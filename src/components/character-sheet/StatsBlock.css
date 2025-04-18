@@ -149,7 +149,7 @@
 
 .proficiency-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 0.75rem;
 }
 
@@ -157,10 +157,54 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   background-color: #f9f9f9;
   border-radius: 4px;
   border-left: 3px solid #ddd;
+}
+
+/* New weapon proficiency styling with attack bonuses */
+.weapon-proficiency {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.weapon-category {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.attack-bonuses {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.bonus-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  text-align: center;
+}
+
+.attack-type {
+  color: #666;
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.attack-bonus {
+  font-weight: bold;
+  color: #5e2929;
+  font-size: 1.1rem;
 }
 
 .proficiency-name {
@@ -231,5 +275,22 @@
   
   .tab-button {
     padding: 0.5rem;
+  }
+  
+  .attack-bonuses {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+  
+  .bonus-container {
+    min-width: 80px;
+  }
+
+  .attack-type {
+    font-size: 0.75rem;
+  }
+  
+  .attack-bonus {
+    font-size: 1rem;
   }
 }

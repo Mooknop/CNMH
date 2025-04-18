@@ -21,6 +21,19 @@ const StatsBlock = ({ character }) => {
     }
   };
   
+  // Calculate attack bonus based on ability modifier and proficiency
+  const getAttackBonus = (abilityMod, proficiency) => {
+    // In PF2E: ability modifier + proficiency bonus + level (if trained or better)
+    let profBonus = 0;
+    if (proficiency > 0) {
+      // Trained +2, Expert +4, Master +6, Legendary +8 + level
+      profBonus = proficiency * 2 + character.level;
+    }
+    
+    const bonus = abilityMod + profBonus;
+    return bonus >= 0 ? `+${bonus}` : bonus.toString();
+  };
+  
   // In PF2E, proficiencies are determined by class, and we need to display them
   // Since we don't have explicit proficiency data, we'll infer based on class
   const getWeaponProficiencies = () => {
@@ -175,6 +188,10 @@ const StatsBlock = ({ character }) => {
   const weaponProfs = getWeaponProficiencies();
   const armorProfs = getArmorProficiencies();
   
+  // Get ability modifiers
+  const strMod = Math.floor((character.abilities?.strength || 10) - 10) / 2;
+  const dexMod = Math.floor((character.abilities?.dexterity || 10) - 10) / 2;
+  
   // Render the appropriate tab content
   const renderTabContent = () => {
     switch(activeTab) {
@@ -231,44 +248,113 @@ const StatsBlock = ({ character }) => {
             <div className="proficiency-group">
               <h4 className="proficiency-category">Weapons</h4>
               <div className="proficiency-items">
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Simple</span>
-                  <span className={`proficiency-value prof-${weaponProfs.simple}`}>
-                    {getProficiencyLabel(weaponProfs.simple)}
-                  </span>
-                </div>
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Martial</span>
-                  <span className={`proficiency-value prof-${weaponProfs.martial}`}>
-                    {getProficiencyLabel(weaponProfs.martial)}
-                  </span>
-                </div>
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Advanced</span>
-                  <span className={`proficiency-value prof-${weaponProfs.advanced}`}>
-                    {getProficiencyLabel(weaponProfs.advanced)}
-                  </span>
-                </div>
-                <div className="proficiency-item">
-                  <span className="proficiency-name">Unarmed</span>
-                  <span className={`proficiency-value prof-${weaponProfs.unarmed}`}>
-                    {getProficiencyLabel(weaponProfs.unarmed)}
-                  </span>
-                </div>
-                {weaponProfs.class > 0 && (
-                  <div className="proficiency-item">
-                    <span className="proficiency-name">Class Weapons</span>
-                    <span className={`proficiency-value prof-${weaponProfs.class}`}>
-                      {getProficiencyLabel(weaponProfs.class)}
+                <div className="proficiency-item weapon-proficiency">
+                  <div className="weapon-category">
+                    <span className="proficiency-name">Simple</span>
+                    <span className={`proficiency-value prof-${weaponProfs.simple}`}>
+                      {getProficiencyLabel(weaponProfs.simple)}
                     </span>
                   </div>
-                )}
-                {weaponProfs.finesse > 0 && (
-                  <div className="proficiency-item">
-                    <span className="proficiency-name">Finesse</span>
-                    <span className={`proficiency-value prof-${weaponProfs.finesse}`}>
-                      {getProficiencyLabel(weaponProfs.finesse)}
+                  <div className="attack-bonuses">
+                    <div className="bonus-container">
+                      <div className="attack-type">Melee (STR)</div>
+                      <div className="attack-bonus">{getAttackBonus(strMod, weaponProfs.simple)}</div>
+                    </div>
+                    <div className="bonus-container">
+                      <div className="attack-type">Ranged (DEX)</div>
+                      <div className="attack-bonus">{getAttackBonus(dexMod, weaponProfs.simple)}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="proficiency-item weapon-proficiency">
+                  <div className="weapon-category">
+                    <span className="proficiency-name">Martial</span>
+                    <span className={`proficiency-value prof-${weaponProfs.martial}`}>
+                      {getProficiencyLabel(weaponProfs.martial)}
                     </span>
+                  </div>
+                  <div className="attack-bonuses">
+                    <div className="bonus-container">
+                      <div className="attack-type">Melee (STR)</div>
+                      <div className="attack-bonus">{getAttackBonus(strMod, weaponProfs.martial)}</div>
+                    </div>
+                    <div className="bonus-container">
+                      <div className="attack-type">Ranged (DEX)</div>
+                      <div className="attack-bonus">{getAttackBonus(dexMod, weaponProfs.martial)}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="proficiency-item weapon-proficiency">
+                  <div className="weapon-category">
+                    <span className="proficiency-name">Advanced</span>
+                    <span className={`proficiency-value prof-${weaponProfs.advanced}`}>
+                      {getProficiencyLabel(weaponProfs.advanced)}
+                    </span>
+                  </div>
+                  <div className="attack-bonuses">
+                    <div className="bonus-container">
+                      <div className="attack-type">Melee (STR)</div>
+                      <div className="attack-bonus">{getAttackBonus(strMod, weaponProfs.advanced)}</div>
+                    </div>
+                    <div className="bonus-container">
+                      <div className="attack-type">Ranged (DEX)</div>
+                      <div className="attack-bonus">{getAttackBonus(dexMod, weaponProfs.advanced)}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="proficiency-item weapon-proficiency">
+                  <div className="weapon-category">
+                    <span className="proficiency-name">Unarmed</span>
+                    <span className={`proficiency-value prof-${weaponProfs.unarmed}`}>
+                      {getProficiencyLabel(weaponProfs.unarmed)}
+                    </span>
+                  </div>
+                  <div className="attack-bonuses">
+                    <div className="bonus-container">
+                      <div className="attack-type">Melee (STR)</div>
+                      <div className="attack-bonus">{getAttackBonus(strMod, weaponProfs.unarmed)}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {weaponProfs.class > 0 && (
+                  <div className="proficiency-item weapon-proficiency">
+                    <div className="weapon-category">
+                      <span className="proficiency-name">Class Weapons</span>
+                      <span className={`proficiency-value prof-${weaponProfs.class}`}>
+                        {getProficiencyLabel(weaponProfs.class)}
+                      </span>
+                    </div>
+                    <div className="attack-bonuses">
+                      <div className="bonus-container">
+                        <div className="attack-type">Melee (STR)</div>
+                        <div className="attack-bonus">{getAttackBonus(strMod, weaponProfs.class)}</div>
+                      </div>
+                      <div className="bonus-container">
+                        <div className="attack-type">Ranged (DEX)</div>
+                        <div className="attack-bonus">{getAttackBonus(dexMod, weaponProfs.class)}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {weaponProfs.finesse > 0 && (
+                  <div className="proficiency-item weapon-proficiency">
+                    <div className="weapon-category">
+                      <span className="proficiency-name">Finesse</span>
+                      <span className={`proficiency-value prof-${weaponProfs.finesse}`}>
+                        {getProficiencyLabel(weaponProfs.finesse)}
+                      </span>
+                    </div>
+                    <div className="attack-bonuses">
+                      <div className="bonus-container">
+                        <div className="attack-type">Melee (STR/DEX)</div>
+                        <div className="attack-bonus">{getAttackBonus(Math.max(strMod, dexMod), weaponProfs.finesse)}</div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
