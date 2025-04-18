@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
-import SkillsList from '../components/character-sheet/SkillsList';
+import EnhancedSkillsList from '../components/character-sheet/EnhancedSkillsList';
 import FeatsList from '../components/character-sheet/FeatsList';
 import './CharacterSheet.css';
 
@@ -29,7 +29,7 @@ const CharacterSheet = () => {
   const renderTabContent = () => {
     switch(activeTab) {
       case 'skills':
-        return <SkillsList character={character} />;
+        return <EnhancedSkillsList character={character} />;
       case 'feats':
         return <FeatsList character={character} />;
       case 'inventory':
@@ -70,7 +70,7 @@ const CharacterSheet = () => {
           </div>
         );
       default:
-        return <SkillsList character={character} />;
+        return <EnhancedSkillsList character={character} />;
     }
   };
   
