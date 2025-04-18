@@ -1,91 +1,110 @@
 .stats-block {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  .hp-section {
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-  }
-  
-  .hp-section label {
-    font-weight: bold;
-    margin-right: 1rem;
-    font-size: 1.2rem;
-  }
-  
-  .hp-counter {
-    display: flex;
-    align-items: center;
-  }
-  
-  .hp-counter span {
-    margin: 0 0.5rem;
-    font-size: 1.1rem;
-  }
-  
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.core-stats {
+  margin-bottom: 1.5rem;
+}
+
+.hp-defense {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hp-box, .ac-box {
+  padding: 0.75rem 1.25rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 120px;
+  flex: 1;
+}
+
+.hp-box {
+  border: 2px solid #5e2929;
+}
+
+.ac-box {
+  border: 2px solid #444;
+}
+
+.defense-name {
+  font-weight: bold;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.defense-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.abilities-section {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ability {
+  text-align: center;
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ability-name {
+  font-weight: bold;
+  color: #5e2929;
+  margin-bottom: 0.5rem;
+}
+
+.ability-mod {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.defenses-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.defense {
+  text-align: center;
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
   .abilities-section {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .ability {
-    text-align: center;
-    background-color: white;
-    padding: 0.75rem;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  
-  .ability-name {
-    font-weight: bold;
-    color: #5e2929;
-    margin-bottom: 0.5rem;
-  }
-  
-  .ability-mod {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #333;
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .defenses-section {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
   }
   
-  .defense {
-    text-align: center;
-    background-color: white;
-    padding: 0.75rem;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  .hp-defense {
+    flex-direction: row;
   }
-  
-  .defense-name {
-    font-weight: bold;
-    color: #5e2929;
-    margin-bottom: 0.25rem;
+}
+
+@media (max-width: 480px) {
+  .hp-defense {
+    flex-direction: column;
   }
-  
-  .defense-value {
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
-  
-  /* Media query for smaller screens */
-  @media (max-width: 768px) {
-    .abilities-section {
-      grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .defenses-section {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
+}

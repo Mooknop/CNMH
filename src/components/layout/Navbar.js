@@ -1,4 +1,3 @@
-// File: src/components/layout/Navbar.js
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
@@ -21,11 +20,6 @@ const Navbar = () => {
             <li className="nav-item">
               <Link to={`/character/${activeCharacter.id}`} className="nav-link">
                 {activeCharacter.name}
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to={`/character/${activeCharacter.id}/inventory`} className="nav-link">
-                Inventory
               </Link>
             </li>
             <li className="nav-item">

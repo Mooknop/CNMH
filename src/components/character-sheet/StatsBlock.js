@@ -9,12 +9,16 @@ const StatsBlock = ({ character }) => {
   
   return (
     <div className="stats-block">
-      <div className="hp-section">
-        <label>HP</label>
-        <div className="hp-counter">
-          <span>{character.currentHp || 0}</span>
-          <span>/</span>
-          <span>{character.maxHp || 0}</span>
+      <div className="core-stats">
+        <div className="hp-defense">
+          <div className="hp-box">
+            <div className="defense-name">HP</div>
+            <div className="defense-value">{character.maxHp || 0}</div>
+          </div>
+          <div className="ac-box">
+            <div className="defense-name">AC</div>
+            <div className="defense-value">{character.ac || 10}</div>
+          </div>
         </div>
       </div>
       
@@ -47,20 +51,16 @@ const StatsBlock = ({ character }) => {
       
       <div className="defenses-section">
         <div className="defense">
-          <div className="defense-name">AC</div>
-          <div className="defense-value">{character.ac || 10}</div>
-        </div>
-        <div className="defense">
           <div className="defense-name">Fort</div>
-          <div className="defense-value">{character.saves?.fortitude || 0}</div>
+          <div className="defense-value">{`+` + character.saves?.fortitude || 0}</div>
         </div>
         <div className="defense">
           <div className="defense-name">Ref</div>
-          <div className="defense-value">{character.saves?.reflex || 0}</div>
+          <div className="defense-value">{`+` + character.saves?.reflex || 0}</div>
         </div>
         <div className="defense">
           <div className="defense-name">Will</div>
-          <div className="defense-value">{character.saves?.will || 0}</div>
+          <div className="defense-value">{`+` + character.saves?.will || 0}</div>
         </div>
       </div>
     </div>
