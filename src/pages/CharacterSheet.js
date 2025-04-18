@@ -4,6 +4,7 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import EnhancedSkillsList from '../components/character-sheet/EnhancedSkillsList';
 import FeatsList from '../components/character-sheet/FeatsList';
+import SpellsList from '../components/character-sheet/SpellsList';
 import './CharacterSheet.css';
 
 const CharacterSheet = () => {
@@ -25,6 +26,9 @@ const CharacterSheet = () => {
   
   if (!character) return <div>Loading character...</div>;
   
+  // Check if character has spellcasting
+  const hasSpellcasting = character.spellcasting && character.spellcasting.tradition;
+  
   // Function to render the active tab content
   const renderTabContent = () => {
     switch(activeTab) {
@@ -32,6 +36,8 @@ const CharacterSheet = () => {
         return <EnhancedSkillsList character={character} />;
       case 'feats':
         return <FeatsList character={character} />;
+      case 'spells':
+        return <SpellsList character={character} />;
       case 'inventory':
         // We'll render the inventory directly here rather than navigating to a separate page
         return (
@@ -100,6 +106,15 @@ const CharacterSheet = () => {
             >
               Feats & Abilities
             </button>
+            {/* Only show spellcasting tab if character has spellcasting */}
+            {hasSpellcasting && (
+              <button 
+                className={`tab-button ${activeTab === 'spells' ? 'active' : ''}`}
+                onClick={() => setActiveTab('spells')}
+              >
+                Spellcasting
+              </button>
+            )}
             <button 
               className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`}
               onClick={() => setActiveTab('inventory')}

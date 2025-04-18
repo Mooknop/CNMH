@@ -1,0 +1,276 @@
+import React, { useState } from 'react';
+import './SpellsList.css';
+
+const SpellsList = ({ character }) => {
+  const [activeSpellLevel, setActiveSpellLevel] = useState('cantrips');
+  const [defenseFilter, setDefenseFilter] = useState('all');
+  
+  // Get spell data from character
+  const spellcasting = character.spellcasting || {};
+  
+  // If no spellcasting data exists, show placeholder
+  if (!spellcasting.tradition) {
+    return (
+      <div className="spells-list">
+        <h2>Spellcasting</h2>
+        <div className="empty-state">
+          <p>This character doesn't have spellcasting abilities.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Calculate spell attack and DC
+  const getSpellModifier = () => {
+    const abilityMod = getAbilityModifier(spellcasting.ability);
+    const proficiencyValue = spellcasting.proficiency || 0;
+    
+    // Proficiency bonus: Trained (+2), Expert (+4), Master (+6), Legendary (+8) + level
+    let proficiencyMod = 0;
+    if (proficiencyValue > 0) {
+      proficiencyMod = proficiencyValue * 2 + character.level;
+    }
+    
+    return abilityMod + proficiencyMod;
+  };
+  
+  const getAbilityModifier = (ability) => {
+    const abilityValue = character.abilities ? character.abilities[ability] || 10 : 10;
+    return Math.floor((abilityValue - 10) / 2);
+  };
+  
+  const getProficiencyLabel = (proficiency) => {
+    switch(proficiency) {
+      case 1: return 'Trained';
+      case 2: return 'Expert';
+      case 3: return 'Master';
+      case 4: return 'Legendary';
+      default: return 'Untrained';
+    }
+  };
+  
+  const spellAttackMod = getSpellModifier();
+  const spellDC = 10 + spellAttackMod;
+  
+  // Organize spells by level
+  const spellsByLevel = {
+    cantrips: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+    10: []
+  };
+  
+  // Populate spells by level
+  if (spellcasting.spells) {
+    spellcasting.spells.forEach(spell => {
+      const level = spell.level === 0 ? 'cantrips' : spell.level;
+      if (spellsByLevel[level]) {
+        spellsByLevel[level].push(spell);
+      }
+    });
+  }
+  
+  // Get available spell levels (only show levels that have spells)
+  const availableSpellLevels = Object.keys(spellsByLevel).filter(
+    level => spellsByLevel[level].length > 0
+  );
+  
+  // Format spell level for display
+  const formatSpellLevel = (level) => {
+    if (level === 'cantrips') return 'Cantrips';
+    return `Level ${level}`;
+  };
+
+  // Get all unique defense types from spells
+  const getAllDefenseTypes = () => {
+    const defenseTypes = new Set(['all']);
+    
+    if (spellcasting.spells) {
+      spellcasting.spells.forEach(spell => {
+        if (spell.defense) {
+          defenseTypes.add(spell.defense);
+        }
+      });
+    }
+    
+    return Array.from(defenseTypes);
+  };
+  
+  const defenseTypes = getAllDefenseTypes();
+
+  // Filter spells by defense type
+  const filterSpellsByDefense = (spells) => {
+    if (defenseFilter === 'all') {
+      return spells;
+    }
+    
+    return spells.filter(spell => 
+      spell.defense === defenseFilter || 
+      (!spell.defense && defenseFilter === 'none')
+    );
+  };
+
+  return (
+    <div className="spells-list">
+      <h2>Spellcasting</h2>
+      
+      <div className="spellcasting-stats">
+        <div className="spellcasting-tradition">
+          <span className="stat-label">Tradition</span>
+          <span className="stat-value">{spellcasting.tradition}</span>
+        </div>
+        <div className="spellcasting-ability">
+          <span className="stat-label">Ability</span>
+          <span className="stat-value">
+            {spellcasting.ability.charAt(0).toUpperCase() + spellcasting.ability.slice(1)}
+          </span>
+        </div>
+        <div className="spell-proficiency">
+          <span className="stat-label">Proficiency</span>
+          <span className="stat-value">{getProficiencyLabel(spellcasting.proficiency)}</span>
+        </div>
+        <div className="spell-attack">
+          <span className="stat-label">Spell Attack</span>
+          <span className="stat-value">+{spellAttackMod}</span>
+        </div>
+        <div className="spell-dc">
+          <span className="stat-label">Spell DC</span>
+          <span className="stat-value">{spellDC}</span>
+        </div>
+        {spellcasting.focus && (
+          <div className="focus-points">
+            <span className="stat-label">Focus Points</span>
+            <span className="stat-value">{spellcasting.focus.current}/{spellcasting.focus.max}</span>
+          </div>
+        )}
+      </div>
+      
+      {availableSpellLevels.length > 0 ? (
+        <div className="spell-levels-container">
+          <div className="spell-level-tabs">
+            {availableSpellLevels.map(level => (
+              <button
+                key={level}
+                className={`spell-level-tab ${activeSpellLevel === level ? 'active' : ''}`}
+                onClick={() => setActiveSpellLevel(level)}
+              >
+                {formatSpellLevel(level)}
+              </button>
+            ))}
+          </div>
+          
+          {defenseTypes.length > 1 && (
+            <div className="defense-filter">
+              <span className="filter-label">Filter by Defense:</span>
+              <div className="defense-buttons">
+                {defenseTypes.map(defense => (
+                  <button
+                    key={defense}
+                    className={`defense-filter-btn ${defenseFilter === defense ? 'active' : ''}`}
+                    onClick={() => setDefenseFilter(defense)}
+                  >
+                    {defense === 'all' ? 'All' : defense === 'none' ? 'None' : defense}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <div className="spells-container">
+            {spellsByLevel[activeSpellLevel].length > 0 ? (
+              <div className="spells-grid">
+                {filterSpellsByDefense(spellsByLevel[activeSpellLevel]).map(spell => (
+                  <div key={spell.id} className="spell-card">
+                    <div className="spell-header">
+                      <h3>{spell.name}</h3>
+                      {spell.prepared !== undefined && (
+                        <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
+                          {spell.prepared ? 'Prepared' : 'Not Prepared'}
+                        </div>
+                      )}
+                    </div>
+                    <div className="spell-meta">
+                      {spell.traits && spell.traits.map((trait, index) => (
+                        <span key={index} className="spell-trait">{trait}</span>
+                      ))}
+                    </div>
+                    <div className="spell-details">
+                      {spell.actions && (
+                        <div className="spell-actions">
+                          <span className="detail-label">Actions:</span>
+                          <span className="detail-value">{spell.actions}</span>
+                        </div>
+                      )}
+                      {spell.defense && (
+                        <div className="spell-defense">
+                          <span className="detail-label">Defense:</span>
+                          <span className="detail-value">{spell.defense}</span>
+                        </div>
+                      )}
+                      {spell.range && (
+                        <div className="spell-range">
+                          <span className="detail-label">Range:</span>
+                          <span className="detail-value">{spell.range}</span>
+                        </div>
+                      )}
+                      {spell.targets && (
+                        <div className="spell-targets">
+                          <span className="detail-label">Targets:</span>
+                          <span className="detail-value">{spell.targets}</span>
+                        </div>
+                      )}
+                      {spell.duration && (
+                        <div className="spell-duration">
+                          <span className="detail-label">Duration:</span>
+                          <span className="detail-value">{spell.duration}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="spell-description">
+                      {spell.description}
+                    </div>
+                    {spell.heightened && (
+                      <div className="spell-heightened">
+                        <span className="heightened-label">Heightened:</span>
+                        {Object.entries(spell.heightened).map(([level, effect], index) => (
+                          <div key={index} className="heightened-entry">
+                            <span className="heightened-level">{level}:</span>
+                            <span className="heightened-effect">{effect}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>No {formatSpellLevel(activeSpellLevel).toLowerCase()} available.</p>
+              </div>
+            )}
+            
+            {filterSpellsByDefense(spellsByLevel[activeSpellLevel]).length === 0 && 
+             spellsByLevel[activeSpellLevel].length > 0 && (
+              <div className="empty-state">
+                <p>No spells with defense "{defenseFilter}" found at this level.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <p>No spells available for this character.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default SpellsList;

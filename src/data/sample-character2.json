@@ -1,116 +1,264 @@
 {
-    "id": "sample-character-2",
-    "created": "2025-04-17T09:30:00.000Z",
-    "lastUpdated": "2025-04-17T09:30:00.000Z",
-    "name": "Kyra",
-    "ancestry": "Human",
-    "background": "Acolyte",
-    "class": "Cleric",
-    "level": 5,
-    "maxHp": 45,
-    "currentHp": 45,
-    "ac": 16,
-    "abilities": {
-      "strength": 12,
-      "dexterity": 10,
-      "constitution": 14,
-      "intelligence": 12,
-      "wisdom": 18,
-      "charisma": 14
+  "id": "sample-character-2",
+  "created": "2025-04-17T09:30:00.000Z",
+  "lastUpdated": "2025-04-17T09:30:00.000Z",
+  "name": "Kyra",
+  "ancestry": "Human",
+  "background": "Acolyte",
+  "class": "Cleric",
+  "level": 5,
+  "maxHp": 45,
+  "currentHp": 45,
+  "ac": 16,
+  "abilities": {
+    "strength": 12,
+    "dexterity": 10,
+    "constitution": 14,
+    "intelligence": 12,
+    "wisdom": 18,
+    "charisma": 14
+  },
+  "saves": {
+    "fortitude": 9,
+    "reflex": 7,
+    "will": 12
+  },
+  "skills": {
+    "medicine": {
+      "proficiency": 2
     },
-    "saves": {
-      "fortitude": 9,
-      "reflex": 7,
-      "will": 12
+    "religion": {
+      "proficiency": 2
     },
-    "skills": {
-      "medicine": {
-        "proficiency": 2
-      },
-      "religion": {
-        "proficiency": 2
-      },
-      "diplomacy": {
-        "proficiency": 1
-      },
-      "society": {
-        "proficiency": 1
-      }
+    "diplomacy": {
+      "proficiency": 1
     },
-    "feats": [
+    "society": {
+      "proficiency": 1
+    }
+  },
+  "feats": [
+    {
+      "id": "feat-1",
+      "name": "Healing Hands",
+      "level": 1,
+      "source": "Cleric",
+      "description": "Your positive energy is particularly potent when healing wounds. When you cast heal, you roll d10s instead of d8s."
+    },
+    {
+      "id": "feat-2",
+      "name": "Turn Undead",
+      "level": 1,
+      "source": "Cleric",
+      "description": "When you use the Positive Healing class feature to damage undead, you can make the undead fleeing for 1 round on a critical failure."
+    },
+    {
+      "id": "feat-3",
+      "name": "Communal Healing",
+      "level": 4,
+      "source": "Cleric",
+      "description": "When you cast a heal spell to heal a single target, you can also heal yourself for 1d6 hit points per level of the spell."
+    }
+  ],
+  "inventory": [
+    {
+      "id": "item-1",
+      "name": "Mace +1",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": ""
+    },
+    {
+      "id": "item-2",
+      "name": "Holy Symbol",
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "Silver symbol of Sarenrae"
+    },
+    {
+      "id": "item-3",
+      "name": "Healer's Tools",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": ""
+    },
+    {
+      "id": "item-4",
+      "name": "Adventurer's Pack",
+      "quantity": 1,
+      "weight": 2.0,
+      "description": "Basic adventuring gear"
+    },
+    {
+      "id": "item-5",
+      "name": "Scroll of Restoration",
+      "quantity": 2,
+      "weight": 0.1,
+      "description": "Removes one debuff when used"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note-1",
+      "title": "Temple Consecration",
+      "date": "2025-04-12",
+      "content": "Assisted in the consecration of a small shrine to Sarenrae in the village. The locals were grateful and provided us with fresh supplies.",
+      "createdAt": "2025-04-12T16:45:00.000Z"
+    },
+    {
+      "id": "note-2",
+      "title": "Healing the Sick",
+      "date": "2025-04-16",
+      "content": "Spent the day healing villagers afflicted by a mysterious illness. Suspect it may be connected to the strange occurrences in the northern forest.",
+      "createdAt": "2025-04-16T19:20:00.000Z"
+    }
+  ],
+  "spellcasting": {
+    "tradition": "Divine",
+    "ability": "wisdom",
+    "proficiency": 2,
+    "focus": {
+      "max": 1,
+      "current": 1
+    },
+    "spells": [
       {
-        "id": "feat-1",
-        "name": "Healing Hands",
+        "id": "spell-1",
+        "name": "Light",
+        "level": 0,
+        "traits": ["Cantrip", "Evocation", "Light"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
+        "duration": "Until the next time you make your daily preparations",
+        "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
+      },
+      {
+        "id": "spell-2",
+        "name": "Stabilize",
+        "level": 0,
+        "traits": ["Cantrip", "Healing", "Necromancy", "Positive"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 dying creature",
+        "description": "Positive energy shuts death's door. The target loses the dying condition, though it remains unconscious at 0 Hit Points."
+      },
+      {
+        "id": "spell-3",
+        "name": "Heal",
         "level": 1,
-        "source": "Cleric",
-        "description": "Your positive energy is particularly potent when healing wounds. When you cast heal, you roll d10s instead of d8s."
+        "traits": ["Healing", "Necromancy", "Positive"],
+        "actions": "One, Two, or Three Actions",
+        "range": "Varies",
+        "targets": "Varies",
+        "defense": "Will",
+        "description": "You channel positive energy to heal the living or damage the undead. If you use 1 action to cast this spell, you restore 1d8 Hit Points. If you use 2 actions, you restore 1d8+8 Hit Points and it gains a range of 30 feet. If you use 3 actions, you restore 1d8+8 Hit Points to all living creatures in a 30-foot emanation.",
+        "heightened": {
+          "+1": "The amount of healing increases by 1d8, or by 2d8 if you're using the version that targets all living creatures in an emanation."
+        },
+        "prepared": true
       },
       {
-        "id": "feat-2",
-        "name": "Turn Undead",
+        "id": "spell-4",
+        "name": "Magic Weapon",
         "level": 1,
-        "source": "Cleric",
-        "description": "When you use the Positive Healing class feature to damage undead, you can make the undead fleeing for 1 round on a critical failure."
+        "traits": ["Transmutation"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 weapon that is unattended or wielded by you or a willing ally",
+        "duration": "1 minute",
+        "description": "The weapon becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two.",
+        "prepared": true
       },
       {
-        "id": "feat-3",
-        "name": "Communal Healing",
-        "level": 4,
-        "source": "Cleric",
-        "description": "When you cast a heal spell to heal a single target, you can also heal yourself for 1d6 hit points per level of the spell."
-      }
-    ],
-    "inventory": [
-      {
-        "id": "item-1",
-        "name": "Mace +1",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": ""
+        "id": "spell-5",
+        "name": "Bless",
+        "level": 1,
+        "traits": ["Enchantment", "Mental"],
+        "actions": "Two Actions",
+        "range": "Emanation",
+        "targets": "Allies in the emanation",
+        "duration": "1 minute",
+        "description": "Blessings from beyond help your allies strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. The emanation is a 5-foot burst centered on you. It can be increased to a 15-foot burst when the spell is heightened.",
+        "prepared": true
       },
       {
-        "id": "item-2",
-        "name": "Holy Symbol",
-        "quantity": 1,
-        "weight": 0.1,
-        "description": "Silver symbol of Sarenrae"
+        "id": "spell-6",
+        "name": "Spiritual Weapon",
+        "level": 2,
+        "traits": ["Attack", "Evocation", "Force"],
+        "actions": "Two Actions",
+        "components": ["somatic", "verbal"],
+        "range": "120 feet",
+        "duration": "Sustained up to 1 minute",
+        "description": "A weapon made of pure magical force materializes and attacks foes you designate within range. The spiritual weapon takes the form of a club, dagger, or other simple weapon of your deity. When you Cast the Spell, the weapon appears next to a foe you choose within range and makes a Strike against it. Each time you Sustain the Spell, you can move the weapon to a new target within range (if needed) and Strike with it. The spiritual weapon uses and contributes to your multiple attack penalty. The weapon's Strikes are melee weapon attacks that use your attack modifier for the weapon type or attack modifier for simple weapons, whichever is higher. Regardless of its appearance, the weapon deals force damage equal to 1d8 plus your spellcasting ability modifier.",
+        "heightened": {
+          "+2": "The damage increases by 1d8."
+        },
+        "prepared": true
       },
       {
-        "id": "item-3",
-        "name": "Healer's Tools",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": ""
+        "id": "spell-7",
+        "name": "Restoration",
+        "level": 2,
+        "traits": ["Healing", "Necromancy"],
+        "actions": "Two Actions",
+        "components": ["somatic", "verbal"],
+        "range": "Touch",
+        "targets": "1 creature",
+        "description": "You infuse the target with positive energy to diminish the effects of debilitations. The effect depends on whether the target is suffering from any of the following conditions: enfeebled, frightened, sickened, or stupefied. If the target has more than one of these conditions, you choose which one to reduce. The target receives a +1 status bonus to saves against the remaining conditions.",
+        "heightened": {
+          "4th": "You can reduce two of the listed conditions, or remove one condition and reduce another."
+        },
+        "prepared": true
       },
       {
-        "id": "item-4",
-        "name": "Adventurer's Pack",
-        "quantity": 1,
-        "weight": 2.0,
-        "description": "Basic adventuring gear"
+        "id": "spell-8",
+        "name": "Remove Fear",
+        "level": 2,
+        "traits": ["Enchantment", "Healing"],
+        "actions": "Two Actions",
+        "components": ["somatic", "verbal"],
+        "range": "Touch",
+        "targets": "1 creature",
+        "description": "You suppress fear in the target. You reduce the target's frightened condition by 2, and suppress all of their other fear effects. If the target is under a fear effect that causes the frightened condition continuously, the condition returns after this spell's duration ends.",
+        "heightened": {
+          "6th": "You can target up to 10 creatures."
+        },
+        "prepared": false
       },
       {
-        "id": "item-5",
-        "name": "Scroll of Restoration",
-        "quantity": 2,
-        "weight": 0.1,
-        "description": "Removes one debuff when used"
-      }
-    ],
-    "notes": [
-      {
-        "id": "note-1",
-        "title": "Temple Consecration",
-        "date": "2025-04-12",
-        "content": "Assisted in the consecration of a small shrine to Sarenrae in the village. The locals were grateful and provided us with fresh supplies.",
-        "createdAt": "2025-04-12T16:45:00.000Z"
+        "id": "spell-9",
+        "name": "Fireball",
+        "level": 3,
+        "traits": ["Evocation", "Fire"],
+        "actions": "Two Actions",
+        "components": ["somatic", "verbal"],
+        "range": "500 feet",
+        "area": "20-foot burst",
+        "description": "A roaring blast of fire appears at the spot you designate, dealing 6d6 fire damage to creatures in the area. Each creature must attempt a basic Reflex save.",
+        "heightened": {
+          "+1": "The damage increases by 2d6."
+        },
+        "prepared": true
       },
       {
-        "id": "note-2",
-        "title": "Healing the Sick",
-        "date": "2025-04-16",
-        "content": "Spent the day healing villagers afflicted by a mysterious illness. Suspect it may be connected to the strange occurrences in the northern forest.",
-        "createdAt": "2025-04-16T19:20:00.000Z"
+        "id": "spell-10",
+        "name": "Heroism",
+        "level": 3,
+        "traits": ["Enchantment", "Mental"],
+        "actions": "Two Actions",
+        "components": ["somatic", "verbal"],
+        "range": "Touch",
+        "targets": "1 creature",
+        "duration": "10 minutes",
+        "description": "You tap into the target's inner heroism, granting it a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks.",
+        "heightened": {
+          "6th": "The status bonus increases to +2.",
+          "9th": "The status bonus increases to +3."
+        },
+        "prepared": true
       }
     ]
   }
+}
