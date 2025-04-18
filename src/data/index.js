@@ -13,5 +13,5 @@ export const sampleCharacters = [
 // Export the lore data
 export const loreEntries = loreData.loreEntries;
 
-// Export the quests data
+// Export the quests data directly from the JSON
 export const quests = questsData.quests;

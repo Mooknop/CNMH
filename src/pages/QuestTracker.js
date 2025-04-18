@@ -2,26 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { quests as defaultQuests } from '../data';
 import './QuestTracker.css';
 
+// For debugging - log immediately on import
+console.log("QuestTracker - Default quests on import:", defaultQuests);
+
 const QuestTracker = () => {
   const [quests, setQuests] = useState([]);
   const [filter, setFilter] = useState('all');
   
   useEffect(() => {
-    // Load quests from localStorage or use default
-    const storedQuests = localStorage.getItem('pf2e-quests');
-    if (storedQuests) {
-      setQuests(JSON.parse(storedQuests));
-    } else {
-      setQuests(defaultQuests);
-    }
+    // For debugging
+    console.log("Default quests in useEffect:", defaultQuests);
+    
+    // Set quests directly from the imported data
+    setQuests(defaultQuests);
   }, []);
   
   useEffect(() => {
-    // Save quests to localStorage whenever they change
-    localStorage.setItem('pf2e-quests', JSON.stringify(quests));
+    // Only save to localStorage if quests is not empty
+    if (quests && quests.length > 0) {
+      localStorage.setItem('pf2e-quests', JSON.stringify(quests));
+    }
   }, [quests]);
   
-  const filteredQuests = quests.filter(quest => {
+  console.log("Current quests state:", quests);
+  
+  // Ensure quests is an array before filtering
+  const questsArray = Array.isArray(quests) ? quests : [];
+  console.log("Quests array for filtering:", questsArray);
+  
+  const filteredQuests = questsArray.filter(quest => {
     if (filter === 'all') return true;
     return quest.status === filter;
   });
@@ -67,6 +76,11 @@ const QuestTracker = () => {
         >
           Completed
         </button>
+      </div>
+      
+      {/* Quest count display for debugging */}
+      <div style={{ marginBottom: '15px', color: '#666' }}>
+        Showing {sortedQuests.length} quests (Total: {questsArray.length})
       </div>
       
       <div className="quests-list">
