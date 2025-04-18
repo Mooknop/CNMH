@@ -132,6 +132,7 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
+    margin-bottom: 1rem;
   }
   
   .spell-header {
@@ -146,6 +147,16 @@
     margin: 0;
     font-size: 1.1rem;
     color: #5e2929;
+    flex-grow: 1;
+  }
+  
+  .spell-rank-indicator {
+    background-color: #5e2929;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
   }
   
   .prepared-indicator {

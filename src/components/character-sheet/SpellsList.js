@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './SpellsList.css';
 
 const SpellsList = ({ character }) => {
-  const [activeSpellLevel, setActiveSpellLevel] = useState('cantrips');
+  const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
   
   // Get spell data from character
@@ -52,8 +52,8 @@ const SpellsList = ({ character }) => {
   const spellAttackMod = getSpellModifier();
   const spellDC = 10 + spellAttackMod;
   
-  // Organize spells by level
-  const spellsByLevel = {
+  // Organize spells by rank
+  const spellsByRank = {
     cantrips: [],
     1: [],
     2: [],
@@ -67,25 +67,26 @@ const SpellsList = ({ character }) => {
     10: []
   };
   
-  // Populate spells by level
+  // Populate spells by rank
   if (spellcasting.spells) {
     spellcasting.spells.forEach(spell => {
-      const level = spell.level === 0 ? 'cantrips' : spell.level;
-      if (spellsByLevel[level]) {
-        spellsByLevel[level].push(spell);
+      const rank = spell.level === 0 ? 'cantrips' : spell.level;
+      if (spellsByRank[rank]) {
+        spellsByRank[rank].push(spell);
       }
     });
   }
   
-  // Get available spell levels (only show levels that have spells)
-  const availableSpellLevels = Object.keys(spellsByLevel).filter(
-    level => spellsByLevel[level].length > 0
+  // Get available spell ranks (only show ranks that have spells)
+  const availableSpellRanks = Object.keys(spellsByRank).filter(
+    rank => spellsByRank[rank].length > 0
   );
   
-  // Format spell level for display
-  const formatSpellLevel = (level) => {
-    if (level === 'cantrips') return 'Cantrips';
-    return `Level ${level}`;
+  // Format spell rank for display
+  const formatSpellRank = (rank) => {
+    if (rank === 'cantrips') return 'Cantrips';
+    if (rank === 'all') return 'All Spells';
+    return `Rank ${rank}`;
   };
 
   // Get all unique defense types from spells
@@ -116,6 +117,55 @@ const SpellsList = ({ character }) => {
       (!spell.defense && defenseFilter === 'none')
     );
   };
+
+  // Get all spells for display
+  const getAllSpells = () => {
+    let allSpells = [];
+    // Add cantrips first
+    if (spellsByRank['cantrips'] && spellsByRank['cantrips'].length > 0) {
+      allSpells = [...spellsByRank['cantrips']];
+    }
+    
+    // Add other ranks in order
+    for (let i = 1; i <= 10; i++) {
+      if (spellsByRank[i] && spellsByRank[i].length > 0) {
+        allSpells = [...allSpells, ...spellsByRank[i]];
+      }
+    }
+    
+    return allSpells;
+  };
+
+  // Get spells to display based on active rank
+  const getSpellsToDisplay = () => {
+    if (activeSpellRank === 'all') {
+      return getAllSpells();
+    }
+    return spellsByRank[activeSpellRank] || [];
+  };
+
+  // Create sorted rank list with cantrips first and then all option
+  const getSortedRankList = () => {
+    let sortedRanks = ['all'];
+    
+    // Add cantrips if available
+    if (availableSpellRanks.includes('cantrips')) {
+      sortedRanks.push('cantrips');
+    }
+    
+    // Add numbered ranks in order
+    for (let i = 1; i <= 10; i++) {
+      if (availableSpellRanks.includes(i.toString())) {
+        sortedRanks.push(i.toString());
+      }
+    }
+    
+    return sortedRanks;
+  };
+
+  const sortedRankList = getSortedRankList();
+  const spellsToDisplay = getSpellsToDisplay();
+  const filteredSpells = filterSpellsByDefense(spellsToDisplay);
 
   return (
     <div className="spells-list">
@@ -152,16 +202,16 @@ const SpellsList = ({ character }) => {
         )}
       </div>
       
-      {availableSpellLevels.length > 0 ? (
-        <div className="spell-levels-container">
+      {availableSpellRanks.length > 0 ? (
+        <div className="spell-ranks-container">
           <div className="spell-level-tabs">
-            {availableSpellLevels.map(level => (
+            {sortedRankList.map(rank => (
               <button
-                key={level}
-                className={`spell-level-tab ${activeSpellLevel === level ? 'active' : ''}`}
-                onClick={() => setActiveSpellLevel(level)}
+                key={rank}
+                className={`spell-level-tab ${activeSpellRank === rank ? 'active' : ''}`}
+                onClick={() => setActiveSpellRank(rank)}
               >
-                {formatSpellLevel(level)}
+                {formatSpellRank(rank)}
               </button>
             ))}
           </div>
@@ -184,12 +234,18 @@ const SpellsList = ({ character }) => {
           )}
           
           <div className="spells-container">
-            {spellsByLevel[activeSpellLevel].length > 0 ? (
+            {filteredSpells.length > 0 ? (
               <div className="spells-grid">
-                {filterSpellsByDefense(spellsByLevel[activeSpellLevel]).map(spell => (
+                {filteredSpells.map(spell => (
                   <div key={spell.id} className="spell-card">
                     <div className="spell-header">
                       <h3>{spell.name}</h3>
+                      <span className="spell-rank-indicator">
+                        {spell.level === 0 
+                          ? `Cantrip (${Math.ceil(character.level / 2)})`
+                          : `Rank ${spell.level}`
+                        }
+                      </span>
                       {spell.prepared !== undefined && (
                         <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
                           {spell.prepared ? 'Prepared' : 'Not Prepared'}
@@ -252,14 +308,7 @@ const SpellsList = ({ character }) => {
               </div>
             ) : (
               <div className="empty-state">
-                <p>No {formatSpellLevel(activeSpellLevel).toLowerCase()} available.</p>
-              </div>
-            )}
-            
-            {filterSpellsByDefense(spellsByLevel[activeSpellLevel]).length === 0 && 
-             spellsByLevel[activeSpellLevel].length > 0 && (
-              <div className="empty-state">
-                <p>No spells with defense "{defenseFilter}" found at this level.</p>
+                <p>No spells matching your current filters.</p>
               </div>
             )}
           </div>
