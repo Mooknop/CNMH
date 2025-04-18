@@ -58,6 +58,44 @@
       "proficiency": 1
     }
   },
+  "proficiencies": {
+  "weapons": {
+    "simple": {
+      "proficiency": 1,
+      "name": "Trained"
+    },
+    "martial": {
+      "proficiency": 1,
+      "name": "Trained"
+    },
+    "advanced": {
+      "proficiency": 0,
+      "name": "Untrained"
+    },
+    "unarmed": {
+      "proficiency": 1,
+      "name": "Trained"
+    }
+  },
+  "armor": {
+    "unarmored": {
+      "proficiency": 1,
+      "name": "Trained"
+    },
+    "light": {
+      "proficiency": 1,
+      "name": "Trained"
+    },
+    "medium": {
+      "proficiency": 1,
+      "name": "Trained"
+    },
+    "heavy": {
+      "proficiency": 0,
+      "name": "Untrained"
+    }
+  }
+},
   "feats": [
     {
       "id": "feat-1",
