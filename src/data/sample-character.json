@@ -1,0 +1,109 @@
+{
+    "id": "sample-character-1",
+    "created": "2025-04-17T09:00:00.000Z",
+    "lastUpdated": "2025-04-17T09:00:00.000Z",
+    "name": "Valeros",
+    "ancestry": "Human",
+    "background": "Mercenary",
+    "class": "Fighter",
+    "level": 5,
+    "maxHp": 65,
+    "currentHp": 65,
+    "ac": 19,
+    "abilities": {
+      "strength": 18,
+      "dexterity": 14,
+      "constitution": 16,
+      "intelligence": 10,
+      "wisdom": 12,
+      "charisma": 10
+    },
+    "saves": {
+      "fortitude": 12,
+      "reflex": 9,
+      "will": 8
+    },
+    "skills": {
+      "athletics": {
+        "proficiency": 2
+      },
+      "acrobatics": {
+        "proficiency": 1
+      },
+      "intimidation": {
+        "proficiency": 1
+      },
+      "survival": {
+        "proficiency": 1
+      }
+    },
+    "feats": [
+      {
+        "id": "feat-1",
+        "name": "Power Attack",
+        "level": 1,
+        "source": "Fighter",
+        "description": "You unleash a particularly powerful attack that clobbers your foe but leaves you a bit unsteady. Make a Strike. This counts as two attacks for your multiple attack penalty. If this Strike hits, you deal an extra die of weapon damage."
+      },
+      {
+        "id": "feat-2",
+        "name": "Double Slice",
+        "level": 1,
+        "source": "Fighter",
+        "description": "You lash out with both weapons. Make two Strikes, one with each of your two melee weapons, each using your current multiple attack penalty."
+      },
+      {
+        "id": "feat-3",
+        "name": "Combat Reflexes",
+        "level": 4,
+        "source": "Fighter",
+        "description": "You can react more quickly than others. You gain a second reaction each round that you can use only to make an Attack of Opportunity."
+      }
+    ],
+    "inventory": [
+      {
+        "id": "item-1",
+        "name": "Longsword +1",
+        "quantity": 1,
+        "weight": 1.0,
+        "description": "Striking Rune"
+      },
+      {
+        "id": "item-2",
+        "name": "Steel Shield",
+        "quantity": 1,
+        "weight": 1.0,
+        "description": ""
+      },
+      {
+        "id": "item-3",
+        "name": "Adventurer's Pack",
+        "quantity": 1,
+        "weight": 2.0,
+        "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+      },
+      {
+        "id": "item-4",
+        "name": "Potion of Healing",
+        "quantity": 3,
+        "weight": 0.1,
+        "description": "Restores 2d8+5 HP when consumed"
+      }
+    ],
+    "notes": [
+      {
+        "id": "note-1",
+        "title": "First Dungeon",
+        "date": "2025-04-10",
+        "content": "We explored the ruins of the old temple today. Found several traps and a hidden chamber with ancient scrolls. The party decided to camp in the entrance hall for the night.",
+        "createdAt": "2025-04-10T18:30:00.000Z"
+      },
+      {
+        "id": "note-2",
+        "title": "Meeting with the Guild",
+        "date": "2025-04-15",
+        "content": "Met with the Adventurer's Guild representative. They offered us a new contract to investigate strange occurrences in the northern forest. Payment is 500 gold upon completion.",
+        "createdAt": "2025-04-15T20:15:00.000Z"
+      }
+    ]
+  }

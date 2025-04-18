@@ -1,0 +1,79 @@
+.feats-list {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+  
+  .feats-list h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #5e2929;
+    font-size: 1.2rem;
+  }
+  
+  .add-feat-form {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .feat-input {
+    flex: 2;
+    min-width: 200px;
+  }
+  
+  .level-input {
+    flex: 0.5;
+    min-width: 70px;
+  }
+  
+  .source-input {
+    flex: 1;
+    min-width: 150px;
+  }
+  
+  .feats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+  
+  .feat-card {
+    background-color: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .feat-header {
+    padding: 0.75rem 1rem;
+    background-color: #f0f0f0;
+    position: relative;
+  }
+  
+  .feat-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #5e2929;
+  }
+  
+  .feat-meta {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .feat-level {
+    color: #666;
+  }
+  
+  .feat-source {
+    color: #888;
+  }
+  
+  .feat-description {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: #333;
+  }

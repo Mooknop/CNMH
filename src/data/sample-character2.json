@@ -1,0 +1,116 @@
+{
+    "id": "sample-character-2",
+    "created": "2025-04-17T09:30:00.000Z",
+    "lastUpdated": "2025-04-17T09:30:00.000Z",
+    "name": "Kyra",
+    "ancestry": "Human",
+    "background": "Acolyte",
+    "class": "Cleric",
+    "level": 5,
+    "maxHp": 45,
+    "currentHp": 45,
+    "ac": 16,
+    "abilities": {
+      "strength": 12,
+      "dexterity": 10,
+      "constitution": 14,
+      "intelligence": 12,
+      "wisdom": 18,
+      "charisma": 14
+    },
+    "saves": {
+      "fortitude": 9,
+      "reflex": 7,
+      "will": 12
+    },
+    "skills": {
+      "medicine": {
+        "proficiency": 2
+      },
+      "religion": {
+        "proficiency": 2
+      },
+      "diplomacy": {
+        "proficiency": 1
+      },
+      "society": {
+        "proficiency": 1
+      }
+    },
+    "feats": [
+      {
+        "id": "feat-1",
+        "name": "Healing Hands",
+        "level": 1,
+        "source": "Cleric",
+        "description": "Your positive energy is particularly potent when healing wounds. When you cast heal, you roll d10s instead of d8s."
+      },
+      {
+        "id": "feat-2",
+        "name": "Turn Undead",
+        "level": 1,
+        "source": "Cleric",
+        "description": "When you use the Positive Healing class feature to damage undead, you can make the undead fleeing for 1 round on a critical failure."
+      },
+      {
+        "id": "feat-3",
+        "name": "Communal Healing",
+        "level": 4,
+        "source": "Cleric",
+        "description": "When you cast a heal spell to heal a single target, you can also heal yourself for 1d6 hit points per level of the spell."
+      }
+    ],
+    "inventory": [
+      {
+        "id": "item-1",
+        "name": "Mace +1",
+        "quantity": 1,
+        "weight": 1.0,
+        "description": ""
+      },
+      {
+        "id": "item-2",
+        "name": "Holy Symbol",
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "Silver symbol of Sarenrae"
+      },
+      {
+        "id": "item-3",
+        "name": "Healer's Tools",
+        "quantity": 1,
+        "weight": 1.0,
+        "description": ""
+      },
+      {
+        "id": "item-4",
+        "name": "Adventurer's Pack",
+        "quantity": 1,
+        "weight": 2.0,
+        "description": "Basic adventuring gear"
+      },
+      {
+        "id": "item-5",
+        "name": "Scroll of Restoration",
+        "quantity": 2,
+        "weight": 0.1,
+        "description": "Removes one debuff when used"
+      }
+    ],
+    "notes": [
+      {
+        "id": "note-1",
+        "title": "Temple Consecration",
+        "date": "2025-04-12",
+        "content": "Assisted in the consecration of a small shrine to Sarenrae in the village. The locals were grateful and provided us with fresh supplies.",
+        "createdAt": "2025-04-12T16:45:00.000Z"
+      },
+      {
+        "id": "note-2",
+        "title": "Healing the Sick",
+        "date": "2025-04-16",
+        "content": "Spent the day healing villagers afflicted by a mysterious illness. Suspect it may be connected to the strange occurrences in the northern forest.",
+        "createdAt": "2025-04-16T19:20:00.000Z"
+      }
+    ]
+  }

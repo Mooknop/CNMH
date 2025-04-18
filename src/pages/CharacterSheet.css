@@ -1,0 +1,51 @@
+.character-sheet {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .character-header {
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  
+  .character-header h1 {
+    margin-bottom: 0.5rem;
+    color: #5e2929;
+  }
+  
+  .character-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .character-actions {
+    display: flex;
+    gap: 0.5rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  
+  .edit-btn {
+    margin-right: 0.5rem;
+  }
+  
+  .character-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .character-edit-form {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+    padding: 2rem;
+    border-radius: 8px;
+  }
+  
+  .character-edit-form h1 {
+    margin-bottom: 1.5rem;
+    color: #5e2929;
+  }
