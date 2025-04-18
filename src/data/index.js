@@ -1,13 +1,15 @@
 // Import sample character data
 import sampleCharacter1 from './sample-character.json';
 import sampleCharacter2 from './sample-character2.json';
+import sampleCharacter3 from './sample-character3.json';
 import loreData from './lore.json';
 import questsData from './quests.json';
 
 // Export an array of all available character data
 export const sampleCharacters = [
   sampleCharacter1,
-  sampleCharacter2
+  sampleCharacter2,
+  sampleCharacter3
 ];
 
 // Export the lore data
