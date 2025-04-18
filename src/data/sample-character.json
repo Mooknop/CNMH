@@ -1,109 +1,267 @@
 {
-    "id": "sample-character-1",
-    "created": "2025-04-17T09:00:00.000Z",
-    "lastUpdated": "2025-04-17T09:00:00.000Z",
-    "name": "Valeros",
-    "ancestry": "Human",
-    "background": "Mercenary",
-    "class": "Fighter",
-    "level": 5,
-    "maxHp": 65,
-    "currentHp": 65,
-    "ac": 19,
-    "abilities": {
-      "strength": 18,
-      "dexterity": 14,
-      "constitution": 16,
-      "intelligence": 10,
-      "wisdom": 12,
-      "charisma": 10
+  "id": "sample-character-1",
+  "created": "2025-04-18T09:00:00.000Z",
+  "lastUpdated": "2025-04-18T09:00:00.000Z",
+  "name": "Izzy Uncut",
+  "ancestry": "Leshy",
+  "background": "Entertainer",
+  "class": "Bard",
+  "level": 3,
+  "maxHp": 32,
+  "currentHp": 32,
+  "ac": 18,
+  "abilities": {
+    "strength": 10,
+    "dexterity": 12,
+    "constitution": 14,
+    "intelligence": 8,
+    "wisdom": 16,
+    "charisma": 18
+  },
+  "saves": {
+    "fortitude": 7,
+    "reflex": 8,
+    "will": 10
+  },
+  "skills": {
+    "deception": {
+      "proficiency": 2
     },
-    "saves": {
-      "fortitude": 12,
-      "reflex": 9,
-      "will": 8
+    "performance": {
+      "proficiency": 1
     },
-    "skills": {
-      "athletics": {
-        "proficiency": 2
-      },
-      "acrobatics": {
-        "proficiency": 1
-      },
-      "intimidation": {
-        "proficiency": 1
-      },
-      "survival": {
-        "proficiency": 1
-      }
+    "diplomacy": {
+      "proficiency": 1
     },
-    "feats": [
+    "nature": {
+      "proficiency": 1
+    },
+    "occultism": {
+      "proficiency": 1
+    },
+    "survival": {
+      "proficiency": 1
+    }
+  },
+  "feats": [
+    {
+      "id": "feat-1",
+      "name": "Leshy Superstition",
+      "level": 1,
+      "source": "Ancestry",
+      "description": "You've learned to be wary of magic from your elders. You gain a +1 circumstance bonus to saving throws against spells and magical effects. If you roll a success on a saving throw against a spell or magical effect, you get a critical success instead."
+    },
+    {
+      "id": "feat-2",
+      "name": "Lingering Composition",
+      "level": 1,
+      "source": "Bard",
+      "description": "By adding flourishes and refrains, you make your compositions last longer. If your next action is to cast a cantrip composition with a duration of 1 round, the composition lasts 2 rounds instead."
+    },
+    {
+      "id": "feat-3",
+      "name": "Reach Spell",
+      "level": 2,
+      "source": "Bard",
+      "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
+    }
+  ],
+  "inventory": [
+    {
+      "id": "item-1",
+      "name": "Resonant Mandolin",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "Serves as a spellcasting focus and performance instrument"
+    },
+    {
+      "id": "item-2",
+      "name": "Leather Armor",
+      "quantity": 1,
+      "weight": 2.0,
+      "description": ""
+    },
+    {
+      "id": "item-3",
+      "name": "Rapier",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": ""
+    },
+    {
+      "id": "item-4",
+      "name": "Adventurer's Pack",
+      "quantity": 1,
+      "weight": 2.0,
+      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+    },
+    {
+      "id": "item-5",
+      "name": "Minor Healing Potion",
+      "quantity": 2,
+      "weight": 0.1,
+      "description": "Restores 1d8 HP when consumed"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note-1",
+      "title": "Performance at the Whispering Oak",
+      "date": "2025-04-10",
+      "content": "My melody moved the ancient tree spirits tonight. The locals said they've never seen the luminescent leaves dance so brightly. Must remember to incorporate more wind-like tones next time for a stronger response.",
+      "createdAt": "2025-04-10T18:30:00.000Z"
+    },
+    {
+      "id": "note-2",
+      "title": "New Composition Ideas",
+      "date": "2025-04-15",
+      "content": "Been experimenting with mimicking the sounds of morning dew falling from leaves in my music. The resonance creates an unexpected calming effect that might be useful for our next forest exploration.",
+      "createdAt": "2025-04-15T20:15:00.000Z"
+    }
+  ],
+  "spellcasting": {
+    "tradition": "Occult",
+    "ability": "charisma",
+    "proficiency": 2,
+    "focus": {
+      "max": 1,
+      "current": 1
+    },
+    "spells": [
       {
-        "id": "feat-1",
-        "name": "Power Attack",
+        "id": "spell-1",
+        "name": "Light",
+        "level": 0,
+        "traits": ["Cantrip", "Evocation", "Light"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
+        "duration": "Until the next time you make your daily preparations",
+        "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
+      },
+      {
+        "id": "spell-2",
+        "name": "Daze",
+        "level": 0,
+        "traits": ["Cantrip", "Enchantment", "Mental", "Nonlethal"],
+        "actions": "Two Actions",
+        "range": "60 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "description": "You cloud the target's mind and daze it with a mental jolt. The jolt deals 1d6 mental damage; the target must attempt a basic Will save. If the target critically fails the save, it is also stunned 1."
+      },
+      {
+        "id": "spell-3",
+        "name": "Ghost Sound",
+        "level": 0,
+        "traits": ["Auditory", "Cantrip", "Illusion"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "duration": "Sustained",
+        "description": "You create an auditory illusion of simple sounds that has a maximum volume equal to four normal humans shouting. The sounds emanate from a specific location, and you can't create intelligible words or other intricate sounds."
+      },
+      {
+        "id": "spell-4",
+        "name": "Inspire Courage",
+        "level": 0,
+        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+        "actions": "One Action",
+        "area": "60-foot emanation",
+        "duration": "1 round",
+        "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
+      },
+      {
+        "id": "spell-5",
+        "name": "Inspire Defense",
+        "level": 0,
+        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+        "actions": "One Action",
+        "area": "60-foot emanation",
+        "duration": "1 round",
+        "description": "You inspire your allies to protect themselves more effectively. You and all allies in the area gain a +1 status bonus to AC and saving throws, as well as resistance 1 to all damage."
+      },
+      {
+        "id": "spell-6",
+        "name": "Charm",
         "level": 1,
-        "source": "Fighter",
-        "description": "You unleash a particularly powerful attack that clobbers your foe but leaves you a bit unsteady. Make a Strike. This counts as two attacks for your multiple attack penalty. If this Strike hits, you deal an extra die of weapon damage."
+        "traits": ["Emotion", "Enchantment", "Incapacitation", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "duration": "1 hour",
+        "defense": "Will",
+        "description": "To the target, your words are honey and your visage seems bathed in a captivating glow. The target must attempt a Will save, with a +4 circumstance bonus if you or your allies recently threatened it or used hostile actions against it.",
+        "prepared": true
       },
       {
-        "id": "feat-2",
-        "name": "Double Slice",
+        "id": "spell-7",
+        "name": "Magic Weapon",
         "level": 1,
-        "source": "Fighter",
-        "description": "You lash out with both weapons. Make two Strikes, one with each of your two melee weapons, each using your current multiple attack penalty."
+        "traits": ["Transmutation"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 weapon that is unattended or wielded by you or a willing ally",
+        "duration": "1 minute",
+        "description": "The weapon becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two.",
+        "prepared": true
       },
       {
-        "id": "feat-3",
-        "name": "Combat Reflexes",
-        "level": 4,
-        "source": "Fighter",
-        "description": "You can react more quickly than others. You gain a second reaction each round that you can use only to make an Attack of Opportunity."
-      }
-    ],
-    "inventory": [
-      {
-        "id": "item-1",
-        "name": "Longsword +1",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "Striking Rune"
+        "id": "spell-8",
+        "name": "Soothe",
+        "level": 1,
+        "traits": ["Emotion", "Enchantment", "Healing", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 willing living creature",
+        "description": "You attempt to calm the target by crooning a gentle melody or offering comforting words. The target regains 1d10+4 Hit Points, and if they were frightened, they reduce their frightened value by 1.",
+        "heightened": {
+          "+1": "The amount of healing increases by 1d10+4."
+        },
+        "prepared": true
       },
       {
-        "id": "item-2",
-        "name": "Steel Shield",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": ""
+        "id": "spell-9",
+        "name": "Fear",
+        "level": 1,
+        "traits": ["Emotion", "Enchantment", "Fear", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "description": "You plant fear in the target; it must attempt a Will save. On a critical success, the target is unaffected. On a success, the target is frightened 1. On a failure, the target is frightened 2. On a critical failure, the target is frightened 3 and fleeing for 1 round.",
+        "heightened": {
+          "3rd": "You can target up to five creatures."
+        },
+        "prepared": true
       },
       {
-        "id": "item-3",
-        "name": "Adventurer's Pack",
-        "quantity": 1,
-        "weight": 2.0,
-        "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+        "id": "spell-10",
+        "name": "Hideous Laughter",
+        "level": 2,
+        "traits": ["Emotion", "Enchantment", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 living creature",
+        "duration": "Sustained up to 1 minute",
+        "defense": "Will",
+        "description": "The target is overcome with uncontrollable laughter. It must attempt a Will save. On a critical success, the target is unaffected. On a success, the target is slowed 1 for 1 round. On a failure, the target is slowed 1 and flat-footed for the duration. On a critical failure, the target falls prone and can't use reactions or take actions other than to laugh for 1 round, and is then slowed 1 and flat-footed for the remaining duration.",
+        "prepared": true
       },
       {
-        "id": "item-4",
-        "name": "Potion of Healing",
-        "quantity": 3,
-        "weight": 0.1,
-        "description": "Restores 2d8+5 HP when consumed"
-      }
-    ],
-    "notes": [
-      {
-        "id": "note-1",
-        "title": "First Dungeon",
-        "date": "2025-04-10",
-        "content": "We explored the ruins of the old temple today. Found several traps and a hidden chamber with ancient scrolls. The party decided to camp in the entrance hall for the night.",
-        "createdAt": "2025-04-10T18:30:00.000Z"
-      },
-      {
-        "id": "note-2",
-        "title": "Meeting with the Guild",
-        "date": "2025-04-15",
-        "content": "Met with the Adventurer's Guild representative. They offered us a new contract to investigate strange occurrences in the northern forest. Payment is 500 gold upon completion.",
-        "createdAt": "2025-04-15T20:15:00.000Z"
+        "id": "spell-11",
+        "name": "Sound Burst",
+        "level": 2,
+        "traits": ["Evocation", "Sonic"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "area": "10-foot burst",
+        "defense": "Fortitude",
+        "description": "You create a cacophonous noise that deals 2d10 sonic damage to creatures in the area. Each creature must attempt a Fortitude save. On a critical failure, the creature is deafened for 1 minute. On a failure, the creature is deafened for 1 round.",
+        "heightened": {
+          "+1": "The damage increases by 1d10."
+        },
+        "prepared": true
       }
     ]
   }
+}
