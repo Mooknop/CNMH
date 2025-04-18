@@ -1,148 +1,203 @@
 .enhanced-skills-list {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-  
-  .enhanced-skills-list h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    color: #5e2929;
-    font-size: 1.2rem;
-  }
-  
-  .skills-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .skill-card {
-    background-color: white;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    transition: box-shadow 0.2s ease;
-  }
-  
-  .skill-card:hover {
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-  }
-  
-  .skill-card.trained {
-    border-left: 4px solid #5e2929;
-  }
-  
-  .skill-card.untrained {
-    border-left: 4px solid #cccccc;
-  }
-  
-  .skill-header {
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .skill-header:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .skill-name-section {
-    flex-grow: 1;
-  }
-  
-  .skill-name-section h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #5e2929;
-  }
-  
-  .skill-ability {
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 0.25rem;
-  }
-  
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.enhanced-skills-list h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #5e2929;
+  font-size: 1.2rem;
+}
+
+.skills-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skill-card {
+  background-color: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.skill-card:hover {
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+/* Proficiency-based colors for the border */
+.skill-card.untrained-color {
+  border-left: 4px solid #cccccc;
+}
+
+.skill-card.trained-color {
+  border-left: 4px solid #5e9c29; /* Green */
+}
+
+.skill-card.expert-color {
+  border-left: 4px solid #2980b9; /* Blue */
+}
+
+.skill-card.master-color {
+  border-left: 4px solid #8e44ad; /* Purple */
+}
+
+.skill-card.legendary-color {
+  border-left: 4px solid #f39c12; /* Gold */
+}
+
+.skill-header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.skill-header:hover {
+  background-color: #f5f5f5;
+}
+
+.skill-name-section {
+  flex-grow: 1;
+}
+
+.skill-name-section h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+}
+
+.skill-ability {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.skill-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.skill-modifier {
+  font-size: 1.3rem;
+  font-weight: 700;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+/* Proficiency text colors */
+.skill-proficiency {
+  font-size: 0.85rem;
+  min-width: 5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.skill-proficiency.untrained-color {
+  color: #7f8c8d; /* Gray */
+}
+
+.skill-proficiency.trained-color {
+  color: #5e9c29; /* Green */
+}
+
+.skill-proficiency.expert-color {
+  color: #2980b9; /* Blue */
+}
+
+.skill-proficiency.master-color {
+  color: #8e44ad; /* Purple */
+}
+
+.skill-proficiency.legendary-color {
+  color: #f39c12; /* Gold */
+}
+
+.expand-icon {
+  font-size: 0.8rem;
+  color: #999;
+  margin-left: 0.5rem;
+}
+
+.skill-actions {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.skill-actions h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1rem;
+}
+
+.actions-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.skill-action {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-action:last-child {
+  border-bottom: none;
+}
+
+.action-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.action-description {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Background highlight for expanded skill based on proficiency */
+.skill-card.untrained-color .skill-actions {
+  background-color: #f8f9fa;
+}
+
+.skill-card.trained-color .skill-actions {
+  background-color: #f1f9ee;
+}
+
+.skill-card.expert-color .skill-actions {
+  background-color: #eef6fc;
+}
+
+.skill-card.master-color .skill-actions {
+  background-color: #f5eefa;
+}
+
+.skill-card.legendary-color .skill-actions {
+  background-color: #fff7e8;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
   .skill-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .skill-modifier {
-    font-size: 1.3rem;
-    font-weight: 700;
-    min-width: 2.5rem;
-    text-align: center;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-end;
   }
   
   .skill-proficiency {
-    font-size: 0.85rem;
-    color: #5e2929;
-    min-width: 5rem;
-    text-align: center;
+    min-width: auto;
   }
-  
-  .expand-icon {
-    font-size: 0.8rem;
-    color: #999;
-    margin-left: 0.5rem;
-  }
-  
-  .skill-actions {
-    background-color: #f9f9f9;
-    padding: 1rem;
-    border-top: 1px solid #eee;
-  }
-  
-  .skill-actions h4 {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    color: #5e2929;
-    font-size: 1rem;
-  }
-  
-  .actions-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .skill-action {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .skill-action:last-child {
-    border-bottom: none;
-  }
-  
-  .action-name {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.25rem;
-  }
-  
-  .action-description {
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  /* Media query for smaller screens */
-  @media (max-width: 768px) {
-    .skill-info {
-      flex-direction: column;
-      gap: 0.25rem;
-      align-items: flex-end;
-    }
-    
-    .skill-proficiency {
-      min-width: auto;
-    }
-  }
+}

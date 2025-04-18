@@ -42,6 +42,7 @@ const EnhancedSkillsList = ({ character }) => {
         { name: 'Disarm', description: "Try to knock an item out of a creature's grasp." }
       ]
     },
+    // ... other skills remain unchanged
     { 
       id: 'crafting', 
       name: 'Crafting', 
@@ -208,6 +209,17 @@ const EnhancedSkillsList = ({ character }) => {
     }
   };
 
+  // Function to get the proficiency color
+  const getProficiencyColor = (proficiency) => {
+    switch(proficiency) {
+      case 1: return 'trained-color';      // Trained
+      case 2: return 'expert-color';       // Expert
+      case 3: return 'master-color';       // Master
+      case 4: return 'legendary-color';    // Legendary
+      default: return 'untrained-color';   // Untrained
+    }
+  };
+
   const toggleSkill = (skillId) => {
     setExpandedSkills(prev => ({
       ...prev,
@@ -226,9 +238,10 @@ const EnhancedSkillsList = ({ character }) => {
           const abilityMod = getModifier(skill.ability);
           const abilityModStr = abilityMod >= 0 ? `+${abilityMod}` : abilityMod.toString();
           const isExpanded = expandedSkills[skill.id];
+          const proficiencyColorClass = getProficiencyColor(proficiency);
           
           return (
-            <div key={skill.id} className={`skill-card ${proficiency > 0 ? 'trained' : 'untrained'}`}>
+            <div key={skill.id} className={`skill-card ${proficiencyColorClass}`}>
               <div 
                 className="skill-header" 
                 onClick={() => toggleSkill(skill.id)}
@@ -243,7 +256,7 @@ const EnhancedSkillsList = ({ character }) => {
                   <div className="skill-modifier">
                     {modifier >= 0 ? `+${modifier}` : modifier}
                   </div>
-                  <div className="skill-proficiency">
+                  <div className={`skill-proficiency ${proficiencyColorClass}`}>
                     {getProficiencyLabel(proficiency)}
                   </div>
                   <div className="expand-icon">
