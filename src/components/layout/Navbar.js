@@ -17,18 +17,11 @@ const Navbar = () => {
           <Link to="/" className="nav-link">Characters</Link>
         </li>
         {activeCharacter && (
-          <>
-            <li className="nav-item">
-              <Link to={`/character/${activeCharacter.id}`} className="nav-link">
-                {activeCharacter.name}
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link to={`/character/${activeCharacter.id}/inventory`} className="nav-link">
-                Inventory
-              </Link>
-            </li>
-          </>
+          <li className="nav-item">
+            <Link to={`/character/${activeCharacter.id}`} className="nav-link">
+              {activeCharacter.name}
+            </Link>
+          </li>
         )}
         <li className="nav-item">
           <Link to="/quests" className="nav-link">Quest Tracker</Link>

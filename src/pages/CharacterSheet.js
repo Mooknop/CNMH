@@ -13,18 +13,71 @@ const CharacterSheet = () => {
   const { getCharacter, setActiveCharacter } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
   const [activeTab, setActiveTab] = useState('skills'); // Default tab
+  const [bulkUsed, setBulkUsed] = useState(0);
+  
+  // Calculate Bulk limit based on Pathfinder 2E rules
+  const calculateBulkLimit = (character) => {
+    if (!character || !character.abilities) return { bulkLimit: 0, encumberedThreshold: 0 };
+    
+    // In PF2E, Bulk limit is equal to Strength ability modifier + 5
+    const strMod = Math.floor((character.abilities.strength - 10) / 2);
+    const bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
+    const encumberedThreshold = bulkLimit - 5; // Can carry up to Bulk limit, but encumbered after this threshold
+    
+    return { bulkLimit, encumberedThreshold };
+  };
+  
+  // Convert pounds to Bulk as per PF2E rules
+  const poundsToBulk = (pounds) => {
+    if (pounds < 0.1) return 0; // Negligible Bulk
+    if (pounds < 1) return 0.1; // Light (L) Bulk
+    return Math.ceil(pounds / 10); // 1 Bulk is roughly 10 pounds
+  };
+  
+  // Calculate total Bulk from inventory
+  const calculateTotalBulk = (inventory) => {
+    if (!inventory) return 0;
+    
+    return inventory.reduce((total, item) => {
+      const itemBulk = poundsToBulk(item.weight) * item.quantity;
+      return total + itemBulk;
+    }, 0);
+  };
+  
+  // Format Bulk for display
+  const formatBulk = (bulk) => {
+    if (bulk === 0) return '—'; // Negligible
+    if (bulk < 1) return 'L'; // Light Bulk
+    return bulk.toString(); // Regular Bulk
+  };
   
   useEffect(() => {
     const characterData = getCharacter(id);
     if (characterData) {
       setCharacter(characterData);
       setActiveCharacter(characterData);
+      const totalBulk = calculateTotalBulk(characterData.inventory);
+      setBulkUsed(totalBulk);
     } else {
       navigate('/');
     }
   }, [id, getCharacter, setActiveCharacter, navigate]);
   
   if (!character) return <div>Loading character...</div>;
+  
+  // Bulk calculations
+  const { bulkLimit, encumberedThreshold } = calculateBulkLimit(character);
+  const bulkPercentage = (bulkUsed / bulkLimit) * 100;
+  const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
+  const isOverencumbered = bulkUsed > bulkLimit;
+  
+  // Determine the color of the bulk bar
+  const getBulkBarColor = () => {
+    if (isOverencumbered) return '#b71c1c'; // Red for overencumbered
+    if (isEncumbered) return '#f57c00'; // Orange for encumbered
+    if (bulkPercentage > 75) return '#ffc107'; // Yellow when getting close
+    return '#5e2929'; // Default color from theme
+  };
   
   // Check if character has spellcasting
   const hasSpellcasting = character.spellcasting && character.spellcasting.tradition;
@@ -39,17 +92,49 @@ const CharacterSheet = () => {
       case 'spells':
         return <SpellsList character={character} />;
       case 'inventory':
-        // We'll render the inventory directly here rather than navigating to a separate page
         return (
           <div className="inventory-tab">
             <h2>Inventory</h2>
+            
+            <div className="bulk-management">
+              <div className="bulk-status">
+                <div className="bulk-labels">
+                  <span>Bulk Used: <strong>{formatBulk(bulkUsed)}</strong></span>
+                  <span>Encumbered at: <strong>{encumberedThreshold}</strong></span>
+                  <span>Maximum: <strong>{bulkLimit}</strong></span>
+                </div>
+                
+                <div className="bulk-progress-container">
+                  <div 
+                    className="bulk-progress-bar" 
+                    style={{ 
+                      width: `${Math.min(bulkPercentage, 100)}%`,
+                      backgroundColor: getBulkBarColor()
+                    }}
+                  />
+                </div>
+                
+                {isEncumbered && !isOverencumbered && (
+                  <div className="bulk-warning">
+                    Encumbered: -10 feet to Speed and take a -1 penalty to Strength- and Dexterity-based checks
+                  </div>
+                )}
+                
+                {isOverencumbered && (
+                  <div className="bulk-warning severe">
+                    Overencumbered: -15 feet to Speed, take a -2 penalty to Strength- and Dexterity-based checks, and can't move if your Bulk exceeds twice your Bulk limit
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <div className="inventory-list">
               <table>
                 <thead>
                   <tr>
                     <th>Item</th>
                     <th>Qty</th>
-                    <th>Weight</th>
+                    <th>Bulk</th>
                     <th>Description</th>
                   </tr>
                 </thead>
@@ -59,7 +144,10 @@ const CharacterSheet = () => {
                       <tr key={item.id}>
                         <td>{item.name}</td>
                         <td>{item.quantity}</td>
-                        <td>{item.weight} lbs</td>
+                        <td>
+                          {formatBulk(poundsToBulk(item.weight))}
+                          {item.quantity > 1 && poundsToBulk(item.weight) > 0 && ` (total: ${formatBulk(poundsToBulk(item.weight) * item.quantity)})`}
+                        </td>
                         <td>{item.description}</td>
                       </tr>
                     ))
