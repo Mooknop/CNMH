@@ -1,0 +1,189 @@
+.quest-tracker {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  .quest-tracker h1 {
+    margin-bottom: 2rem;
+    color: #5e2929;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 0.5rem;
+  }
+  
+  .quest-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  
+  .filter-btn {
+    background: none;
+    border: 2px solid #5e2929;
+    color: #5e2929;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .filter-btn:hover {
+    background-color: rgba(94, 41, 41, 0.1);
+  }
+  
+  .filter-btn.active {
+    background-color: #5e2929;
+    color: white;
+  }
+  
+  .quests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .quest-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    border-left: 5px solid #ddd;
+  }
+  
+  .quest-card.active {
+    border-left-color: #2e7d32; /* Green */
+  }
+  
+  .quest-card.pending {
+    border-left-color: #f57c00; /* Orange */
+  }
+  
+  .quest-card.completed {
+    border-left-color: #757575; /* Gray */
+  }
+  
+  .quest-header {
+    background-color: #f9f9f9;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .quest-title-section {
+    flex-grow: 1;
+  }
+  
+  .quest-header h2 {
+    margin: 0 0 0.5rem 0;
+    color: #5e2929;
+    font-size: 1.3rem;
+  }
+  
+  .quest-meta {
+    display: flex;
+    gap: 1.5rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .quest-priority {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: white;
+  }
+  
+  .quest-priority.high {
+    background-color: #c62828; /* Red */
+  }
+  
+  .quest-priority.medium {
+    background-color: #f57c00; /* Orange */
+  }
+  
+  .quest-priority.low {
+    background-color: #2e7d32; /* Green */
+  }
+  
+  .quest-status {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    color: white;
+  }
+  
+  .active .quest-status {
+    background-color: #2e7d32; /* Green */
+  }
+  
+  .pending .quest-status {
+    background-color: #f57c00; /* Orange */
+  }
+  
+  .completed .quest-status {
+    background-color: #757575; /* Gray */
+  }
+  
+  .quest-details {
+    padding: 1.5rem;
+  }
+  
+  .quest-info {
+    margin-bottom: 2rem;
+  }
+  
+  .quest-info p {
+    margin: 0.75rem 0;
+  }
+  
+  .quest-notes h3 {
+    color: #5e2929;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+  }
+  
+  .notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .quest-note {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+  
+  .note-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #666;
+  }
+  
+  .note-author {
+    font-style: italic;
+  }
+  
+  .note-content {
+    font-size: 0.95rem;
+  }
+  
+  .empty-notes {
+    color: #888;
+    font-style: italic;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    color: #666;
+  }

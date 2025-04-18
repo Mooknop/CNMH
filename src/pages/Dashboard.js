@@ -15,7 +15,7 @@ const Dashboard = () => {
   
   return (
     <div className="dashboard">
-      <h1>Pathfinder 2E Characters</h1>
+      <h1>Unnamed Group of Adventurers from Osprey Cove</h1>
       
       <div className="character-grid">
         {characters.map(character => (

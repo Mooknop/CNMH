@@ -1,3 +1,4 @@
+// File: src/components/layout/Navbar.js
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
@@ -23,12 +24,15 @@ const Navbar = () => {
               </Link>
             </li>
             <li className="nav-item">
-              <Link to={`/character/${activeCharacter.id}/notes`} className="nav-link">
-                Session Notes
+              <Link to={`/character/${activeCharacter.id}/inventory`} className="nav-link">
+                Inventory
               </Link>
             </li>
           </>
         )}
+        <li className="nav-item">
+          <Link to="/quests" className="nav-link">Quest Tracker</Link>
+        </li>
         <li className="nav-item">
           <Link to="/lore" className="nav-link">Lore</Link>
         </li>

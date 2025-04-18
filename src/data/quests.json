@@ -1,0 +1,70 @@
+{
+    "quests": [
+      {
+        "id": "quest-1",
+        "title": "The Whispering Woods",
+        "status": "active",
+        "priority": "high",
+        "giver": "Mayor of Riverdale",
+        "location": "Northern Forest",
+        "description": "Investigate the strange occurrences in the northern forest. Villagers report hearing whispers and seeing strange lights at night.",
+        "reward": "500 gold and the gratitude of Riverdale",
+        "notes": [
+          {
+            "id": "quest-note-1",
+            "date": "2025-04-10",
+            "content": "Spoke with the mayor about the forest disturbances. He mentioned that the incidents started about a month ago, shortly after a traveling merchant passed through town.",
+            "addedBy": "Valeros"
+          },
+          {
+            "id": "quest-note-2",
+            "date": "2025-04-15",
+            "content": "Interviewed three villagers who claimed to have seen the lights. Each described them as pale blue orbs that seem to follow a pattern. Could be will-o'-wisps or some form of fey magic.",
+            "addedBy": "Kyra"
+          }
+        ]
+      },
+      {
+        "id": "quest-2",
+        "title": "The Lost Relic of Sarenrae",
+        "status": "pending",
+        "priority": "medium",
+        "giver": "High Priest Ezren",
+        "location": "Temple of Sarenrae, Absalom",
+        "description": "A sacred relic was stolen from the temple vault. The relic is said to have healing properties and must be recovered before it falls into the wrong hands.",
+        "reward": "Blessing of Sarenrae and access to temple resources",
+        "notes": [
+          {
+            "id": "quest-note-3",
+            "date": "2025-04-16",
+            "content": "Ezren showed us the vault where the relic was kept. No signs of forced entry, suggesting an inside job or someone with knowledge of the temple's security.",
+            "addedBy": "Kyra"
+          }
+        ]
+      },
+      {
+        "id": "quest-3",
+        "title": "The Dragon's Hoard",
+        "status": "completed",
+        "priority": "high",
+        "giver": "Lord Commander of Absalom",
+        "location": "Northern Mountains",
+        "description": "The red dragon Karasoth has been raiding villages in the northern mountains. Find his lair and recover the stolen treasures.",
+        "reward": "30% of the recovered treasure and a commendation from the city",
+        "notes": [
+          {
+            "id": "quest-note-4",
+            "date": "2025-04-01",
+            "content": "Found tracks leading to a cave system in the mountains. Large claw marks on nearby trees suggest we're on the right path.",
+            "addedBy": "Valeros"
+          },
+          {
+            "id": "quest-note-5",
+            "date": "2025-04-05",
+            "content": "Defeated Karasoth after a difficult battle. Found a large cache of treasure including gold, jewels, and several magical items. Also discovered a map that might lead to another dragon's lair to the east.",
+            "addedBy": "Valeros"
+          }
+        ]
+      }
+    ]
+  }
