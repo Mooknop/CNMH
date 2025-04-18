@@ -4,7 +4,6 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import SkillsList from '../components/character-sheet/SkillsList';
 import FeatsList from '../components/character-sheet/FeatsList';
-import CharacterExporter from '../components/characters/CharacterExporter';
 import './CharacterSheet.css';
 
 const CharacterSheet = () => {
@@ -82,9 +81,6 @@ const CharacterSheet = () => {
         <p className="character-subtitle">
           Level {character.level} {character.ancestry} {character.background} {character.class}
         </p>
-        <div className="character-actions">
-          <CharacterExporter characterId={character.id} />
-        </div>
       </div>
       
       <div className="character-content">
