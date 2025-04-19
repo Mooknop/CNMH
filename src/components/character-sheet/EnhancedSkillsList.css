@@ -91,6 +91,7 @@
   font-weight: 700;
   min-width: 2.5rem;
   text-align: center;
+  color: #333; /* Dark text color for better visibility */
 }
 
 /* Proficiency text colors */

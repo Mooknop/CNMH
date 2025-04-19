@@ -5,7 +5,7 @@ import {
   getAbilityModifier, 
   formatModifier, 
   getProficiencyLabel, 
-  getProficiencyBonus 
+  SKILL_ABILITY_MAP 
 } from '../../utils/CharacterUtils';
 
 const EnhancedSkillsList = ({ character }) => {
@@ -33,7 +33,6 @@ const EnhancedSkillsList = ({ character }) => {
         { name: 'Identify Magic', description: 'Specifically of the arcane tradition.' }
       ]
     },
-    // Other skills remain the same...
     { 
       id: 'athletics', 
       name: 'Athletics', 
@@ -204,16 +203,27 @@ const EnhancedSkillsList = ({ character }) => {
     }));
   };
   
+  // Sort skills alphabetically
+  const sortedSkills = [...skills].sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
+  
   return (
     <div className="enhanced-skills-list">
       <h2>Skills</h2>
       
       <div className="skills-grid">
-        {skills.map(skill => {
+                  {sortedSkills.map(skill => {
+          // Get the skill proficiency from character data (0 if not found)
           const proficiency = character.skills?.[skill.id]?.proficiency || 0;
+          
+          // Use the utility function to calculate the full skill modifier
           const modifier = getSkillModifier(character, skill.id);
+          
+          // Get the ability modifier for display
           const abilityMod = getAbilityModifier(character.abilities?.[skill.ability] || 10);
           const abilityModStr = formatModifier(abilityMod);
+          
           const isExpanded = expandedSkills[skill.id];
           const proficiencyColorClass = getProficiencyColor(proficiency);
           
