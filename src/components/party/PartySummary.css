@@ -1,271 +1,317 @@
 /* src/components/party/PartySummary.css */
 .party-summary {
-    margin-bottom: 2.5rem;
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin-bottom: 2.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.party-summary h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #5e2929;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.party-summary h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #5e2929;
+  font-size: 1.2rem;
+}
+
+.party-summary h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+}
+
+.summary-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ability Comparison Styles */
+.ability-skills-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.ability-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.character-column-headers {
+  display: flex;
+  margin-left: 40px; /* Match the width of ability-label */
+  margin-bottom: 0.5rem;
+}
+
+.character-column-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 0.25rem;
+}
+
+.char-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.char-class {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.ability-row {
+  display: flex;
+  align-items: center;
+  height: 30px;
+}
+
+.ability-label {
+  width: 40px;
+  font-weight: 600;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.ability-bars {
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+.char-ability-bar-container {
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.char-ability-bar {
+  height: 20px;
+  border-radius: 3px;
+  position: relative;
+  min-width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  transition: width 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.char-ability-value {
+  color: white;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.char-name-indicator {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 0.75rem;
+  color: #777;
+  white-space: nowrap;
+}
+
+.char-name-indicator.last {
+  right: 0;
+  left: auto;
+  text-align: right;
+}
+
+/* Character Legend Styles */
+.character-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.legend-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.legend-class {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* Character Strengths Styles */
+.character-strengths {
+  margin-top: 1rem;
+}
+
+.strengths-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.strength-card {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 0.75rem;
+  border-left: 4px solid #ddd;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.strength-header {
+  margin-bottom: 0.5rem;
+}
+
+.strength-name {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+.strength-class {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.strength-abilities {
+  font-weight: 600;
+  color: #5e2929;
+  font-size: 0.9rem;
+}
+
+/* Party Skill Specialists Styles */
+.skill-specialists-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.skills-heading {
+  margin-top: 2rem;
+  border-top: 1px solid #eee;
+  padding-top: 1.5rem;
+}
+
+.skill-specialists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+}
+
+.skill-specialist-card {
+  background-color: white;
+  border-radius: 6px;
+  padding: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-left: 4px solid #ddd;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.skill-specialist-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.skill-name {
+  font-weight: 600;
+  color: #5e2929;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #eee;
+}
+
+.specialist-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.specialist-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.specialist-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.specialist-class {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.skill-modifier {
+  font-weight: 600;
+  color: white;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  min-width: 32px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.no-skill-data {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  color: #666;
+}
+
+/* Responsive styling */
+@media (max-width: 900px) {
+  .skill-specialists-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
-  
-  .party-summary h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    color: #5e2929;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 0.5rem;
-  }
-  
-  .party-summary h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    color: #5e2929;
-    font-size: 1.2rem;
-  }
-  
-  .summary-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-  }
-  
-  /* Spider Charts Grid Styles */
-  .ability-charts-container {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .spider-charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1.5rem;
-  }
-  
-  .character-chart-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .character-chart-name {
-    margin: 0 0 0.5rem 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-    text-align: center;
-  }
-  
-  .spider-chart {
-    position: relative;
-    width: 130px;
-    height: 130px;
-    margin: 0 auto 0.5rem;
-  }
-  
-  .chart-grid {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-  }
-  
-  .grid-circle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 1px solid #ddd;
-    border-radius: 50%;
-  }
-  
-  .circle-1 {
-    width: 33%;
-    height: 33%;
-  }
-  
-  .circle-2 {
-    width: 66%;
-    height: 66%;
-  }
-  
-  .circle-3 {
-    width: 100%;
-    height: 100%;
-  }
-  
-  .chart-labels {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3;
-    pointer-events: none;
-  }
-  
-  .chart-label {
-    position: absolute;
-    font-weight: 600;
-    color: #333;
-    font-size: 0.7rem;
-  }
-  
-  .chart-label.str {
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  .chart-label.dex {
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-  }
-  
-  .chart-label.con {
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  .chart-label.int {
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
-  }
-  
-  .chart-label.wis {
-    top: 15%;
-    left: 15%;
-  }
-  
-  .chart-label.cha {
-    top: 15%;
-    right: 15%;
-  }
-  
-  .chart-polygons {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 2;
-  }
-  
-  .character-polygon {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.3s;
-    opacity: 0.7;
-  }
-  
-  .character-polygon:hover {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-  
-  .ability-values {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    color: #666;
-    text-align: center;
-  }
-  
-  .ability-values span {
-    margin: 0 0.25rem;
-  }
-  
-  /* Party Skill Specialists Styles */
-  .best-skills-container {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .best-skills-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 0.75rem;
-  }
-  
-  .skill-card {
-    background-color: #f9f9f9;
-    border-radius: 6px;
-    padding: 0.75rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .skill-name {
-    font-weight: 600;
-    color: #5e2929;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.25rem;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .best-character {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .character-name {
-    font-weight: 500;
-  }
-  
-  .skill-modifier {
-    font-weight: 600;
-    background-color: #5e2929;
-    color: white;
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
+}
+
+@media (max-width: 480px) {
+  .ability-label {
+    width: 30px;
     font-size: 0.85rem;
   }
   
-  .no-skill-data {
-    text-align: center;
-    padding: 2rem;
-    background-color: #f9f9f9;
-    border-radius: 6px;
-    color: #666;
+  .char-ability-value {
+    font-size: 0.7rem;
   }
   
-  /* Responsive styling */
-  @media (max-width: 900px) {
-    .summary-content {
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
-    
-    .spider-charts-grid {
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    }
+  .char-name {
+    font-size: 0.75rem;
   }
   
-  @media (max-width: 480px) {
-    .spider-charts-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .spider-chart {
-      width: 100px;
-      height: 100px;
-    }
-    
-    .best-skills-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .chart-label {
-      font-size: 0.65rem;
-    }
+  .char-class {
+    font-size: 0.7rem;
   }
+  
+  .skill-specialists-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
