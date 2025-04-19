@@ -8,8 +8,11 @@ import {
   SKILL_ABILITY_MAP 
 } from '../../utils/CharacterUtils';
 
-const EnhancedSkillsList = ({ character }) => {
+const EnhancedSkillsList = ({ character, characterColor }) => {
   const [expandedSkills, setExpandedSkills] = useState({});
+
+  // Use the characterColor or default to the theme color
+  const themeColor = characterColor || '#5e2929';
 
   // Define skills with their key abilities and associated actions
   const skills = [
@@ -210,10 +213,10 @@ const EnhancedSkillsList = ({ character }) => {
   
   return (
     <div className="enhanced-skills-list">
-      <h2>Skills</h2>
+      <h2 style={{ color: themeColor }}>Skills</h2>
       
       <div className="skills-grid">
-                  {sortedSkills.map(skill => {
+        {sortedSkills.map(skill => {
           // Get the skill proficiency from character data (0 if not found)
           const proficiency = character.skills?.[skill.id]?.proficiency || 0;
           
@@ -234,7 +237,7 @@ const EnhancedSkillsList = ({ character }) => {
                 onClick={() => toggleSkill(skill.id)}
               >
                 <div className="skill-name-section">
-                  <h3>{skill.name}</h3>
+                  <h3 style={{ color: themeColor }}>{skill.name}</h3>
                   <div className="skill-ability">
                     {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
                   </div>
@@ -254,7 +257,7 @@ const EnhancedSkillsList = ({ character }) => {
               
               {isExpanded && (
                 <div className="skill-actions">
-                  <h4>Skill Actions</h4>
+                  <h4 style={{ color: themeColor }}>Skill Actions</h4>
                   <ul className="actions-list">
                     {skill.actions.map((action, index) => (
                       <li key={index} className="skill-action">

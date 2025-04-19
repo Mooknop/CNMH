@@ -4,21 +4,14 @@ import {
   getAbilityModifier, 
   formatModifier, 
   getSkillModifier,
-  SKILL_ABILITY_MAP
+  SKILL_ABILITY_MAP,
+  CHARACTER_COLORS, // Import the color constants
+  getCharacterColor  // Import the utility function
 } from '../../utils/CharacterUtils';
 import './PartySummary.css';
 
 const PartySummary = () => {
   const { characters } = useContext(CharacterContext);
-  
-  // Color palette for the characters
-  const characterColors = [
-    '#81c784', // green
-    '#ba68c8', // purple
-    '#e57373', // red
-    '#64b5f6', // blue
-    '#ffd54f'  // yellow
-  ];
 
   // Get ability data for all party members
   const getAbilityData = () => {
@@ -26,7 +19,7 @@ const PartySummary = () => {
       const abilities = char.abilities || {};
       return {
         name: char.name,
-        color: characterColors[index % characterColors.length],
+        color: getCharacterColor(index), // Use the utility function
         class: char.class,
         abilities: {
           strength: getAbilityModifier(abilities.strength || 10),
@@ -78,7 +71,7 @@ const PartySummary = () => {
           bestModifier = modifier;
           bestChar = {
             ...char,
-            colorIndex: index % characterColors.length
+            colorIndex: index
           };
         }
       });
@@ -87,7 +80,7 @@ const PartySummary = () => {
         bestCharacters[skill] = {
           name: bestChar.name,
           class: bestChar.class,
-          color: characterColors[bestChar.colorIndex],
+          color: getCharacterColor(bestChar.colorIndex), // Use the utility function
           modifier: bestModifier
         };
       }

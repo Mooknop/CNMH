@@ -6,9 +6,12 @@ import {
   getProficiencyLabel 
 } from '../../utils/CharacterUtils';
 
-const SpellsList = ({ character }) => {
+const SpellsList = ({ character, characterColor }) => {
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
+  
+  // Use the characterColor or default to the theme color
+  const themeColor = characterColor || '#5e2929';
   
   // Get spell data from character
   const spellcasting = character.spellcasting || {};
@@ -17,7 +20,7 @@ const SpellsList = ({ character }) => {
   if (!spellcasting.tradition) {
     return (
       <div className="spells-list">
-        <h2>Spellcasting</h2>
+        <h2 style={{ color: themeColor }}>Spellcasting</h2>
         <div className="empty-state">
           <p>This character doesn't have spellcasting abilities.</p>
         </div>
@@ -156,35 +159,35 @@ const SpellsList = ({ character }) => {
 
   return (
     <div className="spells-list">
-      <h2>Spellcasting</h2>
+      <h2 style={{ color: themeColor }}>Spellcasting</h2>
       
       <div className="spellcasting-stats">
         <div className="spellcasting-tradition">
           <span className="stat-label">Tradition</span>
-          <span className="stat-value">{spellcasting.tradition}</span>
+          <span className="stat-value" style={{ color: themeColor }}>{spellcasting.tradition}</span>
         </div>
         <div className="spellcasting-ability">
           <span className="stat-label">Ability</span>
-          <span className="stat-value">
+          <span className="stat-value" style={{ color: themeColor }}>
             {spellcasting.ability.charAt(0).toUpperCase() + spellcasting.ability.slice(1)}
           </span>
         </div>
         <div className="spell-proficiency">
           <span className="stat-label">Proficiency</span>
-          <span className="stat-value">{getProficiencyLabel(spellcasting.proficiency)}</span>
+          <span className="stat-value" style={{ color: themeColor }}>{getProficiencyLabel(spellcasting.proficiency)}</span>
         </div>
         <div className="spell-attack">
           <span className="stat-label">Spell Attack</span>
-          <span className="stat-value">+{spellAttackMod}</span>
+          <span className="stat-value" style={{ color: themeColor }}>+{spellAttackMod}</span>
         </div>
         <div className="spell-dc">
           <span className="stat-label">Spell DC</span>
-          <span className="stat-value">{spellDC}</span>
+          <span className="stat-value" style={{ color: themeColor }}>{spellDC}</span>
         </div>
         {spellcasting.focus && (
           <div className="focus-points">
             <span className="stat-label">Focus Points</span>
-            <span className="stat-value">{spellcasting.focus.current}/{spellcasting.focus.max}</span>
+            <span className="stat-value" style={{ color: themeColor }}>{spellcasting.focus.current}/{spellcasting.focus.max}</span>
           </div>
         )}
       </div>
@@ -197,6 +200,10 @@ const SpellsList = ({ character }) => {
                 key={rank}
                 className={`spell-level-tab ${activeSpellRank === rank ? 'active' : ''}`}
                 onClick={() => setActiveSpellRank(rank)}
+                style={{ 
+                  backgroundColor: activeSpellRank === rank ? themeColor : '',
+                  borderColor: activeSpellRank === rank ? themeColor : ''
+                }}
               >
                 {formatSpellRank(rank)}
               </button>
@@ -205,13 +212,17 @@ const SpellsList = ({ character }) => {
           
           {defenseTypes.length > 1 && (
             <div className="defense-filter">
-              <span className="filter-label">Filter by Defense:</span>
+              <span className="filter-label" style={{ color: themeColor }}>Filter by Defense:</span>
               <div className="defense-buttons">
                 {defenseTypes.map(defense => (
                   <button
                     key={defense}
                     className={`defense-filter-btn ${defenseFilter === defense ? 'active' : ''}`}
                     onClick={() => setDefenseFilter(defense)}
+                    style={{ 
+                      backgroundColor: defenseFilter === defense ? themeColor : '',
+                      borderColor: defenseFilter === defense ? themeColor : ''
+                    }}
                   >
                     {defense === 'all' ? 'All' : defense === 'none' ? 'None' : defense}
                   </button>
@@ -226,8 +237,8 @@ const SpellsList = ({ character }) => {
                 {filteredSpells.map(spell => (
                   <div key={spell.id} className="spell-card">
                     <div className="spell-header">
-                      <h3>{spell.name}</h3>
-                      <span className="spell-rank-indicator">
+                      <h3 style={{ color: themeColor }}>{spell.name}</h3>
+                      <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
                         {spell.level === 0 
                           ? `Cantrip (${Math.ceil(character.level / 2)})`
                           : `Rank ${spell.level}`
@@ -281,7 +292,7 @@ const SpellsList = ({ character }) => {
                     </div>
                     {spell.heightened && (
                       <div className="spell-heightened">
-                        <span className="heightened-label">Heightened:</span>
+                        <span className="heightened-label" style={{ color: themeColor }}>Heightened:</span>
                         {Object.entries(spell.heightened).map(([level, effect], index) => (
                           <div key={index} className="heightened-entry">
                             <span className="heightened-level">{level}:</span>

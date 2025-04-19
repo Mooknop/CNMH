@@ -9,29 +9,38 @@ import {
   calculateBulkLimit, 
   calculateTotalBulk, 
   formatBulk, 
-  poundsToBulk 
+  poundsToBulk,
+  getCharacterColor  // Import the utility function
 } from '../utils/CharacterUtils';
 import './CharacterSheet.css';
 
 const CharacterSheet = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getCharacter, setActiveCharacter } = useContext(CharacterContext);
+  const { getCharacter, setActiveCharacter, characters } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
   const [activeTab, setActiveTab] = useState('skills'); // Default tab
   const [bulkUsed, setBulkUsed] = useState(0);
+  const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
   
   useEffect(() => {
     const characterData = getCharacter(id);
     if (characterData) {
       setCharacter(characterData);
       setActiveCharacter(characterData);
+      
+      // Find character's index in the characters array for color
+      const characterIndex = characters.findIndex(char => char.id === id);
+      if (characterIndex !== -1) {
+        setCharacterColor(getCharacterColor(characterIndex));
+      }
+      
       const totalBulk = calculateTotalBulk(characterData.inventory);
       setBulkUsed(totalBulk);
     } else {
       navigate('/');
     }
-  }, [id, getCharacter, setActiveCharacter, navigate]);
+  }, [id, getCharacter, setActiveCharacter, navigate, characters]);
   
   if (!character) return <div>Loading character...</div>;
   
@@ -46,7 +55,7 @@ const CharacterSheet = () => {
     if (isOverencumbered) return '#b71c1c'; // Red for overencumbered
     if (isEncumbered) return '#f57c00'; // Orange for encumbered
     if (bulkPercentage > 75) return '#ffc107'; // Yellow when getting close
-    return '#5e2929'; // Default color from theme
+    return characterColor; // Use character's color theme
   };
   
   // Check if character has spellcasting
@@ -56,11 +65,11 @@ const CharacterSheet = () => {
   const renderTabContent = () => {
     switch(activeTab) {
       case 'skills':
-        return <EnhancedSkillsList character={character} />;
+        return <EnhancedSkillsList character={character} characterColor={characterColor} />;
       case 'feats':
-        return <FeatsList character={character} />;
+        return <FeatsList character={character} characterColor={characterColor} />;
       case 'spells':
-        return <SpellsList character={character} />;
+        return <SpellsList character={character} characterColor={characterColor} />;
       case 'inventory':
         return (
           <div className="inventory-tab">
@@ -102,10 +111,10 @@ const CharacterSheet = () => {
               <table>
                 <thead>
                   <tr>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Bulk</th>
-                    <th>Description</th>
+                    <th style={{ backgroundColor: characterColor }}>Item</th>
+                    <th style={{ backgroundColor: characterColor }}>Qty</th>
+                    <th style={{ backgroundColor: characterColor }}>Bulk</th>
+                    <th style={{ backgroundColor: characterColor }}>Description</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -134,33 +143,35 @@ const CharacterSheet = () => {
           </div>
         );
       default:
-        return <EnhancedSkillsList character={character} />;
+        return <EnhancedSkillsList character={character} characterColor={characterColor} />;
     }
   };
   
   return (
     <div className="character-sheet">
       <div className="character-header">
-        <h1>{character.name}</h1>
+        <h1 style={{ color: characterColor }}>{character.name}</h1>
         <p className="character-subtitle">
           Level {character.level} {character.ancestry} {character.background} {character.class}
         </p>
       </div>
       
       <div className="character-content">
-        <StatsBlock character={character} />
+        <StatsBlock character={character} characterColor={characterColor} />
         
         <div className="character-tabs">
           <div className="tabs-header">
             <button 
               className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}
               onClick={() => setActiveTab('skills')}
+              style={{ backgroundColor: activeTab === 'skills' ? characterColor : '' }}
             >
               Skills
             </button>
             <button 
               className={`tab-button ${activeTab === 'feats' ? 'active' : ''}`}
               onClick={() => setActiveTab('feats')}
+              style={{ backgroundColor: activeTab === 'feats' ? characterColor : '' }}
             >
               Feats & Abilities
             </button>
@@ -169,6 +180,7 @@ const CharacterSheet = () => {
               <button 
                 className={`tab-button ${activeTab === 'spells' ? 'active' : ''}`}
                 onClick={() => setActiveTab('spells')}
+                style={{ backgroundColor: activeTab === 'spells' ? characterColor : '' }}
               >
                 Spellcasting
               </button>
@@ -176,6 +188,7 @@ const CharacterSheet = () => {
             <button 
               className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`}
               onClick={() => setActiveTab('inventory')}
+              style={{ backgroundColor: activeTab === 'inventory' ? characterColor : '' }}
             >
               Inventory
             </button>
