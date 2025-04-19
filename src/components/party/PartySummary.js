@@ -108,9 +108,7 @@ const PartySummary = () => {
       <h2>Party Overview</h2>
       
       <div className="summary-content">
-        <div className="ability-comparison-container">
-          <h3>Ability Score Comparison</h3>
-          
+        <div className="ability-comparison-container">          
           <div className="ability-comparison">
             <div className="character-column-headers">
               {partyAbilityData.map((char) => (
