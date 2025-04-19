@@ -1,17 +1,13 @@
+// src/pages/Dashboard.js
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
-import CharacterCard from '../components/characters/CharacterCard';
+import PartySummary from '../components/party/PartySummary';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { characters, setActiveCharacter } = useContext(CharacterContext);
+  const { setActiveCharacter } = useContext(CharacterContext);
   const navigate = useNavigate();
-  
-  const handleSelectCharacter = (character) => {
-    setActiveCharacter(character);
-    navigate(`/character/${character.id}`);
-  };
   
   const navigateTo = (path) => {
     navigate(path);
@@ -20,6 +16,9 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <h1>Unnamed Group of Adventurers from Osprey Cove</h1>
+      
+      {/* Party Summary Section */}
+      <PartySummary />
       
       <div className="dashboard-links">
         <button 
@@ -38,16 +37,7 @@ const Dashboard = () => {
         </button>
       </div>
       
-      <h2 className="characters-heading">Characters</h2>
-      <div className="character-grid">
-        {characters.map(character => (
-          <CharacterCard 
-            key={character.id}
-            character={character}
-            onSelect={() => handleSelectCharacter(character)}
-          />
-        ))}
-      </div>
+      {/* Character section has been removed */}
     </div>
   );
 };
