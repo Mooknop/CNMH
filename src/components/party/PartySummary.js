@@ -48,39 +48,87 @@ const PartySummary = () => {
     '#ba68c8', // purple
     '#ffd54f'  // yellow
   ];
-  
-  // Collect all expert skills from the party
-  const expertSkills = {};
-  
-  characters.forEach(char => {
-    const skills = char.skills || {};
+
+  // Calculate skill modifiers for all characters
+  const calculateSkillModifier = (character, skillName) => {
+    const skills = character.skills || {};
+    const skillData = skills[skillName] || { proficiency: 0 };
     
-    Object.entries(skills).forEach(([skillName, skillData]) => {
-      if (skillData.proficiency >= 2) { // Expert or higher
-        if (!expertSkills[skillName]) {
-          expertSkills[skillName] = [];
+    // Determine the ability modifier for this skill
+    let abilityMod = 0;
+    const abilities = character.abilities || {};
+    
+    // Map skills to their corresponding ability scores (based on PF2E rules)
+    const skillAbilities = {
+      acrobatics: 'dexterity',
+      arcana: 'intelligence',
+      athletics: 'strength',
+      crafting: 'intelligence',
+      deception: 'charisma',
+      diplomacy: 'charisma',
+      intimidation: 'charisma',
+      medicine: 'wisdom',
+      nature: 'wisdom',
+      occultism: 'intelligence',
+      performance: 'charisma',
+      religion: 'wisdom',
+      society: 'intelligence',
+      stealth: 'dexterity',
+      survival: 'wisdom',
+      thievery: 'dexterity'
+    };
+    
+    const abilityKey = skillAbilities[skillName] || 'dexterity';
+    abilityMod = getModifier(abilities[abilityKey] || 10);
+    
+    // Calculate proficiency bonus: Untrained (0), Trained (+2), Expert (+4), Master (+6), Legendary (+8) + level
+    let profBonus = 0;
+    if (skillData.proficiency > 0) {
+      profBonus = skillData.proficiency * 2 + (character.level || 0);
+    }
+    
+    return abilityMod + profBonus;
+  };
+  
+  // Find the best character for each skill
+  const findBestAtSkill = () => {
+    // List of all PF2E skills
+    const allSkills = [
+      'acrobatics', 'arcana', 'athletics', 'crafting', 'deception', 
+      'diplomacy', 'intimidation', 'medicine', 'nature', 'occultism', 
+      'performance', 'religion', 'society', 'stealth', 'survival', 'thievery'
+    ];
+    
+    const bestCharacters = {};
+    
+    allSkills.forEach(skill => {
+      let bestChar = null;
+      let bestModifier = -Infinity;
+      
+      characters.forEach(char => {
+        const modifier = calculateSkillModifier(char, skill);
+        if (modifier > bestModifier) {
+          bestModifier = modifier;
+          bestChar = char;
         }
-        expertSkills[skillName].push({
-          name: char.name,
-          proficiency: skillData.proficiency
-        });
+      });
+      
+      if (bestChar) {
+        bestCharacters[skill] = {
+          name: bestChar.name,
+          modifier: bestModifier
+        };
       }
     });
-  });
+    
+    return bestCharacters;
+  };
+  
+  const bestSkillCharacters = findBestAtSkill();
   
   // Format skill names for better display
   const formatSkillName = (name) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
-  };
-  
-  // Get proficiency label
-  const getProficiencyLabel = (proficiency) => {
-    switch(proficiency) {
-      case 2: return 'Expert';
-      case 3: return 'Master';
-      case 4: return 'Legendary';
-      default: return 'Trained';
-    }
   };
   
   return (
@@ -88,58 +136,48 @@ const PartySummary = () => {
       <h2>Party Overview</h2>
       
       <div className="summary-content">
-        <div className="ability-chart-container">
-          <h3>Ability Modifiers</h3>
-          <div className="spider-chart">
-            <div className="chart-labels">
-              <span className="chart-label str">STR</span>
-              <span className="chart-label dex">DEX</span>
-              <span className="chart-label con">CON</span>
-              <span className="chart-label int">INT</span>
-              <span className="chart-label wis">WIS</span>
-              <span className="chart-label cha">CHA</span>
-            </div>
-            
-            <div className="chart-polygons">
-              {abilityData.map((char, index) => (
-                <div 
-                  key={char.name}
-                  className="character-polygon"
-                  style={{
-                    clipPath: `polygon(
-                      50% 0%, 
-                      ${50 + scaleValue(char.strength) / 2}% ${5 + scaleValue(char.strength) / 5}%, 
-                      100% 50%, 
-                      ${50 + scaleValue(char.dexterity) / 2}% ${95 - scaleValue(char.dexterity) / 5}%, 
-                      50% 100%, 
-                      ${50 - scaleValue(char.constitution) / 2}% ${95 - scaleValue(char.constitution) / 5}%, 
-                      0% 50%, 
-                      ${50 - scaleValue(char.intelligence) / 2}% ${5 + scaleValue(char.intelligence) / 5}%
-                    )`,
-                    backgroundColor: `${colors[index % colors.length]}80` // add 80 for opacity
-                  }}
-                >
-                  <span className="character-name">{char.name}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="chart-grid">
-              <div className="grid-circle circle-1"></div>
-              <div className="grid-circle circle-2"></div>
-              <div className="grid-circle circle-3"></div>
-            </div>
-          </div>
-          
-          <div className="chart-legend">
+        <div className="ability-charts-container">
+          <h3>Character Ability Modifiers</h3>
+          <div className="spider-charts-grid">
             {abilityData.map((char, index) => (
-              <div key={char.name} className="legend-item">
-                <div 
-                  className="legend-color" 
-                  style={{ backgroundColor: colors[index % colors.length] }}
-                ></div>
-                <span className="legend-name">{char.name}</span>
-                <div className="legend-stats">
+              <div key={char.name} className="character-chart-container">
+                <h4 className="character-chart-name">{char.name}</h4>
+                <div className="spider-chart">
+                  <div className="chart-labels">
+                    <span className="chart-label str">STR</span>
+                    <span className="chart-label dex">DEX</span>
+                    <span className="chart-label con">CON</span>
+                    <span className="chart-label int">INT</span>
+                    <span className="chart-label wis">WIS</span>
+                    <span className="chart-label cha">CHA</span>
+                  </div>
+                  
+                  <div className="chart-polygons">
+                    <div 
+                      className="character-polygon"
+                      style={{
+                        clipPath: `polygon(
+                          50% 0%, 
+                          ${50 + scaleValue(char.strength) / 2}% ${5 + scaleValue(char.strength) / 5}%, 
+                          100% 50%, 
+                          ${50 + scaleValue(char.dexterity) / 2}% ${95 - scaleValue(char.dexterity) / 5}%, 
+                          50% 100%, 
+                          ${50 - scaleValue(char.constitution) / 2}% ${95 - scaleValue(char.constitution) / 5}%, 
+                          0% 50%, 
+                          ${50 - scaleValue(char.intelligence) / 2}% ${5 + scaleValue(char.intelligence) / 5}%
+                        )`,
+                        backgroundColor: `${colors[index % colors.length]}`
+                      }}
+                    ></div>
+                  </div>
+                  
+                  <div className="chart-grid">
+                    <div className="grid-circle circle-1"></div>
+                    <div className="grid-circle circle-2"></div>
+                    <div className="grid-circle circle-3"></div>
+                  </div>
+                </div>
+                <div className="ability-values">
                   <span>STR: {char.strength >= 0 ? '+' : ''}{char.strength}</span>
                   <span>DEX: {char.dexterity >= 0 ? '+' : ''}{char.dexterity}</span>
                   <span>CON: {char.constitution >= 0 ? '+' : ''}{char.constitution}</span>
@@ -152,29 +190,25 @@ const PartySummary = () => {
           </div>
         </div>
         
-        <div className="expert-skills-container">
-          <h3>Expert+ Skills</h3>
-          {Object.keys(expertSkills).length > 0 ? (
-            <div className="expert-skills-grid">
-              {Object.entries(expertSkills).map(([skillName, characters]) => (
+        <div className="best-skills-container">
+          <h3>Party Skill Specialists</h3>
+          {Object.keys(bestSkillCharacters).length > 0 ? (
+            <div className="best-skills-grid">
+              {Object.entries(bestSkillCharacters)
+                .sort((a, b) => a[0].localeCompare(b[0])) // Sort alphabetically by skill name
+                .map(([skillName, data]) => (
                 <div key={skillName} className="skill-card">
-                  <h4>{formatSkillName(skillName)}</h4>
-                  <div className="skill-characters">
-                    {characters.map((char, index) => (
-                      <div key={index} className="skill-character">
-                        <span className="character-name">{char.name}</span>
-                        <span className={`proficiency-badge prof-${char.proficiency}`}>
-                          {getProficiencyLabel(char.proficiency)}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="skill-name">{formatSkillName(skillName)}</div>
+                  <div className="best-character">
+                    <span className="character-name">{data.name}</span>
+                    <span className="skill-modifier">{data.modifier >= 0 ? '+' : ''}{data.modifier}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="no-expert-skills">
-              <p>No party members have expert proficiency in any skills yet.</p>
+            <div className="no-skill-data">
+              <p>No skill data available for the party.</p>
             </div>
           )}
         </div>
