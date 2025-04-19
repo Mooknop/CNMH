@@ -3,6 +3,7 @@ import sampleCharacter1 from './sample-character.json';
 import sampleCharacter2 from './sample-character2.json';
 import sampleCharacter3 from './sample-character3.json';
 import sampleCharacter4 from './sample-character4.json';
+import sampleCharacter5 from './sample-character5.json'; // New import for Pellias
 import loreData from './lore.json';
 import questsData from './quests.json';
 
@@ -11,7 +12,8 @@ export const sampleCharacters = [
   sampleCharacter1,
   sampleCharacter2,
   sampleCharacter3,
-  sampleCharacter4
+  sampleCharacter4,
+  sampleCharacter5
 ];
 
 // Export the lore data
