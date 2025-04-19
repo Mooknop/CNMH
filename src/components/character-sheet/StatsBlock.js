@@ -1,31 +1,18 @@
 import React, { useState } from 'react';
 import './StatsBlock.css';
+import { 
+  getAbilityModifier, 
+  formatModifier, 
+  getAttackBonus,
+  getProficiencyLabel
+} from '../../utils/CharacterUtils';
 
 const StatsBlock = ({ character }) => {
   const [activeTab, setActiveTab] = useState('abilities'); // Default tab: 'abilities' or 'proficiencies'
   
-  // Function to get modifier from ability score
-  const getModifier = (value) => {
-    const mod = Math.floor((value - 10) / 2);
-    return mod >= 0 ? `+${mod}` : mod.toString();
-  };
-  
-  // Calculate attack bonus based on ability modifier and proficiency
-  const getAttackBonus = (abilityMod, proficiency) => {
-    // In PF2E: ability modifier + proficiency bonus + level (if trained or better)
-    let profBonus = 0;
-    if (proficiency > 0) {
-      // Trained +2, Expert +4, Master +6, Legendary +8 + level
-      profBonus = proficiency * 2 + character.level;
-    }
-    
-    const bonus = abilityMod + profBonus;
-    return bonus >= 0 ? `+${bonus}` : bonus.toString();
-  };
-  
   // Get ability modifiers
-  const strMod = Math.floor((character.abilities?.strength || 10) - 10) / 2;
-  const dexMod = Math.floor((character.abilities?.dexterity || 10) - 10) / 2;
+  const strMod = getAbilityModifier(character.abilities?.strength || 10);
+  const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
   
   // Default empty proficiencies object in case the character doesn't have it defined
   const defaultProficiencies = {
@@ -55,42 +42,42 @@ const StatsBlock = ({ character }) => {
             <div className="abilities-section">
               <div className="ability">
                 <div className="ability-name">STR</div>
-                <div className="ability-mod">{getModifier(character.abilities?.strength || 10)}</div>
+                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.strength || 10))}</div>
               </div>
               <div className="ability">
                 <div className="ability-name">DEX</div>
-                <div className="ability-mod">{getModifier(character.abilities?.dexterity || 10)}</div>
+                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.dexterity || 10))}</div>
               </div>
               <div className="ability">
                 <div className="ability-name">CON</div>
-                <div className="ability-mod">{getModifier(character.abilities?.constitution || 10)}</div>
+                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.constitution || 10))}</div>
               </div>
               <div className="ability">
                 <div className="ability-name">INT</div>
-                <div className="ability-mod">{getModifier(character.abilities?.intelligence || 10)}</div>
+                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.intelligence || 10))}</div>
               </div>
               <div className="ability">
                 <div className="ability-name">WIS</div>
-                <div className="ability-mod">{getModifier(character.abilities?.wisdom || 10)}</div>
+                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.wisdom || 10))}</div>
               </div>
               <div className="ability">
                 <div className="ability-name">CHA</div>
-                <div className="ability-mod">{getModifier(character.abilities?.charisma || 10)}</div>
+                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.charisma || 10))}</div>
               </div>
             </div>
             
             <div className="defenses-section">
               <div className="defense">
                 <div className="defense-name">Fort</div>
-                <div className="defense-value">{character.saves?.fortitude >= 0 ? '+' + character.saves?.fortitude : character.saves?.fortitude || 0}</div>
+                <div className="defense-value">{formatModifier(character.saves?.fortitude || 0)}</div>
               </div>
               <div className="defense">
                 <div className="defense-name">Ref</div>
-                <div className="defense-value">{character.saves?.reflex >= 0 ? '+' + character.saves?.reflex : character.saves?.reflex || 0}</div>
+                <div className="defense-value">{formatModifier(character.saves?.reflex || 0)}</div>
               </div>
               <div className="defense">
                 <div className="defense-name">Will</div>
-                <div className="defense-value">{character.saves?.will >= 0 ? '+' + character.saves?.will : character.saves?.will || 0}</div>
+                <div className="defense-value">{formatModifier(character.saves?.will || 0)}</div>
               </div>
             </div>
           </>
@@ -107,20 +94,20 @@ const StatsBlock = ({ character }) => {
                   <div className="weapon-category">
                     <span className="proficiency-name">Simple</span>
                     <span className={`proficiency-value prof-${proficiencies.weapons.simple?.proficiency || 0}`}>
-                      {proficiencies.weapons.simple?.name || "Untrained"}
+                      {getProficiencyLabel(proficiencies.weapons.simple?.proficiency || 0)}
                     </span>
                   </div>
                   <div className="attack-bonuses">
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                   </div>
@@ -131,20 +118,20 @@ const StatsBlock = ({ character }) => {
                   <div className="weapon-category">
                     <span className="proficiency-name">Martial</span>
                     <span className={`proficiency-value prof-${proficiencies.weapons.martial?.proficiency || 0}`}>
-                      {proficiencies.weapons.martial?.name || "Untrained"}
+                      {getProficiencyLabel(proficiencies.weapons.martial?.proficiency || 0)}
                     </span>
                   </div>
                   <div className="attack-bonuses">
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                   </div>
@@ -155,20 +142,20 @@ const StatsBlock = ({ character }) => {
                   <div className="weapon-category">
                     <span className="proficiency-name">Advanced</span>
                     <span className={`proficiency-value prof-${proficiencies.weapons.advanced?.proficiency || 0}`}>
-                      {proficiencies.weapons.advanced?.name || "Untrained"}
+                      {getProficiencyLabel(proficiencies.weapons.advanced?.proficiency || 0)}
                     </span>
                   </div>
                   <div className="attack-bonuses">
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                   </div>
@@ -179,14 +166,14 @@ const StatsBlock = ({ character }) => {
                   <div className="weapon-category">
                     <span className="proficiency-name">Unarmed</span>
                     <span className={`proficiency-value prof-${proficiencies.weapons.unarmed?.proficiency || 0}`}>
-                      {proficiencies.weapons.unarmed?.name || "Untrained"}
+                      {getProficiencyLabel(proficiencies.weapons.unarmed?.proficiency || 0)}
                     </span>
                   </div>
                   <div className="attack-bonuses">
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus">
-                        {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                   </div>
@@ -198,20 +185,20 @@ const StatsBlock = ({ character }) => {
                     <div className="weapon-category">
                       <span className="proficiency-name">Class Weapons</span>
                       <span className={`proficiency-value prof-${proficiencies.weapons.class?.proficiency || 0}`}>
-                        {proficiencies.weapons.class?.name || "Untrained"}
+                        {getProficiencyLabel(proficiencies.weapons.class?.proficiency || 0)}
                       </span>
                     </div>
                     <div className="attack-bonuses">
                       <div className="bonus-container">
                         <div className="attack-type">Melee (STR)</div>
                         <div className="attack-bonus">
-                          {getAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0)}
+                          {getAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0, character.level || 0)}
                         </div>
                       </div>
                       <div className="bonus-container">
                         <div className="attack-type">Ranged (DEX)</div>
                         <div className="attack-bonus">
-                          {getAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0)}
+                          {getAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0, character.level || 0)}
                         </div>
                       </div>
                     </div>
@@ -224,14 +211,14 @@ const StatsBlock = ({ character }) => {
                     <div className="weapon-category">
                       <span className="proficiency-name">Finesse</span>
                       <span className={`proficiency-value prof-${proficiencies.weapons.finesse?.proficiency || 0}`}>
-                        {proficiencies.weapons.finesse?.name || "Untrained"}
+                        {getProficiencyLabel(proficiencies.weapons.finesse?.proficiency || 0)}
                       </span>
                     </div>
                     <div className="attack-bonuses">
                       <div className="bonus-container">
                         <div className="attack-type">Melee (STR/DEX)</div>
                         <div className="attack-bonus">
-                          {getAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0)}
+                          {getAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0, character.level || 0)}
                         </div>
                       </div>
                     </div>
@@ -246,25 +233,25 @@ const StatsBlock = ({ character }) => {
                 <div className="proficiency-item">
                   <span className="proficiency-name">Unarmored</span>
                   <span className={`proficiency-value prof-${proficiencies.armor.unarmored?.proficiency || 0}`}>
-                    {proficiencies.armor.unarmored?.name || "Untrained"}
+                    {getProficiencyLabel(proficiencies.armor.unarmored?.proficiency || 0)}
                   </span>
                 </div>
                 <div className="proficiency-item">
                   <span className="proficiency-name">Light</span>
                   <span className={`proficiency-value prof-${proficiencies.armor.light?.proficiency || 0}`}>
-                    {proficiencies.armor.light?.name || "Untrained"}
+                    {getProficiencyLabel(proficiencies.armor.light?.proficiency || 0)}
                   </span>
                 </div>
                 <div className="proficiency-item">
                   <span className="proficiency-name">Medium</span>
                   <span className={`proficiency-value prof-${proficiencies.armor.medium?.proficiency || 0}`}>
-                    {proficiencies.armor.medium?.name || "Untrained"}
+                    {getProficiencyLabel(proficiencies.armor.medium?.proficiency || 0)}
                   </span>
                 </div>
                 <div className="proficiency-item">
                   <span className="proficiency-name">Heavy</span>
                   <span className={`proficiency-value prof-${proficiencies.armor.heavy?.proficiency || 0}`}>
-                    {proficiencies.armor.heavy?.name || "Untrained"}
+                    {getProficiencyLabel(proficiencies.armor.heavy?.proficiency || 0)}
                   </span>
                 </div>
               </div>

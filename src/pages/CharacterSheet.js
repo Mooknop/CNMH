@@ -5,6 +5,12 @@ import StatsBlock from '../components/character-sheet/StatsBlock';
 import EnhancedSkillsList from '../components/character-sheet/EnhancedSkillsList';
 import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/character-sheet/SpellsList';
+import { 
+  calculateBulkLimit, 
+  calculateTotalBulk, 
+  formatBulk, 
+  poundsToBulk 
+} from '../utils/CharacterUtils';
 import './CharacterSheet.css';
 
 const CharacterSheet = () => {
@@ -14,42 +20,6 @@ const CharacterSheet = () => {
   const [character, setCharacter] = useState(null);
   const [activeTab, setActiveTab] = useState('skills'); // Default tab
   const [bulkUsed, setBulkUsed] = useState(0);
-  
-  // Calculate Bulk limit based on Pathfinder 2E rules
-  const calculateBulkLimit = (character) => {
-    if (!character || !character.abilities) return { bulkLimit: 0, encumberedThreshold: 0 };
-    
-    // In PF2E, Bulk limit is equal to Strength ability modifier + 5
-    const strMod = Math.floor((character.abilities.strength - 10) / 2);
-    const bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
-    const encumberedThreshold = bulkLimit - 5; // Can carry up to Bulk limit, but encumbered after this threshold
-    
-    return { bulkLimit, encumberedThreshold };
-  };
-  
-  // Convert pounds to Bulk as per PF2E rules
-  const poundsToBulk = (pounds) => {
-    if (pounds < 0.1) return 0; // Negligible Bulk
-    if (pounds < 1) return 0.1; // Light (L) Bulk
-    return Math.ceil(pounds / 10); // 1 Bulk is roughly 10 pounds
-  };
-  
-  // Calculate total Bulk from inventory
-  const calculateTotalBulk = (inventory) => {
-    if (!inventory) return 0;
-    
-    return inventory.reduce((total, item) => {
-      const itemBulk = poundsToBulk(item.weight) * item.quantity;
-      return total + itemBulk;
-    }, 0);
-  };
-  
-  // Format Bulk for display
-  const formatBulk = (bulk) => {
-    if (bulk === 0) return '—'; // Negligible
-    if (bulk < 1) return 'L'; // Light Bulk
-    return bulk.toString(); // Regular Bulk
-  };
   
   useEffect(() => {
     const characterData = getCharacter(id);

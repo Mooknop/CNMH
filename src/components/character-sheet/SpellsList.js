@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import './SpellsList.css';
+import { 
+  getAbilityModifier, 
+  getProficiencyBonus, 
+  getProficiencyLabel 
+} from '../../utils/CharacterUtils';
 
 const SpellsList = ({ character }) => {
   const [activeSpellRank, setActiveSpellRank] = useState('all');
@@ -22,31 +27,13 @@ const SpellsList = ({ character }) => {
   
   // Calculate spell attack and DC
   const getSpellModifier = () => {
-    const abilityMod = getAbilityModifier(spellcasting.ability);
+    const abilityMod = getAbilityModifier(character.abilities?.[spellcasting.ability] || 10);
     const proficiencyValue = spellcasting.proficiency || 0;
     
-    // Proficiency bonus: Trained (+2), Expert (+4), Master (+6), Legendary (+8) + level
-    let proficiencyMod = 0;
-    if (proficiencyValue > 0) {
-      proficiencyMod = proficiencyValue * 2 + character.level;
-    }
+    // Calculate proficiency bonus
+    const proficiencyMod = getProficiencyBonus(proficiencyValue, character.level || 0);
     
     return abilityMod + proficiencyMod;
-  };
-  
-  const getAbilityModifier = (ability) => {
-    const abilityValue = character.abilities ? character.abilities[ability] || 10 : 10;
-    return Math.floor((abilityValue - 10) / 2);
-  };
-  
-  const getProficiencyLabel = (proficiency) => {
-    switch(proficiency) {
-      case 1: return 'Trained';
-      case 2: return 'Expert';
-      case 3: return 'Master';
-      case 4: return 'Legendary';
-      default: return 'Untrained';
-    }
   };
   
   const spellAttackMod = getSpellModifier();

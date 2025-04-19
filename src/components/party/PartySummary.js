@@ -1,27 +1,28 @@
 // src/components/party/PartySummary.js
 import React, { useContext } from 'react';
 import { CharacterContext } from '../../contexts/CharacterContext';
+import { 
+  getAbilityModifier, 
+  formatModifier, 
+  getSkillModifier,
+  SKILL_ABILITY_MAP
+} from '../../utils/CharacterUtils';
 import './PartySummary.css';
 
 const PartySummary = () => {
   const { characters } = useContext(CharacterContext);
-  
-  // Calculate ability modifiers for each character
-  const getModifier = (abilityScore) => {
-    return Math.floor((abilityScore - 10) / 2);
-  };
   
   // Get all the ability modifiers for the party
   const abilityData = characters.map(char => {
     const abilities = char.abilities || {};
     return {
       name: char.name,
-      strength: getModifier(abilities.strength || 10),
-      dexterity: getModifier(abilities.dexterity || 10),
-      constitution: getModifier(abilities.constitution || 10),
-      intelligence: getModifier(abilities.intelligence || 10),
-      wisdom: getModifier(abilities.wisdom || 10),
-      charisma: getModifier(abilities.charisma || 10)
+      strength: getAbilityModifier(abilities.strength || 10),
+      dexterity: getAbilityModifier(abilities.dexterity || 10),
+      constitution: getAbilityModifier(abilities.constitution || 10),
+      intelligence: getAbilityModifier(abilities.intelligence || 10),
+      wisdom: getAbilityModifier(abilities.wisdom || 10),
+      charisma: getAbilityModifier(abilities.charisma || 10)
     };
   });
   
@@ -49,55 +50,10 @@ const PartySummary = () => {
     '#ffd54f'  // yellow
   ];
 
-  // Calculate skill modifiers for all characters
-  const calculateSkillModifier = (character, skillName) => {
-    const skills = character.skills || {};
-    const skillData = skills[skillName] || { proficiency: 0 };
-    
-    // Determine the ability modifier for this skill
-    let abilityMod = 0;
-    const abilities = character.abilities || {};
-    
-    // Map skills to their corresponding ability scores (based on PF2E rules)
-    const skillAbilities = {
-      acrobatics: 'dexterity',
-      arcana: 'intelligence',
-      athletics: 'strength',
-      crafting: 'intelligence',
-      deception: 'charisma',
-      diplomacy: 'charisma',
-      intimidation: 'charisma',
-      medicine: 'wisdom',
-      nature: 'wisdom',
-      occultism: 'intelligence',
-      performance: 'charisma',
-      religion: 'wisdom',
-      society: 'intelligence',
-      stealth: 'dexterity',
-      survival: 'wisdom',
-      thievery: 'dexterity'
-    };
-    
-    const abilityKey = skillAbilities[skillName] || 'dexterity';
-    abilityMod = getModifier(abilities[abilityKey] || 10);
-    
-    // Calculate proficiency bonus: Untrained (0), Trained (+2), Expert (+4), Master (+6), Legendary (+8) + level
-    let profBonus = 0;
-    if (skillData.proficiency > 0) {
-      profBonus = skillData.proficiency * 2 + (character.level || 0);
-    }
-    
-    return abilityMod + profBonus;
-  };
-  
   // Find the best character for each skill
   const findBestAtSkill = () => {
     // List of all PF2E skills
-    const allSkills = [
-      'acrobatics', 'arcana', 'athletics', 'crafting', 'deception', 
-      'diplomacy', 'intimidation', 'medicine', 'nature', 'occultism', 
-      'performance', 'religion', 'society', 'stealth', 'survival', 'thievery'
-    ];
+    const allSkills = Object.keys(SKILL_ABILITY_MAP);
     
     const bestCharacters = {};
     
@@ -106,7 +62,7 @@ const PartySummary = () => {
       let bestModifier = -Infinity;
       
       characters.forEach(char => {
-        const modifier = calculateSkillModifier(char, skill);
+        const modifier = getSkillModifier(char, skill);
         if (modifier > bestModifier) {
           bestModifier = modifier;
           bestChar = char;
@@ -178,12 +134,12 @@ const PartySummary = () => {
                   </div>
                 </div>
                 <div className="ability-values">
-                  <span>STR: {char.strength >= 0 ? '+' : ''}{char.strength}</span>
-                  <span>DEX: {char.dexterity >= 0 ? '+' : ''}{char.dexterity}</span>
-                  <span>CON: {char.constitution >= 0 ? '+' : ''}{char.constitution}</span>
-                  <span>INT: {char.intelligence >= 0 ? '+' : ''}{char.intelligence}</span>
-                  <span>WIS: {char.wisdom >= 0 ? '+' : ''}{char.wisdom}</span>
-                  <span>CHA: {char.charisma >= 0 ? '+' : ''}{char.charisma}</span>
+                  <span>STR: {formatModifier(char.strength)}</span>
+                  <span>DEX: {formatModifier(char.dexterity)}</span>
+                  <span>CON: {formatModifier(char.constitution)}</span>
+                  <span>INT: {formatModifier(char.intelligence)}</span>
+                  <span>WIS: {formatModifier(char.wisdom)}</span>
+                  <span>CHA: {formatModifier(char.charisma)}</span>
                 </div>
               </div>
             ))}
@@ -201,7 +157,7 @@ const PartySummary = () => {
                   <div className="skill-name">{formatSkillName(skillName)}</div>
                   <div className="best-character">
                     <span className="character-name">{data.name}</span>
-                    <span className="skill-modifier">{data.modifier >= 0 ? '+' : ''}{data.modifier}</span>
+                    <span className="skill-modifier">{formatModifier(data.modifier)}</span>
                   </div>
                 </div>
               ))}

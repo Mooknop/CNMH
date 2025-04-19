@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import './EnhancedSkillsList.css';
+import { 
+  getSkillModifier, 
+  getAbilityModifier, 
+  formatModifier, 
+  getProficiencyLabel, 
+  getProficiencyBonus 
+} from '../../utils/CharacterUtils';
 
 const EnhancedSkillsList = ({ character }) => {
   const [expandedSkills, setExpandedSkills] = useState({});
@@ -26,6 +33,7 @@ const EnhancedSkillsList = ({ character }) => {
         { name: 'Identify Magic', description: 'Specifically of the arcane tradition.' }
       ]
     },
+    // Other skills remain the same...
     { 
       id: 'athletics', 
       name: 'Athletics', 
@@ -42,7 +50,6 @@ const EnhancedSkillsList = ({ character }) => {
         { name: 'Disarm', description: "Try to knock an item out of a creature's grasp." }
       ]
     },
-    // ... other skills remain unchanged
     { 
       id: 'crafting', 
       name: 'Crafting', 
@@ -178,36 +185,6 @@ const EnhancedSkillsList = ({ character }) => {
       ]
     }
   ];
-  
-  const getModifier = (ability) => {
-    const abilityValue = character.abilities ? character.abilities[ability] || 10 : 10;
-    return Math.floor((abilityValue - 10) / 2);
-  };
-  
-  const getSkillModifier = (skillId) => {
-    const skill = skills.find(s => s.id === skillId);
-    const abilityMod = getModifier(skill.ability);
-    const proficiencyValue = character.skills && character.skills[skillId] ? 
-      character.skills[skillId].proficiency || 0 : 0;
-    
-    let proficiencyMod = 0;
-    if (proficiencyValue > 0) {
-      // Trained (+2), Expert (+4), Master (+6), Legendary (+8)
-      proficiencyMod = proficiencyValue * 2 + character.level;
-    }
-    
-    return abilityMod + proficiencyMod;
-  };
-  
-  const getProficiencyLabel = (proficiency) => {
-    switch(proficiency) {
-      case 1: return 'Trained';
-      case 2: return 'Expert';
-      case 3: return 'Master';
-      case 4: return 'Legendary';
-      default: return 'Untrained';
-    }
-  };
 
   // Function to get the proficiency color
   const getProficiencyColor = (proficiency) => {
@@ -234,9 +211,9 @@ const EnhancedSkillsList = ({ character }) => {
       <div className="skills-grid">
         {skills.map(skill => {
           const proficiency = character.skills?.[skill.id]?.proficiency || 0;
-          const modifier = getSkillModifier(skill.id);
-          const abilityMod = getModifier(skill.ability);
-          const abilityModStr = abilityMod >= 0 ? `+${abilityMod}` : abilityMod.toString();
+          const modifier = getSkillModifier(character, skill.id);
+          const abilityMod = getAbilityModifier(character.abilities?.[skill.ability] || 10);
+          const abilityModStr = formatModifier(abilityMod);
           const isExpanded = expandedSkills[skill.id];
           const proficiencyColorClass = getProficiencyColor(proficiency);
           
@@ -254,7 +231,7 @@ const EnhancedSkillsList = ({ character }) => {
                 </div>
                 <div className="skill-info">
                   <div className="skill-modifier">
-                    {modifier >= 0 ? `+${modifier}` : modifier}
+                    {formatModifier(modifier)}
                   </div>
                   <div className={`skill-proficiency ${proficiencyColorClass}`}>
                     {getProficiencyLabel(proficiency)}
