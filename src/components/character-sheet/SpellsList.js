@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SpellsList.css';
 import { 
   getAbilityModifier, 
@@ -9,6 +9,7 @@ import {
 const SpellsList = ({ character, characterColor }) => {
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('spells'); // 'spells' or 'staff'
   
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
@@ -27,6 +28,12 @@ const SpellsList = ({ character, characterColor }) => {
       </div>
     );
   }
+  
+  // Check if character has a staff object
+  const hasStaff = character.staff && character.staff.name;
+  
+  // Staff spells (if available in the character data)
+  const staffSpells = character.staffSpells || [];
   
   // Calculate spell attack and DC
   const getSpellModifier = () => {
@@ -156,6 +163,79 @@ const SpellsList = ({ character, characterColor }) => {
   const sortedRankList = getSortedRankList();
   const spellsToDisplay = getSpellsToDisplay();
   const filteredSpells = filterSpellsByDefense(spellsToDisplay);
+  
+  // Render a spell card 
+  const renderSpellCard = (spell) => {
+    return (
+      <div key={spell.id} className="spell-card">
+        <div className="spell-header">
+          <h3 style={{ color: themeColor }}>{spell.name}</h3>
+          <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
+            {spell.level === 0 
+              ? `Cantrip (${Math.ceil(character.level / 2)})`
+              : `Rank ${spell.level}`
+            }
+          </span>
+          {spell.prepared !== undefined && (
+            <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
+              {spell.prepared ? 'Prepared' : 'Not Prepared'}
+            </div>
+          )}
+        </div>
+        <div className="spell-meta">
+          {spell.traits && spell.traits.map((trait, index) => (
+            <span key={index} className="spell-trait">{trait}</span>
+          ))}
+        </div>
+        <div className="spell-details">
+          {spell.actions && (
+            <div className="spell-actions">
+              <span className="detail-label">Actions:</span>
+              <span className="detail-value">{spell.actions}</span>
+            </div>
+          )}
+          {spell.defense && (
+            <div className="spell-defense">
+              <span className="detail-label">Defense:</span>
+              <span className="detail-value">{spell.defense}</span>
+            </div>
+          )}
+          {spell.range && (
+            <div className="spell-range">
+              <span className="detail-label">Range:</span>
+              <span className="detail-value">{spell.range}</span>
+            </div>
+          )}
+          {spell.targets && (
+            <div className="spell-targets">
+              <span className="detail-label">Targets:</span>
+              <span className="detail-value">{spell.targets}</span>
+            </div>
+          )}
+          {spell.duration && (
+            <div className="spell-duration">
+              <span className="detail-label">Duration:</span>
+              <span className="detail-value">{spell.duration}</span>
+            </div>
+          )}
+        </div>
+        <div className="spell-description">
+          {spell.description}
+        </div>
+        {spell.heightened && (
+          <div className="spell-heightened">
+            <span className="heightened-label" style={{ color: themeColor }}>Heightened:</span>
+            {Object.entries(spell.heightened).map(([level, effect], index) => (
+              <div key={index} className="heightened-entry">
+                <span className="heightened-level">{level}:</span>
+                <span className="heightened-effect">{effect}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="spells-list">
@@ -192,7 +272,34 @@ const SpellsList = ({ character, characterColor }) => {
         )}
       </div>
       
-      {availableSpellRanks.length > 0 ? (
+      {/* View Mode Toggle for staff/spells if character has a staff */}
+      {hasStaff && (
+        <div className="view-mode-toggle">
+          <button 
+            className={`view-mode-btn ${viewMode === 'spells' ? 'active' : ''}`}
+            onClick={() => setViewMode('spells')}
+            style={{ 
+              backgroundColor: viewMode === 'spells' ? themeColor : '',
+              borderColor: viewMode === 'spells' ? themeColor : ''
+            }}
+          >
+            Spellbook
+          </button>
+          <button 
+            className={`view-mode-btn ${viewMode === 'staff' ? 'active' : ''}`}
+            onClick={() => setViewMode('staff')}
+            style={{ 
+              backgroundColor: viewMode === 'staff' ? themeColor : '',
+              borderColor: viewMode === 'staff' ? themeColor : ''
+            }}
+          >
+            {character.staff.name}
+          </button>
+        </div>
+      )}
+      
+      {/* Regular Spells View */}
+      {viewMode === 'spells' && availableSpellRanks.length > 0 && (
         <div className="spell-ranks-container">
           <div className="spell-level-tabs">
             {sortedRankList.map(rank => (
@@ -234,75 +341,7 @@ const SpellsList = ({ character, characterColor }) => {
           <div className="spells-container">
             {filteredSpells.length > 0 ? (
               <div className="spells-grid">
-                {filteredSpells.map(spell => (
-                  <div key={spell.id} className="spell-card">
-                    <div className="spell-header">
-                      <h3 style={{ color: themeColor }}>{spell.name}</h3>
-                      <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
-                        {spell.level === 0 
-                          ? `Cantrip (${Math.ceil(character.level / 2)})`
-                          : `Rank ${spell.level}`
-                        }
-                      </span>
-                      {spell.prepared !== undefined && (
-                        <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
-                          {spell.prepared ? 'Prepared' : 'Not Prepared'}
-                        </div>
-                      )}
-                    </div>
-                    <div className="spell-meta">
-                      {spell.traits && spell.traits.map((trait, index) => (
-                        <span key={index} className="spell-trait">{trait}</span>
-                      ))}
-                    </div>
-                    <div className="spell-details">
-                      {spell.actions && (
-                        <div className="spell-actions">
-                          <span className="detail-label">Actions:</span>
-                          <span className="detail-value">{spell.actions}</span>
-                        </div>
-                      )}
-                      {spell.defense && (
-                        <div className="spell-defense">
-                          <span className="detail-label">Defense:</span>
-                          <span className="detail-value">{spell.defense}</span>
-                        </div>
-                      )}
-                      {spell.range && (
-                        <div className="spell-range">
-                          <span className="detail-label">Range:</span>
-                          <span className="detail-value">{spell.range}</span>
-                        </div>
-                      )}
-                      {spell.targets && (
-                        <div className="spell-targets">
-                          <span className="detail-label">Targets:</span>
-                          <span className="detail-value">{spell.targets}</span>
-                        </div>
-                      )}
-                      {spell.duration && (
-                        <div className="spell-duration">
-                          <span className="detail-label">Duration:</span>
-                          <span className="detail-value">{spell.duration}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="spell-description">
-                      {spell.description}
-                    </div>
-                    {spell.heightened && (
-                      <div className="spell-heightened">
-                        <span className="heightened-label" style={{ color: themeColor }}>Heightened:</span>
-                        {Object.entries(spell.heightened).map(([level, effect], index) => (
-                          <div key={index} className="heightened-entry">
-                            <span className="heightened-level">{level}:</span>
-                            <span className="heightened-effect">{effect}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {filteredSpells.map(spell => renderSpellCard(spell))}
               </div>
             ) : (
               <div className="empty-state">
@@ -311,7 +350,49 @@ const SpellsList = ({ character, characterColor }) => {
             )}
           </div>
         </div>
-      ) : (
+      )}
+      
+      {/* Staff Spells View - Only shown if character has a staff */}
+      {viewMode === 'staff' && hasStaff && (
+        <div className="staff-container">
+          <div className="staff-details">
+            <h3 style={{ color: themeColor }}>{character.staff.name}</h3>
+            <p className="staff-description">{character.staff.description || "A magical staff that can store spells."}</p>
+            
+            {/* Staff usage rules section */}
+            <div className="staff-rules">
+              <h4 style={{ color: themeColor }}>Staff Rules</h4>
+              <p>Each day during your daily preparations, you can prepare a staff to add charges to it for free. 
+              This gives the staff a number of charges equal to the level of your highest-level spell slot. 
+              You can use these charges to cast spells from the staff.</p>
+            </div>
+            
+            {character.staff.spells && character.staff.spells.length > 0 ? (
+              <div className="staff-spells-list">
+                <h4 style={{ color: themeColor }}>Available Staff Spells</h4>
+                <div className="spells-grid">
+                  {character.staff.spells.map(spell => renderSpellCard(spell))}
+                </div>
+              </div>
+            ) : (
+              <div className="empty-staff-spells">
+                <h4 style={{ color: themeColor }}>Available Staff Spells</h4>
+                <p>This staff does not have any spells specified in the character data. 
+                   Staff spells should be added to the character's staff object under a "spells" property.</p>
+                
+                <div className="staff-placeholder">
+                  <h5 style={{ color: themeColor }}>Default Staff Functionality</h5>
+                  <p>Staves typically contain a selection of thematically linked spells that can be cast by 
+                  expending charges from the staff. The exact spells depend on the type of staff and its magical properties.</p>
+                  <p>Consult your Game Master or the Pathfinder 2E rulebook for details on your specific staff's capabilities.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {viewMode === 'spells' && availableSpellRanks.length === 0 && (
         <div className="empty-state">
           <p>No spells available for this character.</p>
         </div>
