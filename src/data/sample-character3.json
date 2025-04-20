@@ -172,7 +172,7 @@
   "spellcasting": {
     "tradition": "Arcane",
     "ability": "charisma",
-    "proficiency": 2,
+    "proficiency": 1,
     "focus": {
       "max": 1,
       "current": 1
@@ -390,7 +390,7 @@
       {
         "id": "staff-spell-2",
         "name": "Produce Flame",
-        "level": 1,
+        "level": 0,
         "traits": ["Attack", "Cantrip", "Evocation", "Fire"],
         "actions": "Two Actions",
         "range": "30 feet",

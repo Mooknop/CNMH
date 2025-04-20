@@ -238,9 +238,7 @@ const SpellsList = ({ character, characterColor }) => {
   };
 
   return (
-    <div className="spells-list">
-      <h2 style={{ color: themeColor }}>Spellcasting</h2>
-      
+    <div className="spells-list">      
       <div className="spellcasting-stats">
         <div className="spellcasting-tradition">
           <span className="stat-label">Tradition</span>
@@ -267,7 +265,7 @@ const SpellsList = ({ character, characterColor }) => {
         {spellcasting.focus && (
           <div className="focus-points">
             <span className="stat-label">Focus Points</span>
-            <span className="stat-value" style={{ color: themeColor }}>{spellcasting.focus.current}/{spellcasting.focus.max}</span>
+            <span className="stat-value" style={{ color: themeColor }}>{spellcasting.focus.max}</span>
           </div>
         )}
       </div>
