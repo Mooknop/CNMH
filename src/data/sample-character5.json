@@ -1,215 +1,222 @@
 {
-    "id": "sample-character-5",
-    "name": "Pellias",
-    "ancestry": "Human",
-    "background": "Squire",
-    "class": "Champion",
-    "level": 3,
-    "maxHp": 47,
-    "ac": 21,
-    "abilities": {
-      "strength": 18,
-      "dexterity": 10,
-      "constitution": 16,
-      "intelligence": 10,
-      "wisdom": 12,
-      "charisma": 12
+  "id": "sample-character-5",
+  "name": "Pellias",
+  "ancestry": "Human",
+  "background": "Squire",
+  "class": "Champion",
+  "level": 3,
+  "maxHp": 47,
+  "ac": 21,
+  "abilities": {
+    "strength": 18,
+    "dexterity": 10,
+    "constitution": 16,
+    "intelligence": 10,
+    "wisdom": 12,
+    "charisma": 12
+  },
+  "saves": {
+    "fortitude": 10,
+    "reflex": 5,
+    "will": 8
+  },
+  "skills": {
+    "athletics": {
+      "proficiency": 2
     },
-    "saves": {
-      "fortitude": 10,
-      "reflex": 5,
-      "will": 8
+    "diplomacy": {
+      "proficiency": 1
     },
-    "skills": {
-      "athletics": {
-        "proficiency": 2
-      },
-      "diplomacy": {
-        "proficiency": 1
-      },
-      "intimidation": {
-        "proficiency": 1
-      },
-      "nature": {
-        "proficiency": 1
-      },
-      "religion": {
-        "proficiency": 1
-      }
+    "intimidation": {
+      "proficiency": 1
     },
-    "proficiencies": {
-      "weapons": {
-        "simple": {
-          "proficiency": 1,
-          "name": "Trained"
-        },
-        "martial": {
-          "proficiency": 1,
-          "name": "Trained"
-        },
-        "advanced": {
-          "proficiency": 0,
-          "name": "Untrained"
-        },
-        "unarmed": {
-          "proficiency": 1,
-          "name": "Trained"
-        }
-      },
-      "armor": {
-        "unarmored": {
-          "proficiency": 1,
-          "name": "Trained"
-        },
-        "light": {
-          "proficiency": 1,
-          "name": "Trained"
-        },
-        "medium": {
-          "proficiency": 1,
-          "name": "Trained"
-        },
-        "heavy": {
-          "proficiency": 1,
-          "name": "Trained"
-        }
-      }
+    "nature": {
+      "proficiency": 1
     },
-    "feats": [
-      {
-        "id": "feat-1",
-        "name": "Angelic Halo",
-        "level": 1,
-        "source": "Ancestry",
-        "description": "Your aura protects those nearby. You and allies within 15 feet gain a +1 circumstance bonus to saving throws against fear effects."
-      },
-      {
-        "id": "feat-2",
-        "name": "Deity's Domain",
-        "level": 1,
-        "source": "Champion",
-        "description": "You embody an aspect of your deity. Choose one of your deity's domains from the list in their entry. You gain the domain's initial domain spell as a devotion spell."
-      },
-      {
-        "id": "feat-3",
-        "name": "Shield Warden",
-        "level": 2,
-        "source": "Champion",
-        "description": "You use your shield to protect your allies as well as yourself. When you have a shield raised, you can use your Shield Block reaction when an attack is made against an adjacent ally. If you do, the shield prevents that ally from taking damage instead of preventing you from taking damage, following the normal rules for Shield Block."
-      }
-    ],
-    "inventory": [
-      {
-        "id": "item-1",
-        "name": "Full Plate",
-        "quantity": 1,
-        "weight": 4.0,
-        "description": "Heavy armor that provides excellent protection at the cost of mobility."
-      },
-      {
-        "id": "item-2",
-        "name": "Steel Shield (Sturdy, Minor)",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "A reinforced shield that can absorb more damage before breaking. Hardness 8, HP 64, BT 32"
-      },
-      {
-        "id": "item-3",
-        "name": "Longsword (+1)",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately."
-      },
-      {
-        "id": "item-4",
-        "name": "Holy Symbol",
-        "quantity": 1,
-        "weight": 0.1,
-        "description": "A silver symbol of Iomedae, the goddess of righteous valor, honor, and justice."
-      },
-      {
-        "id": "item-5",
-        "name": "Healer's Tools",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "These bandages, herbs, and suturing tools are necessary for Medicine checks to Treat Wounds."
-      },
-      {
-        "id": "item-6",
-        "name": "Potion of Healing (Minor)",
-        "quantity": 3,
-        "weight": 0.1,
-        "description": "Restores 1d8 HP when consumed."
-      },
-      {
-        "id": "item-7",
-        "name": "Adventurer's Pack",
-        "quantity": 1,
-        "weight": 2.0,
-        "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin."
-      }
-    ],
-    "notes": [
-      {
-        "id": "note-1",
-        "title": "Oath of Devotion",
-        "date": "2025-04-05",
-        "content": "Today I swore my oath to Iomedae in the Cathedral of Absalom. The High Priest spoke of troubled times ahead and the need for champions to stand against the coming darkness. I will uphold the tenets of my oath: to be just, honorable, and merciful even to those who may not deserve it.",
-        "createdAt": "2025-04-05T09:30:00.000Z"
-      },
-      {
-        "id": "note-2",
-        "title": "Vision of Light",
-        "date": "2025-04-12",
-        "content": "During my evening prayers, I experienced a vision—a flash of golden light and the silhouette of a sword pointing toward the northern mountains. Could this be a sign from Iomedae herself? I must consult with the temple elders about the significance of this vision.",
-        "createdAt": "2025-04-12T22:15:00.000Z"
-      }
-    ],
-    "champion": {
-      "deity": "Iomedae",
-      "cause": "Paladin (Good)",
-      "alignment": "Lawful Good",
-      "tenets": [
-        "You must act with honor, never cheating, lying, or taking advantage of others.",
-        "You must respect legitimate authority.",
-        "You must act with mercy, showing compassion to those who deserve it and seeking to convert those who don't to goodness.",
-        "You must be righteous, standing against the forces of evil wherever they might hide."
-      ],
-      "devotion_spells": [
-        {
-          "id": "spell-1",
-          "name": "Lay on Hands",
-          "level": 1,
-          "traits": ["Champion", "Healing", "Necromancy", "Positive"],
-          "actions": "One Action",
-          "range": "Touch",
-          "targets": "1 willing living creature or 1 undead creature",
-          "description": "Your hands become infused with positive energy, healing a living creature or damaging an undead creature with a touch. If you use lay on hands on a willing living target, you restore 6 Hit Points. If the target is one of your allies, they also gain a +2 status bonus to AC for 1 round. Against an undead target, you deal 1d6 damage and it must attempt a basic Fortitude save. This damage increases to 1d8 if you have master proficiency in Religion."
-        },
-        {
-          "id": "spell-2",
-          "name": "Light of Revelation",
-          "level": 2,
-          "traits": ["Champion", "Divination", "Light"],
-          "actions": "Two Actions",
-          "area": "20-foot emanation",
-          "duration": "1 minute",
-          "description": "You shed a luminous aura, illuminating a 20-foot radius with bright light. Creatures in this area can't be concealed, though they can still be hidden. If a creature is currently undetected by a creature in the area, it becomes hidden to that creature instead."
-        }
-      ],
-      "reactions": [
-        {
-          "name": "Retributive Strike",
-          "trigger": "An enemy damages an ally within 15 feet of you.",
-          "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it."
-        },
-        {
-          "name": "Shield Block",
-          "trigger": "While you have your shield raised, you take damage from a physical attack.",
-          "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
-        }
-      ],
-      "focus_points": 1,
-      "class_dc": 19
+    "religion": {
+      "proficiency": 1
     }
+  },
+  "proficiencies": {
+    "weapons": {
+      "simple": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "martial": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "advanced": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "unarmed": {
+        "proficiency": 1,
+        "name": "Trained"
+      }
+    },
+    "armor": {
+      "unarmored": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "light": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "medium": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "heavy": {
+        "proficiency": 1,
+        "name": "Trained"
+      }
+    }
+  },
+  "feats": [
+    {
+      "id": "feat-1",
+      "name": "Angelic Halo",
+      "level": 1,
+      "source": "Ancestry",
+      "description": "Your aura protects those nearby. You and allies within 15 feet gain a +1 circumstance bonus to saving throws against fear effects."
+    },
+    {
+      "id": "feat-2",
+      "name": "Deity's Domain",
+      "level": 1,
+      "source": "Champion",
+      "description": "You embody an aspect of your deity. Choose one of your deity's domains from the list in their entry. You gain the domain's initial domain spell as a devotion spell."
+    },
+    {
+      "id": "feat-3",
+      "name": "Shield Warden",
+      "level": 2,
+      "source": "Champion",
+      "description": "You use your shield to protect your allies as well as yourself. When you have a shield raised, you can use your Shield Block reaction when an attack is made against an adjacent ally. If you do, the shield prevents that ally from taking damage instead of preventing you from taking damage, following the normal rules for Shield Block."
+    },
+    {
+      "id": "feat-4",
+      "name": "Untrained Improvisation",
+      "level": 3,
+      "source": "General",
+      "description": "You've learned how to handle situations when you're out of your depth. Your proficiency bonus to untrained skill checks is equal to half your level instead of +0. If you're 7th level or higher, the bonus increases to your full level instead."
+    }
+  ],
+  "inventory": [
+    {
+      "id": "item-1",
+      "name": "Full Plate",
+      "quantity": 1,
+      "weight": 4.0,
+      "description": "Heavy armor that provides excellent protection at the cost of mobility."
+    },
+    {
+      "id": "item-2",
+      "name": "Steel Shield (Sturdy, Minor)",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "A reinforced shield that can absorb more damage before breaking. Hardness 8, HP 64, BT 32"
+    },
+    {
+      "id": "item-3",
+      "name": "Longsword (+1)",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately."
+    },
+    {
+      "id": "item-4",
+      "name": "Holy Symbol",
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "A silver symbol of Iomedae, the goddess of righteous valor, honor, and justice."
+    },
+    {
+      "id": "item-5",
+      "name": "Healer's Tools",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "These bandages, herbs, and suturing tools are necessary for Medicine checks to Treat Wounds."
+    },
+    {
+      "id": "item-6",
+      "name": "Potion of Healing (Minor)",
+      "quantity": 3,
+      "weight": 0.1,
+      "description": "Restores 1d8 HP when consumed."
+    },
+    {
+      "id": "item-7",
+      "name": "Adventurer's Pack",
+      "quantity": 1,
+      "weight": 2.0,
+      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin."
+    }
+  ],
+  "notes": [
+    {
+      "id": "note-1",
+      "title": "Oath of Devotion",
+      "date": "2025-04-05",
+      "content": "Today I swore my oath to Iomedae in the Cathedral of Absalom. The High Priest spoke of troubled times ahead and the need for champions to stand against the coming darkness. I will uphold the tenets of my oath: to be just, honorable, and merciful even to those who may not deserve it.",
+      "createdAt": "2025-04-05T09:30:00.000Z"
+    },
+    {
+      "id": "note-2",
+      "title": "Vision of Light",
+      "date": "2025-04-12",
+      "content": "During my evening prayers, I experienced a vision—a flash of golden light and the silhouette of a sword pointing toward the northern mountains. Could this be a sign from Iomedae herself? I must consult with the temple elders about the significance of this vision.",
+      "createdAt": "2025-04-12T22:15:00.000Z"
+    }
+  ],
+  "champion": {
+    "deity": "Iomedae",
+    "cause": "Paladin (Good)",
+    "alignment": "Lawful Good",
+    "tenets": [
+      "You must act with honor, never cheating, lying, or taking advantage of others.",
+      "You must respect legitimate authority.",
+      "You must act with mercy, showing compassion to those who deserve it and seeking to convert those who don't to goodness.",
+      "You must be righteous, standing against the forces of evil wherever they might hide."
+    ],
+    "devotion_spells": [
+      {
+        "id": "spell-1",
+        "name": "Lay on Hands",
+        "level": 1,
+        "traits": ["Champion", "Healing", "Necromancy", "Positive"],
+        "actions": "One Action",
+        "range": "Touch",
+        "targets": "1 willing living creature or 1 undead creature",
+        "description": "Your hands become infused with positive energy, healing a living creature or damaging an undead creature with a touch. If you use lay on hands on a willing living target, you restore 6 Hit Points. If the target is one of your allies, they also gain a +2 status bonus to AC for 1 round. Against an undead target, you deal 1d6 damage and it must attempt a basic Fortitude save. This damage increases to 1d8 if you have master proficiency in Religion."
+      },
+      {
+        "id": "spell-2",
+        "name": "Light of Revelation",
+        "level": 2,
+        "traits": ["Champion", "Divination", "Light"],
+        "actions": "Two Actions",
+        "area": "20-foot emanation",
+        "duration": "1 minute",
+        "description": "You shed a luminous aura, illuminating a 20-foot radius with bright light. Creatures in this area can't be concealed, though they can still be hidden. If a creature is currently undetected by a creature in the area, it becomes hidden to that creature instead."
+      }
+    ],
+    "reactions": [
+      {
+        "name": "Retributive Strike",
+        "trigger": "An enemy damages an ally within 15 feet of you.",
+        "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it."
+      },
+      {
+        "name": "Shield Block",
+        "trigger": "While you have your shield raised, you take damage from a physical attack.",
+        "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
+      }
+    ],
+    "focus_points": 1,
+    "class_dc": 19
   }
+}

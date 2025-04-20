@@ -5,7 +5,8 @@ import {
   getAbilityModifier, 
   formatModifier, 
   getProficiencyLabel, 
-  SKILL_ABILITY_MAP 
+  SKILL_ABILITY_MAP,
+  hasFeat
 } from '../../utils/CharacterUtils';
 
 const EnhancedSkillsList = ({ character, characterColor }) => {
@@ -13,6 +14,9 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
 
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
+
+  // Check if character has Untrained Improvisation
+  const hasUntrainedImprovisation = hasFeat(character, 'Untrained Improvisation');
 
   // Define skills with their key abilities and associated actions
   const skills = [
@@ -215,6 +219,23 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
     <div className="enhanced-skills-list">
       <h2 style={{ color: themeColor }}>Skills</h2>
       
+      {/* Display Untrained Improvisation notice if character has it */}
+      {hasUntrainedImprovisation && (
+        <div className="feat-notice" style={{ 
+          backgroundColor: '#f8f9fa', 
+          padding: '0.75rem', 
+          marginBottom: '1rem',
+          borderLeft: `4px solid ${themeColor}`,
+          borderRadius: '4px'
+        }}>
+          <strong style={{ color: themeColor }}>Untrained Improvisation:</strong> Your proficiency bonus to untrained skill checks is equal to 
+          {character.level >= 7 
+            ? ` your full level (${character.level})`
+            : ` half your level (${Math.floor(character.level / 2)})`
+          } instead of +0.
+        </div>
+      )}
+      
       <div className="skills-grid">
         {sortedSkills.map(skill => {
           // Get the skill proficiency from character data (0 if not found)
@@ -230,14 +251,34 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           const isExpanded = expandedSkills[skill.id];
           const proficiencyColorClass = getProficiencyColor(proficiency);
           
+          // Add a class if this is an untrained skill but character has Untrained Improvisation
+          const isUntrained = proficiency === 0;
+          const hasImprovisedSkill = isUntrained && hasUntrainedImprovisation;
+          
           return (
-            <div key={skill.id} className={`skill-card ${proficiencyColorClass}`}>
+            <div key={skill.id} className={`skill-card ${proficiencyColorClass} ${hasImprovisedSkill ? 'improvised-skill' : ''}`}>
               <div 
                 className="skill-header" 
                 onClick={() => toggleSkill(skill.id)}
               >
                 <div className="skill-name-section">
-                  <h3 style={{ color: themeColor }}>{skill.name}</h3>
+                  <h3 style={{ color: themeColor }}>
+                    {skill.name}
+                    {hasImprovisedSkill && (
+                      <span 
+                        style={{ 
+                          fontSize: '0.75rem', 
+                          marginLeft: '0.5rem', 
+                          color: '#666',
+                          backgroundColor: '#f0f0f0',
+                          padding: '0.15rem 0.4rem',
+                          borderRadius: '4px'
+                        }}
+                      >
+                        Improvised
+                      </span>
+                    )}
+                  </h3>
                   <div className="skill-ability">
                     {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
                   </div>

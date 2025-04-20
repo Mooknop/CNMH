@@ -51,6 +51,20 @@
   border-left: 4px solid #f39c12; /* Gold */
 }
 
+/* Special styling for improvised skills */
+.skill-card.improvised-skill.untrained-color {
+  border-left: 4px dashed #666;
+}
+
+.improvised-skill .skill-header {
+  background-color: #fafbfc;
+}
+
+.feat-notice {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .skill-header {
   padding: 0.75rem 1rem;
   display: flex;
@@ -72,6 +86,8 @@
   margin: 0;
   font-size: 1.1rem;
   color: #5e2929;
+  display: flex;
+  align-items: center;
 }
 
 .skill-ability {
@@ -188,6 +204,12 @@
 
 .skill-card.legendary-color .skill-actions {
   background-color: #fff7e8;
+}
+
+/* Special styling for improvised skill actions */
+.skill-card.improvised-skill .skill-actions {
+  background-color: #fafafa;
+  border-top: 1px dashed #ddd;
 }
 
 /* Media query for smaller screens */

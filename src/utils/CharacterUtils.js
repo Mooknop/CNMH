@@ -56,13 +56,42 @@ export const getProficiencyLabel = (proficiency) => {
 };
 
 /**
+ * Check if a character has a specific feat by name
+ * @param {Object} character - The character object
+ * @param {string} featName - Name of the feat to check for
+ * @returns {boolean} - True if character has the feat
+ */
+export const hasFeat = (character, featName) => {
+  if (!character || !character.feats || !Array.isArray(character.feats)) {
+    return false;
+  }
+  
+  return character.feats.some(feat => 
+    feat.name.toLowerCase() === featName.toLowerCase()
+  );
+};
+
+/**
  * Get proficiency bonus based on proficiency rank and level
  * @param {number} proficiencyRank - Proficiency rank (0-4)
  * @param {number} level - Character level
+ * @param {Object} character - The character object (optional, for feats)
  * @returns {number} - Calculated proficiency bonus
  */
-export const getProficiencyBonus = (proficiencyRank, level) => {
-  if (proficiencyRank <= 0) return 0;
+export const getProficiencyBonus = (proficiencyRank, level, character = null) => {
+  if (proficiencyRank <= 0) {
+    // Check for Untrained Improvisation feat
+    if (character && hasFeat(character, "Untrained Improvisation")) {
+      const characterLevel = character.level || level || 0;
+      // Level 7+ gets full level, otherwise half level
+      if (characterLevel >= 7) {
+        return characterLevel;
+      }
+      return Math.floor(characterLevel / 2);
+    }
+    return 0;
+  }
+  
   // In PF2E: Trained (+2), Expert (+4), Master (+6), Legendary (+8) plus level
   return (proficiencyRank * 2) + (level || 0);
 };
@@ -109,7 +138,7 @@ export const getSkillModifier = (character, skillId) => {
   // Get the proficiency value and calculate bonus
   const skills = character.skills || {};
   const skillData = skills[skillId] || { proficiency: 0 };
-  const profBonus = getProficiencyBonus(skillData.proficiency || 0, character.level || 0);
+  const profBonus = getProficiencyBonus(skillData.proficiency || 0, character.level || 0, character);
   
   // Return the sum of ability modifier and proficiency bonus
   return abilityMod + profBonus;
