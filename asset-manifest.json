@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "https://mooknop.github.io/pathfinder-2e-manager/static/css/main.adc92cde.css",
-    "main.js": "https://mooknop.github.io/pathfinder-2e-manager/static/js/main.fec8c423.js",
-    "static/js/453.7ce2a6f6.chunk.js": "https://mooknop.github.io/pathfinder-2e-manager/static/js/453.7ce2a6f6.chunk.js",
+    "main.js": "https://mooknop.github.io/pathfinder-2e-manager/static/js/main.60bd27e5.js",
+    "static/js/453.c1a3442c.chunk.js": "https://mooknop.github.io/pathfinder-2e-manager/static/js/453.c1a3442c.chunk.js",
     "index.html": "https://mooknop.github.io/pathfinder-2e-manager/index.html",
     "main.adc92cde.css.map": "https://mooknop.github.io/pathfinder-2e-manager/static/css/main.adc92cde.css.map",
-    "main.fec8c423.js.map": "https://mooknop.github.io/pathfinder-2e-manager/static/js/main.fec8c423.js.map",
-    "453.7ce2a6f6.chunk.js.map": "https://mooknop.github.io/pathfinder-2e-manager/static/js/453.7ce2a6f6.chunk.js.map"
+    "main.60bd27e5.js.map": "https://mooknop.github.io/pathfinder-2e-manager/static/js/main.60bd27e5.js.map",
+    "453.c1a3442c.chunk.js.map": "https://mooknop.github.io/pathfinder-2e-manager/static/js/453.c1a3442c.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.adc92cde.css",
-    "static/js/main.fec8c423.js"
+    "static/js/main.60bd27e5.js"
   ]
 }
