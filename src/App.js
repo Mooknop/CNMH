@@ -9,11 +9,9 @@ import Lore from './pages/Lore';
 import './App.css';
 
 function App() {
-  const basename = process.env.PUBLIC_URL;
-
   return (
     <CharacterProvider>
-      <Router basename={basename}>
+      <Router>
         <div className="app-container">
           <Navbar />
           <main className="main-content">
