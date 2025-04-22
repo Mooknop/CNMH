@@ -1,12 +1,20 @@
 import React, { useContext } from 'react';
+import { 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  PolarRadiusAxis, 
+  Radar, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { 
   getAbilityModifier, 
   formatModifier, 
   getSkillModifier,
   SKILL_ABILITY_MAP,
-  CHARACTER_COLORS, // Import the color constants
-  getCharacterColor  // Import the utility function
+  getCharacterColor
 } from '../../utils/CharacterUtils';
 import './PartySummary.css';
 
@@ -19,7 +27,7 @@ const PartySummary = () => {
       const abilities = char.abilities || {};
       return {
         name: char.name,
-        color: getCharacterColor(index), // Use the utility function
+        color: getCharacterColor(index),
         class: char.class,
         abilities: {
           strength: getAbilityModifier(abilities.strength || 10),
@@ -37,7 +45,27 @@ const PartySummary = () => {
 
   const partyAbilityData = getAbilityData();
   
-  // Find min and max modifiers across all characters for scaling
+  // Format data for radar chart
+  const formatDataForRadarChart = () => {
+    const abilities = ['strength', 'constitution', 'wisdom', 'charisma', 'intelligence', 'dexterity'];
+    
+    return abilities.map(ability => {
+      const dataPoint = {
+        ability: ability.substring(0, 3).toUpperCase(),
+      };
+      
+      // Add each character's value for this ability
+      partyAbilityData.forEach(char => {
+        dataPoint[char.name] = char.abilities[ability];
+      });
+      
+      return dataPoint;
+    });
+  };
+  
+  const radarData = formatDataForRadarChart();
+  
+  // Find min and max modifiers across all characters for radar chart scaling
   const allModifiers = partyAbilityData.flatMap(char => 
     Object.values(char.abilities)
   );
@@ -45,14 +73,10 @@ const PartySummary = () => {
   const minModifier = Math.min(...allModifiers);
   const maxModifier = Math.max(...allModifiers);
   
-  // Calculate bar width percentage
-  const getBarWidth = (value) => {
-    const range = maxModifier - minModifier;
-    if (range === 0) return 50; // Default for no variation
-    
-    // Scale to 10-100% range
-    return 10 + ((value - minModifier) / range) * 90;
-  };
+  // Determine domain for radar chart
+  // Add a small buffer to min/max for better visualization
+  const domainMin = Math.floor(minModifier) - 1;
+  const domainMax = Math.ceil(maxModifier) + 1;
   
   // Find the best character for each skill
   const findBestAtSkill = () => {
@@ -80,7 +104,7 @@ const PartySummary = () => {
         bestCharacters[skill] = {
           name: bestChar.name,
           class: bestChar.class,
-          color: getCharacterColor(bestChar.colorIndex), // Use the utility function
+          color: getCharacterColor(bestChar.colorIndex),
           modifier: bestModifier
         };
       }
@@ -101,51 +125,41 @@ const PartySummary = () => {
       <h2>Party Overview</h2>
       
       <div className="summary-content">
-        <div className="ability-comparison-container">          
-          <div className="ability-comparison">
-            <div className="character-column-headers">
-              {partyAbilityData.map((char) => (
-                <div 
-                  key={`header-${char.name}`} 
-                  className="character-column-header"
-                  style={{ 
-                    flexBasis: `${100 / partyAbilityData.length}%`,
-                    color: char.color 
-                  }}
-                >
-                  <span className="char-name">{char.name}</span>
-                  <span className="char-class">{char.class}</span>
-                </div>
-              ))}
-            </div>
-            {['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'].map(ability => (
-              <div key={ability} className="ability-row">
-                <div className="ability-label">
-                  {ability.substring(0, 3).toUpperCase()}
-                </div>
-                <div className="ability-bars">
-                  {partyAbilityData.map((char, index) => (
-                    <div 
-                      key={`${char.name}-${ability}`} 
-                      className="char-ability-bar-container"
-                      style={{ flexBasis: `${100 / partyAbilityData.length}%` }}
-                    >
-                      <div 
-                        className="char-ability-bar" 
-                        style={{ 
-                          width: `${getBarWidth(char.abilities[ability])}%`,
-                          backgroundColor: char.color,
-                        }}
-                      >
-                        <span className="char-ability-value">
-                          {formatModifier(char.abilities[ability])}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+        <div className="ability-comparison-container">
+          <h3>Ability Comparison</h3>
+          
+          {/* Radar Chart with integrated Legend */}
+          <div className="radar-chart-container" style={{ width: '100%', height: 400, marginTop: '1rem' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart 
+                outerRadius={130} 
+                data={radarData}
+                margin={{ top: 10, right: 30, bottom: 30, left: 30 }}
+              >
+                <PolarGrid />
+                <PolarAngleAxis dataKey="ability" />
+                <PolarRadiusAxis angle={30} domain={[domainMin, domainMax]} />
+                
+                {/* Create a Radar for each character */}
+                {partyAbilityData.map((char) => (
+                  <Radar
+                    key={`radar-${char.name}`}
+                    name={`${char.name} (${char.class})`}
+                    dataKey={char.name}
+                    stroke={char.color}
+                    fill={char.color}
+                    fillOpacity={0.2}
+                  />
+                ))}
+                
+                <Legend 
+                  layout="horizontal" 
+                  align="center" 
+                  verticalAlign="bottom"
+                  wrapperStyle={{ paddingTop: '20px' }}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
           </div>
         </div>        
         <div className="skill-specialists-container">
