@@ -169,11 +169,18 @@ export const getAttackBonus = (abilityMod, proficiency, level) => {
 export const calculateBulkLimit = (character) => {
   if (!character || !character.abilities) return { bulkLimit: 0, encumberedThreshold: 0 };
   
-  // In PF2E, Bulk limit is equal to Strength ability modifier + 5
+  // In PF2E, Bulk limit is equal to Strength ability modifier + 10
   const abilities = character.abilities || {};
   const strMod = getAbilityModifier(abilities.strength || 10);
-  const bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
-  const encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
+  let bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
+  let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
+  
+  // Check if the character has the Hefty Hauler feat
+  if (hasFeat(character, "Hefty Hauler")) {
+    // Hefty Hauler increases both maximum and encumbered Bulk by 2
+    bulkLimit += 2;
+    encumberedThreshold += 2;
+  }
   
   return { bulkLimit, encumberedThreshold };
 };
