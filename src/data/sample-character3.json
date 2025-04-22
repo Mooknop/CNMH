@@ -180,14 +180,14 @@
     "spells": [
       {
         "id": "spell-1",
-        "name": "Detect Magic",
+        "name": "Light",
         "level": 0,
-        "traits": ["Cantrip", "Detection", "Divination"],
+        "traits": ["Cantrip", "Evocation", "Light"],
         "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "",
-        "duration": "",
-        "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies."
+        "range": "Touch",
+        "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
+        "duration": "Until the next time you make your daily preparations",
+        "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
       },
       {
         "id": "spell-2",
@@ -205,6 +205,17 @@
       },
       {
         "id": "spell-3",
+        "name": "Detect Magic",
+        "level": 0,
+        "traits": ["Cantrip", "Detection", "Divination"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "",
+        "duration": "",
+        "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies."
+      },
+      {
+        "id": "spell-4",
         "name": "Prestidigitation",
         "level": 0,
         "traits": ["Cantrip", "Evocation"],
@@ -215,42 +226,56 @@
         "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color."
       },
       {
-        "id": "spell-4",
-        "name": "Shield",
-        "level": 0,
-        "traits": ["Cantrip", "Abjuration", "Force"],
-        "actions": "One Action",
-        "duration": "Until the start of your next turn",
-        "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield."
-      },
-      {
         "id": "spell-5",
-        "name": "Burning Hands",
-        "level": 1,
-        "traits": ["Evocation", "Fire"],
+        "name": "Mage Hand",
+        "level": 0,
+        "traits": ["Cantrip", "Evocation"],
         "actions": "Two Actions",
-        "area": "15-foot cone",
-        "defense": "Reflex",
-        "description": "Gouts of flame rush from your hands. You deal 2d6 fire damage to creatures in the area. The creatures must attempt a basic Reflex save.",
-        "heightened": {
-          "+1": "The damage increases by 2d6."
-        }
+        "range": "30 feet",
+        "targets": "1 unattended object of 1 Bulk or less",
+        "duration": "Sustained",
+        "description": "You create a single magical hand, either invisible or ghostlike, that grasps the target object and moves it slowly. You can move the object 20 feet each time you Sustain the Spell. The hand can't move an object more than 20 feet above the ground unless the object started more than 20 feet above the ground."
       },
       {
         "id": "spell-6",
-        "name": "Magic Missile",
-        "level": 1,
-        "traits": ["Evocation", "Force"],
-        "actions": "One to Three Actions",
+        "name": "Ray of Frost",
+        "level": 0,
+        "traits": ["Cantrip", "Cold", "Evocation"],
+        "actions": "Two Actions",
         "range": "120 feet",
         "targets": "1 creature",
-        "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
-        "heightened": {
-          "+2": "You fire one additional missile with each action you spend."
-        }
+        "defense": "Reflex",
+        "description": "You fire a ray of frost. Make a ranged spell attack roll against the target's AC. On a hit, you deal 1d4+4 cold damage plus 1d4 persistent cold damage. On a critical hit, double the initial damage, but not the persistent damage."
       },
       {
         "id": "spell-7",
+        "name": "Telekinetic Projectile",
+        "level": 0,
+        "traits": ["Cantrip", "Attack", "Evocation"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "AC",
+        "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier."
+      },
+      {
+        "id": "spell-8",
+        "name": "Ancestral Memories",
+        "level": 1,
+        "traits": ["Divination", "Mental"],
+        "actions": "One Minute",
+        "targets": "Self",
+        "duration": "Until the end of your next turn",
+        "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
+        "heightened": {
+          "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
+          "5th": "You can select three skills, and the proficiency rank you gain is master instead of trained.",
+          "7th": "You can select four skills, and the proficiency rank you gain is legendary instead of trained."
+        },
+        "prepared": true
+      },
+      {
+        "id": "spell-9",
         "name": "Mage Armor",
         "level": 1,
         "traits": ["Abjuration"],
@@ -262,69 +287,92 @@
           "4th": "You gain a +2 item bonus to AC and a maximum Dexterity modifier of +5.",
           "6th": "You gain a +2 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws.",
           "8th": "You gain a +3 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws."
-        }
-      },
-      {
-        "id": "spell-8",
-        "name": "True Strike",
-        "level": 1,
-        "traits": ["Divination", "Fortune"],
-        "actions": "One Action",
-        "targets": "Self",
-        "duration": "Until the end of your turn",
-        "description": "A glimpse into the future ensures your next blow strikes true. The next time you make an attack roll before the end of your turn, roll twice and use the better result. The attack ignores circumstance penalties to the attack roll and any flat check required due to the target being concealed or hidden."
-      },
-      {
-        "id": "spell-9",
-        "name": "Scorching Ray",
-        "level": 2,
-        "traits": ["Evocation", "Fire"],
-        "actions": "Two Actions",
-        "range": "60 feet",
-        "targets": "1 creature",
-        "defense": "Reflex",
-        "description": "You fire a ray of heat and flame. Make a spell attack roll. On a success, you deal 4d6 fire damage. On a critical success, you deal double damage.",
-        "heightened": {
-          "+1": "The damage increases by 2d6."
-        }
+        },
+        "prepared": true
       },
       {
         "id": "spell-10",
-        "name": "Mirror Image",
-        "level": 2,
-        "traits": ["Illusion", "Visual"],
-        "actions": "Two Actions",
-        "targets": "Self",
-        "duration": "1 minute",
-        "description": "Three illusory duplicates of you swirl around your space, potentially causing those who attack you to hit one of the images instead of you. These images move with you and disappear one at a time when a foe succeeds at attacking one of them. The images have AC 10 + your Dexterity modifier. Strikes that would miss you but would hit AC 10 + your Dexterity modifier hit and destroy a duplicate instead."
-      },
-      {
-        "id": "spell-11",
-        "name": "Haste",
-        "level": 3,
-        "traits": ["Transmutation"],
+        "name": "Command",
+        "level": 1,
+        "traits": ["Auditory", "Enchantment", "Linguistic", "Mental"],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 creature",
-        "duration": "1 minute",
-        "description": "Magic empowers the target to act faster. It gains the quickened condition and can use the extra action each round only for Strike and Stride actions.",
+        "defense": "Will",
+        "description": "You shout a command that's hard to ignore. You can command the target to approach you, run away, release what it's holding, fall prone, or stand in place. The creature must succeed at a Will save or follow your command on its next turn. Some commands might require the target to Seek to approach you.",
         "heightened": {
-          "7th": "You can target up to 6 creatures."
-        }
+          "3rd": "You can target up to 2 creatures.",
+          "5th": "You can target up to 6 creatures.",
+          "7th": "You can target up to 12 creatures.",
+          "9th": "You can target up to 24 creatures."
+        },
+        "prepared": true
+      },
+      {
+        "id": "spell-11",
+        "name": "Magic Missile",
+        "level": 1,
+        "traits": ["Evocation", "Force"],
+        "actions": "One to Three Actions",
+        "range": "120 feet",
+        "targets": "1 creature",
+        "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
+        "heightened": {
+          "+2": "You fire one additional missile with each action you spend."
+        },
+        "prepared": true
       },
       {
         "id": "spell-12",
-        "name": "Fireball",
-        "level": 3,
-        "traits": ["Evocation", "Fire"],
+        "name": "Shocking Grasp",
+        "level": 1,
+        "traits": ["Attack", "Electricity", "Evocation"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 creature",
+        "defense": "AC (fortitude)",
+        "description": "You shroud your hands in a crackling field of electricity. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes 1d4 persistent electricity damage on a hit.",
+        "heightened": {
+          "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
+        },
+        "prepared": true
+      },
+      {
+        "id": "spell-13",
+        "name": "Blazing Bolt",
+        "level": 2,
+        "traits": ["Attack", "Evocation", "Fire"],
         "actions": "Two Actions",
         "range": "500 feet",
-        "area": "20-foot burst",
-        "defense": "Reflex",
-        "description": "A roaring ball of fire explodes, dealing 6d6 fire damage. Each creature in the area must attempt a basic Reflex save.",
+        "targets": "1 creature",
+        "description": "You fire a bolt of roaring flame streaking through the air. Make a ranged spell attack against the AC of a target creature. On a success, you deal 5d6 fire damage. On a critical success, you deal double damage.",
         "heightened": {
-          "+1": "The damage increases by 2d6."
-        }
+          "+1": "The bolt's damage increases by 3d6."
+        },
+        "prepared": true
+      },
+      {
+        "id": "spell-14",
+        "name": "Knock",
+        "level": 2,
+        "traits": ["Transmutation"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 door, lock, or container",
+        "duration": "1 minute",
+        "description": "You knock on a locked door, window, gate, chest, or other object with a closure, and it opens. This spell works against most mundane locks but not ones of exceptional materials, such as adamantine locks or locks requiring unique keys. For complex locks, the GM might roll a secret check using your spell DC against the Thievery DC to pick the lock.",
+        "prepared": true
+      },
+      {
+        "id": "spell-15",
+        "name": "Dispel Magic",
+        "level": 2,
+        "traits": ["Abjuration"],
+        "actions": "Two Actions",
+        "range": "120 feet",
+        "targets": "1 spell effect or unattended magic item",
+        "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail.",
+        "prepared": true
       }
     ],
     "bloodline": {
@@ -374,54 +422,91 @@
       "current": 3
     },
     "spells": [
-      {
-        "id": "staff-spell-1",
-        "name": "Burning Hands",
-        "level": 1,
-        "traits": ["Evocation", "Fire"],
-        "actions": "Two Actions",
-        "area": "15-foot cone",
-        "defense": "Reflex",
-        "description": "Gouts of flame rush from your hands. You deal 2d6 fire damage to creatures in the area. The creatures must attempt a basic Reflex save.",
-        "heightened": {
-          "+1": "The damage increases by 2d6."
-        }
-      },
-      {
-        "id": "staff-spell-2",
-        "name": "Produce Flame",
-        "level": 0,
-        "traits": ["Attack", "Cantrip", "Evocation", "Fire"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 creature",
-        "description": "A small ball of flame appears in your hand, and you throw it at your target. Make a spell attack roll. On a success, you deal 1d4+4 fire damage. On a critical success, the target takes double damage and 1d4 persistent fire damage."
-      },
-      {
-        "id": "staff-spell-3",
-        "name": "Scorching Ray",
-        "level": 2,
-        "traits": ["Evocation", "Fire"],
-        "actions": "Two Actions",
-        "range": "60 feet",
-        "targets": "1 creature",
-        "defense": "Reflex",
-        "description": "You fire a ray of heat and flame. Make a spell attack roll. On a success, you deal 4d6 fire damage. On a critical success, you deal double damage.",
-        "heightened": {
-          "+1": "The damage increases by 2d6."
-        }
-      },
-      {
-        "id": "staff-spell-4",
-        "name": "Wall of Fire",
-        "level": 4,
-        "traits": ["Evocation", "Fire"],
-        "actions": "Three Actions",
-        "range": "120 feet",
-        "area": "60-foot line",
-        "duration": "1 minute",
-        "description": "You create a wall of flame in a straight line up to 60 feet long and 10 feet high. The wall stands vertically and deals 3d6 fire damage to creatures that enter the wall's space or start their turn there. The wall deals this damage when it first appears, dealing damage to creatures in its space."
-      }
-    ]
+    {
+      "id": "staff-spell-1",
+      "name": "Figment",
+      "level": 0,
+      "traits": ["Cantrip", "Illusion", "Visual"],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "duration": "Sustained",
+      "description": "You create a visual illusion that distracts the target. This illusion appears as a vague shape just on the edge of the target's vision. The target must attempt a Will save."
+    },
+    {
+      "id": "staff-spell-2",
+      "name": "Infectious Enthusiasm",
+      "level": 1,
+      "traits": ["Emotion", "Enchantment", "Mental"],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "duration": "10 minutes",
+      "defense": "Will",
+      "description": "You inspire your target with enthusiasm. The target gains a +1 status bonus to a skill of your choice and to Will saves to guard against mental effects."
+    },
+    {
+      "id": "staff-spell-3",
+      "name": "Illusory Object",
+      "level": 1,
+      "traits": ["Illusion", "Visual"],
+      "actions": "Two Actions",
+      "range": "500 feet",
+      "duration": "10 minutes",
+      "description": "You create an illusory visual image of a stationary object. The entire image must fit within a 20-foot cube. The object appears to animate naturally, but it can't move outside of the cube."
+    },
+    {
+      "id": "staff-spell-4",
+      "name": "Fashionista",
+      "level": 2,
+      "traits": ["Illusion", "Visual"],
+      "actions": "Two Actions",
+      "range": "Touch",
+      "targets": "1 willing creature",
+      "duration": "1 hour",
+      "description": "You surround a creature in stylish illusory clothes that shimmer with light. The creature gains a +1 status bonus to checks to Make an Impression."
+    },
+    {
+      "id": "staff-spell-5",
+      "name": "Overselling Flourish",
+      "level": 2,
+      "traits": ["Illusion", "Mental", "Visual"],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "description": "You present an ordinary item as if it were valuable, or cause a willing merchant to perceive something you offer as being worth far more than it is."
+    },
+    {
+      "id": "staff-spell-6",
+      "name": "Illusory Creature",
+      "level": 3,
+      "traits": ["Auditory", "Illusion", "Visual"],
+      "actions": "Two Actions",
+      "range": "500 feet",
+      "duration": "Sustained",
+      "description": "You create an illusory image of a huge or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the illusory creature are ever farther than 500 feet apart, the spell ends."
+    },
+    {
+      "id": "staff-spell-7",
+      "name": "Instant Parade",
+      "level": 3,
+      "traits": ["Conjuration", "Extradimensional"],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "duration": "Sustained up to 1 minute",
+      "description": "You create a small but impressive parade, about 30 feet long and 10 feet wide, that marches and plays music as you direct. The parade consists of magical constructs that resemble humans with brightly colored costumes and festive instruments."
+    },
+    {
+      "id": "staff-spell-8",
+      "name": "Mirror Image",
+      "level": 2,
+      "traits": ["Illusion", "Visual"],
+      "actions": "Two Actions",
+      "targets": "Self",
+      "duration": "1 minute",
+      "description": "Three illusory duplicates of you swirl around your space, potentially causing those who attack you to hit one of the images instead of you. These images move with you and disappear one at a time when a foe succeeds at attacking one of them."
+    }
+  ]
   }
 }

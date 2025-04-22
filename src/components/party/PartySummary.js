@@ -144,7 +144,7 @@ const PartySummary = () => {
                 {partyAbilityData.map((char) => (
                   <Radar
                     key={`radar-${char.name}`}
-                    name={`${char.name} (${char.class})`}
+                    name={`${char.name}`}
                     dataKey={char.name}
                     stroke={char.color}
                     fill={char.color}

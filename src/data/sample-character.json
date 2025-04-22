@@ -168,17 +168,26 @@
     "spells": [
       {
         "id": "spell-1",
-        "name": "Light",
+        "name": "Inspire Courage",
         "level": 0,
-        "traits": ["Cantrip", "Evocation", "Light"],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
-        "duration": "Until the next time you make your daily preparations",
-        "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
+        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+        "actions": "One Action",
+        "area": "60-foot emanation",
+        "duration": "1 round",
+        "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
       },
       {
         "id": "spell-2",
+        "name": "Counter Performance",
+        "level": 0,
+        "traits": ["Bard", "Cantrip", "Composition", "Enchantment", "Fortune", "Mental"],
+        "actions": "Reaction",
+        "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
+        "area": "60-foot emanation",
+        "description": "You use your performance to counter a sonic or visual effect. Roll a Performance check; if your performance is instrumental, you gain a +2 circumstance bonus against auditory effects, and if your performance is a visual display, you gain a +2 circumstance bonus against visual effects. You can counter both types with a combination performance, but you don't gain a circumstance bonus."
+      },
+      {
+        "id": "spell-3",
         "name": "Daze",
         "level": 0,
         "traits": ["Cantrip", "Enchantment", "Mental", "Nonlethal"],
@@ -189,72 +198,57 @@
         "description": "You cloud the target's mind and daze it with a mental jolt. The jolt deals 1d6 mental damage; the target must attempt a basic Will save. If the target critically fails the save, it is also stunned 1."
       },
       {
-        "id": "spell-3",
-        "name": "Ghost Sound",
+        "id": "spell-4",
+        "name": "Forbidding Ward",
         "level": 0,
-        "traits": ["Auditory", "Cantrip", "Illusion"],
+        "traits": ["Abjuration", "Cantrip"],
         "actions": "Two Actions",
         "range": "30 feet",
-        "duration": "Sustained",
-        "description": "You create an auditory illusion of simple sounds that has a maximum volume equal to four normal humans shouting. The sounds emanate from a specific location, and you can't create intelligible words or other intricate sounds."
-      },
-      {
-        "id": "spell-4",
-        "name": "Inspire Courage",
-        "level": 0,
-        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
-        "actions": "One Action",
-        "area": "60-foot emanation",
-        "duration": "1 round",
-        "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
+        "targets": "1 ally and 1 enemy",
+        "duration": "Until the start of your next turn",
+        "description": "You ward an ally against the attacks and hostile spells from the target enemy. The target ally gains a +1 status bonus to Armor Class and saving throws against the target enemy's attacks, spells, and other effects."
       },
       {
         "id": "spell-5",
-        "name": "Inspire Defense",
+        "name": "Guidance",
         "level": 0,
-        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+        "traits": ["Cantrip", "Divination"],
         "actions": "One Action",
-        "area": "60-foot emanation",
-        "duration": "1 round",
-        "description": "You inspire your allies to protect themselves more effectively. You and all allies in the area gain a +1 status bonus to AC and saving throws, as well as resistance 1 to all damage."
+        "range": "30 feet",
+        "targets": "1 creature",
+        "duration": "Until the start of your next turn",
+        "description": "You provide divine guidance, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the duration ends. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, the target is temporarily immune for 1 hour."
       },
       {
         "id": "spell-6",
-        "name": "Charm",
-        "level": 1,
-        "traits": ["Emotion", "Enchantment", "Incapacitation", "Mental"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 creature",
-        "duration": "1 hour",
-        "defense": "Will",
-        "description": "To the target, your words are honey and your visage seems bathed in a captivating glow. The target must attempt a Will save, with a +4 circumstance bonus if you or your allies recently threatened it or used hostile actions against it.",
-        "prepared": true
+        "name": "Shield",
+        "level": 0,
+        "traits": ["Abjuration", "Cantrip", "Force"],
+        "actions": "One Action",
+        "duration": "Until the start of your next turn",
+        "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield."
       },
       {
         "id": "spell-7",
-        "name": "Magic Weapon",
+        "name": "Animate Dead",
         "level": 1,
-        "traits": ["Transmutation"],
+        "traits": ["Necromancy"],
         "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 weapon that is unattended or wielded by you or a willing ally",
-        "duration": "1 minute",
-        "description": "The weapon becomes a +1 striking weapon, gaining a +1 item bonus to attack rolls and increasing the number of weapon damage dice to two.",
+        "range": "30 feet",
+        "targets": "1 corpse",
+        "duration": "Sustained up to 1 minute",
+        "description": "You temporarily animate a corpse to fight for you. The corpse becomes a mindless undead creature. If the corpse was previously animated, you can instead extend the duration of your control over it for the duration of this spell. The animated corpse acts on your next turn and has 4 actions each turn that it remains animated.",
         "prepared": true
       },
       {
         "id": "spell-8",
-        "name": "Soothe",
+        "name": "Bless",
         "level": 1,
-        "traits": ["Emotion", "Enchantment", "Healing", "Mental"],
+        "traits": ["Enchantment", "Mental"],
         "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 willing living creature",
-        "description": "You attempt to calm the target by crooning a gentle melody or offering comforting words. The target regains 1d10+4 Hit Points, and if they were frightened, they reduce their frightened value by 1.",
-        "heightened": {
-          "+1": "The amount of healing increases by 1d10+4."
-        },
+        "area": "5-foot emanation",
+        "duration": "1 minute",
+        "description": "Blessings from beyond help your allies strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. The first time each round a new ally enters the area, the spell's emanation increases by 5 feet.",
         "prepared": true
       },
       {
@@ -274,29 +268,43 @@
       },
       {
         "id": "spell-10",
-        "name": "Hideous Laughter",
-        "level": 2,
-        "traits": ["Emotion", "Enchantment", "Mental"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 living creature",
-        "duration": "Sustained up to 1 minute",
-        "defense": "Will",
-        "description": "The target is overcome with uncontrollable laughter. It must attempt a Will save. On a critical success, the target is unaffected. On a success, the target is slowed 1 for 1 round. On a failure, the target is slowed 1 and flat-footed for the duration. On a critical failure, the target falls prone and can't use reactions or take actions other than to laugh for 1 round, and is then slowed 1 and flat-footed for the remaining duration.",
+        "name": "Magic Missile",
+        "level": 1,
+        "traits": ["Evocation", "Force"],
+        "actions": "One to Three Actions",
+        "range": "120 feet",
+        "targets": "1 creature",
+        "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
+        "heightened": {
+          "+2": "You fire one additional missile with each action you spend."
+        },
         "prepared": true
       },
       {
         "id": "spell-11",
-        "name": "Sound Burst",
+        "name": "Charitable Urge",
+        "level": 2,
+        "traits": ["Enchantment", "Incapacitation", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "duration": "Varies",
+        "description": "You implant a charitable urge in the target's mind. The target must attempt a Will save. If the target has no action or reaction available when it fails its save, it is affected for an equal amount of time after it regains actions.",
+        "prepared": true
+      },
+      {
+        "id": "spell-12",
+        "name": "Noise Blast",
         "level": 2,
         "traits": ["Evocation", "Sonic"],
         "actions": "Two Actions",
-        "range": "30 feet",
-        "area": "10-foot burst",
+        "range": "60 feet",
+        "area": "20-foot burst",
         "defense": "Fortitude",
-        "description": "You create a cacophonous noise that deals 2d10 sonic damage to creatures in the area. Each creature must attempt a Fortitude save. On a critical failure, the creature is deafened for 1 minute. On a failure, the creature is deafened for 1 round.",
+        "description": "A scintillating array of sounds tears through the minds of your enemies. Targets must attempt a Fortitude save and take 2d8 sonic damage. On a critical success, they are unaffected. On a success, they take half damage. On a failure, they take full damage and are deafened for 1 round. On a critical failure, they take double damage and are deafened for 4 rounds.",
         "heightened": {
-          "+1": "The damage increases by 1d10."
+          "+1": "The damage increases by 1d8."
         },
         "prepared": true
       }
