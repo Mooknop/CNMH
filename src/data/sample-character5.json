@@ -78,10 +78,10 @@
   "feats": [
     {
       "id": "feat-1",
-      "name": "Angelic Halo",
+      "name": "Kineticist Dedication",
       "level": 1,
-      "source": "Ancestry",
-      "description": "Your aura protects those nearby. You and allies within 15 feet gain a +1 circumstance bonus to saving throws against fear effects."
+      "source": "Archetype",
+      "description": "You gain the ability to gather and shape elemental energy. Choose an element: air, earth, fire, metal, water, or wood. You gain an impulse attack with the element trait from a gate of your choice."
     },
     {
       "id": "feat-2",
@@ -92,17 +92,59 @@
     },
     {
       "id": "feat-3",
-      "name": "Shield Warden",
-      "level": 2,
+      "name": "Devoted Guardian",
+      "level": 1,
       "source": "Champion",
-      "description": "You use your shield to protect your allies as well as yourself. When you have a shield raised, you can use your Shield Block reaction when an attack is made against an adjacent ally. If you do, the shield prevents that ally from taking damage instead of preventing you from taking damage, following the normal rules for Shield Block."
+      "description": "You've sworn to protect your allies with your shield. When you use the Shield Block reaction to protect an ally, if the ally takes any damage from the attack, you can reduce the damage they take by 2 + your level, and you increase the damage your shield takes by the same amount."
     },
     {
       "id": "feat-4",
+      "name": "Nimble Reprisal",
+      "level": 2,
+      "source": "Ancestry",
+      "description": "If an enemy misses you with a melee attack, you can use your reaction to Step away from that enemy. The enemy must remain within your reach throughout your Step to use this reaction."
+    },
+    {
+      "id": "feat-5",
+      "name": "Shield Block",
+      "level": 1,
+      "source": "General",
+      "description": "You snap your shield in place to ward off a blow. You immediately use your shield's Hardness to reduce the damage you would take by that amount. Your shield takes the damage that was prevented in this way instead."
+    },
+    {
+      "id": "feat-6",
       "name": "Untrained Improvisation",
       "level": 3,
       "source": "General",
       "description": "You've learned how to handle situations when you're out of your depth. Your proficiency bonus to untrained skill checks is equal to half your level instead of +0. If you're 7th level or higher, the bonus increases to your full level instead."
+    },
+    {
+      "id": "feat-7",
+      "name": "Natural Ambition",
+      "level": 1,
+      "source": "Human",
+      "description": "Your ambition knows no bounds, and you strive to learn as much as you can. You gain a 1st-level class feat."
+    },
+    {
+      "id": "feat-8",
+      "name": "Hefty Hauler",
+      "level": 1,
+      "source": "General",
+      "description": "You can carry more than your frame implies. Increase your maximum Bulk by 2 and your encumbered Bulk by 2."
+    },
+    {
+      "id": "feat-9",
+      "name": "Hobnobber",
+      "level": 1,
+      "source": "Skill",
+      "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2)."
+    },
+    {
+      "id": "feat-10",
+      "name": "Titan Wrestler",
+      "level": 1,
+      "source": "Skill",
+      "description": "You can attempt to Disarm, Grapple, Shove, or Trip creatures up to two sizes larger than you, and you don't take a circumstance penalty when targeting a creature that's one size larger than you with these actions."
     }
   ],
   "inventory": [
