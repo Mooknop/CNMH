@@ -1,9 +1,9 @@
 {
-    "id": "sample-character-4",
+    "id": "Blu-Kakke",
     "created": "2025-04-18T12:00:00.000Z",
     "lastUpdated": "2025-04-18T12:00:00.000Z",
     "name": "Blu-kakke",
-    "ancestry": "Human(?)",
+    "ancestry": "Human",
     "background": "Draconic Ravager",
     "class": "Monk",
     "level": 3,
@@ -184,45 +184,22 @@
           "name": "Dragon Stance",
           "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
           "restrictions": "You can use this action only while in Dragon Stance."
-        },
-        {
-          "name": "Mountain Stance",
-          "description": "You enter the stance of an implacable mountain—a technique first discovered by dwarven monks—allowing you to strike with the weight of an avalanche. Your feet are firmly planted on the ground, and you stand steadfast against attacks. You gain a +4 status bonus to AC, but your movement is hampered. While in Mountain Stance, you gain greater resistance to being Shoved or Tripped. Your Strikes deal 1d8 bludgeoning damage.",
-          "restrictions": "You must be on solid ground to take this action."
         }
       ],
       "ki_spells": [
         {
           "id": "ki-spell-1",
-          "name": "Ki Strike",
+          "name": "Inner Upheaval",
           "level": 1,
-          "traits": ["Monk", "Transmutation"],
+          "traits": ["Uncommon", "Concentrate", "Focus", "Monk"],
           "actions": "One Action",
-          "description": "You focus your ki into magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. The damage is force damage.",
+          "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
           "heightened": {
-            "3rd": "The extra damage increases to 2d6 force damage.",
-            "5th": "The extra damage increases to 3d6 force damage.",
-            "7th": "The extra damage increases to 4d6 force damage.",
-            "9th": "The extra damage increases to 5d6 force damage."
-          }
-        },
-        {
-          "id": "ki-spell-2",
-          "name": "Stunning Strike",
-          "level": 2,
-          "traits": ["Incapacitation", "Monk", "Transmutation"],
-          "actions": "One Action",
-          "targets": "1 creature",
-          "description": "Focusing all your ki into a perfectly placed blow, you strike a pressure point, nerve cluster, or other vulnerable spot on the creature. Make an unarmed Strike. If it hits, the target must attempt a Fortitude save against your class DC with the following results. This effect has the incapacitation trait.",
-          "effects": {
-            "Critical Success": "The target is unaffected.",
-            "Success": "The target is stunned 1.",
-            "Failure": "The target is stunned 2.",
-            "Critical Failure": "The target is stunned 3."
+            "+4": "The extra damage increases to 1d6."
           }
         }
       ],
-      "focus_points": 2,
+      "focus_points": 1,
       "class_dc": 19
     }
   }

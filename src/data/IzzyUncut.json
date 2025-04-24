@@ -1,5 +1,5 @@
 {
-  "id": "sample-character-1",
+  "id": "IzzyUncut",
   "created": "2025-04-18T09:00:00.000Z",
   "lastUpdated": "2025-04-18T09:00:00.000Z",
   "name": "Izzy Uncut",
@@ -81,6 +81,28 @@
     }
   }
 },
+"focus_spells":[
+      {
+        "id": "spell-1",
+        "name": "Inspire Courage",
+        "level": 0,
+        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+        "actions": "One Action",
+        "area": "60-foot emanation",
+        "duration": "1 round",
+        "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
+      },
+      {
+        "id": "spell-2",
+        "name": "Counter Performance",
+        "level": 0,
+        "traits": ["Bard", "Cantrip", "Composition", "Enchantment", "Fortune", "Mental"],
+        "actions": "Reaction",
+        "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
+        "area": "60-foot emanation",
+        "description": "You use your performance to counter a sonic or visual effect. Roll a Performance check; if your performance is instrumental, you gain a +2 circumstance bonus against auditory effects, and if your performance is a visual display, you gain a +2 circumstance bonus against visual effects. You can counter both types with a combination performance, but you don't gain a circumstance bonus."
+      }
+    ],
   "feats": [
     {
       "id": "feat-1",
@@ -167,26 +189,6 @@
     },
     "spells": [
       {
-        "id": "spell-1",
-        "name": "Inspire Courage",
-        "level": 0,
-        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
-        "actions": "One Action",
-        "area": "60-foot emanation",
-        "duration": "1 round",
-        "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
-      },
-      {
-        "id": "spell-2",
-        "name": "Counter Performance",
-        "level": 0,
-        "traits": ["Bard", "Cantrip", "Composition", "Enchantment", "Fortune", "Mental"],
-        "actions": "Reaction",
-        "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
-        "area": "60-foot emanation",
-        "description": "You use your performance to counter a sonic or visual effect. Roll a Performance check; if your performance is instrumental, you gain a +2 circumstance bonus against auditory effects, and if your performance is a visual display, you gain a +2 circumstance bonus against visual effects. You can counter both types with a combination performance, but you don't gain a circumstance bonus."
-      },
-      {
         "id": "spell-3",
         "name": "Daze",
         "level": 0,
@@ -237,8 +239,7 @@
         "range": "30 feet",
         "targets": "1 corpse",
         "duration": "Sustained up to 1 minute",
-        "description": "You temporarily animate a corpse to fight for you. The corpse becomes a mindless undead creature. If the corpse was previously animated, you can instead extend the duration of your control over it for the duration of this spell. The animated corpse acts on your next turn and has 4 actions each turn that it remains animated.",
-        "prepared": true
+        "description": "You temporarily animate a corpse to fight for you. The corpse becomes a mindless undead creature. If the corpse was previously animated, you can instead extend the duration of your control over it for the duration of this spell. The animated corpse acts on your next turn and has 4 actions each turn that it remains animated."
       },
       {
         "id": "spell-8",
@@ -248,8 +249,7 @@
         "actions": "Two Actions",
         "area": "5-foot emanation",
         "duration": "1 minute",
-        "description": "Blessings from beyond help your allies strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. The first time each round a new ally enters the area, the spell's emanation increases by 5 feet.",
-        "prepared": true
+        "description": "Blessings from beyond help your allies strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. The first time each round a new ally enters the area, the spell's emanation increases by 5 feet."
       },
       {
         "id": "spell-9",
@@ -263,8 +263,7 @@
         "description": "You plant fear in the target; it must attempt a Will save. On a critical success, the target is unaffected. On a success, the target is frightened 1. On a failure, the target is frightened 2. On a critical failure, the target is frightened 3 and fleeing for 1 round.",
         "heightened": {
           "3rd": "You can target up to five creatures."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-10",
@@ -277,8 +276,7 @@
         "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
         "heightened": {
           "+2": "You fire one additional missile with each action you spend."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-11",
@@ -290,8 +288,7 @@
         "targets": "1 creature",
         "defense": "Will",
         "duration": "Varies",
-        "description": "You implant a charitable urge in the target's mind. The target must attempt a Will save. If the target has no action or reaction available when it fails its save, it is affected for an equal amount of time after it regains actions.",
-        "prepared": true
+        "description": "You implant a charitable urge in the target's mind. The target must attempt a Will save. If the target has no action or reaction available when it fails its save, it is affected for an equal amount of time after it regains actions."
       },
       {
         "id": "spell-12",
@@ -305,8 +302,7 @@
         "description": "A scintillating array of sounds tears through the minds of your enemies. Targets must attempt a Fortitude save and take 2d8 sonic damage. On a critical success, they are unaffected. On a success, they take half damage. On a failure, they take full damage and are deafened for 1 round. On a critical failure, they take double damage and are deafened for 4 rounds.",
         "heightened": {
           "+1": "The damage increases by 1d8."
-        },
-        "prepared": true
+        }
       }
     ]
   }

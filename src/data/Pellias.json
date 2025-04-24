@@ -1,5 +1,5 @@
 {
-  "id": "sample-character-5",
+  "id": "Pellias",
   "name": "Pellias",
   "ancestry": "Human",
   "background": "Squire",
@@ -198,22 +198,6 @@
       "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin."
     }
   ],
-  "notes": [
-    {
-      "id": "note-1",
-      "title": "Oath of Devotion",
-      "date": "2025-04-05",
-      "content": "Today I swore my oath to Iomedae in the Cathedral of Absalom. The High Priest spoke of troubled times ahead and the need for champions to stand against the coming darkness. I will uphold the tenets of my oath: to be just, honorable, and merciful even to those who may not deserve it.",
-      "createdAt": "2025-04-05T09:30:00.000Z"
-    },
-    {
-      "id": "note-2",
-      "title": "Vision of Light",
-      "date": "2025-04-12",
-      "content": "During my evening prayers, I experienced a vision—a flash of golden light and the silhouette of a sword pointing toward the northern mountains. Could this be a sign from Iomedae herself? I must consult with the temple elders about the significance of this vision.",
-      "createdAt": "2025-04-12T22:15:00.000Z"
-    }
-  ],
   "champion": {
     "deity": "Iomedae",
     "cause": "Paladin (Good)",
@@ -227,23 +211,28 @@
     "devotion_spells": [
       {
         "id": "spell-1",
-        "name": "Lay on Hands",
+        "name": "Serrate",
         "level": 1,
-        "traits": ["Champion", "Healing", "Necromancy", "Positive"],
+        "traits": ["Uncommon","Champion", "Focus", "Manipulate", "Metal"],
         "actions": "One Action",
         "range": "Touch",
-        "targets": "1 willing living creature or 1 undead creature",
-        "description": "Your hands become infused with positive energy, healing a living creature or damaging an undead creature with a touch. If you use lay on hands on a willing living target, you restore 6 Hit Points. If the target is one of your allies, they also gain a +2 status bonus to AC for 1 round. Against an undead target, you deal 1d6 damage and it must attempt a basic Fortitude save. This damage increases to 1d8 if you have master proficiency in Religion."
+        "targets": "1 metal weapon",
+        "description": "With a pinch, the metal of a weapon twists, adding numerous jagged blades along its surface. Strikes with the target weapon deal an additional 1d4 slashing damage until the start of your next turn.",
+        "heightened": {
+            "+2": "The extra damage increases by 1d4."
+          }
       },
       {
         "id": "spell-2",
-        "name": "Light of Revelation",
+        "name": "Shields of the Spirit",
         "level": 2,
-        "traits": ["Champion", "Divination", "Light"],
-        "actions": "Two Actions",
-        "area": "20-foot emanation",
-        "duration": "1 minute",
-        "description": "You shed a luminous aura, illuminating a 20-foot radius with bright light. Creatures in this area can't be concealed, though they can still be hidden. If a creature is currently undetected by a creature in the area, it becomes hidden to that creature instead."
+        "traits": ["Uncommon","Champion","Concentrate", "Focus", "Sanctified", "Spirit"],
+        "actions": "One Action",
+        "requirements": "You are wielding a shield.",
+        "description": "You Raise your Shield, causing ephemeral spirit shields to float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage (even if it misses).\nThe benefit applies only while an ally is in your aura, ending for any ally that leaves and applying to any that enters later. As normal, you don't count as your own ally and therefore don't get the benefits of the spirit shields yourself.",
+        "heightened": {
+            "+2": "The extra damage increases by 1d4."
+          }
       }
     ],
     "reactions": [

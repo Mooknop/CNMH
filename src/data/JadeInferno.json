@@ -1,5 +1,5 @@
 {
-  "id": "sample-character-3",
+  "id": "JadeInferno",
   "created": "2025-04-18T10:15:00.000Z",
   "lastUpdated": "2025-04-18T10:15:00.000Z",
   "name": "Jade Inferno",
@@ -259,22 +259,6 @@
         "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier."
       },
       {
-        "id": "spell-8",
-        "name": "Ancestral Memories",
-        "level": 1,
-        "traits": ["Divination", "Mental"],
-        "actions": "One Minute",
-        "targets": "Self",
-        "duration": "Until the end of your next turn",
-        "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
-        "heightened": {
-          "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
-          "5th": "You can select three skills, and the proficiency rank you gain is master instead of trained.",
-          "7th": "You can select four skills, and the proficiency rank you gain is legendary instead of trained."
-        },
-        "prepared": true
-      },
-      {
         "id": "spell-9",
         "name": "Mage Armor",
         "level": 1,
@@ -287,8 +271,7 @@
           "4th": "You gain a +2 item bonus to AC and a maximum Dexterity modifier of +5.",
           "6th": "You gain a +2 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws.",
           "8th": "You gain a +3 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-10",
@@ -305,8 +288,7 @@
           "5th": "You can target up to 6 creatures.",
           "7th": "You can target up to 12 creatures.",
           "9th": "You can target up to 24 creatures."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-11",
@@ -319,8 +301,7 @@
         "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
         "heightened": {
           "+2": "You fire one additional missile with each action you spend."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-12",
@@ -334,8 +315,7 @@
         "description": "You shroud your hands in a crackling field of electricity. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes 1d4 persistent electricity damage on a hit.",
         "heightened": {
           "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-13",
@@ -348,8 +328,7 @@
         "description": "You fire a bolt of roaring flame streaking through the air. Make a ranged spell attack against the AC of a target creature. On a success, you deal 5d6 fire damage. On a critical success, you deal double damage.",
         "heightened": {
           "+1": "The bolt's damage increases by 3d6."
-        },
-        "prepared": true
+        }
       },
       {
         "id": "spell-14",
@@ -360,8 +339,7 @@
         "range": "30 feet",
         "targets": "1 door, lock, or container",
         "duration": "1 minute",
-        "description": "You knock on a locked door, window, gate, chest, or other object with a closure, and it opens. This spell works against most mundane locks but not ones of exceptional materials, such as adamantine locks or locks requiring unique keys. For complex locks, the GM might roll a secret check using your spell DC against the Thievery DC to pick the lock.",
-        "prepared": true
+        "description": "You knock on a locked door, window, gate, chest, or other object with a closure, and it opens. This spell works against most mundane locks but not ones of exceptional materials, such as adamantine locks or locks requiring unique keys. For complex locks, the GM might roll a secret check using your spell DC against the Thievery DC to pick the lock."
       },
       {
         "id": "spell-15",
@@ -371,8 +349,7 @@
         "actions": "Two Actions",
         "range": "120 feet",
         "targets": "1 spell effect or unattended magic item",
-        "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail.",
-        "prepared": true
+        "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
       }
     ],
     "bloodline": {
@@ -381,31 +358,17 @@
       "focus_spells": [
         {
           "id": "focus-1",
-          "name": "Dragon Claws",
+          "name": "Ancestral Memories",
           "level": 1,
-          "traits": ["Morph", "Transmutation"],
-          "actions": "One Action",
-          "range": "",
+          "traits": ["Divination", "Mental"],
+          "actions": "One Minute",
           "targets": "Self",
-          "duration": "1 minute",
-          "description": "Vicious claws grow from your fingers. They are finesse unarmed attacks that deal 1d4 slashing damage and 1d4 fire damage. You're trained with them, or expert if you're a master in the spell's tradition. While the spell is active, your hands are transformed and can't be used for manipulate actions that require fingers, such as casting spells with somatic components, using most weapons, or using hand-to-manipulate abilities such as Disable Device.",
+          "duration": "Until the end of your next turn",
+          "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
           "heightened": {
-            "4th": "The slashing damage increases to 2d4 and the fire damage increases to 2d4.",
-            "6th": "The slashing damage increases to 3d4 and the fire damage increases to 3d4.",
-            "8th": "The slashing damage increases to 4d4 and the fire damage increases to 4d4."
-          }
-        },
-        {
-          "id": "focus-2",
-          "name": "Dragon Breath",
-          "level": 3,
-          "traits": ["Evocation", "Fire"],
-          "actions": "Two Actions",
-          "area": "30-foot cone or 60-foot line",
-          "defense": "Reflex",
-          "description": "You spew energy from your mouth in a powerful blast. You deal 5d6 fire damage to creatures in the area. Each creature must attempt a basic Reflex save.",
-          "heightened": {
-            "+1": "The damage increases by 2d6."
+            "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
+            "5th": "You can select three skills, and the proficiency rank you gain is master instead of trained.",
+            "7th": "You can select four skills, and the proficiency rank you gain is legendary instead of trained."
           }
         }
       ]
