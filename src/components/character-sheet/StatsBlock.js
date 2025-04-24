@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './StatsBlock.css';
+import EnhancedSkillsList from '../character-sheet/EnhancedSkillsList';
 import { 
   getAbilityModifier, 
   formatModifier, 
@@ -261,7 +262,8 @@ const StatsBlock = ({ character, characterColor }) => {
             </div>
           </div>
         );
-      
+      case 'skills':
+        return <EnhancedSkillsList character={character} characterColor={characterColor} />;
       default:
         return null;
     }
@@ -297,6 +299,13 @@ const StatsBlock = ({ character, characterColor }) => {
           style={{ backgroundColor: activeTab === 'proficiencies' ? themeColor : '' }}
         >
           Proficiencies
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}
+          onClick={() => setActiveTab('skills')}
+          style={{ backgroundColor: activeTab === 'skills' ? themeColor : '' }}
+        >
+          Skills
         </button>
       </div>
       

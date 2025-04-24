@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
-import EnhancedSkillsList from '../components/character-sheet/EnhancedSkillsList';
 import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/character-sheet/SpellsList';
 import { 
@@ -64,8 +63,6 @@ const CharacterSheet = () => {
   // Function to render the active tab content
   const renderTabContent = () => {
     switch(activeTab) {
-      case 'skills':
-        return <EnhancedSkillsList character={character} characterColor={characterColor} />;
       case 'feats':
         return <FeatsList character={character} characterColor={characterColor} />;
       case 'spells':
@@ -143,7 +140,7 @@ const CharacterSheet = () => {
           </div>
         );
       default:
-        return <EnhancedSkillsList character={character} characterColor={characterColor} />;
+        return <FeatsList character={character} characterColor={characterColor} />;
     }
   };
   
@@ -161,13 +158,6 @@ const CharacterSheet = () => {
         
         <div className="character-tabs">
           <div className="tabs-header">
-            <button 
-              className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}
-              onClick={() => setActiveTab('skills')}
-              style={{ backgroundColor: activeTab === 'skills' ? characterColor : '' }}
-            >
-              Skills
-            </button>
             <button 
               className={`tab-button ${activeTab === 'feats' ? 'active' : ''}`}
               onClick={() => setActiveTab('feats')}

@@ -247,7 +247,7 @@
         "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
       }
     ],
-    "focus_points": 1,
+    "focus_points": 2,
     "class_dc": 19
   }
 }
