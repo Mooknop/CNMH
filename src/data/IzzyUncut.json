@@ -96,11 +96,24 @@
         "id": "spell-2",
         "name": "Counter Performance",
         "level": 0,
-        "traits": ["Bard", "Cantrip", "Composition", "Enchantment", "Fortune", "Mental"],
+        "traits": ["Bard", "Composition", "Concentrate", "Focus", "Fortune", "Mental"],
         "actions": "Reaction",
         "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
         "area": "60-foot emanation",
-        "description": "You use your performance to counter a sonic or visual effect. Roll a Performance check; if your performance is instrumental, you gain a +2 circumstance bonus against auditory effects, and if your performance is a visual display, you gain a +2 circumstance bonus against visual effects. You can counter both types with a combination performance, but you don't gain a circumstance bonus."
+        "description": "Your performance protects you and your allies. Roll a Performance check for a type you know—it must be an auditory performance if the trigger was auditory or a visual one for a visual trigger, and this action gains the traits for the type of performance (page 243). You and allies in the area can use the better result between your Performance check and the saving throw."
+      },
+      {
+        "id": "spell-3",
+        "name": "Hymn of Healing",
+        "level": 0,
+        "traits": ["Uncommon", "Bard", "Composition", "Concentrate", "Focus", "Healing", "Vitality"],
+        "actions": "Two Actions",
+        "duration": "sustained up to 4 rounds",
+        "area": "30-feet",
+        "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
+        "heightened": {
+          "+1": "The fast healing and temporary Hit Points each increase by 2."
+        }
       }
     ],
   "feats": [
@@ -189,7 +202,7 @@
     "ability": "charisma",
     "proficiency": 2,
     "focus": {
-      "max": 1,
+      "max": 2,
       "current": 1
     },
     "spells": [
