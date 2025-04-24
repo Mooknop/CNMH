@@ -99,24 +99,66 @@
   "feats": [
     {
       "id": "feat-1",
-      "name": "Shadow Magic",
-      "level": 1,
-      "source": "Fetchling",
-      "description": "The shadow magic of the Shadow Plane flows through you. You can cast the dancing lights cantrip as an occult innate spell at will. In addition, you can cast 1st-level darkness once per day as an occult innate spell."
+      "name": "Ranger Dedication",
+      "level": 2,
+      "source": "Archetype",
+      "description": "You become trained in Survival; if you were already trained in Survival, you instead become trained in another skill of your choice. You become trained in ranger class DC. You can use the Hunt Prey action."
     },
     {
       "id": "feat-2",
-      "name": "Implement's Empowerment",
+      "name": "Hard to Fool",
       "level": 1,
-      "source": "Thaumaturge",
-      "description": "When you use your implement to affect a creature that you've identified with Recall Knowledge, you gain a +1 circumstance bonus to your attack roll or save DC. If you got a critical success on the Recall Knowledge check, this bonus increases to +2."
+      "source": "Fetchling",
+      "description": "Your experiences in the Shadow Plane have made you wary of deception. You gain a +1 circumstance bonus to Perception checks against illusions and to Will saves against illusions and lies (such as a successful Lie action)."
     },
     {
       "id": "feat-3",
+      "name": "Bargain Hunter",
+      "level": 1,
+      "source": "General",
+      "description": "You can scrounge, haggle, and maintain your equipment to stretch your money further. You gain a +1 circumstance bonus to checks to Earn Income, to Crafting checks to Repair items, and to daily Subsistence checks. When purchasing items, you can spend downtime to reduce the price of the items by 10%. For each day of downtime you spend, you can apply this discount to one item whose base price is 10 gp or less."
+    },
+    {
+      "id": "feat-4",
+      "name": "Charming Liar",
+      "level": 1,
+      "source": "Skill",
+      "description": "Your charm allows you to win over those you lie to. When you get a critical success using the Lie action, the target's attitude toward you improves by one step, as though you'd succeeded at using Diplomacy to Make an Impression. This works only once per conversation, and if you critically succeed against multiple targets using the same Lie, you choose one creature's attitude to improve."
+    },
+    {
+      "id": "feat-5",
+      "name": "Dubious Knowledge",
+      "level": 1,
+      "source": "Skill",
+      "description": "You're a treasure trove of information, but not all of it comes from reputable sources. When you fail (but don't critically fail) a Recall Knowledge check using any skill, you learn a bit of true knowledge and a bit of erroneous knowledge, but you don't have any way to differentiate which is which."
+    },
+    {
+      "id": "feat-6",
+      "name": "Quick Squeeze",
+      "level": 1,
+      "source": "Skill",
+      "description": "You Squeeze 5 feet per round (10 feet on a critical success), rather than 5 feet per minute (10 feet on a critical success)."
+    },
+    {
+      "id": "feat-7",
       "name": "Diverse Lore",
       "level": 2,
       "source": "Thaumaturge",
       "description": "You collect information from a wide variety of sources, letting you use your esoterica lore for a wider range of topics. You can use your esoterica lore to Recall Knowledge about any topic, though you still can't use it in place of a specific lore for a task that requires specialized training, such as Crafting."
+    },
+    {
+      "id": "feat-8",
+      "name": "Familiar",
+      "level": 1,
+      "source": "General",
+      "description": "You make a pact with a creature that serves you and assists your spellcasting. You gain a familiar."
+    },
+    {
+      "id": "feat-9",
+      "name": "Spell-Signature Reading",
+      "level": 1,
+      "source": "Skill",
+      "description": "Whenever any caster performs magic, no matter how meager, it creates a vibrant display of runes circling around an intricate glyph known as a spell signature. As a learned student of the arcane yourself, you know all too well what information can be gleaned from such runes, such as one's personality or skill level with magic. You learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources such as having innate spells and prepared spells both, you learn both."
     }
   ],
   "inventory": [

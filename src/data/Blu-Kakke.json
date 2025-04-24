@@ -83,31 +83,59 @@
     "feats": [
       {
         "id": "feat-1",
-        "name": "Natural Ambition",
+        "name": "Dragon Spit",
         "level": 1,
-        "source": "Human",
-        "description": "Your ambition drives you to learn quickly. You gain one additional 1st-level class feat from your class."
+        "source": "Monk",
+        "description": "You can spit energy with the elemental properties of your draconic heritage. You gain a ranged unarmed attack with a range increment of 30 feet that deals 1d4 damage of the same damage type as your ancestry's breath weapon."
       },
       {
         "id": "feat-2",
-        "name": "Ki Strike",
+        "name": "Dragon Stance",
         "level": 1,
         "source": "Monk",
-        "description": "You can focus your ki into magical attacks. You gain the ki strike ki spell and a focus pool of 1 Focus Point. Your ki spells are considered monk spells, and your key spellcasting ability is Wisdom."
+        "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits."
       },
       {
         "id": "feat-3",
-        "name": "Stunning Fist",
+        "name": "Qi Spells",
         "level": 1,
         "source": "Monk",
-        "description": "The focused power of your flurry threatens to overwhelm your opponent. When you target the same creature with two Strikes from Flurry of Blows, you can try to stun the creature. If either Strike hits and deals damage, the target must succeed at a Fortitude save against your class DC or be stunned 1 (or stunned 2 on a critical failure). This is an incapacitation effect."
+        "description": "You can tap into your inner qi to cast special spells called ki spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body ki spells."
       },
       {
         "id": "feat-4",
-        "name": "Powerful Fist",
+        "name": "Battle Medicine",
+        "level": 1,
+        "source": "General",
+        "description": "You can patch up yourself or an adjacent ally, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore a corresponding amount of Hit Points. This doesn't remove the wounded condition."
+      },
+      {
+        "id": "feat-5",
+        "name": "Godless Healing",
         "level": 2,
-        "source": "Monk",
-        "description": "You know how to wield your fists as deadly weapons. The damage die for your fist increases to 1d6 instead of 1d4. Special: If you have this feat, the damage die for the fist increases to 1d8 when you gain Powerful Fist from the Gorilla Stance feat."
+        "source": "General",
+        "description": "You recover more Hit Points from effects that only grant healing. You gain a +2 circumstance bonus to Hit Points regained by effects that only grant healing."
+      },
+      {
+        "id": "feat-6",
+        "name": "Quick Repair",
+        "level": 1,
+        "source": "General",
+        "description": "You can Repair items quickly. You can Repair items in half the normal time (minimum 1 minute). If you're a master in Crafting, you can Repair items in one-quarter the normal time (minimum 1 minute)."
+      },
+      {
+        "id": "feat-7",
+        "name": "Draconic Ravager",
+        "level": 1,
+        "source": "Archetype",
+        "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision."
+      },
+      {
+        "id": "feat-8",
+        "name":"Staunch Bleeding",
+        "level": 3,
+        "source": "Skill",
+        "description": "You know how to pack an injury properly to stop bleeding. You use Staunch Bleeding as a single action to Treat Wounds to stop the bleeding; if you use two actions the DC is reduced by 10."
       }
     ],
     "inventory": [

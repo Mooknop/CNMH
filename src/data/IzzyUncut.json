@@ -106,24 +106,45 @@
   "feats": [
     {
       "id": "feat-1",
-      "name": "Leshy Superstition",
-      "level": 1,
-      "source": "Ancestry",
-      "description": "You've learned to be wary of magic from your elders. You gain a +1 circumstance bonus to saving throws against spells and magical effects. If you roll a success on a saving throw against a spell or magical effect, you get a critical success instead."
+      "name": "Celebrity Dedication",
+      "level": 2,
+      "source": "Archetype",
+      "description": "You've developed a significant following due to your artistic talents. You become trained in Society. If you were already trained in Society, you instead become trained in a skill of your choice. You also become trained in Celebrity Lore. You can use your proficiency rank in Performance in place of your proficiency rank in Diplomacy when Gathering Information or Making an Impression."
     },
     {
       "id": "feat-2",
-      "name": "Lingering Composition",
+      "name": "Bardic Lore",
       "level": 1,
       "source": "Bard",
-      "description": "By adding flourishes and refrains, you make your compositions last longer. If your next action is to cast a cantrip composition with a duration of 1 round, the composition lasts 2 rounds instead."
+      "description": "Your studies cover a wide range of topics. You are trained in Bardic Lore, a special Lore skill that can be used for any checks to Recall Knowledge. If you have legendary proficiency in Occultism, you gain expert proficiency in Bardic Lore, but you can't increase your proficiency rank in Bardic Lore by any other means."
     },
     {
       "id": "feat-3",
-      "name": "Reach Spell",
-      "level": 2,
-      "source": "Bard",
-      "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
+      "name": "Seedpod",
+      "level": 1,
+      "source": "Leshy",
+      "description": "Your body produces a nearly endless supply of hard seedpods. You gain a seedpod ranged unarmed attack that deals 1d4 bludgeoning damage; these Strikes have the manipulate trait. On a critical hit, a seedpod bursts, issuing forth a tangle of rapid-growing vines that impose a -10-foot circumstance penalty to the target's Speed for 1 round."
+    },
+    {
+      "id": "feat-4",
+      "name": "Eyes of the City",
+      "level": 1,
+      "source": "Skill",
+      "description": "You keep in contact with various people in the local settlement, and you have a finger on its pulse. You know what's going on and who's involved with what around you. When you're in a settlement, if you succeed at a normal check to Gather Information or Recall Knowledge about that settlement, you get one additional piece of information or relevant fact. If you critically succeed, you get two additional pieces of information or relevant facts."
+    },
+    {
+      "id": "feat-5",
+      "name": "Quick Identification",
+      "level": 1,
+      "source": "Skill",
+      "description": "You can Identify Magic after examining an item for only 1 minute (rather than 10 minutes). If you're a master in Arcana, Nature, Occultism, or Religion, you can Identify Magic in that tradition after examining an item for only 3 rounds. If you're legendary, it takes 1 round."
+    },
+    {
+      "id": "feat-6",
+      "name": "Disrupting Performance",
+      "level": 1,
+      "source": "Skill",
+      "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
     }
   ],
   "inventory": [
@@ -161,22 +182,6 @@
       "quantity": 2,
       "weight": 0.1,
       "description": "Restores 1d8 HP when consumed"
-    }
-  ],
-  "notes": [
-    {
-      "id": "note-1",
-      "title": "Performance at the Whispering Oak",
-      "date": "2025-04-10",
-      "content": "My melody moved the ancient tree spirits tonight. The locals said they've never seen the luminescent leaves dance so brightly. Must remember to incorporate more wind-like tones next time for a stronger response.",
-      "createdAt": "2025-04-10T18:30:00.000Z"
-    },
-    {
-      "id": "note-2",
-      "title": "New Composition Ideas",
-      "date": "2025-04-15",
-      "content": "Been experimenting with mimicking the sounds of morning dew falling from leaves in my music. The resonance creates an unexpected calming effect that might be useful for our next forest exploration.",
-      "createdAt": "2025-04-15T20:15:00.000Z"
     }
   ],
   "spellcasting": {
