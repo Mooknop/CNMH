@@ -116,7 +116,7 @@
       "name": "Bargain Hunter",
       "level": 1,
       "source": "General",
-      "description": "You can scrounge, haggle, and maintain your equipment to stretch your money further. You gain a +1 circumstance bonus to checks to Earn Income, to Crafting checks to Repair items, and to daily Subsistence checks. When purchasing items, you can spend downtime to reduce the price of the items by 10%. For each day of downtime you spend, you can apply this discount to one item whose base price is 10 gp or less."
+      "description": "You can Earn Income (page 228) using Diplomacy, spending your days hunting for bargains and reselling at a profit. You can also spend time specifically sniffing out a great bargain on an item; this works as if you were using Earn Income with Diplomacy, except instead of gaining money, you purchase the item at a discount equal to the money you would have gained, gaining the item for free if your earned income equals or exceeds its cost."
     },
     {
       "id": "feat-4",
