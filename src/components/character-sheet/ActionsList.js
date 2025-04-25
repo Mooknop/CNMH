@@ -223,6 +223,22 @@ const ActionsList = ({ character, characterColor }) => {
       // Add inventory actions to the list
       allActions = [...allActions, ...inventoryActions];
     }
+
+    // Add actions from feats
+    if (character.feats) {
+      const featActions = character.feats
+        .filter(feat => feat.actions && feat.actions.length > 0) // Only feats with actions property
+        .flatMap(feat => {
+          // Map each action from this feat and add a source property
+          return feat.actions.map(action => ({
+            ...action,
+            source: feat.name // Add source for reference
+          }));
+        });
+      
+      // Add feat actions to the list
+      allActions = [...allActions, ...featActions];
+    }
     
     // Add standard actions if none exist (move, strike, etc.)
     if (allActions.length === 0) {
