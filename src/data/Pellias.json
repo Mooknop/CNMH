@@ -286,20 +286,7 @@
       "description": "Give 'em a good smack"
     }
    ],
-  "actions": [
-    {
-      "name": "Step",
-      "actionCount": 1,
-      "traits": ["Move"],
-      "description": "You carefully move 5 feet. This movement doesn't trigger reactions that are normally triggered by movement."
-    },
-    {
-      "name": "Strike",
-      "actionCount": 1,
-      "traits": ["Attack"],
-      "description": "You attack with a weapon or unarmed attack."
-    }
-  ],
+  "actions": [],
   "reactions": [
     {
       "name": "Retributive Strike",
@@ -314,22 +301,5 @@
       "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
     }
   ],
-  "freeActions": [
-    {
-      "name": "Drop Prone",
-      "traits": ["Move"],
-      "description": "You fall prone."
-    },
-    {
-      "name": "Release",
-      "traits": ["Manipulate"],
-      "description": "You release something you're holding in your hand or hands. This might mean dropping an item, removing one hand from your weapon while continuing to hold it in another hand, releasing a rope suspending a chandelier, or performing a similar action."
-    },
-    {
-      "name": "Shields of the Spirit",
-      "traits": ["Champion", "Focus", "Sanctified", "Spirit"],
-      "trigger": "You Raise your Shield.",
-      "description": "Ephemeral spirit shields float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage."
-    }
-  ]
+  "freeActions": []
 }
