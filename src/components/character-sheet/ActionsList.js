@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ActionsList.css';
 import {
   getAbilityModifier, 
@@ -6,13 +6,42 @@ import {
 } from '../../utils/CharacterUtils';
 
 const ActionsList = ({ character, characterColor }) => {
-  const [activeSection, setActiveSection] = useState('strikes'); // Default section
+  const [availableSections, setAvailableSections] = useState([]);
+  const [activeSection, setActiveSection] = useState(null); // Will be set after determining available sections
   
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
   
-  // Function to render strikes section
-  const renderStrikes = () => {
+  // Process character data to determine available sections
+  useEffect(() => {
+    const sections = [];
+    
+    // Check for strikes
+    const hasStrikes = getStrikes().length > 0;
+    if (hasStrikes) sections.push('strikes');
+    
+    // Check for actions
+    const hasActions = getActions().length > 0;
+    if (hasActions) sections.push('actions');
+    
+    // Check for reactions
+    const hasReactions = getReactions().length > 0;
+    if (hasReactions) sections.push('reactions');
+    
+    // Check for free actions
+    const hasFreeActions = getFreeActions().length > 0;
+    if (hasFreeActions) sections.push('freeActions');
+    
+    setAvailableSections(sections);
+    
+    // Set default active section to the first available one
+    if (sections.length > 0 && !activeSection) {
+      setActiveSection(sections[0]);
+    }
+  }, [character]);
+  
+  // Function to get all strikes for the character
+  const getStrikes = () => {
     // Create array to hold all strikes
     let allStrikes = [];
     
@@ -135,11 +164,145 @@ const ActionsList = ({ character, characterColor }) => {
       });
     }
     
+    return allStrikes;
+  };
+  
+  // Function to get all actions for the character
+  const getActions = () => {
+    // Create array to hold all actions
+    let allActions = [];
+    
+    // Add defined actions from character data if they exist
+    if (character.actions && character.actions.length > 0) {
+      allActions = [...character.actions];
+    }
+    
+    // Add actions from inventory items
+    if (character.inventory) {
+      const inventoryActions = character.inventory
+        .filter(item => item.actions && item.actions.length > 0) // Only items with actions property
+        .flatMap(item => {
+          // Map each action from this item and add a source property
+          return item.actions.map(action => ({
+            ...action,
+            source: item.name // Add source for reference
+          }));
+        });
+      
+      // Add inventory actions to the list
+      allActions = [...allActions, ...inventoryActions];
+    }
+
+    // Add actions from feats
+    if (character.feats) {
+      const featActions = character.feats
+        .filter(feat => feat.actions && feat.actions.length > 0) // Only feats with actions property
+        .flatMap(feat => {
+          // Map each action from this feat and add a source property
+          return feat.actions.map(action => ({
+            ...action,
+            source: feat.name // Add source for reference
+          }));
+        });
+      
+      // Add feat actions to the list
+      allActions = [...allActions, ...featActions];
+    }
+    
+    // Add standard actions if none exist (move, stride, etc.)
+    if (allActions.length === 0) {
+      allActions = [
+        {
+          name: "Stride",
+          actionCount: 1,
+          traits: ["Move"],
+          description: "You move up to your Speed."
+        },
+        {
+          name: "Step",
+          actionCount: 1,
+          traits: ["Move"],
+          description: "You carefully move 5 feet. This movement doesn't trigger reactions that are normally triggered by movement."
+        },
+        {
+          name: "Strike",
+          actionCount: 1,
+          traits: ["Attack"],
+          description: "You attack with a weapon or unarmed attack."
+        }
+      ];
+    }
+    
+    return allActions;
+  };
+  
+  // Function to get all reactions for the character
+  const getReactions = () => {
+    // Create array to hold all reactions
+    let allReactions = [];
+    
+    // Add defined reactions from character data if they exist
+    if (character.reactions && character.reactions.length > 0) {
+      allReactions = [...character.reactions];
+    }
+    
+    // Add reactions from inventory items
+    if (character.inventory) {
+      const inventoryReactions = character.inventory
+        .filter(item => item.reactions && item.reactions.length > 0) // Only items with reactions property
+        .flatMap(item => {
+          // Map each reaction from this item and add a source property
+          return item.reactions.map(reaction => ({
+            ...reaction,
+            source: item.name // Add source for reference
+          }));
+        });
+      
+      // Add inventory reactions to the list
+      allReactions = [...allReactions, ...inventoryReactions];
+    }
+    
+    return allReactions;
+  };
+  
+  // Function to get all free actions for the character
+  const getFreeActions = () => {
+    // Create array to hold all free actions
+    let allFreeActions = [];
+    
+    // Add defined free actions from character data if they exist
+    if (character.freeActions && character.freeActions.length > 0) {
+      allFreeActions = [...character.freeActions];
+    }
+    
+    // Add free actions from inventory items
+    if (character.inventory) {
+      const inventoryFreeActions = character.inventory
+        .filter(item => item.freeActions && item.freeActions.length > 0) // Only items with freeActions property
+        .flatMap(item => {
+          // Map each free action from this item and add a source property
+          return item.freeActions.map(freeAction => ({
+            ...freeAction,
+            source: item.name // Add source for reference
+          }));
+        });
+      
+      // Add inventory free actions to the list
+      allFreeActions = [...allFreeActions, ...inventoryFreeActions];
+    }
+    
+    return allFreeActions;
+  };
+  
+  // Function to render strikes section
+  const renderStrikes = () => {
+    const strikes = getStrikes();
+    
     return (
       <div className="strikes-container">
-        {allStrikes.length > 0 ? (
+        {strikes.length > 0 ? (
           <div className="strikes-grid">
-            {allStrikes.map((strike, index) => (
+            {strikes.map((strike, index) => (
               <div key={`strike-${index}`} className="strike-card">
                 <div className="strike-header">
                   <h3 style={{ color: themeColor }}>{strike.name}</h3>
@@ -200,75 +363,13 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render actions section
   const renderActions = () => {
-    // Create array to hold all actions
-    let allActions = [];
-    
-    // Add defined actions from character data if they exist
-    if (character.actions && character.actions.length > 0) {
-      allActions = [...character.actions];
-    }
-    
-    // Add actions from inventory items
-    if (character.inventory) {
-      const inventoryActions = character.inventory
-        .filter(item => item.actions && item.actions.length > 0) // Only items with actions property
-        .flatMap(item => {
-          // Map each action from this item and add a source property
-          return item.actions.map(action => ({
-            ...action,
-            source: item.name // Add source for reference
-          }));
-        });
-      
-      // Add inventory actions to the list
-      allActions = [...allActions, ...inventoryActions];
-    }
-
-    // Add actions from feats
-    if (character.feats) {
-      const featActions = character.feats
-        .filter(feat => feat.actions && feat.actions.length > 0) // Only feats with actions property
-        .flatMap(feat => {
-          // Map each action from this feat and add a source property
-          return feat.actions.map(action => ({
-            ...action,
-            source: feat.name // Add source for reference
-          }));
-        });
-      
-      // Add feat actions to the list
-      allActions = [...allActions, ...featActions];
-    }
-    
-    // Add standard actions if none exist (move, strike, etc.)
-    if (allActions.length === 0) {
-      allActions = [
-        {
-          name: "Stride",
-          actionCount: 1,
-          traits: ["Move"],
-          description: "You move up to your Speed."
-        },
-        {
-          name: "Step",
-          actionCount: 1,
-          traits: ["Move"],
-          description: "You carefully move 5 feet. This movement doesn't trigger reactions that are normally triggered by movement."
-        },
-        {
-          name: "Strike",
-          actionCount: 1,
-          traits: ["Attack"],
-          description: "You attack with a weapon or unarmed attack."
-        }
-      ];
-    }
+    const actions = getActions();
     
     return (
       <div className="actions-container">
-        {allActions.length > 0 ? (
+        {actions.length > 0 ? (
           <div className="actions-grid">
-            {allActions.map((action, index) => (
+            {actions.map((action, index) => (
               <div key={`action-${index}`} className="action-card">
                 <div className="action-header">
                   <h3 style={{ color: themeColor }}>{action.name}</h3>
@@ -317,35 +418,13 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render reactions section
   const renderReactions = () => {
-    // Create array to hold all reactions
-    let allReactions = [];
-    
-    // Add defined reactions from character data if they exist
-    if (character.reactions && character.reactions.length > 0) {
-      allReactions = [...character.reactions];
-    }
-    
-    // Add reactions from inventory items
-    if (character.inventory) {
-      const inventoryReactions = character.inventory
-        .filter(item => item.reactions && item.reactions.length > 0) // Only items with reactions property
-        .flatMap(item => {
-          // Map each reaction from this item and add a source property
-          return item.reactions.map(reaction => ({
-            ...reaction,
-            source: item.name // Add source for reference
-          }));
-        });
-      
-      // Add inventory reactions to the list
-      allReactions = [...allReactions, ...inventoryReactions];
-    }
+    const reactions = getReactions();
     
     return (
       <div className="reactions-container">
-        {allReactions.length > 0 ? (
+        {reactions.length > 0 ? (
           <div className="reactions-grid">
-            {allReactions.map((reaction, index) => (
+            {reactions.map((reaction, index) => (
               <div key={`reaction-${index}`} className="reaction-card">
                 <div className="reaction-header">
                   <h3 style={{ color: themeColor }}>{reaction.name}</h3>
@@ -397,35 +476,13 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render free actions section
   const renderFreeActions = () => {
-    // Create array to hold all free actions
-    let allFreeActions = [];
-    
-    // Add defined free actions from character data if they exist
-    if (character.freeActions && character.freeActions.length > 0) {
-      allFreeActions = [...character.freeActions];
-    }
-    
-    // Add free actions from inventory items
-    if (character.inventory) {
-      const inventoryFreeActions = character.inventory
-        .filter(item => item.freeActions && item.freeActions.length > 0) // Only items with freeActions property
-        .flatMap(item => {
-          // Map each free action from this item and add a source property
-          return item.freeActions.map(freeAction => ({
-            ...freeAction,
-            source: item.name // Add source for reference
-          }));
-        });
-      
-      // Add inventory free actions to the list
-      allFreeActions = [...allFreeActions, ...inventoryFreeActions];
-    }
+    const freeActions = getFreeActions();
     
     return (
       <div className="free-actions-container">
-        {allFreeActions.length > 0 ? (
+        {freeActions.length > 0 ? (
           <div className="free-actions-grid">
-            {allFreeActions.map((freeAction, index) => (
+            {freeActions.map((freeAction, index) => (
               <div key={`free-action-${index}`} className="free-action-card">
                 <div className="free-action-header">
                   <h3 style={{ color: themeColor }}>{freeAction.name}</h3>
@@ -475,44 +532,56 @@ const ActionsList = ({ character, characterColor }) => {
     );
   };
   
+  // If no sections are available, show a message
+  if (availableSections.length === 0) {
+    return (
+      <div className="actions-list">
+        <div className="empty-state">
+          <p>No actions available for this character.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Function to map section ID to label
+  const getSectionLabel = (sectionId) => {
+    switch(sectionId) {
+      case 'strikes': return 'Strikes';
+      case 'actions': return 'Actions';
+      case 'reactions': return 'Reactions';
+      case 'freeActions': return 'Free Actions';
+      default: return '';
+    }
+  };
+  
+  // Function to render the active section content
+  const renderActiveSection = () => {
+    switch(activeSection) {
+      case 'strikes': return renderStrikes();
+      case 'actions': return renderActions();
+      case 'reactions': return renderReactions();
+      case 'freeActions': return renderFreeActions();
+      default: return null;
+    }
+  };
+  
   return (
     <div className="actions-list">
       <div className="section-tabs">
-        <button 
-          className={`section-tab ${activeSection === 'strikes' ? 'active' : ''}`}
-          onClick={() => setActiveSection('strikes')}
-          style={{ backgroundColor: activeSection === 'strikes' ? themeColor : '' }}
-        >
-          Strikes
-        </button>
-        <button 
-          className={`section-tab ${activeSection === 'actions' ? 'active' : ''}`}
-          onClick={() => setActiveSection('actions')}
-          style={{ backgroundColor: activeSection === 'actions' ? themeColor : '' }}
-        >
-          Actions
-        </button>
-        <button 
-          className={`section-tab ${activeSection === 'reactions' ? 'active' : ''}`}
-          onClick={() => setActiveSection('reactions')}
-          style={{ backgroundColor: activeSection === 'reactions' ? themeColor : '' }}
-        >
-          Reactions
-        </button>
-        <button 
-          className={`section-tab ${activeSection === 'freeActions' ? 'active' : ''}`}
-          onClick={() => setActiveSection('freeActions')}
-          style={{ backgroundColor: activeSection === 'freeActions' ? themeColor : '' }}
-        >
-          Free Actions
-        </button>
+        {availableSections.map(section => (
+          <button 
+            key={section}
+            className={`section-tab ${activeSection === section ? 'active' : ''}`}
+            onClick={() => setActiveSection(section)}
+            style={{ backgroundColor: activeSection === section ? themeColor : '' }}
+          >
+            {getSectionLabel(section)}
+          </button>
+        ))}
       </div>
       
       <div className="section-content">
-        {activeSection === 'strikes' && renderStrikes()}
-        {activeSection === 'actions' && renderActions()}
-        {activeSection === 'reactions' && renderReactions()}
-        {activeSection === 'freeActions' && renderFreeActions()}
+        {renderActiveSection()}
       </div>
     </div>
   );
