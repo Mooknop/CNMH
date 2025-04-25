@@ -261,22 +261,6 @@ const ActionsList = ({ character, characterColor }) => {
       // Add inventory reactions to the list
       allReactions = [...allReactions, ...inventoryReactions];
     }
-
-    // Add reactions from feats
-    if (character.feats) {
-      const featReactions = character.feats
-        .filter(feat => feat.reactions && feat.reactions.length > 0) // Only feats with actions property
-        .flatMap(feat => {
-          // Map each action from this feat and add a source property
-          return feat.reactions.map(reaction => ({
-            ...reaction,
-            source: feat.name // Add source for reference
-          }));
-        });
-      
-      // Add feat actions to the list
-      allReactions = [...allReactions, ...featReactions];
-    }
     
     return allReactions;
   };
@@ -319,12 +303,12 @@ const ActionsList = ({ character, characterColor }) => {
         {strikes.length > 0 ? (
           <div className="strikes-grid">
             {strikes.map((strike, index) => (
-              <div key={`strike-${index}`} className="strike-card">
-                <div className="strike-header">
+              <div key={`strike-${index}`} className="strike-card" style={{ borderLeftColor: themeColor }}>
+                <div className="strike-header" style={{ backgroundColor: '#f0f0f0' }}>
                   <h3 style={{ color: themeColor }}>{strike.name}</h3>
                   <div className="action-count">
                     {Array(strike.actionCount || 1).fill().map((_, i) => (
-                      <span key={i} className="action-icon">●</span>
+                      <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
                     ))}
                   </div>
                 </div>
@@ -338,12 +322,12 @@ const ActionsList = ({ character, characterColor }) => {
                 <div className="strike-details">
                   <div className="strike-attack">
                     <span className="detail-label">Attack</span>
-                    <span className="detail-value">{strike.attackMod}</span>
+                    <span className="detail-value" style={{ color: themeColor }}>{strike.attackMod}</span>
                   </div>
                   
                   <div className="strike-damage">
                     <span className="detail-label">Damage</span>
-                    <span className="detail-value">{strike.damage}</span>
+                    <span className="detail-value" style={{ color: themeColor }}>{strike.damage}</span>
                   </div>
                 </div>
                 
@@ -386,12 +370,12 @@ const ActionsList = ({ character, characterColor }) => {
         {actions.length > 0 ? (
           <div className="actions-grid">
             {actions.map((action, index) => (
-              <div key={`action-${index}`} className="action-card">
-                <div className="action-header">
+              <div key={`action-${index}`} className="action-card" style={{ borderLeftColor: themeColor }}>
+                <div className="action-header" style={{ backgroundColor: '#f0f0f0' }}>
                   <h3 style={{ color: themeColor }}>{action.name}</h3>
                   <div className="action-count">
                     {Array(action.actionCount || 1).fill().map((_, i) => (
-                      <span key={i} className="action-icon">●</span>
+                      <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
                     ))}
                   </div>
                 </div>
@@ -441,10 +425,10 @@ const ActionsList = ({ character, characterColor }) => {
         {reactions.length > 0 ? (
           <div className="reactions-grid">
             {reactions.map((reaction, index) => (
-              <div key={`reaction-${index}`} className="reaction-card">
-                <div className="reaction-header">
+              <div key={`reaction-${index}`} className="reaction-card" style={{ borderLeftColor: themeColor }}>
+                <div className="reaction-header" style={{ backgroundColor: '#f0f0f0' }}>
                   <h3 style={{ color: themeColor }}>{reaction.name}</h3>
-                  <div className="reaction-icon">⟳</div>
+                  <div className="reaction-icon" style={{ color: themeColor }}>⟳</div>
                 </div>
                 
                 <div className="reaction-traits">
@@ -455,7 +439,7 @@ const ActionsList = ({ character, characterColor }) => {
                 
                 {reaction.trigger && (
                   <div className="reaction-trigger">
-                    <span className="trigger-label">Trigger</span>
+                    <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
                     <span className="trigger-text">{reaction.trigger}</span>
                   </div>
                 )}
@@ -499,10 +483,10 @@ const ActionsList = ({ character, characterColor }) => {
         {freeActions.length > 0 ? (
           <div className="free-actions-grid">
             {freeActions.map((freeAction, index) => (
-              <div key={`free-action-${index}`} className="free-action-card">
-                <div className="free-action-header">
+              <div key={`free-action-${index}`} className="free-action-card" style={{ borderLeftColor: themeColor }}>
+                <div className="free-action-header" style={{ backgroundColor: '#f0f0f0' }}>
                   <h3 style={{ color: themeColor }}>{freeAction.name}</h3>
-                  <div className="free-action-icon">⟡</div>
+                  <div className="free-action-icon" style={{ color: themeColor }}>⟡</div>
                 </div>
                 
                 <div className="free-action-traits">
@@ -513,7 +497,7 @@ const ActionsList = ({ character, characterColor }) => {
                 
                 {freeAction.trigger && (
                   <div className="free-action-trigger">
-                    <span className="trigger-label">Trigger</span>
+                    <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
                     <span className="trigger-text">{freeAction.trigger}</span>
                   </div>
                 )}
