@@ -167,7 +167,12 @@
       "name": "Longsword (+1)",
       "quantity": 1,
       "weight": 1.0,
-      "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately."
+      "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately.",
+      "weapon": {
+        "proficiency": "martial",
+        "damage": "1d6",
+        "hands": "One Hand"
+      }
     },
     {
       "id": "item-4",
