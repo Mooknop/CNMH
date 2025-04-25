@@ -261,6 +261,22 @@ const ActionsList = ({ character, characterColor }) => {
       // Add inventory reactions to the list
       allReactions = [...allReactions, ...inventoryReactions];
     }
+
+    // Add reactions from feats
+    if (character.feats) {
+      const featReactions = character.feats
+        .filter(feat => feat.reactions && feat.reactions.length > 0) // Only feats with actions property
+        .flatMap(feat => {
+          // Map each action from this feat and add a source property
+          return feat.reactions.map(reaction => ({
+            ...reaction,
+            source: feat.name // Add source for reference
+          }));
+        });
+      
+      // Add feat actions to the list
+      allReactions = [...allReactions, ...featReactions];
+    }
     
     return allReactions;
   };

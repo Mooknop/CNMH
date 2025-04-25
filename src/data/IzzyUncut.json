@@ -122,7 +122,14 @@
       "name": "Celebrity Dedication",
       "level": 2,
       "source": "Archetype",
-      "description": "You've developed a significant following due to your artistic talents. You become trained in Society. If you were already trained in Society, you instead become trained in a skill of your choice. You also become trained in Celebrity Lore. You can use your proficiency rank in Performance in place of your proficiency rank in Diplomacy when Gathering Information or Making an Impression."
+      "description": "You've developed a significant following due to your artistic talents. You become trained in Society. If you were already trained in Society, you instead become trained in a skill of your choice. You also become trained in Celebrity Lore. You can use your proficiency rank in Performance in place of your proficiency rank in Diplomacy when Gathering Information or Making an Impression.",
+      "reactions":[
+        {
+          "name": "Upstage",
+          "trigger": "An enemy attempts a skill check and doesn’t get a critical success",
+          "description": "After your foe has tried their best, you show everyone how it’s really done. Attempt a check using the same skill that triggered this reaction. The DC is typically the same as the check the enemy attempted, though the GM can adjust this as usual. If you critically succeed, you gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn. On a regular success, you get this effect only if the enemy failed their check."
+        }
+      ]
     },
     {
       "id": "feat-2",
@@ -143,7 +150,15 @@
       "name": "Eyes of the City",
       "level": 1,
       "source": "Skill",
-      "description": "You keep in contact with various people in the local settlement, and you have a finger on its pulse. You know what's going on and who's involved with what around you. When you're in a settlement, if you succeed at a normal check to Gather Information or Recall Knowledge about that settlement, you get one additional piece of information or relevant fact. If you critically succeed, you get two additional pieces of information or relevant facts."
+      "description": "You keep in contact with various people in the local settlement, and you have a finger on its pulse. You know what's going on and who's involved with what around you. When you're in a settlement, if you succeed at a normal check to Gather Information or Recall Knowledge about that settlement, you get one additional piece of information or relevant fact. If you critically succeed, you get two additional pieces of information or relevant facts.",
+      "actions": [
+        {
+          "name": "Eyes of the City",
+          "actionCount": 1,
+          "traits": ["General","Skill"],
+          "description": "You can track down targets with the help of locals. You can use Diplomacy or Society, whichever you're trained in, to Track creatures in settlements. You chat with locals to help follow the trail of creatures you Track. At the GM's discretion, there might not be enough people to speak with to keep following the trail."
+        }
+      ]
     },
     {
       "id": "feat-5",
@@ -157,7 +172,15 @@
       "name": "Disrupting Performance",
       "level": 1,
       "source": "Skill",
-      "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
+      "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute.",
+      "reactions":[
+        {
+          "name": "Disrupting Performance",
+          "traits": ["Emotion", "General", "Mental", "Skill"],
+          "trigger": "A creature you can observe within 30 feet takes a skill action with the Auditory, Concentrate, or Visual traits.",
+          "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
+        }
+      ]
     }
   ],
   "inventory": [

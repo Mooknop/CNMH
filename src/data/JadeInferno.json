@@ -99,7 +99,15 @@
       "name": "Harrower Dedication",
       "level": 2,
       "source": "Archetype",
-      "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw."
+      "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw.",
+      "reactions":[
+        {
+          "name": "Avoid Dire Fate",
+          "traits": ["Fortune"],
+          "trigger": "You fail or critically fail a check associated with your active Harrow Omen's suit",
+          "description": "Treat the failure as a success or a critical failure as a failure. You no longer have an active harrow omen."
+        }
+      ]
     },
     {
       "id": "feat-2",
@@ -127,7 +135,15 @@
       "name": "Reach Spell",
       "level": 1,
       "source": "Sorcerer",
-      "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
+      "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
+      "actions": [
+        {
+          "name": "Reach Spell",
+          "actionCount": 1,
+          "traits": ["Concentrate", "Sorcerer", "Spellshape"],
+          "description": "You  can extend your spells’ range. If the next action you use is to Cast a Spell that has a range, increase that spell’s range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
+        }
+      ]
     },
     {
       "id": "feat-6",

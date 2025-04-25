@@ -1,233 +1,294 @@
 {
-    "id": "Blu-Kakke",
-    "created": "2025-04-18T12:00:00.000Z",
-    "lastUpdated": "2025-04-18T12:00:00.000Z",
-    "name": "Blu-kakke",
-    "ancestry": "Human",
-    "background": "Draconic Ravager",
-    "class": "Monk",
-    "level": 3,
-    "maxHp": 38,
-    "ac": 19,
-    "abilities": {
-      "strength": 18,
-      "dexterity": 14,
-      "constitution": 10,
-      "intelligence": 12,
-      "wisdom": 10,
-      "charisma": 14
+  "id": "Blu-Kakke",
+  "created": "2025-04-18T12:00:00.000Z",
+  "lastUpdated": "2025-04-18T12:00:00.000Z",
+  "name": "Blu-kakke",
+  "ancestry": "Human",
+  "background": "Draconic Ravager",
+  "class": "Monk",
+  "level": 3,
+  "maxHp": 38,
+  "ac": 19,
+  "abilities": {
+    "strength": 18,
+    "dexterity": 14,
+    "constitution": 10,
+    "intelligence": 12,
+    "wisdom": 10,
+    "charisma": 14
+  },
+  "saves": {
+    "fortitude": 7,
+    "reflex": 9,
+    "will": 7
+  },
+  "skills": {
+    "athletics": {
+      "proficiency": 1
     },
-    "saves": {
-      "fortitude": 7,
-      "reflex": 9,
-      "will": 7
+    "crafting": {
+      "proficiency": 1
     },
-    "skills": {
-      "athletics": {
-        "proficiency": 1
-      },
-      "crafting": {
-        "proficiency": 1
-      },
-      "deception": {
-        "proficiency": 1
-      },
-      "medicine": {
-        "proficiency": 2
-      },
-      "society": {
-        "proficiency": 1
-      },
-      "survival": {
-        "proficiency": 1
-      }
+    "deception": {
+      "proficiency": 1
     },
-    "proficiencies": {
-      "weapons": {
-        "simple": {
-          "proficiency": 1,
-          "name": "Trained"
-        },
-        "martial": {
-          "proficiency": 0,
-          "name": "Untrained"
-        },
-        "advanced": {
-          "proficiency": 0,
-          "name": "Untrained"
-        },
-        "unarmed": {
-          "proficiency": 1,
-          "name": "Trained"
-        }
-      },
-      "armor": {
-        "unarmored": {
-          "proficiency": 2,
-          "name": "Expert"
-        },
-        "light": {
-          "proficiency": 0,
-          "name": "Untrained"
-        },
-        "medium": {
-          "proficiency": 0,
-          "name": "Untrained"
-        },
-        "heavy": {
-          "proficiency": 0,
-          "name": "Untrained"
-        }
-      }
+    "medicine": {
+      "proficiency": 2
     },
-    "feats": [
-      {
-        "id": "feat-1",
-        "name": "Dragon Spit",
-        "level": 1,
-        "source": "Monk",
-        "description": "You can spit energy with the elemental properties of your draconic heritage. You gain a ranged unarmed attack with a range increment of 30 feet that deals 1d4 damage of the same damage type as your ancestry's breath weapon."
-      },
-      {
-        "id": "feat-2",
-        "name": "Dragon Stance",
-        "level": 1,
-        "source": "Monk",
-        "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits."
-      },
-      {
-        "id": "feat-3",
-        "name": "Qi Spells",
-        "level": 1,
-        "source": "Monk",
-        "description": "You can tap into your inner qi to cast special spells called ki spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body ki spells."
-      },
-      {
-        "id": "feat-4",
-        "name": "Battle Medicine",
-        "level": 1,
-        "source": "General",
-        "description": "You can patch up yourself or an adjacent ally, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore a corresponding amount of Hit Points. This doesn't remove the wounded condition."
-      },
-      {
-        "id": "feat-5",
-        "name": "Godless Healing",
-        "level": 2,
-        "source": "General",
-        "description": "You recover more Hit Points from effects that only grant healing. You gain a +2 circumstance bonus to Hit Points regained by effects that only grant healing."
-      },
-      {
-        "id": "feat-6",
-        "name": "Quick Repair",
-        "level": 1,
-        "source": "General",
-        "description": "You can Repair items quickly. You can Repair items in half the normal time (minimum 1 minute). If you're a master in Crafting, you can Repair items in one-quarter the normal time (minimum 1 minute)."
-      },
-      {
-        "id": "feat-7",
-        "name": "Draconic Ravager",
-        "level": 1,
-        "source": "Archetype",
-        "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision."
-      },
-      {
-        "id": "feat-8",
-        "name":"Staunch Bleeding",
-        "level": 3,
-        "source": "Skill",
-        "description": "You know how to pack an injury properly to stop bleeding. You use Staunch Bleeding as a single action to Treat Wounds to stop the bleeding; if you use two actions the DC is reduced by 10."
-      }
-    ],
-    "inventory": [
-      {
-        "id": "item-1",
-        "name": "Monk's Robes",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "Lightweight robes designed for free movement"
-      },
-      {
-        "id": "item-2",
-        "name": "Temple Sword",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "Monk weapon with curved blade"
-      },
-      {
-        "id": "item-3",
-        "name": "Hand Wraps of Mighty Blows (+1 Striking)",
-        "quantity": 1,
-        "weight": 0.1,
-        "description": "Magic wraps that enhance unarmed attacks, dealing an extra weapon damage die"
-      },
-      {
-        "id": "item-4",
-        "name": "Adventurer's Pack",
-        "quantity": 1,
-        "weight": 2.0,
-        "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
-      },
-      {
-        "id": "item-5",
-        "name": "Meditation Incense",
-        "quantity": 5,
-        "weight": 0.1,
-        "description": "Helps focus ki during meditation"
-      },
-      {
-        "id": "item-6",
-        "name": "Potion of Healing (Minor)",
-        "quantity": 2,
-        "weight": 0.1,
-        "description": "Restores 1d8 HP when consumed"
-      },
-      {
-        "id": "item-7",
-        "name": "Climbing Kit",
-        "quantity": 1,
-        "weight": 1.0,
-        "description": "Provides a +1 item bonus to Athletics checks to climb"
-      }
-    ],
-    "notes": [
-      {
-        "id": "note-1",
-        "title": "Meeting with Master Wei",
-        "date": "2025-04-12",
-        "content": "Master Wei spoke of finding inner balance through the four elements. He believes I focus too much on the physical aspects of training and neglect the spiritual side. I must meditate more on emptiness and harmony to achieve true advancement.",
-        "createdAt": "2025-04-12T18:30:00.000Z"
-      },
-      {
-        "id": "note-2",
-        "title": "Mountain Training",
-        "date": "2025-04-16",
-        "content": "Spent three days at the Peak of Five Winds practicing breath control in the thin air. The cold was intense, but by the third day I could maintain inner warmth through proper ki circulation. This technique might be useful when facing cold-based attacks.",
-        "createdAt": "2025-04-16T20:15:00.000Z"
-      }
-    ],
-    "monk": {
-      "traditions": ["Dragon", "Mountain"],
-      "stances": [
-        {
-          "name": "Dragon Stance",
-          "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
-          "restrictions": "You can use this action only while in Dragon Stance."
-        }
-      ],
-      "ki_spells": [
-        {
-          "id": "ki-spell-1",
-          "name": "Inner Upheaval",
-          "level": 1,
-          "traits": ["Uncommon", "Concentrate", "Focus", "Monk"],
-          "actions": "One Action",
-          "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
-          "heightened": {
-            "+4": "The extra damage increases to 1d6."
-          }
-        }
-      ],
-      "focus_points": 1,
-      "class_dc": 19
+    "society": {
+      "proficiency": 1
+    },
+    "survival": {
+      "proficiency": 1
     }
-  }
+  },
+  "proficiencies": {
+    "weapons": {
+      "simple": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "martial": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "advanced": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "unarmed": {
+        "proficiency": 1,
+        "name": "Trained"
+      }
+    },
+    "armor": {
+      "unarmored": {
+        "proficiency": 2,
+        "name": "Expert"
+      },
+      "light": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "medium": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "heavy": {
+        "proficiency": 0,
+        "name": "Untrained"
+      }
+    }
+  },
+  "feats": [
+    {
+      "id": "feat-1",
+      "name": "Dragon Spit",
+      "level": 1,
+      "source": "Monk",
+      "description": "You can spit energy with the elemental properties of your draconic heritage. You gain a ranged unarmed attack with a range increment of 30 feet that deals 1d4 damage of the same damage type as your ancestry's breath weapon."
+    },
+    {
+      "id": "feat-2",
+      "name": "Dragon Stance",
+      "level": 1,
+      "source": "Monk",
+      "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
+      "actions": [
+      {
+        "name": "Dragon Stance",
+        "actionCount": 1,
+        "traits": ["Concentrate", "Sorcerer", "Spellshape"],
+        "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits. While in Dragon Stance, you can ignore the first square of difficult terrain while Striding."
+      }
+    ]
+    },
+    {
+      "id": "feat-3",
+      "name": "Qi Spells",
+      "level": 1,
+      "source": "Monk",
+      "description": "You can tap into your inner qi to cast special spells called ki spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body ki spells."
+    },
+    {
+      "id": "feat-4",
+      "name": "Battle Medicine",
+      "level": 1,
+      "source": "General",
+      "description": "You can patch up yourself or an adjacent ally, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore a corresponding amount of Hit Points. This doesn't remove the wounded condition.",
+      "actions": [
+      {
+        "name": "Battle Medicine",
+        "actionCount": 1,
+        "traits": ["General", "Healing", "Manipulate", "Skill"],
+        "description": "You can patch up wounds, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore the corresponding amount of HP; this doesn’t remove the wounded condition. As with Treat Wounds, you can attempt checks against higher DCs if you have the minimum proficiency rank. The target is then immune to your Battle Medicine for 1 day. This does not make them immune to, or otherwise count as, Treat Wounds."
+      }
+    ]
+    },
+    {
+      "id": "feat-5",
+      "name": "Godless Healing",
+      "level": 2,
+      "source": "General",
+      "description": "You recover more Hit Points from effects that only grant healing. You gain a +2 circumstance bonus to Hit Points regained by effects that only grant healing."
+    },
+    {
+      "id": "feat-6",
+      "name": "Quick Repair",
+      "level": 1,
+      "source": "General",
+      "description": "You can Repair items quickly. You can Repair items in half the normal time (minimum 1 minute). If you're a master in Crafting, you can Repair items in one-quarter the normal time (minimum 1 minute)."
+    },
+    {
+      "id": "feat-7",
+      "name": "Draconic Ravager",
+      "level": 1,
+      "source": "Archetype",
+      "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision."
+    },
+    {
+      "id": "feat-8",
+      "name":"Staunch Bleeding",
+      "level": 3,
+      "source": "Skill",
+      "description": "You know how to pack an injury properly to stop bleeding.",
+      "actions": [
+      {
+        "name": "Staunch Bleeding",
+        "actionCount": 1,
+        "traits": ["Concentrate", "Sorcerer", "Spellshape"],
+        "description": "As a single action you can Treat Wounds to stop someone from bleeding; if you use two actions the DC is reduced by 10."
+      }
+    ]
+    }
+  ],
+  "inventory": [
+    {
+      "id": "item-1",
+      "name": "Monk's Robes",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "Lightweight robes designed for free movement"
+    },
+    {
+      "id": "item-2",
+      "name": "Temple Sword",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "Monk weapon with curved blade"
+    },
+    {
+      "id": "item-3",
+      "name": "Hand Wraps of Mighty Blows (+1 Striking)",
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "Magic wraps that enhance unarmed attacks, dealing an extra weapon damage die"
+    },
+    {
+      "id": "item-4",
+      "name": "Adventurer's Pack",
+      "quantity": 1,
+      "weight": 2.0,
+      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+    },
+    {
+      "id": "item-5",
+      "name": "Meditation Incense",
+      "quantity": 5,
+      "weight": 0.1,
+      "description": "Helps focus ki during meditation"
+    },
+    {
+      "id": "item-6",
+      "name": "Potion of Healing (Minor)",
+      "quantity": 2,
+      "weight": 0.1,
+      "description": "Restores 1d8 HP when consumed"
+    },
+    {
+      "id": "item-7",
+      "name": "Climbing Kit",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "Provides a +1 item bonus to Athletics checks to climb"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note-1",
+      "title": "Meeting with Master Wei",
+      "date": "2025-04-12",
+      "content": "Master Wei spoke of finding inner balance through the four elements. He believes I focus too much on the physical aspects of training and neglect the spiritual side. I must meditate more on emptiness and harmony to achieve true advancement.",
+      "createdAt": "2025-04-12T18:30:00.000Z"
+    },
+    {
+      "id": "note-2",
+      "title": "Mountain Training",
+      "date": "2025-04-16",
+      "content": "Spent three days at the Peak of Five Winds practicing breath control in the thin air. The cold was intense, but by the third day I could maintain inner warmth through proper ki circulation. This technique might be useful when facing cold-based attacks.",
+      "createdAt": "2025-04-16T20:15:00.000Z"
+    }
+  ],
+  "monk": {
+    "traditions": ["Dragon", "Mountain"],
+    "stances": [
+      {
+        "name": "Dragon Stance",
+        "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
+        "restrictions": "You can use this action only while in Dragon Stance."
+      }
+    ],
+    "ki_spells": [
+      {
+        "id": "ki-spell-1",
+        "name": "Inner Upheaval",
+        "level": 1,
+        "traits": ["Uncommon", "Concentrate", "Focus", "Monk"],
+        "actions": "One Action",
+        "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
+        "heightened": {
+          "+4": "The extra damage increases to 1d6."
+        }
+      }
+    ],
+    "focus_points": 1,
+    "class_dc": 19
+  },
+  "actions": [
+      {
+        "name": "Flurry of Blows",
+        "actionCount": 1,
+        "traits": ["Flourish", "Monk"],
+        "description": "Make two unarmed Strikes. If both hit the same creature, combine their damage for the purpose of resistances and weaknesses. Apply your multiple attack penalty to the Strikes normally. As a flourish ability, you can use Flurry of Blows only once per turn."
+      }
+    ],
+  "strikes": [ 
+    {
+      "name": "Unarmed Strike",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "action": 1,
+      "damage": "1d6",
+      "traits": ["Attack", "Melee"],
+      "description": "Give 'em a good smack"
+    },
+    {
+      "name": "Dragon Claw",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "action": 1,
+      "damage": "1d6",
+      "traits": ["Attack", "Agile", "Finesse"],
+      "description": "Rend their flesh with your draconic claws."
+    },
+    {
+      "name": "Dragon Bite",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "action": 1,
+      "damage": "1d8",
+      "traits": ["Attack", "Agile", "Finesse"],
+      "description": "Bite into your foe with magically sharp dragon teach."
+    }
+  ]
+}
