@@ -1,7 +1,7 @@
 {
   "id": "AshkaBGosh",
   "created": "2025-04-18T14:30:00.000Z",
-  "lastUpdated": "2025-04-18T14:30:00.000Z",
+  "lastUpdated": "2025-04-25T10:15:00.000Z",
   "name": "Ashka B'Gosh",
   "ancestry": "Fetchling",
   "background": "Emissary",
@@ -102,7 +102,15 @@
       "name": "Ranger Dedication",
       "level": 2,
       "source": "Archetype",
-      "description": "You become trained in Survival; if you were already trained in Survival, you instead become trained in another skill of your choice. You become trained in ranger class DC. You can use the Hunt Prey action."
+      "description": "You become trained in Survival; if you were already trained in Survival, you instead become trained in another skill of your choice. You become trained in ranger class DC. You can use the Hunt Prey action.",
+      "actions":[
+        {
+          "name": "Hunt Prey",
+          "actionCount": 1,
+          "traits": ["Concentrate", "Ranger"],
+          "description": "You designate a single creature as your prey and focus your attacks against that creature. You gain a +2 circumstance bonus to Perception checks when you Seek your prey and a +2 circumstance bonus to Survival checks when you Track your prey.\n\nYou also ignore the penalty for making ranged attacks within your second range increment against the prey you're hunting.\n\nYou can have only one creature designated as your prey at a time. This designation lasts until your next daily preparations."
+        }
+      ]
     },
     {
       "id": "feat-2",
@@ -158,16 +166,32 @@
       "name": "Spell-Signature Reading",
       "level": 1,
       "source": "Skill",
-      "description": "Whenever any caster performs magic, no matter how meager, it creates a vibrant display of runes circling around an intricate glyph known as a spell signature. As a learned student of the arcane yourself, you know all too well what information can be gleaned from such runes, such as one's personality or skill level with magic. You learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources such as having innate spells and prepared spells both, you learn both."
+      "description": "Whenever any caster performs magic, no matter how meager, it creates a vibrant display of runes circling around an intricate glyph known as a spell signature. As a learned student of the arcane yourself, you know all too well what information can be gleaned from such runes, such as one's personality or skill level with magic. You learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources such as having innate spells and prepared spells both, you learn both.",
+      "actions":[
+        {
+          "name": "Spell-Signature Reading",
+          "actionCount": 1,
+          "traits": ["Concentrate", "Secret"],
+          "description": "You study the magical energy of a spellcaster you can see within 30 feet. Make a secret Arcana check against the spellcaster's Will DC. On a success, you learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources, you learn both."
+        }
+      ]
     }
   ],
   "inventory": [
     {
       "id": "item-1",
-      "name": "Amulet Implement",
+      "name": "Mother's Amulet",
       "quantity": 1,
       "weight": 0.1,
-      "description": "A darkwood amulet carved with shadow symbols"
+      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you.",
+      "reactions": [
+        {
+          "name": "Amulet's Abeyance",
+          "traits": ["Thaumaturge"],
+          "trigger": "The target of your Exploit Vulnerability would damage you or an ally within 15 feet of you and you are holding your implement.",
+          "description": "You forcefully present your amulet to turn away harm. You or a target ally within 15 feet gain resistance to all damage against the triggering damage. The resistance is equal to 2 + your level."
+        }
+      ]
     },
     {
       "id": "item-2",
@@ -253,5 +277,14 @@
     ],
     "paradigm": "Cursed",
     "paradigm_description": "You believe that many supernatural effects, including those that creatures create, are curses, whether they manifest as traditional curses, possessions, or simple maledictions. You know that using a creature's personal possessions against them lets you take advantage of the metaphysical connection between creature and possession."
-  }
+  },
+  "actions": [
+    {
+      "name": "Exploit Vulnerability",
+      "actionCount": 1,
+      "traits": ["Thaumaturge"],
+      "description": "You use your collected lore to identify and target a specific foe's vulnerabilities. Attempt a check to Recall Knowledge about a creature you can see. The DC of this check is determined by the GM but is typically the standard DC to identify a creature of that type - 2. You gain a +1 circumstance bonus on this check if you have successfully identified the creature with a previous Recall Knowledge check during this combat.\n\nIf you succeed, you center your esoterica on that creature in a way that exploits its vulnerabilities, granting you a +1 circumstance bonus to damage rolls against it. The bonus increases to +2 if you have Personal Antithesis."
+    }
+  ],
+  "reactions": []
 }
