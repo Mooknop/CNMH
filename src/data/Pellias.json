@@ -235,19 +235,94 @@
           }
       }
     ],
-    "reactions": [
-      {
-        "name": "Retributive Strike",
-        "trigger": "An enemy damages an ally within 15 feet of you.",
-        "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it."
-      },
-      {
-        "name": "Shield Block",
-        "trigger": "While you have your shield raised, you take damage from a physical attack.",
-        "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
-      }
-    ],
     "focus_points": 2,
     "class_dc": 19
-  }
+  },
+  "strikes": [
+    {
+      "name": "Longsword Strike",
+      "type": "Melee Weapon",
+      "actionCount": 1,
+      "traits": ["Attack", "Melee", "Versatile P"],
+      "attackMod": 10,
+      "damage": "1d8+4 slashing",
+      "description": "Standard attack with longsword. Can be used with one or two hands."
+    },
+    {
+      "name": "Shield Bash",
+      "type": "Melee Weapon",
+      "actionCount": 1,
+      "traits": ["Attack", "Melee"],
+      "attackMod": 8,
+      "damage": "1d4+4 bludgeoning",
+      "description": "Attack with your shield."
+    },
+    {
+      "name": "Unarmed Strike",
+      "type": "Melee Weapon",
+      "actionCount": 1,
+      "traits": ["Attack", "Melee", "Unarmed"],
+      "attackMod": 8,
+      "damage": "1d4+4 bludgeoning",
+      "description": "A strike with your fist or another body part."
+    }
+  ],
+  "actions": [
+    {
+      "name": "Raise a Shield",
+      "actionCount": 1,
+      "traits": ["Champion"],
+      "description": "You position your shield to protect yourself. When you have your shield raised, you gain a +2 circumstance bonus to AC until the start of your next turn."
+    },
+    {
+      "name": "Stride",
+      "actionCount": 1,
+      "traits": ["Move"],
+      "description": "You move up to your Speed."
+    },
+    {
+      "name": "Step",
+      "actionCount": 1,
+      "traits": ["Move"],
+      "description": "You carefully move 5 feet. This movement doesn't trigger reactions that are normally triggered by movement."
+    },
+    {
+      "name": "Strike",
+      "actionCount": 1,
+      "traits": ["Attack"],
+      "description": "You attack with a weapon or unarmed attack."
+    }
+  ],
+  "reactions": [
+    {
+      "name": "Retributive Strike",
+      "traits": ["Champion"],
+      "trigger": "An enemy damages an ally within 15 feet of you.",
+      "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it."
+    },
+    {
+      "name": "Shield Block",
+      "traits": ["General"],
+      "trigger": "While you have your shield raised, you take damage from a physical attack.",
+      "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
+    },
+    {
+      "name": "Nimble Reprisal",
+      "traits": ["Ancestry", "Human"],
+      "trigger": "An enemy misses you with a melee attack.",
+      "description": "Step away from that enemy. The enemy must remain within your reach throughout your Step to use this reaction."
+    }
+  ],
+  "freeActions": [
+    {
+      "name": "Drop Prone",
+      "traits": ["Move"],
+      "description": "You fall prone."
+    },
+    {
+      "name": "Release",
+      "traits": ["Manipulate"],
+      "description": "You release something you're holding in your hand or hands. This might mean dropping an item, removing one hand from your weapon while continuing to hold it in another hand, releasing a rope suspending a chandelier, or performing a similar action."
+    }
+  ]
 }

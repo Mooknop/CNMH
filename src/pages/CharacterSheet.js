@@ -4,6 +4,7 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/character-sheet/SpellsList';
+import ActionsList from '../components/character-sheet/ActionsList';
 import { 
   calculateBulkLimit, 
   calculateTotalBulk, 
@@ -18,7 +19,7 @@ const CharacterSheet = () => {
   const navigate = useNavigate();
   const { getCharacter, setActiveCharacter, characters } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
-  const [activeTab, setActiveTab] = useState('skills'); // Default tab
+  const [activeTab, setActiveTab] = useState('actions'); // Default tab
   const [bulkUsed, setBulkUsed] = useState(0);
   const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
   
@@ -135,6 +136,8 @@ const CharacterSheet = () => {
   // Function to render the active tab content
   const renderTabContent = () => {
     switch(activeTab) {
+      case 'actions':
+        return <ActionsList character={character} characterColor={characterColor} />;
       case 'feats':
         return <FeatsList character={character} characterColor={characterColor} />;
       case 'focus-spells':
@@ -329,6 +332,14 @@ const CharacterSheet = () => {
         
         <div className="character-tabs">
           <div className="tabs-header">
+            <button 
+              className={`tab-button ${activeTab === 'actions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('actions')}
+              style={{ backgroundColor: activeTab === 'actions' ? characterColor : '' }}
+            >
+              Actions
+            </button>
+            
             <button 
               className={`tab-button ${activeTab === 'feats' ? 'active' : ''}`}
               onClick={() => setActiveTab('feats')}
