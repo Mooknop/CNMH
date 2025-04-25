@@ -244,12 +244,6 @@ const SpellsList = ({ character, characterColor }) => {
           <span className="stat-label">Tradition</span>
           <span className="stat-value" style={{ color: themeColor }}>{spellcasting.tradition}</span>
         </div>
-        <div className="spellcasting-ability">
-          <span className="stat-label">Ability</span>
-          <span className="stat-value" style={{ color: themeColor }}>
-            {spellcasting.ability.charAt(0).toUpperCase() + spellcasting.ability.slice(1)}
-          </span>
-        </div>
         <div className="spell-proficiency">
           <span className="stat-label">Proficiency</span>
           <span className="stat-value" style={{ color: themeColor }}>{getProficiencyLabel(spellcasting.proficiency)}</span>
@@ -262,12 +256,6 @@ const SpellsList = ({ character, characterColor }) => {
           <span className="stat-label">Spell DC</span>
           <span className="stat-value" style={{ color: themeColor }}>{spellDC}</span>
         </div>
-        {spellcasting.focus && (
-          <div className="focus-points">
-            <span className="stat-label">Focus Points</span>
-            <span className="stat-value" style={{ color: themeColor }}>{spellcasting.focus.max}</span>
-          </div>
-        )}
       </div>
       
       {/* View Mode Toggle for staff/spells if character has a staff */}
@@ -281,7 +269,7 @@ const SpellsList = ({ character, characterColor }) => {
               borderColor: viewMode === 'spells' ? themeColor : ''
             }}
           >
-            Spellbook
+            Repertiore
           </button>
           <button 
             className={`view-mode-btn ${viewMode === 'staff' ? 'active' : ''}`}
