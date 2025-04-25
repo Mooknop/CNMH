@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import './ActionsList.css';
-import { formatModifier } from '../../utils/CharacterUtils';
+import {
+  getAbilityModifier, 
+  getAttackBonus 
+} from '../../utils/CharacterUtils';
 
 const ActionsList = ({ character, characterColor }) => {
   const [activeSection, setActiveSection] = useState('strikes'); // Default section
@@ -10,12 +13,132 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render strikes section
   const renderStrikes = () => {
-    // This will be populated with character strikes data
+    // Create array to hold all strikes
+    let allStrikes = [];
+    
+    // Add defined strikes from character data if they exist
+    if (character.strikes && character.strikes.length > 0) {
+      // Process each predefined strike to calculate attack modifier
+      const processedStrikes = character.strikes.map(strike => {
+        // Determine ability modifier based on strike type and traits
+        let abilityMod;
+        const isMelee = strike.type === 'melee';
+        const isFinesse = strike.traits && strike.traits.includes('Finesse');
+        
+        // Get relevant ability modifiers
+        const strMod = getAbilityModifier(character.abilities?.strength || 10);
+        const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
+        
+        // Use appropriate modifier based on weapon type and traits
+        if (isFinesse) {
+          abilityMod = Math.max(strMod, dexMod); // Finesse can use higher of STR or DEX
+        } else if (isMelee) {
+          abilityMod = strMod; // Melee weapons use STR
+        } else {
+          abilityMod = dexMod; // Ranged weapons use DEX
+        }
+        
+        // Determine the proficiency value to use
+        let proficiencyValue = 0;
+        // Check for proficiency based on weapon category
+        if (strike.category && character.proficiencies?.weapons?.[strike.category]) {
+          proficiencyValue = character.proficiencies.weapons[strike.category].proficiency || 0;
+        }
+        // Special case for unarmed attacks
+        else if (strike.traits && strike.traits.includes('Unarmed')) {
+          proficiencyValue = character.proficiencies?.weapons?.unarmed?.proficiency || 0;
+        }
+        // Default to simple weapons proficiency
+        else {
+          proficiencyValue = character.proficiencies?.weapons?.simple?.proficiency || 0;
+        }
+        
+        // Calculate attack bonus
+        const attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+        
+        // Return the strike with calculated attack modifier
+        return {
+          ...strike,
+          attackMod: attackBonus
+        };
+      });
+      
+      allStrikes = [...processedStrikes];
+    }
+    
+    // Add strikes generated from inventory weapons
+    if (character.inventory) {
+      const weaponStrikes = character.inventory
+        .filter(item => item.weapon) // Only items with weapon property
+        .map(item => {
+          const weapon = item.weapon;
+          const isProficient = character.proficiencies?.weapons?.[weapon.proficiency || 'simple'];
+          const proficiencyValue = isProficient?.proficiency || 0;
+          
+          // Determine ability modifier based on weapon traits
+          let abilityMod;
+          const isMelee = weapon.type === 'melee';
+          const isFinesse = weapon.traits && weapon.traits.includes('Finesse');
+          
+          // Get relevant ability modifiers
+          const strMod = getAbilityModifier(character.abilities?.strength || 10);
+          const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
+          
+          // Use appropriate modifier based on weapon type and traits
+          if (isFinesse) {
+            abilityMod = Math.max(strMod, dexMod); // Finesse can use higher of STR or DEX
+          } else if (isMelee) {
+            abilityMod = strMod; // Melee weapons use STR
+          } else {
+            abilityMod = dexMod; // Ranged weapons use DEX
+          }
+          
+          // Calculate attack bonus
+          const attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+          
+          // Format damage string with ability modifier (for melee weapons)
+          let damageString = weapon.damage || '1d6';
+          if (isMelee && strMod !== 0) {
+            damageString += (strMod > 0 ? '+' + strMod : strMod);
+          }
+          
+          return {
+            name: `${item.name} Strike`,
+            type: weapon.type,
+            actionCount: parseInt(weapon.action) || 1,
+            traits: weapon.traits || [],
+            attackMod: attackBonus,
+            damage: damageString,
+            description: item.description || ""
+          };
+        });
+      
+      // Add weapon strikes to the list
+      allStrikes = [...allStrikes, ...weaponStrikes];
+    }
+    
+    // Add unarmed strike if no strikes available
+    if (allStrikes.length === 0) {
+      const unarmedProficiency = character.proficiencies?.weapons?.unarmed?.proficiency || 0;
+      const strMod = getAbilityModifier(character.abilities?.strength || 10);
+      const attackBonus = getAttackBonus(strMod, unarmedProficiency, character.level || 0);
+      
+      allStrikes.push({
+        name: "Unarmed Strike",
+        type: "melee",
+        actionCount: 1,
+        traits: ["Attack", "Melee", "Unarmed"],
+        attackMod: attackBonus,
+        damage: `1d4${strMod !== 0 ? (strMod > 0 ? '+' + strMod : strMod) : ''}`,
+        description: "A strike with your fist or another body part."
+      });
+    }
+    
     return (
       <div className="strikes-container">
-        {(character.strikes && character.strikes.length > 0) ? (
+        {allStrikes.length > 0 ? (
           <div className="strikes-grid">
-            {character.strikes.map((strike, index) => (
+            {allStrikes.map((strike, index) => (
               <div key={`strike-${index}`} className="strike-card">
                 <div className="strike-header">
                   <h3 style={{ color: themeColor }}>{strike.name}</h3>
@@ -35,7 +158,7 @@ const ActionsList = ({ character, characterColor }) => {
                 <div className="strike-details">
                   <div className="strike-attack">
                     <span className="detail-label">Attack</span>
-                    <span className="detail-value">{formatModifier(strike.attackMod)}</span>
+                    <span className="detail-value">{strike.attackMod}</span>
                   </div>
                   
                   <div className="strike-damage">

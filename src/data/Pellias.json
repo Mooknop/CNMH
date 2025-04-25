@@ -172,8 +172,7 @@
         "proficiency": "martial",
         "type": "melee",
         "action": 1,
-        "damage": "1d6",
-        "damageType": ["Piercing", "Slashing"],
+        "damage": "1d8",
         "hands": "One Hand",
         "traits": ["Attack", "Melee", "Versatile P"]
       }
@@ -249,31 +248,13 @@
   },
   "strikes": [
     {
-      "name": "Longsword Strike",
-      "type": "Melee Weapon",
-      "actionCount": 1,
-      "traits": ["Attack", "Melee", "Versatile P"],
-      "attackMod": 10,
-      "damage": "1d8+4 slashing",
-      "description": "Standard attack with longsword. Can be used with one or two hands."
-    },
-    {
       "name": "Shield Bash",
-      "type": "Melee Weapon",
+      "type": "melee",
+      "category": "martial",
       "actionCount": 1,
       "traits": ["Attack", "Melee"],
-      "attackMod": 8,
-      "damage": "1d4+4 bludgeoning",
+      "damage": "1d4+4",
       "description": "Attack with your shield."
-    },
-    {
-      "name": "Unarmed Strike",
-      "type": "Melee Weapon",
-      "actionCount": 1,
-      "traits": ["Attack", "Melee", "Unarmed"],
-      "attackMod": 8,
-      "damage": "1d4+4 bludgeoning",
-      "description": "A strike with your fist or another body part."
     }
   ],
   "actions": [
@@ -300,6 +281,12 @@
       "actionCount": 1,
       "traits": ["Attack"],
       "description": "You attack with a weapon or unarmed attack."
+    },
+    {
+      "name": "Lay on Hands",
+      "actionCount": 1,
+      "traits": ["Champion", "Divine", "Healing", "Manipulate", "Positive"],
+      "description": "Your hands become infused with positive energy as you lay them on a creature to heal its wounds. You restore 6 Hit Points when you cast this spell. The spell has your positive healing trait, and the healing is positive healing. You can target yourself or a willing living creature, which must be within reach."
     }
   ],
   "reactions": [
@@ -332,6 +319,12 @@
       "name": "Release",
       "traits": ["Manipulate"],
       "description": "You release something you're holding in your hand or hands. This might mean dropping an item, removing one hand from your weapon while continuing to hold it in another hand, releasing a rope suspending a chandelier, or performing a similar action."
+    },
+    {
+      "name": "Shields of the Spirit",
+      "traits": ["Champion", "Focus", "Sanctified", "Spirit"],
+      "trigger": "You Raise your Shield.",
+      "description": "Ephemeral spirit shields float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage."
     }
   ]
 }
