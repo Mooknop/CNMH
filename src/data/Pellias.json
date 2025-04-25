@@ -161,6 +161,13 @@
       "quantity": 1,
       "weight": 1.0,
       "description": "A reinforced shield that can absorb more damage before breaking. Hardness 8, HP 64, BT 32",
+      "strikes": {
+          "proficiency": "martial",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d4",
+          "traits": ["Attack", "Melee"]
+        },
       "actions":[
         {
           "name": "Raise a Shield",
@@ -254,17 +261,7 @@
     "focus_points": 2,
     "class_dc": 19
   },
-  "strikes": [
-    {
-      "name": "Shield Bash",
-      "type": "melee",
-      "category": "martial",
-      "actionCount": 1,
-      "traits": ["Attack", "Melee"],
-      "damage": "1d4+4",
-      "description": "Attack with your shield."
-    }
-  ],
+  "strikes": [  ],
   "actions": [
     {
       "name": "Stride",
@@ -283,12 +280,6 @@
       "actionCount": 1,
       "traits": ["Attack"],
       "description": "You attack with a weapon or unarmed attack."
-    },
-    {
-      "name": "Lay on Hands",
-      "actionCount": 1,
-      "traits": ["Champion", "Divine", "Healing", "Manipulate", "Positive"],
-      "description": "Your hands become infused with positive energy as you lay them on a creature to heal its wounds. You restore 6 Hit Points when you cast this spell. The spell has your positive healing trait, and the healing is positive healing. You can target yourself or a willing living creature, which must be within reach."
     }
   ],
   "reactions": [
