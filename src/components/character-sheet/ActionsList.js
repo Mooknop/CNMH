@@ -69,9 +69,9 @@ const ActionsList = ({ character, characterColor }) => {
     // Add strikes generated from inventory weapons
     if (character.inventory) {
       const weaponStrikes = character.inventory
-        .filter(item => item.weapon) // Only items with weapon property
+        .filter(item => item.strikes) // Only items with strikes property
         .map(item => {
-          const weapon = item.weapon;
+          const weapon = item.strikes;
           const isProficient = character.proficiencies?.weapons?.[weapon.proficiency || 'simple'];
           const proficiencyValue = isProficient?.proficiency || 0;
           

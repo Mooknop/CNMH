@@ -160,7 +160,15 @@
       "name": "Steel Shield (Sturdy, Minor)",
       "quantity": 1,
       "weight": 1.0,
-      "description": "A reinforced shield that can absorb more damage before breaking. Hardness 8, HP 64, BT 32"
+      "description": "A reinforced shield that can absorb more damage before breaking. Hardness 8, HP 64, BT 32",
+      "actions":[
+        {
+          "name": "Raise a Shield",
+          "actionCount": 1,
+          "traits": ["Champion"],
+          "description": "You position your shield to protect yourself. When you have your shield raised, you gain a +2 circumstance bonus to AC until the start of your next turn."
+        }
+      ]
     },
     {
       "id": "item-3",
@@ -168,7 +176,7 @@
       "quantity": 1,
       "weight": 1.0,
       "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately.",
-      "weapon": {
+      "strikes": {
         "proficiency": "martial",
         "type": "melee",
         "action": 1,
@@ -258,12 +266,6 @@
     }
   ],
   "actions": [
-    {
-      "name": "Raise a Shield",
-      "actionCount": 1,
-      "traits": ["Champion"],
-      "description": "You position your shield to protect yourself. When you have your shield raised, you gain a +2 circumstance bonus to AC until the start of your next turn."
-    },
     {
       "name": "Stride",
       "actionCount": 1,
