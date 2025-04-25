@@ -1,9 +1,4 @@
-.spells-list {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
+
 
 .spells-list h2 {
   margin-top: 0;
@@ -77,15 +72,6 @@
   background-color: #5e2929;
   color: white;
   border-color: #5e2929;
-}
-
-/* Staff Container Styling */
-.staff-container {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
 }
 
 .staff-details h3 {

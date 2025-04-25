@@ -33,7 +33,7 @@ const SpellsList = ({ character, characterColor }) => {
   const hasStaff = character.staff && character.staff.name;
   
   // Staff spells (if available in the character data)
-  const staffSpells = character.staffSpells || [];
+  const staffSpells = character.staff ? character.staff.spells || [] : [];
   
   // Calculate spell attack and DC
   const getSpellModifier = () => {
@@ -64,7 +64,7 @@ const SpellsList = ({ character, characterColor }) => {
     10: []
   };
   
-  // Populate spells by rank
+  // Populate spells by rank from character's spell repertoire
   if (spellcasting.spells) {
     spellcasting.spells.forEach(spell => {
       const rank = spell.level === 0 ? 'cantrips' : spell.level;
@@ -73,11 +73,43 @@ const SpellsList = ({ character, characterColor }) => {
       }
     });
   }
+
+  // Organize staff spells by rank
+  const staffSpellsByRank = {
+    cantrips: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+    10: []
+  };
+
+  // Populate staff spells by rank
+  if (staffSpells.length > 0) {
+    staffSpells.forEach(spell => {
+      const rank = spell.level === 0 ? 'cantrips' : spell.level;
+      if (staffSpellsByRank[rank]) {
+        staffSpellsByRank[rank].push(spell);
+      }
+    });
+  }
   
-  // Get available spell ranks (only show ranks that have spells)
+  // Get available spell ranks from both regular and staff spells (only show ranks that have spells)
   const availableSpellRanks = Object.keys(spellsByRank).filter(
     rank => spellsByRank[rank].length > 0
   );
+
+  const availableStaffSpellRanks = Object.keys(staffSpellsByRank).filter(
+    rank => staffSpellsByRank[rank].length > 0
+  );
+
+  // Combine available ranks from both sources
+  const allAvailableRanks = [...new Set([...availableSpellRanks, ...availableStaffSpellRanks])];
   
   // Format spell rank for display
   const formatSpellRank = (rank) => {
@@ -86,12 +118,22 @@ const SpellsList = ({ character, characterColor }) => {
     return `Rank ${rank}`;
   };
 
-  // Get all unique defense types from spells
+  // Get all unique defense types from all spells
   const getAllDefenseTypes = () => {
     const defenseTypes = new Set(['all']);
     
+    // Add defense types from regular spells
     if (spellcasting.spells) {
       spellcasting.spells.forEach(spell => {
+        if (spell.defense) {
+          defenseTypes.add(spell.defense);
+        }
+      });
+    }
+
+    // Add defense types from staff spells
+    if (staffSpells.length > 0) {
+      staffSpells.forEach(spell => {
         if (spell.defense) {
           defenseTypes.add(spell.defense);
         }
@@ -115,6 +157,19 @@ const SpellsList = ({ character, characterColor }) => {
     );
   };
 
+  // Filter spells by rank
+  const filterSpellsByRank = (spells) => {
+    if (activeSpellRank === 'all') {
+      return spells;
+    }
+    
+    if (activeSpellRank === 'cantrips') {
+      return spells.filter(spell => spell.level === 0);
+    }
+    
+    return spells.filter(spell => spell.level === parseInt(activeSpellRank));
+  };
+
   // Get all spells for display
   const getAllSpells = () => {
     let allSpells = [];
@@ -133,26 +188,36 @@ const SpellsList = ({ character, characterColor }) => {
     return allSpells;
   };
 
-  // Get spells to display based on active rank
+  // Get all staff spells for display
+  const getAllStaffSpells = () => {
+    return staffSpells;
+  };
+
+  // Get spells to display based on active rank and view mode
   const getSpellsToDisplay = () => {
-    if (activeSpellRank === 'all') {
-      return getAllSpells();
+    if (viewMode === 'spells') {
+      if (activeSpellRank === 'all') {
+        return getAllSpells();
+      }
+      return spellsByRank[activeSpellRank] || [];
+    } else if (viewMode === 'staff') {
+      return filterSpellsByRank(getAllStaffSpells());
     }
-    return spellsByRank[activeSpellRank] || [];
+    return [];
   };
 
   // Create sorted rank list with cantrips first and then all option
   const getSortedRankList = () => {
     let sortedRanks = ['all'];
     
-    // Add cantrips if available
-    if (availableSpellRanks.includes('cantrips')) {
+    // Add cantrips if available in either source
+    if (allAvailableRanks.includes('cantrips')) {
       sortedRanks.push('cantrips');
     }
     
     // Add numbered ranks in order
     for (let i = 1; i <= 10; i++) {
-      if (availableSpellRanks.includes(i.toString())) {
+      if (allAvailableRanks.includes(i.toString())) {
         sortedRanks.push(i.toString());
       }
     }
@@ -269,7 +334,7 @@ const SpellsList = ({ character, characterColor }) => {
               borderColor: viewMode === 'spells' ? themeColor : ''
             }}
           >
-            Repertiore
+            Repertoire
           </button>
           <button 
             className={`view-mode-btn ${viewMode === 'staff' ? 'active' : ''}`}
@@ -284,9 +349,10 @@ const SpellsList = ({ character, characterColor }) => {
         </div>
       )}
       
-      {/* Regular Spells View */}
-      {viewMode === 'spells' && availableSpellRanks.length > 0 && (
-        <div className="spell-ranks-container">
+      {/* Global filters that work for both tabs */}
+      {allAvailableRanks.length > 0 && (
+        <div className="spell-filters-container">
+          {/* Spell rank filter */}
           <div className="spell-level-tabs">
             {sortedRankList.map(rank => (
               <button
@@ -303,6 +369,7 @@ const SpellsList = ({ character, characterColor }) => {
             ))}
           </div>
           
+          {/* Defense type filter */}
           {defenseTypes.length > 1 && (
             <div className="defense-filter">
               <span className="filter-label" style={{ color: themeColor }}>Filter by Defense:</span>
@@ -323,18 +390,21 @@ const SpellsList = ({ character, characterColor }) => {
               </div>
             </div>
           )}
-          
-          <div className="spells-container">
-            {filteredSpells.length > 0 ? (
-              <div className="spells-grid">
-                {filteredSpells.map(spell => renderSpellCard(spell))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <p>No spells matching your current filters.</p>
-              </div>
-            )}
-          </div>
+        </div>
+      )}
+      
+      {/* Regular Spells View */}
+      {viewMode === 'spells' && availableSpellRanks.length > 0 && (
+        <div className="spells-container">
+          {filteredSpells.length > 0 ? (
+            <div className="spells-grid">
+              {filteredSpells.map(spell => renderSpellCard(spell))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p>No spells matching your current filters.</p>
+            </div>
+          )}
         </div>
       )}
       
@@ -353,25 +423,31 @@ const SpellsList = ({ character, characterColor }) => {
               You can use these charges to cast spells from the staff.</p>
             </div>
             
-            {character.staff.spells && character.staff.spells.length > 0 ? (
+            {filteredSpells.length > 0 ? (
               <div className="staff-spells-list">
                 <h4 style={{ color: themeColor }}>Available Staff Spells</h4>
                 <div className="spells-grid">
-                  {character.staff.spells.map(spell => renderSpellCard(spell))}
+                  {filteredSpells.map(spell => renderSpellCard(spell))}
                 </div>
               </div>
             ) : (
               <div className="empty-staff-spells">
                 <h4 style={{ color: themeColor }}>Available Staff Spells</h4>
-                <p>This staff does not have any spells specified in the character data. 
-                   Staff spells should be added to the character's staff object under a "spells" property.</p>
-                
-                <div className="staff-placeholder">
-                  <h5 style={{ color: themeColor }}>Default Staff Functionality</h5>
-                  <p>Staves typically contain a selection of thematically linked spells that can be cast by 
-                  expending charges from the staff. The exact spells depend on the type of staff and its magical properties.</p>
-                  <p>Consult your Game Master or the Pathfinder 2E rulebook for details on your specific staff's capabilities.</p>
-                </div>
+                {activeSpellRank !== 'all' || defenseFilter !== 'all' ? (
+                  <p>No staff spells matching your current filters.</p>
+                ) : (
+                  <>
+                    <p>This staff does not have any spells specified in the character data. 
+                       Staff spells should be added to the character's staff object under a "spells" property.</p>
+                    
+                    <div className="staff-placeholder">
+                      <h5 style={{ color: themeColor }}>Default Staff Functionality</h5>
+                      <p>Staves typically contain a selection of thematically linked spells that can be cast by 
+                      expending charges from the staff. The exact spells depend on the type of staff and its magical properties.</p>
+                      <p>Consult your Game Master or the Pathfinder 2E rulebook for details on your specific staff's capabilities.</p>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
