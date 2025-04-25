@@ -5,6 +5,7 @@ import StatsBlock from '../components/character-sheet/StatsBlock';
 import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/character-sheet/SpellsList';
 import ActionsList from '../components/character-sheet/ActionsList';
+import FocusSpellsList from '../components/character-sheet/FocusSpellsList';
 import { 
   calculateBulkLimit, 
   calculateTotalBulk, 
@@ -96,43 +97,6 @@ const CharacterSheet = () => {
     return 'Focus Spells';
   };
   
-  // Get focus spells for the character
-  const getFocusSpells = () => {
-    if (character.champion && character.champion.devotion_spells) {
-      return character.champion.devotion_spells;
-    }
-    if (character.monk && character.monk.ki_spells) {
-      return character.monk.ki_spells;
-    }
-    if (character.spellcasting && character.spellcasting.bloodline && character.spellcasting.bloodline.focus_spells) {
-      return character.spellcasting.bloodline.focus_spells;
-    }
-    if (character.focus_spells) {
-      return character.focus_spells;
-    }
-    return [];
-  };
-  
-  // Get focus points for the character
-  const getFocusPoints = () => {
-    if (character.champion && character.champion.focus_points !== undefined) {
-      return character.champion.focus_points;
-    }
-    if (character.monk && character.monk.focus_points !== undefined) {
-      return character.monk.focus_points;
-    }
-    if (character.spellcasting && character.spellcasting.focus && character.spellcasting.focus.max !== undefined) {
-      return character.spellcasting.focus.max;
-    }
-    return null;
-  };
-  
-  // Focus spells and focus pool info
-  const hasFocusSpellsAvailable = hasFocusSpells();
-  const focusSpellsLabel = getFocusSpellsLabel();
-  const focusSpells = getFocusSpells();
-  const focusPoints = getFocusPoints();
-  
   // Function to render the active tab content
   const renderTabContent = () => {
     switch(activeTab) {
@@ -141,104 +105,7 @@ const CharacterSheet = () => {
       case 'feats':
         return <FeatsList character={character} characterColor={characterColor} />;
       case 'focus-spells':
-        return (
-          <div className="focus-spells-section">
-            {/* Focus Points Display */}
-            {focusPoints !== null && (
-              <div className="focus-points-display" style={{ borderColor: characterColor }}>
-                <span className="focus-points-label">Focus Points:</span>
-                <span className="focus-points-value">{focusPoints}</span>
-              </div>
-            )}
-            
-            {/* Focus Spells Grid */}
-            <div className="focus-spells-grid">
-              {focusSpells.length > 0 ? (
-                focusSpells.map((spell, index) => (
-                  <div key={spell.id || `focus-spell-${index}`} className="focus-spell-card">
-                    <div className="focus-spell-header" style={{ backgroundColor: '#f0f0f0' }}>
-                      <h3 style={{ color: characterColor }}>{spell.name}</h3>
-                      {spell.level !== undefined && (
-                        <span className="focus-spell-level" style={{ backgroundColor: characterColor }}>
-                          Level {Math.ceil(character.level/2)}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Spell Traits */}
-                    {spell.traits && spell.traits.length > 0 && (
-                      <div className="focus-spell-traits">
-                        {spell.traits.map((trait, i) => (
-                          <span key={i} className="focus-spell-trait">{trait}</span>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Spell Details */}
-                    <div className="focus-spell-details">
-                      {spell.actions && (
-                        <div className="focus-spell-actions">
-                          <span className="detail-label">Actions:</span>
-                          <span className="detail-value">{spell.actions}</span>
-                        </div>
-                      )}
-                      
-                      {spell.range && (
-                        <div className="focus-spell-range">
-                          <span className="detail-label">Range:</span>
-                          <span className="detail-value">{spell.range}</span>
-                        </div>
-                      )}
-                      
-                      {spell.targets && (
-                        <div className="focus-spell-targets">
-                          <span className="detail-label">Targets:</span>
-                          <span className="detail-value">{spell.targets}</span>
-                        </div>
-                      )}
-                      
-                      {spell.area && (
-                        <div className="focus-spell-area">
-                          <span className="detail-label">Area:</span>
-                          <span className="detail-value">{spell.area}</span>
-                        </div>
-                      )}
-                      
-                      {spell.duration && (
-                        <div className="focus-spell-duration">
-                          <span className="detail-label">Duration:</span>
-                          <span className="detail-value">{spell.duration}</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Spell Description */}
-                    <div className="focus-spell-description">
-                      {spell.description}
-                    </div>
-                    
-                    {/* Heightened Effects */}
-                    {spell.heightened && (
-                      <div className="focus-spell-heightened">
-                        <div className="heightened-label" style={{ color: characterColor }}>Heightened:</div>
-                        {Object.entries(spell.heightened).map(([level, effect], i) => (
-                          <div key={i} className="heightened-entry">
-                            <span className="heightened-level">{level}:</span>
-                            <span className="heightened-effect">{effect}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="empty-state">
-                  <p>No {focusSpellsLabel.toLowerCase()} available.</p>
-                </div>
-              )}
-            </div>
-          </div>
-        );
+        return <FocusSpellsList character={character} characterColor={characterColor} />;
       case 'spells':
         return <SpellsList character={character} characterColor={characterColor} />;
       case 'inventory':
@@ -314,7 +181,7 @@ const CharacterSheet = () => {
           </div>
         );
       default:
-        return <FeatsList character={character} characterColor={characterColor} />;
+        return <ActionsList character={character} characterColor={characterColor} />;
     }
   };
   
@@ -349,13 +216,13 @@ const CharacterSheet = () => {
             </button>
             
             {/* Focus Spells tab - only shown if character has focus spells */}
-            {hasFocusSpellsAvailable && (
+            {hasFocusSpells() && (
               <button 
                 className={`tab-button ${activeTab === 'focus-spells' ? 'active' : ''}`}
                 onClick={() => setActiveTab('focus-spells')}
                 style={{ backgroundColor: activeTab === 'focus-spells' ? characterColor : '' }}
               >
-                {focusSpellsLabel}
+                {getFocusSpellsLabel()}
               </button>
             )}
             
