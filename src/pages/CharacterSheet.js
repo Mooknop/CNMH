@@ -334,7 +334,7 @@ const CharacterSheet = () => {
               onClick={() => setActiveTab('feats')}
               style={{ backgroundColor: activeTab === 'feats' ? characterColor : '' }}
             >
-              Feats & Abilities
+              Feats
             </button>
             
             {/* Focus Spells tab - only shown if character has focus spells */}

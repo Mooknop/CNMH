@@ -9,9 +9,7 @@ const FeatsList = ({ character, characterColor }) => {
   const themeColor = characterColor || '#5e2929';
   
   return (
-    <div className="feats-list">
-      <h2 style={{ color: themeColor }}>Feats & Abilities</h2>
-      
+    <div className="feats-list">     
       <div className="feats-grid">
         {sortedFeats.length > 0 ? (
           sortedFeats.map(feat => (
