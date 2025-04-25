@@ -170,8 +170,11 @@
       "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately.",
       "weapon": {
         "proficiency": "martial",
+        "type": "melee",
+        "action": 1,
         "damage": "1d6",
-        "hands": "One Hand"
+        "hands": "One Hand",
+        "traits": ["Attack", "Melee", "Versatile P"]
       }
     },
     {
