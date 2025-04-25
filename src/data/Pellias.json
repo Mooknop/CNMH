@@ -81,7 +81,21 @@
       "name": "Kineticist Dedication",
       "level": 1,
       "source": "Archetype",
-      "description": "You gain the ability to gather and shape elemental energy. Choose an element: air, earth, fire, metal, water, or wood. You gain an impulse attack with the element trait from a gate of your choice."
+      "description": "You gain the ability to gather and shape elemental energy. Choose an element: air, earth, fire, metal, water, or wood. You gain an impulse attack with the element trait from a gate of your choice.",
+      "actions": [
+        {
+          "name": "Channel Elements",
+          "actionCount": 1,
+          "traits": ["Aura", "Kineticist", "Metal", "Primal"],
+          "description": "You tap into your kinetic gate to make elements flow around you. Your kinetic aura activates, and as a part of this action, you can use a 1-action Elemental Blast or a 1-action stance impulse. Your kinetic aura is a 10-foot emanation where pieces of your kinetic element (or all your kinetic elements, if you can channel more than one) flow around you. The kinetic aura can't damage anything or affect the environment around you unless another ability allows it to. Channel Elements has the traits of all your kinetic elements.\nYour kinetic aura automatically deactivates if you're knocked out, you use an impulse with the overflow trait, or you Dismiss the aura. Though you can't use new impulses while your kinetic aura is deactivated, ones you already used remain, and you can still Sustain any that can be sustained. Stance impulses are linked to your kinetic aura and end when the aura deactivates."
+        },
+        {
+          "name": "Elemental Blast (Metal)",
+          "actionCount": 1,
+          "traits": ["Attack", "Impulse", "Kineticist", "Metal", "Primal"],
+          "description": "With a wave of your hand, you collect elemental matter from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier Your blast does 1d8 piercing or slashing damage, and has a range of 30 feet."
+        }
+      ]
     },
     {
       "id": "feat-2",
@@ -261,14 +275,18 @@
     "focus_points": 2,
     "class_dc": 19
   },
-  "strikes": [  ],
-  "actions": [
+  "strikes": [ 
     {
-      "name": "Stride",
-      "actionCount": 1,
-      "traits": ["Move"],
-      "description": "You move up to your Speed."
-    },
+      "name": "Unarmed Strike",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "action": 1,
+      "damage": "1d4",
+      "traits": ["Attack", "Melee"],
+      "description": "Give 'em a good smack"
+    }
+   ],
+  "actions": [
     {
       "name": "Step",
       "actionCount": 1,
@@ -294,12 +312,6 @@
       "traits": ["General"],
       "trigger": "While you have your shield raised, you take damage from a physical attack.",
       "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
-    },
-    {
-      "name": "Nimble Reprisal",
-      "traits": ["Ancestry", "Human"],
-      "trigger": "An enemy misses you with a melee attack.",
-      "description": "Step away from that enemy. The enemy must remain within your reach throughout your Step to use this reaction."
     }
   ],
   "freeActions": [

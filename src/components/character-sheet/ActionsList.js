@@ -109,7 +109,8 @@ const ActionsList = ({ character, characterColor }) => {
             traits: weapon.traits || [],
             attackMod: attackBonus,
             damage: damageString,
-            description: item.description || ""
+            description: item.description || "",
+            source: item.name // Add source for reference
           };
         });
       
@@ -172,6 +173,19 @@ const ActionsList = ({ character, characterColor }) => {
                     {strike.description}
                   </div>
                 )}
+                
+                {/* Display item source if it exists */}
+                {strike.source && (
+                  <div className="strike-source" style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#666',
+                    borderTop: '1px solid #eee',
+                    padding: '0.5rem 1rem',
+                    fontStyle: 'italic'
+                  }}>
+                    From: {strike.source}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -186,11 +200,59 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render actions section
   const renderActions = () => {
+    // Create array to hold all actions
+    let allActions = [];
+    
+    // Add defined actions from character data if they exist
+    if (character.actions && character.actions.length > 0) {
+      allActions = [...character.actions];
+    }
+    
+    // Add actions from inventory items
+    if (character.inventory) {
+      const inventoryActions = character.inventory
+        .filter(item => item.actions && item.actions.length > 0) // Only items with actions property
+        .flatMap(item => {
+          // Map each action from this item and add a source property
+          return item.actions.map(action => ({
+            ...action,
+            source: item.name // Add source for reference
+          }));
+        });
+      
+      // Add inventory actions to the list
+      allActions = [...allActions, ...inventoryActions];
+    }
+    
+    // Add standard actions if none exist (move, strike, etc.)
+    if (allActions.length === 0) {
+      allActions = [
+        {
+          name: "Stride",
+          actionCount: 1,
+          traits: ["Move"],
+          description: "You move up to your Speed."
+        },
+        {
+          name: "Step",
+          actionCount: 1,
+          traits: ["Move"],
+          description: "You carefully move 5 feet. This movement doesn't trigger reactions that are normally triggered by movement."
+        },
+        {
+          name: "Strike",
+          actionCount: 1,
+          traits: ["Attack"],
+          description: "You attack with a weapon or unarmed attack."
+        }
+      ];
+    }
+    
     return (
       <div className="actions-container">
-        {(character.actions && character.actions.length > 0) ? (
+        {allActions.length > 0 ? (
           <div className="actions-grid">
-            {character.actions.map((action, index) => (
+            {allActions.map((action, index) => (
               <div key={`action-${index}`} className="action-card">
                 <div className="action-header">
                   <h3 style={{ color: themeColor }}>{action.name}</h3>
@@ -212,6 +274,19 @@ const ActionsList = ({ character, characterColor }) => {
                     {action.description}
                   </div>
                 )}
+                
+                {/* Display item source if it exists */}
+                {action.source && (
+                  <div className="action-source" style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#666',
+                    borderTop: '1px solid #eee',
+                    padding: '0.5rem 1rem',
+                    fontStyle: 'italic'
+                  }}>
+                    From: {action.source}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -226,11 +301,35 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render reactions section
   const renderReactions = () => {
+    // Create array to hold all reactions
+    let allReactions = [];
+    
+    // Add defined reactions from character data if they exist
+    if (character.reactions && character.reactions.length > 0) {
+      allReactions = [...character.reactions];
+    }
+    
+    // Add reactions from inventory items
+    if (character.inventory) {
+      const inventoryReactions = character.inventory
+        .filter(item => item.reactions && item.reactions.length > 0) // Only items with reactions property
+        .flatMap(item => {
+          // Map each reaction from this item and add a source property
+          return item.reactions.map(reaction => ({
+            ...reaction,
+            source: item.name // Add source for reference
+          }));
+        });
+      
+      // Add inventory reactions to the list
+      allReactions = [...allReactions, ...inventoryReactions];
+    }
+    
     return (
       <div className="reactions-container">
-        {(character.reactions && character.reactions.length > 0) ? (
+        {allReactions.length > 0 ? (
           <div className="reactions-grid">
-            {character.reactions.map((reaction, index) => (
+            {allReactions.map((reaction, index) => (
               <div key={`reaction-${index}`} className="reaction-card">
                 <div className="reaction-header">
                   <h3 style={{ color: themeColor }}>{reaction.name}</h3>
@@ -255,6 +354,19 @@ const ActionsList = ({ character, characterColor }) => {
                     {reaction.description}
                   </div>
                 )}
+                
+                {/* Display item source if it exists */}
+                {reaction.source && (
+                  <div className="reaction-source" style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#666',
+                    borderTop: '1px solid #eee',
+                    padding: '0.5rem 1rem',
+                    fontStyle: 'italic'
+                  }}>
+                    From: {reaction.source}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -269,11 +381,35 @@ const ActionsList = ({ character, characterColor }) => {
   
   // Function to render free actions section
   const renderFreeActions = () => {
+    // Create array to hold all free actions
+    let allFreeActions = [];
+    
+    // Add defined free actions from character data if they exist
+    if (character.freeActions && character.freeActions.length > 0) {
+      allFreeActions = [...character.freeActions];
+    }
+    
+    // Add free actions from inventory items
+    if (character.inventory) {
+      const inventoryFreeActions = character.inventory
+        .filter(item => item.freeActions && item.freeActions.length > 0) // Only items with freeActions property
+        .flatMap(item => {
+          // Map each free action from this item and add a source property
+          return item.freeActions.map(freeAction => ({
+            ...freeAction,
+            source: item.name // Add source for reference
+          }));
+        });
+      
+      // Add inventory free actions to the list
+      allFreeActions = [...allFreeActions, ...inventoryFreeActions];
+    }
+    
     return (
       <div className="free-actions-container">
-        {(character.freeActions && character.freeActions.length > 0) ? (
+        {allFreeActions.length > 0 ? (
           <div className="free-actions-grid">
-            {character.freeActions.map((freeAction, index) => (
+            {allFreeActions.map((freeAction, index) => (
               <div key={`free-action-${index}`} className="free-action-card">
                 <div className="free-action-header">
                   <h3 style={{ color: themeColor }}>{freeAction.name}</h3>
@@ -296,6 +432,19 @@ const ActionsList = ({ character, characterColor }) => {
                 {freeAction.description && (
                   <div className="free-action-description">
                     {freeAction.description}
+                  </div>
+                )}
+                
+                {/* Display item source if it exists */}
+                {freeAction.source && (
+                  <div className="free-action-source" style={{ 
+                    fontSize: '0.8rem', 
+                    color: '#666',
+                    borderTop: '1px solid #eee',
+                    padding: '0.5rem 1rem',
+                    fontStyle: 'italic'
+                  }}>
+                    From: {freeAction.source}
                   </div>
                 )}
               </div>
