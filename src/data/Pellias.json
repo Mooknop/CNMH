@@ -173,6 +173,7 @@
         "type": "melee",
         "action": 1,
         "damage": "1d6",
+        "damageType": ["Piercing", "Slashing"],
         "hands": "One Hand",
         "traits": ["Attack", "Melee", "Versatile P"]
       }
