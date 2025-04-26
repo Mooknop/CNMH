@@ -180,6 +180,12 @@ const StatsBlock = ({ character, characterColor }) => {
                         {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
+                    <div className="bonus-container">
+                      <div className="attack-type">Ranged (DEX)</div>
+                      <div className="attack-bonus" style={{ color: themeColor }}>
+                        {getAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
