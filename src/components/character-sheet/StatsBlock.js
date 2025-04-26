@@ -269,7 +269,7 @@ const StatsBlock = ({ character, characterColor }) => {
           </div>
         );
       case 'skills':
-        return <EnhancedSkillsList character={character} characterColor={characterColor} />;
+        return <EnhancedSkillsList character={character} characterColor={themeColor} />;
       default:
         return null;
     }

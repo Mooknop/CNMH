@@ -249,20 +249,6 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
             <div className="skill-name-section">
               <h3 style={{ color: themeColor }}>
                 {skill.name}
-                {hasImprovisedSkill && (
-                  <span 
-                    style={{ 
-                      fontSize: '0.75rem', 
-                      marginLeft: '0.5rem', 
-                      color: '#666',
-                      backgroundColor: '#f0f0f0',
-                      padding: '0.15rem 0.4rem',
-                      borderRadius: '4px'
-                    }}
-                  >
-                    Improvised
-                  </span>
-                )}
                 <div className="skill-ability">
                   {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
                 </div>
@@ -296,10 +282,9 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           return (
             <CollapsibleCard 
               key={skill.id}
-              className={`skill-card ${proficiencyColorClass} ${hasImprovisedSkill ? 'improvised-skill' : ''}`}
+              className={`skill-card  ${hasImprovisedSkill ? 'improvised-skill' : proficiencyColorClass}`}
               header={header}
               themeColor={themeColor}
-              style={{ borderLeft: `4px solid ${hasImprovisedSkill ? '#ddd' : ''}` }}
             >
               {content}
             </CollapsibleCard>
