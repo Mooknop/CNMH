@@ -239,7 +239,7 @@ const SpellsList = ({ character, characterColor }) => {
         <div className="spell-header-meta">
           <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
             {spell.level === 0 
-              ? `Cantrip (${Math.ceil(character.level / 2)})`
+              ? `Cantrip ${spell.baseLevel} (${Math.ceil(character.level / 2)})`
               : `Rank ${spell.level}`
             }
           </span>

@@ -250,6 +250,7 @@
         "id": "spell-1",
         "name": "Serrate",
         "level": 1,
+        "baseLevel": 1,
         "traits": ["Uncommon","Champion", "Focus", "Manipulate", "Metal"],
         "actions": "One Action",
         "range": "Touch",
@@ -262,7 +263,8 @@
       {
         "id": "spell-2",
         "name": "Shields of the Spirit",
-        "level": 2,
+        "level": 1,
+        "baseLevel": 1,
         "traits": ["Uncommon","Champion","Concentrate", "Focus", "Sanctified", "Spirit"],
         "actions": "One Action",
         "requirements": "You are wielding a shield.",

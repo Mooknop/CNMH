@@ -111,7 +111,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
                 <h3 style={{ color: themeColor }}>{spell.name}</h3>
                 {spell.level !== undefined && (
                   <span className="focus-spell-level" style={{ backgroundColor: themeColor }}>
-                    Rank {spell.level}
+                    {`Rank ${spell.baseLevel} (${Math.ceil(character.level / 2)})`}
                   </span>
                 )}
               </>
