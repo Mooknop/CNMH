@@ -1,0 +1,40 @@
+/* src/components/shared/CollapsibleCard.css */
+.collapsible-card {
+    background-color: white;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease;
+  }
+  
+  .collapsible-card:hover {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  }
+  
+  .collapsible-header {
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f0f0f0;
+    transition: background-color 0.2s ease;
+  }
+  
+  .collapsible-header:hover {
+    background-color: #e8e8e8;
+  }
+  
+  .expand-icon {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+  }
+  
+  .collapsible-content {
+    animation: fadeIn 0.2s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }

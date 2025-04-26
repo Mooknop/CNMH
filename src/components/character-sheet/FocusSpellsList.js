@@ -1,5 +1,6 @@
 import React from 'react';
 import './FocusSpellsList.css';
+import CollapsibleCard from '../shared/CollapsibleCard';
 
 const FocusSpellsList = ({ character, characterColor }) => {
   // Use the characterColor or default to the theme color
@@ -103,83 +104,101 @@ const FocusSpellsList = ({ character, characterColor }) => {
       {/* Focus Spells Grid */}
       <div className="focus-spells-grid">
         {focusSpells.length > 0 ? (
-          focusSpells.map((spell, index) => (
-            <div key={spell.id || `focus-spell-${index}`} className="focus-spell-card">
-              <div className="focus-spell-header">
+          focusSpells.map((spell, index) => {
+            // Create header content
+            const header = (
+              <>
                 <h3 style={{ color: themeColor }}>{spell.name}</h3>
                 {spell.level !== undefined && (
                   <span className="focus-spell-level" style={{ backgroundColor: themeColor }}>
-                    Rank {Math.ceil(character.level/2)}
+                    Rank {spell.level}
                   </span>
                 )}
-              </div>
-              
-              {/* Spell Traits */}
-              {spell.traits && spell.traits.length > 0 && (
-                <div className="focus-spell-traits">
-                  {spell.traits.map((trait, i) => (
-                    <span key={i} className="focus-spell-trait">{trait}</span>
-                  ))}
-                </div>
-              )}
-              
-              {/* Spell Details */}
-              <div className="focus-spell-details">
-                {spell.actions && (
-                  <div className="focus-spell-actions">
-                    <span className="detail-label">Actions:</span>
-                    <span className="detail-value">{spell.actions}</span>
+              </>
+            );
+            
+            // Create content
+            const content = (
+              <>
+                {/* Spell Traits */}
+                {spell.traits && spell.traits.length > 0 && (
+                  <div className="focus-spell-traits">
+                    {spell.traits.map((trait, i) => (
+                      <span key={i} className="focus-spell-trait">{trait}</span>
+                    ))}
                   </div>
                 )}
                 
-                {spell.range && (
-                  <div className="focus-spell-range">
-                    <span className="detail-label">Range:</span>
-                    <span className="detail-value">{spell.range}</span>
-                  </div>
-                )}
-                
-                {spell.targets && (
-                  <div className="focus-spell-targets">
-                    <span className="detail-label">Targets:</span>
-                    <span className="detail-value">{spell.targets}</span>
-                  </div>
-                )}
-                
-                {spell.area && (
-                  <div className="focus-spell-area">
-                    <span className="detail-label">Area:</span>
-                    <span className="detail-value">{spell.area}</span>
-                  </div>
-                )}
-                
-                {spell.duration && (
-                  <div className="focus-spell-duration">
-                    <span className="detail-label">Duration:</span>
-                    <span className="detail-value">{spell.duration}</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Spell Description */}
-              <div className="focus-spell-description">
-                {spell.description}
-              </div>
-              
-              {/* Heightened Effects */}
-              {spell.heightened && (
-                <div className="focus-spell-heightened">
-                  <div className="heightened-label" style={{ color: themeColor }}>Heightened:</div>
-                  {Object.entries(spell.heightened).map(([level, effect], i) => (
-                    <div key={i} className="heightened-entry">
-                      <span className="heightened-level">{level}:</span>
-                      <span className="heightened-effect">{effect}</span>
+                {/* Spell Details */}
+                <div className="focus-spell-details">
+                  {spell.actions && (
+                    <div className="focus-spell-actions">
+                      <span className="detail-label">Actions:</span>
+                      <span className="detail-value">{spell.actions}</span>
                     </div>
-                  ))}
+                  )}
+                  
+                  {spell.range && (
+                    <div className="focus-spell-range">
+                      <span className="detail-label">Range:</span>
+                      <span className="detail-value">{spell.range}</span>
+                    </div>
+                  )}
+                  
+                  {spell.targets && (
+                    <div className="focus-spell-targets">
+                      <span className="detail-label">Targets:</span>
+                      <span className="detail-value">{spell.targets}</span>
+                    </div>
+                  )}
+                  
+                  {spell.area && (
+                    <div className="focus-spell-area">
+                      <span className="detail-label">Area:</span>
+                      <span className="detail-value">{spell.area}</span>
+                    </div>
+                  )}
+                  
+                  {spell.duration && (
+                    <div className="focus-spell-duration">
+                      <span className="detail-label">Duration:</span>
+                      <span className="detail-value">{spell.duration}</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
+                
+                {/* Spell Description */}
+                <div className="focus-spell-description">
+                  {spell.description}
+                </div>
+                
+                {/* Heightened Effects */}
+                {spell.heightened && (
+                  <div className="focus-spell-heightened">
+                    <div className="heightened-label" style={{ color: themeColor }}>Heightened:</div>
+                    {Object.entries(spell.heightened).map(([level, effect], i) => (
+                      <div key={i} className="heightened-entry">
+                        <span className="heightened-level">{level}:</span>
+                        <span className="heightened-effect">{effect}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+            
+            return (
+              <CollapsibleCard 
+                key={spell.id || `focus-spell-${index}`}
+                className="focus-spell-card"
+                header={header}
+                themeColor={themeColor}
+                initialExpanded={false}
+              >
+                {content}
+              </CollapsibleCard>
+            );
+          })
         ) : (
           <div className="empty-state">
             <p>No {focusSpellsLabel.toLowerCase()} available.</p>

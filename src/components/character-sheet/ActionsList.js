@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './ActionsList.css';
+import CollapsibleCard from '../shared/CollapsibleCard';
 import {
   getAbilityModifier, 
   getAttackBonus 
@@ -302,55 +303,73 @@ const ActionsList = ({ character, characterColor }) => {
       <div className="strikes-container">
         {strikes.length > 0 ? (
           <div className="strikes-grid">
-            {strikes.map((strike, index) => (
-              <div key={`strike-${index}`} className="strike-card" style={{ borderLeftColor: themeColor }}>
-                <div className="strike-header" style={{ backgroundColor: '#f0f0f0' }}>
+            {strikes.map((strike, index) => {
+              // Create header content
+              const header = (
+                <>
                   <h3 style={{ color: themeColor }}>{strike.name}</h3>
                   <div className="action-count">
                     {Array(strike.actionCount || 1).fill().map((_, i) => (
                       <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
                     ))}
                   </div>
-                </div>
-                
-                <div className="strike-traits">
-                  {strike.traits && strike.traits.map((trait, i) => (
-                    <span key={i} className="trait-tag">{trait}</span>
-                  ))}
-                </div>
-                
-                <div className="strike-details">
-                  <div className="strike-attack">
-                    <span className="detail-label">Attack</span>
-                    <span className="detail-value" style={{ color: themeColor }}>{strike.attackMod}</span>
+                </>
+              );
+              
+              // Create content
+              const content = (
+                <>
+                  <div className="strike-traits">
+                    {strike.traits && strike.traits.map((trait, i) => (
+                      <span key={i} className="trait-tag">{trait}</span>
+                    ))}
                   </div>
                   
-                  <div className="strike-damage">
-                    <span className="detail-label">Damage</span>
-                    <span className="detail-value" style={{ color: themeColor }}>{strike.damage}</span>
+                  <div className="strike-details">
+                    <div className="strike-attack">
+                      <span className="detail-label">Attack</span>
+                      <span className="detail-value" style={{ color: themeColor }}>{strike.attackMod}</span>
+                    </div>
+                    
+                    <div className="strike-damage">
+                      <span className="detail-label">Damage</span>
+                      <span className="detail-value" style={{ color: themeColor }}>{strike.damage}</span>
+                    </div>
                   </div>
-                </div>
-                
-                {strike.description && (
-                  <div className="strike-description">
-                    {strike.description}
-                  </div>
-                )}
-                
-                {/* Display item source if it exists */}
-                {strike.source && (
-                  <div className="strike-source" style={{ 
-                    fontSize: '0.8rem', 
-                    color: '#666',
-                    borderTop: '1px solid #eee',
-                    padding: '0.5rem 1rem',
-                    fontStyle: 'italic'
-                  }}>
-                    From: {strike.source}
-                  </div>
-                )}
-              </div>
-            ))}
+                  
+                  {strike.description && (
+                    <div className="strike-description">
+                      {strike.description}
+                    </div>
+                  )}
+                  
+                  {/* Display item source if it exists */}
+                  {strike.source && (
+                    <div className="strike-source" style={{ 
+                      fontSize: '0.8rem', 
+                      color: '#666',
+                      borderTop: '1px solid #eee',
+                      padding: '0.5rem 1rem',
+                      fontStyle: 'italic'
+                    }}>
+                      From: {strike.source}
+                    </div>
+                  )}
+                </>
+              );
+              
+              return (
+                <CollapsibleCard 
+                  key={`strike-${index}`}
+                  className="strike-card"
+                  header={header}
+                  themeColor={themeColor}
+                  style={{ borderLeft: `4px solid ${themeColor}` }}
+                >
+                  {content}
+                </CollapsibleCard>
+              );
+            })}
           </div>
         ) : (
           <div className="empty-state">
@@ -369,43 +388,61 @@ const ActionsList = ({ character, characterColor }) => {
       <div className="actions-container">
         {actions.length > 0 ? (
           <div className="actions-grid">
-            {actions.map((action, index) => (
-              <div key={`action-${index}`} className="action-card" style={{ borderLeftColor: themeColor }}>
-                <div className="action-header" style={{ backgroundColor: '#f0f0f0' }}>
+            {actions.map((action, index) => {
+              // Create header content
+              const header = (
+                <>
                   <h3 style={{ color: themeColor }}>{action.name}</h3>
                   <div className="action-count">
                     {Array(action.actionCount || 1).fill().map((_, i) => (
                       <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
                     ))}
                   </div>
-                </div>
-                
-                <div className="action-traits">
-                  {action.traits && action.traits.map((trait, i) => (
-                    <span key={i} className="trait-tag">{trait}</span>
-                  ))}
-                </div>
-                
-                {action.description && (
-                  <div className="action-description">
-                    {action.description}
+                </>
+              );
+              
+              // Create content
+              const content = (
+                <>
+                  <div className="action-traits">
+                    {action.traits && action.traits.map((trait, i) => (
+                      <span key={i} className="trait-tag">{trait}</span>
+                    ))}
                   </div>
-                )}
-                
-                {/* Display item source if it exists */}
-                {action.source && (
-                  <div className="action-source" style={{ 
-                    fontSize: '0.8rem', 
-                    color: '#666',
-                    borderTop: '1px solid #eee',
-                    padding: '0.5rem 1rem',
-                    fontStyle: 'italic'
-                  }}>
-                    From: {action.source}
-                  </div>
-                )}
-              </div>
-            ))}
+                  
+                  {action.description && (
+                    <div className="action-description">
+                      {action.description}
+                    </div>
+                  )}
+                  
+                  {/* Display item source if it exists */}
+                  {action.source && (
+                    <div className="action-source" style={{ 
+                      fontSize: '0.8rem', 
+                      color: '#666',
+                      borderTop: '1px solid #eee',
+                      padding: '0.5rem 1rem',
+                      fontStyle: 'italic'
+                    }}>
+                      From: {action.source}
+                    </div>
+                  )}
+                </>
+              );
+              
+              return (
+                <CollapsibleCard 
+                  key={`action-${index}`}
+                  className="action-card"
+                  header={header}
+                  themeColor={themeColor}
+                  style={{ borderLeft: `4px solid ${themeColor}` }}
+                >
+                  {content}
+                </CollapsibleCard>
+              );
+            })}
           </div>
         ) : (
           <div className="empty-state">
@@ -424,46 +461,64 @@ const ActionsList = ({ character, characterColor }) => {
       <div className="reactions-container">
         {reactions.length > 0 ? (
           <div className="reactions-grid">
-            {reactions.map((reaction, index) => (
-              <div key={`reaction-${index}`} className="reaction-card" style={{ borderLeftColor: themeColor }}>
-                <div className="reaction-header" style={{ backgroundColor: '#f0f0f0' }}>
+            {reactions.map((reaction, index) => {
+              // Create header content
+              const header = (
+                <>
                   <h3 style={{ color: themeColor }}>{reaction.name}</h3>
                   <div className="reaction-icon" style={{ color: themeColor }}>⟳</div>
-                </div>
-                
-                <div className="reaction-traits">
-                  {reaction.traits && reaction.traits.map((trait, i) => (
-                    <span key={i} className="trait-tag">{trait}</span>
-                  ))}
-                </div>
-                
-                {reaction.trigger && (
-                  <div className="reaction-trigger">
-                    <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
-                    <span className="trigger-text">{reaction.trigger}</span>
+                </>
+              );
+              
+              // Create content
+              const content = (
+                <>
+                  <div className="reaction-traits">
+                    {reaction.traits && reaction.traits.map((trait, i) => (
+                      <span key={i} className="trait-tag">{trait}</span>
+                    ))}
                   </div>
-                )}
-                
-                {reaction.description && (
-                  <div className="reaction-description">
-                    {reaction.description}
-                  </div>
-                )}
-                
-                {/* Display item source if it exists */}
-                {reaction.source && (
-                  <div className="reaction-source" style={{ 
-                    fontSize: '0.8rem', 
-                    color: '#666',
-                    borderTop: '1px solid #eee',
-                    padding: '0.5rem 1rem',
-                    fontStyle: 'italic'
-                  }}>
-                    From: {reaction.source}
-                  </div>
-                )}
-              </div>
-            ))}
+                  
+                  {reaction.trigger && (
+                    <div className="reaction-trigger">
+                      <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
+                      <span className="trigger-text">{reaction.trigger}</span>
+                    </div>
+                  )}
+                  
+                  {reaction.description && (
+                    <div className="reaction-description">
+                      {reaction.description}
+                    </div>
+                  )}
+                  
+                  {/* Display item source if it exists */}
+                  {reaction.source && (
+                    <div className="reaction-source" style={{ 
+                      fontSize: '0.8rem', 
+                      color: '#666',
+                      borderTop: '1px solid #eee',
+                      padding: '0.5rem 1rem',
+                      fontStyle: 'italic'
+                    }}>
+                      From: {reaction.source}
+                    </div>
+                  )}
+                </>
+              );
+              
+              return (
+                <CollapsibleCard 
+                  key={`reaction-${index}`}
+                  className="reaction-card"
+                  header={header}
+                  themeColor={themeColor}
+                  style={{ borderLeft: `4px solid ${themeColor}` }}
+                >
+                  {content}
+                </CollapsibleCard>
+              );
+            })}
           </div>
         ) : (
           <div className="empty-state">

@@ -11,27 +11,6 @@
   font-size: 1.2rem;
 }
 
-.add-feat-form {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #ddd;
-}
-
-.feat-input {
-  flex: 2;
-  min-width: 200px;
-}
-
-.level-input {
-  flex: 0.5;
-  min-width: 70px;
-}
-
-.source-input {
-  flex: 1;
-  min-width: 150px;
-}
-
 /* Feats Grid Layout */
 .feats-grid {
   display: grid;
@@ -39,29 +18,28 @@
   gap: 1rem;
 }
 
-.feat-card {
-  background-color: white;
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+/* Adjustments for CollapsibleCard integration */
+.feat-card .collapsible-header {
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.feat-header {
-  padding: 0.75rem 1rem;
-  background-color: #f0f0f0;
-  position: relative;
-}
-
-.feat-header h3 {
+.feat-card .collapsible-header h3 {
   margin: 0;
   font-size: 1.1rem;
   color: #5e2929;
+  margin-bottom: 0.25rem;
+}
+
+.feat-card .expand-icon {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
 }
 
 .feat-meta {
   display: flex;
   gap: 0.75rem;
-  margin-top: 0.25rem;
   font-size: 0.8rem;
 }
 
@@ -74,9 +52,101 @@
 }
 
 .feat-description {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0;
   font-size: 0.9rem;
   color: #333;
+}
+
+/* Styles for actions within feats */
+.feat-actions, 
+.feat-reactions {
+  margin-top: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+}
+
+.feat-actions h4,
+.feat-reactions h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1rem;
+}
+
+.actions-list,
+.reactions-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feat-action,
+.feat-reaction {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.feat-action:last-child,
+.feat-reaction:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.action-header,
+.reaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.action-name,
+.reaction-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.action-count,
+.reaction-icon {
+  color: #5e2929;
+}
+
+.action-traits,
+.reaction-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.trait-tag {
+  font-size: 0.8rem;
+  background-color: #e0e0e0;
+  color: #333;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.reaction-trigger {
+  background-color: #fff8e1;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.trigger-label {
+  font-weight: 600;
+  color: #5e2929;
+  margin-right: 0.5rem;
+}
+
+.action-description,
+.reaction-description {
+  font-size: 0.9rem;
+  color: #333;
+  white-space: pre-line;
 }
 
 .empty-state {

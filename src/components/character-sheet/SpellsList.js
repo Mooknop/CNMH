@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './SpellsList.css';
+import CollapsibleCard from '../shared/CollapsibleCard';
 import { 
   getAbilityModifier, 
   getProficiencyBonus, 
@@ -231,10 +232,11 @@ const SpellsList = ({ character, characterColor }) => {
   
   // Render a spell card 
   const renderSpellCard = (spell) => {
-    return (
-      <div key={spell.id} className="spell-card">
-        <div className="spell-header">
-          <h3 style={{ color: themeColor }}>{spell.name}</h3>
+    // Create header content
+    const header = (
+      <>
+        <h3 style={{ color: themeColor }}>{spell.name}</h3>
+        <div className="spell-header-meta">
           <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
             {spell.level === 0 
               ? `Cantrip (${Math.ceil(character.level / 2)})`
@@ -247,6 +249,12 @@ const SpellsList = ({ character, characterColor }) => {
             </div>
           )}
         </div>
+      </>
+    );
+    
+    // Create content
+    const content = (
+      <>
         <div className="spell-meta">
           {spell.traits && spell.traits.map((trait, index) => (
             <span key={index} className="spell-trait">{trait}</span>
@@ -298,7 +306,19 @@ const SpellsList = ({ character, characterColor }) => {
             ))}
           </div>
         )}
-      </div>
+      </>
+    );
+    
+    return (
+      <CollapsibleCard 
+        key={spell.id}
+        className="spell-card"
+        header={header}
+        themeColor={themeColor}
+        initialExpanded={false}
+      >
+        {content}
+      </CollapsibleCard>
     );
   };
 

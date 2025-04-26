@@ -1,219 +1,214 @@
 .actions-list {
-    padding: 1.5rem;
-    border-radius: 8px;
-  }
-  
-  .actions-list h2 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    color: #5e2929;
-    font-size: 1.2rem;
-  }
-  
-  /* Section tabs styling */
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.actions-list h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #5e2929;
+  font-size: 1.2rem;
+}
+
+/* Section tabs styling */
+.section-tabs {
+  display: flex;
+  margin-bottom: 1.5rem;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.section-tab {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #444;
+  transition: background-color 0.2s, color 0.2s;
+  text-align: center;
+}
+
+.section-tab:hover {
+  background-color: #d0d0d0;
+}
+
+.section-tab.active {
+  background-color: #5e2929;
+  color: white;
+}
+
+/* Content container */
+.section-content {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Grid layouts for each section */
+.strikes-grid,
+.actions-grid,
+.reactions-grid,
+.free-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Card headers */
+.strike-card .collapsible-header,
+.action-card .collapsible-header,
+.reaction-card .collapsible-header,
+.free-action-card .collapsible-header {
+  background-color: #f0f0f0;
+}
+
+.strike-card .collapsible-header h3,
+.action-card .collapsible-header h3,
+.reaction-card .collapsible-header h3,
+.free-action-card .collapsible-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+  flex-grow: 1;
+}
+
+.action-count {
+  display: flex;
+  gap: 2px;
+}
+
+.action-icon,
+.reaction-icon,
+.free-action-icon {
+  font-size: 1.2rem;
+  color: #5e2929;
+}
+
+/* Traits styling */
+.strike-traits,
+.action-traits,
+.reaction-traits,
+.free-action-traits {
+  padding: 0.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+}
+
+.trait-tag {
+  font-size: 0.8rem;
+  background-color: #e0e0e0;
+  color: #333;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Strike-specific details */
+.strike-details {
+  padding: 0.75rem 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+}
+
+.strike-attack,
+.strike-damage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #333;
+}
+
+/* Descriptions */
+.strike-description,
+.action-description,
+.reaction-description,
+.free-action-description {
+  padding: 0.75rem 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+/* Trigger sections for reactions and free actions */
+.reaction-trigger,
+.free-action-trigger {
+  padding: 0.75rem 0;
+  background-color: #fff8e1;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.trigger-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+}
+
+.trigger-text {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+/* Source attribution */
+.strike-source,
+.action-source,
+.reaction-source,
+.free-action-source {
+  font-size: 0.8rem;
+  color: #666;
+  border-top: 1px solid #eee;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
   .section-tabs {
-    display: flex;
-    margin-bottom: 1.5rem;
-    background-color: #e0e0e0;
-    border-radius: 4px;
-    overflow: hidden;
+    flex-direction: column;
   }
   
   .section-tab {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: #444;
-    transition: background-color 0.2s, color 0.2s;
-    text-align: center;
+    padding: 0.5rem;
   }
   
-  .section-tab:hover {
-    background-color: #d0d0d0;
-  }
-  
-  .section-tab.active {
-    background-color: #5e2929;
-    color: white;
-  }
-  
-  /* Content container */
-  .section-content {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-  
-  /* Grid layouts for each section */
   .strikes-grid,
   .actions-grid,
   .reactions-grid,
   .free-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1fr;
   }
   
-  /* Card styling for all action types */
-  .strike-card,
-  .action-card,
-  .reaction-card,
-  .free-action-card {
-    background-color: #f9f9f9;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    border-left: 4px solid #5e2929;
-  }
-  
-  /* Card headers */
-  .strike-header,
-  .action-header,
-  .reaction-header,
-  .free-action-header {
-    padding: 0.75rem 1rem;
-    background-color: #f0f0f0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .strike-header h3,
-  .action-header h3,
-  .reaction-header h3,
-  .free-action-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #5e2929;
-    flex-grow: 1;
-  }
-  
-  .action-count {
-    display: flex;
-    gap: 2px;
-  }
-  
-  .action-icon,
-  .reaction-icon,
-  .free-action-icon {
-    font-size: 1.2rem;
-    color: #5e2929;
-  }
-  
-  /* Traits styling */
-  .strike-traits,
-  .action-traits,
-  .reaction-traits,
-  .free-action-traits {
-    padding: 0.5rem 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .trait-tag {
-    font-size: 0.8rem;
-    background-color: #e0e0e0;
-    color: #333;
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
-  }
-  
-  /* Strike-specific details */
   .strike-details {
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    background-color: #fafafa;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .strike-attack,
-  .strike-damage {
-    display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 0.75rem;
   }
-  
-  .detail-label {
-    font-size: 0.8rem;
-    color: #666;
-    margin-bottom: 0.25rem;
-  }
-  
-  .detail-value {
-    font-weight: 600;
-    color: #333;
-  }
-  
-  /* Descriptions */
-  .strike-description,
-  .action-description,
-  .reaction-description,
-  .free-action-description {
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    color: #333;
-    flex-grow: 1;
-  }
-  
-  /* Trigger sections for reactions and free actions */
-  .reaction-trigger,
-  .free-action-trigger {
-    padding: 0.75rem 1rem;
-    background-color: #fff8e1;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .trigger-label {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #5e2929;
-    margin-bottom: 0.25rem;
-  }
-  
-  .trigger-text {
-    font-size: 0.9rem;
-    color: #333;
-  }
-  
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 2rem;
-    color: #888;
-    font-style: italic;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .section-tabs {
-      flex-direction: column;
-    }
-    
-    .section-tab {
-      padding: 0.5rem;
-    }
-    
-    .strikes-grid,
-    .actions-grid,
-    .reactions-grid,
-    .free-actions-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .strike-details {
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-  }
+}

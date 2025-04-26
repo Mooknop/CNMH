@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import './EnhancedSkillsList.css';
+import CollapsibleCard from '../shared/CollapsibleCard';
 import { 
   getSkillModifier, 
   getAbilityModifier, 
   formatModifier, 
   getProficiencyLabel, 
-  SKILL_ABILITY_MAP,
   hasFeat
 } from '../../utils/CharacterUtils';
 
 const EnhancedSkillsList = ({ character, characterColor }) => {
-  const [expandedSkills, setExpandedSkills] = useState({});
-
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
 
@@ -191,8 +189,7 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
       ]
     }
   ];
-
-  // Function to get the proficiency color
+  // Function to get the proficiency color (unchanged)
   const getProficiencyColor = (proficiency) => {
     switch(proficiency) {
       case 1: return 'trained-color';      // Trained
@@ -201,13 +198,6 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
       case 4: return 'legendary-color';    // Legendary
       default: return 'untrained-color';   // Untrained
     }
-  };
-
-  const toggleSkill = (skillId) => {
-    setExpandedSkills(prev => ({
-      ...prev,
-      [skillId]: !prev[skillId]
-    }));
   };
   
   // Sort skills alphabetically
@@ -248,68 +238,71 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           const abilityMod = getAbilityModifier(character.abilities?.[skill.ability] || 10);
           const abilityModStr = formatModifier(abilityMod);
           
-          const isExpanded = expandedSkills[skill.id];
           const proficiencyColorClass = getProficiencyColor(proficiency);
           
           // Add a class if this is an untrained skill but character has Untrained Improvisation
           const isUntrained = proficiency === 0;
           const hasImprovisedSkill = isUntrained && hasUntrainedImprovisation;
           
-          return (
-            <div key={skill.id} className={`skill-card ${proficiencyColorClass} ${hasImprovisedSkill ? 'improvised-skill' : ''}`}>
-              <div 
-                className="skill-header" 
-                onClick={() => toggleSkill(skill.id)}
-              >
-                <div className="skill-name-section">
-                  <h3 style={{ color: themeColor }}>
-                    {skill.name}
-                    {hasImprovisedSkill && (
-                      <span 
-                        style={{ 
-                          fontSize: '0.75rem', 
-                          marginLeft: '0.5rem', 
-                          color: '#666',
-                          backgroundColor: '#f0f0f0',
-                          padding: '0.15rem 0.4rem',
-                          borderRadius: '4px'
-                        }}
-                      >
-                        Improvised
-                      </span>
-                    )}
-                  </h3>
-                  <div className="skill-ability">
-                    {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
-                  </div>
+          // Create the header content
+          const header = (
+            <div className="skill-name-section">
+              <h3 style={{ color: themeColor }}>
+                {skill.name}
+                {hasImprovisedSkill && (
+                  <span 
+                    style={{ 
+                      fontSize: '0.75rem', 
+                      marginLeft: '0.5rem', 
+                      color: '#666',
+                      backgroundColor: '#f0f0f0',
+                      padding: '0.15rem 0.4rem',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    Improvised
+                  </span>
+                )}
+                <div className="skill-ability">
+                  {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
                 </div>
-                <div className="skill-info">
-                  <div className="skill-modifier">
-                    {formatModifier(modifier)}
-                  </div>
-                  <div className={`skill-proficiency ${proficiencyColorClass}`}>
-                    {getProficiencyLabel(proficiency)}
-                  </div>
-                  <div className="expand-icon">
-                    {isExpanded ? '▼' : '▶'}
-                  </div>
+              </h3>
+              <div className="skill-info">
+                <div className="skill-modifier">
+                  {formatModifier(modifier)}
+                </div>
+                <div className={`skill-proficiency ${proficiencyColorClass}`}>
+                  {getProficiencyLabel(proficiency)}
                 </div>
               </div>
-              
-              {isExpanded && (
-                <div className="skill-actions">
-                  <h4 style={{ color: themeColor }}>Skill Actions</h4>
-                  <ul className="actions-list">
-                    {skill.actions.map((action, index) => (
-                      <li key={index} className="skill-action">
-                        <span className="action-name">{action.name}</span>
-                        <span className="action-description">{action.description}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
+          );
+          
+          // Create the content for the collapsible part
+          const content = (
+            <div className="skill-actions">
+              <h4 style={{ color: themeColor }}>Skill Actions</h4>
+              <ul className="actions-list">
+                {skill.actions.map((action, index) => (
+                  <li key={index} className="skill-action">
+                    <span className="action-name">{action.name}</span>
+                    <span className="action-description">{action.description}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+          
+          return (
+            <CollapsibleCard 
+              key={skill.id}
+              className={`skill-card ${proficiencyColorClass} ${hasImprovisedSkill ? 'improvised-skill' : ''}`}
+              header={header}
+              themeColor={themeColor}
+              style={{ borderLeft: `4px solid ${hasImprovisedSkill ? '#ddd' : ''}` }}
+            >
+              {content}
+            </CollapsibleCard>
           );
         })}
       </div>

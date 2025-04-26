@@ -18,11 +18,11 @@
   gap: 0.75rem;
 }
 
+/* CollapsibleCard integration for skill cards */
 .skill-card {
   background-color: white;
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   transition: box-shadow 0.2s ease;
 }
 
@@ -56,7 +56,7 @@
   border-left: 4px dashed #666;
 }
 
-.improvised-skill .skill-header {
+.improvised-skill .collapsible-header {
   background-color: #fafbfc;
 }
 
@@ -65,21 +65,12 @@
   line-height: 1.4;
 }
 
-.skill-header {
-  padding: 0.75rem 1rem;
+/* Skill name section styling inside collapsible header */
+.skill-name-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.skill-header:hover {
-  background-color: #f5f5f5;
-}
-
-.skill-name-section {
-  flex-grow: 1;
+  width: 100%;
 }
 
 .skill-name-section h3 {
@@ -88,6 +79,8 @@
   color: #5e2929;
   display: flex;
   align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .skill-ability {
@@ -138,16 +131,9 @@
   color: #f39c12; /* Gold */
 }
 
-.expand-icon {
-  font-size: 0.8rem;
-  color: #999;
-  margin-left: 0.5rem;
-}
-
+/* Skill actions section in the collapsible content */
 .skill-actions {
-  background-color: #f9f9f9;
   padding: 1rem;
-  border-top: 1px solid #eee;
 }
 
 .skill-actions h4 {
