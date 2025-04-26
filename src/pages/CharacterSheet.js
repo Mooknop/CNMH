@@ -7,6 +7,7 @@ import SpellsList from '../components/character-sheet/SpellsList';
 import ActionsList from '../components/character-sheet/ActionsList';
 import FocusSpellsList from '../components/character-sheet/FocusSpellsList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
+import ItemModal from '../components/character-sheet/ItemModal';
 import { 
   calculateBulkLimit, 
   calculateTotalBulk, 
@@ -26,6 +27,8 @@ const CharacterSheet = () => {
   const [bulkUsed, setBulkUsed] = useState(0);
   const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   
   useEffect(() => {
     const characterData = getCharacter(id);
@@ -45,6 +48,17 @@ const CharacterSheet = () => {
       navigate('/');
     }
   }, [id, getCharacter, setActiveCharacter, navigate, characters]);
+  
+  // Handle opening the item detail modal
+  const handleItemClick = (item) => {
+    setSelectedItem(item);
+    setIsItemModalOpen(true);
+  };
+  
+  // Handle closing the item detail modal
+  const closeItemModal = () => {
+    setIsItemModalOpen(false);
+  };
   
   if (!character) return <div>Loading character...</div>;
     
@@ -124,8 +138,8 @@ const CharacterSheet = () => {
               <div className="bulk-status">
                 <div className="bulk-labels">
                   <span>Bulk Used: <strong>{formatBulk(bulkUsed)}</strong></span>
-                  <span>Encumbered at: <strong>{encumberedThreshold}</strong></span>
-                  <span>Maximum: <strong>{bulkLimit}</strong></span>
+                  <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
+                  <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
                 </div>
                 
                 <div className="bulk-progress-container">
@@ -159,20 +173,25 @@ const CharacterSheet = () => {
                     <th style={{ backgroundColor: characterColor }}>Item</th>
                     <th style={{ backgroundColor: characterColor }}>Qty</th>
                     <th style={{ backgroundColor: characterColor }}>Bulk</th>
-                    <th style={{ backgroundColor: characterColor }}>Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {character.inventory && character.inventory.length > 0 ? (
                     character.inventory.map(item => (
                       <tr key={item.id}>
-                        <td>{item.name}</td>
+                        <td>
+                          <button 
+                            className="item-name" 
+                            onClick={() => handleItemClick(item)}
+                            style={{ color: characterColor }}
+                          >
+                            {item.name}
+                          </button>
+                        </td>
                         <td>{item.quantity}</td>
                         <td>
                           {formatBulk(poundsToBulk(item.weight))}
-                          {item.quantity > 1 && poundsToBulk(item.weight) > 0 && ` (total: ${formatBulk(poundsToBulk(item.weight) * item.quantity)})`}
                         </td>
-                        <td>{item.description}</td>
                       </tr>
                     ))
                   ) : (
@@ -291,6 +310,16 @@ const CharacterSheet = () => {
         character={character}
         characterColor={characterColor}
       />
+      
+      {/* Item Detail Modal */}
+      {selectedItem && (
+        <ItemModal
+          isOpen={isItemModalOpen}
+          onClose={closeItemModal}
+          item={selectedItem}
+          characterColor={characterColor}
+        />
+      )}
     </div>
   );
 };

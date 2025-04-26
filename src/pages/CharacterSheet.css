@@ -241,6 +241,66 @@
   }
 }
 
+/* Responsive inventory table adjustments */
+.inventory-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-list th {
+  background-color: #5e2929;
+  color: white;
+  text-align: left;
+  padding: 0.75rem 1rem;
+}
+
+.inventory-list th:first-child {
+  border-top-left-radius: 8px;
+}
+
+.inventory-list th:last-child {
+  border-top-right-radius: 8px;
+}
+
+.inventory-list td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.item-name {
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s;
+  text-decoration: none;
+  display: inline-block; /* Makes the entire text clickable */
+}
+
+.item-name:hover {
+  color: #5e2929;
+  text-decoration: underline;
+}
+
+/* Add a small info icon on mobile to indicate clickable items */
+@media (max-width: 768px) {
+  .item-name::after {
+    content: " 🔍";
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) { 
+  .inventory-list th, 
+  .inventory-list td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .item-name {
+    font-weight: 500; /* Make item names a bit more prominent on mobile */
+  }
+}
+
 @media (max-width: 480px) {
   .character-actions {
     width: 100%;
