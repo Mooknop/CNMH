@@ -193,23 +193,21 @@
       "quantity": 1,
       "weight": 0.1,
       "description": "Single-use scroll",
-      "spells":[
-        {
-          "id": "spell-1",
-          "name": "Pocket Library",
-          "level": 1,
-          "baseLevel": 1,
-          "traits": ["Rare", "Concentrate", "Extradimensional", "Manipulate"],
-          "actions": "Three Actions",
-          "duration": "24 hours",
-          "description": "When you Cast this Spell, choose any skill in which you are at least trained that has the Recall Knowledge action. During the duration of this spell, you can call forth a tome from an extradimensional library called the Akashic Record when attempting a Recall Knowledge check using your chosen skill. This is part of the action to Recall Knowledge. You must have a hand free to do so. The tome appears in your hand, open to an appropriate page. This grants you a +1 status bonus to the Recall Knowledge check. If you roll a critical failure on this check, you get a failure instead. If the roll is successful and the subject is a creature, you gain additional information or context about the creature. Once you reference a book from your pocket library, the spell ends.",
-          "heightened": {
-            "3rd": "The status bonus increases to +2 and you can reference your pocket library twice before the spell ends.",
-            "6th": "The status bonus increases to +3 and you can reference your pocket library three times before the spell ends.",
-            "9th": "The status bonus increases to +4 and you can reference your pocket library four times before the spell ends."
-          }
+      "scroll":{
+        "id": "spell-1",
+        "name": "Pocket Library",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Rare", "Concentrate", "Extradimensional", "Manipulate"],
+        "actions": "Three Actions",
+        "duration": "24 hours",
+        "description": "When you Cast this Spell, choose any skill in which you are at least trained that has the Recall Knowledge action. During the duration of this spell, you can call forth a tome from an extradimensional library called the Akashic Record when attempting a Recall Knowledge check using your chosen skill. This is part of the action to Recall Knowledge. You must have a hand free to do so. The tome appears in your hand, open to an appropriate page. This grants you a +1 status bonus to the Recall Knowledge check. If you roll a critical failure on this check, you get a failure instead. If the roll is successful and the subject is a creature, you gain additional information or context about the creature. Once you reference a book from your pocket library, the spell ends.",
+        "heightened": {
+          "3rd": "The status bonus increases to +2 and you can reference your pocket library twice before the spell ends.",
+          "6th": "The status bonus increases to +3 and you can reference your pocket library three times before the spell ends.",
+          "9th": "The status bonus increases to +4 and you can reference your pocket library four times before the spell ends."
         }
-      ]
+      }
     },
     {
       "id": "item-6",
@@ -218,29 +216,27 @@
       "quantity": 1,
       "weight": 0.1,
       "description": "Single-use scroll",
-      "spells":[
-        {
-          "id": "spell-1",
-          "name": "Sleep",
-          "level": 1,
-          "baseLevel": 1,
-          "range": "30 feet",
-          "area": "5-foot burst",
-          "defense": "Will",
-          "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
-          "actions": "Three Actions",
-          "description": "Each creature in the area becomes drowsy, possibly nodding off. A creature that falls unconscious from this spell doesn't fall prone or release what it's holding. This spell doesn't prevent creatures from waking up due to a successful Perception check, limiting its utility in combat.",
-          "degrees":{
-            "crit_success": "The creature is unaffected.",
-            "success": "The creature takes a –1 status penalty to Perception checks for 1 round.",
-            "failure": "The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.",
-            "crit_failure": "The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically."
-          },
-          "heightened": {
-            "4th": "The creatures fall unconscious for 1 round on a failure or 1 minute on a critical failure. They fall prone and release what they're holding, and they can't attempt Perception checks to wake up. When the duration ends, the creature is sleeping normally instead of automatically waking up."
-          }
+      "scroll":{
+        "id": "spell-1",
+        "name": "Sleep",
+        "level": 1,
+        "baseLevel": 1,
+        "range": "30 feet",
+        "area": "5-foot burst",
+        "defense": "Will",
+        "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
+        "actions": "Three Actions",
+        "description": "Each creature in the area becomes drowsy, possibly nodding off. A creature that falls unconscious from this spell doesn't fall prone or release what it's holding. This spell doesn't prevent creatures from waking up due to a successful Perception check, limiting its utility in combat.",
+        "degrees":{
+          "crit_success": "The creature is unaffected.",
+          "success": "The creature takes a –1 status penalty to Perception checks for 1 round.",
+          "failure": "The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.",
+          "crit_failure": "The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically."
+        },
+        "heightened": {
+          "4th": "The creatures fall unconscious for 1 round on a failure or 1 minute on a critical failure. They fall prone and release what they're holding, and they can't attempt Perception checks to wake up. When the duration ends, the creature is sleeping normally instead of automatically waking up."
         }
-      ]
+      }
     },
     {
       "id": "item-7",
@@ -249,24 +245,22 @@
       "quantity": 1,
       "weight": 0.1,
       "description": "Single-use scroll",
-      "spells":[
-        {
-          "id": "spell-1",
-          "name": "Runic Body",
-          "level": 1,
-          "baseLevel": 1,
-          "range": "touch",
-          "target": "1 willing creature",
-          "duration": "1 minute",
-          "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
-          "actions": "Two Actions",
-          "description": "Glowing runes appear on the target's body. All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
-          "heightened": {
-            "6th": "The unarmed attacks are +2 greater striking.",
-            "9th": "The unarmed attacks are +3 major striking."
-          }
+      "scroll":{
+        "id": "spell-1",
+        "name": "Runic Body",
+        "level": 1,
+        "baseLevel": 1,
+        "range": "touch",
+        "target": "1 willing creature",
+        "duration": "1 minute",
+        "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
+        "actions": "Two Actions",
+        "description": "Glowing runes appear on the target's body. All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
+        "heightened": {
+          "6th": "The unarmed attacks are +2 greater striking.",
+          "9th": "The unarmed attacks are +3 major striking."
         }
-      ]
+      }
     }
   ],
   "spellcasting": {
