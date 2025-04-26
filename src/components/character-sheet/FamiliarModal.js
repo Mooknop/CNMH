@@ -12,16 +12,6 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
 
   // Use provided familiar data or defaults
   const familiarData = familiar;
-  
-  // Calculate ability modifiers
-  const getModifier = (score) => {
-    return Math.floor((score - 10) / 2);
-  };
-  
-  // Format ability modifier for display
-  const formatModifier = (mod) => {
-    return mod >= 0 ? `+${mod}` : `${mod}`;
-  };
 
   return (
     <div className="familiar-modal-overlay" onClick={onClose}>
