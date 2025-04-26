@@ -51,14 +51,6 @@ const CharacterSheet = () => {
   // Define familiar data
   const hasFamiliar = hasFeat(character, 'Familiar');
   const familiar = hasFamiliar ? character.familiar : null;
-  familiar.abilityScores = {
-    "strength": 8,
-    "dexterity": 16,
-    "constitution": 10,
-    "intelligence": 10,
-    "wisdom": 12,
-    "charisma": 6
-  }
 
   // Bulk calculations
   const { bulkLimit, encumberedThreshold } = calculateBulkLimit(character);
