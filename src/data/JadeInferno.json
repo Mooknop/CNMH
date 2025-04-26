@@ -156,54 +156,117 @@
   "inventory": [
     {
       "id": "item-1",
-      "name": "Spellbook",
+      "name": "Minor Elixir of Life",
+      "price": 3,
       "quantity": 1,
-      "weight": 1.0,
-      "description": "Contains various notes and arcane theories"
+      "weight": 0.1,
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
     },
     {
       "id": "item-2",
-      "name": "Wand of Magic Missiles",
+      "name": "Sanitizing Pin",
+      "price": 7,
       "quantity": 1,
-      "weight": 0.1,
-      "description": "3 charges per day, casts magic missiles at 1st level"
+      "weight": 0,
+      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
     },
     {
       "id": "item-3",
-      "name": "Ruby Amulet",
+      "name": "Rust Scrub",
+      "price": 2,
       "quantity": 1,
       "weight": 0.1,
-      "description": "Focus item for bloodline powers"
+      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
     },
     {
       "id": "item-4",
       "name": "Adventurer's Pack",
       "quantity": 1,
+      "price": 1.5,
       "weight": 2.0,
       "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
     },
     {
       "id": "item-5",
-      "name": "Scroll of Invisibility",
+      "name": "Scroll of Pocket Library",
+      "price": 4,
       "quantity": 1,
       "weight": 0.1,
-      "description": "Single-use scroll"
-    }
-  ],
-  "notes": [
-    {
-      "id": "note-1",
-      "title": "Imperial Lineage Research",
-      "date": "2025-04-14",
-      "content": "Visited the Grand Library of Taldor to research more about my imperial bloodline. The librarian mentioned a collection of ancient texts detailing the rise and fall of the first Taldan emperors. Need to gain higher access privileges to view these restricted archives.",
-      "createdAt": "2025-04-14T16:20:00.000Z"
+      "description": "Single-use scroll",
+      "spells":[
+        {
+          "id": "spell-1",
+          "name": "Pocket Library",
+          "level": 1,
+          "baseLevel": 1,
+          "traits": ["Rare", "Concentrate", "Extradimensional", "Manipulate"],
+          "actions": "Three Actions",
+          "duration": "24 hours",
+          "description": "When you Cast this Spell, choose any skill in which you are at least trained that has the Recall Knowledge action. During the duration of this spell, you can call forth a tome from an extradimensional library called the Akashic Record when attempting a Recall Knowledge check using your chosen skill. This is part of the action to Recall Knowledge. You must have a hand free to do so. The tome appears in your hand, open to an appropriate page. This grants you a +1 status bonus to the Recall Knowledge check. If you roll a critical failure on this check, you get a failure instead. If the roll is successful and the subject is a creature, you gain additional information or context about the creature. Once you reference a book from your pocket library, the spell ends.",
+          "heightened": {
+            "3rd": "The status bonus increases to +2 and you can reference your pocket library twice before the spell ends.",
+            "6th": "The status bonus increases to +3 and you can reference your pocket library three times before the spell ends.",
+            "9th": "The status bonus increases to +4 and you can reference your pocket library four times before the spell ends."
+          }
+        }
+      ]
     },
     {
-      "id": "note-2",
-      "title": "Arcane Breakthrough",
-      "date": "2025-04-17",
-      "content": "While practicing the manipulation of fire magic, I discovered a technique to make the flames burn with a distinctive blue-white color. The heat seems more intense, but the effect requires precise control of my innate energies. Must experiment further to refine this.",
-      "createdAt": "2025-04-17T21:45:00.000Z"
+      "id": "item-6",
+      "name": "Scroll of Sleep",
+      "price": 4,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "Single-use scroll",
+      "spells":[
+        {
+          "id": "spell-1",
+          "name": "Sleep",
+          "level": 1,
+          "baseLevel": 1,
+          "range": "30 feet",
+          "area": "5-foot burst",
+          "defense": "Will",
+          "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
+          "actions": "Three Actions",
+          "description": "Each creature in the area becomes drowsy, possibly nodding off. A creature that falls unconscious from this spell doesn't fall prone or release what it's holding. This spell doesn't prevent creatures from waking up due to a successful Perception check, limiting its utility in combat.",
+          "degrees":{
+            "crit_success": "The creature is unaffected.",
+            "success": "The creature takes a –1 status penalty to Perception checks for 1 round.",
+            "failure": "The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.",
+            "crit_failure": "The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically."
+          },
+          "heightened": {
+            "4th": "The creatures fall unconscious for 1 round on a failure or 1 minute on a critical failure. They fall prone and release what they're holding, and they can't attempt Perception checks to wake up. When the duration ends, the creature is sleeping normally instead of automatically waking up."
+          }
+        }
+      ]
+    },
+    {
+      "id": "item-7",
+      "name": "Scroll of Runic Body",
+      "price": 4,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "Single-use scroll",
+      "spells":[
+        {
+          "id": "spell-1",
+          "name": "Runic Body",
+          "level": 1,
+          "baseLevel": 1,
+          "range": "touch",
+          "target": "1 willing creature",
+          "duration": "1 minute",
+          "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
+          "actions": "Two Actions",
+          "description": "Glowing runes appear on the target's body. All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
+          "heightened": {
+            "6th": "The unarmed attacks are +2 greater striking.",
+            "9th": "The unarmed attacks are +3 major striking."
+          }
+        }
+      ]
     }
   ],
   "spellcasting": {
@@ -355,7 +418,7 @@
         "actions": "Two Actions",
         "range": "Touch",
         "targets": "1 creature",
-        "defense": "AC (fortitude)",
+        "defense": "AC",
         "description": "You shroud your hands in a crackling field of electricity. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes 1d4 persistent electricity damage on a hit.",
         "heightened": {
           "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
