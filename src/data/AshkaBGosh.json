@@ -286,5 +286,27 @@
       "description": "You use your collected lore to identify and target a specific foe's vulnerabilities. Attempt a check to Recall Knowledge about a creature you can see. The DC of this check is determined by the GM but is typically the standard DC to identify a creature of that type - 2. You gain a +1 circumstance bonus on this check if you have successfully identified the creature with a previous Recall Knowledge check during this combat.\n\nIf you succeed, you center your esoterica on that creature in a way that exploits its vulnerabilities, granting you a +1 circumstance bonus to damage rolls against it. The bonus increases to +2 if you have Personal Antithesis."
     }
   ],
-  "reactions": []
+  "reactions": [],
+  "familiar": {
+    "name": "Lazarus",
+    "type": "Squox",
+    "size": "Tiny",
+    "traits": ["Familiar"],
+    "ac": 19,
+    "hp": 15,
+    "speed": "25 feet",
+    "skills": ["Stealth", "Acrobatics", "Perception"],
+    "communication": "Empathic link with Ashka within 1 mile",
+    "abilities": [
+      {
+        "name": "Manual Dexterity",
+        "description": "Your familiar can use up to two of its limbs as if they were hands to use manipulate actions."
+      },
+      {
+        "name": "Threat Display",
+        "description": "Your familiar helps you convey wordless threats through body language. Whenever you attempt an Intimidation check to Demoralize a creature, if your familiar is within 30 feet of your target and can act, it accompanies you with snarls, hisses, or raising its hackles. If it can do so, you don't take the normal –4 penalty on the Intimidation check if your target doesn't understand the language you're speaking."
+      }
+    ],
+    "description": "A Squox is an exotic creature resembling a cross between a squirrel and a fox. Little is known about them in Golarion, not even where they are native to; the only clue to their origin is the fact that they can most often be tracked back to Elven traders though where they procure the creatures in the first place remains a mystery."
+  }
 }

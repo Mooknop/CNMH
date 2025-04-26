@@ -27,6 +27,29 @@
   right: 0;
 }
 
+.familiar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #5e2929;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.familiar-button:hover {
+  background-color: #7a3939;
+}
+
+.familiar-icon {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
 .character-content {
   display: grid;
   grid-template-columns: 1fr;
@@ -195,6 +218,15 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .character-header {
+    padding-top: 2.5rem;
+  }
+  
+  .character-actions {
+    top: -10px;
+    right: 0;
+  }
+  
   .tabs-header {
     flex-direction: column;
   }
@@ -206,5 +238,12 @@
   .bulk-labels {
     flex-direction: column;
     gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .character-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 }

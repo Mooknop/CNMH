@@ -6,12 +6,14 @@ import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/character-sheet/SpellsList';
 import ActionsList from '../components/character-sheet/ActionsList';
 import FocusSpellsList from '../components/character-sheet/FocusSpellsList';
+import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import { 
   calculateBulkLimit, 
   calculateTotalBulk, 
   formatBulk, 
   poundsToBulk,
-  getCharacterColor
+  getCharacterColor,
+  hasFeat
 } from '../utils/CharacterUtils';
 import './CharacterSheet.css';
 
@@ -23,6 +25,7 @@ const CharacterSheet = () => {
   const [activeTab, setActiveTab] = useState('actions'); // Default tab
   const [bulkUsed, setBulkUsed] = useState(0);
   const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
+  const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
   
   useEffect(() => {
     const characterData = getCharacter(id);
@@ -44,7 +47,19 @@ const CharacterSheet = () => {
   }, [id, getCharacter, setActiveCharacter, navigate, characters]);
   
   if (!character) return <div>Loading character...</div>;
-  
+    
+  // Define familiar data
+  const hasFamiliar = hasFeat(character, 'Familiar');
+  const familiar = hasFamiliar ? character.familiar : null;
+  familiar.abilityScores = {
+    "strength": 8,
+    "dexterity": 16,
+    "constitution": 10,
+    "intelligence": 10,
+    "wisdom": 12,
+    "charisma": 6
+  }
+
   // Bulk calculations
   const { bulkLimit, encumberedThreshold } = calculateBulkLimit(character);
   const bulkPercentage = (bulkUsed / bulkLimit) * 100;
@@ -192,6 +207,30 @@ const CharacterSheet = () => {
         <p className="character-subtitle">
           Level {character.level} {character.ancestry} {character.background} {character.class}
         </p>
+        
+        {/* Add Familiar button if character has the Familiar feat */}
+        {hasFamiliar && (
+          <div className="character-actions">
+            <button 
+              className="familiar-button" 
+              onClick={() => setIsFamiliarModalOpen(true)}
+              style={{ 
+                backgroundColor: characterColor,
+                color: 'white',
+                border: 'none',
+                padding: '0.5rem 1rem',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span className="familiar-icon" role="img" aria-label="Familiar">🐾</span>
+              Familiar
+            </button>
+          </div>
+        )}
       </div>
       
       <div className="character-content">
@@ -251,6 +290,15 @@ const CharacterSheet = () => {
           </div>
         </div>
       </div>
+      
+      {/* Familiar Modal */}
+      <FamiliarModal 
+        isOpen={isFamiliarModalOpen} 
+        onClose={() => setIsFamiliarModalOpen(false)} 
+        familiar={familiar}
+        character={character}
+        characterColor={characterColor}
+      />
     </div>
   );
 };
