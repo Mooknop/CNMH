@@ -6,10 +6,10 @@
  */
 export const CHARACTER_COLORS = [
   '#81c784', // green
+  '#7E8C9A', // slate
   '#ba68c8', // purple
-  '#e57373', // red
   '#64b5f6', // blue
-  '#ffd54f'  // yellow
+  '#E67E22'  // bright rust
 ];
 
 /**
