@@ -8,8 +8,7 @@ import SpellFilters from './SpellFilters';
 import SpellsRepertoire from './SpellsRepertoire';
 import StaffSpells from './StaffSpells';
 import ScrollSpells from './ScrollSpells';
-
-// Utility imports
+import WandSpells from './WandSpells';
 import { 
   organizeSpellsByRank, 
   getAvailableRanks,
@@ -17,7 +16,9 @@ import {
   filterSpellsByRank,
   getSortedRankList,
   findScrollItems,
-  extractScrollSpells
+  extractScrollSpells,
+  findWandItems,
+  extractWandSpells
 } from '../../utils/SpellUtils';
 
 /**
@@ -44,14 +45,19 @@ const SpellsList = ({ character, characterColor }) => {
     scrollItems,
     scrollSpells,
     hasScrolls,
+    wandItems,
+    wandSpells,
+    hasWands,
     spellsByRank,
     staffSpells,
     hasStaff,
     staffSpellsByRank,
     scrollSpellsByRank,
+    wandSpellsByRank,
     availableSpellRanks,
     availableStaffSpellRanks,
     availableScrollSpellRanks,
+    availableWandSpellRanks,
     allAvailableRanks,
     sortedRankList,
     allDefenseTypes
@@ -66,14 +72,19 @@ const SpellsList = ({ character, characterColor }) => {
         scrollItems: [],
         scrollSpells: [],
         hasScrolls: false,
+        wandItems: [],
+        wandSpells: [],
+        hasWands: false,
         spellsByRank: {},
         staffSpells: [],
         hasStaff: false,
         staffSpellsByRank: {},
         scrollSpellsByRank: {},
+        wandSpellsByRank: {},
         availableSpellRanks: [],
         availableStaffSpellRanks: [],
         availableScrollSpellRanks: [],
+        availableWandSpellRanks: [],
         allAvailableRanks: [],
         sortedRankList: [],
         allDefenseTypes: []
@@ -87,6 +98,13 @@ const SpellsList = ({ character, characterColor }) => {
     // Extract scroll spells
     const scrollSpells = hasScrolls ? extractScrollSpells(scrollItems) : [];
     
+    // Find wands in inventory
+    const wandItems = findWandItems(character);
+    const hasWands = wandItems.length > 0;
+    
+    // Extract wand spells
+    const wandSpells = hasWands ? extractWandSpells(wandItems) : [];
+    
     // Check if character has a staff
     const hasStaff = character.staff && character.staff.name;
     const staffSpells = character.staff?.spells || [];
@@ -95,17 +113,20 @@ const SpellsList = ({ character, characterColor }) => {
     const spellsByRank = organizeSpellsByRank(spellcasting.spells || []);
     const staffSpellsByRank = organizeSpellsByRank(staffSpells);
     const scrollSpellsByRank = organizeSpellsByRank(scrollSpells);
+    const wandSpellsByRank = organizeSpellsByRank(wandSpells);
     
     // Get available ranks from each source
     const availableSpellRanks = getAvailableRanks(spellsByRank);
     const availableStaffSpellRanks = getAvailableRanks(staffSpellsByRank);
     const availableScrollSpellRanks = getAvailableRanks(scrollSpellsByRank);
+    const availableWandSpellRanks = getAvailableRanks(wandSpellsByRank);
     
     // Combine available ranks from all sources
     const allAvailableRanks = [...new Set([
       ...availableSpellRanks, 
       ...availableStaffSpellRanks,
-      ...availableScrollSpellRanks
+      ...availableScrollSpellRanks,
+      ...availableWandSpellRanks
     ])];
     
     // Create sorted rank list
@@ -115,7 +136,8 @@ const SpellsList = ({ character, characterColor }) => {
     const allSpells = [
       ...(spellcasting.spells || []),
       ...staffSpells,
-      ...scrollSpells
+      ...scrollSpells,
+      ...wandSpells
     ];
     
     const allDefenseTypes = getDefenseTypes(allSpells);
@@ -125,14 +147,19 @@ const SpellsList = ({ character, characterColor }) => {
       scrollItems,
       scrollSpells,
       hasScrolls,
+      wandItems,
+      wandSpells,
+      hasWands,
       spellsByRank,
       staffSpells,
       hasStaff,
       staffSpellsByRank,
       scrollSpellsByRank,
+      wandSpellsByRank,
       availableSpellRanks,
       availableStaffSpellRanks,
       availableScrollSpellRanks,
+      availableWandSpellRanks,
       allAvailableRanks,
       sortedRankList,
       allDefenseTypes
@@ -181,6 +208,9 @@ const SpellsList = ({ character, characterColor }) => {
     else if (viewMode === 'scrolls') {
       return filterSpellsByRank(scrollSpells, activeSpellRank);
     }
+    else if (viewMode === 'wands') {
+      return filterSpellsByRank(wandSpells, activeSpellRank);
+    }
     
     return [];
   };
@@ -202,6 +232,7 @@ const SpellsList = ({ character, characterColor }) => {
         setViewMode={setViewMode}
         hasStaff={hasStaff}
         hasScrolls={hasScrolls}
+        hasWands={hasWands}
         staff={character.staff || {}}
         themeColor={themeColor}
       />
@@ -242,6 +273,16 @@ const SpellsList = ({ character, characterColor }) => {
       
       {viewMode === 'scrolls' && hasScrolls && (
         <ScrollSpells 
+          spells={spellsToDisplay}
+          themeColor={themeColor}
+          characterLevel={character.level}
+          defenseFilter={defenseFilter}
+          activeSpellRank={activeSpellRank}
+        />
+      )}
+      
+      {viewMode === 'wands' && hasWands && (
+        <WandSpells 
           spells={spellsToDisplay}
           themeColor={themeColor}
           characterLevel={character.level}

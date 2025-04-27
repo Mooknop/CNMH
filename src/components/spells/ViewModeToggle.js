@@ -7,6 +7,7 @@ import React from 'react';
  * @param {function} props.setViewMode - Setter for view mode
  * @param {boolean} props.hasStaff - Whether character has a staff
  * @param {boolean} props.hasScrolls - Whether character has scrolls
+ * @param {boolean} props.hasWands - Whether character has wands
  * @param {Object} props.staff - Staff object if available
  * @param {string} props.themeColor - Theme color
  */
@@ -14,7 +15,8 @@ const ViewModeToggle = ({
   viewMode, 
   setViewMode, 
   hasStaff, 
-  hasScrolls, 
+  hasScrolls,
+  hasWands, 
   staff, 
   themeColor 
 }) => {
@@ -54,6 +56,19 @@ const ViewModeToggle = ({
           }}
         >
           Scrolls
+        </button>
+      )}
+      
+      {hasWands && (
+        <button 
+          className={`view-mode-btn ${viewMode === 'wands' ? 'active' : ''}`}
+          onClick={() => setViewMode('wands')}
+          style={{ 
+            backgroundColor: viewMode === 'wands' ? themeColor : '',
+            borderColor: viewMode === 'wands' ? themeColor : ''
+          }}
+        >
+          Wands
         </button>
       )}
     </div>

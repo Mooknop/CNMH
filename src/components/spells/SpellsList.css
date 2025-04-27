@@ -432,6 +432,64 @@
   margin-bottom: 0;
 }
 
+/* Wand indicator styling */
+.wand-indicator {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  background-color: #c8e6c9;
+  color: #2e7d32;
+  border: 1px solid #81c784;
+}
+
+/* Wands Details */
+.wands-details h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.wands-description {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.wands-rules {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #5e2929;
+}
+
+.wands-rules h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+}
+
+.wands-rules p {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.wands-spells-list h4,
+.empty-wands-spells h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
 /* Visual distinguishers for different degree outcomes */
 .degree-entry:nth-child(1) .degree-level {
   color: #2e7d32; /* Green for Critical Success */

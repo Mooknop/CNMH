@@ -30,6 +30,11 @@ const SpellCard = ({ spell, themeColor, characterLevel }) => {
             {spell.scrollName}
           </div>
         )}
+        {spell.fromWand && (
+          <div className="wand-indicator">
+            {spell.wandName}
+          </div>
+        )}
       </div>
     </>
   );

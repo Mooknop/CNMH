@@ -187,3 +187,34 @@ import {
       return [];
     });
   };
+
+  /**
+ * Find wands in character inventory
+ * @param {Object} character - Character object
+ * @returns {Array} - Array of wand items with spells
+ */
+export const findWandItems = (character) => {
+  return character.inventory
+    ? character.inventory.filter(item => 
+        item.name.toLowerCase().includes('wand') && item.wand)
+    : [];
+};
+
+/**
+ * Extract wand spells from wand items
+ * @param {Array} wandItems - Array of wand items
+ * @returns {Array} - Array of wand spells
+ */
+export const extractWandSpells = (wandItems) => {
+  return wandItems.flatMap(item => {
+    // Add an identifier to the spell to know it's from a wand
+    if (item.wand) {
+      return {
+        ...item.wand,
+        fromWand: true,
+        wandName: item.name
+      };
+    }
+    return [];
+  });
+};
