@@ -250,17 +250,6 @@ const SpellsList = ({ character, characterColor }) => {
       {/* Bloodline information */}
       {hasBloodline && renderBloodlineInfo()}
       
-      {/* View mode toggle */}
-      <ViewModeToggle 
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        hasStaff={hasStaff}
-        hasScrolls={hasScrolls}
-        hasWands={hasWands}
-        staff={character.staff || {}}
-        themeColor={themeColor}
-      />
-      
       {/* Filters that work across all tabs */}
       {allAvailableRanks.length > 0 && (
         <SpellFilters
@@ -273,6 +262,17 @@ const SpellsList = ({ character, characterColor }) => {
           themeColor={themeColor}
         />
       )}
+
+      {/* View mode toggle */}
+      <ViewModeToggle 
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        hasStaff={hasStaff}
+        hasScrolls={hasScrolls}
+        hasWands={hasWands}
+        staff={character.staff || {}}
+        themeColor={themeColor}
+      />
       
       {/* Content based on active view */}
       {viewMode === 'spells' && (

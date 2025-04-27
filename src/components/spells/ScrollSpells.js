@@ -26,8 +26,8 @@ const ScrollSpells = ({ spells, themeColor, characterLevel, defenseFilter, activ
         </p>
         
         {/* Scroll usage rules section */}
-        <div className="scrolls-rules">
-          <h4 style={{ color: themeColor }}>Scroll Rules</h4>
+        <div className="bloodline-info">
+          <h3 style={{ color: themeColor }}>Using Scrolls</h3>
           <p>
             To cast a spell from a scroll, you must hold the scroll in one hand and activate it 
             with a Cast a Spell activity. A scroll can be used only once, and it's consumed when 
@@ -37,7 +37,6 @@ const ScrollSpells = ({ spells, themeColor, characterLevel, defenseFilter, activ
         
         {filteredSpells.length > 0 ? (
           <div className="scrolls-spells-list">
-            <h4 style={{ color: themeColor }}>Available Scrolls</h4>
             <div className="spells-grid">
               {filteredSpells.map(spell => (
                 <SpellCard 
@@ -51,7 +50,6 @@ const ScrollSpells = ({ spells, themeColor, characterLevel, defenseFilter, activ
           </div>
         ) : (
           <div className="empty-scrolls-spells">
-            <h4 style={{ color: themeColor }}>Available Scrolls</h4>
             {activeSpellRank !== 'all' || defenseFilter !== 'all' ? (
               <p>No scroll spells matching your current filters.</p>
             ) : (

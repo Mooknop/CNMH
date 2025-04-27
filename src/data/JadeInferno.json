@@ -370,7 +370,6 @@
           "actions": "Two Actions",
           "range": "120 feet",
           "targets": "1 spell effect or unattended magic item",
-          "bloodline": true,
           "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
         }
       }
@@ -389,26 +388,28 @@
           "name": "Light",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Evocation", "Light"],
+          "traits": ["Cantrip", "Concentrate", "Light", "Manipulate"],
           "actions": "Two Actions",
-          "range": "Touch",
-          "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
+          "range": "120 feet",
           "duration": "Until the next time you make your daily preparations",
-          "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
+          "description": "You create an orb of light that sheds bright light in a 20-foot radius (and dim light for the next 20 feet) in a color you choose. If you create the light in the same space as a willing creature, you can attach the light to the creature, causing it to float near that creature as it moves. You can Sustain the spell to move the light up to 60 feet; you can attach or detach it from a creature as part of this movement. You can Dismiss the spell. If you Cast the Spell while you already have four light spells active, you must choose one of the existing spells to end.",
+          "heightened":{
+            "4th": "The orb sheds light in a 60-foot radius (and dim light for the next 60 feet)."
+          }
         },
         {
           "id": "spell-2",
           "name": "Electric Arc",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Electricity", "Evocation"],
+          "traits": ["Cantrip", "Concentrate", "Electricity", "Manipulate"],
           "actions": "Two Actions",
           "range": "30 feet",
           "targets": "1 or 2 creatures",
           "defense": "Reflex",
-          "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save. The electricity damage increases to 2d4+4 at 3rd level, 3d4+4 at 5th level, 4d4+4 at 7th level, and so on.",
+          "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save.",
           "heightened": {
-            "+1": "The damage increases by 1d4+4."
+            "+1": "The damage increases by 1d4."
           }
         },
         {
@@ -416,103 +417,125 @@
           "name": "Detect Magic",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Detection", "Divination"],
+          "traits": ["Cantrip", "Concentrate", "Detection", "Manipulate"],
           "actions": "Two Actions",
-          "range": "30 feet",
-          "targets": "",
-          "duration": "",
-          "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies."
+          "area": "30 feet",
+          "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies. You detect illusion magic only if that magic's effect has a lower rank than the rank of your detect magic spell. However, items that have an illusion aura but aren't deceptive in appearance (such as an invisibility potion) typically are detected normally.",
+          "heightened":{
+            "3rd": "You learn the rank or level of the most powerful magical effect the spell detects, as determined by the GM.",
+            "4th": "As 3rd rank, but you also pinpoint the source of the highest-rank magic. Like for an imprecise sense, you don't learn the exact location, but can narrow down the source to within a 5-foot cube (or the nearest if larger than that)."
+          }
         },
         {
           "id": "spell-4",
           "name": "Prestidigitation",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Evocation"],
+          "traits": ["Cantrip", "Concentrate", "Manipulate"],
           "actions": "Two Actions",
           "range": "10 feet",
           "targets": "1 object (cook, clean, or color only)",
           "duration": "Sustained",
-          "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color."
+          "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color. Prestidigitation can't deal damage or cause adverse conditions. Any actual change to an object (beyond what is noted above) persists only as long as you Sustain the spell."
         },
         {
           "id": "spell-5",
-          "name": "Mage Hand",
+          "name": "Telekinetic Hand",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Evocation"],
+          "traits": ["Cantrip", "Concentrate", "Manipulate"],
           "actions": "Two Actions",
           "range": "30 feet",
-          "targets": "1 unattended object of 1 Bulk or less",
+          "targets": "1 unattended object of Light Bulk or less",
           "duration": "Sustained",
-          "description": "You create a single magical hand, either invisible or ghostlike, that grasps the target object and moves it slowly. You can move the object 20 feet each time you Sustain the Spell. The hand can't move an object more than 20 feet above the ground unless the object started more than 20 feet above the ground."
+          "description": "You create a floating, magical hand, either invisible or ghostlike, that grasps the target object and levitates it slowly up to 20 feet in any direction. When you Sustain the spell, you can move the object an additional 20 feet. If the object is in the air when the spell ends, the object falls.",
+          "heightened":{
+            "3rd":"You can target an unattended object with a Bulk of 1 or less.",
+            "5th":"The range increases to 60 feet, and you can target an unattended object with a Bulk of 1 or less.",
+            "7th":"The range increases to 60 feet, and you can target an unattended object with a Bulk of 2 or less."
+          }
         },
         {
           "id": "spell-6",
           "name": "Ray of Frost",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Cold", "Evocation"],
+          "traits": ["Attack", "Cantrip", "Cold", "Evocation"],
           "actions": "Two Actions",
           "range": "120 feet",
           "targets": "1 creature",
-          "defense": "Reflex",
-          "description": "You fire a ray of frost. Make a ranged spell attack roll against the target's AC. On a hit, you deal 1d4+4 cold damage plus 1d4 persistent cold damage. On a critical hit, double the initial damage, but not the persistent damage."
+          "defense": "AC",
+          "description": "You blast an icy ray. Make a spell attack roll. The ray deals 2d4 cold damage.",
+          "heightened":{
+            "+1": "The damage increases by 1d4."
+          },
+          "degrees":{
+            "Critical Success":"The target takes double damage and takes a –10-foot status penalty to its Speeds for 1 round."
+          }
         },
         {
           "id": "spell-7",
           "name": "Telekinetic Projectile",
-          "level": 0,
+          "level": 1,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Attack", "Evocation"],
+          "traits": ["Attack", "Cantrip", "Concentrate", "Manipulate"],
           "actions": "Two Actions",
           "range": "30 feet",
           "targets": "1 creature",
           "defense": "AC",
-          "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier."
+          "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier.",
+          "heightened":{
+            "+1": "The damage increases by 1d6."
+          },
+          "degrees":{
+            "Critical Success":"Deal double damage."
+          }
         },
         {
           "id": "spell-9",
-          "name": "Mage Armor",
+          "name": "Mystic Armor",
           "level": 1,
-          "traits": ["Abjuration"],
+          "traits": ["Concentrate", "Manipulate"],
           "actions": "Two Actions",
           "targets": "Self",
           "duration": "Until the next time you make your daily preparations",
-          "description": "You ward yourself with magical energy. You gain a +1 item bonus to AC and a maximum Dexterity modifier of +5. While wearing mage armor, you use your unarmored proficiency to calculate your AC.",
+          "description": "You ward yourself with shimmering magical energy, gaining a +1 item bonus to AC and a maximum Dexterity modifier of +5. While wearing mystic armor, you use your unarmored proficiency to calculate your AC.",
           "heightened": {
-            "4th": "You gain a +2 item bonus to AC and a maximum Dexterity modifier of +5.",
-            "6th": "You gain a +2 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws.",
-            "8th": "You gain a +3 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws."
+            "4th": "You gain a +1 item bonus to saving throws.",
+            "6th": "The item bonus to AC increases to +2, and you gain a +1 item bonus to saving throws.",
+            "8th": "The item bonus to AC increases to +2, and you gain a +2 item bonus to saving throws.",
+            "10th": "The item bonus to AC increases to +3, and you gain a +3 item bonus to saving throws."
           }
         },
         {
           "id": "spell-10",
           "name": "Command",
           "level": 1,
-          "traits": ["Auditory", "Enchantment", "Linguistic", "Mental"],
+          "traits": ["Auditory", "Concentrate", "Linguistic", "Manipulate", "Mental"],
           "actions": "Two Actions",
           "range": "30 feet",
           "targets": "1 creature",
           "defense": "Will",
           "description": "You shout a command that's hard to ignore. You can command the target to approach you, run away, release what it's holding, fall prone, or stand in place. The creature must succeed at a Will save or follow your command on its next turn. Some commands might require the target to Seek to approach you.",
           "heightened": {
-            "3rd": "You can target up to 2 creatures.",
-            "5th": "You can target up to 6 creatures.",
-            "7th": "You can target up to 12 creatures.",
-            "9th": "You can target up to 24 creatures."
+            "5th": "You can target up to 10 creatures."
+          },
+          "degrees":{
+            "Success": "The creature is unaffected.",
+            "Failure": "The creature must spend the first action on its next turn to obey your command.",
+            "Critical Failure": "The target must use all its actions on its next turn to obey your command."
           }
         },
         {
           "id": "spell-11",
           "name": "Force Barrage",
           "level": 1,
-          "traits": ["Evocation", "Force"],
+          "traits": ["Concentrate", "Force", "Manipulate"],
           "actions": "One to Three Actions",
           "range": "120 feet",
-          "targets": "1 creature",
+          "targets": "1 or more creatures",
           "bloodline": true,
-          "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
+          "description": "You fire a shard of solidified magic toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, increase the number of shards you shoot by one, to a maximum of three shards for 3 actions. You choose the target for each shard individually. If you shoot more than one shard at the same target, combine the damage before applying bonuses or penalties to damage, resistances, weaknesses, and so forth.",
           "heightened": {
             "+2": "You fire one additional missile with each action you spend."
           }
@@ -535,31 +558,31 @@
           "id": "spell-13",
           "name": "Blazing Bolt",
           "level": 2,
-          "traits": ["Attack", "Evocation", "Fire"],
-          "actions": "Two Actions",
-          "range": "500 feet",
-          "targets": "1 creature",
-          "description": "You fire a bolt of roaring flame streaking through the air. Make a ranged spell attack against the AC of a target creature. On a success, you deal 5d6 fire damage. On a critical success, you deal double damage.",
+          "traits": ["Attack", "Concentrate", "Fire", "Manipulate"],
+          "actions": "One to Three Actions",
+          "range": "60 feet",
+          "targets": "1 or more creature",
+          "description": "You fire a ray of heat and flame. Make a spell attack roll against a single creature. On a hit, the target takes 2d6 fire damage, and on a critical hit, the target takes double damage. For each additional action you use when Casting the Spell, you can fire an additional ray at a different target, to a maximum of three rays targeting three different targets for 3 actions. These attacks each increase your multiple attack penalty, but you don't increase your multiple attack penalty until after you make all the spell attack rolls for blazing bolt. If you spend 2 or more actions Casting the Spell, the damage increases to 4d6 fire damage on a hit, and it still deals double damage on a critical hit.",
           "heightened": {
-            "+1": "The bolt's damage increases by 3d6."
+            "+1": "The damage to each target increases by 1d6 for the 1-action version, or by 2d6 for the 2- and 3-action versions."
           }
         },
         {
           "id": "spell-14",
           "name": "Knock",
           "level": 2,
-          "traits": ["Transmutation"],
+          "traits": ["Concentrate", "Manipulate"],
           "actions": "Two Actions",
           "range": "30 feet",
           "targets": "1 door, lock, or container",
           "duration": "1 minute",
-          "description": "You knock on a locked door, window, gate, chest, or other object with a closure, and it opens. This spell works against most mundane locks but not ones of exceptional materials, such as adamantine locks or locks requiring unique keys. For complex locks, the GM might roll a secret check using your spell DC against the Thievery DC to pick the lock."
+          "description": "You make the target easier to open. Knock grants a +4 status bonus to any creature that tries to open the target door, lock, or container with an Athletics or a Thievery check. You can attempt a Thievery check to open the target as part of casting knock, and you add your level even if you're untrained. Knock counteracts Lock."
         },
         {
           "id": "spell-15",
           "name": "Dispel Magic",
           "level": 2,
-          "traits": ["Abjuration"],
+          "traits": ["Concentrate", "Manipulate"],
           "actions": "Two Actions",
           "range": "120 feet",
           "targets": "1 spell effect or unattended magic item",
@@ -638,7 +661,7 @@
       {
         "id": "staff-spell-4",
         "name": "Fashionista",
-        "level": 2,
+        "level": 1,
         "traits": ["Illusion", "Visual"],
         "actions": "Two Actions",
         "range": "Touch",
@@ -649,7 +672,7 @@
       {
         "id": "staff-spell-5",
         "name": "Overselling Flourish",
-        "level": 2,
+        "level": 1,
         "traits": ["Illusion", "Mental", "Visual"],
         "actions": "Two Actions",
         "range": "30 feet",
@@ -666,6 +689,29 @@
         "targets": "Self",
         "duration": "1 minute",
         "description": "Three illusory duplicates of you swirl around your space, potentially causing those who attack you to hit one of the images instead of you. These images move with you and disappear one at a time when a foe succeeds at attacking one of them."
+      },
+      {
+        "id": "staff-spell-7",
+        "name": "Illusory Creature",
+        "level": 2,
+        "traits": ["Auditory","Concentrate", "Illusion", "Manipulate", "Olfactory", "Visual"],
+        "actions": "Two Actions",
+        "range": "500 feet",
+        "duration": "Sustained",
+        "description": "You create an illusory image of a Large or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the image are ever farther than 500 feet apart, the spell ends. The image can't speak, but you can use your actions to speak through the creature, with the spell disguising your voice as appropriate. You might need to attempt a Deception or Performance check to mimic the creature, as determined by the GM. This is especially likely if you're trying to imitate a specific person and engage with someone that person knows. In combat, the illusion can use 2 actions per turn, which it uses when you Sustain the spell. It uses your spell attack modifier for attack rolls and your spell DC for its AC. Its saving throw modifiers are equal to your spell DC – 10. It is substantial enough that it can flank other creatures. If the image is hit by an attack or fails a save, the spell ends. The illusion can cause damage by making the target believe the illusion's attacks are real, but it cannot otherwise directly affect the physical world. If the illusory creature hits with a Strike, the target takes 3d4 mental damage. The illusion's Strikes are nonlethal. If the damage doesn't correspond to the image of the monster—for example, if an illusory Large dragon deals only 5 damage—the GM might allow the target to attempt an immediate Perception check to disbelieve the spell. Any relevant resistances and weaknesses apply if the target thinks they do, as judged by the GM. For example, if the illusion wields a warhammer and attacks a creature resistant to bludgeoning damage, the creature would take less mental damage. However, illusory damage does not deactivate regeneration or trigger other effects that require a certain damage type. The GM should track illusory damage dealt by the illusion. Any creature that touches the image or uses the Seek action to examine it can attempt to disbelieve your illusion. When a creature disbelieves the illusion, it recovers from half the damage it had taken from it (if any) and doesn't take any further damage from it.",
+        "heightened": {
+          "+1": "The damage of the image's Strikes increases by 1d4, and the maximum size of creature you can create increases by one (to a maximum of Gargantuan)."
+        }
+      },
+      {
+        "id": "staff-spell-8",
+        "name": "Instant Parade",
+        "level": 2,
+        "traits": ["Uncommon", "Auditory", "Aura", "Illusion", "Visual"],
+        "actions": "Two Actions",
+        "area": "10-foot emanation",
+        "duration": "10 minutes",
+        "description": "An illusory parade with dozens of participants and performers appears around you, following you as you move. The parade is lively and noisy, providing enough cover and distraction to hide among the crowd. You and other creatures can Hide and Sneak inside the crowd, though creatures that disbelieve the illusion still see creatures within as normal. You can choose to send the parade off with a 2-action activity, which has the concentrate trait. When you do so, the parade no longer follows you and instead continues traveling in the direction of your choice. The parade travels 100 feet over 1 round and then disappears as the spell is Dismissed. You can otherwise Dismiss the spell normally if you prefer."
       }
     ]
   },

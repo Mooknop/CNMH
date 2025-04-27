@@ -25,25 +25,26 @@ const WandSpells = ({ spells, themeColor, characterLevel, defenseFilter, activeS
         </p>
         
         {/* Wand usage rules section */}
-        <div className="wands-rules">
-          <h4 style={{ color: themeColor }}>Wand Rules</h4>
-          <p>
+        <div className="bloodline-info">
+          <h3 style={{ color: themeColor }}>Using Wand</h3>
+          <p className="bloodline-description">
             To cast a spell from a wand, you must hold the wand in one hand and activate it with a Cast a Spell activity. 
             This uses the spell's normal number of actions. A spell cast from a wand has the standard effects of that spell for someone 
             of your level, without the need to meet the spell's requirements. A wand's spells are automatically heightened to half the 
             wand's level rounded up. Each wand can be used to cast its spell only once per day without risking the wand's destruction
           </p>
-        </div>
-        <div className="wands-rules">
-          <h4 style={{ color: themeColor }}>Overchanging Wands</h4>
-          <p>
-          After the spell is cast from the wand for the day, you can attempt to cast it one more time—overcharging the wand at the risk of destroying it. Cast the Spell again, then roll a DC 10 flat check. On a success, the wand is broken. On a failure, the wand is destroyed. If anyone tries to overcharge a wand when it’s already been overcharged that day, the wand is automatically destroyed (even if it had been repaired) and no spell is cast.
-          </p>
-        </div>
-        
+          <div className="bloodline-magic">
+            <span className="bloodline-magic-label">Overchanging Wands:</span>
+            <span className="bloodline-magic-effect">
+              After the spell is cast from the wand for the day, you can attempt to cast it one more time—overcharging the wand at the risk of destroying it.
+              Cast the Spell again, then roll a DC 10 flat check. On a success, the wand is broken.
+              On a failure, the wand is destroyed.
+              If anyone tries to overcharge a wand when it’s already been overcharged that day, the wand is automatically destroyed (even if it had been repaired) and no spell is cast.
+            </span>
+          </div>
+        </div>        
         {filteredSpells.length > 0 ? (
           <div className="wands-spells-list">
-            <h4 style={{ color: themeColor }}>Available Wand Spells</h4>
             <div className="spells-grid">
               {filteredSpells.map(spell => (
                 <SpellCard 
@@ -61,7 +62,6 @@ const WandSpells = ({ spells, themeColor, characterLevel, defenseFilter, activeS
           </div>
         ) : (
           <div className="empty-wands-spells">
-            <h4 style={{ color: themeColor }}>Available Wand Spells</h4>
             {activeSpellRank !== 'all' || defenseFilter !== 'all' ? (
               <p>No wand spells matching your current filters.</p>
             ) : (
