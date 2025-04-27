@@ -147,15 +147,17 @@
       "level": 1,
       "source": "Leshy",
       "description": "Your body produces a nearly endless supply of hard seedpods. You gain a seedpod ranged unarmed attack that deals 1d4 bludgeoning damage; these Strikes have the manipulate trait. On a critical hit, a seedpod bursts, issuing forth a tangle of rapid-growing vines that impose a -10-foot circumstance penalty to the target's Speed for 1 round.",
-      "strikes":{
-        "name": "Seedpod",
-        "proficiency": "unarmed",
-        "type": "ranged",
-        "action": 1,
-        "damage": "1d4",
-        "traits": ["Attack", "Ranged"],
-        "description": "Chuck one of your seed pods!"
-      }
+      "strikes":[
+          {
+          "name": "Seedpod",
+          "proficiency": "unarmed",
+          "type": "ranged",
+          "action": 1,
+          "damage": "1d4",
+          "traits": ["Attack", "Ranged"],
+          "description": "Chuck one of your seed pods!"
+        }
+      ]
     },
     {
       "id": "feat-4",

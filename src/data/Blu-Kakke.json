@@ -144,7 +144,27 @@
       "name": "Draconic Ravager",
       "level": 1,
       "source": "Archetype",
-      "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision."
+      "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision.",
+      "strikes":[
+        {
+          "name": "Dragon Claw",
+          "proficiency": "unarmed",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d6",
+          "traits": ["Attack", "Agile", "Finesse"],
+          "description": "Rend their flesh with your draconic claws."
+        },
+        {
+          "name": "Dragon Bite",
+          "proficiency": "unarmed",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d8",
+          "traits": ["Attack", "Agile", "Finesse"],
+          "description": "Bite into your foe with magically sharp dragon teach."
+        }
+      ]
     },
     {
       "id": "feat-8",
@@ -272,24 +292,6 @@
       "damage": "1d6",
       "traits": ["Attack", "Melee"],
       "description": "Give 'em a good smack"
-    },
-    {
-      "name": "Dragon Claw",
-      "proficiency": "unarmed",
-      "type": "melee",
-      "action": 1,
-      "damage": "1d6",
-      "traits": ["Attack", "Agile", "Finesse"],
-      "description": "Rend their flesh with your draconic claws."
-    },
-    {
-      "name": "Dragon Bite",
-      "proficiency": "unarmed",
-      "type": "melee",
-      "action": 1,
-      "damage": "1d8",
-      "traits": ["Attack", "Agile", "Finesse"],
-      "description": "Bite into your foe with magically sharp dragon teach."
     }
   ]
 }
