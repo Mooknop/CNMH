@@ -267,13 +267,13 @@
         "name": "Xanderghul's Flawless Hammer",
         "quantity": 1,
         "weight": 2.0,
-        "description": "Runelord Xanderghul's ancient weapon of rule.",
+        "description": "At the height of the ancient Thassilonian Empire Emperor Xin crafted seven Alara'quin, magical weapons of extraordinary power. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the Runelord of Pride.",
         "strikes": {
           "proficiency": "simple",
           "type": "melee",
           "action": 1,
           "damage": "1d12",
-          "traits": ["Attack", "Melee", "Shove"]
+          "traits": ["Attack", "Melee", "Reach", "Shove"]
         },
         "reactions":[
           {
@@ -526,7 +526,7 @@
     },
     "staff": {
       "name": "Xanderghul's Flawless Hammer",
-      "description": "Runelord Xanderghul's ancient weapon of rule.",
+      "description": "At the height of the ancient Thassilonian Empire Emperor Xin crafted seven Alara'quin, magical weapons of extraordinary power. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the Runelord of Pride.",
       "type": "Greater",
       "itemLevel": 6,
       "bulkValue": 1,
@@ -594,26 +594,6 @@
       },
       {
         "id": "staff-spell-6",
-        "name": "Illusory Creature",
-        "level": 3,
-        "traits": ["Auditory", "Illusion", "Visual"],
-        "actions": "Two Actions",
-        "range": "500 feet",
-        "duration": "Sustained",
-        "description": "You create an illusory image of a huge or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the illusory creature are ever farther than 500 feet apart, the spell ends."
-      },
-      {
-        "id": "staff-spell-7",
-        "name": "Instant Parade",
-        "level": 3,
-        "traits": ["Conjuration", "Extradimensional"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "duration": "Sustained up to 1 minute",
-        "description": "You create a small but impressive parade, about 30 feet long and 10 feet wide, that marches and plays music as you direct. The parade consists of magical constructs that resemble humans with brightly colored costumes and festive instruments."
-      },
-      {
-        "id": "staff-spell-8",
         "name": "Mirror Image",
         "level": 2,
         "traits": ["Illusion", "Visual"],
