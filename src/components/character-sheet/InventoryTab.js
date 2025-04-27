@@ -33,7 +33,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     
     // In PF2E, Bulk limit is equal to Strength ability modifier + 10
     const abilities = character.abilities || {};
-    const strMod = Math.floor((abilities.strength || 10 - 10) / 2);
+    const strMod = Math.floor((abilities.strength - 10 || 0) / 2);
     let bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
     let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
     
