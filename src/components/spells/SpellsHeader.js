@@ -38,14 +38,6 @@ const SpellsHeader = ({ character, themeColor }) => {
           {spellDC}
         </span>
       </div>
-      {spellcasting.focus && (
-        <div className="focus-points">
-          <span className="stat-label">Focus Points</span>
-          <span className="stat-value" style={{ color: themeColor }}>
-            {spellcasting.focus.current}/{spellcasting.focus.max}
-          </span>
-        </div>
-      )}
     </div>
   );
 };
