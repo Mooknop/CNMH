@@ -8,11 +8,8 @@ import ActionsList from '../components/character-sheet/ActionsList';
 import FocusSpellsList from '../components/spells/FocusSpellsList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import ItemModal from '../components/character-sheet/ItemModal';
+import InventoryTab from '../components/character-sheet/InventoryTab';
 import { 
-  calculateBulkLimit, 
-  calculateTotalBulk, 
-  formatBulk, 
-  poundsToBulk,
   getCharacterColor,
   hasFeat
 } from '../utils/CharacterUtils';
@@ -24,7 +21,6 @@ const CharacterSheet = () => {
   const { getCharacter, setActiveCharacter, characters } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
   const [activeTab, setActiveTab] = useState('actions'); // Default tab
-  const [bulkUsed, setBulkUsed] = useState(0);
   const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -41,9 +37,6 @@ const CharacterSheet = () => {
       if (characterIndex !== -1) {
         setCharacterColor(getCharacterColor(characterIndex));
       }
-      
-      const totalBulk = calculateTotalBulk(characterData.inventory);
-      setBulkUsed(totalBulk);
     } else {
       navigate('/');
     }
@@ -66,20 +59,6 @@ const CharacterSheet = () => {
   const hasFamiliar = hasFeat(character, 'Familiar');
   const familiar = hasFamiliar ? character.familiar : null;
 
-  // Bulk calculations
-  const { bulkLimit, encumberedThreshold } = calculateBulkLimit(character);
-  const bulkPercentage = (bulkUsed / bulkLimit) * 100;
-  const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
-  const isOverencumbered = bulkUsed > bulkLimit;
-  
-  // Determine the color of the bulk bar
-  const getBulkBarColor = () => {
-    if (isOverencumbered) return '#b71c1c'; // Red for overencumbered
-    if (isEncumbered) return '#f57c00'; // Orange for encumbered
-    if (bulkPercentage > 75) return '#ffc107'; // Yellow when getting close
-    return characterColor; // Use character's color theme
-  };
-  
   // Check if character has spellcasting
   const hasSpellcasting = character.spellcasting && character.spellcasting.tradition;
   
@@ -131,80 +110,11 @@ const CharacterSheet = () => {
         return <SpellsList character={character} characterColor={characterColor} />;
       case 'inventory':
         return (
-          <div className="inventory-tab">
-            <h2 style={{ color: characterColor }}>Inventory</h2>
-            
-            <div className="bulk-management">
-              <div className="bulk-status">
-                <div className="bulk-labels">
-                  <span>Bulk Used: <strong>{formatBulk(bulkUsed.toFixed(1))}</strong></span>
-                  <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
-                  <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
-                </div>
-                
-                <div className="bulk-progress-container">
-                  <div 
-                    className="bulk-progress-bar" 
-                    style={{ 
-                      width: `${Math.min(bulkPercentage, 100)}%`,
-                      backgroundColor: getBulkBarColor()
-                    }}
-                  />
-                </div>
-                
-                {isEncumbered && !isOverencumbered && (
-                  <div className="bulk-warning">
-                    Encumbered: -10 feet to Speed and take a -1 penalty to Strength- and Dexterity-based checks
-                  </div>
-                )}
-                
-                {isOverencumbered && (
-                  <div className="bulk-warning severe">
-                    Overencumbered: -15 feet to Speed, take a -2 penalty to Strength- and Dexterity-based checks, and can't move if your Bulk exceeds twice your Bulk limit
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            <div className="inventory-list">
-              <table>
-                <thead>
-                  <tr>
-                    <th style={{ backgroundColor: characterColor }}>Item</th>
-                    <th style={{ backgroundColor: characterColor }}>Qty</th>
-                    <th style={{ backgroundColor: characterColor }}>Bulk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {character.inventory && character.inventory.length > 0 ? (
-                    character.inventory.map(item => (
-                      <tr key={item.id}>
-                        <td>
-                          <button 
-                            className="item-name" 
-                            onClick={() => handleItemClick(item)}
-                            style={{ color: characterColor }}
-                          >
-                            {item.name}
-                          </button>
-                        </td>
-                        <td>{item.quantity}</td>
-                        <td>
-                          {formatBulk(poundsToBulk(item.weight))}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="empty-inventory">
-                        No items in inventory
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <InventoryTab 
+            character={character} 
+            characterColor={characterColor} 
+            onItemClick={handleItemClick} 
+          />
         );
       default:
         return <ActionsList character={character} characterColor={characterColor} />;
