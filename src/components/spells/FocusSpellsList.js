@@ -14,11 +14,11 @@ const FocusSpellsList = ({ character, characterColor }) => {
     if (character.monk) {
       return 'Ki Spells';
     }
+    if (character.spellcasting && character.spellcasting.bloodline) {
+      return `${character.spellcasting.bloodline.name} Bloodline Spells`;
+    }
     if (character.class === 'Bard') {
       return 'Compositions';
-    }
-    if (character.spellcasting && character.spellcasting.bloodline) {
-      return 'Focus Spells';
     }
     return 'Focus Spells';
   };
@@ -36,6 +36,9 @@ const FocusSpellsList = ({ character, characterColor }) => {
       return true;
     }
     if (character.focus_spells && character.focus_spells.length > 0) {
+      return true;
+    }
+    if (character.spellcasting && character.spellcasting.bloodline && character.spellcasting.bloodline.focus_spells) {
       return true;
     }
     return false;
@@ -72,6 +75,11 @@ const FocusSpellsList = ({ character, characterColor }) => {
     return null;
   };
   
+  // Check if character has a bloodline
+  const hasBloodline = () => {
+    return character.spellcasting && character.spellcasting.bloodline;
+  };
+  
   // Focus spells and focus pool info
   const hasFocusSpellsAvailable = hasFocusSpells();
   const focusSpellsLabel = getFocusSpellsLabel();
@@ -89,9 +97,30 @@ const FocusSpellsList = ({ character, characterColor }) => {
     );
   }
   
+  // Render bloodline information if character has a bloodline
+  const renderBloodlineInfo = () => {
+    if (!hasBloodline()) return null;
+    
+    const { name, description, blood_magic } = character.spellcasting.bloodline;
+    
+    return (
+      <div className="bloodline-info">
+        <h3 style={{ color: themeColor }}>{name} Bloodline</h3>
+        <p className="bloodline-description">{description}</p>
+        <div className="bloodline-magic">
+          <span className="bloodline-magic-label">Imperial Blood Magic:</span>
+          <span className="bloodline-magic-effect">Whenever you cast a bloodline spell passed down from your ancestor, you choose one blood magic effect you know to benefit from.</span>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="focus-spells-list">
       <h2 style={{ color: themeColor }}>{focusSpellsLabel}</h2>
+      
+      {/* Bloodline information for sorcerers */}
+      {hasBloodline() && renderBloodlineInfo()}
       
       {/* Focus Points Display */}
       {focusPoints !== null && (
@@ -105,15 +134,25 @@ const FocusSpellsList = ({ character, characterColor }) => {
       <div className="focus-spells-grid">
         {focusSpells.length > 0 ? (
           focusSpells.map((spell, index) => {
+            // Flag to indicate if this is a bloodline spell for sorcerers
+            const isBloodlineSpell = hasBloodline() && spell.bloodline;
+            
             // Create header content
             const header = (
               <>
                 <h3 style={{ color: themeColor }}>{spell.name}</h3>
-                {spell.level !== undefined && (
-                  <span className="focus-spell-level" style={{ backgroundColor: themeColor }}>
-                    {`Rank ${spell.baseLevel} (${Math.ceil(character.level / 2)})`}
-                  </span>
-                )}
+                <div className="spell-header-meta">
+                  {spell.level !== undefined && (
+                    <span className="focus-spell-level" style={{ backgroundColor: themeColor }}>
+                      {`Rank ${spell.baseLevel} (${Math.ceil(character.level / 2)})`}
+                    </span>
+                  )}
+                  {isBloodlineSpell && (
+                    <div className="bloodline-indicator">
+                      Bloodline
+                    </div>
+                  )}
+                </div>
               </>
             );
             
@@ -167,6 +206,14 @@ const FocusSpellsList = ({ character, characterColor }) => {
                   )}
                 </div>
                 
+                {/* Blood Magic effect for bloodline spells */}
+                {isBloodlineSpell && character.spellcasting.bloodline.blood_magic && (
+                  <div className="spell-blood-magic">
+                    <span className="blood-magic-label" style={{ color: themeColor }}>Blood Magic:</span>
+                    <p className="blood-magic-effect">{character.spellcasting.bloodline.blood_magic}</p>
+                  </div>
+                )}
+                
                 {/* Spell Description */}
                 <div className="focus-spell-description">
                   {spell.description}
@@ -190,7 +237,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
             return (
               <CollapsibleCard 
                 key={spell.id || `focus-spell-${index}`}
-                className="focus-spell-card"
+                className={`focus-spell-card ${isBloodlineSpell ? 'bloodline-spell' : ''}`}
                 header={header}
                 themeColor={themeColor}
                 initialExpanded={false}

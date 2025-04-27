@@ -39,7 +39,10 @@ const SpellsList = ({ character, characterColor }) => {
   // Get spell data from character
   const spellcasting = character.spellcasting || {};
   
-  // Use memoization for preparing spell data to avoid recalculating on every render
+  // Check if character has a bloodline
+  const hasBloodline = !!spellcasting.bloodline;
+  
+  // Use memoization for preparing spell data
   const {
     hasSpellcasting,
     scrollItems,
@@ -218,6 +221,24 @@ const SpellsList = ({ character, characterColor }) => {
   // Get spells to display based on current filters
   const spellsToDisplay = getSpellsToDisplay();
   
+  // Show bloodline information if character has a bloodline
+  const renderBloodlineInfo = () => {
+    if (!hasBloodline) return null;
+    
+    const { name, description, blood_magic } = spellcasting.bloodline;
+    
+    return (
+      <div className="bloodline-info">
+        <h3 style={{ color: themeColor }}>{name} Bloodline</h3>
+        <p className="bloodline-description">{description}</p>
+        <div className="bloodline-magic">
+          <span className="bloodline-magic-label">Imperial Blood Magic:</span>
+          <span className="bloodline-magic-effect">Whenever you cast a bloodline spell passed down from your ancestor, you choose one blood magic effect you know to benefit from.</span>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="spells-list">
       {/* Spellcasting statistics */}
@@ -225,6 +246,9 @@ const SpellsList = ({ character, characterColor }) => {
         character={character} 
         themeColor={themeColor} 
       />
+      
+      {/* Bloodline information */}
+      {hasBloodline && renderBloodlineInfo()}
       
       {/* View mode toggle */}
       <ViewModeToggle 
@@ -257,6 +281,7 @@ const SpellsList = ({ character, characterColor }) => {
           themeColor={themeColor}
           characterLevel={character.level}
           defenseFilter={defenseFilter}
+          character={character}
         />
       )}
       
@@ -268,6 +293,7 @@ const SpellsList = ({ character, characterColor }) => {
           characterLevel={character.level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
+          character={character}
         />
       )}
       
@@ -278,6 +304,7 @@ const SpellsList = ({ character, characterColor }) => {
           characterLevel={character.level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
+          character={character}
         />
       )}
       
@@ -288,6 +315,7 @@ const SpellsList = ({ character, characterColor }) => {
           characterLevel={character.level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
+          character={character}
         />
       )}
       

@@ -9,8 +9,15 @@ import { filterSpellsByDefense } from '../../utils/SpellUtils';
  * @param {string} props.themeColor - Theme color from character
  * @param {number} props.characterLevel - Character's level
  * @param {string} props.defenseFilter - Active defense filter
+ * @param {Object} props.character - Full character data for bloodline effects
  */
-const SpellsRepertoire = ({ spells, themeColor, characterLevel, defenseFilter }) => {
+const SpellsRepertoire = ({ 
+  spells, 
+  themeColor, 
+  characterLevel, 
+  defenseFilter,
+  character 
+}) => {
   // Filter spells by defense type
   const filteredSpells = filterSpellsByDefense(spells, defenseFilter);
   
@@ -24,6 +31,7 @@ const SpellsRepertoire = ({ spells, themeColor, characterLevel, defenseFilter })
               spell={spell}
               themeColor={themeColor}
               characterLevel={characterLevel}
+              character={character}
             />
           ))}
         </div>

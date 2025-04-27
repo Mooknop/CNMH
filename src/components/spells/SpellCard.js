@@ -1,3 +1,4 @@
+// src/components/spells/SpellCard.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 
@@ -7,8 +8,9 @@ import CollapsibleCard from '../shared/CollapsibleCard';
  * @param {Object} props.spell - The spell data
  * @param {string} props.themeColor - Theme color from character
  * @param {number} props.characterLevel - Character's level for cantrip scaling
+ * @param {Object} props.character - Character data for bloodline effects (optional)
  */
-const SpellCard = ({ spell, themeColor, characterLevel }) => {
+const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
   // Create header content for the card
   const header = (
     <>
@@ -33,6 +35,11 @@ const SpellCard = ({ spell, themeColor, characterLevel }) => {
         {spell.fromWand && (
           <div className="wand-indicator">
             {spell.wandName}
+          </div>
+        )}
+        {spell.bloodline && (
+          <div className="bloodline-indicator">
+            Bloodline
           </div>
         )}
       </div>
@@ -79,6 +86,15 @@ const SpellCard = ({ spell, themeColor, characterLevel }) => {
           </div>
         )}
       </div>
+      
+      {/* Blood Magic effect for bloodline spells */}
+      {spell.bloodline && character?.spellcasting?.bloodline?.blood_magic && (
+        <div className="spell-blood-magic">
+          <span className="blood-magic-label" style={{ color: themeColor }}>Blood Magic:</span>
+          <p className="blood-magic-effect">{character.spellcasting.bloodline.blood_magic}</p>
+        </div>
+      )}
+      
       <div className="spell-description">
         {spell.description}
       </div>
@@ -114,7 +130,7 @@ const SpellCard = ({ spell, themeColor, characterLevel }) => {
   return (
     <CollapsibleCard 
       key={spell.id + (spell.fromScroll ? '-scroll' : '')}
-      className="spell-card"
+      className={`spell-card ${spell.bloodline ? 'bloodline-spell' : ''}`}
       header={header}
       themeColor={themeColor}
       initialExpanded={false}

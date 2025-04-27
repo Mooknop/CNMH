@@ -511,16 +511,14 @@
             "id": "focus-1",
             "name": "Ancestral Memories",
             "level": 1,
-            "traits": ["Divination", "Mental"],
-            "actions": "One Minute",
-            "targets": "Self",
-            "duration": "Until the end of your next turn",
+            "baseLevel": 1,
+            "traits": ["Uncommon", "Concentrate", "Focus", "Sorcerer"],
+            "actions": "One Action",
             "bloodline": true,
-            "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
+            "description": "The memories of long-dead spellcasters grant you their knowledge, making your spells more formidable. You gain either a +1 status bonus to the next spell attack roll you attempt before the end of your turn or an enemy within 60 feet takes a –1 status penalty to the next saving throw they attempt against a spell you cast before the end of your turn.",
             "heightened": {
-              "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
-              "5th": "You can select three skills, and the proficiency rank you gain is master instead of trained.",
-              "7th": "You can select four skills, and the proficiency rank you gain is legendary instead of trained."
+              "5th": "The bonus increases to +2 or the penalty increases to –2.",
+              "8th": "The bonus increases to +3 or the penalty increases to –3."
             }
           }
         ]
