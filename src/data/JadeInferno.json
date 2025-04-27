@@ -440,12 +440,13 @@
         },
         {
           "id": "spell-11",
-          "name": "Magic Missile",
+          "name": "Force Barrage",
           "level": 1,
           "traits": ["Evocation", "Force"],
           "actions": "One to Three Actions",
           "range": "120 feet",
           "targets": "1 creature",
+          "bloodline": true,
           "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
           "heightened": {
             "+2": "You fire one additional missile with each action you spend."
@@ -497,12 +498,14 @@
           "actions": "Two Actions",
           "range": "120 feet",
           "targets": "1 spell effect or unattended magic item",
+          "bloodline": true,
           "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
         }
       ],
       "bloodline": {
         "name": "Imperial",
-        "description": "The blood of dragons or other powerful reptilian creatures runs through your veins. The inheritors of this bloodline are often ambitious and proud, with a tendency toward imperiousness and a sense of superiority.",
+        "description": "One of your ancestors was a mortal who mastered magic. Such magical blood can remain latent for generations, but in you it manifested in full.",
+        "blood_magic": "A surge of ancestral memories grants you or one target a +1 status bonus to skill checks for 1 round.",
         "focus_spells": [
           {
             "id": "focus-1",
@@ -512,6 +515,7 @@
             "actions": "One Minute",
             "targets": "Self",
             "duration": "Until the end of your next turn",
+            "bloodline": true,
             "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
             "heightened": {
               "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
