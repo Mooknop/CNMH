@@ -537,6 +537,7 @@
         "id": "staff-spell-1",
         "name": "Figment",
         "level": 0,
+        "baseLevel": 1,
         "traits": ["Cantrip", "Illusion", "Visual"],
         "actions": "Two Actions",
         "range": "30 feet",

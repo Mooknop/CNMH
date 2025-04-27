@@ -1,0 +1,67 @@
+import React from 'react';
+import SpellCard from './SpellCard';
+import { filterSpellsByDefense } from '../../utils/SpellUtils';
+
+/**
+ * Component to display scroll spells
+ * @param {Object} props
+ * @param {Array} props.spells - Array of scroll spells to display
+ * @param {string} props.themeColor - Theme color from character
+ * @param {number} props.characterLevel - Character's level
+ * @param {string} props.defenseFilter - Active defense filter
+ * @param {string} props.activeSpellRank - Active rank filter
+ */
+const ScrollSpells = ({ spells, themeColor, characterLevel, defenseFilter, activeSpellRank }) => {
+  // Filter spells by defense type
+  const filteredSpells = filterSpellsByDefense(spells, defenseFilter);
+  
+  return (
+    <div className="scrolls-container">
+      <div className="scrolls-details">
+        <h3 style={{ color: themeColor }}>Spell Scrolls</h3>
+        <p className="scrolls-description">
+          Spell scrolls allow any magic user to cast the spell written upon them, 
+          even if they don't know the spell themselves, so long as the spell is part 
+          of their magical tradition.
+        </p>
+        
+        {/* Scroll usage rules section */}
+        <div className="scrolls-rules">
+          <h4 style={{ color: themeColor }}>Scroll Rules</h4>
+          <p>
+            To cast a spell from a scroll, you must hold the scroll in one hand and activate it 
+            with a Cast a Spell activity. A scroll can be used only once, and it's consumed when 
+            the spell is cast or the scroll is destroyed.
+          </p>
+        </div>
+        
+        {filteredSpells.length > 0 ? (
+          <div className="scrolls-spells-list">
+            <h4 style={{ color: themeColor }}>Available Scrolls</h4>
+            <div className="spells-grid">
+              {filteredSpells.map(spell => (
+                <SpellCard 
+                  key={`${spell.id}-scroll`}
+                  spell={spell}
+                  themeColor={themeColor}
+                  characterLevel={characterLevel}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="empty-scrolls-spells">
+            <h4 style={{ color: themeColor }}>Available Scrolls</h4>
+            {activeSpellRank !== 'all' || defenseFilter !== 'all' ? (
+              <p>No scroll spells matching your current filters.</p>
+            ) : (
+              <p>No spell scrolls found in your inventory.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ScrollSpells;
