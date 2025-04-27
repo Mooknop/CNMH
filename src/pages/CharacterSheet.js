@@ -7,8 +7,8 @@ import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/character-sheet/ActionsList';
 import FocusSpellsList from '../components/spells/FocusSpellsList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
-import ItemModal from '../components/character-sheet/ItemModal';
-import InventoryTab from '../components/character-sheet/InventoryTab';
+import ItemModal from '../components/inventory/ItemModal';
+import InventoryTab from '../components/inventory/InventoryTab';
 import { 
   getCharacterColor,
   hasFeat
