@@ -56,522 +56,555 @@
     }
   },
   "proficiencies": {
-"weapons": {
-  "simple": {
-    "proficiency": 1,
-    "name": "Trained"
-  },
-  "martial": {
-    "proficiency": 0,
-    "name": "Untrained"
-  },
-  "advanced": {
-    "proficiency": 0,
-    "name": "Untrained"
-  },
-  "unarmed": {
-    "proficiency": 1,
-    "name": "Trained"
-  }
-},
-"armor": {
-  "unarmored": {
-    "proficiency": 1,
-    "name": "Trained"
-  },
-  "light": {
-    "proficiency": 0,
-    "name": "Untrained"
-  },
-  "medium": {
-    "proficiency": 0,
-    "name": "Untrained"
-  },
-  "heavy": {
-    "proficiency": 0,
-    "name": "Untrained"
-  }
-}
-},
-  "feats": [
-    {
-      "id": "feat-1",
-      "name": "Harrower Dedication",
-      "level": 2,
-      "source": "Archetype",
-      "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw.",
-      "reactions":[
-        {
-          "name": "Avoid Dire Fate",
-          "traits": ["Fortune"],
-          "trigger": "You fail or critically fail a check associated with your active Harrow Omen's suit",
-          "description": "Treat the failure as a success or a critical failure as a failure. You no longer have an active harrow omen."
-        }
-      ]
+  "weapons": {
+    "simple": {
+      "proficiency": 1,
+      "name": "Trained"
     },
-    {
-      "id": "feat-2",
-      "name": "Otherworldly Magic",
-      "level": 1,
-      "source": "Ancestry",
-      "description": "Your elven blood runs strong enough to grant you magical abilities. Choose one cantrip from the arcane spell list. You can cast this spell as an arcane innate spell at will. A cantrip is heightened to a spell level equal to half your level rounded up."
+    "martial": {
+      "proficiency": 0,
+      "name": "Untrained"
     },
-    {
-      "id": "feat-3",
-      "name": "Alchemical Crafting",
-      "level": 1,
-      "source": "Skill",
-      "description": "You can use the Craft activity to create alchemical items. When you select this feat, you immediately add the formulas for four common 1st-level alchemical items to your formula book."
+    "advanced": {
+      "proficiency": 0,
+      "name": "Untrained"
     },
-    {
-      "id": "feat-4",
-      "name": "Hobnobber",
-      "level": 1,
-      "source": "Skill",
-      "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2)."
-    },
-    {
-      "id": "feat-5",
-      "name": "Reach Spell",
-      "level": 1,
-      "source": "Sorcerer",
-      "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
-      "actions": [
-        {
-          "name": "Reach Spell",
-          "actionCount": 1,
-          "traits": ["Concentrate", "Sorcerer", "Spellshape"],
-          "description": "You  can extend your spells’ range. If the next action you use is to Cast a Spell that has a range, increase that spell’s range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
-        }
-      ]
-    },
-    {
-      "id": "feat-6",
-      "name": "Tell Fortune",
-      "level": 1,
-      "source": "Skill",
-      "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week."
+    "unarmed": {
+      "proficiency": 1,
+      "name": "Trained"
     }
-  ],
-  "inventory": [
-    {
-      "id": "item-1",
-      "name": "Minor Elixir of Life",
-      "price": 3,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+  },
+  "armor": {
+    "unarmored": {
+      "proficiency": 1,
+      "name": "Trained"
     },
-    {
-      "id": "item-2",
-      "name": "Sanitizing Pin",
-      "price": 7,
-      "quantity": 1,
-      "weight": 0,
-      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+    "light": {
+      "proficiency": 0,
+      "name": "Untrained"
     },
-    {
-      "id": "item-3",
-      "name": "Rust Scrub",
-      "price": 2,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+    "medium": {
+      "proficiency": 0,
+      "name": "Untrained"
     },
-    {
-      "id": "item-4",
-      "name": "Adventurer's Pack",
-      "quantity": 1,
-      "price": 1.5,
-      "weight": 2.0,
-      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
-    },
-    {
-      "id": "item-5",
-      "name": "Scroll of Pocket Library",
-      "price": 4,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "Single-use scroll",
-      "scroll":{
-        "id": "spell-1",
-        "name": "Pocket Library",
-        "level": 1,
-        "baseLevel": 1,
-        "traits": ["Rare", "Concentrate", "Extradimensional", "Manipulate"],
-        "actions": "Three Actions",
-        "duration": "24 hours",
-        "description": "When you Cast this Spell, choose any skill in which you are at least trained that has the Recall Knowledge action. During the duration of this spell, you can call forth a tome from an extradimensional library called the Akashic Record when attempting a Recall Knowledge check using your chosen skill. This is part of the action to Recall Knowledge. You must have a hand free to do so. The tome appears in your hand, open to an appropriate page. This grants you a +1 status bonus to the Recall Knowledge check. If you roll a critical failure on this check, you get a failure instead. If the roll is successful and the subject is a creature, you gain additional information or context about the creature. Once you reference a book from your pocket library, the spell ends.",
-        "heightened": {
-          "3rd": "The status bonus increases to +2 and you can reference your pocket library twice before the spell ends.",
-          "6th": "The status bonus increases to +3 and you can reference your pocket library three times before the spell ends.",
-          "9th": "The status bonus increases to +4 and you can reference your pocket library four times before the spell ends."
-        }
-      }
-    },
-    {
-      "id": "item-6",
-      "name": "Scroll of Sleep",
-      "price": 4,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "Single-use scroll",
-      "scroll":{
-        "id": "spell-1",
-        "name": "Sleep",
-        "level": 1,
-        "baseLevel": 1,
-        "range": "30 feet",
-        "area": "5-foot burst",
-        "defense": "Will",
-        "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
-        "actions": "Three Actions",
-        "description": "Each creature in the area becomes drowsy, possibly nodding off. A creature that falls unconscious from this spell doesn't fall prone or release what it's holding. This spell doesn't prevent creatures from waking up due to a successful Perception check, limiting its utility in combat.",
-        "degrees":{
-          "Critical Success": "The creature is unaffected.",
-          "Success": "The creature takes a –1 status penalty to Perception checks for 1 round.",
-          "Failure": "The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.",
-          "Critical Failure": "The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically."
-        },
-        "heightened": {
-          "4th": "The creatures fall unconscious for 1 round on a failure or 1 minute on a critical failure. They fall prone and release what they're holding, and they can't attempt Perception checks to wake up. When the duration ends, the creature is sleeping normally instead of automatically waking up."
-        }
-      }
-    },
-    {
-      "id": "item-7",
-      "name": "Scroll of Runic Body",
-      "price": 4,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "Single-use scroll",
-      "scroll":{
-        "id": "spell-1",
-        "name": "Runic Body",
-        "level": 1,
-        "baseLevel": 1,
-        "range": "touch",
-        "target": "1 willing creature",
-        "duration": "1 minute",
-        "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
-        "actions": "Two Actions",
-        "description": "Glowing runes appear on the target's body. All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
-        "heightened": {
-          "6th": "The unarmed attacks are +2 greater striking.",
-          "9th": "The unarmed attacks are +3 major striking."
-        }
-      }
+    "heavy": {
+      "proficiency": 0,
+      "name": "Untrained"
     }
-  ],
-  "spellcasting": {
-    "tradition": "Arcane",
-    "ability": "charisma",
-    "proficiency": 1,
-    "focus": {
-      "max": 1,
-      "current": 1
-    },
-    "spells": [
+  }
+  },
+    "feats": [
       {
-        "id": "spell-1",
-        "name": "Light",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Evocation", "Light"],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
-        "duration": "Until the next time you make your daily preparations",
-        "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
-      },
-      {
-        "id": "spell-2",
-        "name": "Electric Arc",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Electricity", "Evocation"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 or 2 creatures",
-        "defense": "Reflex",
-        "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save. The electricity damage increases to 2d4+4 at 3rd level, 3d4+4 at 5th level, 4d4+4 at 7th level, and so on.",
-        "heightened": {
-          "+1": "The damage increases by 1d4+4."
-        }
-      },
-      {
-        "id": "spell-3",
-        "name": "Detect Magic",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Detection", "Divination"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "",
-        "duration": "",
-        "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies."
-      },
-      {
-        "id": "spell-4",
-        "name": "Prestidigitation",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Evocation"],
-        "actions": "Two Actions",
-        "range": "10 feet",
-        "targets": "1 object (cook, clean, or color only)",
-        "duration": "Sustained",
-        "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color."
-      },
-      {
-        "id": "spell-5",
-        "name": "Mage Hand",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Evocation"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 unattended object of 1 Bulk or less",
-        "duration": "Sustained",
-        "description": "You create a single magical hand, either invisible or ghostlike, that grasps the target object and moves it slowly. You can move the object 20 feet each time you Sustain the Spell. The hand can't move an object more than 20 feet above the ground unless the object started more than 20 feet above the ground."
-      },
-      {
-        "id": "spell-6",
-        "name": "Ray of Frost",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Cold", "Evocation"],
-        "actions": "Two Actions",
-        "range": "120 feet",
-        "targets": "1 creature",
-        "defense": "Reflex",
-        "description": "You fire a ray of frost. Make a ranged spell attack roll against the target's AC. On a hit, you deal 1d4+4 cold damage plus 1d4 persistent cold damage. On a critical hit, double the initial damage, but not the persistent damage."
-      },
-      {
-        "id": "spell-7",
-        "name": "Telekinetic Projectile",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Cantrip", "Attack", "Evocation"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 creature",
-        "defense": "AC",
-        "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier."
-      },
-      {
-        "id": "spell-9",
-        "name": "Mage Armor",
-        "level": 1,
-        "traits": ["Abjuration"],
-        "actions": "Two Actions",
-        "targets": "Self",
-        "duration": "Until the next time you make your daily preparations",
-        "description": "You ward yourself with magical energy. You gain a +1 item bonus to AC and a maximum Dexterity modifier of +5. While wearing mage armor, you use your unarmored proficiency to calculate your AC.",
-        "heightened": {
-          "4th": "You gain a +2 item bonus to AC and a maximum Dexterity modifier of +5.",
-          "6th": "You gain a +2 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws.",
-          "8th": "You gain a +3 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws."
-        }
-      },
-      {
-        "id": "spell-10",
-        "name": "Command",
-        "level": 1,
-        "traits": ["Auditory", "Enchantment", "Linguistic", "Mental"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 creature",
-        "defense": "Will",
-        "description": "You shout a command that's hard to ignore. You can command the target to approach you, run away, release what it's holding, fall prone, or stand in place. The creature must succeed at a Will save or follow your command on its next turn. Some commands might require the target to Seek to approach you.",
-        "heightened": {
-          "3rd": "You can target up to 2 creatures.",
-          "5th": "You can target up to 6 creatures.",
-          "7th": "You can target up to 12 creatures.",
-          "9th": "You can target up to 24 creatures."
-        }
-      },
-      {
-        "id": "spell-11",
-        "name": "Magic Missile",
-        "level": 1,
-        "traits": ["Evocation", "Force"],
-        "actions": "One to Three Actions",
-        "range": "120 feet",
-        "targets": "1 creature",
-        "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
-        "heightened": {
-          "+2": "You fire one additional missile with each action you spend."
-        }
-      },
-      {
-        "id": "spell-12",
-        "name": "Shocking Grasp",
-        "level": 1,
-        "traits": ["Attack", "Electricity", "Evocation"],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 creature",
-        "defense": "AC",
-        "description": "You shroud your hands in a crackling field of electricity. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes 1d4 persistent electricity damage on a hit.",
-        "heightened": {
-          "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
-        }
-      },
-      {
-        "id": "spell-13",
-        "name": "Blazing Bolt",
+        "id": "feat-1",
+        "name": "Harrower Dedication",
         "level": 2,
-        "traits": ["Attack", "Evocation", "Fire"],
-        "actions": "Two Actions",
-        "range": "500 feet",
-        "targets": "1 creature",
-        "description": "You fire a bolt of roaring flame streaking through the air. Make a ranged spell attack against the AC of a target creature. On a success, you deal 5d6 fire damage. On a critical success, you deal double damage.",
-        "heightened": {
-          "+1": "The bolt's damage increases by 3d6."
-        }
+        "source": "Archetype",
+        "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw.",
+        "reactions":[
+          {
+            "name": "Avoid Dire Fate",
+            "traits": ["Fortune"],
+            "trigger": "You fail or critically fail a check associated with your active Harrow Omen's suit",
+            "description": "Treat the failure as a success or a critical failure as a failure. You no longer have an active harrow omen."
+          }
+        ]
       },
       {
-        "id": "spell-14",
-        "name": "Knock",
-        "level": 2,
-        "traits": ["Transmutation"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 door, lock, or container",
-        "duration": "1 minute",
-        "description": "You knock on a locked door, window, gate, chest, or other object with a closure, and it opens. This spell works against most mundane locks but not ones of exceptional materials, such as adamantine locks or locks requiring unique keys. For complex locks, the GM might roll a secret check using your spell DC against the Thievery DC to pick the lock."
+        "id": "feat-2",
+        "name": "Otherworldly Magic",
+        "level": 1,
+        "source": "Ancestry",
+        "description": "Your elven blood runs strong enough to grant you magical abilities. Choose one cantrip from the arcane spell list. You can cast this spell as an arcane innate spell at will. A cantrip is heightened to a spell level equal to half your level rounded up."
       },
       {
-        "id": "spell-15",
-        "name": "Dispel Magic",
-        "level": 2,
-        "traits": ["Abjuration"],
-        "actions": "Two Actions",
-        "range": "120 feet",
-        "targets": "1 spell effect or unattended magic item",
-        "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
+        "id": "feat-3",
+        "name": "Alchemical Crafting",
+        "level": 1,
+        "source": "Skill",
+        "description": "You can use the Craft activity to create alchemical items. When you select this feat, you immediately add the formulas for four common 1st-level alchemical items to your formula book."
+      },
+      {
+        "id": "feat-4",
+        "name": "Hobnobber",
+        "level": 1,
+        "source": "Skill",
+        "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2)."
+      },
+      {
+        "id": "feat-5",
+        "name": "Reach Spell",
+        "level": 1,
+        "source": "Sorcerer",
+        "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
+        "actions": [
+          {
+            "name": "Reach Spell",
+            "actionCount": 1,
+            "traits": ["Concentrate", "Sorcerer", "Spellshape"],
+            "description": "You  can extend your spells’ range. If the next action you use is to Cast a Spell that has a range, increase that spell’s range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
+          }
+        ]
+      },
+      {
+        "id": "feat-6",
+        "name": "Tell Fortune",
+        "level": 1,
+        "source": "Skill",
+        "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week."
       }
     ],
-    "bloodline": {
-      "name": "Imperial",
-      "description": "The blood of dragons or other powerful reptilian creatures runs through your veins. The inheritors of this bloodline are often ambitious and proud, with a tendency toward imperiousness and a sense of superiority.",
-      "focus_spells": [
-        {
-          "id": "focus-1",
-          "name": "Ancestral Memories",
+    "inventory": [
+      {
+        "id": "item-1",
+        "name": "Minor Elixir of Life",
+        "price": 3,
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+      },
+      {
+        "id": "item-2",
+        "name": "Sanitizing Pin",
+        "price": 7,
+        "quantity": 1,
+        "weight": 0,
+        "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+      },
+      {
+        "id": "item-3",
+        "name": "Rust Scrub",
+        "price": 2,
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+      },
+      {
+        "id": "item-4",
+        "name": "Adventurer's Pack",
+        "quantity": 1,
+        "price": 1.5,
+        "weight": 2.0,
+        "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+      },
+      {
+        "id": "item-5",
+        "name": "Scroll of Pocket Library",
+        "price": 4,
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "Single-use scroll",
+        "scroll":{
+          "id": "spell-1",
+          "name": "Pocket Library",
           "level": 1,
-          "traits": ["Divination", "Mental"],
-          "actions": "One Minute",
-          "targets": "Self",
-          "duration": "Until the end of your next turn",
-          "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
+          "baseLevel": 1,
+          "traits": ["Rare", "Concentrate", "Extradimensional", "Manipulate"],
+          "actions": "Three Actions",
+          "duration": "24 hours",
+          "description": "When you Cast this Spell, choose any skill in which you are at least trained that has the Recall Knowledge action. During the duration of this spell, you can call forth a tome from an extradimensional library called the Akashic Record when attempting a Recall Knowledge check using your chosen skill. This is part of the action to Recall Knowledge. You must have a hand free to do so. The tome appears in your hand, open to an appropriate page. This grants you a +1 status bonus to the Recall Knowledge check. If you roll a critical failure on this check, you get a failure instead. If the roll is successful and the subject is a creature, you gain additional information or context about the creature. Once you reference a book from your pocket library, the spell ends.",
           "heightened": {
-            "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
-            "5th": "You can select three skills, and the proficiency rank you gain is master instead of trained.",
-            "7th": "You can select four skills, and the proficiency rank you gain is legendary instead of trained."
+            "3rd": "The status bonus increases to +2 and you can reference your pocket library twice before the spell ends.",
+            "6th": "The status bonus increases to +3 and you can reference your pocket library three times before the spell ends.",
+            "9th": "The status bonus increases to +4 and you can reference your pocket library four times before the spell ends."
           }
         }
-      ]
-    }
+      },
+      {
+        "id": "item-6",
+        "name": "Scroll of Sleep",
+        "price": 4,
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "Single-use scroll",
+        "scroll":{
+          "id": "spell-1",
+          "name": "Sleep",
+          "level": 1,
+          "baseLevel": 1,
+          "range": "30 feet",
+          "area": "5-foot burst",
+          "defense": "Will",
+          "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
+          "actions": "Three Actions",
+          "description": "Each creature in the area becomes drowsy, possibly nodding off. A creature that falls unconscious from this spell doesn't fall prone or release what it's holding. This spell doesn't prevent creatures from waking up due to a successful Perception check, limiting its utility in combat.",
+          "degrees":{
+            "Critical Success": "The creature is unaffected.",
+            "Success": "The creature takes a –1 status penalty to Perception checks for 1 round.",
+            "Failure": "The creature falls unconscious. If it's still unconscious after 1 minute, it wakes up automatically.",
+            "Critical Failure": "The creature falls unconscious. If it's still unconscious after 1 hour, it wakes up automatically."
+          },
+          "heightened": {
+            "4th": "The creatures fall unconscious for 1 round on a failure or 1 minute on a critical failure. They fall prone and release what they're holding, and they can't attempt Perception checks to wake up. When the duration ends, the creature is sleeping normally instead of automatically waking up."
+          }
+        }
+      },
+      {
+        "id": "item-7",
+        "name": "Scroll of Runic Body",
+        "price": 4,
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "Single-use scroll",
+        "scroll":{
+          "id": "spell-1",
+          "name": "Runic Body",
+          "level": 1,
+          "baseLevel": 1,
+          "range": "touch",
+          "target": "1 willing creature",
+          "duration": "1 minute",
+          "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental", "Sleep"],
+          "actions": "Two Actions",
+          "description": "Glowing runes appear on the target's body. All its unarmed attacks become +1 striking unarmed attacks, gaining a +1 item bonus to attack rolls and increasing the number of damage dice to two.",
+          "heightened": {
+            "6th": "The unarmed attacks are +2 greater striking.",
+            "9th": "The unarmed attacks are +3 major striking."
+          }
+        }
+      },
+      {
+        "id": "item-8",
+        "name": "Xanderghul's Flawless Hammer",
+        "quantity": 1,
+        "weight": 2.0,
+        "description": "Runelord Xanderghul's ancient weapon of rule.",
+        "strikes": {
+          "proficiency": "simple",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d12",
+          "traits": ["Attack", "Melee", "Shove"]
+        },
+        "reactions":[
+          {
+            "name": "Dominant Emotion (Pride)",
+            "traits": ["Emotion", "Mental"],
+            "trigger": "You would be adversely affected by an emotion effect",
+            "description": "The hammer tries to neutralize the triggering effect with its own emotion, attempting a counteract check. If the check succeeds, you feel a sudden rush of intense pride and the counteracted effect doesn't take hold of you."
+          }
+        ]
+      }
+    ],
+    "spellcasting": {
+      "tradition": "Arcane",
+      "ability": "charisma",
+      "proficiency": 1,
+      "focus": {
+        "max": 1,
+        "current": 1
+      },
+      "spells": [
+        {
+          "id": "spell-1",
+          "name": "Light",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Evocation", "Light"],
+          "actions": "Two Actions",
+          "range": "Touch",
+          "targets": "1 object of 1 Bulk or less, either unattended or possessed by you or a willing ally",
+          "duration": "Until the next time you make your daily preparations",
+          "description": "The object glows with bright light in a 20-foot radius (and dim light for the next 20 feet) like a torch. If you cast this spell again on a second object, the light spell on the first object ends."
+        },
+        {
+          "id": "spell-2",
+          "name": "Electric Arc",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Electricity", "Evocation"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "1 or 2 creatures",
+          "defense": "Reflex",
+          "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save. The electricity damage increases to 2d4+4 at 3rd level, 3d4+4 at 5th level, 4d4+4 at 7th level, and so on.",
+          "heightened": {
+            "+1": "The damage increases by 1d4+4."
+          }
+        },
+        {
+          "id": "spell-3",
+          "name": "Detect Magic",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Detection", "Divination"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "",
+          "duration": "",
+          "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies."
+        },
+        {
+          "id": "spell-4",
+          "name": "Prestidigitation",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Evocation"],
+          "actions": "Two Actions",
+          "range": "10 feet",
+          "targets": "1 object (cook, clean, or color only)",
+          "duration": "Sustained",
+          "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color."
+        },
+        {
+          "id": "spell-5",
+          "name": "Mage Hand",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Evocation"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "1 unattended object of 1 Bulk or less",
+          "duration": "Sustained",
+          "description": "You create a single magical hand, either invisible or ghostlike, that grasps the target object and moves it slowly. You can move the object 20 feet each time you Sustain the Spell. The hand can't move an object more than 20 feet above the ground unless the object started more than 20 feet above the ground."
+        },
+        {
+          "id": "spell-6",
+          "name": "Ray of Frost",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Cold", "Evocation"],
+          "actions": "Two Actions",
+          "range": "120 feet",
+          "targets": "1 creature",
+          "defense": "Reflex",
+          "description": "You fire a ray of frost. Make a ranged spell attack roll against the target's AC. On a hit, you deal 1d4+4 cold damage plus 1d4 persistent cold damage. On a critical hit, double the initial damage, but not the persistent damage."
+        },
+        {
+          "id": "spell-7",
+          "name": "Telekinetic Projectile",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Attack", "Evocation"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "1 creature",
+          "defense": "AC",
+          "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier."
+        },
+        {
+          "id": "spell-9",
+          "name": "Mage Armor",
+          "level": 1,
+          "traits": ["Abjuration"],
+          "actions": "Two Actions",
+          "targets": "Self",
+          "duration": "Until the next time you make your daily preparations",
+          "description": "You ward yourself with magical energy. You gain a +1 item bonus to AC and a maximum Dexterity modifier of +5. While wearing mage armor, you use your unarmored proficiency to calculate your AC.",
+          "heightened": {
+            "4th": "You gain a +2 item bonus to AC and a maximum Dexterity modifier of +5.",
+            "6th": "You gain a +2 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws.",
+            "8th": "You gain a +3 item bonus to AC, a maximum Dexterity modifier of +6, and a +1 item bonus to saving throws."
+          }
+        },
+        {
+          "id": "spell-10",
+          "name": "Command",
+          "level": 1,
+          "traits": ["Auditory", "Enchantment", "Linguistic", "Mental"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "1 creature",
+          "defense": "Will",
+          "description": "You shout a command that's hard to ignore. You can command the target to approach you, run away, release what it's holding, fall prone, or stand in place. The creature must succeed at a Will save or follow your command on its next turn. Some commands might require the target to Seek to approach you.",
+          "heightened": {
+            "3rd": "You can target up to 2 creatures.",
+            "5th": "You can target up to 6 creatures.",
+            "7th": "You can target up to 12 creatures.",
+            "9th": "You can target up to 24 creatures."
+          }
+        },
+        {
+          "id": "spell-11",
+          "name": "Magic Missile",
+          "level": 1,
+          "traits": ["Evocation", "Force"],
+          "actions": "One to Three Actions",
+          "range": "120 feet",
+          "targets": "1 creature",
+          "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
+          "heightened": {
+            "+2": "You fire one additional missile with each action you spend."
+          }
+        },
+        {
+          "id": "spell-12",
+          "name": "Shocking Grasp",
+          "level": 1,
+          "traits": ["Attack", "Electricity", "Evocation"],
+          "actions": "Two Actions",
+          "range": "Touch",
+          "targets": "1 creature",
+          "defense": "AC",
+          "description": "You shroud your hands in a crackling field of electricity. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes 1d4 persistent electricity damage on a hit.",
+          "heightened": {
+            "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
+          }
+        },
+        {
+          "id": "spell-13",
+          "name": "Blazing Bolt",
+          "level": 2,
+          "traits": ["Attack", "Evocation", "Fire"],
+          "actions": "Two Actions",
+          "range": "500 feet",
+          "targets": "1 creature",
+          "description": "You fire a bolt of roaring flame streaking through the air. Make a ranged spell attack against the AC of a target creature. On a success, you deal 5d6 fire damage. On a critical success, you deal double damage.",
+          "heightened": {
+            "+1": "The bolt's damage increases by 3d6."
+          }
+        },
+        {
+          "id": "spell-14",
+          "name": "Knock",
+          "level": 2,
+          "traits": ["Transmutation"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "1 door, lock, or container",
+          "duration": "1 minute",
+          "description": "You knock on a locked door, window, gate, chest, or other object with a closure, and it opens. This spell works against most mundane locks but not ones of exceptional materials, such as adamantine locks or locks requiring unique keys. For complex locks, the GM might roll a secret check using your spell DC against the Thievery DC to pick the lock."
+        },
+        {
+          "id": "spell-15",
+          "name": "Dispel Magic",
+          "level": 2,
+          "traits": ["Abjuration"],
+          "actions": "Two Actions",
+          "range": "120 feet",
+          "targets": "1 spell effect or unattended magic item",
+          "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
+        }
+      ],
+      "bloodline": {
+        "name": "Imperial",
+        "description": "The blood of dragons or other powerful reptilian creatures runs through your veins. The inheritors of this bloodline are often ambitious and proud, with a tendency toward imperiousness and a sense of superiority.",
+        "focus_spells": [
+          {
+            "id": "focus-1",
+            "name": "Ancestral Memories",
+            "level": 1,
+            "traits": ["Divination", "Mental"],
+            "actions": "One Minute",
+            "targets": "Self",
+            "duration": "Until the end of your next turn",
+            "description": "You delve into the memories of your ancestors, seeking knowledge. You gain the trained proficiency rank in one skill of your choice. This effect lasts until the duration expires.",
+            "heightened": {
+              "3rd": "You can select two skills, and the proficiency rank you gain is expert instead of trained.",
+              "5th": "You can select three skills, and the proficiency rank you gain is master instead of trained.",
+              "7th": "You can select four skills, and the proficiency rank you gain is legendary instead of trained."
+            }
+          }
+        ]
+      }
+    },
+    "staff": {
+      "name": "Xanderghul's Flawless Hammer",
+      "description": "Runelord Xanderghul's ancient weapon of rule.",
+      "type": "Greater",
+      "itemLevel": 6,
+      "bulkValue": 1,
+      "charges": {
+        "max": 3,
+        "current": 3
+      },
+      "spells": [
+      {
+        "id": "staff-spell-1",
+        "name": "Figment",
+        "level": 0,
+        "traits": ["Cantrip", "Illusion", "Visual"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "duration": "Sustained",
+        "description": "You create a visual illusion that distracts the target. This illusion appears as a vague shape just on the edge of the target's vision. The target must attempt a Will save."
+      },
+      {
+        "id": "staff-spell-2",
+        "name": "Infectious Enthusiasm",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Emotion", "Enchantment", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "duration": "10 minutes",
+        "defense": "Will",
+        "description": "You inspire your target with enthusiasm. The target gains a +1 status bonus to a skill of your choice and to Will saves to guard against mental effects."
+      },
+      {
+        "id": "staff-spell-3",
+        "name": "Illusory Object",
+        "level": 1,
+        "traits": ["Illusion", "Visual"],
+        "actions": "Two Actions",
+        "range": "500 feet",
+        "duration": "10 minutes",
+        "description": "You create an illusory visual image of a stationary object. The entire image must fit within a 20-foot cube. The object appears to animate naturally, but it can't move outside of the cube."
+      },
+      {
+        "id": "staff-spell-4",
+        "name": "Fashionista",
+        "level": 2,
+        "traits": ["Illusion", "Visual"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 willing creature",
+        "duration": "1 hour",
+        "description": "You surround a creature in stylish illusory clothes that shimmer with light. The creature gains a +1 status bonus to checks to Make an Impression."
+      },
+      {
+        "id": "staff-spell-5",
+        "name": "Overselling Flourish",
+        "level": 2,
+        "traits": ["Illusion", "Mental", "Visual"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "description": "You present an ordinary item as if it were valuable, or cause a willing merchant to perceive something you offer as being worth far more than it is."
+      },
+      {
+        "id": "staff-spell-6",
+        "name": "Illusory Creature",
+        "level": 3,
+        "traits": ["Auditory", "Illusion", "Visual"],
+        "actions": "Two Actions",
+        "range": "500 feet",
+        "duration": "Sustained",
+        "description": "You create an illusory image of a huge or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the illusory creature are ever farther than 500 feet apart, the spell ends."
+      },
+      {
+        "id": "staff-spell-7",
+        "name": "Instant Parade",
+        "level": 3,
+        "traits": ["Conjuration", "Extradimensional"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "duration": "Sustained up to 1 minute",
+        "description": "You create a small but impressive parade, about 30 feet long and 10 feet wide, that marches and plays music as you direct. The parade consists of magical constructs that resemble humans with brightly colored costumes and festive instruments."
+      },
+      {
+        "id": "staff-spell-8",
+        "name": "Mirror Image",
+        "level": 2,
+        "traits": ["Illusion", "Visual"],
+        "actions": "Two Actions",
+        "targets": "Self",
+        "duration": "1 minute",
+        "description": "Three illusory duplicates of you swirl around your space, potentially causing those who attack you to hit one of the images instead of you. These images move with you and disappear one at a time when a foe succeeds at attacking one of them."
+      }
+    ]
   },
-  "staff": {
-    "name": "Xanderghul's Flawless Hammer",
-    "description": "Runelord Xanderghul's ancient weapon of rule.",
-    "type": "Greater",
-    "itemLevel": 6,
-    "bulkValue": 1,
-    "charges": {
-      "max": 3,
-      "current": 3
-    },
-    "spells": [
+  "strikes":[
     {
-      "id": "staff-spell-1",
-      "name": "Figment",
-      "level": 0,
-      "traits": ["Cantrip", "Illusion", "Visual"],
-      "actions": "Two Actions",
-      "range": "30 feet",
-      "targets": "1 creature",
-      "duration": "Sustained",
-      "description": "You create a visual illusion that distracts the target. This illusion appears as a vague shape just on the edge of the target's vision. The target must attempt a Will save."
-    },
-    {
-      "id": "staff-spell-2",
-      "name": "Infectious Enthusiasm",
-      "level": 0,
-      "baseLevel": 1,
-      "traits": ["Emotion", "Enchantment", "Mental"],
-      "actions": "Two Actions",
-      "range": "30 feet",
-      "targets": "1 creature",
-      "duration": "10 minutes",
-      "defense": "Will",
-      "description": "You inspire your target with enthusiasm. The target gains a +1 status bonus to a skill of your choice and to Will saves to guard against mental effects."
-    },
-    {
-      "id": "staff-spell-3",
-      "name": "Illusory Object",
-      "level": 1,
-      "traits": ["Illusion", "Visual"],
-      "actions": "Two Actions",
-      "range": "500 feet",
-      "duration": "10 minutes",
-      "description": "You create an illusory visual image of a stationary object. The entire image must fit within a 20-foot cube. The object appears to animate naturally, but it can't move outside of the cube."
-    },
-    {
-      "id": "staff-spell-4",
-      "name": "Fashionista",
-      "level": 2,
-      "traits": ["Illusion", "Visual"],
-      "actions": "Two Actions",
-      "range": "Touch",
-      "targets": "1 willing creature",
-      "duration": "1 hour",
-      "description": "You surround a creature in stylish illusory clothes that shimmer with light. The creature gains a +1 status bonus to checks to Make an Impression."
-    },
-    {
-      "id": "staff-spell-5",
-      "name": "Overselling Flourish",
-      "level": 2,
-      "traits": ["Illusion", "Mental", "Visual"],
-      "actions": "Two Actions",
-      "range": "30 feet",
-      "targets": "1 creature",
-      "defense": "Will",
-      "description": "You present an ordinary item as if it were valuable, or cause a willing merchant to perceive something you offer as being worth far more than it is."
-    },
-    {
-      "id": "staff-spell-6",
-      "name": "Illusory Creature",
-      "level": 3,
-      "traits": ["Auditory", "Illusion", "Visual"],
-      "actions": "Two Actions",
-      "range": "500 feet",
-      "duration": "Sustained",
-      "description": "You create an illusory image of a huge or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the illusory creature are ever farther than 500 feet apart, the spell ends."
-    },
-    {
-      "id": "staff-spell-7",
-      "name": "Instant Parade",
-      "level": 3,
-      "traits": ["Conjuration", "Extradimensional"],
-      "actions": "Two Actions",
-      "range": "30 feet",
-      "duration": "Sustained up to 1 minute",
-      "description": "You create a small but impressive parade, about 30 feet long and 10 feet wide, that marches and plays music as you direct. The parade consists of magical constructs that resemble humans with brightly colored costumes and festive instruments."
-    },
-    {
-      "id": "staff-spell-8",
-      "name": "Mirror Image",
-      "level": 2,
-      "traits": ["Illusion", "Visual"],
-      "actions": "Two Actions",
-      "targets": "Self",
-      "duration": "1 minute",
-      "description": "Three illusory duplicates of you swirl around your space, potentially causing those who attack you to hit one of the images instead of you. These images move with you and disappear one at a time when a foe succeeds at attacking one of them."
+      "name": "Unarmed Strike",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "action": 1,
+      "damage": "1d4",
+      "traits": ["Attack", "Melee"],
+      "description": "Give 'em a good smack"
     }
   ]
-  }
 }
