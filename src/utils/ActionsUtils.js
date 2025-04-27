@@ -40,8 +40,8 @@ import {
         // Determine the proficiency value to use
         let proficiencyValue = 0;
         // Check for proficiency based on weapon category
-        if (strike.category && character.proficiencies?.weapons?.[strike.category]) {
-          proficiencyValue = character.proficiencies.weapons[strike.category].proficiency || 0;
+        if (strike.proficiency && character.proficiencies?.weapons?.[strike.proficiency]) {
+          proficiencyValue = character.proficiencies.weapons[strike.proficiency].proficiency || 0;
         }
         // Special case for unarmed attacks
         else if (strike.traits && strike.traits.includes('Unarmed')) {
@@ -65,7 +65,73 @@ import {
       allStrikes = [...processedStrikes];
     }
     
-    // Add strikes generated from inventory weapons
+    // Add strikes from feats
+    if (character.feats) {
+      const featStrikes = character.feats
+        .filter(feat => feat.strikes && feat.strikes.length > 0) // Only feats with strikes property
+        .flatMap(feat => {
+          // Map each strike from this feat and add a source property
+          return feat.strikes.map(strike => {
+            // Determine ability modifier based on strike type and traits
+            let abilityMod;
+            const isMelee = strike.type === 'melee';
+            const isFinesse = strike.traits && strike.traits.includes('Finesse');
+            
+            // Get relevant ability modifiers
+            const strMod = getAbilityModifier(character.abilities?.strength || 10);
+            const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
+            
+            // Use appropriate modifier based on weapon type and traits
+            if (isFinesse) {
+              abilityMod = Math.max(strMod, dexMod); // Finesse can use higher of STR or DEX
+            } else if (isMelee) {
+              abilityMod = strMod; // Melee weapons use STR
+            } else {
+              abilityMod = dexMod; // Ranged weapons use DEX
+            }
+            
+            // Determine the proficiency value to use
+            let proficiencyValue = 0;
+            // Check for proficiency based on weapon category
+            if (strike.proficiency && character.proficiencies?.weapons?.[strike.proficiency]) {
+              proficiencyValue = character.proficiencies.weapons[strike.proficiency].proficiency || 0;
+            }
+            // Special case for unarmed attacks
+            else if (strike.traits && strike.traits.includes('Unarmed')) {
+              proficiencyValue = character.proficiencies?.weapons?.unarmed?.proficiency || 0;
+            }
+            // Default to simple weapons proficiency
+            else {
+              proficiencyValue = character.proficiencies?.weapons?.simple?.proficiency || 0;
+            }
+            
+            // Calculate attack bonus
+            const attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+            
+            // Format damage string with ability modifier (for melee weapons)
+            let damageString = strike.damage || '1d6';
+            if (isMelee && strMod !== 0 && !damageString.includes('+') && !damageString.includes('-')) {
+              damageString += (strMod > 0 ? '+' + strMod : strMod);
+            }
+            
+            return {
+              name: strike.name,
+              type: strike.type,
+              actionCount: parseInt(strike.action) || 1,
+              traits: strike.traits || [],
+              attackMod: attackBonus,
+              damage: damageString,
+              description: strike.description || "",
+              source: feat.name // Add feat source for reference
+            };
+          });
+        });
+      
+      // Add feat strikes to the list
+      allStrikes = [...allStrikes, ...featStrikes];
+    }
+    
+    // Add strikes from inventory weapons
     if (character.inventory) {
       const weaponStrikes = character.inventory
         .filter(item => item.strikes) // Only items with strikes property
@@ -97,7 +163,7 @@ import {
           
           // Format damage string with ability modifier (for melee weapons)
           let damageString = weapon.damage || '1d6';
-          if (isMelee && strMod !== 0) {
+          if (isMelee && strMod !== 0 && !damageString.includes('+') && !damageString.includes('-')) {
             damageString += (strMod > 0 ? '+' + strMod : strMod);
           }
           
