@@ -4,7 +4,7 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/spells/SpellsList';
-import ActionsList from '../components/character-sheet/ActionsList';
+import ActionsList from '../components/actions/ActionsList';
 import FocusSpellsList from '../components/spells/FocusSpellsList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import ItemModal from '../components/inventory/ItemModal';
