@@ -165,12 +165,52 @@
           "ignored": 2,
           "contents":[
             {
-              "id": "item-4",
-              "name": "Adventurer's Supplies",
+              "name": "Bedroll",
               "quantity": 1,
-              "price": 1.5,
-              "weight": 1.0,
-              "description": "Includes bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+              "weight": 0.1,
+              "description": "A compact mat, not too comfy but suitable for long journeys."
+            },
+            {
+              "name": "Chalk",
+              "quantity": 10,
+              "weight": 0.0,
+              "description": "Suitable for marking hard surfaces temporarily."
+            },
+            {
+              "name": "Flint & Steel",
+              "quantity": 1,
+              "weight": 0.0,
+              "description": "A camper's classic for starting fires."
+            },
+            {
+              "name": "Rope (50ft)",
+              "quantity": 1,
+              "weight": 0.1,
+              "description": "Sturdy rope for tying something (or someone) down."
+            },
+            {
+              "name": "Rations",
+              "quantity": 7,
+              "weight": 0.1,
+              "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+            },
+            {
+              "name": "Soap",
+              "quantity": 1,
+              "weight": 0.0,
+              "description": "Scrub a dub dub"
+            },
+            {
+              "name": "Torch",
+              "quantity": 5,
+              "weight": 0.1,
+              "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+            },
+            {
+              "name": "Waterskin",
+              "quantity": 1,
+              "weight": 0.1,
+              "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
             }
           ]
         }

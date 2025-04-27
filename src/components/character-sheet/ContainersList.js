@@ -30,7 +30,7 @@ const ContainersList = ({ inventory, themeColor, onItemClick }) => {
       <div className="containers-info">
         <p>
           Containers can reduce the effective Bulk of items stored within them, making them valuable for managing your carrying capacity.
-          It takes two actions to retrieve a stowed item, rather than the usual single action for grabbing an item that is worn on your person.
+          It takes two actions to stow an item or retrieve a stowed item, rather than the usual single action for interacting with an item that is worn on your person.
         </p>
       </div>
       
