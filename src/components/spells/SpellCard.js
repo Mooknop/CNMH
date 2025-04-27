@@ -87,6 +87,13 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
         )}
       </div>
       
+      {spell.trigger && (
+        <div className="reaction-trigger">
+          <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
+          <span className="trigger-text">{spell.trigger}</span>
+        </div>
+      )}
+
       {/* Blood Magic effect for bloodline spells */}
       {spell.bloodline && character?.spellcasting?.bloodline?.blood_magic && (
         <div className="spell-blood-magic">

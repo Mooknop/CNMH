@@ -46,7 +46,7 @@ const SpellFilters = ({
       {defenseTypes.length > 1 && (
         <div className="defense-filter">
           <span className="filter-label" style={{ color: themeColor }}>
-            Filter by Defense:
+            Filters:
           </span>
           <div className="defense-buttons">
             {defenseTypes.map(defense => (

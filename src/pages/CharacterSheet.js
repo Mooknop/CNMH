@@ -137,7 +137,7 @@ const CharacterSheet = () => {
             <div className="bulk-management">
               <div className="bulk-status">
                 <div className="bulk-labels">
-                  <span>Bulk Used: <strong>{formatBulk(bulkUsed)}</strong></span>
+                  <span>Bulk Used: <strong>{formatBulk(bulkUsed.toFixed(1))}</strong></span>
                   <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
                   <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
                 </div>
