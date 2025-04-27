@@ -1,129 +1,132 @@
 /* src/components/character-sheet/InventoryTab.css */
 .inventory-tab h2 {
-margin-top: 0;
-margin-bottom: 1.5rem;
-font-size: 1.2rem;
-}
-
-/* Bulk Management Styles */
-.bulk-management {
-margin-bottom: 2rem;
-background-color: #f5f5f5;
-border-radius: 8px;
-padding: 1.5rem;
-}
-
-.bulk-status {
-margin-bottom: 1rem;
-}
-
-.bulk-labels {
-display: flex;
-justify-content: space-between;
-margin-bottom: 0.5rem;
-font-size: 0.9rem;
-color: #666;
-}
-
-.bulk-progress-container {
-width: 100%;
-height: 0.75rem;
-background-color: #e0e0e0;
-border-radius: 4px;
-margin-bottom: 0.5rem;
-overflow: hidden;
-}
-
-.bulk-progress-bar {
-height: 100%;
-transition: width 0.3s ease, background-color 0.3s ease;
-}
-
-.bulk-warning {
-margin-top: 0.75rem;
-padding: 0.75rem;
-background-color: #fff3e0;
-border-left: 4px solid #f57c00;
-color: #e65100;
-font-size: 0.9rem;
-border-radius: 4px;
-}
-
-.bulk-warning.severe {
-background-color: #ffebee;
-border-left: 4px solid #b71c1c;
-color: #b71c1c;
-}
-
-/* Inventory List Styles */
-.inventory-list table {
-width: 100%;
-border-collapse: collapse;
-}
-
-.inventory-list th {
-background-color: #5e2929;
-color: white;
-text-align: left;
-padding: 0.75rem 1rem;
-}
-
-.inventory-list th:first-child {
-border-top-left-radius: 8px;
-}
-
-.inventory-list th:last-child {
-border-top-right-radius: 8px;
-}
-
-.inventory-list td {
-padding: 0.75rem 1rem;
-border-bottom: 1px solid #eee;
-}
-
-.empty-inventory {
-text-align: center;
-padding: 2rem;
-color: #888;
-}
-
-.item-name {
-color: #333;
-cursor: pointer;
-transition: color 0.2s;
-text-decoration: none;
-display: inline-block;
-background: none;
-border: none;
-padding: 0;
-font: inherit;
-text-align: left;
-}
-
-.item-name:hover {
-color: #5e2929;
-text-decoration: underline;
-}
-
-/* Add a small info icon on mobile to indicate clickable items */
-@media (max-width: 768px) {
-.item-name::after {
-    content: " 🔍";
-    font-size: 0.8rem;
-    opacity: 0.7;
-}
-
-.bulk-labels {
-    flex-direction: column;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+  }
+  
+  /* Bulk Management Styles */
+  .bulk-management {
+    margin-bottom: 2rem;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+  
+  .bulk-status {
+    margin-bottom: 1rem;
+  }
+  
+  .bulk-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .bulk-progress-container {
+    width: 100%;
+    height: 0.75rem;
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .bulk-progress-bar {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+  
+  .bulk-warning {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: #fff3e0;
+    border-left: 4px solid #f57c00;
+    color: #e65100;
+    font-size: 0.9rem;
+    border-radius: 4px;
+  }
+  
+  .bulk-warning.severe {
+    background-color: #ffebee;
+    border-left: 4px solid #b71c1c;
+    color: #b71c1c;
+  }
+  
+  /* Inventory List Styles */
+  .inventory-list table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .inventory-list th {
+    background-color: #5e2929;
+    color: white;
+    text-align: left;
+    padding: 0.75rem 1rem;
+  }
+  
+  .inventory-list th:first-child {
+    border-top-left-radius: 8px;
+  }
+  
+  .inventory-list th:last-child {
+    border-top-right-radius: 8px;
+  }
+  
+  .inventory-list td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .empty-inventory {
+    text-align: center;
+    padding: 2rem;
+    color: #888;
+  }
+  
+  .item-name {
+    color: #333;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
     gap: 0.5rem;
-}
-
-.inventory-list th, 
-.inventory-list td {
-    padding: 0.75rem 0.5rem;
-}
-
-.item-name {
-    font-weight: 500; /* Make item names a bit more prominent on mobile */
-}
-}
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    text-align: left;
+  }
+  
+  .item-name:hover {
+    color: #5e2929;
+    text-decoration: underline;
+  }
+  
+  /* Container indicator in item name */
+  .container-indicator {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-left: 0.25rem;
+  }
+  
+  /* Add a small info icon on mobile to indicate clickable items */
+  @media (max-width: 768px) {
+    .bulk-labels {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+  
+    .inventory-list th, 
+    .inventory-list td {
+      padding: 0.75rem 0.5rem;
+    }
+  
+    .item-name {
+      font-weight: 500; /* Make item names a bit more prominent on mobile */
+    }
+  }

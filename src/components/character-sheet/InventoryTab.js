@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './InventoryTab.css';
+import ContainersList from './ContainersList';
 import { 
-  calculateBulkLimit, 
-  calculateTotalBulk, 
+  calculateItemsBulk, 
   formatBulk, 
   poundsToBulk 
-} from '../../utils/CharacterUtils';
+} from '../../utils/InventoryUtils';
 
 /**
  * Component for displaying character inventory
@@ -15,10 +15,43 @@ import {
  * @param {function} props.onItemClick - Handler for item clicks
  */
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
-  const [bulkUsed] = useState(calculateTotalBulk(character.inventory));
+  const [bulkUsed, setBulkUsed] = useState(0);
   
-  // Bulk calculations
-  const { bulkLimit, encumberedThreshold } = calculateBulkLimit(character);
+  // Calculate bulk whenever inventory changes
+  useEffect(() => {
+    if (character && character.inventory) {
+      const totalBulk = calculateItemsBulk(character.inventory);
+      setBulkUsed(totalBulk);
+    }
+  }, [character]);
+  
+  // Bulk calculations for character
+  const calculateBulkLimit = () => {
+    if (!character || !character.abilities) {
+      return { bulkLimit: 0, encumberedThreshold: 0 };
+    }
+    
+    // In PF2E, Bulk limit is equal to Strength ability modifier + 10
+    const abilities = character.abilities || {};
+    const strMod = Math.floor((abilities.strength || 10 - 10) / 2);
+    let bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
+    let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
+    
+    // Check if the character has the Hefty Hauler feat
+    const hasHeftyHauler = character.feats && character.feats.some(
+      feat => feat.name === "Hefty Hauler"
+    );
+    
+    if (hasHeftyHauler) {
+      // Hefty Hauler increases both maximum and encumbered Bulk by 2
+      bulkLimit += 2;
+      encumberedThreshold += 2;
+    }
+    
+    return { bulkLimit, encumberedThreshold };
+  };
+  
+  const { bulkLimit, encumberedThreshold } = calculateBulkLimit();
   const bulkPercentage = (bulkUsed / bulkLimit) * 100;
   const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
   const isOverencumbered = bulkUsed > bulkLimit;
@@ -38,7 +71,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       <div className="bulk-management">
         <div className="bulk-status">
           <div className="bulk-labels">
-            <span>Bulk Used: <strong>{formatBulk(bulkUsed.toFixed(1))}</strong></span>
+            <span>Bulk Used: <strong>{formatBulk(bulkUsed.toFixed(1).replace(/\.0$/, ''))}</strong></span>
             <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
             <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
           </div>
@@ -87,11 +120,18 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
                       style={{ color: characterColor }}
                     >
                       {item.name}
+                      {item.container && (
+                        <span className="container-indicator" title="This item is a container">
+                          📦
+                        </span>
+                      )}
                     </button>
                   </td>
-                  <td>{item.quantity}</td>
+                  <td>{item.quantity || 1}</td>
                   <td>
-                    {formatBulk(poundsToBulk(item.weight))}
+                    {formatBulk(poundsToBulk(item.weight || 0))}
+                    {item.quantity > 1 && poundsToBulk(item.weight || 0) > 0 && 
+                      ` (total: ${formatBulk(poundsToBulk(item.weight || 0) * (item.quantity || 1))})`}
                   </td>
                 </tr>
               ))
@@ -105,6 +145,13 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
           </tbody>
         </table>
       </div>
+      
+      {/* Display containers section if character has any */}
+      <ContainersList 
+        inventory={character.inventory} 
+        themeColor={characterColor} 
+        onItemClick={onItemClick} 
+      />
     </div>
   );
 };

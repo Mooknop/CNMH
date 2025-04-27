@@ -1,0 +1,144 @@
+/* src/components/character-sheet/ContainerItem.css */
+.container-item {
+    margin-top: 2rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .container-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .container-header:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .container-title {
+    flex: 1;
+  }
+  
+  .container-title h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.2rem;
+  }
+  
+  .container-status {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .container-toggle {
+    padding-left: 1rem;
+  }
+  
+  .toggle-icon {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+  }
+  
+  /* Container bulk bar styling */
+  .container-bulk-bar-wrapper {
+    height: 0.5rem;
+    background-color: #e0e0e0;
+    overflow: hidden;
+  }
+  
+  .container-bulk-bar {
+    height: 100%;
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+  
+  /* Container contents styling */
+  .container-contents {
+    padding: 1rem;
+    background-color: #fff;
+  }
+  
+  .contents-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .contents-table th {
+    color: white;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .contents-table th:first-child {
+    border-top-left-radius: 6px;
+  }
+  
+  .contents-table th:last-child {
+    border-top-right-radius: 6px;
+  }
+  
+  .contents-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+  }
+  
+  .contents-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .item-name {
+    color: inherit;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    text-align: left;
+  }
+  
+  .item-name:hover {
+    text-decoration: underline;
+  }
+  
+  .container-ignored {
+    color: #888;
+    font-style: italic;
+  }
+  
+  .empty-container {
+    padding: 1.5rem;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .container-header {
+      padding: 0.75rem 1rem;
+    }
+    
+    .container-title h3 {
+      font-size: 1.1rem;
+    }
+    
+    .container-status {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .contents-table th, 
+    .contents-table td {
+      padding: 0.5rem 0.75rem;
+    }
+  }
