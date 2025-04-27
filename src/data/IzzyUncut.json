@@ -108,7 +108,7 @@
         "id": "spell-3",
         "name": "Hymn of Healing",
         "level": 0,
-        "baseLevel": 2,
+        "baseLevel": 1,
         "traits": ["Uncommon", "Bard", "Composition", "Concentrate", "Focus", "Healing", "Vitality"],
         "actions": "Two Actions",
         "duration": "sustained up to 4 rounds",
@@ -146,7 +146,16 @@
       "name": "Seedpod",
       "level": 1,
       "source": "Leshy",
-      "description": "Your body produces a nearly endless supply of hard seedpods. You gain a seedpod ranged unarmed attack that deals 1d4 bludgeoning damage; these Strikes have the manipulate trait. On a critical hit, a seedpod bursts, issuing forth a tangle of rapid-growing vines that impose a -10-foot circumstance penalty to the target's Speed for 1 round."
+      "description": "Your body produces a nearly endless supply of hard seedpods. You gain a seedpod ranged unarmed attack that deals 1d4 bludgeoning damage; these Strikes have the manipulate trait. On a critical hit, a seedpod bursts, issuing forth a tangle of rapid-growing vines that impose a -10-foot circumstance penalty to the target's Speed for 1 round.",
+      "strikes":{
+        "name": "Seedpod",
+        "proficiency": "unarmed",
+        "type": "ranged",
+        "action": 1,
+        "damage": "1d4",
+        "traits": ["Attack", "Ranged"],
+        "description": "Chuck one of your seed pods!"
+      }
     },
     {
       "id": "feat-4",
@@ -188,8 +197,69 @@
   ],
   "inventory": [
     {
+      "name": "Backpack",
+      "price": 0,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "A backpack for holding your gear",
+      "container":{
+        "capacity": 4,
+        "ignored": 2,
+        "contents":[
+          {
+            "name": "Bedroll",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "A compact mat, not too comfy but suitable for long journeys."
+          },
+          {
+            "name": "Chalk",
+            "quantity": 10,
+            "weight": 0.0,
+            "description": "Suitable for marking hard surfaces temporarily."
+          },
+          {
+            "name": "Flint & Steel",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "A camper's classic for starting fires."
+          },
+          {
+            "name": "Rope (50ft)",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "Sturdy rope for tying something (or someone) down."
+          },
+          {
+            "name": "Rations",
+            "quantity": 7,
+            "weight": 0.1,
+            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+          },
+          {
+            "name": "Soap",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "Scrub a dub dub"
+          },
+          {
+            "name": "Torch",
+            "quantity": 5,
+            "weight": 0.1,
+            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+          },
+          {
+            "name": "Waterskin",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+          }
+        ]
+      }
+    },
+    {
       "id": "item-1",
-      "name": "Resonant Mandolin",
+      "name": "Vocoder of Invisibility",
       "quantity": 1,
       "weight": 1.0,
       "description": "Serves as a spellcasting focus and performance instrument"
@@ -207,13 +277,6 @@
       "quantity": 1,
       "weight": 1.0,
       "description": ""
-    },
-    {
-      "id": "item-4",
-      "name": "Adventurer's Pack",
-      "quantity": 1,
-      "weight": 2.0,
-      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
     },
     {
       "id": "item-5",
@@ -237,7 +300,7 @@
         "name": "Daze",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Cantrip", "Enchantment", "Mental", "Nonlethal"],
+        "traits": ["Cantrip", "Concentrate", "Manipulate", "Mental", "Nonlethal"],
         "actions": "Two Actions",
         "range": "60 feet",
         "targets": "1 creature",
@@ -249,109 +312,141 @@
         "name": "Forbidding Ward",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Abjuration", "Cantrip"],
+        "traits": ["Cantrip","Concentrate","Manipulate"],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 ally and 1 enemy",
-        "duration": "Until the start of your next turn",
-        "description": "You ward an ally against the attacks and hostile spells from the target enemy. The target ally gains a +1 status bonus to Armor Class and saving throws against the target enemy's attacks, spells, and other effects."
+        "duration": "Sustained up to 1 minute",
+        "description": "You ward an ally against the attacks and hostile spells from the target enemy. The target ally gains a +1 status bonus to Armor Class and saving throws against the target enemy's attacks, spells, and other effects.",
+        "heightened":{
+          "6th": "The status bonus increases to +2."
+        }
       },
       {
         "id": "spell-5",
         "name": "Guidance",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Cantrip", "Divination"],
+        "traits": ["Cantrip", "Concentrate"],
         "actions": "One Action",
         "range": "30 feet",
         "targets": "1 creature",
         "duration": "Until the start of your next turn",
-        "description": "You provide divine guidance, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the duration ends. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, the target is temporarily immune for 1 hour."
+        "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the duration ends. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, the target is then temporarily immune for 1 hour."
       },
       {
         "id": "spell-6",
         "name": "Shield",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Abjuration", "Cantrip", "Force"],
+        "traits": ["Cantrip", "Concentrate", "Force"],
         "actions": "One Action",
         "duration": "Until the start of your next turn",
-        "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield."
+        "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield. The shield has Hardness 5. You can use the spell's reaction to reduce damage from any spell or magical effect, even if it doesn't deal physical damage. After you use Shield Block, the spell ends and you can't cast it again for 10 minutes.",
+        "heightened": {
+          "+2": "The shields hardness increases by 5."
+        }
       },
       {
         "id": "spell-7",
-        "name": "Animate Dead",
+        "name": "Summon Undead",
         "level": 1,
-        "traits": ["Necromancy"],
+        "traits": ["Concentrate", "Manipulate", "Summon"],
         "actions": "Two Actions",
         "range": "30 feet",
-        "targets": "1 corpse",
         "duration": "Sustained up to 1 minute",
-        "description": "You temporarily animate a corpse to fight for you. The corpse becomes a mindless undead creature. If the corpse was previously animated, you can instead extend the duration of your control over it for the duration of this spell. The animated corpse acts on your next turn and has 4 actions each turn that it remains animated."
+        "description": "You summon a creature that has the undead trait and whose level is –1 to fight for you.",
+        "heightened":{
+          "2nd": "The creature can be up to Level 1.",
+          "3rd": "The creature can be up to Level 2.",
+          "4th": "The creature can be up to Level 3.",
+          "5th": "The creature can be up to Level 5.",
+          "6th": "The creature can be up to Level 7.",
+          "7th": "The creature can be up to Level 9.",
+          "8th": "The creature can be up to Level 11.",
+          "9th": "The creature can be up to Level 13.",
+          "10th": "The creature can be up to Level 15."
+        }
       },
       {
         "id": "spell-8",
         "name": "Bless",
         "level": 1,
-        "traits": ["Enchantment", "Mental"],
+        "traits": ["Aura", "Concentrate", "Manipulate", "Mental"],
         "actions": "Two Actions",
-        "area": "5-foot emanation",
+        "area": "15-foot emanation",
         "duration": "1 minute",
-        "description": "Blessings from beyond help your allies strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. The first time each round a new ally enters the area, the spell's emanation increases by 5 feet."
+        "description": "Blessings from beyond help your companions strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane."
       },
       {
         "id": "spell-9",
         "name": "Fear",
         "level": 1,
-        "traits": ["Emotion", "Enchantment", "Fear", "Mental"],
+        "traits": ["Concentrate", "Emotion", "Fear", "Manipulate", "Mental"],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 creature",
         "defense": "Will",
-        "description": "You plant fear in the target; it must attempt a Will save. On a critical success, the target is unaffected. On a success, the target is frightened 1. On a failure, the target is frightened 2. On a critical failure, the target is frightened 3 and fleeing for 1 round.",
+        "description": "You plant fear in the target; it must attempt a Will save.",
         "heightened": {
           "3rd": "You can target up to five creatures."
-        }
-      },
-      {
-        "id": "spell-10",
-        "name": "Magic Missile",
-        "level": 1,
-        "traits": ["Evocation", "Force"],
-        "actions": "One to Three Actions",
-        "range": "120 feet",
-        "targets": "1 creature",
-        "description": "You send a dart of force streaking toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, you can fire an additional missile at the same or a different target.",
-        "heightened": {
-          "+2": "You fire one additional missile with each action you spend."
+        },
+        "degrees": {
+          "Critical Success": "The target is unaffected.",
+          "Success": "The target is frightened 1.",
+          "Failure": "The target is frightened 2.",
+          "Critical Failure": "The target is frightened 3 and fleeing for 1 round."
         }
       },
       {
         "id": "spell-11",
         "name": "Charitable Urge",
         "level": 2,
-        "traits": ["Enchantment", "Incapacitation", "Mental"],
+        "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental"],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 creature",
         "defense": "Will",
         "duration": "Varies",
-        "description": "You implant a charitable urge in the target's mind. The target must attempt a Will save. If the target has no action or reaction available when it fails its save, it is affected for an equal amount of time after it regains actions."
+        "description": "You speak on the virtue of charity, compelling the target to give away its possessions. The target must attempt a Will save. If the target has no items on its person, the spell fails.",
+        "degrees": {
+          "Critical Success": "The target is unaffected.",
+          "Success": "The target is stunned 1 as it wrestles with the urge.",
+          "Failure": "On its next turn, before it does anything else, the target must present the nearest creature with an item in its possession; the target chooses which item to give, and if the only item it has is one that it's currently using to defend itself, such as a weapon during a combat encounter, it can choose to be stunned for 1 round instead of giving up the item. This might require the target to Interact to retrieve an item or move to reach the nearest creature, and passing the item off requires an Interact action as normal.",
+          "Critical Failure": "As failure, except the duration is 4 rounds, and the target must repeat the effects of a failure on each of its turns. At the end of each of its turns, the target can attempt a new Will save to reduce the remaining duration by 1 round, ending the effects entirely on a critical success."
+        }
       },
       {
         "id": "spell-12",
         "name": "Noise Blast",
         "level": 2,
-        "traits": ["Evocation", "Sonic"],
+        "traits": ["Concentrate", "Manipulate", "Sonic"],
         "actions": "Two Actions",
         "range": "60 feet",
         "area": "20-foot burst",
         "defense": "Fortitude",
-        "description": "A scintillating array of sounds tears through the minds of your enemies. Targets must attempt a Fortitude save and take 2d8 sonic damage. On a critical success, they are unaffected. On a success, they take half damage. On a failure, they take full damage and are deafened for 1 round. On a critical failure, they take double damage and are deafened for 4 rounds.",
+        "description": "A cacophonous noise blasts out, dealing 2d10 sonic damage. Each creature must attempt a Fortitude save.",
         "heightened": {
-          "+1": "The damage increases by 1d8."
+          "+1": "The damage increases by 1d10."
+        },
+        "degrees":{
+          "Critical Success": "The target is unaffected.",
+          "Success": "The target takes half damage.",
+          "Failure": "The target takes full damage and is Deafened for 1 round  ",
+          "Critical Failure": "The creature takes double damage and is deafened for 1 minute, and stunned 1."
         }
       }
     ]
-  }
+  },
+  "strikes":[
+    {
+      "name": "Unarmed Strike",
+      "proficiency": "unarmed",
+      "type": "melee",
+      "action": 1,
+      "damage": "1d4",
+      "traits": ["Attack", "Melee"],
+      "description": "Give 'em a good smack"
+    }
+  ]
 }
