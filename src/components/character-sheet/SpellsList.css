@@ -309,6 +309,36 @@
   flex-grow: 1;
 }
 
+/* Degrees of Success Section Styling */
+.spell-degrees {
+  padding: 0.75rem 0;
+  font-size: 0.9rem;
+  border-top: 1px solid #eee;
+  margin-top: 0.5rem;
+}
+
+.degrees-label {
+  display: block;
+  font-weight: 600;
+  color: #5e2929;
+  margin-bottom: 0.5rem;
+}
+
+.degree-entry {
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+}
+
+.degree-level {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.degree-effect {
+  color: #333;
+}
+
+/* Heightened Effects Section Styling */
 .spell-heightened {
   padding: 0.75rem 0;
   font-size: 0.9rem;
@@ -331,6 +361,10 @@
 .heightened-level {
   font-weight: 600;
   margin-right: 0.5rem;
+}
+
+.heightened-effect {
+  color: #333;
 }
 
 .empty-state {
@@ -398,6 +432,23 @@
   margin-bottom: 0;
 }
 
+/* Visual distinguishers for different degree outcomes */
+.degree-entry:nth-child(1) .degree-level {
+  color: #2e7d32; /* Green for Critical Success */
+}
+
+.degree-entry:nth-child(2) .degree-level {
+  color: #1976d2; /* Blue for Success */
+}
+
+.degree-entry:nth-child(3) .degree-level {
+  color: #f57c00; /* Orange for Failure */
+}
+
+.degree-entry:nth-child(4) .degree-level {
+  color: #c62828; /* Red for Critical Failure */
+}
+
 @media (max-width: 768px) {
   .spellcasting-stats {
     grid-template-columns: repeat(2, 1fr);
@@ -413,5 +464,10 @@
   
   .view-mode-btn {
     min-width: 120px;
+  }
+  
+  .spell-degrees .degree-entry,
+  .spell-heightened .heightened-entry {
+    padding-left: 0.5rem;
   }
 }

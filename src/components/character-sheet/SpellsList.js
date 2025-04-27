@@ -36,7 +36,7 @@ const SpellsList = ({ character, characterColor }) => {
   // Find scrolls in inventory
   const scrollItems = character.inventory
     ? character.inventory.filter(item => 
-        item.name.toLowerCase().includes('scroll') && item.spells && item.spells.length > 0)
+        item.name.toLowerCase().includes('scroll') && item.scroll)
     : [];
   
   // Check if character has scrolls
@@ -44,11 +44,7 @@ const SpellsList = ({ character, characterColor }) => {
   
   // Get all scroll spells
   const scrollSpells = hasScrolls 
-    ? scrollItems.flatMap(item => item.spells.map(spell => ({
-        ...spell,
-        scrollName: item.name, // Add the scroll name for reference
-        fromScroll: true // Mark as scroll spell
-      })))
+    ? scrollItems.flatMap(item => item.scroll)
     : [];
   
   // Staff spells (if available in the character data)
@@ -367,6 +363,21 @@ const SpellsList = ({ character, characterColor }) => {
         <div className="spell-description">
           {spell.description}
         </div>
+        
+        {/* Degrees of Success Section */}
+        {spell.degrees && (
+          <div className="spell-degrees">
+            <span className="degrees-label" style={{ color: themeColor }}>Degrees of Success:</span>
+            {Object.entries(spell.degrees).map(([degree, effect], index) => (
+              <div key={index} className="degree-entry">
+                <span className="degree-level">{degree}:</span>
+                <span className="degree-effect">{effect}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Heightened Effects Section */}
         {spell.heightened && (
           <div className="spell-heightened">
             <span className="heightened-label" style={{ color: themeColor }}>Heightened:</span>
@@ -576,14 +587,14 @@ const SpellsList = ({ character, characterColor }) => {
             
             {filteredSpells.length > 0 ? (
               <div className="scrolls-spells-list">
-                <h4 style={{ color: themeColor }}>Available Scroll Spells</h4>
+                <h4 style={{ color: themeColor }}>Available Scrolls</h4>
                 <div className="spells-grid">
                   {filteredSpells.map(spell => renderSpellCard(spell))}
                 </div>
               </div>
             ) : (
               <div className="empty-scrolls-spells">
-                <h4 style={{ color: themeColor }}>Available Scroll Spells</h4>
+                <h4 style={{ color: themeColor }}>Available Scrolls</h4>
                 {activeSpellRank !== 'all' || defenseFilter !== 'all' ? (
                   <p>No scroll spells matching your current filters.</p>
                 ) : (
