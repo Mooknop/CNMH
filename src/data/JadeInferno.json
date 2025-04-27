@@ -308,6 +308,71 @@
             "Critical Failure": "The creature is stunned for 1 round and blinded for 1 minute."
           }
         }
+      },
+      {
+        
+        "id": "item-10",
+        "name": "Wand of Breathe Fire",
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "A wand containing the spell Breathe Fire",
+        "wand":{
+          "id": "spell-1",
+          "name": "Breathe Fire",
+          "level": 1,
+          "baseLevel": 1,
+          "area": "15-foot cone",
+          "defense": "Reflex",
+          "traits": ["Concentrate", "Fire", "Manipulate"],
+          "actions": "Two Actions",
+          "description": "A gout of flame sprays from your mouth. You deal 2d6 fire damage to creatures in the area with a basic Reflex save.",
+          "heightened":{
+            "+1": "The damage increases by 2d6."
+          }
+        }
+      },
+      {
+        
+        "id": "item-10",
+        "name": "Wand of Grease",
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "A wand containing the spell Grease.",
+        "wand":{
+          "id": "spell-1",
+          "name": "Grease",
+          "level": 1,
+          "baseLevel": 1,
+          "range": "30 feet",
+          "duration": "1 minute",
+          "defense": "Reflex",
+          "targets": "4 contiguous 5-foot squares OR 1 object of 1 Bulk or less",
+          "traits": ["Concentrate", "Manipulate"],
+          "actions": "Two Actions",
+          "description": "You conjure grease.  All solid ground in the area is covered with grease. Each creature standing on the greasy surface must succeed at a Reflex save or an Acrobatics check against your spell DC or fall prone. Creatures using an action to move onto the greasy surface during the spell's duration must attempt either a Reflex save or an Acrobatics check to Balance. A creature that Steps or Crawls doesn't have to attempt a check or save. Alternatively, if you Cast the Spell on an unattended object, anyone trying to pick up the object must succeed at an Acrobatics check or Reflex save against your spell DC to do so. If you target an attended object, the creature that has the object must attempt an Acrobatics check or Reflex save. On a failure, the holder or wielder takes a –2 circumstance penalty to all checks that involve using the object; on a critical failure, the holder or wielder releases the item. The object lands in an adjacent square of the GM's choice. If you Cast this Spell on a worn object, the wearer gains a +2 circumstance bonus to Fortitude saves against attempts to grapple them.",
+          "heightened":{
+            "+1": "The damage increases by 2d6."
+          }
+        }
+      },
+      {
+        "id": "item-11",
+        "name": "Scroll of Dispel Magic",
+        "price": 12,
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "Single-use scroll",
+        "scroll":{
+          "id": "spell-15",
+          "name": "Dispel Magic",
+          "level": 2,
+          "traits": ["Abjuration"],
+          "actions": "Two Actions",
+          "range": "120 feet",
+          "targets": "1 spell effect or unattended magic item",
+          "bloodline": true,
+          "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
+        }
       }
     ],
     "spellcasting": {
