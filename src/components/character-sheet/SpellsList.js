@@ -10,7 +10,7 @@ import {
 const SpellsList = ({ character, characterColor }) => {
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('spells'); // 'spells' or 'staff'
+  const [viewMode, setViewMode] = useState('spells'); // 'spells', 'staff', or 'scrolls'
   
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
@@ -32,6 +32,24 @@ const SpellsList = ({ character, characterColor }) => {
   
   // Check if character has a staff object
   const hasStaff = character.staff && character.staff.name;
+  
+  // Find scrolls in inventory
+  const scrollItems = character.inventory
+    ? character.inventory.filter(item => 
+        item.name.toLowerCase().includes('scroll') && item.spells && item.spells.length > 0)
+    : [];
+  
+  // Check if character has scrolls
+  const hasScrolls = scrollItems.length > 0;
+  
+  // Get all scroll spells
+  const scrollSpells = hasScrolls 
+    ? scrollItems.flatMap(item => item.spells.map(spell => ({
+        ...spell,
+        scrollName: item.name, // Add the scroll name for reference
+        fromScroll: true // Mark as scroll spell
+      })))
+    : [];
   
   // Staff spells (if available in the character data)
   const staffSpells = character.staff ? character.staff.spells || [] : [];
@@ -100,7 +118,32 @@ const SpellsList = ({ character, characterColor }) => {
     });
   }
   
-  // Get available spell ranks from both regular and staff spells (only show ranks that have spells)
+  // Organize scroll spells by rank
+  const scrollSpellsByRank = {
+    cantrips: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+    7: [],
+    8: [],
+    9: [],
+    10: []
+  };
+  
+  // Populate scroll spells by rank
+  if (scrollSpells.length > 0) {
+    scrollSpells.forEach(spell => {
+      const rank = spell.level === 0 ? 'cantrips' : spell.level;
+      if (scrollSpellsByRank[rank]) {
+        scrollSpellsByRank[rank].push(spell);
+      }
+    });
+  }
+  
+  // Get available spell ranks from all sources (only show ranks that have spells)
   const availableSpellRanks = Object.keys(spellsByRank).filter(
     rank => spellsByRank[rank].length > 0
   );
@@ -108,9 +151,17 @@ const SpellsList = ({ character, characterColor }) => {
   const availableStaffSpellRanks = Object.keys(staffSpellsByRank).filter(
     rank => staffSpellsByRank[rank].length > 0
   );
+  
+  const availableScrollSpellRanks = Object.keys(scrollSpellsByRank).filter(
+    rank => scrollSpellsByRank[rank].length > 0
+  );
 
-  // Combine available ranks from both sources
-  const allAvailableRanks = [...new Set([...availableSpellRanks, ...availableStaffSpellRanks])];
+  // Combine available ranks from all sources
+  const allAvailableRanks = [...new Set([
+    ...availableSpellRanks, 
+    ...availableStaffSpellRanks,
+    ...availableScrollSpellRanks
+  ])];
   
   // Format spell rank for display
   const formatSpellRank = (rank) => {
@@ -135,6 +186,15 @@ const SpellsList = ({ character, characterColor }) => {
     // Add defense types from staff spells
     if (staffSpells.length > 0) {
       staffSpells.forEach(spell => {
+        if (spell.defense) {
+          defenseTypes.add(spell.defense);
+        }
+      });
+    }
+    
+    // Add defense types from scroll spells
+    if (scrollSpells.length > 0) {
+      scrollSpells.forEach(spell => {
         if (spell.defense) {
           defenseTypes.add(spell.defense);
         }
@@ -193,6 +253,11 @@ const SpellsList = ({ character, characterColor }) => {
   const getAllStaffSpells = () => {
     return staffSpells;
   };
+  
+  // Get all scroll spells for display
+  const getAllScrollSpells = () => {
+    return scrollSpells;
+  };
 
   // Get spells to display based on active rank and view mode
   const getSpellsToDisplay = () => {
@@ -203,6 +268,8 @@ const SpellsList = ({ character, characterColor }) => {
       return spellsByRank[activeSpellRank] || [];
     } else if (viewMode === 'staff') {
       return filterSpellsByRank(getAllStaffSpells());
+    } else if (viewMode === 'scrolls') {
+      return filterSpellsByRank(getAllScrollSpells());
     }
     return [];
   };
@@ -246,6 +313,11 @@ const SpellsList = ({ character, characterColor }) => {
           {spell.prepared !== undefined && (
             <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
               {spell.prepared ? 'Prepared' : 'Not Prepared'}
+            </div>
+          )}
+          {spell.fromScroll && (
+            <div className="scroll-indicator">
+              {spell.scrollName}
             </div>
           )}
         </div>
@@ -311,7 +383,7 @@ const SpellsList = ({ character, characterColor }) => {
     
     return (
       <CollapsibleCard 
-        key={spell.id}
+        key={spell.id + (spell.fromScroll ? '-scroll' : '')}
         className="spell-card"
         header={header}
         themeColor={themeColor}
@@ -343,19 +415,20 @@ const SpellsList = ({ character, characterColor }) => {
         </div>
       </div>
       
-      {/* View Mode Toggle for staff/spells if character has a staff */}
-      {hasStaff && (
-        <div className="view-mode-toggle">
-          <button 
-            className={`view-mode-btn ${viewMode === 'spells' ? 'active' : ''}`}
-            onClick={() => setViewMode('spells')}
-            style={{ 
-              backgroundColor: viewMode === 'spells' ? themeColor : '',
-              borderColor: viewMode === 'spells' ? themeColor : ''
-            }}
-          >
-            Repertoire
-          </button>
+      {/* View Mode Toggle for all tabs if needed */}
+      <div className="view-mode-toggle">
+        <button 
+          className={`view-mode-btn ${viewMode === 'spells' ? 'active' : ''}`}
+          onClick={() => setViewMode('spells')}
+          style={{ 
+            backgroundColor: viewMode === 'spells' ? themeColor : '',
+            borderColor: viewMode === 'spells' ? themeColor : ''
+          }}
+        >
+          Repertoire
+        </button>
+        
+        {hasStaff && (
           <button 
             className={`view-mode-btn ${viewMode === 'staff' ? 'active' : ''}`}
             onClick={() => setViewMode('staff')}
@@ -366,10 +439,23 @@ const SpellsList = ({ character, characterColor }) => {
           >
             {character.staff.name}
           </button>
-        </div>
-      )}
+        )}
+        
+        {hasScrolls && (
+          <button 
+            className={`view-mode-btn ${viewMode === 'scrolls' ? 'active' : ''}`}
+            onClick={() => setViewMode('scrolls')}
+            style={{ 
+              backgroundColor: viewMode === 'scrolls' ? themeColor : '',
+              borderColor: viewMode === 'scrolls' ? themeColor : ''
+            }}
+          >
+            Scrolls
+          </button>
+        )}
+      </div>
       
-      {/* Global filters that work for both tabs */}
+      {/* Global filters that work for all tabs */}
       {allAvailableRanks.length > 0 && (
         <div className="spell-filters-container">
           {/* Spell rank filter */}
@@ -467,6 +553,41 @@ const SpellsList = ({ character, characterColor }) => {
                       <p>Consult your Game Master or the Pathfinder 2E rulebook for details on your specific staff's capabilities.</p>
                     </div>
                   </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* Scrolls View - Only shown if character has scrolls */}
+      {viewMode === 'scrolls' && hasScrolls && (
+        <div className="scrolls-container">
+          <div className="scrolls-details">
+            <h3 style={{ color: themeColor }}>Spell Scrolls</h3>
+            <p className="scrolls-description">Spell scrolls allow any magic user to cast the spell written upon them, even if they don't know the spell themselves, so long as the spell is part of their magical tradition.</p>
+            
+            {/* Scroll usage rules section */}
+            <div className="scrolls-rules">
+              <h4 style={{ color: themeColor }}>Scroll Rules</h4>
+              <p>To cast a spell from a scroll, you must hold the scroll in one hand and activate it with a Cast a Spell activity. 
+              A scroll can be used only once, and it's consumed when the spell is cast or the scroll is destroyed.</p>
+            </div>
+            
+            {filteredSpells.length > 0 ? (
+              <div className="scrolls-spells-list">
+                <h4 style={{ color: themeColor }}>Available Scroll Spells</h4>
+                <div className="spells-grid">
+                  {filteredSpells.map(spell => renderSpellCard(spell))}
+                </div>
+              </div>
+            ) : (
+              <div className="empty-scrolls-spells">
+                <h4 style={{ color: themeColor }}>Available Scroll Spells</h4>
+                {activeSpellRank !== 'all' || defenseFilter !== 'all' ? (
+                  <p>No scroll spells matching your current filters.</p>
+                ) : (
+                  <p>No spell scrolls found in your inventory.</p>
                 )}
               </div>
             )}

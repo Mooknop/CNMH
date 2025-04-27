@@ -88,6 +88,44 @@
   margin-bottom: 1rem;
 }
 
+/* Scrolls Details */
+.scrolls-details h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.scrolls-description {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.scrolls-rules {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #5e2929;
+}
+
+.scrolls-rules h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+}
+
+.scrolls-rules p {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
 .spell-level-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -210,6 +248,16 @@
   border: 1px solid #ddd;
 }
 
+/* Scroll indicator styling */
+.scroll-indicator {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  background-color: #d1c4e9;
+  color: #4527a0;
+  border: 1px solid #b39ddb;
+}
+
 .spell-meta {
   padding: 0.5rem 0;
   display: flex;
@@ -315,7 +363,9 @@
 }
 
 .staff-spells-list h4,
-.empty-staff-spells h4 {
+.empty-staff-spells h4,
+.scrolls-spells-list h4,
+.empty-scrolls-spells h4 {
   margin-top: 0;
   margin-bottom: 1rem;
   color: #5e2929;
@@ -355,5 +405,13 @@
   
   .spell-details {
     grid-template-columns: 1fr;
+  }
+  
+  .view-mode-toggle {
+    flex-wrap: wrap;
+  }
+  
+  .view-mode-btn {
+    min-width: 120px;
   }
 }
