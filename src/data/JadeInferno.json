@@ -283,6 +283,31 @@
             "description": "The hammer tries to neutralize the triggering effect with its own emotion, attempting a counteract check. If the check succeeds, you feel a sudden rush of intense pride and the counteracted effect doesn't take hold of you."
           }
         ]
+      },
+      {
+        "id": "item-9",
+        "name": "Wand of Dizzying Colors",
+        "quantity": 1,
+        "weight": 0.1,
+        "description": "A wand containing the spell Dizzying Colors",
+        "wand":{
+          "id": "spell-1",
+          "name": "Dizzying Colors",
+          "level": 1,
+          "baseLevel": 1,
+          "area": "15-foot cone",
+          "defense": "Will",
+          "duration": "1 or more rounds",
+          "traits": ["Concentrate", "illusion", "Incapacitation", "Manipulate", "Visual"],
+          "actions": "Two Actions",
+          "description": "You unleash a swirling multitude of colors that overwhelms creatures based on their Will saves.",
+          "degrees":{
+            "Critical Success": "The creature is unaffected.",
+            "Success": "The creature is dazzled for 1 round.",
+            "Failure": "The creature stunned 1, blinded for 1 round, and dazzled for 1 minute.",
+            "Critical Failure": "The creature is stunned for 1 round and blinded for 1 minute."
+          }
+        }
       }
     ],
     "spellcasting": {
