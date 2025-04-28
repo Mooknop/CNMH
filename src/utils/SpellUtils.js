@@ -218,3 +218,43 @@ export const extractWandSpells = (wandItems) => {
     return [];
   });
 };
+
+/**
+ * Extract innate spells from character's feats or other sources
+ * @param {Object} character - Character object
+ * @returns {Array} - Array of innate spells
+ */
+export const extractInnateSpells = (character) => {
+  const innateSpells = [];
+  
+  // Check for feats with innate spells
+  if (character.feats && Array.isArray(character.feats)) {
+    character.feats.forEach(feat => {
+      if (feat.innate && Array.isArray(feat.innate)) {
+        // Add each innate spell from the feat, with source information
+        feat.innate.forEach(spell => {
+          innateSpells.push({
+            ...spell,
+            innateSource: feat.name,
+            innate: true
+          });
+        });
+      }
+    });
+  }
+  
+  // Check for ancestry innate spells (if implemented)
+  if (character.ancestry_spells && Array.isArray(character.ancestry_spells)) {
+    character.ancestry_spells.forEach(spell => {
+      innateSpells.push({
+        ...spell,
+        innateSource: character.ancestry,
+        innate: true
+      });
+    });
+  }
+  
+  // Add other sources as needed
+  
+  return innateSpells;
+};

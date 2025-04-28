@@ -7,6 +7,7 @@ import React from 'react';
  * @param {function} props.setViewMode - Setter for view mode
  * @param {boolean} props.hasSpellcasting - Whether character has spellcasting
  * @param {boolean} props.hasFocus - Whether character has focus spells
+ * @param {boolean} props.hasInnate - Whether character has innate spells
  * @param {boolean} props.hasStaff - Whether character has a staff
  * @param {boolean} props.hasScrolls - Whether character has scrolls
  * @param {boolean} props.hasWands - Whether character has wands
@@ -19,6 +20,7 @@ const ViewModeToggle = ({
   setViewMode, 
   hasSpellcasting,
   hasFocus,
+  hasInnate,
   hasStaff, 
   hasScrolls,
   hasWands, 
@@ -38,6 +40,19 @@ const ViewModeToggle = ({
           }}
         >
           Repertoire
+        </button>
+      )}
+      
+      {hasInnate && (
+        <button 
+          className={`view-mode-btn ${viewMode === 'innate' ? 'active' : ''}`}
+          onClick={() => setViewMode('innate')}
+          style={{ 
+            backgroundColor: viewMode === 'innate' ? themeColor : '',
+            borderColor: viewMode === 'innate' ? themeColor : ''
+          }}
+        >
+          Innate
         </button>
       )}
       

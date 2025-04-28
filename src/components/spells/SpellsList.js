@@ -10,6 +10,7 @@ import StaffSpells from './StaffSpells';
 import ScrollSpells from './ScrollSpells';
 import WandSpells from './WandSpells';
 import FocusSpellsList from './FocusSpellsList';
+import InnateCastingList from './InnateCastingList';
 import { 
   organizeSpellsByRank, 
   getAvailableRanks,
@@ -19,7 +20,8 @@ import {
   findScrollItems,
   extractScrollSpells,
   findWandItems,
-  extractWandSpells
+  extractWandSpells,
+  extractInnateSpells
 } from '../../utils/SpellUtils';
 
 /**
@@ -32,7 +34,7 @@ const SpellsList = ({ character, characterColor }) => {
   // State for filters and view mode
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('spells'); // 'spells', 'focus', 'staff', 'scrolls', or 'wands'
+  const [viewMode, setViewMode] = useState('spells'); // 'spells', 'innate', 'focus', 'staff', 'scrolls', or 'wands'
   
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
@@ -65,22 +67,16 @@ const SpellsList = ({ character, characterColor }) => {
   const {
     hasSpellcasting,
     hasFocus,
-    scrollItems,
+    hasInnate,
+    innateSpells,
     scrollSpells,
     hasScrolls,
-    wandItems,
     wandSpells,
     hasWands,
     spellsByRank,
     staffSpells,
     hasStaff,
-    staffSpellsByRank,
-    scrollSpellsByRank,
-    wandSpellsByRank,
     availableSpellRanks,
-    availableStaffSpellRanks,
-    availableScrollSpellRanks,
-    availableWandSpellRanks,
     allAvailableRanks,
     sortedRankList,
     allDefenseTypes
@@ -91,11 +87,17 @@ const SpellsList = ({ character, characterColor }) => {
     // Check if character has focus spells
     const hasFocus = hasFocusSpells();
     
+    // Extract innate spells
+    const innateSpells = extractInnateSpells(character);
+    const hasInnate = innateSpells.length > 0;
+    
     // If no spellcasting, return early with default values
-    if (!hasSpellcasting && !hasFocus) {
+    if (!hasSpellcasting && !hasFocus && !hasInnate) {
       return {
         hasSpellcasting: false,
         hasFocus: false,
+        hasInnate: false,
+        innateSpells: [],
         scrollItems: [],
         scrollSpells: [],
         hasScrolls: false,
@@ -108,10 +110,12 @@ const SpellsList = ({ character, characterColor }) => {
         staffSpellsByRank: {},
         scrollSpellsByRank: {},
         wandSpellsByRank: {},
+        innateSpellsByRank: {},
         availableSpellRanks: [],
         availableStaffSpellRanks: [],
         availableScrollSpellRanks: [],
         availableWandSpellRanks: [],
+        availableInnateSpellRanks: [],
         allAvailableRanks: [],
         sortedRankList: [],
         allDefenseTypes: []
@@ -141,19 +145,22 @@ const SpellsList = ({ character, characterColor }) => {
     const staffSpellsByRank = organizeSpellsByRank(staffSpells);
     const scrollSpellsByRank = organizeSpellsByRank(scrollSpells);
     const wandSpellsByRank = organizeSpellsByRank(wandSpells);
+    const innateSpellsByRank = organizeSpellsByRank(innateSpells);
     
     // Get available ranks from each source
     const availableSpellRanks = getAvailableRanks(spellsByRank);
     const availableStaffSpellRanks = getAvailableRanks(staffSpellsByRank);
     const availableScrollSpellRanks = getAvailableRanks(scrollSpellsByRank);
     const availableWandSpellRanks = getAvailableRanks(wandSpellsByRank);
+    const availableInnateSpellRanks = getAvailableRanks(innateSpellsByRank);
     
     // Combine available ranks from all sources
     const allAvailableRanks = [...new Set([
       ...availableSpellRanks, 
       ...availableStaffSpellRanks,
       ...availableScrollSpellRanks,
-      ...availableWandSpellRanks
+      ...availableWandSpellRanks,
+      ...availableInnateSpellRanks
     ])];
     
     // Create sorted rank list
@@ -164,7 +171,8 @@ const SpellsList = ({ character, characterColor }) => {
       ...(spellcasting.spells || []),
       ...staffSpells,
       ...scrollSpells,
-      ...wandSpells
+      ...wandSpells,
+      ...innateSpells
     ];
     
     const allDefenseTypes = getDefenseTypes(allSpells);
@@ -172,6 +180,8 @@ const SpellsList = ({ character, characterColor }) => {
     return {
       hasSpellcasting,
       hasFocus,
+      hasInnate,
+      innateSpells,
       scrollItems,
       scrollSpells,
       hasScrolls,
@@ -184,23 +194,25 @@ const SpellsList = ({ character, characterColor }) => {
       staffSpellsByRank,
       scrollSpellsByRank,
       wandSpellsByRank,
+      innateSpellsByRank,
       availableSpellRanks,
       availableStaffSpellRanks,
       availableScrollSpellRanks,
       availableWandSpellRanks,
+      availableInnateSpellRanks,
       allAvailableRanks,
       sortedRankList,
       allDefenseTypes
     };
   }, [character, spellcasting]);
   
-  // If no spellcasting or focus magic, show placeholder
-  if (!hasSpellcasting && !hasFocus) {
+  // If no spellcasting, focus magic, or innate spells, show placeholder
+  if (!hasSpellcasting && !hasFocus && !hasInnate) {
     return (
       <div className="spells-list">
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
         <div className="empty-state">
-          <p>This character doesn't have spellcasting or focus magic abilities.</p>
+          <p>This character doesn't have spellcasting, innate, or focus magic abilities.</p>
         </div>
       </div>
     );
@@ -230,6 +242,9 @@ const SpellsList = ({ character, characterColor }) => {
       // Return spells of specific rank
       return spellsByRank[activeSpellRank] || [];
     } 
+    else if (viewMode === 'innate') {
+      return filterSpellsByRank(innateSpells, activeSpellRank);
+    }
     else if (viewMode === 'staff') {
       return filterSpellsByRank(staffSpells, activeSpellRank);
     } 
@@ -267,7 +282,7 @@ const SpellsList = ({ character, characterColor }) => {
   const renderBloodlineInfo = () => {
     if (!hasBloodline) return null;
     
-    const { name, description, blood_magic } = spellcasting.bloodline;
+    const { name, description } = spellcasting.bloodline;
     
     return (
       <div className="bloodline-info">
@@ -294,6 +309,21 @@ const SpellsList = ({ character, characterColor }) => {
       {/* Bloodline information */}
       {hasBloodline && renderBloodlineInfo()}
       
+      {/* View mode toggle */}
+      <ViewModeToggle 
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        hasSpellcasting={hasSpellcasting}
+        hasFocus={hasFocus}
+        hasInnate={hasInnate}
+        hasStaff={hasStaff}
+        hasScrolls={hasScrolls}
+        hasWands={hasWands}
+        staff={character.staff || {}}
+        focusLabel={getFocusSpellsLabel()}
+        themeColor={themeColor}
+      />
+      
       {/* Filters that work across all tabs */}
       {allAvailableRanks.length > 0 && viewMode !== 'focus' && (
         <SpellFilters
@@ -306,24 +336,20 @@ const SpellsList = ({ character, characterColor }) => {
           themeColor={themeColor}
         />
       )}
-
-      {/* View mode toggle */}
-      <ViewModeToggle 
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        hasSpellcasting={hasSpellcasting}
-        hasFocus={hasFocus}
-        hasStaff={hasStaff}
-        hasScrolls={hasScrolls}
-        hasWands={hasWands}
-        staff={character.staff || {}}
-        focusLabel={getFocusSpellsLabel()}
-        themeColor={themeColor}
-      />
       
       {/* Content based on active view */}
       {viewMode === 'spells' && hasSpellcasting && (
         <SpellsRepertoire 
+          spells={spellsToDisplay}
+          themeColor={themeColor}
+          characterLevel={character.level}
+          defenseFilter={defenseFilter}
+          character={character}
+        />
+      )}
+      
+      {viewMode === 'innate' && hasInnate && (
+        <InnateCastingList
           spells={spellsToDisplay}
           themeColor={themeColor}
           characterLevel={character.level}
@@ -373,10 +399,16 @@ const SpellsList = ({ character, characterColor }) => {
         />
       )}
       
-      {/* Fallback for empty repertoire */}
+      {/* Fallbacks for empty repertoires */}
       {viewMode === 'spells' && availableSpellRanks.length === 0 && hasSpellcasting && (
         <div className="empty-state">
           <p>No spells available for this character.</p>
+        </div>
+      )}
+      
+      {viewMode === 'innate' && (!hasInnate || innateSpells.length === 0) && (
+        <div className="empty-state">
+          <p>No innate spells available for this character.</p>
         </div>
       )}
     </div>

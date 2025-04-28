@@ -589,6 +589,43 @@
   background-color: #f9f4fc;
 }
 
+/* Innate spells styling */
+.innate-spells-container {
+  margin-top: 1rem;
+}
+
+.innate-details h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.innate-description {
+  font-size: 0.95rem;
+  color: #555;
+  margin-bottom: 1rem;
+}
+
+.innate-source {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+/* Innate spell indicator in spell card header */
+.innate-indicator {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  background-color: #f0e7ff;
+  color: #5a3db5;
+  border: 1px solid #d7c1ff;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .spellcasting-stats {

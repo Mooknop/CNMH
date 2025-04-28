@@ -37,6 +37,11 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
             {spell.wandName}
           </div>
         )}
+        {spell.fromInnate && (
+          <div className="innate-indicator">
+            Innate
+          </div>
+        )}
         {spell.bloodline && (
           <div className="bloodline-indicator">
             Bloodline
@@ -129,6 +134,12 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
               <span className="heightened-effect">{effect}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {spell.fromInnate && spell.innateSource && (
+        <div className="innate-source">
+          <span>Source: {spell.innateSource}</span>
         </div>
       )}
     </>
