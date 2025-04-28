@@ -191,7 +191,8 @@ if (character.inventory) {
         attackMod: attackBonus,
         damage: damageString,
         description: item.description || "",
-        source: item.name // Add source for reference
+        source: item.name,
+        range: weapon.range
       };
     });
   

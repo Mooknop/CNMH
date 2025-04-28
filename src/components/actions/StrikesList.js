@@ -49,6 +49,16 @@ const StrikesList = ({ character, themeColor }) => {
                     <span className="detail-label">Damage</span>
                     <span className="detail-value" style={{ color: themeColor }}>{strike.damage}</span>
                   </div>
+                  
+                  {/* Add range display for ranged weapons */}
+                  {(strike.type === 'ranged' || strike.range) && (
+                    <div className="strike-range">
+                      <span className="detail-label">Range</span>
+                      <span className="detail-value" style={{ color: themeColor }}>
+                        {strike.range || '30 feet'}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 {strike.description && (
