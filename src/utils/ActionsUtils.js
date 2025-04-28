@@ -54,11 +54,18 @@ import {
         
         // Calculate attack bonus
         const attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+
+        //Add appropriate mod to damage
+        let damageString = strike.damage || '??';
+            if (isMelee && strMod !== 0 && !damageString.includes('+') && !damageString.includes('-')) {
+              damageString += (strMod > 0 ? '+' + strMod : strMod);
+            }
         
         // Return the strike with calculated attack modifier
         return {
           ...strike,
-          attackMod: attackBonus
+          attackMod: attackBonus,
+          damage: damageString
         };
       });
       

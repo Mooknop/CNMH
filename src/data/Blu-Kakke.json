@@ -95,13 +95,24 @@
       "source": "Monk",
       "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
       "actions": [
-      {
-        "name": "Dragon Stance",
-        "actionCount": 1,
-        "traits": ["Concentrate", "Sorcerer", "Spellshape"],
-        "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits. While in Dragon Stance, you can ignore the first square of difficult terrain while Striding."
-      }
-    ]
+        {
+          "name": "Dragon Stance",
+          "actionCount": 1,
+          "traits": ["Concentrate", "Sorcerer", "Spellshape"],
+          "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits. While in Dragon Stance, you can ignore the first square of difficult terrain while Striding."
+        }
+      ],
+      "strikes":[
+        {
+          "name": "Dragon Tail Strike",
+          "proficiency": "unarmed",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d10",
+          "traits": ["Attack", "Backswing", "Nonlethal", "Melee", "Unarmed"],
+          "description": "You swing your leg through the air like a dragon swiping with its tail. You can only use this when you are in Dragon Stance."
+        }
+      ]
     },
     {
       "id": "feat-3",
@@ -162,7 +173,7 @@
           "action": 1,
           "damage": "1d8",
           "traits": ["Attack", "Agile", "Finesse"],
-          "description": "Bite into your foe with magically sharp dragon teach."
+          "description": "Bite into your foe with magically sharp dragon teeth."
         }
       ]
     },
