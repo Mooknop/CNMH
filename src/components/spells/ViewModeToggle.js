@@ -5,33 +5,54 @@ import React from 'react';
  * @param {Object} props
  * @param {string} props.viewMode - Current view mode
  * @param {function} props.setViewMode - Setter for view mode
+ * @param {boolean} props.hasSpellcasting - Whether character has spellcasting
+ * @param {boolean} props.hasFocus - Whether character has focus spells
  * @param {boolean} props.hasStaff - Whether character has a staff
  * @param {boolean} props.hasScrolls - Whether character has scrolls
  * @param {boolean} props.hasWands - Whether character has wands
  * @param {Object} props.staff - Staff object if available
+ * @param {string} props.focusLabel - Label for focus spells button
  * @param {string} props.themeColor - Theme color
  */
 const ViewModeToggle = ({ 
   viewMode, 
   setViewMode, 
+  hasSpellcasting,
+  hasFocus,
   hasStaff, 
   hasScrolls,
   hasWands, 
-  staff, 
+  staff,
+  focusLabel = "Focus Spells",
   themeColor 
 }) => {
   return (
     <div className="view-mode-toggle">
-      <button 
-        className={`view-mode-btn ${viewMode === 'spells' ? 'active' : ''}`}
-        onClick={() => setViewMode('spells')}
-        style={{ 
-          backgroundColor: viewMode === 'spells' ? themeColor : '',
-          borderColor: viewMode === 'spells' ? themeColor : ''
-        }}
-      >
-        Repertoire
-      </button>
+      {hasSpellcasting && (
+        <button 
+          className={`view-mode-btn ${viewMode === 'spells' ? 'active' : ''}`}
+          onClick={() => setViewMode('spells')}
+          style={{ 
+            backgroundColor: viewMode === 'spells' ? themeColor : '',
+            borderColor: viewMode === 'spells' ? themeColor : ''
+          }}
+        >
+          Repertoire
+        </button>
+      )}
+      
+      {hasFocus && (
+        <button 
+          className={`view-mode-btn ${viewMode === 'focus' ? 'active' : ''}`}
+          onClick={() => setViewMode('focus')}
+          style={{ 
+            backgroundColor: viewMode === 'focus' ? themeColor : '',
+            borderColor: viewMode === 'focus' ? themeColor : ''
+          }}
+        >
+          {focusLabel}
+        </button>
+      )}
       
       {hasStaff && (
         <button 

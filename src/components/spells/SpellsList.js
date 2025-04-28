@@ -9,6 +9,7 @@ import SpellsRepertoire from './SpellsRepertoire';
 import StaffSpells from './StaffSpells';
 import ScrollSpells from './ScrollSpells';
 import WandSpells from './WandSpells';
+import FocusSpellsList from './FocusSpellsList';
 import { 
   organizeSpellsByRank, 
   getAvailableRanks,
@@ -31,7 +32,7 @@ const SpellsList = ({ character, characterColor }) => {
   // State for filters and view mode
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('spells'); // 'spells', 'staff', or 'scrolls'
+  const [viewMode, setViewMode] = useState('spells'); // 'spells', 'focus', 'staff', 'scrolls', or 'wands'
   
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
@@ -42,9 +43,28 @@ const SpellsList = ({ character, characterColor }) => {
   // Check if character has a bloodline
   const hasBloodline = !!spellcasting.bloodline;
   
+  // Function to check if character has focus spells
+  const hasFocusSpells = () => {
+    // Check each character class for focus spells
+    if (character.champion && character.champion.devotion_spells) {
+      return true;
+    }
+    if (character.spellcasting && character.spellcasting.focus) {
+      return true;
+    }
+    if (character.monk && character.monk.ki_spells) {
+      return true;
+    }
+    if (character.focus_spells && character.focus_spells.length > 0) {
+      return true;
+    }
+    return false;
+  };
+  
   // Use memoization for preparing spell data
   const {
     hasSpellcasting,
+    hasFocus,
     scrollItems,
     scrollSpells,
     hasScrolls,
@@ -68,10 +88,14 @@ const SpellsList = ({ character, characterColor }) => {
     // Check if character has spellcasting
     const hasSpellcasting = !!spellcasting.tradition;
     
+    // Check if character has focus spells
+    const hasFocus = hasFocusSpells();
+    
     // If no spellcasting, return early with default values
-    if (!hasSpellcasting) {
+    if (!hasSpellcasting && !hasFocus) {
       return {
         hasSpellcasting: false,
+        hasFocus: false,
         scrollItems: [],
         scrollSpells: [],
         hasScrolls: false,
@@ -147,6 +171,7 @@ const SpellsList = ({ character, characterColor }) => {
     
     return {
       hasSpellcasting,
+      hasFocus,
       scrollItems,
       scrollSpells,
       hasScrolls,
@@ -169,13 +194,13 @@ const SpellsList = ({ character, characterColor }) => {
     };
   }, [character, spellcasting]);
   
-  // If no spellcasting data exists, show placeholder
-  if (!hasSpellcasting) {
+  // If no spellcasting or focus magic, show placeholder
+  if (!hasSpellcasting && !hasFocus) {
     return (
       <div className="spells-list">
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
         <div className="empty-state">
-          <p>This character doesn't have spellcasting abilities.</p>
+          <p>This character doesn't have spellcasting or focus magic abilities.</p>
         </div>
       </div>
     );
@@ -221,6 +246,23 @@ const SpellsList = ({ character, characterColor }) => {
   // Get spells to display based on current filters
   const spellsToDisplay = getSpellsToDisplay();
   
+  // Determine the focus spells label
+  const getFocusSpellsLabel = () => {
+    if (character.champion) {
+      return 'Devotion Spells';
+    }
+    if (character.monk) {
+      return 'Qi Spells';
+    }
+    if (character.class === 'Bard') {
+      return 'Compositions';
+    }
+    if (character.spellcasting && character.spellcasting.bloodline) {
+      return 'Focus Spells';
+    }
+    return 'Focus Spells';
+  };
+  
   // Show bloodline information if character has a bloodline
   const renderBloodlineInfo = () => {
     if (!hasBloodline) return null;
@@ -241,17 +283,19 @@ const SpellsList = ({ character, characterColor }) => {
   
   return (
     <div className="spells-list">
-      {/* Spellcasting statistics */}
-      <SpellsHeader 
-        character={character} 
-        themeColor={themeColor} 
-      />
+      {/* Spellcasting statistics - only show if character has spellcasting */}
+      {hasSpellcasting && (
+        <SpellsHeader 
+          character={character} 
+          themeColor={themeColor} 
+        />
+      )}
       
       {/* Bloodline information */}
       {hasBloodline && renderBloodlineInfo()}
       
       {/* Filters that work across all tabs */}
-      {allAvailableRanks.length > 0 && (
+      {allAvailableRanks.length > 0 && viewMode !== 'focus' && (
         <SpellFilters
           rankList={sortedRankList}
           activeSpellRank={activeSpellRank}
@@ -267,21 +311,31 @@ const SpellsList = ({ character, characterColor }) => {
       <ViewModeToggle 
         viewMode={viewMode}
         setViewMode={setViewMode}
+        hasSpellcasting={hasSpellcasting}
+        hasFocus={hasFocus}
         hasStaff={hasStaff}
         hasScrolls={hasScrolls}
         hasWands={hasWands}
         staff={character.staff || {}}
+        focusLabel={getFocusSpellsLabel()}
         themeColor={themeColor}
       />
       
       {/* Content based on active view */}
-      {viewMode === 'spells' && (
+      {viewMode === 'spells' && hasSpellcasting && (
         <SpellsRepertoire 
           spells={spellsToDisplay}
           themeColor={themeColor}
           characterLevel={character.level}
           defenseFilter={defenseFilter}
           character={character}
+        />
+      )}
+      
+      {viewMode === 'focus' && hasFocus && (
+        <FocusSpellsList 
+          character={character} 
+          characterColor={themeColor} 
         />
       )}
       
@@ -320,7 +374,7 @@ const SpellsList = ({ character, characterColor }) => {
       )}
       
       {/* Fallback for empty repertoire */}
-      {viewMode === 'spells' && availableSpellRanks.length === 0 && (
+      {viewMode === 'spells' && availableSpellRanks.length === 0 && hasSpellcasting && (
         <div className="empty-state">
           <p>No spells available for this character.</p>
         </div>

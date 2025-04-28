@@ -5,7 +5,6 @@ import StatsBlock from '../components/character-sheet/StatsBlock';
 import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/actions/ActionsList';
-import FocusSpellsList from '../components/spells/FocusSpellsList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
@@ -62,41 +61,6 @@ const CharacterSheet = () => {
   // Check if character has spellcasting
   const hasSpellcasting = character.spellcasting && character.spellcasting.tradition;
   
-  // Check if character has focus spells
-  const hasFocusSpells = () => {
-    // Check each character class for focus spells
-    if (character.champion && character.champion.devotion_spells) {
-      return true;
-    }
-    if (character.spellcasting && character.spellcasting.focus) {
-      return true;
-    }
-    if (character.monk && character.monk.ki_spells) {
-      return true;
-    }
-    if (character.focus_spells && character.focus_spells.length > 0) {
-      return true;
-    }
-    return false;
-  };
-  
-  // Get the label for focus spells based on character class
-  const getFocusSpellsLabel = () => {
-    if (character.champion) {
-      return 'Devotion Spells';
-    }
-    if (character.monk) {
-      return 'Qi Spells';
-    }
-    if (character.class === 'Bard') {
-      return 'Compositions';
-    }
-    if (character.spellcasting && character.spellcasting.bloodline) {
-      return 'Focus Spells';
-    }
-    return 'Focus Spells';
-  };
-  
   // Function to render the active tab content
   const renderTabContent = () => {
     switch(activeTab) {
@@ -104,8 +68,6 @@ const CharacterSheet = () => {
         return <ActionsList character={character} characterColor={characterColor} />;
       case 'feats':
         return <FeatsList character={character} characterColor={characterColor} />;
-      case 'focus-spells':
-        return <FocusSpellsList character={character} characterColor={characterColor} />;
       case 'spells':
         return <SpellsList character={character} characterColor={characterColor} />;
       case 'inventory':
@@ -175,19 +137,8 @@ const CharacterSheet = () => {
               Feats
             </button>
             
-            {/* Focus Spells tab - only shown if character has focus spells */}
-            {hasFocusSpells() && (
-              <button 
-                className={`tab-button ${activeTab === 'focus-spells' ? 'active' : ''}`}
-                onClick={() => setActiveTab('focus-spells')}
-                style={{ backgroundColor: activeTab === 'focus-spells' ? characterColor : '' }}
-              >
-                {getFocusSpellsLabel()}
-              </button>
-            )}
-            
-            {/* Only show spellcasting tab if character has spellcasting */}
-            {hasSpellcasting && (
+            {/* Combined spellcasting tab - only shown if character has spellcasting OR focus spells */}
+            {(hasSpellcasting || character.focus_spells || character.champion?.devotion_spells || character.monk?.ki_spells) && (
               <button 
                 className={`tab-button ${activeTab === 'spells' ? 'active' : ''}`}
                 onClick={() => setActiveTab('spells')}
