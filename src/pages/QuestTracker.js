@@ -2,17 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { quests as defaultQuests } from '../data';
 import './QuestTracker.css';
 
-// For debugging - log immediately on import
-console.log("QuestTracker - Default quests on import:", defaultQuests);
-
 const QuestTracker = () => {
   const [quests, setQuests] = useState([]);
   const [filter, setFilter] = useState('all');
   
-  useEffect(() => {
-    // For debugging
-    console.log("Default quests in useEffect:", defaultQuests);
-    
+  useEffect(() => {    
     // Set quests directly from the imported data
     setQuests(defaultQuests);
   }, []);
@@ -24,11 +18,8 @@ const QuestTracker = () => {
     }
   }, [quests]);
   
-  console.log("Current quests state:", quests);
-  
   // Ensure quests is an array before filtering
   const questsArray = Array.isArray(quests) ? quests : [];
-  console.log("Quests array for filtering:", questsArray);
   
   const filteredQuests = questsArray.filter(quest => {
     if (filter === 'all') return true;

@@ -199,6 +199,17 @@
   ],
   "inventory": [
     {
+      "name": "Gourd Head",
+      "quantity": 1,
+      "weight": 0.0,
+      "description": "You have a large gourd for a skull, and since you don't have a physical brain, you can use the space inside your head. You can store a collection of up to 1 Bulk of objects within your head. The DC of checks to Steal objects from inside your head increases by 4. Additionally, if you store only one object within your head, you can draw it effortlessly into your hand as part of another action to use the object. Drawing the item grants this other action the manipulate trait.",
+      "container":{
+        "capacity": 1,
+        "ignored": 0,
+        "contents":[]
+      }
+    },
+    {
       "name": "Backpack",
       "price": 0,
       "quantity": 1,
@@ -264,28 +275,58 @@
       "name": "Vocoder of Invisibility",
       "quantity": 1,
       "weight": 1.0,
-      "description": "Serves as a spellcasting focus and performance instrument"
+      "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
+      "actions":[
+        {
+          "name": "Unseen Din",
+          "actionCount": 1,
+          "traits": ["Auditory", "Illusion", "Manipulate"],
+          "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
+        }
+      ]
     },
     {
       "id": "item-2",
-      "name": "Leather Armor",
-      "quantity": 1,
-      "weight": 2.0,
-      "description": ""
-    },
-    {
-      "id": "item-3",
-      "name": "Rapier",
+      "name": "Studded Leather Armor",
       "quantity": 1,
       "weight": 1.0,
-      "description": ""
+      "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection."
     },
     {
       "id": "item-5",
       "name": "Minor Healing Potion",
-      "quantity": 2,
+      "quantity": 1,
       "weight": 0.1,
       "description": "Restores 1d8 HP when consumed"
+    },
+    {
+      "name": "Scroll of Friendfetch",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "A single-use scroll",
+      "scroll":{
+        "name": "Friendfetch",
+        "level": 1,
+        "traits": ["Uncommon", "Force"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 or 2 willing creatures",
+        "description": "You shoot out ephemeral, telekinetic strands that drag each target directly toward you, stopping in the closest unoccupied space to you in this path. This is forced movement."
+      }
+    },
+    {
+      "name": "Sanitizing Pin",
+      "price": 7,
+      "quantity": 1,
+      "weight": 0,
+      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+    },
+    {
+      "name": "Rust Scrub",
+      "price": 2,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
     }
   ],
   "spellcasting": {
@@ -347,6 +388,19 @@
         "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield. The shield has Hardness 5. You can use the spell's reaction to reduce damage from any spell or magical effect, even if it doesn't deal physical damage. After you use Shield Block, the spell ends and you can't cast it again for 10 minutes.",
         "heightened": {
           "+2": "The shields hardness increases by 5."
+        }
+      },
+      {
+        "name": "Haunting Hymn",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Auditory", "Cantrip", "Concentrate", "Manipulate", "Sonic"],
+        "actions": "Two Actions",
+        "area": "15-foot cone",
+        "defense":"Fortitude",
+        "description": "You echo a jarring hymn that only creatures in the area can hear. The hymn deals 1d8 sonic damage, with a basic Fortitude save. If a target critically fails the save, it's also deafened for 1 minute.",
+        "heightened": {
+          "+2": "The damage increases by 1d8."
         }
       },
       {

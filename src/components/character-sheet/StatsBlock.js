@@ -21,10 +21,10 @@ const StatsBlock = ({ character, characterColor }) => {
   // Default empty proficiencies object in case the character doesn't have it defined
   const defaultProficiencies = {
     weapons: {
+      unarmed: { proficiency: 0, name: "Untrained" },
       simple: { proficiency: 0, name: "Untrained" },
       martial: { proficiency: 0, name: "Untrained" },
-      advanced: { proficiency: 0, name: "Untrained" },
-      unarmed: { proficiency: 0, name: "Untrained" }
+      advanced: { proficiency: 0, name: "Untrained" }
     },
     armor: {
       unarmored: { proficiency: 0, name: "Untrained" },
@@ -93,6 +93,30 @@ const StatsBlock = ({ character, characterColor }) => {
             <div className="proficiency-group">
               <h4 className="proficiency-category" style={{ color: themeColor }}>Weapons</h4>
               <div className="proficiency-items">
+                {/* Unarmed Attacks */}
+                <div className="proficiency-item weapon-proficiency">
+                  <div className="weapon-category">
+                    <span className="proficiency-name">Unarmed</span>
+                    <span className={`proficiency-value prof-${proficiencies.weapons.unarmed?.proficiency || 0}`}>
+                      {getProficiencyLabel(proficiencies.weapons.unarmed?.proficiency || 0)}
+                    </span>
+                  </div>
+                  <div className="attack-bonuses">
+                    <div className="bonus-container">
+                      <div className="attack-type">Melee (STR)</div>
+                      <div className="attack-bonus" style={{ color: themeColor }}>
+                        {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
+                      </div>
+                    </div>
+                    <div className="bonus-container">
+                      <div className="attack-type">Ranged (DEX)</div>
+                      <div className="attack-bonus" style={{ color: themeColor }}>
+                        {getAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Simple Weapons */}
                 <div className="proficiency-item weapon-proficiency">
                   <div className="weapon-category">
@@ -160,30 +184,6 @@ const StatsBlock = ({ character, characterColor }) => {
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
                         {getAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, character.level || 0)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Unarmed Attacks */}
-                <div className="proficiency-item weapon-proficiency">
-                  <div className="weapon-category">
-                    <span className="proficiency-name">Unarmed</span>
-                    <span className={`proficiency-value prof-${proficiencies.weapons.unarmed?.proficiency || 0}`}>
-                      {getProficiencyLabel(proficiencies.weapons.unarmed?.proficiency || 0)}
-                    </span>
-                  </div>
-                  <div className="attack-bonuses">
-                    <div className="bonus-container">
-                      <div className="attack-type">Melee (STR)</div>
-                      <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
-                      </div>
-                    </div>
-                    <div className="bonus-container">
-                      <div className="attack-type">Ranged (DEX)</div>
-                      <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
                       </div>
                     </div>
                   </div>

@@ -20,8 +20,6 @@ if (!rootElement) {
       <App />
     </React.StrictMode>
   );
-  
-  console.log('React application mounted successfully');
 }
 
 // If you want to start measuring performance in your app, pass a function
