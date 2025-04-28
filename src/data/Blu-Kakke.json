@@ -319,6 +319,7 @@
         "type": "ranged",
         "action": 1,
         "damage": "1d4",
+        "range": "20ft",
         "traits": ["Attack", "Agile", "Monk", "Thrown"]
       }
     }
