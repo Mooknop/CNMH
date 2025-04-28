@@ -85,8 +85,23 @@
       "id": "feat-1",
       "name": "Dragon Spit",
       "level": 1,
-      "source": "Monk",
-      "description": "You can spit energy with the elemental properties of your draconic heritage. You gain a ranged unarmed attack with a range increment of 30 feet that deals 1d4 damage of the same damage type as your ancestry's breath weapon."
+      "description": "Many Tian-Dan claim to have dragon blood in their veins, and in your case, this is true—you can spit.",
+      "innate":[
+        {
+          "name": "Electric Arc",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip", "Concentrate", "Electricity", "Manipulate"],
+          "actions": "Two Actions",
+          "range": "30 feet",
+          "targets": "1 or 2 creatures",
+          "defense": "Reflex",
+          "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save.",
+          "heightened": {
+            "+1": "The damage increases by 1d4."
+          }
+        }
+      ]
     },
     {
       "id": "feat-2",
@@ -117,7 +132,7 @@
     {
       "id": "feat-3",
       "name": "Qi Spells",
-      "level": 1,
+      "level": 2,
       "source": "Monk",
       "description": "You can tap into your inner qi to cast special spells called qi spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body qi spells."
     },
@@ -153,7 +168,7 @@
     {
       "id": "feat-7",
       "name": "Draconic Ravager",
-      "level": 1,
+      "level": 2,
       "source": "Archetype",
       "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision.",
       "strikes":[
