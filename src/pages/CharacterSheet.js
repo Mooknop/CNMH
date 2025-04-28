@@ -86,7 +86,7 @@ const CharacterSheet = () => {
       return 'Devotion Spells';
     }
     if (character.monk) {
-      return 'Ki Spells';
+      return 'Qi Spells';
     }
     if (character.class === 'Bard') {
       return 'Compositions';

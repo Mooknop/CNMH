@@ -119,7 +119,7 @@
       "name": "Qi Spells",
       "level": 1,
       "source": "Monk",
-      "description": "You can tap into your inner qi to cast special spells called ki spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body ki spells."
+      "description": "You can tap into your inner qi to cast special spells called qi spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body qi spells."
     },
     {
       "id": "feat-4",
@@ -195,69 +195,132 @@
   ],
   "inventory": [
     {
-      "id": "item-1",
-      "name": "Monk's Robes",
-      "quantity": 1,
-      "weight": 1.0,
-      "description": "Lightweight robes designed for free movement"
-    },
-    {
-      "id": "item-2",
-      "name": "Temple Sword",
-      "quantity": 1,
-      "weight": 1.0,
-      "description": "Monk weapon with curved blade"
-    },
-    {
-      "id": "item-3",
-      "name": "Hand Wraps of Mighty Blows (+1 Striking)",
+      "name": "Backpack",
+      "price": 0,
       "quantity": 1,
       "weight": 0.1,
-      "description": "Magic wraps that enhance unarmed attacks, dealing an extra weapon damage die"
+      "description": "A backpack for holding your gear",
+      "container":{
+        "capacity": 4,
+        "ignored": 2,
+        "contents":[
+          {
+            "name": "Bedroll",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "A compact mat, not too comfy but suitable for long journeys."
+          },
+          {
+            "name": "Chalk",
+            "quantity": 10,
+            "weight": 0.0,
+            "description": "Suitable for marking hard surfaces temporarily."
+          },
+          {
+            "name": "Flint & Steel",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "A camper's classic for starting fires."
+          },
+          {
+            "name": "Rope (50ft)",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "Sturdy rope for tying something (or someone) down."
+          },
+          {
+            "name": "Rations",
+            "quantity": 7,
+            "weight": 0.1,
+            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+          },
+          {
+            "name": "Soap",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "Scrub a dub dub"
+          },
+          {
+            "name": "Torch",
+            "quantity": 5,
+            "weight": 0.1,
+            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+          },
+          {
+            "name": "Waterskin",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+          }
+        ]
+      }
     },
     {
-      "id": "item-4",
-      "name": "Adventurer's Pack",
+      "name": "Spacious Pouch",
+      "price": 0,
       "quantity": 1,
-      "weight": 2.0,
-      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
+      "weight": 1.0,
+      "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
+      "container":{
+        "capacity": 25,
+        "ignored": 25,
+        "contents":[
+          
+        ]
+      }
     },
     {
-      "id": "item-5",
-      "name": "Meditation Incense",
-      "quantity": 5,
-      "weight": 0.1,
-      "description": "Helps focus ki during meditation"
-    },
-    {
-      "id": "item-6",
-      "name": "Potion of Healing (Minor)",
+      "name": "Minor Healing Potion",
       "quantity": 2,
       "weight": 0.1,
-      "description": "Restores 1d8 HP when consumed"
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed"
     },
     {
-      "id": "item-7",
-      "name": "Climbing Kit",
+      "name": "Minor Elixir of Life",
+      "price": 3,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+    },
+    {
+      "name": "Potion of Waterbreathing",
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour."
+    },
+    {
+      "name": "Mysterious Blue Orb",
       "quantity": 1,
       "weight": 1.0,
-      "description": "Provides a +1 item bonus to Athletics checks to climb"
-    }
-  ],
-  "notes": [
-    {
-      "id": "note-1",
-      "title": "Meeting with Master Wei",
-      "date": "2025-04-12",
-      "content": "Master Wei spoke of finding inner balance through the four elements. He believes I focus too much on the physical aspects of training and neglect the spiritual side. I must meditate more on emptiness and harmony to achieve true advancement.",
-      "createdAt": "2025-04-12T18:30:00.000Z"
+      "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him."
     },
     {
-      "id": "note-2",
-      "title": "Mountain Training",
-      "date": "2025-04-16",
-      "content": "Spent three days at the Peak of Five Winds practicing breath control in the thin air. The cold was intense, but by the third day I could maintain inner warmth through proper ki circulation. This technique might be useful when facing cold-based attacks.",
-      "createdAt": "2025-04-16T20:15:00.000Z"
+      "name": "Sanitizing Pin",
+      "price": 7,
+      "quantity": 1,
+      "weight": 0,
+      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+    },
+    {
+      "name": "Rust Scrub",
+      "price": 2,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+    },
+    {
+      "name": "Shuriken",
+      "price": 2,
+      "quantity": 100,
+      "weight": 0.0,
+      "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
+      "strikes":{
+        "proficiency": "simple",
+        "type": "ranged",
+        "action": 1,
+        "damage": "1d4",
+        "traits": ["Attack", "Agile", "Monk", "Thrown"]
+      }
     }
   ],
   "monk": {

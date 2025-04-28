@@ -297,7 +297,7 @@
       "name": "Minor Healing Potion",
       "quantity": 1,
       "weight": 0.1,
-      "description": "Restores 1d8 HP when consumed"
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed"
     },
     {
       "name": "Scroll of Friendfetch",
@@ -312,6 +312,25 @@
         "range": "30 feet",
         "targets": "1 or 2 willing creatures",
         "description": "You shoot out ephemeral, telekinetic strands that drag each target directly toward you, stopping in the closest unoccupied space to you in this path. This is forced movement."
+      }
+    },
+    {
+      "name": "Scroll of Cleanse Affliction",
+      "quantity": 1,
+      "weight": 1.0,
+      "description": "A single-use scroll",
+      "scroll":{
+        "name": "Cleanse Affliction",
+        "level": 2,
+        "traits": ["Concentrate", "Healing", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 willing creature",
+        "description": "Gentle restorative magic pushes back the effects of toxins and more complex maladies. Choose an affliction on the target, such as a curse, disease, or poison. If it has advanced past stage one, reduce the stage by one. This reduction can be applied only once to a given case of an affliction, with the case ending when it's completely cured. Although the reduction can't occur again, heightened versions of this spell attempt to counteract with each casting.",
+        "heightened":{
+          "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
+          "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
+        }
       }
     },
     {

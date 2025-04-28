@@ -12,7 +12,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
       return 'Devotion Spells';
     }
     if (character.monk) {
-      return 'Ki Spells';
+      return 'Qi Spells';
     }
     if (character.spellcasting && character.spellcasting.bloodline) {
       return `${character.spellcasting.bloodline.name} Bloodline Spells`;
@@ -101,7 +101,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
   const renderBloodlineInfo = () => {
     if (!hasBloodline()) return null;
     
-    const { name, description, blood_magic } = character.spellcasting.bloodline;
+    const { name, description } = character.spellcasting.bloodline;
     
     return (
       <div className="bloodline-info">
