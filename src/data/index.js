@@ -9,10 +9,10 @@ import questsData from './quests.json';
 
 // Export an array of all available character data
 export const sampleCharacters = [
-  IzzyUncut,
   AshkaBGosh,
-  JadeInferno,
   Blu_Kakke,
+  IzzyUncut,
+  JadeInferno,
   Pellias
 ];
 

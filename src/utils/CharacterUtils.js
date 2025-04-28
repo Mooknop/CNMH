@@ -5,10 +5,10 @@
  * Character color palette - used for consistent color coding across components
  */
 export const CHARACTER_COLORS = [
-  '#81c784', // green
   '#7E8C9A', // slate
-  '#ba68c8', // purple
   '#64b5f6', // blue
+  '#81c784', // green
+  '#ba68c8', // purple
   '#E67E22'  // bright rust
 ];
 
