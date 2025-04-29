@@ -92,10 +92,21 @@
       ],
       "strikes":[
         {
-          "name": "Elemental Blast (Metal)",
+          "name": "Melee Metal Blast",
           "actionCount": 1,
+          "type": "melee",
           "traits": ["Attack", "Impulse", "Kineticist", "Metal", "Primal"],
-          "description": "With a wave of your hand, you collect elemental matter from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier Your blast does 1d8 piercing or slashing damage, and has a range of 30 feet."
+          "damage": "1d8",
+          "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage."
+        },
+        {
+          "name": "Ranged Metal Blast",
+          "actionCount": 1,
+          "type": "ranged",
+          "damage": "1d8",
+          "range": "30ft",
+          "traits": ["Attack", "Impulse", "Kineticist", "Metal", "Primal"],
+          "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. When you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage, and has a range of 30 feet."
         }
       ]
     },
@@ -221,7 +232,7 @@
       "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
       "strikes": {
         "proficiency": "martial",
-        "type": "me;ee",
+        "type": "melee",
         "action": 1,
         "damage": "1d6"
       }
