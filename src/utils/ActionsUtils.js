@@ -176,8 +176,23 @@ export const getStrikes = (character) => {
             abilityMod = dexMod; // Ranged weapons use DEX
           }
           
-          // Calculate attack bonus
-          const attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+          // Calculate attack bonus from ability, proficiency and level
+          let attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+          
+          // Add weapon potency bonus if present
+          if (item.potency) {
+            // Convert the numerical value of the potency rune to a string with a + sign
+            const potencyBonus = `+${item.potency}`;
+            
+            // If the attack bonus already includes a + sign, add the potency numerically
+            if (attackBonus.startsWith('+')) {
+              const currentBonus = parseInt(attackBonus.substring(1));
+              attackBonus = `+${currentBonus + item.potency}`;
+            } else {
+              // Otherwise, just append the potency bonus
+              attackBonus = `${attackBonus}${potencyBonus}`;
+            }
+          }
           
           // Format damage string with ability modifier
           let damageString = weaponStrike.damage || '1d6';
