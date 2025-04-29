@@ -194,46 +194,88 @@
       ]
     },
     {
-      "id": "item-2",
-      "name": "Rapier",
+      "name": "Backpack",
+      "price": 0,
       "quantity": 1,
-      "weight": 1.0,
-      "description": "Piercing damage, finesse, deadly d8"
-    },
-    {
-      "id": "item-3",
-      "name": "Leather Armor",
-      "quantity": 1,
-      "weight": 2.0,
-      "description": "Light armor, +2 AC, +4 DEX Cap, -1 Check Penalty"
-    },
-    {
-      "id": "item-4",
-      "name": "Adventurer's Pack",
-      "quantity": 1,
-      "weight": 2.0,
-      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin"
-    },
-    {
-      "id": "item-5",
-      "name": "Scroll of Comprehend Language",
-      "quantity": 2,
       "weight": 0.1,
-      "description": "Allows comprehension of an unfamiliar language for 1 hour"
+      "description": "A backpack for holding your gear",
+      "container":{
+        "capacity": 4,
+        "ignored": 2,
+        "contents":[
+          {
+            "name": "Bedroll",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "A compact mat, not too comfy but suitable for long journeys."
+          },
+          {
+            "name": "Chalk",
+            "quantity": 10,
+            "weight": 0.0,
+            "description": "Suitable for marking hard surfaces temporarily."
+          },
+          {
+            "name": "Flint & Steel",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "A camper's classic for starting fires."
+          },
+          {
+            "name": "Rope (50ft)",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "Sturdy rope for tying something (or someone) down."
+          },
+          {
+            "name": "Rations",
+            "quantity": 7,
+            "weight": 0.1,
+            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+          },
+          {
+            "name": "Soap",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "Scrub a dub dub"
+          },
+          {
+            "name": "Torch",
+            "quantity": 5,
+            "weight": 0.1,
+            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+          },
+          {
+            "name": "Waterskin",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+          }
+        ]
+      }
     },
     {
-      "id": "item-6",
-      "name": "Chalice Implement",
+      "name": "Crescent Cross",
       "quantity": 1,
-      "weight": 0.5,
-      "description": "An obsidian chalice with silver inlaid runes"
-    },
-    {
-      "id": "item-7",
-      "name": "Esoteric Tome",
-      "quantity": 1,
-      "weight": 1.0,
-      "description": "Contains notes on various creatures and their weaknesses"
+      "weight": 0.1,
+      "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
+      "strikes": [
+        {
+          "proficiency": "martial",
+          "type": "ranged",
+          "action": 1,
+          "damage": "1d6",
+          "range": "30ft",
+          "traits": ["Attack"]
+        },
+        {
+          "proficiency": "martial",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d4",
+          "traits": ["Attack"]
+        }
+      ]
     }
   ],
   "notes": [
