@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './SpellsList.css';
 
 // Component imports
@@ -34,7 +34,7 @@ const SpellsList = ({ character, characterColor }) => {
   // State for filters and view mode
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('spells'); // 'spells', 'innate', 'focus', 'staff', 'scrolls', or 'wands'
+  const [viewMode, setViewMode] = useState(null); // Initialize to null, will be set after determining available modes
   
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
@@ -205,6 +205,30 @@ const SpellsList = ({ character, characterColor }) => {
       allDefenseTypes
     };
   }, [character, spellcasting]);
+
+  // Effect to set the initial view mode based on what's available
+  useEffect(() => {
+    // Only set view mode if it hasn't been set yet
+    if (viewMode === null) {
+      // Determine what view modes are available
+      const availableModes = [];
+      
+      if (hasSpellcasting) availableModes.push('spells');
+      if (hasInnate) availableModes.push('innate');
+      if (hasFocus) availableModes.push('focus');
+      if (hasStaff) availableModes.push('staff');
+      if (hasScrolls) availableModes.push('scrolls');
+      if (hasWands) availableModes.push('wands');
+      
+      // Set view mode to the first available one
+      if (availableModes.length > 0) {
+        setViewMode(availableModes[0]);
+      } else {
+        // Fallback to 'spells' if somehow there are no available modes
+        setViewMode('spells');
+      }
+    }
+  }, [hasSpellcasting, hasInnate, hasFocus, hasStaff, hasScrolls, hasWands, viewMode]);
   
   // If no spellcasting, focus magic, or innate spells, show placeholder
   if (!hasSpellcasting && !hasFocus && !hasInnate) {
@@ -213,6 +237,18 @@ const SpellsList = ({ character, characterColor }) => {
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
         <div className="empty-state">
           <p>This character doesn't have spellcasting, innate, or focus magic abilities.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If view mode hasn't been set yet, show loading state
+  if (viewMode === null) {
+    return (
+      <div className="spells-list">
+        <h2 style={{ color: themeColor }}>Spellcasting</h2>
+        <div className="empty-state">
+          <p>Loading spells...</p>
         </div>
       </div>
     );

@@ -144,7 +144,7 @@ const CharacterSheet = () => {
                 onClick={() => setActiveTab('spells')}
                 style={{ backgroundColor: activeTab === 'spells' ? characterColor : '' }}
               >
-                Spells
+                Magic
               </button>
             )}
             
