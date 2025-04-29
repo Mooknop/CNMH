@@ -9,7 +9,7 @@
 export const poundsToBulk = (pounds) => {
 if (!pounds || pounds < 0.1) return 0; // Negligible Bulk
 if (pounds < 1) return 0.1; // Light (L) Bulk
-return Math.ceil(pounds / 10); // 1 Bulk is roughly 10 pounds
+return pounds;
 };
 
 /**
