@@ -280,7 +280,51 @@
         "capacity": 25,
         "ignored": 25,
         "contents":[
-          
+          {
+            "name": "Sterling Artisan's Tools (Talismans)",
+            "quantity": 1,
+            "weight": 2,
+            "description": "An incredibly high-quality set of artisan tools, perfectly suited to creating Talismans. If you use them when you Craft a Talisman, you get a +1 item bonus to the check."
+          },
+          {
+            "name": "Anticorrosion Oil",
+            "quantity": 3,
+            "weight": 0.1,
+            "description":"You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae."
+          },
+          {
+            "name": "Oil of Weightlessness",
+            "quantity": 1,
+            "weight": 0.1,
+            "description":"You can spread this shimmering oil on an item of 1 Bulk or less to make it feel weightless. It has negligible Bulk for 1 hour."
+          },
+          {
+            "name": "Moderate Drakeheart Mutagen",
+            "quantity": 2,
+            "weight": 0.1,
+            "description":"Your skin grows scales like a drake, and your eyesight become sharp and your pupils slitted, but your mind and reflexes slow. You gain a +5 Item bonus to AC, a Dexterity cap of +2 (as usual, use your lowest Dexterity cap if you have more than one), and a +2 item bonus to Perception checks. If you're wearing armor, you still calculate your proficiency bonus to AC based on your proficiency in the armor you're wearing, even if the drakeheart mutagen has a higher item bonus. While under its effects, you take a –1 penalty to Will saves, Reflex saves, and all skill checks to Recall Knowledge. As a single action, you can burn through the remaining duration of the Mutagen to stride twice."
+          },
+          {
+            "name": "Eye Garnets",
+            "quantity": 2,
+            "weight": 0,
+            "price": 50,
+            "description": "Large red rubies you pried from a statue of Xar-Azmak."
+          },
+          {
+            "name": "Rusty, Broken Full Plate Armor",
+            "quantity": 2,
+            "weight": 5,
+            "price": 30,
+            "description": "Large red rubies you pried from a statue of Xar-Azmak."
+          },
+          {
+            "name": "Midnight Milk",
+            "quantity": 1,
+            "weight": 0.1,
+            "price": 0,
+            "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands."
+          }
         ]
       }
     },

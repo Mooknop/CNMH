@@ -116,8 +116,6 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
                   <td>{item.quantity || 1}</td>
                   <td>
                     {formatBulk(poundsToBulk(item.weight || 0))}
-                    {item.quantity > 1 && poundsToBulk(item.weight || 0) > 0 && 
-                      ` (total: ${formatBulk(poundsToBulk(item.weight || 0) * item.quantity)})`}
                   </td>
                 </tr>
               ))}

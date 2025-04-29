@@ -44,17 +44,18 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
     <>
       <h3 style={{ color: themeColor }}>{spell.name}</h3>
       <div className="spell-header-meta">
+        {/* Action indicators now come first */}
+        {spell.actions && (
+          <div className="spell-actions-indicator">
+            {renderSpellActionIcons(spell.actions)}
+          </div>
+        )}
         <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
           {spell.level === 0 
             ? `Cantrip ${spell.baseLevel} (${Math.ceil(characterLevel / 2)})`
             : `Rank ${spell.level}`
           }
         </span>
-        {spell.actions && (
-          <div className="spell-actions-indicator">
-            {renderSpellActionIcons(spell.actions)}
-          </div>
-        )}
         {spell.prepared !== undefined && (
           <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
             {spell.prepared ? 'Prepared' : 'Not Prepared'}

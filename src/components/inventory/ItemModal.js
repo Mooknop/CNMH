@@ -27,8 +27,6 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
               <span className="item-detail-label">Bulk</span>
               <span className="item-detail-value">
                 {formatBulk(poundsToBulk(item.weight))}
-                {item.quantity > 1 && poundsToBulk(item.weight) > 0 && 
-                  ` (total: ${formatBulk(poundsToBulk(item.weight) * item.quantity)})`}
               </span>
             </div>
           </div>
