@@ -154,6 +154,83 @@
     border-radius: 8px;
     color: #666;
   }
+
+  /* Spell action indicators */
+.spell-actions-indicator {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+
+.spell-action-count {
+  display: flex;
+  gap: 2px;
+}
+
+.spell-action-icon {
+  font-size: 1.2rem;
+  color: #5e2929;
+}
+
+.spell-action-text {
+  font-size: 0.85rem;
+  background-color: #f0f0f0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  color: #444;
+}
+
+/* Reaction and free action icons */
+.reaction-icon {
+  font-size: 1.2rem;
+}
+
+.free-action-icon {
+  font-size: 1.2rem;
+}
+
+/* Update the focus spell header meta layout for better spacing with action icons */
+.spell-header-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Update the focus spell card header to use flexbox */
+.focus-spell-card .collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.focus-spell-card .collapsible-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+  flex-grow: 1;
+}
+
+/* Improved focus for reaction triggers */
+.reaction-trigger {
+  background-color: #fff8e1;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin: 0.75rem 0;
+  border-left: 3px solid #ffc107;
+}
+
+.trigger-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.trigger-text {
+  font-size: 0.9rem;
+  color: #333;
+}
   
   /* Responsive adjustments */
   @media (max-width: 768px) {

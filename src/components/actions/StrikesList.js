@@ -1,7 +1,7 @@
 // src/components/actions/StrikesList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { getStrikes } from '../../utils/ActionsUtils';
+import { getStrikes, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
  * Component to render character's strikes, separated into melee and ranged categories
@@ -17,17 +17,38 @@ const StrikesList = ({ character, themeColor }) => {
   const meleeStrikes = strikes.filter(strike => strike.type === 'melee');
   const rangedStrikes = strikes.filter(strike => strike.type === 'ranged');
   
+  // Helper function to render action icons
+  const renderStrikeActionIcon = (strike) => {
+    const count = strike.actionCount || 1;
+    const actionText = `${count} Action${count > 1 ? 's' : ''}`;
+    const actionInfo = renderActionIcons(actionText, themeColor);
+    
+    if (actionInfo && actionInfo.type === 'standard') {
+      return (
+        <div className="action-count">
+          {Array(actionInfo.count).fill().map((_, i) => (
+            <span key={i} className="action-icon" style={{ color: themeColor }}>{actionInfo.icon}</span>
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="action-count">
+        {Array(count).fill().map((_, i) => (
+          <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
+        ))}
+      </div>
+    );
+  };
+  
   // Helper function to render a strike card
   const renderStrikeCard = (strike, index) => {
     // Create header content
     const header = (
       <>
         <h3 style={{ color: themeColor }}>{strike.name}</h3>
-        <div className="action-count">
-          {Array(strike.actionCount || 1).fill().map((_, i) => (
-            <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
-          ))}
-        </div>
+        {renderStrikeActionIcon(strike)}
       </>
     );
     

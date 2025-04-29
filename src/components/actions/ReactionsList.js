@@ -1,7 +1,7 @@
-// src/components/character-sheet/ReactionsList.js
+// src/components/actions/ReactionsList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { getReactions } from '../../utils/ActionsUtils';
+import { getReactions, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
  * Component to render character's reactions
@@ -13,6 +13,17 @@ const ReactionsList = ({ character, themeColor }) => {
   // Get all reactions for the character
   const reactions = getReactions(character);
   
+  // Helper function to render reaction icon
+  const renderReactionIcon = () => {
+    const actionInfo = renderActionIcons("Reaction", themeColor);
+    
+    return (
+      <div className="reaction-icon" style={{ color: themeColor }}>
+        {actionInfo.icon}
+      </div>
+    );
+  };
+  
   return (
     <div className="reactions-container">
       {reactions.length > 0 ? (
@@ -22,7 +33,7 @@ const ReactionsList = ({ character, themeColor }) => {
             const header = (
               <>
                 <h3 style={{ color: themeColor }}>{reaction.name}</h3>
-                <div className="reaction-icon" style={{ color: themeColor }}>⟳</div>
+                {renderReactionIcon()}
               </>
             );
             

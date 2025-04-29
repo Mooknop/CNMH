@@ -1,7 +1,7 @@
-// src/components/character-sheet/FreeActionsList.js
+// src/components/actions/FreeActionsList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { getFreeActions } from '../../utils/ActionsUtils';
+import { getFreeActions, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
  * Component to render character's free actions
@@ -13,6 +13,17 @@ const FreeActionsList = ({ character, themeColor }) => {
   // Get all free actions for the character
   const freeActions = getFreeActions(character);
   
+  // Helper function to render free action icon
+  const renderFreeActionIcon = () => {
+    const actionInfo = renderActionIcons("Free Action", themeColor);
+    
+    return (
+      <div className="free-action-icon" style={{ color: themeColor }}>
+        {actionInfo.icon}
+      </div>
+    );
+  };
+  
   return (
     <div className="free-actions-container">
       {freeActions.length > 0 ? (
@@ -22,7 +33,7 @@ const FreeActionsList = ({ character, themeColor }) => {
             const header = (
               <>
                 <h3 style={{ color: themeColor }}>{freeAction.name}</h3>
-                <div className="free-action-icon" style={{ color: themeColor }}>⟡</div>
+                {renderFreeActionIcon()}
               </>
             );
             

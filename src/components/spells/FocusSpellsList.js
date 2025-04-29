@@ -1,10 +1,38 @@
 import React from 'react';
 import './FocusSpellsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import { renderActionIcons } from '../../utils/ActionsUtils';
 
 const FocusSpellsList = ({ character, characterColor }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
+  
+  // Function to render action icons using the shared utility
+  const renderSpellActionIcons = (actionText) => {
+    if (!actionText) return null;
+    
+    const actionInfo = renderActionIcons(actionText, themeColor);
+    
+    if (actionInfo) {
+      if (actionInfo.type === 'standard') {
+        return (
+          <div className="spell-action-count">
+            {Array(actionInfo.count).fill().map((_, i) => (
+              <span key={i} className="spell-action-icon" style={{ color: themeColor }}>{actionInfo.icon}</span>
+            ))}
+          </div>
+        );
+      } else if (actionInfo.type === 'reaction') {
+        return <div className="spell-action-icon reaction-icon" style={{ color: themeColor }}>{actionInfo.icon}</div>;
+      } else if (actionInfo.type === 'free') {
+        return <div className="spell-action-icon free-action-icon" style={{ color: themeColor }}>{actionInfo.icon}</div>;
+      } else {
+        return <span className="spell-action-text">{actionInfo.text}</span>;
+      }
+    }
+    
+    return null;
+  };
   
   // Function to get the label for focus spells based on character class
   const getFocusSpellsLabel = () => {
@@ -146,6 +174,11 @@ const FocusSpellsList = ({ character, characterColor }) => {
                     <span className="focus-spell-level" style={{ backgroundColor: themeColor }}>
                       {`Rank ${spell.baseLevel} (${Math.ceil(character.level / 2)})`}
                     </span>
+                  )}
+                  {spell.actions && (
+                    <div className="spell-actions-indicator">
+                      {renderSpellActionIcons(spell.actions)}
+                    </div>
                   )}
                   {isBloodlineSpell && (
                     <div className="bloodline-indicator">

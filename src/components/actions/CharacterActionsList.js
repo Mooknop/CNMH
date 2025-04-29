@@ -1,7 +1,7 @@
-// src/components/character-sheet/CharacterActionsList.js
+// src/components/actions/CharacterActionsList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { getActions } from '../../utils/ActionsUtils';
+import { getActions, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
  * Component to render character's standard actions
@@ -13,6 +13,31 @@ const CharacterActionsList = ({ character, themeColor }) => {
   // Get all actions for the character
   const actions = getActions(character);
   
+  // Helper function to render action icons
+  const renderActionCount = (action) => {
+    const count = action.actionCount || 1;
+    const actionText = `${count} Action${count > 1 ? 's' : ''}`;
+    const actionInfo = renderActionIcons(actionText, themeColor);
+    
+    if (actionInfo && actionInfo.type === 'standard') {
+      return (
+        <div className="action-count">
+          {Array(actionInfo.count).fill().map((_, i) => (
+            <span key={i} className="action-icon" style={{ color: themeColor }}>{actionInfo.icon}</span>
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="action-count">
+        {Array(count).fill().map((_, i) => (
+          <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
+        ))}
+      </div>
+    );
+  };
+  
   return (
     <div className="actions-container">
       {actions.length > 0 ? (
@@ -22,11 +47,7 @@ const CharacterActionsList = ({ character, themeColor }) => {
             const header = (
               <>
                 <h3 style={{ color: themeColor }}>{action.name}</h3>
-                <div className="action-count">
-                  {Array(action.actionCount || 1).fill().map((_, i) => (
-                    <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
-                  ))}
-                </div>
+                {renderActionCount(action)}
               </>
             );
             

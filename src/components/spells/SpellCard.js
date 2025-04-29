@@ -1,6 +1,7 @@
 // src/components/spells/SpellCard.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import { renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
  * Component to render a spell card with expandable details
@@ -11,6 +12,33 @@ import CollapsibleCard from '../shared/CollapsibleCard';
  * @param {Object} props.character - Character data for bloodline effects (optional)
  */
 const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
+  // Function to render action icons using the shared utility
+  const renderSpellActionIcons = (actionText) => {
+    if (!actionText) return null;
+    
+    const actionInfo = renderActionIcons(actionText, themeColor);
+    
+    if (actionInfo) {
+      if (actionInfo.type === 'standard') {
+        return (
+          <div className="spell-action-count">
+            {Array(actionInfo.count).fill().map((_, i) => (
+              <span key={i} className="spell-action-icon" style={{ color: themeColor }}>{actionInfo.icon}</span>
+            ))}
+          </div>
+        );
+      } else if (actionInfo.type === 'reaction') {
+        return <div className="spell-action-icon reaction-icon" style={{ color: themeColor }}>{actionInfo.icon}</div>;
+      } else if (actionInfo.type === 'free') {
+        return <div className="spell-action-icon free-action-icon" style={{ color: themeColor }}>{actionInfo.icon}</div>;
+      } else {
+        return <span className="spell-action-text">{actionInfo.text}</span>;
+      }
+    }
+    
+    return null;
+  };
+  
   // Create header content for the card
   const header = (
     <>
@@ -22,6 +50,11 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
             : `Rank ${spell.level}`
           }
         </span>
+        {spell.actions && (
+          <div className="spell-actions-indicator">
+            {renderSpellActionIcons(spell.actions)}
+          </div>
+        )}
         {spell.prepared !== undefined && (
           <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
             {spell.prepared ? 'Prepared' : 'Not Prepared'}

@@ -432,3 +432,92 @@ export const getFreeActions = (character) => {
 
   return allFreeActions;
 };
+
+/**
+ * Parse action text to determine action count
+ * @param {string} actionText - Text describing actions (e.g., "One Action", "Two Actions")
+ * @returns {number} - Number of actions (0 if not determinable)
+ */
+export const parseActionCount = (actionText) => {
+  if (!actionText) return 0;
+  
+  // Convert to lowercase for consistent matching
+  const text = actionText.toLowerCase();
+  
+  // Check for "One Action", "Two Actions", "Three Actions" format
+  if (text.includes('one action')) return 1;
+  if (text.includes('two actions')) return 2;
+  if (text.includes('three actions')) return 3;
+  
+  // Check for "1 Action", "2 Actions", "3 Actions" format
+  const match = text.match(/(\d+)\s+action/i);
+  if (match) return parseInt(match[1]);
+  
+  // Handle "One to Three Actions" variable format
+  if (text.includes('one to three actions')) return 3;
+  if (text.includes('one to two actions')) return 2;
+  
+  // Handle special action types
+  if (text.includes('reaction')) return -1; // Reaction
+  if (text.includes('free action')) return -2; // Free action
+  
+  return 0; // Unknown or not applicable
+};
+
+/**
+ * Get the action type based on action count
+ * @param {number} actionCount - Action count from parseActionCount
+ * @returns {string} - Action type (standard, reaction, free)
+ */
+export const getActionType = (actionCount) => {
+  if (actionCount > 0) return 'standard';
+  if (actionCount === -1) return 'reaction';
+  if (actionCount === -2) return 'free';
+  return 'unknown';
+};
+
+/**
+ * Render action indicators as JSX
+ * @param {string} actionText - Text describing actions
+ * @param {string} themeColor - Color theme to use
+ * @returns {Object} - JSX elements for rendering action indicators
+ */
+export const renderActionIcons = (actionText, themeColor) => {
+  if (!actionText) return null;
+  
+  const actionCount = parseActionCount(actionText);
+  const actionType = getActionType(actionCount);
+  
+  // Special icons for reaction and free action
+  if (actionType === 'reaction') {
+    return { 
+      type: 'reaction',
+      icon: '⟳',
+      count: 1
+    };
+  }
+  
+  if (actionType === 'free') {
+    return {
+      type: 'free',
+      icon: '⟡',
+      count: 1
+    };
+  }
+  
+  // Standard actions
+  if (actionType === 'standard' && actionCount > 0) {
+    return {
+      type: 'standard',
+      icon: '●',
+      count: actionCount
+    };
+  }
+  
+  // Default for unknown
+  return {
+    type: 'text',
+    text: actionText,
+    count: 0
+  };
+};
