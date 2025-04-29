@@ -419,6 +419,14 @@
           "bloodline": true,
           "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
         }
+      },
+      {
+        "name": "Crafter's Eyepiece",
+        "quantity": 1,
+        "weight": 0,
+        "description": "This rugged metal eyepiece etched with square patterns is designed to be worn over a single eye. Twisting the lens reveals a faint three-dimensional outline of an item you plan to build or repair, with helpful labels on the component parts. You gain a +1 item bonus to Crafting checks. When you Repair an item, increase the Hit Points restored to 10 + 10 per proficiency rank on a success or 15 + 15 per proficiency rank on a critical success.",
+        "invested": true,
+        "bonus": ["Crafting", 1]
       }
     ],
     "spellcasting": {
