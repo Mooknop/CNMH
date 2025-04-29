@@ -6,6 +6,7 @@ import {
   getAbilityModifier, 
   formatModifier, 
   getProficiencyLabel, 
+  getItemBonus,
   hasFeat
 } from '../../utils/CharacterUtils';
 
@@ -189,7 +190,7 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
       ]
     }
   ];
-  // Function to get the proficiency color (unchanged)
+  // Function to get the proficiency color
   const getProficiencyColor = (proficiency) => {
     switch(proficiency) {
       case 1: return 'trained-color';      // Trained
@@ -238,6 +239,9 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           const abilityMod = getAbilityModifier(character.abilities?.[skill.ability] || 10);
           const abilityModStr = formatModifier(abilityMod);
           
+          // Get any item bonus for this skill
+          const itemBonus = getItemBonus(character, skill.id);
+          
           const proficiencyColorClass = getProficiencyColor(proficiency);
           
           // Add a class if this is an untrained skill but character has Untrained Improvisation
@@ -259,6 +263,9 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
                 </div>
                 <div className={`skill-proficiency ${proficiencyColorClass}`}>
                   {getProficiencyLabel(proficiency)}
+                  {itemBonus > 0 && (
+                    <span className="item-bonus-indicator"> (+{itemBonus} item)</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -267,6 +274,17 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           // Create the content for the collapsible part
           const content = (
             <div className="skill-actions">
+              {itemBonus > 0 && (
+                <div className="skill-item-bonus">
+                  <span className="item-bonus-label" style={{ color: themeColor }}>Item Bonus:</span>
+                  <span className="item-bonus-value">+{itemBonus} from {
+                    character.inventory
+                      .filter(item => item.bonus && item.bonus[0] === skill.id)
+                      .map(item => item.name)
+                      .join(', ')
+                  }</span>
+                </div>
+              )}
               <h4 style={{ color: themeColor }}>Skill Actions</h4>
               <ul className="actions-list">
                 {skill.actions.map((action, index) => (
@@ -282,7 +300,7 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           return (
             <CollapsibleCard 
               key={skill.id}
-              className={`skill-card  ${hasImprovisedSkill ? 'improvised-skill' : proficiencyColorClass}`}
+              className={`skill-card ${hasImprovisedSkill ? 'improvised-skill' : ''} ${proficiencyColorClass}`}
               header={header}
               themeColor={themeColor}
             >

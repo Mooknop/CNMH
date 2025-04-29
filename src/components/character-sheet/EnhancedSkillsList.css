@@ -131,6 +131,32 @@
   color: #f39c12; /* Gold */
 }
 
+/* Item bonus styling */
+.item-bonus-indicator {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #2980b9; /* Blue */
+  display: block;
+  margin-top: 0.2rem;
+}
+
+.skill-item-bonus {
+  padding: 0.75rem;
+  background-color: #e8f4fc; /* Light blue background */
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 3px solid #2980b9; /* Blue */
+}
+
+.item-bonus-label {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.item-bonus-value {
+  font-style: italic;
+}
+
 /* Skill actions section in the collapsible content */
 .skill-actions {
   padding: 1rem;

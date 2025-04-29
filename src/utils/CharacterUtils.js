@@ -119,7 +119,34 @@ export const SKILL_ABILITY_MAP = {
 };
 
 /**
- * Calculate skill modifier using ability score and proficiency
+ * Get item bonus for a specific skill from character's inventory
+ * @param {Object} character - The character object
+ * @param {string} skillId - The skill identifier
+ * @returns {number} - The item bonus value (0 if none)
+ */
+export const getItemBonus = (character, skillId) => {
+  if (!character || !character.inventory) return 0;
+  
+  // Look for items with the 'bonus' property that applies to this skill
+  const itemsWithBonus = character.inventory.filter(item => {
+    if (!item.bonus || !Array.isArray(item.bonus) || item.bonus.length < 2) return false;
+    
+    // Skip items that aren't invested if they require investing
+    if (item.invested === true && item.invested !== undefined) {
+      return item.bonus[0] === skillId;
+    }
+    
+    return item.bonus[0] === skillId;
+  });
+  
+  // Return the highest bonus value
+  if (itemsWithBonus.length === 0) return 0;
+  
+  return Math.max(...itemsWithBonus.map(item => item.bonus[1] || 0));
+};
+
+/**
+ * Calculate skill modifier using ability score, proficiency, and item bonuses
  * @param {Object} character - The character object
  * @param {string} skillId - The skill identifier
  * @returns {number} - The calculated skill modifier
@@ -140,8 +167,11 @@ export const getSkillModifier = (character, skillId) => {
   const skillData = skills[skillId] || { proficiency: 0 };
   const profBonus = getProficiencyBonus(skillData.proficiency || 0, character.level || 0, character);
   
-  // Return the sum of ability modifier and proficiency bonus
-  return abilityMod + profBonus;
+  // Get any item bonus for this skill
+  const itemBonus = getItemBonus(character, skillId);
+  
+  // Return the sum of ability modifier, proficiency bonus, and item bonus
+  return abilityMod + profBonus + itemBonus;
 };
 
 /**
