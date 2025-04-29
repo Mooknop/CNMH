@@ -261,21 +261,46 @@
       "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
       "strikes": [
         {
+          "name": "Crescent Cross Bolt",
           "proficiency": "martial",
           "type": "ranged",
           "action": 1,
           "damage": "1d6",
           "range": "30ft",
-          "traits": ["Attack"]
+          "traits": ["Attack", "Ranged"]
         },
         {
+          "name": "Crescent Cross Blade",
           "proficiency": "martial",
           "type": "melee",
           "action": 1,
           "damage": "1d4",
-          "traits": ["Attack"]
+          "traits": ["Attack", "Melee", "Slashing"]
         }
       ]
+    },
+    {
+      "name": "Longbow",
+      "quantity": 1,
+      "weight": 2.0,
+      "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted. Because it's made for long range, you take a -2 penalty to attacks on creatures within 30ft with it.",
+      "strikes": [
+        {
+          "proficiency": "martial",
+          "type": "ranged",
+          "action": 1,
+          "damage": "1d8",
+          "range": "30ft",
+          "traits": ["Attack", "Deadly D10", "Ranged", "Volley 30ft"]
+        }
+      ]
+    },
+    {
+      "name": "Minor Elixir of Life",
+      "price": 3,
+      "quantity": 2,
+      "weight": 0.1,
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
     }
   ],
   "notes": [
