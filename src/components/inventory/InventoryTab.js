@@ -63,6 +63,20 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     if (bulkPercentage > 75) return '#ffc107'; // Yellow when getting close
     return characterColor; // Use character's color theme
   };
+
+  // Sort inventory items alphabetically by name
+  const getSortedInventory = () => {
+    if (!character || !character.inventory || !Array.isArray(character.inventory)) {
+      return [];
+    }
+    
+    return [...character.inventory].sort((a, b) => {
+      // Compare names case-insensitive
+      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    });
+  };
+  
+  const sortedInventory = getSortedInventory();
   
   return (
     <div className="inventory-tab">
@@ -110,8 +124,8 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
             </tr>
           </thead>
           <tbody>
-            {character.inventory && character.inventory.length > 0 ? (
-              character.inventory.map(item => (
+            {sortedInventory.length > 0 ? (
+              sortedInventory.map(item => (
                 <tr key={item.id || `item-${item.name}`}>
                   <td>
                     <button 
@@ -148,7 +162,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       
       {/* Display containers section if character has any */}
       <ContainersList 
-        inventory={character.inventory} 
+        inventory={sortedInventory} 
         themeColor={characterColor} 
         onItemClick={onItemClick} 
       />

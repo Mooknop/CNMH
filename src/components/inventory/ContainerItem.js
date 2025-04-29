@@ -39,6 +39,20 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
+
+  // Sort the container contents alphabetically by name
+  const getSortedContents = () => {
+    if (!contents || !Array.isArray(contents)) {
+      return [];
+    }
+    
+    return [...contents].sort((a, b) => {
+      // Compare names case-insensitive
+      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+    });
+  };
+  
+  const sortedContents = getSortedContents();
   
   return (
     <div className="container-item">
@@ -77,7 +91,7 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
       </div>
       
       {/* Contents list - only shown when expanded */}
-      {isExpanded && contents.length > 0 && (
+      {isExpanded && sortedContents.length > 0 && (
         <div className="container-contents">
           <table className="contents-table">
             <thead>
@@ -88,7 +102,7 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
               </tr>
             </thead>
             <tbody>
-              {contents.map((item, index) => (
+              {sortedContents.map((item, index) => (
                 <tr key={item.id || `container-item-${index}`}>
                   <td>
                     <button 
