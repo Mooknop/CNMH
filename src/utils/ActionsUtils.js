@@ -16,7 +16,7 @@ export const getStrikes = (character) => {
   let allStrikes = [];
 
   // Add defined strikes from character data if they exist
-  if (character.strikes && character.strikes.length > 0) {
+  if (character.strikes && Array.isArray(character.strikes) && character.strikes.length > 0) {
     // Process each predefined strike to calculate attack modifier
     const processedStrikes = character.strikes.map(strike => {
       // Determine ability modifier based on strike type and traits
@@ -78,7 +78,7 @@ export const getStrikes = (character) => {
   // Add strikes from feats
   if (character.feats) {
     const featStrikes = character.feats
-      .filter(feat => feat.strikes && feat.strikes.length > 0) // Only feats with strikes property
+      .filter(feat => feat.strikes && Array.isArray(feat.strikes) && feat.strikes.length > 0) // Only feats with strikes property
       .flatMap(feat => {
         // Map each strike from this feat and add a source property
         return feat.strikes.map(strike => {
@@ -129,13 +129,14 @@ export const getStrikes = (character) => {
           
           return {
             name: strike.name,
-            type: strike.type,
-            actionCount: parseInt(strike.action) || 1,
+            type: strike.type || 'melee', // Default to melee if not specified
+            actionCount: parseInt(strike.actionCount || strike.action) || 1,
             traits: strike.traits || [],
             attackMod: attackBonus,
             damage: damageString,
             description: strike.description || "",
-            source: feat.name // Add feat source for reference
+            source: feat.name, // Add feat source for reference
+            range: strike.range
           };
         });
       });
@@ -208,8 +209,8 @@ export const getStrikes = (character) => {
           
           return {
             name: strikeName,
-            type: weaponStrike.type,
-            actionCount: parseInt(weaponStrike.action) || 1,
+            type: weaponStrike.type || 'melee', // Default to melee if not specified
+            actionCount: parseInt(weaponStrike.actionCount || weaponStrike.action) || 1,
             traits: weaponStrike.traits || [],
             attackMod: attackBonus,
             damage: damageString,
@@ -241,7 +242,25 @@ export const getStrikes = (character) => {
     });
   }
 
+  // Ensure type is defined for all strikes
+  allStrikes = allStrikes.map(strike => ({
+    ...strike,
+    type: strike.type || (strike.traits && strike.traits.includes('Ranged') ? 'ranged' : 'melee')
+  }));
+
   return allStrikes;
+};
+
+/**
+ * Categorize strikes by type (melee/ranged)
+ * @param {Array} strikes - Array of strike objects
+ * @returns {Object} - Object with strikes categorized by type
+ */
+export const categorizeStrikesByType = (strikes) => {
+  return {
+    melee: strikes.filter(strike => strike.type === 'melee'),
+    ranged: strikes.filter(strike => strike.type === 'ranged')
+  };
 };
 
 /**

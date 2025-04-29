@@ -10,6 +10,23 @@
   font-size: 1.2rem;
 }
 
+/* Strike category header styling */
+.strike-category-header {
+  font-size: 1.1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+
+.strikes-section {
+  margin-bottom: 2rem;
+}
+
+.strikes-section:last-child {
+  margin-bottom: 0;
+}
+
 /* Section tabs styling */
 .section-tabs {
   display: flex;

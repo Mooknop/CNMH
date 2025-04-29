@@ -1,4 +1,4 @@
-// src/components/character-sheet/ActionsList.js
+// src/components/actions/ActionsList.js
 import React, { useState, useEffect } from 'react';
 import './ActionsList.css';
 import StrikesList from './StrikesList';
