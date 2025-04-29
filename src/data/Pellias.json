@@ -88,7 +88,9 @@
           "actionCount": 1,
           "traits": ["Aura", "Kineticist", "Metal", "Primal"],
           "description": "You tap into your kinetic gate to make elements flow around you. Your kinetic aura activates, and as a part of this action, you can use a 1-action Elemental Blast or a 1-action stance impulse. Your kinetic aura is a 10-foot emanation where pieces of your kinetic element (or all your kinetic elements, if you can channel more than one) flow around you. The kinetic aura can't damage anything or affect the environment around you unless another ability allows it to. Channel Elements has the traits of all your kinetic elements.\nYour kinetic aura automatically deactivates if you're knocked out, you use an impulse with the overflow trait, or you Dismiss the aura. Though you can't use new impulses while your kinetic aura is deactivated, ones you already used remain, and you can still Sustain any that can be sustained. Stance impulses are linked to your kinetic aura and end when the aura deactivates."
-        },
+        }
+      ],
+      "strikes":[
         {
           "name": "Elemental Blast (Metal)",
           "actionCount": 1,
@@ -167,72 +169,158 @@
       "name": "Full Plate",
       "quantity": 1,
       "weight": 4.0,
-      "description": "Heavy armor that provides excellent protection at the cost of mobility."
+      "speedPenalty": [10, 5],
+      "description": "Plate mail consists of interlocking plates that encase nearly the entire body in a carapace of steel. It is costly and heavy, and the wearer often requires help to don it correctly, but it provides some of the best defense armor can supply. A suit of this armor comes with an undercoat of padded armor and a pair of gauntlets."
     },
     {
-      "id": "item-2",
-      "name": "Steel Shield (Sturdy, Minor)",
+      "name": "Spiked Steel Shield",
       "quantity": 1,
-      "weight": 1.0,
-      "description": "A reinforced shield that can absorb more damage before breaking. Hardness 8, HP 64, BT 32",
+      "weight": 1,
+      "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
+      "health": 20,
+      "breakThreshold": 10,
       "strikes": {
+        "name": "Spiked Shield Bash",
+        "proficiency": "simple",
+        "type": "melee",
+        "action": 1,
+        "damage": "1d6",
+        "traits": ["Attack", "melee"]
+      }
+    },
+    {
+      "name": "Cold Iron Light Hammer",
+      "potency": 1,
+      "weight": 1,
+      "quantity": 1,
+      "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "strikes": [
+        {
+          "name": "Light Hammer Strike",
           "proficiency": "martial",
           "type": "melee",
           "action": 1,
-          "damage": "1d4",
-          "traits": ["Attack", "Melee"]
+          "damage": "1d6",
+          "traits": ["Attack", "Agile", "Melee"]
         },
-      "actions":[
         {
-          "name": "Raise a Shield",
-          "actionCount": 1,
-          "traits": ["Champion"],
-          "description": "You position your shield to protect yourself. When you have your shield raised, you gain a +2 circumstance bonus to AC until the start of your next turn."
+          "name": "Hammer Throw",
+          "proficiency": "martial",
+          "type": "ranged",
+          "range": "20ft",
+          "action": 1,
+          "damage": "1d6",
+          "traits": ["Attack", "Agile", "Thrown"]
         }
       ]
     },
     {
-      "id": "item-3",
-      "name": "Longsword (+1)",
+      "name": "Pick",
+      "weight": 1,
       "quantity": 1,
-      "weight": 1.0,
-      "description": "A versatile blade that can be wielded with one or two hands. This sword has been magically enhanced to strike more accurately.",
+      "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
       "strikes": {
         "proficiency": "martial",
-        "type": "melee",
+        "type": "me;ee",
         "action": 1,
-        "damage": "1d8",
-        "hands": "One Hand",
-        "traits": ["Attack", "Melee", "Versatile P"]
+        "damage": "1d6"
       }
     },
     {
-      "id": "item-4",
-      "name": "Holy Symbol",
+      "name": "Sanitizing Pin",
+      "price": 7,
+      "quantity": 1,
+      "weight": 0,
+      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+    },
+    {
+      "name": "Rust Scrub",
+      "price": 2,
       "quantity": 1,
       "weight": 0.1,
-      "description": "A silver symbol of Iomedae, the goddess of righteous valor, honor, and justice."
+      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
     },
     {
-      "id": "item-5",
-      "name": "Healer's Tools",
+      "name": "Minor Elixir of Life",
+      "price": 3,
       "quantity": 1,
-      "weight": 1.0,
-      "description": "These bandages, herbs, and suturing tools are necessary for Medicine checks to Treat Wounds."
-    },
-    {
-      "id": "item-6",
-      "name": "Potion of Healing (Minor)",
-      "quantity": 3,
       "weight": 0.1,
-      "description": "Restores 1d8 HP when consumed."
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
     },
     {
-      "id": "item-7",
-      "name": "Adventurer's Pack",
+      "name": "Gecko Potion",
+      "price": 3,
       "quantity": 1,
-      "weight": 2.0,
-      "description": "Includes backpack, bedroll, 10 pieces of chalk, flint and steel, 50 feet of rope, 2 weeks' rations, soap, 5 torches, and a waterskin."
+      "weight": 0.1,
+      "description": "A gecko potion is a sticky, tawny brown liquid with flecks of sand suspended in it. For 5 minutes after drinking this potion, your fingertips sprout thousands of microscopic, bristled hairs that cling to objects, granting you a +1 item bonus to Climb and Palm an Object, and to your Reflex DC against Disarm attempts."
+    },
+    {
+      "name": "Wolf Fang",
+      "price": 3,
+      "quantity": 1,
+      "weight": 0.0,
+      "description": "This wolf canine is bound in a strip of leather and tied to a buckle or strap on a suit of armor. When the fang is affixed to a weapon and you succesfully trip a foe, you can activate it to deal bludgeoning damage equal to your Strength modifier to the target of your Trip."
+    },
+    {
+      "name": "Backpack",
+      "price": 0,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "A backpack for holding your gear",
+      "container":{
+        "capacity": 4,
+        "ignored": 2,
+        "contents":[
+          {
+            "name": "Bedroll",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "A compact mat, not too comfy but suitable for long journeys."
+          },
+          {
+            "name": "Chalk",
+            "quantity": 10,
+            "weight": 0.0,
+            "description": "Suitable for marking hard surfaces temporarily."
+          },
+          {
+            "name": "Flint & Steel",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "A camper's classic for starting fires."
+          },
+          {
+            "name": "Rope (50ft)",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "Sturdy rope for tying something (or someone) down."
+          },
+          {
+            "name": "Rations",
+            "quantity": 7,
+            "weight": 0.1,
+            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+          },
+          {
+            "name": "Soap",
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "Scrub a dub dub"
+          },
+          {
+            "name": "Torch",
+            "quantity": 5,
+            "weight": 0.1,
+            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+          },
+          {
+            "name": "Waterskin",
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+          }
+        ]
+      }
     }
   ],
   "champion": {
