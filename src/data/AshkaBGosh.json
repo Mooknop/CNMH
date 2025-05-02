@@ -181,9 +181,10 @@
     {
       "id": "item-1",
       "name": "Mother's Amulet",
+      "traits":["Implement"],
       "quantity": 1,
       "weight": 0.1,
-      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you.",
+      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you. The power of your implement can be turned to adding and amplifying the effects of runes and other magical empowerments. When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit.",
       "reactions": [
         {
           "name": "Amulet's Abeyance",
@@ -256,6 +257,7 @@
     },
     {
       "name": "Crescent Cross",
+      "traits": ["Combination", "Critical Fusion", "Disarm", "Parry"],
       "quantity": 1,
       "weight": 0.1,
       "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
@@ -267,7 +269,7 @@
           "action": 1,
           "damage": "1d6",
           "range": "30ft",
-          "traits": ["Attack", "Ranged"]
+          "traits": ["Attack", "Capacity 3", "Parry", "Ranged"]
         },
         {
           "name": "Crescent Cross Blade",
@@ -275,12 +277,13 @@
           "type": "melee",
           "action": 1,
           "damage": "1d4",
-          "traits": ["Attack", "Melee", "Slashing"]
+          "traits": ["Attack", "Disarm", "Melee", "Parry"]
         }
       ]
     },
     {
       "name": "Longbow",
+      "traits": ["Deadly D10", "Volley 30ft"],
       "quantity": 1,
       "weight": 2.0,
       "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted. Because it's made for long range, you take a -2 penalty to attacks on creatures within 30ft with it.",
@@ -297,26 +300,44 @@
     },
     {
       "name": "Minor Elixir of Life",
+      "traits": ["Alchemical", "Consumable", "Elixir", "Healing"],
       "price": 3,
       "quantity": 2,
       "weight": 0.1,
       "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
-    }
-  ],
-  "notes": [
-    {
-      "id": "note-1",
-      "title": "Shadow Plane Research",
-      "date": "2025-04-10",
-      "content": "I've been collecting information about the intersection points between our world and the Shadow Plane. There seems to be a pattern to the locations where the veil is thinnest. Most align with ancient sites of occult significance.",
-      "createdAt": "2025-04-10T18:45:00.000Z"
     },
     {
-      "id": "note-2",
-      "title": "Amulet's Strange Behavior",
-      "date": "2025-04-15",
-      "content": "My amulet implement has been behaving oddly when near the northern temple ruins. The symbols glow with a faint purple light, and I've noticed shadows cast by it seem to move independently. Could be connected to the strange occurrences the villagers reported.",
-      "createdAt": "2025-04-15T21:30:00.000Z"
+      "name": "Skeleton Key",
+      "traits": ["Magical"],
+      "quantity": 1,
+      "weight": 0,
+      "description": "A grinning skull tops the bow of this macabre key. This key can be used in place of a thieves' toolkit when attempting to Pick a Lock, and it grants a +1 item bonus to the Thievery check. If the skeleton key becomes broken due to a critical failure on the check, it works as a normal thieves' toolkit and loses its benefits until repaired.",
+      "freeActions":[
+        {
+          "name": "Loosen Lock",
+          "traits": [ "Manipulate"],
+          "description": "Once per day, the key casts Knock on a Lock you're trying to pick, granting a +4 status bonus to attempts to pick it."
+        }
+      ],
+      "secret": {
+        "name": "Shrieking Key",
+        "traits": ["Rare", "Cursed", "Magical", "Transmutation"],
+        "quantity": 1,
+        "weight": 0,
+        "description": "A skull-topped metal shrieking key appears to be a skeleton key, useful in place of thieves' tools when attempting to Pick a Lock. A shrieking key has no activation, however. When you use it to Pick a Lock, the key emits a loud shriek audible for 500 feet despite ambient noise. Physical barriers still block or muffle the shriek as normal. You also take a –2 circumstance penalty to the Thievery check rather than enjoying a bonus. After you attempt such a check with the key the first time, it magically attaches to you, returning to your possession if discarded. To use another device to Pick a Lock, you must first succeed at a DC 20 Will save."
+      }
+    },
+    {
+      "name": "Healer's Toolkit",
+      "quantity": 1,
+      "weight": 1,
+      "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
+    },
+    {
+      "name": "Thieves' Toolkit",
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "You need a thieves' toolkit to Pick Locks or Disable Devices (of some types) using the Thievery skill. If your thieves' toolkit is broken, you can repair it by replacing the lock picks with replacement picks appropriate to your toolkit; this doesn't require using the Repair action. If you wear your thieves' toolkit, you can draw and replace it as part of the action that uses it."
     }
   ],
   "thaumaturge": {
@@ -325,32 +346,31 @@
         "name": "Amulet",
         "benefit": "You gain an item bonus to saving throws equal to the amulet's implement bonus.",
         "esoterica": "You gain a +1 circumstance bonus to Perception checks to sense magic and to Recall Knowledge about magical subjects."
-      },
-      {
-        "name": "Chalice",
-        "benefit": "As an action, you can imbue the chalice with a concoction that you or an adjacent ally can drink. This grants temporary Hit Points equal to your level + your Charisma modifier that last for 10 minutes.",
-        "esoterica": "When you succeed at identifying a creature, you learn about any special characteristics of its physiology."
       }
     ],
     "exploits": [
       {
         "name": "Personal Antithesis",
-        "description": "You learn how to find and exploit a weakness in a specific creature. When you use Exploit Vulnerability against a creature you've identified with Recall Knowledge, you gain a +2 circumstance bonus to damage rolls against that creature."
+        "description": "You improvise a custom weakness on a creature by forcefully presenting and empowering a piece of esoterica that repels it on an individual level; for instance, against a tyrant, you might procure a broken chain that once held a captive. This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level."
       },
       {
-        "name": "Shadow Shroud",
-        "description": "You can manipulate shadows around yourself, gaining a +1 circumstance bonus to Stealth checks and concealment against creatures more than 30 feet away from you in dim light or darkness."
+        "name": "Mortal Weakness",
+        "description": "After identifying a creature's weakness, you use a thematically resonant bit of esoterica to attune your attacks to your discovery. Your unarmed and weapon Strikes activate the highest weakness you discovered with Exploit Vulnerability, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. For example, when fighting a pack of werewolves you might use silver shavings or crushed moonstone to deal damage that applies their weakness to silver to your attacks against any of the werewolves, but you wouldn't apply this damage to any other monsters with a weakness to silver."
       }
-    ],
-    "paradigm": "Cursed",
-    "paradigm_description": "You believe that many supernatural effects, including those that creatures create, are curses, whether they manifest as traditional curses, possessions, or simple maledictions. You know that using a creature's personal possessions against them lets you take advantage of the metaphysical connection between creature and possession."
+    ]
   },
   "actions": [
     {
       "name": "Exploit Vulnerability",
       "actionCount": 1,
-      "traits": ["Thaumaturge"],
-      "description": "You use your collected lore to identify and target a specific foe's vulnerabilities. Attempt a check to Recall Knowledge about a creature you can see. The DC of this check is determined by the GM but is typically the standard DC to identify a creature of that type - 2. You gain a +1 circumstance bonus on this check if you have successfully identified the creature with a previous Recall Knowledge check during this combat.\n\nIf you succeed, you center your esoterica on that creature in a way that exploits its vulnerabilities, granting you a +1 circumstance bonus to damage rolls against it. The bonus increases to +2 if you have Personal Antithesis."
+      "traits": ["Esoterica", "Manipulate", "Thaumaturge"],
+      "description": "You scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.",
+      "degrees": {
+        "Critical Success": "You remember the creature's weaknesses, and as you empower your esoterica, you have a flash of insight that grants even more knowledge about the creature. You learn all of the creature's resistances, weaknesses, and immunities, including the amounts of the resistances and weaknesses and any unusual weaknesses or vulnerabilities, such as what spells will pass through a golem's antimagic. You can exploit either the creature's mortal weakness or personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
+        "Success": "You recall an important fact about the creature, learning its highest weakness (or one of its highest weaknesses, if it has multiple with the same value) but not its other weaknesses, resistances, or immunities. You can exploit either the creature's mortal weakness or personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
+        "Failure": " Failing to recall a salient weakness about the creature, you instead attempt to exploit a more personal vulnerability. You can exploit only the creature's personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
+        "Critical Failure": "You couldn't remember the right object to use and become distracted while you rummage through your esoterica. You become flat-footed until the beginning of your next turn."
+      }
     }
   ],
   "reactions": [],

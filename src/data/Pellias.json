@@ -188,8 +188,12 @@
       "quantity": 1,
       "weight": 1,
       "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
-      "health": 20,
-      "breakThreshold": 10,
+      "shield": {
+        "health": 20,
+        "breakThreshold": 10,
+        "hardness": 5,
+        "bonus": 2
+      },
       "strikes": {
         "name": "Spiked Shield Bash",
         "proficiency": "simple",
@@ -200,10 +204,25 @@
       }
     },
     {
+      "name": "Tower Shield",
+      "quantity": 1,
+      "weight": 4,
+      "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shiled.",
+      "shield": {
+        "health": 20,
+        "breakThreshold": 10,
+        "hardness": 5,
+        "bonus": 2,
+        "speedPenalty": 5
+      }
+      
+    },
+    {
       "name": "Cold Iron Light Hammer",
       "potency": 1,
       "weight": 1,
       "quantity": 1,
+      "traits": ["Agile", "Thrown 20ft"],
       "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
       "strikes": [
         {
@@ -230,6 +249,7 @@
       "weight": 1,
       "quantity": 1,
       "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
+      "traits": ["Fatal 1d10"],
       "strikes": {
         "proficiency": "martial",
         "type": "melee",
@@ -242,6 +262,7 @@
       "price": 7,
       "quantity": 1,
       "weight": 0,
+      "traits": ["Consumable", "Magical", "Talisman", "Uncommon"],
       "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
     },
     {
@@ -249,6 +270,7 @@
       "price": 2,
       "quantity": 1,
       "weight": 0.1,
+      "traits": ["Alchemical", "Consumable", "Uncommon"],
       "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
     },
     {
@@ -256,6 +278,7 @@
       "price": 3,
       "quantity": 1,
       "weight": 0.1,
+      "traits": ["Alchemical", "Consumable", "Elixir", "Healing"],
       "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
     },
     {
@@ -263,6 +286,7 @@
       "price": 3,
       "quantity": 1,
       "weight": 0.1,
+      "traits": ["Consumable", "Magical", "Potion"],
       "description": "A gecko potion is a sticky, tawny brown liquid with flecks of sand suspended in it. For 5 minutes after drinking this potion, your fingertips sprout thousands of microscopic, bristled hairs that cling to objects, granting you a +1 item bonus to Climb and Palm an Object, and to your Reflex DC against Disarm attempts."
     },
     {
@@ -270,6 +294,7 @@
       "price": 3,
       "quantity": 1,
       "weight": 0.0,
+      "traits": ["Consumable", "Magical", "Talisman"],
       "description": "This wolf canine is bound in a strip of leather and tied to a buckle or strap on a suit of armor. When the fang is affixed to a weapon and you succesfully trip a foe, you can activate it to deal bludgeoning damage equal to your Strength modifier to the target of your Trip."
     },
     {
@@ -335,9 +360,8 @@
     }
   ],
   "champion": {
-    "deity": "Iomedae",
-    "cause": "Paladin (Good)",
-    "alignment": "Lawful Good",
+    "deity": "Ferrumnestra",
+    "cause": "Paladin",
     "tenets": [
       "You must act with honor, never cheating, lying, or taking advantage of others.",
       "You must respect legitimate authority.",

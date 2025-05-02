@@ -275,6 +275,7 @@
       "price": 0,
       "quantity": 1,
       "weight": 1.0,
+      "traits": ["Extradimensional", "Magical"],
       "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
       "container":{
         "capacity": 25,
@@ -290,18 +291,21 @@
             "name": "Anticorrosion Oil",
             "quantity": 3,
             "weight": 0.1,
+            "traits": ["Consumable", "Magical", "Oil"],
             "description":"You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae."
           },
           {
             "name": "Oil of Weightlessness",
             "quantity": 1,
             "weight": 0.1,
+            "traits": ["Consumable", "Magical", "Oil"],
             "description":"You can spread this shimmering oil on an item of 1 Bulk or less to make it feel weightless. It has negligible Bulk for 1 hour."
           },
           {
             "name": "Moderate Drakeheart Mutagen",
             "quantity": 2,
             "weight": 0.1,
+            "traits": ["Alchemical", "Consumable", "Elixir", "Mutagen"],
             "description":"Your skin grows scales like a drake, and your eyesight become sharp and your pupils slitted, but your mind and reflexes slow. You gain a +5 Item bonus to AC, a Dexterity cap of +2 (as usual, use your lowest Dexterity cap if you have more than one), and a +2 item bonus to Perception checks. If you're wearing armor, you still calculate your proficiency bonus to AC based on your proficiency in the armor you're wearing, even if the drakeheart mutagen has a higher item bonus. While under its effects, you take a –1 penalty to Will saves, Reflex saves, and all skill checks to Recall Knowledge. As a single action, you can burn through the remaining duration of the Mutagen to stride twice."
           },
           {
@@ -323,15 +327,23 @@
             "quantity": 1,
             "weight": 0.1,
             "price": 0,
+            "traits": ["Alchemical", "Consumable", "Drug", "Ingested", "Poison", "Rare"],
             "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands."
           }
         ]
       }
     },
     {
+      "name": "Healer's Toolkit",
+      "quantity": 1,
+      "weight": 1,
+      "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
+    },
+    {
       "name": "Minor Healing Potion",
       "quantity": 2,
       "weight": 0.1,
+      "traits": ["Consumable", "Healing", "Magical", "Potion", "Vitality"],
       "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed"
     },
     {
@@ -339,18 +351,21 @@
       "price": 3,
       "quantity": 1,
       "weight": 0.1,
+      "traits": ["Alchemical", "Consumable", "Elixir", "Healing"],
       "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
     },
     {
       "name": "Potion of Waterbreathing",
       "quantity": 1,
       "weight": 0.1,
+      "traits": ["Consumable", "Magical", "Potion"],
       "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour."
     },
     {
       "name": "Mysterious Blue Orb",
       "quantity": 1,
       "weight": 1.0,
+      "traits": ["Magical"],
       "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him."
     },
     {
@@ -358,6 +373,7 @@
       "price": 7,
       "quantity": 1,
       "weight": 0,
+      "traits": ["Consumable", "Magical", "Talisman", "Uncommon"],
       "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
     },
     {
@@ -365,6 +381,7 @@
       "price": 2,
       "quantity": 1,
       "weight": 0.1,
+      "traits": ["Alchemical", "Consumable", "Uncommon"],
       "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
     },
     {
@@ -373,6 +390,7 @@
       "quantity": 100,
       "weight": 0.0,
       "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
+      "traits": ["Agile", "Monk", "Thrown", "Uncommon"],
       "strikes":{
         "proficiency": "simple",
         "type": "ranged",
