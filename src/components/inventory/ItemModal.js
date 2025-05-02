@@ -48,6 +48,48 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
             )}
           </div>
           
+          {/* Display shield properties if this is a shield */}
+          {item.shield && (
+            <div className="shield-properties">
+              <h3 style={{ color: themeColor }}>Shield Properties</h3>
+              <div className="item-detail-grid">
+                {item.shield.bonus && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">AC Bonus</span>
+                    <span className="item-detail-value">+{item.shield.bonus}</span>
+                  </div>
+                )}
+                {item.shield.hardness !== undefined && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Hardness</span>
+                    <span className="item-detail-value">{item.shield.hardness}</span>
+                  </div>
+                )}
+                {item.shield.health !== undefined && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Hit Points</span>
+                    <span className="item-detail-value">{item.shield.health}</span>
+                  </div>
+                )}
+                {item.shield.breakThreshold !== undefined && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Break Threshold</span>
+                    <span className="item-detail-value">{item.shield.breakThreshold}</span>
+                  </div>
+                )}
+                {item.shield.speedPenalty !== undefined && (
+                  <div className="item-detail">
+                    <span className="item-detail-label">Speed Penalty</span>
+                    <span className="item-detail-value">-{item.shield.speedPenalty} ft.</span>
+                  </div>
+                )}
+              </div>
+              <div className="shield-info" style={{ marginTop: '0.5rem', fontSize: '0.9rem', fontStyle: 'italic', color: '#666' }}>
+                When you use the Shield Block reaction, your shield prevents you from taking damage equal to its Hardness. Your shield and you take any remaining damage, potentially breaking or destroying the shield if the damage exceeds its Break Threshold.
+              </div>
+            </div>
+          )}
+          
           {item.description && (
             <div className="item-description">
               <h3>Description</h3>
