@@ -125,12 +125,16 @@
       "name": "Celebrity Dedication",
       "level": 2,
       "source": "Archetype",
-      "description": "You've developed a significant following due to your artistic talents. You become trained in Society. If you were already trained in Society, you instead become trained in a skill of your choice. You also become trained in Celebrity Lore. You can use your proficiency rank in Performance in place of your proficiency rank in Diplomacy when Gathering Information or Making an Impression.",
+      "description": "The more people you have looking at you, the more content you are, and you take every opportunity to show up others when their performances are less than perfect. You gain the Upstage reaction. In addition, when you Earn Income, if the level of the task is higher than your level, you gain a +1 circumstance bonus to your check to Earn Income.",
       "reactions":[
         {
           "name": "Upstage",
           "trigger": "An enemy attempts a skill check and doesn’t get a critical success",
-          "description": "After your foe has tried their best, you show everyone how it’s really done. Attempt a check using the same skill that triggered this reaction. The DC is typically the same as the check the enemy attempted, though the GM can adjust this as usual. If you critically succeed, you gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn. On a regular success, you get this effect only if the enemy failed their check."
+          "description": "After your foe has tried their best, you show everyone how it’s really done. Attempt a check using the same skill that triggered this reaction. The DC is typically the same as the check the enemy attempted, though the GM can adjust this as usual.",
+          "degrees":{
+            "Critical Success": "You gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn.",
+            "Success": "As critical success, except you gain the benefits only if the triggering creature failed their skill check."
+          }
         }
       ]
     },
@@ -164,22 +168,14 @@
       "name": "Eyes of the City",
       "level": 1,
       "source": "Skill",
-      "description": "You keep in contact with various people in the local settlement, and you have a finger on its pulse. You know what's going on and who's involved with what around you. When you're in a settlement, if you succeed at a normal check to Gather Information or Recall Knowledge about that settlement, you get one additional piece of information or relevant fact. If you critically succeed, you get two additional pieces of information or relevant facts.",
-      "actions": [
-        {
-          "name": "Eyes of the City",
-          "actionCount": 1,
-          "traits": ["General","Skill"],
-          "description": "You can track down targets with the help of locals. You can use Diplomacy or Society, whichever you're trained in, to Track creatures in settlements. You chat with locals to help follow the trail of creatures you Track. At the GM's discretion, there might not be enough people to speak with to keep following the trail."
-        }
-      ]
+      "description": "You can track down targets with the help of locals. You can use Diplomacy or Society, whichever you're trained in, to Track creatures in settlements. You chat with locals to help follow the trail of creatures you Track. At the GM's discretion, there might not be enough people to speak with to keep following the trail."
     },
     {
       "id": "feat-5",
       "name": "Quick Identification",
       "level": 1,
       "source": "Skill",
-      "description": "You can Identify Magic after examining an item for only 1 minute (rather than 10 minutes). If you're a master in Arcana, Nature, Occultism, or Religion, you can Identify Magic in that tradition after examining an item for only 3 rounds. If you're legendary, it takes 1 round."
+      "description": "You can Identify Magic swiftly. You take only 1 minute when using Identify Magic to determine the properties of an item, ongoing effect, or location, rather than 10 minutes. If you’re a master, it takes a 3-action activity, and if you’re legendary, it takes 1 action."
     },
     {
       "id": "feat-6",
@@ -281,7 +277,7 @@
         {
           "name": "Unseen Din",
           "actionCount": 1,
-          "traits": ["Auditory", "Illusion", "Manipulate"],
+          "traits": ["Illusion", "Manipulate", "Sonic"],
           "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
         }
       ]

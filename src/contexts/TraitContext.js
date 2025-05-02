@@ -23,7 +23,7 @@ export const TraitProvider = ({ children }) => {
   // Function to open modal with a specific trait
   const openTraitModal = (traitName) => {
     const trait = traits.find(t => 
-      t.name.toLowerCase() === traitName.toLowerCase()
+      traitName.toLowerCase().includes(t.name.toLowerCase())
     );
     
     if (trait) {

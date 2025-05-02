@@ -117,7 +117,7 @@
       "name": "Hard to Fool",
       "level": 1,
       "source": "Fetchling",
-      "description": "Your experiences in the Shadow Plane have made you wary of deception. You gain a +1 circumstance bonus to Perception checks against illusions and to Will saves against illusions and lies (such as a successful Lie action)."
+      "description": "You're accustomed to seeing through shifting darkness and bewildering magic. You gain a +1 circumstance bonus on Perception checks against illusions as well as to Will saves against illusions and shadow effects."
     },
     {
       "id": "feat-3",
@@ -152,14 +152,14 @@
       "name": "Diverse Lore",
       "level": 2,
       "source": "Thaumaturge",
-      "description": "You collect information from a wide variety of sources, letting you use your esoterica lore for a wider range of topics. You can use your esoterica lore to Recall Knowledge about any topic, though you still can't use it in place of a specific lore for a task that requires specialized training, such as Crafting."
+      "description": "Your wandering studies mean you've heard rumors or theories about almost every topic... though admittedly, your sources aren't always the most reliable. You can take a –2 penalty to your check to Recall Knowledge with Esoteric Lore to Recall Knowledge about any topic, not just the usual topics available for Esoteric Lore. Additionally, when you succeed at your check to Exploit a Vulnerability, compare the result of your Esoteric Lore check to the DC to Recall Knowledge for that creature; if that number would be a success or a critical success, you gain information as if you had succeeded at the Recall Knowledge check."
     },
     {
       "id": "feat-8",
       "name": "Familiar",
       "level": 1,
       "source": "General",
-      "description": "You make a pact with a creature that serves you and assists your spellcasting. You gain a familiar."
+      "description": "You make a pact with a creature that serves you and assists you; you gain a familiar."
     },
     {
       "id": "feat-9",

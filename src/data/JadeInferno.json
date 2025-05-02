@@ -114,7 +114,7 @@
         "name": "Otherworldly Magic",
         "level": 1,
         "source": "Ancestry",
-        "description": "Your elven blood runs strong enough to grant you magical abilities. Choose one cantrip from the arcane spell list. You can cast this spell as an arcane innate spell at will. A cantrip is heightened to a spell level equal to half your level rounded up."
+        "description": "Your elven blood runs strong enough to grant you magical abilities. You gain an extra Arcane cantrip."
       },
       {
         "id": "feat-3",

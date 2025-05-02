@@ -115,21 +115,21 @@
       "name": "Deity's Domain",
       "level": 1,
       "source": "Champion",
-      "description": "You embody an aspect of your deity. Choose one of your deity's domains from the list in their entry. You gain the domain's initial domain spell as a devotion spell."
+      "description": "You embody an aspect of your deity. You get the initial domain spell of the Metal domain as a Devotion Spell."
     },
     {
       "id": "feat-3",
       "name": "Devoted Guardian",
       "level": 1,
       "source": "Champion",
-      "description": "You've sworn to protect your allies with your shield. When you use the Shield Block reaction to protect an ally, if the ally takes any damage from the attack, you can reduce the damage they take by 2 + your level, and you increase the damage your shield takes by the same amount."
+      "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward. Select one adjacent creature. As long as your shield is raised and the creature remains adjacent to you, the creature gains a +1 circumstance bonus to their AC, or a +2 circumstance bonus if the shield you raised was a tower shield."
     },
     {
       "id": "feat-4",
       "name": "Nimble Reprisal",
       "level": 2,
       "source": "Ancestry",
-      "description": "If an enemy misses you with a melee attack, you can use your reaction to Step away from that enemy. The enemy must remain within your reach throughout your Step to use this reaction."
+      "description": "You can use Retributive Strike at greater distance. You can use a ranged weapon to make a ranged Strike instead of a melee Strike for Retributive Strike. The enemy needs to be in range, but not in reach, and it must still be in your champion's aura. You can also make melee Strikes against enemies a bit farther away. If the enemy that triggered your reaction is outside your reach but is within 5 feet of your reach, as part of your reaction you can Step to put the enemy in your reach before making a melee Retributive Strike."
     },
     {
       "id": "feat-5",
@@ -150,7 +150,7 @@
       "name": "Natural Ambition",
       "level": 1,
       "source": "Human",
-      "description": "Your ambition knows no bounds, and you strive to learn as much as you can. You gain a 1st-level class feat."
+      "description": "Your ambition knows no bounds, and you strive to learn as much as you can. You gain an extra 1st-level class feat."
     },
     {
       "id": "feat-8",
@@ -207,7 +207,7 @@
       "name": "Tower Shield",
       "quantity": 1,
       "weight": 4,
-      "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shiled.",
+      "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
       "shield": {
         "health": 20,
         "breakThreshold": 10,
@@ -243,19 +243,6 @@
           "traits": ["Attack", "Agile", "Thrown"]
         }
       ]
-    },
-    {
-      "name": "Pick",
-      "weight": 1,
-      "quantity": 1,
-      "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
-      "traits": ["Fatal 1d10"],
-      "strikes": {
-        "proficiency": "martial",
-        "type": "melee",
-        "action": 1,
-        "damage": "1d6"
-      }
     },
     {
       "name": "Sanitizing Pin",
@@ -354,6 +341,19 @@
             "quantity": 1,
             "weight": 0.1,
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+          },
+          {
+            "name": "Pick",
+            "weight": 1,
+            "quantity": 1,
+            "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
+            "traits": ["Fatal 1d10"],
+            "strikes": {
+              "proficiency": "martial",
+              "type": "melee",
+              "action": 1,
+              "damage": "1d6"
+            }
           }
         ]
       }
