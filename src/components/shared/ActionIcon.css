@@ -1,0 +1,93 @@
+/* src/components/shared/ActionIcon.css */
+
+.action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    line-height: 1;
+    margin: 0 1px;
+  }
+  
+  .action-icon-small {
+    font-size: 0.9rem;
+  }
+  
+  .action-icon-medium {
+    font-size: 1.2rem;
+  }
+  
+  .action-icon-large {
+    font-size: 1.5rem;
+  }
+  
+  .action-count {
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .variable-action-count {
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .variable-action-count .action-range-separator {
+    margin: 0 2px;
+  }
+  
+  .reaction-icon {
+    color: #5e2929;
+  }
+  
+  .free-action-icon {
+    color: #5e2929;
+  }
+  
+  /* Tooltip styles */
+  .action-icon-wrapper {
+    position: relative;
+    display: inline-flex;
+  }
+  
+  .action-icon-wrapper:hover .action-tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .action-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+    z-index: 1000;
+    margin-bottom: 5px;
+  }
+  
+  .action-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+  }
+  
+  /* Make tooltips more accessible on mobile devices */
+  @media (max-width: 768px) {
+    .action-tooltip {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+    }
+  }

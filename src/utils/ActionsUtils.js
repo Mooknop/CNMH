@@ -1,5 +1,5 @@
 // src/utils/ActionsUtils.js
-// Shared utility functions for actions-related components
+// Updated utility functions for actions-related components
 
 import { 
   getAbilityModifier, 
@@ -274,7 +274,12 @@ export const getActions = (character) => {
 
   // Add defined actions from character data if they exist
   if (character.actions && character.actions.length > 0) {
-    allActions = [...character.actions];
+    // Process each action to normalize action count and check for variable actions
+    const processedActions = character.actions.map(action => {
+      return processActionText(action);
+    });
+    
+    allActions = [...processedActions];
   }
 
   // Add actions from inventory items
@@ -283,10 +288,13 @@ export const getActions = (character) => {
       .filter(item => item.actions && item.actions.length > 0) // Only items with actions property
       .flatMap(item => {
         // Map each action from this item and add a source property
-        return item.actions.map(action => ({
-          ...action,
-          source: item.name // Add source for reference
-        }));
+        return item.actions.map(action => {
+          const processedAction = processActionText(action);
+          return {
+            ...processedAction,
+            source: item.name // Add source for reference
+          };
+        });
       });
     
     // Add inventory actions to the list
@@ -299,10 +307,13 @@ export const getActions = (character) => {
       .filter(feat => feat.actions && feat.actions.length > 0) // Only feats with actions property
       .flatMap(feat => {
         // Map each action from this feat and add a source property
-        return feat.actions.map(action => ({
-          ...action,
-          source: feat.name // Add source for reference
-        }));
+        return feat.actions.map(action => {
+          const processedAction = processActionText(action);
+          return {
+            ...processedAction,
+            source: feat.name // Add source for reference
+          };
+        });
       });
     
     // Add feat actions to the list
@@ -334,6 +345,68 @@ export const getActions = (character) => {
   }
 
   return allActions;
+};
+
+/**
+ * Process action text to handle variable action counts
+ * @param {Object} action - The action object to process
+ * @returns {Object} - The processed action with normalized actionCount and variableActionCount fields
+ */
+const processActionText = (action) => {
+  // If actions field is defined as text (like "One to Three Actions")
+  if (action.actions && typeof action.actions === 'string') {
+    const text = action.actions.toLowerCase();
+    
+    // Check for variable action ranges
+    if (text.includes('to')) {
+      const rangeMatch = text.match(/(\w+)\s+to\s+(\w+)/i);
+      if (rangeMatch) {
+        const min = convertWordToNumber(rangeMatch[1]);
+        const max = convertWordToNumber(rangeMatch[2]);
+        
+        if (min > 0 && max > 0) {
+          return {
+            ...action,
+            actionCount: min, // Use minimum as default
+            variableActionCount: {
+              min,
+              max
+            }
+          };
+        }
+      }
+    }
+    
+    // Process regular action counts
+    const count = parseActionCount(action.actions);
+    if (count > 0) {
+      return {
+        ...action,
+        actionCount: count
+      };
+    }
+  }
+  
+  // Return original action if no processing was needed
+  return action;
+};
+
+/**
+ * Helper function to convert word numbers to integers
+ * @param {string} word - Word representation of a number
+ * @returns {number} - Numeric value
+ */
+const convertWordToNumber = (word) => {
+  const wordMap = {
+    'one': 1,
+    'two': 2,
+    'three': 3,
+    '1': 1,
+    '2': 2,
+    '3': 3
+  };
+  
+  return wordMap[word.toLowerCase()] || 0;
 };
 
 /**
@@ -374,7 +447,7 @@ export const getReactions = (character) => {
         // Map each reaction from this feat and add a source property
         return feat.reactions.map(reaction => ({
           ...reaction,
-          source: feat.name // Add source for reference
+          source: feat.name // Add feat source for reference
         }));
       });
     
@@ -454,8 +527,8 @@ export const parseActionCount = (actionText) => {
   if (match) return parseInt(match[1]);
   
   // Handle "One to Three Actions" variable format
-  if (text.includes('one to three actions')) return 3;
-  if (text.includes('one to two actions')) return 2;
+  if (text.includes('one to three actions')) return 3; // Return the maximum
+  if (text.includes('one to two actions')) return 2;  // Return the maximum
   
   // Handle special action types
   if (text.includes('reaction')) return -1; // Reaction
@@ -477,6 +550,30 @@ export const getActionType = (actionCount) => {
 };
 
 /**
+ * Extract variable action count from action text if present
+ * @param {string} actionText - Text describing actions
+ * @returns {Object|null} - Object with min and max action counts, or null if not variable
+ */
+export const extractVariableActionCount = (actionText) => {
+  if (!actionText) return null;
+  
+  const text = actionText.toLowerCase();
+  
+  // Look for "X to Y actions" pattern
+  const rangeMatch = text.match(/(\w+)\s+to\s+(\w+)\s+action/i);
+  if (rangeMatch) {
+    const min = convertWordToNumber(rangeMatch[1]);
+    const max = convertWordToNumber(rangeMatch[2]);
+    
+    if (min > 0 && max > 0 && min <= max) {
+      return { min, max };
+    }
+  }
+  
+  return null;
+};
+
+/**
  * Render action indicators as JSX
  * @param {string} actionText - Text describing actions
  * @param {string} themeColor - Color theme to use
@@ -485,11 +582,21 @@ export const getActionType = (actionCount) => {
 export const renderActionIcons = (actionText, themeColor) => {
   if (!actionText) return null;
   
-  const actionCount = parseActionCount(actionText);
-  const actionType = getActionType(actionCount);
+  const text = actionText.toLowerCase();
+  
+  // Check for variable action counts
+  const variableCount = extractVariableActionCount(text);
+  if (variableCount) {
+    return {
+      type: 'variable',
+      min: variableCount.min,
+      max: variableCount.max,
+      count: variableCount.min // Use minimum as default count
+    };
+  }
   
   // Special icons for reaction and free action
-  if (actionType === 'reaction') {
+  if (text.includes('reaction')) {
     return { 
       type: 'reaction',
       icon: '⟳',
@@ -497,7 +604,7 @@ export const renderActionIcons = (actionText, themeColor) => {
     };
   }
   
-  if (actionType === 'free') {
+  if (text.includes('free action')) {
     return {
       type: 'free',
       icon: '⟡',
@@ -506,7 +613,8 @@ export const renderActionIcons = (actionText, themeColor) => {
   }
   
   // Standard actions
-  if (actionType === 'standard' && actionCount > 0) {
+  const actionCount = parseActionCount(text);
+  if (actionCount > 0) {
     return {
       type: 'standard',
       icon: '●',

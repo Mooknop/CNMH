@@ -1,7 +1,9 @@
 // src/components/actions/CharacterActionsList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { getActions, renderActionIcons } from '../../utils/ActionsUtils';
+import TraitTag from '../shared/TraitTag';
+import ActionIcon from '../shared/ActionIcon';
+import { getActions } from '../../utils/ActionsUtils';
 
 /**
  * Component to render character's standard actions
@@ -13,29 +15,17 @@ const CharacterActionsList = ({ character, themeColor }) => {
   // Get all actions for the character
   const actions = getActions(character);
   
-  // Helper function to render action icons
-  const renderActionCount = (action) => {
+  // Helper function to format action text for display and for ActionIcon
+  const getActionText = (action) => {
     const count = action.actionCount || 1;
-    const actionText = `${count} Action${count > 1 ? 's' : ''}`;
-    const actionInfo = renderActionIcons(actionText, themeColor);
     
-    if (actionInfo && actionInfo.type === 'standard') {
-      return (
-        <div className="action-count">
-          {Array(actionInfo.count).fill().map((_, i) => (
-            <span key={i} className="action-icon" style={{ color: themeColor }}>{actionInfo.icon}</span>
-          ))}
-        </div>
-      );
+    // Handle variable action ranges
+    if (action.variableActionCount) {
+      const { min, max } = action.variableActionCount;
+      return `${min} to ${max} Actions`;
     }
     
-    return (
-      <div className="action-count">
-        {Array(count).fill().map((_, i) => (
-          <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
-        ))}
-      </div>
-    );
+    return `${count} Action${count !== 1 ? 's' : ''}`;
   };
   
   return (
@@ -43,11 +33,19 @@ const CharacterActionsList = ({ character, themeColor }) => {
       {actions.length > 0 ? (
         <div className="actions-grid">
           {actions.map((action, index) => {
+            // Format action text
+            const actionText = getActionText(action);
+            
             // Create header content
             const header = (
               <>
                 <h3 style={{ color: themeColor }}>{action.name}</h3>
-                {renderActionCount(action)}
+                <div className="action-icons">
+                  <ActionIcon 
+                    actionText={action.actions || actionText} 
+                    color={themeColor} 
+                  />
+                </div>
               </>
             );
             
@@ -56,8 +54,14 @@ const CharacterActionsList = ({ character, themeColor }) => {
               <>
                 <div className="action-traits">
                   {action.traits && action.traits.map((trait, i) => (
-                    <span key={i} className="trait-tag">{trait}</span>
+                    <TraitTag key={i} trait={trait} />
                   ))}
+                </div>
+                
+                {/* Display action count in text form */}
+                <div className="action-count-text">
+                  <span className="detail-label">Actions:</span>
+                  <span className="detail-value">{actionText}</span>
                 </div>
                 
                 {action.description && (
