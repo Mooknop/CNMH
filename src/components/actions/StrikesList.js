@@ -3,6 +3,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import ThaumaturgeImplementsDisplay from './ThaumaturgeImplementsDisplay';
 import { getStrikes, categorizeStrikesByType } from '../../utils/ActionsUtils';
 
 /**
@@ -18,6 +19,9 @@ const StrikesList = ({ character, themeColor }) => {
   // Separate strikes into melee and ranged categories
   const meleeStrikes = strikes.filter(strike => strike.type === 'melee');
   const rangedStrikes = strikes.filter(strike => strike.type === 'ranged');
+  
+  // Check if character is a Thaumaturge
+  const isThaumaturge = character.class === 'Thaumaturge' && character.thaumaturge;
   
   // Helper function to get action text for a strike
   const getActionText = (strike) => {
@@ -114,6 +118,11 @@ const StrikesList = ({ character, themeColor }) => {
 
   return (
     <div className="strikes-container">
+      {/* Display Thaumaturge implements if character is a Thaumaturge */}
+      {isThaumaturge && (
+        <ThaumaturgeImplementsDisplay character={character} themeColor={themeColor} />
+      )}
+      
       {strikes.length > 0 ? (
         <>
           {/* Melee Strikes Section */}
