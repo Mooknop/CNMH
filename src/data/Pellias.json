@@ -93,7 +93,7 @@
       "strikes":[
         {
           "name": "Melee Metal Blast",
-          "actionCount": 1,
+          "actionCount": "One to Two",
           "type": "melee",
           "traits": ["Attack", "Impulse", "Kineticist", "Metal", "Primal"],
           "damage": "1d8",
@@ -101,7 +101,7 @@
         },
         {
           "name": "Ranged Metal Blast",
-          "actionCount": 1,
+          "actionCount": "One to Two",
           "type": "ranged",
           "damage": "1d8",
           "range": "30ft",
