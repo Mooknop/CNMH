@@ -1,6 +1,7 @@
 // src/components/actions/ReactionsList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import TraitTag from '../shared/TraitTag';
 import { getReactions, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
@@ -42,7 +43,7 @@ const ReactionsList = ({ character, themeColor }) => {
               <>
                 <div className="reaction-traits">
                   {reaction.traits && reaction.traits.map((trait, i) => (
-                    <span key={i} className="trait-tag">{trait}</span>
+                    <TraitTag key={i} trait={trait} />
                   ))}
                 </div>
                 

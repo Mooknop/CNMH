@@ -1,0 +1,84 @@
+.trait-tag {
+    font-size: 0.8rem;
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    display: inline-block;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .trait-tag.clickable {
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    position: relative;
+  }
+  
+  .trait-tag.clickable:hover {
+    background-color: #d0d0d0;
+    transform: translateY(-1px);
+  }
+  
+  .trait-tag.clickable:active {
+    transform: translateY(0);
+  }
+  
+  /* Add info indicator */
+  .trait-tag.clickable::after {
+    content: "ⓘ";
+    font-size: 0.7rem;
+    margin-left: 0.3rem;
+    opacity: 0.7;
+  }
+  
+  /* Trait-specific background colors */
+  .trait-tag.magical {
+    background-color: #e1f5fe;
+    color: #0277bd;
+  }
+  
+  .trait-tag.fire {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+  
+  .trait-tag.cold {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  .trait-tag.electricity {
+    background-color: #fff8e1;
+    color: #ff8f00;
+  }
+  
+  .trait-tag.sonic {
+    background-color: #e8eaf6;
+    color: #3949ab;
+  }
+  
+  .trait-tag.poison {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+  }
+  
+  .trait-tag.disease {
+    background-color: #e0f2f1;
+    color: #00695c;
+  }
+  
+  .trait-tag.uncommon {
+    background-color: #e3f2fd;
+    color: #1565c0;
+  }
+  
+  .trait-tag.rare {
+    background-color: #ede7f6;
+    color: #4527a0;
+  }
+  
+  .trait-tag.unique {
+    background-color: #fce4ec;
+    color: #ad1457;
+  }

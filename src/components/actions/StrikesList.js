@@ -1,6 +1,7 @@
 // src/components/actions/StrikesList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import TraitTag from '../shared/TraitTag';
 import { getStrikes, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
@@ -57,7 +58,7 @@ const StrikesList = ({ character, themeColor }) => {
       <>
         <div className="strike-traits">
           {strike.traits && strike.traits.map((trait, i) => (
-            <span key={i} className="trait-tag">{trait}</span>
+            <TraitTag key={i} trait={trait} />
           ))}
         </div>
         

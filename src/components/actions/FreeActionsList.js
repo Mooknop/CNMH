@@ -1,6 +1,7 @@
 // src/components/actions/FreeActionsList.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import TraitTag from '../shared/TraitTag';
 import { getFreeActions, renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
@@ -42,7 +43,7 @@ const FreeActionsList = ({ character, themeColor }) => {
               <>
                 <div className="free-action-traits">
                   {freeAction.traits && freeAction.traits.map((trait, i) => (
-                    <span key={i} className="trait-tag">{trait}</span>
+                    <TraitTag key={i} trait={trait} />
                   ))}
                 </div>
                 

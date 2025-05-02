@@ -1,0 +1,212 @@
+{
+    "traits": [
+      {
+        "name": "Agile",
+        "description": "The multiple attack penalty you take with this weapon on the second attack on your turn is -4 instead of -5, and -8 instead of -10 on the third and subsequent attacks in the turn."
+      },
+      {
+        "name": "Auditory",
+        "description": "Auditory actions and effects rely on sound. An action with the auditory trait can be successfully performed only if the creature using the action can speak or otherwise produce the required sounds. A spell or effect with the auditory trait has its effect only if the target can hear it. This applies only to sound-based parts of the effect, as determined by the GM. This is different from a sonic effect, which affects creatures whether or not they can hear it."
+      },
+      {
+        "name": "Attack",
+        "description": "An action with this trait involves an attack. Attack actions typically use the Strike action or a similar action that targets an enemy's AC."
+      },
+      {
+        "name": "Backswing",
+        "description": "You can use the momentum from a missed attack with this weapon to lead into your next attack. After you miss with this weapon on your turn, you gain a +1 circumstance bonus to your next attack with this weapon before the end of your turn."
+      },
+      {
+        "name": "Cantrip",
+        "description": "A spell you can cast at will that is automatically heightened to half your level rounded up. Cantrips are a type of spell that don't use spell slots."
+      },
+      {
+        "name": "Concentrate",
+        "description": "An action with this trait requires a degree of mental concentration and discipline. You can't use an action with the concentrate trait if you're affected by effects that prevent you from concentrating, like being fascinated."
+      },
+      {
+        "name": "Disarm",
+        "description": "You can use this weapon to knock items out of a creature's grasp. When you use an Attack action with this weapon, you can attempt to disarm the target with the Athletics skill. If you critically succeed at the Athletics check, you can knock the item away from the opponent as normal, or you can grab the item with your attack hand if it's free."
+      },
+      {
+        "name": "Emotion",
+        "description": "This effect alters emotions. Effects with this trait might affect only creatures that have emotions, and usually they alter emotions in some way. Creatures without emotions—typically constructs, mindless undead, and objects—are immune to emotion effects."
+      },
+      {
+        "name": "Evocation",
+        "description": "A spell that manipulates the raw elemental power of the universe—air, earth, fire, water, or pure magical energy—belongs to the evocation school. Spells that create an object, energy, or a creature out of nothing are also often (though not always) from this school."
+      },
+      {
+        "name": "Fatal",
+        "description": "A fatal weapon is especially effective at dealing critical hits. When you critically succeed at an attack roll with this weapon, you apply the listed weapon specialization effect, and your attack deals one additional die of the listed size. This die applies the effects from all your weapon runes. For example, a pick with fatal d10 deals an additional d10 damage on a critical hit, on top of the doubled damage from the critical hit and on top of the additional damage from weapon specialization."
+      },
+      {
+        "name": "Finesse",
+        "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage."
+      },
+      {
+        "name": "Healing",
+        "description": "A healing effect restores a creature's body, typically by restoring Hit Points, but sometimes by removing diseases or other debilitating effects."
+      },
+      {
+        "name": "Implement",
+        "description": "A special item that thaumaturges use to channel their esoteric practices. Items with the implement trait can be used as implements by a thaumaturge."
+      },
+      {
+        "name": "Light",
+        "description": "Effects with this trait create light. Light effects have a specified range, and some can target objects that then emanate light, potentially with a different range. Light with a larger radius can illuminate creatures across a greater distance, making them easier to detect using sight. For instance, an effect that creates dim light in a 20-foot radius provides illumination sufficient to reduce creatures' Stealth modifier from darkness from a +2 circumstance bonus to a +1 circumstance bonus anywhere in that 20 foot area."
+      },
+      {
+        "name": "Manipulate",
+        "description": "You must physically manipulate an item or make gestures to use an action with this trait. Creatures without a suitable appendage can't perform actions with this trait. Manipulate actions often trigger reactions."
+      },
+      {
+        "name": "Mental",
+        "description": "A mental effect can alter the target's mind. It has no effect on an object or a mindless creature."
+      },
+      {
+        "name": "Melee",
+        "description": "This weapon or attack is used in melee, meaning that it can be used only against creatures within reach of the wielder. Most melee weapons have a reach of 5 feet, but some weapons have different reach values."
+      },
+      {
+        "name": "Monk",
+        "description": "Monks can use abilities with this trait, and those with this trait can be found in the monk class."
+      },
+      {
+        "name": "Nonlethal",
+        "description": "Attacks with this weapon are nonlethal, and are used to knock creatures unconscious instead of killing them. They do not apply the dying condition or the normal penalties for attacking nonlethally with a weapon that doesn't have this trait."
+      },
+      {
+        "name": "Parry",
+        "description": "This weapon can be used defensively to block attacks. While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn."
+      },
+      {
+        "name": "Ranged",
+        "description": "This weapon is used for making a ranged attack and has a maximum range in feet."
+      },
+      {
+        "name": "Reach",
+        "description": "This weapon is long and can be used to attack creatures up to 10 feet away instead of only adjacent creatures. For creatures that already have reach with the limb or limbs that wield the weapon, the weapon increases their reach by 5 feet."
+      },
+      {
+        "name": "Shove",
+        "description": "You can use this weapon to push a creature away from you. When you use an Attack action with this weapon, you can attempt to Shove the target using the Athletics skill. If you successfully Shove a target with this weapon, you can move the target an additional 5 feet back, for a total of 10 feet. This doesn't count as a move action for the target."
+      },
+      {
+        "name": "Sonic",
+        "description": "An effect with the sonic trait functions only if it makes sound, meaning it has no effect in an area of silence or in a vacuum. This is different from an auditory effect, which relies on the target being able to hear it."
+      },
+      {
+        "name": "Thrown",
+        "description": "You can throw this weapon as a ranged attack; it is a ranged weapon when thrown. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment."
+      },
+      {
+        "name": "Unarmed",
+        "description": "An unarmed attack uses your body rather than a manufactured weapon. An unarmed attack isn't a weapon, though it's categorized with weapons for weapon groups, and it might have weapon traits. Since it's part of your body, an unarmed attack can't be Disarmed. It also doesn't take up a hand, though a fist or other grasping appendage generally works like a free-hand weapon."
+      },
+      {
+        "name": "Uncommon",
+        "description": "Something of uncommon rarity requires special training or comes from a particular culture or part of the world. Some character choices give access to uncommon options, and the GM can choose to allow access for anyone. Less is known about uncommon items than common items, and they're generally not available except from special merchants."
+      },
+      {
+        "name": "Visual",
+        "description": "A visual effect can affect only creatures that can see it. This applies only to parts of the effect that would require seeing it, as determined by the GM."
+      },
+      {
+        "name": "Volley",
+        "description": "This ranged weapon is less effective at close distances. Your attacks against targets that are at a distance within the listed range take a –2 penalty."
+      },
+      {
+        "name": "Consumable",
+        "description": "An item with this trait can be used only once. Unless stated otherwise, it's destroyed after activation. Consumable items include alchemical items, ammunition, scrolls, talismans, and most magical oils and potions."
+      },
+      {
+        "name": "Magical",
+        "description": "Something with the magical trait is infused with magical energies not tied to a specific tradition of magic. A magical item radiates a magic aura infused with its effect."
+      },
+      {
+        "name": "Alchemical",
+        "description": "Alchemical items contain chemically infused magical energy and tend to be consumable. Improper handling of an alchemical item might cause it to explode, catch fire, or otherwise release dangerous chemicals."
+      },
+      {
+        "name": "Elixir",
+        "description": "Elixirs are alchemical liquids that contain volatile chemicals that grant the drinker some alchemical benefit. Each elixir is a single dose that takes 1 action to drink (or administer). An elixir's effects typically last for a specified period of time."
+      },
+      {
+        "name": "Invested",
+        "description": "A character can wear only 10 magical items that have the invested trait. None of the magical effects of the item apply if the character hasn't invested the item, though they still gain any normal benefits from wearing or carrying the physical item (like a hat keeping rain off their head)."
+      },
+      {
+        "name": "Talisman",
+        "description": "A talisman is a small object affixed to armor, a shield, or a weapon. Each talisman holds a sliver of magical energy that can be activated for a specific benefit. A talisman can be activated only once, after which it burns out and becomes useless. If a talisman is removed, it keeps its magical energy for 24 hours before burning out."
+      },
+      {
+        "name": "Scroll",
+        "description": "Scrolls contain the necessary magic to cast a particular spell without using your spell slots. You must hold the scroll in one hand and cast the spell as if using the Cast a Spell activity, except you perform verbal, somatic, and material components while reading directly from the scroll."
+      },
+      {
+        "name": "Fire",
+        "description": "Effects with the fire trait deal fire damage or either conjure or manipulate fire. Those that manipulate fire have no effect in an area without fire."
+      },
+      {
+        "name": "Electricity",
+        "description": "Effects with this trait deal electricity damage or create electricity. If an attack with this trait deals damage, all of that damage is electricity damage."
+      },
+      {
+        "name": "Illusion",
+        "description": "The illusion school of magic is used to create images, figments, and phantasms to deceive the senses. Illusions can create sensory experiences or have mind-affecting properties. If an illusion creates something insubstantial, like an image, a creature could detect that it's an illusion by physically interacting with it, causing their hand to go through it."
+      },
+      {
+        "name": "Cold",
+        "description": "Effects with this trait deal cold damage or create ice, snow, or other freezing effects. Creatures and objects with this trait deal cold damage or have a cold theme to their abilities."
+      },
+      {
+        "name": "Force",
+        "description": "Effects with this trait deal force damage or create objects made of magical force. Force effects can damage force barriers such as a wall of force."
+      },
+      {
+        "name": "Extradimensional",
+        "description": "Items with this trait create an extradimensional storage space. An extradimensional space overlaps with the Material Plane, but the space exists outside any of the dimensions. Using an extradimensional space isn't the same as traveling to another plane."
+      },
+      {
+        "name": "Oil",
+        "description": "This item is a container of oil that can be applied to an object or creature. Applying a vial of oil typically takes 1 action. The effects apply to the first target hit with the oil, and the substance becomes inert immediately thereafter."
+      },
+      {
+        "name": "Potion",
+        "description": "A potion is a magical liquid activated when you drink it, which uses it up. Potions have the consumable trait and a variety of subtypes based on their effects. They typically can be used only once."
+      },
+      {
+        "name": "Wand",
+        "description": "A wand contains a single spell which can be cast once per day. Most wands are made from wood, but some rare materials like ivory, metal, and even crystal can be used."
+      },
+      {
+        "name": "Drug",
+        "description": "An item with this trait is a drug, which alters a creature's mind and body. Drugs usually have effects that help the user in some way, and separate addiction effects that hinder the user when they're in withdrawal."
+      },
+      {
+        "name": "Poison",
+        "description": "An effect with this trait delivers a poison or deals poison damage. An item with this trait is poisonous and might cause an affliction."
+      },
+      {
+        "name": "Disease",
+        "description": "An effect with this trait applies a disease to a character. A disease is an affliction other characters can catch from the infected character, making them infected as well."
+      },
+      {
+        "name": "Incapacitation",
+        "description": "An ability with this trait can take a character completely out of the fight or even kill them, and it's harder to use on a more powerful character. When a spell or ability with the incapacitation trait comes from a creature or hazard whose level is lower than the target, the target gets a +1 circumstance bonus to any saves against that spell or ability."
+      },
+      {
+        "name": "Fortune",
+        "description": "A fortune effect beneficially alters how you roll the dice. You can never have more than one fortune effect come into play when you roll a single check, and if multiple fortune effects would apply, you must pick which one to use. If a fortune effect and a misfortune effect would apply to the same roll, the effects cancel each other out and you roll normally."
+      },
+      {
+        "name": "Composition",
+        "description": "To cast a composition cantrip or focus spell, you usually use the Performance skill. If the spell includes a verbal component, you must sing, recite, or play an instrument. If it includes a somatic component, you must dance or play an instrument. If it includes a material component, you must use a musical instrument as a focus. Composition spells are a type of focus spell."
+      },
+      {
+        "name": "Flourish",
+        "description": "Actions with this trait are special techniques that require too much exertion to perform a large number in a row. You can use only 1 action with the flourish trait per turn."
+      }
+    ]
+  }

@@ -1,5 +1,6 @@
 // src/components/inventory/ItemModal.js
 import React from 'react';
+import TraitTag from '../shared/TraitTag';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
@@ -21,7 +22,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
           {item.traits && item.traits.length > 0 && (
             <div className="item-traits">
               {item.traits.map((trait, i) => (
-                <span key={i} className="trait-tag">{trait}</span>
+                <TraitTag key={i} trait={trait} />
               ))}
             </div>
           )}
@@ -115,7 +116,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                     {action.traits && action.traits.length > 0 && (
                       <div className="action-traits">
                         {action.traits.map((trait, i) => (
-                          <span key={i} className="trait-tag">{trait}</span>
+                          <TraitTag key={i} trait={trait} />
                         ))}
                       </div>
                     )}
@@ -140,7 +141,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                     {reaction.traits && reaction.traits.length > 0 && (
                       <div className="reaction-traits">
                         {reaction.traits.map((trait, i) => (
-                          <span key={i} className="trait-tag">{trait}</span>
+                          <TraitTag key={i} trait={trait} />
                         ))}
                       </div>
                     )}
@@ -171,7 +172,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                     {freeAction.traits && freeAction.traits.length > 0 && (
                       <div className="free-action-traits">
                         {freeAction.traits.map((trait, i) => (
-                          <span key={i} className="trait-tag">{trait}</span>
+                          <TraitTag key={i} trait={trait} />
                         ))}
                       </div>
                     )}
@@ -231,7 +232,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                   (!Array.isArray(item.strikes) && item.strikes.traits)) && (
                   <div className="strike-traits full-width">
                     {(Array.isArray(item.strikes) ? item.strikes[0].traits : item.strikes.traits).map((trait, i) => (
-                      <span key={i} className="trait-tag">{trait}</span>
+                      <TraitTag key={i} trait={trait} />
                     ))}
                   </div>
                 )}
@@ -251,7 +252,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                 {item.scroll.traits && item.scroll.traits.length > 0 && (
                   <div className="scroll-traits">
                     {item.scroll.traits.map((trait, i) => (
-                      <span key={i} className="trait-tag">{trait}</span>
+                      <TraitTag key={i} trait={trait} />
                     ))}
                   </div>
                 )}
@@ -274,7 +275,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                 {item.wand.traits && item.wand.traits.length > 0 && (
                   <div className="wand-traits">
                     {item.wand.traits.map((trait, i) => (
-                      <span key={i} className="trait-tag">{trait}</span>
+                      <TraitTag key={i} trait={trait} />
                     ))}
                   </div>
                 )}

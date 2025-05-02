@@ -1,6 +1,7 @@
 import React from 'react';
 import './FocusSpellsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import TraitTag from '../shared/TraitTag';
 import { renderActionIcons } from '../../utils/ActionsUtils';
 
 const FocusSpellsList = ({ character, characterColor }) => {
@@ -196,7 +197,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
                 {spell.traits && spell.traits.length > 0 && (
                   <div className="focus-spell-traits">
                     {spell.traits.map((trait, i) => (
-                      <span key={i} className="focus-spell-trait">{trait}</span>
+                      <TraitTag key={i} trait={trait} />
                     ))}
                   </div>
                 )}

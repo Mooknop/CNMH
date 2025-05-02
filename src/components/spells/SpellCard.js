@@ -1,6 +1,7 @@
 // src/components/spells/SpellCard.js
 import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
+import TraitTag from '../shared/TraitTag';
 import { renderActionIcons } from '../../utils/ActionsUtils';
 
 /**
@@ -90,7 +91,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
     <>
       <div className="spell-meta">
         {spell.traits && spell.traits.map((trait, index) => (
-          <span key={index} className="spell-trait">{trait}</span>
+          <TraitTag key={index} trait={trait} />
         ))}
       </div>
       <div className="spell-details">

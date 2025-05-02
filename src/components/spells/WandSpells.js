@@ -1,5 +1,6 @@
 import React from 'react';
 import SpellCard from './SpellCard';
+import TraitTag from '../shared/TraitTag';
 import { filterSpellsByDefense } from '../../utils/SpellUtils';
 
 /**
@@ -39,7 +40,7 @@ const WandSpells = ({ spells, themeColor, characterLevel, defenseFilter, activeS
               After the spell is cast from the wand for the day, you can attempt to cast it one more time—overcharging the wand at the risk of destroying it.
               Cast the Spell again, then roll a DC 10 flat check. On a success, the wand is broken.
               On a failure, the wand is destroyed.
-              If anyone tries to overcharge a wand when it’s already been overcharged that day, the wand is automatically destroyed (even if it had been repaired) and no spell is cast.
+              If anyone tries to overcharge a wand when it's already been overcharged that day, the wand is automatically destroyed (even if it had been repaired) and no spell is cast.
             </span>
           </div>
         </div>        

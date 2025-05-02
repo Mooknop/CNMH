@@ -1,6 +1,7 @@
 // src/components/spells/InnateCastingList.js
 import React from 'react';
 import SpellCard from './SpellCard';
+import TraitTag from '../shared/TraitTag';
 import { filterSpellsByDefense } from '../../utils/SpellUtils';
 
 /**
