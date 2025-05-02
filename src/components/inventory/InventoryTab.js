@@ -102,13 +102,13 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
           
           {isEncumbered && !isOverencumbered && (
             <div className="bulk-warning">
-              Encumbered: -10 feet to Speed and take a -1 penalty to Strength- and Dexterity-based checks
+              Encumbered: -10 feet to Speed and your movements become clumsy and inexact. You take a -1 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
             </div>
           )}
           
           {isOverencumbered && (
             <div className="bulk-warning severe">
-              Overencumbered: -15 feet to Speed, take a -2 penalty to Strength- and Dexterity-based checks, and can't move if your Bulk exceeds twice your Bulk limit
+              Overencumbered: -15 feet to Speed and your movements become clumsy and inexact. You take a -2 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
             </div>
           )}
         </div>

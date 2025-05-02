@@ -20,7 +20,7 @@ const Dashboard = () => {
       {/* Party Summary Section */}
       <PartySummary />
       
-      <div className="dashboard-links">
+      {/* <div className="dashboard-links">
         <button 
           className="dashboard-link-btn quest-btn"
           onClick={() => navigateTo('/quests')}
@@ -35,9 +35,8 @@ const Dashboard = () => {
           <span className="btn-icon">📚</span>
           <span className="btn-text">Campaign Lore</span>
         </button>
-      </div>
+      </div> */}
       
-      {/* Character section has been removed */}
     </div>
   );
 };
