@@ -88,7 +88,7 @@ const ActionIcon = ({ actionText, color = '#5e2929', size = 'medium', showToolti
   
   // Handle variable action ranges
   if (text.includes('to')) {
-    // Pattern: "X to Y actions"
+    // Pattern: "X to Y actions" or "One to Three Actions"
     const rangeMatch = text.match(/(\w+)\s+to\s+(\w+)/i);
     if (rangeMatch) {
       const startCount = convertWordToNumber(rangeMatch[1]);
@@ -101,7 +101,7 @@ const ActionIcon = ({ actionText, color = '#5e2929', size = 'medium', showToolti
               <div key={`start-${i}`} className="action-icon-wrapper">
                 <span className="action-icon" style={iconStyle}>●</span>
                 {showTooltip && i === 0 && (
-                  <div className="action-tooltip">{`${startCount} Action${startCount > 1 ? 's' : ''}`}</div>
+                  <div className="action-tooltip">{`${startCount}-${endCount} Actions`}</div>
                 )}
               </div>
             ))}
@@ -109,9 +109,6 @@ const ActionIcon = ({ actionText, color = '#5e2929', size = 'medium', showToolti
             {Array(endCount).fill().map((_, i) => (
               <div key={`end-${i}`} className="action-icon-wrapper">
                 <span className="action-icon" style={iconStyle}>●</span>
-                {showTooltip && i === endCount - 1 && (
-                  <div className="action-tooltip">{`${endCount} Action${endCount > 1 ? 's' : ''}`}</div>
-                )}
               </div>
             ))}
           </div>

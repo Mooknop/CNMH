@@ -127,10 +127,48 @@ export const getStrikes = (character) => {
             damageString += (strMod > 0 ? '+' + strMod : strMod);
           }
           
+          // Check for variable actions - important for Metal Blast
+          let variableActionCount = null;
+          
+          // Check for text like "One to Two"
+          if (strike.actionCount && typeof strike.actionCount === 'string') {
+            const actionText = strike.actionCount.toLowerCase();
+            if (actionText.includes('to')) {
+              const rangeMatch = actionText.match(/(\w+)\s+to\s+(\w+)/i);
+              if (rangeMatch) {
+                const min = convertWordToNumber(rangeMatch[1]);
+                const max = convertWordToNumber(rangeMatch[2]);
+                if (min > 0 && max > 0) {
+                  variableActionCount = { min, max };
+                }
+              }
+            }
+          } 
+          // Special handling for Pellias's Metal Blast
+          else if (strike.name && strike.name.includes('Metal Blast')) {
+            // Parse from actionCount string if it's in the format "One to Two Actions"
+            if (typeof strike.action === 'string' && strike.action.toLowerCase().includes('to')) {
+              const actionText = strike.action.toLowerCase();
+              const rangeMatch = actionText.match(/(\w+)\s+to\s+(\w+)/i);
+              if (rangeMatch) {
+                const min = convertWordToNumber(rangeMatch[1]);
+                const max = convertWordToNumber(rangeMatch[2]);
+                if (min > 0 && max > 0) {
+                  variableActionCount = { min, max };
+                }
+              }
+            } else {
+              // Hardcode for Metal Blast which we know is "One to Two"
+              variableActionCount = { min: 1, max: 2 };
+            }
+          }
+          
           return {
             name: strike.name,
             type: strike.type || 'melee', // Default to melee if not specified
             actionCount: parseInt(strike.actionCount || strike.action) || 1,
+            variableActionCount: variableActionCount,
+            actions: strike.action && typeof strike.action === 'string' ? strike.action : null,
             traits: strike.traits || [],
             attackMod: attackBonus,
             damage: damageString,
@@ -242,6 +280,20 @@ export const getStrikes = (character) => {
     });
   }
 
+  // Post-process strikes for variable action counts
+  allStrikes = allStrikes.map(strike => {
+    // Special handling for Metal Blast
+    if (strike.name && strike.name.includes('Metal Blast')) {
+      return {
+        ...strike,
+        actions: 'One to Two Actions',
+        variableActionCount: { min: 1, max: 2 }
+      };
+    }
+    
+    return strike;
+  });
+
   // Ensure type is defined for all strikes
   allStrikes = allStrikes.map(strike => ({
     ...strike,
@@ -261,6 +313,24 @@ export const categorizeStrikesByType = (strikes) => {
     melee: strikes.filter(strike => strike.type === 'melee'),
     ranged: strikes.filter(strike => strike.type === 'ranged')
   };
+};
+
+/**
+ * Helper function to convert word numbers to integers
+ * @param {string} word - Word representation of a number
+ * @returns {number} - Numeric value
+ */
+const convertWordToNumber = (word) => {
+  const wordMap = {
+    'one': 1,
+    'two': 2,
+    'three': 3,
+    '1': 1,
+    '2': 2,
+    '3': 3
+  };
+  
+  return wordMap[word.toLowerCase()] || 0;
 };
 
 /**
@@ -389,24 +459,6 @@ const processActionText = (action) => {
   
   // Return original action if no processing was needed
   return action;
-};
-
-/**
- * Helper function to convert word numbers to integers
- * @param {string} word - Word representation of a number
- * @returns {number} - Numeric value
- */
-const convertWordToNumber = (word) => {
-  const wordMap = {
-    'one': 1,
-    'two': 2,
-    'three': 3,
-    '1': 1,
-    '2': 2,
-    '3': 3
-  };
-  
-  return wordMap[word.toLowerCase()] || 0;
 };
 
 /**

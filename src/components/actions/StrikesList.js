@@ -21,6 +21,13 @@ const StrikesList = ({ character, themeColor }) => {
   
   // Helper function to get action text for a strike
   const getActionText = (strike) => {
+    // Check for variable action counts first
+    if (strike.variableActionCount) {
+      const { min, max } = strike.variableActionCount;
+      return `${min} to ${max} Actions`;
+    }
+    
+    // Otherwise use the standard action count
     const count = strike.actionCount || 1;
     return `${count} Action${count !== 1 ? 's' : ''}`;
   };
@@ -33,7 +40,7 @@ const StrikesList = ({ character, themeColor }) => {
         <h3 style={{ color: themeColor }}>{strike.name}</h3>
         <div className="action-icons">
           <ActionIcon 
-            actionText={getActionText(strike)} 
+            actionText={strike.actions || getActionText(strike)} 
             color={themeColor} 
           />
         </div>

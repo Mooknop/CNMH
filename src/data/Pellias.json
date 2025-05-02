@@ -178,6 +178,7 @@
     {
       "id": "item-1",
       "name": "Full Plate",
+      "traits": ["Bulwark"],
       "quantity": 1,
       "weight": 4.0,
       "speedPenalty": [10, 5],

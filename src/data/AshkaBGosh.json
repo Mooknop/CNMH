@@ -184,7 +184,7 @@
       "traits":["Implement"],
       "quantity": 1,
       "weight": 0.1,
-      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you. The power of your implement can be turned to adding and amplifying the effects of runes and other magical empowerments. When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit.",
+      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you.",
       "reactions": [
         {
           "name": "Amulet's Abeyance",
@@ -343,9 +343,8 @@
   "thaumaturge": {
     "implements": [
       {
-        "name": "Amulet",
-        "benefit": "You gain an item bonus to saving throws equal to the amulet's implement bonus.",
-        "esoterica": "You gain a +1 circumstance bonus to Perception checks to sense magic and to Recall Knowledge about magical subjects."
+        "name": "Implement's Empowerment",
+        "benefit": "The power of your implement can also be turned to the more common task of combat, its power adding to and amplifying the effects of runes and other magical empowerments. When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit."
       }
     ],
     "exploits": [
