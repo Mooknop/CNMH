@@ -198,8 +198,7 @@
           "name": "Take Flight",
           "actionCount": 1,
           "traits": ["Dragon"],
-          "frequency": "Once per round",
-          "description": "You've grown a pair of scaled wings, but they're taking some getting used to. You fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
+          "description": "You've grown a pair of scaled wings, but they're taking some getting used to. Once per round, you can fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
         }
       ]
     },
