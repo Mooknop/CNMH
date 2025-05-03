@@ -107,11 +107,9 @@ const FocusSpellsList = ({ character, characterColor }) => {
     
     return (
       <div className="bloodline-info">
-        <h3 style={{ color: themeColor }}>{name} Bloodline</h3>
-        <p className="bloodline-description">{description}</p>
+        <h3 style={{ color: themeColor }}>Imperial Blood Magic</h3>
         <div className="bloodline-magic">
-          <span className="bloodline-magic-label">Imperial Blood Magic:</span>
-          <span className="bloodline-magic-effect">Whenever you cast a bloodline spell passed down from your ancestor, you choose one blood magic effect you know to benefit from.</span>
+          <span className="bloodline-magic-effect">{character.spellcasting.bloodline.blood_magic}</span>
         </div>
       </div>
     );
