@@ -12,6 +12,7 @@
   "ac": 19,
   "size": "Small",
   "speed": 25,
+  "senses": "Darkvision",
   "abilities": {
     "strength": 10,
     "dexterity": 16,

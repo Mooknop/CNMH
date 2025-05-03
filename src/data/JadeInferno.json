@@ -12,6 +12,7 @@
   "ac": 17,
   "size": "Medium",
   "speed": 30,
+  "senses": "Low-light Vision",
   "abilities": {
     "strength": 10,
     "dexterity": 14,
