@@ -176,7 +176,7 @@
       "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision.",
       "strikes":[
         {
-          "name": "Dragon Claw",
+          "name": "Ravager Claw",
           "proficiency": "unarmed",
           "type": "melee",
           "action": 1,
@@ -185,7 +185,7 @@
           "description": "Rend their flesh with your draconic claws."
         },
         {
-          "name": "Dragon Fang",
+          "name": "Ravager Fang",
           "proficiency": "unarmed",
           "type": "melee",
           "action": 1,
