@@ -184,13 +184,22 @@
           "description": "Rend their flesh with your draconic claws."
         },
         {
-          "name": "Dragon Bite",
+          "name": "Dragon Fang",
           "proficiency": "unarmed",
           "type": "melee",
           "action": 1,
           "damage": "1d8",
           "traits": ["Attack", "Agile", "Finesse"],
           "description": "Bite into your foe with magically sharp dragon teeth."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Take Flight",
+          "actionCount": 1,
+          "traits": ["Dragon"],
+          "frequency": "Once per round",
+          "description": "You've grown a pair of scaled wings, but they're taking some getting used to. You fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
         }
       ]
     },
