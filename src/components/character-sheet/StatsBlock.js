@@ -289,6 +289,29 @@ const StatsBlock = ({ character, characterColor }) => {
           </div>
         </div>
       </div>
+
+      {/* Size and Speed Section */}
+      <div className="character-attributes" style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              backgroundColor: '#f9f9f9', 
+              padding: '0.75rem', 
+              borderRadius: '4px',
+              marginBottom: '1rem' 
+            }}>
+              <div className="attribute">
+                <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Size</span>
+                <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
+                  {character.size || 'Medium'}
+                </span>
+              </div>
+              <div className="attribute">
+                <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Speed</span>
+                <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
+                  {character.speed || 25} feet
+                </span>
+              </div>
+            </div>
       
       {/* Tab Navigation */}
       <div className="stats-tabs">
