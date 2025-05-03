@@ -302,15 +302,23 @@ const StatsBlock = ({ character, characterColor }) => {
               <div className="attribute">
                 <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Size</span>
                 <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
-                  {character.size || 'Medium'}
+                  {character.size || 'teeny weeny'}
                 </span>
               </div>
               <div className="attribute">
                 <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Speed</span>
                 <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
-                  {character.speed || 25} feet
+                  {character.speed || 69} feet
                 </span>
               </div>
+              {character.senses && (
+                <div className="attribute">
+                  <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Senses</span>
+                  <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
+                    {character.senses}
+                  </span>
+                </div>
+              )}
             </div>
       
       {/* Tab Navigation */}
