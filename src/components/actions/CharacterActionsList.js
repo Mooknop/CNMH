@@ -3,6 +3,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import ThaumaturgeExploitsDisplay from './ThaumaturgeExploitsDisplay';
 import { getActions } from '../../utils/ActionsUtils';
 
 /**
@@ -14,6 +15,9 @@ import { getActions } from '../../utils/ActionsUtils';
 const CharacterActionsList = ({ character, themeColor }) => {
   // Get all actions for the character
   const actions = getActions(character);
+  
+  // Check if character is a Thaumaturge
+  const isThaumaturge = character.class === 'Thaumaturge' && character.thaumaturge;
   
   // Helper function to format action text for display and for ActionIcon
   const getActionText = (action) => {
@@ -30,6 +34,11 @@ const CharacterActionsList = ({ character, themeColor }) => {
   
   return (
     <div className="actions-container">
+      {/* Display Thaumaturge exploits if character is a Thaumaturge */}
+      {isThaumaturge && (
+        <ThaumaturgeExploitsDisplay character={character} themeColor={themeColor} />
+      )}
+      
       {actions.length > 0 ? (
         <div className="actions-grid">
           {actions.map((action, index) => {
@@ -67,6 +76,40 @@ const CharacterActionsList = ({ character, themeColor }) => {
                 {action.description && (
                   <div className="action-description">
                     {action.description}
+                  </div>
+                )}
+                
+                {/* Display degrees of success if present */}
+                {action.degrees && (
+                  <div className="action-degrees">
+                    <span className="degrees-label" style={{ 
+                      color: themeColor,
+                      fontWeight: 'bold',
+                      display: 'block',
+                      marginTop: '0.75rem',
+                      marginBottom: '0.5rem'
+                    }}>
+                      Degrees of Success:
+                    </span>
+                    {Object.entries(action.degrees).map(([degree, effect], i) => (
+                      <div key={i} className="degree-entry" style={{
+                        marginBottom: '0.5rem',
+                        paddingLeft: '1rem'
+                      }}>
+                        <span className="degree-level" style={{
+                          fontWeight: 'bold',
+                          color: degree.includes('Critical Success') ? '#2e7d32' :
+                                 degree.includes('Success') ? '#1976d2' :
+                                 degree.includes('Failure') && !degree.includes('Critical') ? '#f57c00' :
+                                 '#c62828'
+                        }}>
+                          {degree}:
+                        </span>
+                        <span className="degree-effect" style={{ marginLeft: '0.5rem' }}>
+                          {effect}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
                 
