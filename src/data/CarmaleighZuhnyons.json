@@ -1,0 +1,585 @@
+{
+    "id": "CarmaleighZuhnyons",
+    "name": "Carmaleigh Zuhnyons",
+    "ancestry": "Elf",
+    "background": "Space-Cowpoke",
+    "class": "Witchwarper",
+    "level": 4,
+    "maxHp": 34,
+    "ac": 20,
+    "size": "Medium",
+    "speed": 30,
+    "senses": "Low-light Vision",
+    "abilities": {
+        "strength": 10,
+        "dexterity": 16,
+        "constitution": 8,
+        "intelligence": 18,
+        "wisdom": 14,
+        "charisma": 12
+    },
+    "saves": {
+        "fortitude": 5,
+        "reflex": 9,
+        "will": 10
+    },
+    "skills":{
+        "acrobatics": {
+          "proficiency": 1
+        },
+        "arcana": {
+          "proficiency": 1
+        },
+        "computers": {
+          "proficiency": 2
+        },
+        "crafting": {
+          "proficiency": 1
+        },
+        "deception": {
+          "proficiency": 1
+        },
+        "indimidation": {
+          "proficiency": 1
+        },
+        "nature": {
+          "proficiency": 1
+        },
+        "occultism": {
+          "proficiency": 1
+        },
+        "piloting": {
+          "proficiency": 1
+        },
+        "religion": {
+          "proficiency": 1
+        },
+        "stealth": {
+          "proficiency": 1
+        },
+        "survival": {
+          "proficiency": 1
+        },
+        "thievery": {
+          "proficiency": 1
+        }
+    },
+    "proficiencies": {
+    "weapons": {
+      "simple": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "martial": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "advanced": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "unarmed": {
+        "proficiency": 1,
+        "name": "Trained"
+      }
+    },
+    "armor": {
+      "unarmored": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "light": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "medium": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "heavy": {
+        "proficiency": 0,
+        "name": "Untrained"
+      }
+    }
+  },
+  "feats": [
+    {
+      "id": "feat-1",
+      "name": "Debris Zone",
+      "level": 2,
+      "source": "Witchwarper",
+      "description": "You pull in debris, floods of water, or other random objects from the multiverse; your quantum field becomes difficult terrain.",
+      "actions":[
+        {
+          "name": "Debris Zone",
+          "actionCount": 1,
+          "traits": ["Anchoring", "Witchwaper", "Zone"],
+          "description": "You pull in debris, floods of water, or other random objects from the multiverse; your quantum field becomes difficult terrain."
+        }
+      ]
+    },
+    {
+      "id": "feat-2",
+      "name": "Radiant Zone",
+      "level": 4,
+      "source": "Witchwarper",
+      "description": "The reality you conjure is much brighter than your own. The area of your quantum field becomes bright light. Creatures in your quantum field must attempt a Fortitude save against your class DC; creatures with light blindness treat their result as one step worse.",
+      "actions":[
+        {
+          "name": "Radiant Zone",
+          "actionCount": 1,
+          "traits": ["Anchoring", "Incapacitation", "Light", "Witchwaper", "Zone"],
+          "description": "The reality you conjure is much brighter than your own. The area of your quantum field becomes bright light. Creatures in your quantum field must attempt a Fortitude save against your class DC; creatures with light blindness treat their result as one step worse.",
+          "degrees": {
+            "Critical Success": "The creature is unaffected.",
+            "Success": "The creature is dazzled for 1 round.",
+            "Failure": "The creature is blinded for 1 round and dazzled for 1 minute. The creature can spend an interact action rubbing its eyes to end this blinded condition.",
+            "Critical Failure": "As failure, but the creature cannot rub the blindness from their eyes."
+          }
+        }
+      ]
+    },
+    {
+      "id": "feat-3",
+      "name": "Phreaker",
+      "level": 2,
+      "source": "Skill",
+      "description": "You've learned how to hack using traditional methods that are more convenient but often less secure, such as calling a data center's automatic help line and entering a unique tone to access a connected server. You can use Computers to Disable a Device or Hack a system using any computer, comm unit, or terminal instead of a hacking toolkit. If you're an expert in Computers and the equipment you use is at least 3rd level, you gain a +1 item bonus to Disable a Device or Hack."
+    },
+    {
+      "id": "feat-4",
+      "name": "Imaginary Trick",
+      "level": 4,
+      "source": "Skill",
+      "description": "As a purveyor of the obscure and esoteric, you have gleaned a basic talent for illusions. You can cast 1st-Rank Figment as an Occult Innate spell."
+    },
+    {
+      "id": "feat-5",
+      "name": "Pinpoint Out",
+      "level": 3,
+      "source": "General",
+      "description": "You have learned to communicate with indiscriminate detail to allies. You immediately Point Out the creature and your allies get a +2 circumstance bonus to their perception checks to find it so long as they can see and understand you.",
+      "freeActions":[
+        {
+          "name": "Pinpoint Out",
+          "traits": ["General"],
+          "description": "You have learned to communicate with indiscriminate detail to allies. You immediately Point Out the creature and your allies get a +2 circumstance bonus to their perception checks to find it so long as they can see and understand you."
+        }
+      ]
+    },
+    {
+      "id": "feat-6",
+      "name": "Rogue Dedication",
+      "level": 2,
+      "source": "Rogue Archetype",
+      "description": "You gain a skill feat and the rogue’s surprise attack class feature. You become trained in light armor. In addition, you become trained in Stealth or Thievery plus one skill of your choice; if you are already trained in both Stealth and Thievery, you become trained in an additional skill of your choice."
+    },
+    {
+      "id": "feat-7",
+      "name": "Surprise Attack",
+      "level": 2,
+      "source": "Rogue Archetype",
+      "description": "You spring into combat faster than foes can react. On the first round of combat, if you roll Deception or Stealth for initiative, creatures that haven't acted are off-guard to you."
+    },
+    {
+      "id": "feat-7",
+      "name": "Sneak Attacker",
+      "level": 4,
+      "source": "Rogue Archetype",
+      "description": "When your enemy can't properly defend itself, you take advantage to deal extra damage. If you Strike a creature that has the off-guard condition with an agile or finesse melee weapon, an agile or finesse unarmed attack, a ranged weapon attack, or a ranged unarmed attack, you deal an extra 1d4 precision damage. For a ranged attack with a thrown melee weapon, that weapon must also be agile or finesse."
+    }
+  ],
+  "inventory": [
+    {
+      "id": "item-1",
+      "name": "Tempweave",
+      "traits": ["Tech"],
+      "quantity": 1,
+      "weight": 1,
+      "description": "Tempweave suits are reinforced hooded garments woven with thermal fabric and venting wires, popularly worn for trips to Castrovel's jungles and other humid climates."
+    },
+    {
+      "name": "Zero Knife",
+      "potency": 0,
+      "weight": 0.1,
+      "quantity": 1,
+      "traits": ["Agile", "Critical (Cryo)", "Finesse", "Powered", "Tech"],
+      "description": "Unfolding like a switchblade, a supercooled chamber within this weapon's grip instantly forms a blade of ice with an aura of intense cold.",
+      "strikes": [
+        {
+          "proficiency": "simple",
+          "type": "melee",
+          "action": 1,
+          "damage": "1d4 Cold",
+          "traits": ["Agile", "Attack", "Critical (Cryo)", "Finesse", "Powered", "Tech"]
+        }
+      ]
+    },
+    {
+      "name": "Laser Pistol",
+      "potency": 0,
+      "weight": 1,
+      "quantity": 1,
+      "traits": ["Tech"],
+      "description": "This compact energy pistol is the most popular sidearm in the Pact Worlds thanks to its reliability, durability, and affordability. Most common laser pistols have a heat-treated, lightweight polycarbon body ending in a long, slim barrel.",
+      "strikes": [
+        {
+            "proficiency": "simple",
+            "type": "ranged",
+            "action": 1,
+            "damage": "1d6 Fire",
+            "traits": ["Attack"],
+            "range": "30ft",
+            "magazine": 10
+        }
+      ]
+    },
+    {
+      "name": "Tactical Silenced Scoped Seeker Rifle",
+      "potency": 1,
+      "weight": 2,
+      "quantity": 1,
+      "traits": ["Analog", "Tracking +1"],
+      "description": "This single-shot sniper rifle is one of the most popular weapons in the Vast thanks to its stability and reliability with minimal upkeep. It has a metallic cylinder filled with internal sound baffles to reduce the noise of shots fired, but your targets may still cry out in pain.",
+      "strikes": [
+        {
+            "proficiency": "simple",
+            "type": "ranged",
+            "action": 1,
+            "damage": "1d10 Piercing",
+            "traits": ["Attack"],
+            "range": "40ft",
+            "magazine": 10
+        }
+      ],
+      "actions": [
+        {
+          "name": "Adjust Sight",
+          "actionCount": 1,
+          "traits": ["Manipulate"],
+          "description": "Increase the range increment of the Seeker Rifle by 10 feet; this lasts until the beginning of your next turn or until you're no longer wielding the weapon, whichever comes first."
+        }
+      ]
+    },
+    {
+      "name": "Jump Jets",
+      "weight": 0.1,
+      "quantity": 1,
+      "traits": ["Tech"],
+      "description": "Powerful boosters attached to your armor allow you to fly short distances.",
+      "actions": [
+        {
+          "name": "Activate Jets",
+          "actionCount": 1,
+          "traits": ["Manipulate"],
+          "description": "You activate your jump jets to get a quick boost. You Fly up to 20 feet with a maximum height of 10 feet, or you fly up to 20 feet straight up. You must land at the end of this movement or fall. The jets can't lift you if you're Encumbered."
+        }
+      ]
+    },
+    {
+      "name": "Datajack",
+      "weight": 0,
+      "quantity": 1,
+      "traits": ["Tech"],
+      "description": "This cybernetic is a programmable data port that integrates into your body, allowing you to access computers and digital storage devices. Any handheld computer can be inserted directly into the port, while larger systems typically require an adapter cable. You don't need an interface to acccess the system, as it connects directly to your nervous system via the datajack. You must still attempt any skill checks associated with operating the device, such as Computers to access a system. Some closed systems don't allow direct data access at all."
+    },
+    {
+      "name": "Invisibility Spell Gem",
+      "price": 4,
+      "quantity": 1,
+      "weight": 0.1,
+      "traits": ["Consumable", "Magical", "Illusion", "Manipulate", "Subtle"],
+      "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Invisibility.",
+      "scroll":{
+        "name": "Invisibility",
+        "level": 2,
+        "baseLevel": 2,
+        "traits": ["Illusion", "Manipulate", "Subtle"],
+        "actions": "Two Actions",
+        "duration": "10 Minutes",
+        "targets": "1 creature",
+        "range": "Touch",
+        "description": "Illusions bend light around the target, rendering it invisible. This makes it undetected to all creatures, though the creatures can attempt to find the target, making it hidden to them instead. If the target uses a hostile action, the spell ends after that hostile action is completed."
+      }
+    },
+    {
+      "name": "Overheat Spell Gem",
+      "price": 4,
+      "quantity": 1,
+      "weight": 0.1,
+      "traits": ["Consumable", "Magical", "Manipulate", "fire"],
+      "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Overheat.",
+      "scroll":{
+        "name": "Overheat",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Concentrate", "Manipulate", "Fire"],
+        "actions": "Two Actions",
+        "targets": "1 creature",
+        "defense": "Reflex",
+        "range": "60 feet",
+        "description": "You collect heat generated by nearby bodies and technological devices and vent it toward a nearby target. You deal 2d6 fire damage to the target. On a failed save, the target's held equipment becomes hot to the touch for the next round. Unless the target drops its currently held equipment at the start of its turn, it takes 3 fire damage."
+      }
+    },
+    {
+      "name": "Cellular Stimulant Spell Gem",
+      "price": 4,
+      "quantity": 1,
+      "weight": 0.1,
+      "traits": ["Consumable", "Magical", "Manipulate", "fire"],
+      "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Cellular Stimulant.",
+      "scroll":{
+        "name": "Cellular Stimulant",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Concentrate", "Manipulate", "Vitality"],
+        "actions": "One Action",
+        "targets": "1 living creature that is not fatigued or quickened",
+        "defense": "Fortitude",
+        "duration": "1 round",
+        "description": "You vitalize and stimulate the target at a cellular level, giving it a temporary burst of energy that unfortunately takes an exhausting toll. The target attempts a Fortitude save (it may choose to fail). If the target fails, it gains the Quickened condition and can use the extra action to Stride or Strike. After that round ends, the target becomes fatigued until it can rest for 10 minutes."
+      }
+    }
+  ],
+  "witchwarper":{
+    "warpSpells": [
+        {
+          "id": "warp-spell-1",
+          "name": "Warp Probability",
+          "level": 1,
+          "baseLevel": 1,
+          "traits": ["Uncommon", "Anchoring", "Concentrate", "Focus", "Fortune", "Witchwarper"],
+          "actions": "Reaction",
+          "trigger": "You fail an attack roll or saving throw",
+          "description": "You open your mind to read the underlying probability of the multiverse. Reroll the failed check and take the better result."
+        }
+    ]
+  },
+  "spellcasting": {
+    "tradition": "Arcane",
+    "ability": "intelligence",
+    "proficiency": 1,
+    "focus": {
+        "max": 1
+    },
+    "spells": [
+      {
+        "id": "spell-1",
+        "name": "Analyze Target",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Cantrip", "Concentrate", "Detection", "Manipulate"],
+        "actions": "One Action",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "duration": "1 hour",
+        "description": "You focus on the target, gathering data as magical holograms display information. When the casting is complete, you learn biometric information about the target, including its fingerprints, medical conditions, and other basic physiological information. You or anyone you advice about the analysis gains a +1 circumstance bonus to Impersonate the creature, on Medicine checks to Treat Wounds, and to Recall Knowledge actions about the creature. If the creature is illusory or under the effects of illusion magic, you detect this only if the effect's rank is lower than the spell rank of your Analyze Target spell.",
+        "heightened":{
+            "3rd": "The circumstance bonus increases to +2 and you can target up to 10 creatures.",
+            "6th": "The circumstance bonus increases to +3 and you can target any number of creatures."
+        }
+      },
+      {
+        "id": "spell-2",
+        "name": "Adhere",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Cantrip", "Concentrate", "Manipulate"],
+        "actions": "One action",
+        "targets":"1 object or 5-foot-square surface",
+        "defense": "Reflex",
+        "range": "Touch",
+        "duration": "1 minute",
+        "description": "You create a molecular bond between an object you touch and another object or surface that object is touching. Pulling the object free of that surface requires a successful Athletics check against your spell DC to Force Open. If you instead touch one unoccupied 5-foot square, that surface becomes charged with adhering magic. That space becomes Greater Difficult Terrain."
+      },
+      {
+        "id": "spell-3",
+        "name": "Injury Echo",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Cantrip", "Concentrate", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "description": "You manifest an injury from the future or past to harm a creature in the present. Choose bludgeoning, piercing, or slashing damage. The target takes 1d6 of the selected damage type with a basic Will save. If the target fails its save and then takes the same type of damage before the end of your next turn, it takes an additional 1d4 persistent bleed damage.",
+        "heightened":{
+          "+2": "The initial damage increases by 1d6, and the persistent damage on a failure increases by 1d4."
+        }
+      },
+      {
+        "id": "spell-4",
+        "name": "Ricochet",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Cantrip", "Concentrate", "Force", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 or 2 creatures",
+        "defense": "Reflex",
+        "description": "A spinning disk of shimmering force leaps from one target to another. You deal 2d4 force damage, with a basic Reflex save.",
+        "heightened":{
+          "+1": "The damage increases by 1d4."
+        }
+      },
+      {
+        "id": "spell-5",
+        "name": "Stumble",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Cantrip", "Concentrate", "Light", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Reflex",
+        "description": "A burst of microgravity causes a tremor around the target, pulling it toward the ground. The target attempts a Reflex save.",
+        "degrees":{
+            "Failure": "The target becomes off-guard for 1 round. If the target was flying, swimming, or floating, it falls 10 feet downward.",
+            "Critical Failure": "The target falls prone. If the target was flying, swimming, or floating, it falls 20 feet downward."
+        },
+        "heightened":{
+          "+1": "If the target is flying, it falls an additional 10 feet on a failure and 20 feet on a critical failure."
+        }
+      },
+      {
+        "id": "spell-6",
+        "name": "Kinetic Ram",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Concentrate", "Force", "Manipulate"],
+        "actions": "One to Three Actions",
+        "range": "Varies",
+        "targets": "1 or more creatures",
+        "defense": "Fortitude",
+        "description": "Gathering kinetic energy, you either focus it in a straight line or disperse it as an encircling ripple. Any creature targeted by this spell must succeed at a Fortitude saving throw or be pushed 10 feet away from you (or 20 feet on a critical failure). If you spend one action on the spell, it targets one creature with 15 feet; two actions targets one creature within 30 feet, doubles the distance it is pushed on a failure, and on a critical failure it knocks them prone and deals 1d6 bludgeoning damage; three actions targets all creatures in a 5-foot emanation."
+      },
+      {
+        "id": "spell-7",
+        "name": "Wisp Ally",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Concentrate", "Light", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "120 feet",
+        "defense": "Will",
+        "duration": "Sustained up to 1 minute",
+        "description": "You summon a Tiny bouncing wisp of light that easily distracts even the most determined of combatants. A wisp doesn't take up space, grant flanking, or have any other attributes a creature would. The wisp generate bright light in a 10-foot radius. When you Cast the Spell and each time you Sustain, you can direct the wisp to move to a creature you choose within range and attempt to distract the target. Each creature who fails a Will save against a distracting wisp become off-guard until the end of their next turn. If the creature fails a Will save against a second wisp in the same round, it becomes Dazzled until the end of its next turn instead.",
+        "heightened":{
+          "+1": "You create one additional wisp when you Cast the Spell. When you Sustain this spell, you can move all wisps you've created."
+        }
+      },
+      {
+        "id": "spell-8",
+        "name": "Befuddle",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Concentrate", "Emotion", "Manipulate", "Mental"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "duration": "1 round",
+        "description": "You sow seeds of confusion in your target’s mind, causing its actions and thoughts to become clumsy.",
+        "degrees":{
+            "Critical Success": "The target is unaffected",
+            "Success":"The target is Clumsy 1 and Stupefied 1.",
+            "Failure": "The target is Clumsy 2 and Stupefied 2.",
+            "Critical Failure": "The target is Clumsy 3, Stupefied 3, and Confused."
+        }
+      },
+      {
+        "id": "spell-9",
+        "name": "Delete",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Concentrate", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 data set or tech item with the tracking trait",
+        "description": "You delete data from a device or object with a flamboyant magical gesture. This data might be handwritten, printed, or digital. You delete up to 1,500 words worth of text, one page of content, or one display screen worth of text or other visual information. Non-magical writing in or on an unattended or held object is automatically deleted. Attempt a counteract check to delete magical writing (using your spellcasting attribute modifier plus your spellcasting proficiency bonus) or digital content (using your spellcasting attribute modifier plus your Computers proficiency bonus). If you fail to delete writing that is part of a hazard, you trigger the hazard. This can’t be used to delete the contents of a spellbook or similar means of storing magical formulas or spells. If you target an attended tech item with the tracking trait, attempt a counteract check using your spellcasting attribute modifier plus your Computers proficiency bonus. On a success, the item becomes glitching 1. A creature holding the item can spend a single action with the Interact trait to restart the UI, reducing the glitching value by 1.",
+        "heightened":{
+          "7th": "You can delete all the data stored locally on a single device or book, or all the data on a device or book related to a specific name, topic, or category."
+        }
+      },
+      {
+        "id": "spell-10",
+        "name": "Doom Scroll",
+        "level": 2,
+        "baseLevel": 2,
+        "traits": ["Auditory", "Concentrate", "Incapacitation", "Manipulate", "Visual"],
+        "actions": "Two Actions",
+        "range": "60 feet",
+        "area": "15-foot burst",
+        "defense": "Will",
+        "description": "You magically broadcast grim news onto nearby devices, holo projectors, screens, and other displays (including comm units and armor). Creatures in the area who can see one or more displays must attempt a Will save.",
+        "degrees": {
+            "Critical Success": "The creature is unaffected.",
+            "Success": "The creature is Fascinated by the display.",
+            "Failure": "The creature is Fascinated by the display and Frightened 2 (even if the fascination ends)",
+            "Critical Failure": "The creature is Fascinated by the display, Frightened 3, and Doomed 1 (even if the fascination ends)"
+        }
+      },
+      {
+        "id": "spell-11",
+        "name": "Sift the Sphere",
+        "level": 2,
+        "baseLevel": 2,
+        "traits": ["Concentrate", "Manipulate", "Prediction"],
+        "actions": "10 minute",
+        "description": "You ritually sift through the local infosphere and gain mystical insight about a topic. During the casting of this spell, ask about the results of a particular course of action. The spell can predict results up to 20 minutes into the future and reveals the GM's best guess among the following outcomes: Weal (good), Woe (bad), Weal and Woe (mix of good and bad), Nothing (not particularly good or bad). The GM rolls a secred DC 6 flat check. On a failure, the result is always 'nothing'. This makes it impossible to tell whether a 'nothing' result is accurate. If anyone asks about the same topic as the first casting of this spell during an additional casting, the GM uses the secret roll result from the first casting. If circumstances change, it's possible to get a different result.",
+        "heightened":{
+          "4th": "You gain useful counsel about a topic, and the spell can predict results up to 1 week into the future."
+        }
+      },
+      {
+        "id": "spell-12",
+        "name": "Instant Virus",
+        "level": 2,
+        "baseLevel": 2,
+        "traits": ["Concentrate", "Disease", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 target with the tech trait",
+        "description": "Your touch installs a dangerous self-replicating virus that disrupts a technological target's programming. The target must attempt a Fortitude Save.",
+        "degrees": {
+          "Critical Success": "The target is unaffected.",
+          "Success": "The target is Glitching 1.",
+          "Failure": "The target is Glitching 1 and Stunned 1.",
+          "Critical Failure": "The target is Glitching 2 and Stunned 2."
+        }
+      },
+      {
+        "id": "spell-13",
+        "name": "Verdant Code",
+        "level": 2,
+        "baseLevel": 2,
+        "traits": ["Concentrate", "Manipulate", "Plant", "Wood"],
+        "actions": "Two Actions",
+        "range": "30 feet",
+        "targets": "1 computer",
+        "defense": "Reflex",
+        "description": "You cause flowering vines or other plant matter to grow from a computer or unattended other device. Plant matter eplodes from the target device, filling all squares within a 20-foot radius. Each round a creature starts its turn in the area, it takes 2d6 piercing damage and must attempt a Reflex save. The growth also covers the device, requiring a successful DC 5 flat check for non-remote access for the spell's duration.",
+        "degrees": {
+          "Critical Success": "The creature is unaffected.",
+          "Success": "The creature takes half damage.",
+          "Failure": "The creature takes full damage.",
+          "Critical Failure": "The creature takes full damage and is immobilized for 1 round."
+        }
+      }
+    ]
+  },
+  "actions": [
+    {
+      "name": "Warp Reality",
+      "actionCount": 1,
+      "traits": ["Concentrate", "Witchwarper"],
+      "description": "Your quantum field activates and lasts as long as you Sustain it (up to 10 minutes) or until the end of your next turn. Your quantum field is a 15-foot-radius burst centered on a point you choose within 100 feet. While your Quantum Field is active, you can use actions that have the anchoring trait. As an Analyst, you see and understand infinite possibilities and complex theoretical equations as clearly as though they were etched into your surroundings. When you Seek or Recall Knowledge, you can apply the result against two related creatures, hazards, unattended objects, and effects in your quantum field. Whenever you sustain your quantum field, you can seek or Recall Knowledge against an appropriate target in your quantum field as a free action. Your quantum field automatically deactivates if you're knocked out, you dismiss it, or if you move more than 100 feet away from it."
+    },
+    {
+      "name": "Touch Something Real",
+      "actionCount": 1,
+      "traits": ["Anchoring", "Concentrate", "Witchwarper"],
+      "description": "Briefly touching or fidgeting with your anchor helps you evaluate your situation clearly. Once per round, decrease the value of your Frightened or Stupefied condition by 1. If you have none of these conditions, you instead gain a +1 circumstance bonus to Will saves against fear effects until the start of your next turn."
+    }
+  ]
+}

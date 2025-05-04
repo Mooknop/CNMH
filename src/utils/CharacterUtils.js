@@ -9,7 +9,8 @@ export const CHARACTER_COLORS = [
   '#64b5f6', // blue
   '#81c784', // green
   '#ba68c8', // purple
-  '#E67E22'  // bright rust
+  '#E67E22',  // bright rust
+  '#C33764'  //Nebula Pink
 ];
 
 /**

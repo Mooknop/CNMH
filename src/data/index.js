@@ -4,6 +4,7 @@ import AshkaBGosh from './AshkaBGosh.json';
 import JadeInferno from './JadeInferno.json';
 import Blu_Kakke from './Blu-Kakke.json';
 import Pellias from './Pellias.json';
+import CarmaleighZ from './CarmaleighZuhnyons.json';
 import loreData from './lore.json';
 import questsData from './quests.json';
 
@@ -13,7 +14,8 @@ export const sampleCharacters = [
   Blu_Kakke,
   IzzyUncut,
   JadeInferno,
-  Pellias
+  Pellias,
+  CarmaleighZ
 ];
 
 // Export the lore data

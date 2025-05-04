@@ -164,8 +164,7 @@ import {
    */
   export const findScrollItems = (character) => {
     return character.inventory
-      ? character.inventory.filter(item => 
-          item.name.toLowerCase().includes('scroll') && item.scroll)
+      ? character.inventory.filter(item => item.scroll)
       : [];
   };
   
