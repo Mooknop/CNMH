@@ -24,6 +24,11 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
             <ActionIcon actionText={spell.actions} color={themeColor} />
           </div>
         )}
+        {spell.fromGem && (
+          <div className="gem-indicator">
+            {spell.gemName}
+          </div>
+        )}
         <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
           {spell.level === 0 
             ? `Cantrip ${spell.baseLevel} (${Math.ceil(characterLevel / 2)})`

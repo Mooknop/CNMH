@@ -257,3 +257,33 @@ export const extractInnateSpells = (character) => {
   
   return innateSpells;
 };
+
+/**
+ * Find gem items in character inventory
+ * @param {Object} character - Character object
+ * @returns {Array} - Array of gem items with spells
+ */
+export const findGemItems = (character) => {
+  return character.inventory
+    ? character.inventory.filter(item => item.gem)
+    : [];
+};
+
+/**
+ * Extract gem spells from gem items
+ * @param {Array} gemItems - Array of gem items
+ * @returns {Array} - Array of gem spells
+ */
+export const extractGemSpells = (gemItems) => {
+  return gemItems.flatMap(item => {
+    // Add an identifier to the spell to know it's from a gem
+    if (item.gem) {
+      return {
+        ...item.gem,
+        fromGem: true,
+        gemName: item.name
+      };
+    }
+    return [];
+  });
+};

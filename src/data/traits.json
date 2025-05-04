@@ -243,6 +243,18 @@
       {
         "name": "Flourish",
         "description": "Actions with this trait are special techniques that require too much exertion to perform a large number in a row. You can use only 1 action with the flourish trait per turn."
+      },
+      {
+        "name": "Zone",
+        "description": "These actions apply an additional effect to your quantum field. You may apply effects of a zone only to a quantum field that doesn't have a zone effect."
+      },
+      {
+        "name": "Anchoring",
+        "description": "You can use abilities with the anchoring trait only while your quantum field is activated (unless they are your Signature Spells). If you use the ability on your turn, in addition to their stated effects, they automatically Sustain your quantum field."
+      },
+      {
+        "name": "Tech",
+        "description": "Items with this trait incorporate things like electronics, computer systems, integrated power sources, and/or a comm unit. They cannot use archaic runes."
       }
     ]
   }

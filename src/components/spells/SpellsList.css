@@ -626,6 +626,16 @@
   border: 1px solid #d7c1ff;
 }
 
+/* Gem indicator styling */
+.gem-indicator {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 20px;
+  background-color: #e1f5fe;
+  color: #0288d1;
+  border: 1px solid #4fc3f7;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .spellcasting-stats {

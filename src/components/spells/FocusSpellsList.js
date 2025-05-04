@@ -43,6 +43,9 @@ const FocusSpellsList = ({ character, characterColor }) => {
     if (character.spellcasting && character.spellcasting.bloodline && character.spellcasting.bloodline.focus_spells) {
       return true;
     }
+    if (character.witchwarper && character.witchwarper.warpSpells) {
+      return true;
+    }
     return false;
   };
   
@@ -59,6 +62,9 @@ const FocusSpellsList = ({ character, characterColor }) => {
     }
     if (character.focus_spells) {
       return character.focus_spells;
+    }
+    if (character.witchwarper && character.witchwarper.warpSpells) {
+      return character.witchwarper.warpSpells;
     }
     return [];
   };

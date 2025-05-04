@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Component for toggling between different spell view modes
  * @param {Object} props
@@ -11,6 +9,7 @@ import React from 'react';
  * @param {boolean} props.hasStaff - Whether character has a staff
  * @param {boolean} props.hasScrolls - Whether character has scrolls
  * @param {boolean} props.hasWands - Whether character has wands
+ * @param {boolean} props.hasGems - Whether character has gems
  * @param {Object} props.staff - Staff object if available
  * @param {string} props.focusLabel - Label for focus spells button
  * @param {string} props.themeColor - Theme color
@@ -23,7 +22,8 @@ const ViewModeToggle = ({
   hasInnate,
   hasStaff, 
   hasScrolls,
-  hasWands, 
+  hasWands,
+  hasGems,
   staff,
   focusLabel = "Focus Spells",
   themeColor 
@@ -105,6 +105,19 @@ const ViewModeToggle = ({
           }}
         >
           Wands
+        </button>
+      )}
+      
+      {hasGems && (
+        <button 
+          className={`view-mode-btn ${viewMode === 'gems' ? 'active' : ''}`}
+          onClick={() => setViewMode('gems')}
+          style={{ 
+            backgroundColor: viewMode === 'gems' ? themeColor : '',
+            borderColor: viewMode === 'gems' ? themeColor : ''
+          }}
+        >
+          Spell Gems
         </button>
       )}
     </div>

@@ -104,6 +104,21 @@
   },
   "feats": [
     {
+      "id": "feat-0",
+      "name": "Baby",
+      "level": 1,
+      "source": "Witchwarper",
+      "description": "Your anchor is Baby, a Laser Wolf from Castrovel. His presence helps ground you in this reality. You gain a +1 circumstance bonus to both Perception checks and Will saves against illusions and holograms. When you come within 10 feet of an illusion or hologram that can be disbelieved, the GM rolls a secret check for you to disbelieve it, even if you didn't spend an action to Interact with the illusion or hologram.",
+      "actions":[
+        {
+          "name": "Touch Something Real",
+          "actionCount": 1,
+          "traits": ["Anchoring", "Concentrate", "Witchwarper"],
+          "description": "Briefly touching or fidgeting with your anchor helps you evaluate your situation clearly. Once per round, decrease the value of your Frightened or Stupefied condition by 1. If you have none of these conditions, you instead gain a +1 circumstance bonus to Will saves against fear effects until the start of your next turn."
+        }
+      ]
+    },
+    {
       "id": "feat-1",
       "name": "Debris Zone",
       "level": 2,
@@ -182,7 +197,7 @@
       "description": "You spring into combat faster than foes can react. On the first round of combat, if you roll Deception or Stealth for initiative, creatures that haven't acted are off-guard to you."
     },
     {
-      "id": "feat-7",
+      "id": "feat-8",
       "name": "Sneak Attacker",
       "level": 4,
       "source": "Rogue Archetype",
@@ -284,6 +299,7 @@
       "description": "This cybernetic is a programmable data port that integrates into your body, allowing you to access computers and digital storage devices. Any handheld computer can be inserted directly into the port, while larger systems typically require an adapter cable. You don't need an interface to acccess the system, as it connects directly to your nervous system via the datajack. You must still attempt any skill checks associated with operating the device, such as Computers to access a system. Some closed systems don't allow direct data access at all."
     },
     {
+      "id": "gem-1",
       "name": "Invisibility Spell Gem",
       "price": 4,
       "quantity": 1,
@@ -291,6 +307,7 @@
       "traits": ["Consumable", "Magical", "Illusion", "Manipulate", "Subtle"],
       "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Invisibility.",
       "gem":{
+        "id": "gem-spell-1",
         "name": "Invisibility",
         "level": 2,
         "baseLevel": 2,
@@ -303,6 +320,7 @@
       }
     },
     {
+      "id": "gem-2",
       "name": "Overheat Spell Gem",
       "price": 4,
       "quantity": 1,
@@ -310,6 +328,7 @@
       "traits": ["Consumable", "Magical", "Manipulate", "fire"],
       "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Overheat.",
       "gem":{
+        "id": "gem-spell-2",
         "name": "Overheat",
         "level": 1,
         "baseLevel": 1,
@@ -322,6 +341,7 @@
       }
     },
     {
+      "id": "gem-3",
       "name": "Cellular Stimulant Spell Gem",
       "price": 4,
       "quantity": 1,
@@ -329,6 +349,7 @@
       "traits": ["Consumable", "Magical", "Manipulate", "fire"],
       "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Cellular Stimulant.",
       "gem":{
+        "id": "gem-spell-3",
         "name": "Cellular Stimulant",
         "level": 1,
         "baseLevel": 1,
@@ -458,7 +479,8 @@
         "name": "Wisp Ally",
         "level": 1,
         "baseLevel": 1,
-        "traits": ["Concentrate", "Light", "Manipulate"],
+        "traits": ["Anchoring", "Concentrate", "Light", "Manipulate"],
+        "signature": true,
         "actions": "Two Actions",
         "range": "120 feet",
         "defense": "Will",
@@ -553,11 +575,12 @@
         "name": "Verdant Code",
         "level": 2,
         "baseLevel": 2,
-        "traits": ["Concentrate", "Manipulate", "Plant", "Wood"],
+        "traits": ["Anchoring", "Concentrate", "Manipulate", "Plant", "Wood"],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 computer",
         "defense": "Reflex",
+        "duration": "1 minute",
         "description": "You cause flowering vines or other plant matter to grow from a computer or unattended other device. Plant matter eplodes from the target device, filling all squares within a 20-foot radius. Each round a creature starts its turn in the area, it takes 2d6 piercing damage and must attempt a Reflex save. The growth also covers the device, requiring a successful DC 5 flat check for non-remote access for the spell's duration.",
         "degrees": {
           "Critical Success": "The creature is unaffected.",
@@ -574,12 +597,6 @@
       "actionCount": 1,
       "traits": ["Concentrate", "Witchwarper"],
       "description": "Your quantum field activates and lasts as long as you Sustain it (up to 10 minutes) or until the end of your next turn. Your quantum field is a 15-foot-radius burst centered on a point you choose within 100 feet. While your Quantum Field is active, you can use actions that have the anchoring trait. As an Analyst, you see and understand infinite possibilities and complex theoretical equations as clearly as though they were etched into your surroundings. When you Seek or Recall Knowledge, you can apply the result against two related creatures, hazards, unattended objects, and effects in your quantum field. Whenever you sustain your quantum field, you can seek or Recall Knowledge against an appropriate target in your quantum field as a free action. Your quantum field automatically deactivates if you're knocked out, you dismiss it, or if you move more than 100 feet away from it."
-    },
-    {
-      "name": "Touch Something Real",
-      "actionCount": 1,
-      "traits": ["Anchoring", "Concentrate", "Witchwarper"],
-      "description": "Briefly touching or fidgeting with your anchor helps you evaluate your situation clearly. Once per round, decrease the value of your Frightened or Stupefied condition by 1. If you have none of these conditions, you instead gain a +1 circumstance bonus to Will saves against fear effects until the start of your next turn."
     }
   ]
 }

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import './SpellsList.css';
 
-// Component imports
+import GemSpells from './GemSpells';
 import SpellsHeader from './SpellsHeader';
 import ViewModeToggle from './ViewModeToggle';
 import SpellFilters from './SpellFilters';
@@ -21,7 +21,9 @@ import {
   extractScrollSpells,
   findWandItems,
   extractWandSpells,
-  extractInnateSpells
+  extractInnateSpells,
+  findGemItems,
+  extractGemSpells
 } from '../../utils/SpellUtils';
 
 /**
@@ -79,7 +81,9 @@ const SpellsList = ({ character, characterColor }) => {
     availableSpellRanks,
     allAvailableRanks,
     sortedRankList,
-    allDefenseTypes
+    allDefenseTypes,
+    hasGems,
+    gemSpells
   } = useMemo(() => {
     // Check if character has spellcasting
     const hasSpellcasting = !!spellcasting.tradition;
@@ -118,7 +122,9 @@ const SpellsList = ({ character, characterColor }) => {
         availableInnateSpellRanks: [],
         allAvailableRanks: [],
         sortedRankList: [],
-        allDefenseTypes: []
+        allDefenseTypes: [],
+        hasGems: false,
+        gemSpells: []
       };
     }
     
@@ -129,6 +135,12 @@ const SpellsList = ({ character, characterColor }) => {
     // Extract scroll spells
     const scrollSpells = hasScrolls ? extractScrollSpells(scrollItems) : [];
     
+    // Spell gems
+    const gemItems = findGemItems(character);
+    const hasGems = gemItems.length > 0;
+    // Extract gem spells
+    const gemSpells = hasGems ? extractGemSpells(gemItems) : [];
+
     // Find wands in inventory
     const wandItems = findWandItems(character);
     const hasWands = wandItems.length > 0;
@@ -146,6 +158,7 @@ const SpellsList = ({ character, characterColor }) => {
     const scrollSpellsByRank = organizeSpellsByRank(scrollSpells);
     const wandSpellsByRank = organizeSpellsByRank(wandSpells);
     const innateSpellsByRank = organizeSpellsByRank(innateSpells);
+    const gemSpellsByRank = organizeSpellsByRank(gemSpells);
     
     // Get available ranks from each source
     const availableSpellRanks = getAvailableRanks(spellsByRank);
@@ -153,6 +166,7 @@ const SpellsList = ({ character, characterColor }) => {
     const availableScrollSpellRanks = getAvailableRanks(scrollSpellsByRank);
     const availableWandSpellRanks = getAvailableRanks(wandSpellsByRank);
     const availableInnateSpellRanks = getAvailableRanks(innateSpellsByRank);
+    const availableGemSpellRanks = getAvailableRanks(gemSpellsByRank);
     
     // Combine available ranks from all sources
     const allAvailableRanks = [...new Set([
@@ -160,7 +174,8 @@ const SpellsList = ({ character, characterColor }) => {
       ...availableStaffSpellRanks,
       ...availableScrollSpellRanks,
       ...availableWandSpellRanks,
-      ...availableInnateSpellRanks
+      ...availableInnateSpellRanks,
+      ...availableGemSpellRanks
     ])];
     
     // Create sorted rank list
@@ -172,7 +187,8 @@ const SpellsList = ({ character, characterColor }) => {
       ...staffSpells,
       ...scrollSpells,
       ...wandSpells,
-      ...innateSpells
+      ...innateSpells,
+      ...gemSpells
     ];
     
     const allDefenseTypes = getDefenseTypes(allSpells);
@@ -202,7 +218,12 @@ const SpellsList = ({ character, characterColor }) => {
       availableInnateSpellRanks,
       allAvailableRanks,
       sortedRankList,
-      allDefenseTypes
+      allDefenseTypes,
+      gemItems,
+      gemSpells,
+      hasGems,
+      gemSpellsByRank,
+      availableGemSpellRanks
     };
   }, [character, spellcasting]);
 
@@ -219,6 +240,7 @@ const SpellsList = ({ character, characterColor }) => {
       if (hasStaff) availableModes.push('staff');
       if (hasScrolls) availableModes.push('scrolls');
       if (hasWands) availableModes.push('wands');
+      if (hasGems) availableModes.push('gems');
       
       // Set view mode to the first available one
       if (availableModes.length > 0) {
@@ -290,6 +312,9 @@ const SpellsList = ({ character, characterColor }) => {
     else if (viewMode === 'wands') {
       return filterSpellsByRank(wandSpells, activeSpellRank);
     }
+    else if (viewMode === 'gems') {
+      return filterSpellsByRank(gemSpells, activeSpellRank);
+    }
     
     return [];
   };
@@ -358,6 +383,7 @@ const SpellsList = ({ character, characterColor }) => {
         staff={character.staff || {}}
         focusLabel={getFocusSpellsLabel()}
         themeColor={themeColor}
+        hasGems={hasGems}
       />
       
       {/* Filters that work across all tabs */}
@@ -426,6 +452,17 @@ const SpellsList = ({ character, characterColor }) => {
       
       {viewMode === 'wands' && hasWands && (
         <WandSpells 
+          spells={spellsToDisplay}
+          themeColor={themeColor}
+          characterLevel={character.level}
+          defenseFilter={defenseFilter}
+          activeSpellRank={activeSpellRank}
+          character={character}
+        />
+      )}
+
+      {viewMode === 'gems' && hasGems && (
+        <GemSpells 
           spells={spellsToDisplay}
           themeColor={themeColor}
           characterLevel={character.level}
