@@ -435,6 +435,7 @@
         "actions": "Two Actions",
         "range": "30 feet",
         "duration": "Sustained up to 1 minute",
+        "signature": true,
         "description": "You summon a creature that has the undead trait and whose level is –1 to fight for you.",
         "heightened":{
           "2nd": "The creature can be up to Level 1.",
