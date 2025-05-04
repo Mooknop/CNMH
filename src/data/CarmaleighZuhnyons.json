@@ -290,7 +290,7 @@
       "weight": 0.1,
       "traits": ["Consumable", "Magical", "Illusion", "Manipulate", "Subtle"],
       "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Invisibility.",
-      "scroll":{
+      "gem":{
         "name": "Invisibility",
         "level": 2,
         "baseLevel": 2,
@@ -309,7 +309,7 @@
       "weight": 0.1,
       "traits": ["Consumable", "Magical", "Manipulate", "fire"],
       "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Overheat.",
-      "scroll":{
+      "gem":{
         "name": "Overheat",
         "level": 1,
         "baseLevel": 1,
@@ -328,7 +328,7 @@
       "weight": 0.1,
       "traits": ["Consumable", "Magical", "Manipulate", "fire"],
       "description": "This latticed gemstone is suspended in a silicon casing and encoded with the magical script necessary to cast Cellular Stimulant.",
-      "scroll":{
+      "gem":{
         "name": "Cellular Stimulant",
         "level": 1,
         "baseLevel": 1,
