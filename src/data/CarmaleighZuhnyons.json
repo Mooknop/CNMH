@@ -581,6 +581,7 @@
         "targets": "1 computer",
         "defense": "Reflex",
         "duration": "1 minute",
+        "signature": true,
         "description": "You cause flowering vines or other plant matter to grow from a computer or unattended other device. Plant matter eplodes from the target device, filling all squares within a 20-foot radius. Each round a creature starts its turn in the area, it takes 2d6 piercing damage and must attempt a Reflex save. The growth also covers the device, requiring a successful DC 5 flat check for non-remote access for the spell's duration.",
         "degrees": {
           "Critical Success": "The creature is unaffected.",

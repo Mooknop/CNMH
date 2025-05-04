@@ -29,6 +29,11 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
             {spell.gemName}
           </div>
         )}
+        {spell.signature && (
+          <div className="signature-indicator">
+            Signature
+          </div>
+        )}
         <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
           {spell.level === 0 
             ? `Cantrip ${spell.baseLevel} (${Math.ceil(characterLevel / 2)})`
@@ -120,6 +125,17 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
         </div>
       )}
       
+      {/* Signature spell explanation if applicable */}
+      {spell.signature && (
+        <div className="signature-explanation">
+          <span className="signature-label" style={{ color: themeColor }}>Signature Spell:</span>
+          <p className="signature-effect">
+            As a signature spell, you can cast this at any rank up to your highest available spell rank 
+            without knowing it in a specific Rank.
+          </p>
+        </div>
+      )}
+      
       <div className="spell-description">
         {spell.description}
       </div>
@@ -161,7 +177,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
   return (
     <CollapsibleCard 
       key={spell.id + (spell.fromScroll ? '-scroll' : '')}
-      className={`spell-card ${spell.bloodline ? 'bloodline-spell' : ''}`}
+      className={`spell-card ${spell.bloodline ? 'bloodline-spell' : ''} ${spell.signature ? 'signature-spell' : ''}`}
       header={header}
       themeColor={themeColor}
       initialExpanded={false}
