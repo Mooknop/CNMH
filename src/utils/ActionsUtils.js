@@ -87,13 +87,17 @@ export const getStrikes = (character) => {
           const isMelee = strike.type === 'melee';
           const isFinesse = strike.traits && strike.traits.includes('Finesse');
           const isThrown = strike.traits && strike.traits.includes('Thrown');
+          const isKineticist = strike.traits && strike.traits.includes('Kineticist');
           
           // Get relevant ability modifiers
           const strMod = getAbilityModifier(character.abilities?.strength || 10);
           const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
+          const conMod = getAbilityModifier(character.abilities?.constitution || 10);
           
           // Use appropriate modifier based on weapon type and traits
-          if (isFinesse) {
+          if(isKineticist){
+            abilityMod = conMod;
+          } else if (isFinesse) {
             abilityMod = Math.max(strMod, dexMod); // Finesse can use higher of STR or DEX
           } else if (isMelee) {
             abilityMod = strMod; // Melee weapons use STR
