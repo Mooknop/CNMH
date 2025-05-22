@@ -4,9 +4,9 @@
   "ancestry": "Human",
   "background": "Kineticist",
   "class": "Champion",
-  "level": 3,
-  "maxHp": 47,
-  "ac": 21,
+  "level": 4,
+  "maxHp": 60,
+  "ac": 22,
   "size": "Medium",
   "speed": 20,
   "abilities": {
@@ -18,9 +18,9 @@
     "charisma": 12
   },
   "saves": {
-    "fortitude": 10,
-    "reflex": 5,
-    "will": 8
+    "fortitude": 11,
+    "reflex": 6,
+    "will": 9
   },
   "skills": {
     "athletics": {
@@ -182,6 +182,43 @@
       "level": 1,
       "source": "Skill",
       "description": "You can attempt to Disarm, Grapple, Shove, or Trip creatures up to two sizes larger than you, and you don't take a circumstance penalty when targeting a creature that's one size larger than you with these actions."
+    },
+    {
+      "id": "feat-11",
+      "name": "Primary Threat",
+      "level": 1,
+      "source": "Champion",
+      "description": "When a fight begins, you make it clear you should be the one people are concerned about.",
+      "freeActions": [
+        {
+          "name": "Primary Threat",
+          "traits": [ "Champion"],
+          "trigger": "Your turn begins and it is the first round of combat",
+          "description": "You Delay while presenting an imposing afront to your enemies. Enemy creatures that go after you used Delay take a -1 circumstance penalty to attack rolls against your allies until the beginning of your next turn. Creatures can remove this penalty by spending a single action with the concentrate trait to do their own threat evaluation."
+        }
+      ]
+    },
+    {
+      "id": "feat-12",
+      "name": "Through the Gate",
+      "level": 1,
+      "source": "Kineticist",
+      "description": "You have learned to channel the energies of the Plane of Metal more precisely; you gain a new Kineticist Impulse.",
+      "actions": [
+        {
+          "name": "Shard Strike",
+          "actionCount": 2,
+          "traits": ["Impulse", "Kineticist", "Metal", "Primal"],
+          "description": "Jagged metal shards form in the air and lash out in front of you. Creatures in the area attempt a Basic Reflex Save against your Class DC. Choose Shards or Spines. Shards deal 1d6 slashing damage in a 15-foot cone, and a creature that critically fails takes 1d6 persistent bleed damage. Spines deal 1d6 piercing damage in a 30-foot line, and a creature that critically fails is Clumsy 1 until the start of your next turn."
+        }
+      ]
+    },
+    {
+      "id": "feat-13",
+      "name": "Murmured Prayer",
+      "level": 4,
+      "source": "Skill",
+      "description": "A prayer under your breath to the appropriate god can guide you in times of trouble. You can cast Guidance as a divine innate cantrip. Once per day, you can utter a prayer to a particularly relevant deity as part of casting Guidance, and the bonus increases to a +2. You do not need to follow the deity to ask for their guidance, but if their goals do not align with you own, they may refuse to aid you. When you are Legendary in Religion, you can utter a prayer once per hour instead of daily."
     }
   ],
   "inventory": [
@@ -406,6 +443,16 @@
         "heightened": {
             "+2": "The extra damage increases by 1d4."
           }
+      },
+      {
+        "id": "spell-3",
+        "name": "Guidance",
+        "level": 1,
+        "baseLevel": 1,
+        "traits": ["Cantrip","Concentrate"],
+        "actions": "One Action",
+        "range": "30ft",
+        "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour."
       }
     ],
     "focus_points": 2,

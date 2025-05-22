@@ -6,10 +6,9 @@
   "ancestry": "Leshy",
   "background": "Celebrity",
   "class": "Bard",
-  "level": 3,
-  "maxHp": 32,
-  "currentHp": 32,
-  "ac": 18,
+  "level": 4,
+  "maxHp": 48,
+  "ac": 19,
   "size": "Small",
   "speed": 25,
   "senses": "Low-light Vision",
@@ -22,9 +21,9 @@
     "charisma": 18
   },
   "saves": {
-    "fortitude": 7,
-    "reflex": 8,
-    "will": 10
+    "fortitude": 8,
+    "reflex": 9,
+    "will": 11
   },
   "skills": {
     "deception": {
@@ -120,6 +119,20 @@
         "heightened": {
           "+1": "The fast healing and temporary Hit Points each increase by 2."
         }
+      },
+      {
+        "id": "spell-4",
+        "name": "Lingering Composition",
+        "level": 0,
+        "baseLevel": 1,
+        "traits": ["Bard", "Composition", "Concentrate", "Focus", "Spellshape"],
+        "actions": "Free Action",
+        "description": "You add a flourish to your composition to extend its benefits. If your next action is to cast a cantrip composition with a duration of 1 round, attempt a Performance check. The DC is standard-difficulty of a level equal to the highestt level target of your composition.",
+        "degrees": {
+          "Critical Success": "The composition lasts 4 rounds.",
+          "Success": "The composition lasts 3 rounds.",
+          "Failure": "The composition lasts 1 round, but you don't expend a focus point for trying."
+        }
       }
     ],
   "feats": [
@@ -192,6 +205,35 @@
           "traits": ["Emotion", "General", "Mental", "Skill"],
           "trigger": "A creature you can observe within 30 feet takes a skill action with the Auditory, Concentrate, or Visual traits.",
           "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
+        }
+      ]
+    },
+    {
+      "id": "feat-7",
+      "name": "Multifarious Muse",
+      "level": 4,
+      "source": "Bard",
+      "description": "Your muse doesn't fall into a single label. Your muse is now also a Maestro, you gain that muse's unique ability, and can now choose feats that are available only to Maestro Bards."
+    },
+    {
+      "id": "feat-8",
+      "name": "Eld Attunement",
+      "level": 4,
+      "source": "Ostilli Host",
+      "description": "The Ostilli bound to you has learned from absorbing the primal magic you naturally exude. When you make your daily preparations, you can attune your Ostilli to a single source of potent magic to which you have been exposed for at least half of the past 24 hours, granting you a new kind of magic called an Eld Power. You may use each one only once per hour as you replenish the Ostilli's store of magical energy. You can re-attune your Ostilli during the day as a 1-hour activity that requires your complete focus."
+    },
+    {
+      "id": "feat-9",
+      "name": "Harmless Bystander",
+      "level": 4,
+      "source": "Skill",
+      "description": "You can pretend you have nothing to do with the conflict that is about to take place.",
+      "freeActions": [
+        {
+          "name": "Harmless Bystander",
+          "traits": [ "Auditory", "Concentrate", "Linguistic", "Mental", "Skill"],
+          "trigger": "You roll initiative",
+          "description": "Roll initiative using your Deception rather than Perception. Any non-ally creature must attempt to Sense Motive against you to realize you are hostile to them and they cannot make reactions against you until you take a hostile action against the creature or its allies. If you are wielding a weapon or cannot reasonably hide yourself as a bystander, the creature gets a +4 circumstance bonus to their Sense Motive. If you are observed taking a hostile action you are automatically recognized as hostile. Regardless of the result of the creature's Sense Motive, once you are observed being hostile, non-allied creatures are temporarily immune to your use of Harmless Bystander for 1 day."
         }
       ]
     }

@@ -6,10 +6,9 @@
   "ancestry": "Fetchling",
   "background": "Ranger",
   "class": "Thaumaturge",
-  "level": 3,
-  "maxHp": 32,
-  "currentHp": 32,
-  "ac": 19,
+  "level": 4,
+  "maxHp": 40,
+  "ac": 20,
   "size": "Small",
   "speed": 25,
   "senses": "Darkvision",
@@ -22,9 +21,9 @@
     "charisma": 18
   },
   "saves": {
-    "fortitude": 7,
-    "reflex": 10,
-    "will": 8
+    "fortitude": 8,
+    "reflex": 11,
+    "will": 9
   },
   "skills": {
     "acrobatics": {
@@ -178,6 +177,27 @@
           "description": "You study the magical energy of a spellcaster you can see within 30 feet. Make a secret Arcana check against the spellcaster's Will DC. On a success, you learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources, you learn both."
         }
       ]
+    },
+    {
+      "id": "feat-10",
+      "name": "Scroll Thaumaturgy",
+      "level": 4,
+      "source": "Thaumaturge",
+      "description": "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease. You can activate scrolls of any magical tradition, using your Thaumaturge class DC for the resulting spell's DC. When you do, you choose which of its possible traditions to use when you activate it. You can draw and activate scrolls with the same hand holding an implement, much like you can for esoterica."
+    },
+    {
+      "id": "feat-11",
+      "name": "Animal Companion",
+      "level": 4,
+      "source": "Ranger",
+      "description": "You gain the service of a young animal companion that travels with you and obeys simple commands. When you Hunt Prey, your animal companion gains the action's benefits."
+    },
+    {
+      "id": "feat-12",
+      "name": "Discrete Inquiry",
+      "level": 1,
+      "source": "General",
+      "description": "You are subtle in your efforts to learn the things you need to know. When Gathering Information, you can hide the true subject of your inquiry among other topics of little interest to you without increasing the difficulty of the check or taking more time to Gather Information. Anyone trying to Gather Information to determine if someone else was asking about the topic in question must exceed your Deception DC or the normal DC to Gather Information about your inquiries, whichever is higher, or else they don't learn of your efforts."
     }
   ],
   "inventory": [

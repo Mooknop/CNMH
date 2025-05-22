@@ -6,10 +6,9 @@
   "ancestry": "Half-Elf",
   "background": "Harrower",
   "class": "Sorcerer",
-  "level": 3,
-  "maxHp": 24,
-  "currentHp": 24,
-  "ac": 17,
+  "level": 4,
+  "maxHp": 30,
+  "ac": 18,
   "size": "Medium",
   "speed": 30,
   "senses": "Low-light Vision",
@@ -22,9 +21,9 @@
     "charisma": 18
   },
   "saves": {
-    "fortitude": 5,
-    "reflex": 7,
-    "will": 7
+    "fortitude": 6,
+    "reflex": 8,
+    "will": 8
   },
   "skills": {
     "acrobatics": {
@@ -154,6 +153,27 @@
         "level": 1,
         "source": "Skill",
         "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week."
+      },
+      {
+        "id": "feat-7",
+        "name": "Split Shot",
+        "level": 4,
+        "source": "Sorcerer",
+        "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals hafl the amount of damage it would normally deal and has no effects beyond the spell's initial damage."
+      },
+      {
+        "id": "feat-8",
+        "name": "Harrow Casting",
+        "level": 4,
+        "source": "Harrower",
+        "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn."
+      },
+      {
+        "id": "feat-9",
+        "name": "Glad-Hand",
+        "level": 4,
+        "source": "Skill",
+        "description": "First impressions are your strong suit. When you meet someone in a casual or social situation, you can immediately attempt a Diplomacy check to Make an Impression on that creature rather than needing to converse for 1 minute. If you fail, you can engage in 1 minute of conversation and attempt a new check at the end of the time rather than accepting the failure."
       }
     ],
     "inventory": [
