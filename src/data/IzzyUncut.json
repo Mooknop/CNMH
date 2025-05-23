@@ -737,7 +737,7 @@
             "actions": "Two Actions",
             "range": "30 feet",
             "traits": ["Attack", "Electricity", "Magical"],
-            "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 (+1d4 per level)."
+            "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 per level you have."
           }
         ]
       }
