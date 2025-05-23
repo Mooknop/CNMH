@@ -11,6 +11,7 @@ import ScrollSpells from './ScrollSpells';
 import WandSpells from './WandSpells';
 import FocusSpellsList from './FocusSpellsList';
 import InnateCastingList from './InnateCastingList';
+import EldPowers from './EldPowers';
 import { 
   organizeSpellsByRank, 
   getAvailableRanks,
@@ -83,8 +84,14 @@ const SpellsList = ({ character, characterColor }) => {
     sortedRankList,
     allDefenseTypes,
     hasGems,
-    gemSpells
+    gemSpells,
+    hasEldPowers,
+    eldPowers
   } = useMemo(() => {
+    // Check if character has Eld Powers
+    const hasEldPowers = spellcasting.eldPowers && spellcasting.eldPowers.length > 0;
+    const eldPowers = spellcasting.eldPowers || [];
+    
     // Check if character has spellcasting
     const hasSpellcasting = !!spellcasting.tradition;
     
@@ -96,11 +103,13 @@ const SpellsList = ({ character, characterColor }) => {
     const hasInnate = innateSpells.length > 0;
     
     // If no spellcasting, return early with default values
-    if (!hasSpellcasting && !hasFocus && !hasInnate) {
+    if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers) {
       return {
         hasSpellcasting: false,
         hasFocus: false,
         hasInnate: false,
+        hasEldPowers: false,
+        eldPowers: [],
         innateSpells: [],
         scrollItems: [],
         scrollSpells: [],
@@ -197,6 +206,8 @@ const SpellsList = ({ character, characterColor }) => {
       hasSpellcasting,
       hasFocus,
       hasInnate,
+      hasEldPowers,
+      eldPowers,
       innateSpells,
       scrollItems,
       scrollSpells,
@@ -237,6 +248,7 @@ const SpellsList = ({ character, characterColor }) => {
       if (hasSpellcasting) availableModes.push('spells');
       if (hasInnate) availableModes.push('innate');
       if (hasFocus) availableModes.push('focus');
+      if (hasEldPowers) availableModes.push('eld');
       if (hasStaff) availableModes.push('staff');
       if (hasScrolls) availableModes.push('scrolls');
       if (hasWands) availableModes.push('wands');
@@ -250,15 +262,15 @@ const SpellsList = ({ character, characterColor }) => {
         setViewMode('spells');
       }
     }
-  }, [hasSpellcasting, hasInnate, hasFocus, hasStaff, hasScrolls, hasWands, viewMode]);
+  }, [hasSpellcasting, hasInnate, hasFocus, hasEldPowers, hasStaff, hasScrolls, hasWands, hasGems, viewMode]);
   
-  // If no spellcasting, focus magic, or innate spells, show placeholder
-  if (!hasSpellcasting && !hasFocus && !hasInnate) {
+  // If no spellcasting, focus magic, innate spells, or eld powers, show placeholder
+  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers) {
     return (
       <div className="spells-list">
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
         <div className="empty-state">
-          <p>This character doesn't have spellcasting, innate, or focus magic abilities.</p>
+          <p>This character doesn't have spellcasting, innate, focus magic abilities, or Eld Powers.</p>
         </div>
       </div>
     );
@@ -377,6 +389,7 @@ const SpellsList = ({ character, characterColor }) => {
         hasSpellcasting={hasSpellcasting}
         hasFocus={hasFocus}
         hasInnate={hasInnate}
+        hasEldPowers={hasEldPowers}
         hasStaff={hasStaff}
         hasScrolls={hasScrolls}
         hasWands={hasWands}
@@ -387,7 +400,7 @@ const SpellsList = ({ character, characterColor }) => {
       />
       
       {/* Filters that work across all tabs */}
-      {allAvailableRanks.length > 0 && viewMode !== 'focus' && (
+      {allAvailableRanks.length > 0 && viewMode !== 'focus' && viewMode !== 'eld' && (
         <SpellFilters
           rankList={sortedRankList}
           activeSpellRank={activeSpellRank}
@@ -469,6 +482,14 @@ const SpellsList = ({ character, characterColor }) => {
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
+        />
+      )}
+      
+      {viewMode === 'eld' && hasEldPowers && (
+        <EldPowers 
+          eldPowers={eldPowers}
+          themeColor={themeColor}
+          characterLevel={character.level}
         />
       )}
       

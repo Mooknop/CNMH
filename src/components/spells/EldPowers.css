@@ -1,0 +1,247 @@
+/* src/components/spells/EldPowers.css */
+.eld-powers-container {
+  margin-top: 2rem;
+}
+
+.eld-powers-header {
+  margin-bottom: 1.5rem;
+}
+
+.eld-powers-header h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.eld-powers-description {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Source selector */
+.eld-source-selector {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.eld-source-selector label {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.eld-source-selector select {
+  flex: 1;
+  max-width: 300px;
+  padding: 0.5rem;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.eld-source-selector select:hover {
+  border-color: #bbb;
+}
+
+.eld-source-selector select:focus {
+  outline: none;
+  border-color: #5e2929;
+}
+
+/* Special info box */
+.eld-special-info {
+  background-color: #f3f4f6;
+  border-left: 4px solid #5e2929;
+  border-radius: 0 6px 6px 0;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.eld-special-info h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+}
+
+.eld-special-info p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Powers list */
+.eld-powers-list h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.eld-powers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Power card styling */
+.eld-power-card {
+  background-color: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.eld-power-card .collapsible-header {
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.eld-power-card .collapsible-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+  flex-grow: 1;
+}
+
+.power-actions-indicator {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+}
+
+/* Power traits */
+.power-traits {
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+/* Power details */
+.power-details {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+  background-color: #fcfcfc;
+}
+
+.power-actions,
+.power-range,
+.power-area {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #666;
+}
+
+.detail-value {
+  color: #333;
+}
+
+/* Power description */
+.power-description {
+  padding: 1rem;
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Degrees of success */
+.power-degrees {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  border-top: 1px solid #eee;
+  margin-top: 0.5rem;
+  background-color: #fcfcfc;
+}
+
+.degrees-label {
+  display: block;
+  font-weight: 600;
+  color: #5e2929;
+  margin-bottom: 0.5rem;
+}
+
+.degree-entry {
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+}
+
+.degree-level {
+  font-weight: 600;
+  margin-right: 0.5rem;
+  color: #444;
+}
+
+.degree-effect {
+  color: #333;
+}
+
+/* Different colors for different degree outcomes */
+.degree-entry:has(.degree-level:contains("Critical Success")) .degree-level {
+  color: #2e7d32;
+}
+
+.degree-entry:has(.degree-level:contains("Success")) .degree-level {
+  color: #1976d2;
+}
+
+.degree-entry:has(.degree-level:contains("Failure")) .degree-level {
+  color: #f57c00;
+}
+
+.degree-entry:has(.degree-level:contains("Critical Failure")) .degree-level {
+  color: #c62828;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .eld-source-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .eld-source-selector select {
+    max-width: none;
+  }
+  
+  .eld-powers-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .power-details {
+    grid-template-columns: 1fr;
+  }
+}

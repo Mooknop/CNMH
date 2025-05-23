@@ -20,6 +20,7 @@ const ViewModeToggle = ({
   hasSpellcasting,
   hasFocus,
   hasInnate,
+  hasEldPowers,
   hasStaff, 
   hasScrolls,
   hasWands,
@@ -66,6 +67,19 @@ const ViewModeToggle = ({
           }}
         >
           {focusLabel}
+        </button>
+      )}
+
+      {hasEldPowers && (
+        <button 
+          className={`view-mode-btn ${viewMode === 'eld' ? 'active' : ''}`}
+          onClick={() => setViewMode('eld')}
+          style={{ 
+            backgroundColor: viewMode === 'eld' ? themeColor : '',
+            borderColor: viewMode === 'eld' ? themeColor : ''
+          }}
+        >
+          Eld Powers
         </button>
       )}
       
