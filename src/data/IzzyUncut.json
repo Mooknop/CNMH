@@ -220,7 +220,7 @@
       "name": "Eld Attunement",
       "level": 4,
       "source": "Ostilli Host",
-      "description": "The Ostilli bound to you has learned from absorbing the primal magic you naturally exude. When you make your daily preparations, you can attune your Ostilli to a single source of potent magic to which you have been exposed for at least half of the past 24 hours, granting you a new kind of magic called an Eld Power. You may use each one only once per hour as you replenish the Ostilli's store of magical energy. You can re-attune your Ostilli during the day as a 1-hour activity that requires your complete focus."
+      "description": "The Ostilli bound to you has learned from absorbing the primal magic you naturally exude. When you make your daily preparations, you can attune your Ostilli to a single source of potent magic to which you have been exposed for at least half of the past 24 hours, granting you a new kind of magic called an Eld Power. You may use each one only once per hour as you replenish the Ostilli's store of magical energy."
     },
     {
       "id": "feat-9",
@@ -598,6 +598,131 @@
           "Failure": "The target takes full damage and is Deafened for 1 round  ",
           "Critical Failure": "The creature takes double damage and is deafened for 1 minute, and stunned 1."
         }
+      }
+    ],
+    "eldPowers": [
+      {
+        "source": "Pellias",
+        "powers": [
+          {
+            "name": "Erode",
+            "actions": "Two Actions",
+            "range": "Touch",
+            "traits": ["Attack", "Concentrate", "Magical", "Void"],
+            "description": "You touch a creature, ushering them towards the harsh embrace of death. Make a melee spell attack roll against a foe in reach, dealing 2d10 (+1d10 per level) void damage.",
+            "degrees":{
+              "Critical Success": "The target succumbs to the call of the Void and takes double damage",
+              "Success": "The target takes regular damage",
+              "Failure": "The target takes damage equal to 2 + half your level",
+              "Critical Failure": "The target resists, taking no damage"
+            }
+          },
+          {
+            "name": "Rust Cloud",
+            "actions": "Two Actions",
+            "area": "20 foot emanation",
+            "traits": ["Concentrate", "Metal", "Magical"],
+            "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first.",
+            "degrees":{
+              "Critical Success": "The target succumbs to the call of the Void and takes double damage",
+              "Success": "The target takes regular damage",
+              "Failure": "The target takes damage equal to 2 + half your level",
+              "Critical Failure": "The target resists, taking no damage"
+            }
+          }
+        ]
+      },
+      {
+        "source": "Horn of Rust",
+        "special":{
+          "name": "Shrouded",
+          "description": "When a creature is shrouded, all light within 20 feet of them is lowered in intensity by one step (bright to dim, dim to dark)."
+        },
+        "powers": [
+          {
+            "name": "Gloaming Backstab",
+            "actions": "Two Actions",
+            "range": "Touch",
+            "traits": ["Attack", "Concentrate", "Darkness", "Magical"],
+            "description": "You reach into the shadows and pull out a blade of pure darkness. You deal 2d6 (+1d6 per level) void damage to a foe within your reach with a Melee Spell Attack. If you're hidden, you deal an additional 2d4 (+1d4 per level) percision damage. You become Shrouded until the end of your turn."
+          },
+          {
+            "name": "Chains of Rust",
+            "actions": "Two Actions",
+            "range": "Touch",
+            "traits": ["Concentrate", "Metal", "Magical"],
+            "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
+            "degrees":{
+              "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
+              "Critical Failure": "The creature is immobilized until the start of your next turn."
+            }
+          }
+        ]
+      },
+      {
+        "source": "Ashka's Amulet",
+        "powers": [
+          {
+            "name": "Addling Blast",
+            "actions": "Two Actions",
+            "area": "15 foot cone",
+            "traits": ["Concentrate", "Magical", "Mental"],
+            "description": "You blast a cone of disorienting mental energy to muddle your foes' minds and throw them off guard. You deal 1d4 (+1d4 per level) mental damage to all creatures in a 15-foot cone with a basic Will save.",
+            "degrees":{
+              "Success": "The creature is Off-Guard until the start of their next turn",
+              "Failure": "The creature is Off-Guard and Stupefied 1 until the end of your next turn",
+              "Critical Failure": "The creature is Off-Guard and Stupefied 2 until the end of your next turn"
+            }
+          },
+          {
+            "name": "Psychic Thrust",
+            "actions": "Two Actions",
+            "range": "60 feet",
+            "traits": ["Attack", "Concentrate", "Magical", "Mental"],
+            "description": "You thrust psychic energy into a foe from a distance to overwhelm their mind. Make a ranged Spell Attack against a foe in range, dealing 2d6 (+1d6 per level) mental damage",
+            "degrees":{
+              "Critical Success": "You hit a mental weak spot, dealing double damage and inflicting Stupefied 3 until the end of your next turn",
+              "Success": "The enemy takes regular damage and is Stupefied 2 until the end of your next turn",
+              "Failure": "The enemy takes no damage, and is Stupefied 1 until the end of your next turn",
+              "Critical Failure": "The enemy's psyche is too strong and they are unaffected"
+            }
+          }
+        ]
+      },
+      {
+        "source": "Xanderghul's Flawless Hammer",
+        "special":{
+          "name": "Limned",
+          "description": "A limned creature is surrounded by light, causing it to glow like a torch, outlining it and making its position obvious. A limned creature cant normally become concealed, though if the creature would become invisible it will become concealed instead. Attempts at stealth while Limned take a -4 penalty."
+        },
+        "powers": [
+          {
+            "name": "Stupefying Inception",
+            "actions": "Two Actions",
+            "range": "touch",
+            "traits": ["Attack", "Concentrate", "Magical", "Mental"],
+            "description": "You touch a foe and release overflowing mental energy into their vulnerable mind, damaging them and briefly weakening their psychic defenses. Make a Spell Attack against an enemy; you deal 2d8 (+1d8 per level) mental damage to them.",
+            "degrees":{
+              "Critical Success": "You deal double damage, and they are Stupefied 3 until the end of your next turn",
+              "Success": "You deal regular damage, and they are Stupefied 2 until the end of your next turn",
+              "Failure": "They take no damage, but are Stupefied 1 until the end of your next turn",
+              "Critical Failure": "They resist your psychic assault and take no damage"
+            }
+          },
+          {
+            "name": "Shining Guidance",
+            "actions": "Two Actions",
+            "range": "40 feet",
+            "traits": ["Concentrate", "Light", "Magical"],
+            "description": "You call forth a guiding light to surround your foe and guide your attacks toward them. Choose an enemy in range; you deal 2d4 (+1d4 per level + half your level) fire damage with a Basic Fortitude Save.",
+            "degrees":{
+              "Critical Success": "The creature resists entirely and is unaffected",
+              "Success": "The enemy is Limned until the end of your next turn. You can choose to deal no fire damage rather than half; if you do, you and your allies get a +1 circumstance bonus to attack rolls against them until the end of your next turn, as long as it remains limned",
+              "Failure": "The foe is Limned until the end of your next turn. You and your allies get a +1 circumstance bonus on attack rolls against the creature until the end of your next turn, as long as it remains limned",
+              "Critical Failure": "The foe is limned for two rounds (ending at the end of your turn). During that time, as long as it remains limned, you and your allies gain a +1 circumstance bonus to attack rolls against them"
+            }
+          }
+        ]
       }
     ]
   },
