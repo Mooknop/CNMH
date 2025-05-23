@@ -717,6 +717,29 @@
             }
           }
         ]
+      },
+      {
+        "source": "Blu's Weird Orb",
+        "special":{
+          "name": "Charged",
+          "description": "Using electric Eld abilities gives you Charge; while charged, you are off-guard against attacks that deal electricity damage and take a -2 on saves against electric effects. The charged condition lasts until the encounter ends, you take electric damage, or you Discharge to empower another Electric Eld Power."
+        },
+        "powers": [
+          {
+            "name": "Electric Surge",
+            "actions": "Two Actions",
+            "area": "20 foot line",
+            "traits": ["Concentrate", "Electricity", "Magical"],
+            "description": "You send a surging current of electricity in front of you, shocking creatures in a line. You deal 1d4 (+1d4 per level) electric damage to all creatures in a 20ft line with a Basic Reflex Save. Choose one rider effect: you either become Charged, or you Discharge to increase the are to a 40ft line and the damage increases from d4s to d8s."
+          },
+          {
+            "name": "Polarize",
+            "actions": "Two Actions",
+            "range": "30 feet",
+            "traits": ["Attack", "Electricity", "Magical"],
+            "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 (+1d4 per level)."
+          }
+        ]
       }
     ]
   },
