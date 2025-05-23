@@ -1,6 +1,6 @@
 // src/components/character-sheet/AnimalCompanionModal.js
 import React from 'react';
-import { getAbilityModifier, formatModifier } from '../../utils/CharacterUtils';
+import { getAbilityModifier, getAttackBonus, formatModifier } from '../../utils/CharacterUtils';
 import './AnimalCompanionModal.css';
 
 const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, characterColor }) => {
@@ -125,6 +125,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
                       <div key={index} className="companion-strike">
                         <div className="strike-header">
                           <h5>{strike.name}</h5>
+                          <h5 className="strike-details">{getAttackBonus(getAbilityModifier(Math.max(companionData.abilities.dexterity, companionData.abilities.strength)), strike.proficiency, character.level)}</h5>
                           <h5 className="strike-details">{strike.damage} {getCompanionAbilityMod(companionData.abilities?.strength)}</h5>
                           <div className="strike-traits">
                             {strike.traits && strike.traits.map((trait, i) => (
