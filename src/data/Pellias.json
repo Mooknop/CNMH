@@ -81,7 +81,7 @@
     {
       "id": "feat-1",
       "name": "Kineticist Dedication",
-      "level": 1,
+      "level": 2,
       "source": "Archetype",
       "description": "You gain the ability to gather and shape elemental energy. Choose an element: air, earth, fire, metal, water, or wood. You gain an impulse attack with the element trait from a gate of your choice.",
       "actions": [
@@ -122,7 +122,7 @@
     {
       "id": "feat-3",
       "name": "Devoted Guardian",
-      "level": 1,
+      "level": 2,
       "source": "Champion",
       "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward.",
       "actions": [
@@ -165,7 +165,7 @@
     {
       "id": "feat-8",
       "name": "Hefty Hauler",
-      "level": 1,
+      "level": 2,
       "source": "General",
       "description": "You can carry more than your frame implies. Increase your maximum Bulk by 2 and your encumbered Bulk by 2."
     },
@@ -186,7 +186,7 @@
     {
       "id": "feat-11",
       "name": "Primary Threat",
-      "level": 1,
+      "level": 4,
       "source": "Champion",
       "description": "When a fight begins, you make it clear you should be the one people are concerned about.",
       "freeActions": [
@@ -201,7 +201,7 @@
     {
       "id": "feat-12",
       "name": "Through the Gate",
-      "level": 1,
+      "level": 4,
       "source": "Kineticist",
       "description": "You have learned to channel the energies of the Plane of Metal more precisely; you gain a new Kineticist Impulse.",
       "actions": [

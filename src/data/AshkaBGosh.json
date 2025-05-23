@@ -131,7 +131,7 @@
     {
       "id": "feat-4",
       "name": "Charming Liar",
-      "level": 1,
+      "level": 2,
       "source": "Skill",
       "description": "Your charm allows you to win over those you lie to. When you get a critical success using the Lie action, the target's attitude toward you improves by one step, as though you'd succeeded at using Diplomacy to Make an Impression. This works only once per conversation, and if you critically succeed against multiple targets using the same Lie, you choose one creature's attitude to improve."
     },
@@ -159,14 +159,14 @@
     {
       "id": "feat-8",
       "name": "Familiar",
-      "level": 1,
+      "level": 2,
       "source": "General",
       "description": "You make a pact with a creature that serves you and assists you; you gain a familiar."
     },
     {
       "id": "feat-9",
       "name": "Spell-Signature Reading",
-      "level": 1,
+      "level": 3,
       "source": "Skill",
       "description": "Whenever any caster performs magic, no matter how meager, it creates a vibrant display of runes circling around an intricate glyph known as a spell signature. As a learned student of the arcane yourself, you know all too well what information can be gleaned from such runes, such as one's personality or skill level with magic. You learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources such as having innate spells and prepared spells both, you learn both.",
       "actions":[
@@ -195,7 +195,7 @@
     {
       "id": "feat-12",
       "name": "Discrete Inquiry",
-      "level": 1,
+      "level": 4,
       "source": "General",
       "description": "You are subtle in your efforts to learn the things you need to know. When Gathering Information, you can hide the true subject of your inquiry among other topics of little interest to you without increasing the difficulty of the check or taking more time to Gather Information. Anyone trying to Gather Information to determine if someone else was asking about the topic in question must exceed your Deception DC or the normal DC to Gather Information about your inquiries, whichever is higher, or else they don't learn of your efforts."
     }

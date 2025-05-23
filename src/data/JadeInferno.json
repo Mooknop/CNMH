@@ -121,7 +121,7 @@
       {
         "id": "feat-3",
         "name": "Alchemical Crafting",
-        "level": 1,
+        "level": 2,
         "source": "Skill",
         "description": "You can use the Craft activity to create alchemical items. When you select this feat, you immediately add the formulas for four common 1st-level alchemical items to your formula book."
       },
@@ -135,7 +135,7 @@
       {
         "id": "feat-5",
         "name": "Reach Spell",
-        "level": 1,
+        "level": 2,
         "source": "Sorcerer",
         "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
         "actions": [
@@ -150,7 +150,7 @@
       {
         "id": "feat-6",
         "name": "Tell Fortune",
-        "level": 1,
+        "level": 3,
         "source": "Skill",
         "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week."
       },

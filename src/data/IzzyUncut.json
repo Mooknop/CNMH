@@ -182,7 +182,7 @@
     {
       "id": "feat-4",
       "name": "Eyes of the City",
-      "level": 1,
+      "level": 2,
       "source": "Skill",
       "description": "You can track down targets with the help of locals. You can use Diplomacy or Society, whichever you're trained in, to Track creatures in settlements. You chat with locals to help follow the trail of creatures you Track. At the GM's discretion, there might not be enough people to speak with to keep following the trail."
     },
@@ -196,7 +196,7 @@
     {
       "id": "feat-6",
       "name": "Disrupting Performance",
-      "level": 1,
+      "level": 3,
       "source": "Skill",
       "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute.",
       "reactions":[
