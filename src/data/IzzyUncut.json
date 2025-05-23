@@ -438,9 +438,9 @@
   "spellcasting": {
     "tradition": "Occult",
     "ability": "charisma",
-    "proficiency": 2,
+    "proficiency": 1,
     "focus": {
-      "max": 2,
+      "max": 3,
       "current": 1
     },
     "spells": [
