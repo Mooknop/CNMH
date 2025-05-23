@@ -6,6 +6,7 @@ import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/actions/ActionsList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
+import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
 import { 
@@ -22,6 +23,7 @@ const CharacterSheet = () => {
   const [activeTab, setActiveTab] = useState('actions'); // Default tab
   const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
+  const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   
@@ -58,6 +60,10 @@ const CharacterSheet = () => {
   const hasFamiliar = hasFeat(character, 'Familiar');
   const familiar = hasFamiliar ? character.familiar : null;
 
+  // Define animal companion data
+  const hasAnimalCompanion = hasFeat(character, 'Animal Companion');
+  const animalCompanion = hasAnimalCompanion ? character.animalCompanion : null;
+
   // Check if character has spellcasting
   const hasSpellcasting = character.spellcasting && character.spellcasting.tradition;
   
@@ -92,28 +98,49 @@ const CharacterSheet = () => {
         </p>
         
         {/* Add Familiar button if character has the Familiar feat */}
-        {hasFamiliar && (
           <div className="character-actions">
-            <button 
-              className="familiar-button" 
-              onClick={() => setIsFamiliarModalOpen(true)}
-              style={{ 
-                backgroundColor: characterColor,
-                color: 'white',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <span className="familiar-icon" role="img" aria-label="Familiar">🐾</span>
-              Familiar
-            </button>
+            {hasFamiliar && (
+              <button 
+                className="familiar-button" 
+                onClick={() => setIsFamiliarModalOpen(true)}
+                style={{ 
+                  backgroundColor: characterColor,
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span className="familiar-icon" role="img" aria-label="Familiar">🐾</span>
+                {familiar.name}
+              </button>
+            )}
+
+            {hasAnimalCompanion && (
+              <button 
+                className="familiar-button" 
+                onClick={() => setIsAnimalCompanionOpen(true)}
+                style={{ 
+                  backgroundColor: characterColor,
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span className="familiar-icon" role="img" aria-label="Animal Companion">🐾</span>
+                {animalCompanion.name}
+              </button>
+            )}
           </div>
-        )}
       </div>
       
       <div className="character-content">
@@ -168,6 +195,15 @@ const CharacterSheet = () => {
         isOpen={isFamiliarModalOpen} 
         onClose={() => setIsFamiliarModalOpen(false)} 
         familiar={familiar}
+        character={character}
+        characterColor={characterColor}
+      />
+
+      {/* Animal Companion Modal */}
+      <AnimalCompanionModal
+        isOpen={isAnimalCompanionOpen}
+        onClose={() => setIsAnimalCompanionOpen(false)}
+        animalCompanion={animalCompanion}
         character={character}
         characterColor={characterColor}
       />

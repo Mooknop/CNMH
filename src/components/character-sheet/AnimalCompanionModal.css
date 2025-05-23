@@ -1,0 +1,279 @@
+/* src/components/character-sheet/AnimalCompanionModal.css */
+.animal-companion-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.animal-companion-modal {
+  background-color: white;
+  width: 90%;
+  max-width: 700px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.animal-companion-modal-header {
+  background-color: #5e2929;
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.animal-companion-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.animal-companion-modal-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.companion-basic-info {
+  margin-bottom: 1.5rem;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.companion-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.trait-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.trait-value {
+  color: #333;
+}
+
+.companion-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.companion-abilities h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #5e2929;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.ability-scores {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+}
+
+.ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 0.75rem 0.5rem;
+  border-radius: 6px;
+}
+
+.ability-name {
+  font-weight: 600;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+}
+
+.ability-score {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.ability-mod {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.companion-defenses,
+.companion-saves {
+  display: flex;
+  justify-content: space-between;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.defense {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem;
+}
+
+.defense-label {
+  font-weight: 600;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+}
+
+.defense-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.companion-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.companion-section h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.25rem;
+}
+
+.companion-section p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.companion-strikes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.companion-strike {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.strike-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.strike-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.strike-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.trait-tag {
+  font-size: 0.8rem;
+  background-color: #e0e0e0;
+  color: #333;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.strike-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.strike-damage,
+.strike-range {
+  font-weight: 500;
+}
+
+.companion-abilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.companion-ability h5 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: #333;
+}
+
+.companion-ability p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ability-scores {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .companion-defenses,
+  .companion-saves {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .defense {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .defense-label {
+    margin-bottom: 0;
+  }
+  
+  .strike-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ability-scores {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .companion-traits {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
