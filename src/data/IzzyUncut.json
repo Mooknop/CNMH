@@ -651,11 +651,7 @@
             "actions": "Two Actions",
             "range": "Touch",
             "traits": ["Concentrate", "Metal", "Magical"],
-            "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
-            "degrees":{
-              "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
-              "Critical Failure": "The creature is immobilized until the start of your next turn."
-            }
+            "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save."
           }
         ]
       },
