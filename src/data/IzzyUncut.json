@@ -393,6 +393,46 @@
       "weight": 0.1,
       "traits": ["Alchemical", "Consumable", "Uncommon"],
       "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+    },
+    {
+      "name": "Wand of Cleanse Affliction",
+      "quantity": 1,
+      "weight": 0.1,
+      "traits": ["Magical", "Wand"],
+      "description": "A wand containing the spell Cleanse Affliction",
+      "wand":{
+        "name": "Cleanse Affliction",
+        "level": 2,
+        "traits": ["Concentrate", "Healing", "Manipulate"],
+        "actions": "Two Actions",
+        "range": "Touch",
+        "targets": "1 willing creature",
+        "description": "Gentle restorative magic pushes back the effects of toxins and more complex maladies. Choose an affliction on the target, such as a curse, disease, or poison. If it has advanced past stage one, reduce the stage by one. This reduction can be applied only once to a given case of an affliction, with the case ending when it's completely cured. Although the reduction can't occur again, heightened versions of this spell attempt to counteract with each casting.",
+        "heightened":{
+          "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
+          "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
+        }
+      }
+    },
+    {
+      "name": "Wand of Create Food",
+      "quantity": 1,
+      "weight": 0.1,
+      "traits": ["Magical", "Wand"],
+      "description": "A wand containing the spell Create Food",
+      "wand":{
+        "name": "Create Food",
+        "level": 2,
+        "traits": ["Concentrate", "Healing", "Manipulate"],
+        "actions": "1 Hour",
+        "range": "30 feet",
+        "description": "You create enough food to feed six Medium creatures for a day. This food is bland and unappealing, but it is nourishing. After 1 day, if no one has eaten the food, it decays and becomes inedible. Most Small creatures eat one-quarter as much as a Medium creature (one-sixteenth as much for most Tiny creatures), and most Large creatures eat 10 times as much (100 times as much for Huge creatures and so on).",
+        "heightened":{
+          "4th": "You can feed 12 Medium creatures.",
+          "6th": "You can feed 50 Medium creatures.",
+          "8th": "You can feed 200 Medium creatures."
+        }
+      }
     }
   ],
   "spellcasting": {
