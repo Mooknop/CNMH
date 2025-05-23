@@ -622,13 +622,7 @@
             "actions": "Two Actions",
             "area": "20 foot emanation",
             "traits": ["Concentrate", "Metal", "Magical"],
-            "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first.",
-            "degrees":{
-              "Critical Success": "The target succumbs to the call of the Void and takes double damage",
-              "Success": "The target takes regular damage",
-              "Failure": "The target takes damage equal to 2 + half your level",
-              "Critical Failure": "The target resists, taking no damage"
-            }
+            "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first."
           }
         ]
       },
@@ -651,7 +645,11 @@
             "actions": "Two Actions",
             "range": "Touch",
             "traits": ["Concentrate", "Metal", "Magical"],
-            "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save."
+            "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
+            "degrees":{
+              "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
+              "Critical Failure": "The creature is immobilized until the start of your next turn."
+            }
           }
         ]
       },
