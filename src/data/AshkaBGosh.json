@@ -401,8 +401,8 @@
     "type": "Squox",
     "size": "Tiny",
     "traits": ["Familiar"],
-    "ac": 19,
-    "hp": 15,
+    "ac": 20,
+    "hp": 20,
     "speed": "25 feet",
     "skills": ["Stealth", "Acrobatics", "Perception"],
     "communication": "Empathic link with Ashka within 1 mile",
@@ -421,5 +421,39 @@
       }
     ],
     "description": "A Squox is an exotic creature resembling a cross between a squirrel and a fox. Little is known about them in Golarion, not even where they are native to; the only clue to their origin is the fact that they can most often be tracked back to Elven traders though where they procure the creatures in the first place remains a mystery."
+  },
+  "animalCompanion":{
+    "name": "Zevira",
+    "type": "Young Shadow Hound",
+    "size": "Small",
+    "ac": 19,
+    "hp": 32,
+    "speed": 25,
+    "senses": "Darkvision, Scent (imprecise) 30 feet",
+    "abilities": {
+      "strength": 14,
+      "dexterity": 16,
+      "constitution": 13,
+      "intelligence": 2,
+      "wisdom": 12,
+      "charisma": 12
+    },
+    "saves": {
+      "fortitude": 7,
+      "reflex": 9,
+      "will": 7
+    },
+    "skills": ["Acrobatics","Athletics", "Intimidation", "Perception"],
+    "strikes":[
+      {
+        "name": "Bite",
+        "proficiency": 1,
+        "type": "melee",
+        "action": 1,
+        "damage": "1d8",
+        "traits": ["Attack", "Finesse"]
+      }
+    ],
+    "support": "Zevira shrouds your foes in shadow when you leave an opening. Until the start of your next turn, when you damage a creature with a Strike and that creature is within reach of your Shadow Hound, both you and your hound become Concealed to the creature until the end of your next turn."
   }
 }
