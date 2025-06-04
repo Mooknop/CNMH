@@ -394,19 +394,6 @@
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
           },
           {
-            "name": "Pick",
-            "weight": 1,
-            "quantity": 1,
-            "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
-            "traits": ["Fatal 1d10"],
-            "strikes": {
-              "proficiency": "martial",
-              "type": "melee",
-              "action": 1,
-              "damage": "1d6"
-            }
-          },
-          {
             "name": "+1 Striking Pick",
             "weight": 1,
             "quantity": 1,
