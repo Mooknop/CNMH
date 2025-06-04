@@ -37,6 +37,9 @@
     },
     "religion": {
       "proficiency": 1
+    },
+    "survival":{
+      "proficiency": 1
     }
   },
   "proficiencies": {
