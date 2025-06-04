@@ -699,6 +699,19 @@
           "targets": "1 spell effect or unattended magic item",
           "bloodline": true,
           "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
+        },
+        {
+          "id": "spell-16",
+          "name": "Sudden Bolt",
+          "level": 2,
+          "traits": ["Uncommon", "Electricity", "Manipulate"],
+          "actions": "Two Actions",
+          "range": "600 feet",
+          "targets": "1 creature or object",
+          "description": "You call down a small bolt of lightning on the target, dealing 4d12 electricity damage.",
+          "heightened":{
+            "+1": "The damage increases by 1d12."
+          }
         }
       ],
       "bloodline": {
