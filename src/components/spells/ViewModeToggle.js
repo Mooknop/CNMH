@@ -27,7 +27,8 @@ const ViewModeToggle = ({
   hasGems,
   staff,
   focusLabel = "Focus Spells",
-  themeColor 
+  themeColor,
+  hasHarrowing
 }) => {
   return (
     <div className="view-mode-toggle">
@@ -80,6 +81,19 @@ const ViewModeToggle = ({
           }}
         >
           Eld Powers
+        </button>
+      )}
+
+      {hasHarrowing && (
+        <button
+          className={`view-mode-btn ${viewMode === 'harrow' ? 'active' : ''}`}
+          onClick={() => setViewMode('harrow')}
+          style={{ 
+            backgroundColor: viewMode === 'harrow' ? themeColor : '',
+            borderColor: viewMode === 'harrow' ? themeColor : ''
+          }}
+        >
+          Harrowing
         </button>
       )}
       

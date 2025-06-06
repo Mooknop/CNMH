@@ -26,6 +26,7 @@ import {
   findGemItems,
   extractGemSpells
 } from '../../utils/SpellUtils';
+import Harrowing from './Harrowing';
 
 /**
  * Main component for displaying spells in different categories
@@ -86,7 +87,8 @@ const SpellsList = ({ character, characterColor }) => {
     hasGems,
     gemSpells,
     hasEldPowers,
-    eldPowers
+    eldPowers,
+    hasHarrowing
   } = useMemo(() => {
     // Check if character has Eld Powers
     const hasEldPowers = spellcasting.eldPowers && spellcasting.eldPowers.length > 0;
@@ -102,8 +104,12 @@ const SpellsList = ({ character, characterColor }) => {
     const innateSpells = extractInnateSpells(character);
     const hasInnate = innateSpells.length > 0;
     
+    const hasHarrowing = character.feats && character.feats.some(
+      feat => feat.name === "Harrower Dedication"
+    );
+
     // If no spellcasting, return early with default values
-    if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers) {
+    if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing) {
       return {
         hasSpellcasting: false,
         hasFocus: false,
@@ -133,7 +139,8 @@ const SpellsList = ({ character, characterColor }) => {
         sortedRankList: [],
         allDefenseTypes: [],
         hasGems: false,
-        gemSpells: []
+        gemSpells: [],
+        hasHarrowing: false
       };
     }
     
@@ -234,7 +241,8 @@ const SpellsList = ({ character, characterColor }) => {
       gemSpells,
       hasGems,
       gemSpellsByRank,
-      availableGemSpellRanks
+      availableGemSpellRanks,
+      hasHarrowing
     };
   }, [character, spellcasting]);
 
@@ -253,6 +261,7 @@ const SpellsList = ({ character, characterColor }) => {
       if (hasScrolls) availableModes.push('scrolls');
       if (hasWands) availableModes.push('wands');
       if (hasGems) availableModes.push('gems');
+      if (hasHarrowing) availableModes.push('harrow');
       
       // Set view mode to the first available one
       if (availableModes.length > 0) {
@@ -262,10 +271,10 @@ const SpellsList = ({ character, characterColor }) => {
         setViewMode('spells');
       }
     }
-  }, [hasSpellcasting, hasInnate, hasFocus, hasEldPowers, hasStaff, hasScrolls, hasWands, hasGems, viewMode]);
+  }, [hasSpellcasting, hasInnate, hasFocus, hasEldPowers, hasStaff, hasScrolls, hasWands, hasGems, viewMode, hasHarrowing]);
   
   // If no spellcasting, focus magic, innate spells, or eld powers, show placeholder
-  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers) {
+  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing) {
     return (
       <div className="spells-list">
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
@@ -397,10 +406,11 @@ const SpellsList = ({ character, characterColor }) => {
         focusLabel={getFocusSpellsLabel()}
         themeColor={themeColor}
         hasGems={hasGems}
+        hasHarrowing={hasHarrowing}
       />
       
-      {/* Filters that work across all tabs */}
-      {allAvailableRanks.length > 0 && viewMode !== 'focus' && viewMode !== 'eld' && (
+      {/* Filters that work across most tabs */}
+      {allAvailableRanks.length > 0 && viewMode !== 'focus' && viewMode !== 'eld' && viewMode !== 'harrow' && (
         <SpellFilters
           rankList={sortedRankList}
           activeSpellRank={activeSpellRank}
@@ -491,6 +501,10 @@ const SpellsList = ({ character, characterColor }) => {
           themeColor={themeColor}
           characterLevel={character.level}
         />
+      )}
+
+      {viewMode === 'harrow' && hasHarrowing && (
+        <Harrowing character={character} themeColor={characterColor}/>
       )}
       
       {/* Fallbacks for empty repertoires */}

@@ -1,0 +1,355 @@
+/* src/components/spells/HarrowingSection.css */
+.harrowing {
+  margin-top: 2rem;
+}
+
+.harrowing-header {
+  margin-bottom: 1.5rem;
+}
+
+.harrowing-header h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.harrowing-description {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Ritual Card Styling */
+.harrowing-ritual {
+  margin-bottom: 1.5rem;
+}
+
+.ritual-card .collapsible-header {
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ritual-card .collapsible-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+  flex-grow: 1;
+}
+
+.ritual-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ritual-rank {
+  background-color: #5e2929;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.ritual-details {
+  padding: 1rem;
+}
+
+.ritual-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.ritual-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.ritual-description {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.ritual-usage h5 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.25rem;
+}
+
+.ritual-usage p {
+  margin: 0;
+  line-height: 1.5;
+  color: #333;
+}
+
+/* Harrow Casting Feat Styling */
+.harrow-casting-feat {
+  margin-bottom: 1.5rem;
+}
+
+.feat-card .collapsible-header {
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feat-card .collapsible-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+  flex-grow: 1;
+}
+
+.feat-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.feat-level {
+  background-color: #5e2929;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.feat-details {
+  padding: 1rem;
+}
+
+.feat-actions {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feat-requirements {
+  background-color: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 3px solid #5e2929;
+}
+
+.requirements-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.requirements-text {
+  font-size: 0.9rem;
+  color: #333;
+  line-height: 1.4;
+}
+
+.feat-description {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.suit-benefits h5 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.25rem;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1rem;
+}
+
+.suit-benefit {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #5e2929;
+}
+
+.suit-name {
+  font-weight: 600;
+  color: #5e2929;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.suit-effect {
+  color: #333;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Harrow Deck Reference Styling */
+.harrow-deck-reference {
+  margin-bottom: 1.5rem;
+}
+
+.reference-card .collapsible-header {
+  background-color: #f0f0f0;
+}
+
+.reference-card .collapsible-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #5e2929;
+}
+
+.deck-reference-content {
+  padding: 1rem;
+}
+
+.suits-section,
+.deck-info {
+  margin-bottom: 1.5rem;
+}
+
+.suits-section h5,
+.deck-info h5 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.25rem;
+}
+
+.suits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.suit-card {
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  padding: 1rem;
+  border-left: 4px solid #5e2929;
+}
+
+.suit-card h6 {
+  margin: 0 0 0.5rem 0;
+  color: #5e2929;
+  font-size: 1rem;
+}
+
+.suit-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.suit-ability {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.suit-description {
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+}
+
+.deck-info p {
+  margin: 0;
+  line-height: 1.5;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+/* Usage Guidelines */
+.harrowing-guidelines {
+  margin-bottom: 1.5rem;
+}
+
+.guidelines-info {
+  background-color: #f3f4f6;
+  border-left: 4px solid #5e2929;
+  border-radius: 0 6px 6px 0;
+  padding: 1rem 1.25rem;
+}
+
+.guidelines-info h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #5e2929;
+  font-size: 1.1rem;
+}
+
+.guidelines-info p {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+.guidelines-info ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.guidelines-info li {
+  margin-bottom: 0.5rem;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ritual-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .suits-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .ritual-meta,
+  .feat-meta {
+    flex-wrap: wrap;
+  }
+  
+  .suit-benefit {
+    padding: 0.75rem;
+  }
+}
