@@ -6,6 +6,7 @@ import {
   formatBulk, 
   poundsToBulk 
 } from '../../utils/InventoryUtils';
+import CraftingModal from './CraftingModal';
 
 /**
  * Component for displaying character inventory
@@ -16,6 +17,7 @@ import {
  */
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const [bulkUsed, setBulkUsed] = useState(0);
+  const [isCraftingOpen, setIsCraftingOpen] = useState(false);
   
   // Calculate bulk whenever inventory changes
   useEffect(() => {
@@ -77,11 +79,32 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   };
   
   const sortedInventory = getSortedInventory();
+
+  const hasCrafting = character.skills?.crafting?.proficiency > 0;
   
   return (
     <div className="inventory-tab">
       <h2 style={{ color: characterColor }}>Inventory</h2>
-      
+      {hasCrafting && (
+        <button 
+          className="crafting-button" 
+          onClick={() => setIsCraftingOpen(true)}
+          style={{ 
+            backgroundColor: characterColor,
+            color: 'white',
+            border: 'none',
+            padding: '0.5rem 1rem',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}
+        >
+          <span className="familiar-icon" role="img" aria-label="Crafting">🔨</span>
+          Crafting
+        </button>
+      )}
       <div className="bulk-management">
         <div className="bulk-status">
           <div className="bulk-labels">
@@ -163,6 +186,14 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         inventory={sortedInventory} 
         themeColor={characterColor} 
         onItemClick={onItemClick} 
+      />
+
+      {/* Crafting Modal */}
+      <CraftingModal
+        isOpen={isCraftingOpen}
+        onClose={() => setIsCraftingOpen(false)}
+        character={character}
+        characterColor={characterColor}
       />
     </div>
   );
