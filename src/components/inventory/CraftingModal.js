@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import './CraftingModal.css';
 import { getProficiencyLabel, getSkillModifier, formatModifier, formatBulk } from '../../utils/CharacterUtils';
+import { getLevelBasedDc } from '../../utils/InventoryUtils';
 
 const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('rules');
@@ -200,6 +201,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
                                     <span className="type-name">{type.type}</span>
                                     <span className="type-level">Level {type.level}</span>
                                     <span className="type-price">{type.price} gp</span>
+                                    <span className="type-dc">DC {getLevelBasedDc(type.level)}</span>
                                   </div>
                                   <div className="type-effect">
                                     {type.effect}
