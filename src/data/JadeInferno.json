@@ -1,7 +1,5 @@
 {
   "id": "JadeInferno",
-  "created": "2025-04-18T10:15:00.000Z",
-  "lastUpdated": "2025-04-18T10:15:00.000Z",
   "name": "Jade Inferno",
   "ancestry": "Half-Elf",
   "background": "Harrower",
@@ -839,6 +837,84 @@
       "damage": "1d4",
       "traits": ["Attack", "Melee"],
       "description": "Give 'em a good smack"
+    }
+  ],
+  "crafting":[
+    {
+      "name": "Elixir of Life",
+      "weight": 0.1,
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
+      "types": [
+        {
+          "level": 1,
+          "type": "Minor",
+          "price": 3,
+          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
+        },
+        {
+          "level": 5,
+          "type": "Lesser",
+          "price": 30,
+          "effect": "The elixir restores 3d6 + 6 Hit Points, and the bonus is +1."
+        }
+      ]
+    },
+    {
+      "name": "Antidote",
+      "weight": 0.1,
+      "description": "An antidote protects you against toxins. Upon drinking an antidote, you gain an item bonus to Fortitude saving throws against poisons for 6 hours.",
+      "types": [
+        {
+          "level": 1,
+          "type": "Lesser",
+          "price": 3,
+          "effect": "You gain a +2 item bonus"
+        },
+        {
+          "level": 6,
+          "type": "Moderate",
+          "price": 35,
+          "effect": "You gain a +3 item bonus"
+        }
+      ]
+    },
+    {
+      "name": "Antiplague",
+      "weight": 0.1,
+      "description": "Antiplague can fortify the body's defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease's progression.",
+      "types": [
+        {
+          "level": 1,
+          "type": "Lesser",
+          "price": 3,
+          "effect": "You gain a +2 item bonus"
+        },
+        {
+          "level": 6,
+          "type": "Moderate",
+          "price": 35,
+          "effect": "You gain a +3 item bonus"
+        }
+      ]
+    },
+    {
+      "name": "Eagle-eye Elixir",
+      "weight": 0.1,
+      "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that's greater when attempting to find secret doors and traps.",
+      "types": [
+        {
+          "level": 1,
+          "type": "Lesser",
+          "price": 4,
+          "effect": "The bonus is +1, or +2 to find secret doors and traps."
+        },
+        {
+          "level": 6,
+          "type": "Moderate",
+          "price": 27,
+          "effect": "The bonus is +2, or +3 to find secret doors and traps."
+        }
+      ]
     }
   ]
 }
