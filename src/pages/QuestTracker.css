@@ -10,33 +10,6 @@
     padding-bottom: 0.5rem;
   }
   
-  .quest-filters {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-  }
-  
-  .filter-btn {
-    background: none;
-    border: 2px solid #5e2929;
-    color: #5e2929;
-    padding: 0.5rem 1.5rem;
-    border-radius: 20px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .filter-btn:hover {
-    background-color: rgba(94, 41, 41, 0.1);
-  }
-  
-  .filter-btn.active {
-    background-color: #5e2929;
-    color: white;
-  }
-  
   .quests-list {
     display: flex;
     flex-direction: column;

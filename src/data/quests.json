@@ -1,68 +1,65 @@
 {
     "quests": [
       {
-        "id": "quest-1",
-        "title": "The Whispering Woods",
+        "title": "Escape Hell",
         "status": "active",
         "priority": "high",
-        "giver": "Mayor of Riverdale",
-        "location": "Northern Forest",
-        "description": "Investigate the strange occurrences in the northern forest. Villagers report hearing whispers and seeing strange lights at night.",
-        "reward": "500 gold and the gratitude of Riverdale",
+        "location": "Dis, Hell",
+        "description": "You entered a portal to Dis to defeat Xar-Azmak, but the doorway closed behind you. You must find a way back to the Material Plane or submit to a life living amongst devils.",
         "notes": [
-          {
-            "id": "quest-note-1",
-            "date": "2025-04-10",
-            "content": "Spoke with the mayor about the forest disturbances. He mentioned that the incidents started about a month ago, shortly after a traveling merchant passed through town.",
-            "addedBy": "Valeros"
-          },
           {
             "id": "quest-note-2",
-            "date": "2025-04-15",
-            "content": "Interviewed three villagers who claimed to have seen the lights. Each described them as pale blue orbs that seem to follow a pattern. Could be will-o'-wisps or some form of fey magic.",
-            "addedBy": "Kyra"
-          }
-        ]
-      },
-      {
-        "id": "quest-2",
-        "title": "The Lost Relic of Sarenrae",
-        "status": "pending",
-        "priority": "medium",
-        "giver": "High Priest Ezren",
-        "location": "Temple of Sarenrae, Absalom",
-        "description": "A sacred relic was stolen from the temple vault. The relic is said to have healing properties and must be recovered before it falls into the wrong hands.",
-        "reward": "Blessing of Sarenrae and access to temple resources",
-        "notes": [
-          {
-            "id": "quest-note-3",
-            "date": "2025-04-16",
-            "content": "Ezren showed us the vault where the relic was kept. No signs of forced entry, suggesting an inside job or someone with knowledge of the temple's security.",
-            "addedBy": "Kyra"
-          }
-        ]
-      },
-      {
-        "id": "quest-3",
-        "title": "The Dragon's Hoard",
-        "status": "completed",
-        "priority": "high",
-        "giver": "Lord Commander of Absalom",
-        "location": "Northern Mountains",
-        "description": "The red dragon Karasoth has been raiding villages in the northern mountains. Find his lair and recover the stolen treasures.",
-        "reward": "30% of the recovered treasure and a commendation from the city",
-        "notes": [
-          {
-            "id": "quest-note-4",
-            "date": "2025-04-01",
-            "content": "Found tracks leading to a cave system in the mountains. Large claw marks on nearby trees suggest we're on the right path.",
-            "addedBy": "Valeros"
+            "content": "A Coarti named Ariuk has been assigned as your personal guide throughout the city of Dis. He can hear you whenever you call for him and seems to appear before you can even finish your sentence. He was sent by Erecura, the Queen of Hell, though why she's taken a particular interest in you is still a mystery."
           },
           {
-            "id": "quest-note-5",
-            "date": "2025-04-05",
-            "content": "Defeated Karasoth after a difficult battle. Found a large cache of treasure including gold, jewels, and several magical items. Also discovered a map that might lead to another dragon's lair to the east.",
-            "addedBy": "Valeros"
+            "id": "quest-note-1",
+            "content": "Hell's beaureacracy is a nightmare to navigate. Perhaps you can find someone willing to help you through it... for a price."
+          },
+          {
+            "id": "quest-note-3",
+            "content": "Navigating infernal paperwork isn't the only way to escape. A powerful spellcaster should be able to open a tunnel to the Material Plane if you can convince them."
+          }
+        ]
+      },
+      {
+        "title": "Destroy the Horn of Rust",
+        "status": "pending",
+        "priority": "medium",
+        "description": "The Horn of Rust is a powerful artifact, but as long as it exists there remains a chance that Xar-Azmak will return. Ferrumnestra has asked you to find a way to destroy the thing once and for all.",
+        "notes": [
+          {
+            "content": "As an Artifact, the Horn of Rust cannot be destroyed by conventional means. You must find a way to unravel the divine magic coursing through it."
+          }
+        ]
+      },
+      {
+        "title": "Find Ashka's mom",
+        "status": "pending",
+        "priority": "low",
+        "description": "When Ashka was little, cloaked figures appeared to take her away and her mother hid her. They took her instead, and Ashka has been searching for her ever since.",
+        "notes": [
+          {
+            "content": "Over the years, Ashka has been able to deduce that her mother was taken by people called the Denizens of Leng. Who are they? What did they want with Ashka? Where have they taken her mother?"
+          },
+          {
+            "content": "The Runelords of Ancient Thassilon allegedly had dealings with the Denizens of Leng. Perhaps their ancient knowledge can help you find them."
+          },
+          {
+            "content": "Meitremar is dead, but that doesn't mean the trail is gone. He died in Hell, which means there's still a chance to interrogate his soul if you can find it."
+          }
+        ]
+      },
+      {
+        "title": "Discover the secrets of Blu's orb",
+        "status": "pending",
+        "priority": "low",
+        "description": "Before your encounter with the Cult of Xar-Azmak, Blu felt a pull towards some Ancient Thassilonian ruins. Investigating, they found a patrol of Xin-Edasseril's military cleaning out a trove of magical artifacts, the orb among them. What is it? Why does it pull at Blu's mind?",
+        "notes": [
+          {
+            "content": "The orb feels... awake somehow. While it's mostly inert, sometimes when he holds it Blu gets the feeling that he's being watched."
+          },
+          {
+            "content": "Jade was able to determine that the Orb could be Activated, but attempting to do so backfired and shocked her with a bolt of electricity. What could it do if wielded correctly?"
           }
         ]
       }

@@ -4,70 +4,28 @@ import './QuestTracker.css';
 
 const QuestTracker = () => {
   const [quests, setQuests] = useState([]);
-  const [filter, setFilter] = useState('all');
   
   useEffect(() => {    
     // Set quests directly from the imported data
     setQuests(defaultQuests);
   }, []);
   
-  useEffect(() => {
-    // Only save to localStorage if quests is not empty
-    if (quests && quests.length > 0) {
-      localStorage.setItem('pf2e-quests', JSON.stringify(quests));
-    }
-  }, [quests]);
-  
-  // Ensure quests is an array before filtering
   const questsArray = Array.isArray(quests) ? quests : [];
   
-  const filteredQuests = questsArray.filter(quest => {
-    if (filter === 'all') return true;
-    return quest.status === filter;
-  });
-  
-  const sortedQuests = [...filteredQuests].sort((a, b) => {
-    // Sort by priority first (high > medium > low)
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-    
-    if (priorityDiff !== 0) return priorityDiff;
-    
+  const sortedQuests = [...questsArray].sort((a, b) => {
     // If same priority, sort by status (active > pending > completed)
     const statusOrder = { active: 0, pending: 1, completed: 2 };
-    return statusOrder[a.status] - statusOrder[b.status];
+    var statusDiff = statusOrder[a.status] - statusOrder[b.status];
+
+    if(statusDiff !== 0) return statusDiff;
+
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
   
   return (
     <div className="quest-tracker">
-      <h1>Party Quest Tracker</h1>
-      
-      <div className="quest-filters">
-        <button 
-          className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          All Quests
-        </button>
-        <button 
-          className={`filter-btn ${filter === 'active' ? 'active' : ''}`}
-          onClick={() => setFilter('active')}
-        >
-          Active
-        </button>
-        <button 
-          className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
-          onClick={() => setFilter('pending')}
-        >
-          Pending
-        </button>
-        <button 
-          className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
-          onClick={() => setFilter('completed')}
-        >
-          Completed
-        </button>
-      </div>
+      <h1>Quests</h1>
       
       {/* Quest count display for debugging */}
       <div style={{ marginBottom: '15px', color: '#666' }}>
@@ -100,9 +58,8 @@ const QuestTracker = () => {
               
               <div className="quest-details">
                 <div className="quest-info">
-                  <p><strong>Quest Giver:</strong> {quest.giver}</p>
-                  <p><strong>Description:</strong> {quest.description}</p>
-                  <p><strong>Reward:</strong> {quest.reward}</p>
+                  {(quest.giver && <p><strong>Quest Giver:</strong> {quest.giver}</p>)}
+                  <p>{quest.description}</p>
                 </div>
                 
                 <div className="quest-notes">
@@ -113,10 +70,10 @@ const QuestTracker = () => {
                         <div key={note.id} className="quest-note">
                           <div className="note-header">
                             <span className="note-date">
-                              {new Date(note.date).toLocaleDateString()}
+                              ⭐
                             </span>
-                            <span className="note-author">
-                              Added by {note.addedBy}
+                            <span className="note-date">
+                              ⭐
                             </span>
                           </div>
                           <div className="note-content">
@@ -134,7 +91,7 @@ const QuestTracker = () => {
           ))
         ) : (
           <div className="empty-state">
-            <p>No quests found with the current filter.</p>
+            <p>No quests found.</p>
           </div>
         )}
       </div>
