@@ -48,6 +48,9 @@
         "occultism": {
           "proficiency": 1
         },
+        "perception": {
+          "proficiency":1
+        },
         "piloting": {
           "proficiency": 1
         },

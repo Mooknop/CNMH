@@ -111,6 +111,7 @@ export const SKILL_ABILITY_MAP = {
   medicine: 'wisdom',
   nature: 'wisdom',
   occultism: 'intelligence',
+  perception: 'wisdom',
   performance: 'charisma',
   religion: 'wisdom',
   society: 'intelligence',

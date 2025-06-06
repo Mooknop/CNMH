@@ -47,6 +47,9 @@
     "occultism": {
       "proficiency": 1
     },
+    "perception": {
+      "proficiency":2
+    },
     "religion": {
       "proficiency": 1
     },

@@ -140,6 +140,15 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
         { name: 'Identify Magic', description: 'Specifically of the occult tradition.' }
       ]
     },
+    {
+      id: 'perception',
+      name: 'Perception',
+      ability: 'wisdom',
+      actions: [
+        {name: 'Seek', description: 'Try to find something hidden, or a hiding creature you expect is around.'},
+        {name: 'Sense Motive', description: `You try to tell whether a creature's behavior is abnormal or indicative of something.`},
+      ]
+    },
     { 
       id: 'performance', 
       name: 'Performance', 

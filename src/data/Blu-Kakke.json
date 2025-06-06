@@ -38,6 +38,9 @@
     "medicine": {
       "proficiency": 2
     },
+    "perception": {
+      "proficiency":1
+    },
     "society": {
       "proficiency": 1
     },
