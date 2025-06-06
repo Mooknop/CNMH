@@ -6,6 +6,7 @@
   "ancestry": "Leshy",
   "background": "Celebrity",
   "class": "Bard",
+  "keyAbility": "charisma",
   "level": 4,
   "maxHp": 48,
   "ac": 19,
@@ -49,6 +50,7 @@
     }
   },
   "proficiencies": {
+    "class": 1,
   "weapons": {
     "simple": {
       "proficiency": 1,

@@ -252,3 +252,12 @@ export const formatBulk = (bulk) => {
   if (bulk < 1) return 'L'; // Light Bulk
   return bulk.toString(); // Regular Bulk
 };
+
+export const calculateClassDC = (character) => {
+  const level = character.level || 1;
+  const keyAbilityMod = getAbilityModifier(character.abilities[character.keyAbility]);
+  const classProficiency = character.proficiencies?.class || 1; // Default to Trained
+  const proficiencyBonus = getProficiencyBonus(classProficiency, level, character);
+  
+  return 10 + keyAbilityMod + proficiencyBonus;
+};

@@ -6,6 +6,7 @@
   "ancestry": "Human",
   "background": "Draconic Ravager",
   "class": "Monk",
+  "keyAbility": "dexterity",
   "level": 4,
   "maxHp": 48,
   "ac": 20,
@@ -49,6 +50,7 @@
     }
   },
   "proficiencies": {
+    "class": 1,
     "weapons": {
       "simple": {
         "proficiency": 1,

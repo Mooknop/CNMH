@@ -4,6 +4,7 @@
   "ancestry": "Human",
   "background": "Kineticist",
   "class": "Champion",
+  "keyAbility": "strength",
   "level": 4,
   "maxHp": 60,
   "ac": 22,
@@ -46,6 +47,7 @@
     }
   },
   "proficiencies": {
+    "class": 1,
     "weapons": {
       "simple": {
         "proficiency": 1,

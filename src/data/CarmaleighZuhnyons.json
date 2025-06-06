@@ -4,6 +4,7 @@
     "ancestry": "Elf",
     "background": "Space-Cowpoke",
     "class": "Witchwarper",
+    "keyAbility": "intelligence",
     "level": 4,
     "maxHp": 34,
     "ac": 20,
@@ -68,45 +69,46 @@
         }
     },
     "proficiencies": {
-    "weapons": {
-      "simple": {
-        "proficiency": 1,
-        "name": "Trained"
+      "class": 1,
+      "weapons": {
+        "simple": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "martial": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "advanced": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "unarmed": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
       },
-      "martial": {
-        "proficiency": 0,
-        "name": "Untrained"
-      },
-      "advanced": {
-        "proficiency": 0,
-        "name": "Untrained"
-      },
-      "unarmed": {
-        "proficiency": 1,
-        "name": "Trained"
+      "armor": {
+        "unarmored": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "light": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "medium": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "heavy": {
+          "proficiency": 0,
+          "name": "Untrained"
+        }
       }
     },
-    "armor": {
-      "unarmored": {
-        "proficiency": 1,
-        "name": "Trained"
-      },
-      "light": {
-        "proficiency": 1,
-        "name": "Trained"
-      },
-      "medium": {
-        "proficiency": 0,
-        "name": "Untrained"
-      },
-      "heavy": {
-        "proficiency": 0,
-        "name": "Untrained"
-      }
-    }
-  },
-  "feats": [
-    {
+    "feats": [
+      {
       "id": "feat-0",
       "name": "Baby",
       "level": 1,

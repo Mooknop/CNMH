@@ -4,6 +4,7 @@
   "ancestry": "Half-Elf",
   "background": "Harrower",
   "class": "Sorcerer",
+  "keyAbility": "charisma",
   "level": 4,
   "maxHp": 30,
   "ac": 18,
@@ -59,6 +60,7 @@
     }
   },
   "proficiencies": {
+    "class": 1,
   "weapons": {
     "simple": {
       "proficiency": 1,

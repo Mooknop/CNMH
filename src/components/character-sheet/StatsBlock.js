@@ -5,7 +5,8 @@ import {
   getAbilityModifier, 
   formatModifier, 
   getAttackBonus,
-  getProficiencyLabel
+  getProficiencyLabel,
+  calculateClassDC
 } from '../../utils/CharacterUtils';
 
 const StatsBlock = ({ character, characterColor }) => {
@@ -91,6 +92,15 @@ const StatsBlock = ({ character, characterColor }) => {
         return (
           <div className="proficiencies-section">
             <div className="proficiency-group">
+              <h4 className="proficiency-category" style={{ color: themeColor }}>Class DC</h4>
+              <div className="proficiency-items">
+                <div className="proficiency-item">
+                  <span className="proficiency-name" style={{ color: themeColor }}>
+                    <strong>{calculateClassDC(character)}</strong>
+                  </span>
+                </div>
+              </div>
+
               <h4 className="proficiency-category" style={{ color: themeColor }}>Weapons</h4>
               <div className="proficiency-items">
                 {/* Unarmed Attacks */}
