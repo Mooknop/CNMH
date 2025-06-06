@@ -84,27 +84,29 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   
   return (
     <div className="inventory-tab">
-      <h2 style={{ color: characterColor }}>Inventory</h2>
-      {hasCrafting && (
-        <button 
-          className="crafting-button" 
-          onClick={() => setIsCraftingOpen(true)}
-          style={{ 
-            backgroundColor: characterColor,
-            color: 'white',
-            border: 'none',
-            padding: '0.5rem 1rem',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          <span className="familiar-icon" role="img" aria-label="Crafting">🔨</span>
-          Crafting
-        </button>
-      )}
+      <div className="inventory-header">
+        <h2 style={{ color: characterColor }}>Inventory</h2>
+        {hasCrafting && (
+          <button 
+            className="crafting-button" 
+            onClick={() => setIsCraftingOpen(true)}
+            style={{ 
+              backgroundColor: characterColor,
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span className="familiar-icon" role="img" aria-label="Crafting">🔨</span>
+            Crafting
+          </button>
+        )}
+      </div>
       <div className="bulk-management">
         <div className="bulk-status">
           <div className="bulk-labels">

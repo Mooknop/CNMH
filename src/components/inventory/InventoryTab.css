@@ -4,7 +4,28 @@
     margin-bottom: 1.5rem;
     font-size: 1.2rem;
   }
-  
+
+/* Inventory Header */
+.inventory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.inventory-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.crafting-button {
+  transition: background-color 0.2s ease;
+}
+
+.crafting-button:hover {
+  opacity: 0.9;
+}
+
   /* Bulk Management Styles */
   .bulk-management {
     margin-bottom: 2rem;

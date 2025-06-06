@@ -841,25 +841,6 @@
   ],
   "crafting":[
     {
-      "name": "Elixir of Life",
-      "weight": 0.1,
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
-      "types": [
-        {
-          "level": 1,
-          "type": "Minor",
-          "price": 3,
-          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
-        },
-        {
-          "level": 5,
-          "type": "Lesser",
-          "price": 30,
-          "effect": "The elixir restores 3d6 + 6 Hit Points, and the bonus is +1."
-        }
-      ]
-    },
-    {
       "name": "Antidote",
       "weight": 0.1,
       "description": "An antidote protects you against toxins. Upon drinking an antidote, you gain an item bonus to Fortitude saving throws against poisons for 6 hours.",
@@ -913,6 +894,25 @@
           "type": "Moderate",
           "price": 27,
           "effect": "The bonus is +2, or +3 to find secret doors and traps."
+        }
+      ]
+    },
+    {
+      "name": "Elixir of Life",
+      "weight": 0.1,
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
+      "types": [
+        {
+          "level": 1,
+          "type": "Minor",
+          "price": 3,
+          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
+        },
+        {
+          "level": 5,
+          "type": "Lesser",
+          "price": 30,
+          "effect": "The elixir restores 3d6 + 6 Hit Points, and the bonus is +1."
         }
       ]
     }
