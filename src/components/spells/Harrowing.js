@@ -73,9 +73,6 @@ const Harrowing = ({ character, themeColor }) => {
           className="reference-card"
           header={<>
             <h4 style={{ color: themeColor }}>Tell Fortune</h4>
-            <div className="feat-actions">
-              <ActionIcon actionText="One Action" color={themeColor} />
-            </div>
           </>}
           themeColor={themeColor}
           initialExpanded={false}

@@ -227,11 +227,13 @@
   margin: 1.5rem 0;
 }
 
+/* Earnings Table - Mobile-First Approach */
 .earnings-table {
   background-color: #f9f9f9;
   border-radius: 6px;
   padding: 1rem;
   margin-top: 0.75rem;
+  overflow-x: auto; /* Allow horizontal scroll if needed */
 }
 
 .table-header,
@@ -241,6 +243,7 @@
   gap: 0.5rem;
   padding: 0.5rem 0;
   align-items: center;
+  min-width: fit-content; /* Prevent crushing */
 }
 
 .table-header {
@@ -424,16 +427,61 @@
     text-align: center;
   }
   
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 0.25rem;
+  /* Mobile-friendly table: Convert to card layout */
+  .earnings-table {
+    padding: 0.75rem;
   }
   
-  .table-header span:not(:first-child),
-  .table-row span:not(:first-child) {
-    text-align: left;
+  .table-header {
+    display: none; /* Hide header on mobile */
   }
+  
+  .table-row {
+    display: block; /* Stack items vertically */
+    background-color: white;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .table-row span {
+    display: block;
+    text-align: left !important;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .table-row span:first-child {
+    font-weight: 600;
+    color: #5e2929;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  .table-row span:not(:first-child) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .recipe-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  
+  .type-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  /* Add labels for mobile */
+  .table-row span:nth-child(2)::before { content: "Critical Success: "; font-weight: 500; color: #666; }
+  .table-row span:nth-child(3)::before { content: "Success: "; font-weight: 500; color: #666; }
   
   .recipe-header {
     flex-direction: column;
@@ -455,5 +503,17 @@
   
   .tab-button {
     padding: 0.5rem;
+  }
+
+  .crafting-modal-content {
+    padding: 0.75rem;
+  }
+  
+  .earnings-table {
+    padding: 0.5rem;
+  }
+  
+  .table-row {
+    padding: 0.75rem;
   }
 }

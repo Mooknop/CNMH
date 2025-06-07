@@ -8,15 +8,12 @@
         "description": "You entered a portal to Dis to defeat Xar-Azmak, but the doorway closed behind you. You must find a way back to the Material Plane or submit to a life living amongst devils.",
         "notes": [
           {
-            "id": "quest-note-2",
             "content": "A Coarti named Ariuk has been assigned as your personal guide throughout the city of Dis. He can hear you whenever you call for him and seems to appear before you can even finish your sentence. He was sent by Erecura, the Queen of Hell, though why she's taken a particular interest in you is still a mystery."
           },
           {
-            "id": "quest-note-1",
             "content": "Hell's beaureacracy is a nightmare to navigate. Perhaps you can find someone willing to help you through it... for a price."
           },
           {
-            "id": "quest-note-3",
             "content": "Navigating infernal paperwork isn't the only way to escape. A powerful spellcaster should be able to open a tunnel to the Material Plane if you can convince them."
           }
         ]
