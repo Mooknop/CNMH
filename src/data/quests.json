@@ -8,7 +8,7 @@
         "description": "You entered a portal to Dis to defeat Xar-Azmak, but the doorway closed behind you. You must find a way back to the Material Plane or submit to a life living amongst devils.",
         "notes": [
           {
-            "content": "A Coarti named Ariuk has been assigned as your personal guide throughout the city of Dis. He can hear you whenever you call for him and seems to appear before you can even finish your sentence. He was sent by Erecura, the Queen of Hell, though why she's taken a particular interest in you is still a mystery."
+            "content": "A Coarti named Ariuk has been assigned as your personal guide throughout the city of Dis. He can hear you whenever you call for him and seems to appear before you can even finish your sentence. He was sent by Erecura, the Queen of Dis, though why she's taken a particular interest in you is still a mystery."
           },
           {
             "content": "Hell's beaureacracy is a nightmare to navigate. Perhaps you can find someone willing to help you through it... for a price."
@@ -42,7 +42,7 @@
             "content": "The Runelords of Ancient Thassilon allegedly had dealings with the Denizens of Leng. Perhaps their ancient knowledge can help you find them."
           },
           {
-            "content": "Meitremar is dead, but that doesn't mean the trail is gone. He died in Hell, which means there's still a chance to interrogate his soul if you can find it."
+            "content": "Meitremar is dead, and before he could reveal anything about Thassilon's connection to the Denizens of Leng. Ashka needs a new lead."
           }
         ]
       },

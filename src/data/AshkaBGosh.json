@@ -6,6 +6,7 @@
   "ancestry": "Fetchling",
   "background": "Ranger",
   "class": "Thaumaturge",
+  "keyAbility": "charisma",
   "level": 4,
   "maxHp": 40,
   "ac": 20,
@@ -64,6 +65,7 @@
     }
   },
   "proficiencies": {
+    "class": 1,
   "weapons": {
     "simple": {
       "proficiency": 1,
