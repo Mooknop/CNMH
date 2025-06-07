@@ -350,7 +350,7 @@
     {
       "name": "Scroll of Friendfetch",
       "quantity": 1,
-      "weight": 1.0,
+      "weight": 0.1,
       "description": "A single-use scroll",
       "traits": ["Consumable", "Magical", "Scroll"],
       "scroll":{
@@ -366,7 +366,7 @@
     {
       "name": "Scroll of Cleanse Affliction",
       "quantity": 1,
-      "weight": 1.0,
+      "weight": 0.1,
       "description": "A single-use scroll",
       "traits": ["Consumable", "Magical", "Scroll"],
       "scroll":{
