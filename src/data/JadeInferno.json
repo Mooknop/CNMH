@@ -49,6 +49,20 @@
     "occultism": {
       "proficiency": 1
     },
+    "lore":[
+      {
+        "name": "Varisian",
+        "proficiency": 1
+      },
+      {
+        "name": "Elven",
+        "proficiency": 1
+      },
+      {
+        "name": "Fortune-Telling",
+        "proficiency": 1
+      }
+    ],
     "perception": {
       "proficiency":1
     },
