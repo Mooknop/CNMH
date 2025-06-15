@@ -96,6 +96,12 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
             <span className="detail-value">{spell.range}</span>
           </div>
         )}
+        {spell.area && (
+          <div className="spell-range">
+            <span className="detail-label">Area:</span>
+            <span className="detail-value">{spell.area}</span>
+          </div>
+        )}
         {spell.targets && (
           <div className="spell-targets">
             <span className="detail-label">Targets:</span>
