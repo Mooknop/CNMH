@@ -39,6 +39,16 @@
     "diplomacy": {
       "proficiency": 1
     },
+    "lore":[
+      {
+        "name": "Esoteric",
+        "proficiency": 2
+      },
+      {
+        "name": "Merchantile",
+        "proficiency": 1
+      }
+    ],
     "medicine": {
       "proficiency": 1
     },

@@ -33,6 +33,12 @@
     "intimidation": {
       "proficiency": 1
     },
+    "lore":[
+      {
+        "name": "Thassilonian",
+        "proficiency": 1
+      }
+    ],
     "nature": {
       "proficiency": 1
     },

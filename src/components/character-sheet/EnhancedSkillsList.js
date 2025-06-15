@@ -240,6 +240,8 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
   const sortedSkills = [...skills].sort((a, b) => {
     return a.name.localeCompare(b.name);
   });
+
+  const loreSkills = character.skills.lore;
   
   return (
     <div className="enhanced-skills-list">
@@ -344,6 +346,34 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           );
         })}
       </div>
+      {Array.isArray(character.skills.lore) && character.skills.lore.map((loreSkill, index) => {
+        const loreId = `lore-${loreSkill.name.toLowerCase().replace(/\s+/g, '-')}`;
+        const loreProficiency = loreSkill.proficiency || 0;
+        const abilityMod = getAbilityModifier(character.abilities?.intelligence || 10);
+        const loreModifier = abilityMod + character.level + loreSkill.proficiency*2;
+        
+        return (
+          <CollapsibleCard 
+            key={loreId}
+            themeColor={themeColor}
+            className={`skill-card ${getProficiencyColor(loreProficiency)}`}
+            header={
+              <div className="skill-name-section">
+                <h3 style={{ color: themeColor }}>
+                  {loreSkill.name} Lore
+                  <div className="skill-ability">(Intelligence)</div>
+                </h3>
+                <div className="skill-info">
+                  <div className="skill-modifier">{formatModifier(loreModifier)}</div>
+                  <div className={`skill-proficiency ${getProficiencyColor(loreProficiency)}`}>
+                    {getProficiencyLabel(loreProficiency)}
+                  </div>
+                </div>
+              </div>
+            }
+          />
+        );
+      })}
     </div>
   );
 };

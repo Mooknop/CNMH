@@ -36,6 +36,16 @@
     "deception": {
       "proficiency": 1
     },
+    "lore":[
+      {
+        "name": "Dragon",
+        "proficiency": 1
+      },
+      {
+        "name": "Sailing",
+        "proficiency": 1
+      }
+    ],
     "medicine": {
       "proficiency": 2
     },

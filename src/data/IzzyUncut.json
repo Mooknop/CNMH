@@ -39,6 +39,16 @@
     "diplomacy": {
       "proficiency": 1
     },
+    "lore":[
+      {
+        "name": "Bardic",
+        "proficiency": 1
+      },
+      {
+        "name": "Underdark (Ostilli)",
+        "proficiency": 1
+      }
+    ],
     "nature": {
       "proficiency": 1
     },
