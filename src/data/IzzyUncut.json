@@ -130,6 +130,7 @@
         "actions": "Two Actions",
         "duration": "sustained up to 4 rounds",
         "area": "30-feet",
+        "targets":"1 willing creature",
         "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
         "heightened": {
           "+1": "The fast healing and temporary Hit Points each increase by 2."

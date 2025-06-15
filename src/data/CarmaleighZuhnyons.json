@@ -378,6 +378,16 @@
           "actions": "Reaction",
           "trigger": "You fail an attack roll or saving throw",
           "description": "You open your mind to read the underlying probability of the multiverse. Reroll the failed check and take the better result."
+        },
+        {
+          "name": "Friendly Push",
+          "level": 1,
+          "baseLevel": 1,
+          "traits": ["Uncommon", "Anchoring", "Concentrate", "Focus", "Manipulate", "Witchwarper"],
+          "actions": "One Action",
+          "duration": "sustained up to 1 minute",
+          "targets": "1 willing creature",
+          "description": "You exert magical force to propel a willing creature up to 10 feet in a straight line, including upward, though if they aren't on solid ground or have another way to maintain their height (such as a Fly speed) when the movement ends, they fall. When you Sustain the spell, you can move them again or choose a new target within range and move them instead. You can cast this spell on an unconscious ally, and if you do, the movement from this spell doesn't trigger reactions."
         }
     ]
   },
@@ -386,7 +396,7 @@
     "ability": "intelligence",
     "proficiency": 1,
     "focus": {
-        "max": 1
+        "max": 2
     },
     "spells": [
       {
@@ -548,14 +558,17 @@
       },
       {
         "id": "spell-11",
-        "name": "Sift the Sphere",
+        "name": "Warping Pull",
         "level": 2,
         "baseLevel": 2,
-        "traits": ["Concentrate", "Manipulate", "Prediction"],
-        "actions": "10 minute",
-        "description": "You ritually sift through the local infosphere and gain mystical insight about a topic. During the casting of this spell, ask about the results of a particular course of action. The spell can predict results up to 20 minutes into the future and reveals the GM's best guess among the following outcomes: Weal (good), Woe (bad), Weal and Woe (mix of good and bad), Nothing (not particularly good or bad). The GM rolls a secred DC 6 flat check. On a failure, the result is always 'nothing'. This makes it impossible to tell whether a 'nothing' result is accurate. If anyone asks about the same topic as the first casting of this spell during an additional casting, the GM uses the secret roll result from the first casting. If circumstances change, it's possible to get a different result.",
+        "traits": ["Uncommon", "Concentrate", "Manipulate", "Teleportation"],
+        "actions": "Reaction",
+        "trigger": "An effect would deal damage to an ally within range",
+        "range": "30 feet",
+        "targets":"1 willing creature that would take damage from the triggering effect",
+        "description": "You get an ally out of danger with a teleporting pull. You teleport the target to an unoccupied square up to 10 feet closer to you. The target gains resistance 5 to all damage against the triggering effect.",
         "heightened":{
-          "4th": "You gain useful counsel about a topic, and the spell can predict results up to 1 week into the future."
+          "+2": "The resistance increases by 5"
         }
       },
       {

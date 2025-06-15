@@ -216,7 +216,13 @@ const FocusSpellsList = ({ character, characterColor }) => {
                     </div>
                   )}
                 </div>
-                
+                {spell.trigger && (
+                  <div className="reaction-trigger">
+                    <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
+                    <span className="trigger-text">{spell.trigger}</span>
+                  </div>
+                )}
+
                 {/* Blood Magic effect for bloodline spells */}
                 {isBloodlineSpell && character.spellcasting.bloodline.blood_magic && (
                   <div className="spell-blood-magic">
