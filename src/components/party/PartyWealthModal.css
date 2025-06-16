@@ -1,0 +1,410 @@
+/* src/components/inventory/PartyGoldModal.css */
+.party-gold-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.party-gold-modal {
+  background-color: white;
+  width: 95%;
+  max-width: 1200px;
+  max-height: 90vh;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.party-gold-modal-header {
+  background: linear-gradient(135deg, #5e2929, #7d3c3c);
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modal-title-section h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.party-totals {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.total-value,
+.total-bulk,
+.total-items {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 500;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.close-button:hover {
+  opacity: 1;
+}
+
+.party-gold-modal-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Controls Section */
+.inventory-controls {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.search-section {
+  margin-bottom: 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #5e2929;
+  box-shadow: 0 0 0 3px rgba(94, 41, 41, 0.1);
+}
+
+.filter-sort-section {
+  display: flex;
+  gap: 2rem;
+  align-items: end;
+}
+
+.filter-group,
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label,
+.sort-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.filter-select,
+.sort-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.filter-select:focus,
+.sort-select:focus {
+  outline: none;
+  border-color: #5e2929;
+  box-shadow: 0 0 0 2px rgba(94, 41, 41, 0.1);
+}
+
+/* PF2E Rules Section */
+.pf2e-rules-info {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.rules-section h4 {
+  margin: 0 0 0.75rem 0;
+  color: #856404;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rules-section p {
+  margin: 0.5rem 0;
+  color: #856404;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.rules-section strong {
+  color: #5e2929;
+}
+
+/* Inventory Table */
+.party-inventory-list {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e9ecef;
+}
+
+.party-inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.party-inventory-table thead th {
+  background-color: #5e2929;
+  color: white;
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.party-inventory-table tbody tr {
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s ease;
+}
+
+.party-inventory-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.inventory-row td {
+  padding: 0.75rem;
+  vertical-align: top;
+}
+
+.item-cell {
+  min-width: 200px;
+}
+
+.item-name-button {
+  background: none;
+  border: none;
+  color: #5e2929;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  font-size: 1rem;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.item-name-button:hover {
+  color: #7d3c3c;
+  text-decoration: underline;
+}
+
+.container-indicator {
+  font-size: 0.8rem;
+}
+
+.item-traits-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.trait-overflow {
+  font-size: 0.7rem;
+  color: #6c757d;
+  font-style: italic;
+  align-self: center;
+}
+
+.character-cell {
+  min-width: 120px;
+}
+
+.character-name {
+  font-weight: 600;
+}
+
+.quantity-cell,
+.bulk-cell,
+.value-cell {
+  text-align: center;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 0.9rem;
+}
+
+.value-cell {
+  color: #28a745;
+  font-weight: 600;
+}
+
+/* Empty State */
+.empty-inventory {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-inventory p {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.clear-search-button {
+  background-color: #5e2929;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.clear-search-button:hover {
+  background-color: #7d3c3c;
+}
+
+/* Character Legend */
+.character-legend {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.character-legend h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.legend-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-character-name {
+  font-weight: 600;
+  color: #495057;
+}
+
+.legend-character-class {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .party-gold-modal {
+    width: 98%;
+    max-height: 95vh;
+    margin: 0.5rem;
+  }
+  
+  .party-gold-modal-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .party-totals {
+    gap: 1rem;
+    font-size: 0.8rem;
+  }
+  
+  .filter-sort-section {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .party-inventory-table {
+    font-size: 0.8rem;
+  }
+  
+  .party-inventory-table thead th,
+  .inventory-row td {
+    padding: 0.5rem 0.4rem;
+  }
+  
+  .item-cell {
+    min-width: 150px;
+  }
+  
+  .character-cell {
+    min-width: 80px;
+  }
+  
+  .legend-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .party-totals {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  
+  .party-inventory-table {
+    font-size: 0.75rem;
+  }
+  
+  .item-traits-row {
+    display: none; /* Hide traits on very small screens */
+  }
+}
