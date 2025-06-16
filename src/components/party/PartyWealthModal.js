@@ -5,42 +5,73 @@ import { calculateItemsBulk, formatBulk, poundsToBulk } from '../../utils/Invent
 import TraitTag from '../shared/TraitTag';
 import './PartyWealthModal.css';
 
-/**
- * Modal component for displaying combined party inventory
- * Follows Pathfinder 2E rules for item management and bulk calculation
- */
 const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
   const { characters } = useContext(CharacterContext);
-  const [sortBy, setSortBy] = useState('name'); // name, character, bulk, value
+  const [sortBy, setSortBy] = useState('name'); // name, character, bulk, value, location
   const [searchTerm, setSearchTerm] = useState('');
+  const [showContainerItems, setShowContainerItems] = useState(true);
 
   // Aggregate all items from all characters with character context
   const allPartyItems = useMemo(() => {
     const items = [];
     
+    // Helper function to recursively extract items from inventory, including container contents
+    const extractAllItems = (itemArray, character, charIndex, containerContext = null, containerName = null) => {
+      if (!itemArray || !Array.isArray(itemArray)) return;
+      
+      itemArray.forEach((item, itemIndex) => {
+        // Add the item itself (whether it's a container or regular item)
+        const itemWithContext = {
+          ...item,
+          characterName: character.name,
+          characterColor: getCharacterColor(charIndex),
+          characterId: character.id,
+          uniqueId: containerContext 
+            ? `${character.id}-${containerContext}-${itemIndex}` 
+            : `${character.id}-${itemIndex}`,
+          totalValue: (item.price || 0) * (item.quantity || 1),
+          singleBulk: formatBulk(poundsToBulk(item.weight || 0)),
+          totalBulk: calculateItemsBulk([item]),
+          // Add context about where this item is stored
+          storageLocation: containerContext || 'inventory',
+          containerName: containerName,
+          isInContainer: !!containerContext
+        };
+        items.push(itemWithContext);
+        
+        // If this item is a container with contents, recursively extract those items too
+        if (item.container && Array.isArray(item.container.contents) && item.container.contents.length > 0) {
+          extractAllItems(
+            item.container.contents, 
+            character, 
+            charIndex, 
+            `container-${item.name}-${itemIndex}`,
+            item.name
+          );
+        }
+      });
+    };
+    
+    // Process each character's inventory
     characters.forEach((character, charIndex) => {
       if (character.inventory && Array.isArray(character.inventory)) {
-        character.inventory.forEach((item, itemIndex) => {
-          // Add character context to each item
-          const itemWithContext = {
-            ...item,
-            characterName: character.name,
-            characterColor: getCharacterColor(charIndex),
-            characterId: character.id,
-            uniqueId: `${character.id}-${itemIndex}`, // Unique identifier for React keys
-            totalValue: (item.price || 0) * (item.quantity || 1),
-            singleBulk: formatBulk(poundsToBulk(item.weight || 0)),
-            totalBulk: calculateItemsBulk([item])
-          };
-          items.push(itemWithContext);
-        });
+        extractAllItems(character.inventory, character, charIndex);
       }
     });
     
     return items;
   }, [characters]);
 
-  // Calculate party totals
+  // Filter items based on showContainerItems setting
+  const filteredItems = useMemo(() => {
+    if (showContainerItems) {
+      return allPartyItems;
+    } else {
+      return allPartyItems.filter(item => !item.isInContainer);
+    }
+  }, [allPartyItems, showContainerItems]);
+
+  // Calculate party totals (always include all items for accurate totals)
   const partyTotals = useMemo(() => {
     const totalValue = allPartyItems.reduce((sum, item) => sum + (item.totalValue || 0), 0);
     const totalBulk = allPartyItems.reduce((sum, item) => sum + (item.totalBulk || 0), 0);
@@ -50,13 +81,14 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
       totalValue,
       totalBulk: formatBulk(totalBulk),
       totalItems,
-      uniqueItems: allPartyItems.length
+      uniqueItems: allPartyItems.length,
+      containerItems: allPartyItems.filter(item => item.isInContainer).length
     };
   }, [allPartyItems]);
 
   // Sort items
   const sortedItems = useMemo(() => {
-    const items = allPartyItems;
+    const items = [...filteredItems];
     
     items.sort((a, b) => {
       switch (sortBy) {
@@ -69,6 +101,11 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
           return (b.totalBulk || 0) - (a.totalBulk || 0);
         case 'value':
           return (b.totalValue || 0) - (a.totalValue || 0);
+        case 'location':
+          if (a.storageLocation !== b.storageLocation) {
+            return a.storageLocation.localeCompare(b.storageLocation);
+          }
+          return a.name.localeCompare(b.name);
         case 'name':
         default:
           return a.name.localeCompare(b.name);
@@ -76,7 +113,7 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
     });
 
     return items;
-  }, [sortBy]);
+  }, [filteredItems, sortBy]);
 
   if (!isOpen) return null;
 
@@ -108,9 +145,21 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
                 >
                   <option value="name">Name</option>
                   <option value="character">Character</option>
+                  <option value="location">Storage Location</option>
                   <option value="bulk">Bulk</option>
                   <option value="value">Value</option>
                 </select>
+              </div>
+              
+              <div className="filter-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={showContainerItems}
+                    onChange={(e) => setShowContainerItems(e.target.checked)}
+                  />
+                  Show items in containers
+                </label>
               </div>
             </div>
           </div>
@@ -123,6 +172,7 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
                   <tr>
                     <th>Item</th>
                     <th>Character</th>
+                    <th>Location</th>
                     <th>Qty</th>
                     <th>Bulk</th>
                     <th>Value</th>
@@ -164,6 +214,15 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
                           {item.characterName}
                         </span>
                       </td>
+                      <td className="location-cell">
+                        {item.isInContainer ? (
+                          <span className="container-location" title={`Stored in ${item.containerName}`}>
+                            📦 {item.containerName}
+                          </span>
+                        ) : (
+                          <span className="inventory-location">Worn</span>
+                        )}
+                      </td>
                       <td className="quantity-cell">{item.quantity || 1}</td>
                       <td className="bulk-cell">{item.singleBulk}</td>
                       <td className="value-cell">
@@ -176,13 +235,8 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
             ) : (
               <div className="empty-inventory">
                 <p>No items found matching your criteria.</p>
-                {searchTerm && (
-                  <button 
-                    onClick={() => setSearchTerm('')}
-                    className="clear-search-button"
-                  >
-                    Clear Search
-                  </button>
+                {!showContainerItems && (
+                  <p className="filter-hint">Try enabling "Show items in containers" to see more items.</p>
                 )}
               </div>
             )}
