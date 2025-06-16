@@ -722,7 +722,7 @@
       "bloodline": {
         "name": "Imperial",
         "description": "One of your ancestors was a mortal who mastered magic. Such magical blood can remain latent for generations, but in you it manifested in full.",
-        "blood_magic": "A surge of ancestral memories grants you or one target a +1 status bonus to skill checks for 1 round.",
+        "blood_magic": "Raw magic emanates from every cell in your body, protecting you. Until the start of your next turn, you gain +1 to either your AC or to Saving Throws.",
         "focus_spells": [
           {
             "id": "focus-1",
