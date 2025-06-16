@@ -94,19 +94,15 @@ const CharacterInventorySection = ({
           >
             {character.name}
           </div>
-          <div className="character-class-level">
-            {character.class} {character.level}
-          </div>
-        </div>
-        
-        <div className="character-wealth-summary">
-          <div className="wealth-stat">
-            <span className="wealth-label">💰 Total Value</span>
-            <span className="wealth-value">{characterTotals.totalValue} gp</span>
-          </div>
-          <div className="wealth-stat">
-            <span className="wealth-label">📋 Items</span>
-            <span className="wealth-value">{characterTotals.totalItems}</span>
+          <div className="character-wealth-summary">
+            <div className="wealth-stat">
+              <span className="wealth-label">💰 Total Value</span>
+              <span className="wealth-value">{characterTotals.totalValue} gp</span>
+            </div>
+            <div className="wealth-stat">
+              <span className="wealth-label">📋 Items</span>
+              <span className="wealth-value">{characterTotals.totalItems}</span>
+            </div>
           </div>
         </div>
       </div>
