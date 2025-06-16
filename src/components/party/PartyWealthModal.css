@@ -1,51 +1,52 @@
-/* src/components/inventory/PartyGoldModal.css */
+/* Party Wealth Modal - Updated for Per-Character Inventory Tables */
+
 .party-gold-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  backdrop-filter: blur(2px);
 }
 
 .party-gold-modal {
-  background-color: white;
-  width: 95%;
-  max-width: 1200px;
-  max-height: 90vh;
+  background-color: #f8f9fa;
   border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  display: flex;
-  flex-direction: column;
+  width: 95%;
+  max-width: 1400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e9ecef;
 }
 
+/* Header Section */
 .party-gold-modal-header {
   background: linear-gradient(135deg, #5e2929, #7d3c3c);
   color: white;
   padding: 1.5rem;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  align-items: center;
+  border-radius: 12px 12px 0 0;
 }
 
 .modal-title-section h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
 }
 
 .party-totals {
   display: flex;
-  gap: 1.5rem;
-  font-size: 0.9rem;
-  opacity: 0.9;
+  gap: 2rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .total-value,
@@ -53,96 +54,26 @@
 .total-items {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
-  font-weight: 500;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.8rem;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
-}
-
-.close-button:hover {
-  opacity: 1;
-}
-
-.party-gold-modal-content {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
-}
-
-/* Controls Section */
-.inventory-controls {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid #e9ecef;
-}
-
-.search-section {
-  margin-bottom: 1rem;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #5e2929;
-  box-shadow: 0 0 0 3px rgba(94, 41, 41, 0.1);
-}
-
-.filter-sort-section {
-  display: flex;
-  gap: 2rem;
-  align-items: end;
-}
-
-.filter-group,
-.sort-group {
-  display: flex;
-  flex-direction: column;
   gap: 0.5rem;
 }
 
-.filter-group label,
-.sort-group label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.9rem;
-}
-
-.filter-select,
-.sort-select {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  background-color: white;
-  font-size: 0.9rem;
+.modal-close-button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.filter-select:focus,
-.sort-select:focus {
-  outline: none;
-  border-color: #5e2929;
-  box-shadow: 0 0 0 2px rgba(94, 41, 41, 0.1);
+.modal-close-button:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* PF2E Rules Section */
@@ -151,7 +82,7 @@
   border: 1px solid #ffeaa7;
   border-radius: 8px;
   padding: 1rem;
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 1.5rem 1rem 1.5rem;
 }
 
 .rules-section h4 {
@@ -174,21 +105,189 @@
   color: #5e2929;
 }
 
-/* Inventory Table */
-.party-inventory-list {
+/* Filter and Sort Controls */
+.filter-sort-section {
+  display: flex;
+  gap: 1.5rem;
+  align-items: end;
+  padding: 1rem 1.5rem;
   background-color: white;
+  border-bottom: 1px solid #e9ecef;
+  margin: 0 1.5rem;
   border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-group,
+.filter-group,
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-group label,
+.filter-group label,
+.sort-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.search-input,
+.sort-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus,
+.sort-select:focus {
+  outline: none;
+  border-color: #5e2929;
+  box-shadow: 0 0 0 2px rgba(94, 41, 41, 0.1);
+}
+
+.filter-group label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.filter-group input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Character Inventories Container */
+.character-inventories-container {
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Individual Character Inventory Section */
+.character-inventory-section {
+  background-color: white;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
 }
 
-.party-inventory-table {
+.character-section-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.character-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.character-name-large {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.character-class-level {
+  color: #6c757d;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.character-wealth-summary {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.wealth-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.wealth-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wealth-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #495057;
+}
+
+/* Bulk status colors */
+.wealth-value.bulk-normal {
+  color: #28a745;
+}
+
+.wealth-value.bulk-encumbered {
+  color: #ffc107;
+}
+
+.wealth-value.bulk-overencumbered {
+  color: #dc3545;
+}
+
+/* Encumbrance Warning */
+.encumbrance-warning {
+  margin: 0 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.encumbrance-warning.encumbered {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+.encumbrance-warning.overencumbered {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.encumbrance-warning strong {
+  font-weight: 700;
+}
+
+/* Character Inventory Table */
+.character-inventory-table-container {
+  margin: 1.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+}
+
+.character-inventory-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.party-inventory-table thead th {
+.character-inventory-table thead th {
   background-color: #5e2929;
   color: white;
   padding: 1rem 0.75rem;
@@ -198,12 +297,12 @@
   letter-spacing: 0.5px;
 }
 
-.party-inventory-table tbody tr {
+.character-inventory-table tbody tr {
   border-bottom: 1px solid #f1f3f4;
   transition: background-color 0.2s ease;
 }
 
-.party-inventory-table tbody tr:hover {
+.character-inventory-table tbody tr:hover {
   background-color: #f8f9fa;
 }
 
@@ -212,6 +311,7 @@
   vertical-align: top;
 }
 
+/* Table Cells */
 .item-cell {
   min-width: 200px;
 }
@@ -254,175 +354,6 @@
   align-self: center;
 }
 
-.character-cell {
-  min-width: 120px;
-}
-
-.character-name {
-  font-weight: 600;
-}
-
-.quantity-cell,
-.bulk-cell,
-.value-cell {
-  text-align: center;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-  font-size: 0.9rem;
-}
-
-.value-cell {
-  color: #28a745;
-  font-weight: 600;
-}
-
-/* Empty State */
-.empty-inventory {
-  padding: 3rem 1.5rem;
-  text-align: center;
-  color: #6c757d;
-}
-
-.empty-inventory p {
-  margin: 0 0 1rem 0;
-  font-size: 1.1rem;
-}
-
-.clear-search-button {
-  background-color: #5e2929;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s ease;
-}
-
-.clear-search-button:hover {
-  background-color: #7d3c3c;
-}
-
-/* Character Legend */
-.character-legend {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e9ecef;
-}
-
-.character-legend h4 {
-  margin: 0 0 1rem 0;
-  color: #495057;
-  font-size: 1rem;
-}
-
-.legend-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-}
-
-.legend-color-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.legend-character-name {
-  font-weight: 600;
-  color: #495057;
-}
-
-.legend-character-class {
-  color: #6c757d;
-  font-size: 0.85rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .party-gold-modal {
-    width: 98%;
-    max-height: 95vh;
-    margin: 0.5rem;
-  }
-  
-  .party-gold-modal-header {
-    padding: 1rem;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .party-totals {
-    gap: 1rem;
-    font-size: 0.8rem;
-  }
-  
-  .filter-sort-section {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .party-inventory-table {
-    font-size: 0.8rem;
-  }
-  
-  .party-inventory-table thead th,
-  .inventory-row td {
-    padding: 0.5rem 0.4rem;
-  }
-  
-  .item-cell {
-    min-width: 150px;
-  }
-  
-  .character-cell {
-    min-width: 80px;
-  }
-  
-  .legend-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Container count in header */
-.container-count {
-  font-size: 0.9rem;
-  color: #6c757d;
-  font-weight: 500;
-}
-
-/* Filter controls */
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.filter-group label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.filter-group input[type="checkbox"] {
-  margin: 0;
-  cursor: pointer;
-}
-
-/* Location column styling */
 .location-cell {
   min-width: 120px;
   font-size: 0.85rem;
@@ -448,16 +379,152 @@
   gap: 0.25rem;
 }
 
-/* Enhanced filter hint */
-.filter-hint {
-  font-style: italic;
-  color: #6c757d;
-  margin-top: 0.5rem;
+.quantity-cell,
+.bulk-cell,
+.value-cell {
+  text-align: center;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
   font-size: 0.9rem;
 }
 
-/* Responsive updates for new column */
+.value-cell {
+  color: #28a745;
+  font-weight: 600;
+}
+
+/* Empty States */
+.empty-character-inventory {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-character-inventory p {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.filter-hint {
+  font-style: italic;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Character Legend */
+.character-legend {
+  margin: 2rem 1.5rem 1.5rem 1.5rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.character-legend h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.legend-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legend-character-name {
+  font-weight: 600;
+  color: #495057;
+}
+
+.legend-character-class {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .character-wealth-summary {
+    gap: 1rem;
+  }
+  
+  .wealth-stat {
+    text-align: center;
+  }
+}
+
 @media (max-width: 768px) {
+  .party-gold-modal {
+    width: 98%;
+    max-height: 95vh;
+    margin: 1vh;
+  }
+  
+  .party-gold-modal-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .party-totals {
+    gap: 1rem;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .filter-sort-section {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .character-section-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .character-wealth-summary {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .character-inventory-table-container {
+    margin: 1rem;
+  }
+  
+  .character-inventory-table {
+    font-size: 0.85rem;
+  }
+  
+  .character-inventory-table thead th,
+  .inventory-row td {
+    padding: 0.5rem 0.4rem;
+  }
+  
+  .item-cell {
+    min-width: 150px;
+  }
+  
   .location-cell {
     min-width: 100px;
   }
@@ -467,35 +534,110 @@
     font-size: 0.7rem;
   }
   
-  /* Stack filter controls on mobile */
-  .filter-sort-section {
-    flex-direction: column;
-    gap: 1rem;
+  .legend-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .encumbrance-warning {
+    margin: 0 1rem;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
-  /* Hide location column on very small screens */
-  .party-inventory-table th:nth-child(3),
-  .party-inventory-table td:nth-child(3) {
-    display: none;
-  }
-  
-  .container-count {
-    font-size: 0.8rem;
+  .party-gold-modal-header h2 {
+    font-size: 1.25rem;
   }
   
   .party-totals {
     flex-direction: column;
     gap: 0.5rem;
-    align-items: flex-start;
+    align-items: center;
   }
   
-  .party-inventory-table {
+  .character-name-large {
+    font-size: 1.25rem;
+  }
+  
+  .character-wealth-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .wealth-stat:last-child {
+    grid-column: 1 / -1;
+  }
+  
+  /* Hide location column on very small screens */
+  .character-inventory-table th:nth-child(2),
+  .character-inventory-table td:nth-child(2) {
+    display: none;
+  }
+  
+  .character-inventory-table {
     font-size: 0.75rem;
   }
   
   .item-traits-row {
     display: none; /* Hide traits on very small screens */
+  }
+  
+  .character-inventories-container {
+    padding: 0.75rem;
+    gap: 1.5rem;
+  }
+  
+  .character-legend {
+    margin: 1rem 0.75rem;
+    padding: 1rem;
+  }
+  
+  .encumbrance-warning {
+    margin: 0 0.75rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .party-gold-modal-overlay {
+    position: static;
+    background: none;
+    backdrop-filter: none;
+  }
+  
+  .party-gold-modal {
+    box-shadow: none;
+    max-height: none;
+    overflow: visible;
+    border: 1px solid #333;
+  }
+  
+  .modal-close-button {
+    display: none;
+  }
+  
+  .filter-sort-section {
+    display: none;
+  }
+  
+  .pf2e-rules-info {
+    background: white;
+    border: 1px solid #333;
+  }
+  
+  .character-section-header {
+    background: #f8f9fa;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  .character-inventory-table thead th {
+    background: #333 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
   }
 }

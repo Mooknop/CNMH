@@ -113,7 +113,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
     
     return (
       <div className="bloodline-info">
-        <h3 style={{ color: themeColor }}>Imperial Blood Magic</h3>
+        <h3 style={{ color: themeColor }}>Imperious Defense</h3>
         <div className="bloodline-magic">
           <span className="bloodline-magic-effect">{character.spellcasting.bloodline.blood_magic}</span>
         </div>
