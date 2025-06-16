@@ -1,6 +1,5 @@
 // File: src/components/layout/Navbar.js
 import React, { useContext, useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import './Navbar.css';
@@ -31,12 +30,6 @@ const Navbar = () => {
   const closeDropdown = () => {
     setDropdownOpen(false);
   };
-  
-  const navigate = useNavigate();
-  
-  const navigateTo = (path) => {
-    navigate(path);
-  };
 
   return (
     <nav className="navbar">
@@ -46,13 +39,7 @@ const Navbar = () => {
       
       <ul className="navbar-nav">        
         <li>
-          <button 
-            className="nav-item"
-            onClick={() => navigateTo('/quests')}
-          >
-            <span className="btn-icon">📜</span>
-            <span className="btn-text">Quests</span>
-          </button>
+          
         </li>
         {/* Characters Dropdown */}
         <li className="nav-item dropdown" ref={dropdownRef}>

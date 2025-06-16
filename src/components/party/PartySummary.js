@@ -122,8 +122,6 @@ const PartySummary = () => {
   
   return (
     <div className="party-summary">
-      <h2>Party Overview</h2>
-      
       <div className="summary-content">
         <div className="ability-comparison-container">
           <h3>Ability Comparison</h3>
