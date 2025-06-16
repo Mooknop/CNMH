@@ -183,7 +183,15 @@
         "name": "Harrow Casting",
         "level": 4,
         "source": "Harrower",
-        "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn."
+        "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn.",
+        "actions": [
+          {
+            "name": "Harrow Casting",
+            "actionCount": 1,
+            "traits": ["Concentrate", "Harrower", "Spellshape"],
+            "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn."
+          }
+        ]
       },
       {
         "id": "feat-9",

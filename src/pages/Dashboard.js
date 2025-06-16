@@ -82,10 +82,10 @@ const Dashboard = () => {
             </button>
 
             <button 
-            className="nav-item"
+            className="stat-card clickable-stat-card"
             onClick={() => navigateTo('/quests')}>
-              <span className="btn-icon">📜</span>
-              <span className="btn-text">Quests</span>
+              <span className="stat-icon">📜</span>
+              <span className="stat-number">Quests</span>
             </button>
           </div>
         </div>
