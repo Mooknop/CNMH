@@ -268,7 +268,7 @@
     },
     {
       "name": "Backpack",
-      "price": 0,
+      "price": 0.1,
       "quantity": 1,
       "weight": 0.1,
       "description": "A backpack for holding your gear",
@@ -278,48 +278,56 @@
         "contents":[
           {
             "name": "Bedroll",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.1,
             "description": "A compact mat, not too comfy but suitable for long journeys."
           },
           {
             "name": "Chalk",
+            "price": 0.001,
             "quantity": 10,
             "weight": 0.0,
             "description": "Suitable for marking hard surfaces temporarily."
           },
           {
             "name": "Flint & Steel",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.0,
             "description": "A camper's classic for starting fires."
           },
           {
             "name": "Rope (50ft)",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "Sturdy rope for tying something (or someone) down."
           },
           {
             "name": "Rations",
+            "price": 0.04,
             "quantity": 7,
             "weight": 0.1,
             "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
           },
           {
             "name": "Soap",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.0,
             "description": "Scrub a dub dub"
           },
           {
             "name": "Torch",
+            "price": 0.01,
             "quantity": 5,
             "weight": 0.1,
             "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
           },
           {
             "name": "Waterskin",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
@@ -330,6 +338,7 @@
     {
       "id": "item-1",
       "name": "Vocoder of Invisibility",
+      "price": 50,
       "quantity": 1,
       "weight": 1.0,
       "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
@@ -346,6 +355,7 @@
     {
       "id": "item-2",
       "name": "Studded Leather Armor",
+      "price": 3,
       "quantity": 1,
       "weight": 1.0,
       "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection."
@@ -353,6 +363,7 @@
     {
       "id": "item-5",
       "name": "Minor Healing Potion",
+      "price": 4,
       "quantity": 1,
       "weight": 0.1,
       "traits": ["Consumable", "Healing", "Magical", "Potion", "Vitality"],
@@ -360,6 +371,7 @@
     },
     {
       "name": "Scroll of Friendfetch",
+      "price": 4,
       "quantity": 1,
       "weight": 0.1,
       "description": "A single-use scroll",
@@ -376,6 +388,7 @@
     },
     {
       "name": "Scroll of Cleanse Affliction",
+      "price": 12,
       "quantity": 1,
       "weight": 0.1,
       "description": "A single-use scroll",
@@ -412,6 +425,7 @@
     },
     {
       "name": "Wand of Cleanse Affliction",
+      "price": 60,
       "quantity": 1,
       "weight": 0.1,
       "traits": ["Magical", "Wand"],
@@ -432,6 +446,7 @@
     },
     {
       "name": "Wand of Create Food",
+      "price": 160,
       "quantity": 1,
       "weight": 0.1,
       "traits": ["Magical", "Wand"],

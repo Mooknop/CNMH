@@ -239,6 +239,7 @@
     {
       "id": "item-1",
       "name": "Full Plate",
+      "price": 30,
       "traits": ["Bulwark"],
       "quantity": 1,
       "weight": 4.0,
@@ -247,6 +248,7 @@
     },
     {
       "name": "Spiked Steel Shield",
+      "price": 2.5,
       "quantity": 1,
       "weight": 1,
       "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
@@ -267,6 +269,7 @@
     },
     {
       "name": "Reinforced Tower Shield",
+      "price": 85,
       "quantity": 1,
       "weight": 4,
       "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
@@ -281,6 +284,7 @@
     },
     {
       "name": "+1 Striking Pick",
+      "price": 100.1,
       "weight": 1,
       "quantity": 1,
       "potency": 1,
@@ -335,7 +339,7 @@
     },
     {
       "name": "Backpack",
-      "price": 0,
+      "price": 0.1,
       "quantity": 1,
       "weight": 0.1,
       "description": "A backpack for holding your gear",
@@ -345,54 +349,63 @@
         "contents":[
           {
             "name": "Bedroll",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.1,
             "description": "A compact mat, not too comfy but suitable for long journeys."
           },
           {
             "name": "Chalk",
+            "price": 0.001,
             "quantity": 10,
             "weight": 0.0,
             "description": "Suitable for marking hard surfaces temporarily."
           },
           {
             "name": "Flint & Steel",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.0,
             "description": "A camper's classic for starting fires."
           },
           {
             "name": "Rope (50ft)",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "Sturdy rope for tying something (or someone) down."
           },
           {
             "name": "Rations",
+            "price": 0.04,
             "quantity": 7,
             "weight": 0.1,
             "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
           },
           {
             "name": "Soap",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.0,
             "description": "Scrub a dub dub"
           },
           {
             "name": "Torch",
+            "price": 0.01,
             "quantity": 5,
             "weight": 0.1,
             "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
           },
           {
             "name": "Waterskin",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
           },
           {
             "name": "+1 Cold Iron Light Hammer",
+            "price": 75.1,
             "potency": 1,
             "weight": 1,
             "quantity": 1,

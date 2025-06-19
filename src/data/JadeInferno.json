@@ -202,67 +202,75 @@
       }
     ],
     "inventory": [
-      {
-        "name": "Backpack",
-        "price": 0,
-        "quantity": 1,
-        "weight": 0.1,
-        "description": "A backpack for holding your gear",
-        "container":{
-          "capacity": 4,
-          "ignored": 2,
-          "contents":[
-            {
-              "name": "Bedroll",
-              "quantity": 1,
-              "weight": 0.1,
-              "description": "A compact mat, not too comfy but suitable for long journeys."
-            },
-            {
-              "name": "Chalk",
-              "quantity": 10,
-              "weight": 0.0,
-              "description": "Suitable for marking hard surfaces temporarily."
-            },
-            {
-              "name": "Flint & Steel",
-              "quantity": 1,
-              "weight": 0.0,
-              "description": "A camper's classic for starting fires."
-            },
-            {
-              "name": "Rope (50ft)",
-              "quantity": 1,
-              "weight": 0.1,
-              "description": "Sturdy rope for tying something (or someone) down."
-            },
-            {
-              "name": "Rations",
-              "quantity": 7,
-              "weight": 0.1,
-              "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
-            },
-            {
-              "name": "Soap",
-              "quantity": 1,
-              "weight": 0.0,
-              "description": "Scrub a dub dub"
-            },
-            {
-              "name": "Torch",
-              "quantity": 5,
-              "weight": 0.1,
-              "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
-            },
-            {
-              "name": "Waterskin",
-              "quantity": 1,
-              "weight": 0.1,
-              "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
-            }
-          ]
-        }
-      },
+    {
+      "name": "Backpack",
+      "price": 0.1,
+      "quantity": 1,
+      "weight": 0.1,
+      "description": "A backpack for holding your gear",
+      "container":{
+        "capacity": 4,
+        "ignored": 2,
+        "contents":[
+          {
+            "name": "Bedroll",
+            "price": 0.02,
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "A compact mat, not too comfy but suitable for long journeys."
+          },
+          {
+            "name": "Chalk",
+            "price": 0.001,
+            "quantity": 10,
+            "weight": 0.0,
+            "description": "Suitable for marking hard surfaces temporarily."
+          },
+          {
+            "name": "Flint & Steel",
+            "price": 0.05,
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "A camper's classic for starting fires."
+          },
+          {
+            "name": "Rope (50ft)",
+            "price": 0.05,
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "Sturdy rope for tying something (or someone) down."
+          },
+          {
+            "name": "Rations",
+            "price": 0.04,
+            "quantity": 7,
+            "weight": 0.1,
+            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+          },
+          {
+            "name": "Soap",
+            "price": 0.02,
+            "quantity": 1,
+            "weight": 0.0,
+            "description": "Scrub a dub dub"
+          },
+          {
+            "name": "Torch",
+            "price": 0.01,
+            "quantity": 5,
+            "weight": 0.1,
+            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+          },
+          {
+            "name": "Waterskin",
+            "price": 0.05,
+            "quantity": 1,
+            "weight": 0.1,
+            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+          }
+        ]
+      }
+    },
       {
         "id": "item-1",
         "name": "Minor Elixir of Life",
@@ -395,6 +403,7 @@
       {
         "id": "item-9",
         "name": "Wand of Dizzying Colors",
+        "price": 60,
         "quantity": 1,
         "weight": 0.1,
         "traits": ["Magical", "Wand"],
@@ -420,6 +429,7 @@
       },
       {
         "name": "Wand of Breathe Fire",
+        "price": 60,
         "quantity": 1,
         "weight": 0.1,
         "traits": ["Magical", "Wand"],
@@ -441,6 +451,7 @@
       },
       {
         "name": "Wand of Grease",
+        "price": 60,
         "quantity": 1,
         "weight": 0.1,
         "traits": ["Magical", "Wand"],
@@ -481,6 +492,7 @@
       },
       {
         "name": "Crafter's Eyepiece",
+        "price": 60,
         "quantity": 1,
         "weight": 0,
         "traits": ["Invested", "Magical"],

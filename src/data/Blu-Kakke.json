@@ -274,7 +274,7 @@
   "inventory": [
     {
       "name": "Backpack",
-      "price": 0,
+      "price": 0.1,
       "quantity": 1,
       "weight": 0.1,
       "description": "A backpack for holding your gear",
@@ -284,48 +284,56 @@
         "contents":[
           {
             "name": "Bedroll",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.1,
             "description": "A compact mat, not too comfy but suitable for long journeys."
           },
           {
             "name": "Chalk",
+            "price": 0.001,
             "quantity": 10,
             "weight": 0.0,
             "description": "Suitable for marking hard surfaces temporarily."
           },
           {
             "name": "Flint & Steel",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.0,
             "description": "A camper's classic for starting fires."
           },
           {
             "name": "Rope (50ft)",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "Sturdy rope for tying something (or someone) down."
           },
           {
             "name": "Rations",
+            "price": 0.04,
             "quantity": 7,
             "weight": 0.1,
             "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
           },
           {
             "name": "Soap",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.0,
             "description": "Scrub a dub dub"
           },
           {
             "name": "Torch",
+            "price": 0.01,
             "quantity": 5,
             "weight": 0.1,
             "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
           },
           {
             "name": "Waterskin",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
@@ -335,7 +343,7 @@
     },
     {
       "name": "Spacious Pouch",
-      "price": 0,
+      "price": 75,
       "quantity": 1,
       "weight": 1.0,
       "traits": ["Extradimensional", "Magical"],
@@ -346,12 +354,14 @@
         "contents":[
           {
             "name": "Sterling Artisan's Tools (Talismans)",
+            "price": 50,
             "quantity": 1,
             "weight": 2,
             "description": "An incredibly high-quality set of artisan tools, perfectly suited to creating Talismans. If you use them when you Craft a Talisman, you get a +1 item bonus to the check."
           },
           {
             "name": "Anticorrosion Oil",
+            "price": 6,
             "quantity": 3,
             "weight": 0.1,
             "traits": ["Consumable", "Magical", "Oil"],
@@ -359,6 +369,7 @@
           },
           {
             "name": "Oil of Weightlessness",
+            "price": 6,
             "quantity": 1,
             "weight": 0.1,
             "traits": ["Consumable", "Magical", "Oil"],
@@ -366,6 +377,7 @@
           },
           {
             "name": "Moderate Drakeheart Mutagen",
+            "price": 12,
             "quantity": 2,
             "weight": 0.1,
             "traits": ["Alchemical", "Consumable", "Elixir", "Mutagen"],
@@ -389,7 +401,7 @@
             "name": "Midnight Milk",
             "quantity": 1,
             "weight": 0.1,
-            "price": 0,
+            "price": 30,
             "traits": ["Alchemical", "Consumable", "Drug", "Ingested", "Poison", "Rare"],
             "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands."
           }
@@ -398,12 +410,14 @@
     },
     {
       "name": "Healer's Toolkit",
+      "price": 5,
       "quantity": 1,
       "weight": 1,
       "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
     },
     {
       "name": "Minor Healing Potion",
+      "price": 4,
       "quantity": 2,
       "weight": 0.1,
       "traits": ["Consumable", "Healing", "Magical", "Potion", "Vitality"],
@@ -419,6 +433,7 @@
     },
     {
       "name": "Potion of Waterbreathing",
+      "price": 11,
       "quantity": 1,
       "weight": 0.1,
       "traits": ["Consumable", "Magical", "Potion"],
@@ -450,7 +465,7 @@
     {
       "name": "Shuriken",
       "price": 2,
-      "quantity": 100,
+      "quantity": 15,
       "weight": 0.0,
       "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
       "traits": ["Agile", "Monk", "Thrown", "Uncommon"],

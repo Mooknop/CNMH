@@ -234,7 +234,7 @@
     },
     {
       "name": "Backpack",
-      "price": 0,
+      "price": 0.1,
       "quantity": 1,
       "weight": 0.1,
       "description": "A backpack for holding your gear",
@@ -244,48 +244,56 @@
         "contents":[
           {
             "name": "Bedroll",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.1,
             "description": "A compact mat, not too comfy but suitable for long journeys."
           },
           {
             "name": "Chalk",
+            "price": 0.001,
             "quantity": 10,
             "weight": 0.0,
             "description": "Suitable for marking hard surfaces temporarily."
           },
           {
             "name": "Flint & Steel",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.0,
             "description": "A camper's classic for starting fires."
           },
           {
             "name": "Rope (50ft)",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "Sturdy rope for tying something (or someone) down."
           },
           {
             "name": "Rations",
+            "price": 0.04,
             "quantity": 7,
             "weight": 0.1,
             "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
           },
           {
             "name": "Soap",
+            "price": 0.02,
             "quantity": 1,
             "weight": 0.0,
             "description": "Scrub a dub dub"
           },
           {
             "name": "Torch",
+            "price": 0.01,
             "quantity": 5,
             "weight": 0.1,
             "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
           },
           {
             "name": "Waterskin",
+            "price": 0.05,
             "quantity": 1,
             "weight": 0.1,
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
@@ -295,6 +303,7 @@
     },
     {
       "name": "Crescent Cross",
+      "price": 4,
       "traits": ["Combination", "Critical Fusion", "Disarm", "Parry"],
       "quantity": 1,
       "weight": 0.1,
@@ -321,6 +330,7 @@
     },
     {
       "name": "Longbow",
+      "price": 6,
       "traits": ["Deadly D10", "Volley 30ft"],
       "quantity": 1,
       "weight": 2.0,
@@ -346,6 +356,7 @@
     },
     {
       "name": "Skeleton Key",
+      "price": 125,
       "traits": ["Magical"],
       "quantity": 1,
       "weight": 0,
@@ -367,12 +378,14 @@
     },
     {
       "name": "Healer's Toolkit",
+      "price": 5,
       "quantity": 1,
       "weight": 1,
       "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
     },
     {
       "name": "Thieves' Toolkit",
+      "price": 3,
       "quantity": 1,
       "weight": 0.1,
       "description": "You need a thieves' toolkit to Pick Locks or Disable Devices (of some types) using the Thievery skill. If your thieves' toolkit is broken, you can repair it by replacing the lock picks with replacement picks appropriate to your toolkit; this doesn't require using the Repair action. If you wear your thieves' toolkit, you can draw and replace it as part of the action that uses it."
