@@ -1,64 +1,67 @@
 {
-    "quests": [
-      {
-        "title": "Escape Hell",
-        "status": "active",
-        "priority": "high",
-        "location": "Dis, Hell",
-        "description": "You entered a portal to Dis to defeat Xar-Azmak, but the doorway closed behind you. You must find a way back to the Material Plane or submit to a life living amongst devils.",
-        "notes": [
-          {
-            "content": "A Coarti named Ariuk has been assigned as your personal guide throughout the city of Dis. He can hear you whenever you call for him and seems to appear before you can even finish your sentence. He was sent by Erecura, the Queen of Dis, though why she's taken a particular interest in you is still a mystery."
-          },
-          {
-            "content": "Hell's beaureacracy is a nightmare to navigate. Perhaps you can find someone willing to help you through it... for a price."
-          },
-          {
-            "content": "Navigating infernal paperwork isn't the only way to escape. A powerful spellcaster should be able to open a tunnel to the Material Plane if you can convince them."
-          }
-        ]
-      },
-      {
-        "title": "Destroy the Horn of Rust",
-        "status": "pending",
-        "priority": "medium",
-        "description": "The Horn of Rust is a powerful artifact, but as long as it exists there remains a chance that Xar-Azmak will return. Ferrumnestra has asked you to find a way to destroy the thing once and for all.",
-        "notes": [
-          {
-            "content": "As an Artifact, the Horn of Rust cannot be destroyed by conventional means. You must find a way to unravel the divine magic coursing through it."
-          }
-        ]
-      },
-      {
-        "title": "Find Ashka's mom",
-        "status": "pending",
-        "priority": "low",
-        "description": "When Ashka was little, cloaked figures appeared to take her away and her mother hid her. They took her instead, and Ashka has been searching for her ever since.",
-        "notes": [
-          {
-            "content": "Over the years, Ashka has been able to deduce that her mother was taken by people called the Denizens of Leng. Who are they? What did they want with Ashka? Where have they taken her mother?"
-          },
-          {
-            "content": "The Runelords of Ancient Thassilon allegedly had dealings with the Denizens of Leng. Perhaps their ancient knowledge can help you find them."
-          },
-          {
-            "content": "Meitremar is dead, and before he could reveal anything about Thassilon's connection to the Denizens of Leng. Ashka needs a new lead."
-          }
-        ]
-      },
-      {
-        "title": "Discover the secrets of Blu's orb",
-        "status": "pending",
-        "priority": "low",
-        "description": "Before your encounter with the Cult of Xar-Azmak, Blu felt a pull towards some Ancient Thassilonian ruins. Investigating, they found a patrol of Xin-Edasseril's military cleaning out a trove of magical artifacts, the orb among them. What is it? Why does it pull at Blu's mind?",
-        "notes": [
-          {
-            "content": "The orb feels... awake somehow. While it's mostly inert, sometimes when he holds it Blu gets the feeling that he's being watched."
-          },
-          {
-            "content": "Jade was able to determine that the Orb could be Activated, but attempting to do so backfired and shocked her with a bolt of electricity. What could it do if wielded correctly?"
-          }
-        ]
-      }
-    ]
-  }
+  "quests": [
+    {
+      "title": "Escape Hell",
+      "status": "active",
+      "priority": "high",
+      "location": "Dis, Hell",
+      "description": "You entered a portal to Dis to defeat Xar-Azmak, but the doorway closed behind you. You must find a way back to the Material Plane or submit to a life living amongst devils.",
+      "notes": [
+        {
+          "content": "You've learned about a cult in the city that call themselves the Midwives. Rumor has it that they are able to provide teleportation services in exchange for large amounts of energy. How much energy and in what form? We'll have to seek them out to learn more."
+        },
+        {
+          "content": "Navigating infernal paperwork isn't the only way to escape. A powerful spellcaster should be able to open a tunnel to the Material Plane if you can convince them."
+        },
+        {
+          "content": "Hell's beaureacracy is a nightmare to navigate. Perhaps you can find someone willing to help you through it... for a price."
+        },
+        {
+          "content": "A Coarti named Ariuk has been assigned as your personal guide throughout the city of Dis. He can hear you whenever you call for him and seems to appear before you can even finish your sentence. He was sent by Erecura, the Queen of Dis, though why she's taken a particular interest in you is still a mystery."
+        }
+      ]
+    },
+    {
+      "title": "Destroy the Horn of Rust",
+      "status": "pending",
+      "priority": "medium",
+      "description": "The Horn of Rust is a powerful artifact, but as long as it exists there remains a chance that Xar-Azmak will return. Ferrumnestra has asked you to find a way to destroy the thing once and for all.",
+      "notes": [
+        {
+          "content": "As an Artifact, the Horn of Rust cannot be destroyed by conventional means. You must find a way to unravel the divine magic coursing through it."
+        }
+      ]
+    },
+    {
+      "title": "Find Ashka's mom",
+      "status": "pending",
+      "priority": "low",
+      "description": "When Ashka was little, cloaked figures appeared to take her away and her mother hid her. They took her instead, and Ashka has been searching for her ever since.",
+      "notes": [
+        {
+          "content": "Meitremar is dead, and before he could reveal anything about Thassilon's connection to the Denizens of Leng. Ashka needs a new lead. Avistan, the home of the human half of Jade's family, leads the Inner Sea in Ancient Thassilonian scholarship."
+        },
+        {
+          "content": "The Runelords of Ancient Thassilon allegedly had dealings with the Denizens of Leng. Perhaps their ancient knowledge can help you find them."
+        },
+        {
+          "content": "Over the years, Ashka has been able to deduce that her mother was taken by people called the Denizens of Leng. Who are they? What did they want with Ashka? Where have they taken her mother?"
+        }
+      ]
+    },
+    {
+      "title": "Discover the secrets of Blu's orb",
+      "status": "pending",
+      "priority": "low",
+      "description": "Before the events at Rusthenge, Blu felt a pull towards some Ancient Thassilonian ruins. Investigating, they found a patrol of Xin-Edasseril's military cleaning out a trove of magical artifacts, the orb among them. What is it? Why does it pull at Blu's mind?",
+      "notes": [
+        {
+          "content": "Jade was able to determine that the Orb could be Activated, but attempting to do so backfired and shocked her with a bolt of electricity. What could it do if wielded correctly?"
+        },
+        {
+          "content": "The orb feels... awake somehow. While it's mostly inert, sometimes when he holds it Blu gets the feeling that he's being watched."
+        }
+      ]
+    }
+  ]
+}
