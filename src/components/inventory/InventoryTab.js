@@ -3,9 +3,9 @@ import './InventoryTab.css';
 import ContainersList from './ContainersList';
 import { 
   calculateItemsBulk, 
-  formatBulk, 
   poundsToBulk 
 } from '../../utils/InventoryUtils';
+import { formatBulk } from '../../utils/CharacterUtils';
 import CraftingModal from './CraftingModal';
 
 /**
@@ -110,7 +110,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       <div className="bulk-management">
         <div className="bulk-status">
           <div className="bulk-labels">
-            <span>Bulk Used: <strong>{formatBulk(bulkUsed.toFixed(1).replace(/\.0$/, ''))}</strong></span>
+            <span>Bulk Used: <strong>{formatBulk(bulkUsed)}</strong></span>
             <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
             <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
           </div>

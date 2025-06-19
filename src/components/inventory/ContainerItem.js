@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import './ContainerItem.css';
 import { 
   calculateContainerBulk, 
-  formatBulk, 
   formatDecimal,
   poundsToBulk 
 } from '../../utils/InventoryUtils';
+import { formatBulk } from '../../utils/CharacterUtils';
 
 /**
  * Component for displaying a container and its contents
