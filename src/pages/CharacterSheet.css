@@ -1,16 +1,56 @@
-.character-sheet {
-  max-width: 900px;
-  margin: 0 auto;
+/* Character Sheet Page Container with Background */
+.character-sheet-page {
+  position: fixed;
+  top: 60px; /* Account for navbar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('../../Background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  overflow-y: auto;
 }
 
+/* Dark overlay effect like Dashboard */
+.character-sheet-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  z-index: 1;
+}
+
+/* Main content container */
+.character-sheet {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Character Header with transparency */
 .character-header {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
   margin-bottom: 2rem;
   position: relative;
+  padding: 1.5rem;
 }
 
 .character-header h1 {
   margin-bottom: 0.5rem;
   color: #5e2929;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .character-subtitle {
@@ -23,8 +63,8 @@
   display: flex;
   gap: 0.5rem;
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 1.5rem;
+  right: 1.5rem;
 }
 
 .familiar-button {
@@ -38,11 +78,14 @@
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .familiar-button:hover {
   background-color: #7a3939;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .familiar-icon {
@@ -56,32 +99,113 @@
   gap: 2rem;
 }
 
-/* Tabs Styling */
-.character-tabs {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  overflow: hidden;
+/* Stats Block with transparency */
+.stats-block {
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  padding: 1.5rem;
 }
 
-.tabs-header {
+.core-stats {
+  margin-bottom: 1.5rem;
+}
+
+.hp-defense {
   display: flex;
-  background-color: #e0e0e0;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.hp-box, .ac-box {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  min-width: 120px;
+  flex: 1;
+}
+
+.hp-box {
+  border: 2px solid #5e2929;
+}
+
+.ac-box {
+  border: 2px solid #444;
+}
+
+.defense-name {
+  font-weight: bold;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+}
+
+.defense-value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Character Attributes Section */
+.character-attributes {
+  background: rgba(255, 255, 255, .01);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.attribute {
+  text-align: center;
+}
+
+.attribute-label {
+  color: #5e2929;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.attribute-value {
+  display: block;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* Tab Navigation Styling with transparency */
+.stats-tabs {
+  display: flex;
+  margin-bottom: 1rem;
+  background: rgba(224, 224, 224, 0.9);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .tab-button {
-  padding: 1rem 1.5rem;
+  flex: 1;
+  padding: 0.75rem 1rem;
   background: none;
   border: none;
   cursor: pointer;
   font-weight: 500;
-  color: #333;
-  transition: background-color 0.2s, color 0.2s;
-  flex: 1;
+  color: #444;
+  transition: all 0.2s;
   text-align: center;
 }
 
 .tab-button:hover {
-  background-color: #d0d0d0;
+  background: rgba(208, 208, 208, 0.9);
 }
 
 .tab-button.active {
@@ -89,8 +213,89 @@
   color: white;
 }
 
+/* Tab Content Container with transparency */
 .tab-content {
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+  padding: 1.25rem;
+}
+
+/* Tabs Container with transparency */
+.character-tabs {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.tabs-header {
+  display: flex;
+  background: rgba(224, 224, 224, 0.9);
+}
+
+/* Abilities Section Styling */
+.abilities-section {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.ability {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ability-name {
+  font-weight: bold;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.ability-score {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.ability-mod {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Saving Throws Section */
+.saving-throws {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.save {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.save-name {
+  font-weight: bold;
+  color: #5e2929;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.save-value {
+  font-size: 1.25rem;
+  font-weight: bold;
 }
 
 /* Inventory Tab Styling with Bulk Management */
@@ -104,9 +309,11 @@
 /* Bulk Management Styles */
 .bulk-management {
   margin-bottom: 2rem;
-  background-color: #f5f5f5;
+  background: rgba(245, 245, 245, 0.95);
   border-radius: 8px;
   padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
 }
 
 .bulk-status {
@@ -124,7 +331,7 @@
 .bulk-progress-container {
   width: 100%;
   height: 0.75rem;
-  background-color: #e0e0e0;
+  background: rgba(224, 224, 224, 0.9);
   border-radius: 4px;
   margin-bottom: 0.5rem;
   overflow: hidden;
@@ -138,17 +345,26 @@
 .bulk-warning {
   margin-top: 0.75rem;
   padding: 0.75rem;
-  background-color: #fff3e0;
+  background: rgba(255, 243, 224, 0.95);
   border-left: 4px solid #f57c00;
   color: #e65100;
   font-size: 0.9rem;
   border-radius: 4px;
+  backdrop-filter: blur(5px);
 }
 
 .bulk-warning.severe {
-  background-color: #ffebee;
+  background: rgba(255, 235, 238, 0.95);
   border-left: 4px solid #b71c1c;
   color: #b71c1c;
+}
+
+/* Inventory List */
+.inventory-list {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .inventory-list table {
@@ -173,13 +389,28 @@
 
 .inventory-list td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(238, 238, 238, 0.8);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.item-name {
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.item-name:hover {
+  color: #5e2929;
+  text-decoration: underline;
 }
 
 .empty-inventory {
   text-align: center;
   padding: 2rem;
   color: #888;
+  background: rgba(255, 255, 255, 0.9);
 }
 
 /* Remove the border and background from components when used in tabs */
@@ -216,15 +447,26 @@
   margin-right: 0.5rem;
 }
 
-/* Responsive adjustments */
+/* Mobile responsive adjustments */
 @media (max-width: 768px) {
-  .character-header {
-    padding-top: 2.5rem;
+  .character-sheet-page {
+    padding: 1rem;
   }
-  
+
+  .character-sheet {
+    padding: 1rem;
+  }
+
+  .character-header {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
   .character-actions {
-    top: -10px;
-    right: 0;
+    position: static;
+    margin-top: 1rem;
+    width: 100%;
+    justify-content: flex-end;
   }
   
   .tabs-header {
@@ -239,49 +481,16 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-}
 
-/* Responsive inventory table adjustments */
-.inventory-list table {
-  width: 100%;
-  border-collapse: collapse;
-}
+  .inventory-list th, 
+  .inventory-list td {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .item-name {
+    font-weight: 500;
+  }
 
-.inventory-list th {
-  background-color: #5e2929;
-  color: white;
-  text-align: left;
-  padding: 0.75rem 1rem;
-}
-
-.inventory-list th:first-child {
-  border-top-left-radius: 8px;
-}
-
-.inventory-list th:last-child {
-  border-top-right-radius: 8px;
-}
-
-.inventory-list td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #eee;
-}
-
-.item-name {
-  color: #333;
-  cursor: pointer;
-  transition: color 0.2s;
-  text-decoration: none;
-  display: inline-block; /* Makes the entire text clickable */
-}
-
-.item-name:hover {
-  color: #5e2929;
-  text-decoration: underline;
-}
-
-/* Add a small info icon on mobile to indicate clickable items */
-@media (max-width: 768px) {
   .item-name::after {
     content: " 🔍";
     font-size: 0.8rem;
@@ -289,21 +498,13 @@
   }
 }
 
-/* Responsive adjustments for mobile */
-@media (max-width: 768px) { 
-  .inventory-list th, 
-  .inventory-list td {
-    padding: 0.75rem 0.5rem;
-  }
-  
-  .item-name {
-    font-weight: 500; /* Make item names a bit more prominent on mobile */
-  }
-}
-
 @media (max-width: 480px) {
-  .character-actions {
-    width: 100%;
-    justify-content: flex-end;
+  .abilities-section {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .saving-throws {
+    grid-template-columns: 1fr;
   }
 }

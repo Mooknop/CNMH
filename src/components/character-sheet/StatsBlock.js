@@ -304,7 +304,6 @@ const StatsBlock = ({ character, characterColor }) => {
       <div className="character-attributes" style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
-              backgroundColor: '#f9f9f9', 
               padding: '0.75rem', 
               borderRadius: '4px',
               marginBottom: '1rem' 

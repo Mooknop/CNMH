@@ -90,6 +90,7 @@ const CharacterSheet = () => {
   };
   
   return (
+    <div className="character-sheet-page">
     <div className="character-sheet">
       <div className="character-header">
         <h1 style={{ color: characterColor }}>{character.name}</h1>
@@ -217,6 +218,7 @@ const CharacterSheet = () => {
           characterColor={characterColor}
         />
       )}
+    </div>
     </div>
   );
 };
