@@ -8,7 +8,7 @@ import ItemModal from '../components/inventory/ItemModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const PartyGold = 46;
+  const PartyGold = 41;
 
   const { setActiveCharacter } = useContext(CharacterContext);
 

@@ -266,45 +266,32 @@
       }
     },
     {
-      "name": "Tower Shield",
+      "name": "Reinforced Tower Shield",
       "quantity": 1,
       "weight": 4,
       "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
       "shield": {
-        "health": 20,
-        "breakThreshold": 10,
-        "hardness": 5,
+        "health": 64,
+        "breakThreshold": 32,
+        "hardness": 8,
         "bonus": 2,
         "speedPenalty": 5
       }
       
     },
     {
-      "name": "+1 Cold Iron Light Hammer",
-      "potency": 1,
+      "name": "+1 Striking Pick",
       "weight": 1,
       "quantity": 1,
-      "traits": ["Agile", "Thrown 20ft"],
-      "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
-      "strikes": [
-        {
-          "name": "Light Hammer Strike",
-          "proficiency": "martial",
-          "type": "melee",
-          "action": 1,
-          "damage": "1d6",
-          "traits": ["Attack", "Agile", "Melee"]
-        },
-        {
-          "name": "Hammer Throw",
-          "proficiency": "martial",
-          "type": "ranged",
-          "range": "20ft",
-          "action": 1,
-          "damage": "1d6",
-          "traits": ["Attack", "Agile", "Thrown"]
-        }
-      ]
+      "potency": 1,
+      "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
+      "traits": ["Fatal 1d10"],
+      "strikes": {
+        "proficiency": "martial",
+        "type": "melee",
+        "action": 1,
+        "damage": "2d6"
+      }
     },
     {
       "name": "Sanitizing Pin",
@@ -405,18 +392,31 @@
             "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
           },
           {
-            "name": "+1 Striking Pick",
+            "name": "+1 Cold Iron Light Hammer",
+            "potency": 1,
             "weight": 1,
             "quantity": 1,
-            "potency": 1,
-            "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
-            "traits": ["Fatal 1d10"],
-            "strikes": {
-              "proficiency": "martial",
-              "type": "melee",
-              "action": 1,
-              "damage": "2d6"
-            }
+            "traits": ["Agile", "Thrown 20ft"],
+            "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+            "strikes": [
+              {
+                "name": "Light Hammer Strike",
+                "proficiency": "martial",
+                "type": "melee",
+                "action": 1,
+                "damage": "1d6",
+                "traits": ["Attack", "Agile", "Melee"]
+              },
+              {
+                "name": "Hammer Throw",
+                "proficiency": "martial",
+                "type": "ranged",
+                "range": "20ft",
+                "action": 1,
+                "damage": "1d6",
+                "traits": ["Attack", "Agile", "Thrown"]
+              }
+            ]
           }
         ]
       }
