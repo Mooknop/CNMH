@@ -1,6 +1,7 @@
 import CollapsibleCard from '../shared/CollapsibleCard';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import { formatBulk } from '../../utils/InventoryUtils';
+import { calculateEnhancedBulkLimit } from '../../utils/CharacterUtils';
 
 const CharacterInventorySection = ({ 
   character, 
@@ -50,23 +51,10 @@ const CharacterInventorySection = ({
 
   // Calculate bulk limits for this character (PF2E rules)
   const calculateBulkLimits = () => {
-    if (!character.abilities) return { bulkLimit: 10, encumberedThreshold: 5 };
-    
-    const strMod = Math.floor((character.abilities.strength - 10) / 2);
-    let bulkLimit = strMod + 10;
-    let encumberedThreshold = bulkLimit - 5;
-    
-    // Check for Hefty Hauler feat (adds +2 to both limits)
-    if (character.feats && character.feats.some(feat => 
-      feat.name && feat.name.toLowerCase().includes('hefty hauler'))) {
-      bulkLimit += 2;
-      encumberedThreshold += 2;
-    }
-    
-    return { bulkLimit, encumberedThreshold };
+    return calculateEnhancedBulkLimit(character);
   };
 
-  const { bulkLimit, encumberedThreshold } = calculateBulkLimits();
+  const { bulkLimit, encumberedThreshold, containerBonus } = calculateBulkLimits();
 
   // Create the header content for the CollapsibleCard
   const headerContent = (

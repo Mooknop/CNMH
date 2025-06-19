@@ -261,3 +261,67 @@ export const calculateClassDC = (character) => {
   
   return 10 + keyAbilityMod + proficiencyBonus;
 };
+
+/*
+ * Calculate a character's bulk limit based on Strength, feats, and containers
+ * @param {Object} character - The character object
+ * @returns {Object} - Object containing bulk limit and encumbered threshold
+ */
+export const calculateEnhancedBulkLimit = (character) => {
+  if (!character || !character.abilities) {
+    return { bulkLimit: 0, encumberedThreshold: 0, containerBonus: 0 };
+  }
+  
+  // Base calculation: Strength ability modifier + 10
+  const abilities = character.abilities || {};
+  const strMod = Math.floor((abilities.strength - 10) / 2);
+  let bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
+  let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
+  
+  // Check if the character has the Hefty Hauler feat
+  const hasHeftyHauler = character.feats && character.feats.some(feat => 
+    feat.name && feat.name.toLowerCase().includes('hefty hauler')
+  );
+  
+  if (hasHeftyHauler) {
+    // Hefty Hauler increases both maximum and encumbered Bulk by 2
+    bulkLimit += 2;
+    encumberedThreshold += 2;
+  }
+  
+  // Calculate container ignored bulk bonus
+  const containerBonus = calculateTotalContainerIgnoredBulk(character.inventory);
+  
+  // Add container bonus to bulk limits
+  const finalBulkLimit = bulkLimit + containerBonus;
+  const finalEncumberedThreshold = encumberedThreshold + containerBonus;
+  
+  return { 
+    bulkLimit: finalBulkLimit, 
+    encumberedThreshold: finalEncumberedThreshold,
+    containerBonus: containerBonus,
+    baseBulkLimit: bulkLimit,
+    baseEncumberedThreshold: encumberedThreshold
+  };
+};
+
+/**
+ * Calculate total ignored bulk from all containers in character's inventory
+ * @param {Array} inventory - Character's inventory array
+ * @returns {number} - Total ignored bulk from all containers
+ */
+export const calculateTotalContainerIgnoredBulk = (inventory) => {
+  if (!inventory || !Array.isArray(inventory)) return 0;
+  
+  return inventory.reduce((total, item) => {
+    // Check if this item is a container and has ignored bulk
+    if (item.container && item.container.ignored) {
+      const ignoredBulk = item.container.ignored;
+      const quantity = item.quantity || 1;
+      
+      // Multiple containers of the same type each provide their ignored bulk
+      return total + (ignoredBulk * quantity);
+    }
+    return total;
+  }, 0);
+};
