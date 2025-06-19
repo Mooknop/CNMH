@@ -20,7 +20,7 @@ return pounds;
 export const formatBulk = (bulk) => {
 if (bulk === 0) return '—'; // Negligible
 if (bulk < 1) return 'L'; // Light Bulk
-return bulk.toString(); // Regular Bulk
+return parseFloat(bulk.toFixed(1)).toString();; // Regular Bulk
 };
 
 /**

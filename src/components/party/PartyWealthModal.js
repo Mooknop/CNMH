@@ -97,7 +97,7 @@ const CharacterInventorySection = ({
           <div className="character-wealth-summary">
             <div className="wealth-stat">
               <span className="wealth-label">💰 Total Value</span>
-              <span className="wealth-value">{characterTotals.totalValue} gp</span>
+              <span className="wealth-value">{formatCurrency(characterTotals.totalValue)} gp</span>
             </div>
             <div className="wealth-stat">
               <span className="wealth-label">📋 Items</span>
@@ -172,6 +172,11 @@ const CharacterInventorySection = ({
       )}
     </div>
   );
+};
+
+const formatCurrency = (value) => {
+  // Round to 2 decimal places and remove trailing zeros
+  return parseFloat(value.toFixed(2)).toString();
 };
 
 const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
@@ -253,7 +258,7 @@ const PartyWealthModal = ({ isOpen, onClose, onItemClick, gold }) => {
           <div className="modal-title-section">
             <h2>Party Wealth & Inventory</h2>
             <div className="party-totals">
-              <span className="total-value">💰 {partyTotals.totalValue + (gold || 0)} gp</span>
+              <span className="total-value">💰 {formatCurrency(partyTotals.totalValue + (gold || 0))} gp</span>
               <span className="total-bulk">📦 {partyTotals.totalBulk} Bulk</span>
               <span className="total-items">📋 {partyTotals.totalItems} items</span>
             </div>
