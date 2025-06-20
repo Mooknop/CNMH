@@ -95,62 +95,71 @@
 
 .ability {
   text-align: center;
-  background-color: #f9f9f9;
-  padding: 0.75rem;
-  border-radius: 4px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 0.75rem 0.5rem;
+  border: 1px solid #e9ecef;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-width: 0; /* Prevent grid items from overflowing */
 }
 
 .ability-name {
   font-weight: bold;
-  color: #5e2929;
-  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ability-score {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
 }
 
 .ability-mod {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: bold;
   color: #333;
 }
 
+/* Defenses Section Styling */
 .defenses-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .defense {
   text-align: center;
-  background-color: #f9f9f9;
+  background-color: #f8f9fa;
+  border-radius: 6px;
   padding: 0.75rem;
-  border-radius: 4px;
+  border: 1px solid #e9ecef;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-width: 0; /* Prevent overflow */
+}
+
+.defense-name {
+  font-weight: bold;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.defense-value {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #333;
 }
 
 /* Proficiencies Section Styling */
-.proficiencies-section {
-  padding: 0;
-}
-
-.proficiency-group {
-  margin-bottom: 1.5rem;
-}
-
-.proficiency-group:last-child {
-  margin-bottom: 0;
-}
-
-.proficiency-category {
-  font-size: 1rem;
-  color: #5e2929;
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-}
-
 .proficiency-items {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
 }
 
 .proficiency-item {
@@ -158,32 +167,20 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  border-left: 3px solid #ddd;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-width: 0; /* Prevent overflow */
 }
 
-/* New weapon proficiency styling with attack bonuses */
-.weapon-proficiency {
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.weapon-category {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-
+/* Attack Bonuses */
 .attack-bonuses {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 0.5rem;
-  border-top: 1px solid #eee;
-  padding-top: 0.5rem;
-  margin-top: 0.25rem;
+  justify-content: space-around;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 .bonus-container {
@@ -192,6 +189,7 @@
   align-items: center;
   flex: 1;
   text-align: center;
+  min-width: 80px; /* Minimum width to prevent squishing */
 }
 
 .attack-type {
@@ -210,6 +208,9 @@
 .proficiency-name {
   font-weight: 500;
   color: #444;
+  flex: 1;
+  text-align: left;
+  word-wrap: break-word; /* Handle long proficiency names */
 }
 
 .proficiency-value {
@@ -217,6 +218,7 @@
   font-weight: 600;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
+  white-space: nowrap; /* Keep proficiency labels together */
 }
 
 /* Proficiency level colors */
@@ -245,28 +247,130 @@
   background-color: #f39c12;
 }
 
-/* Media query for smaller screens */
+/* Media query for tablets */
+@media (max-width: 1024px) {
+  .abilities-section {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .ability {
+    padding: 0.6rem 0.4rem;
+  }
+  
+  .ability-name {
+    font-size: 0.8rem;
+  }
+  
+  .ability-mod {
+    font-size: 1.2rem;
+  }
+}
+
+/* Media query for mobile devices */
 @media (max-width: 768px) {
   .abilities-section {
     grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .ability {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .ability-name {
+    font-size: 0.75rem;
+  }
+  
+  .ability-mod {
+    font-size: 1.1rem;
   }
   
   .defenses-section {
     grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .defense {
+    padding: 0.6rem 0.4rem;
+  }
+  
+  .defense-name {
+    font-size: 0.75rem;
+  }
+  
+  .defense-value {
+    font-size: 1.2rem;
   }
   
   .hp-defense {
     flex-direction: row;
+    gap: 0.5rem;
+  }
+  
+  .hp-box, .ac-box {
+    padding: 0.6rem 0.8rem;
+    min-width: 100px;
   }
   
   .proficiency-items {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .proficiency-item {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .proficiency-name {
+    font-size: 0.9rem;
+  }
+  
+  .attack-bonuses {
+    gap: 0.5rem;
+  }
+  
+  .bonus-container {
+    min-width: 70px;
   }
 }
 
+/* Media query for very small mobile devices */
 @media (max-width: 480px) {
+  .abilities-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .ability {
+    padding: 0.4rem 0.2rem;
+  }
+  
+  .ability-name {
+    font-size: 0.7rem;
+  }
+  
+  .ability-mod {
+    font-size: 1rem;
+  }
+  
+  .defenses-section {
+    grid-template-columns: 1fr;
+    gap: 0.4rem;
+  }
+  
+  .defense {
+    padding: 0.5rem;
+  }
+  
   .hp-defense {
     flex-direction: column;
+    gap: 0.4rem;
+  }
+  
+  .hp-box, .ac-box {
+    padding: 0.5rem;
+    min-width: auto;
   }
   
   .stats-tabs {
@@ -275,15 +379,17 @@
   
   .tab-button {
     padding: 0.5rem;
+    font-size: 0.9rem;
   }
   
   .attack-bonuses {
     flex-direction: row;
     justify-content: space-around;
+    gap: 0.25rem;
   }
   
   .bonus-container {
-    min-width: 80px;
+    min-width: 60px;
   }
 
   .attack-type {
@@ -292,5 +398,18 @@
   
   .attack-bonus {
     font-size: 1rem;
+  }
+  
+  .proficiency-item {
+    padding: 0.5rem 0.6rem;
+  }
+  
+  .proficiency-name {
+    font-size: 0.85rem;
+  }
+  
+  .proficiency-value {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
   }
 }
