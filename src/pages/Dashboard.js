@@ -1,47 +1,17 @@
 // src/pages/Dashboard.js
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import PartySummary from '../components/party/PartySummary';
-import PartyWealthModal from '../components/party/PartyWealthModal';
-import ItemModal from '../components/inventory/ItemModal';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const PartyGold = 41;
-
   const { setActiveCharacter } = useContext(CharacterContext);
-
-  const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-
   const navigate = useNavigate();
     
   const navigateTo = (path) => {
     navigate(path);
-  };
-  
-    // Handle opening the party gold modal
-  const handlePartyGoldClick = () => {
-    setIsPartyGoldModalOpen(true);
-  };
-
-  // Handle closing the party gold modal
-  const closePartyGoldModal = () => {
-    setIsPartyGoldModalOpen(false);
-  };
-
-  // Handle opening the item detail modal from party inventory
-  const handleItemClick = (item) => {
-    setSelectedItem(item);
-    setIsItemModalOpen(true);
-  };
-
-  // Handle closing the item detail modal
-  const closeItemModal = () => {
-    setIsItemModalOpen(false);
-    setSelectedItem(null);
   };
 
   return (
@@ -72,7 +42,7 @@ const Dashboard = () => {
 
             <button 
             className="stat-card clickable-stat-card"
-            onClick={handlePartyGoldClick}
+            onClick={() => navigateTo('/party-wealth')}
             title="Click to view party inventory">
               <div className="stat-icon">💰</div>
               <div className="stat-content">
@@ -96,24 +66,6 @@ const Dashboard = () => {
       { <div className="dashboard-links">
         
       </div> }
-
-      {/* Party Gold Modal */}
-      <PartyWealthModal
-        isOpen={isPartyGoldModalOpen}
-        onClose={closePartyGoldModal}
-        onItemClick={handleItemClick}
-        gold={PartyGold}
-      />
-
-      {/* Item Detail Modal */}
-      {selectedItem && (
-        <ItemModal
-          isOpen={isItemModalOpen}
-          onClose={closeItemModal}
-          item={selectedItem}
-          characterColor={selectedItem.characterColor}
-        />
-      )}
 
       {/* for lore time
       <button 

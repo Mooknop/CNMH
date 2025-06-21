@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar';
 import Dashboard from './pages/Dashboard';
 import CharacterSheet from './pages/CharacterSheet';
 import QuestTracker from './pages/QuestTracker';
+import PartyWealth from './pages/PartyWealth';
 import Lore from './pages/Lore';
 import './App.css';
 
@@ -21,6 +22,7 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/character/:id" element={<CharacterSheet />} />
                 <Route path="/quests" element={<QuestTracker />} />
+                <Route path="/party-wealth" element={<PartyWealth />} />
                 <Route path="/lore" element={<Lore />} />
               </Routes>
             </main>

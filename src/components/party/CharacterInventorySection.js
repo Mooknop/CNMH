@@ -67,7 +67,7 @@ const CharacterInventorySection = ({
           {character.name}
         </div>
         <div className="character-class-level">
-          {character.class || 'Unknown Class'} {character.level || 1}
+          {character.class || 'Unknown Class'}
         </div>
       </div>
 

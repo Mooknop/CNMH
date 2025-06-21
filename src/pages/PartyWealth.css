@@ -1,0 +1,251 @@
+/* Party Wealth Page Styles */
+
+.party-wealth-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 60px); /* Account for navbar */
+}
+
+/* Header Section */
+.party-wealth-header {
+  background: linear-gradient(135deg, #5e2929, #7d3c3c);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.party-wealth-header h1 {
+  margin: 0 0 1rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.party-totals {
+  display: flex;
+  gap: 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.total-value,
+.total-bulk,
+.total-items {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* PF2E Rules Section */
+.pf2e-rules-info {
+  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.rules-section h4 {
+  margin: 0 0 0.75rem 0;
+  color: #856404;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rules-section p {
+  margin: 0.5rem 0;
+  color: #856404;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.rules-section strong {
+  color: #5e2929;
+}
+
+/* Filter and Sort Controls */
+.filter-sort-section {
+  display: flex;
+  gap: 1.5rem;
+  align-items: end;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-group,
+.filter-group,
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.search-group label,
+.filter-group label,
+.sort-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.search-input,
+.sort-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus,
+.sort-select:focus {
+  outline: none;
+  border-color: #5e2929;
+  box-shadow: 0 0 0 2px rgba(94, 41, 41, 0.1);
+}
+
+.filter-group label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.filter-group input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Character Inventories Container */
+.character-inventories-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Character Legend */
+.character-legend {
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.character-legend h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.legend-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.legend-character-name {
+  font-weight: 600;
+  color: #495057;
+}
+
+.legend-character-class {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .party-wealth-page {
+    padding: 1.5rem;
+  }
+  
+  .filter-sort-section {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .party-wealth-page {
+    padding: 1rem;
+  }
+  
+  .party-wealth-header {
+    padding: 1.5rem;
+  }
+  
+  .party-wealth-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .party-totals {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    justify-content: center;
+  }
+  
+  .total-value,
+  .total-bulk,
+  .total-items {
+    gap: 0.25rem;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  
+  .filter-sort-section {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .legend-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .party-wealth-header h1 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .party-totals {
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .rules-section p {
+    font-size: 0.85rem;
+  }
+}
