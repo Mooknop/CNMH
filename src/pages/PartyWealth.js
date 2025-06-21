@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useContext } from 'react';
+import ReactDOM from 'react-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import CharacterInventorySection from '../components/party/CharacterInventorySection';
 import ItemModal from '../components/inventory/ItemModal';
@@ -9,6 +10,14 @@ import './PartyWealth.css';
 const formatCurrency = (value) => {
   // Round to 2 decimal places and remove trailing zeros
   return parseFloat(value.toFixed(2)).toString();
+};
+
+// Portal component for the modal
+const ItemModalPortal = ({ children }) => {
+  return ReactDOM.createPortal(
+    children,
+    document.body
+  );
 };
 
 const PartyWealth = () => {
@@ -59,25 +68,23 @@ const PartyWealth = () => {
         
         items.push(itemWithContext);
         
-        // If item is a container, recursively extract its contents
+        // Check if item is a container with contents
         if (item.contents && Array.isArray(item.contents) && item.contents.length > 0) {
-          extractAllItems(item.contents, character, charIndex, item.id, item.name);
+          extractAllItems(
+            item.contents, 
+            character, 
+            charIndex, 
+            `container-${itemIndex}`,
+            item.name
+          );
         }
       });
     };
     
     // Extract items from each character
     characters.forEach((character, charIndex) => {
-      // Main inventory
-      extractAllItems(character.inventory || [], character, charIndex);
-      
-      // Containers (if stored separately)
-      if (character.containers && Array.isArray(character.containers)) {
-        character.containers.forEach((container) => {
-          if (container.contents && Array.isArray(container.contents)) {
-            extractAllItems(container.contents, character, charIndex, container.id, container.name);
-          }
-        });
+      if (character.inventory) {
+        extractAllItems(character.inventory, character, charIndex);
       }
     });
     
@@ -98,83 +105,89 @@ const PartyWealth = () => {
   }, [allPartyItems, showContainerItems]);
 
   return (
-    <div className="party-wealth-page">
-      <div className="party-wealth-header">
-        <h1>Party Wealth & Inventory</h1>
-        <div className="party-totals">
-          <span className="total-value">💰 {formatCurrency(partyTotals.totalValue + PartyGold)} gp</span>
-          <span className="total-bulk">📦 {formatBulk(partyTotals.totalBulk)} Bulk</span>
-          <span className="total-items">📋 {partyTotals.totalItems} items</span>
+    <>
+      <div className="party-wealth-page">
+        <div className="party-wealth-content">
+          <div className="party-wealth-header">
+            <h1>Party Wealth & Inventory</h1>
+            <div className="party-totals">
+              <span className="total-value">💰 {formatCurrency(partyTotals.totalValue + PartyGold)} gp</span>
+              <span className="total-bulk">📦 {formatBulk(partyTotals.totalBulk)} Bulk</span>
+              <span className="total-items">📋 {partyTotals.totalItems} items</span>
+            </div>
+          </div>
+
+          {/* Filter and Sort Controls */}
+          <div className="filter-sort-section">
+            <div className="search-group">
+              <label htmlFor="search-input">🔍 Search Items</label>
+              <input
+                id="search-input"
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Filter by item name..."
+                className="search-input"
+              />
+            </div>
+
+            <div className="filter-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={showContainerItems}
+                  onChange={(e) => setShowContainerItems(e.target.checked)}
+                />
+                Show items in containers
+              </label>
+            </div>
+
+            <div className="sort-group">
+              <label htmlFor="sort-select">Sort by</label>
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-select"
+              >
+                <option value="name">Item Name</option>
+                <option value="bulk">Bulk (Heaviest First)</option>
+                <option value="value">Value (Highest First)</option>
+                <option value="location">Storage Location</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Character Inventory Sections */}
+          <div className="character-inventories-container">
+            {characters.map((character, index) => (
+              <CharacterInventorySection
+                key={character.id}
+                character={character}
+                characterIndex={index}
+                items={allPartyItems}
+                onItemClick={handleItemClick}
+                sortBy={sortBy}
+                searchTerm={searchTerm}
+                showContainerItems={showContainerItems}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Filter and Sort Controls */}
-      <div className="filter-sort-section">
-        <div className="search-group">
-          <label htmlFor="search-input">🔍 Search Items</label>
-          <input
-            id="search-input"
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Filter by item name..."
-            className="search-input"
-          />
-        </div>
-
-        <div className="filter-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={showContainerItems}
-              onChange={(e) => setShowContainerItems(e.target.checked)}
-            />
-            Show items in containers
-          </label>
-        </div>
-
-        <div className="sort-group">
-          <label htmlFor="sort-select">Sort by</label>
-          <select
-            id="sort-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
-          >
-            <option value="name">Item Name</option>
-            <option value="bulk">Bulk (Heaviest First)</option>
-            <option value="value">Value (Highest First)</option>
-            <option value="location">Storage Location</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Character Inventory Sections */}
-      <div className="character-inventories-container">
-        {characters.map((character, index) => (
-          <CharacterInventorySection
-            key={character.id}
-            character={character}
-            characterIndex={index}
-            items={allPartyItems}
-            onItemClick={handleItemClick}
-            sortBy={sortBy}
-            searchTerm={searchTerm}
-            showContainerItems={showContainerItems}
-          />
-        ))}
-      </div>
-
-      {/* Item Detail Modal */}
+      {/* Item Detail Modal - Rendered through Portal */}
       {selectedItem && (
-        <ItemModal
-          isOpen={isItemModalOpen}
-          onClose={closeItemModal}
-          item={selectedItem}
-          characterColor={selectedItem.characterColor}
-        />
+        <ItemModalPortal>
+          <ItemModal
+            isOpen={isItemModalOpen}
+            onClose={closeItemModal}
+            item={selectedItem}
+            characterColor={selectedItem.characterColor}
+          />
+        </ItemModalPortal>
       )}
-    </div>
+    </>
   );
 };
 
