@@ -1,27 +1,63 @@
-/* Party Wealth Page Styles */
+/* Party Wealth Page Styles with Background and Transparency */
 
 .party-wealth-page {
-  max-width: 1400px;
-  margin: 0 auto;
+  position: fixed;
+  top: 60px; /* Account for navbar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('../../Background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   padding: 2rem;
-  background-color: #f8f9fa;
-  min-height: calc(100vh - 60px); /* Account for navbar */
+  overflow-y: auto;
 }
 
-/* Header Section */
+/* Dark overlay effect like Dashboard */
+.party-wealth-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  z-index: 1;
+}
+
+/* Ensure all content is above the overlay */
+.party-wealth-page > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Center the content */
+.party-wealth-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header Section with transparency */
 .party-wealth-header {
-  background: linear-gradient(135deg, #5e2929, #7d3c3c);
+  background: rgba(94, 41, 41, 0.6);
   color: white;
   padding: 2rem;
   border-radius: 12px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
 }
 
 .party-wealth-header h1 {
   margin: 0 0 1rem 0;
   font-size: 2rem;
   font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .party-totals {
@@ -39,13 +75,15 @@
   gap: 0.5rem;
 }
 
-/* PF2E Rules Section */
+/* PF2E Rules Section with transparency */
 .pf2e-rules-info {
-  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-  border: 1px solid #ffeaa7;
+  background: rgba(255, 243, 205, 0.9);
+  border: 1px solid rgba(255, 234, 167, 0.8);
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(5px);
 }
 
 .rules-section h4 {
@@ -68,16 +106,18 @@
   color: #5e2929;
 }
 
-/* Filter and Sort Controls */
+/* Filter and Sort Controls with transparency */
 .filter-sort-section {
   display: flex;
   gap: 1.5rem;
   align-items: end;
   padding: 1.5rem;
-  background-color: white;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
 }
 
 .search-group,
@@ -101,7 +141,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid #ced4da;
   border-radius: 4px;
-  background-color: white;
+  background: rgba(255, 255, 255, 0.95);
   font-size: 0.9rem;
   transition: border-color 0.2s ease;
 }
@@ -133,13 +173,15 @@
   margin-bottom: 2rem;
 }
 
-/* Character Legend */
+/* Character Legend with transparency */
 .character-legend {
-  background-color: white;
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid rgba(233, 236, 239, 0.8);
   padding: 1.5rem;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(5px);
 }
 
 .character-legend h4 {
@@ -159,9 +201,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem;
-  background-color: #f8f9fa;
+  background: rgba(248, 249, 250, 0.9);
   border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border: 1px solid rgba(233, 236, 239, 0.8);
 }
 
 .legend-color-dot {
@@ -181,6 +223,87 @@
 .legend-character-class {
   color: #6c757d;
   font-size: 0.85rem;
+}
+
+/* Update character inventory sections to be transparent */
+.character-inventory-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.character-inventory-header {
+  background: rgba(245, 245, 245, 0.9);
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(233, 236, 239, 0.8);
+}
+
+.character-inventory-table-container {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.character-inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.character-inventory-table th {
+  background: rgba(94, 41, 41, 0.9);
+  color: white;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+}
+
+.character-inventory-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(233, 236, 239, 0.6);
+}
+
+.inventory-row:hover {
+  background: rgba(248, 249, 250, 0.9);
+}
+
+/* Container items styling with transparency */
+.container-item {
+  margin-top: 2rem;
+  border: 1px solid rgba(238, 238, 238, 0.8);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(249, 249, 249, 0.9);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.container-header:hover {
+  background: rgba(240, 240, 240, 0.9);
+}
+
+.container-contents {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* Modal enhancements for background */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
 }
 
 /* Responsive Design */
