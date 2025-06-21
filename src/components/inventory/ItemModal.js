@@ -1,6 +1,7 @@
 // src/components/inventory/ItemModal.js
 import React from 'react';
 import TraitTag from '../shared/TraitTag';
+import { formatBulk, poundsToBulk } from '../../utils/InventoryUtils';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
@@ -66,31 +67,27 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                     <span className="item-detail-value">{item.shield.hardness}</span>
                   </div>
                 )}
-                {item.shield.health !== undefined && (
+                {item.shield.hp !== undefined && (
                   <div className="item-detail">
                     <span className="item-detail-label">Hit Points</span>
-                    <span className="item-detail-value">{item.shield.health}</span>
+                    <span className="item-detail-value">{item.shield.hp}</span>
                   </div>
                 )}
-                {item.shield.breakThreshold !== undefined && (
+                {item.shield.broken_threshold !== undefined && (
                   <div className="item-detail">
-                    <span className="item-detail-label">Break Threshold</span>
-                    <span className="item-detail-value">{item.shield.breakThreshold}</span>
-                  </div>
-                )}
-                {item.shield.speedPenalty !== undefined && (
-                  <div className="item-detail">
-                    <span className="item-detail-label">Speed Penalty</span>
-                    <span className="item-detail-value">-{item.shield.speedPenalty} ft.</span>
+                    <span className="item-detail-label">Broken Threshold</span>
+                    <span className="item-detail-value">{item.shield.broken_threshold}</span>
                   </div>
                 )}
               </div>
-              <div className="shield-info" style={{ marginTop: '0.5rem', fontSize: '0.9rem', fontStyle: 'italic', color: '#666' }}>
-                When you use the Shield Block reaction, your shield prevents you from taking damage equal to its Hardness. Your shield and you take any remaining damage, potentially breaking or destroying the shield if the damage exceeds its Break Threshold.
+              <div className="shield-info">
+                <strong>Shield Rules:</strong> Raise this shield for +{item.shield.bonus || 0} AC. 
+                It has {item.shield.hardness || 0} Hardness and {item.shield.hp || 0} HP.
               </div>
             </div>
           )}
           
+          {/* Display item description if it exists */}
           {item.description && (
             <div className="item-description">
               <h3>Description</h3>
@@ -108,8 +105,8 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                     <div className="action-header">
                       <span className="action-name">{action.name}</span>
                       <div className="action-count">
-                        {Array(action.actionCount || 1).fill().map((_, i) => (
-                          <span key={i} className="action-icon" style={{ color: themeColor }}>●</span>
+                        {action.actionCount && Array.from({ length: action.actionCount }, (_, i) => (
+                          <span key={i} className="action-icon" style={{ color: themeColor }}>⚬</span>
                         ))}
                       </div>
                     </div>
@@ -167,7 +164,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                   <div key={index} className="item-free-action">
                     <div className="free-action-header">
                       <span className="free-action-name">{freeAction.name}</span>
-                      <div className="free-action-icon" style={{ color: themeColor }}>⟡</div>
+                      <div className="free-action-icon" style={{ color: themeColor }}>◆</div>
                     </div>
                     {freeAction.traits && freeAction.traits.length > 0 && (
                       <div className="free-action-traits">
@@ -194,6 +191,14 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
             <div className="item-strikes">
               <h3>Strikes</h3>
               <div className="strike-details">
+                <div className="strike-detail">
+                  <span className="strike-detail-label">Attack Bonus</span>
+                  <span className="strike-detail-value">
+                    {Array.isArray(item.strikes) 
+                      ? item.strikes[0].bonus || "-" 
+                      : item.strikes.bonus || "-"}
+                  </span>
+                </div>
                 <div className="strike-detail">
                   <span className="strike-detail-label">Type</span>
                   <span className="strike-detail-value">
@@ -231,7 +236,8 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                 {((Array.isArray(item.strikes) && item.strikes[0].traits) || 
                   (!Array.isArray(item.strikes) && item.strikes.traits)) && (
                   <div className="strike-traits full-width">
-                    {(Array.isArray(item.strikes) ? item.strikes[0].traits : item.strikes.traits).map((trait, i) => (
+                    {(Array.isArray(item.strikes) ? 
+                      item.strikes[0].traits : item.strikes.traits).map((trait, i) => (
                       <TraitTag key={i} trait={trait} />
                     ))}
                   </div>
@@ -289,19 +295,6 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
       </div>
     </div>
   );
-};
-
-// Helper functions for bulk formatting
-const poundsToBulk = (pounds) => {
-  if (!pounds || pounds < 0.1) return 0; // Negligible Bulk
-  if (pounds < 1) return 0.1; // Light (L) Bulk
-  return Math.ceil(pounds / 10); // 1 Bulk is roughly 10 pounds
-};
-
-const formatBulk = (bulk) => {
-  if (bulk === 0) return '—'; // Negligible
-  if (bulk < 1) return 'L'; // Light Bulk
-  return bulk.toString(); // Regular Bulk
 };
 
 export default ItemModal;
