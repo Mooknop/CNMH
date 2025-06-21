@@ -75,44 +75,13 @@
   gap: 0.5rem;
 }
 
-/* PF2E Rules Section with transparency */
-.pf2e-rules-info {
-  background: rgba(255, 243, 205, 0.9);
-  border: 1px solid rgba(255, 234, 167, 0.8);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(5px);
-}
-
-.rules-section h4 {
-  margin: 0 0 0.75rem 0;
-  color: #856404;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.rules-section p {
-  margin: 0.5rem 0;
-  color: #856404;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-.rules-section strong {
-  color: #5e2929;
-}
-
 /* Filter and Sort Controls with transparency */
 .filter-sort-section {
   display: flex;
   gap: 1.5rem;
   align-items: end;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 8px;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -141,7 +110,7 @@
   padding: 0.5rem 0.75rem;
   border: 1px solid #ced4da;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.45);
   font-size: 0.9rem;
   transition: border-color 0.2s ease;
 }
@@ -173,61 +142,9 @@
   margin-bottom: 2rem;
 }
 
-/* Character Legend with transparency */
-.character-legend {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 8px;
-  border: 1px solid rgba(233, 236, 239, 0.8);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(5px);
-}
-
-.character-legend h4 {
-  margin: 0 0 1rem 0;
-  color: #495057;
-  font-size: 1rem;
-}
-
-.legend-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background: rgba(248, 249, 250, 0.9);
-  border-radius: 6px;
-  border: 1px solid rgba(233, 236, 239, 0.8);
-}
-
-.legend-color-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  border: 2px solid white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.legend-character-name {
-  font-weight: 600;
-  color: #495057;
-}
-
-.legend-character-class {
-  color: #6c757d;
-  font-size: 0.85rem;
-}
-
 /* Update character inventory sections to be transparent */
 .character-inventory-section {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(227, 110, 110, 0.65);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -236,13 +153,13 @@
 }
 
 .character-inventory-header {
-  background: rgba(245, 245, 245, 0.9);
+  background: rgba(245, 245, 245, 0.6);
   padding: 1.5rem;
   border-bottom: 1px solid rgba(233, 236, 239, 0.8);
 }
 
 .character-inventory-table-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .character-inventory-table {
@@ -251,7 +168,7 @@
 }
 
 .character-inventory-table th {
-  background: rgba(94, 41, 41, 0.9);
+  background: rgba(94, 41, 41, 0.6);
   color: white;
   text-align: left;
   padding: 0.75rem 1rem;
@@ -264,7 +181,7 @@
 }
 
 .inventory-row:hover {
-  background: rgba(248, 249, 250, 0.9);
+  background: rgba(248, 249, 250, 0.6);
 }
 
 /* Container items styling with transparency */
@@ -356,8 +273,162 @@
     grid-template-columns: 1fr;
   }
 }
+/* Missing Character Inventory Section Styles for PartyWealth.css */
+
+/* Character Section Header Styles */
+.character-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+.character-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.character-name-large {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.character-class-level {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.7);
+  font-weight: 500;
+}
+
+/* Character Wealth Summary Styles */
+.character-wealth-summary {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.wealth-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 70px;
+}
+
+.wealth-label {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.wealth-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+  white-space: nowrap;
+}
+
+/* Empty Character Inventory Styles */
+.empty-character-inventory {
+  text-align: center;
+  padding: 2rem;
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(248, 249, 250, 0.9);
+  border-radius: 8px;
+  margin: 1rem;
+}
+
+.empty-character-inventory p {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.filter-hint {
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-style: italic;
+}
+
+/* Table Cell Specific Styles */
+.item-cell {
+  font-weight: 500;
+}
+
+.location-cell {
+  font-size: 0.9rem;
+}
+
+.container-location {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.inventory-location {
+  color: #5e2929;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.quantity-cell,
+.bulk-cell {
+  text-align: center;
+  font-weight: 500;
+}
+
+.value-cell {
+  text-align: right;
+  font-weight: 600;
+  color: #5e2929;
+}
+
+/* Responsive adjustments for character inventory sections */
+@media (max-width: 768px) {
+  .character-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .character-wealth-summary {
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-around;
+  }
+  
+  .wealth-stat {
+    min-width: 60px;
+  }
+  
+  .wealth-label {
+    font-size: 0.75rem;
+  }
+  
+  .wealth-value {
+    font-size: 0.9rem;
+  }
+}
 
 @media (max-width: 480px) {
+  .character-name-large {
+    font-size: 1.1rem;
+  }
+  
+  .character-class-level {
+    font-size: 0.8rem;
+  }
+  
+  .character-wealth-summary {
+    gap: 0.75rem;
+  }
+  
+  .wealth-stat {
+    min-width: 50px;
+  }
+
   .party-wealth-header h1 {
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
