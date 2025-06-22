@@ -111,8 +111,9 @@ const PartyWealth = () => {
           <div className="party-wealth-header">
             <h1>Party Wealth & Inventory</h1>
             <div className="party-totals">
-              <span className="total-value">💰 {formatCurrency(partyTotals.totalValue + PartyGold)} gp</span>
-              <span className="total-bulk">📦 {formatBulk(partyTotals.totalBulk)} Bulk</span>
+              <span className="total-value">💰 {formatCurrency(PartyGold)} gp</span>
+              <span className="total-value">📦 {formatCurrency(partyTotals.totalValue)} gp</span>
+              <span className="total-bulk">⚖️ {formatBulk(partyTotals.totalBulk)} Bulk</span>
               <span className="total-items">📋 {partyTotals.totalItems} items</span>
             </div>
           </div>
@@ -132,14 +133,14 @@ const PartyWealth = () => {
             </div>
 
             <div className="filter-group">
-              <label>
+              {/* <label>
                 <input
                   type="checkbox"
                   checked={showContainerItems}
                   onChange={(e) => setShowContainerItems(e.target.checked)}
                 />
                 Show items in containers
-              </label>
+              </label> */}
             </div>
 
             <div className="sort-group">

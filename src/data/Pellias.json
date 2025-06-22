@@ -232,7 +232,19 @@
       "name": "Murmured Prayer",
       "level": 4,
       "source": "Skill",
-      "description": "A prayer under your breath to the appropriate god can guide you in times of trouble. You can cast Guidance as a divine innate cantrip. Once per day, you can utter a prayer to a particularly relevant deity as part of casting Guidance, and the bonus increases to a +2. You do not need to follow the deity to ask for their guidance, but if their goals do not align with you own, they may refuse to aid you. When you are Legendary in Religion, you can utter a prayer once per hour instead of daily."
+      "description": "A prayer under your breath to the appropriate god can guide you in times of trouble. You can cast Guidance as a divine innate cantrip. Once per day, you can utter a prayer to a particularly relevant deity as part of casting Guidance, and the bonus increases to a +2. You do not need to follow the deity to ask for their guidance, but if their goals do not align with you own, they may refuse to aid you. When you are Legendary in Religion, you can utter a prayer once per hour instead of daily.",
+      "innate":[
+        {
+          "id": "spell-3",
+          "name": "Guidance",
+          "level": 0,
+          "baseLevel": 1,
+          "traits": ["Cantrip","Concentrate"],
+          "actions": "One Action",
+          "range": "30ft",
+          "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour."
+        }
+      ]
     }
   ],
   "inventory": [
@@ -471,16 +483,6 @@
         "heightened": {
             "+2": "The extra damage increases by 1d4."
           }
-      },
-      {
-        "id": "spell-3",
-        "name": "Guidance",
-        "level": 1,
-        "baseLevel": 1,
-        "traits": ["Cantrip","Concentrate"],
-        "actions": "One Action",
-        "range": "30ft",
-        "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour."
       }
     ],
     "focus_points": 2,
