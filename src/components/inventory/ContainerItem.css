@@ -61,7 +61,7 @@
   /* Container contents styling */
   .container-contents {
     padding: 1rem;
-    background-color: #fff;
+    background: rgba(255, 255, 255, 0.5);
   }
   
   .contents-table {

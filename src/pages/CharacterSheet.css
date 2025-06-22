@@ -215,17 +215,16 @@
 
 /* Tab Content Container with transparency */
 .tab-content {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(5px);
   padding: 1.25rem;
 }
 
 /* Tabs Container with transparency */
 .character-tabs {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -247,7 +246,7 @@
 
 .ability {
   text-align: center;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.6);
   padding: 0.75rem;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -309,7 +308,7 @@
 /* Bulk Management Styles */
 .bulk-management {
   margin-bottom: 2rem;
-  background: rgba(245, 245, 245, 0.95);
+  background: rgba(245, 245, 245, 0.6);
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -361,7 +360,7 @@
 
 /* Inventory List */
 .inventory-list {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -390,7 +389,7 @@
 .inventory-list td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid rgba(238, 238, 238, 0.8);
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .item-name {

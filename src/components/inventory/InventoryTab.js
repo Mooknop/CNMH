@@ -5,7 +5,7 @@ import {
   calculateItemsBulk, 
   poundsToBulk 
 } from '../../utils/InventoryUtils';
-import { formatBulk } from '../../utils/CharacterUtils';
+import { formatBulk } from '../../utils/InventoryUtils';
 import CraftingModal from './CraftingModal';
 
 /**

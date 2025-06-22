@@ -40,7 +40,6 @@ const ThaumaturgeImplementsDisplay = ({ character, themeColor }) => {
                 borderLeft: `4px solid ${themeColor}`, 
                 padding: '1rem',
                 marginBottom: '1rem',
-                backgroundColor: '#f9f9f9',
                 borderRadius: '0 6px 6px 0'
               }}>
                 <h4 style={{ color: themeColor, marginTop: 0 }}>{implement.name}</h4>

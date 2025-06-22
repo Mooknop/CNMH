@@ -59,10 +59,8 @@
 
 /* Content container */
 .section-content {
-  background-color: white;
   border-radius: 8px;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* Grid layouts for each section */
@@ -80,7 +78,7 @@
 .action-card .collapsible-header,
 .reaction-card .collapsible-header,
 .free-action-card .collapsible-header {
-  background-color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .strike-card .collapsible-header h3,
@@ -242,7 +240,7 @@
 }
 
 .thaumaturge-description {
-  background-color: #f3f4f6;
+  background: rgba(255, 255, 255, 0.6);
   border-left: 3px solid #5e2929;
   padding: 1rem;
   border-radius: 0 4px 4px 0;
@@ -260,7 +258,7 @@
 
 .implement-card,
 .exploit-card {
-  background-color: white;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: 0 6px 6px 0;
   padding: 1.25rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);

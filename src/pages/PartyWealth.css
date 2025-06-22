@@ -191,7 +191,7 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .container-header {
@@ -210,7 +210,7 @@
 
 .container-contents {
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Modal enhancements for background */

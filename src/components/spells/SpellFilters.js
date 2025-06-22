@@ -24,47 +24,55 @@ const SpellFilters = ({
   return (
     <div className="spell-filters-container">
       {/* Spell rank filter */}
-      {rankList.length > 0 && (
-        <div className="spell-level-tabs">
-          {rankList.map(rank => (
-            <button
-              key={rank}
-              className={`spell-level-tab ${activeSpellRank === rank ? 'active' : ''}`}
-              onClick={() => setActiveSpellRank(rank)}
-              style={{ 
-                backgroundColor: activeSpellRank === rank ? themeColor : '',
-                borderColor: activeSpellRank === rank ? themeColor : ''
-              }}
-            >
-              {formatSpellRank(rank)}
-            </button>
-          ))}
-        </div>
-      )}
-      
-      {/* Defense type filter */}
-      {defenseTypes.length > 1 && (
-        <div className="defense-filter">
-          <span className="filter-label" style={{ color: themeColor }}>
-            Filters:
-          </span>
-          <div className="defense-buttons">
-            {defenseTypes.map(defense => (
-              <button
-                key={defense}
-                className={`defense-filter-btn ${defenseFilter === defense ? 'active' : ''}`}
-                onClick={() => setDefenseFilter(defense)}
-                style={{ 
-                  backgroundColor: defenseFilter === defense ? themeColor : '',
-                  borderColor: defenseFilter === defense ? themeColor : ''
-                }}
-              >
-                {defense === 'all' ? 'All' : defense === 'none' ? 'None' : defense}
-              </button>
-            ))}
+      {(rankList.length > 2 || defenseTypes.length > 2 )&& (<div className="defense-filter">
+        {rankList.length > 2 && (
+          <div>
+            <span className="filter-label" style={{ color: themeColor }}>
+              Spell Rank:
+            </span>
+            <div className="spell-level-tabs">
+              {rankList.map(rank => (
+                <button
+                  key={rank}
+                  className={`spell-level-tab ${activeSpellRank === rank ? 'active' : ''}`}
+                  onClick={() => setActiveSpellRank(rank)}
+                  style={{ 
+                    backgroundColor: activeSpellRank === rank ? themeColor : '',
+                    borderColor: activeSpellRank === rank ? themeColor : ''
+                  }}
+                >
+                  {formatSpellRank(rank)}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      
+        {/* Defense type filter */}
+        {defenseTypes.length > 2 && (
+          <div>
+            <span className="filter-label" style={{ color: themeColor }}>
+              Defense:
+            </span>
+            <div className="defense-buttons">
+              {defenseTypes.map(defense => (
+                <button
+                  key={defense}
+                  className={`defense-filter-btn ${defenseFilter === defense ? 'active' : ''}`}
+                  onClick={() => setDefenseFilter(defense)}
+                  style={{ 
+                    backgroundColor: defenseFilter === defense ? themeColor : '',
+                    borderColor: defenseFilter === defense ? themeColor : ''
+                  }}
+                >
+                  {defense === 'all' ? 'All' : defense === 'none' ? 'None' : defense}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )}
     </div>
   );
 };
