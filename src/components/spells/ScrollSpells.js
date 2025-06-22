@@ -26,16 +26,6 @@ const ScrollSpells = ({ spells, themeColor, characterLevel, defenseFilter, activ
           of their magical tradition.
         </p>
         
-        {/* Scroll usage rules section */}
-        <div className="bloodline-info">
-          <h3 style={{ color: themeColor }}>Using Scrolls</h3>
-          <p>
-            To cast a spell from a scroll, you must hold the scroll in one hand and activate it 
-            with a Cast a Spell activity. A scroll can be used only once, and it's consumed when 
-            the spell is cast or the scroll is destroyed.
-          </p>
-        </div>
-        
         {filteredSpells.length > 0 ? (
           <div className="scrolls-spells-list">
             <div className="spells-grid">

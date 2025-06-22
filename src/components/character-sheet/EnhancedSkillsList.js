@@ -245,7 +245,6 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
   
   return (
     <div className="enhanced-skills-list">
-      <h2 style={{ color: themeColor }}>Skills</h2>
       
       {/* Display Untrained Improvisation notice if character has it */}
       {hasUntrainedImprovisation && (

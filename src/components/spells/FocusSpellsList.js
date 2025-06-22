@@ -125,9 +125,6 @@ const FocusSpellsList = ({ character, characterColor }) => {
     <div className="focus-spells-list">
       <h2 style={{ color: themeColor }}>{focusSpellsLabel}</h2>
       
-      {/* Bloodline information for sorcerers */}
-      {hasBloodline() && renderBloodlineInfo()}
-      
       {/* Focus Points Display */}
       {focusPoints !== null && (
         <div className="focus-points-display" style={{ borderColor: themeColor }}>
@@ -269,6 +266,8 @@ const FocusSpellsList = ({ character, characterColor }) => {
           </div>
         )}
       </div>
+      {/* Bloodline information for sorcerers */}
+      {hasBloodline() && renderBloodlineInfo()}
     </div>
   );
 };

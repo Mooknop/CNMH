@@ -360,24 +360,6 @@ const SpellsList = ({ character, characterColor }) => {
     return 'Focus Spells';
   };
   
-  // Show bloodline information if character has a bloodline
-  const renderBloodlineInfo = () => {
-    if (!hasBloodline) return null;
-    
-    const { name, description } = spellcasting.bloodline;
-    
-    return (
-      <div className="bloodline-info">
-        <h3 style={{ color: themeColor }}>{name} Bloodline</h3>
-        <p className="bloodline-description">{description}</p>
-        <div className="bloodline-magic">
-          <span className="bloodline-magic-label">Imperial Blood Magic:</span>
-          <span className="bloodline-magic-effect">Whenever you cast a bloodline spell passed down from your ancestor, you choose one blood magic effect you know to benefit from.</span>
-        </div>
-      </div>
-    );
-  };
-  
   return (
     <div className="spells-list">
       {/* Spellcasting statistics - only show if character has spellcasting */}
@@ -387,9 +369,6 @@ const SpellsList = ({ character, characterColor }) => {
           themeColor={themeColor} 
         />
       )}
-      
-      {/* Bloodline information */}
-      {hasBloodline && renderBloodlineInfo()}
       
       {/* View mode toggle */}
       <ViewModeToggle 
