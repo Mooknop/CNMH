@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/CNMH/static/css/main.8e727790.css",
-    "main.js": "/CNMH/static/js/main.fc9f6470.js",
+    "main.js": "/CNMH/static/js/main.d470ec62.js",
     "static/js/453.af45b7ff.chunk.js": "/CNMH/static/js/453.af45b7ff.chunk.js",
     "static/media/Background.png": "/CNMH/static/media/Background.f702801ea4bbda2d889a.png",
     "index.html": "/CNMH/index.html",
     "main.8e727790.css.map": "/CNMH/static/css/main.8e727790.css.map",
-    "main.fc9f6470.js.map": "/CNMH/static/js/main.fc9f6470.js.map",
+    "main.d470ec62.js.map": "/CNMH/static/js/main.d470ec62.js.map",
     "453.af45b7ff.chunk.js.map": "/CNMH/static/js/453.af45b7ff.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.8e727790.css",
-    "static/js/main.fc9f6470.js"
+    "static/js/main.d470ec62.js"
   ]
 }
