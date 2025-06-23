@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Campaign Start",
+    "date": { "year": 4724, "month": 0, "day": 15 },
+    "type": "campaign",
+    "description": "The adventure begins in Osprey Cove"
+  },
+  {
+    "title": "Xmas",
+    "date": { "year": 4724, "month": 0, "day": 28 },
+    "type": "holiday",
+    "description": "Party arrives in Dis, Hell"
+  },
+  {
+    "title": "Xin-Edasseril Rises Again",
+    "date": { "year": 4724, "month": 0, "day": 28 },
+    "type": "world event",
+    "description": "Party arrives in Dis, Hell"
+  }
+]
