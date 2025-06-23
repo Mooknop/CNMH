@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 1050; /* Increased from 1000 to be above navbar */
   }
   
   .familiar-modal {
@@ -22,6 +22,8 @@
     max-height: 90vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1051; /* Ensure modal content is above overlay */
   }
   
   .familiar-modal-header {
@@ -31,6 +33,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    z-index: 1052; /* Ensure header is above everything */
   }
   
   .familiar-modal-header h2 {
@@ -174,6 +178,12 @@
     gap: 1rem;
   }
   
+  .familiar-ability {
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+  
   .familiar-ability h5 {
     margin: 0 0 0.5rem;
     font-size: 1rem;
@@ -205,10 +215,26 @@
     .defense-label {
       margin-bottom: 0;
     }
+    
+    /* Additional mobile spacing for navbar clearance */
+    .familiar-modal {
+      margin-top: 20px; /* Add some top margin on mobile to clear navbar better */
+    }
   }
   
   @media (max-width: 480px) {
     .ability-scores {
       grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .familiar-traits {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    /* Ensure adequate spacing from navbar on very small screens */
+    .familiar-modal {
+      margin-top: 30px;
+      max-height: calc(90vh - 30px);
     }
   }
