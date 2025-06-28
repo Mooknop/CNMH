@@ -33,9 +33,9 @@ export const GameDateContext = createContext();
 export const GameDateProvider = ({ children }) => {
   // Initial game date - 21st of Desnus (month index 4), 4725 AR
   const [gameDate, setGameDate] = useState({
-    day: 21,
-    month: 4, // 0-indexed
-    year: 4725
+    day: 5,
+    month: 8, // 0-indexed
+    year: 4724
   });
 
   /**
