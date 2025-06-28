@@ -1,18 +1,24 @@
 [
   {
+    "title": "Blu's Birthday",
+    "date": { "month": 0, "day": 25 },
+    "type": "personal",
+    "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
+  },
+  {
     "title": "A Message in the Night",
     "date": { "year": 4724, "month": 7, "day": 27 },
     "type": "campaign",
     "description": "A dead Gorumite asks for help with his dying breath; Iron Harbor is in danger."
   },
   {
-    "title": "Xmas",
+    "title": "Elder Ordwi Found",
     "date": { "year": 4724, "month": 7, "day": 31 },
     "type": "campaign",
     "description": "The party finds Elder Ordwi"
   },
   {
-    "title": "Xin-Edasseril Rises Again",
+    "title": "Xar-Azmak Defeated",
     "date": { "year": 4724, "month": 8, "day": 1 },
     "type": "world event",
     "description": "Party arrives in Dis, Hell"

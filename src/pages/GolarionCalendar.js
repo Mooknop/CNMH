@@ -30,12 +30,24 @@ const GolarionCalendar = () => {
     return eventType ? eventType.replace(/\s+/g, '-') : 'default';
   };
   const getEventsForDate = (year, month, day) => {
-    return timelineData.filter(event => 
-      event.date.year === year && 
-      event.date.month === month && 
-      event.date.day === day
-    );
-  };
+  return timelineData.filter(event => {
+    // Check for exact date match (specific year events)
+    if (event.date.year && event.date.year === year && 
+        event.date.month === month && 
+        event.date.day === day) {
+      return true;
+    }
+    
+    // Check for annual events (events without a year that recur every year)
+    if (!event.date.year && 
+        event.date.month === month && 
+        event.date.day === day) {
+      return true;
+    }
+    
+    return false;
+  });
+};
 
   // Handle day click
   const handleDayClick = (day) => {
