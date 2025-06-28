@@ -24,13 +24,16 @@ const Dashboard = () => {
       {
         <div className="content-section">
           <div className="stats-grid">            
-            <div className="stat-card">
+            <button 
+            className="stat-card clickable-stat-card party-level-stat"
+            onClick={() => navigateTo('/party-summary')}
+            title="Click to view detailed party summary">
               <div className="stat-icon">🌟</div>
               <div className="stat-content">
                 <div className="stat-label">Party Level</div>
                 <div className="stat-number">4</div>
               </div>
-            </div>
+          </button>
             
             <div className="stat-card">
               <div className="stat-icon">🗺️</div>
@@ -72,8 +75,8 @@ const Dashboard = () => {
           </div>
         </div>
         }
-      {/* Party Summary Section */}
-      <PartySummary />
+      {/* Party Summary Section
+      <PartySummary /> */}
       
       { <div className="dashboard-links">
         

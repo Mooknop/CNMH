@@ -10,6 +10,7 @@ import QuestTracker from './pages/QuestTracker';
 import PartyWealth from './pages/PartyWealth';
 import Lore from './pages/Lore';
 import GolarionCalendar from './pages/GolarionCalendar';
+import PartySummary from './components/party/PartySummary';
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
                   <Route path="/party-wealth" element={<PartyWealth />} />
                   <Route path="/lore" element={<Lore />} />
                   <Route path="/calendar" element={<GolarionCalendar />} />
+                  <Route path="/party-summary" element={<PartySummary />} />
                 </Routes>
               </main>
             </div>
