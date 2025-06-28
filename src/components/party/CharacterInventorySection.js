@@ -31,11 +31,6 @@ const CharacterInventorySection = ({
         return (b.totalBulk || 0) - (a.totalBulk || 0);
       case 'value':
         return (b.totalValue || 0) - (a.totalValue || 0);
-      case 'location':
-        if (a.storageLocation !== b.storageLocation) {
-          return a.storageLocation.localeCompare(b.storageLocation);
-        }
-        return a.name.localeCompare(b.name);
       case 'name':
       default:
         return a.name.localeCompare(b.name);
@@ -106,7 +101,6 @@ const CharacterInventorySection = ({
             <thead>
               <tr>
                 <th className="item-header">Item</th>
-                <th className="location-header">Location</th>
                 <th className="quantity-header">Qty</th>
                 <th className="bulk-header">Bulk</th>
                 <th className="value-header">Value</th>
@@ -122,15 +116,6 @@ const CharacterInventorySection = ({
                 >
                   <td className="item-cell">
                     <div className="item-name">{item.name}</div>
-                  </td>
-                  <td className="location-cell">
-                    {item.isInContainer ? (
-                      <span className="container-location" title={`Stored in ${item.containerName}`}>
-                        📦 {item.containerName}
-                      </span>
-                    ) : (
-                      <span className="inventory-location">Worn</span>
-                    )}
                   </td>
                   <td className="quantity-cell">{item.quantity || 1}</td>
                   <td className="bulk-cell">{item.singleBulk}</td>
