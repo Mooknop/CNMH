@@ -6,6 +6,30 @@
     "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
   },
   {
+    "title": "Currentseve",
+    "date": { "month": 2, "day": 9 },
+    "type": "holiday",
+    "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations."
+  },
+  {
+    "title": "Start of the Merrymead Festival",
+    "date": { "month": 8, "day": 24 },
+    "type": "holiday",
+    "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business."
+  },
+  {
+    "title": "End of the Merrymead Festival",
+    "date": { "month": 9, "day": 7 },
+    "type": "holiday",
+    "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business."
+  },
+  {
+    "title": "Allbrith",
+    "date": { "month": 9, "day": 31 },
+    "type": "holiday",
+    "description": "What was once a day of bloodcurdling ritualistic sacrifice has become a day of temptation and celebration, ever since the half-orcs and Goblins of Katapesh popularized the celebration of the Demon Queen Lamashtu with secretive masquerades."
+  },
+  {
     "title": "A Message in the Night",
     "date": { "year": 4724, "month": 7, "day": 27 },
     "type": "campaign",

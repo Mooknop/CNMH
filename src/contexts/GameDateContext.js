@@ -44,7 +44,9 @@ export const GameDateProvider = ({ children }) => {
    */
   const formatGameDate = () => {
     const monthName = GOLARION_MONTHS[gameDate.month].name;
-    return `${gameDate.day} ${monthName}, ${gameDate.year} AR`;
+    let formattedDate = `${gameDate.day} ${monthName}`;
+    formattedDate += gameDate.year? `, ${gameDate.year} AR;`:""
+    return formattedDate;
   };
 
   /**

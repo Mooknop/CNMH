@@ -226,8 +226,8 @@ const GolarionCalendar = () => {
           <div className="event-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>
-                Events for {selectedEvents.length > 0 && selectedEvents[0].date ? 
-                  `${selectedEvents[0].date.day} ${GOLARION_MONTHS[selectedEvents[0].date.month].name}, ${selectedEvents[0].date.year} AR` : 
+                {selectedEvents.length > 0 && selectedEvents[0].date ? 
+                  `${selectedEvents[0].date.day} ${GOLARION_MONTHS[selectedEvents[0].date.month].name}` : 
                   'Selected Date'}
               </h2>
               <button
