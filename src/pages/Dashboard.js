@@ -23,9 +23,7 @@ const Dashboard = () => {
       {/* Campaign Stats */}
       {
         <div className="content-section">
-          <h2>Party Overview</h2>
           <div className="stats-grid">            
-            
             <div className="stat-card">
               <div className="stat-icon">🌟</div>
               <div className="stat-content">
