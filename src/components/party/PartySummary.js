@@ -119,45 +119,176 @@ const PartySummary = () => {
   const formatSkillName = (name) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
   };
+
+  // Custom tick formatter to show +/- modifiers
+  const formatTick = (value) => {
+    if (value === 0) return '0';
+    return value > 0 ? `+${value}` : `${value}`;
+  };
   
   return (
     <div className="party-summary">
+      {/* Character Details Grid */}
+      <div className="summary-content">
+            <h3>Party Members</h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1rem'
+            }}>
+              {partyAbilityData.map((char, index) => (
+                <div key={char.name} style={{
+                  background: 'rgba(255, 255, 255, 0.7)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  border: `3px solid ${char.color}`,
+                  boxShadow: '0 4px 12px rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(3px)'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      backgroundColor: char.color,
+                      marginRight: '0.5rem'
+                    }}></div>
+                    <div>
+                      <h4 style={{ 
+                        margin: 0, 
+                        color: char.color,
+                        fontSize: '1.1rem',
+                        fontWeight: '700',
+                        textShadow: '2px 2px 4px rgba(255, 255, 255, 0.8)'
+                      }}>
+                        {char.name}
+                      </h4>
+                      <p style={{ 
+                        margin: 0, 
+                        color: '#666',
+                        fontSize: '0.9rem',
+                        fontWeight: '500'
+                      }}>
+                        {char.class}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '0.5rem',
+                    fontSize: '0.85rem'
+                  }}>
+                    {Object.entries(char.abilities).map(([ability, modifier]) => (
+                      <div key={ability} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        padding: '0.25rem 0.5rem',
+                        background: 'rgba(94, 41, 41, 0.1)',
+                        borderRadius: '4px'
+                      }}>
+                        <span style={{ 
+                          fontWeight: '600',
+                          color: '#5e2929',
+                          textTransform: 'capitalize'
+                        }}>
+                          {ability.slice(0, 3)}:
+                        </span>
+                        <span style={{ 
+                          fontWeight: '700',
+                          color: modifier >= 0 ? '#228B22' : '#DC143C'
+                        }}>
+                          {modifier >= 0 ? `+${modifier}` : modifier}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+        </div>
       <div className="summary-content">
         <div className="ability-comparison-container">
           <h3>Ability Comparison</h3>
-          
-          {/* Radar Chart with integrated Legend */}
-          <div className="radar-chart-container" style={{ width: '100%', height: 400, marginTop: '1rem' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart 
-                outerRadius={130} 
-                data={radarData}
-                margin={{ top: 10, right: 30, bottom: 30, left: 30 }}
-              >
-                <PolarGrid />
-                <PolarAngleAxis dataKey="ability" />
-                <PolarRadiusAxis angle={30} domain={[domainMin, domainMax]} />
-                
-                {/* Create a Radar for each character */}
-                {partyAbilityData.map((char) => (
-                  <Radar
-                    key={`radar-${char.name}`}
-                    name={`${char.name}`}
-                    dataKey={char.name}
-                    stroke={char.color}
-                    fill={char.color}
-                    fillOpacity={0.2}
+          {/* Enhanced Radar Chart */}
+            <div style={{ 
+              width: '100%', 
+              height: '500px', 
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              padding: '1rem',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(94, 41, 41, 0.2)'
+            }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart 
+                  outerRadius={150} 
+                  data={radarData}
+                  margin={{ top: 20, right: 40, bottom: 60, left: 40 }}
+                >
+                  {/* Enhanced polar grid with better contrast */}
+                  <PolarGrid 
+                    stroke="#5e2929" 
+                    strokeWidth={1.5}
+                    strokeOpacity={0.6}
+                    fill="rgba(94, 41, 41, 0.02)"
                   />
-                ))}
-                
-                <Legend 
-                  layout="horizontal" 
-                  align="center" 
-                  verticalAlign="bottom"
-                  wrapperStyle={{ paddingTop: '20px' }}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+                  
+                  {/* Enhanced angle axis with better readability */}
+                  <PolarAngleAxis 
+                    dataKey="ability" 
+                    tick={{ 
+                      fill: '#2c1810', 
+                      fontSize: 14, 
+                      fontWeight: '700',
+                      textAnchor: 'middle'
+                    }}
+                    tickSize={8}
+                    stroke="#5e2929"
+                    strokeWidth={2}
+                  />
+                  
+                  {/* Enhanced radius axis with clear modifiers */}
+                  <PolarRadiusAxis 
+                    angle={30} 
+                    domain={[domainMin, domainMax]}
+                    tick={{ 
+                      fill: '#5e2929', 
+                      fontSize: 12, 
+                      fontWeight: '600'
+                    }}
+                    tickFormatter={formatTick}
+                    stroke="#8b4513"
+                    strokeWidth={1}
+                    strokeOpacity={0.7}
+                  />
+                  
+                  {/* Create enhanced Radar for each character */}
+                  {partyAbilityData.map((char, index) => (
+                    <Radar
+                      key={`radar-${char.name}`}
+                      name={char.name}
+                      dataKey={char.name}
+                      stroke={char.color}
+                      strokeWidth={3}
+                      fill={char.color}
+                      fillOpacity={0.15}
+                      dot={{ 
+                        fill: char.color, 
+                        strokeWidth: 2, 
+                        stroke: '#fff',
+                        r: 5
+                      }}
+                    />
+                  ))}
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>        
         <div className="skill-specialists-container">
@@ -192,7 +323,6 @@ const PartySummary = () => {
           )}
         </div>
       </div>
-    </div>
   );
 };
 
