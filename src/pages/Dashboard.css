@@ -206,6 +206,53 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
 }
 
+/* Calendar-specific styling */
+.calendar-card {
+  border-left: 4px solid #8B4513 !important; /* Brown color fitting the Pathfinder theme */
+}
+
+.calendar-card .stat-icon {
+  color: #8B4513;
+}
+
+.calendar-card .stat-number {
+  font-size: 1.2rem !important; /* Slightly smaller to fit the date */
+  line-height: 1.2;
+  color: #8B4513;
+  font-weight: 600;
+}
+
+.calendar-card .stat-label {
+  color: #6B3410;
+  font-weight: 600;
+}
+
+.calendar-card:hover {
+  border-left-color: #A0522D !important;
+  background: rgba(255, 248, 220, 0.95) !important; /* Subtle warm tint on hover */
+}
+
+.calendar-card:hover .stat-icon {
+  color: #A0522D;
+}
+
+.calendar-card:hover .stat-number {
+  color: #A0522D;
+}
+
+/* Responsive adjustments for the date display */
+@media (max-width: 768px) {
+  .calendar-card .stat-number {
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-card .stat-number {
+    font-size: 0.9rem !important;
+  }
+}
+
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .dashboard {
