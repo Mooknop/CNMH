@@ -2,31 +2,15 @@
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
+import { useGameDate } from '../contexts/GameDateContext';
 import PartySummary from '../components/party/PartySummary';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const PartyGold = 41;
   const { setActiveCharacter } = useContext(CharacterContext);
+  const { formatGameDate } = useGameDate();
   const navigate = useNavigate();
-  
-  // Current game date in Golarion - 21st of Desnus, 4725 AR
-  const gameDate = {
-    day: 21,
-    month: 4, // Desnus (5th month, 0-indexed)
-    year: 4725
-  };
-  
-  // Golarion month names for display
-  const golarionMonths = [
-    "Abadius", "Calistril", "Pharast", "Gozran", "Desnus", "Sarenith",
-    "Erastus", "Arodus", "Rova", "Lamashan", "Neth", "Kuthona"
-  ];
-  
-  const formatGameDate = () => {
-    const monthName = golarionMonths[gameDate.month];
-    return `${gameDate.day} ${monthName}, ${gameDate.year} AR`;
-  };
     
   const navigateTo = (path) => {
     navigate(path);
@@ -76,7 +60,7 @@ const Dashboard = () => {
               <span className="stat-number">Quests</span>
             </button>
 
-            {/* New Golarion Calendar Button */}
+            {/* Golarion Calendar Button - Now using centralized game date */}
             <button 
             className="stat-card clickable-stat-card calendar-card"
             onClick={() => navigateTo('/calendar')}
