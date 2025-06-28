@@ -127,11 +127,16 @@ const GolarionCalendar = () => {
 
           {/* Current campaign date indicator */}
           {currentYear === gameDate.year && currentMonth === gameDate.month && (
-            <div className="current-date-indicator">
+            <>
               <strong>
-                Current Campaign Date: {formatGameDate()}
-              </strong>
-            </div>
+                  Current Date
+                </strong>
+              <div className="current-date-indicator">
+                <strong>
+                  {formatGameDate()}
+                </strong>
+              </div>
+            </>
           )}
 
           {/* Weekday Headers */}
