@@ -75,10 +75,22 @@
     "description": "A comemorative holiday celebrating those that died in the Shining Crusades against the Whispering Tyrant."
   },
   {
-    "title": "Ascendance Night",
+    "title": "Ascendance Night (Norgorber)",
     "date": { "month": 4, "day": 2 },
     "type": "holiday",
-    "description": "A holiday comemorating the asccendance of Norgorber to Godhood."
+    "description": "A holiday comemorating the apotheosis of the Reaper of Reputation."
+  },
+  {
+    "title": "Ritual of Stardust",
+    "date": { "month": 5, "day": 21 },
+    "type": "holiday",
+    "description": "Bi-annual festival held on the solstices, where the faithful of Desna sing songs through the night around bonfires."
+  },
+  {
+    "title": "Archerfeast",
+    "date": { "month": 6, "day": 3 },
+    "type": "holiday",
+    "description": "Devotees of Erastil celebrate this holiday with archery contests and a celebration of the contribution of Hunters to their communities."
   },
   {
     "title": "First Brewing",
@@ -99,16 +111,34 @@
     "description": "Priests of Desna release a wagon full of swallowtail butterflies in front of a crowd of believers. Worshipers consider it a good omen if a butterfly rests on him or her for a short time. The remainder of the day is spent in celebration and can include activities such as feasting, storytelling, and singing."
   },
   {
-    "title": "Ascendance Day",
+    "title": "Feast of the Survivors",
+    "recurring": "third Moonday of Lamashan",
+    "type": "holiday",
+    "description": "A Nidalese tradition celebrating the protection offered by Zon-Kuthon to their people for generations. Hyper-goth Passover."
+  },
+  {
+    "title": "Ascendance Day (Iomedae)",
     "date": { "month": 9, "day": 6 },
     "type": "holiday",
     "description": "Holiday marking the ascension of the goddess Iomedae after taking the Test of the Starstone."
+  },
+  {
+    "title": "Jestercap",
+    "date": { "month": 9, "day": 27 },
+    "type": "holiday",
+    "description": "A gnomish holiday celebrated by playing practical jokes."
   },
   {
     "title": "Allbrith",
     "date": { "month": 9, "day": 30 },
     "type": "holiday",
     "description": "What was once a day of bloodcurdling ritualistic sacrifice has become a day of temptation and celebration, ever since the half-orcs and Goblins of Katapesh popularized the celebration of the Demon Queen Lamashtu with secretive masquerades."
+  },
+  {
+    "title": "Festival of the Witch",
+    "date": { "month": 9, "day": 30 },
+    "type": "holiday",
+    "description": "A tradition started in Irrisen, it is a celebration of all Witches and the refinement of their craft."
   },
   {
     "name": "Festival of Making and Breaking",
@@ -135,9 +165,51 @@
     "description": "Holiday celebrating transformation, both magical and metaphysical."
   },
   {
+    "title": "Ascension Day (Cayden Cailean)",
+    "date": { "month": 11, "day": 11 },
+    "type": "holiday",
+    "description": "Celebration of the Accidental God's triumph over the Test of the Starstone."
+  },
+  {
+    "title": "Day of Order",
+    "date": { "month": 11, "day": 11 },
+    "type": "holiday",
+    "description": "Asmodean holiday recognizing Asmodeus slaying his brother Ihys at the dawn of this universe. "
+  },
+  {
+    "title": "Candlemark",
+    "date": { "month": 11, "day": 21 },
+    "type": "holiday",
+    "description": "Holiday reminding the faithful that the Dawnflower's power to heal and redeem is always with her, even during the sun's weakest day. The day is also seen as a time to look forward to longer days."
+  },
+  {
+    "title": "Crystalhue",
+    "date": { "month": 11, "day": 21 },
+    "type": "holiday",
+    "description": "Shelynite holiday marked by the creation of artistic works, and the start of romantic courtships."
+  },
+  {
+    "title": "Ritual of Stardust",
+    "date": { "month": 11, "day": 21 },
+    "type": "holiday",
+    "description": "Bi-annual festival held on the solstices, where the faithful of Desna sing songs through the night around bonfires."
+  },
+  {
     "title": "The Final Day",
     "date": { "month": 11, "day": 31 },
     "type": "holiday",
     "description": "Cultists of Groetus perform an hour's silence at dusk on the last day of the year and seek guidance from their god about the End Time."
+  },
+  {
+    "title": "Night of the Pale",
+    "date": { "month": 11, "day": 31 },
+    "type": "holiday",
+    "description": "On the Night of the Pale, it is said that the ghosts of those who died during the previous year manifest upon the world and come to visit the homes they lived in during life. Although some might think that the chance of seeing even the shade of a dearly departed one might be a blessing, the Night of the Pale is not a time for tearful reunions, for these ghosts, tradition says, do not return out of love for those they left behind but out of darker compulsions."
+  },
+  {
+    "title": "Turning Day",
+    "date": { "month": 11, "day": 31 },
+    "type": "holiday",
+    "description": "The changing of the year is celebrated by Alseta's faithful with the forgiveness of old debts and grudges, and embracing new opportunities."
   }
 ]
