@@ -190,7 +190,7 @@ export const GameDateProvider = ({ children }) => {
   const isFullMoon = (date = gameDate) => {
     const totalDays = getTotalDays(date);
     const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
-    return cyclePosition === 14; // Only true on day 14 of the 28-day cycle
+    return cyclePosition === 16; // Only true on day 16 of the 32-day cycle
   };
 
   /**
@@ -201,7 +201,7 @@ export const GameDateProvider = ({ children }) => {
   const isNewMoon = (date = gameDate) => {
     const totalDays = getTotalDays(date);
     const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
-    return cyclePosition === 0; // Only true on day 0 of the 28-day cycle
+    return cyclePosition === 0; // Only true on day 0 of the 32-day cycle
   };
 
   /**

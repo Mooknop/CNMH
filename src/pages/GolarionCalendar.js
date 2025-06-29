@@ -1,30 +1,18 @@
 // src/pages/GolarionCalendar.js
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useGameDate } from '../contexts/GameDateContext';
-import MoonPhase, { MoonPhaseIndicator, MoonPhaseLegend } from '../components/calendar/MoonPhase';
+import MoonPhase, { MoonPhaseIndicator } from '../components/calendar/MoonPhase';
 import timelineData from '../data/Timeline.json';
 import './GolarionCalendar.css';
 
 const GolarionCalendar = () => {
   const { 
     gameDate, 
-    formatGameDate, 
     GOLARION_MONTHS, 
     GOLARION_WEEKDAYS,
     getDayOfWeek,
-    getMoonPhaseInfo,
-    getCurrentSeason,
-    getCurrentYear
+    getMoonPhaseInfo
   } = useGameDate();
-
-  const EVENT_TYPE_COLORS = {
-    "campaign": "#8B4513",
-    "holiday": "#DC143C", 
-    "world event": "#4B0082",
-    "personal": "#228B22",
-    "recurring": "#6B4226",
-    "default": "#5e2929"
-  };
   
   const [currentMonth, setCurrentMonth] = useState(gameDate.month);
   const [currentYear, setCurrentYear] = useState(gameDate.year);
@@ -463,7 +451,7 @@ const GolarionCalendar = () => {
                     );
                   }
 
-                  const { day, events, isCurrentDate, moonInfo } = dayData;
+                  const { day, events, isCurrentDate } = dayData;
                   const dayDate = { day, month: currentMonth, year: currentYear };
                   
                   return (
