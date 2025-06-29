@@ -417,26 +417,41 @@ const GolarionCalendar = () => {
       {/* Modal for event details */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="event-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              {/* <h2>Events for {selectedEvents.length > 0 && selectedEvents[0].date ? 
-                `${selectedEvents[0].date.day} ${GOLARION_MONTHS[selectedEvents[0].date.month]?.name || GOLARION_MONTHS[currentMonth].name}` :
-                `${currentMonth + 1}/${selectedEvents[0]?.day || 'Unknown'}`}</h2> */}
-              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+              <button className="close-button" onClick={() => setShowModal(false)}>×</button>
             </div>
-            <div className="modal-body">
+            <div className="modal-content">
               {selectedEvents.map((event, index) => (
                 <div key={index} className={`event-item ${getEventTypeClass(event.type)}`}>
-                  <h3>
-                    {event.title}
-                    {event.isRecurring && <span className="recurring-badge"> (Recurring)</span>}
-                  </h3>
+                  <div className="event-header">
+                    <h3>
+                      {event.title}
+                      {event.isRecurring && <span className="recurring-badge">Recurring</span>}
+                    </h3>
+                    <span className="event-type">{event.type || 'Unknown'}</span>
+                  </div>
+                  
+                  {/* Show recurring pattern if applicable */}
                   {event.isRecurring && event.recurring && (
-                    <p className="recurring-pattern"><strong>Pattern:</strong> {event.recurring}</p>
+                    <p className="recurring-pattern">
+                      <strong>Pattern:</strong> {event.recurring}
+                    </p>
                   )}
-                  <p className="event-type"><strong>Type:</strong> {event.type || 'Unknown'}</p>
-                  {event.description && <p className="event-description">{event.description}</p>}
-                  {event.details && <p className="event-details">{event.details}</p>}
+                  
+                  {/* Event description */}
+                  {event.description && (
+                    <div className="event-description">
+                      <p>{event.description}</p>
+                    </div>
+                  )}
+                  
+                  {/* Additional details if present */}
+                  {event.details && (
+                    <div className="event-details">
+                      <p>{event.details}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

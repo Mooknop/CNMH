@@ -418,6 +418,251 @@
   text-align: center;
 }
 
+/* Base event item styling with border and background accents */
+.event-item {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(240, 240, 240, 0.8);
+  border-left: 4px solid #5e2929; /* Default color */
+  border-radius: 0 8px 8px 0;
+  background: rgba(248, 249, 250, 0.3);
+  transition: all 0.3s ease;
+}
+
+.event-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 1rem;
+  border-bottom: none;
+}
+
+.event-item:hover {
+  background: rgba(248, 249, 250, 0.6);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Campaign Events - Brown (Pathfinder signature color) */
+.event-item.campaign {
+  border-left-color: #8B4513;
+  background: rgba(139, 69, 19, 0.05);
+}
+
+.event-item.campaign .event-type {
+  background: rgba(139, 69, 19, 0.15);
+  color: #8B4513;
+  border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+.event-item.campaign h3 {
+  color: #8B4513;
+}
+
+.event-item.campaign:hover {
+  background: rgba(139, 69, 19, 0.1);
+  box-shadow: 0 2px 12px rgba(139, 69, 19, 0.2);
+}
+
+/* Holiday Events - Red (Festive) */
+.event-item.holiday {
+  border-left-color: #DC143C;
+  background: rgba(220, 20, 60, 0.05);
+}
+
+.event-item.holiday .event-type {
+  background: rgba(220, 20, 60, 0.15);
+  color: #DC143C;
+  border: 1px solid rgba(220, 20, 60, 0.3);
+}
+
+.event-item.holiday h3 {
+  color: #DC143C;
+}
+
+.event-item.holiday:hover {
+  background: rgba(220, 20, 60, 0.1);
+  box-shadow: 0 2px 12px rgba(220, 20, 60, 0.2);
+}
+
+/* World Event - Purple (Mystical/Important) */
+.event-item.world-event {
+  border-left-color: #4B0082;
+  background: rgba(75, 0, 130, 0.05);
+}
+
+.event-item.world-event .event-type {
+  background: rgba(75, 0, 130, 0.15);
+  color: #4B0082;
+  border: 1px solid rgba(75, 0, 130, 0.3);
+}
+
+.event-item.world-event h3 {
+  color: #4B0082;
+}
+
+.event-item.world-event:hover {
+  background: rgba(75, 0, 130, 0.1);
+  box-shadow: 0 2px 12px rgba(75, 0, 130, 0.2);
+}
+
+/* Personal Events - Green (Personal/Nature) */
+.event-item.personal {
+  border-left-color: #228B22;
+  background: rgba(34, 139, 34, 0.05);
+}
+
+.event-item.personal .event-type {
+  background: rgba(34, 139, 34, 0.15);
+  color: #228B22;
+  border: 1px solid rgba(34, 139, 34, 0.3);
+}
+
+.event-item.personal h3 {
+  color: #228B22;
+}
+
+.event-item.personal:hover {
+  background: rgba(34, 139, 34, 0.1);
+  box-shadow: 0 2px 12px rgba(34, 139, 34, 0.2);
+}
+
+/* Recurring Events - Dark Brown */
+.event-item.recurring {
+  border-left-color: #6B4226;
+  background: rgba(107, 66, 38, 0.05);
+}
+
+.event-item.recurring .event-type {
+  background: rgba(107, 66, 38, 0.15);
+  color: #6B4226;
+  border: 1px solid rgba(107, 66, 38, 0.3);
+}
+
+.event-item.recurring h3 {
+  color: #6B4226;
+}
+
+.event-item.recurring:hover {
+  background: rgba(107, 66, 38, 0.1);
+  box-shadow: 0 2px 12px rgba(107, 66, 38, 0.2);
+}
+
+/* Enhanced event type badge styling */
+.event-type {
+  background: rgba(248, 249, 250, 0.9);
+  color: #666;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-left: 1rem;
+  backdrop-filter: blur(3px);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  transition: all 0.3s ease;
+}
+
+/* Recurring badge styling */
+.recurring-badge {
+  background: rgba(107, 66, 38, 0.15);
+  color: #6B4226;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  border: 1px solid rgba(107, 66, 38, 0.3);
+}
+
+/* Recurring pattern text styling */
+.recurring-pattern {
+  font-style: italic;
+  color: #6B4226;
+  background: rgba(107, 66, 38, 0.08);
+  padding: 0.5rem;
+  border-radius: 6px;
+  border-left: 3px solid #6B4226;
+  margin: 0.5rem 0;
+}
+
+/* Enhanced event descriptions */
+.event-description,
+.event-details {
+  margin: 0.5rem 0 0 0;
+  line-height: 1.6;
+  color: #555;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  border: 1px solid rgba(230, 230, 230, 0.5);
+}
+
+/* Event header improvements */
+.event-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.event-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  flex-grow: 1;
+  color: #5e2929;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Modal header enhancement to match theme */
+.modal-header h2 {
+  margin: 0;
+  color: #5e2929;
+  font-size: 1.4rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 700;
+}
+
+/* Mobile responsiveness for event items */
+@media (max-width: 768px) {
+  .event-item {
+    padding: 1rem;
+    border-left-width: 3px;
+  }
+  
+  .event-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .event-type {
+    margin-left: 0;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .event-header h3 {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-item {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .event-type {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .recurring-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
 /* Mobile Responsive Design */
 @media (max-width: 1024px) {
   .golarion-calendar {
