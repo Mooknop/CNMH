@@ -3,14 +3,14 @@ import React, { createContext, useContext, useState } from 'react';
 
 // Golarion calendar data following Pathfinder 2E lore
 export const GOLARION_MONTHS = [
-  { name: "Abadius", days: 31, season: "Winter", index: 0 },
-  { name: "Calistril", days: 28, season: "Winter", index: 1 },
-  { name: "Pharast", days: 31, season: "Spring", index: 2 },
-  { name: "Gozran", days: 30, season: "Spring", index: 3 },
-  { name: "Desnus", days: 31, season: "Spring", index: 4 },
-  { name: "Sarenith", days: 30, season: "Summer", index: 5 },
-  { name: "Erastus", days: 31, season: "Summer", index: 6 },
-  { name: "Arodus", days: 31, season: "Summer", index: 7 },
+  { name: "Abadius", days: 31, season: "Winter", index: 0 },    //jan
+  { name: "Calistril", days: 28, season: "Winter", index: 1 },  //feb
+  { name: "Pharast", days: 31, season: "Spring", index: 2 },    //mar
+  { name: "Gozran", days: 30, season: "Spring", index: 3 },     //apr
+  { name: "Desnus", days: 31, season: "Spring", index: 4 },     //may
+  { name: "Sarenith", days: 30, season: "Summer", index: 5 },   //jun
+  { name: "Erastus", days: 31, season: "Summer", index: 6 },    //jul
+  { name: "Arodus", days: 31, season: "Summer", index: 7 },     //aug
   { name: "Rova", days: 30, season: "Autumn", index: 8 },
   { name: "Lamashan", days: 31, season: "Autumn", index: 9 },
   { name: "Neth", days: 30, season: "Autumn", index: 10 },
@@ -88,8 +88,8 @@ export const GameDateContext = createContext();
 export const GameDateProvider = ({ children }) => {
   // Initial game date - 5th of Rova (month index 8), 4724 AR
   const [gameDate, setGameDate] = useState({
-    day: 25,
-    month: 6, // 0-indexed
+    day: 5,
+    month: 8, // 0-indexed
     year: 4724
   });
 
