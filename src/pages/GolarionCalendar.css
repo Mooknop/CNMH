@@ -561,29 +561,6 @@
   transition: all 0.3s ease;
 }
 
-/* Recurring badge styling */
-.recurring-badge {
-  background: rgba(107, 66, 38, 0.15);
-  color: #6B4226;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin-left: 0.5rem;
-  border: 1px solid rgba(107, 66, 38, 0.3);
-}
-
-/* Recurring pattern text styling */
-.recurring-pattern {
-  font-style: italic;
-  color: #6B4226;
-  background: rgba(107, 66, 38, 0.08);
-  padding: 0.5rem;
-  border-radius: 6px;
-  border-left: 3px solid #6B4226;
-  margin: 0.5rem 0;
-}
-
 /* Enhanced event descriptions */
 .event-description,
 .event-details {
@@ -655,11 +632,6 @@
   .event-type {
     font-size: 0.7rem;
     padding: 0.25rem 0.5rem;
-  }
-  
-  .recurring-badge {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.4rem;
   }
 }
 

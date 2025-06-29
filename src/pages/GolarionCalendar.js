@@ -511,19 +511,9 @@ const GolarionCalendar = () => {
               {selectedEvents.map((event, index) => (
                 <div key={index} className={`event-item ${getEventTypeClass(event.type)}`}>
                   <div className="event-header">
-                    <h3>
-                      {event.name || event.title}
-                      {event.isRecurring && <span className="recurring-badge">Recurring</span>}
-                    </h3>
+                    <h3>{event.name || event.title}</h3>
                     <span className="event-type">{event.type || 'Unknown'}</span>
                   </div>
-                  
-                  {/* Show recurring pattern if applicable */}
-                  {event.isRecurring && event.recurring && (
-                    <p className="recurring-pattern">
-                      <strong>Pattern:</strong> {event.recurring}
-                    </p>
-                  )}
                   
                   {/* Event description */}
                   {event.description && (
