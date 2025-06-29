@@ -456,7 +456,7 @@
     "size": "Small",
     "ac": 19,
     "hp": 32,
-    "speed": 25,
+    "speed": 30,
     "senses": "Darkvision, Scent (imprecise) 30 feet",
     "abilities": {
       "strength": 14,
