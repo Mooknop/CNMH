@@ -1,4 +1,3 @@
-// src/components/calendar/MoonPhase.js
 import React from 'react';
 import { useGameDate } from '../../contexts/GameDateContext';
 import './MoonPhase.css';
@@ -74,11 +73,25 @@ const MoonPhase = ({ date, compact = false, showDetails = true }) => {
 };
 
 /**
- * Small moon phase indicator for calendar days
+ * Updated Moon Phase Indicator for calendar days
+ * Only displays icons for New Moon, Full Moon, and Half Moon days
  */
 export const MoonPhaseIndicator = ({ date }) => {
-  const { getMoonPhaseInfo } = useGameDate();
+  const { getMoonPhaseInfo, MOON_PHASES } = useGameDate();
   const moonInfo = getMoonPhaseInfo(date);
+  
+  // Only show moon icons for New Moon, Full Moon, and Half Moons (First/Last Quarter)
+  const shouldShowMoonIcon = () => {
+    return moonInfo.phase === MOON_PHASES.NEW_MOON ||
+           moonInfo.phase === MOON_PHASES.FULL_MOON
+          //  moonInfo.phase === MOON_PHASES.FIRST_QUARTER ||
+          //  moonInfo.phase === MOON_PHASES.LAST_QUARTER;
+  };
+
+  // Don't render anything if it's not one of the key moon phases
+  if (!shouldShowMoonIcon()) {
+    return null;
+  }
   
   return (
     <div 

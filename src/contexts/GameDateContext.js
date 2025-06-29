@@ -24,7 +24,6 @@ export const GOLARION_WEEKDAYS = [
 // Golarion's lunar cycle - Based on Blood of the Moon companion
 // Each full moon has a name corresponding to its month
 export const LUNAR_MONTH_NAMES = [
-  "Zon-Kuthon's Moon", // Winter full moon in Kuthona
   "Abadar's Moon", // Deep winter full moon in Abadius
   "Calistria's Moon", // Winter full moon in Calistril
   "Pharasma's Moon", // Spring awakening full moon in Pharast  
@@ -36,6 +35,7 @@ export const LUNAR_MONTH_NAMES = [
   "Rovagug's Moon", // Early autumn full moon in Rova
   "Lamashtu's Moon", // Mid-autumn full moon in Lamashan
   "Nethys' Moon", // Late autumn full moon in Neth
+  "Zon-Kuthon's Moon", // Winter full moon in Kuthona
 ];
 
 // Moon phases
@@ -74,7 +74,7 @@ export const MOON_PHASE_SYMBOLS = [
 ];
 
 // Lunar cycle length in days (standard fantasy moon cycle)
-const LUNAR_CYCLE_DAYS = 28;
+const LUNAR_CYCLE_DAYS = 32;
 
 // Create the context
 export const GameDateContext = createContext();
@@ -126,13 +126,13 @@ export const GameDateProvider = ({ children }) => {
     // Define specific days in the 28-day cycle for each phase
     // This ensures New Moon and Full Moon only occur on single days
     if (cyclePosition === 0) return MOON_PHASES.NEW_MOON;           // Day 0
-    if (cyclePosition >= 1 && cyclePosition <= 6) return MOON_PHASES.WAXING_CRESCENT;   // Days 1-6
-    if (cyclePosition === 7) return MOON_PHASES.FIRST_QUARTER;     // Day 7
-    if (cyclePosition >= 8 && cyclePosition <= 13) return MOON_PHASES.WAXING_GIBBOUS;   // Days 8-13
-    if (cyclePosition === 14) return MOON_PHASES.FULL_MOON;        // Day 14 (single day)
-    if (cyclePosition >= 15 && cyclePosition <= 20) return MOON_PHASES.WANING_GIBBOUS;  // Days 15-20
-    if (cyclePosition === 21) return MOON_PHASES.LAST_QUARTER;     // Day 21
-    if (cyclePosition >= 22 && cyclePosition <= 27) return MOON_PHASES.WANING_CRESCENT; // Days 22-27
+    if (cyclePosition >= 1 && cyclePosition <= 7) return MOON_PHASES.WAXING_CRESCENT;   // Days 1-6
+    if (cyclePosition === 8) return MOON_PHASES.FIRST_QUARTER;     // Day 7
+    if (cyclePosition >= 9 && cyclePosition <= 15) return MOON_PHASES.WAXING_GIBBOUS;   // Days 8-13
+    if (cyclePosition === 16) return MOON_PHASES.FULL_MOON;        // Day 14 (single day)
+    if (cyclePosition >= 17 && cyclePosition <= 23) return MOON_PHASES.WANING_GIBBOUS;  // Days 15-20
+    if (cyclePosition === 24) return MOON_PHASES.LAST_QUARTER;     // Day 21
+    if (cyclePosition >= 25 && cyclePosition <= 32) return MOON_PHASES.WANING_CRESCENT; // Days 22-27
     
     // Fallback (shouldn't reach here with 28-day cycle)
     return MOON_PHASES.NEW_MOON;
