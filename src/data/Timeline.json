@@ -1,35 +1,5 @@
 [
   {
-    "title": "Blu's Birthday",
-    "date": { "month": 0, "day": 25 },
-    "type": "personal",
-    "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
-  },
-  {
-    "title": "Currentseve",
-    "date": { "month": 2, "day": 9 },
-    "type": "holiday",
-    "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations."
-  },
-  {
-    "title": "Start of the Merrymead Festival",
-    "date": { "month": 8, "day": 24 },
-    "type": "holiday",
-    "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business."
-  },
-  {
-    "title": "End of the Merrymead Festival",
-    "date": { "month": 9, "day": 7 },
-    "type": "holiday",
-    "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business."
-  },
-  {
-    "title": "Allbrith",
-    "date": { "month": 9, "day": 31 },
-    "type": "holiday",
-    "description": "What was once a day of bloodcurdling ritualistic sacrifice has become a day of temptation and celebration, ever since the half-orcs and Goblins of Katapesh popularized the celebration of the Demon Queen Lamashtu with secretive masquerades."
-  },
-  {
     "title": "A Message in the Night",
     "date": { "year": 4724, "month": 7, "day": 27 },
     "type": "campaign",
@@ -46,5 +16,80 @@
     "date": { "year": 4724, "month": 8, "day": 1 },
     "type": "world event",
     "description": "Party arrives in Dis, Hell"
+  },
+
+
+
+  {
+    "title": "Blu's Birthday",
+    "date": { "month": 0, "day": 25 },
+    "type": "personal",
+    "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
+  },
+  {
+    "title": "Currentseve",
+    "date": { "month": 2, "day": 9 },
+    "type": "holiday",
+    "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations."
+  },
+  {
+    "title": "Merrymead",
+    "date": { "month": 1, "day": 2 },
+    "type": "holiday",
+    "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business."
+  },
+  {
+    "title": "First Brewing",
+    "date": { "month": 8, "day": 1 },
+    "type": "holiday",
+    "description": "Cayden's priests use this holiday to bless the year's harvest of brewing crops and reflect on the hard work of the Accidental God's devotees."
+  },
+  {
+    "title": "Day of the Inheritor",
+    "date": { "month": 8, "day": 19 },
+    "type": "holiday",
+    "description": "A holiday commemorating the church of Iomedae's adoption of the forlorn faithful of the dead god Aroden into their midst."
+  },
+  {
+    "title": "Swallowtail Festival",
+    "date": { "month": 8, "day": 23 },
+    "type": "holiday",
+    "description": "Priests of Desna release a wagon full of swallowtail butterflies in front of a crowd of believers. Worshipers consider it a good omen if a butterfly rests on him or her for a short time. The remainder of the day is spent in celebration and can include activities such as feasting, storytelling, and singing."
+  },
+  {
+    "title": "Ascendance Day",
+    "date": { "month": 9, "day": 6 },
+    "type": "holiday",
+    "description": "Holiday marking the ascension of the goddess Iomedae after taking the Test of the Starstone."
+  },
+  {
+    "title": "Allbrith",
+    "date": { "month": 9, "day": 30 },
+    "type": "holiday",
+    "description": "What was once a day of bloodcurdling ritualistic sacrifice has become a day of temptation and celebration, ever since the half-orcs and Goblins of Katapesh popularized the celebration of the Demon Queen Lamashtu with secretive masquerades."
+  },
+  {
+    "name": "Festival of Making and Breaking",
+    "recurring": "First Starday of Neth",
+    "type": "holiday",
+    "description": "Artisans teach children to build something which, come evening, is then destroyed by teachers of magic in a vibrant elemental display."
+  },
+  {
+    "title": "Abjurant Day",
+    "date": { "month": 10, "day": 8 },
+    "type": "holiday",
+    "description": "Nethysian holiday devoted to magical protection and securing that which is dear to you."
+  },
+  {
+    "title": "Evoking Day",
+    "date": { "month": 10, "day": 18 },
+    "type": "holiday",
+    "description": "Holiday marked by displays of fireworks and magical duels (both mock and real)."
+  },
+  {
+    "title": "Transmutatum",
+    "date": { "month": 10, "day": 28 },
+    "type": "holiday",
+    "description": "Holiday celebrating transformation, both magical and metaphysical."
   }
 ]

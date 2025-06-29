@@ -90,29 +90,4 @@ export const MoonPhaseIndicator = ({ date }) => {
   );
 };
 
-/**
- * Moon phase calendar legend
- */
-export const MoonPhaseLegend = () => {
-  const { MOON_PHASE_NAMES, MOON_PHASE_SYMBOLS } = useGameDate();
-  
-  return (
-    <div className="moon-phase-legend">
-      <h4>Moon Phases of Somal</h4>
-      <div className="legend-grid">
-        {MOON_PHASE_NAMES.map((phaseName, index) => (
-          <div key={index} className="legend-item">
-            <span className="legend-symbol">{MOON_PHASE_SYMBOLS[index]}</span>
-            <span className="legend-name">{phaseName}</span>
-          </div>
-        ))}
-      </div>
-      <p className="moon-lore">
-        Somal, Golarion's tidally-locked moon, influences lycanthropes and lunar magic. 
-        Each full moon bears the name of its corresponding month.
-      </p>
-    </div>
-  );
-};
-
 export default MoonPhase;

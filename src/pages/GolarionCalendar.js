@@ -22,6 +22,7 @@ const GolarionCalendar = () => {
     "holiday": "#DC143C", 
     "world event": "#4B0082",
     "personal": "#228B22",
+    "recurring": "#6B4226", // New color for recurring events
     "default": "#5e2929"
   };
   
@@ -35,8 +36,207 @@ const GolarionCalendar = () => {
     return eventType ? eventType.replace(/\s+/g, '-') : 'default';
   };
 
+  /**
+   * Find the nth occurrence of a specific weekday in a month
+   * @param {number} year - Year in AR
+   * @param {number} month - Month index (0-11)
+   * @param {number} weekday - Weekday index (0-6)
+   * @param {number} occurrence - Which occurrence (1-5, or -1 for last)
+   * @returns {number|null} Day of month or null if not found
+   */
+  const getNthWeekdayOfMonth = (year, month, weekday, occurrence) => {
+    const daysInMonth = GOLARION_MONTHS[month].days;
+    const matches = [];
+    
+    // Find all occurrences of this weekday in the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayOfWeek = getDayOfWeek({ day, month, year });
+      if (dayOfWeek === weekday) {
+        matches.push(day);
+      }
+    }
+    
+    if (occurrence === -1) {
+      // Return last occurrence
+      return matches.length > 0 ? matches[matches.length - 1] : null;
+    } else if (occurrence >= 1 && occurrence <= matches.length) {
+      // Return nth occurrence (1-indexed)
+      return matches[occurrence - 1];
+    }
+    
+    return null;
+  };
+
+  /**
+   * Parse a recurring event description into structured data
+   * @param {string} description - e.g., "Second Starday", "Second Starday of Rova", "Last Fireday of Kuthona"
+   * @returns {Object} Parsed event data
+   */
+  const parseRecurringEvent = (description) => {
+    const patterns = [
+      // Patterns with specific months
+      { regex: /^(first|second|third|fourth|fifth)\s+(\w+day)\s+of\s+(\w+)$/i, type: 'nth_monthly' },
+      { regex: /^last\s+(\w+day)\s+of\s+(\w+)$/i, type: 'last_monthly' },
+      { regex: /^every\s+(\w+day)\s+of\s+(\w+)$/i, type: 'every_monthly' },
+      
+      // Patterns without specific months (recurring every month)
+      { regex: /^(first|second|third|fourth|fifth)\s+(\w+day)$/i, type: 'nth' },
+      { regex: /^last\s+(\w+day)$/i, type: 'last' },
+      { regex: /^every\s+(\w+day)$/i, type: 'every' }
+    ];
+    
+    for (const pattern of patterns) {
+      const match = description.match(pattern.regex);
+      if (match) {
+        const ordinals = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5 };
+        
+        if (pattern.type === 'nth_monthly') {
+          const weekdayName = match[2];
+          const monthName = match[3];
+          const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
+          const monthIndex = GOLARION_MONTHS.findIndex(m => m.name.toLowerCase() === monthName.toLowerCase());
+          
+          return {
+            type: 'nth_weekday_monthly',
+            weekday: weekdayIndex,
+            weekdayName,
+            occurrence: ordinals[match[1].toLowerCase()],
+            month: monthIndex,
+            monthName,
+            originalText: description
+          };
+        } else if (pattern.type === 'last_monthly') {
+          const weekdayName = match[1];
+          const monthName = match[2];
+          const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
+          const monthIndex = GOLARION_MONTHS.findIndex(m => m.name.toLowerCase() === monthName.toLowerCase());
+          
+          return {
+            type: 'last_weekday_monthly',
+            weekday: weekdayIndex,
+            weekdayName,
+            occurrence: -1,
+            month: monthIndex,
+            monthName,
+            originalText: description
+          };
+        } else if (pattern.type === 'every_monthly') {
+          const weekdayName = match[1];
+          const monthName = match[2];
+          const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
+          const monthIndex = GOLARION_MONTHS.findIndex(m => m.name.toLowerCase() === monthName.toLowerCase());
+          
+          return {
+            type: 'every_weekday_monthly',
+            weekday: weekdayIndex,
+            weekdayName,
+            month: monthIndex,
+            monthName,
+            originalText: description
+          };
+        } else if (pattern.type === 'nth') {
+          const weekdayName = match[2];
+          const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
+          
+          return {
+            type: 'nth_weekday',
+            weekday: weekdayIndex,
+            weekdayName,
+            occurrence: ordinals[match[1].toLowerCase()],
+            originalText: description
+          };
+        } else if (pattern.type === 'last') {
+          const weekdayName = match[1];
+          const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
+          
+          return {
+            type: 'last_weekday',
+            weekday: weekdayIndex,
+            weekdayName,
+            occurrence: -1,
+            originalText: description
+          };
+        } else if (pattern.type === 'every') {
+          const weekdayName = match[1];
+          const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
+          
+          return {
+            type: 'every_weekday',
+            weekday: weekdayIndex,
+            weekdayName,
+            originalText: description
+          };
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  /**
+   * Check if a recurring event occurs on a specific date
+   * @param {Object} eventRule - Parsed recurring event rule
+   * @param {Object} date - Date to check
+   * @returns {boolean} Whether the event occurs on this date
+   */
+  const doesEventOccurOnDate = (eventRule, date) => {
+    if (!eventRule) return false;
+    
+    // For monthly events, check if we're in the correct month
+    if (eventRule.type.includes('monthly')) {
+      if (eventRule.month !== date.month) {
+        return false; // Wrong month, event doesn't occur
+      }
+    }
+    
+    if (eventRule.type === 'nth_weekday' || eventRule.type === 'last_weekday' ||
+        eventRule.type === 'nth_weekday_monthly' || eventRule.type === 'last_weekday_monthly') {
+      const targetDay = getNthWeekdayOfMonth(
+        date.year, 
+        date.month, 
+        eventRule.weekday, 
+        eventRule.occurrence
+      );
+      return targetDay === date.day;
+    } else if (eventRule.type === 'every_weekday' || eventRule.type === 'every_weekday_monthly') {
+      const dayOfWeek = getDayOfWeek(date);
+      return dayOfWeek === eventRule.weekday;
+    }
+    
+    return false;
+  };
+
+  /**
+   * Get recurring events for a specific date
+   * @param {number} year - Year
+   * @param {number} month - Month index
+   * @param {number} day - Day of month
+   * @returns {Array} Array of recurring events
+   */
+  const getRecurringEventsForDate = (year, month, day) => {
+    return timelineData
+      .filter(event => event.recurring) // Only check events with recurring property
+      .map(event => ({
+        ...event,
+        recurringRule: parseRecurringEvent(event.recurring)
+      }))
+      .filter(event => {
+        if (!event.recurringRule) return false;
+        return doesEventOccurOnDate(event.recurringRule, { day, month, year });
+      })
+      .map(event => ({
+        ...event,
+        type: event.type || 'recurring', // Mark as recurring if no type specified
+        isRecurring: true
+      }));
+  };
+
   const getEventsForDate = (year, month, day) => {
-    return timelineData.filter(event => {
+    // Get standard timeline events
+    const standardEvents = timelineData.filter(event => {
+      // Skip events that have recurring property (they'll be handled separately)
+      if (event.recurring) return false;
+      
       // Check for exact date match (specific year events)
       if (event.date.year && event.date.year === year && 
           event.date.month === month && 
@@ -53,6 +253,12 @@ const GolarionCalendar = () => {
       
       return false;
     });
+
+    // Get recurring events
+    const recurringEvents = getRecurringEventsForDate(year, month, day);
+
+    // Combine both types of events
+    return [...standardEvents, ...recurringEvents];
   };
 
   // Handle day click
@@ -130,25 +336,18 @@ const GolarionCalendar = () => {
             <button onClick={previousMonth} className="nav-button">
               ‹ Previous
             </button>
+            {/* Current campaign date indicator */}
+          <div className="current-date-indicator">
+            <strong>{formatGameDate()}</strong> - <span>{getCurrentSeason()}</span>
+          </div>
             
-            <div className="month-year-display">
-              <h2 className="month-name">
-                {formatGameDate()}
-              </h2>
-              <div className="year-season">
-                <span className="season">{getCurrentSeason()}</span>
-              </div>
-            </div>
             
             <button onClick={nextMonth} className="nav-button">
               Next ›
             </button>
           </div>
 
-          {/* Current campaign date indicator */}
-          
-            <div className="current-date-indicator">
-              <div className="month-year-display">
+          <div className="month-year-display">
               <h2 className="month-name">
                 {GOLARION_MONTHS[currentMonth].name}
               </h2>
@@ -157,8 +356,6 @@ const GolarionCalendar = () => {
                 <span className="season">{GOLARION_MONTHS[currentMonth].season}</span>
               </div>
             </div>
-            </div>
-          
 
           {/* Weekday Headers */}
           <div className="weekday-headers">
@@ -190,67 +387,62 @@ const GolarionCalendar = () => {
                       onClick={() => handleDayClick(day)}
                       className={`calendar-day ${events.length > 0 ? 'has-events' : ''} ${isCurrentDate ? 'current-date' : ''}`}
                     >
+                      <div className="day-number">{day}</div>
+                      
                       {/* Moon phase indicator */}
                       <MoonPhaseIndicator date={dayDate} />
                       
-                      {/* Day number */}
-                      <div className="day-number">{day}</div>
-                      
                       {/* Event indicators */}
-                      {events.length > 0 && (
-                        <div className="event-indicators">
-                          {events.slice(0, 3).map((event, eventIndex) => (
-                            <div
-                              key={eventIndex}
-                              className={`event-dot ${getEventTypeClass(event.type)}`}
-                              title={event.title}
-                            />
-                          ))}
-                          {events.length > 3 && (
-                            <span className="more-events">+{events.length - 3} more</span>
-                          )}
-                        </div>
-                      )}
+                      <div className="event-indicators">
+                        {events.slice(0, 3).map((event, eventIndex) => (
+                          <div 
+                            key={eventIndex}
+                            className={`event-dot ${getEventTypeClass(event.type)}`}
+                            title={`${event.name}${event.isRecurring ? ' (Recurring: ' + event.recurring + ')' : ''}`}
+                          />
+                        ))}
+                        {events.length > 3 && (
+                          <span className="more-events">+{events.length - 3}</span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             ))}
           </div>
-
-          {/* Current moon phase display */}
-          <MoonPhase />
         </div>
+      </div>
 
-        {/* Event Modal */}
-        {showModal && (
-          <div className="modal-overlay" onClick={() => setShowModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>Events</h3>
-                <button onClick={() => setShowModal(false)} className="close-button">
-                  ×
-                </button>
-              </div>
-              <div className="modal-body">
-                {selectedEvents.map((event, index) => (
-                  <div key={index} className="event-detail">
-                    <div 
-                      className="event-marker"
-                      style={{ backgroundColor: EVENT_TYPE_COLORS[event.type] || EVENT_TYPE_COLORS.default }}
-                    />
-                    <div className="event-content">
-                      <h4>{event.title}</h4>
-                      <p className="event-type">{event.type}</p>
-                      <p className="event-description">{event.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* Modal for event details */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Events for {selectedEvents.length > 0 && selectedEvents[0].date ? 
+                `${selectedEvents[0].date.day} ${GOLARION_MONTHS[selectedEvents[0].date.month]?.name || GOLARION_MONTHS[currentMonth].name}` :
+                `${currentMonth + 1}/${selectedEvents[0]?.day || 'Unknown'}`}</h2>
+              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {selectedEvents.map((event, index) => (
+                <div key={index} className={`event-item ${getEventTypeClass(event.type)}`}>
+                  <h3>
+                    {event.name}
+                    {event.isRecurring && <span className="recurring-badge"> (Recurring)</span>}
+                  </h3>
+                  {event.isRecurring && event.recurring && (
+                    <p className="recurring-pattern"><strong>Pattern:</strong> {event.recurring}</p>
+                  )}
+                  <p className="event-type"><strong>Type:</strong> {event.type || 'Unknown'}</p>
+                  {event.description && <p className="event-description">{event.description}</p>}
+                  {event.details && <p className="event-details">{event.details}</p>}
+                </div>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
