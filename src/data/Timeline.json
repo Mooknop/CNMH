@@ -27,6 +27,12 @@
     "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
   },
   {
+    "name": "Longnight",
+    "recurring": "full moon of Abadius",
+    "type": "holiday",
+    "description": "All-night festival in which revelers defy the darkness of winter and stay up to greet the dawn."
+  },
+  {
     "title": "Ritual of the Whip Sting",
     "date": { "month": 1, "day": 1 },
     "type": "holiday",

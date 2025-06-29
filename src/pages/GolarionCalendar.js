@@ -22,7 +22,7 @@ const GolarionCalendar = () => {
     "holiday": "#DC143C", 
     "world event": "#4B0082",
     "personal": "#228B22",
-    "recurring": "#6B4226", // New color for recurring events
+    "recurring": "#6B4226",
     "default": "#5e2929"
   };
   
@@ -68,18 +68,25 @@ const GolarionCalendar = () => {
   };
 
   /**
-   * Parse a recurring event description into structured data
-   * @param {string} description - e.g., "Second Starday", "Second Starday of Rova", "Last Fireday of Kuthona"
+   * Enhanced parse function for recurring events with moon phase support
+   * @param {string} description - e.g., "every full moon", "Sarenrae's Moon", "Second Starday of Rova"
    * @returns {Object} Parsed event data
    */
   const parseRecurringEvent = (description) => {
     const patterns = [
-      // Patterns with specific months
+      // Moon phase patterns
+      { regex: /^every\s+full\s+moon$/i, type: 'every_full_moon' },
+      { regex: /^every\s+new\s+moon$/i, type: 'every_new_moon' },
+      { regex: /^full\s+moon\s+of\s+(\w+)$/i, type: 'full_moon_monthly' },
+      { regex: /^new\s+moon\s+of\s+(\w+)$/i, type: 'new_moon_monthly' },
+      { regex: /^(\w+'\s*s?\s+moon)$/i, type: 'named_full_moon' }, // e.g., "Sarenrae's Moon"
+      
+      // Existing weekday patterns with specific months
       { regex: /^(first|second|third|fourth|fifth)\s+(\w+day)\s+of\s+(\w+)$/i, type: 'nth_monthly' },
       { regex: /^last\s+(\w+day)\s+of\s+(\w+)$/i, type: 'last_monthly' },
       { regex: /^every\s+(\w+day)\s+of\s+(\w+)$/i, type: 'every_monthly' },
       
-      // Patterns without specific months (recurring every month)
+      // Existing weekday patterns without specific months
       { regex: /^(first|second|third|fourth|fifth)\s+(\w+day)$/i, type: 'nth' },
       { regex: /^last\s+(\w+day)$/i, type: 'last' },
       { regex: /^every\s+(\w+day)$/i, type: 'every' }
@@ -90,7 +97,69 @@ const GolarionCalendar = () => {
       if (match) {
         const ordinals = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5 };
         
-        if (pattern.type === 'nth_monthly') {
+        // Handle moon phase patterns
+        if (pattern.type === 'every_full_moon') {
+          return {
+            type: 'every_full_moon',
+            originalText: description
+          };
+        } else if (pattern.type === 'every_new_moon') {
+          return {
+            type: 'every_new_moon',
+            originalText: description
+          };
+        } else if (pattern.type === 'full_moon_monthly') {
+          const monthName = match[1];
+          const monthIndex = GOLARION_MONTHS.findIndex(m => m.name.toLowerCase() === monthName.toLowerCase());
+          
+          return {
+            type: 'full_moon_monthly',
+            month: monthIndex,
+            monthName,
+            originalText: description
+          };
+        } else if (pattern.type === 'new_moon_monthly') {
+          const monthName = match[1];
+          const monthIndex = GOLARION_MONTHS.findIndex(m => m.name.toLowerCase() === monthName.toLowerCase());
+          
+          return {
+            type: 'new_moon_monthly',
+            month: monthIndex,
+            monthName,
+            originalText: description
+          };
+        } else if (pattern.type === 'named_full_moon') {
+          // Handle named moons like "Sarenrae's Moon", "Desna's Moon", etc.
+          const moonName = match[1];
+          
+          // Map named moons to their months based on Pathfinder 2E lore
+          const namedMoonMap = {
+            "zon-kuthon's moon": 11, // Kuthona
+            "abadar's moon": 0,      // Abadius
+            "calistria's moon": 1,   // Calistril
+            "pharasma's moon": 2,    // Pharast
+            "gozreh's moon": 3,      // Gozran
+            "desna's moon": 4,       // Desnus
+            "sarenrae's moon": 5,    // Sarenith
+            "erastil's moon": 6,     // Erastus
+            "aroden's moon": 7,      // Arodus
+            "rovagug's moon": 8,     // Rova
+            "lamashtu's moon": 9,    // Lamashan
+            "nethys' moon": 10       // Neth
+          };
+          
+          const monthIndex = namedMoonMap[moonName.toLowerCase()];
+          
+          return {
+            type: 'named_full_moon',
+            month: monthIndex,
+            moonName,
+            originalText: description
+          };
+        }
+        
+        // Handle existing weekday patterns (unchanged from original)
+        else if (pattern.type === 'nth_monthly') {
           const weekdayName = match[2];
           const monthName = match[3];
           const weekdayIndex = GOLARION_WEEKDAYS.indexOf(weekdayName);
@@ -174,7 +243,7 @@ const GolarionCalendar = () => {
   };
 
   /**
-   * Check if a recurring event occurs on a specific date
+   * Enhanced check for recurring event occurrences with moon phase support
    * @param {Object} eventRule - Parsed recurring event rule
    * @param {Object} date - Date to check
    * @returns {boolean} Whether the event occurs on this date
@@ -183,14 +252,32 @@ const GolarionCalendar = () => {
     if (!eventRule) return false;
     
     // For monthly events, check if we're in the correct month
-    if (eventRule.type.includes('monthly')) {
+    if (eventRule.type.includes('monthly') && eventRule.month !== undefined) {
       if (eventRule.month !== date.month) {
         return false; // Wrong month, event doesn't occur
       }
     }
     
-    if (eventRule.type === 'nth_weekday' || eventRule.type === 'last_weekday' ||
-        eventRule.type === 'nth_weekday_monthly' || eventRule.type === 'last_weekday_monthly') {
+    // Handle moon phase events
+    if (eventRule.type === 'every_full_moon') {
+      const moonInfo = getMoonPhaseInfo(date);
+      return moonInfo.isFullMoon;
+    } else if (eventRule.type === 'every_new_moon') {
+      const moonInfo = getMoonPhaseInfo(date);
+      return moonInfo.isNewMoon;
+    } else if (eventRule.type === 'full_moon_monthly' || eventRule.type === 'named_full_moon') {
+      // Check if it's the full moon of the specified month
+      const moonInfo = getMoonPhaseInfo(date);
+      return moonInfo.isFullMoon && date.month === eventRule.month;
+    } else if (eventRule.type === 'new_moon_monthly') {
+      // Check if it's the new moon of the specified month
+      const moonInfo = getMoonPhaseInfo(date);
+      return moonInfo.isNewMoon && date.month === eventRule.month;
+    }
+    
+    // Handle existing weekday events
+    else if (eventRule.type === 'nth_weekday' || eventRule.type === 'last_weekday' ||
+             eventRule.type === 'nth_weekday_monthly' || eventRule.type === 'last_weekday_monthly') {
       const targetDay = getNthWeekdayOfMonth(
         date.year, 
         date.month, 
@@ -398,7 +485,7 @@ const GolarionCalendar = () => {
                           <div 
                             key={eventIndex}
                             className={`event-dot ${getEventTypeClass(event.type)}`}
-                            title={`${event.name}${event.isRecurring ? ' (Recurring: ' + event.recurring + ')' : ''}`}
+                            title={`${event.name || event.title}${event.isRecurring ? ' (Recurring: ' + event.recurring + ')' : ''}`}
                           />
                         ))}
                         {events.length > 3 && (
@@ -426,7 +513,7 @@ const GolarionCalendar = () => {
                 <div key={index} className={`event-item ${getEventTypeClass(event.type)}`}>
                   <div className="event-header">
                     <h3>
-                      {event.title}
+                      {event.name || event.title}
                       {event.isRecurring && <span className="recurring-badge">Recurring</span>}
                     </h3>
                     <span className="event-type">{event.type || 'Unknown'}</span>
