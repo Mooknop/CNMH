@@ -417,6 +417,7 @@ const GolarionCalendar = () => {
         
         {/* Calendar container */}
         <div className="calendar-container">
+          <MoonPhase date={gameDate}/>
           
           {/* Header */}
           <div className="calendar-header">
@@ -424,17 +425,8 @@ const GolarionCalendar = () => {
               ‹ Previous
             </button>
             {/* Current campaign date indicator */}
-          <div className="current-date-indicator">
-            <strong>{formatGameDate()}</strong> - <span>{getCurrentSeason()}</span>
-          </div>
-            
-            
-            <button onClick={nextMonth} className="nav-button">
-              Next ›
-            </button>
-          </div>
-
-          <div className="month-year-display">
+          
+            <div className="month-year-display">
               <h2 className="month-name">
                 {GOLARION_MONTHS[currentMonth].name}
               </h2>
@@ -443,6 +435,12 @@ const GolarionCalendar = () => {
                 <span className="season">{GOLARION_MONTHS[currentMonth].season}</span>
               </div>
             </div>
+            
+            <button onClick={nextMonth} className="nav-button">
+              Next ›
+            </button>
+          </div>
+
 
           {/* Weekday Headers */}
           <div className="weekday-headers">
@@ -498,6 +496,7 @@ const GolarionCalendar = () => {
               </div>
             ))}
           </div>
+          
         </div>
       </div>
 
