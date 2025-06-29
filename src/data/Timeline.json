@@ -69,6 +69,12 @@
     "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations."
   },
   {
+    "name": "Rememberance Moon",
+    "recurring": "full moon of Desnus",
+    "type": "holiday",
+    "description": "A comemorative holiday celebrating those that died in the Shining Crusades against the Whispering Tyrant."
+  },
+  {
     "title": "Ascendance Night",
     "date": { "month": 4, "day": 2 },
     "type": "holiday",
@@ -127,5 +133,11 @@
     "date": { "month": 10, "day": 28 },
     "type": "holiday",
     "description": "Holiday celebrating transformation, both magical and metaphysical."
+  },
+  {
+    "title": "The Final Day",
+    "date": { "month": 11, "day": 31 },
+    "type": "holiday",
+    "description": "Cultists of Groetus perform an hour's silence at dusk on the last day of the year and seek guidance from their god about the End Time."
   }
 ]

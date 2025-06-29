@@ -122,7 +122,20 @@ export const GameDateProvider = ({ children }) => {
   const getMoonPhase = (date = gameDate) => {
     const totalDays = getTotalDays(date);
     const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
-    return Math.floor((cyclePosition / LUNAR_CYCLE_DAYS) * 8);
+    
+    // Define specific days in the 28-day cycle for each phase
+    // This ensures New Moon and Full Moon only occur on single days
+    if (cyclePosition === 0) return MOON_PHASES.NEW_MOON;           // Day 0
+    if (cyclePosition >= 1 && cyclePosition <= 6) return MOON_PHASES.WAXING_CRESCENT;   // Days 1-6
+    if (cyclePosition === 7) return MOON_PHASES.FIRST_QUARTER;     // Day 7
+    if (cyclePosition >= 8 && cyclePosition <= 13) return MOON_PHASES.WAXING_GIBBOUS;   // Days 8-13
+    if (cyclePosition === 14) return MOON_PHASES.FULL_MOON;        // Day 14 (single day)
+    if (cyclePosition >= 15 && cyclePosition <= 20) return MOON_PHASES.WANING_GIBBOUS;  // Days 15-20
+    if (cyclePosition === 21) return MOON_PHASES.LAST_QUARTER;     // Day 21
+    if (cyclePosition >= 22 && cyclePosition <= 27) return MOON_PHASES.WANING_CRESCENT; // Days 22-27
+    
+    // Fallback (shouldn't reach here with 28-day cycle)
+    return MOON_PHASES.NEW_MOON;
   };
 
   /**
@@ -142,10 +155,12 @@ export const GameDateProvider = ({ children }) => {
   const getDaysUntilFullMoon = (date = gameDate) => {
     const totalDays = getTotalDays(date);
     const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
-    const fullMoonDay = Math.floor(LUNAR_CYCLE_DAYS / 2); // Day 14 of 28-day cycle
+    const fullMoonDay = 14; // Full moon occurs on day 14 of cycle
     
-    if (cyclePosition <= fullMoonDay) {
+    if (cyclePosition < fullMoonDay) {
       return fullMoonDay - cyclePosition;
+    } else if (cyclePosition === fullMoonDay) {
+      return 0; // It's full moon today
     } else {
       return (LUNAR_CYCLE_DAYS - cyclePosition) + fullMoonDay;
     }
@@ -161,7 +176,7 @@ export const GameDateProvider = ({ children }) => {
     const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
     
     if (cyclePosition === 0) {
-      return 0;
+      return 0; // It's new moon today
     } else {
       return LUNAR_CYCLE_DAYS - cyclePosition;
     }
@@ -173,7 +188,9 @@ export const GameDateProvider = ({ children }) => {
    * @returns {boolean} True if full moon
    */
   const isFullMoon = (date = gameDate) => {
-    return getMoonPhase(date) === MOON_PHASES.FULL_MOON;
+    const totalDays = getTotalDays(date);
+    const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
+    return cyclePosition === 14; // Only true on day 14 of the 28-day cycle
   };
 
   /**
@@ -182,7 +199,9 @@ export const GameDateProvider = ({ children }) => {
    * @returns {boolean} True if new moon
    */
   const isNewMoon = (date = gameDate) => {
-    return getMoonPhase(date) === MOON_PHASES.NEW_MOON;
+    const totalDays = getTotalDays(date);
+    const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
+    return cyclePosition === 0; // Only true on day 0 of the 28-day cycle
   };
 
   /**
