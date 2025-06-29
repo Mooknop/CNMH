@@ -223,6 +223,10 @@ export const GameDateProvider = ({ children }) => {
     return GOLARION_MONTHS[gameDate.month];
   };
 
+  const getCurrentYear = () => {
+    return gameDate.year;
+  };
+
   /**
    * Get the current season
    * @returns {string} Season name
@@ -323,6 +327,7 @@ export const GameDateProvider = ({ children }) => {
         gameDate,
         formatGameDate,
         getCurrentMonth,
+        getCurrentYear,
         getCurrentSeason,
         getCurrentWeekday,
         getDetailedDate,

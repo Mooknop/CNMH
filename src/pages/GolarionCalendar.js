@@ -12,7 +12,9 @@ const GolarionCalendar = () => {
     GOLARION_MONTHS, 
     GOLARION_WEEKDAYS,
     getDayOfWeek,
-    getMoonPhaseInfo
+    getMoonPhaseInfo,
+    getCurrentSeason,
+    getCurrentYear
   } = useGameDate();
 
   const EVENT_TYPE_COLORS = {
@@ -131,11 +133,10 @@ const GolarionCalendar = () => {
             
             <div className="month-year-display">
               <h2 className="month-name">
-                {GOLARION_MONTHS[currentMonth].name}
+                {formatGameDate()}
               </h2>
               <div className="year-season">
-                <span className="year">{currentYear} AR</span>
-                <span className="season">{GOLARION_MONTHS[currentMonth].season}</span>
+                <span className="season">{getCurrentSeason()}</span>
               </div>
             </div>
             
@@ -145,13 +146,19 @@ const GolarionCalendar = () => {
           </div>
 
           {/* Current campaign date indicator */}
-          {currentYear === gameDate.year && currentMonth === gameDate.month && (
+          
             <div className="current-date-indicator">
-              <strong>
-                Current Campaign Date: {formatGameDate()}
-              </strong>
+              <div className="month-year-display">
+              <h2 className="month-name">
+                {GOLARION_MONTHS[currentMonth].name}
+              </h2>
+              <div className="year-season">
+                <span className="year">{currentYear} AR</span>
+                <span className="season">{GOLARION_MONTHS[currentMonth].season}</span>
+              </div>
             </div>
-          )}
+            </div>
+          
 
           {/* Weekday Headers */}
           <div className="weekday-headers">
@@ -214,24 +221,6 @@ const GolarionCalendar = () => {
           {/* Current moon phase display */}
           <MoonPhase />
         </div>
-
-        {/* Moon Phase Legend
-        <MoonPhaseLegend />
-
-        Calendar Legend
-        <div className="calendar-legend">
-          <h3>Event Types</h3>
-          <div className="legend-items">
-            {Object.entries(EVENT_TYPE_COLORS).map(([type, color]) => (
-              <div key={type} className="legend-item">
-                <div className="legend-dot" style={{ backgroundColor: color }} />
-                <span className="legend-label">
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div> */}
 
         {/* Event Modal */}
         {showModal && (
