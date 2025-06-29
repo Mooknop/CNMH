@@ -419,16 +419,16 @@ const GolarionCalendar = () => {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Events for {selectedEvents.length > 0 && selectedEvents[0].date ? 
+              {/* <h2>Events for {selectedEvents.length > 0 && selectedEvents[0].date ? 
                 `${selectedEvents[0].date.day} ${GOLARION_MONTHS[selectedEvents[0].date.month]?.name || GOLARION_MONTHS[currentMonth].name}` :
-                `${currentMonth + 1}/${selectedEvents[0]?.day || 'Unknown'}`}</h2>
+                `${currentMonth + 1}/${selectedEvents[0]?.day || 'Unknown'}`}</h2> */}
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
             <div className="modal-body">
               {selectedEvents.map((event, index) => (
                 <div key={index} className={`event-item ${getEventTypeClass(event.type)}`}>
                   <h3>
-                    {event.name}
+                    {event.title}
                     {event.isRecurring && <span className="recurring-badge"> (Recurring)</span>}
                   </h3>
                   {event.isRecurring && event.recurring && (

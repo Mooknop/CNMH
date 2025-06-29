@@ -27,16 +27,46 @@
     "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
   },
   {
-    "title": "Currentseve",
-    "date": { "month": 2, "day": 9 },
+    "title": "Ritual of the Whip Sting",
+    "date": { "month": 1, "day": 1 },
     "type": "holiday",
-    "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations."
+    "description": "Calistrian day of vengeance. Any revenge taken on this day must be put fully to rest."
+  },
+  {
+    "title": "Feast of Vigor",
+    "date": { "month": 1, "day": 14 },
+    "type": "holiday",
+    "description": "A communal, hedonistic celebration of pleasure."
   },
   {
     "title": "Merrymead",
     "date": { "month": 1, "day": 2 },
     "type": "holiday",
     "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business."
+  },
+  {
+    "title": "Day of Bones",
+    "date": { "month": 2, "day": 5 },
+    "type": "holiday",
+    "description": "Priests and worshipers of the Lady of Graves parade the bodies of the recently dead on this holiday, holding free burials afterwards."
+  },
+  {
+    "title": "Firstbloom",
+    "date": { "month": 2, "day": 20 },
+    "type": "holiday",
+    "description": "Firstbloom is a holiday celebrating the first planting of the agricultural season, and generally associated with the weather god Gozreh. It falls on the vernal equinox."
+  },
+  {
+    "title": "Currentseve",
+    "date": { "month": 3, "day": 7 },
+    "type": "holiday",
+    "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations."
+  },
+  {
+    "title": "Ascendance Night",
+    "date": { "month": 4, "day": 2 },
+    "type": "holiday",
+    "description": "A holiday comemorating the asccendance of Norgorber to Godhood."
   },
   {
     "title": "First Brewing",
