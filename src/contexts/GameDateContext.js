@@ -88,8 +88,8 @@ export const GameDateContext = createContext();
 export const GameDateProvider = ({ children }) => {
   // Initial game date - 5th of Rova (month index 8), 4724 AR
   const [gameDate, setGameDate] = useState({
-    day: 5,
-    month: 8, // 0-indexed
+    day: 25,
+    month: 6, // 0-indexed
     year: 4724
   });
 
