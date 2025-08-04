@@ -631,6 +631,12 @@
       "actionCount": 1,
       "traits": ["Concentrate", "Witchwarper"],
       "description": "Your quantum field activates and lasts as long as you Sustain it (up to 10 minutes) or until the end of your next turn. Your quantum field is a 15-foot-radius burst centered on a point you choose within 100 feet. While your Quantum Field is active, you can use actions that have the anchoring trait. As an Analyst, you see and understand infinite possibilities and complex theoretical equations as clearly as though they were etched into your surroundings. When you Seek or Recall Knowledge, you can apply the result against two related creatures, hazards, unattended objects, and effects in your quantum field. Whenever you sustain your quantum field, you can seek or Recall Knowledge against an appropriate target in your quantum field as a free action. Your quantum field automatically deactivates if you're knocked out, you dismiss it, or if you move more than 100 feet away from it."
+    },
+    {
+      "name": "Isolated Spell Matrix",
+      "actionCount": 1,
+      "traits": ["Anchoring", "Spellshape"],
+      "description": "If the next action you use is to Cast a Spell that has a range, increase the spell's range to 100 feet. The spell can only affect targets inside of your quantum field."
     }
   ]
 }
