@@ -588,14 +588,13 @@
       },
       {
         "id": "spell-12",
-        "name": "Instant Virus",
+        "name": "Temporal Bullets",
         "level": 2,
         "baseLevel": 2,
         "traits": ["Concentrate", "Disease", "Manipulate"],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 target with the tech trait",
-        "description": "Your touch installs a dangerous self-replicating virus that disrupts a technological target's programming. The target must attempt a Fortitude Save.",
+        "actions": "Reaction",
+        "trigger": "You miss, but don't critically miss, with a ranged weapon attack",
+        "description": "You rewind time and adjust probability to ensure an attack that just missed still does damage to its intended target. Roll damage as though you hit the target with the Strike, but the target only takes half the damage. You are then immune to temporal bullets for 10 minutes.",
         "degrees": {
           "Critical Success": "The target is unaffected.",
           "Success": "The target is Glitching 1.",

@@ -14,8 +14,8 @@ export const sampleCharacters = [
   Blu_Kakke,
   IzzyUncut,
   JadeInferno,
-  Pellias
-  //CarmaleighZ
+  Pellias,
+  CarmaleighZ
 ];
 
 // Export the lore data

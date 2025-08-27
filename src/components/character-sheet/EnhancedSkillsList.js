@@ -55,18 +55,18 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
         { name: 'Disarm', description: "Try to knock an item out of a creature's grasp." }
       ]
     },
-    // { 
-    //   id: 'computers', 
-    //   name: 'Computers', 
-    //   ability: 'intelligence',
-    //   actions: [
-    //     { name: 'Access Infosphere', description: 'You attempt to access a local netowkr, known as an infosphere, to come up with information on a topic.' },
-    //     { name: 'Descipher Writing', description: 'Descipher what code and programming languages.' },
-    //     { name: 'Disable Device', description: 'Disable computerized or virtual devices.' },
-    //     { name: 'Hack', description: 'Try to access, control, or make changes to an active secured system.' },
-    //     { name: 'Program', description: 'Spend time writing lines of code that can be integrated into computerized systems.' }
-    //   ]
-    // },
+    { 
+      id: 'computers', 
+      name: 'Computers', 
+      ability: 'intelligence',
+      actions: [
+        { name: 'Access Infosphere', description: 'You attempt to access a local netowkr, known as an infosphere, to come up with information on a topic.' },
+        { name: 'Descipher Writing', description: 'Descipher what code and programming languages.' },
+        { name: 'Disable Device', description: 'Disable computerized or virtual devices.' },
+        { name: 'Hack', description: 'Try to access, control, or make changes to an active secured system.' },
+        { name: 'Program', description: 'Spend time writing lines of code that can be integrated into computerized systems.' }
+      ]
+    },
     { 
       id: 'crafting', 
       name: 'Crafting', 
@@ -157,20 +157,20 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
         { name: 'Perform', description: 'Put on a performance for an audience.' }
       ]
     },
-    // { 
-    //   id: 'piloting', 
-    //   name: 'Piloting', 
-    //   ability: 'dexterity',
-    //   actions: [
-    //     { name: 'Drive', description: 'Pilot a vehicle to move.' },
-    //     { name: 'Navigate', description: 'Plan a short journey.' },
-    //     { name: 'Plot Course', description: 'Plan a longer journey into the stars.' },
-    //     { name: 'Run Over', description: 'Try to run over creatures with your vehicle.' },
-    //     { name: 'Stop', description: 'Bring the vehicle to a stop.' },
-    //     { name: 'Stunt', description: "Perform a stunt while Driving, temporarily improving the vehicle's effective capabilities at the risk of losing control." },
-    //     { name: 'Take Control', description: 'Take control of a vehicle that was uncontrolled.' }
-    //   ]
-    // },
+    { 
+      id: 'piloting', 
+      name: 'Piloting', 
+      ability: 'dexterity',
+      actions: [
+        { name: 'Drive', description: 'Pilot a vehicle to move.' },
+        { name: 'Navigate', description: 'Plan a short journey.' },
+        { name: 'Plot Course', description: 'Plan a longer journey into the stars.' },
+        { name: 'Run Over', description: 'Try to run over creatures with your vehicle.' },
+        { name: 'Stop', description: 'Bring the vehicle to a stop.' },
+        { name: 'Stunt', description: "Perform a stunt while Driving, temporarily improving the vehicle's effective capabilities at the risk of losing control." },
+        { name: 'Take Control', description: 'Take control of a vehicle that was uncontrolled.' }
+      ]
+    },
     { 
       id: 'religion', 
       name: 'Religion', 
