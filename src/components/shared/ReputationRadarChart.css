@@ -1,0 +1,65 @@
+/* Reputation Radar Chart Styles */
+.reputation-radar-chart {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: rgba(249, 249, 249, 0.8);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reputation-radar-chart .radar-axis-text {
+  fill: #333;
+  font-weight: 500;
+}
+
+.reputation-radar-chart .radar-radius-text {
+  fill: #666;
+  font-size: 12px;
+}
+
+/* Radar chart labels */
+.reputation-radar-chart .recharts-label {
+  fill: #333;
+  font-size: 12px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+/* Reputation Effects Section */
+.reputation-effects {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+.reputation-effects h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.effects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.effect-item {
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #8884d8;
+}
+
+.effect-faction {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.effect-description {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.4;
+}

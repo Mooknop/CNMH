@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { quests as defaultQuests, reputation } from '../data';
 import ReputationModal from '../components/shared/ReputationModal';
+import ReputationRadarChart from '../components/shared/ReputationRadarChart';
 import './QuestTracker.css';
 
 const QuestTracker = () => {
@@ -11,11 +12,6 @@ const QuestTracker = () => {
     // Set quests directly from the imported data
     setQuests(defaultQuests);
   }, []);
-  
-  const getCurrentStanding = (faction) => {
-    const rep = faction.reputation;
-    return faction.ranks.find(rank => rep >= rank.min && rep <= rank.max)?.name || 'Unknown';
-  };
   
   const questsArray = Array.isArray(quests) ? quests : [];
   
@@ -34,7 +30,7 @@ const QuestTracker = () => {
     <div className="quest-tracker-page">
       <div className="quest-tracker">
         <h1>Reputation</h1>
-        <div className="reputation-buttons">
+        {/* <div className="reputation-buttons">
           {reputation.Factions.map(faction => (
             <button 
               key={faction.name}
@@ -42,10 +38,11 @@ const QuestTracker = () => {
               className="reputation-button"
             >
               <div className="faction-name">{faction.name}</div>
-              <div className="faction-standing">{getCurrentStanding(faction)}</div>
+              <div className="faction-standing">{faction.reputation}</div>
             </button>
           ))}
-        </div>
+        </div> */}
+        <ReputationRadarChart factions={reputation.Factions} />
         <h1>Quests</h1>
         {/* Quest count display for debugging */}
         <div style={{ marginBottom: '15px', color: '#666' }}>
