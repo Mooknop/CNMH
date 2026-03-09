@@ -27,6 +27,30 @@
     "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band."
   },
   {
+    "title": "Izzy's Birthday",
+    "date": { "month": 2, "day": 17 },
+    "type": "personal",
+    "description": "Izzy could never quite recall when he was created, which is strange for Leshies. It's a puzzle to this day..."
+  },
+  {
+    "title": "Ashka's Birthday",
+    "date": { "month": 6, "day": 20 },
+    "type": "personal",
+    "description": "One of Ashka's fondest memories is of the brithday tiaras their mother would give them, glistening with beautiful rubies..."
+  },
+  {
+    "title": "Pellias' Birthday",
+    "date": { "month": 9, "day": 18 },
+    "type": "personal",
+    "description": "That religious hipster, worshipping some new god nobody's ever heard of..."
+  },
+  {
+    "title": "Jade's Birthday",
+    "date": { "month": 10, "day": 29 },
+    "type": "personal",
+    "description": "Half elf, half Varisian, 100% that witch."
+  },
+  {
     "name": "Longnight",
     "recurring": "full moon of Abadius",
     "type": "holiday",
