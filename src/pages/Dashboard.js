@@ -39,7 +39,7 @@ const Dashboard = () => {
               <div className="stat-icon">🗺️</div>
               <div className="stat-content">
                 <div className="stat-label">Current Location</div>
-                <div className="stat-number">Dis, Hell</div>
+                <div className="stat-number">Sandpoint</div>
               </div>
             </div>
 
