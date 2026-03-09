@@ -32,16 +32,14 @@ const ReputationModal = ({ isOpen, onClose, faction }) => {
             </div>
           </div>
 
-          {currentRank && (
+          {currentRank.effect && (
             <div className="current-rank-details">
-              {currentRank.effect && (
                 <div className="rank-details">
                   <div>
                     <h3>Effect:</h3>
                     <p className="effect-text">{currentRank.effect}</p>
                   </div>
                 </div>
-              )}
             </div>
           )}
         </div>
