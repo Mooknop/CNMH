@@ -86,11 +86,10 @@ export const GameDateContext = createContext();
  * @param {React.ReactNode} props.children - Child components
  */
 export const GameDateProvider = ({ children }) => {
-  // Initial game date - 5th of Rova (month index 8), 4724 AR
   const [gameDate, setGameDate] = useState({
     day: 5,
-    month: 8, // 0-indexed
-    year: 4724
+    month: 2, // Pharast
+    year: 4725
   });
 
   /**
