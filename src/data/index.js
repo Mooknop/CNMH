@@ -7,6 +7,7 @@ import Pellias from './Pellias.json';
 //import CarmaleighZ from './CarmaleighZuhnyons.json';
 import loreData from './lore.json';
 import questsData from './quests.json';
+import reputationData from './reputation.json';
 
 // Export an array of all available character data
 export const sampleCharacters = [
@@ -23,3 +24,6 @@ export const loreEntries = loreData.loreEntries;
 
 // Export the quests data directly from the JSON
 export const quests = questsData.quests;
+
+// Export the reputation data
+export const reputation = reputationData;

@@ -58,7 +58,7 @@ const Dashboard = () => {
             className="stat-card clickable-stat-card"
             onClick={() => navigateTo('/quests')}>
               <span className="stat-icon">📜</span>
-              <span className="stat-number">Quests</span>
+              <span className="stat-number">Adventure</span>
             </button>
 
             {/* Golarion Calendar Button - Now using centralized game date */}

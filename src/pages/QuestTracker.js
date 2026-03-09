@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { quests as defaultQuests } from '../data';
+import { quests as defaultQuests, reputation } from '../data';
+import ReputationModal from '../components/shared/ReputationModal';
 import './QuestTracker.css';
 
 const QuestTracker = () => {
   const [quests, setQuests] = useState([]);
+  const [selectedFaction, setSelectedFaction] = useState(null);
   
   useEffect(() => {    
     // Set quests directly from the imported data
     setQuests(defaultQuests);
   }, []);
+  
+  const getCurrentStanding = (faction) => {
+    const rep = faction.reputation;
+    return faction.ranks.find(rank => rep >= rank.min && rep <= rank.max)?.name || 'Unknown';
+  };
   
   const questsArray = Array.isArray(quests) ? quests : [];
   
@@ -26,8 +33,20 @@ const QuestTracker = () => {
   return (
     <div className="quest-tracker-page">
       <div className="quest-tracker">
+        <h1>Reputation</h1>
+        <div className="reputation-buttons">
+          {reputation.Factions.map(faction => (
+            <button 
+              key={faction.name}
+              onClick={() => setSelectedFaction(faction)}
+              className="reputation-button"
+            >
+              <div className="faction-name">{faction.name}</div>
+              <div className="faction-standing">{getCurrentStanding(faction)}</div>
+            </button>
+          ))}
+        </div>
         <h1>Quests</h1>
-        
         {/* Quest count display for debugging */}
         <div style={{ marginBottom: '15px', color: '#666' }}>
           Showing {sortedQuests.length} quests (Total: {questsArray.length})
@@ -97,6 +116,12 @@ const QuestTracker = () => {
           )}
         </div>
       </div>
+      
+      <ReputationModal
+        isOpen={!!selectedFaction}
+        onClose={() => setSelectedFaction(null)}
+        faction={selectedFaction}
+      />
     </div>
   );
 };
