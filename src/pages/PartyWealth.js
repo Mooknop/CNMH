@@ -4,7 +4,7 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import CharacterInventorySection from '../components/party/CharacterInventorySection';
 import ItemModal from '../components/inventory/ItemModal';
 import { getCharacterColor } from '../utils/CharacterUtils';
-import { calculateItemsBulk, formatBulk, poundsToBulk } from '../utils/InventoryUtils';
+import { calculateItemsBulk, formatBulk } from '../utils/InventoryUtils';
 import './PartyWealth.css';
 
 const formatCurrency = (value) => {
@@ -59,7 +59,7 @@ const PartyWealth = () => {
             ? `${character.id}-${containerContext}-${itemIndex}` 
             : `${character.id}-${itemIndex}`,
           totalValue: (item.price || 0) * (item.quantity || 1),
-          singleBulk: formatBulk(poundsToBulk(item.weight || 0)),
+          singleBulk: formatBulk(item.weight || 0),
           totalBulk: calculateItemsBulk([item]),
           storageLocation: containerContext || 'inventory',
           containerName: containerName,

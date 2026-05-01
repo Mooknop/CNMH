@@ -4,7 +4,7 @@ import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import ThaumaturgeExploitsDisplay from './ThaumaturgeExploitsDisplay';
-import { getActions } from '../../utils/ActionsUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component to render character's standard actions
@@ -13,11 +13,8 @@ import { getActions } from '../../utils/ActionsUtils';
  * @param {string} props.themeColor - Character color theme
  */
 const CharacterActionsList = ({ character, themeColor }) => {
-  // Get all actions for the character
-  const actions = getActions(character);
-  
-  // Check if character is a Thaumaturge
-  const isThaumaturge = character.class === 'Thaumaturge' && character.thaumaturge;
+  const { actions, flags, thaumaturge } = useCharacter(character);
+  const { isThaumaturge } = flags;
   
   // Helper function to format action text for display and for ActionIcon
   const getActionText = (action) => {
@@ -36,7 +33,7 @@ const CharacterActionsList = ({ character, themeColor }) => {
     <div className="actions-container">
       {/* Display Thaumaturge exploits if character is a Thaumaturge */}
       {isThaumaturge && (
-        <ThaumaturgeExploitsDisplay character={character} themeColor={themeColor} />
+        <ThaumaturgeExploitsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
       )}
       
       {actions.length > 0 ? (

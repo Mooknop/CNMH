@@ -9,10 +9,8 @@ import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
-import { 
-  getCharacterColor,
-  hasFeat
-} from '../utils/CharacterUtils';
+import { getCharacterColor } from '../utils/CharacterUtils';
+import { useCharacter } from '../hooks/useCharacter';
 import './CharacterSheet.css';
 
 const CharacterSheet = () => {
@@ -54,18 +52,13 @@ const CharacterSheet = () => {
     setIsItemModalOpen(false);
   };
   
-  if (!character) return <div>Loading character...</div>;
-    
-  // Define familiar data
-  const hasFamiliar = hasFeat(character, 'Familiar');
-  const familiar = hasFamiliar ? character.familiar : null;
+  // Data layer — all character reads go through this hook
+  const characterModel = useCharacter(character);
 
-  // Define animal companion data
-  const hasAnimalCompanion = hasFeat(character, 'Animal Companion');
-  const animalCompanion = hasAnimalCompanion ? character.animalCompanion : null;
+  if (!character || !characterModel) return <div>Loading character...</div>;
 
-  // Check if character has spellcasting
-  const hasSpellcasting = character.spellcasting && character.spellcasting.tradition;
+  const { flags, familiar, animalCompanion } = characterModel;
+  const { hasFamiliar, hasAnimalCompanion, hasSpellcasting, hasFocusSpells } = flags;
   
   // Function to render the active tab content
   const renderTabContent = () => {
@@ -166,7 +159,7 @@ const CharacterSheet = () => {
             </button>
             
             {/* Combined spellcasting tab - only shown if character has spellcasting OR focus spells */}
-            {(hasSpellcasting || character.focus_spells || character.champion?.devotion_spells || character.monk?.ki_spells) && (
+            {(hasSpellcasting || hasFocusSpells) && (
               <button 
                 className={`tab-button ${activeTab === 'spells' ? 'active' : ''}`}
                 onClick={() => setActiveTab('spells')}

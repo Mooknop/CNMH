@@ -2,17 +2,6 @@
 // Utility functions for inventory and container calculations
 
 /**
- * Convert pounds to Bulk as per PF2E rules
- * @param {number} pounds - Weight in pounds
- * @returns {number} - Equivalent Bulk value
- */
-export const poundsToBulk = (pounds) => {
-if (!pounds || pounds < 0.1) return 0; // Negligible Bulk
-if (pounds < 1) return 0.1; // Light (L) Bulk
-return pounds;
-};
-
-/**
  * Format Bulk for display
  * @param {number} bulk - Bulk value
  * @returns {string} - Formatted bulk string
@@ -20,11 +9,12 @@ return pounds;
 export const formatBulk = (bulk) => {
 if (bulk === 0) return '—'; // Negligible
 if (bulk < 1) return 'L'; // Light Bulk
-return parseFloat(bulk.toFixed(1)).toString();; // Regular Bulk
+return parseFloat(bulk.toFixed(1)).toString(); // Regular Bulk
 };
 
 /**
- * Calculate total Bulk of items
+ * Calculate total Bulk of items.
+ * Item weights are stored directly in Bulk units in the JSON data.
  * @param {Array} items - Array of items
  * @returns {number} - Total bulk
  */
@@ -32,8 +22,8 @@ export const calculateItemsBulk = (items) => {
 if (!items || !Array.isArray(items)) return 0;
 
 return items.reduce((total, item) => {
-    // Calculate this item's bulk
-    const itemBulk = poundsToBulk(item.weight) * (item.quantity || 1);
+    // Item weight is already in Bulk units
+    const itemBulk = (item.weight || 0) * (item.quantity || 1);
     
     // If item has contents, recursively calculate their bulk too
     let contentsBulk = 0;

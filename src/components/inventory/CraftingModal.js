@@ -1,8 +1,8 @@
 // src/components/inventory/CraftingModal.js
 import React, { useState } from 'react';
 import './CraftingModal.css';
-import { getProficiencyLabel, getSkillModifier, formatModifier, formatBulk } from '../../utils/CharacterUtils';
-import { getLevelBasedDc } from '../../utils/InventoryUtils';
+import { getProficiencyLabel, getSkillModifier, formatModifier } from '../../utils/CharacterUtils';
+import { getLevelBasedDc, formatBulk } from '../../utils/InventoryUtils';
 
 const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('rules');

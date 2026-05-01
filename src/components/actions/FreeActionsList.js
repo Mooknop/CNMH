@@ -3,7 +3,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
-import { getFreeActions } from '../../utils/ActionsUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component to render character's free actions
@@ -12,8 +12,7 @@ import { getFreeActions } from '../../utils/ActionsUtils';
  * @param {string} props.themeColor - Character color theme
  */
 const FreeActionsList = ({ character, themeColor }) => {
-  // Get all free actions for the character
-  const freeActions = getFreeActions(character);
+  const { freeActions } = useCharacter(character);
   
   return (
     <div className="free-actions-container">

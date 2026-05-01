@@ -4,7 +4,7 @@ import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import ThaumaturgeImplementsDisplay from './ThaumaturgeImplementsDisplay';
-import { getStrikes, categorizeStrikesByType } from '../../utils/ActionsUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component to render character's strikes, separated into melee and ranged categories
@@ -13,15 +13,12 @@ import { getStrikes, categorizeStrikesByType } from '../../utils/ActionsUtils';
  * @param {string} props.themeColor - Character color theme
  */
 const StrikesList = ({ character, themeColor }) => {
-  // Get all strikes for the character
-  const strikes = getStrikes(character);
-  
+  const { strikes, flags, thaumaturge } = useCharacter(character);
+  const { isThaumaturge } = flags;
+
   // Separate strikes into melee and ranged categories
   const meleeStrikes = strikes.filter(strike => strike.type === 'melee');
   const rangedStrikes = strikes.filter(strike => strike.type === 'ranged');
-  
-  // Check if character is a Thaumaturge
-  const isThaumaturge = character.class === 'Thaumaturge' && character.thaumaturge;
   
   // Helper function to get action text for a strike
   const getActionText = (strike) => {
@@ -120,7 +117,7 @@ const StrikesList = ({ character, themeColor }) => {
     <div className="strikes-container">
       {/* Display Thaumaturge implements if character is a Thaumaturge */}
       {isThaumaturge && (
-        <ThaumaturgeImplementsDisplay character={character} themeColor={themeColor} />
+        <ThaumaturgeImplementsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
       )}
       
       {strikes.length > 0 ? (

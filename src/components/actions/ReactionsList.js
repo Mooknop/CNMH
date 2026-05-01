@@ -3,7 +3,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
-import { getReactions } from '../../utils/ActionsUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component to render character's reactions
@@ -12,8 +12,7 @@ import { getReactions } from '../../utils/ActionsUtils';
  * @param {string} props.themeColor - Character color theme
  */
 const ReactionsList = ({ character, themeColor }) => {
-  // Get all reactions for the character
-  const reactions = getReactions(character);
+  const { reactions } = useCharacter(character);
   
   return (
     <div className="reactions-container">

@@ -1,7 +1,7 @@
 // src/components/inventory/ItemModal.js
 import React from 'react';
 import TraitTag from '../shared/TraitTag';
-import { formatBulk, poundsToBulk } from '../../utils/InventoryUtils';
+import { formatBulk } from '../../utils/InventoryUtils';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
@@ -37,7 +37,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
             <div className="item-detail">
               <span className="item-detail-label">Bulk</span>
               <span className="item-detail-value">
-                {formatBulk(poundsToBulk(item.weight || 0))}
+                {formatBulk(item.weight || 0)}
               </span>
             </div>
 

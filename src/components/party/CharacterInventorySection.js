@@ -1,29 +1,33 @@
 import CollapsibleCard from '../shared/CollapsibleCard';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 import { formatBulk } from '../../utils/InventoryUtils';
-import { calculateEnhancedBulkLimit } from '../../utils/CharacterUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
-const CharacterInventorySection = ({ 
-  character, 
-  characterIndex, 
-  items, 
-  onItemClick, 
+const CharacterInventorySection = ({
+  character,
+  characterIndex,
+  items,
+  onItemClick,
   sortBy,
   searchTerm,
-  showContainerItems 
+  showContainerItems
 }) => {
   const characterColor = getCharacterColor(characterIndex);
-  
+
+  // Data layer — all character reads go through this hook
+  const { bulkStats, id, name, characterClass } = useCharacter(character);
+  const { bulkLimit } = bulkStats;
+
   // Filter items for this character
-  const characterItems = items.filter(item => item.characterId === character.id);
-  
+  const characterItems = items.filter(item => item.characterId === id);
+
   // Apply search filter
   const filteredItems = characterItems.filter(item => {
     if (!showContainerItems && item.isInContainer) return false;
     if (!searchTerm) return true;
     return item.name.toLowerCase().includes(searchTerm.toLowerCase());
   });
-  
+
   // Sort items for this character
   const sortedItems = [...filteredItems].sort((a, b) => {
     switch (sortBy) {
@@ -44,13 +48,6 @@ const CharacterInventorySection = ({
     totalItems: totals.totalItems + (item.quantity || 1)
   }), { totalValue: 0, totalBulk: 0, totalItems: 0 });
 
-  // Calculate bulk limits for this character (PF2E rules)
-  const calculateBulkLimits = () => {
-    return calculateEnhancedBulkLimit(character);
-  };
-
-  const { bulkLimit, encumberedThreshold, containerBonus } = calculateBulkLimits();
-
   // Create the header content for the CollapsibleCard
   const headerContent = (
     <div className="character-section-header">
@@ -59,10 +56,10 @@ const CharacterInventorySection = ({
           className="character-name-large" 
           style={{ color: characterColor }}
         >
-          {character.name}
+          {name}
         </div>
         <div className="character-class-level">
-          {character.class || 'Unknown Class'}
+          {characterClass || 'Unknown Class'}
         </div>
       </div>
 
@@ -129,7 +126,7 @@ const CharacterInventorySection = ({
         </div>
       ) : (
         <div className="empty-character-inventory">
-          <p>No items found for {character.name}</p>
+          <p>No items found for {name}</p>
           {!showContainerItems && (
             <p className="filter-hint">Try enabling "Show items in containers" to see more items.</p>
           )}

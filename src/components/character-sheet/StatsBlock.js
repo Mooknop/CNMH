@@ -1,24 +1,32 @@
 import React, { useState } from 'react';
 import './StatsBlock.css';
 import EnhancedSkillsList from '../character-sheet/EnhancedSkillsList';
-import { 
-  getAbilityModifier, 
-  formatModifier, 
-  getAttackBonus,
-  getProficiencyLabel,
-  calculateClassDC
-} from '../../utils/CharacterUtils';
+import { formatModifier, getAttackBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 const StatsBlock = ({ character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('abilities'); // Default tab: 'abilities' or 'proficiencies'
-  
-  // Get ability modifiers
-  const strMod = getAbilityModifier(character.abilities?.strength || 10);
-  const dexMod = getAbilityModifier(character.abilities?.dexterity || 10);
-  
+
+  // Data layer — all character reads go through this hook
+  const {
+    abilityModifiers,
+    saves,
+    proficiencies: rawProficiencies,
+    classDC,
+    level,
+    maxHp,
+    ac,
+    size,
+    speed,
+    senses,
+  } = useCharacter(character);
+
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
-  
+
+  const strMod = abilityModifiers.strength;
+  const dexMod = abilityModifiers.dexterity;
+
   // Default empty proficiencies object in case the character doesn't have it defined
   const defaultProficiencies = {
     weapons: {
@@ -34,9 +42,8 @@ const StatsBlock = ({ character, characterColor }) => {
       heavy: { proficiency: 0, name: "Untrained" }
     }
   };
-  
-  // Use character proficiencies if available, otherwise use defaults
-  const proficiencies = character.proficiencies || defaultProficiencies;
+
+  const proficiencies = rawProficiencies.weapons ? rawProficiencies : defaultProficiencies;
   
   // Render the appropriate tab content
   const renderTabContent = () => {
@@ -47,42 +54,42 @@ const StatsBlock = ({ character, characterColor }) => {
             <div className="abilities-section">
               <div className="ability">
                 <div className="ability-name" style={{ color: themeColor }}>STR</div>
-                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.strength || 10))}</div>
+                <div className="ability-mod">{formatModifier(abilityModifiers.strength)}</div>
               </div>
               <div className="ability">
                 <div className="ability-name" style={{ color: themeColor }}>DEX</div>
-                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.dexterity || 10))}</div>
+                <div className="ability-mod">{formatModifier(abilityModifiers.dexterity)}</div>
               </div>
               <div className="ability">
                 <div className="ability-name" style={{ color: themeColor }}>CON</div>
-                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.constitution || 10))}</div>
+                <div className="ability-mod">{formatModifier(abilityModifiers.constitution)}</div>
               </div>
               <div className="ability">
                 <div className="ability-name" style={{ color: themeColor }}>INT</div>
-                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.intelligence || 10))}</div>
+                <div className="ability-mod">{formatModifier(abilityModifiers.intelligence)}</div>
               </div>
               <div className="ability">
                 <div className="ability-name" style={{ color: themeColor }}>WIS</div>
-                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.wisdom || 10))}</div>
+                <div className="ability-mod">{formatModifier(abilityModifiers.wisdom)}</div>
               </div>
               <div className="ability">
                 <div className="ability-name" style={{ color: themeColor }}>CHA</div>
-                <div className="ability-mod">{formatModifier(getAbilityModifier(character.abilities?.charisma || 10))}</div>
+                <div className="ability-mod">{formatModifier(abilityModifiers.charisma)}</div>
               </div>
             </div>
             
             <div className="defenses-section">
               <div className="defense">
                 <div className="defense-name" style={{ color: themeColor }}>Fort</div>
-                <div className="defense-value">{formatModifier(character.saves?.fortitude || 0)}</div>
+                <div className="defense-value">{formatModifier(saves.fortitude)}</div>
               </div>
               <div className="defense">
                 <div className="defense-name" style={{ color: themeColor }}>Ref</div>
-                <div className="defense-value">{formatModifier(character.saves?.reflex || 0)}</div>
+                <div className="defense-value">{formatModifier(saves.reflex)}</div>
               </div>
               <div className="defense">
                 <div className="defense-name" style={{ color: themeColor }}>Will</div>
-                <div className="defense-value">{formatModifier(character.saves?.will || 0)}</div>
+                <div className="defense-value">{formatModifier(saves.will)}</div>
               </div>
             </div>
           </>
@@ -96,7 +103,7 @@ const StatsBlock = ({ character, characterColor }) => {
               <div className="proficiency-items">
                 <div className="proficiency-item">
                   <span className="proficiency-name" style={{ color: themeColor }}>
-                    <strong>{calculateClassDC(character)}</strong>
+                    <strong>{classDC}</strong>
                   </span>
                 </div>
               </div>
@@ -115,13 +122,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, level)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, level)}
                       </div>
                     </div>
                   </div>
@@ -139,13 +146,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0, level)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0, level)}
                       </div>
                     </div>
                   </div>
@@ -163,13 +170,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0, level)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0, level)}
                       </div>
                     </div>
                   </div>
@@ -187,13 +194,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0, level)}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {getAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, character.level || 0)}
+                        {getAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, level)}
                       </div>
                     </div>
                   </div>
@@ -212,13 +219,13 @@ const StatsBlock = ({ character, characterColor }) => {
                       <div className="bonus-container">
                         <div className="attack-type">Melee (STR)</div>
                         <div className="attack-bonus" style={{ color: themeColor }}>
-                          {getAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0, character.level || 0)}
+                          {getAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0, level)}
                         </div>
                       </div>
                       <div className="bonus-container">
                         <div className="attack-type">Ranged (DEX)</div>
                         <div className="attack-bonus" style={{ color: themeColor }}>
-                          {getAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0, character.level || 0)}
+                          {getAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0, level)}
                         </div>
                       </div>
                     </div>
@@ -238,7 +245,7 @@ const StatsBlock = ({ character, characterColor }) => {
                       <div className="bonus-container">
                         <div className="attack-type">Melee (STR/DEX)</div>
                         <div className="attack-bonus" style={{ color: themeColor }}>
-                          {getAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0, character.level || 0)}
+                          {getAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0, level)}
                         </div>
                       </div>
                     </div>
@@ -291,11 +298,11 @@ const StatsBlock = ({ character, characterColor }) => {
         <div className="hp-defense">
           <div className="hp-box" style={{ borderColor: themeColor }}>
             <div className="defense-name" style={{ color: themeColor }}>HP</div>
-            <div className="defense-value">{character.maxHp || 0}</div>
+            <div className="defense-value">{maxHp}</div>
           </div>
           <div className="ac-box">
             <div className="defense-name">AC</div>
-            <div className="defense-value">{character.ac || 10}</div>
+            <div className="defense-value">{ac}</div>
           </div>
         </div>
       </div>
@@ -311,20 +318,20 @@ const StatsBlock = ({ character, characterColor }) => {
               <div className="attribute">
                 <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Size</span>
                 <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
-                  {character.size || 'teeny weeny'}
+                  {size || 'teeny weeny'}
                 </span>
               </div>
               <div className="attribute">
                 <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Speed</span>
                 <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
-                  {character.speed || 69} feet
+                  {speed || 69} feet
                 </span>
               </div>
-              {character.senses && (
+              {senses && (
                 <div className="attribute">
                   <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Senses</span>
                   <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
-                    {character.senses}
+                    {senses}
                   </span>
                 </div>
               )}

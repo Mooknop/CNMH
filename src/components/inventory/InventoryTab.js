@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './InventoryTab.css';
 import ContainersList from './ContainersList';
-import { 
-  calculateItemsBulk, 
-  poundsToBulk 
-} from '../../utils/InventoryUtils';
 import { formatBulk } from '../../utils/InventoryUtils';
 import CraftingModal from './CraftingModal';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component for displaying character inventory
@@ -16,44 +13,12 @@ import CraftingModal from './CraftingModal';
  * @param {function} props.onItemClick - Handler for item clicks
  */
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
-  const [bulkUsed, setBulkUsed] = useState(0);
   const [isCraftingOpen, setIsCraftingOpen] = useState(false);
-  
-  // Calculate bulk whenever inventory changes
-  useEffect(() => {
-    if (character && character.inventory) {
-      const totalBulk = calculateItemsBulk(character.inventory);
-      setBulkUsed(totalBulk);
-    }
-  }, [character]);
-  
-  // Bulk calculations for character
-  const calculateBulkLimit = () => {
-    if (!character || !character.abilities) {
-      return { bulkLimit: 0, encumberedThreshold: 0 };
-    }
-    
-    // In PF2E, Bulk limit is equal to Strength ability modifier + 10
-    const abilities = character.abilities || {};
-    const strMod = Math.floor((abilities.strength - 10 || 0) / 2);
-    let bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
-    let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
-    
-    // Check if the character has the Hefty Hauler feat
-    const hasHeftyHauler = character.feats && character.feats.some(
-      feat => feat.name === "Hefty Hauler"
-    );
-    
-    if (hasHeftyHauler) {
-      // Hefty Hauler increases both maximum and encumbered Bulk by 2
-      bulkLimit += 2;
-      encumberedThreshold += 2;
-    }
-    
-    return { bulkLimit, encumberedThreshold };
-  };
-  
-  const { bulkLimit, encumberedThreshold } = calculateBulkLimit();
+
+  // Data layer — all character reads go through this hook
+  const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = useCharacter(character);
+  const { bulkLimit, encumberedThreshold } = bulkStats;
+
   const bulkPercentage = (bulkUsed / bulkLimit) * 100;
   const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
   const isOverencumbered = bulkUsed > bulkLimit;
@@ -67,20 +32,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   };
 
   // Sort inventory items alphabetically by name
-  const getSortedInventory = () => {
-    if (!character || !character.inventory || !Array.isArray(character.inventory)) {
-      return [];
-    }
-    
-    return [...character.inventory].sort((a, b) => {
-      // Compare names case-insensitive
-      return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-    });
-  };
-  
-  const sortedInventory = getSortedInventory();
+  const sortedInventory = [...inventory].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
 
-  const hasCrafting = character.skills?.crafting?.proficiency > 0;
+  const hasCrafting = skillProficiencies.crafting > 0;
   
   return (
     <div className="inventory-tab">
@@ -168,7 +124,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
                   </td>
                   <td>{item.quantity || 1}</td>
                   <td>
-                    {formatBulk(poundsToBulk(item.weight || 0))}
+                    {formatBulk(item.weight || 0)}
                   </td>
                 </tr>
               ))

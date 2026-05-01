@@ -9,13 +9,16 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { CharacterContext } from '../../contexts/CharacterContext';
-import { 
-  getAbilityModifier, 
-  formatModifier, 
+import {
+  getAbilityModifier,
+  formatModifier,
   getSkillModifier,
   SKILL_ABILITY_MAP,
   getCharacterColor
 } from '../../utils/CharacterUtils';
+// Note: PartySummary aggregates data from multiple characters simultaneously.
+// useCharacter cannot be called inside a loop per React's rules of hooks.
+// Multi-character calculations are handled by utility functions directly.
 import './PartySummary.css';
 
 const PartySummary = () => {

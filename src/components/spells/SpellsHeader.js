@@ -1,6 +1,6 @@
 import React from 'react';
 import { getProficiencyLabel } from '../../utils/CharacterUtils';
-import { calculateSpellStats } from '../../utils/SpellUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component to display spellcasting statistics
@@ -9,8 +9,8 @@ import { calculateSpellStats } from '../../utils/SpellUtils';
  * @param {string} props.themeColor - Theme color
  */
 const SpellsHeader = ({ character, themeColor }) => {
-  const spellcasting = character.spellcasting || {};
-  const { spellAttackMod, spellDC } = calculateSpellStats(character);
+  const { spellcasting, spellStats } = useCharacter(character);
+  const { spellAttackMod, spellDC } = spellStats;
 
   return (
     <div className="spellcasting-stats">

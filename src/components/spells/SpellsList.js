@@ -12,21 +12,15 @@ import WandSpells from './WandSpells';
 import FocusSpellsList from './FocusSpellsList';
 import InnateCastingList from './InnateCastingList';
 import EldPowers from './EldPowers';
-import { 
-  organizeSpellsByRank, 
+import {
+  organizeSpellsByRank,
   getAvailableRanks,
   getDefenseTypes,
   filterSpellsByRank,
   getSortedRankList,
-  findScrollItems,
-  extractScrollSpells,
-  findWandItems,
-  extractWandSpells,
-  extractInnateSpells,
-  findGemItems,
-  extractGemSpells
 } from '../../utils/SpellUtils';
 import Harrowing from './Harrowing';
+import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Main component for displaying spells in different categories
@@ -39,212 +33,90 @@ const SpellsList = ({ character, characterColor }) => {
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
   const [viewMode, setViewMode] = useState(null); // Initialize to null, will be set after determining available modes
-  
-  // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
-  
-  // Get spell data from character
-  const spellcasting = character.spellcasting || {};
-  
-  // Check if character has a bloodline
-  const hasBloodline = !!spellcasting.bloodline;
-  
-  // Function to check if character has focus spells
-  const hasFocusSpells = () => {
-    // Check each character class for focus spells
-    if (character.champion && character.champion.devotion_spells) {
-      return true;
-    }
-    if (character.spellcasting && character.spellcasting.focus) {
-      return true;
-    }
-    if (character.monk && character.monk.ki_spells) {
-      return true;
-    }
-    if (character.focus_spells && character.focus_spells.length > 0) {
-      return true;
-    }
-    return false;
-  };
-  
-  // Use memoization for preparing spell data
+
+  // Data layer — all character reads go through this hook
+  const {
+    spellcasting,
+    scrollSpells,
+    wandSpells,
+    gemSpells,
+    innateSpells,
+    staffSpells,
+    staff,
+    eldPowers,
+    level,
+    flags,
+    champion,
+    monk,
+    characterClass,
+  } = useCharacter(character);
+
   const {
     hasSpellcasting,
-    hasFocus,
-    hasInnate,
-    innateSpells,
-    scrollSpells,
+    hasFocusSpells: hasFocus,
+    hasInnateSpells: hasInnate,
     hasScrolls,
-    wandSpells,
     hasWands,
-    spellsByRank,
-    staffSpells,
+    hasGems,
     hasStaff,
+    hasEldPowers,
+    hasHarrowing,
+  } = flags;
+
+  // Use the characterColor or default to the theme color
+  const themeColor = characterColor || '#5e2929';
+
+  // Organize spell data using SpellUtils (pure functions, no raw character access)
+  const {
+    spellsByRank,
     availableSpellRanks,
     allAvailableRanks,
     sortedRankList,
     allDefenseTypes,
-    hasGems,
-    gemSpells,
-    hasEldPowers,
-    eldPowers,
-    hasHarrowing
   } = useMemo(() => {
-    // Check if character has Eld Powers
-    const hasEldPowers = spellcasting.eldPowers && spellcasting.eldPowers.length > 0;
-    const eldPowers = spellcasting.eldPowers || [];
-    
-    // Check if character has spellcasting
-    const hasSpellcasting = !!spellcasting.tradition;
-    
-    // Check if character has focus spells
-    const hasFocus = hasFocusSpells();
-    
-    // Extract innate spells
-    const innateSpells = extractInnateSpells(character);
-    const hasInnate = innateSpells.length > 0;
-    
-    const hasHarrowing = character.feats && character.feats.some(
-      feat => feat.name === "Harrower Dedication"
-    );
+    const staffSpellsByRank    = organizeSpellsByRank(staffSpells);
+    const scrollSpellsByRank   = organizeSpellsByRank(scrollSpells);
+    const wandSpellsByRank     = organizeSpellsByRank(wandSpells);
+    const innateSpellsByRank   = organizeSpellsByRank(innateSpells);
+    const gemSpellsByRank      = organizeSpellsByRank(gemSpells);
+    const spellsByRank         = organizeSpellsByRank(spellcasting.spells || []);
 
-    // If no spellcasting, return early with default values
-    if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing) {
-      return {
-        hasSpellcasting: false,
-        hasFocus: false,
-        hasInnate: false,
-        hasEldPowers: false,
-        eldPowers: [],
-        innateSpells: [],
-        scrollItems: [],
-        scrollSpells: [],
-        hasScrolls: false,
-        wandItems: [],
-        wandSpells: [],
-        hasWands: false,
-        spellsByRank: {},
-        staffSpells: [],
-        hasStaff: false,
-        staffSpellsByRank: {},
-        scrollSpellsByRank: {},
-        wandSpellsByRank: {},
-        innateSpellsByRank: {},
-        availableSpellRanks: [],
-        availableStaffSpellRanks: [],
-        availableScrollSpellRanks: [],
-        availableWandSpellRanks: [],
-        availableInnateSpellRanks: [],
-        allAvailableRanks: [],
-        sortedRankList: [],
-        allDefenseTypes: [],
-        hasGems: false,
-        gemSpells: [],
-        hasHarrowing: false
-      };
-    }
-    
-    // Find scrolls in inventory
-    const scrollItems = findScrollItems(character);
-    const hasScrolls = scrollItems.length > 0;
-    
-    // Extract scroll spells
-    const scrollSpells = hasScrolls ? extractScrollSpells(scrollItems) : [];
-    
-    // Spell gems
-    const gemItems = findGemItems(character);
-    const hasGems = gemItems.length > 0;
-    // Extract gem spells
-    const gemSpells = hasGems ? extractGemSpells(gemItems) : [];
-
-    // Find wands in inventory
-    const wandItems = findWandItems(character);
-    const hasWands = wandItems.length > 0;
-    
-    // Extract wand spells
-    const wandSpells = hasWands ? extractWandSpells(wandItems) : [];
-    
-    // Check if character has a staff
-    const hasStaff = character.staff && character.staff.name;
-    const staffSpells = character.staff?.spells || [];
-    
-    // Organize spells by rank
-    const spellsByRank = organizeSpellsByRank(spellcasting.spells || []);
-    const staffSpellsByRank = organizeSpellsByRank(staffSpells);
-    const scrollSpellsByRank = organizeSpellsByRank(scrollSpells);
-    const wandSpellsByRank = organizeSpellsByRank(wandSpells);
-    const innateSpellsByRank = organizeSpellsByRank(innateSpells);
-    const gemSpellsByRank = organizeSpellsByRank(gemSpells);
-    
-    // Get available ranks from each source
-    const availableSpellRanks = getAvailableRanks(spellsByRank);
+    const availableSpellRanks      = getAvailableRanks(spellsByRank);
     const availableStaffSpellRanks = getAvailableRanks(staffSpellsByRank);
-    const availableScrollSpellRanks = getAvailableRanks(scrollSpellsByRank);
-    const availableWandSpellRanks = getAvailableRanks(wandSpellsByRank);
-    const availableInnateSpellRanks = getAvailableRanks(innateSpellsByRank);
-    const availableGemSpellRanks = getAvailableRanks(gemSpellsByRank);
-    
-    // Combine available ranks from all sources
+    const availableScrollSpellRanks= getAvailableRanks(scrollSpellsByRank);
+    const availableWandSpellRanks  = getAvailableRanks(wandSpellsByRank);
+    const availableInnateSpellRanks= getAvailableRanks(innateSpellsByRank);
+    const availableGemSpellRanks   = getAvailableRanks(gemSpellsByRank);
+
     const allAvailableRanks = [...new Set([
-      ...availableSpellRanks, 
+      ...availableSpellRanks,
       ...availableStaffSpellRanks,
       ...availableScrollSpellRanks,
       ...availableWandSpellRanks,
       ...availableInnateSpellRanks,
-      ...availableGemSpellRanks
+      ...availableGemSpellRanks,
     ])];
-    
-    // Create sorted rank list
+
     const sortedRankList = getSortedRankList(allAvailableRanks);
-    
-    // Get all defense types from all spells
+
     const allSpells = [
       ...(spellcasting.spells || []),
       ...staffSpells,
       ...scrollSpells,
       ...wandSpells,
       ...innateSpells,
-      ...gemSpells
+      ...gemSpells,
     ];
-    
     const allDefenseTypes = getDefenseTypes(allSpells);
-    
+
     return {
-      hasSpellcasting,
-      hasFocus,
-      hasInnate,
-      hasEldPowers,
-      eldPowers,
-      innateSpells,
-      scrollItems,
-      scrollSpells,
-      hasScrolls,
-      wandItems,
-      wandSpells,
-      hasWands,
       spellsByRank,
-      staffSpells,
-      hasStaff,
-      staffSpellsByRank,
-      scrollSpellsByRank,
-      wandSpellsByRank,
-      innateSpellsByRank,
       availableSpellRanks,
-      availableStaffSpellRanks,
-      availableScrollSpellRanks,
-      availableWandSpellRanks,
-      availableInnateSpellRanks,
       allAvailableRanks,
       sortedRankList,
       allDefenseTypes,
-      gemItems,
-      gemSpells,
-      hasGems,
-      gemSpellsByRank,
-      availableGemSpellRanks,
-      hasHarrowing
     };
-  }, [character, spellcasting]);
+  }, [spellcasting, scrollSpells, wandSpells, gemSpells, innateSpells, staffSpells]);
 
   // Effect to set the initial view mode based on what's available
   useEffect(() => {
@@ -274,7 +146,7 @@ const SpellsList = ({ character, characterColor }) => {
   }, [hasSpellcasting, hasInnate, hasFocus, hasEldPowers, hasStaff, hasScrolls, hasWands, hasGems, viewMode, hasHarrowing]);
   
   // If no spellcasting, focus magic, innate spells, or eld powers, show placeholder
-  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing) {
+  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing && !hasScrolls && !hasWands && !hasGems && !hasStaff) {
     return (
       <div className="spells-list">
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
@@ -345,18 +217,10 @@ const SpellsList = ({ character, characterColor }) => {
   
   // Determine the focus spells label
   const getFocusSpellsLabel = () => {
-    if (character.champion) {
-      return 'Devotion Spells';
-    }
-    if (character.monk) {
-      return 'Qi Spells';
-    }
-    if (character.class === 'Bard') {
-      return 'Compositions';
-    }
-    if (character.spellcasting && character.spellcasting.bloodline) {
-      return 'Focus Spells';
-    }
+    if (champion) return 'Devotion Spells';
+    if (monk) return 'Qi Spells';
+    if (characterClass === 'Bard') return 'Compositions';
+    if (spellcasting.bloodline) return 'Focus Spells';
     return 'Focus Spells';
   };
   
@@ -381,7 +245,7 @@ const SpellsList = ({ character, characterColor }) => {
         hasStaff={hasStaff}
         hasScrolls={hasScrolls}
         hasWands={hasWands}
-        staff={character.staff || {}}
+        staff={staff || {}}
         focusLabel={getFocusSpellsLabel()}
         themeColor={themeColor}
         hasGems={hasGems}
@@ -406,7 +270,7 @@ const SpellsList = ({ character, characterColor }) => {
         <SpellsRepertoire 
           spells={spellsToDisplay}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
           defenseFilter={defenseFilter}
           character={character}
         />
@@ -416,7 +280,7 @@ const SpellsList = ({ character, characterColor }) => {
         <InnateCastingList
           spells={spellsToDisplay}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
           defenseFilter={defenseFilter}
           character={character}
         />
@@ -431,10 +295,10 @@ const SpellsList = ({ character, characterColor }) => {
       
       {viewMode === 'staff' && hasStaff && (
         <StaffSpells 
-          staff={character.staff}
+          staff={staff}
           spells={spellsToDisplay}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
@@ -445,7 +309,7 @@ const SpellsList = ({ character, characterColor }) => {
         <ScrollSpells 
           spells={spellsToDisplay}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
@@ -456,7 +320,7 @@ const SpellsList = ({ character, characterColor }) => {
         <WandSpells 
           spells={spellsToDisplay}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
@@ -467,7 +331,7 @@ const SpellsList = ({ character, characterColor }) => {
         <GemSpells 
           spells={spellsToDisplay}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
@@ -478,7 +342,7 @@ const SpellsList = ({ character, characterColor }) => {
         <EldPowers 
           eldPowers={eldPowers}
           themeColor={themeColor}
-          characterLevel={character.level}
+          characterLevel={level}
         />
       )}
 

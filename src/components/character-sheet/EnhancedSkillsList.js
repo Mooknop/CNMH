@@ -1,21 +1,26 @@
 import React, { useState } from 'react';
 import './EnhancedSkillsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { 
-  getSkillModifier, 
-  getAbilityModifier, 
-  formatModifier, 
-  getProficiencyLabel, 
-  getItemBonus,
-  hasFeat
-} from '../../utils/CharacterUtils';
+import { formatModifier, getProficiencyLabel } from '../../utils/CharacterUtils';
+import { useCharacter } from '../../hooks/useCharacter';
 
 const EnhancedSkillsList = ({ character, characterColor }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || '#5e2929';
 
-  // Check if character has Untrained Improvisation
-  const hasUntrainedImprovisation = hasFeat(character, 'Untrained Improvisation');
+  // Data layer — all character reads go through this hook
+  const {
+    skillModifiers,
+    skillProficiencies,
+    itemBonuses,
+    abilityModifiers,
+    loreSkills,
+    level,
+    inventory,
+    flags,
+  } = useCharacter(character);
+
+  const hasUntrainedImprovisation = flags.hasUntrainedImprovisation;
 
   // Define skills with their key abilities and associated actions
   const skills = [
@@ -241,7 +246,6 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
     return a.name.localeCompare(b.name);
   });
 
-  const loreSkills = character.skills.lore;
   
   return (
     <div className="enhanced-skills-list">
@@ -256,27 +260,20 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           borderRadius: '4px'
         }}>
           <strong style={{ color: themeColor }}>Untrained Improvisation:</strong> Your proficiency bonus to untrained skill checks is equal to 
-          {character.level >= 7 
-            ? ` your full level (${character.level})`
-            : ` half your level (${Math.floor(character.level / 2)})`
+          {level >= 7
+            ? ` your full level (${level})`
+            : ` half your level (${Math.floor(level / 2)})`
           } instead of +0.
         </div>
       )}
       
       <div className="skills-grid">
         {sortedSkills.map(skill => {
-          // Get the skill proficiency from character data (0 if not found)
-          const proficiency = character.skills?.[skill.id]?.proficiency || 0;
-          
-          // Use the utility function to calculate the full skill modifier
-          const modifier = getSkillModifier(character, skill.id);
-          
-          // Get the ability modifier for display
-          const abilityMod = getAbilityModifier(character.abilities?.[skill.ability] || 10);
+          const proficiency = skillProficiencies[skill.id] || 0;
+          const modifier    = skillModifiers[skill.id] || 0;
+          const abilityMod  = abilityModifiers[skill.ability] || 0;
           const abilityModStr = formatModifier(abilityMod);
-          
-          // Get any item bonus for this skill
-          const itemBonus = getItemBonus(character, skill.id);
+          const itemBonus   = itemBonuses[skill.id] || 0;
           
           const proficiencyColorClass = getProficiencyColor(proficiency);
           
@@ -314,7 +311,7 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
                 <div className="skill-item-bonus">
                   <span className="item-bonus-label" style={{ color: themeColor }}>Item Bonus:</span>
                   <span className="item-bonus-value">+{itemBonus} from {
-                    character.inventory
+                    inventory
                       .filter(item => item.bonus && item.bonus[0] === skill.id)
                       .map(item => item.name)
                       .join(', ')
@@ -345,11 +342,11 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           );
         })}
       </div>
-      {Array.isArray(character.skills.lore) && character.skills.lore.map((loreSkill, index) => {
+      {loreSkills.map((loreSkill, index) => {
         const loreId = `lore-${loreSkill.name.toLowerCase().replace(/\s+/g, '-')}`;
         const loreProficiency = loreSkill.proficiency || 0;
-        const abilityMod = getAbilityModifier(character.abilities?.intelligence || 10);
-        const loreModifier = abilityMod + character.level + loreSkill.proficiency*2;
+        const abilityMod = abilityModifiers.intelligence;
+        const loreModifier = abilityMod + level + loreSkill.proficiency * 2;
         
         return (
           <CollapsibleCard 

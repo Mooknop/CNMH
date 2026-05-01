@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import './ContainerItem.css';
-import { 
-  calculateContainerBulk, 
+import {
+  calculateContainerBulk,
   formatDecimal,
-  poundsToBulk 
+  formatBulk,
 } from '../../utils/InventoryUtils';
-import { formatBulk } from '../../utils/CharacterUtils';
 
 /**
  * Component for displaying a container and its contents
@@ -115,7 +114,7 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
                   </td>
                   <td>{item.quantity || 1}</td>
                   <td>
-                    {formatBulk(poundsToBulk(item.weight || 0))}
+                    {formatBulk(item.weight || 0)}
                   </td>
                 </tr>
               ))}

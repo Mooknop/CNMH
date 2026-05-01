@@ -8,11 +8,10 @@ import './ActionsList.css';
  * @param {Object} props.character - Character data
  * @param {string} props.themeColor - Character color theme
  */
-const ThaumaturgeImplementsDisplay = ({ character, themeColor }) => {
-  // Return null if character doesn't have thaumaturge data
-  if (!character.thaumaturge) return null;
+const ThaumaturgeImplementsDisplay = ({ thaumaturge, themeColor }) => {
+  if (!thaumaturge) return null;
 
-  const { passives = [] } = character.thaumaturge;
+  const { passives = [] } = thaumaturge;
 
   return (
     <div className="thaumaturge-implements-container">
