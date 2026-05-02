@@ -6,7 +6,7 @@ import ActionIcon from '../shared/ActionIcon';
 
 const FocusSpellsList = ({ character, characterColor }) => {
   // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
+  const themeColor = characterColor || 'var(--color-primary)';
   
   // Function to get the label for focus spells based on character class
   const getFocusSpellsLabel = () => {

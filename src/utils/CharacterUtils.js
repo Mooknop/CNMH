@@ -2,6 +2,17 @@
 // Utility functions for character calculations in Pathfinder 2E
 
 /**
+ * Feat names referenced across the codebase — single source of truth to avoid typo bugs
+ */
+export const FEAT_NAMES = {
+  FAMILIAR: 'Familiar',
+  ANIMAL_COMPANION: 'Animal Companion',
+  HEFTY_HAULER: 'Hefty Hauler',
+  UNTRAINED_IMPROVISATION: 'Untrained Improvisation',
+  HARROWER_DEDICATION: 'Harrower Dedication',
+};
+
+/**
  * Character color palette - used for consistent color coding across components
  */
 export const CHARACTER_COLORS = [
@@ -82,7 +93,7 @@ export const hasFeat = (character, featName) => {
 export const getProficiencyBonus = (proficiencyRank, level, character = null) => {
   if (proficiencyRank <= 0) {
     // Check for Untrained Improvisation feat
-    if (character && hasFeat(character, "Untrained Improvisation")) {
+    if (character && hasFeat(character, FEAT_NAMES.UNTRAINED_IMPROVISATION)) {
       const characterLevel = character.level || level || 0;
       // Level 7+ gets full level, otherwise half level
       if (characterLevel >= 7) {
@@ -208,12 +219,12 @@ export const calculateBulkLimit = (character) => {
   let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
   
   // Check if the character has the Hefty Hauler feat
-  if (hasFeat(character, "Hefty Hauler")) {
+  if (hasFeat(character, FEAT_NAMES.HEFTY_HAULER)) {
     // Hefty Hauler increases both maximum and encumbered Bulk by 2
     bulkLimit += 2;
     encumberedThreshold += 2;
   }
-  
+
   return { bulkLimit, encumberedThreshold };
 };
 
@@ -243,12 +254,7 @@ export const calculateEnhancedBulkLimit = (character) => {
   let bulkLimit = strMod + 10; // Maximum Bulk before becoming overencumbered
   let encumberedThreshold = bulkLimit - 5; // Encumbered after this threshold
   
-  // Check if the character has the Hefty Hauler feat
-  const hasHeftyHauler = character.feats && character.feats.some(feat => 
-    feat.name && feat.name.toLowerCase().includes('hefty hauler')
-  );
-  
-  if (hasHeftyHauler) {
+  if (hasFeat(character, FEAT_NAMES.HEFTY_HAULER)) {
     // Hefty Hauler increases both maximum and encumbered Bulk by 2
     bulkLimit += 2;
     encumberedThreshold += 2;

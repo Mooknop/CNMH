@@ -79,6 +79,20 @@ return parseFloat(value).toFixed(1).replace(/\.0$/, '');
 };
 
 /**
+ * Derive encumbrance status from bulk values
+ * @param {number} bulkUsed - Current bulk carried
+ * @param {number} bulkLimit - Maximum bulk before overencumbered
+ * @param {number} encumberedThreshold - Bulk at which encumbered begins
+ * @returns {{ percentage: number, isEncumbered: boolean, isOverencumbered: boolean }}
+ */
+export const getBulkStatus = (bulkUsed, bulkLimit, encumberedThreshold) => {
+  const percentage = bulkLimit > 0 ? (bulkUsed / bulkLimit) * 100 : 0;
+  const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
+  const isOverencumbered = bulkUsed > bulkLimit;
+  return { percentage, isEncumbered, isOverencumbered };
+};
+
+/**
  * Get level-based DC
  */
 export const getLevelBasedDc = (level) => {

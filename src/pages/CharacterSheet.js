@@ -9,37 +9,32 @@ import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
-import { getCharacterColor } from '../utils/CharacterUtils';
 import { useCharacter } from '../hooks/useCharacter';
 import './CharacterSheet.css';
 
 const CharacterSheet = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getCharacter, setActiveCharacter, characters } = useContext(CharacterContext);
+  const { getCharacter, setActiveCharacter, activeCharacterColor } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
-  const [activeTab, setActiveTab] = useState('actions'); // Default tab
-  const [characterColor, setCharacterColor] = useState('#5e2929'); // Default theme color
+  const [activeTab, setActiveTab] = useState('actions');
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-  
+
+  // characterColor is now derived by CharacterContext from the active character's index
+  const characterColor = activeCharacterColor;
+
   useEffect(() => {
     const characterData = getCharacter(id);
     if (characterData) {
       setCharacter(characterData);
       setActiveCharacter(characterData);
-      
-      // Find character's index in the characters array for color
-      const characterIndex = characters.findIndex(char => char.id === id);
-      if (characterIndex !== -1) {
-        setCharacterColor(getCharacterColor(characterIndex));
-      }
     } else {
       navigate('/');
     }
-  }, [id, getCharacter, setActiveCharacter, navigate, characters]);
+  }, [id, getCharacter, setActiveCharacter, navigate]);
   
   // Handle opening the item detail modal
   const handleItemClick = (item) => {

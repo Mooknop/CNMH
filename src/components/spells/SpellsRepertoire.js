@@ -25,7 +25,7 @@ const SpellsRepertoire = ({
 
     <div className="spells-container">
       {filteredSpells.length > 0 ? (
-        <div className="spells-grid">
+        <div className="cards-grid">
           {filteredSpells.map(spell => (
             <SpellCard 
               key={spell.id}

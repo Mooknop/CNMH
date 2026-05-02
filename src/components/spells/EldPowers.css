@@ -10,7 +10,7 @@
 .eld-powers-header h3 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.3rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.5rem;
@@ -25,7 +25,7 @@
 /* Source selector */
 .eld-source-selector {
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
   display: flex;
@@ -43,7 +43,7 @@
   max-width: 300px;
   padding: 0.5rem;
   border: 2px solid #ddd;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 1rem;
   background-color: white;
   cursor: pointer;
@@ -56,13 +56,13 @@
 
 .eld-source-selector select:focus {
   outline: none;
-  border-color: #5e2929;
+  border-color: var(--color-primary);
 }
 
 /* Special info box */
 .eld-special-info {
   background-color: #f3f4f6;
-  border-left: 4px solid #5e2929;
+  border-left: 4px solid var(--color-primary);
   border-radius: 0 6px 6px 0;
   padding: 1rem 1.25rem;
   margin-bottom: 1.5rem;
@@ -71,7 +71,7 @@
 .eld-special-info h4 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.1rem;
 }
 
@@ -86,7 +86,7 @@
 .eld-powers-list h4 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.1rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.5rem;
@@ -101,7 +101,7 @@
 /* Power card styling */
 .eld-power-card {
   background-color: white;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
@@ -116,7 +116,7 @@
 .eld-power-card .collapsible-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   flex-grow: 1;
 }
 
@@ -181,7 +181,7 @@
 .degrees-label {
   display: block;
   font-weight: 600;
-  color: #5e2929;
+  color: var(--color-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -202,19 +202,19 @@
 
 /* Different colors for different degree outcomes */
 .degree-entry:has(.degree-level:contains("Critical Success")) .degree-level {
-  color: #2e7d32;
+  color: var(--color-success);
 }
 
 .degree-entry:has(.degree-level:contains("Success")) .degree-level {
-  color: #1976d2;
+  color: var(--color-success-blue);
 }
 
 .degree-entry:has(.degree-level:contains("Failure")) .degree-level {
-  color: #f57c00;
+  color: var(--color-warning);
 }
 
 .degree-entry:has(.degree-level:contains("Critical Failure")) .degree-level {
-  color: #c62828;
+  color: var(--color-crit-fail);
 }
 
 /* Empty state */
@@ -222,7 +222,7 @@
   text-align: center;
   padding: 2rem;
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   color: #666;
 }
 

@@ -65,7 +65,7 @@
   align-items: center;
   gap: 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border-left: 4px solid #5e2929;
+  border-left: 4px solid var(--color-primary);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
 }
@@ -100,7 +100,7 @@
 .stat-number {
   font-size: 2rem;
   font-weight: bold;
-  color: #5e2929;
+  color: var(--color-primary);
   line-height: 1;
 }
 
@@ -138,7 +138,7 @@
   justify-content: center;
   background: rgba(255, 255, 255, 0.9);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   height: 120px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -154,7 +154,7 @@
 
 .quest-btn {
   background: rgba(243, 229, 216, 0.9);
-  border-left: 5px solid #f57c00;
+  border-left: 5px solid var(--color-warning);
 }
 
 /* Character grid and cards */

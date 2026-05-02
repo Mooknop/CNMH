@@ -15,17 +15,17 @@
 }
 
 .btn-primary {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 500;
 }
 
 .btn-primary:hover {
-  background-color: #7a3939;
+  background-color: var(--color-primary-hover);
 }
 
 .btn-secondary {
@@ -33,7 +33,7 @@
   color: #333;
   border: 1px solid #ddd;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 500;
 }
@@ -43,11 +43,11 @@
 }
 
 .btn-danger {
-  background-color: #b71c1c;
+  background-color: var(--color-danger);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-weight: 500;
 }
@@ -77,7 +77,7 @@
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 1rem;
 }
 
@@ -102,6 +102,27 @@
   text-align: center;
   padding: 2rem;
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   margin: 1rem 0;
+}
+
+/* Shared utility: single-column card grid used across actions, spells, strikes */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Shared utility: modal backdrop */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-overlay);
 }

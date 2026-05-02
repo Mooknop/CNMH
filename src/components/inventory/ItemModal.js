@@ -8,7 +8,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
   if (!isOpen || !item) return null;
   
   // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
+  const themeColor = characterColor || 'var(--color-primary)';
 
   return (
     <div className="item-modal-overlay" onClick={onClose}>

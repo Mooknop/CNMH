@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useGameDate } from '../contexts/GameDateContext';
 import PartySummary from '../components/party/PartySummary';
+import { PARTY_GOLD, PARTY_NAME, CURRENT_LOCATION } from '../data/campaign';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const PartyGold = 41;
   const { setActiveCharacter } = useContext(CharacterContext);
   const { formatGameDate } = useGameDate();
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <h1>Unnamed Group of Adventurers from Osprey Covey</h1>
+      <h1>{PARTY_NAME}</h1>
       
       {/* Campaign Stats */}
       {
@@ -39,7 +39,7 @@ const Dashboard = () => {
               <div className="stat-icon">🗺️</div>
               <div className="stat-content">
                 <div className="stat-label">Current Location</div>
-                <div className="stat-number">Sandpoint</div>
+                <div className="stat-number">{CURRENT_LOCATION}</div>
               </div>
             </div>
 
@@ -50,7 +50,7 @@ const Dashboard = () => {
               <div className="stat-icon">💰</div>
               <div className="stat-content">
                 <div className="stat-label">Party Gold</div>
-                <div className="stat-number">{PartyGold} gp</div>
+                <div className="stat-number">{PARTY_GOLD} gp</div>
               </div>
             </button>
 

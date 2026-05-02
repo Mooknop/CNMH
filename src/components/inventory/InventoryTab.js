@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './InventoryTab.css';
 import ContainersList from './ContainersList';
-import { formatBulk } from '../../utils/InventoryUtils';
+import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
 import CraftingModal from './CraftingModal';
 import { useCharacter } from '../../hooks/useCharacter';
 
@@ -19,14 +19,12 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = useCharacter(character);
   const { bulkLimit, encumberedThreshold } = bulkStats;
 
-  const bulkPercentage = (bulkUsed / bulkLimit) * 100;
-  const isEncumbered = bulkUsed > encumberedThreshold && bulkUsed <= bulkLimit;
-  const isOverencumbered = bulkUsed > bulkLimit;
-  
+  const { percentage: bulkPercentage, isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
+
   // Determine the color of the bulk bar
   const getBulkBarColor = () => {
-    if (isOverencumbered) return '#b71c1c'; // Red for overencumbered
-    if (isEncumbered) return '#f57c00'; // Orange for encumbered
+    if (isOverencumbered) return 'var(--color-danger)';
+    if (isEncumbered) return 'var(--color-warning)';
     if (bulkPercentage > 75) return '#ffc107'; // Yellow when getting close
     return characterColor; // Use character's color theme
   };

@@ -18,7 +18,7 @@ const CollapsibleCard = ({
   className = '', 
   style = {}, 
   initialExpanded = false,
-  themeColor = '#5e2929' 
+  themeColor = 'var(--color-primary)'
 }) => {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
   

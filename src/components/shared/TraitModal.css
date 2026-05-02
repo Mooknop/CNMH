@@ -8,14 +8,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: var(--z-modal-overlay);
   }
   
   .trait-modal {
     background-color: white;
     width: 90%;
     max-width: 500px;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     max-height: 90vh;
@@ -24,7 +24,7 @@
   }
   
   .trait-modal-header {
-    background-color: #5e2929;
+    background-color: var(--color-primary);
     color: white;
     padding: 1rem 1.5rem;
     display: flex;

@@ -1,12 +1,12 @@
 .actions-list {
   
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
 }
 
 .actions-list h2 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.2rem;
 }
 
@@ -32,7 +32,7 @@
   display: flex;
   margin-bottom: 1.5rem;
   background-color: #e0e0e0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -53,13 +53,13 @@
 }
 
 .section-tab.active {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
 }
 
 /* Content container */
 .section-content {
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
 }
 
@@ -87,7 +87,7 @@
 .free-action-card .collapsible-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   flex-grow: 1;
 }
 
@@ -100,7 +100,7 @@
 .reaction-icon,
 .free-action-icon {
   font-size: 1.2rem;
-  color: #5e2929;
+  color: var(--color-primary);
 }
 
 /* Traits styling */
@@ -166,7 +166,7 @@
 .free-action-trigger {
   padding: 0.75rem 0;
   background-color: #fff8e1;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   margin-bottom: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -175,7 +175,7 @@
 .trigger-label {
   font-weight: 600;
   font-size: 0.85rem;
-  color: #5e2929;
+  color: var(--color-primary);
   margin-bottom: 0.25rem;
 }
 
@@ -241,7 +241,7 @@
 
 .thaumaturge-description {
   background: rgba(255, 255, 255, 0.6);
-  border-left: 3px solid #5e2929;
+  border-left: 3px solid var(--color-primary);
   padding: 1rem;
   border-radius: 0 4px 4px 0;
   margin-bottom: 1.5rem;

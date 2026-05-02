@@ -45,7 +45,7 @@ const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, 
         </div>        
         {filteredSpells.length > 0 ? (
           <div className="innate-spells-list">
-            <div className="spells-grid">
+            <div className="cards-grid">
               {filteredSpells.map(spell => (
                 <SpellCard 
                   key={spell.id}

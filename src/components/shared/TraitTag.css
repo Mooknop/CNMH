@@ -40,12 +40,12 @@
   
   .trait-tag.fire {
     background-color: #ffebee;
-    color: #c62828;
+    color: var(--color-crit-fail);
   }
   
   .trait-tag.cold {
     background-color: #e8f5e9;
-    color: #2e7d32;
+    color: var(--color-success);
   }
   
   .trait-tag.electricity {

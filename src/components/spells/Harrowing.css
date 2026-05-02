@@ -10,7 +10,7 @@
 .harrowing-header h3 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.3rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.5rem;
@@ -37,7 +37,7 @@
 .ritual-card .collapsible-header h4 {
   margin: 0;
   font-size: 1.1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   flex-grow: 1;
 }
 
@@ -48,10 +48,10 @@
 }
 
 .ritual-rank {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
 }
 
@@ -66,7 +66,7 @@
   margin-bottom: 1rem;
   background-color: #f9f9f9;
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
 }
 
 .ritual-stat {
@@ -94,7 +94,7 @@
 .ritual-usage h5 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.25rem;
@@ -121,7 +121,7 @@
 .feat-card .collapsible-header h4 {
   margin: 0;
   font-size: 1.1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   flex-grow: 1;
 }
 
@@ -132,10 +132,10 @@
 }
 
 .feat-level {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
 }
 
@@ -153,9 +153,9 @@
 .feat-requirements {
   background-color: #f3f4f6;
   padding: 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   margin-bottom: 1rem;
-  border-left: 3px solid #5e2929;
+  border-left: 3px solid var(--color-primary);
 }
 
 .requirements-label {
@@ -179,7 +179,7 @@
 .suit-benefits h5 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.25rem;
@@ -194,13 +194,13 @@
 .suit-benefit {
   background-color: #f9f9f9;
   padding: 1rem;
-  border-radius: 6px;
-  border-left: 4px solid #5e2929;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--color-primary);
 }
 
 .suit-name {
   font-weight: 600;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1rem;
   display: block;
   margin-bottom: 0.5rem;
@@ -224,7 +224,7 @@
 .reference-card .collapsible-header h4 {
   margin: 0;
   font-size: 1.1rem;
-  color: #5e2929;
+  color: var(--color-primary);
 }
 
 .deck-reference-content {
@@ -240,7 +240,7 @@
 .deck-info h5 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.25rem;
@@ -254,14 +254,14 @@
 
 .suit-card {
   background-color: #f9f9f9;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 1rem;
-  border-left: 4px solid #5e2929;
+  border-left: 4px solid var(--color-primary);
 }
 
 .suit-card h6 {
   margin: 0 0 0.5rem 0;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1rem;
 }
 
@@ -297,7 +297,7 @@
 
 .guidelines-info {
   background-color: #f3f4f6;
-  border-left: 4px solid #5e2929;
+  border-left: 4px solid var(--color-primary);
   border-radius: 0 6px 6px 0;
   padding: 1rem 1.25rem;
 }
@@ -305,7 +305,7 @@
 .guidelines-info h4 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.1rem;
 }
 

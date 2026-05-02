@@ -22,7 +22,7 @@ const StatsBlock = ({ character, characterColor }) => {
   } = useCharacter(character);
 
   // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
+  const themeColor = characterColor || 'var(--color-primary)';
 
   const strMod = abilityModifiers.strength;
   const dexMod = abilityModifiers.dexterity;

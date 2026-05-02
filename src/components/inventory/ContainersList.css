@@ -14,7 +14,7 @@
   .containers-info {
     margin-bottom: 1.5rem;
     background-color: #f9f9f9;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     padding: 1rem;
     border-left: 4px solid #ddd;
   }

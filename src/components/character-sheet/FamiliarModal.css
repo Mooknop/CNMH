@@ -9,32 +9,32 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1050; /* Increased from 1000 to be above navbar */
+    z-index: var(--z-modal-overlay); /* Increased from 1000 to be above navbar */
   }
   
   .familiar-modal {
     background-color: white;
     width: 90%;
     max-width: 600px;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     position: relative;
-    z-index: 1051; /* Ensure modal content is above overlay */
+    z-index: var(--z-modal); /* Ensure modal content is above overlay */
   }
   
   .familiar-modal-header {
-    background-color: #5e2929;
+    background-color: var(--color-primary);
     color: white;
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: relative;
-    z-index: 1052; /* Ensure header is above everything */
+    z-index: var(--z-modal-header); /* Ensure header is above everything */
   }
   
   .familiar-modal-header h2 {
@@ -61,7 +61,7 @@
     margin-bottom: 1.5rem;
     background-color: #f9f9f9;
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
   
   .familiar-traits {
@@ -88,7 +88,7 @@
   .familiar-abilities h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #5e2929;
+    color: var(--color-primary);
     font-size: 1.2rem;
     border-bottom: 1px solid #eee;
     padding-bottom: 0.5rem;
@@ -106,12 +106,12 @@
     align-items: center;
     background-color: #f9f9f9;
     padding: 0.75rem 0.5rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
   
   .ability-name {
     font-weight: 600;
-    color: #5e2929;
+    color: var(--color-primary);
     margin-bottom: 0.25rem;
   }
   
@@ -131,7 +131,7 @@
     justify-content: space-between;
     background-color: #f9f9f9;
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
   
   .defense {
@@ -143,7 +143,7 @@
   
   .defense-label {
     font-weight: 600;
-    color: #5e2929;
+    color: var(--color-primary);
     margin-bottom: 0.25rem;
   }
   
@@ -161,7 +161,7 @@
   .familiar-section h4 {
     margin-top: 0;
     margin-bottom: 0.5rem;
-    color: #5e2929;
+    color: var(--color-primary);
     font-size: 1.1rem;
     border-bottom: 1px solid #eee;
     padding-bottom: 0.25rem;
@@ -180,7 +180,7 @@
   
   .familiar-ability {
     background-color: #f9f9f9;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     padding: 1rem;
   }
   

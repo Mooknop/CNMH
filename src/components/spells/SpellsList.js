@@ -64,7 +64,7 @@ const SpellsList = ({ character, characterColor }) => {
   } = flags;
 
   // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
+  const themeColor = characterColor || 'var(--color-primary)';
 
   // Organize spell data using SpellUtils (pure functions, no raw character access)
   const {

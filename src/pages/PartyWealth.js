@@ -5,6 +5,7 @@ import CharacterInventorySection from '../components/party/CharacterInventorySec
 import ItemModal from '../components/inventory/ItemModal';
 import { getCharacterColor } from '../utils/CharacterUtils';
 import { calculateItemsBulk, formatBulk } from '../utils/InventoryUtils';
+import { PARTY_GOLD } from '../data/campaign';
 import './PartyWealth.css';
 
 const formatCurrency = (value) => {
@@ -21,7 +22,6 @@ const ItemModalPortal = ({ children }) => {
 };
 
 const PartyWealth = () => {
-  const PartyGold = 41; // Party gold constant
   const { characters } = useContext(CharacterContext);
   const [sortBy, setSortBy] = useState('name');
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,7 +111,7 @@ const PartyWealth = () => {
           <div className="party-wealth-header">
             <h1>Party Wealth & Inventory</h1>
             <div className="party-totals">
-              <span className="total-value">💰 {formatCurrency(PartyGold)} gp</span>
+              <span className="total-value">💰 {formatCurrency(PARTY_GOLD)} gp</span>
               <span className="total-value">📦 {formatCurrency(partyTotals.totalValue)} gp</span>
               <span className="total-bulk">⚖️ {formatBulk(partyTotals.totalBulk)} Bulk</span>
               <span className="total-items">📋 {partyTotals.totalItems} items</span>

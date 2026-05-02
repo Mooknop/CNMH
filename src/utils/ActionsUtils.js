@@ -320,11 +320,11 @@ export const categorizeStrikesByType = (strikes) => {
 };
 
 /**
- * Helper function to convert word numbers to integers
+ * Convert word numbers to integers (e.g. "one" → 1, "two" → 2)
  * @param {string} word - Word representation of a number
- * @returns {number} - Numeric value
+ * @returns {number} - Numeric value, or 0 if unrecognized
  */
-const convertWordToNumber = (word) => {
+export const convertWordToNumber = (word) => {
   const wordMap = {
     'one': 1,
     'two': 2,

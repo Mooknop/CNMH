@@ -1,13 +1,13 @@
 .feats-list {
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 1.5rem;
 }
 
 .feats-list h2 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.2rem;
 }
 
@@ -27,7 +27,7 @@
 .feat-card .collapsible-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   margin-bottom: 0.25rem;
 }
 
@@ -69,6 +69,6 @@
   text-align: center;
   padding: 2rem;
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   margin: 1rem 0;
 }

@@ -9,14 +9,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal-overlay);
 }
 
 .crafting-modal {
   background-color: white;
   width: 95%;
   max-width: 900px;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   max-height: 90vh;
@@ -25,7 +25,7 @@
 }
 
 .crafting-modal-header {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
   padding: 1rem 1.5rem;
   display: flex;
@@ -57,7 +57,7 @@
 /* Crafting Skill Info */
 .crafting-skill-info {
   background-color: #f9f9f9;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   margin-bottom: 1.5rem;
   display: flex;
@@ -81,7 +81,7 @@
 .stat-value {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #5e2929;
+  color: var(--color-primary);
 }
 
 /* Tab Navigation */
@@ -89,7 +89,7 @@
   display: flex;
   margin-bottom: 1.5rem;
   background-color: #e0e0e0;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -110,7 +110,7 @@
 }
 
 .tab-button.active {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
 }
 
@@ -127,7 +127,7 @@
 .rules-section h3 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.3rem;
   border-bottom: 2px solid #eee;
   padding-bottom: 0.5rem;
@@ -136,7 +136,7 @@
 .rules-section h4 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1.1rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.25rem;
@@ -144,7 +144,7 @@
 
 .activity-header {
   background-color: #f5f5f5;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
   display: flex;
@@ -189,7 +189,7 @@
   margin-bottom: 1rem;
   padding: 0.75rem;
   background-color: #f9f9f9;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border-left: 4px solid #ddd;
 }
 
@@ -201,19 +201,19 @@
 }
 
 .degree-level.critical-success {
-  color: #2e7d32;
+  color: var(--color-success);
 }
 
 .degree-level.success {
-  color: #1976d2;
+  color: var(--color-success-blue);
 }
 
 .degree-level.failure {
-  color: #f57c00;
+  color: var(--color-warning);
 }
 
 .degree-level.critical-failure {
-  color: #c62828;
+  color: var(--color-crit-fail);
 }
 
 .degree-description {
@@ -230,7 +230,7 @@
 /* Earnings Table - Mobile-First Approach */
 .earnings-table {
   background-color: #f9f9f9;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 1rem;
   margin-top: 0.75rem;
   overflow-x: auto; /* Allow horizontal scroll if needed */
@@ -251,7 +251,7 @@
   border-bottom: 1px solid #ddd;
   padding-bottom: 0.75rem;
   margin-bottom: 0.5rem;
-  color: #5e2929;
+  color: var(--color-primary);
 }
 
 .table-header span:first-child {
@@ -277,7 +277,7 @@
 
 /* Special Rules */
 .special-section li strong {
-  color: #5e2929;
+  color: var(--color-primary);
 }
 
 /* Known Recipes Styles */
@@ -294,9 +294,9 @@
 
 .recipe-card {
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
-  border-left: 4px solid #5e2929;
+  border-left: 4px solid var(--color-primary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -310,7 +310,7 @@
 .recipe-header h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: #5e2929;
+  color: var(--color-primary);
 }
 
 .recipe-weight {
@@ -318,7 +318,7 @@
   color: #666;
   background-color: #e0e0e0;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .recipe-description {
@@ -334,7 +334,7 @@
 .recipe-types h4 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: #5e2929;
+  color: var(--color-primary);
   font-size: 1rem;
   border-bottom: 1px solid #ddd;
   padding-bottom: 0.25rem;
@@ -348,7 +348,7 @@
 
 .type-entry {
   background-color: white;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   padding: 0.75rem;
   border: 1px solid #e0e0e0;
 }
@@ -368,10 +368,10 @@
 }
 
 .type-level {
-  background-color: #5e2929;
+  background-color: var(--color-primary);
   color: white;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -380,7 +380,7 @@
   background-color: #f0f0f0;
   color: #333;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-weight: 500;
 }
@@ -396,7 +396,7 @@
   text-align: center;
   padding: 3rem 2rem;
   background-color: #f9f9f9;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   color: #666;
 }
 
@@ -439,7 +439,7 @@
   .table-row {
     display: block; /* Stack items vertically */
     background-color: white;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     padding: 1rem;
     margin-bottom: 0.75rem;
     border: 1px solid #ddd;
@@ -455,7 +455,7 @@
   
   .table-row span:first-child {
     font-weight: 600;
-    color: #5e2929;
+    color: var(--color-primary);
     border-bottom: 1px solid #eee;
     padding-bottom: 0.5rem;
     margin-bottom: 0.75rem;

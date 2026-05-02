@@ -1,5 +1,6 @@
 // src/components/shared/ActionIcon.js
 import React from 'react';
+import { convertWordToNumber } from '../../utils/ActionsUtils';
 import './ActionIcon.css';
 
 /**
@@ -11,7 +12,7 @@ import './ActionIcon.css';
  * @param {boolean} props.showTooltip - Whether to show tooltips on hover
  * @returns {JSX.Element} - Rendered action icons
  */
-const ActionIcon = ({ actionText, color = '#5e2929', size = 'medium', showTooltip = true }) => {
+const ActionIcon = ({ actionText, color = 'var(--color-primary)', size = 'medium', showTooltip = true }) => {
   if (!actionText) return null;
   
   // Convert text to lowercase for consistent parsing
@@ -30,24 +31,6 @@ const ActionIcon = ({ actionText, color = '#5e2929', size = 'medium', showToolti
   // Icon styles and classes
   const sizeClass = getSizeClass();
   const iconStyle = { color };
-  
-  /**
-   * Helper function to convert word numbers to integers
-   * @param {string} word - Word representation of a number
-   * @returns {number} - Numeric value
-   */
-  const convertWordToNumber = (word) => {
-    const wordMap = {
-      'one': 1,
-      'two': 2,
-      'three': 3,
-      '1': 1,
-      '2': 2,
-      '3': 3
-    };
-    
-    return wordMap[word.toLowerCase()] || 0;
-  };
   
   /**
    * Helper function to get action count from text

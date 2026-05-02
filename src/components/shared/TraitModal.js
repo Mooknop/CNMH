@@ -15,7 +15,7 @@ const TraitModal = ({ isOpen, onClose, trait, themeColor }) => {
   return (
     <div className="trait-modal-overlay" onClick={onClose}>
       <div className="trait-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="trait-modal-header" style={{ backgroundColor: themeColor || '#5e2929' }}>
+        <div className="trait-modal-header" style={{ backgroundColor: themeColor || 'var(--color-primary)' }}>
           <h2>{trait.name}</h2>
           <button className="close-button" onClick={onClose}>&times;</button>
         </div>

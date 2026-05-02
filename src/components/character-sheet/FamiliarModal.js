@@ -6,7 +6,7 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
   if (!isOpen) return null;
   
   // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
+  const themeColor = characterColor || 'var(--color-primary)';
 
   
 

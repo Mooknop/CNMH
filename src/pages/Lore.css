@@ -5,7 +5,7 @@
   
   .lore-page h1 {
     margin-bottom: 2rem;
-    color: #5e2929;
+    color: var(--color-primary);
     border-bottom: 2px solid #eee;
     padding-bottom: 0.5rem;
   }
@@ -18,7 +18,7 @@
   
   .lore-sidebar {
     background-color: #f9f9f9;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
     height: fit-content;
   }
@@ -30,7 +30,7 @@
   .category-filters h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #5e2929;
+    color: var(--color-primary);
     font-size: 1.1rem;
   }
   
@@ -47,25 +47,25 @@
   }
   
   .category-btn:hover {
-    color: #5e2929;
+    color: var(--color-primary);
   }
   
   .category-btn.active {
-    color: #5e2929;
+    color: var(--color-primary);
     font-weight: 500;
   }
   
   .add-entry-form h3 {
     margin-top: 0;
     margin-bottom: 1rem;
-    color: #5e2929;
+    color: var(--color-primary);
     font-size: 1.1rem;
   }
   
   .lore-entries h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
-    color: #5e2929;
+    color: var(--color-primary);
     font-size: 1.2rem;
     border-bottom: 1px solid #eee;
     padding-bottom: 0.5rem;
@@ -73,7 +73,7 @@
   
   .lore-entry {
     background-color: white;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-bottom: 1.5rem;
     overflow: hidden;
@@ -90,11 +90,11 @@
   .entry-header h3 {
     margin: 0;
     flex-grow: 1;
-    color: #5e2929;
+    color: var(--color-primary);
   }
   
   .entry-category {
-    background-color: #5e2929;
+    background-color: var(--color-primary);
     color: white;
     padding: 0.25rem 0.75rem;
     border-radius: 20px;

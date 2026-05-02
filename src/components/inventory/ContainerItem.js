@@ -29,8 +29,8 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
   
   // Determine status and color for progress bar
   const getStatusColor = (percent) => {
-    if (percent >= 100) return '#b71c1c'; // Red for full
-    if (percent >= 75) return '#f57c00';  // Orange for getting full
+    if (percent >= 100) return 'var(--color-danger)';
+    if (percent >= 75) return 'var(--color-warning)';
     return themeColor;                     // Default theme color
   };
   

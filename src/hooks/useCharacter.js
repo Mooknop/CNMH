@@ -13,6 +13,7 @@ import {
   calculateClassDC,
   calculateEnhancedBulkLimit,
   hasFeat,
+  FEAT_NAMES,
 } from '../utils/CharacterUtils';
 
 import {
@@ -154,11 +155,11 @@ export const useCharacter = (character) => {
     // Centralises all "does this character have X?" checks so components
     // don't need to inspect raw JSON structure.
     const flags = {
-      hasFamiliar              : hasFeat(character, 'Familiar'),
-      hasAnimalCompanion       : hasFeat(character, 'Animal Companion'),
-      hasHeftyHauler           : hasFeat(character, 'Hefty Hauler'),
-      hasUntrainedImprovisation: hasFeat(character, 'Untrained Improvisation'),
-      hasHarrowing             : !!(character.feats?.some(f => f.name === 'Harrower Dedication')),
+      hasFamiliar              : hasFeat(character, FEAT_NAMES.FAMILIAR),
+      hasAnimalCompanion       : hasFeat(character, FEAT_NAMES.ANIMAL_COMPANION),
+      hasHeftyHauler           : hasFeat(character, FEAT_NAMES.HEFTY_HAULER),
+      hasUntrainedImprovisation: hasFeat(character, FEAT_NAMES.UNTRAINED_IMPROVISATION),
+      hasHarrowing             : hasFeat(character, FEAT_NAMES.HARROWER_DEDICATION),
       hasSpellcasting          : !!spellcasting.tradition,
       hasFocusSpells           : !!(
         character.champion?.devotion_spells ||

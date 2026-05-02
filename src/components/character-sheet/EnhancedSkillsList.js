@@ -6,7 +6,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 
 const EnhancedSkillsList = ({ character, characterColor }) => {
   // Use the characterColor or default to the theme color
-  const themeColor = characterColor || '#5e2929';
+  const themeColor = characterColor || 'var(--color-primary)';
 
   // Data layer — all character reads go through this hook
   const {

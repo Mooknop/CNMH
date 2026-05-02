@@ -133,7 +133,7 @@ const StrikesList = ({ character, themeColor }) => {
               }}>
                 Melee Strikes
               </h3>
-              <div className="strikes-grid">
+              <div className="cards-grid">
                 {meleeStrikes.map((strike, index) => renderStrikeCard(strike, `melee-${index}`))}
               </div>
             </div>
@@ -151,7 +151,7 @@ const StrikesList = ({ character, themeColor }) => {
               }}>
                 Ranged Strikes
               </h3>
-              <div className="strikes-grid">
+              <div className="cards-grid">
                 {rangedStrikes.map((strike, index) => renderStrikeCard(strike, `ranged-${index}`))}
               </div>
             </div>
