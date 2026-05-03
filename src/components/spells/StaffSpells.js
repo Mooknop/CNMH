@@ -59,7 +59,9 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
       infoBox={<StaffInfoBox themeColor={themeColor} />}
       emptyMessage={emptyMessage}
       spellKeyFn={(spell) => spell.id}
-    />
+    >
+      {noDataContent}
+    </SpellCategorySection>
   );
 };
 

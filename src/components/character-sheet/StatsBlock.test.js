@@ -5,44 +5,54 @@ import StatsBlock from './StatsBlock';
 // Mock dependencies
 jest.mock('../../utils/CharacterUtils', () => ({
   formatModifier: (mod) => mod >= 0 ? `+${mod}` : `${mod}`,
-  getAttackBonus: jest.fn(() => '+3'),
-  getProficiencyLabel: jest.fn((prof) => {
+  getAttackBonus: () => '+3',
+  getProficiencyLabel: (prof) => {
     const labels = { 0: 'Untrained', 1: 'Trained', 2: 'Expert' };
     return labels[prof] || 'Untrained';
-  })
+  }
 }));
 
+const defaultCharData = {
+  abilityModifiers: {
+    strength: 2,
+    dexterity: 1,
+    constitution: 0,
+    intelligence: -1,
+    wisdom: 1,
+    charisma: 2
+  },
+  saves: {
+    fortitude: 3,
+    reflex: 2,
+    will: 2
+  },
+  proficiencies: {
+    weapons: {
+      unarmed: { proficiency: 1, name: 'Trained' },
+      simple: { proficiency: 0 },
+      martial: { proficiency: 0 },
+      advanced: { proficiency: 0 },
+    },
+    armor: {
+      unarmored: { proficiency: 1 },
+      light: { proficiency: 0 },
+      medium: { proficiency: 0 },
+      heavy: { proficiency: 0 },
+    }
+  },
+  classDC: 15,
+  level: 1,
+  maxHp: 8,
+  ac: 16,
+  size: 'Medium',
+  speed: 25,
+  senses: 'Low-light vision'
+};
+
+const mockUseCharacter = jest.fn();
+
 jest.mock('../../hooks/useCharacter', () => ({
-  useCharacter: (character) => {
-    if (!character) return null;
-    return {
-      abilityModifiers: {
-        strength: 2,
-        dexterity: 1,
-        constitution: 0,
-        intelligence: -1,
-        wisdom: 1,
-        charisma: 2
-      },
-      saves: {
-        fortitude: 3,
-        reflex: 2,
-        will: 2
-      },
-      proficiencies: {
-        weapons: {
-          unarmed: { proficiency: 1, name: 'Trained' }
-        }
-      },
-      classDC: 15,
-      level: 1,
-      maxHp: 8,
-      ac: 16,
-      size: 'Medium',
-      speed: 25,
-      senses: 'Low-light vision'
-    };
-  }
+  useCharacter: (...args) => mockUseCharacter(...args),
 }));
 
 jest.mock('../character-sheet/EnhancedSkillsList', () => {
@@ -52,6 +62,10 @@ jest.mock('../character-sheet/EnhancedSkillsList', () => {
 });
 
 describe('StatsBlock', () => {
+  beforeEach(() => {
+    mockUseCharacter.mockImplementation((character) => character ? defaultCharData : null);
+  });
+
   const mockCharacter = {
     id: '1',
     name: 'Test Character',
@@ -160,9 +174,151 @@ describe('StatsBlock', () => {
 
   it('should format ability modifiers correctly', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    
+
     // The hook returns modifiers like +2, +1 etc
     const modifierDivs = screen.getAllByText(/^[\+\-]\d+$/);
     expect(modifierDivs.length).toBeGreaterThan(0);
+  });
+
+  it('should display HP and AC values', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('8')).toBeInTheDocument(); // maxHp
+    expect(screen.getByText('16')).toBeInTheDocument(); // ac
+  });
+
+  it('should display size', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('Medium')).toBeInTheDocument();
+  });
+
+  it('should display speed', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('25 feet')).toBeInTheDocument();
+  });
+
+  it('should display senses when present', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('Low-light vision')).toBeInTheDocument();
+  });
+
+  it('should use "teeny weeny" fallback when size is absent', () => {
+    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, size: null });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('teeny weeny')).toBeInTheDocument();
+  });
+
+  it('should use 69 fallback when speed is absent', () => {
+    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, speed: null });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('69 feet')).toBeInTheDocument();
+  });
+
+  it('should not display senses section when senses is absent', () => {
+    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, senses: null });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.queryByText('Senses')).toBeNull();
+  });
+
+  it('should switch to proficiencies tab', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.getByText('Class DC')).toBeInTheDocument();
+    expect(screen.getByText('Weapons')).toBeInTheDocument();
+    expect(screen.getByText('Armor')).toBeInTheDocument();
+  });
+
+  it('should render classDC in proficiencies tab', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.getByText('15')).toBeInTheDocument();
+  });
+
+  it('should render weapon proficiency labels in proficiencies tab', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.getByText('Unarmed')).toBeInTheDocument();
+    expect(screen.getByText('Simple')).toBeInTheDocument();
+    expect(screen.getByText('Martial')).toBeInTheDocument();
+    expect(screen.getByText('Advanced')).toBeInTheDocument();
+  });
+
+  it('should render armor proficiency categories in proficiencies tab', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.getByText('Unarmored')).toBeInTheDocument();
+    expect(screen.getByText('Light')).toBeInTheDocument();
+    // 'Medium' also appears in the size section, use getAllByText
+    expect(screen.getAllByText('Medium').length).toBeGreaterThan(0);
+    expect(screen.getByText('Heavy')).toBeInTheDocument();
+  });
+
+  it('should use default proficiencies when rawProficiencies has no weapons key', () => {
+    const emptyProfData = { ...defaultCharData, proficiencies: {} };
+    mockUseCharacter.mockReturnValueOnce(emptyProfData);
+    mockUseCharacter.mockReturnValueOnce(emptyProfData); // for re-render after tab click
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    // Default proficiencies should render Untrained for all
+    expect(screen.getAllByText('Untrained').length).toBeGreaterThan(0);
+  });
+
+  it('should render class weapons section when proficiencies.weapons.class is present', () => {
+    const dataWithClass = {
+      ...defaultCharData,
+      proficiencies: {
+        ...defaultCharData.proficiencies,
+        weapons: {
+          ...defaultCharData.proficiencies.weapons,
+          class: { proficiency: 1 },
+        }
+      }
+    };
+    mockUseCharacter.mockReturnValueOnce(dataWithClass);
+    mockUseCharacter.mockReturnValueOnce(dataWithClass); // for re-render after tab click
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.getByText('Class Weapons')).toBeInTheDocument();
+  });
+
+  it('should render finesse weapons section when proficiencies.weapons.finesse is present', () => {
+    const dataWithFinesse = {
+      ...defaultCharData,
+      proficiencies: {
+        ...defaultCharData.proficiencies,
+        weapons: {
+          ...defaultCharData.proficiencies.weapons,
+          finesse: { proficiency: 2 },
+        }
+      }
+    };
+    mockUseCharacter.mockReturnValueOnce(dataWithFinesse);
+    mockUseCharacter.mockReturnValueOnce(dataWithFinesse); // for re-render after tab click
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.getByText('Finesse')).toBeInTheDocument();
+  });
+
+  it('should not render class weapons when absent', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.queryByText('Class Weapons')).toBeNull();
+  });
+
+  it('should not render finesse weapons when absent', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(screen.queryByText('Finesse')).toBeNull();
+  });
+
+  it('tab button is active/highlighted when selected', () => {
+    const { container } = render(
+      <StatsBlock character={mockCharacter} characterColor="#ff0000" />
+    );
+    // Initially 'abilities' tab is active
+    const tabButtons = container.querySelectorAll('.tab-button');
+    expect(tabButtons[0]).toHaveStyle('background-color: #ff0000');
+    // After clicking proficiencies
+    fireEvent.click(screen.getByText('Proficiencies'));
+    expect(tabButtons[1]).toHaveStyle('background-color: #ff0000');
   });
 });

@@ -8,6 +8,7 @@ import {
   parseActionCount,
   getActionType,
   extractVariableActionCount,
+  renderActionIcons,
 } from './ActionsUtils';
 
 // Mock CharacterUtils to avoid dependencies
@@ -412,6 +413,352 @@ describe('ActionsUtils', () => {
       expect(extractVariableActionCount(null)).toBeNull();
       expect(extractVariableActionCount('')).toBeNull();
       expect(extractVariableActionCount('Invalid text')).toBeNull();
+    });
+
+    it('should return null when min <= 0 (unrecognized word)', () => {
+      expect(extractVariableActionCount('four to five actions')).toBeNull();
+    });
+  });
+
+  describe('renderActionIcons', () => {
+    it('should return null when actionText is null', () => {
+      expect(renderActionIcons(null, '#fff')).toBeNull();
+    });
+
+    it('should return null when actionText is undefined', () => {
+      expect(renderActionIcons(undefined, '#fff')).toBeNull();
+    });
+
+    it('should return variable type for variable action text', () => {
+      const result = renderActionIcons('One to Two Actions', '#fff');
+      expect(result.type).toBe('variable');
+      expect(result.min).toBe(1);
+      expect(result.max).toBe(2);
+    });
+
+    it('should return reaction type for reaction text', () => {
+      const result = renderActionIcons('Reaction', '#fff');
+      expect(result.type).toBe('reaction');
+      expect(result.icon).toBe('⟳');
+    });
+
+    it('should return free type for free action text', () => {
+      const result = renderActionIcons('Free Action', '#fff');
+      expect(result.type).toBe('free');
+      expect(result.icon).toBe('⟡');
+    });
+
+    it('should return standard type for single action text', () => {
+      const result = renderActionIcons('One Action', '#fff');
+      expect(result.type).toBe('standard');
+      expect(result.count).toBe(1);
+    });
+
+    it('should return standard type for two actions text', () => {
+      const result = renderActionIcons('Two Actions', '#fff');
+      expect(result.type).toBe('standard');
+      expect(result.count).toBe(2);
+    });
+
+    it('should return text type for unrecognized text', () => {
+      const result = renderActionIcons('Continuous', '#fff');
+      expect(result.type).toBe('text');
+      expect(result.text).toBe('Continuous');
+    });
+  });
+
+  describe('getStrikes — additional branch coverage', () => {
+    const baseChar = {
+      level: 1,
+      abilities: { strength: 10, dexterity: 10 },
+      proficiencies: { weapons: { simple: { proficiency: 1 } } },
+    };
+
+    it('handles character.strikes as empty array (no predefined strikes)', () => {
+      const char = { ...baseChar, strikes: [] };
+      const result = getStrikes(char);
+      // Falls through to unarmed
+      expect(result[0].name).toBe('Unarmed Strike');
+    });
+
+    it('handles ranged (non-finesse, non-melee) weapon — uses dexterity', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 10, dexterity: 14 },
+        strikes: [{ name: 'Shortbow', type: 'ranged', traits: [], damage: '1d6' }],
+      };
+      const result = getStrikes(char);
+      // DEX mod = +2, proficiency 1 → +2, level 1 → total = +5
+      expect(result[0].attackMod).toBe('+5');
+    });
+
+    it('uses explicit proficiency when strike.proficiency matches weapons entry', () => {
+      const char = {
+        ...baseChar,
+        proficiencies: { weapons: { martial: { proficiency: 2 } } },
+        strikes: [{ name: 'Longsword', type: 'melee', traits: [], damage: '1d8', proficiency: 'martial' }],
+      };
+      const result = getStrikes(char);
+      // proficiency = 2 → +4, STR 10 → 0, level 1 → +5
+      expect(result[0].attackMod).toBe('+5');
+    });
+
+    it('uses unarmed proficiency when Unarmed trait present', () => {
+      const char = {
+        ...baseChar,
+        proficiencies: { weapons: { unarmed: { proficiency: 2 }, simple: { proficiency: 1 } } },
+        strikes: [{ name: 'Fist', type: 'melee', traits: ['Unarmed'], damage: '1d4' }],
+      };
+      const result = getStrikes(char);
+      // unarmed proficiency = 2 → +4, STR 10 → 0, level 1 → +5
+      expect(result[0].attackMod).toBe('+5');
+    });
+
+    it('does NOT append damage modifier when strMod is 0 for melee', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 10 },
+        strikes: [{ name: 'Dagger', type: 'melee', traits: [], damage: '1d4' }],
+      };
+      const result = getStrikes(char);
+      expect(result[0].damage).toBe('1d4');
+    });
+
+    it('appends negative damage modifier when strMod < 0 for melee', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 8 },
+        strikes: [{ name: 'Dagger', type: 'melee', traits: [], damage: '1d4' }],
+      };
+      const result = getStrikes(char);
+      expect(result[0].damage).toBe('1d4-1');
+    });
+
+    it('does not append modifier when damage already contains +', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 14 },
+        strikes: [{ name: 'Sword', type: 'melee', traits: [], damage: '1d8+3' }],
+      };
+      const result = getStrikes(char);
+      expect(result[0].damage).toBe('1d8+3');
+    });
+
+    it('handles feats with no strikes (filtered out)', () => {
+      const char = {
+        ...baseChar,
+        feats: [{ name: 'Power Attack', actions: [{ name: 'Power Attack' }] }],
+      };
+      const result = getStrikes(char);
+      expect(result[0].name).toBe('Unarmed Strike');
+    });
+
+    it('feat strike with Kineticist trait uses CON modifier', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 10, dexterity: 10, constitution: 16 },
+        feats: [{
+          name: 'Kinetic Blast',
+          strikes: [{ name: 'Metal Blast Test', type: 'ranged', traits: ['Kineticist'], damage: '1d8' }],
+        }],
+      };
+      const result = getStrikes(char);
+      // CON 16 → mod 3, simple proficiency 1 (from baseChar), level 1 → 3 + (1*2+1) = 3+3 = +6
+      expect(result.find(s => s.source === 'Kinetic Blast').attackMod).toBe('+6');
+    });
+
+    it('feat strike with Thrown trait appends STR to damage', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 14, dexterity: 10 },
+        feats: [{
+          name: 'Javelin Throw',
+          strikes: [{ name: 'Javelin', type: 'ranged', traits: ['Thrown'], damage: '1d6' }],
+        }],
+      };
+      const result = getStrikes(char);
+      expect(result.find(s => s.name === 'Javelin').damage).toBe('1d6+2');
+    });
+
+    it('feat strike with variable actionCount "One to Two" sets variableActionCount', () => {
+      const char = {
+        ...baseChar,
+        feats: [{
+          name: 'Versatile Blast',
+          strikes: [{ name: 'Versatile', type: 'melee', traits: [], damage: '1d6', actionCount: 'One to Two' }],
+        }],
+      };
+      const result = getStrikes(char);
+      const strike = result.find(s => s.name === 'Versatile');
+      expect(strike.variableActionCount).toEqual({ min: 1, max: 2 });
+    });
+
+    it('feat strike named Metal Blast gets hardcoded variableActionCount', () => {
+      const char = {
+        ...baseChar,
+        feats: [{
+          name: 'Kineticist',
+          strikes: [{ name: 'Metal Blast', type: 'ranged', traits: [], damage: '1d8' }],
+        }],
+      };
+      const result = getStrikes(char);
+      const blast = result.find(s => s.name === 'Metal Blast');
+      // Post-processing should set variableActionCount
+      expect(blast.variableActionCount).toEqual({ min: 1, max: 2 });
+    });
+
+    it('inventory with array of strikes creates multiple strike entries', () => {
+      const char = {
+        ...baseChar,
+        inventory: [{
+          name: 'Dual Weapon',
+          strikes: [
+            { type: 'melee', traits: [], damage: '1d6' },
+            { name: 'Off-hand', type: 'melee', traits: [], damage: '1d4' },
+          ],
+        }],
+      };
+      const result = getStrikes(char);
+      const fromItem = result.filter(s => s.source === 'Dual Weapon');
+      expect(fromItem).toHaveLength(2);
+    });
+
+    it('inventory strike with potency rune adds potency to positive bonus', () => {
+      const char = {
+        ...baseChar,
+        abilities: { strength: 10, dexterity: 10 },
+        proficiencies: { weapons: { simple: { proficiency: 1 } } },
+        inventory: [{
+          name: 'Magic Sword',
+          potency: 2,
+          strikes: { type: 'melee', traits: [], damage: '1d8', proficiency: 'simple' },
+        }],
+      };
+      const result = getStrikes(char);
+      const sword = result.find(s => s.source === 'Magic Sword');
+      // base = +3 (0 STR, +2 trained, +1 level), potency +2 → +5
+      expect(sword.attackMod).toBe('+5');
+    });
+
+    it('resolves type from Ranged trait when type is absent', () => {
+      const char = {
+        ...baseChar,
+        strikes: [{ name: 'Arrow', traits: ['Ranged'], damage: '1d6' }],
+      };
+      const result = getStrikes(char);
+      expect(result.find(s => s.name === 'Arrow').type).toBe('ranged');
+    });
+
+    it('character with no strikes, feats, or inventory gets default unarmed', () => {
+      const result = getStrikes({ level: 1 });
+      expect(result[0].name).toBe('Unarmed Strike');
+    });
+  });
+
+  describe('getActions — additional branch coverage', () => {
+    it('returns default stride/step/strike when no actions, inventory, or feats', () => {
+      const result = getActions({});
+      expect(result.some(a => a.name === 'Stride')).toBe(true);
+      expect(result.some(a => a.name === 'Step')).toBe(true);
+      expect(result.some(a => a.name === 'Strike')).toBe(true);
+    });
+
+    it('processes variable action text in character.actions', () => {
+      const char = {
+        actions: [{ name: 'Blast', actions: 'One to Three Actions' }],
+      };
+      const result = getActions(char);
+      const blast = result.find(a => a.name === 'Blast');
+      expect(blast.variableActionCount).toEqual({ min: 1, max: 3 });
+    });
+
+    it('processes regular action count text in character.actions', () => {
+      const char = {
+        actions: [{ name: 'Cast', actions: 'Two Actions' }],
+      };
+      const result = getActions(char);
+      const cast = result.find(a => a.name === 'Cast');
+      expect(cast.actionCount).toBe(2);
+    });
+
+    it('ignores inventory items without actions', () => {
+      const char = {
+        actions: [{ name: 'Strike' }],
+        inventory: [{ name: 'Sword' }], // no actions
+      };
+      const result = getActions(char);
+      expect(result.some(a => a.name === 'Strike')).toBe(true);
+    });
+
+    it('ignores feats without actions', () => {
+      const char = {
+        actions: [{ name: 'Strike' }],
+        feats: [{ name: 'Power Attack' }], // no actions
+      };
+      const result = getActions(char);
+      expect(result.some(a => a.name === 'Strike')).toBe(true);
+    });
+
+    it('returns action unchanged when actions field is absent', () => {
+      const char = {
+        actions: [{ name: 'Stride', actionCount: 1 }],
+      };
+      const result = getActions(char);
+      const stride = result.find(a => a.name === 'Stride');
+      expect(stride.actionCount).toBe(1);
+    });
+  });
+
+  describe('getReactions — additional branch coverage', () => {
+    it('returns empty array when character has no reactions, feats, or inventory', () => {
+      expect(getReactions({})).toEqual([]);
+    });
+
+    it('handles character.reactions being empty', () => {
+      const char = { reactions: [] };
+      expect(getReactions(char)).toEqual([]);
+    });
+
+    it('ignores inventory items without reactions', () => {
+      const char = {
+        reactions: [{ name: 'React' }],
+        inventory: [{ name: 'Sword' }],
+      };
+      expect(getReactions(char)).toHaveLength(1);
+    });
+
+    it('ignores feats without reactions', () => {
+      const char = {
+        reactions: [{ name: 'React' }],
+        feats: [{ name: 'Power Attack' }],
+      };
+      expect(getReactions(char)).toHaveLength(1);
+    });
+  });
+
+  describe('getFreeActions — additional branch coverage', () => {
+    it('returns empty array when character has no freeActions, feats, or inventory', () => {
+      expect(getFreeActions({})).toEqual([]);
+    });
+
+    it('handles character.freeActions being empty', () => {
+      expect(getFreeActions({ freeActions: [] })).toEqual([]);
+    });
+
+    it('ignores inventory items without freeActions', () => {
+      const char = {
+        freeActions: [{ name: 'Quick Draw' }],
+        inventory: [{ name: 'Sword' }],
+      };
+      expect(getFreeActions(char)).toHaveLength(1);
+    });
+
+    it('ignores feats without freeActions', () => {
+      const char = {
+        freeActions: [{ name: 'Quick Draw' }],
+        feats: [{ name: 'Power Attack' }],
+      };
+      expect(getFreeActions(char)).toHaveLength(1);
     });
   });
 });
