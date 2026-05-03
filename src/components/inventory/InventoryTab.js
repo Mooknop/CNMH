@@ -16,7 +16,10 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const [isCraftingOpen, setIsCraftingOpen] = useState(false);
 
   // Data layer — all character reads go through this hook
-  const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = useCharacter(character);
+  const charData = useCharacter(character);
+  if (!charData) return null;
+
+  const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = charData;
   const { bulkLimit, encumberedThreshold } = bulkStats;
 
   const { percentage: bulkPercentage, isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);

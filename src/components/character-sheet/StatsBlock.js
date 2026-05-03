@@ -8,6 +8,9 @@ const StatsBlock = ({ character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('abilities'); // Default tab: 'abilities' or 'proficiencies'
 
   // Data layer — all character reads go through this hook
+  const charData = useCharacter(character);
+  if (!charData) return null;
+
   const {
     abilityModifiers,
     saves,
@@ -19,7 +22,7 @@ const StatsBlock = ({ character, characterColor }) => {
     size,
     speed,
     senses,
-  } = useCharacter(character);
+  } = charData;
 
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';

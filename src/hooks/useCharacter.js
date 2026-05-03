@@ -136,7 +136,7 @@ export const useCharacter = (character) => {
     const gemItems     = findGemItems(character);
     const gemSpells    = extractGemSpells(gemItems);
 
-    const innateSpells = extractInnateSpells(character);
+    const innateSpells = extractInnateSpells(character) || [];
 
     const staff       = character.staff || null;
     const staffSpells = staff?.spells || [];
