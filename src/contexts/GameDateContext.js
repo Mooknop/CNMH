@@ -154,8 +154,8 @@ export const GameDateProvider = ({ children }) => {
   const getDaysUntilFullMoon = (date = gameDate) => {
     const totalDays = getTotalDays(date);
     const cyclePosition = totalDays % LUNAR_CYCLE_DAYS;
-    const fullMoonDay = 14; // Full moon occurs on day 14 of cycle
-    
+    const fullMoonDay = 16; // Full moon occurs on day 16 of cycle
+
     if (cyclePosition < fullMoonDay) {
       return fullMoonDay - cyclePosition;
     } else if (cyclePosition === fullMoonDay) {

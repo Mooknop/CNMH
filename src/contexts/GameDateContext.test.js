@@ -198,6 +198,61 @@ describe('GameDateContext', () => {
     consoleSpy.mockRestore();
   });
 
+  it('identifies full moon and new moon correctly using known dates', () => {
+    const MoonTest = () => {
+      const { gameDate, setSpecificDate, getMoonPhaseInfo, getDaysUntilFullMoon, getDaysUntilNewMoon, isFullMoon, isNewMoon } = useGameDate();
+      const info = getMoonPhaseInfo();
+      const flags = `${isFullMoon()},${isNewMoon()}`;
+      return (
+        <div>
+          <span data-testid="phase">{info.phase}</span>
+          <span data-testid="isFull">{info.isFullMoon.toString()}</span>
+          <span data-testid="isNew">{info.isNewMoon.toString()}</span>
+          <span data-testid="daysUntilFull">{getDaysUntilFullMoon()}</span>
+          <span data-testid="daysUntilNew">{getDaysUntilNewMoon()}</span>
+          <button onClick={() => setSpecificDate(14, 2, 4725)}>Set Full Moon</button>
+          <button onClick={() => setSpecificDate(26, 1, 4725)}>Set New Moon</button>
+          <span data-testid="flags">{flags}</span>
+          <span data-testid="currentDate">{`${gameDate.day}-${gameDate.month}-${gameDate.year}`}</span>
+        </div>
+      );
+    };
+
+    render(<GameDateProvider><MoonTest /></GameDateProvider>);
+    act(() => {
+      screen.getByText('Set Full Moon').click();
+    });
+    expect(screen.getByTestId('phase').textContent).toBe('4');
+    expect(screen.getByTestId('isFull').textContent).toBe('true');
+    expect(screen.getByTestId('daysUntilNew').textContent).toBe('16');
+    expect(screen.getByTestId('currentDate').textContent).toBe('14-2-4725');
+
+    act(() => {
+      screen.getByText('Set New Moon').click();
+    });
+    expect(screen.getByTestId('phase').textContent).toBe('0');
+    expect(screen.getByTestId('isNew').textContent).toBe('true');
+    expect(screen.getByTestId('daysUntilFull').textContent).toBe('16');
+    expect(screen.getByTestId('currentDate').textContent).toBe('26-1-4725');
+  });
+
+  it('advanceDays handles year transitions', () => {
+    const YearTest = () => {
+      const { gameDate, advanceDays } = useGameDate();
+      return (
+        <div>
+          <span data-testid="year">{gameDate.year}</span>
+          <span data-testid="month">{gameDate.month}</span>
+          <span data-testid="day">{gameDate.day}</span>
+          <button onClick={() => advanceDays(365)}>Advance Year</button>
+        </div>
+      );
+    };
+    render(<GameDateProvider><YearTest /></GameDateProvider>);
+    act(() => { screen.getByText('Advance Year').click(); });
+    expect(screen.getByTestId('year').textContent).toBe('4726');
+  });
+
   it('useGameDate throws when used outside provider', () => {
     const BrokenConsumer = () => {
       useGameDate();
