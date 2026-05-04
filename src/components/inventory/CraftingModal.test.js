@@ -126,7 +126,7 @@ describe('CraftingModal', () => {
     const { container } = render(
       <CraftingModal isOpen={true} onClose={onClose} character={baseCharacter} />
     );
-    fireEvent.click(container.querySelector('.crafting-modal-overlay'));
+    fireEvent.click(container.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -135,7 +135,7 @@ describe('CraftingModal', () => {
     const { container } = render(
       <CraftingModal isOpen={true} onClose={onClose} character={baseCharacter} />
     );
-    fireEvent.click(container.querySelector('.crafting-modal'));
+    fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -148,7 +148,7 @@ describe('CraftingModal', () => {
         characterColor="#ff0000"
       />
     );
-    expect(container.querySelector('.crafting-modal-header')).toHaveStyle(
+    expect(container.querySelector('.modal-header')).toHaveStyle(
       'background-color: #ff0000'
     );
   });
@@ -157,7 +157,7 @@ describe('CraftingModal', () => {
     const { container } = render(
       <CraftingModal isOpen={true} onClose={jest.fn()} character={baseCharacter} />
     );
-    expect(container.querySelector('.crafting-modal-header')).toHaveStyle(
+    expect(container.querySelector('.modal-header')).toHaveStyle(
       'background-color: var(--color-primary)'
     );
   });

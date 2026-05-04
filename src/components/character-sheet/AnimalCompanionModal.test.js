@@ -260,7 +260,7 @@ describe('AnimalCompanionModal', () => {
         characterColor="#cc0000"
       />
     );
-    expect(container.querySelector('.animal-companion-modal-header')).toHaveStyle(
+    expect(container.querySelector('.modal-header')).toHaveStyle(
       'background-color: #cc0000'
     );
   });
@@ -274,7 +274,7 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    expect(container.querySelector('.animal-companion-modal-header')).toHaveStyle(
+    expect(container.querySelector('.modal-header')).toHaveStyle(
       'background-color: var(--color-primary)'
     );
   });
@@ -289,7 +289,7 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    fireEvent.click(container.querySelector('.animal-companion-modal-overlay'));
+    fireEvent.click(container.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -303,7 +303,7 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    fireEvent.click(container.querySelector('.animal-companion-modal'));
+    fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 });

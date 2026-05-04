@@ -521,7 +521,7 @@ describe('ItemModal', () => {
     const { container } = render(
       <ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} characterColor="#ff0000" />
     );
-    const header = container.querySelector('.item-modal-header');
+    const header = container.querySelector('.modal-header');
     expect(header).toHaveStyle('background-color: #ff0000');
   });
 
@@ -529,7 +529,7 @@ describe('ItemModal', () => {
     const { container } = render(
       <ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} />
     );
-    const header = container.querySelector('.item-modal-header');
+    const header = container.querySelector('.modal-header');
     expect(header).toHaveStyle('background-color: var(--color-primary)');
   });
 
@@ -539,7 +539,7 @@ describe('ItemModal', () => {
     const { container } = render(
       <ItemModal isOpen={true} onClose={onClose} item={baseItem} />
     );
-    fireEvent.click(container.querySelector('.item-modal-overlay'));
+    fireEvent.click(container.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -548,7 +548,7 @@ describe('ItemModal', () => {
     const { container } = render(
       <ItemModal isOpen={true} onClose={onClose} item={baseItem} />
     );
-    fireEvent.click(container.querySelector('.item-modal'));
+    fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 

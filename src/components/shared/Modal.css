@@ -1,0 +1,119 @@
+/* src/components/shared/Modal.css
+   Shared styles for the generic Modal wrapper component.
+   All modal overlays, containers, headers, and close buttons should be
+   styled here rather than duplicated in individual modal CSS files.
+*/
+
+/* ---------- Overlay ---------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-overlay);
+}
+
+/* Elevated stack – used when the modal must appear above other floating UI */
+.modal-overlay--high {
+  z-index: var(--z-modal-high-overlay);
+}
+
+/* ---------- Dialog container ---------- */
+.modal-container {
+  background-color: white;
+  width: 90%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: var(--z-modal);
+}
+
+.modal-container--high {
+  z-index: var(--z-modal-high);
+}
+
+/* ---------- Header ---------- */
+.modal-header {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: var(--z-modal-header);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* Themed variant: background-color and color are set via inline style */
+.modal-header--themed .modal-close-button {
+  color: white;
+}
+
+/* Plain variant (no themeColor): styled like a section divider */
+.modal-header:not(.modal-header--themed) {
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header:not(.modal-header--themed) h2 {
+  color: var(--color-primary);
+  font-size: 1.3rem;
+}
+
+/* ---------- Close button ---------- */
+.modal-close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-header:not(.modal-header--themed) .modal-close-button {
+  color: #666;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.modal-header:not(.modal-header--themed) .modal-close-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+
+/* ---------- Body ---------- */
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .modal-container {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-container {
+    margin-top: 30px;
+    max-height: calc(90vh - 30px);
+  }
+}

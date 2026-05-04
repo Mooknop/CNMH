@@ -1,4 +1,5 @@
 import React from 'react';
+import Modal from './Modal';
 import './TraitModal.css';
 
 /**
@@ -11,23 +12,14 @@ import './TraitModal.css';
  */
 const TraitModal = ({ isOpen, onClose, trait, themeColor }) => {
   if (!isOpen || !trait) return null;
-  
+
   return (
-    <div className="trait-modal-overlay" onClick={onClose}>
-      <div className="trait-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="trait-modal-header" style={{ backgroundColor: themeColor || 'var(--color-primary)' }}>
-          <h2>{trait.name}</h2>
-          <button className="close-button" onClick={onClose}>&times;</button>
-        </div>
-        <div className="trait-modal-content">
-          <p className="trait-description">{trait.description}</p>
-          
-          <div className="trait-source">
-            <span>Source: Pathfinder 2nd Edition Core Rulebook</span>
-          </div>
-        </div>
+    <Modal isOpen={isOpen} onClose={onClose} title={trait.name} themeColor={themeColor} maxWidth="500px">
+      <p className="trait-description">{trait.description}</p>
+      <div className="trait-source">
+        <span>Source: Pathfinder 2nd Edition Core Rulebook</span>
       </div>
-    </div>
+    </Modal>
   );
 };
 

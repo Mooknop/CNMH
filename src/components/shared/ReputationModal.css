@@ -1,46 +1,8 @@
-/* Reputation Modal Styles */
-.reputation-modal {
-  max-width: 600px;
-  width: 90%;
-}
+/* ReputationModal-specific styles only. Overlay, container, header, and close-button
+   styles live in src/components/shared/Modal.css.
+*/
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.modal-header h2 {
-  margin: 0;
-  color: var(--color-primary);
-  font-size: 1.5rem;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-}
-
-.close-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-  color: #333;
-}
-
-.modal-body {
+.reputation-content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -114,17 +76,5 @@
 @media (max-width: 768px) {
   .reputation-info {
     grid-template-columns: 1fr;
-  }
-
-  .scale-segment {
-    padding: 0.5rem 0.75rem;
-  }
-
-  .rank-name {
-    font-size: 0.9rem;
-  }
-
-  .rank-range {
-    font-size: 0.8rem;
   }
 }

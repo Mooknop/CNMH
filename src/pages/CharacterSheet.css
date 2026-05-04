@@ -139,7 +139,7 @@
   border: 2px solid #444;
 }
 
-.defense-name {
+.character-sheet .defense-name {
   font-weight: bold;
   color: var(--color-primary);
   margin-bottom: 0.25rem;
@@ -147,7 +147,7 @@
   text-transform: uppercase;
 }
 
-.defense-value {
+.character-sheet .defense-value {
   font-size: 1.75rem;
   font-weight: bold;
   color: #333;
@@ -244,7 +244,7 @@
   margin-bottom: 1.5rem;
 }
 
-.ability {
+.character-sheet .ability {
   text-align: center;
   background: rgba(255, 255, 255, 0.6);
   padding: 0.75rem;
@@ -252,20 +252,20 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.ability-name {
+.character-sheet .ability-name {
   font-weight: bold;
   color: var(--color-primary);
   margin-bottom: 0.25rem;
   font-size: 0.9rem;
 }
 
-.ability-score {
+.character-sheet .ability-score {
   font-size: 1.5rem;
   font-weight: bold;
   margin-bottom: 0.25rem;
 }
 
-.ability-mod {
+.character-sheet .ability-mod {
   font-size: 1rem;
   color: #666;
 }

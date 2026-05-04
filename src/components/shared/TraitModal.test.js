@@ -37,7 +37,7 @@ describe('TraitModal', () => {
     const { container } = render(
       <TraitModal isOpen={true} onClose={onClose} trait={mockTrait} />
     );
-    fireEvent.click(container.querySelector('.trait-modal-overlay'));
+    fireEvent.click(container.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -46,7 +46,7 @@ describe('TraitModal', () => {
     const { container } = render(
       <TraitModal isOpen={true} onClose={onClose} trait={mockTrait} />
     );
-    fireEvent.click(container.querySelector('.trait-modal'));
+    fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -54,7 +54,7 @@ describe('TraitModal', () => {
     const { container } = render(
       <TraitModal isOpen={true} onClose={() => {}} trait={mockTrait} themeColor="#ff0000" />
     );
-    const header = container.querySelector('.trait-modal-header');
+    const header = container.querySelector('.modal-header');
     expect(header.style.backgroundColor).toBe('rgb(255, 0, 0)');
   });
 });

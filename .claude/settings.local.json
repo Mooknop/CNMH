@@ -2,7 +2,20 @@
   "permissions": {
     "allow": [
       "Bash(npm run *)",
-      "Bash(npx react-scripts *)"
+      "Bash(npx react-scripts *)",
+      "Bash(wc -l /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/**/*.js)",
+      "Bash(find /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src -name \"*.js\" -type f ! -name \"*.test.js\" -exec wc -l {} \\\\;)",
+      "Bash(awk '{print $1 \"\\\\t\" FILENAME}' FILENAME={})",
+      "Bash(grep -l \"Modal\" /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/components/**/*.js)",
+      "Bash(ls -la /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/**/*.css)",
+      "Bash(find /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/components/shared -name \"*.js\" ! -name \"*.test.js\" -exec wc -l {} \\\\;)",
+      "Bash(xargs wc *)",
+      "Bash(grep -l \"Spells\" /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/components/spells/*.js)",
+      "Bash(ls -lh /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/components/actions/*.js)",
+      "Bash(grep -h \"^\\\\..*{\" /c/Users/mookn/Documents/CNMH/chaotic-neutral-milk-hotel/src/components/**/*.css)",
+      "Bash(grep \"\\\\.js$\")",
+      "Bash(npm test *)",
+      "Bash(set CI=true)"
     ]
   }
 }

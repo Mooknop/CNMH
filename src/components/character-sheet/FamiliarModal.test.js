@@ -237,7 +237,7 @@ describe('FamiliarModal', () => {
         characterColor="#00cc99"
       />
     );
-    expect(container.querySelector('.familiar-modal-header')).toHaveStyle(
+    expect(container.querySelector('.modal-header')).toHaveStyle(
       'background-color: #00cc99'
     );
   });
@@ -251,7 +251,7 @@ describe('FamiliarModal', () => {
         character={baseCharacter}
       />
     );
-    expect(container.querySelector('.familiar-modal-header')).toHaveStyle(
+    expect(container.querySelector('.modal-header')).toHaveStyle(
       'background-color: var(--color-primary)'
     );
   });
@@ -266,7 +266,7 @@ describe('FamiliarModal', () => {
         character={baseCharacter}
       />
     );
-    fireEvent.click(container.querySelector('.familiar-modal-overlay'));
+    fireEvent.click(container.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -280,7 +280,7 @@ describe('FamiliarModal', () => {
         character={baseCharacter}
       />
     );
-    fireEvent.click(container.querySelector('.familiar-modal'));
+    fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 });
