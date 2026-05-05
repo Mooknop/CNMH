@@ -25,7 +25,7 @@ const PartyWealth = () => {
   const { characters } = useContext(CharacterContext);
   const [sortBy, setSortBy] = useState('name');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showContainerItems, setShowContainerItems] = useState(true);
+  const showContainerItems = true;
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
 
