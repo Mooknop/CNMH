@@ -109,8 +109,6 @@ const FocusSpellsList = ({ character, characterColor }) => {
   const renderBloodlineInfo = () => {
     if (!hasBloodline()) return null;
     
-    const { name, description } = character.spellcasting.bloodline;
-    
     return (
       <div className="bloodline-info">
         <h3 style={{ color: themeColor }}>Imperious Defense</h3>

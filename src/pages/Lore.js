@@ -3,7 +3,7 @@ import { loreEntries as defaultLoreEntries } from '../data';
 import './Lore.css';
 
 const Lore = () => {
-  const [loreEntries, setLoreEntries] = useState(defaultLoreEntries);
+  const [loreEntries] = useState(defaultLoreEntries);
   const [filter, setFilter] = useState('');
   const [categories, setCategories] = useState([]);
   

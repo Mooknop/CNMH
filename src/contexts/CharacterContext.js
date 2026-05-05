@@ -5,7 +5,7 @@ import { getCharacterColor } from '../utils/CharacterUtils';
 export const CharacterContext = createContext();
 
 export const CharacterProvider = ({ children }) => {
-  const [characters, setCharacters] = useState(sampleCharacters);
+  const [characters] = useState(sampleCharacters);
   const [activeCharacter, setActiveCharacter] = useState(null);
 
   const getCharacter = (id) => {

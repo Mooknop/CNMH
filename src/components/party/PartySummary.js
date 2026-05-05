@@ -5,7 +5,6 @@ import {
   PolarAngleAxis, 
   PolarRadiusAxis, 
   Radar, 
-  Legend, 
   ResponsiveContainer 
 } from 'recharts';
 import { CharacterContext } from '../../contexts/CharacterContext';

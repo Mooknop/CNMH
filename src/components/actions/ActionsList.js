@@ -1,8 +1,5 @@
 // src/components/actions/ActionsList.js
 import React, { useState } from 'react';
-import CollapsibleCard from '../shared/CollapsibleCard';
-import TraitTag from '../shared/TraitTag';
-import ActionIcon from '../shared/ActionIcon';
 import StrikesList from './StrikesList';
 import CharacterActionsList from './CharacterActionsList';
 import ReactionsList from './ReactionsList';

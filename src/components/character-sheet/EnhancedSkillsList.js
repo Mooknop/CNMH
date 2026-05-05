@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './EnhancedSkillsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import { formatModifier, getProficiencyLabel } from '../../utils/CharacterUtils';

@@ -3,12 +3,11 @@ import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useGameDate } from '../contexts/GameDateContext';
-import PartySummary from '../components/party/PartySummary';
 import { PARTY_GOLD, PARTY_NAME, CURRENT_LOCATION } from '../data/campaign';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { setActiveCharacter } = useContext(CharacterContext);
+  const { } = useContext(CharacterContext);
   const { formatGameDate } = useGameDate();
   const navigate = useNavigate();
     

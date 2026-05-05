@@ -1,5 +1,5 @@
 // src/components/spells/Harrowing.js
-import React, { useState } from 'react';
+import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
