@@ -62,7 +62,7 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
           </h3>
           <div className="container-status">
             <span className="container-bulk-label">
-              {formatBulk(formatDecimal(contentsBulk))} / {formatBulk(capacity)} Bulk
+              {formatBulk(contentsBulk)} / {formatBulk(capacity)} Bulk
             </span>
             {ignored > 0 && (
               <span className="container-ignored">
