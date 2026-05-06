@@ -307,8 +307,8 @@ const SpellsList = ({ character, characterColor }) => {
       )}
       
       {viewMode === 'scrolls' && hasScrolls && (
-        <ScrollSpells 
-          spells={spellsToDisplay}
+        <ScrollSpells
+          spells={scrollSpells}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}
@@ -316,10 +316,10 @@ const SpellsList = ({ character, characterColor }) => {
           character={character}
         />
       )}
-      
+
       {viewMode === 'wands' && hasWands && (
-        <WandSpells 
-          spells={spellsToDisplay}
+        <WandSpells
+          spells={wandSpells}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}
