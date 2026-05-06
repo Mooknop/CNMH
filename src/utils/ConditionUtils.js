@@ -177,8 +177,8 @@ export function computeConditionEffects(activeConditions, keyAbility = '', level
     spellAttack,
     classDC,
     spellDC,
-    speed:     { total: -speedReduction,  sources: speedSources  },
-    maxHp:     { total: -maxHpReduction,  sources: maxHpSources  },
+    speed:     { total: speedReduction  ? -speedReduction  : 0, sources: speedSources  },
+    maxHp:     { total: maxHpReduction  ? -maxHpReduction  : 0, sources: maxHpSources  },
     skillPenalty,
   };
 }

@@ -6,6 +6,7 @@ import StatsBlock from './StatsBlock';
 jest.mock('../../utils/CharacterUtils', () => ({
   formatModifier: (mod) => mod >= 0 ? `+${mod}` : `${mod}`,
   getAttackBonus: () => '+3',
+  getProficiencyBonus: (prof) => (prof || 0) * 2,
   getProficiencyLabel: (prof) => {
     const labels = { 0: 'Untrained', 1: 'Trained', 2: 'Expert' };
     return labels[prof] || 'Untrained';
@@ -193,7 +194,10 @@ describe('StatsBlock', () => {
 
   it('should display speed', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('25 feet')).toBeInTheDocument();
+    // Speed renders as PenaltyDisplay (span) + " feet" text node; match the combined parent text
+    expect(screen.getByText((_, el) =>
+      el?.textContent?.replace(/\s+/g, ' ').trim() === '25 feet'
+    )).toBeInTheDocument();
   });
 
   it('should display senses when present', () => {
@@ -210,7 +214,9 @@ describe('StatsBlock', () => {
   it('should use 69 fallback when speed is absent', () => {
     mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, speed: null });
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('69 feet')).toBeInTheDocument();
+    expect(screen.getByText((_, el) =>
+      el?.textContent?.replace(/\s+/g, ' ').trim() === '69 feet'
+    )).toBeInTheDocument();
   });
 
   it('should not display senses section when senses is absent', () => {
@@ -320,5 +326,39 @@ describe('StatsBlock', () => {
     // After clicking proficiencies
     fireEvent.click(screen.getByText('Proficiencies'));
     expect(tabButtons[1]).toHaveStyle('background-color: #ff0000');
+  });
+
+  it('renders the CONDITIONS button in the hp-defense row', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('CONDITIONS')).toBeInTheDocument();
+  });
+
+  it('shows em-dash when no conditions are active', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('opens ConditionModal when CONDITIONS button is clicked', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+    expect(screen.getByText('Condition Tracker')).toBeInTheDocument();
+  });
+
+  it('shows condition count after adding a condition', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+    // Click Off-Guard (a toggle condition) in the browser
+    fireEvent.click(screen.getByText('Off-Guard').closest('button'));
+    // Button should now show 1 (the count of active conditions)
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+  });
+
+  it('applies condition penalty to AC when condition is active', () => {
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    // Open condition modal and add Off-Guard (-2 circumstance to AC)
+    fireEvent.click(screen.getByText('CONDITIONS').closest('button'));
+    fireEvent.click(screen.getByText('Off-Guard').closest('button'));
+    // AC was 16, Off-Guard applies -2 → AC should show 14
+    expect(screen.getByText('14')).toBeInTheDocument();
   });
 });

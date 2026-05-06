@@ -86,6 +86,21 @@ describe('EnhancedSkillsList', () => {
     render(<EnhancedSkillsList character={{ id: '1' }} />);
     expect(screen.getAllByText('Trained').length).toBeGreaterThan(0);
   });
+
+  it('accepts activeConditions prop without crashing', () => {
+    const conditions = [{ id: 'frightened', value: 2 }];
+    expect(() =>
+      render(<EnhancedSkillsList character={{ id: '1' }} activeConditions={conditions} />)
+    ).not.toThrow();
+  });
+
+  it('shows penalized skill modifier when condition applies', () => {
+    // Frightened 2 applies -2 status to all skills
+    const conditions = [{ id: 'frightened', value: 2 }];
+    render(<EnhancedSkillsList character={{ id: '1' }} activeConditions={conditions} />);
+    // Athletics modifier was +5; with Frightened 2 → +3
+    expect(screen.getByText('+3')).toBeInTheDocument();
+  });
 });
 
 describe('EnhancedSkillsList with Untrained Improvisation', () => {

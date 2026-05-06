@@ -17,7 +17,13 @@
       "Bash(npm test *)",
       "Bash(set CI=true)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\" -Force)",
-      "Bash(Select-Object Name, Mode)"
+      "Bash(Select-Object Name, Mode)",
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --testPathPattern=\"PenaltyDisplay|ConditionModal|ConditionUtils|AnimalCompanion|FamiliarModal|StatsBlock|EnhancedSkillsList\" 2>&1)",
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --testPathPattern=\"EnhancedSkillsList.test\" 2>&1 | Select-String -Pattern \"\\(PASS|FAIL|Tests:|√|×|●\\)\" | Select-Object -First 30)",
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-Object -Last 60)",
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --testPathPattern=\"pf2eConditions.test\" 2>&1 | Select-String -Pattern \"\\(PASS|FAIL|Tests:|√|×|●\\)\" | Select-Object -First 30)",
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-Object -Last 25)",
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-String -Pattern \"\\(threshold|Jest:|Test Suites:|Tests:\\)\" | Select-Object -Last 10)"
     ]
   }
 }

@@ -283,4 +283,55 @@ describe('FamiliarModal', () => {
     fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('renders the Conditions button', () => {
+    render(
+      <FamiliarModal
+        isOpen={true}
+        onClose={jest.fn()}
+        familiar={baseFamiliar}
+        character={baseCharacter}
+      />
+    );
+    expect(screen.getByText('Conditions')).toBeInTheDocument();
+  });
+
+  it('shows em-dash when no conditions are active', () => {
+    render(
+      <FamiliarModal
+        isOpen={true}
+        onClose={jest.fn()}
+        familiar={baseFamiliar}
+        character={baseCharacter}
+      />
+    );
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('opens ConditionModal when Conditions button is clicked', () => {
+    render(
+      <FamiliarModal
+        isOpen={true}
+        onClose={jest.fn()}
+        familiar={baseFamiliar}
+        character={baseCharacter}
+      />
+    );
+    fireEvent.click(screen.getByText('Conditions').closest('button'));
+    expect(screen.getByText('Condition Tracker')).toBeInTheDocument();
+  });
+
+  it('shows condition count after adding a condition', () => {
+    render(
+      <FamiliarModal
+        isOpen={true}
+        onClose={jest.fn()}
+        familiar={baseFamiliar}
+        character={baseCharacter}
+      />
+    );
+    fireEvent.click(screen.getByText('Conditions').closest('button'));
+    fireEvent.click(screen.getByText('Off-Guard').closest('button'));
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0);
+  });
 });
