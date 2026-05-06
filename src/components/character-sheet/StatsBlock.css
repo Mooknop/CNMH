@@ -33,6 +33,33 @@
   border: 2px solid #444;
 }
 
+.condition-box {
+  padding: 0.75rem 1.25rem;
+  background-color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+  min-width: 120px;
+  flex: 1;
+  border: 2px dashed #aaa;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.condition-box:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.condition-box--active {
+  border-style: solid;
+}
+
+.condition-count {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+}
+
 .defense-name {
   font-weight: bold;
   color: var(--color-primary);

@@ -1,109 +1,184 @@
-// src/components/character-sheet/FamiliarModal.js
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '../shared/Modal';
+import ConditionModal from './ConditionModal';
+import PenaltyDisplay from '../shared/PenaltyDisplay';
+import { computeConditionEffects } from '../../utils/ConditionUtils';
 import './FamiliarModal.css';
 
 const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor }) => {
-  if (!isOpen) return null;
+  const [activeConditions, setActiveConditions] = useState([]);
+  const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
+
+  // Keep mounted (state preserved) while Modal handles the visual hide
+  if (!familiar || !character) return null;
 
   const themeColor = characterColor || 'var(--color-primary)';
   const familiarData = familiar;
 
+  // Familiar conditions affect its own AC, Speed, and its use of the master's saves
+  const effects = computeConditionEffects(activeConditions, '', character.level);
+
+  const handleAdd = (condition) => {
+    setActiveConditions((prev) => {
+      const existing = prev.find((c) => c.id === condition.id);
+      if (existing) {
+        if (!condition.valued) return prev;
+        return prev.map((c) =>
+          c.id === condition.id
+            ? { ...c, value: Math.min(c.value + 1, c.maxValue) }
+            : c
+        );
+      }
+      return [...prev, { ...condition, value: condition.valued ? 1 : null }];
+    });
+  };
+
+  const handleRemove = (id) => setActiveConditions((prev) => prev.filter((c) => c.id !== id));
+
+  const handleChangeValue = (id, delta) => {
+    setActiveConditions((prev) =>
+      prev.reduce((acc, c) => {
+        if (c.id !== id) return [...acc, c];
+        const next = c.value + delta;
+        if (next <= 0) return acc;
+        return [...acc, { ...c, value: Math.min(next, c.maxValue) }];
+      }, [])
+    );
+  };
+
+  const hasConditions = activeConditions.length > 0;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={familiarData.name} themeColor={themeColor} maxWidth="600px">
-      <div className="familiar-basic-info">
-        <div className="familiar-traits">
-          <span className="trait-label">Type:</span>
-          <span className="trait-value">{familiarData.type}</span>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={familiarData.name} themeColor={themeColor} maxWidth="600px">
+        <div className="familiar-basic-info">
+          <div className="familiar-traits">
+            <span className="trait-label">Type:</span>
+            <span className="trait-value">{familiarData.type}</span>
 
-          <span className="trait-label">Size:</span>
-          <span className="trait-value">{familiarData.size}</span>
+            <span className="trait-label">Size:</span>
+            <span className="trait-value">{familiarData.size}</span>
 
-          {familiarData.traits && (
-            <>
-              <span className="trait-label">Traits:</span>
-              <span className="trait-value">{familiarData.traits.join(", ")}</span>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="familiar-stats">
-        <div className="familiar-defenses">
-          <div className="defense">
-            <span className="defense-label">AC</span>
-            <span className="defense-value">{familiarData.ac}</span>
-          </div>
-          <div className="defense">
-            <span className="defense-label">HP</span>
-            <span className="defense-value">{familiarData.hp}</span>
-          </div>
-          <div className="defense">
-            <span className="defense-label">Speed</span>
-            <span className="defense-value">{familiarData.speed}</span>
-          </div>
-        </div>
-        <div className="familiar-defenses">
-          <div className="defense">
-            <span className="defense-label">Fortitude</span>
-            <span className="defense-value">+{character.saves.fortitude}</span>
-          </div>
-          <div className="defense">
-            <span className="defense-label">Reflex</span>
-            <span className="defense-value">+{character.saves.reflex}</span>
-          </div>
-          <div className="defense">
-            <span className="defense-label">Will</span>
-            <span className="defense-value">+{character.saves.will}</span>
+            {familiarData.traits && (
+              <>
+                <span className="trait-label">Traits:</span>
+                <span className="trait-value">{familiarData.traits.join(", ")}</span>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="familiar-details">
-          {familiarData.skills && (
-            <div className="familiar-section">
-              <h4 style={{ color: themeColor }}>Skills</h4>
-              <p>{familiarData.skills.join(", ")}: +7</p>
-              <p>All Other Skills: +3</p>
+        <div className="familiar-stats">
+          <div className="familiar-defenses">
+            <div className="defense">
+              <span className="defense-label">AC</span>
+              <span className="defense-value">
+                <PenaltyDisplay base={familiarData.ac} penalty={effects.ac} />
+              </span>
             </div>
-          )}
-
-          {familiarData.senses && (
-            <div className="familiar-section">
-              <h4 style={{ color: themeColor }}>Senses</h4>
-              <p>{familiarData.senses.join(", ")}</p>
+            <div className="defense">
+              <span className="defense-label">HP</span>
+              <span className="defense-value">
+                <PenaltyDisplay base={familiarData.hp} penalty={effects.maxHp} />
+              </span>
             </div>
-          )}
-
-          {familiarData.communication && (
-            <div className="familiar-section">
-              <h4 style={{ color: themeColor }}>Communication</h4>
-              <p>{familiarData.communication}</p>
+            <div className="defense">
+              <span className="defense-label">Speed</span>
+              <span className="defense-value">
+                <PenaltyDisplay base={familiarData.speed} penalty={effects.speed} />
+              </span>
             </div>
-          )}
+            <button
+              className={`defense condition-btn${hasConditions ? ' condition-btn--active' : ''}`}
+              onClick={() => setIsConditionModalOpen(true)}
+              style={hasConditions ? { borderColor: '#d4a017', color: '#d4a017' } : {}}
+            >
+              <span className="defense-label" style={hasConditions ? { color: '#d4a017' } : {}}>
+                Conditions
+              </span>
+              <span className="defense-value">{hasConditions ? activeConditions.length : '—'}</span>
+            </button>
+          </div>
 
-          {familiarData.abilities && (
-            <div className="familiar-section">
-              <h4 style={{ color: themeColor }}>Familiar Abilities</h4>
-              <div className="familiar-abilities-list">
-                {familiarData.abilities.map((ability, index) => (
-                  <div key={index} className="familiar-ability">
-                    <h5>{ability.name}</h5>
-                    <p>{ability.description}</p>
-                  </div>
-                ))}
+          <div className="familiar-defenses">
+            <div className="defense">
+              <span className="defense-label">Fortitude</span>
+              <span className="defense-value">
+                <PenaltyDisplay base={character.saves.fortitude} penalty={effects.fort} format="modifier" />
+              </span>
+            </div>
+            <div className="defense">
+              <span className="defense-label">Reflex</span>
+              <span className="defense-value">
+                <PenaltyDisplay base={character.saves.reflex} penalty={effects.reflex} format="modifier" />
+              </span>
+            </div>
+            <div className="defense">
+              <span className="defense-label">Will</span>
+              <span className="defense-value">
+                <PenaltyDisplay base={character.saves.will} penalty={effects.will} format="modifier" />
+              </span>
+            </div>
+          </div>
+
+          <div className="familiar-details">
+            {familiarData.skills && (
+              <div className="familiar-section">
+                <h4 style={{ color: themeColor }}>Skills</h4>
+                <p>{familiarData.skills.join(", ")}: +7</p>
+                <p>All Other Skills: +3</p>
               </div>
-            </div>
-          )}
+            )}
 
-          {familiarData.description && (
-            <div className="familiar-section">
-              <h4 style={{ color: themeColor }}>Description</h4>
-              <p>{familiarData.description}</p>
-            </div>
-          )}
+            {familiarData.senses && (
+              <div className="familiar-section">
+                <h4 style={{ color: themeColor }}>Senses</h4>
+                <p>{familiarData.senses.join(", ")}</p>
+              </div>
+            )}
+
+            {familiarData.communication && (
+              <div className="familiar-section">
+                <h4 style={{ color: themeColor }}>Communication</h4>
+                <p>{familiarData.communication}</p>
+              </div>
+            )}
+
+            {familiarData.abilities && (
+              <div className="familiar-section">
+                <h4 style={{ color: themeColor }}>Familiar Abilities</h4>
+                <div className="familiar-abilities-list">
+                  {familiarData.abilities.map((ability, index) => (
+                    <div key={index} className="familiar-ability">
+                      <h5>{ability.name}</h5>
+                      <p>{ability.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {familiarData.description && (
+              <div className="familiar-section">
+                <h4 style={{ color: themeColor }}>Description</h4>
+                <p>{familiarData.description}</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+
+      <ConditionModal
+        isOpen={isConditionModalOpen}
+        onClose={() => setIsConditionModalOpen(false)}
+        themeColor={themeColor}
+        activeConditions={activeConditions}
+        onAdd={handleAdd}
+        onRemove={handleRemove}
+        onChangeValue={handleChangeValue}
+        highZ
+      />
+    </>
   );
 };
 

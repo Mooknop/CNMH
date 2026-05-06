@@ -1,10 +1,12 @@
 import React from 'react';
 import './EnhancedSkillsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
-import { formatModifier, getProficiencyLabel } from '../../utils/CharacterUtils';
+import PenaltyDisplay from '../shared/PenaltyDisplay';
+import { getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
+import { computeConditionEffects } from '../../utils/ConditionUtils';
 
-const EnhancedSkillsList = ({ character, characterColor }) => {
+const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';
 
@@ -21,6 +23,8 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
   } = useCharacter(character);
 
   const hasUntrainedImprovisation = flags.hasUntrainedImprovisation;
+
+  const condEffects = computeConditionEffects(activeConditions, character?.keyAbility, level);
 
   // Define skills with their key abilities and associated actions
   const skills = [
@@ -272,16 +276,15 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           const proficiency = skillProficiencies[skill.id] || 0;
           const modifier    = skillModifiers[skill.id] || 0;
           const abilityMod  = abilityModifiers[skill.ability] || 0;
-          const abilityModStr = formatModifier(abilityMod);
+          const abilityModStr = abilityMod >= 0 ? `+${abilityMod}` : String(abilityMod);
           const itemBonus   = itemBonuses[skill.id] || 0;
-          
+          const condPenalty = condEffects.skillPenalty(skill.ability);
+
           const proficiencyColorClass = getProficiencyColor(proficiency);
-          
-          // Add a class if this is an untrained skill but character has Untrained Improvisation
+
           const isUntrained = proficiency === 0;
           const hasImprovisedSkill = isUntrained && hasUntrainedImprovisation;
-          
-          // Create the header content
+
           const header = (
             <div className="skill-name-section">
               <h3 style={{ color: themeColor }}>
@@ -292,7 +295,7 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
               </h3>
               <div className="skill-info">
                 <div className="skill-modifier">
-                  {formatModifier(modifier)}
+                  <PenaltyDisplay base={modifier} penalty={condPenalty} format="modifier" />
                 </div>
                 <div className={`skill-proficiency ${proficiencyColorClass}`}>
                   {getProficiencyLabel(proficiency)}
@@ -342,14 +345,15 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
           );
         })}
       </div>
-      {loreSkills.map((loreSkill, index) => {
+      {loreSkills.map((loreSkill) => {
         const loreId = `lore-${loreSkill.name.toLowerCase().replace(/\s+/g, '-')}`;
         const loreProficiency = loreSkill.proficiency || 0;
         const abilityMod = abilityModifiers.intelligence;
         const loreModifier = abilityMod + level + loreSkill.proficiency * 2;
-        
+        const lorePenalty = condEffects.skillPenalty('intelligence');
+
         return (
-          <CollapsibleCard 
+          <CollapsibleCard
             key={loreId}
             themeColor={themeColor}
             className={`skill-card ${getProficiencyColor(loreProficiency)}`}
@@ -360,7 +364,9 @@ const EnhancedSkillsList = ({ character, characterColor }) => {
                   <div className="skill-ability">(Intelligence)</div>
                 </h3>
                 <div className="skill-info">
-                  <div className="skill-modifier">{formatModifier(loreModifier)}</div>
+                  <div className="skill-modifier">
+                    <PenaltyDisplay base={loreModifier} penalty={lorePenalty} format="modifier" />
+                  </div>
                   <div className={`skill-proficiency ${getProficiencyColor(loreProficiency)}`}>
                     {getProficiencyLabel(loreProficiency)}
                   </div>

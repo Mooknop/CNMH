@@ -6,6 +6,7 @@ jest.mock('../../utils/CharacterUtils', () => ({
   getAbilityModifier: jest.fn((score) => Math.floor(((score || 10) - 10) / 2)),
   getAttackBonus: jest.fn(() => '+5/+0/-5'),
   formatModifier: jest.fn((n) => (n >= 0 ? `+${n}` : `${n}`)),
+  getProficiencyBonus: jest.fn((prof, level) => (prof || 0) * 2 + (level || 0)),
 }));
 
 const baseCharacter = { name: 'Aria', level: 5 };
@@ -305,5 +306,59 @@ describe('AnimalCompanionModal', () => {
     );
     fireEvent.click(container.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('renders the Conditions button in the defenses row', () => {
+    render(
+      <AnimalCompanionModal
+        isOpen={true}
+        onClose={jest.fn()}
+        animalCompanion={baseCompanion}
+        character={baseCharacter}
+      />
+    );
+    expect(screen.getByText('Conditions')).toBeInTheDocument();
+  });
+
+  it('shows em-dash when no conditions are active', () => {
+    render(
+      <AnimalCompanionModal
+        isOpen={true}
+        onClose={jest.fn()}
+        animalCompanion={baseCompanion}
+        character={baseCharacter}
+      />
+    );
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('opens ConditionModal when Conditions button is clicked', () => {
+    render(
+      <AnimalCompanionModal
+        isOpen={true}
+        onClose={jest.fn()}
+        animalCompanion={baseCompanion}
+        character={baseCharacter}
+      />
+    );
+    fireEvent.click(screen.getByText('Conditions').closest('button'));
+    expect(screen.getByText('Condition Tracker')).toBeInTheDocument();
+  });
+
+  it('adds a condition and shows count in button', () => {
+    render(
+      <AnimalCompanionModal
+        isOpen={true}
+        onClose={jest.fn()}
+        animalCompanion={baseCompanion}
+        character={baseCharacter}
+      />
+    );
+    // Open condition modal
+    fireEvent.click(screen.getByText('Conditions').closest('button'));
+    // Click Off-Guard in the browser grid (toggle condition)
+    fireEvent.click(screen.getByText('Off-Guard').closest('button'));
+    // The count badge should now show 1 instead of —
+    expect(screen.getAllByText('1').length).toBeGreaterThan(0);
   });
 });
