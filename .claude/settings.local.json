@@ -23,7 +23,14 @@
       "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-Object -Last 60)",
       "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --testPathPattern=\"pf2eConditions.test\" 2>&1 | Select-String -Pattern \"\\(PASS|FAIL|Tests:|√|×|●\\)\" | Select-Object -First 30)",
       "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-Object -Last 25)",
-      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-String -Pattern \"\\(threshold|Jest:|Test Suites:|Tests:\\)\" | Select-Object -Last 10)"
+      "PowerShell(cd \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\"; $env:CI = \"true\"; npx react-scripts test --watchAll=false --coverage 2>&1 | Select-String -Pattern \"\\(threshold|Jest:|Test Suites:|Tests:\\)\" | Select-Object -Last 10)",
+      "Bash(grep -E \"\\\\.\\(json|js\\)$\")",
+      "Bash(node -e \"const c = require\\('./src/data/JadeInferno.json'\\); const sc = c.spellcasting; console.log\\(JSON.stringify\\({tradition: sc.tradition, ability: sc.ability, proficiency: sc.proficiency, focus: sc.focus, spell_slots: sc.spell_slots, spellSlotsKeys: Object.keys\\(sc\\)}, null, 2\\)\\); console.log\\('First 2 spells:', JSON.stringify\\(sc.spells?.slice\\(0,2\\), null, 2\\)\\);\")",
+      "Bash(node -e \"const c = require\\('./src/data/IzzyUncut.json'\\); const sc = c.spellcasting; console.log\\('IzzyUncut spellcasting keys:', JSON.stringify\\(Object.keys\\(sc\\)\\)\\); console.log\\('level:', c.level, 'class:', c.class\\);\")",
+      "Bash(node -e ' *)",
+      "WebFetch(domain:2e.aonprd.com)",
+      "WebSearch",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\components\\\\spells\\\\\" -File)"
     ]
   }
 }

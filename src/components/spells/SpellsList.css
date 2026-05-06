@@ -716,3 +716,132 @@
     margin-bottom: 0.5rem;
   }
 }
+
+/* ── Spell Repertoire: rank sections, slot bubbles, name chips ── */
+
+.repertoire-rank-section {
+  margin-bottom: 1.5rem;
+}
+
+.rank-section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.4rem;
+}
+
+.rank-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Slot bubbles */
+.slot-bubbles {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.slot-bubble {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.slot-bubble.slot-filled {
+  background-color: var(--color-primary);
+}
+
+.slot-bubble.slot-empty {
+  background-color: transparent;
+}
+
+.slot-bubble:hover {
+  opacity: 0.75;
+}
+
+/* Spell name chips */
+.spell-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.spell-name-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  background-color: #f5f5f5;
+  color: #444;
+  border: 1px solid #ddd;
+  cursor: default;
+}
+
+.chip-symbol {
+  font-size: 0.75rem;
+}
+
+.spell-name-chip a.chip-name {
+  color: inherit;
+  text-decoration: none;
+}
+
+.spell-name-chip a.chip-name:hover {
+  text-decoration: underline;
+}
+
+/* Spell chip tooltip — follows ActionIcon pattern */
+.spell-name-chip .spell-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  white-space: normal;
+  max-width: 220px;
+  text-align: center;
+  transition: opacity 0.2s ease-in-out;
+  pointer-events: none;
+  z-index: var(--z-modal-overlay);
+  line-height: 1.4;
+}
+
+.spell-name-chip .spell-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border: 5px solid transparent;
+  border-top-color: rgba(0, 0, 0, 0.85);
+}
+
+.spell-name-chip:hover .spell-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.staff-charges-section {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #eee;
+}
