@@ -1,0 +1,85 @@
+.pd-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2em;
+  cursor: default;
+}
+
+/* The adjusted (penalized) value */
+.pd-penalized {
+  color: #c0392b;
+  font-weight: inherit;
+}
+
+/* Small delta badge, e.g. "−3" */
+.pd-delta {
+  font-size: 0.6em;
+  color: #c0392b;
+  opacity: 0.8;
+  line-height: 1;
+  align-self: flex-start;
+}
+
+/* Tooltip bubble — hidden by default, shown on hover */
+.pd-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #f0f0f0;
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  min-width: 180px;
+  max-width: 260px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  z-index: var(--z-tooltip, 9999);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* Arrow pointing down */
+.pd-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1a1a1a;
+}
+
+.pd-wrapper:hover .pd-tooltip {
+  display: block;
+}
+
+.pd-tooltip-title {
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #aaa;
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #333;
+}
+
+.pd-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pd-tooltip-label {
+  color: #f0f0f0;
+}
+
+.pd-tooltip-penalty {
+  color: #e74c3c;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
