@@ -2,41 +2,50 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ActionsList from './ActionsList';
 
-jest.mock('./StrikesList', () => () => <div data-testid="strikes-list" />);
 jest.mock('./CharacterActionsList', () => () => <div data-testid="character-actions-list" />);
 jest.mock('./ReactionsList', () => () => <div data-testid="reactions-list" />);
 jest.mock('./FreeActionsList', () => () => <div data-testid="free-actions-list" />);
 
-const mockCharacter = { id: '1', name: 'Test', level: 1, strikes: [], actions: [], reactions: [], freeActions: [] };
+const mockCharacter = { id: '1', name: 'Test', level: 1, actions: [], reactions: [], freeActions: [] };
 
 describe('ActionsList', () => {
   it('renders without crashing', () => {
     expect(() => render(<ActionsList character={mockCharacter} />)).not.toThrow();
   });
 
-  it('shows Strikes section by default', () => {
+  it('renders the Encounter heading', () => {
     render(<ActionsList character={mockCharacter} />);
-    expect(screen.getByTestId('strikes-list')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Encounter' })).toBeInTheDocument();
+  });
+
+  it('shows Actions section by default', () => {
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.getByTestId('character-actions-list')).toBeInTheDocument();
   });
 
   it('does not show other sections by default', () => {
     render(<ActionsList character={mockCharacter} />);
-    expect(screen.queryByTestId('character-actions-list')).not.toBeInTheDocument();
     expect(screen.queryByTestId('reactions-list')).not.toBeInTheDocument();
     expect(screen.queryByTestId('free-actions-list')).not.toBeInTheDocument();
   });
 
-  it('switches to Actions section on click', () => {
+  it('renders Actions, Reactions, and Free Actions tab buttons', () => {
     render(<ActionsList character={mockCharacter} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
-    expect(screen.getByTestId('character-actions-list')).toBeInTheDocument();
-    expect(screen.queryByTestId('strikes-list')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Actions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reactions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Free Actions' })).toBeInTheDocument();
+  });
+
+  it('does not render a Strikes tab button', () => {
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByRole('button', { name: 'Strikes' })).not.toBeInTheDocument();
   });
 
   it('switches to Reactions section on click', () => {
     render(<ActionsList character={mockCharacter} />);
     fireEvent.click(screen.getByRole('button', { name: 'Reactions' }));
     expect(screen.getByTestId('reactions-list')).toBeInTheDocument();
+    expect(screen.queryByTestId('character-actions-list')).not.toBeInTheDocument();
   });
 
   it('switches to Free Actions section on click', () => {
@@ -45,16 +54,11 @@ describe('ActionsList', () => {
     expect(screen.getByTestId('free-actions-list')).toBeInTheDocument();
   });
 
-  it('renders Actions heading', () => {
+  it('switches back to Actions after visiting another tab', () => {
     render(<ActionsList character={mockCharacter} />);
-    // The heading "Actions" is an h2 element
-    expect(screen.getByRole('heading', { name: 'Actions' })).toBeInTheDocument();
-  });
-
-  it('renders all tab buttons', () => {
-    render(<ActionsList character={mockCharacter} />);
-    expect(screen.getByRole('button', { name: 'Strikes' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reactions' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Free Actions' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reactions' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
+    expect(screen.getByTestId('character-actions-list')).toBeInTheDocument();
+    expect(screen.queryByTestId('reactions-list')).not.toBeInTheDocument();
   });
 });
