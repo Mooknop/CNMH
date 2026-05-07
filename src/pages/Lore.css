@@ -113,3 +113,41 @@
   .entry-content p:last-child {
     margin-bottom: 0;
   }
+
+  .entry-title-link {
+    text-decoration: none;
+    flex-grow: 1;
+  }
+
+  .entry-title-link h3 {
+    margin: 0;
+    color: var(--color-primary);
+    transition: color 0.2s;
+  }
+
+  .entry-title-link:hover h3 {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+
+  .entry-summary {
+    padding: 1rem 1.5rem 1.25rem;
+  }
+
+  .entry-summary p {
+    margin: 0 0 0.75rem 0;
+    color: #555;
+  }
+
+  .read-more-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+  }
+
+  .read-more-link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }

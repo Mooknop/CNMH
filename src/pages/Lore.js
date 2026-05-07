@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { loreEntries as defaultLoreEntries } from '../data';
 import './Lore.css';
 
@@ -6,34 +7,32 @@ const Lore = () => {
   const [loreEntries] = useState(defaultLoreEntries);
   const [filter, setFilter] = useState('');
   const [categories, setCategories] = useState([]);
-  
+
   useEffect(() => {
-    // Extract unique categories from lore entries
     const uniqueCategories = [...new Set(loreEntries.map(entry => entry.category))];
     setCategories(uniqueCategories);
   }, [loreEntries]);
-  
-  const filteredEntries = loreEntries.filter(entry => {
-    const matchesFilter = filter ? entry.category === filter : true;
-    return matchesFilter;
-  });
-  
+
+  const filteredEntries = loreEntries.filter(entry =>
+    filter ? entry.category === filter : true
+  );
+
   return (
     <div className="lore-page">
-      <h1>Campaign Lore</h1>
-      
+      <h1>Lore Library</h1>
+
       <div className="lore-container">
         <div className="lore-sidebar">
           <div className="category-filters">
             <h3>Categories</h3>
-            <button 
+            <button
               className={`category-btn ${!filter ? 'active' : ''}`}
               onClick={() => setFilter('')}
             >
               All
             </button>
             {categories.map(category => (
-              <button 
+              <button
                 key={category}
                 className={`category-btn ${filter === category ? 'active' : ''}`}
                 onClick={() => setFilter(category)}
@@ -43,21 +42,24 @@ const Lore = () => {
             ))}
           </div>
         </div>
-        
+
         <div className="lore-entries">
-          <h2>{filter ? `${filter} Entries` : 'All Lore Entries'}</h2>
-          
+          <h2>{filter ? `${filter} Entries` : 'All Entries'}</h2>
+
           {filteredEntries.length > 0 ? (
             filteredEntries.map(entry => (
               <div key={entry.id} className="lore-entry">
                 <div className="entry-header">
-                  <h3>{entry.title}</h3>
+                  <Link to={`/lore/${entry.id}`} className="entry-title-link">
+                    <h3>{entry.title}</h3>
+                  </Link>
                   <span className="entry-category">{entry.category}</span>
                 </div>
-                <div className="entry-content">
-                  {entry.content.split('\n').map((paragraph, i) => (
-                    <p key={i}>{paragraph}</p>
-                  ))}
+                <div className="entry-summary">
+                  <p>{entry.summary || entry.content}</p>
+                  <Link to={`/lore/${entry.id}`} className="read-more-link">
+                    Read More →
+                  </Link>
                 </div>
               </div>
             ))

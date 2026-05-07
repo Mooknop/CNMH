@@ -1,39 +1,1182 @@
 {
-    "loreEntries": [
-      {
-        "id": "lore-1",
-        "title": "The Kingdom of Taldor",
-        "category": "Location",
-        "content": "Taldor is one of the oldest human kingdoms still standing in the Inner Sea region. Once the mightiest empire in the region, Taldor has since fallen into a state of decadence and decline. The nation is known for its aristocracy, its fine wines and cuisine, and its talented duelists.",
-        "createdAt": "2025-04-05T10:15:00.000Z"
-      },
-      {
-        "id": "lore-2",
-        "title": "The Great Wyrm Karasoth",
-        "category": "NPC",
-        "content": "Karasoth is an ancient red dragon who has terrorized the northern mountains for centuries. It is said that his hoard contains treasures from fallen kingdoms and civilizations long forgotten. Many brave adventurers have sought to defeat him, but few have returned to tell the tale.",
-        "createdAt": "2025-04-07T14:30:00.000Z"
-      },
-      {
-        "id": "lore-3",
-        "title": "The Order of the Shining Star",
-        "category": "Organization",
-        "content": "A knightly order dedicated to Sarenrae, the Order of the Shining Star focuses on healing the sick and injured as well as hunting undead and fiends. Founded two centuries ago after the Plague of Shadows, the order maintains chapter houses in most major cities across the Inner Sea region.",
-        "createdAt": "2025-04-10T09:45:00.000Z"
-      },
-      {
-        "id": "lore-4",
-        "title": "The Whispering Tyrant",
-        "category": "NPC",
-        "content": "Once a powerful lich known as Tar-Baphon, the Whispering Tyrant ruled the land of Ustalav for centuries before being defeated and imprisoned beneath Gallowspire by the Shining Crusade. Recent events have led to concerns that his prison may be weakening.",
-        "createdAt": "2025-04-12T16:20:00.000Z"
-      },
-      {
-        "id": "lore-5",
-        "title": "The Starstone Cathedral",
-        "category": "Location",
-        "content": "Located in the center of Absalom, the Starstone Cathedral houses the titular Starstone, a fragment of a fallen star. Those who manage to reach the Starstone and pass its test are elevated to godhood. Only three mortals have ever succeeded: Aroden, Cayden Cailean, and Iomedae.",
-        "createdAt": "2025-04-15T11:10:00.000Z"
-      }
-    ]
-  }
+  "loreEntries": [
+    {
+      "id": "sandpoint",
+      "title": "Sandpoint",
+      "category": "Location",
+      "summary": "Known as the 'Light of the Lost Coast,' Sandpoint is a thriving small town on the southwestern coast of Varisia — an adventurer's hub with a dark history and a bright, if uncertain, future.",
+      "content": "Sandpoint rests in a natural cove along the cliff-lined Lost Coast of Varisia, on the edge of the Varisian Gulf, roughly fifty miles northeast of the city of Magnimar. Though technically under Magnimar's rule, Sandpoint's isolated location affords it considerable independence. It is now Varisia's sixth-largest settlement, and while it has grown considerably in recent years, it still maintains the air of a sleepy fishing town.\n\nThe town is most famous for the arts — particularly theatre and the (now-shuttered) Sandpoint Glassworks. A ruined lighthouse called the Old Light stretches high above the coastal bluffs: a remnant of the ancient empire of Thassilon, which ruled this region thousands of years ago.\n\nSandpoint was founded in 4666 AR by four powerful families from Magnimar — the Kaijitsus, the Valdemars, the Scarnettis, and the Deverins — who consolidated their resources to claim the land. Their arrival was not without conflict: Alamon Scarnetti led a murderous raid on the Varisian tribe that wintered here, sparking a crisis resolved only through a sixty-year revenue-sharing agreement with the Varisian Council, set to expire in 4726 AR.\n\nThe town's history has been punctuated by tragedy — most notably the 'Late Unpleasantness' of 4702 AR (serial murders and a devastating chapel fire), and goblin raids in 4707 AR tied to the rise of Runelord Karzoug. Since then the town has endured giant invasions, sinkholes into Thassilonian ruins, and tsunamis. Yet Sandpoint has continued to grow, and its people remain resilient and optimistic.\n\nNotable locations include the Sandpoint Cathedral, the Garrison, the Rusty Dragon inn, the Sandpoint Theater, and the surrounding wilds of the Sandpoint Hinterlands.",
+      "related": [
+        "sandpoint-cathedral",
+        "late-unpleasantness",
+        "ancient-thassilon",
+        "sandpoint-hinterlands",
+        "founding-families",
+        "varisia",
+        "magnimar",
+        "the-scarnettis",
+        "the-deverins",
+        "the-kaijitsus",
+        "the-valdemars",
+        "ameiko-kaijitsu"
+      ],
+      "tags": [
+        "sandpoint",
+        "lost coast",
+        "varisia",
+        "town",
+        "hub",
+        "founding families"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "varisia",
+      "title": "Varisia",
+      "category": "Location",
+      "summary": "A vast frontier nation on the western coast of Avistan, Varisia is home to ancient Thassilonian ruins, nomadic Varisian and Shoanti peoples, and three major city-states that compete for dominance.",
+      "content": "Varisia has no central government. Its independent city-states — Magnimar, Korvosa, and the pirate haven of Riddleport — each hold sway over a small collection of towns and villages. The wilds beyond, including most of the Storval Plateau, are claimed by the Shoanti people. The neutral city of Kaer Maga is often discounted from political calculations altogether, and its inhabitants prefer it that way.\n\nThe human population is split between Varisians — descendants of Thassilon's enslaved workers who developed a nomadic culture of their own — and Chelaxian-descended settlers from the south. The Shoanti, another group descended from Thassilonian slaves, are largely a nomadic warrior people who inhabit the plateau and uplands.\n\nAncient Thassilonian ruins are scattered throughout Varisia, relics of an empire destroyed by the cataclysm known as Earthfall ten thousand years ago. These ruins have taken on new significance with the recent return of New Thassilon and its Runelords.",
+      "related": [
+        "magnimar",
+        "korvosa",
+        "ancient-thassilon",
+        "new-thassilon",
+        "sandpoint",
+        "shoanti",
+        "varisian-people"
+      ],
+      "tags": [
+        "varisia",
+        "nation",
+        "frontier",
+        "avistan"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "magnimar",
+      "title": "Magnimar",
+      "category": "Location",
+      "summary": "One of Varisia's two great city-states, Magnimar is an ambitious metropolis that casts its political shadow over Sandpoint and much of the Lost Coast.",
+      "content": "Magnimar stands as one of the two major city-states of southern Varisia, sitting in the shadow of the most awe-inspiring ruins of Ancient Thassilon: the crumbled cyclopean bridge called the Irespan. The city is ambitious and cosmopolitan, governed by a Lord-Mayor and the Council of Ushers, with a third, less official body — the Varisian Council — representing the nomadic Varisian people.\n\nSandpoint is technically a holding of Magnimar, though its isolated location means the city's direct authority is limited. The four founding families of Sandpoint — the Deverins, Scarnettis, Kaijitsus, and Valdemars — all trace their origins to Magnimar's aristocracy.\n\nMagnimar is divided into numerous districts, from the wealthy Alabaster District to the criminal-ridden Underbridge slums. Criminal organizations such as the Night Scales and the Sczarni gangs operate in its shadows. The Pathfinder Society maintains a lodge here at Heidmarch Manor.",
+      "related": [
+        "sandpoint",
+        "varisia",
+        "pathfinder-society",
+        "founding-families",
+        "the-scarnettis"
+      ],
+      "tags": [
+        "magnimar",
+        "city-state",
+        "varisia",
+        "politics"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "korvosa",
+      "title": "Korvosa",
+      "category": "Location",
+      "summary": "The eldest of Varisia's city-states, Korvosa was once part of Imperial Cheliax and retains strong Chelaxian traditions, built atop the ruins of an ancient Thassilonian city.",
+      "content": "Korvosa is the eldest of Varisia's three city-states, once part of Imperial Cheliax but now independent. The settlement originally served as a defensive position for settlers entering Varisia, growing over time into a cosmopolitan center of trade. Korvosa is built upon the ruins of the Ancient Thassilonian city of Xin-Eurythnia, once the capital of the realm ruled by Runelord Sorshen, the Runelord of Lust.\n\nKorvosa maintains strong ties to Chelaxian tradition and culture, which puts it at odds with the more progressive Magnimar. The Scarnetti family of Sandpoint maintains hidden ties to interests in Korvosa, sending reports and receiving payments from mysterious Korvosan benefactors.",
+      "related": [
+        "varisia",
+        "ancient-thassilon",
+        "runelord-sorshen",
+        "the-scarnettis"
+      ],
+      "tags": [
+        "korvosa",
+        "city-state",
+        "varisia",
+        "cheliax"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ancient-thassilon",
+      "title": "Ancient Thassilon",
+      "category": "History",
+      "summary": "A vast and terrible empire that once ruled much of northwestern Avistan, Thassilon was governed by seven all-powerful Runelords before being destroyed by the cataclysm of Earthfall.",
+      "content": "The ancient empire of Thassilon existed in the waning years of the Age of Legend, occupying parts of what are today Varisia, the Hold of Belkzen, and the Lands of the Linnorm Kings. While its power was great, struggles for control within the nation were near-constant. It was ruled by seven Runelords — archmages of terrifying power, each tied to one of the seven cardinal sins: Greed, Pride, Wrath, Envy, Lust, Sloth, and Gluttony. Each Runelord controlled a realm and a great city built to honor their sin.\n\nThe empire was finally destroyed by Earthfall — a cataclysmic event in which a rain of falling stars reshaped the face of Golarion — roughly ten thousand years ago. The Runelords, foreseeing the disaster, fled into magical stasis rather than face death, leaving their cities and populations to their fate.\n\nAll that now remains of Thassilon are mysterious ruins scattered throughout Varisia. The Varisians and Shoanti are both descended from the slaves who served the empire. In recent years, several Runelords have awakened from their long slumber, culminating in the return of New Thassilon.",
+      "related": [
+        "new-thassilon",
+        "runelord-sorshen",
+        "sandpoint",
+        "varisia",
+        "varisian-people",
+        "shoanti"
+      ],
+      "tags": [
+        "thassilon",
+        "runelords",
+        "history",
+        "ancient empire",
+        "ruins",
+        "earthfall"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "new-thassilon",
+      "title": "New Thassilon",
+      "category": "History",
+      "summary": "The recently returned Thassilonian civilization, formed by time-displaced peoples, is now split between the rule of Runelord Belimarius and the surprising reformer Runelord Sorshen.",
+      "content": "New Thassilon is the returned civilization of Ancient Thassilonian peoples — survivors and time-displaced subjects of the old empire who have re-established a presence in Varisia. It is currently split between the rule of two Runelords: Runelord Belimarius (Runelord of Envy) and Runelord Sorshen (Runelord of Lust), who has taken a surprisingly different path from her former colleagues.\n\nThe return of New Thassilon has sparked renewed interest in Thassilonian history and ruins throughout Varisia. It has also created a new wave of worship for two long-lost gods: Lissala (goddess of runes, once the patron deity of Thassilon) and the Peacock Spirit (a mysterious god of success and prosperity).",
+      "related": [
+        "ancient-thassilon",
+        "runelord-sorshen",
+        "varisia"
+      ],
+      "tags": [
+        "new thassilon",
+        "runelords",
+        "history",
+        "current events"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "late-unpleasantness",
+      "title": "The Late Unpleasantness",
+      "category": "History",
+      "summary": "A series of dark events in 4702 AR — murders by the serial killer 'Chopper' and the fire that destroyed Sandpoint's original chapel — that the townspeople prefer not to speak of.",
+      "content": "Referred to locally as 'the Late Unpleasantness,' a series of catastrophic events struck Sandpoint in the winter of 4702 AR. First, a string of gruesome murders was carried out by a killer known only as 'Chopper' — later revealed to be the woodcarver Jervis Stoot — who killed dozens of townspeople before being stopped during his last terrible night. The previous sheriff, Casp Avertin, was among Chopper's victims.\n\nShortly afterward, a great fire destroyed the original Sandpoint chapel and the surrounding buildings, killing Father Ezakien Tobyn and many others. Tobyn's acolyte, Abstalar Zantus, was elevated to replace him as high priest of the rebuilt Sandpoint Cathedral.\n\nChopper's Isle, where Stoot once lived, is said to be haunted to this day.",
+      "related": [
+        "sandpoint",
+        "abstalar-zantus",
+        "sandpoint-cathedral"
+      ],
+      "tags": [
+        "history",
+        "tragedy",
+        "chopper",
+        "sandpoint",
+        "late unpleasantness",
+        "4702"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "founding-families",
+      "title": "Sandpoint's Founding Families",
+      "category": "History",
+      "summary": "Four powerful families from Magnimar — the Deverins, Scarnettis, Kaijitsus, and Valdemars — founded Sandpoint in 4666 AR, and their descendants continue to shape the town's politics today.",
+      "content": "In 4666 AR, four powerful families from Magnimar consolidated their resources and sailed north to found Sandpoint. Each family brought a different industry: the Kaijitsus were glassmakers and jewelers, the Valdemars shipbuilders and carpenters, the Scarnettis loggers and millers, and the Deverins farmers and brewers.\n\nTheir founding was marred almost immediately. They arrived to find the land already inhabited by a large Varisian tribe. After a week of failed negotiations, Alamon Scarnetti organized a murderous raid on the Varisian camp, killing five people. The resulting crisis was resolved through negotiation: the Varisians received a sixty-year share of Sandpoint profits (later extended to 4726 AR) and the promise of a Desnan temple in the cathedral.\n\nToday, the Deverins and Scarnettis remain Sandpoint's most influential founding families. The Kaijitsus departed when Ameiko Kaijitsu ascended to become Empress of Minkai. The Valdemars have effectively withdrawn from town politics following financial setbacks and the death of their Sandpoint patriarch.",
+      "related": [
+        "sandpoint",
+        "the-scarnettis",
+        "the-deverins",
+        "the-kaijitsus",
+        "the-valdemars",
+        "ameiko-kaijitsu"
+      ],
+      "tags": [
+        "founding families",
+        "history",
+        "sandpoint",
+        "magnimar",
+        "4666"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "abstalar-zantus",
+      "title": "Father Abstalar Zantus",
+      "category": "NPC",
+      "summary": "The warm and ecumenical high priest of Sandpoint Cathedral, a devoted cleric of Desna who opens his doors to followers of all faiths.",
+      "content": "When the Sandpoint chapel burned to the ground in 4702 AR, killing the town's priest Ezakien Tobyn, Abstalar Zantus — Tobyn's top acolyte — stepped up to fill the role. Though Father Zantus is himself a cleric of Desna, his role as high priest of the since-rebuilt Sandpoint Cathedral requires him to be open to all faiths, and he is more than willing to assist followers of any god with spiritual matters.\n\nZantus is one of the seven members of the Sandpoint Town Council, representing the town's religious community. He is widely liked and considered one of the more level-headed voices on the council.",
+      "related": [
+        "sandpoint-cathedral",
+        "sandpoint",
+        "late-unpleasantness",
+        "desna"
+      ],
+      "tags": [
+        "priest",
+        "desna",
+        "sandpoint",
+        "npc",
+        "council",
+        "cathedral"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "titus-scarnetti",
+      "title": "Titus Scarnetti",
+      "category": "NPC",
+      "summary": "Sandpoint's most powerful and least liked aristocrat — a lumber and trade mogul who has rebuilt his family's fortune through secret deals with Korvosan interests.",
+      "content": "Titus Scarnetti is the head of the Scarnetti family and controls Sandpoint's lumber and milling industry. He represents the founding family seat on the Sandpoint Town Council, though his influence there has slipped as the Valdemars withdrew and political opponents continue to outmaneuver him.\n\nHis family suffered a serious blow when evidence of collusion with local criminals nearly surfaced after the Scarnetti Manor was damaged in a giant raid. In response, Titus has secretly brokered a deal with mysterious Korvosan agents, sending them regular reports about Magnimar and the Lost Coast in exchange for payments that have rebuilt the family's finances.\n\nTitus is Sandpoint's most traditional and conservative voice — a man who clings to outdated Chelaxian values and is deeply unpopular among the town's Varisian residents, many of whom have not forgotten Alamon Scarnetti's murderous raid on their ancestors.",
+      "related": [
+        "the-scarnettis",
+        "sandpoint",
+        "korvosa",
+        "founding-families"
+      ],
+      "tags": [
+        "aristocrat",
+        "sandpoint",
+        "npc",
+        "scarnetti",
+        "council"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ameiko-kaijitsu",
+      "title": "Ameiko Kaijitsu",
+      "category": "NPC",
+      "summary": "The former proprietor of the Rusty Dragon who left Sandpoint behind to reclaim her family's imperial birthright — she is now the Empress of Minkai.",
+      "content": "Born Ameiko Kaijitsu, her true surname is Amatatsu — the last surviving rightful heir to the throne of Minkai. Before her ascension, she was best known in Sandpoint as the proprietor of the Rusty Dragon, the most popular inn and tavern in town, and as a former adventurer.\n\nIn 4707 AR, Ameiko lost both her father and half-brother during the goblin raids tied to the rise of Runelord Karzoug. In 4711 AR, she and a group of adventurers discovered her true heritage and embarked on a journey across the Crown of the World to Minkai, where she defeated the usurper Jade Regent and claimed the Jade Throne.\n\nAs of 4724 AR, Amatatsu Ameiko is Empress of Minkai. She still returns to Sandpoint on occasion for visits.",
+      "related": [
+        "sandpoint",
+        "the-kaijitsus",
+        "founding-families"
+      ],
+      "tags": [
+        "ameiko",
+        "rusty dragon",
+        "sandpoint",
+        "npc",
+        "minkai",
+        "empress"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "pathfinder-society",
+      "title": "Pathfinder Society",
+      "category": "Organization",
+      "summary": "A globe-spanning organization of explorers and chroniclers based in Absalom, with a significant presence in Magnimar through Heidmarch Manor.",
+      "content": "The Pathfinder Society is a globe-spanning organization based out of Absalom, the City at the Center of the World. Its members — called Pathfinders — travel throughout Golarion to explore, delve, and document the lesser-seen parts of the world, sending journals back to their venture-captains. The most illuminating of these journals are compiled into the ongoing Pathfinder Chronicles series.\n\nIn Varisia, the Society operates out of Heidmarch Manor in Magnimar, run by Sheila and Canayven Heidmarch. They maintain ties with local scouts and take an active interest in Thassilonian ruins throughout the region.",
+      "related": [
+        "magnimar",
+        "ancient-thassilon"
+      ],
+      "tags": [
+        "pathfinder society",
+        "organization",
+        "magnimar",
+        "explorers"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sandpoint-cathedral",
+      "title": "Sandpoint Cathedral",
+      "category": "Location",
+      "summary": "Sandpoint's grand, multi-faith cathedral — rebuilt after the fire of 4702 AR — serves all gods under the guidance of the ecumenical Father Abstalar Zantus.",
+      "content": "The Sandpoint Cathedral is the town's primary religious institution, rebuilt after the original chapel was destroyed in the fire of 4702 AR that accompanied the Late Unpleasantness. The original chapel's destruction killed its priest, Ezakien Tobyn, and the new cathedral was built on a grander scale as part of the town's recovery.\n\nFather Abstalar Zantus, a cleric of Desna, serves as high priest — but his role requires him to welcome followers of all faiths. The cathedral provides healing magic, religious items, and divine scrolls to the community.\n\nThe cathedral's inclusion of a Desnan temple was part of the compromise reached with the Varisian Council after the Scarnetti founding raid, ensuring the Varisian people had a spiritual home in Sandpoint.",
+      "related": [
+        "abstalar-zantus",
+        "sandpoint",
+        "late-unpleasantness",
+        "desna",
+        "founding-families"
+      ],
+      "tags": [
+        "cathedral",
+        "church",
+        "sandpoint",
+        "desna",
+        "religion"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sandpoint-hinterlands",
+      "title": "Sandpoint Hinterlands",
+      "category": "Location",
+      "summary": "The wild and varied countryside surrounding Sandpoint — marshes, forests, moors, and rocky escarpments that conceal goblin tribes, ancient ruins, and stranger things.",
+      "content": "The Sandpoint Hinterlands is the name for the area surrounding the town of Sandpoint. It encompasses a wide variety of terrain including Brinestump Marsh to the west, the Nettlewood and Mosswood forests, the Tickwood, the rocky Devil's Platter escarpment, the mysterious Turandarok River, and several areas of open moor.\n\nNotable locations within the Hinterlands include: Devil's Platter and its notorious Pit, Thistletop (former stronghold of the Thistletop goblin tribe), Habe's Sanatorium, Ravenroost, and Hag's Plummet. Multiple goblin tribes make their homes in the hinterlands.\n\nThe Turandarok River is said to lead, eventually, to the First World — an extraordinary claim that has driven many expeditions to madness. Closer to town, the Tickwood offers relatively safe hunting grounds for locals — when one accounts for its fey inhabitants.",
+      "related": [
+        "sandpoint",
+        "tickwood",
+        "akonis-grove"
+      ],
+      "tags": [
+        "hinterlands",
+        "sandpoint",
+        "wilderness",
+        "geography",
+        "location"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "tickwood",
+      "title": "The Tickwood",
+      "category": "Location",
+      "summary": "A small forest just outside Sandpoint, popular with local hunters — though its fey lord Akoni and a recent redcap incursion make it less safe than it appears.",
+      "content": "The Tickwood is a relatively small forested area in the Sandpoint Hinterlands, located on the northern banks of the Turandarok River. It is less than two miles in length, separated from the coastal Shank's Wood to its north by the Lost Coast Road. To its west lie the Ravenroost hills, while Leb's Tors rise to the east.\n\nThe Tickwood is a favorite spot for local hunters, as it is thought to be free of goblin tribes, and is home to many deer, wild boars, and the occasional firepelt cougar. Stories in Sandpoint greatly exaggerate the size of the giant ticks that also dwell here, keeping many cautious citizens off the forest paths.\n\nAt the heart of the wood stands Akoni's Grove, the court of the dryad Akoni, who presides over the Tickwood's fey inhabitants. A troop of redcaps has recently moved into the area under their leader 'Grandfather' Grustmier — and though they will not establish permanent roots without the dryad's permission, Grustmier is confident he can obtain it one way or another.\n\nDeep in the wood, a treasure hidden by the late Ezanna Scarnetti generations ago reportedly still awaits discovery.",
+      "related": [
+        "akonis-grove",
+        "akoni",
+        "sandpoint-hinterlands",
+        "the-scarnettis",
+        "grandfather-grustmier"
+      ],
+      "tags": [
+        "tickwood",
+        "forest",
+        "hinterlands",
+        "sandpoint",
+        "fey",
+        "location"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "akonis-grove",
+      "title": "Akoni's Grove",
+      "category": "Location",
+      "summary": "The ancient redwood heart of the Tickwood, where the dryad Akoni holds court over sprites, grigs, and other fey — though recent redcap meddling has left its power dynamics dangerously uncertain.",
+      "content": "Akoni's Grove occupies the deepest part of the Tickwood, where the oldest and largest redwood trees stand. Here the dryad Akoni presides as lord of the wood's fey inhabitants, holding court over a retinue of sprites and grigs.\n\nThe Grove's tranquility has been shaken by two threats arriving in close succession. A family of redcaps — led by their self-styled patriarch 'Grandfather' Grustmier — has moved into the Tickwood and is quietly poisoning the great redwood tree to which Akoni is bound, weakening the dryad while they await what they consider an inevitable transfer of power. At the same time, the ongoing deterioration of Akoni's bond tree has left the Grove's fey feeling leaderless and uneasy, making the community vulnerable.\n\nAkoni is beloved among Sandpoint's more nature-minded residents, particularly those who knew the late Ovana Scarnetti, whose body was returned to the Grove after her death through the efforts of Shalelu Andosana and her companions.",
+      "related": [
+        "akoni",
+        "tickwood",
+        "sandpoint-hinterlands",
+        "grandfather-grustmier",
+        "the-scarnettis"
+      ],
+      "tags": [
+        "akoni's grove",
+        "fey",
+        "dryad",
+        "tickwood",
+        "location",
+        "hinterlands"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "akoni",
+      "title": "Akoni",
+      "category": "NPC",
+      "summary": "A gentle male dryad who rules the fey court of Akoni's Grove in the Tickwood — currently grieving the death of his beloved Ovana Scarnetti while redcaps slowly poison his bond tree.",
+      "content": "Akoni is a male dryad who makes his home in the Tickwood near Sandpoint, presiding over Akoni's Grove as lord of its fey court. His court is composed mainly of sprites and grigs, and he has long maintained a peaceful relationship with Sandpoint's hunters and nature-minded residents.\n\nAkoni's life was upended by the death of his beloved, Ovana Scarnetti. His grief was compounded by the practical difficulty of retrieving her body — the Scarnetti family is notoriously difficult to deal with. Ultimately, Shalelu Andosana and her adventuring companions intervened, navigating a tense diplomatic exchange with the Scarnettis to return Ovana's body to the Grove.\n\nNow Akoni faces a new crisis: a family of redcaps led by 'Grandfather' Grustmier has moved into the Tickwood and is actively poisoning the ancient redwood tree to which Akoni is bound. As the tree weakens, so does Akoni — and so does his hold over the Grove's fey community.",
+      "related": [
+        "akonis-grove",
+        "tickwood",
+        "grandfather-grustmier",
+        "sandpoint-hinterlands",
+        "the-scarnettis"
+      ],
+      "tags": [
+        "akoni",
+        "dryad",
+        "fey",
+        "tickwood",
+        "npc"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "grandfather-grustmier",
+      "title": "'Grandfather' Grustmier",
+      "category": "NPC",
+      "summary": "The deceptively courtly leader of a redcap troop that has recently settled in the Tickwood — patiently poisoning Akoni's bond tree while waiting for the dryad to 'grant permission' for their permanent residence.",
+      "content": "'Grandfather' Grustmier is the self-styled patriarch and leader of a troop of redcaps that has recently taken up residence in the Tickwood near Sandpoint. Redcaps are violent fey whose iron-shod boots and dripping red caps mark them as creatures of cruelty — but Grustmier presents a veneer of folksy patience and diplomatic propriety, insisting that he merely awaits the dryad Akoni's formal permission to settle permanently.\n\nIn practice, Grustmier's troop is actively poisoning the ancient redwood tree to which Akoni is bound, steadily weakening the dryad in order to make him either relent or become too weak to resist. Grustmier is confident — perhaps even cheerfully so — that the matter will resolve itself in his favor before too long.\n\nHis presence in the Tickwood is a serious threat to Akoni's Grove and to the fey court that relies on the dryad's protection.",
+      "related": [
+        "akoni",
+        "akonis-grove",
+        "tickwood"
+      ],
+      "tags": [
+        "redcap",
+        "fey",
+        "tickwood",
+        "npc",
+        "antagonist",
+        "grustmier"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "the-scarnettis",
+      "title": "The Scarnetti Family",
+      "category": "Faction",
+      "summary": "One of Sandpoint's founding families — conservative, powerful, and deeply unpopular with many locals — who control the town's lumber industry and have a history of shady dealings.",
+      "content": "The Scarnetti family controls Sandpoint's mills and lumber industry, making them indispensable to the town's economy despite being widely disliked. Many of Sandpoint's elderly Varisian locals still have not forgotten or forgiven Alamon Scarnetti's murderous raid on their people over fifty years ago.\n\nThe family is headed by Titus Scarnetti and maintains the most conservative, Chelaxian-influenced values of any family in town. Recent years have been turbulent: evidence of collusion with local criminals nearly surfaced after the Scarnetti Manor was damaged in a giant raid, and Titus has since been secretly working with Korvosan interests to rebuild the family's fortunes.\n\nFamily members include Titus (head of family), Milton, Gradon (operating in Magnimar), Enid (elderly aunt), and Adimar (Enid's son, who carries secrets of his own). The late Ovana Scarnetti was beloved by the dryad Akoni of the Tickwood — the family's negotiations over her body represented a rare moment of diplomatic sensitivity forced upon them by outside pressure.",
+      "related": [
+        "titus-scarnetti",
+        "sandpoint",
+        "founding-families",
+        "akoni",
+        "akonis-grove",
+        "korvosa"
+      ],
+      "tags": [
+        "scarnetti",
+        "family",
+        "sandpoint",
+        "founding families",
+        "faction"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "the-deverins",
+      "title": "The Deverin Family",
+      "category": "Faction",
+      "summary": "The most respected of Sandpoint's founding families — down-to-earth farmers and brewers whose current leader serves as the town's popular mayor.",
+      "content": "The Deverin family is one of the most down-to-earth aristocratic families in Magnimar. Along with their modest town manor in the Naos district of Magnimar, they also own one of Magnimar's most successful breweries. A branch of the family sailed north in 4666 AR to found Sandpoint, and continues to live there today.\n\nThe current leader of the Sandpoint branch also serves as the town's mayor. Gaven Deverin, a cousin of the mayor, is the last surviving owner of Two Knight Brewing in Sandpoint.",
+      "related": [
+        "sandpoint",
+        "magnimar",
+        "founding-families"
+      ],
+      "tags": [
+        "deverin",
+        "family",
+        "sandpoint",
+        "founding families",
+        "faction"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "the-kaijitsus",
+      "title": "The Kaijitsu Family",
+      "category": "Faction",
+      "summary": "Sandpoint's most exotic founding family — glassmakers from far-off Minkai — whose last daughter left to become an empress, closing the chapter on their presence in town.",
+      "content": "The Kaijitsu family traveled across the Crown of the World from Minkai generations ago, eventually settling in Magnimar before becoming one of Sandpoint's founding families as glassmakers and jewelers. The family's profile in Magnimar declined after the death of their leader in a storm in 4687 AR.\n\nLonjiku Kaijitsu, the family's Sandpoint patriarch, was known for his sharp temper and difficult relationships with his children. His daughter Ameiko became an adventurer and innkeeper, defying all expectations — and eventually ascended to become Empress of Minkai. Lonjiku met a grisly end in the Sandpoint Glassworks during the 4707 AR goblin raids. With Ameiko's departure, the Kaijitsu family has effectively ended its presence in Sandpoint.",
+      "related": [
+        "ameiko-kaijitsu",
+        "sandpoint",
+        "founding-families"
+      ],
+      "tags": [
+        "kaijitsu",
+        "family",
+        "sandpoint",
+        "founding families",
+        "faction"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "the-valdemars",
+      "title": "The Valdemar Family",
+      "category": "Faction",
+      "summary": "Once Sandpoint's most prosperous founding family — shipbuilders and carpenters — the Valdemars have fallen on hard times and largely withdrawn from Sandpoint's civic life.",
+      "content": "The Valdemar family was once one of the most prosperous of Sandpoint's founding families, generating significant revenue through fishing, shipping, and logging. Found primarily in Magnimar and Sandpoint, the family's fortunes have declined sharply due to competition from the Scarnettis and a series of tragedies.\n\nEthram Valdemar, the family's Sandpoint patriarch, recently died. The Magnimar branch of the family has shown no interest in maintaining an active presence in Sandpoint, leaving their traditional council seat vacant and their businesses understaffed.",
+      "related": [
+        "sandpoint",
+        "founding-families"
+      ],
+      "tags": [
+        "valdemar",
+        "family",
+        "sandpoint",
+        "founding families",
+        "faction"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "varisian-people",
+      "title": "The Varisian People",
+      "category": "History",
+      "summary": "A primarily nomadic human ethnic group descended from the slaves of Ancient Thassilon — fiercely loyal to family and tradition, and often unfairly stereotyped as thieves and rogues.",
+      "content": "Varisians are a primarily nomadic human ethnic group who favor the open road over permanent settlements. Their traveling caravans can be encountered throughout Golarion, but Varisians also settle in permanent communities. They are the descendants of the enslaved workers of Ancient Thassilon.\n\nDespite outward appearances of frivolity, the Varisian people are fiercely loyal to family and friends, and embrace a rich culture steeped in history and tradition. The unfair reputation of Varisians as scoundrels and rogues stems largely from non-Varisians' encounters with the criminal Sczarni gangs, which represent only a small fraction of the Varisian people.\n\nIn Sandpoint, the Varisian community has a complex relationship with the founding families, particularly the Scarnettis, due to the murderous raid on their ancestors at the town's founding. A sixty-year revenue-sharing pact and the inclusion of a Desnan shrine in the cathedral were the conditions for their cooperation, set to expire in 4726 AR.",
+      "related": [
+        "varisia",
+        "sandpoint",
+        "ancient-thassilon",
+        "shoanti",
+        "desna"
+      ],
+      "tags": [
+        "varisian",
+        "people",
+        "culture",
+        "nomadic",
+        "thassilon"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "shoanti",
+      "title": "The Shoanti",
+      "category": "History",
+      "summary": "A nomadic warrior people who inhabit the Storval Plateau and surrounding regions of Varisia — descendants of Thassilon's slaves who developed a very different culture from their Varisian cousins.",
+      "content": "The Shoanti are an often nomadic people who live in the Storval Plateau and Velashu Uplands of Varisia, as well as the Hold of Belkzen and the Lands of the Linnorm Kings. Like their Varisian cousins, these humans descended from the enslaved workers of the empire of Ancient Thassilon, but have since developed a unique and advanced culture of their own — centered on warrior traditions, tribal identity, and a deep connection to their ancestral lands.\n\nIn Sandpoint, the number of Shoanti residents has steadily increased over the years.",
+      "related": [
+        "varisia",
+        "ancient-thassilon",
+        "varisian-people"
+      ],
+      "tags": [
+        "shoanti",
+        "people",
+        "culture",
+        "warrior",
+        "varisia"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "desna",
+      "title": "Desna",
+      "category": "Religion",
+      "summary": "The goddess of dreams, travelers, and freedom — one of the most widely worshipped deities in Varisia, with a particular significance to the Varisian people.",
+      "content": "Desna is the goddess of dreams, travelers, and freedom. She is one of the most widely worshipped deities in Varisia, particularly among the Varisian people who see her as a patron of the road and of personal liberty. Her faith emphasizes joy, exploration, and the beauty of the night sky.\n\nThe inclusion of a Desnan temple in the Sandpoint Cathedral was a condition of the compromise reached with the Varisian Council after the Scarnetti founding raid — a gesture of respect for Varisian nomadic culture. Father Abstalar Zantus, while a devoted cleric of Desna, keeps the cathedral open to all faiths.",
+      "related": [
+        "sandpoint-cathedral",
+        "abstalar-zantus",
+        "varisian-people",
+        "sandpoint"
+      ],
+      "tags": [
+        "desna",
+        "religion",
+        "goddess",
+        "travelers",
+        "varisian"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "runelord-sorshen",
+      "title": "Runelord Sorshen",
+      "category": "NPC",
+      "summary": "The ancient Runelord of Lust — unique among her peers for having chosen reform over conquest, and instrumental in opposing the return of more destructive runelords.",
+      "content": "Runelord Sorshen was the Runelord of Lust in Ancient Thassilon, ruler of the realm of Eurythnia. Her ancient capital was Xin-Eurythnia, now the site of the modern city of Korvosa. Like her peers, she fled into magical stasis when Earthfall threatened the empire.\n\nIn recent years, Sorshen awakened and took a strikingly different path from the other returning Runelords — choosing to work against destructive forces rather than seek conquest. She was instrumental in empowering adventurers in their fight against the returning Runelord Alaznist, and invented the Runewaking Ritual, a crucial piece of magic for those hoping to permanently destroy Runelord Zutha.\n\nSorshen has been collecting the weapons of her fallen fellow Runelords, storing them in her personal demiplane, the Eye of Desire, to protect the world from their power. She now rules a portion of New Thassilon.",
+      "related": [
+        "ancient-thassilon",
+        "new-thassilon",
+        "korvosa"
+      ],
+      "tags": [
+        "runelord",
+        "thassilon",
+        "npc",
+        "lust",
+        "powerful"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "osprey-cove",
+      "title": "Osprey Cove",
+      "category": "Location",
+      "summary": "A laid-back coastal town of druids, farmers, and free spirits on the Kindred Coast — a world away from the grim militarism of its sister settlement Iron Harbor.",
+      "content": "Osprey Cove is a small, community-minded town on the Kindred Coast of the Iron Archipelago, founded by escaped slaves from the pirate city of Riddleport. Its people have built a culture that prizes personal freedom, communal support, and a close relationship with the natural world. The town is generally full of worshippers of Cayden Cailean, and its druids and farmers set the tone for a settlement that is relaxed, egalitarian, and occasionally eccentric.\n\nOsprey Cove is governed informally by a council of Elders, currently including Milton Scarnetti and Elder Ordwi — a cleric of Cayden Cailean and a known friend of the natural world. The town stands in marked contrast to its sister settlement Iron Harbor across the water: where Iron Harbor is gruff, martial, and devoted to Gorum, Osprey Cove is gentle, communal, and welcoming to outsiders.\n\nThe Kindred Coast region lies close to significant Ancient Thassilonian ruins, most notably Rusthenge, which has drawn the attention of Runelord Belimarius's government in Xin-Edasseril.",
+      "related": [
+        "iron-harbor",
+        "kindred-coast",
+        "rusthenge",
+        "elder-ordwi",
+        "cayden-cailean",
+        "the-scarnettis",
+        "new-thassilon",
+        "runelord-belimarius"
+      ],
+      "tags": [
+        "osprey cove",
+        "kindred coast",
+        "town",
+        "location",
+        "cayden cailean",
+        "iron archipelago"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "iron-harbor",
+      "title": "Iron Harbor",
+      "category": "Location",
+      "summary": "The rougher, more militant sister-town of Osprey Cove — a garrison settlement devoted to Gorum whose Stonehome church-fortress has recently been infiltrated by a dangerous cult.",
+      "content": "Iron Harbor is the sister settlement to Osprey Cove, situated on the mainland beside the island that holds the Thassilonian ruin of Rusthenge. Where Osprey Cove is gentle and communal, Iron Harbor is gruff, militaristic, and fiercely devoted to Gorum, the Lord of Battle. The town's center of power is Stonehome, a structure that serves simultaneously as garrison and temple.\n\nRecently, Stonehome and Iron Harbor have been infiltrated and partially taken over by followers of the dead demon lord Xar-Azmak, operating under the direction of Meitremar — a scholar and operative who serves Runelord Belimarius's government in Xin-Edasseril. The loyal Gorumites who survived the takeover of Stonehome were handed over to Meitremar's sinspawn ally Azomi.\n\nNotable residents include Elsie, a cheerful shopkeep who offered the party a place to stay, and Derrol, an architect who was hired to build luxury mansions for Magnimarian aristocrats — including one for Gradon Scarnetti — that were never occupied, and who is eager to leave.",
+      "related": [
+        "osprey-cove",
+        "kindred-coast",
+        "rusthenge",
+        "gorum",
+        "runelord-belimarius",
+        "meitremar"
+      ],
+      "tags": [
+        "iron harbor",
+        "kindred coast",
+        "town",
+        "location",
+        "gorum",
+        "iron archipelago"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "kindred-coast",
+      "title": "The Kindred Coast",
+      "category": "Location",
+      "summary": "A stretch of coastline on an island in the Iron Archipelago, home to the twin towns of Osprey Cove and Iron Harbor — and to the shadow of the ancient Thassilonian ruin Rusthenge.",
+      "content": "The Kindred Coast is the name for the coast of an island in the Iron Archipelago, a region that has come under the political umbrella of New Thassilon. It is home to the brother-towns of Osprey Cove and Iron Harbor, both founded by escaped slaves from the pirating hub of Riddleport who sought a new life free of the city's violence and exploitation.\n\nThe region is notable for its proximity to significant Ancient Thassilonian ruins, most notably Rusthenge. This has drawn the attention of Runelord Belimarius's government, which has begun extending its influence into the area through operatives like Meitremar.",
+      "related": [
+        "osprey-cove",
+        "iron-harbor",
+        "rusthenge",
+        "new-thassilon",
+        "runelord-belimarius",
+        "ancient-thassilon"
+      ],
+      "tags": [
+        "kindred coast",
+        "iron archipelago",
+        "location",
+        "new thassilon"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "rusthenge",
+      "title": "Rusthenge",
+      "category": "Location",
+      "summary": "An Ancient Thassilonian ruin on an island of the Kindred Coast — a site of dangerous historical research that has become the source of a plot to resurrect a dead demon lord.",
+      "content": "Rusthenge is the most significant of the Ancient Thassilonian ruins near the Kindred Coast, situated on an island close to Iron Harbor. Like most Thassilonian ruins scattered across northwestern Avistan, it is a remnant of the empire that was destroyed by Earthfall ten thousand years ago.\n\nThe ruin has taken on new and sinister significance thanks to the scholar Meitremar, who has been using research found within Rusthenge to pursue the resurrection of the long-dead demon lord Xar-Azmak — the former ruler of the Abyssal realm of Vlorus. Meitremar operates under the political cover of Runelord Belimarius's government in Xin-Edasseril, lending the power of New Thassilon to his dangerous work.\n\nThe ruin is thematically connected to rust, decay, and demonic corruption — a fitting site for work tied to the Lord of Rust.",
+      "related": [
+        "kindred-coast",
+        "iron-harbor",
+        "meitremar",
+        "vlorus",
+        "runelord-belimarius",
+        "ancient-thassilon",
+        "ferrumnestra"
+      ],
+      "tags": [
+        "rusthenge",
+        "ruins",
+        "thassilon",
+        "location",
+        "kindred coast",
+        "xar-azmak"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "elder-ordwi",
+      "title": "Elder Ordwi",
+      "category": "NPC",
+      "summary": "One of the Elders of Osprey Cove — a cleric of Cayden Cailean, a friend of the natural world, and a warm ally of the party.",
+      "content": "Elder Ordwi is one of the governing council of Elders that leads Osprey Cove. She is a cleric of Cayden Cailean and a known friend of the natural world, embodying the town's values of freedom, community, and easy-going goodwill. She has become a personal friend of the party, and offered them hospitality — including lodging in the bar she runs — when they arrived in Osprey Cove.",
+      "related": [
+        "osprey-cove",
+        "cayden-cailean"
+      ],
+      "tags": [
+        "osprey cove",
+        "elder",
+        "npc",
+        "cayden cailean",
+        "cleric"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "meitremar",
+      "title": "Meitremar",
+      "category": "NPC",
+      "summary": "A scholar and operative of New Thassilon who is using research found in Rusthenge to attempt the resurrection of the dead demon lord Xar-Azmak.",
+      "content": "Meitremar is a dangerous scholar who is picking up where his grandfather left off: attempting the resurrection of Xar-Azmak, the long-dead demon lord of rust who once ruled the Abyssal realm of Vlorus. He has found the research necessary for this project within the Thassilonian ruin of Rusthenge near Iron Harbor.\n\nMeitremar is positioned as a member of Runelord Belimarius's government in Xin-Edasseril, giving his work the political backing and resources of New Thassilon. In practice this relationship is one of convenience — his sinspawn ally Azomi, while nominally loyal to Belimarius, is loyal only to itself.\n\nMeitremar's cult has infiltrated and taken over Stonehome in Iron Harbor, subverting the local Gorum worshippers. Followers of Xar-Azmak favor rusted armor and sickles as a mark of their devotion.",
+      "related": [
+        "rusthenge",
+        "iron-harbor",
+        "vlorus",
+        "runelord-belimarius",
+        "kindred-coast",
+        "ferrumnestra"
+      ],
+      "tags": [
+        "meitremar",
+        "villain",
+        "npc",
+        "new thassilon",
+        "xar-azmak",
+        "resurrection"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "vlorus",
+      "title": "Vlorus",
+      "category": "Location",
+      "summary": "The Abyssal realm once ruled by the deceased demon lord Xar-Azmak — a valley of rusted junk and decaying castles, now unclaimed, whose barrier to the Plane of Metal is dangerously thin.",
+      "content": "Vlorus is an Abyssal realm within the Outer Rifts — what was once the domain of the demon lord Xar-Azmak, the Lord of Rust, before he was slain by the armies of the devil Dispater. The realm is now unclaimed by any power, left as a vast valley littered with rusted junk and decaying buildings, some as large as the castles that ring the valley's high edges.\n\nWhat makes Vlorus especially significant today is the unusual thinness of the barrier between it and the Plane of Metal. This planar proximity is why Ferrumnestra, the Lady of Rust and Elemental Lord of Metal, opposes the resurrection of Xar-Azmak with particular urgency — she sees any attempt to restore him as a direct affront to her domain over metal, decay, and inevitability.\n\nThe demon-type known as vloriaks — insectile fiends who cause metal to rust and rot — hail from this realm and carry within them the potential for decay and rusting ruin.",
+      "related": [
+        "ferrumnestra",
+        "meitremar",
+        "rusthenge",
+        "kindred-coast"
+      ],
+      "tags": [
+        "vlorus",
+        "abyss",
+        "realm",
+        "xar-azmak",
+        "rust",
+        "location"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ferrumnestra",
+      "title": "Ferrumnestra",
+      "category": "Religion",
+      "summary": "The Lady of Rust — the Elemental Lord of metal, decline, and inevitability — an eternally wandering deity who opposes the resurrection of Xar-Azmak and has chosen Pellias Scarnetti as her champion.",
+      "content": "Ferrumnestra is the Elemental Lord of Metal, known as the Lady of Rust. She is one of the two Elemental Lords of the Plane of Metal, her domain encompassing metal, decay, mourning, and the inevitability of endings. Her touch is that of slow decline — the rust of ages that eats away at even the strongest steel. While she has no particular desire to hasten any endings, she is there to consume the last crumbling detritus of what has fallen, leaving nonexistence in her wake.\n\nFerrumnestra keeps no permanent dwelling, always on the move as is her purpose. Her few devotees usually follow her example, traveling across the world and destroying the wreckage of ancient ruins in their wake. Her edicts are to accept the inevitable, clear what remains of that which has fallen to ruin, and usher the past into obscurity. Her anathema: to preserve knowledge that has outlived its time, or to restore an object or structure that has been reclaimed by the elements.\n\nShe is strongly opposed to the resurrection of Xar-Azmak, the dead demon lord whose realm Vlorus borders the Plane of Metal — viewing any attempt to restore him as a direct disrespect to her domain. She has chosen Pellias Scarnetti as her champion, a bond that his companion Jade Inferno has taken great interest in helping him explore.",
+      "related": [
+        "vlorus",
+        "meitremar",
+        "rusthenge",
+        "the-scarnettis"
+      ],
+      "tags": [
+        "ferrumnestra",
+        "elemental lord",
+        "metal",
+        "religion",
+        "rust",
+        "decay",
+        "champion"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "runelord-belimarius",
+      "title": "Runelord Belimarius",
+      "category": "NPC",
+      "summary": "The Runelord of Envy and ruler of half of New Thassilon — an ancient archmage who has reawakened from stasis and resumed command of her long-frozen capital Xin-Edasseril.",
+      "content": "Belimarius was the tenth and final Runelord of Envy, ruler of the Ancient Thassilonian realm of Edasseril. She reigned from -5402 AR until the fall of Thassilon in -5293 AR, when she and the inhabitants of her capital Xin-Edasseril were preserved outside of normal time rather than destroyed by Earthfall.\n\nVery recently, adventurers freed Belimarius and the inhabitants of Xin-Edasseril from this state of captivity, and she has taken up the reins of leadership once again — now as co-ruler of the nation of New Thassilon alongside Runelord Sorshen. She wields Belimarius's Invidious Halberd, a weapon crafted by Xin himself for the previous Runelord of Envy.\n\nThe Runelord of Envy specializes in abjuration magic. Belimarius's government has extended its reach to the Kindred Coast region, where her operative Meitremar is pursuing the resurrection of the dead demon lord Xar-Azmak — a project whose implications she may or may not fully understand.",
+      "related": [
+        "new-thassilon",
+        "ancient-thassilon",
+        "runelord-sorshen",
+        "meitremar",
+        "kindred-coast"
+      ],
+      "tags": [
+        "runelord",
+        "envy",
+        "thassilon",
+        "npc",
+        "new thassilon",
+        "belimarius"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "runelord-xanderghul",
+      "title": "Runelord Xanderghul",
+      "category": "NPC",
+      "summary": "The one and only Runelord of Pride — a master of illusion who secretly also posed as the god known as the Peacock Spirit, worshipped by rune magic scholars throughout Thassilon.",
+      "content": "Runelord Xanderghul was the sole holder of the title of Runelord of Pride throughout all of Ancient Thassilon's history — there was only ever one. As the Runelord of Pride, he specialized in illusion magic, whose rune is the Crescent Scepter, and his sin's energy is violet.\n\nXanderghul harbored an extraordinary secret: he was the same entity as the Peacock Spirit, the mysterious god worshipped by scholars and researchers of rune magic throughout Thassilon. Only Xanderghul himself knew these were one and the same, though it is said his most devoted followers were aware of the secret as well. The Peacock Spirit's worship ended with the decline of Thassilon, and has not meaningfully returned — even in the current age of New Thassilon.\n\nWhether Xanderghul survived Earthfall in magical stasis, as some of his peers did, remains unknown.",
+      "related": [
+        "ancient-thassilon",
+        "new-thassilon"
+      ],
+      "tags": [
+        "runelord",
+        "pride",
+        "thassilon",
+        "npc",
+        "illusion",
+        "xanderghul",
+        "peacock spirit"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "scarnetti-consortium",
+      "title": "The Scarnetti Consortium",
+      "category": "Organization",
+      "summary": "An aggressive industrial conglomerate of mills and lumber concerns owned and controlled by Titus Scarnetti — widely regarded as Sandpoint's most unpleasant power broker.",
+      "content": "The Scarnetti Consortium is a collection of industrial companies and concerns centered on Sandpoint's lumber and milling industries, all owned and directed by Titus Scarnetti, the head of the Scarnetti family. The Consortium controls the lumber supply that competing interests — especially the now-weakened Valdemars — depend on, and Titus leverages this dependency openly and without apology.\n\nThe Consortium has a deeply negative reputation with much of Sandpoint's population, particularly the Varisian community. Evidence of collusion with local criminal elements nearly surfaced publicly when Scarnetti Manor was damaged in a giant raid; Titus managed to suppress most of it, but enough leaked to cause lasting damage to the family's standing. Since then, the Consortium has been rebuilt through secret dealings with Korvosan interests.\n\nThe Consortium is distinct from the broader Sandpoint Mercantile League, which it participates in but frequently works against. Its influence rating in town is sharply negative.",
+      "related": [
+        "the-scarnettis",
+        "titus-scarnetti",
+        "sandpoint",
+        "sandpoint-mercantile-league",
+        "korvosa"
+      ],
+      "tags": [
+        "scarnetti consortium",
+        "organization",
+        "sandpoint",
+        "industry",
+        "lumber",
+        "scarnetti"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cheliax",
+      "title": "Cheliax",
+      "category": "Location",
+      "summary": "A once-vast empire that collapsed after the death of its patron god Aroden, Cheliax now rules itself through infernal pacts with devils and the iron authority of devil-worship — and its cultural shadow still falls over Sandpoint's most conservative families.",
+      "content": "Cheliax is one of the most powerful nations of the Inner Sea region, a former empire whose reach once extended across much of western Avistan. After the death of the god Aroden, Cheliax fell into civil war and chaos, from which it emerged under the thumb of devil-worshipping aristocrats who bound themselves to the power of Hell. Today, Cheliax is ruled by an alliance of infernal-pact noble houses, with Asmodeus as the state's patron deity.\n\nChelaxian culture values order, hierarchy, law, and tradition — virtues taken to their darkest extreme in the service of Hell. The nation maintains the Hellknights, a collection of iron-disciplined knightly orders that enforce law with brutal efficiency, and its influence spreads through vassal states like Isger and former colonies like now-independent Vidrian.\n\nIn Sandpoint, Chelaxian cultural influence is most visible in the founding Scarnetti family, who cling to 'old values from Cheliax that are, in many cases, outdated.' The Chelaxian half of Sandpoint's founding population — settlers who came north via Magnimar — forms roughly half the town's human demographic.",
+      "related": [
+        "sandpoint",
+        "the-scarnettis",
+        "korvosa",
+        "varisia",
+        "magnimar",
+        "asmodeus"
+      ],
+      "tags": [
+        "cheliax",
+        "empire",
+        "nation",
+        "avistan",
+        "asmodeus",
+        "devils"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "asmodeus",
+      "title": "Asmodeus",
+      "category": "Religion",
+      "summary": "The Prince of Darkness — the most powerful archdevil and the only one to claim full divinity — patron god of Cheliax and lord of all Hell.",
+      "content": "Asmodeus is the most powerful of the nine archdevils that inhabit Hell, and the only one of Hell's rulers to claim full divinity. He is credited with penning the Contract of Creation, within which his followers believe is hidden the means for their patron's eventual rise to supremacy over all other gods.\n\nOther gods find Asmodeus the easiest of the evil deities to deal with — they recognize his aid is not to be sought lightly, but he operates within predictable frameworks of law and contract. He is allied with Abadar due to their shared appreciation for order and lawful societies. He has an ongoing feud with Irori, who dislikes him for undermining others' hard work. He holds a great disdain for Grandmother Spider, who stole his keys and outwitted his retribution.\n\nAsmodeus serves as the patron deity of Cheliax, whose ruling houses bound themselves to infernal power after the chaos following Aroden's death.",
+      "related": [
+        "cheliax",
+        "the-scarnettis"
+      ],
+      "tags": [
+        "asmodeus",
+        "devil",
+        "hell",
+        "religion",
+        "cheliax",
+        "god"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "brotherhood-of-the-platinum-band",
+      "title": "Brotherhood of the Platinum Band",
+      "category": "Organization",
+      "summary": "A small monastic order of humanoid worshippers devoted to Apsu the Waybringer, operating primarily out of Oppara and Absalom — and the order that raised Blu-Kakke before casting him out.",
+      "content": "The Brotherhood of the Platinum Band is a monastic order of humanoid worshippers devoted to Apsu the Waybringer, the primordial dragon god of creation and patron of metallic dragons. According to the draconic creation myth Apsu is one of the primordial dragons who created the solar system and its inhabitants from the chaos of the Universe. The Brotherhood reveres him as the source of all righteous draconic power.\n\nThe small faith operates mostly out of Oppara and Absalom. They are an unusual congregation in that they are composed of humanoids rather than dragons, drawn to Apsu's ideals of good, creativity, and the long arc of cosmic order.\n\nThe Brotherhood raised Blu-Kakke after he was left in their care as a child by one of the Gearsmen from Numeria. He trained with them until a connection to Blue Dragons — chromatic dragons associated with evil in orthodox draconic religion — scandalized the Brotherhood and led to his expulsion on religious grounds.",
+      "related": [
+        "apsu",
+        "osprey-cove"
+      ],
+      "tags": [
+        "brotherhood of the platinum band",
+        "organization",
+        "apsu",
+        "monastic",
+        "dragons"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "apsu",
+      "title": "Apsu",
+      "category": "Religion",
+      "summary": "The Waybringer — the patron deity of all good and metallic dragons, and one of the oldest gods of the Great Beyond, who according to draconic myth shaped the cosmos from primordial chaos.",
+      "content": "Apsu is the patron deity of all good and metallic dragons, and one of the oldest gods of the Great Beyond. According to the draconic creation myth, he was one of the primordial dragons who created the solar system and its inhabitants from the chaos of the Universe, making him a figure of cosmic significance in draconic religion.\n\nApsu is worshipped by the humanoid monastic order known as the Brotherhood of the Platinum Band, who venerate him as the source of righteous draconic power. His faith is small but sincere, and his followers tend toward the ideals of creation, guardianship, and the patient wisdom of ancient things.\n\nApsu's eternal enemy is Dahak, the evil dragon deity of destruction, treachery, and wanton violence.",
+      "related": [
+        "dahak",
+        "brotherhood-of-the-platinum-band"
+      ],
+      "tags": [
+        "apsu",
+        "dragon",
+        "deity",
+        "religion",
+        "metallic dragons",
+        "good"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dahak",
+      "title": "Dahak",
+      "category": "Religion",
+      "summary": "The Endless Destruction — the evil dragon deity of destruction, treachery, and wanton violence, and the eternal enemy of Apsu.",
+      "content": "Dahak is the evil dragon deity of destruction, treachery, and wanton violence. He is the eternal enemy of Apsu, the good dragon god, and their conflict represents the cosmic division within dragonkind between the metallic (good) and chromatic (evil) lineages.\n\nDahak's portfolio encompasses senseless destruction, betrayal, and the pleasure taken in causing pain and ruin. He is worshipped primarily by chromatic dragons and those mortals who seek power through destruction. His connection to Blue Dragons — whose lightning and proud cruelty align with his domain — is part of why Blu-Kakke's discovered connection to Blue Dragon power scandalized the Brotherhood of the Platinum Band, which is devoted to Apsu.",
+      "related": [
+        "apsu",
+        "brotherhood-of-the-platinum-band"
+      ],
+      "tags": [
+        "dahak",
+        "dragon",
+        "deity",
+        "religion",
+        "chromatic dragons",
+        "evil",
+        "destruction"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "gorum",
+      "title": "Gorum",
+      "category": "Religion",
+      "summary": "Our Lord in Iron — the god of battle, strength, and valor, whose worshippers seek glory through combat and who forms the spiritual backbone of the militaristic town of Iron Harbor.",
+      "content": "Gorum is the god of battle, strength, and valor — known to his faithful as Our Lord in Iron. He is a deity of pure martial virtue, caring not for law or chaos, good or evil, only for the glory found in worthy combat. His followers believe that the greatest honor a warrior can achieve is to die in battle, and they seek out worthy conflicts with fervor.\n\nGorum has a herald known as the First Blade. His followers in the Iron Archipelago's Iron Harbor have made the fortress-church of Stonehome the center of their devotion — though that institution has recently been compromised by the cult of Xar-Azmak.\n\nGorum is viewed as disinterested in inventors, even of weapons, and has come into conflict with Urgathoa, who considers death by disease insufficiently honorable for warriors.",
+      "related": [
+        "iron-harbor",
+        "osprey-cove"
+      ],
+      "tags": [
+        "gorum",
+        "battle",
+        "deity",
+        "religion",
+        "strength",
+        "iron harbor"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "cayden-cailean",
+      "title": "Cayden Cailean",
+      "category": "Religion",
+      "summary": "The Accidental God of drink, freedom, adventure, and revelry — patron of Osprey Cove and one of the three deities who ascended to godhood through the Test of the Starstone.",
+      "content": "Cayden Cailean is the god of drink, partying, freedom, and adventure. He is one of three mortals known to have passed the Test of the Starstone — a near-impossible divine trial — and ascended to godhood, though legend holds he was drunk at the time and can no longer clearly remember why he agreed to attempt it.\n\nHis faith is beloved by free spirits, travelers, fighters who prefer brawling to strategy, and anyone who believes that life is best lived without unnecessary chains. He has no patience for tyranny or the oppression of the weak. His followers in Osprey Cove, like Elder Ordwi, embody the town's laid-back, community-minded values.\n\nCayden Cailean is on good terms with Brigh (who appreciates the science of brewing) and counts Desna and Shelyn among his friendly divine neighbors.",
+      "related": [
+        "osprey-cove",
+        "elder-ordwi",
+        "desna"
+      ],
+      "tags": [
+        "cayden cailean",
+        "deity",
+        "religion",
+        "freedom",
+        "drink",
+        "adventure",
+        "osprey cove"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sarenrae",
+      "title": "Sarenrae",
+      "category": "Religion",
+      "summary": "The Dawnflower — goddess of healing, redemption, and the sun, whose faith of compassion and temperance is one of the most widely practiced at the Sandpoint Cathedral.",
+      "content": "Known to her faithful as the Dawnflower, the Healing Flame, and the Everlight, Sarenrae is a goddess who teaches temperance and patience in all things. Compassion and peace are her greatest virtues, and if enemies of the faith can be redeemed, they should be — though she is not without wrath for those who refuse redemption and continue to cause harm.\n\nSarenrae is one of the deities whose faith is welcomed at the multi-faith Sandpoint Cathedral. Her worship is widespread throughout the Inner Sea region. Her enemies include the undead goddess Urgathoa, whose portfolio of excess and disease runs counter to everything Sarenrae values.\n\nShe is one third of the divine relationship known as the Prismatic Ray, alongside Desna and Shelyn.",
+      "related": [
+        "sandpoint-cathedral",
+        "desna",
+        "shelyn"
+      ],
+      "tags": [
+        "sarenrae",
+        "deity",
+        "religion",
+        "healing",
+        "sun",
+        "redemption",
+        "sandpoint"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "shelyn",
+      "title": "Shelyn",
+      "category": "Religion",
+      "summary": "The Eternal Rose — goddess of beauty, art, love, and music, whose faith of creative joy and compassion welcomes all who seek beauty in the world.",
+      "content": "Shelyn is the goddess of beauty, art, love, and music. She was born the daughter of the spirit-wolf Thron and shares her father with her half-brother Dou-Bral — who, after a long absence and mysterious corruption, returned as the god of pain and shadow, Zon-Kuthon. Shelyn still grieves this transformation and holds love for what her brother once was, even as she opposes what he has become.\n\nShelyn's faith celebrates creativity and joy in all its forms. She is one third of the divine relationship known as the Prismatic Ray alongside Desna and Sarenrae. Her worshippers are found wherever art is made, and her faith is welcomed at the Sandpoint Cathedral. She is closest among the gods to Brigh, goddess of invention, despite their apparent differences.",
+      "related": [
+        "sandpoint-cathedral",
+        "desna",
+        "sarenrae"
+      ],
+      "tags": [
+        "shelyn",
+        "deity",
+        "religion",
+        "beauty",
+        "art",
+        "love",
+        "sandpoint"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "erastil",
+      "title": "Erastil",
+      "category": "Religion",
+      "summary": "Old Deadeye — one of the oldest gods still worshipped in the Inner Sea, patron of farming, hunting, family, and community, whose simple faith speaks to those who build their lives from the land.",
+      "content": "Erastil is one of the oldest human gods still worshipped in the Inner Sea region, his religion dating back to before the Age of Darkness, when small farming communities and hunter-gatherers prayed to him for bountiful harvests and successful hunts. He leads his followers by example and good deeds rather than flowery rhetoric.\n\nErastil believes that groups work best when led by a good and strong leader, and he values family, community, children honoring their parents, and understanding the difference between work and play. His faith is humble, practical, and deeply rooted in the rhythms of rural life.\n\nHis faith is welcomed at the multi-faith Sandpoint Cathedral and provides aid to the poor in Magnimar's rougher districts.",
+      "related": [
+        "sandpoint-cathedral",
+        "sandpoint"
+      ],
+      "tags": [
+        "erastil",
+        "deity",
+        "religion",
+        "farming",
+        "family",
+        "community",
+        "sandpoint"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "abadar",
+      "title": "Abadar",
+      "category": "Religion",
+      "summary": "The Master of the First Vault — patient god of cities, law, merchants, and wealth, whose faith champions the expansion of civilization and lawful order across Golarion.",
+      "content": "Abadar is the god of cities, law, merchants, and wealth, known to be a patient deity who maintains a strong neutral stance in his actions. He sets forth to expand civilization and order among the peoples of Golarion, believing that structured society and lawful trade are the foundations of prosperity and peace.\n\nAbadar is allied with Asmodeus due to their shared appreciation for order and lawful societies, though the two have very different ends in mind. He has a good relationship with Irori. His faith is widespread in every major city of the Inner Sea and is welcomed at the Sandpoint Cathedral. His retired paladin Jasper Korvaski serves as Sandpoint's town planner — a man whose near-incorruptible character the Mercantile League values highly.",
+      "related": [
+        "sandpoint-cathedral",
+        "sandpoint"
+      ],
+      "tags": [
+        "abadar",
+        "deity",
+        "religion",
+        "law",
+        "merchants",
+        "cities",
+        "sandpoint"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "gozreh",
+      "title": "Gozreh",
+      "category": "Religion",
+      "summary": "The Wind and the Waves — an ancient, dual-natured deity of nature, weather, and the sea, worshipped by sailors, druids, and all who live close to the natural world.",
+      "content": "Gozreh is an ancient deity, thought to have existed for as long as the wind has blown and the waters swelled. Their faithful are to be found in all places of nature, doing their will as they have for eons. Gozreh is dual-natured — representing both the wild sky and the deep sea, both calm and storm.\n\nGozreh is one of the deities who fought and helped trap Rovagug in the defense of all creation. Their faith is particularly embraced by those who live and work close to nature — sailors, druids, fishers, and healers of the wilds like Hannah Velerin of Sandpoint, who spends her mornings in the hinterlands enjoying Gozreh's bounty.",
+      "related": [
+        "sandpoint-cathedral",
+        "sandpoint-hinterlands"
+      ],
+      "tags": [
+        "gozreh",
+        "deity",
+        "religion",
+        "nature",
+        "weather",
+        "sea",
+        "sandpoint"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "vanda",
+      "title": "Vanda",
+      "category": "NPC",
+      "summary": "A former Stonehome acolyte who has not yet fully surrendered to the cult of Xar-Azmak — still wearing her unrusted plate, still carrying a thread of remorse.",
+      "content": "Vanda is one of the acolytes of Stonehome, the garrison-church of Gorum in Iron Harbor, who fell under the influence of Meitremar's cult of Xar-Azmak when the Iron Harbor was infiltrated. Unlike the others who have fully converted — trading their unrusted steel for the rusted armor and sickles that mark devotion to the dead demon lord — Vanda has not yet made that final surrender.\n\nShe still wears her unrusted full plate and fights with a greatsword, equipment that marks her as someone who has not entirely let go of what she was. A shred of remorse clings to her mind, a hesitation her fellow cultists have either not noticed or chosen to ignore. Whether that thread of conscience is enough to pull her back from the path Meitremar has set her on remains an open question.",
+      "related": [
+        "iron-harbor",
+        "meitremar",
+        "gorum",
+        "vlorus"
+      ],
+      "tags": [
+        "vanda",
+        "npc",
+        "iron harbor",
+        "stonehome",
+        "cult",
+        "xar-azmak",
+        "conflicted"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hell",
+      "title": "Hell",
+      "category": "Location",
+      "summary": "The Pit — an outer plane of absolute lawful evil, where obedience is honed to a razor's edge in service of Asmodeus and the torment of mortal souls.",
+      "content": "Hell, sometimes called the Pit, is the ultimate expression of evil order in the Great Beyond. It is a plane where the weak are subjugated to serve the strong, where complete obedience and unquestioning faith are the supreme virtues. Its tortures are not the willful, random cruelty of the Abyss, nor the purely sadistic spite of Abaddon — they are precise, purposeful, and honed to a razor's edge in service of a single goal: bending the will of souls and the very architecture of creation to the glory of the lord Asmodeus and his perfect order.\n\nHell is home to myriads of devils and other evil outsiders, and is the final destination for countless mortal souls who made infernal bargains in life. Its architecture is one of endless iron, fire, and stone, shaped into cities, prisons, and fortresses of terrible grandeur.\n\nHell is divided into nine layers, each ruled by an archdevil. Asmodeus rules from the deepest layer, Nessus. The second layer is Dis, an iron city-realm ruled by the archdevil Dispater.",
+      "related": [
+        "asmodeus",
+        "dispater",
+        "dis",
+        "cheliax"
+      ],
+      "tags": [
+        "hell",
+        "plane",
+        "outer plane",
+        "devils",
+        "asmodeus",
+        "infernal"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dis",
+      "title": "Dis",
+      "category": "Location",
+      "summary": "The Iron City — the second layer of Hell and one of the largest prisons in all the cosmos, a metropolis of millions ruled with calculating cunning by the archdevil Dispater.",
+      "content": "Dis is the second layer of Hell, and its name belongs both to the layer itself and to the immense iron city that fills it — a metropolis with a population of millions, a sprawling monument to what civilization becomes when order serves evil. It is one of the largest prisons in all the cosmos, and its ruler Dispater is its unyielding, merciless warden.\n\nIn contrast to the iron, fire, and stone that dominates most of Dis, a region called Eleusys — the personal palace of Dispater's wife Erecura — is filled with lush vegetation, a startling oasis of green within the infernal city. Erecura keeps her court there, attended by three norns who serve as her advisors and handmaidens.\n\nAdventurers who have run afoul of Dispater's underlings, been exploited in the infernal markets, or need to overturn one of the Iron Lord's decisions may seek an audience with Erecura, who holds genuine power within Dis — though gaining such an audience is extraordinarily difficult.",
+      "related": [
+        "hell",
+        "dispater",
+        "erecura",
+        "asmodeus"
+      ],
+      "tags": [
+        "dis",
+        "hell",
+        "location",
+        "iron city",
+        "plane",
+        "dispater"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "dispater",
+      "title": "Dispater",
+      "category": "NPC",
+      "summary": "The Iron Lord — archdevil, greatest jailer and politician of Hell, ruler of Dis, and one of Asmodeus's oldest and most trusted allies. Calculating, patient, and absolutely merciless when provoked.",
+      "content": "Dispater is Hell's greatest jailer and politician, ruling its second layer, Dis. Known as the Iron Lord, Father of Dis, and First King, he is one of the most active rulers of Hell and one of Asmodeus's closest and longest-standing allies. He appears as a majestic, towering figure with rust-red skin, four horns, and a burning crown that hovers above his head — a fallen angel whose black wings he keeps retracted within his body at almost all times.\n\nDispater is a master strategist and expert in intrigue. He prefers to use his commanding presence, charm, and political leverage to achieve his ends rather than direct violence — but when violence becomes necessary, he reminds everyone precisely why he is feared. His symbol of office is an artifact known as the Eclipsing Eye. His religious symbol is an iron spike driven into a golden ring with a red and purple crown.\n\nAlone among the lords of Hell, Dispater believes in the virtues of courtly love. He has taken three wives over his eons-long existence: the first is forgotten even by himself, her only memorial a shattered statue in his throne room. His second was Feronia, an elemental demigoddess, with whom he had a brief tempestuous relationship that produced the empyreal lord Ragathiel. His third and current wife is Erecura, a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life from Pharasma — and whom Dispater sincerely loves.\n\nDispater's armies were responsible for the destruction of the demon lord Xar-Azmak, whose Abyssal realm Vlorus now lies unclaimed — a fact that makes Meitremar's plan to resurrect Xar-Azmak a matter that would draw Hell's attention if it came to light.",
+      "related": [
+        "hell",
+        "dis",
+        "erecura",
+        "asmodeus",
+        "vlorus",
+        "meitremar"
+      ],
+      "tags": [
+        "dispater",
+        "archdevil",
+        "hell",
+        "dis",
+        "npc",
+        "iron lord"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "erecura",
+      "title": "Erecura",
+      "category": "NPC",
+      "summary": "The Queen of Dis — a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life, now one of the most subtly powerful figures in the infernal city, and wife to Dispater.",
+      "content": "Erecura is the Queen of Dis, the second layer of Hell, and the wife of its ruler, the archdevil Dispater. She is a demigoddess whose origins lie in mortality — she was condemned to Hell for stealing the secret of eternal life from Pharasma, the goddess of death and fate. Despite being an authority figure within Hell, her outlook and motivations are far removed from those of typical devils, and remain unclear even to her own husband.\n\nAs part of her nuptial agreements with Dispater, Erecura is allowed to keep a palace of her own liking — the lush, green-filled Eleusys — and to exercise power as she sees fit within Dis. Dispater sincerely loves her, often calling upon her to arbitrate disputes and delegating responsibilities of rule to her even when she does not ask. Asmodeus himself plans to rely on Erecura's savvy should Hell enter conflict with forces beyond its ordinary ken.\n\nHer divine portfolio encompasses deduction, mind reading, subtlety, thriving in hostile environments, and the art of manipulating dangerous beings to one's advantage. Her worship is virtually unknown on Golarion and is strongly tied to the veneration of Dispater. Those few who do follow her tend to be soothsayers and non-evil rangers who admire her ability to maintain integrity and power within an environment of overwhelming evil.\n\nErecura prefers green and tan robes within her own palace of Eleusys, and dons black in her public role as Queen of Dis. She is attended by three norns — Felixia, Rowane, and Selieste — who serve as her advisors and handmaidens.",
+      "related": [
+        "dis",
+        "dispater",
+        "hell",
+        "asmodeus"
+      ],
+      "tags": [
+        "erecura",
+        "queen of dis",
+        "demigoddess",
+        "hell",
+        "npc",
+        "dispater",
+        "subtlety"
+      ],
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}

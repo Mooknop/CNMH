@@ -9,6 +9,7 @@ import CharacterSheet from './pages/CharacterSheet';
 import QuestTracker from './pages/QuestTracker';
 import PartyWealth from './pages/PartyWealth';
 import Lore from './pages/Lore';
+import LoreTopic from './pages/LoreTopic';
 import GolarionCalendar from './pages/GolarionCalendar';
 import PartySummary from './components/party/PartySummary';
 import './App.css';
@@ -28,6 +29,7 @@ function App() {
                   <Route path="/quests" element={<QuestTracker />} />
                   <Route path="/party-wealth" element={<PartyWealth />} />
                   <Route path="/lore" element={<Lore />} />
+                  <Route path="/lore/:id" element={<LoreTopic />} />
                   <Route path="/calendar" element={<GolarionCalendar />} />
                   <Route path="/party-summary" element={<PartySummary />} />
                 </Routes>
