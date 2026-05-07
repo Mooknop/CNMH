@@ -17,15 +17,26 @@ describe('FreeActionsList', () => {
     expect(() => render(<FreeActionsList character={mockCharacter} />)).not.toThrow();
   });
 
-  it('renders ActionCardList with free-action type', () => {
+  it('renders two ActionCardList components (character + basic)', () => {
     render(<FreeActionsList character={mockCharacter} />);
-    const list = screen.getByTestId('action-card-list');
-    expect(list).toBeInTheDocument();
-    expect(list.dataset.type).toBe('free-action');
+    expect(screen.getAllByTestId('action-card-list')).toHaveLength(2);
   });
 
-  it('passes empty message to ActionCardList', () => {
+  it('renders ActionCardList with free-action type', () => {
     render(<FreeActionsList character={mockCharacter} />);
-    expect(screen.getByText('No free actions available for this character.')).toBeInTheDocument();
+    const lists = screen.getAllByTestId('action-card-list');
+    lists.forEach((list) => expect(list.dataset.type).toBe('free-action'));
+  });
+
+  it('passes unique empty message to character ActionCardList', () => {
+    render(<FreeActionsList character={mockCharacter} />);
+    expect(
+      screen.getByText('No unique free actions available for this character.')
+    ).toBeInTheDocument();
+  });
+
+  it('renders Basic section divider', () => {
+    render(<FreeActionsList character={mockCharacter} />);
+    expect(screen.getByText('Basic')).toBeInTheDocument();
   });
 });

@@ -125,6 +125,15 @@ const StrikesList = ({ character, themeColor }) => {
           {/* Melee Strikes Section */}
           {meleeStrikes.length > 0 && (
             <div className="strikes-section">
+              <h3 className="strike-category-header" style={{
+                color: themeColor,
+                borderBottom: `1px solid ${themeColor}`,
+                paddingBottom: '0.5rem',
+                marginTop: '1rem',
+                marginBottom: '1rem'
+              }}>
+                Melee Strikes
+              </h3>
               <div className="cards-grid">
                 {meleeStrikes.map((strike, index) => renderStrikeCard(strike, `melee-${index}`))}
               </div>
