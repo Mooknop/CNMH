@@ -255,7 +255,7 @@ const SpellsList = ({ character, characterColor }) => {
       {/* Filters that work across most tabs */}
       {allAvailableRanks.length > 0 && viewMode !== 'focus' && viewMode !== 'eld' && viewMode !== 'harrow' && (
         <SpellFilters
-          rankList={sortedRankList}
+          rankList={viewMode === 'spells' ? [] : sortedRankList}
           activeSpellRank={activeSpellRank}
           setActiveSpellRank={setActiveSpellRank}
           defenseTypes={allDefenseTypes}
@@ -267,8 +267,9 @@ const SpellsList = ({ character, characterColor }) => {
       
       {/* Content based on active view */}
       {viewMode === 'spells' && hasSpellcasting && (
-        <SpellsRepertoire 
-          spells={spellsToDisplay}
+        <SpellsRepertoire
+          spells={spellcasting.spells || []}
+          spellSlots={spellcasting.spell_slots || {}}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}
@@ -294,9 +295,9 @@ const SpellsList = ({ character, characterColor }) => {
       )}
       
       {viewMode === 'staff' && hasStaff && (
-        <StaffSpells 
+        <StaffSpells
           staff={staff}
-          spells={spellsToDisplay}
+          spells={staffSpells}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}
@@ -306,8 +307,8 @@ const SpellsList = ({ character, characterColor }) => {
       )}
       
       {viewMode === 'scrolls' && hasScrolls && (
-        <ScrollSpells 
-          spells={spellsToDisplay}
+        <ScrollSpells
+          spells={scrollSpells}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}
@@ -315,10 +316,10 @@ const SpellsList = ({ character, characterColor }) => {
           character={character}
         />
       )}
-      
+
       {viewMode === 'wands' && hasWands && (
-        <WandSpells 
-          spells={spellsToDisplay}
+        <WandSpells
+          spells={wandSpells}
           themeColor={themeColor}
           characterLevel={level}
           defenseFilter={defenseFilter}

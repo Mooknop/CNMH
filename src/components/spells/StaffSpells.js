@@ -1,5 +1,35 @@
-import React from 'react';
-import SpellCategorySection from './SpellCategorySection';
+import React, { useState } from 'react';
+import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
+
+const SpellNameChip = ({ spell, character }) => {
+  const isSignature = !!spell.signature;
+  const isBloodline = !!spell.bloodline;
+
+  const chipClass = `spell-name-chip${isSignature ? ' signature-indicator' : isBloodline ? ' bloodline-indicator' : ''}`;
+  const symbol = isSignature ? '★' : isBloodline ? '✦' : null;
+  const tooltipText = isSignature
+    ? 'Signature Spell: Cast at any rank up to your highest available spell rank.'
+    : isBloodline
+    ? (character?.spellcasting?.bloodline?.blood_magic || '')
+    : null;
+
+  const aonUrl = `https://2e.aonprd.com/Search.aspx?q=${encodeURIComponent(spell.name)}`;
+
+  return (
+    <div className={chipClass}>
+      <a
+        className="chip-name"
+        href={aonUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {spell.name}
+      </a>
+      {symbol && <span className="chip-symbol">{symbol}</span>}
+      {tooltipText && <div className="spell-tooltip">{tooltipText}</div>}
+    </div>
+  );
+};
 
 const StaffInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
@@ -19,49 +49,84 @@ const StaffInfoBox = ({ themeColor }) => (
   </div>
 );
 
-const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank }) => {
+const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character }) => {
+  const chargesMax = staff.charges?.max ?? 0;
+  const [chargesSpent, setChargesSpent] = useState(
+    chargesMax - (staff.charges?.current ?? chargesMax)
+  );
+
+  const handleChargeClick = (i) => {
+    const available = chargesMax - chargesSpent;
+    if (i < available) {
+      setChargesSpent(prev => Math.min(prev + 1, chargesMax));
+    } else {
+      setChargesSpent(prev => Math.max(prev - 1, 0));
+    }
+  };
+
+  const filtered = filterSpellsByDefense(spells, defenseFilter);
+  const spellsByRank = organizeSpellsByRank(filtered);
+  const ranksToShow = getSortedRankList(
+    Object.keys(spellsByRank).filter(r => spellsByRank[r].length > 0)
+  ).slice(1).filter(r => activeSpellRank === 'all' || r === activeSpellRank);
+
   const hasActiveFilter = activeSpellRank !== 'all' || defenseFilter !== 'all';
 
-  const emptyMessage = hasActiveFilter
-    ? 'No staff spells matching your current filters.'
-    : undefined; // SpellCategorySection renders a default when undefined
-
-  // The "no spells in data" case gets custom JSX; pass it only when there's no filter
-  const noDataContent = !hasActiveFilter ? (
-    <>
-      <p>
-        This staff does not have any spells specified in the character data.
-        Staff spells should be added to the character's staff object under a "spells" property.
-      </p>
-      <div className="staff-placeholder">
-        <h5 style={{ color: themeColor }}>Default Staff Functionality</h5>
-        <p>
-          Staves typically contain a selection of thematically linked spells that can be cast by
-          expending charges from the staff. The exact spells depend on the type of staff and its magical properties.
-        </p>
-        <p>
-          Consult your Game Master or the Pathfinder 2E rulebook for details on your specific staff's capabilities.
-        </p>
-      </div>
-    </>
-  ) : null;
-
   return (
-    <SpellCategorySection
-      title={staff.name}
-      spells={spells}
-      themeColor={themeColor}
-      characterLevel={characterLevel}
-      defenseFilter={defenseFilter}
-      activeSpellRank={activeSpellRank}
-      containerClass="staff-container"
-      description={staff.description || 'A magical staff that can store spells.'}
-      infoBox={<StaffInfoBox themeColor={themeColor} />}
-      emptyMessage={emptyMessage}
-      spellKeyFn={(spell) => spell.id}
-    >
-      {noDataContent}
-    </SpellCategorySection>
+    <div className="spells-container">
+      <StaffInfoBox themeColor={themeColor} />
+
+      {chargesMax > 0 && (
+        <div className="staff-charges-section">
+          <div className="rank-section-header">
+            <span className="rank-label" style={{ color: themeColor }}>Charges</span>
+            <div className="slot-bubbles">
+              {Array.from({ length: chargesMax }, (_, i) => {
+                const isFilled = i < chargesMax - chargesSpent;
+                return (
+                  <button
+                    key={i}
+                    className={`slot-bubble ${isFilled ? 'slot-filled' : 'slot-empty'}`}
+                    style={isFilled ? { backgroundColor: themeColor, borderColor: themeColor } : { borderColor: themeColor }}
+                    onClick={() => handleChargeClick(i)}
+                    aria-label={isFilled ? 'Available slot' : 'Spent slot'}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ranksToShow.map(rank => (
+        <div className="repertoire-rank-section" key={rank}>
+          <div className="rank-section-header">
+            <span className="rank-label" style={{ color: themeColor }}>
+              {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
+            </span>
+          </div>
+          <div className="spell-chips-row">
+            {spellsByRank[rank].map(spell => (
+              <SpellNameChip
+                key={spell.id || spell.name}
+                spell={spell}
+                character={character}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {ranksToShow.length === 0 && (
+        <div className="empty-state">
+          <p>
+            {hasActiveFilter
+              ? 'No staff spells matching your current filters.'
+              : 'This staff has no spells.'}
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 

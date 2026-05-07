@@ -404,6 +404,7 @@
     "focus": {
         "max": 2
     },
+    "spell_slots": { "1": 4, "2": 3 },
     "spells": [
       {
         "id": "spell-1",

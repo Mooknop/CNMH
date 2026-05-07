@@ -1,58 +1,136 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import WandSpells from './WandSpells';
 
-let capturedProps = {};
+jest.mock('../../utils/SpellUtils', () => ({
+  filterSpellsByDefense: (spells, filter) =>
+    filter === 'all' ? spells : spells.filter(s => s.defense === filter),
+  organizeSpellsByRank: (spells) => {
+    const result = { cantrips: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [] };
+    spells.forEach(s => {
+      const rank = s.level === 0 ? 'cantrips' : s.level;
+      if (result[rank]) result[rank].push(s);
+    });
+    return result;
+  },
+  getSortedRankList: (ranks) => {
+    const sorted = ['all'];
+    if (ranks.includes('cantrips')) sorted.push('cantrips');
+    for (let i = 1; i <= 10; i++) {
+      if (ranks.includes(String(i))) sorted.push(String(i));
+    }
+    return sorted;
+  },
+}));
 
-jest.mock('./SpellCategorySection', () => {
-  return function DummySpellCategorySection(props) {
-    capturedProps = props;
-    return <div data-testid="spell-category-section"><span>{props.title}</span></div>;
-  };
-});
+const baseSpells = [
+  { id: 'spell-1', name: 'Dizzying Colors', level: 1, defense: 'Will', wandName: 'Wand of Dizzying Colors' },
+  { id: 'spell-1', name: 'Fireball', level: 3, defense: 'Reflex', wandName: 'Wand of Fireball' },
+];
 
 const baseProps = {
-  spells: [],
+  spells: baseSpells,
   themeColor: '#4a90d9',
   characterLevel: 5,
   defenseFilter: 'all',
   activeSpellRank: 'all',
+  character: {},
 };
 
 describe('WandSpells', () => {
-  beforeEach(() => { capturedProps = {}; });
-
-  it('renders SpellCategorySection with title "Wands"', () => {
+  it('renders WandInfoBox with Using Wands heading', () => {
     render(<WandSpells {...baseProps} />);
-    expect(screen.getByText('Wands')).toBeInTheDocument();
+    expect(screen.getByText('Using Wands')).toBeInTheDocument();
   });
 
-  it('passes WandInfoBox as infoBox', () => {
+  it('renders spell names as chips', () => {
     render(<WandSpells {...baseProps} />);
-    expect(capturedProps.infoBox).not.toBeNull();
+    expect(screen.getByText('Dizzying Colors')).toBeInTheDocument();
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
   });
 
-  it('uses spell.id + "-wand" as key via spellKeyFn', () => {
+  it('renders one slot bubble per wand, all initially available', () => {
     render(<WandSpells {...baseProps} />);
-    const spell = { id: 'abc', name: 'Magic Missile' };
-    expect(capturedProps.spellKeyFn(spell)).toBe('abc-wand');
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+    expect(screen.queryAllByLabelText('Spent slot')).toHaveLength(0);
   });
 
-  it('passes fromWand: true via spellPropsFn', () => {
+  it('clicking an available bubble marks the wand as used', () => {
     render(<WandSpells {...baseProps} />);
-    const spell = { id: 'abc', name: 'Magic Missile' };
-    expect(capturedProps.spellPropsFn(spell).fromWand).toBe(true);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
   });
 
-  it('uses spell.wandName when present via spellPropsFn', () => {
+  it('clicking a spent bubble resets the wand to available', () => {
     render(<WandSpells {...baseProps} />);
-    const spell = { id: 'abc', wandName: 'Wand of Fire' };
-    expect(capturedProps.spellPropsFn(spell).wandName).toBe('Wand of Fire');
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getByLabelText('Spent slot'));
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
   });
 
-  it('defaults wandName to "Wand" when spell.wandName is absent', () => {
+  it('shows Overcharge button only for used wands', () => {
     render(<WandSpells {...baseProps} />);
-    const spell = { id: 'abc' };
-    expect(capturedProps.spellPropsFn(spell).wandName).toBe('Wand');
+    expect(screen.queryByRole('button', { name: /overcharge/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    expect(screen.getByRole('button', { name: /overcharge/i })).toBeInTheDocument();
+  });
+
+  it('clicking Overcharge marks the wand as overcharged', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /overcharge/i }));
+    expect(screen.getByText(/Overcharged/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Overcharge' })).not.toBeInTheDocument();
+  });
+
+  it('clicking the overcharged label resets the wand to available', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /overcharge/i }));
+    fireEvent.click(screen.getByText(/Overcharged/));
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+    expect(screen.queryByText(/Overcharged/)).not.toBeInTheDocument();
+  });
+
+  it('each wand tracks state independently', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
+  });
+
+  it('groups spells into rank sections', () => {
+    render(<WandSpells {...baseProps} />);
+    expect(screen.getByText('Rank 1')).toBeInTheDocument();
+    expect(screen.getByText('Rank 3')).toBeInTheDocument();
+  });
+
+  it('filters to matching rank when activeSpellRank is set', () => {
+    render(<WandSpells {...baseProps} activeSpellRank="1" />);
+    expect(screen.getByText('Rank 1')).toBeInTheDocument();
+    expect(screen.queryByText('Rank 3')).not.toBeInTheDocument();
+  });
+
+  it('filters spells by defenseFilter', () => {
+    render(<WandSpells {...baseProps} defenseFilter="Will" />);
+    expect(screen.getByText('Dizzying Colors')).toBeInTheDocument();
+    expect(screen.queryByText('Fireball')).not.toBeInTheDocument();
+  });
+
+  it('shows filter-aware empty message when no spells match', () => {
+    render(<WandSpells {...baseProps} defenseFilter="Fortitude" />);
+    expect(screen.getByText('No wands matching your current filters.')).toBeInTheDocument();
+  });
+
+  it('shows generic empty message when no wands in inventory', () => {
+    render(<WandSpells {...baseProps} spells={[]} />);
+    expect(screen.getByText('No wands in inventory.')).toBeInTheDocument();
+  });
+
+  it('chip links point to aonprd.com', () => {
+    render(<WandSpells {...baseProps} />);
+    const link = screen.getByRole('link', { name: 'Dizzying Colors' });
+    expect(link).toHaveAttribute('href', expect.stringContaining('aonprd.com'));
   });
 });

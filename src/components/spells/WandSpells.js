@@ -1,5 +1,35 @@
-import React from 'react';
-import SpellCategorySection from './SpellCategorySection';
+import React, { useState } from 'react';
+import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
+
+const SpellNameChip = ({ spell, character }) => {
+  const isSignature = !!spell.signature;
+  const isBloodline = !!spell.bloodline;
+
+  const chipClass = `spell-name-chip${isSignature ? ' signature-indicator' : isBloodline ? ' bloodline-indicator' : ''}`;
+  const symbol = isSignature ? '★' : isBloodline ? '✦' : null;
+  const tooltipText = isSignature
+    ? 'Signature Spell: Cast at any rank up to your highest available spell rank.'
+    : isBloodline
+    ? (character?.spellcasting?.bloodline?.blood_magic || '')
+    : null;
+
+  const aonUrl = `https://2e.aonprd.com/Search.aspx?q=${encodeURIComponent(spell.name)}`;
+
+  return (
+    <div className={chipClass}>
+      <a
+        className="chip-name"
+        href={aonUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {spell.name}
+      </a>
+      {symbol && <span className="chip-symbol">{symbol}</span>}
+      {tooltipText && <div className="spell-tooltip">{tooltipText}</div>}
+    </div>
+  );
+};
 
 const WandInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
@@ -22,20 +52,107 @@ const WandInfoBox = ({ themeColor }) => (
   </div>
 );
 
-const WandSpells = ({ spells, themeColor, characterLevel, defenseFilter, activeSpellRank }) => (
-  <SpellCategorySection
-    title="Wands"
-    spells={spells}
-    themeColor={themeColor}
-    characterLevel={characterLevel}
-    defenseFilter={defenseFilter}
-    activeSpellRank={activeSpellRank}
-    containerClass="wands-container"
-    description="Wands allow you to cast a specific spell once per day without expending your own spell slots. Unlike scrolls, wands are not consumed when used and recharge each day at dawn."
-    infoBox={<WandInfoBox themeColor={themeColor} />}
-    spellKeyFn={(spell) => `${spell.id}-wand`}
-    spellPropsFn={(spell) => ({ fromWand: true, wandName: spell.wandName || 'Wand' })}
-  />
-);
+const wandKey = (spell) => spell.wandName || spell.id;
+
+// State cycle per wand: 'available' → 'used' → 'overcharged' → 'available'
+const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, character }) => {
+  const [wandStates, setWandStates] = useState(() =>
+    Object.fromEntries(spells.map(s => [wandKey(s), 'available']))
+  );
+
+  const handleSlotClick = (key) => {
+    setWandStates(prev => ({
+      ...prev,
+      [key]: prev[key] === 'available' ? 'used' : 'available',
+    }));
+  };
+
+  const handleOvercharge = (key) => {
+    setWandStates(prev => ({ ...prev, [key]: 'overcharged' }));
+  };
+
+  const handleReset = (key) => {
+    setWandStates(prev => ({ ...prev, [key]: 'available' }));
+  };
+
+  const filtered = filterSpellsByDefense(spells, defenseFilter);
+  const spellsByRank = organizeSpellsByRank(filtered);
+  const ranksToShow = getSortedRankList(
+    Object.keys(spellsByRank).filter(r => spellsByRank[r].length > 0)
+  ).slice(1).filter(r => activeSpellRank === 'all' || r === activeSpellRank);
+
+  const hasActiveFilter = activeSpellRank !== 'all' || defenseFilter !== 'all';
+
+  return (
+    <div className="spells-container">
+      <WandInfoBox themeColor={themeColor} />
+
+      {ranksToShow.map(rank => (
+        <div className="repertoire-rank-section" key={rank}>
+          <div className="rank-section-header">
+            <span className="rank-label" style={{ color: themeColor }}>
+              {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
+            </span>
+          </div>
+          {spellsByRank[rank].map(spell => {
+            const key = wandKey(spell);
+            const state = wandStates[key] ?? 'available';
+            return (
+              <div className="wand-row" key={key}>
+                <SpellNameChip spell={spell} character={character} />
+                {state !== 'overcharged' ? (
+                  <button
+                    className={`slot-bubble ${state === 'available' ? 'slot-filled' : 'slot-empty'}`}
+                    style={state === 'available'
+                      ? { backgroundColor: themeColor, borderColor: themeColor }
+                      : { borderColor: themeColor }}
+                    onClick={() => handleSlotClick(key)}
+                    aria-label={state === 'available' ? 'Available slot' : 'Spent slot'}
+                  />
+                ) : (
+                  <button
+                    className="slot-bubble wand-overcharged-slot"
+                    onClick={() => handleReset(key)}
+                    aria-label="Reset wand"
+                  />
+                )}
+                {state === 'used' && (
+                  <button
+                    className="wand-overcharge-btn"
+                    style={{ color: themeColor, borderColor: themeColor }}
+                    onClick={() => handleOvercharge(key)}
+                  >
+                    Overcharge
+                  </button>
+                )}
+                {state === 'overcharged' && (
+                  <span
+                    className="wand-overcharged-label"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleReset(key)}
+                    onKeyDown={e => e.key === 'Enter' && handleReset(key)}
+                  >
+                    Overcharged — click to reset
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+
+      {ranksToShow.length === 0 && (
+        <div className="empty-state">
+          <p>
+            {hasActiveFilter
+              ? 'No wands matching your current filters.'
+              : 'No wands in inventory.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default WandSpells;
