@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { loreEntries as defaultLoreEntries } from '../data';
+import HistoryTimeline from '../components/shared/HistoryTimeline';
 import './Lore.css';
 
 const Lore = () => {
@@ -13,9 +14,11 @@ const Lore = () => {
     setCategories(uniqueCategories);
   }, [loreEntries]);
 
-  const filteredEntries = loreEntries.filter(entry =>
-    filter ? entry.category === filter : true
-  );
+  const filteredEntries = filter
+    ? filter === 'History'
+      ? [] // History entries are handled by HistoryTimeline component
+      : loreEntries.filter(entry => entry.category === filter)
+    : loreEntries.filter(entry => entry.category !== 'History'); // Exclude History from "All" view
 
   return (
     <div className="lore-page">
@@ -46,7 +49,9 @@ const Lore = () => {
         <div className="lore-entries">
           <h2>{filter ? `${filter} Entries` : 'All Entries'}</h2>
 
-          {filteredEntries.length > 0 ? (
+          {filter === 'History' ? (
+            <HistoryTimeline loreEntries={loreEntries} />
+          ) : filteredEntries.length > 0 ? (
             filteredEntries.map(entry => (
               <div key={entry.id} className="lore-entry">
                 <div className="entry-header">
