@@ -220,6 +220,7 @@
 
 .spell-header-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
@@ -883,4 +884,34 @@
 
 .wand-overcharged-label:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  /* Scrollable single-line tab bar instead of wrapping rows */
+  .view-mode-toggle {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 0.5rem;
+    padding-bottom: 4px; /* keep scrollbar from clipping */
+  }
+
+  .view-mode-btn {
+    flex: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  /* Larger slot bubbles for easier tapping */
+  .slot-bubble {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Larger wand overcharge tap target */
+  .wand-overcharge-btn {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+  }
 }

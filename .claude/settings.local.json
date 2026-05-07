@@ -30,7 +30,10 @@
       "Bash(node -e ' *)",
       "WebFetch(domain:2e.aonprd.com)",
       "WebSearch",
-      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\components\\\\spells\\\\\" -File)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\components\\\\spells\\\\\" -File)",
+      "Bash(findstr \"\\\\.css\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\data\")",
+      "Bash(Select-Object Name)"
     ]
   }
 }

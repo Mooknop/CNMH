@@ -113,6 +113,16 @@
   gap: 1rem;
 }
 
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.75rem 1rem;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Shared utility: modal backdrop */
 .modal-overlay {
   position: fixed;
