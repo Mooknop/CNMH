@@ -8,17 +8,26 @@ const Lore = () => {
   const [loreEntries] = useState(defaultLoreEntries);
   const [filter, setFilter] = useState('');
   const [categories, setCategories] = useState([]);
+  const [randomEntry, setRandomEntry] = useState(null);
+
+  const getRandomEntry = () => {
+    const nonHistoryEntries = loreEntries.filter(entry => entry.category !== 'History');
+    if (nonHistoryEntries.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * nonHistoryEntries.length);
+    return nonHistoryEntries[randomIndex];
+  };
 
   useEffect(() => {
     const uniqueCategories = [...new Set(loreEntries.map(entry => entry.category))];
     setCategories(uniqueCategories);
+    setRandomEntry(getRandomEntry());
   }, [loreEntries]);
 
   const filteredEntries = filter
     ? filter === 'History'
       ? [] // History entries are handled by HistoryTimeline component
       : loreEntries.filter(entry => entry.category === filter)
-    : loreEntries.filter(entry => entry.category !== 'History'); // Exclude History from "All" view
+    : randomEntry ? [randomEntry] : [];
 
   return (
     <div className="lore-page">
@@ -47,7 +56,18 @@ const Lore = () => {
         </div>
 
         <div className="lore-entries">
-          <h2>{filter ? `${filter} Entries` : 'All Entries'}</h2>
+          <div className="entries-header">
+            <h2>{filter ? `${filter} Entries` : 'Random Entry'}</h2>
+            {!filter && (
+              <button 
+                className="random-button" 
+                onClick={() => setRandomEntry(getRandomEntry())}
+                title="Load another random entry"
+              >
+                🎲 New Random
+              </button>
+            )}
+          </div>
 
           {filter === 'History' ? (
             <HistoryTimeline loreEntries={loreEntries} />
