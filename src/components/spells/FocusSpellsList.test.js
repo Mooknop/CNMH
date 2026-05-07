@@ -43,6 +43,8 @@ const baseCharacter = {
 };
 
 describe('FocusSpellsList', () => {
+  beforeEach(() => localStorage.clear());
+
   it('renders empty state when no focus spells', () => {
     render(<FocusSpellsList character={{ id: '1', level: 1 }} characterColor="#333" />);
     expect(screen.getByText(/doesn't have any focus spells/i)).toBeInTheDocument();
