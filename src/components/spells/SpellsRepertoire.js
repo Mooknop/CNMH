@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
+import useLocalStorage from '../../hooks/useLocalStorage';
 
 const SpellNameChip = ({ spell, character }) => {
   const isSignature = !!spell.signature;
@@ -39,8 +40,10 @@ const SpellsRepertoire = ({
   defenseFilter,
   character,
 }) => {
-  const [slotsSpent, setSlotsSpent] = useState(() =>
-    Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0]))
+  const characterKey = character?.name || 'unknown';
+  const [slotsSpent, setSlotsSpent] = useLocalStorage(
+    `cnmh_slots_${characterKey}`,
+    () => Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0]))
   );
 
   const handleBubbleClick = (rank, i) => {

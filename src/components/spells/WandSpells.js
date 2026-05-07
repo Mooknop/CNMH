@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
+import useLocalStorage from '../../hooks/useLocalStorage';
 
 const SpellNameChip = ({ spell, character }) => {
   const isSignature = !!spell.signature;
@@ -56,8 +57,10 @@ const wandKey = (spell) => spell.wandName || spell.id;
 
 // State cycle per wand: 'available' → 'used' → 'overcharged' → 'available'
 const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, character }) => {
-  const [wandStates, setWandStates] = useState(() =>
-    Object.fromEntries(spells.map(s => [wandKey(s), 'available']))
+  const characterKey = character?.name || 'unknown';
+  const [wandStates, setWandStates] = useLocalStorage(
+    `cnmh_wands_${characterKey}`,
+    () => Object.fromEntries(spells.map(s => [wandKey(s), 'available']))
   );
 
   const handleSlotClick = (key) => {
