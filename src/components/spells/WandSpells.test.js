@@ -25,7 +25,7 @@ jest.mock('../../utils/SpellUtils', () => ({
 
 const baseSpells = [
   { id: 'spell-1', name: 'Dizzying Colors', level: 1, defense: 'Will', wandName: 'Wand of Dizzying Colors' },
-  { id: 'spell-1', name: 'Fireball', level: 3, defense: 'Reflex', wandName: 'Wand of Fireball' },
+  { id: 'spell-2', name: 'Fireball', level: 3, defense: 'Reflex', wandName: 'Wand of Fireball' },
 ];
 
 const baseProps = {
@@ -38,6 +38,8 @@ const baseProps = {
 };
 
 describe('WandSpells', () => {
+  beforeEach(() => localStorage.clear());
+
   it('renders WandInfoBox with Using Wands heading', () => {
     render(<WandSpells {...baseProps} />);
     expect(screen.getByText('Using Wands')).toBeInTheDocument();

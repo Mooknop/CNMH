@@ -46,6 +46,8 @@ const baseProps = {
 };
 
 describe('StaffSpells', () => {
+  beforeEach(() => localStorage.clear());
+
   it('renders StaffInfoBox with Staff Rules heading', () => {
     render(<StaffSpells {...baseProps} />);
     expect(screen.getByText('Staff Rules')).toBeInTheDocument();

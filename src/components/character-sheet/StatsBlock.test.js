@@ -64,6 +64,7 @@ jest.mock('../character-sheet/EnhancedSkillsList', () => {
 
 describe('StatsBlock', () => {
   beforeEach(() => {
+    localStorage.clear();
     mockUseCharacter.mockImplementation((character) => character ? defaultCharData : null);
   });
 
