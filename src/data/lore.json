@@ -597,7 +597,10 @@
         "rusthenge",
         "gorum",
         "runelord-belimarius",
-        "meitremar"
+        "meitremar",
+        "vanda",
+        "dis",
+        "dispater"
       ],
       "tags": [
         "iron harbor",
@@ -687,7 +690,8 @@
         "vlorus",
         "runelord-belimarius",
         "kindred-coast",
-        "ferrumnestra"
+        "ferrumnestra",
+        "dispater"
       ],
       "tags": [
         "meitremar",
@@ -709,7 +713,8 @@
         "ferrumnestra",
         "meitremar",
         "rusthenge",
-        "kindred-coast"
+        "kindred-coast",
+        "dispater"
       ],
       "tags": [
         "vlorus",
@@ -823,7 +828,8 @@
         "korvosa",
         "varisia",
         "magnimar",
-        "asmodeus"
+        "asmodeus",
+        "hell"
       ],
       "tags": [
         "cheliax",
@@ -843,7 +849,9 @@
       "content": "Asmodeus is the most powerful of the nine archdevils that inhabit Hell, and the only one of Hell's rulers to claim full divinity. He is credited with penning the Contract of Creation, within which his followers believe is hidden the means for their patron's eventual rise to supremacy over all other gods.\n\nOther gods find Asmodeus the easiest of the evil deities to deal with — they recognize his aid is not to be sought lightly, but he operates within predictable frameworks of law and contract. He is allied with Abadar due to their shared appreciation for order and lawful societies. He has an ongoing feud with Irori, who dislikes him for undermining others' hard work. He holds a great disdain for Grandmother Spider, who stole his keys and outwitted his retribution.\n\nAsmodeus serves as the patron deity of Cheliax, whose ruling houses bound themselves to infernal power after the chaos following Aroden's death.",
       "related": [
         "cheliax",
-        "the-scarnettis"
+        "the-scarnettis",
+        "hell",
+        "dispater"
       ],
       "tags": [
         "asmodeus",
@@ -923,7 +931,8 @@
       "content": "Gorum is the god of battle, strength, and valor — known to his faithful as Our Lord in Iron. He is a deity of pure martial virtue, caring not for law or chaos, good or evil, only for the glory found in worthy combat. His followers believe that the greatest honor a warrior can achieve is to die in battle, and they seek out worthy conflicts with fervor.\n\nGorum has a herald known as the First Blade. His followers in the Iron Archipelago's Iron Harbor have made the fortress-church of Stonehome the center of their devotion — though that institution has recently been compromised by the cult of Xar-Azmak.\n\nGorum is viewed as disinterested in inventors, even of weapons, and has come into conflict with Urgathoa, who considers death by disease insufficiently honorable for warriors.",
       "related": [
         "iron-harbor",
-        "osprey-cove"
+        "osprey-cove",
+        "vanda"
       ],
       "tags": [
         "gorum",
