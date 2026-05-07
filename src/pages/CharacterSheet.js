@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
-import FeatsList from '../components/character-sheet/FeatsList';
 import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/actions/ActionsList';
+import ExplorationList from '../components/actions/ExplorationList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
@@ -17,7 +17,7 @@ const CharacterSheet = () => {
   const navigate = useNavigate();
   const { getCharacter, setActiveCharacter, activeCharacterColor } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
-  const [activeTab, setActiveTab] = useState('actions');
+  const [activeTab, setActiveTab] = useState('encounter');
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -58,18 +58,18 @@ const CharacterSheet = () => {
   // Function to render the active tab content
   const renderTabContent = () => {
     switch(activeTab) {
-      case 'actions':
+      case 'encounter':
         return <ActionsList character={character} characterColor={characterColor} />;
-      case 'feats':
-        return <FeatsList character={character} characterColor={characterColor} />;
+      case 'exploration':
+        return <ExplorationList character={character} characterColor={characterColor} />;
       case 'spells':
         return <SpellsList character={character} characterColor={characterColor} />;
       case 'inventory':
         return (
-          <InventoryTab 
-            character={character} 
-            characterColor={characterColor} 
-            onItemClick={handleItemClick} 
+          <InventoryTab
+            character={character}
+            characterColor={characterColor}
+            onItemClick={handleItemClick}
           />
         );
       default:
@@ -137,22 +137,22 @@ const CharacterSheet = () => {
         
         <div className="character-tabs">
           <div className="tabs-header">
-            <button 
-              className={`tab-button ${activeTab === 'actions' ? 'active' : ''}`}
-              onClick={() => setActiveTab('actions')}
-              style={{ backgroundColor: activeTab === 'actions' ? characterColor : '' }}
+            <button
+              className={`tab-button ${activeTab === 'encounter' ? 'active' : ''}`}
+              onClick={() => setActiveTab('encounter')}
+              style={{ backgroundColor: activeTab === 'encounter' ? characterColor : '' }}
             >
-              Actions
+              Encounter
             </button>
-            
-            <button 
-              className={`tab-button ${activeTab === 'feats' ? 'active' : ''}`}
-              onClick={() => setActiveTab('feats')}
-              style={{ backgroundColor: activeTab === 'feats' ? characterColor : '' }}
+
+            <button
+              className={`tab-button ${activeTab === 'exploration' ? 'active' : ''}`}
+              onClick={() => setActiveTab('exploration')}
+              style={{ backgroundColor: activeTab === 'exploration' ? characterColor : '' }}
             >
-              Feats
+              Exploration
             </button>
-            
+
             {/* Combined spellcasting tab - only shown if character has spellcasting OR focus spells */}
             {(hasSpellcasting || hasFocusSpells) && (
               <button 

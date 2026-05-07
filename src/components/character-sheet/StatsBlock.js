@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './StatsBlock.css';
 import EnhancedSkillsList from '../character-sheet/EnhancedSkillsList';
+import FeatsList from '../character-sheet/FeatsList';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
@@ -345,6 +346,10 @@ const StatsBlock = ({ character, characterColor }) => {
             </div>
           </div>
         );
+      case 'feats':
+        return (
+          <FeatsList character={character} characterColor={themeColor} />
+        );
       case 'skills':
         return (
           <EnhancedSkillsList
@@ -434,6 +439,13 @@ const StatsBlock = ({ character, characterColor }) => {
           style={{ backgroundColor: activeTab === 'proficiencies' ? themeColor : '' }}
         >
           Proficiencies
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'feats' ? 'active' : ''}`}
+          onClick={() => setActiveTab('feats')}
+          style={{ backgroundColor: activeTab === 'feats' ? themeColor : '' }}
+        >
+          Feats
         </button>
         <button
           className={`tab-button ${activeTab === 'skills' ? 'active' : ''}`}

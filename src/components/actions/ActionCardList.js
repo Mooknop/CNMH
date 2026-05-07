@@ -54,10 +54,25 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage 
     <div className="cards-grid">
       {items.map((item, index) => {
         const actionText = getActionText(item);
+        const highlightColor = '#d4a017';
+        const cardColor = item.highlight ? highlightColor : themeColor;
 
         const header = (
           <>
             <h3 style={{ color: themeColor }}>{item.name}</h3>
+            {item.highlight && (
+              <span style={{
+                color: highlightColor,
+                fontSize: '0.7rem',
+                fontWeight: '700',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+                marginLeft: '0.4rem',
+              }}>
+                ✦ {item.highlight}
+              </span>
+            )}
             <div className={`${type}-icon`}>
               <ActionIcon actionText={item.actions || actionText} color={themeColor} />
             </div>
@@ -120,8 +135,8 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage 
             key={`${type}-${index}`}
             className={`${type}-card`}
             header={header}
-            themeColor={themeColor}
-            style={{ borderLeft: `4px solid ${themeColor}` }}
+            themeColor={cardColor}
+            style={{ borderLeft: `4px solid ${cardColor}` }}
           >
             {content}
           </CollapsibleCard>
