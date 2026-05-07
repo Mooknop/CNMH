@@ -845,3 +845,42 @@
   padding-bottom: 0.75rem;
   border-bottom: 2px solid #eee;
 }
+
+.wand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.wand-overcharge-btn {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.wand-overcharge-btn:hover {
+  opacity: 1;
+}
+
+.wand-overcharged-slot {
+  border-color: #c0392b !important;
+  background-color: transparent !important;
+  opacity: 0.5;
+}
+
+.wand-overcharged-label {
+  font-size: 0.72rem;
+  color: #c0392b;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.wand-overcharged-label:hover {
+  text-decoration: underline;
+}

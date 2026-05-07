@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import WandSpells from './WandSpells';
 
 jest.mock('../../utils/SpellUtils', () => ({
@@ -24,8 +24,8 @@ jest.mock('../../utils/SpellUtils', () => ({
 }));
 
 const baseSpells = [
-  { id: 'w1', name: 'Dizzying Colors', level: 1, defense: 'Will', wandName: 'Wand of Dizzying Colors' },
-  { id: 'w2', name: 'Fireball', level: 3, defense: 'Reflex', wandName: 'Wand of Fireball' },
+  { id: 'spell-1', name: 'Dizzying Colors', level: 1, defense: 'Will', wandName: 'Wand of Dizzying Colors' },
+  { id: 'spell-1', name: 'Fireball', level: 3, defense: 'Reflex', wandName: 'Wand of Fireball' },
 ];
 
 const baseProps = {
@@ -47,6 +47,57 @@ describe('WandSpells', () => {
     render(<WandSpells {...baseProps} />);
     expect(screen.getByText('Dizzying Colors')).toBeInTheDocument();
     expect(screen.getByText('Fireball')).toBeInTheDocument();
+  });
+
+  it('renders one slot bubble per wand, all initially available', () => {
+    render(<WandSpells {...baseProps} />);
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+    expect(screen.queryAllByLabelText('Spent slot')).toHaveLength(0);
+  });
+
+  it('clicking an available bubble marks the wand as used', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
+  });
+
+  it('clicking a spent bubble resets the wand to available', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getByLabelText('Spent slot'));
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+  });
+
+  it('shows Overcharge button only for used wands', () => {
+    render(<WandSpells {...baseProps} />);
+    expect(screen.queryByRole('button', { name: /overcharge/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    expect(screen.getByRole('button', { name: /overcharge/i })).toBeInTheDocument();
+  });
+
+  it('clicking Overcharge marks the wand as overcharged', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /overcharge/i }));
+    expect(screen.getByText(/Overcharged/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Overcharge' })).not.toBeInTheDocument();
+  });
+
+  it('clicking the overcharged label resets the wand to available', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /overcharge/i }));
+    fireEvent.click(screen.getByText(/Overcharged/));
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+    expect(screen.queryByText(/Overcharged/)).not.toBeInTheDocument();
+  });
+
+  it('each wand tracks state independently', () => {
+    render(<WandSpells {...baseProps} />);
+    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    expect(screen.getAllByLabelText('Available slot')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
   });
 
   it('groups spells into rank sections', () => {
@@ -81,10 +132,5 @@ describe('WandSpells', () => {
     render(<WandSpells {...baseProps} />);
     const link = screen.getByRole('link', { name: 'Dizzying Colors' });
     expect(link).toHaveAttribute('href', expect.stringContaining('aonprd.com'));
-  });
-
-  it('renders no interactive bubbles', () => {
-    render(<WandSpells {...baseProps} />);
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
   });
 });

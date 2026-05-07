@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
 
 const SpellNameChip = ({ spell, character }) => {
@@ -52,7 +52,29 @@ const WandInfoBox = ({ themeColor }) => (
   </div>
 );
 
+const wandKey = (spell) => spell.wandName || spell.id;
+
+// State cycle per wand: 'available' → 'used' → 'overcharged' → 'available'
 const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, character }) => {
+  const [wandStates, setWandStates] = useState(() =>
+    Object.fromEntries(spells.map(s => [wandKey(s), 'available']))
+  );
+
+  const handleSlotClick = (key) => {
+    setWandStates(prev => ({
+      ...prev,
+      [key]: prev[key] === 'available' ? 'used' : 'available',
+    }));
+  };
+
+  const handleOvercharge = (key) => {
+    setWandStates(prev => ({ ...prev, [key]: 'overcharged' }));
+  };
+
+  const handleReset = (key) => {
+    setWandStates(prev => ({ ...prev, [key]: 'available' }));
+  };
+
   const filtered = filterSpellsByDefense(spells, defenseFilter);
   const spellsByRank = organizeSpellsByRank(filtered);
   const ranksToShow = getSortedRankList(
@@ -72,15 +94,51 @@ const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, charac
               {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
             </span>
           </div>
-          <div className="spell-chips-row">
-            {spellsByRank[rank].map(spell => (
-              <SpellNameChip
-                key={`${spell.id}-wand`}
-                spell={spell}
-                character={character}
-              />
-            ))}
-          </div>
+          {spellsByRank[rank].map(spell => {
+            const key = wandKey(spell);
+            const state = wandStates[key] ?? 'available';
+            return (
+              <div className="wand-row" key={key}>
+                <SpellNameChip spell={spell} character={character} />
+                {state !== 'overcharged' ? (
+                  <button
+                    className={`slot-bubble ${state === 'available' ? 'slot-filled' : 'slot-empty'}`}
+                    style={state === 'available'
+                      ? { backgroundColor: themeColor, borderColor: themeColor }
+                      : { borderColor: themeColor }}
+                    onClick={() => handleSlotClick(key)}
+                    aria-label={state === 'available' ? 'Available slot' : 'Spent slot'}
+                  />
+                ) : (
+                  <button
+                    className="slot-bubble wand-overcharged-slot"
+                    onClick={() => handleReset(key)}
+                    aria-label="Reset wand"
+                  />
+                )}
+                {state === 'used' && (
+                  <button
+                    className="wand-overcharge-btn"
+                    style={{ color: themeColor, borderColor: themeColor }}
+                    onClick={() => handleOvercharge(key)}
+                  >
+                    Overcharge
+                  </button>
+                )}
+                {state === 'overcharged' && (
+                  <span
+                    className="wand-overcharged-label"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleReset(key)}
+                    onKeyDown={e => e.key === 'Enter' && handleReset(key)}
+                  >
+                    Overcharged — click to reset
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
 
