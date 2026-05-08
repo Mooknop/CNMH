@@ -4,6 +4,7 @@ import {
   getDateLabel,
   getRelatedEntries,
 } from '../../utils/timelineUtils';
+import eraDescriptions from '../../data/lore/eras.json';
 import './HistoryTimeline.css';
 
 const HistoryTimeline = ({ loreEntries }) => {
@@ -19,6 +20,26 @@ const HistoryTimeline = ({ loreEntries }) => {
     // Scroll to the related entry or filter for it
     setExpandedEntryId(relatedId);
     // Could also update Lore view to show that specific entry
+  };
+
+  const renderEraDescription = (period) => {
+    const eraData = eraDescriptions[period.periodKey];
+    if (!eraData) return null;
+    return (
+      <div className="period-description">
+        <p className="period-description-text">{eraData.description}</p>
+        {eraData.subEras && eraData.subEras.length > 0 && (
+          <div className="era-sub-list">
+            {eraData.subEras.map((sub) => (
+              <div key={sub.id} className="era-sub-item">
+                <div className="era-sub-title">{sub.title}</div>
+                <p className="era-sub-description">{sub.description}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderEraMarker = (era) => (
@@ -81,6 +102,9 @@ const HistoryTimeline = ({ loreEntries }) => {
             <div className="period-header">
               <h3 className="period-label">{period.periodLabel}</h3>
             </div>
+
+            {/* Era description */}
+            {renderEraDescription(period)}
 
             {/* Timeline content for this period */}
             <div className="period-content">

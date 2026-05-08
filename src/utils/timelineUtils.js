@@ -8,22 +8,40 @@
  */
 const AGE_PERIODS = [
   {
-    key: 'ancient-age',
-    label: 'Ancient Age',
-    minYear: -Infinity,
-    maxYear: 0,
-  },
-  {
-    key: 'early-ar',
-    label: 'Early Absalom Reckoning',
-    minYear: 0,
-    maxYear: 4650,
-  },
-  {
-    key: 'recent-era',
-    label: 'Recent Era',
-    minYear: 4650,
+    key: 'age-of-lost-omens',
+    label: 'Age of Lost Omens',
+    minYear: 4606,
     maxYear: Infinity,
+  },
+  {
+    key: 'age-of-enthronement',
+    label: 'Age of Enthronement',
+    minYear: 1,
+    maxYear: 4606,
+  },
+  {
+    key: 'age-of-destiny',
+    label: 'Age of Destiny',
+    minYear: -3470,
+    maxYear: 1,
+  },
+  {
+    key: 'age-of-anguish',
+    label: 'Age of Anguish',
+    minYear: -4294,
+    maxYear: -3470,
+  },
+  {
+    key: 'age-of-darkness',
+    label: 'Age of Darkness',
+    minYear: -5293,
+    maxYear: -4294,
+  },
+  {
+    key: 'age-before-ages',
+    label: 'Age Before Ages',
+    minYear: -Infinity,
+    maxYear: -5293,
   },
 ];
 
