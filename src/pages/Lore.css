@@ -12,8 +12,19 @@
   
   .lore-container {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 220px 1fr;
     gap: 2rem;
+    align-items: start;
+  }
+
+  .lore-container.panel-open {
+    grid-template-columns: 220px 1fr 320px;
+  }
+
+  @media (max-width: 900px) {
+    .lore-container.panel-open {
+      grid-template-columns: 220px 1fr;
+    }
   }
   
   .lore-sidebar {
@@ -118,6 +129,9 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     margin-bottom: 1.5rem;
     overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: box-shadow 0.15s, border-color 0.15s;
   }
   
   .entry-header {
@@ -191,4 +205,95 @@
   .read-more-link:hover {
     color: var(--color-primary-hover);
     text-decoration: underline;
+  }
+
+  .lore-entry.focused {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.15);
+  }
+
+  .entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0.5rem 0 0.6rem;
+  }
+
+  .entry-tag {
+    background-color: #f0f0f0;
+    color: #666;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .search-bar input {
+    flex: 1;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    background: white;
+  }
+
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .search-clear-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: var(--radius-md);
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    color: #666;
+    font-size: 0.85rem;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .search-clear-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .subgroup-header {
+    font-weight: 600;
+    color: var(--color-primary);
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-transform: capitalize;
+  }
+
+  .subgroup-count {
+    font-size: 0.82rem;
+    color: #999;
+    font-weight: 400;
+  }
+
+  .subgroup-card {
+    margin-bottom: 1rem;
+  }
+
+  .subgroup-card .lore-entry {
+    margin-bottom: 1rem;
+  }
+
+  .subgroup-card .lore-entry:last-child {
+    margin-bottom: 0;
+  }
+
+  .empty-state {
+    color: #999;
+    font-style: italic;
+    padding: 2rem 0;
+    text-align: center;
   }

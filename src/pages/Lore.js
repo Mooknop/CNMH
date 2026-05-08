@@ -1,45 +1,180 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { loreEntries as defaultLoreEntries } from '../data';
+import { loreEntries as allLoreEntries } from '../data';
 import HistoryTimeline from '../components/shared/HistoryTimeline';
+import CollapsibleCard from '../components/shared/CollapsibleCard';
+import LoreDiscoveryPanel from '../components/shared/LoreDiscoveryPanel';
+import {
+  getAllCategories,
+  getEntriesByCategory,
+  groupEntriesByCategory,
+  buildBacklinkMap,
+  getConnectionData,
+  filterBySearchTerm,
+  getSubgroupsForCategory,
+} from '../utils/loreUtils';
 import './Lore.css';
 
 const Lore = () => {
-  const [loreEntries] = useState(defaultLoreEntries);
   const [filter, setFilter] = useState('');
-  const [categories, setCategories] = useState([]);
-  const [randomEntry, setRandomEntry] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [focusedEntryId, setFocusedEntryId] = useState(null);
 
-  const getRandomEntry = () => {
-    const nonHistoryEntries = loreEntries.filter(entry => entry.category !== 'History');
-    if (nonHistoryEntries.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * nonHistoryEntries.length);
-    return nonHistoryEntries[randomIndex];
+  const categories = useMemo(() => getAllCategories(allLoreEntries), []);
+  const backlinkMap = useMemo(() => buildBacklinkMap(allLoreEntries), []);
+
+  const baseEntries = useMemo(
+    () => filter ? getEntriesByCategory(allLoreEntries, filter) : allLoreEntries,
+    [filter]
+  );
+
+  const visibleEntries = useMemo(
+    () => filterBySearchTerm(baseEntries, searchTerm),
+    [baseEntries, searchTerm]
+  );
+
+  const subgroups = useMemo(
+    () => (filter && filter !== 'History') ? getSubgroupsForCategory(visibleEntries) : [],
+    [filter, visibleEntries]
+  );
+
+  const allGrouped = useMemo(
+    () => !filter ? groupEntriesByCategory(allLoreEntries) : null,
+    [filter]
+  );
+
+  const focusedEntry = useMemo(
+    () => focusedEntryId ? allLoreEntries.find(e => e.id === focusedEntryId) : null,
+    [focusedEntryId]
+  );
+
+  const connectionData = useMemo(
+    () => focusedEntry ? getConnectionData(focusedEntry, allLoreEntries, backlinkMap) : null,
+    [focusedEntry, backlinkMap]
+  );
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setSearchTerm('');
+    setFocusedEntryId(null);
   };
 
-  useEffect(() => {
-    const uniqueCategories = [...new Set(loreEntries.map(entry => entry.category))];
-    setCategories(uniqueCategories);
-    setRandomEntry(getRandomEntry());
-  }, [loreEntries]);
+  const renderEntryCard = (entry) => {
+    const isFocused = focusedEntryId === entry.id;
+    return (
+      <div
+        key={entry.id}
+        className={`lore-entry ${isFocused ? 'focused' : ''}`}
+        onClick={() => setFocusedEntryId(isFocused ? null : entry.id)}
+      >
+        <div className="entry-header">
+          <Link
+            to={`/lore/${entry.id}`}
+            className="entry-title-link"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3>{entry.title}</h3>
+          </Link>
+          <span className="entry-category">{entry.category}</span>
+        </div>
+        <div className="entry-summary">
+          {(entry.summary || entry.content).split('\n').map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+          {(entry.tags || []).length > 0 && (
+            <div className="entry-tags">
+              {entry.tags.map(tag => (
+                <span key={tag} className="entry-tag">{tag}</span>
+              ))}
+            </div>
+          )}
+          <Link
+            to={`/lore/${entry.id}`}
+            className="read-more-link"
+            onClick={e => e.stopPropagation()}
+          >
+            Read More →
+          </Link>
+        </div>
+      </div>
+    );
+  };
 
-  const filteredEntries = filter
-    ? filter === 'History'
-      ? [] // History entries are handled by HistoryTimeline component
-      : loreEntries.filter(entry => entry.category === filter)
-    : randomEntry ? [randomEntry] : [];
+  const renderSubgroupedEntries = () => {
+    if (subgroups.length === 0) {
+      return visibleEntries.map(entry => renderEntryCard(entry));
+    }
+    const coveredIds = new Set(subgroups.flatMap(g => g.entries.map(e => e.id)));
+    const ungrouped = visibleEntries.filter(e => !coveredIds.has(e.id));
+    return (
+      <>
+        {subgroups.map((group, i) => (
+          <CollapsibleCard
+            key={group.tag}
+            initialExpanded={i < 2}
+            header={
+              <span className="subgroup-header">
+                {group.tag}
+                <span className="subgroup-count">({group.entries.length})</span>
+              </span>
+            }
+            themeColor="var(--color-primary)"
+            className="subgroup-card"
+          >
+            {group.entries.map(entry => renderEntryCard(entry))}
+          </CollapsibleCard>
+        ))}
+        {ungrouped.length > 0 && (
+          <CollapsibleCard
+            key="__other"
+            initialExpanded={subgroups.length < 2}
+            header={
+              <span className="subgroup-header">
+                Other
+                <span className="subgroup-count">({ungrouped.length})</span>
+              </span>
+            }
+            themeColor="var(--color-primary)"
+            className="subgroup-card"
+          >
+            {ungrouped.map(entry => renderEntryCard(entry))}
+          </CollapsibleCard>
+        )}
+      </>
+    );
+  };
+
+  const renderAllGrouped = () => {
+    if (!allGrouped) return null;
+    return allGrouped.map(({ category, entries }) => (
+      <CollapsibleCard
+        key={category}
+        initialExpanded
+        header={
+          <span className="subgroup-header">
+            {category}
+            <span className="subgroup-count">({entries.length})</span>
+          </span>
+        }
+        themeColor="var(--color-primary)"
+        className="subgroup-card"
+      >
+        {entries.map(entry => renderEntryCard(entry))}
+      </CollapsibleCard>
+    ));
+  };
 
   return (
     <div className="lore-page">
-      <h1>Lore Library</h1>
+      <h1>Campaign Lore</h1>
 
-      <div className="lore-container">
+      <div className={`lore-container ${focusedEntryId ? 'panel-open' : ''}`}>
         <div className="lore-sidebar">
           <div className="category-filters">
             <h3>Categories</h3>
             <button
               className={`category-btn ${!filter ? 'active' : ''}`}
-              onClick={() => setFilter('')}
+              onClick={() => handleFilterChange('')}
             >
               All
             </button>
@@ -47,7 +182,7 @@ const Lore = () => {
               <button
                 key={category}
                 className={`category-btn ${filter === category ? 'active' : ''}`}
-                onClick={() => setFilter(category)}
+                onClick={() => handleFilterChange(category)}
               >
                 {category}
               </button>
@@ -57,43 +192,48 @@ const Lore = () => {
 
         <div className="lore-entries">
           <div className="entries-header">
-            <h2>{filter ? `${filter} Entries` : 'Random Entry'}</h2>
-            {!filter && (
-              <button 
-                className="random-button" 
-                onClick={() => setRandomEntry(getRandomEntry())}
-                title="Load another random entry"
-              >
-                🎲 New Random
-              </button>
-            )}
+            <h2>{filter ? `${filter} Entries` : 'All Lore Entries'}</h2>
           </div>
 
+          {filter !== 'History' && (
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search entries..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button className="search-clear-btn" onClick={() => setSearchTerm('')}>
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+
           {filter === 'History' ? (
-            <HistoryTimeline loreEntries={loreEntries} />
-          ) : filteredEntries.length > 0 ? (
-            filteredEntries.map(entry => (
-              <div key={entry.id} className="lore-entry">
-                <div className="entry-header">
-                  <Link to={`/lore/${entry.id}`} className="entry-title-link">
-                    <h3>{entry.title}</h3>
-                  </Link>
-                  <span className="entry-category">{entry.category}</span>
-                </div>
-                <div className="entry-summary">
-                  <p>{entry.summary || entry.content}</p>
-                  <Link to={`/lore/${entry.id}`} className="read-more-link">
-                    Read More →
-                  </Link>
-                </div>
-              </div>
-            ))
+            <HistoryTimeline loreEntries={allLoreEntries} />
+          ) : filter ? (
+            renderSubgroupedEntries()
           ) : (
+            renderAllGrouped()
+          )}
+
+          {filter !== 'History' && visibleEntries.length === 0 && (
             <div className="empty-state">
-              <p>No lore entries found for this category.</p>
+              <p>No lore entries found.</p>
             </div>
           )}
         </div>
+
+        {focusedEntryId && (
+          <LoreDiscoveryPanel
+            entry={focusedEntry}
+            connectionData={connectionData}
+            onEntrySelect={setFocusedEntryId}
+            onClose={() => setFocusedEntryId(null)}
+          />
+        )}
       </div>
     </div>
   );
