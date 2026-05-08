@@ -19,6 +19,7 @@ const Lore = () => {
   const [filter, setFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [focusedEntryId, setFocusedEntryId] = useState(null);
+  const [compressed, setCompressed] = useState(false);
 
   const categories = useMemo(() => getAllCategories(allLoreEntries), []);
   const backlinkMap = useMemo(() => buildBacklinkMap(allLoreEntries), []);
@@ -100,9 +101,29 @@ const Lore = () => {
     );
   };
 
+  const renderCompressedEntry = (entry) => {
+    const isFocused = focusedEntryId === entry.id;
+    return (
+      <div
+        key={entry.id}
+        className={`lore-entry-row ${isFocused ? 'focused' : ''}`}
+        onClick={() => setFocusedEntryId(isFocused ? null : entry.id)}
+      >
+        <span className="entry-row-title">{entry.title}</span>
+        {!filter && <span className="entry-category">{entry.category}</span>}
+      </div>
+    );
+  };
+
+  const renderEntry = compressed ? renderCompressedEntry : renderEntryCard;
+
   const renderSubgroupedEntries = () => {
     if (subgroups.length === 0) {
-      return visibleEntries.map(entry => renderEntryCard(entry));
+      return (
+        <div className={compressed ? 'lore-entry-list' : undefined}>
+          {visibleEntries.map(entry => renderEntry(entry))}
+        </div>
+      );
     }
     const coveredIds = new Set(subgroups.flatMap(g => g.entries.map(e => e.id)));
     const ungrouped = visibleEntries.filter(e => !coveredIds.has(e.id));
@@ -121,7 +142,9 @@ const Lore = () => {
             themeColor="var(--color-primary)"
             className="subgroup-card"
           >
-            {group.entries.map(entry => renderEntryCard(entry))}
+            <div className={compressed ? 'lore-entry-list' : undefined}>
+              {group.entries.map(entry => renderEntry(entry))}
+            </div>
           </CollapsibleCard>
         ))}
         {ungrouped.length > 0 && (
@@ -137,7 +160,9 @@ const Lore = () => {
             themeColor="var(--color-primary)"
             className="subgroup-card"
           >
-            {ungrouped.map(entry => renderEntryCard(entry))}
+            <div className={compressed ? 'lore-entry-list' : undefined}>
+              {ungrouped.map(entry => renderEntry(entry))}
+            </div>
           </CollapsibleCard>
         )}
       </>
@@ -159,7 +184,9 @@ const Lore = () => {
         themeColor="var(--color-primary)"
         className="subgroup-card"
       >
-        {entries.map(entry => renderEntryCard(entry))}
+        <div className={compressed ? 'lore-entry-list' : undefined}>
+          {entries.map(entry => renderEntry(entry))}
+        </div>
       </CollapsibleCard>
     ));
   };
@@ -193,6 +220,24 @@ const Lore = () => {
         <div className="lore-entries">
           <div className="entries-header">
             <h2>{filter ? `${filter} Entries` : 'All Lore Entries'}</h2>
+            {filter !== 'History' && (
+              <div className="view-toggle">
+                <button
+                  className={`view-toggle-btn ${!compressed ? 'active' : ''}`}
+                  onClick={() => setCompressed(false)}
+                  title="Card view"
+                >
+                  ⊞
+                </button>
+                <button
+                  className={`view-toggle-btn ${compressed ? 'active' : ''}`}
+                  onClick={() => setCompressed(true)}
+                  title="Compact view"
+                >
+                  ☰
+                </button>
+              </div>
+            )}
           </div>
 
           {filter !== 'History' && (
