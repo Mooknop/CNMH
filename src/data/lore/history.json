@@ -1,0 +1,144 @@
+[
+  {
+    "id": "ancient-thassilon",
+    "title": "Ancient Thassilon",
+    "category": "History",
+    "dateArStart": -10000,
+    "summary": "A vast and terrible empire that once ruled much of northwestern Avistan, Thassilon was governed by seven all-powerful Runelords before being destroyed by the cataclysm of Earthfall.",
+    "content": "The ancient empire of Thassilon existed in the waning years of the Age of Legend, occupying parts of what are today Varisia, the Hold of Belkzen, and the Lands of the Linnorm Kings. While its power was great, struggles for control within the nation were near-constant. It was ruled by seven Runelords — archmages of terrifying power, each tied to one of the seven cardinal sins: Greed, Pride, Wrath, Envy, Lust, Sloth, and Gluttony. Each Runelord controlled a realm and a great city built to honor their sin.\n\nThe empire was finally destroyed by Earthfall — a cataclysmic event in which a rain of falling stars reshaped the face of Golarion — roughly ten thousand years ago. The Runelords, foreseeing the disaster, fled into magical stasis rather than face death, leaving their cities and populations to their fate.\n\nAll that now remains of Thassilon are mysterious ruins scattered throughout Varisia. The Varisians and Shoanti are both descended from the slaves who served the empire. In recent years, several Runelords have awakened from their long slumber, culminating in the return of New Thassilon.",
+    "related": [
+      "new-thassilon",
+      "runelord-sorshen",
+      "sandpoint",
+      "varisia",
+      "varisian-people",
+      "shoanti",
+      "old-light",
+      "brodert-quink"
+    ],
+    "tags": [
+      "thassilon",
+      "runelords",
+      "history",
+      "ancient empire",
+      "ruins",
+      "earthfall",
+      "era"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "new-thassilon",
+    "title": "New Thassilon",
+    "category": "History",
+    "dateArStart": 4720,
+    "summary": "The recently returned Thassilonian civilization, formed by time-displaced peoples, is now split between the rule of Runelord Belimarius and the surprising reformer Runelord Sorshen.",
+    "content": "New Thassilon is the returned civilization of Ancient Thassilonian peoples — survivors and time-displaced subjects of the old empire who have re-established a presence in Varisia. It is currently split between the rule of two Runelords: Runelord Belimarius (Runelord of Envy) and Runelord Sorshen (Runelord of Lust), who has taken a surprisingly different path from her former colleagues.\n\nThe return of New Thassilon has sparked renewed interest in Thassilonian history and ruins throughout Varisia. It has also created a new wave of worship for two long-lost gods: Lissala (goddess of runes, once the patron deity of Thassilon) and the Peacock Spirit (a mysterious god of success and prosperity).",
+    "related": [
+      "ancient-thassilon",
+      "runelord-sorshen",
+      "varisia",
+      "old-light",
+      "brodert-quink"
+    ],
+    "tags": [
+      "new thassilon",
+      "runelords",
+      "history",
+      "current events"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "late-unpleasantness",
+    "title": "The Late Unpleasantness",
+    "category": "History",
+    "dateArStart": 4702,
+    "summary": "A series of dark events in 4702 AR — murders by the serial killer 'Chopper' and the fire that destroyed Sandpoint's original chapel — that the townspeople prefer not to speak of.",
+    "content": "Referred to locally as 'the Late Unpleasantness,' a series of catastrophic events struck Sandpoint in the winter of 4702 AR. First, a string of gruesome murders was carried out by a killer known only as 'Chopper' — later revealed to be the woodcarver Jervis Stoot — who killed dozens of townspeople before being stopped during his last terrible night. The previous sheriff, Casp Avertin, was among Chopper's victims.\n\nShortly afterward, a great fire destroyed the original Sandpoint chapel and the surrounding buildings, killing Father Ezakien Tobyn and many others. Tobyn's acolyte, Abstalar Zantus, was elevated to replace him as high priest of the rebuilt Sandpoint Cathedral.\n\nChopper's Isle, where Stoot once lived, is said to be haunted to this day.",
+    "related": [
+      "sandpoint",
+      "abstalar-zantus",
+      "sandpoint-cathedral"
+    ],
+    "tags": [
+      "history",
+      "tragedy",
+      "chopper",
+      "sandpoint",
+      "late unpleasantness",
+      "4702"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "founding-families",
+    "title": "Sandpoint's Founding Families",
+    "category": "History",
+    "dateArStart": 4666,
+    "summary": "Four powerful families from Magnimar — the Deverins, Scarnettis, Kaijitsus, and Valdemars — founded Sandpoint in 4666 AR, and their descendants continue to shape the town's politics today.",
+    "content": "In 4666 AR, four powerful families from Magnimar consolidated their resources and sailed north to found Sandpoint. Each family brought a different industry: the Kaijitsus were glassmakers and jewelers, the Valdemars shipbuilders and carpenters, the Scarnettis loggers and millers, and the Deverins farmers and brewers.\n\nTheir founding was marred almost immediately. They arrived to find the land already inhabited by a large Varisian tribe. After a week of failed negotiations, Alamon Scarnetti organized a murderous raid on the Varisian camp, killing five people. The resulting crisis was resolved through negotiation: the Varisians received a sixty-year share of Sandpoint profits (later extended to 4726 AR) and the promise of a Desnan temple in the cathedral.\n\nToday, the Deverins and Scarnettis remain Sandpoint's most influential founding families. The Kaijitsus departed when Ameiko Kaijitsu ascended to become Empress of Minkai. The Valdemars have effectively withdrawn from town politics following financial setbacks and the death of their Sandpoint patriarch.",
+    "related": [
+      "sandpoint",
+      "the-scarnettis",
+      "the-deverins",
+      "the-kaijitsus",
+      "the-valdemars",
+      "ameiko-kaijitsu"
+    ],
+    "tags": [
+      "founding families",
+      "history",
+      "sandpoint",
+      "magnimar",
+      "4666"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "varisian-people",
+    "title": "The Varisian People",
+    "category": "History",
+    "dateArStart": -10000,
+    "summary": "A primarily nomadic human ethnic group descended from the slaves of Ancient Thassilon — fiercely loyal to family and tradition, and often unfairly stereotyped as thieves and rogues.",
+    "content": "Varisians are a primarily nomadic human ethnic group who favor the open road over permanent settlements. Their traveling caravans can be encountered throughout Golarion, but Varisians also settle in permanent communities. They are the descendants of the enslaved workers of Ancient Thassilon.\n\nDespite outward appearances of frivolity, the Varisian people are fiercely loyal to family and friends, and embrace a rich culture steeped in history and tradition. The unfair reputation of Varisians as scoundrels and rogues stems largely from non-Varisians' encounters with the criminal Sczarni gangs, which represent only a small fraction of the Varisian people.\n\nIn Sandpoint, the Varisian community has a complex relationship with the founding families, particularly the Scarnettis, due to the murderous raid on their ancestors at the town's founding. A sixty-year revenue-sharing pact and the inclusion of a Desnan shrine in the cathedral were the conditions for their cooperation, set to expire in 4726 AR.",
+    "related": [
+      "varisia",
+      "sandpoint",
+      "ancient-thassilon",
+      "shoanti",
+      "desna"
+    ],
+    "tags": [
+      "varisian",
+      "people",
+      "culture",
+      "nomadic",
+      "thassilon",
+      "era"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "shoanti",
+    "title": "The Shoanti",
+    "category": "History",
+    "dateArStart": -10000,
+    "summary": "A nomadic warrior people who inhabit the Storval Plateau and surrounding regions of Varisia — descendants of Thassilon's slaves who developed a very different culture from their Varisian cousins.",
+    "content": "The Shoanti are an often nomadic people who live in the Storval Plateau and Velashu Uplands of Varisia, as well as the Hold of Belkzen and the Lands of the Linnorm Kings. Like their Varisian cousins, these humans descended from the enslaved workers of the empire of Ancient Thassilon, but have since developed a unique and advanced culture of their own — centered on warrior traditions, tribal identity, and a deep connection to their ancestral lands.\n\nIn Sandpoint, the number of Shoanti residents has steadily increased over the years.",
+    "related": [
+      "varisia",
+      "ancient-thassilon",
+      "varisian-people"
+    ],
+    "tags": [
+      "shoanti",
+      "people",
+      "culture",
+      "warrior",
+      "varisia",
+      "era"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]

@@ -1,0 +1,834 @@
+[
+  {
+    "id": "abstalar-zantus",
+    "title": "Abstalar Zantus",
+    "category": "NPC",
+    "summary": "Sandpoint's high priest — a cleric of Desna who ministers to all faiths with steady, unhurried warmth.",
+    "content": "Abstalar Zantus inherited his position when fire killed his predecessor, and has held it with a grace that surprised those who expected ambition to follow tragedy. He is a man of genuine open faith.",
+    "related": [
+      "sandpoint-cathedral",
+      "sandpoint",
+      "desna"
+    ],
+    "tags": [
+      "abstalar zantus",
+      "cleric",
+      "desna",
+      "sandpoint",
+      "npc",
+      "priest"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "titus-scarnetti",
+    "title": "Titus Scarnetti",
+    "category": "NPC",
+    "summary": "Head of the Scarnetti family — a man who has rebuilt his fortune through means he'd prefer to keep quiet, and who hasn't forgiven Sandpoint for not being afraid of him.",
+    "content": "Titus is the last significant patriarch of the Scarnetti line, operating Sandpoint's lumber industry and nursing grievances against the mayor, the Mercantile League, and the town's general failure to accord him the deference he considers his birthright. He has outside sponsors whose interest he's been careful to serve.",
+    "related": [
+      "scarnetti-manor",
+      "sandpoint",
+      "the-scarnettis",
+      "scarnetti-consortium",
+      "sandpoint-town-council"
+    ],
+    "tags": [
+      "titus scarnetti",
+      "scarnetti",
+      "sandpoint",
+      "npc",
+      "lumber"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ameiko-kaijitsu",
+    "title": "Ameiko Kaijitsu",
+    "category": "NPC",
+    "summary": "The former proprietor of the Rusty Dragon who left Sandpoint behind to reclaim her family's imperial birthright — she is now the Empress of Minkai.",
+    "content": "Born Ameiko Kaijitsu, her true surname is Amatatsu — the last surviving rightful heir to the throne of Minkai. Before her ascension, she was best known in Sandpoint as the proprietor of the Rusty Dragon, the most popular inn and tavern in town, and as a former adventurer.\n\nIn 4707 AR, Ameiko lost both her father and half-brother during the goblin raids tied to the rise of Runelord Karzoug. In 4711 AR, she and a group of adventurers discovered her true heritage and embarked on a journey across the Crown of the World to Minkai, where she defeated the usurper Jade Regent and claimed the Jade Throne.\n\nAs of 4724 AR, Amatatsu Ameiko is Empress of Minkai. She still returns to Sandpoint on occasion for visits.",
+    "related": [
+      "sandpoint",
+      "the-kaijitsus",
+      "founding-families"
+    ],
+    "tags": [
+      "ameiko",
+      "rusty dragon",
+      "sandpoint",
+      "npc",
+      "minkai",
+      "empress"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "akoni",
+    "title": "Akoni",
+    "category": "NPC",
+    "summary": "A gentle male dryad who rules the fey court of Akoni's Grove in the Tickwood.",
+    "content": "Akoni is a male dryad who makes his home in the Tickwood near Sandpoint, presiding over Akoni's Grove as lord of its fey court. His court is composed mainly of sprites and grigs, and he has long maintained a peaceful relationship with Sandpoint's hunters and nature-minded residents.",
+    "related": [
+      "akonis-grove",
+      "tickwood",
+      "grandfather-grustmier",
+      "sandpoint-hinterlands",
+      "the-scarnettis"
+    ],
+    "tags": [
+      "akoni",
+      "dryad",
+      "fey",
+      "tickwood",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "grandfather-grustmier",
+    "title": "'Grandfather' Grustmier",
+    "category": "NPC",
+    "summary": "The deceptively courtly leader of a redcap troop that has recently settled in the Tickwood — patiently poisoning Akoni's bond tree while waiting for the dryad to 'grant permission' for their permanent residence.",
+    "content": "'Grandfather' Grustmier is the self-styled patriarch and leader of a troop of redcaps that has recently taken up residence in the Tickwood near Sandpoint. Redcaps are violent fey whose iron-shod boots and dripping red caps mark them as creatures of cruelty — but Grustmier presents a veneer of folksy patience and diplomatic propriety, insisting that he merely awaits the dryad Akoni's formal permission to settle permanently.\n\nIn practice, Grustmier's troop is actively poisoning the ancient redwood tree to which Akoni is bound, steadily weakening the dryad in order to make him either relent or become too weak to resist. Grustmier is confident — perhaps even cheerfully so — that the matter will resolve itself in his favor before too long.\n\nHis presence in the Tickwood is a serious threat to Akoni's Grove and to the fey court that relies on the dryad's protection.",
+    "related": [
+      "akoni",
+      "akonis-grove",
+      "tickwood"
+    ],
+    "tags": [
+      "redcap",
+      "fey",
+      "tickwood",
+      "npc",
+      "antagonist",
+      "grustmier"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "runelord-sorshen",
+    "title": "Runelord Sorshen",
+    "category": "NPC",
+    "summary": "The ancient Runelord of Lust — unique among her peers for having chosen reform over conquest, and instrumental in opposing the return of more destructive runelords.",
+    "content": "Runelord Sorshen was the Runelord of Lust in Ancient Thassilon, ruler of the realm of Eurythnia. Her ancient capital was Xin-Eurythnia, now the site of the modern city of Korvosa. Like her peers, she fled into magical stasis when Earthfall threatened the empire.\n\nIn recent years, Sorshen awakened and took a strikingly different path from the other returning Runelords — choosing to work against destructive forces rather than seek conquest. She was instrumental in empowering adventurers in their fight against the returning Runelord Alaznist, and invented the Runewaking Ritual, a crucial piece of magic for those hoping to permanently destroy Runelord Zutha.\n\nSorshen has been collecting the weapons of her fallen fellow Runelords, storing them in her personal demiplane, the Eye of Desire, to protect the world from their power. She now rules a portion of New Thassilon.",
+    "related": [
+      "ancient-thassilon",
+      "new-thassilon",
+      "korvosa"
+    ],
+    "tags": [
+      "runelord",
+      "thassilon",
+      "npc",
+      "lust",
+      "powerful"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "elder-ordwi",
+    "title": "Elder Ordwi",
+    "category": "NPC",
+    "summary": "One of the Elders of Osprey Cove — a cleric of Cayden Cailean, a friend of the natural world, and a warm ally of the party.",
+    "content": "Elder Ordwi is one of the governing council of Elders that leads Osprey Cove. She is a cleric of Cayden Cailean and a known friend of the natural world, embodying the town's values of freedom, community, and easy-going goodwill. She has become a personal friend of the party, and offered them hospitality — including lodging in the bar she runs — when they arrived in Osprey Cove.",
+    "related": [
+      "osprey-cove",
+      "cayden-cailean"
+    ],
+    "tags": [
+      "osprey cove",
+      "elder",
+      "npc",
+      "cayden cailean",
+      "cleric"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "meitremar",
+    "title": "Meitremar",
+    "category": "NPC",
+    "summary": "A scholar and operative of New Thassilon who is using research found in Rusthenge to attempt the resurrection of the dead demon lord Xar-Azmak.",
+    "content": "Meitremar is a dangerous scholar who is picking up where his grandfather left off: attempting the resurrection of Xar-Azmak, the long-dead demon lord of rust who once ruled the Abyssal realm of Vlorus. He has found the research necessary for this project within the Thassilonian ruin of Rusthenge near Iron Harbor.\n\nMeitremar is positioned as a member of Runelord Belimarius's government in Xin-Edasseril, giving his work the political backing and resources of New Thassilon. In practice this relationship is one of convenience — his sinspawn ally Azomi, while nominally loyal to Belimarius, is loyal only to itself.\n\nMeitremar's cult has infiltrated and taken over Stonehome in Iron Harbor, subverting the local Gorum worshippers. Followers of Xar-Azmak favor rusted armor and sickles as a mark of their devotion.",
+    "related": [
+      "rusthenge",
+      "iron-harbor",
+      "vlorus",
+      "runelord-belimarius",
+      "kindred-coast",
+      "ferrumnestra",
+      "dispater"
+    ],
+    "tags": [
+      "meitremar",
+      "villain",
+      "npc",
+      "new thassilon",
+      "xar-azmak",
+      "resurrection"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "runelord-belimarius",
+    "title": "Runelord Belimarius",
+    "category": "NPC",
+    "summary": "The Runelord of Envy and ruler of half of New Thassilon — an ancient archmage who has reawakened from stasis and resumed command of her long-frozen capital Xin-Edasseril.",
+    "content": "Belimarius was the tenth and final Runelord of Envy, ruler of the Ancient Thassilonian realm of Edasseril. She reigned from -5402 AR until the fall of Thassilon in -5293 AR, when she and the inhabitants of her capital Xin-Edasseril were preserved outside of normal time rather than destroyed by Earthfall.\n\nVery recently, adventurers freed Belimarius and the inhabitants of Xin-Edasseril from this state of captivity, and she has taken up the reins of leadership once again — now as co-ruler of the nation of New Thassilon alongside Runelord Sorshen. She wields Belimarius's Invidious Halberd, a weapon crafted by Xin himself for the previous Runelord of Envy.\n\nThe Runelord of Envy specializes in abjuration magic. Belimarius's government has extended its reach to the Kindred Coast region, where her operative Meitremar is pursuing the resurrection of the dead demon lord Xar-Azmak — a project whose implications she may or may not fully understand.",
+    "related": [
+      "new-thassilon",
+      "ancient-thassilon",
+      "runelord-sorshen",
+      "meitremar",
+      "kindred-coast"
+    ],
+    "tags": [
+      "runelord",
+      "envy",
+      "thassilon",
+      "npc",
+      "new thassilon",
+      "belimarius"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "runelord-xanderghul",
+    "title": "Runelord Xanderghul",
+    "category": "NPC",
+    "summary": "The one and only Runelord of Pride — a master of illusion who secretly also posed as the god known as the Peacock Spirit, worshipped by rune magic scholars throughout Thassilon.",
+    "content": "Runelord Xanderghul was the sole holder of the title of Runelord of Pride throughout all of Ancient Thassilon's history — there was only ever one. As the Runelord of Pride, he specialized in illusion magic, whose rune is the Crescent Scepter, and his sin's energy is violet.\n\nWhether Xanderghul survived Earthfall in magical stasis, as some of his peers did, remains unknown.",
+    "related": [
+      "ancient-thassilon",
+      "new-thassilon"
+    ],
+    "tags": [
+      "runelord",
+      "pride",
+      "thassilon",
+      "npc",
+      "illusion",
+      "xanderghul",
+      "peacock spirit"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "vanda",
+    "title": "Vanda",
+    "category": "NPC",
+    "summary": "A former Stonehome acolyte who has not yet fully surrendered to the cult of Xar-Azmak — still wearing her unrusted plate, still carrying a thread of remorse.",
+    "content": "Vanda is one of the acolytes of Stonehome, the garrison-church of Gorum in Iron Harbor, who fell under the influence of Meitremar's cult of Xar-Azmak when the Iron Harbor was infiltrated. Unlike the others who have fully converted — trading their unrusted steel for the rusted armor and sickles that mark devotion to the dead demon lord — Vanda has not yet made that final surrender.\n\nShe still wears her unrusted full plate and fights with a greatsword, equipment that marks her as someone who has not entirely let go of what she was. A shred of remorse clings to her mind, a hesitation her fellow cultists have either not noticed or chosen to ignore. Whether that thread of conscience is enough to pull her back from the path Meitremar has set her on remains an open question.",
+    "related": [
+      "iron-harbor",
+      "meitremar",
+      "gorum",
+      "vlorus"
+    ],
+    "tags": [
+      "vanda",
+      "npc",
+      "iron harbor",
+      "stonehome",
+      "cult",
+      "xar-azmak",
+      "conflicted"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "naffer-vosk",
+    "title": "Naffer Vosk",
+    "category": "NPC",
+    "summary": "The caretaker of Sandpoint's boneyard — a former smuggler who found redemption in Sarenrae, and tends the dead with fierce devotion.",
+    "content": "Naffer walks with an awkward lurch from a twisted spine he's had since birth, but he maintains the Sandpoint Boneyard in meticulous condition and rings the cathedral bells at dawn, noon, and dusk without fail.",
+    "related": [
+      "sandpoint-boneyard",
+      "sandpoint-cathedral",
+      "sarenrae"
+    ],
+    "tags": [
+      "naffer vosk",
+      "sandpoint boneyard",
+      "sandpoint",
+      "npc",
+      "sarenrae"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "belor-hemlock",
+    "title": "Belor Hemlock",
+    "category": "NPC",
+    "summary": "Sandpoint's Shoanti sheriff — he took the job on the worst night of the town's history and never gave it back.",
+    "content": "Belor Hemlock changed his name from Viskalai — the Shoanti word for hemlock — as a gesture of belonging to the town that elected him in the aftermath of Chopper's rampage. His brother has never forgiven him for it.",
+    "related": [
+      "sandpoint-garrison",
+      "sandpoint",
+      "town-watch",
+      "garridan-viskalai",
+      "kaye-tresarani"
+    ],
+    "tags": [
+      "belor hemlock",
+      "sheriff",
+      "shoanti",
+      "sandpoint",
+      "npc",
+      "town watch"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "kendra-deverin",
+    "title": "Kendra Deverin",
+    "category": "NPC",
+    "summary": "Sandpoint's mayor — fiery-haired, sharp-minded, and genuinely liked by the people she governs, which her rivals find deeply inconvenient.",
+    "content": "Kendra didn't want to be mayor. She won anyway, and has been better at the job than most expected. She governs with a personal touch that the founding families find insufficiently aristocratic and the townspeople find refreshing.",
+    "related": [
+      "sandpoint",
+      "sandpoint-town-council",
+      "deverin-manor",
+      "the-deverins",
+      "titus-scarnetti"
+    ],
+    "tags": [
+      "kendra deverin",
+      "mayor",
+      "sandpoint",
+      "npc",
+      "government"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "cyrdak-drokkus",
+    "title": "Cyrdak Drokkus",
+    "category": "NPC",
+    "summary": "Sandpoint's showman — theatrical, charming, and in possession of a past in Magnimar he'll reference constantly but never actually explain.",
+    "content": "Cyrdak runs the Sandpoint Theater with a flamboyance that has made him both beloved and indispensable. He's married to the paladin Jasper Korvaski, which he considers proof that Sandpoint was always where he was supposed to be.",
+    "related": [
+      "sandpoint-theater",
+      "jasper-korvaski",
+      "sandpoint"
+    ],
+    "tags": [
+      "cyrdak drokkus",
+      "sandpoint theater",
+      "sandpoint",
+      "npc",
+      "bard"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "jasper-korvaski",
+    "title": "Jasper Korvaski",
+    "category": "NPC",
+    "summary": "Sandpoint's town planner and retired paladin of Abadar — incorruptible in ways that make him both invaluable and occasionally inconvenient.",
+    "content": "Jasper handles Sandpoint's planning, zoning, and property disputes with the same nigh-incorruptible character that once made him a paladin. The Scarnettis have tried to push him out of town. He has declined to leave.",
+    "related": [
+      "sandpoint-theater",
+      "cyrdak-drokkus",
+      "sandpoint",
+      "sandpoint-merchantile-league",
+      "abadar",
+      "hayliss-korvaski"
+    ],
+    "tags": [
+      "jasper korvaski",
+      "town planner",
+      "abadar",
+      "sandpoint",
+      "npc",
+      "paladin"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "bethana-corwin",
+    "title": "Bethana Corwin",
+    "category": "NPC",
+    "summary": "The Rusty Dragon's quiet halfling manager — far more comfortable with linens and ledgers than with crowds.",
+    "content": "Bethana is introverted to the point of near-invisibility in a busy tavern, which suits her fine. She handles the maid services and room rentals and leaves the socializing to everyone else.",
+    "related": [
+      "the-rusty-dragon",
+      "sandpoint"
+    ],
+    "tags": [
+      "bethana corwin",
+      "halfling",
+      "rusty dragon",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "daviren-hosk",
+    "title": "Daviren Hosk",
+    "category": "NPC",
+    "summary": "Security and muscle at the Rusty Dragon — and the man in Sandpoint with the most personal reasons to hate goblins.",
+    "content": "Daviren lost an eye to a goblin horsechopper during the Thistletop raid. He added eight goblin ears to his collection in the same fight. His feelings on the subject have not moderated since.",
+    "related": [
+      "the-rusty-dragon",
+      "sandpoint",
+      "ripnugget",
+      "thistletop"
+    ],
+    "tags": [
+      "daviren hosk",
+      "rusty dragon",
+      "sandpoint",
+      "npc",
+      "goblins"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "garridan-viskalai",
+    "title": "Garridan Viskalai",
+    "category": "NPC",
+    "summary": "Owner of the White Deer — a Shoanti man who stayed in Sandpoint out of love for his family and has never quite forgiven himself for it.",
+    "content": "Garridan runs the White Deer with quiet efficiency. He regrets that his parents gave up their Shoanti roots to settle in Sandpoint, and resents that his brother did the same thing — and then renamed himself after it.",
+    "related": [
+      "the-white-deer",
+      "sandpoint",
+      "belor-hemlock"
+    ],
+    "tags": [
+      "garridan viskalai",
+      "shoanti",
+      "white deer",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "jargie-quinn",
+    "title": "Jargie Quinn",
+    "category": "NPC",
+    "summary": "The one-legged, endlessly gregarious owner of the Hagfish — a champion liar in the best possible sense.",
+    "content": "Jargie Quinn is the kind of man who can hold a room just by opening his mouth. His hagfish Norah has made the Hagfish famous. How he lost his leg is a different story every time and somehow always entertaining.",
+    "related": [
+      "the-hagfish",
+      "sandpoint"
+    ],
+    "tags": [
+      "jargie quinn",
+      "hagfish",
+      "sandpoint",
+      "npc",
+      "tavern owner"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "jesk-cracktooth-berinni",
+    "title": "Jesk 'Cracktooth' Berinni",
+    "category": "NPC",
+    "summary": "Owner of Cracktooth's Tavern — looks like a thug, thinks like a satirist, and is funnier than anyone expects.",
+    "content": "Jesk is well read, sharp-witted, and slightly dangerous. His amateur political commentary on Magnimar's ruling class has made him a minor local celebrity. Do not judge him by his teeth.",
+    "related": [
+      "cracktooths-tavern",
+      "sandpoint"
+    ],
+    "tags": [
+      "jesk cracktooth",
+      "cracktooths tavern",
+      "sandpoint",
+      "npc",
+      "tavern owner"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "risa-magravi",
+    "title": "Risa Magravi",
+    "category": "NPC",
+    "summary": "Sandpoint's oldest innkeeper — a half-blind Varisian sorcerer whose tales of strange places are actually true, and who is quietly dying because she can no longer dream.",
+    "content": "Risa built her tavern and her legend in equal measure. She travels the Dreamlands every night in her sleep — or she used to. Something is blocking her dreams now, and without them, she is fading. She doesn't know why, and she doesn't know how long she has.",
+    "related": [
+      "risas-place",
+      "sandpoint",
+      "dreamlands",
+      "besk-magravi",
+      "lanalee-magravi",
+      "vodger-magravi"
+    ],
+    "tags": [
+      "risa magravi",
+      "varisian",
+      "sorcerer",
+      "risas place",
+      "sandpoint",
+      "npc",
+      "dreamlands"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "jubrayl-vhiski",
+    "title": "Jubrayl Vhiski",
+    "category": "NPC",
+    "summary": "Leader of the Bunyip Club — Sandpoint's local face of the Sczarni, managing thieves, smugglers, and a side venture in Thassilonian artifacts that has gotten more complicated than he planned.",
+    "content": "Jubrayl runs a tight operation of two dozen criminals who maintain perfectly respectable day jobs. He's gotten tangled in Ancient Thassilonian smuggling through an associate at Hag's Plummet, and is starting to wonder if the money is worth the exposure.",
+    "related": [
+      "fatmans-feedbag",
+      "bunyip-club",
+      "the-sczarni",
+      "sandpoint"
+    ],
+    "tags": [
+      "jubrayl vhiski",
+      "sczarni",
+      "bunyip club",
+      "sandpoint",
+      "npc",
+      "criminal"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "kaye-tresarani",
+    "title": "Kaye Tresarani",
+    "category": "NPC",
+    "summary": "Proprietor of the Pixie's Kitten — well-connected, quietly formidable, and in a long-running relationship with the sheriff that neither of them advertises.",
+    "content": "Kaye runs her establishment with a shrewdness that extends well beyond the front door. She has a seat on the town council, a relationship with Belor Hemlock that the town politely pretends not to notice, and ears in places most people forget are listening.",
+    "related": [
+      "the-pixies-kitten",
+      "sandpoint",
+      "belor-hemlock",
+      "sandpoint-town-council"
+    ],
+    "tags": [
+      "kaye tresarani",
+      "pixies kitten",
+      "sandpoint",
+      "npc",
+      "town council"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "vorvashali-voon",
+    "title": "Vorvashali Voon",
+    "category": "NPC",
+    "summary": "The gregarious proprietor of the Feathered Serpent — a collector and dealer in magical oddities who is currently very interested in clockwork birds.",
+    "content": "Vorvashali is enthusiastic about almost everything and especially enthusiastic about magical curiosities. He already has one piece of the Clockwork Songbird and is offering rewards to anyone who can find more.",
+    "related": [
+      "the-feathered-serpent",
+      "sandpoint"
+    ],
+    "tags": [
+      "vorvashali voon",
+      "feathered serpent",
+      "sandpoint",
+      "npc",
+      "merchant",
+      "occult"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "chask-haladan",
+    "title": "Chask Haladan",
+    "category": "NPC",
+    "summary": "Owner of the Curious Goblin — a retired adventurer who has spent seventy years loving books and shows no sign of stopping.",
+    "content": "Chask is old, unhurried, and surrounded by books he genuinely doesn't want to sell. He'll talk about almost any of them at length if you let him. He's kept the shop financially afloat for decades on the strength of a lucky adventuring career and a very frugal lifestyle.",
+    "related": [
+      "the-curious-goblin",
+      "sandpoint"
+    ],
+    "tags": [
+      "chask haladan",
+      "curious goblin",
+      "sandpoint",
+      "npc",
+      "scholar"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "savah-bevaniky",
+    "title": "Savah Bevaniky",
+    "category": "NPC",
+    "summary": "Sandpoint's arms dealer — practical, professional, and quietly worried about why her town needs so many adventurers.",
+    "content": "Savah runs a clean operation and keeps good stock. She's noticed that every time someone cleans her out of heavy crossbows, something terrible is about to happen to Sandpoint. She is currently well-stocked.",
+    "related": [
+      "savah-armory",
+      "sandpoint"
+    ],
+    "tags": [
+      "savah bevaniky",
+      "armory",
+      "sandpoint",
+      "npc",
+      "merchant"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "das-korvut",
+    "title": "Das Korvut",
+    "category": "NPC",
+    "summary": "Sandpoint's smith — brilliant at his work and legendarily unpleasant about everything else.",
+    "content": "Das Korvut is bald, powerfully built, and constitutionally incapable of suffering fools. He produces exceptional metalwork. He will make you feel terrible about asking for it. The local children have a rhyme about him.",
+    "related": [
+      "red-dog-smithy",
+      "sandpoint"
+    ],
+    "tags": [
+      "das korvut",
+      "red dog smithy",
+      "sandpoint",
+      "npc",
+      "smith"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "aliver-pillbug-podiker",
+    "title": "Aliver 'Pillbug' Podiker",
+    "category": "NPC",
+    "summary": "Sandpoint's alchemist — a poison dealer and Midnight Dawn operative hiding behind a respectable storefront.",
+    "content": "Aliver maintains his reputation as a legitimate pharmacist while quietly supplying the Sczarni with poisons and the Midnight Dawn with something worse. He is not a man to approach carelessly, and he has friends in dark places.",
+    "related": [
+      "pillbugs-pantry",
+      "sandpoint",
+      "midnight-dawn",
+      "bunyip-club",
+      "the-sczarni"
+    ],
+    "tags": [
+      "aliver pillbug podiker",
+      "alchemist",
+      "sandpoint",
+      "npc",
+      "midnight dawn",
+      "poison"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ilsoari-gandethus",
+    "title": "Ilsoari Gandethus",
+    "category": "NPC",
+    "summary": "Headmaster of Turandarok Academy — a retired adventurer who runs an orphanage and keeps a locked museum of the things he killed, with one notable regret.",
+    "content": "Ilsoari is the kind of retired adventurer who chose to do something useful with his time. He runs the school and orphanage with genuine care. His basement collection is extraordinary. And there's a dungeon he never got to finish exploring — the Pit — that he's never quite gotten over.",
+    "related": [
+      "turandarok-academy",
+      "sandpoint",
+      "runewatchers"
+    ],
+    "tags": [
+      "ilsoari gandethus",
+      "turandarok academy",
+      "sandpoint",
+      "npc",
+      "wizard",
+      "adventurer"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ibor-thorn",
+    "title": "Ibor Thorn",
+    "category": "NPC",
+    "summary": "Manager of the Sandpoint Lumber Mill — a man whose nightmares about the machinery are getting harder to dismiss as stress.",
+    "content": "Ibor keeps the mill running and himself together through sheer stubbornness. His nightmares about the logsplitter have crossed a line from concerning to alarming, and people close to him are starting to notice.",
+    "related": [
+      "sandpoint-lumber-mill",
+      "sandpoint"
+    ],
+    "tags": [
+      "ibor thorn",
+      "sandpoint lumber mill",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "hannah-velerin",
+    "title": "Hannah Velerin",
+    "category": "NPC",
+    "summary": "Sandpoint's herbalist and healer — a town council member quietly dealing with a threatening situation she hasn't taken to the authorities yet.",
+    "content": "Hannah is trusted by most of Sandpoint and sits on the town council. She handles the anonymous threats showing up at her door with the patience of someone who has dealt with worse, and the caution of someone who knows that patience has limits.",
+    "related": [
+      "hannahs",
+      "sandpoint",
+      "sandpoint-town-council",
+      "gozreh"
+    ],
+    "tags": [
+      "hannah velerin",
+      "herbalist",
+      "druid",
+      "sandpoint",
+      "npc",
+      "town council"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "brodert-quink",
+    "title": "Brodert Quink",
+    "category": "NPC",
+    "summary": "Sandpoint's Thassilonian scholar — decades of study and no prestige to show for it, until recently when people started realizing he'd been right all along.",
+    "content": "Brodert studied with dwarven engineers at Janderhoff and catalogued ruins at the Founder's Archive in Magnimar. He's spent years insisting the Old Light was a war machine. The town is only now catching up to him, and he has mixed feelings about being vindicated this way.",
+    "related": [
+      "old-light",
+      "sandpoint",
+      "ancient-thassilon",
+      "runewatchers",
+      "janderhoff"
+    ],
+    "tags": [
+      "brodert quink",
+      "scholar",
+      "thassilon",
+      "sandpoint",
+      "npc",
+      "runewatchers"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "gorvi",
+    "title": "Gorvi",
+    "category": "NPC",
+    "summary": "Sandpoint's dung-sweeper — one of the town's few half-orcs, paid well enough to live better than he does, and seemingly content with his shack and his crew.",
+    "content": "Gorvi employs over two dozen youths to help manage Sandpoint's waste. He lives in a small, run-down shack despite earning a comfortable wage, and nobody has yet worked out whether that's philosophy or stubbornness.",
+    "related": [
+      "junkers-edge",
+      "sandpoint"
+    ],
+    "tags": [
+      "gorvi",
+      "half-orc",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ven-vinder",
+    "title": "Ven Vinder",
+    "category": "NPC",
+    "summary": "Owner of Sandpoint's general store — a father who lost a daughter to a serial killer and has been losing himself to grief ever since.",
+    "content": "Ven used to be one of those men who measured their worth in their family. Now he measures it in how many hours he can spend in his cellar drinking before anyone comes looking for him.",
+    "related": [
+      "sandpoint-general-store",
+      "sandpoint",
+      "solsta-vinder",
+      "shayliss-vinder"
+    ],
+    "tags": [
+      "ven vinder",
+      "sandpoint general store",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "solsta-vinder",
+    "title": "Solsta Vinder",
+    "category": "NPC",
+    "summary": "Ven Vinder's wife — keeping the general store running, keeping the family together, and quietly terrified that she's losing both her husband and her daughter.",
+    "content": "Solsta manages the store, manages her husband's deterioration, and is starting to manage her fear about where Shayliss keeps disappearing to. She has promised herself she'll ask the next group of capable-looking strangers for help.",
+    "related": [
+      "sandpoint-general-store",
+      "sandpoint",
+      "ven-vinder",
+      "shayliss-vinder"
+    ],
+    "tags": [
+      "solsta vinder",
+      "sandpoint general store",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "shayliss-vinder",
+    "title": "Shayliss Vinder",
+    "category": "NPC",
+    "summary": "The Vinders' surviving daughter — she's found Calistria and a secret identity, and she's not coming home much anymore.",
+    "content": "Shayliss has become someone her parents don't quite recognize. She's found faith in Calistria and an outlet in a masked vigilante identity called the Shroud. Whatever she's doing when she slips out of the secret door by the Turandarok River, it isn't what her mother imagines.",
+    "related": [
+      "sandpoint-general-store",
+      "sandpoint",
+      "ven-vinder",
+      "solsta-vinder",
+      "calistria"
+    ],
+    "tags": [
+      "shayliss vinder",
+      "sandpoint",
+      "npc",
+      "calistria",
+      "shroud",
+      "vigilante"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "larz-rovanky",
+    "title": "Larz Rovanky",
+    "category": "NPC",
+    "summary": "Owner of the Rovanky Tannery — a perfectionist who produces excellent leather goods, keeps firing his employees, and sees nothing contradictory about this.",
+    "content": "Larz expects perfection. He has never met an employee who meets that standard for long. The leather goods are worth the wait. The wait is sometimes very long.",
+    "related": [
+      "rovanky-tannery",
+      "sandpoint"
+    ],
+    "tags": [
+      "larz rovanky",
+      "tannery",
+      "sandpoint",
+      "npc"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "hayliss-korvaski",
+    "title": "Hayliss Korvaski",
+    "category": "NPC",
+    "summary": "Jasper's sister and fellow Abadar devotee — without her brother's restraint, and not at all sorry about it.",
+    "content": "Hayliss runs her shop with the same faith her brother Jasper holds, and none of his diplomatic temperament. She charges Scarnetti family members extra and considers the mayor's requests to keep the peace to be advisory at best. She has recently seen something unusual involving the Vinder girl, and she's looking for someone discreet to investigate.",
+    "related": [
+      "sandpoint",
+      "jasper-korvaski",
+      "abadar",
+      "shayliss-vinder"
+    ],
+    "tags": [
+      "hayliss korvaski",
+      "sandpoint",
+      "npc",
+      "abadar"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ripnugget",
+    "title": "Chief Ripnugget",
+    "category": "NPC",
+    "summary": "???",
+    "content": "???",
+    "related": [
+      "daviren-hosk"
+    ],
+    "tags": [
+      "placeholder",
+      "goblin",
+      "thistletop"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]
