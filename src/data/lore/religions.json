@@ -14,7 +14,7 @@
     "tags": [
       "desna",
       "religion",
-      "goddess",
+      "deity",
       "travelers",
       "varisian"
     ],
@@ -35,6 +35,7 @@
     "tags": [
       "ferrumnestra",
       "elemental lord",
+      "deity",
       "metal",
       "religion",
       "rust",
@@ -61,7 +62,7 @@
       "hell",
       "religion",
       "cheliax",
-      "god"
+      "deity"
     ],
     "createdAt": "2025-01-01T00:00:00.000Z"
   },
@@ -268,7 +269,7 @@
       "erecura",
       "asmodeus",
       "vlorus",
-      "meitremar"
+      "deity"
     ],
     "tags": [
       "dispater",

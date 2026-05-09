@@ -4,7 +4,7 @@
     "title": "Sandpoint",
     "category": "Location",
     "summary": "The Light of the Lost Coast — a small Varisian town with a long memory and a knack for attracting trouble far above its weight class.",
-    "content": "Sandpoint sits in a natural cove along the cliff-lined Lost Coast of Varisia, roughly fifty miles northeast of Magnimar. It is Varisia's sixth-largest settlement and the only notable stop along this stretch of coast — a town that calls itself the Light of the Lost Coast and mostly believes it. Its reputation for arts, theater, and fine glasswork coexists uneasily with a history of serial murder, goblin raids, giant attacks, Runelord incursions, sinkholes into Thassilonian ruins, and tsunamis.\n\nThe town was founded in 4666 AR by four powerful families from Magnimar — the Kaijitsus, Valdemars, Scarnettis, and Deverins — who arrived to find Varisian travelers already using the land for their winter camps. The negotiations that followed went badly when Alamon Scarnetti launched a murderous raid on the Varisian camp. The resulting scandal was smoothed over, eventually, with a profit-sharing arrangement with the Varisian Council of Magnimar. That arrangement expires in 4726 AR. The town has not forgotten how it started.\n\nGovernment sits nominally with Mayor Kendra Deverin, a capable diplomat whose personal style of governance has earned her genuine affection. The Sandpoint Town Council shares power with the Mercantile League, the Cathedral, and the increasingly fractious interests of the remaining founding families. The sheriff is Belor Hemlock, a Shoanti man who took the job under terrible circumstances and has kept it well.",
+    "content": "Sandpoint sits in a natural cove along the cliff-lined Lost Coast of Varisia, roughly fifty miles northeast of Magnimar. It is Varisia's sixth-largest settlement and the only notable stop along this stretch of coast — a town that calls itself the Light of the Lost Coast and mostly believes it. Its reputation for arts, theater, and fine glasswork coexists uneasily with a history of serial murder, goblin raids, giant attacks, Runelord incursions, sinkholes into Thassilonian ruins, and tsunamis.\n\nThe town was founded in 4666 AR by four powerful families from Magnimar — the Kaijitsus, Valdemars, Scarnettis, and Deverins — who arrived to find Varisian travelers already using the land for their winter camps. The negotiations that followed went badly, though the resulting scandal was smoothed over, eventually, with a profit-sharing arrangement with the Varisian Council of Magnimar. That arrangement expires in 4726 AR. The town has not forgotten how it started.\n\nGovernment sits nominally with Mayor Kendra Deverin, a capable diplomat whose personal style of governance has earned her genuine affection. The Sandpoint Town Council shares power with the Mercantile League, the Cathedral, and the increasingly fractious interests of the remaining founding families. The sheriff is Belor Hemlock, a Shoanti man who took the job under terrible circumstances and has kept it well.",
     "related": [
       "sandpoint-cathedral",
       "sandpoint-garrison",
@@ -59,7 +59,7 @@
     "title": "Varisia",
     "category": "Location",
     "summary": "A vast frontier nation on the western coast of Avistan, Varisia is home to ancient Thassilonian ruins, nomadic Varisian and Shoanti peoples, and three major city-states that compete for dominance.",
-    "content": "Varisia has no central government. Its independent city-states — Magnimar, Korvosa, and the pirate haven of Riddleport — each hold sway over a small collection of towns and villages. The wilds beyond, including most of the Storval Plateau, are claimed by the Shoanti people. The neutral city of Kaer Maga is often discounted from political calculations altogether, and its inhabitants prefer it that way.\n\nThe human population is split between Varisians — descendants of Thassilon's enslaved workers who developed a nomadic culture of their own — and Chelaxian-descended settlers from the south. The Shoanti, another group descended from Thassilonian slaves, are largely a nomadic warrior people who inhabit the plateau and uplands.\n\nAncient Thassilonian ruins are scattered throughout Varisia, relics of an empire destroyed by the cataclysm known as Earthfall ten thousand years ago. These ruins have taken on new significance with the recent return of New Thassilon and its Runelords.",
+    "content": "Varisia has no central government. Its independent city-states — Magnimar, Korvosa, and the pirate haven of Riddleport — each hold sway over a small collection of towns and villages. The wilds beyond, including most of the Storval Plateau, are claimed by the Shoanti people. The neutral city of Kaer Maga is often discounted from political calculations altogether, and its inhabitants prefer it that way.\n\nThe human population is split between Varisians/Shoanti — tribes descended from Thassilon's enslaved workers who developed nomadic cultures of their own — and Chelaxian-descended settlers from the south. \n\nAncient Thassilonian ruins are scattered throughout Varisia, relics of an empire destroyed by the cataclysm known as Earthfall ten thousand years ago. These ruins have taken on new significance with the recent return of New Thassilon and The Runelords.",
     "related": [
       "magnimar",
       "korvosa",
@@ -103,7 +103,7 @@
     "title": "Korvosa",
     "category": "Location",
     "summary": "The eldest of Varisia's city-states, Korvosa was once part of Imperial Cheliax and retains strong Chelaxian traditions, built atop the ruins of an ancient Thassilonian city.",
-    "content": "Korvosa is the eldest of Varisia's three city-states, once part of Imperial Cheliax but now independent. The settlement originally served as a defensive position for settlers entering Varisia, growing over time into a cosmopolitan center of trade. Korvosa is built upon the ruins of the Ancient Thassilonian city of Xin-Eurythnia, once the capital of the realm ruled by Runelord Sorshen, the Runelord of Lust.\n\nKorvosa maintains strong ties to Chelaxian tradition and culture, which puts it at odds with the more progressive Magnimar. The Scarnetti family of Sandpoint maintains hidden ties to interests in Korvosa, sending reports and receiving payments from mysterious Korvosan benefactors.",
+    "content": "Korvosa is the eldest of Varisia's three city-states, once part of Imperial Cheliax but now independent. The settlement originally served as a defensive position for settlers entering Varisia, growing over time into a cosmopolitan center of trade. Korvosa is built upon the ruins of the Ancient Thassilonian city of Xin-Eurythnia, once the capital of the realm ruled by Runelord Sorshen, the Runelord of Lust.\n\nKorvosa maintains strong ties to Chelaxian tradition and culture, which puts it at odds with the more progressive Magnimar.",
     "related": [
       "varisia",
       "ancient-thassilon",
@@ -151,7 +151,7 @@
     "title": "Sandpoint Hinterlands",
     "category": "Location",
     "summary": "The wild and varied countryside surrounding Sandpoint — marshes, forests, moors, and rocky escarpments that conceal goblin tribes, ancient ruins, and stranger things.",
-    "content": "The Sandpoint Hinterlands is the name for the area surrounding the town of Sandpoint. It encompasses a wide variety of terrain including Brinestump Marsh to the west, the Nettlewood and Mosswood forests, the Tickwood, the rocky Devil's Platter escarpment, the mysterious Turandarok River, and several areas of open moor.\n\nNotable locations within the Hinterlands include: Devil's Platter and its notorious Pit, Thistletop (former stronghold of the Thistletop goblin tribe), Habe's Sanatorium, Ravenroost, and Hag's Plummet. Multiple goblin tribes make their homes in the hinterlands.\n\nThe Turandarok River is said to lead, eventually, to the First World — an extraordinary claim that has driven many expeditions to madness. Closer to town, the Tickwood offers relatively safe hunting grounds for locals — when one accounts for its fey inhabitants.",
+    "content": "The Sandpoint Hinterlands is the name for the area surrounding the town of Sandpoint. It encompasses a wide variety of terrain including Brinestump Marsh to the west, the Nettlewood and Mosswood forests, the Tickwood, the rocky Devil's Platter escarpment, the mysterious Turandarok River, and several areas of open moor. Multiple goblin tribes make their homes in the hinterlands.\n\nThe Turandarok River is said to lead, eventually, to the First World — an extraordinary claim that has driven many expeditions to madness. Closer to town, the Tickwood offers relatively safe hunting grounds for locals — when one accounts for its fey inhabitants.",
     "related": [
       "sandpoint",
       "tickwood",
@@ -171,7 +171,7 @@
     "title": "The Tickwood",
     "category": "Location",
     "summary": "A small forest just outside Sandpoint, popular with local hunters — though its fey lord Akoni and a recent redcap incursion make it less safe than it appears.",
-    "content": "The Tickwood is a relatively small forested area in the Sandpoint Hinterlands, located on the northern banks of the Turandarok River. It is less than two miles in length, separated from the coastal Shank's Wood to its north by the Lost Coast Road. To its west lie the Ravenroost hills, while Leb's Tors rise to the east.\n\nThe Tickwood is a favorite spot for local hunters, as it is thought to be free of goblin tribes, and is home to many deer, wild boars, and the occasional firepelt cougar. Stories in Sandpoint greatly exaggerate the size of the giant ticks that also dwell here, keeping many cautious citizens off the forest paths.\n\nAt the heart of the wood stands Akoni's Grove, the court of the dryad Akoni, who presides over the Tickwood's fey inhabitants. A troop of redcaps has recently moved into the area under their leader 'Grandfather' Grustmier — and though they will not establish permanent roots without the dryad's permission, Grustmier is confident he can obtain it one way or another.",
+    "content": "The Tickwood is a relatively small forested area in the Sandpoint Hinterlands, located on the northern banks of the Turandarok River. It is less than two miles in length, separated from the coastal Shank's Wood to its north by the Lost Coast Road. To its west lie the Ravenroost hills, while Leb's Tors rise to the east.\n\nThe Tickwood is a favorite spot for local hunters, as it is thought to be free of goblin tribes, and is home to many deer, wild boars, and the occasional firepelt cougar. Stories in Sandpoint greatly exaggerate the size of the giant ticks that also dwell here, keeping many cautious citizens off the forest paths.\n\nAt the heart of the wood stands Akoni's Grove, the court of the dryad Akoni, who presides over the Tickwood's fey inhabitants. A troop of redcaps has recently moved into the area and though they will not establish permanent roots without the dryad's permission, they seem confident they can obtain it one way or another.",
     "related": [
       "akonis-grove",
       "akoni",
@@ -194,7 +194,7 @@
     "title": "Akoni's Grove",
     "category": "Location",
     "summary": "The ancient redwood heart of the Tickwood, where the dryad Akoni holds court over sprites, grigs, and other fey — though recent redcap meddling has left its power dynamics dangerously uncertain.",
-    "content": "Akoni's Grove occupies the deepest part of the Tickwood, where the oldest and largest redwood trees stand. Here the dryad Akoni presides as lord of the wood's fey inhabitants, holding court over a retinue of sprites and grigs.\n\nThe Grove's tranquility has been shaken by two threats arriving in close succession. A family of redcaps — led by their self-styled patriarch 'Grandfather' Grustmier — has moved into the Tickwood and is quietly poisoning the great redwood tree to which Akoni is bound, weakening the dryad while they await what they consider an inevitable transfer of power. At the same time, the ongoing deterioration of Akoni's bond tree has left the Grove's fey feeling leaderless and uneasy, making the community vulnerable.",
+    "content": "Akoni's Grove occupies the deepest part of the Tickwood, where the oldest and largest redwood trees stand. Here the dryad Akoni presides as lord of the wood's fey inhabitants, holding court over a retinue of sprites and grigs.\n\nA family of redcaps — led by their self-styled patriarch 'Grandfather' Grustmier — had moved into the Tickwood and begun quietly poisoning the great redwood tree to which Akoni is bound, weakening the dryad until he had no choice but to comply with their demands.\n\nNow chased off, the Grove is returning to normalcy, though Akoni still worries about what brought the redcaps to his woods in the first place...",
     "related": [
       "akoni",
       "tickwood",
@@ -243,7 +243,7 @@
     "title": "Iron Harbor",
     "category": "Location",
     "summary": "The rougher, more militant sister-town of Osprey Cove — a garrison settlement devoted to Gorum whose Stonehome church-fortress has recently been infiltrated by a dangerous cult.",
-    "content": "Iron Harbor is the sister settlement to Osprey Cove, situated on the mainland beside the island that holds the Thassilonian ruin of Rusthenge. Where Osprey Cove is gentle and communal, Iron Harbor is gruff, militaristic, and fiercely devoted to Gorum, the Lord of Battle. The town's center of power is Stonehome, a structure that serves simultaneously as garrison and temple.\n\nRecently, Stonehome and Iron Harbor have been infiltrated and partially taken over by followers of the dead demon lord Xar-Azmak, operating under the direction of Meitremar — a scholar and operative who serves Runelord Belimarius's government in Xin-Edasseril. The loyal Gorumites who survived the takeover of Stonehome were handed over to Meitremar's sinspawn ally Azomi.\n\nNotable residents include Elsie, a cheerful shopkeep who offered the party a place to stay, and Derrol, an architect who was hired to build luxury mansions for Magnimarian aristocrats — including one for Gradon Scarnetti — that were never occupied, and who is eager to leave.",
+    "content": "Iron Harbor is the sister settlement to Osprey Cove, situated on the mainland beside the island that holds the Thassilonian ruin of Rusthenge. Where Osprey Cove is gentle and communal, Iron Harbor is gruff, militaristic, and fiercely devoted to Gorum, the Lord of Battle. The town's center of power is Stonehome, a structure that serves simultaneously as garrison and temple.\n\nRecently, Stonehome and Iron Harbor have been infiltrated and partially taken over by followers of the dead demon lord Xar-Azmak, operating under the direction of Meitremar — a scholar and operative who serves Runelord Belimarius's government in Xin-Edasseril. The loyal Gorumites who survived the takeover of Stonehome were handed over to Meitremar's sinspawn ally Azomi. ",
     "related": [
       "osprey-cove",
       "kindred-coast",
@@ -292,7 +292,7 @@
     "title": "Rusthenge",
     "category": "Location",
     "summary": "An Ancient Thassilonian ruin on an island of the Kindred Coast — a site of dangerous historical research that has become the source of a plot to resurrect a dead demon lord.",
-    "content": "Rusthenge is the most significant of the Ancient Thassilonian ruins near the Kindred Coast, situated on an island close to Iron Harbor. Like most Thassilonian ruins scattered across northwestern Avistan, it is a remnant of the empire that was destroyed by Earthfall ten thousand years ago.\n\nThe ruin has taken on new and sinister significance thanks to the scholar Meitremar, who has been using research found within Rusthenge to pursue the resurrection of the long-dead demon lord Xar-Azmak — the former ruler of the Abyssal realm of Vlorus. Meitremar operates under the political cover of Runelord Belimarius's government in Xin-Edasseril, lending the power of New Thassilon to his dangerous work.\n\nThe ruin is thematically connected to rust, decay, and demonic corruption — a fitting site for work tied to the Lord of Rust.",
+    "content": "Rusthenge is the most significant of the Ancient Thassilonian ruins near the Kindred Coast, situated on an island close to Iron Harbor. Like most Thassilonian ruins scattered across northwestern Avistan, it is a remnant of the empire that was destroyed by Earthfall ten thousand years ago.\n\nThe ruin has taken on new and sinister significance thanks to the scholar Meitremar, who has been using research found within Rusthenge to pursue the resurrection of the long-dead demon lord Xar-Azmak — the former ruler of the Abyssal realm of Vlorus. Meitremar operated under the political cover of Runelord Belimarius's government in Xin-Edasseril, lending the power of New Thassilon to his dangerous work.",
     "related": [
       "kindred-coast",
       "iron-harbor",
@@ -317,7 +317,7 @@
     "title": "Vlorus",
     "category": "Location",
     "summary": "The Abyssal realm once ruled by the deceased demon lord Xar-Azmak — a valley of rusted junk and decaying castles, now unclaimed, whose barrier to the Plane of Metal is dangerously thin.",
-    "content": "Vlorus is an Abyssal realm within the Outer Rifts — what was once the domain of the demon lord Xar-Azmak, the Lord of Rust, before he was slain by the armies of the devil Dispater. The realm is now unclaimed by any power, left as a vast valley littered with rusted junk and decaying buildings, some as large as the castles that ring the valley's high edges.\n\nWhat makes Vlorus especially significant today is the unusual thinness of the barrier between it and the Plane of Metal. This planar proximity is why Ferrumnestra, the Lady of Rust and Elemental Lord of Metal, opposes the resurrection of Xar-Azmak with particular urgency — she sees any attempt to restore him as a direct affront to her domain over metal, decay, and inevitability.\n\nThe demon-type known as vloriaks — insectile fiends who cause metal to rust and rot — hail from this realm and carry within them the potential for decay and rusting ruin.",
+    "content": "Vlorus is the Abyssal realm once ruled by the deceased demon lord Xar-Azmak before his death by Dispater's armies. It is now unclaimed by any power. The valley realm is full of rusted junk and buildings, some as large as the castles that circle the tops of the valley in which the realm is located.",
     "related": [
       "ferrumnestra",
       "meitremar",
@@ -387,7 +387,7 @@
     "title": "Dis",
     "category": "Location",
     "summary": "The Iron City — the second layer of Hell and one of the largest prisons in all the cosmos, a metropolis of millions ruled with calculating cunning by the archdevil Dispater.",
-    "content": "Dis is the second layer of Hell, and its name belongs both to the layer itself and to the immense iron city that fills it — a metropolis with a population of millions, a sprawling monument to what civilization becomes when order serves evil. It is one of the largest prisons in all the cosmos, and its ruler Dispater is its unyielding, merciless warden.\n\nIn contrast to the iron, fire, and stone that dominates most of Dis, a region called Eleusys — the personal palace of Dispater's wife Erecura — is filled with lush vegetation, a startling oasis of green within the infernal city. Erecura keeps her court there, attended by three norns who serve as her advisors and handmaidens.\n\nAdventurers who have run afoul of Dispater's underlings, been exploited in the infernal markets, or need to overturn one of the Iron Lord's decisions may seek an audience with Erecura, who holds genuine power within Dis — though gaining such an audience is extraordinarily difficult.",
+    "content": "Dis is the second layer of Hell, and its name belongs both to the layer itself and to the immense iron city that fills it — a metropolis with a population of millions, a sprawling monument to what civilization becomes when order serves evil. It is one of the largest prisons in all the cosmos, and its ruler Dispater is its unyielding, merciless warden.\n\nIn contrast to the iron, fire, and stone that dominates most of Dis, a region called Eleusys — the personal palace of Dispater's wife Erecura — is filled with lush vegetation, a startling oasis of green within the infernal city. Erecura keeps her court there, attended by three norns who serve as her advisors and handmaidens.",
     "related": [
       "hell",
       "dispater",
@@ -469,7 +469,7 @@
     "title": "Sandpoint Glassworks",
     "category": "Location",
     "summary": "Once the finest glassworks in the region — now closed, locked, and widely believed to be haunted.",
-    "content": "The Sandpoint Glassworks was for decades one of the town's great economic engines, operated by the Kaijitsu family whose skill with glass was foundational to Sandpoint's cultural identity. After Ameiko Kaijitsu inherited the building and departed for Minkai, she closed the glassworks rather than deal with persistent rumors that it was haunted by victims of a prior tragedy. It stands empty now — the furnaces cold, the windows dark. No one goes in, and everyone has a theory about why.",
+    "content": "The Sandpoint Glassworks was for decades one of the town's great economic engines, operated by the Kaijitsu family whose skill with glass was foundational to Sandpoint's cultural identity. After Ameiko Kaijitsu inherited the building and departed for Minkai, she closed the glassworks rather than deal with persistent rumors that it was haunted by victims of a prior tragedy. It stands empty now — the furnaces cold, the windows dark.",
     "related": [
       "sandpoint",
       "the-kaijitsus",
@@ -513,8 +513,8 @@
     "id": "the-white-deer",
     "title": "The White Deer",
     "category": "Location",
-    "summary": "The cleanest inn in Sandpoint — cheaper rooms than the Rusty Dragon and nicer ones, if you can get past the owner's gruffness.",
-    "content": "The White Deer offers better accommodations than its more famous rival at comparable prices. Its owner, Garridan Viskalai, keeps the place immaculate and the rates low in an attempt to lure guests away from the Dragon. His gruff demeanor undercuts the effort somewhat, but the quality of the rooms speaks for itself. Garridan is the brother of Sheriff Belor Hemlock — a fact neither of them discusses without visible discomfort.",
+    "summary": "The newest building in town, capitalizing on the influx of flush pursed adventurers coming through town.",
+    "content": "The White Deer offers massive rooms for large parties, as well as the most luxurious accomodations. Its owner, Garridan Viskalai, keeps the place immaculate in an attempt to lure The Next Big Adventuring Party to get some of the spotlight that the Rusty Dragon enjoys. His gruff demeanor undercuts the effort somewhat, but the quality of the rooms speaks for itself. Garridan is the brother of Sheriff Belor Hemlock — a fact neither of them discusses without visible discomfort.",
     "related": [
       "sandpoint",
       "garridan-viskalai",
@@ -573,7 +573,7 @@
     "title": "Risa's Place",
     "category": "Location",
     "summary": "A cozy Varisian tavern famous for its founder's dreamland stories — now run by her children, while Risa herself grows quietly, dangerously ill.",
-    "content": "Risa's Place has been a Sandpoint fixture since the town's founding, built on the warmth and strange tales of its founder Risa Magravi, a Varisian sorcerer who spent her nights traveling the Dreamlands in her sleep. She's left day-to-day operations to her three children, Besk, Lanalee, and Vodger, but remains a fixture of the taproom. Lately she's been silent and listless — she hasn't been able to dream, and she's slowly fading as a result.",
+    "content": "Risa's Place has been a Sandpoint fixture since the town's founding, built on the warmth and strange tales of its founder Risa Magravi, a Varisian sorcerer who spent her nights traveling the Dreamlands in her sleep. She's left day-to-day operations to her three children, Besk, Lanalee, and Vodger, but remains a fixture of the taproom. Lately she's been silent and listless — she hasn't been able to dream, and her appearances have become shorter and less frequent.",
     "related": [
       "sandpoint",
       "risa-magravi",
@@ -596,20 +596,15 @@
     "title": "Fatman's Feedbag",
     "category": "Location",
     "summary": "The roughest bar in Sandpoint — cheap drinks, no questions asked, and a clientele that prefers it that way.",
-    "content": "Fatman's Feedbag is the Sandpoint establishment least interested in Sandpoint's reputation as a charming arts town. It caters to laborers, dockworkers, and anyone who wants to drink without being seen doing it. It also serves as informal headquarters for the Bunyip Club, the local Sczarni gang, and their leader Jubrayl Vhiski.",
+    "content": "Fatman's Feedbag is the Sandpoint establishment least interested in Sandpoint's reputation as a charming arts town. It caters to laborers, dockworkers, and anyone who wants to drink without being seen doing it.",
     "related": [
-      "sandpoint",
-      "jubrayl-vhiski",
-      "bunyip-club",
-      "the-sczarni"
+      "sandpoint"
     ],
     "tags": [
       "fatmans feedbag",
       "tavern",
       "sandpoint",
-      "location",
-      "sczarni",
-      "bunyip club"
+      "location"
     ],
     "createdAt": "2025-01-01T00:00:00.000Z"
   },
@@ -618,11 +613,10 @@
     "title": "The Pixie's Kitten",
     "category": "Location",
     "summary": "Sandpoint's brothel — a surprisingly tasteful establishment whose proprietor keeps it safer and quieter than its reputation suggests.",
-    "content": "The Pixie's Kitten is Sandpoint's open secret — a brothel operated with a discretion that most of the town appreciates and none of the Scarnettis will acknowledge. It offers lodging as well as its primary services, and its proprietor, Kaye Tresarani, is a prominent enough figure in town that her establishment operates without serious harassment. She is also, quietly, in a long-running romance with Sheriff Hemlock.",
+    "content": "The Pixie's Kitten is Sandpoint's open secret — a brothel operated with a discretion that most of the town appreciates and none of the Scarnettis will acknowledge. It offers lodging as well as its primary services, and its proprietor, Kaye Tresarani, is a prominent enough figure in town that her establishment operates without serious harassment.",
     "related": [
       "sandpoint",
-      "kaye-tresarani",
-      "belor-hemlock"
+      "kaye-tresarani"
     ],
     "tags": [
       "pixies kitten",
@@ -659,7 +653,7 @@
     "title": "The Feathered Serpent",
     "category": "Location",
     "summary": "Sandpoint's curio shop — stocked with oddities, scrolls, and magical wares by a gregarious proprietor who always seems to know what you need before you do.",
-    "content": "The Feathered Serpent is the kind of shop that rewards browsing. Vorvashali Voon fills it with curiosities and magical items that seem almost randomly assembled but have a way of being exactly relevant. The shop offers occult spellcasting, and Vorvashali has a particular interest in locating pieces of the legendary Clockwork Songbird.",
+    "content": "The Feathered Serpent is the kind of shop that rewards browsing. Vorvashali Voon fills it with curiosities and magical items that seem almost randomly assembled but have a way of being exactly relevant.",
     "related": [
       "sandpoint",
       "vorvashali-voon"
@@ -679,7 +673,7 @@
     "title": "The Curious Goblin",
     "category": "Location",
     "summary": "Sandpoint's bookshop — crammed with tomes, overpriced for the locals, and run by an old scholar who cares more about the books than the business.",
-    "content": "The Curious Goblin is a well-stocked bookshop whose prices reflect its proprietor's priorities — Chask Haladan values the books for their own sake, not for what they'll fetch. His adventuring youth gave him enough of a nest egg to run the shop on his own terms, which means most locals can't afford to shop there regularly. He also offers arcane spellcasting for those who ask correctly.",
+    "content": "The Curious Goblin is a well-stocked bookshop whose prices reflect its proprietor's priorities — Chask Haladan values the books for their own sake, not for what they'll fetch. His adventuring youth gave him enough of a nest egg to run the shop on his own terms, which means most locals can't afford to shop there regularly. He also offers arcane spellcasting for those who ask.",
     "related": [
       "sandpoint",
       "chask-haladan"
@@ -737,11 +731,10 @@
     "title": "Pillbug's Pantry",
     "category": "Location",
     "summary": "Sandpoint's alchemist shop — legitimate medicinal supplies on the shelves, and something considerably less legitimate in the back.",
-    "content": "Pillbug's Pantry operates as a perfectly respectable alchemy shop under the ownership of Aliver 'Pillbug' Podiker. It sells medicines and potions that the town genuinely needs. It also, for the right customers who know to ask the right question, sells poison to Sczarni locals. More recently, Aliver has become entangled with a syndicate out of Magnimar called the Midnight Dawn, making his side business considerably more dangerous than it used to be.",
+    "content": "Pillbug's Pantry operates as a perfectly respectable alchemy shop under the ownership of Aliver 'Pillbug' Podiker. It sells medicines and potions that the town genuinely needs. It also, for the right customers who know to ask the right question, sells poisons and other morally dubious alchemical concoctions.",
     "related": [
       "sandpoint",
       "aliver-pillbug-podiker",
-      "midnight-dawn",
       "bunyip-club"
     ],
     "tags": [
@@ -799,7 +792,7 @@
     "title": "Hannah's",
     "category": "Location",
     "summary": "Sandpoint's herbalist and healer — primal spellcasting, fresh remedies, and an anonymous harassment campaign that its proprietor is trying to handle without involving the sheriff.",
-    "content": "Hannah Velerin runs her shop and home as Sandpoint's primary source of herbal medicine and primal spellcasting. She spends her mornings in the hinterlands gathering ingredients and her afternoons treating patients. She is also, recently, receiving dead animals at her doorstep in the middle of the night from someone who wants her frightened and quiet.",
+    "content": "Hannah Velerin runs her shop and home as Sandpoint's primary source of herbal medicine and primal spellcasting. She spends her mornings in the hinterlands gathering ingredients and her afternoons treating patients.",
     "related": [
       "sandpoint",
       "hannah-velerin",
@@ -881,7 +874,7 @@
     "title": "Chopper's Isle",
     "category": "Location",
     "summary": "A rocky island just off the coast — where Sandpoint's most infamous killer lived, and where the ruins of his home still sit, untouched.",
-    "content": "Chopper's Isle is the small rocky outcrop where Jervis Stoot, the serial killer known as Chopper, carved his grotesque menagerie of birds into every available surface and eventually killed over two dozen Sandpoint residents before being stopped. Nobody has demolished the carvings or the ruins of his home. Nobody goes there if they can help it. Children dare each other to swim out to it.",
+    "content": "Chopper's Isle is the small rocky outcrop revealed to be the home of Sandpoint's infamous serial killer.Nobody goes there if they can help it. Children dare each other to swim out to it.",
     "related": [
       "sandpoint"
     ],
@@ -979,7 +972,7 @@
     "title": "Scarnetti Manor",
     "category": "Location",
     "summary": "The Scarnetti family estate — recently rebuilt after giant-raid damage, and paid for with money from a source Titus would rather not discuss.",
-    "content": "Scarnetti Manor was damaged during a giant raid and spent several years in disrepair while the family's reputation suffered. Titus Scarnetti has since rebuilt both, partly through a deal with Korvosan benefactors whose interest in Sandpoint's affairs he reports on seasonally. The manor is restored. The questions about who paid for it haven't gone away.",
+    "content": "Scarnetti Manor was damaged during a giant raid and spent several years in disrepair while the family's reputation suffered. Titus Scarnetti has since rebuilt both, and rumors abound about the sudden reversal of fortunes.",
     "related": [
       "sandpoint",
       "titus-scarnetti",
@@ -1039,7 +1032,7 @@
     "title": "Scarnetti Mill",
     "category": "Location",
     "summary": "The Scarnetti family's grain mill — one of their primary commercial operations, run by a man paid barely enough to stay and threatened enough not to leave.",
-    "content": "Scarnetti Mill is one of the family's foundational commercial assets, managed by the perpetually anxious Courrin Whesterwill under conditions that might charitably be described as exploitative. Courrin stays because the alternative, as Titus has made clear, involves unpleasant consequences for people Courrin cares about.",
+    "content": "Scarnetti Mill is one of the family's foundational commercial assets, managed by the perpetually anxious Courrin Whesterwill under conditions that might charitably be described as exploitative.",
     "related": [
       "sandpoint",
       "the-scarnettis",
@@ -1060,7 +1053,7 @@
     "title": "Goblin Squash Stables",
     "category": "Location",
     "summary": "Sandpoint's stables — named with the particular enthusiasm of a man who really, really hates goblins.",
-    "content": "Sandpoint's main stabling facility is owned by Daviren Hosk, who named it with characteristic restraint. It functions as a fully operational stable and is well-maintained. Daviren's ear collection is displayed near the entrance. Visitors are encouraged not to comment on it.",
+    "content": "Sandpoint's main stabling facility is owned by Daviren Hosk, who named it with characteristic restraint. It functions as a fully operational stable and is well-maintained. Daviren's goblin ear collection is displayed near the entrance. Visitors are encouraged not to comment on it.",
     "related": [
       "sandpoint",
       "daviren-hosk"
@@ -1089,22 +1082,6 @@
       "sandpoint",
       "location",
       "valdemar"
-    ],
-    "createdAt": "2025-01-01T00:00:00.000Z"
-  },
-  {
-    "id": "midnight-dawn",
-    "title": "Midnight Dawn",
-    "category": "Location",
-    "summary": "???",
-    "content": "???",
-    "related": [
-      "aliver-pillbug-podiker",
-      "fatmans-feedbag"
-    ],
-    "tags": [
-      "placeholder",
-      "sandpoint"
     ],
     "createdAt": "2025-01-01T00:00:00.000Z"
   }

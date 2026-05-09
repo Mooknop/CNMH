@@ -4,7 +4,7 @@
     "title": "Abstalar Zantus",
     "category": "NPC",
     "summary": "Sandpoint's high priest — a cleric of Desna who ministers to all faiths with steady, unhurried warmth.",
-    "content": "Abstalar Zantus inherited his position when fire killed his predecessor, and has held it with a grace that surprised those who expected ambition to follow tragedy. He is a man of genuine open faith.",
+    "content": "When the Sandpoint chapel burnt to the ground in 4702 AR, killing the town's priest, Ezakien Tobyn, his position in the town was filled by his top acolyte, Abstalar Zantus. Though Father Zantus is himself a cleric of Desna, his role as high priest of the since-rebuilt Sandpoint Cathedral requires him to be open to other faiths, and he is more than willing and open to assist followers of other gods with spiritual matters.",
     "related": [
       "sandpoint-cathedral",
       "sandpoint",
@@ -25,13 +25,14 @@
     "title": "Titus Scarnetti",
     "category": "NPC",
     "summary": "Head of the Scarnetti family — a man who has rebuilt his fortune through means he'd prefer to keep quiet, and who hasn't forgiven Sandpoint for not being afraid of him.",
-    "content": "Titus is the last significant patriarch of the Scarnetti line, operating Sandpoint's lumber industry and nursing grievances against the mayor, the Mercantile League, and the town's general failure to accord him the deference he considers his birthright. He has outside sponsors whose interest he's been careful to serve.",
+    "content": "Titus is the last significant patriarch of the Scarnetti line, operating Sandpoint's lumber industry and nursing grievances against the mayor, the Mercantile League, and the town's general failure to accord him the deference he considers his birthright.\n\nScarnetti is quite conservative and traditional in his thinking, which often puts him at odds with the other people in town. This disconnect has cost him the race for mayor every time he has run against the more likeable Kendra Deverin, and there is no love lost between the two.\n\nLately, there have been rumors that Titus has links to certain nefarious individuals in the Sandpoint area—including members of the Sczarni criminal gangs—which have greatly reduced his standing in town.3 The exits of fellow local nobles Ameiko Kaijitsu and the Valdemars have further eroded his influence, leading him to form the Scarnetti Consortium in an attempt to consolidate his power.",
     "related": [
       "scarnetti-manor",
       "sandpoint",
       "the-scarnettis",
       "scarnetti-consortium",
-      "sandpoint-town-council"
+      "sandpoint-town-council",
+      "kendra-deverin"
     ],
     "tags": [
       "titus scarnetti",
@@ -89,8 +90,8 @@
     "id": "grandfather-grustmier",
     "title": "'Grandfather' Grustmier",
     "category": "NPC",
-    "summary": "The deceptively courtly leader of a redcap troop that has recently settled in the Tickwood — patiently poisoning Akoni's bond tree while waiting for the dryad to 'grant permission' for their permanent residence.",
-    "content": "'Grandfather' Grustmier is the self-styled patriarch and leader of a troop of redcaps that has recently taken up residence in the Tickwood near Sandpoint. Redcaps are violent fey whose iron-shod boots and dripping red caps mark them as creatures of cruelty — but Grustmier presents a veneer of folksy patience and diplomatic propriety, insisting that he merely awaits the dryad Akoni's formal permission to settle permanently.\n\nIn practice, Grustmier's troop is actively poisoning the ancient redwood tree to which Akoni is bound, steadily weakening the dryad in order to make him either relent or become too weak to resist. Grustmier is confident — perhaps even cheerfully so — that the matter will resolve itself in his favor before too long.\n\nHis presence in the Tickwood is a serious threat to Akoni's Grove and to the fey court that relies on the dryad's protection.",
+    "summary": "???",
+    "content": "???",
     "related": [
       "akoni",
       "akonis-grove",
@@ -150,7 +151,7 @@
     "title": "Meitremar",
     "category": "NPC",
     "summary": "A scholar and operative of New Thassilon who is using research found in Rusthenge to attempt the resurrection of the dead demon lord Xar-Azmak.",
-    "content": "Meitremar is a dangerous scholar who is picking up where his grandfather left off: attempting the resurrection of Xar-Azmak, the long-dead demon lord of rust who once ruled the Abyssal realm of Vlorus. He has found the research necessary for this project within the Thassilonian ruin of Rusthenge near Iron Harbor.\n\nMeitremar is positioned as a member of Runelord Belimarius's government in Xin-Edasseril, giving his work the political backing and resources of New Thassilon. In practice this relationship is one of convenience — his sinspawn ally Azomi, while nominally loyal to Belimarius, is loyal only to itself.\n\nMeitremar's cult has infiltrated and taken over Stonehome in Iron Harbor, subverting the local Gorum worshippers. Followers of Xar-Azmak favor rusted armor and sickles as a mark of their devotion.",
+    "content": "Meitremar is a dangerous scholar who is picking up where his grandfather left off: attempting the resurrection of Xar-Azmak, the long-dead demon lord of rust who once ruled the Abyssal realm of Vlorus. He has found the research necessary for this project within the Thassilonian ruin of Rusthenge near Iron Harbor.\n\nMeitremar is positioned as a member of Runelord Belimarius's government in Xin-Edasseril, giving his work the political backing and resources of New Thassilon. In practice this relationship is one of convenience — his sinspawn ally Azomi, while nominally loyal to Belimarius, is loyal only to itself.\n\nMeitremar's cult infiltrated and took over Stonehome in Iron Harbor, subverting the local Gorum worshippers, before they were soundly defeated. Meitremar's soul has been taken by the leigons of hell.",
     "related": [
       "rusthenge",
       "iron-harbor",
@@ -175,7 +176,7 @@
     "title": "Runelord Belimarius",
     "category": "NPC",
     "summary": "The Runelord of Envy and ruler of half of New Thassilon — an ancient archmage who has reawakened from stasis and resumed command of her long-frozen capital Xin-Edasseril.",
-    "content": "Belimarius was the tenth and final Runelord of Envy, ruler of the Ancient Thassilonian realm of Edasseril. She reigned from -5402 AR until the fall of Thassilon in -5293 AR, when she and the inhabitants of her capital Xin-Edasseril were preserved outside of normal time rather than destroyed by Earthfall.\n\nVery recently, adventurers freed Belimarius and the inhabitants of Xin-Edasseril from this state of captivity, and she has taken up the reins of leadership once again — now as co-ruler of the nation of New Thassilon alongside Runelord Sorshen. She wields Belimarius's Invidious Halberd, a weapon crafted by Xin himself for the previous Runelord of Envy.\n\nThe Runelord of Envy specializes in abjuration magic. Belimarius's government has extended its reach to the Kindred Coast region, where her operative Meitremar is pursuing the resurrection of the dead demon lord Xar-Azmak — a project whose implications she may or may not fully understand.",
+    "content": "Belimarius was the tenth and final Runelord of Envy, ruler of the Ancient Thassilonian realm of Edasseril. She reigned from -5402 AR until the fall of Thassilon in -5293 AR, when she and the inhabitants of her capital Xin-Edasseril were preserved outside of normal time rather than destroyed by Earthfall.\n\nVery recently, adventurers freed Belimarius and the inhabitants of Xin-Edasseril from this state of captivity, and she has taken up the reins of leadership once again — now as co-ruler of the nation of New Thassilon alongside Runelord Sorshen. She wields Belimarius's Invidious Halberd, a weapon crafted by Xin himself for the previous Runelord of Envy.\n\nThe Runelord of Envy specializes in abjuration magic.",
     "related": [
       "new-thassilon",
       "ancient-thassilon",
@@ -198,7 +199,7 @@
     "title": "Runelord Xanderghul",
     "category": "NPC",
     "summary": "The one and only Runelord of Pride — a master of illusion who secretly also posed as the god known as the Peacock Spirit, worshipped by rune magic scholars throughout Thassilon.",
-    "content": "Runelord Xanderghul was the sole holder of the title of Runelord of Pride throughout all of Ancient Thassilon's history — there was only ever one. As the Runelord of Pride, he specialized in illusion magic, whose rune is the Crescent Scepter, and his sin's energy is violet.\n\nWhether Xanderghul survived Earthfall in magical stasis, as some of his peers did, remains unknown.",
+    "content": "Runelord Xanderghul was the sole holder of the title of Runelord of Pride throughout all of Ancient Thassilon's history — there was only ever one. As the Runelord of Pride, he specialized in illusion magic, whose rune is the Crescent Scepter, and his sin's energy is violet.\n\nWhether Xanderghul survived Earthfall in magical stasis, as some of his peers did, remains unknown.\n\nPerhaps he was too prideful to run.",
     "related": [
       "ancient-thassilon",
       "new-thassilon"
@@ -219,7 +220,7 @@
     "title": "Vanda",
     "category": "NPC",
     "summary": "A former Stonehome acolyte who has not yet fully surrendered to the cult of Xar-Azmak — still wearing her unrusted plate, still carrying a thread of remorse.",
-    "content": "Vanda is one of the acolytes of Stonehome, the garrison-church of Gorum in Iron Harbor, who fell under the influence of Meitremar's cult of Xar-Azmak when the Iron Harbor was infiltrated. Unlike the others who have fully converted — trading their unrusted steel for the rusted armor and sickles that mark devotion to the dead demon lord — Vanda has not yet made that final surrender.\n\nShe still wears her unrusted full plate and fights with a greatsword, equipment that marks her as someone who has not entirely let go of what she was. A shred of remorse clings to her mind, a hesitation her fellow cultists have either not noticed or chosen to ignore. Whether that thread of conscience is enough to pull her back from the path Meitremar has set her on remains an open question.",
+    "content": "Vanda was one of the acolytes of Stonehome, the garrison-church of Gorum in Iron Harbor, who fell under the influence of Meitremar's cult of Xar-Azmak when the Iron Harbor was infiltrated. Unlike the others who fully converted — trading their unrusted steel for the rusted armor and sickles that mark devotion to the dead demon lord — Vanda never made that final surrender.\n\nIn the wake of the crisis, Vanda stepped up to lead Stonehome, taking on the responsibilities of a temple left without clear direction after the corruption was purged. She has since thrown herself into rebuilding both the church and the community's trust in it.\n\nShe is currently in a situationship with Ashka B'gosh.",
     "related": [
       "iron-harbor",
       "meitremar",
@@ -232,8 +233,7 @@
       "iron harbor",
       "stonehome",
       "cult",
-      "xar-azmak",
-      "conflicted"
+      "xar-azmak"
     ],
     "createdAt": "2025-01-01T00:00:00.000Z"
   },
@@ -449,7 +449,7 @@
     "title": "Risa Magravi",
     "category": "NPC",
     "summary": "Sandpoint's oldest innkeeper — a half-blind Varisian sorcerer whose tales of strange places are actually true, and who is quietly dying because she can no longer dream.",
-    "content": "Risa built her tavern and her legend in equal measure. She travels the Dreamlands every night in her sleep — or she used to. Something is blocking her dreams now, and without them, she is fading. She doesn't know why, and she doesn't know how long she has.",
+    "content": "Risa built her tavern and her legend in equal measure. She travels the Dreamlands every night in her sleep — or she used to. Something is blocking her dreams now, and without them she believes she is fading.",
     "related": [
       "risas-place",
       "sandpoint",
@@ -473,8 +473,8 @@
     "id": "jubrayl-vhiski",
     "title": "Jubrayl Vhiski",
     "category": "NPC",
-    "summary": "Leader of the Bunyip Club — Sandpoint's local face of the Sczarni, managing thieves, smugglers, and a side venture in Thassilonian artifacts that has gotten more complicated than he planned.",
-    "content": "Jubrayl runs a tight operation of two dozen criminals who maintain perfectly respectable day jobs. He's gotten tangled in Ancient Thassilonian smuggling through an associate at Hag's Plummet, and is starting to wonder if the money is worth the exposure.",
+    "summary": "???",
+    "content": "???",
     "related": [
       "fatmans-feedbag",
       "bunyip-club",
@@ -517,7 +517,7 @@
     "title": "Vorvashali Voon",
     "category": "NPC",
     "summary": "The gregarious proprietor of the Feathered Serpent — a collector and dealer in magical oddities who is currently very interested in clockwork birds.",
-    "content": "Vorvashali is enthusiastic about almost everything and especially enthusiastic about magical curiosities. He already has one piece of the Clockwork Songbird and is offering rewards to anyone who can find more.",
+    "content": "Vorvashali is enthusiastic about almost everything and especially enthusiastic about magical curiosities. Nine out of ten adventurers will tell you one of Vorvashali's items saved their hid, and the tenth didn't make it out of the dungeon.",
     "related": [
       "the-feathered-serpent",
       "sandpoint"
@@ -593,8 +593,8 @@
     "id": "aliver-pillbug-podiker",
     "title": "Aliver 'Pillbug' Podiker",
     "category": "NPC",
-    "summary": "Sandpoint's alchemist — a poison dealer and Midnight Dawn operative hiding behind a respectable storefront.",
-    "content": "Aliver maintains his reputation as a legitimate pharmacist while quietly supplying the Sczarni with poisons and the Midnight Dawn with something worse. He is not a man to approach carelessly, and he has friends in dark places.",
+    "summary": "Sandpoint's alchemist — a poison dealer if you know how to ask hiding behind a respectable storefront.",
+    "content": "An unassuming, if strange, alchemist. Just as likely to offer a healing poltice as a deadly poison, depending on his judgement of your needs.",
     "related": [
       "pillbugs-pantry",
       "sandpoint",
@@ -739,7 +739,7 @@
     "title": "Solsta Vinder",
     "category": "NPC",
     "summary": "Ven Vinder's wife — keeping the general store running, keeping the family together, and quietly terrified that she's losing both her husband and her daughter.",
-    "content": "Solsta manages the store, manages her husband's deterioration, and is starting to manage her fear about where Shayliss keeps disappearing to. She has promised herself she'll ask the next group of capable-looking strangers for help.",
+    "content": "Solsta manages the store, manages her husband's deterioration, and is starting to manage her fear about where Shayliss keeps disappearing to.",
     "related": [
       "sandpoint-general-store",
       "sandpoint",
@@ -758,8 +758,8 @@
     "id": "shayliss-vinder",
     "title": "Shayliss Vinder",
     "category": "NPC",
-    "summary": "The Vinders' surviving daughter — she's found Calistria and a secret identity, and she's not coming home much anymore.",
-    "content": "Shayliss has become someone her parents don't quite recognize. She's found faith in Calistria and an outlet in a masked vigilante identity called the Shroud. Whatever she's doing when she slips out of the secret door by the Turandarok River, it isn't what her mother imagines.",
+    "summary": "The Vinders' surviving, yet prodigal, daughter ",
+    "content": "Shayliss has become someone her parents don't quite recognize. She's found faith in Calistria seemingly out of nowhere. Whatever she's doing when she slips out of the secret door by the Turandarok River, it isn't what her mother imagines.",
     "related": [
       "sandpoint-general-store",
       "sandpoint",
