@@ -11,6 +11,7 @@ import religionEntries from './lore/religions.json';
 import historyEntries from './lore/history.json';
 import factionEntries from './lore/factions.json';
 import organizationEntries from './lore/organizations.json';
+import artifactEntries from './lore/artifacts.json';
 import pcEntries from './lore/pcs.json';
 import questsData from './quests.json';
 import reputationData from './reputation.json';
@@ -33,6 +34,7 @@ export const loreEntries = [
   ...historyEntries,
   ...factionEntries,
   ...organizationEntries,
+  ...artifactEntries,
   ...pcEntries,
 ];
 
