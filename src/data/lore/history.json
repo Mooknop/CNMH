@@ -1,0 +1,71 @@
+[
+  {
+    "id": "new-thassilon",
+    "title": "New Thassilon",
+    "category": "History",
+    "dateArStart": 4720,
+    "summary": "The recently returned Thassilonian civilization, formed by time-displaced peoples, is now split between the rule of Runelord Belimarius and the surprising reformer Runelord Sorshen.",
+    "content": "New Thassilon is the returned civilization of Ancient Thassilonian peoples — survivors and time-displaced subjects of the old empire who have re-established a presence in Varisia. It is currently split between the rule of two Runelords: Runelord Belimarius (Runelord of Envy) and Runelord Sorshen (Runelord of Lust), who has taken a surprisingly different path from her former colleagues.\n\nThe return of New Thassilon has sparked renewed interest in Thassilonian history and ruins throughout Varisia. It has also created a new wave of worship for two long-lost gods: Lissala (goddess of runes, once the patron deity of Thassilon) and the Peacock Spirit (a mysterious god of success and prosperity).",
+    "related": [
+      "ancient-thassilon",
+      "runelord-sorshen",
+      "varisia",
+      "old-light",
+      "brodert-quink"
+    ],
+    "tags": [
+      "new thassilon",
+      "runelords",
+      "history",
+      "current events"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "late-unpleasantness",
+    "title": "The Late Unpleasantness",
+    "category": "History",
+    "dateArStart": 4702,
+    "summary": "A series of dark events in 4702 AR — murders by the serial killer 'Chopper' and the fire that destroyed Sandpoint's original chapel — that the townspeople prefer not to speak of.",
+    "content": "Referred to locally as 'the Late Unpleasantness,' a series of catastrophic events struck Sandpoint in the winter of 4702 AR. First, a string of gruesome murders was carried out by a killer known only as 'Chopper' took the lives of dozens of townspeople before being stopped during his last terrible night.\n\nShortly afterward, a great fire destroyed the original Sandpoint chapel and the surrounding buildings, killing Father Ezakien Tobyn. Tobyn was succeeded by Abstalar Zantus, who took on the task of rebuilding the cathedral and the faith of the people of Sandpoint",
+    "related": [
+      "sandpoint",
+      "abstalar-zantus",
+      "sandpoint-cathedral"
+    ],
+    "tags": [
+      "history",
+      "tragedy",
+      "chopper",
+      "sandpoint",
+      "late unpleasantness",
+      "4702"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "founding-families",
+    "title": "Sandpoint's Founding Families",
+    "category": "History",
+    "dateArStart": 4666,
+    "summary": "Four powerful families from Magnimar — the Deverins, Scarnettis, Kaijitsus, and Valdemars — founded Sandpoint in 4666 AR, and their descendants continue to shape the town's politics today.",
+    "content": "In 4666 AR, four powerful families from Magnimar consolidated their resources and sailed north to found Sandpoint. Each family brought a different industry: the Kaijitsus were glassmakers and jewelers, the Valdemars shipbuilders and carpenters, the Scarnettis loggers and millers, and the Deverins farmers and brewers.\n\nTheir founding was marred almost immediately. They arrived to find the land already inhabited by a large Varisian tribe. After some failed negotiations, a scandal leaving dozens of Varisians and Scarnettis dead rocked the negotiations. The resulting crisis threatened the establishement of the town all together until a compromise was reached: the Varisians received a sixty-year share of Sandpoint profits (later extended to 4726 AR) and the promise of a Desnan temple in the cathedral.\n\nToday, the Deverins and Scarnettis remain Sandpoint's most influential founding families. The Kaijitsus departed when Ameiko Kaijitsu ascended to become Empress of Minkai. The Valdemars have effectively withdrawn from town politics following financial setbacks and the death of their Sandpoint patriarch.",
+    "related": [
+      "sandpoint",
+      "the-scarnettis",
+      "the-deverins",
+      "the-kaijitsus",
+      "the-valdemars",
+      "ameiko-kaijitsu"
+    ],
+    "tags": [
+      "founding families",
+      "history",
+      "sandpoint",
+      "magnimar",
+      "4666"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]
+

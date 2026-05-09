@@ -1,0 +1,44 @@
+{
+  "age-of-lost-omens": {
+    "description": "The Age of Lost Omens is one of the five major historical ages of the Inner Sea region, the beginnings and ends of which are marked by globally-significant events. It is the age in which we find ourselves today, having supplanted the Age of Enthronement in 4606 AR when the death of the god Aroden threw the entire planet into decades of turmoil and confusion. Aroden himself had prophesied thousands of years before that he would return on the cusp of mankind's greatest triumph and usher in the Age of Glory. His priests and followers calculated the supposed exact time of this event and prepared for it with lavish pomp. On the prophesied date, instead of his return, all contact to the god was lost and the world was devastated by terrible storms, the opening of vast planar rifts, and decades-spanning political upheavals. Since then, no major prophecy has come true, a condition for which historians have named the current era.",
+    "subEras": [
+      {
+        "id": "age-of-glory",
+        "title": "The Age of Glory (Unfulfilled)",
+        "description": "The Age of Glory was the time of the prophesied return of the god Aroden to Golarion. According to the Starfall Doctrine, it was supposed to have begun in 4606 AR, but instead of the god of humanity's return, his priests lost their divine connection and he is presumed to have perished. Instead of humans being led into a new golden age of peace and justice that Golarion hadn't witnessed since the height of ancient Azlanti, the world was plunged into decades of chaos and the Age of Lost Omens."
+      }
+    ]
+  },
+  "age-of-enthronement": {
+    "description": "The Age of Enthronement began with the founding of Absalom, and its inception is also the starting point for the Absalom Reckoning dating system. The Age of Enthronement spans the years from 1 AR until 4606 AR when Aroden, the god of humanity, died. This age is characterised by the emergence of a number of gods who ascended to divinity through the Test of the Starstone. The mortals who survived the test and became gods were Aroden in 1 AR, Norgorber in 1983, Cayden Cailean in 2765 and Iomedae in 3832. The nations of Andoran and Cheliax were founded as expansion from the kingdom of Taldor. The Oath Wars raged across northwest Garund between 2498 AR and 2560 as the churches of Nethys, Norgorber and Sarenrae vied for dominance. The Whispering Tyrant arose in 3203 AR invoking the Shining Crusade in 3754 AR which burned for three quarters of a century and ended with the founding of Lastwall to defend against the return of the lich king. In 4305 AR Cheliax began an extended period of expansion annexing lands in Molthune and Varisia which would become known as the Everwar."
+  },
+  "age-of-destiny": {
+    "description": "The Age of Destiny (-3470 AR – 1 AR) began with the founding of the Osirian civilization and spanned three and a half millennia until Aroden raised the Starstone from the bottom of the Inner Sea and founded the great city of Absalom, ushering in the Age of Enthronement. It was marked by the re-emergence of human civilization after the barbarism of the Age of Darkness and the Age of Anguish. Other notable occurrences included the founding of the nations of Taldor, Qadira, and the Lands of the Linnorm Kings, and the beginning of the imperial expansion of Kelesh. Wars during this age included the Nex–Geb War and the tarrasque invasion of -632 AR. The broadly known history of Golarion extends to this period, almost 6,000 years into the past or to approximately -1,300 AR."
+  },
+  "age-of-anguish": {
+    "description": "The Age of Anguish is a term used by historians to describe the roughly 800 year period starting in -4294 AR when the skies finally cleared of the dust of Earthfall. This age was characterized by the conflicts of primitive peoples in a desperate struggle for survival and domination in a world left shattered by the Age of Darkness. The end of the Age of Anguish, and the beginning of the Age of Destiny, was marked by the founding of the Osirion civilization in circa -3470 AR, and the slow re-establishment of human civilizations across the world."
+  },
+  "age-of-darkness": {
+    "description": "The Age of Darkness was a thousand-year period in which the sun's light was blocked by the ash knocked into the atmosphere by the meteoric impacts of Earthfall. It began with the impact of the fragmented Aeon Star in -5293 AR and lasted until the sun's light was restored around -4294 AR. During the Age of Darkness, all major civilizations across Golarion were destroyed, ushering in a time of anarchy and destruction."
+  },
+  "age-before-ages": {
+    "description": "The Age Before Ages is a collective term used in the Inner Sea region to describe Golarion's prehistoric past that preceded the Age of Darkness, as marked by the destruction of the Aeon Star during Earthfall in -5293 AR. Going backwards in time from Earthfall, the Age Before Ages includes the Age of Legend, Age of Serpents, and the Age of Creation. It is a time best known through myths and legends, and although great priests and powerful diviners have used magic to explore it, their discoveries have been fragmentary and confusing, raising many more questions than they answered.",
+    "subEras": [
+      {
+        "id": "age-of-legend",
+        "title": "Age of Legend",
+        "description": "Age of Legend is a general term used to refer to the \"prehistoric\" time before the destruction of the Starstone led to the Age of Darkness in -5293 AR. It is marked by the rise of the first human civilization on the lost continent of Azlant, the establishment of the Thassilonian Empire on Avistan's mainland, the rise of the dragon rulers in Tian Xia, and the creation of the cyclops nation of Koloran on the continent of Casmaron. It was preceded by the unmeasured time of the Age of Serpents, and ended when the Starstone brought on the collapse of the first human civilizations and the Age of Darkness."
+      },
+      {
+        "id": "age-of-serpents",
+        "title": "Age of Serpents",
+        "description": "The Age of Serpents is a term used primarily in the Inner Sea region by those who use the dating system known as Absalom Reckoning for the length of unmeasured time that preceded the rise of humanity on the continent of Azlant. It was marked by the rise of one of Golarion's first mortal races to gain control of large parts of the world and from whom the age is named: the serpentfolk. Some scholars postulate that the rule of the serpentfolk in this age stretched across continents and beyond to nearby planetoids. The Age of Serpents was preceded by the mythical Age of Creation and was followed by the Age of Legend, when the power of the serpentfolk was eclipsed by other races."
+      },
+      {
+        "id": "age-of-creation",
+        "title": "Age of Creation",
+        "description": "The Age of Creation refers to the uncounted years of mythic time, beginning with the creation of Golarion and ending with the emergence of mortal beings upon its face (the Age of Serpents). It was a time when the deities of Golarion played a much more active role than they do today. It was during the Age of Creation that the great battle that led to Rovagug's imprisonment occurred."
+      }
+    ]
+  }
+}

@@ -5,7 +5,12 @@ import JadeInferno from './JadeInferno.json';
 import Blu_Kakke from './Blu-Kakke.json';
 import Pellias from './Pellias.json';
 //import CarmaleighZ from './CarmaleighZuhnyons.json';
-import loreData from './lore.json';
+import locationEntries from './lore/locations.json';
+import npcEntries from './lore/npcs.json';
+import religionEntries from './lore/religions.json';
+import historyEntries from './lore/history.json';
+import factionEntries from './lore/factions.json';
+import organizationEntries from './lore/organizations.json';
 import questsData from './quests.json';
 import reputationData from './reputation.json';
 
@@ -20,7 +25,14 @@ export const sampleCharacters = [
 ];
 
 // Export the lore data
-export const loreEntries = loreData.loreEntries;
+export const loreEntries = [
+  ...locationEntries,
+  ...npcEntries,
+  ...religionEntries,
+  ...historyEntries,
+  ...factionEntries,
+  ...organizationEntries,
+];
 
 // Export the quests data directly from the JSON
 export const quests = questsData.quests;

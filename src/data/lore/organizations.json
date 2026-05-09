@@ -1,0 +1,79 @@
+[
+  {
+    "id": "pathfinder-society",
+    "title": "Pathfinder Society",
+    "category": "Organization",
+    "summary": "A globe-spanning organization of explorers and chroniclers based in Absalom, with a significant presence in Magnimar through Heidmarch Manor.",
+    "content": "The Pathfinder Society is a globe-spanning organization based out of Absalom, the City at the Center of the World. Its members — called Pathfinders — travel throughout Golarion to explore, delve, and document the lesser-seen parts of the world, sending journals back to their venture-captains. The most illuminating of these journals are compiled into the ongoing Pathfinder Chronicles series.\n\nIn Varisia, the Society operates out of Heidmarch Manor in Magnimar, run by Sheila and Canayven Heidmarch. They maintain ties with local scouts and take an active interest in Thassilonian ruins throughout the region.",
+    "related": [
+      "magnimar",
+      "ancient-thassilon"
+    ],
+    "tags": [
+      "pathfinder society",
+      "organization",
+      "magnimar",
+      "explorers"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "scarnetti-consortium",
+    "title": "The Scarnetti Consortium",
+    "category": "Organization",
+    "summary": "An aggressive industrial conglomerate of mills and lumber concerns owned and controlled by Titus Scarnetti — widely regarded as Sandpoint's most unpleasant power broker.",
+    "content": "The Scarnetti Consortium is a collection of industrial companies and concerns centered on Sandpoint's lumber and milling industries, all owned and directed by Titus Scarnetti, the head of the Scarnetti family. The Consortium controls the lumber supply that competing interests — especially the now-weakened Valdemars — depend on, and Titus leverages this dependency openly and without apology.\n\nThe Consortium has a deeply negative reputation with much of Sandpoint's population, particularly the Varisian community. Evidence of collusion with local criminal elements nearly surfaced publicly when Scarnetti Manor was damaged in a giant raid; Titus managed to suppress most of it, but enough leaked to cause lasting damage to the family's standing. Since then, the Consortium has been rebuilt through secret dealings with Korvosan interests.\n\nThe Consortium is distinct from the broader Sandpoint Mercantile League, which it participates in but frequently works against. Its influence rating in town is sharply negative.",
+    "related": [
+      "the-scarnettis",
+      "titus-scarnetti",
+      "sandpoint",
+      "sandpoint-mercantile-league",
+      "korvosa"
+    ],
+    "tags": [
+      "scarnetti consortium",
+      "organization",
+      "sandpoint",
+      "industry",
+      "lumber",
+      "scarnetti"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "brotherhood-of-the-platinum-band",
+    "title": "Brotherhood of the Platinum Band",
+    "category": "Organization",
+    "summary": "A small monastic order of humanoid worshippers devoted to Apsu the Waybringer, operating primarily out of Oppara and Absalom — and the order that raised Blu-Kakke before casting him out.",
+    "content": "The Brotherhood of the Platinum Band is a monastic order of humanoid worshippers devoted to Apsu the Waybringer, the primordial dragon god of creation and patron of metallic dragons. According to the draconic creation myth Apsu is one of the primordial dragons who created the solar system and its inhabitants from the chaos of the Universe. The Brotherhood reveres him as the source of all righteous draconic power.\n\nThe small faith operates mostly out of Oppara and Absalom. They are an unusual congregation in that they are composed of humanoids rather than dragons, drawn to Apsu's ideals of good, creativity, and the long arc of cosmic order.\n\nThe Brotherhood raised Blu-Kakke after he was left in their care as a child by 'a man made of metal' from the north east. He trained with them until a connection to Blue Dragons — chromatic dragons associated with evil in orthodox draconic religion — scandalized the Brotherhood and led to his expulsion on religious grounds.",
+    "related": [
+      "apsu",
+      "osprey-cove"
+    ],
+    "tags": [
+      "brotherhood of the platinum band",
+      "organization",
+      "apsu",
+      "monastic",
+      "dragons"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "bunyip-club",
+    "title": "The Bunyip Club",
+    "category": "Organization",
+    "summary": "???",
+    "content": "???",
+    "related": [
+      "jubrayl-vhiski",
+      "fatmans-feedbag",
+      "aliver-pillbug-podiker"
+    ],
+    "tags": [
+      "placeholder",
+      "sandpoint"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]

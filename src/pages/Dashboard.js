@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameDate } from '../contexts/GameDateContext';
-import { PARTY_GOLD, PARTY_NAME, CURRENT_LOCATION } from '../data/campaign';
+import { PARTY_GOLD, PARTY_NAME, CURRENT_LOCATION, CURRENT_LOCATION_LORE_ID } from '../data/campaign';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -32,13 +32,16 @@ const Dashboard = () => {
               </div>
           </button>
             
-            <div className="stat-card">
+            <button
+              className="stat-card clickable-stat-card"
+              onClick={() => navigateTo(`/lore/${CURRENT_LOCATION_LORE_ID}`)}
+              title="Click to view lore about this location">
               <div className="stat-icon">🗺️</div>
               <div className="stat-content">
                 <div className="stat-label">Current Location</div>
                 <div className="stat-number">{CURRENT_LOCATION}</div>
               </div>
-            </div>
+            </button>
 
             <button 
             className="stat-card clickable-stat-card"

@@ -1,0 +1,323 @@
+[
+  {
+    "id": "desna",
+    "title": "Desna",
+    "category": "Religion",
+    "summary": "The goddess of dreams, travelers, and freedom — one of the most widely worshipped deities in Varisia, with a particular significance to the Varisian people.",
+    "content": "Desna is the goddess of dreams, travelers, and freedom. She is one of the most widely worshipped deities in Varisia, particularly among the Varisian people who see her as a patron of the road and of personal liberty. Her faith emphasizes joy, exploration, and the beauty of the night sky.\n\nThe inclusion of a Desnan temple in the Sandpoint Cathedral was a condition of the compromise reached with the Varisian Council after the Scarnetti founding raid — a gesture of respect for Varisian nomadic culture. Father Abstalar Zantus, while a devoted cleric of Desna, keeps the cathedral open to all faiths.",
+    "related": [
+      "sandpoint-cathedral",
+      "abstalar-zantus",
+      "varisian-people",
+      "sandpoint"
+    ],
+    "tags": [
+      "desna",
+      "religion",
+      "deity",
+      "travelers",
+      "varisian"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "ferrumnestra",
+    "title": "Ferrumnestra",
+    "category": "Religion",
+    "summary": "The Lady of Rust — the Elemental Lord of metal, decline, and inevitability — an eternally wandering deity who opposes the resurrection of Xar-Azmak and has chosen Pellias Scarnetti as her champion.",
+    "content": "Ferrumnestra is the Elemental Lord of Metal, known as the Lady of Rust. She is one of the two Elemental Lords of the Plane of Metal, her domain encompassing metal, decay, mourning, and the inevitability of endings. Her touch is that of slow decline — the rust of ages that eats away at even the strongest steel. While she has no particular desire to hasten any endings, she is there to consume the last crumbling detritus of what has fallen, leaving nonexistence in her wake.\n\nFerrumnestra keeps no permanent dwelling, always on the move as is her purpose. Her few devotees usually follow her example, traveling across the world and destroying the wreckage of ancient ruins in their wake. Her edicts are to accept the inevitable, clear what remains of that which has fallen to ruin, and usher the past into obscurity. Her anathema: to preserve knowledge that has outlived its time, or to restore an object or structure that has been reclaimed by the elements.\n\nShe is strongly opposed to the resurrection of Xar-Azmak, the dead demon lord whose realm Vlorus borders the Plane of Metal — viewing any attempt to restore him as a direct disrespect to her domain. She has chosen Pellias Scarnetti as her champion, a bond that his companion Jade Inferno has taken great interest in helping him explore.",
+    "related": [
+      "vlorus",
+      "meitremar",
+      "rusthenge",
+      "the-scarnettis"
+    ],
+    "tags": [
+      "ferrumnestra",
+      "elemental lord",
+      "deity",
+      "metal",
+      "religion",
+      "rust",
+      "decay",
+      "champion"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "asmodeus",
+    "title": "Asmodeus",
+    "category": "Religion",
+    "summary": "The Prince of Darkness — the most powerful archdevil and the only one to claim full divinity — patron god of Cheliax and lord of all Hell.",
+    "content": "Asmodeus is the most powerful of the nine archdevils that inhabit Hell, and the only one of Hell's rulers to claim full divinity. He is credited with penning the Contract of Creation, within which his followers believe is hidden the means for their patron's eventual rise to supremacy over all other gods.\n\nOther gods find Asmodeus the easiest of the evil deities to deal with — they recognize his aid is not to be sought lightly, but he operates within predictable frameworks of law and contract. He is allied with Abadar due to their shared appreciation for order and lawful societies. He has an ongoing feud with Irori, who dislikes him for undermining others' hard work. He holds a great disdain for Grandmother Spider, who stole his keys and outwitted his retribution.\n\nAsmodeus serves as the patron deity of Cheliax, whose ruling houses bound themselves to infernal power after the chaos following Aroden's death.",
+    "related": [
+      "cheliax",
+      "the-scarnettis",
+      "hell",
+      "dispater"
+    ],
+    "tags": [
+      "asmodeus",
+      "devil",
+      "hell",
+      "religion",
+      "cheliax",
+      "deity"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "apsu",
+    "title": "Apsu",
+    "category": "Religion",
+    "summary": "The Waybringer — the patron deity of all good and metallic dragons, and one of the oldest gods of the Great Beyond, who according to draconic myth shaped the cosmos from primordial chaos.",
+    "content": "Apsu is the patron deity of all good and metallic dragons, and one of the oldest gods of the Great Beyond. According to the draconic creation myth, he was one of the primordial dragons who created the solar system and its inhabitants from the chaos of the Universe, making him a figure of cosmic significance in draconic religion.\n\nApsu is worshipped by the humanoid monastic order known as the Brotherhood of the Platinum Band, who venerate him as the source of righteous draconic power. His faith is small but sincere, and his followers tend toward the ideals of creation, guardianship, and the patient wisdom of ancient things.\n\nApsu's eternal enemy is Dahak, the evil dragon deity of destruction, treachery, and wanton violence.",
+    "related": [
+      "dahak",
+      "brotherhood-of-the-platinum-band"
+    ],
+    "tags": [
+      "apsu",
+      "dragon",
+      "deity",
+      "religion",
+      "metallic dragons",
+      "good"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "dahak",
+    "title": "Dahak",
+    "category": "Religion",
+    "summary": "The Endless Destruction — the evil dragon deity of destruction, treachery, and wanton violence, and the eternal enemy of Apsu.",
+    "content": "Dahak is the evil dragon deity of destruction, treachery, and wanton violence. He is the eternal enemy of Apsu, the good dragon god, and their conflict represents the cosmic division within dragonkind between the metallic (good) and chromatic (evil) lineages.\n\nDahak's portfolio encompasses senseless destruction, betrayal, and the pleasure taken in causing pain and ruin. He is worshipped primarily by chromatic dragons and those mortals who seek power through destruction. His connection to Blue Dragons — whose lightning and proud cruelty align with his domain — is part of why Blu-Kakke's discovered connection to Blue Dragon power scandalized the Brotherhood of the Platinum Band, which is devoted to Apsu.",
+    "related": [
+      "apsu",
+      "brotherhood-of-the-platinum-band"
+    ],
+    "tags": [
+      "dahak",
+      "dragon",
+      "deity",
+      "religion",
+      "chromatic dragons",
+      "evil",
+      "destruction"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "gorum",
+    "title": "Gorum",
+    "category": "Religion",
+    "summary": "Our Lord in Iron — the god of battle, strength, and valor, whose worshippers seek glory through combat and who forms the spiritual backbone of the militaristic town of Iron Harbor.",
+    "content": "Gorum is the god of battle, strength, and valor — known to his faithful as Our Lord in Iron. He is a deity of pure martial virtue, caring not for law or chaos, good or evil, only for the glory found in worthy combat. His followers believe that the greatest honor a warrior can achieve is to die in battle, and they seek out worthy conflicts with fervor.\n\nGorum has a herald known as the First Blade. His followers in the Iron Archipelago's Iron Harbor have made the fortress-church of Stonehome the center of their devotion — though that institution has recently been compromised by the cult of Xar-Azmak.\n\nGorum is viewed as disinterested in inventors, even of weapons, and has come into conflict with Urgathoa, who considers death by disease insufficiently honorable for warriors.",
+    "related": [
+      "iron-harbor",
+      "osprey-cove",
+      "vanda"
+    ],
+    "tags": [
+      "gorum",
+      "battle",
+      "deity",
+      "religion",
+      "strength",
+      "iron harbor"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "cayden-cailean",
+    "title": "Cayden Cailean",
+    "category": "Religion",
+    "summary": "The Accidental God of drink, freedom, adventure, and revelry — patron of Osprey Cove and one of the three deities who ascended to godhood through the Test of the Starstone.",
+    "content": "Cayden Cailean is the god of drink, partying, freedom, and adventure. He is one of three mortals known to have passed the Test of the Starstone — a near-impossible divine trial — and ascended to godhood, though legend holds he was drunk at the time and can no longer clearly remember why he agreed to attempt it.\n\nHis faith is beloved by free spirits, travelers, fighters who prefer brawling to strategy, and anyone who believes that life is best lived without unnecessary chains. He has no patience for tyranny or the oppression of the weak. His followers in Osprey Cove, like Elder Ordwi, embody the town's laid-back, community-minded values.\n\nCayden Cailean is on good terms with Brigh (who appreciates the science of brewing) and counts Desna and Shelyn among his friendly divine neighbors.",
+    "related": [
+      "osprey-cove",
+      "elder-ordwi",
+      "desna"
+    ],
+    "tags": [
+      "cayden cailean",
+      "deity",
+      "religion",
+      "freedom",
+      "drink",
+      "adventure",
+      "osprey cove"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "sarenrae",
+    "title": "Sarenrae",
+    "category": "Religion",
+    "summary": "The Dawnflower — goddess of healing, redemption, and the sun, whose faith of compassion and temperance is one of the most widely practiced at the Sandpoint Cathedral.",
+    "content": "Known to her faithful as the Dawnflower, the Healing Flame, and the Everlight, Sarenrae is a goddess who teaches temperance and patience in all things. Compassion and peace are her greatest virtues, and if enemies of the faith can be redeemed, they should be — though she is not without wrath for those who refuse redemption and continue to cause harm.\n\nSarenrae is one of the deities whose faith is welcomed at the multi-faith Sandpoint Cathedral. Her worship is widespread throughout the Inner Sea region. Her enemies include the undead goddess Urgathoa, whose portfolio of excess and disease runs counter to everything Sarenrae values.\n\nShe is one third of the divine relationship known as the Prismatic Ray, alongside Desna and Shelyn.",
+    "related": [
+      "sandpoint-cathedral",
+      "desna",
+      "shelyn"
+    ],
+    "tags": [
+      "sarenrae",
+      "deity",
+      "religion",
+      "healing",
+      "sun",
+      "redemption",
+      "sandpoint"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "shelyn",
+    "title": "Shelyn",
+    "category": "Religion",
+    "summary": "The Eternal Rose — goddess of beauty, art, love, and music, whose faith of creative joy and compassion welcomes all who seek beauty in the world.",
+    "content": "Shelyn is the goddess of beauty, art, love, and music. She was born the daughter of the spirit-wolf Thron and shares her father with her half-brother Dou-Bral — who, after a long absence and mysterious corruption, returned as the god of pain and shadow, Zon-Kuthon. Shelyn still grieves this transformation and holds love for what her brother once was, even as she opposes what he has become.\n\nShelyn's faith celebrates creativity and joy in all its forms. She is one third of the divine relationship known as the Prismatic Ray alongside Desna and Sarenrae. Her worshippers are found wherever art is made, and her faith is welcomed at the Sandpoint Cathedral. She is closest among the gods to Brigh, goddess of invention, despite their apparent differences.",
+    "related": [
+      "sandpoint-cathedral",
+      "desna",
+      "sarenrae"
+    ],
+    "tags": [
+      "shelyn",
+      "deity",
+      "religion",
+      "beauty",
+      "art",
+      "love",
+      "sandpoint"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "erastil",
+    "title": "Erastil",
+    "category": "Religion",
+    "summary": "Old Deadeye — one of the oldest gods still worshipped in the Inner Sea, patron of farming, hunting, family, and community, whose simple faith speaks to those who build their lives from the land.",
+    "content": "Erastil is one of the oldest human gods still worshipped in the Inner Sea region, his religion dating back to before the Age of Darkness, when small farming communities and hunter-gatherers prayed to him for bountiful harvests and successful hunts. He leads his followers by example and good deeds rather than flowery rhetoric.\n\nErastil believes that groups work best when led by a good and strong leader, and he values family, community, children honoring their parents, and understanding the difference between work and play. His faith is humble, practical, and deeply rooted in the rhythms of rural life.\n\nHis faith is welcomed at the multi-faith Sandpoint Cathedral and provides aid to the poor in Magnimar's rougher districts.",
+    "related": [
+      "sandpoint-cathedral",
+      "sandpoint"
+    ],
+    "tags": [
+      "erastil",
+      "deity",
+      "religion",
+      "farming",
+      "family",
+      "community",
+      "sandpoint"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "abadar",
+    "title": "Abadar",
+    "category": "Religion",
+    "summary": "The Master of the First Vault — patient god of cities, law, merchants, and wealth, whose faith champions the expansion of civilization and lawful order across Golarion.",
+    "content": "Abadar is the god of cities, law, merchants, and wealth, known to be a patient deity who maintains a strong neutral stance in his actions. He sets forth to expand civilization and order among the peoples of Golarion, believing that structured society and lawful trade are the foundations of prosperity and peace.\n\nAbadar is allied with Asmodeus due to their shared appreciation for order and lawful societies, though the two have very different ends in mind. He has a good relationship with Irori. His faith is widespread in every major city of the Inner Sea and is welcomed at the Sandpoint Cathedral. His retired paladin Jasper Korvaski serves as Sandpoint's town planner — a man whose near-incorruptible character the Mercantile League values highly.",
+    "related": [
+      "sandpoint-cathedral",
+      "sandpoint"
+    ],
+    "tags": [
+      "abadar",
+      "deity",
+      "religion",
+      "law",
+      "merchants",
+      "cities",
+      "sandpoint"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "gozreh",
+    "title": "Gozreh",
+    "category": "Religion",
+    "summary": "The Wind and the Waves — an ancient, dual-natured deity of nature, weather, and the sea, worshipped by sailors, druids, and all who live close to the natural world.",
+    "content": "Gozreh is an ancient deity, thought to have existed for as long as the wind has blown and the waters swelled. Their faithful are to be found in all places of nature, doing their will as they have for eons. Gozreh is dual-natured — representing both the wild sky and the deep sea, both calm and storm.\n\nGozreh is one of the deities who fought and helped trap Rovagug in the defense of all creation. Their faith is particularly embraced by those who live and work close to nature — sailors, druids, fishers, and healers of the wilds like Hannah Velerin of Sandpoint, who spends her mornings in the hinterlands enjoying Gozreh's bounty.",
+    "related": [
+      "sandpoint-cathedral",
+      "sandpoint-hinterlands"
+    ],
+    "tags": [
+      "gozreh",
+      "deity",
+      "religion",
+      "nature",
+      "weather",
+      "sea",
+      "sandpoint"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "dispater",
+    "title": "Dispater",
+    "category": "Religion",
+    "summary": "The Iron Lord — archdevil, greatest jailer and politician of Hell, ruler of Dis, and one of Asmodeus's oldest and most trusted allies. Calculating, patient, and absolutely merciless when provoked.",
+    "content": "Dispater is Hell's greatest jailer and politician, ruling its second layer, Dis. Known as the Iron Lord, Father of Dis, and First King, he is one of the most active rulers of Hell and one of Asmodeus's closest and longest-standing allies. He appears as a majestic, towering figure with rust-red skin, four horns, and a burning crown that hovers above his head — a fallen angel whose black wings he keeps retracted within his body at almost all times.\n\nDispater is a master strategist and expert in intrigue. He prefers to use his commanding presence, charm, and political leverage to achieve his ends rather than direct violence — but when violence becomes necessary, he reminds everyone precisely why he is feared. His symbol of office is an artifact known as the Eclipsing Eye. His religious symbol is an iron spike driven into a golden ring with a red and purple crown.\n\nAlone among the lords of Hell, Dispater believes in the virtues of courtly love. He has taken three wives over his eons-long existence: the first is forgotten even by himself, her only memorial a shattered statue in his throne room. His second was Feronia, an elemental demigoddess, with whom he had a brief tempestuous relationship that produced the empyreal lord Ragathiel. His third and current wife is Erecura, a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life from Pharasma — and whom Dispater sincerely loves.\n\nDispater's armies were responsible for the destruction of the demon lord Xar-Azmak, whose Abyssal realm Vlorus now lies unclaimed — a fact that makes Meitremar's plan to resurrect Xar-Azmak a matter that would draw Hell's attention if it came to light.",
+    "related": [
+      "hell",
+      "dis",
+      "erecura",
+      "asmodeus",
+      "vlorus",
+      "deity"
+    ],
+    "tags": [
+      "dispater",
+      "archdevil",
+      "hell",
+      "dis",
+      "npc",
+      "iron lord"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "erecura",
+    "title": "Erecura",
+    "category": "Religion",
+    "summary": "The Queen of Dis — a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life, now one of the most subtly powerful figures in the infernal city, and wife to Dispater.",
+    "content": "Erecura is the Queen of Dis, the second layer of Hell, and the wife of its ruler, the archdevil Dispater. She is a demigoddess whose origins lie in mortality — she was condemned to Hell for stealing the secret of eternal life from Pharasma, the goddess of death and fate. Despite being an authority figure within Hell, her outlook and motivations are far removed from those of typical devils, and remain unclear even to her own husband.\n\nAs part of her nuptial agreements with Dispater, Erecura is allowed to keep a palace of her own liking — the lush, green-filled Eleusys — and to exercise power as she sees fit within Dis. Dispater sincerely loves her, often calling upon her to arbitrate disputes and delegating responsibilities of rule to her even when she does not ask. Asmodeus himself plans to rely on Erecura's savvy should Hell enter conflict with forces beyond its ordinary ken.\n\nHer divine portfolio encompasses deduction, mind reading, subtlety, thriving in hostile environments, and the art of manipulating dangerous beings to one's advantage. Her worship is virtually unknown on Golarion and is strongly tied to the veneration of Dispater. Those few who do follow her tend to be soothsayers and non-evil rangers who admire her ability to maintain integrity and power within an environment of overwhelming evil.\n\nErecura prefers green and tan robes within her own palace of Eleusys, and dons black in her public role as Queen of Dis. She is attended by three norns — Felixia, Rowane, and Selieste — who serve as her advisors and handmaidens.",
+    "related": [
+      "dis",
+      "dispater",
+      "hell",
+      "asmodeus"
+    ],
+    "tags": [
+      "erecura",
+      "queen of dis",
+      "demigoddess",
+      "hell",
+      "npc",
+      "dispater",
+      "subtlety"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "calistria",
+    "title": "Calistria",
+    "category": "Religion",
+    "summary": "???",
+    "content": "???",
+    "related": [
+      "shayliss-vinder"
+    ],
+    "tags": [
+      "placeholder",
+      "deity",
+      "calistria"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+]
