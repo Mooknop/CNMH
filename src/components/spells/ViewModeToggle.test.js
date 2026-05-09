@@ -78,4 +78,60 @@ describe('ViewModeToggle', () => {
     expect(innateBtn.className).toContain('active');
     expect(reperBtn.className).not.toContain('active');
   });
+
+  it('calls setViewMode with spells when Repertoire is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="innate" setViewMode={setViewMode} hasSpellcasting />);
+    fireEvent.click(screen.getByText('Repertoire'));
+    expect(setViewMode).toHaveBeenCalledWith('spells');
+  });
+
+  it('calls setViewMode with innate when Innate is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasInnate />);
+    fireEvent.click(screen.getByText('Innate'));
+    expect(setViewMode).toHaveBeenCalledWith('innate');
+  });
+
+  it('calls setViewMode with focus when Focus button is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasFocus />);
+    fireEvent.click(screen.getByText('Focus Spells'));
+    expect(setViewMode).toHaveBeenCalledWith('focus');
+  });
+
+  it('calls setViewMode with eld when Eld Powers is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasEldPowers />);
+    fireEvent.click(screen.getByText('Eld Powers'));
+    expect(setViewMode).toHaveBeenCalledWith('eld');
+  });
+
+  it('calls setViewMode with harrow when Harrowing is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasHarrowing />);
+    fireEvent.click(screen.getByText('Harrowing'));
+    expect(setViewMode).toHaveBeenCalledWith('harrow');
+  });
+
+  it('calls setViewMode with staff when staff button is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasStaff staff={{ name: 'Staff of Fire' }} />);
+    fireEvent.click(screen.getByText('Staff of Fire'));
+    expect(setViewMode).toHaveBeenCalledWith('staff');
+  });
+
+  it('calls setViewMode with wands when Wands is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasWands />);
+    fireEvent.click(screen.getByText('Wands'));
+    expect(setViewMode).toHaveBeenCalledWith('wands');
+  });
+
+  it('calls setViewMode with gems when Spell Gems is clicked', () => {
+    const setViewMode = jest.fn();
+    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasGems />);
+    fireEvent.click(screen.getByText('Spell Gems'));
+    expect(setViewMode).toHaveBeenCalledWith('gems');
+  });
 });
