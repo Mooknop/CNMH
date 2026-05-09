@@ -66,6 +66,40 @@
       "4666"
     ],
     "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "rise-of-the-runelords",
+    "title": "The Rise of the Runelords",
+    "category": "History",
+    "dateArStart": 4702,
+    "summary": "The emergence of Runelord Karzoug in Sandpoint.",
+    "content": "Runelord Karzoug emerged in Sandpoint in 4702 AR as the initial one of Thassilon's seven runelords to awaken from millennia of stasis, kept just beyond the fringes of reality until an unwitting stone giant wizard triggered the mechanism that facilitated the runelord's resurgence. A group of heroes rose against Karzoug and his formidable giant forces, ultimately defeating him in 4707 AR and thereby reviving the legacy of Thassilon. As the revelation spread across Avistan that Varisia had once been the domain of a potent and ancient wizard empire that had faded into history, adventurers, scholars, explorers, and researchers arrived from distant lands to explore and delve into the enigma of Thassilon.\n\nLeaders among Varisia's city-states became increasingly concerned. Seven runelords had vanished during Earthfall, and if the upheaval caused by a single awakening was so catastrophic, the potential ramifications of all the runelords rising from their slumber were ominous. Responding to their concerns, a fresh group of heroes embarked on a quest to locate and reconstruct an ancient artifact, the seven-pointed Sihedron, piecing it together from its fractured remnants. Originally crafted by Thassilon's founder, the formidable wizard Xin, the Sihedron housed the secrets of Thassilonian magic and stood as a crucial defense against the awakening of the other runelords, should such a scenario arise.",
+    "related": [
+    ],
+    "tags": [
+      "history",
+      "sandpoint",
+      "4702",
+      "runelords"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "return-of-the-runelords",
+    "title": "The Return of the Runelords",
+    "category": "History",
+    "dateArStart": 4718,
+    "summary": "The remaining Runelords begin to awaken from their slumbers.",
+    "content": "In 4718 AR, after awakening from her slumber, Runelord Alaznist employed the Scepter of Ages to travel back in time and replace the history of Golarion with one where she rules over a New Thassilon stretching from the Lands of the Linnorm Kings to Ustalav and Nidal and beyond. Her efforts were foiled by a group of adventurers working under her rival Sorshen. By the time Alaznist was defeated, most runelords were also dead, except Sorshen and Belimarius, who claimed the land that would become New Thassilon.",
+    "related": [
+    ],
+    "tags": [
+      "history",
+      "sandpoint",
+      "4718",
+      "runelords"
+    ],
+    "createdAt": "2025-01-01T00:00:00.000Z"
   }
 ]
 

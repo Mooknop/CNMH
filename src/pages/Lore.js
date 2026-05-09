@@ -193,92 +193,100 @@ const Lore = () => {
 
   return (
     <div className="lore-page">
-      <h1>Campaign Lore</h1>
+      <div className="lore-content">
+        <h1>Campaign Lore</h1>
 
-      <div className={`lore-container ${focusedEntryId ? 'panel-open' : ''}`}>
-        <div className="lore-sidebar">
-          <div className="category-filters">
-            <h3>Categories</h3>
-            <button
-              className={`category-btn ${!filter ? 'active' : ''}`}
-              onClick={() => handleFilterChange('')}
-            >
-              All
-            </button>
-            {categories.map(category => (
+        <div className={`lore-container ${focusedEntryId ? 'panel-open' : ''}`}>
+          <div className="lore-sidebar">
+            <div className="category-filters">
+              <h3>Categories</h3>
               <button
-                key={category}
-                className={`category-btn ${filter === category ? 'active' : ''}`}
-                onClick={() => handleFilterChange(category)}
+                className={`category-btn ${!filter ? 'active' : ''}`}
+                onClick={() => handleFilterChange('')}
               >
-                {category}
+                All
               </button>
-            ))}
+              {categories.map(category => (
+                <button
+                  key={category}
+                  className={`category-btn ${filter === category ? 'active' : ''}`}
+                  onClick={() => handleFilterChange(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="lore-entries">
-          <div className="entries-header">
-            <h2>{filter ? `${filter} Entries` : 'All Lore Entries'}</h2>
+          <div className="lore-entries">
+            <div className="entries-header">
+              <h2>{filter ? `${filter} Entries` : 'All Lore Entries'}</h2>
+              {filter !== 'History' && (
+                <div className="view-toggle">
+                  <button
+                    className={`view-toggle-btn ${!compressed ? 'active' : ''}`}
+                    onClick={() => setCompressed(false)}
+                    title="Card view"
+                  >
+                    ⊞
+                  </button>
+                  <button
+                    className={`view-toggle-btn ${compressed ? 'active' : ''}`}
+                    onClick={() => setCompressed(true)}
+                    title="Compact view"
+                  >
+                    ☰
+                  </button>
+                </div>
+              )}
+            </div>
+
             {filter !== 'History' && (
-              <div className="view-toggle">
-                <button
-                  className={`view-toggle-btn ${!compressed ? 'active' : ''}`}
-                  onClick={() => setCompressed(false)}
-                  title="Card view"
-                >
-                  ⊞
-                </button>
-                <button
-                  className={`view-toggle-btn ${compressed ? 'active' : ''}`}
-                  onClick={() => setCompressed(true)}
-                  title="Compact view"
-                >
-                  ☰
-                </button>
+              <div className="search-bar">
+                <input
+                  type="text"
+                  placeholder="Search entries..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button className="search-clear-btn" onClick={() => setSearchTerm('')}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            )}
+
+            {filter === 'History' ? (
+              <HistoryTimeline loreEntries={allLoreEntries} />
+            ) : filter ? (
+              renderSubgroupedEntries()
+            ) : (
+              renderAllGrouped()
+            )}
+
+            {filter !== 'History' && visibleEntries.length === 0 && (
+              <div className="empty-state">
+                <p>No lore entries found.</p>
               </div>
             )}
           </div>
 
-          {filter !== 'History' && (
-            <div className="search-bar">
-              <input
-                type="text"
-                placeholder="Search entries..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button className="search-clear-btn" onClick={() => setSearchTerm('')}>
-                  ✕
-                </button>
-              )}
-            </div>
+          {focusedEntryId && (
+            <div
+              className="lore-panel-backdrop"
+              onClick={() => setFocusedEntryId(null)}
+            />
           )}
-
-          {filter === 'History' ? (
-            <HistoryTimeline loreEntries={allLoreEntries} />
-          ) : filter ? (
-            renderSubgroupedEntries()
-          ) : (
-            renderAllGrouped()
-          )}
-
-          {filter !== 'History' && visibleEntries.length === 0 && (
-            <div className="empty-state">
-              <p>No lore entries found.</p>
-            </div>
+          {focusedEntryId && (
+            <LoreDiscoveryPanel
+              entry={focusedEntry}
+              connectionData={connectionData}
+              onEntrySelect={setFocusedEntryId}
+              onClose={() => setFocusedEntryId(null)}
+            />
           )}
         </div>
-
-        {focusedEntryId && (
-          <LoreDiscoveryPanel
-            entry={focusedEntry}
-            connectionData={connectionData}
-            onEntrySelect={setFocusedEntryId}
-            onClose={() => setFocusedEntryId(null)}
-          />
-        )}
       </div>
     </div>
   );

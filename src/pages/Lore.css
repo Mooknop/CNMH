@@ -1,15 +1,47 @@
 .lore-page {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../../Background.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    padding: 2rem;
+    overflow-y: auto;
+  }
+
+  .lore-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    z-index: 1;
+  }
+
+  .lore-page > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .lore-content {
     max-width: 1200px;
     margin: 0 auto;
   }
-  
-  .lore-page h1 {
+
+  .lore-content h1 {
     margin-bottom: 2rem;
     color: var(--color-primary);
     border-bottom: 2px solid #eee;
     padding-bottom: 0.5rem;
   }
-  
+
   .lore-container {
     display: grid;
     grid-template-columns: 220px 1fr;
@@ -21,9 +53,63 @@
     grid-template-columns: 220px 1fr 320px;
   }
 
-  @media (max-width: 900px) {
+  .lore-panel-backdrop {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .lore-container,
     .lore-container.panel-open {
-      grid-template-columns: 220px 1fr;
+      display: block;
+    }
+
+    .lore-sidebar {
+      background: none;
+      padding: 0;
+      margin-bottom: 1rem;
+    }
+
+    .category-filters {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      gap: 0.4rem;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .category-filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-filters h3 {
+      display: none;
+    }
+
+    .category-btn {
+      display: inline-block;
+      width: auto;
+      white-space: nowrap;
+      padding: 0.35rem 0.85rem;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .category-btn.active {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
+
+    .lore-panel-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 99;
     }
   }
   
