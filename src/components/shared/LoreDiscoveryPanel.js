@@ -1,9 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useLore } from '../../contexts/LoreContext';
 import './LoreDiscoveryPanel.css';
 
 const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) => {
   if (!entry) return null;
+
+  const { openLore } = useLore();
 
   const { outgoingByCategory = {}, incomingByCategory = {} } = connectionData || {};
   const outgoingCategories = Object.keys(outgoingByCategory).sort();
@@ -34,9 +36,9 @@ const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) =
         </div>
       )}
 
-      <Link to={`/lore/${entry.id}`} className="discovery-full-link">
+      <button className="discovery-full-link" onClick={() => openLore(entry.id)}>
         Open full entry →
-      </Link>
+      </button>
 
       {hasConnections ? (
         <>

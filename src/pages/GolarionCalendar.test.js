@@ -1,6 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import GolarionCalendar from './GolarionCalendar';
+
+const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 jest.mock('../contexts/GameDateContext', () => ({
   useGameDate: () => ({
@@ -40,46 +43,46 @@ jest.mock('../components/calendar/MoonPhase', () => {
   return MoonPhase;
 });
 
-jest.mock('../data/Timeline.json', () => [], { virtual: true });
+jest.mock('../data/CalendarEvents.json', () => [], { virtual: true });
 
 describe('GolarionCalendar', () => {
   it('renders without crashing', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     expect(document.body).toBeTruthy();
   });
 
   it('displays the calendar grid', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     // Should have day cells for Pharast (31 days)
     const dayCells = document.querySelectorAll('.calendar-day, .day-cell, [class*="calendar"]');
     expect(dayCells.length).toBeGreaterThan(0);
   });
 
   it('renders month navigation', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     const prevBtns = screen.getAllByRole('button').filter(b => b.textContent.includes('←') || b.textContent.includes('<') || b.getAttribute('aria-label')?.includes('prev'));
     expect(prevBtns.length + screen.getAllByRole('button').length).toBeGreaterThan(0);
   });
 
   it('shows Pharast as current month', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     expect(screen.getByText(/Pharast/)).toBeInTheDocument();
   });
 
   it('shows the current year', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     expect(screen.getByText(/4725/)).toBeInTheDocument();
   });
 
   it('navigates to next month (Gozran) on Next button click', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     const nextBtn = screen.getByText(/Next/);
     await act(async () => { fireEvent.click(nextBtn); });
     expect(screen.getByText(/Gozran/)).toBeInTheDocument();
   });
 
   it('navigates to previous month (Calistril) on Previous button click', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     const prevBtn = screen.getByText(/Previous/);
     await act(async () => { fireEvent.click(prevBtn); });
     expect(screen.getByText(/Calistril/)).toBeInTheDocument();
@@ -87,7 +90,7 @@ describe('GolarionCalendar', () => {
 
   it('wraps to Kuthona and decrements year when navigating back from month 0', async () => {
     // Navigate back from Pharast (2) to Calistril (1) to Abadius (0) to Kuthona (11) of prev year
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     const prevBtn = screen.getByText(/Previous/);
     // Click 3 times to get from month 2 to month 11 of previous year (via 2→1→0→11)
     for (let i = 0; i < 3; i++) {
@@ -98,7 +101,7 @@ describe('GolarionCalendar', () => {
   });
 
   it('wraps to Abadius and increments year when navigating forward from month 11', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     const nextBtn = screen.getByText(/Next/);
     // Navigate from Pharast (2) to Kuthona (11) then to Abadius (0) of next year
     // That's 9 clicks forward + 1 more = 10 clicks to wrap
@@ -110,14 +113,14 @@ describe('GolarionCalendar', () => {
   });
 
   it('renders the current game date day with current-date class', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     const { container } = { container: document.body };
     const currentDayCell = document.querySelector('.current-date');
     expect(currentDayCell).toBeInTheDocument();
   });
 
   it('renders day numbers in calendar grid', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     // Day 1 should be visible in the grid
     const dayNumbers = document.querySelectorAll('.day-number');
     expect(dayNumbers.length).toBeGreaterThan(0);
@@ -125,19 +128,19 @@ describe('GolarionCalendar', () => {
   });
 
   it('renders navigation buttons', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     expect(screen.getByText(/Previous/)).toBeInTheDocument();
     expect(screen.getByText(/Next/)).toBeInTheDocument();
   });
 
   it('renders weekday headers', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     expect(screen.getByText('Moonday')).toBeInTheDocument();
     expect(screen.getByText('Sunday')).toBeInTheDocument();
   });
 
   it('modal is not shown initially', async () => {
-    await act(async () => { render(<GolarionCalendar />); });
+    await act(async () => { renderWithRouter(<GolarionCalendar />); });
     expect(document.querySelector('.modal-overlay')).toBeNull();
   });
 });

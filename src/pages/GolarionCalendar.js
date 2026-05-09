@@ -1,12 +1,14 @@
 // src/pages/GolarionCalendar.js
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGameDate } from '../contexts/GameDateContext';
 import MoonPhase, { MoonPhaseIndicator } from '../components/calendar/MoonPhase';
-import timelineData from '../data/Timeline.json';
+import timelineData from '../data/CalendarEvents.json';
 import { getEventTypeClass, createCalendarHelpers } from '../utils/calendarUtils';
 import './GolarionCalendar.css';
 
 const GolarionCalendar = () => {
+  const navigate = useNavigate();
   const {
     gameDate,
     GOLARION_MONTHS,
@@ -90,7 +92,12 @@ const GolarionCalendar = () => {
       <div className="calendar-content">
 
         {/* Page title */}
-        <h1>Golarion Calendar</h1>
+        <div className="calendar-page-header">
+          <h1>Golarion Calendar</h1>
+          <button className="calendar-history-btn" onClick={() => navigate('/timeline')}>
+            📜 History
+          </button>
+        </div>
 
         {/* Calendar container */}
         <div className="calendar-container">

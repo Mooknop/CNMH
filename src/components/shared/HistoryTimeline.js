@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLore } from '../../contexts/LoreContext';
 import {
   buildTimelineData,
   getDateLabel,
@@ -9,6 +10,7 @@ import './HistoryTimeline.css';
 
 const HistoryTimeline = ({ loreEntries }) => {
   const [expandedEntryId, setExpandedEntryId] = useState(null);
+  const { openLore } = useLore();
 
   const timelineData = buildTimelineData(loreEntries);
 
@@ -17,9 +19,7 @@ const HistoryTimeline = ({ loreEntries }) => {
   };
 
   const handleRelatedEntryClick = (relatedId) => {
-    // Scroll to the related entry or filter for it
-    setExpandedEntryId(relatedId);
-    // Could also update Lore view to show that specific entry
+    openLore(relatedId);
   };
 
   const renderEraDescription = (period) => {

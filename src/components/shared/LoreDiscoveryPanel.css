@@ -87,6 +87,10 @@
   font-weight: 500;
   margin-bottom: 1rem;
   transition: color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .discovery-full-link:hover {
