@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
+import { useLore } from '../contexts/LoreContext';
+import { loreEntries } from '../data';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/actions/ActionsList';
@@ -25,6 +27,7 @@ const CharacterSheet = () => {
 
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
+  const { openLore } = useLore();
 
   useEffect(() => {
     const characterData = getCharacter(id);
@@ -88,6 +91,27 @@ const CharacterSheet = () => {
         
         {/* Add Familiar button if character has the Familiar feat */}
           <div className="character-actions">
+            {character.loreEntryId && loreEntries.some(e => e.id === character.loreEntryId) && (
+              <button
+                className="familiar-button"
+                onClick={() => openLore(character.loreEntryId)}
+                style={{
+                  backgroundColor: characterColor,
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span role="img" aria-label="Lore">📖</span>
+                Lore
+              </button>
+            )}
+
             {hasFamiliar && (
               <button 
                 className="familiar-button" 

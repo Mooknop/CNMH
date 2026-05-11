@@ -2,13 +2,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameDate } from '../contexts/GameDateContext';
+import { useLore } from '../contexts/LoreContext';
 import { PARTY_GOLD, PARTY_NAME, CURRENT_LOCATION, CURRENT_LOCATION_LORE_ID } from '../data/campaign';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { formatGameDate } = useGameDate();
   const navigate = useNavigate();
-    
+  const { openLore } = useLore();
+
   const navigateTo = (path) => {
     navigate(path);
   };
@@ -16,12 +18,12 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <h1>{PARTY_NAME}</h1>
-      
+
       {/* Campaign Stats */}
       {
         <div className="content-section">
-          <div className="stats-grid">            
-            <button 
+          <div className="stats-grid">
+            <button
             className="stat-card clickable-stat-card party-level-stat"
             onClick={() => navigateTo('/party-summary')}
             title="Click to view detailed party summary">
@@ -31,10 +33,10 @@ const Dashboard = () => {
                 <div className="stat-number">4</div>
               </div>
           </button>
-            
+
             <button
               className="stat-card clickable-stat-card"
-              onClick={() => navigateTo(`/lore/${CURRENT_LOCATION_LORE_ID}`)}
+              onClick={() => openLore(CURRENT_LOCATION_LORE_ID)}
               title="Click to view lore about this location">
               <div className="stat-icon">🗺️</div>
               <div className="stat-content">
@@ -43,7 +45,7 @@ const Dashboard = () => {
               </div>
             </button>
 
-            <button 
+            <button
             className="stat-card clickable-stat-card"
             onClick={() => navigateTo('/party-wealth')}
             title="Click to view party inventory">
@@ -54,7 +56,7 @@ const Dashboard = () => {
               </div>
             </button>
 
-            <button 
+            <button
             className="stat-card clickable-stat-card"
             onClick={() => navigateTo('/quests')}>
               <span className="stat-icon">📜</span>
@@ -62,7 +64,7 @@ const Dashboard = () => {
             </button>
 
             {/* Golarion Calendar Button - Now using centralized game date */}
-            <button 
+            <button
             className="stat-card clickable-stat-card calendar-card"
             onClick={() => navigateTo('/calendar')}
             title="View Golarion Calendar and current date">
@@ -75,23 +77,10 @@ const Dashboard = () => {
           </div>
         </div>
         }
-      {/* Party Summary Section
-      <PartySummary /> */}
-      
-      { <div className="dashboard-links">
-        
-      </div> }
 
-      {/* for lore time
-      <button 
-          className="dashboard-link-btn lore-btn"
-          onClick={() => navigateTo('/lore')}
-        >
-          <span className="btn-icon">📚</span>
-          <span className="btn-text">Campaign Lore</span>
-        </button>
-      */}
-      
+      { <div className="dashboard-links">
+
+      </div> }
     </div>
   );
 };

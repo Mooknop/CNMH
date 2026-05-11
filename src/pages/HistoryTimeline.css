@@ -1,0 +1,9 @@
+.history-timeline-page {
+  padding: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.history-timeline-page h1 {
+  margin-bottom: 1.5rem;
+}

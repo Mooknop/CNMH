@@ -87,6 +87,10 @@
   font-weight: 500;
   margin-bottom: 1rem;
   transition: color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .discovery-full-link:hover {
@@ -152,4 +156,18 @@
   text-align: center;
   padding: 1rem 0;
   margin: 0;
+}
+
+@media (max-width: 768px) {
+  .lore-discovery-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    max-height: 65vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+  }
 }
