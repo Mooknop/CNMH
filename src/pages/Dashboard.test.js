@@ -25,6 +25,10 @@ jest.mock('../contexts/GameDateContext', () => ({
   })
 }));
 
+jest.mock('../contexts/LoreContext', () => ({
+  useLore: () => ({ openLore: jest.fn() }),
+}));
+
 // Mock components
 jest.mock('../components/party/PartySummary', () => {
   return function DummyPartySummary() {

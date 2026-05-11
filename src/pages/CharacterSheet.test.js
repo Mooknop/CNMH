@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import CharacterSheet from './CharacterSheet';
 
+jest.mock('../contexts/LoreContext', () => ({
+  useLore: () => ({ openLore: jest.fn() }),
+}));
+
 // Mock contexts — must be a real React context so useContext works
 jest.mock('../contexts/CharacterContext', () => {
   const React = require('react');

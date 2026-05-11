@@ -3,6 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import LoreDiscoveryPanel from './LoreDiscoveryPanel';
 
+jest.mock('../../contexts/LoreContext', () => ({
+  useLore: () => ({ openLore: jest.fn() }),
+}));
+
 const mockEntry = {
   id: 'entry-1',
   title: 'Aroden',
