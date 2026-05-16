@@ -1,12 +1,20 @@
 name = "cnmh-pf2e"
+main = "worker/index.js"
 compatibility_date = "2024-09-23"
-pages_build_output_dir = "build"
+
+# Serve the CRA build. SPA fallback so BrowserRouter deep links resolve to
+# index.html. The binding lets the Worker delegate non-API requests to assets.
+[assets]
+directory = "./build"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
 
 [[durable_objects.bindings]]
 name = "CAMPAIGN_SESSION"
 class_name = "CampaignSession"
 
-# SQLite-backed Durable Object class -> eligible for the free tier.
+# SQLite-backed Durable Object class -> eligible for the free tier. Migrations
+# are valid here because the DO is defined in this same Worker.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["CampaignSession"]
