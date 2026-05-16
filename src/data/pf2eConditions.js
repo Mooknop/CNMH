@@ -253,4 +253,20 @@ const PF2E_CONDITIONS = [
   },
 ];
 
+// ── Hydration helpers ────────────────────────────────────────────────
+// Synced/persisted state stores only the dynamic shape `{ id, value }`
+// (functions don't survive JSON). Re-derive the static definition —
+// including the `effect` function — from this canonical list at point of use.
+
+export const getCondition = (id) => PF2E_CONDITIONS.find((c) => c.id === id);
+
+export const hydrateCondition = (stored) => {
+  const def = getCondition(stored?.id);
+  return def ? { ...def, value: stored.value } : null;
+};
+
+// Unknown ids (older/newer clients) are dropped defensively.
+export const hydrateConditions = (stored = []) =>
+  stored.map(hydrateCondition).filter(Boolean);
+
 export default PF2E_CONDITIONS;

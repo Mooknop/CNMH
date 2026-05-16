@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import './StatsBlock.css';
 import EnhancedSkillsList from '../character-sheet/EnhancedSkillsList';
 import FeatsList from '../character-sheet/FeatsList';
@@ -8,6 +8,7 @@ import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
+import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
 
 const StatsBlock = ({ character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('abilities');
@@ -15,6 +16,8 @@ const StatsBlock = ({ character, characterColor }) => {
   const [activeConditions, setActiveConditions] = useLocalStorage(`cnmh_conditions_${characterKey}`, []);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
 
+  // Synced state stores only the dynamic shape `{ id, value }`; static
+  // definition data (name, effect, maxValue, …) is re-derived for display.
   const handleAddCondition = (condition) => {
     setActiveConditions((prev) => {
       const alreadyActive = prev.find((c) => c.id === condition.id);
@@ -22,11 +25,11 @@ const StatsBlock = ({ character, characterColor }) => {
         if (!condition.valued) return prev;
         return prev.map((c) =>
           c.id === condition.id
-            ? { ...c, value: Math.min(c.value + 1, c.maxValue) }
+            ? { ...c, value: Math.min(c.value + 1, condition.maxValue) }
             : c
         );
       }
-      return [...prev, { ...condition, value: condition.valued ? 1 : null }];
+      return [...prev, { id: condition.id, value: condition.valued ? 1 : null }];
     });
   };
 
@@ -35,15 +38,22 @@ const StatsBlock = ({ character, characterColor }) => {
   };
 
   const handleChangeValue = (id, delta) => {
+    const maxValue = getCondition(id)?.maxValue;
     setActiveConditions((prev) =>
       prev.reduce((acc, c) => {
         if (c.id !== id) return [...acc, c];
         const next = c.value + delta;
         if (next <= 0) return acc;
-        return [...acc, { ...c, value: Math.min(next, c.maxValue) }];
+        return [...acc, { ...c, value: Math.min(next, maxValue) }];
       }, [])
     );
   };
+
+  // Re-derive full condition objects (with `effect`) for display/computation.
+  const hydratedConditions = useMemo(
+    () => hydrateConditions(activeConditions),
+    [activeConditions]
+  );
 
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
@@ -84,7 +94,7 @@ const StatsBlock = ({ character, characterColor }) => {
   const proficiencies = rawProficiencies.weapons ? rawProficiencies : defaultProficiencies;
 
   // Compute condition penalties for every displayed stat
-  const effects = computeConditionEffects(activeConditions, character?.keyAbility, level);
+  const effects = computeConditionEffects(hydratedConditions, character?.keyAbility, level);
 
   // Helper: raw attack bonus as a number (no formatting) so PenaltyDisplay can apply the delta
   const attackNum = (abilityMod, proficiency) =>
@@ -355,7 +365,7 @@ const StatsBlock = ({ character, characterColor }) => {
           <EnhancedSkillsList
             character={character}
             characterColor={themeColor}
-            activeConditions={activeConditions}
+            activeConditions={hydratedConditions}
           />
         );
       default:
@@ -465,7 +475,7 @@ const StatsBlock = ({ character, characterColor }) => {
         isOpen={isConditionModalOpen}
         onClose={() => setIsConditionModalOpen(false)}
         themeColor={themeColor}
-        activeConditions={activeConditions}
+        activeConditions={hydratedConditions}
         onAdd={handleAddCondition}
         onRemove={handleRemoveCondition}
         onChangeValue={handleChangeValue}

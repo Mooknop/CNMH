@@ -1,4 +1,8 @@
-import PF2E_CONDITIONS from './pf2eConditions';
+import PF2E_CONDITIONS, {
+  getCondition,
+  hydrateCondition,
+  hydrateConditions,
+} from './pf2eConditions';
 
 describe('pf2eConditions', () => {
   it('exports a non-empty array', () => {
@@ -95,6 +99,58 @@ describe('pf2eConditions', () => {
       const cond = PF2E_CONDITIONS.find((c) => c.id === 'encumbered');
       expect(cond.valued).toBe(false);
       expect(typeof cond.effect(null)).toBe('string');
+    });
+  });
+
+  describe('hydration helpers', () => {
+    it('getCondition returns the definition for a known id', () => {
+      const cond = getCondition('frightened');
+      expect(cond).toBeDefined();
+      expect(cond.id).toBe('frightened');
+      expect(typeof cond.effect).toBe('function');
+    });
+
+    it('getCondition returns undefined for an unknown id', () => {
+      expect(getCondition('nope')).toBeUndefined();
+    });
+
+    it('hydrateCondition restores static fields and keeps the stored value', () => {
+      const hydrated = hydrateCondition({ id: 'clumsy', value: 2 });
+      expect(hydrated.name).toBe('Clumsy');
+      expect(hydrated.maxValue).toBe(4);
+      expect(hydrated.value).toBe(2);
+      expect(typeof hydrated.effect).toBe('function');
+      expect(hydrated.effect(2)).toContain('2');
+    });
+
+    it('hydrateCondition returns null for an unknown id', () => {
+      expect(hydrateCondition({ id: 'xxx', value: 1 })).toBeNull();
+      expect(hydrateCondition(undefined)).toBeNull();
+    });
+
+    it('hydrateConditions defaults to an empty array and drops unknown ids', () => {
+      expect(hydrateConditions()).toEqual([]);
+      const result = hydrateConditions([
+        { id: 'clumsy', value: 2 },
+        { id: 'xxx', value: 1 },
+      ]);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('clumsy');
+    });
+
+    it('reproduces the sync bug: a JSON round-trip still yields a working effect', () => {
+      // Functions do not survive JSON; hydration must restore them.
+      const stored = [
+        { id: 'blinded', value: null },
+        { id: 'clumsy', value: 3 },
+      ];
+      const roundTripped = JSON.parse(JSON.stringify(stored));
+      expect(typeof roundTripped[0].effect).toBe('undefined');
+
+      const hydrated = hydrateConditions(roundTripped);
+      expect(typeof hydrated[0].effect).toBe('function');
+      expect(hydrated[0].effect(null).length).toBeGreaterThan(0);
+      expect(hydrated[1].effect(hydrated[1].value)).toContain('3');
     });
   });
 });
