@@ -16,7 +16,9 @@ jest.mock('../shared/CollapsibleCard', () =>
 jest.mock('../shared/TraitTag', () => ({ trait }) => <span>{trait}</span>);
 
 const mockSetter = jest.fn();
-jest.mock('../../hooks/useLocalStorage', () => jest.fn(() => [null, mockSetter]));
+jest.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: jest.fn(() => [null, mockSetter]),
+}));
 
 const makeCharacterModel = (overrides = {}) => ({
   flags: {
@@ -50,7 +52,7 @@ describe('ExplorationList', () => {
     jest.clearAllMocks();
     const { useCharacter } = require('../../hooks/useCharacter');
     useCharacter.mockReturnValue(makeCharacterModel());
-    require('../../hooks/useLocalStorage').mockReturnValue([null, mockSetter]);
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue([null, mockSetter]);
   });
 
   it('renders without crashing', () => {
@@ -127,7 +129,7 @@ describe('ExplorationList', () => {
   });
 
   it('shows active activity banner when an activity is selected', () => {
-    require('../../hooks/useLocalStorage').mockReturnValue(['Hustle', mockSetter]);
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Hustle', mockSetter]);
     render(<ExplorationList character={mockCharacter} />);
     expect(screen.getByText('Active Activity')).toBeInTheDocument();
     expect(screen.getAllByText('Hustle').length).toBeGreaterThan(0);
@@ -146,14 +148,14 @@ describe('ExplorationList', () => {
   });
 
   it('calls setter with null when Clear button is clicked', () => {
-    require('../../hooks/useLocalStorage').mockReturnValue(['Hustle', mockSetter]);
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Hustle', mockSetter]);
     render(<ExplorationList character={mockCharacter} />);
     fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
     expect(mockSetter).toHaveBeenCalledWith(null);
   });
 
   it('shows Active button label for the selected activity', () => {
-    require('../../hooks/useLocalStorage').mockReturnValue(['Hustle', mockSetter]);
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Hustle', mockSetter]);
     render(<ExplorationList character={mockCharacter} />);
     expect(screen.getByRole('button', { name: /✓ Active/ })).toBeInTheDocument();
   });

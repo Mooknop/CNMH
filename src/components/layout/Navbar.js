@@ -2,6 +2,7 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
+import SyncStatus from '../shared/SyncStatus';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -38,8 +39,8 @@ const Navbar = () => {
       </div>
       
       <ul className="navbar-nav">        
-        <li>
-          
+        <li className="nav-item nav-sync">
+          <SyncStatus />
         </li>
         {/* Characters Dropdown */}
         <li className="nav-item dropdown" ref={dropdownRef}>

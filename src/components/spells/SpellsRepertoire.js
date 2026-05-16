@@ -1,6 +1,6 @@
 import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 
 const SpellNameChip = ({ spell, character }) => {
   const isSignature = !!spell.signature;
@@ -40,7 +40,7 @@ const SpellsRepertoire = ({
   defenseFilter,
   character,
 }) => {
-  const characterKey = character?.name || 'unknown';
+  const characterKey = character?.id || 'unknown';
   const [slotsSpent, setSlotsSpent] = useLocalStorage(
     `cnmh_slots_${characterKey}`,
     () => Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0]))
