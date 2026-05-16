@@ -1,0 +1,12 @@
+name = "cnmh-pf2e"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "build"
+
+[[durable_objects.bindings]]
+name = "CAMPAIGN_SESSION"
+class_name = "CampaignSession"
+
+# SQLite-backed Durable Object class -> eligible for the free tier.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["CampaignSession"]

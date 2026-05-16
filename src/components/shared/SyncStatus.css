@@ -1,0 +1,20 @@
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.sync-live {
+  color: #1b5e20;
+  background: rgba(76, 175, 80, 0.18);
+}
+
+.sync-offline {
+  color: #757575;
+  background: rgba(120, 120, 120, 0.15);
+}

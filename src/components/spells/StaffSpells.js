@@ -1,6 +1,6 @@
 import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 
 const SpellNameChip = ({ spell, character }) => {
   const isSignature = !!spell.signature;
@@ -53,7 +53,7 @@ const StaffInfoBox = ({ themeColor }) => (
 const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character }) => {
   const chargesMax = staff.charges?.max ?? 0;
   const [chargesSpent, setChargesSpent] = useLocalStorage(
-    `cnmh_staff_${character?.name || 'unknown'}`,
+    `cnmh_staff_${character?.id || 'unknown'}`,
     chargesMax - (staff.charges?.current ?? chargesMax)
   );
 

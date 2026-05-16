@@ -2,7 +2,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import { useCharacter } from '../../hooks/useCharacter';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
 
 const HIGHLIGHT_COLOR = '#d4a017';
@@ -26,7 +26,7 @@ const profLabel = (rank) => {
 const ExplorationList = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
   const characterModel = useCharacter(character);
-  const characterKey = character?.name || 'unknown';
+  const characterKey = character?.id || 'unknown';
   const [activeActivityName, setActiveActivityName] = useLocalStorage(
     `cnmh_exploration_${characterKey}`,
     null

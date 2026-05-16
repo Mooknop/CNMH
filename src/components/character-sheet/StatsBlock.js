@@ -7,11 +7,11 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 
 const StatsBlock = ({ character, characterColor }) => {
   const [activeTab, setActiveTab] = useState('abilities');
-  const characterKey = character?.name || 'unknown';
+  const characterKey = character?.id || 'unknown';
   const [activeConditions, setActiveConditions] = useLocalStorage(`cnmh_conditions_${characterKey}`, []);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { SessionProvider } from './contexts/SessionContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { TraitProvider } from './contexts/TraitContext';
 import { GameDateProvider } from './contexts/GameDateContext';
@@ -17,31 +18,33 @@ import './App.css';
 
 function App() {
   return (
-    <GameDateProvider>
-      <CharacterProvider>
-        <TraitProvider>
-          <LoreProvider>
-            <Router>
-              <div className="app-container">
-                <Navbar />
-                <main className="main-content">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/character/:id" element={<CharacterSheet />} />
-                    <Route path="/quests" element={<QuestTracker />} />
-                    <Route path="/party-wealth" element={<PartyWealth />} />
-                    <Route path="/calendar" element={<GolarionCalendar />} />
-                    <Route path="/timeline" element={<HistoryTimeline />} />
-                    <Route path="/party-summary" element={<PartySummary />} />
-                  </Routes>
-                </main>
-                <LoreDrawer />
-              </div>
-            </Router>
-          </LoreProvider>
-        </TraitProvider>
-      </CharacterProvider>
-    </GameDateProvider>
+    <SessionProvider>
+      <GameDateProvider>
+        <CharacterProvider>
+          <TraitProvider>
+            <LoreProvider>
+              <Router>
+                <div className="app-container">
+                  <Navbar />
+                  <main className="main-content">
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/character/:id" element={<CharacterSheet />} />
+                      <Route path="/quests" element={<QuestTracker />} />
+                      <Route path="/party-wealth" element={<PartyWealth />} />
+                      <Route path="/calendar" element={<GolarionCalendar />} />
+                      <Route path="/timeline" element={<HistoryTimeline />} />
+                      <Route path="/party-summary" element={<PartySummary />} />
+                    </Routes>
+                  </main>
+                  <LoreDrawer />
+                </div>
+              </Router>
+            </LoreProvider>
+          </TraitProvider>
+        </CharacterProvider>
+      </GameDateProvider>
+    </SessionProvider>
   );
 }
 

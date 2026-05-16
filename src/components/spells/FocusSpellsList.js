@@ -1,6 +1,6 @@
 import React from 'react';
 import { organizeSpellsByRank, getSortedRankList } from '../../utils/SpellUtils';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 
 const SpellNameChip = ({ spell, character }) => {
   const isSignature = !!spell.signature;
@@ -84,7 +84,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
   const focusMax = focusInfo?.max ?? 0;
 
   const [pointsSpent, setPointsSpent] = useLocalStorage(
-    `cnmh_focus_${character?.name || 'unknown'}`,
+    `cnmh_focus_${character?.id || 'unknown'}`,
     focusMax - (focusInfo?.current ?? focusMax)
   );
 
