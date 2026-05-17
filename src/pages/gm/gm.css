@@ -110,6 +110,8 @@
   white-space: pre;
 }
 
+.gm-skill-grid .form-group { min-width: 150px; flex: 0 1 150px; }
+
 .gm-count { color: #666; font-size: 0.85rem; margin: 8px 0; }
 
 .gm-editor-list { list-style: none; padding: 0; }
