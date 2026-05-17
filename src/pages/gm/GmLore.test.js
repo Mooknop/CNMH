@@ -31,6 +31,14 @@ const loreEntries = [
 
 const setContent = () => useContent.mockReturnValue({ loreEntries });
 
+const multiCategory = [
+  { id: 'sandpoint', title: 'Sandpoint', category: 'Location', tags: ['town'] },
+  { id: 'magnimar', title: 'Magnimar', category: 'Location', tags: ['city'] },
+  { id: 'aroden', title: 'Aroden', category: 'History', tags: ['deity'] },
+  { id: 'desna', title: 'Desna', category: 'Religion', tags: ['deity'] },
+];
+const setMulti = () => useContent.mockReturnValue({ loreEntries: multiCategory });
+
 afterEach(() => jest.restoreAllMocks());
 
 describe('GmLore', () => {
@@ -117,6 +125,59 @@ describe('GmLore', () => {
     fireEvent.click(within(form).getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('lore', 'aroden', expect.objectContaining({ id: 'aroden' }))
+    );
+  });
+
+  it('renders a tab per category (All + sorted)', () => {
+    setMulti();
+    render(<GmLore />);
+    const nav = screen.getByLabelText('lore categories');
+    ['All', 'History', 'Location', 'Religion'].forEach((t) =>
+      expect(within(nav).getByText(t)).toBeInTheDocument()
+    );
+    expect(screen.getByText('Showing 4 of 4')).toBeInTheDocument();
+  });
+
+  it('filters to the active category tab and the count reflects it', () => {
+    setMulti();
+    render(<GmLore />);
+    fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
+    expect(screen.getByTestId('lore-form-sandpoint')).toBeInTheDocument();
+    expect(screen.getByTestId('lore-form-magnimar')).toBeInTheDocument();
+    expect(screen.queryByTestId('lore-form-aroden')).not.toBeInTheDocument();
+    expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
+  });
+
+  it('scopes the text filter within the active category tab', () => {
+    setMulti();
+    render(<GmLore />);
+    fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
+    fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'magni' } });
+    expect(screen.getByTestId('lore-form-magnimar')).toBeInTheDocument();
+    expect(screen.queryByTestId('lore-form-sandpoint')).not.toBeInTheDocument();
+    expect(screen.getByText('Showing 1 of 2')).toBeInTheDocument();
+    // 'aroden' is in History, not Location — never shown even though it would
+    // match a broader search.
+    fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'deity' } });
+    expect(screen.getByText('Showing 0 of 2')).toBeInTheDocument();
+  });
+
+  it('prefills a new entry category from the active tab; blank under All', async () => {
+    setMulti();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmLore />);
+    fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Religion'));
+    fireEvent.click(screen.getByText('+ New entry'));
+    const form = screen.getByTestId('lore-form-new');
+    expect(within(form).getByLabelText('category')).toHaveValue('Religion');
+    fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Pharasma' } });
+    fireEvent.click(within(form).getByText('Create entry'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith(
+        'lore',
+        'pharasma',
+        expect.objectContaining({ category: 'Religion' })
+      )
     );
   });
 });

@@ -194,6 +194,9 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
 };
 
+// Category is required on save, but be defensive about legacy/blank rows.
+const categoryOf = (e) => (e.category && String(e.category).trim()) || 'Uncategorized';
+
 const GmLore = () => {
   const { loreEntries } = useContent();
   const entries = useMemo(
@@ -204,6 +207,19 @@ const GmLore = () => {
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
   const [query, setQuery] = useState('');
+  const [tab, setTab] = useState('All');
+
+  const tabs = useMemo(
+    () => ['All', ...Array.from(new Set(entries.map(categoryOf))).sort()],
+    [entries]
+  );
+  // A removed/renamed category could leave `tab` dangling; fall back to All.
+  const activeTab = tabs.includes(tab) ? tab : 'All';
+
+  const inTab = useMemo(
+    () => (activeTab === 'All' ? entries : entries.filter((e) => categoryOf(e) === activeTab)),
+    [entries, activeTab]
+  );
 
   const onSaved = (wasNew) => {
     if (wasNew) setAdding(false);
@@ -212,24 +228,47 @@ const GmLore = () => {
   const onRestored = () =>
     setFlash('Restored. Changes are live for every connected player.');
 
+  // Text filter applies within the active category tab.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return entries;
-    return entries.filter((e) =>
+    if (!q) return inTab;
+    return inTab.filter((e) =>
       [e.title, e.category, e.id, ...(e.tags || [])]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q))
     );
-  }, [entries, query]);
+  }, [inTab, query]);
+
+  // Prefill the category of a new entry from the active tab (All → blank, so
+  // the GM still must pick one — category is required on save).
+  const newInitial = () => ({
+    ...blankEntry(),
+    category: activeTab === 'All' ? '' : activeTab,
+  });
 
   return (
     <div className="gm-lore">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
+      <nav className="gm-nav" aria-label="lore categories">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            className={`gm-nav-link ${t === activeTab ? 'active' : ''}`}
+            aria-pressed={t === activeTab}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </nav>
+
       <div className="form-group">
         <input
           aria-label="filter"
-          placeholder={`Filter ${entries.length} entries by title, category, tag or id…`}
+          placeholder={`Filter ${inTab.length} ${
+            activeTab === 'All' ? 'entries' : `${activeTab} entries`
+          } by title, tag or id…`}
           value={query}
           onChange={(ev) => setQuery(ev.target.value)}
         />
@@ -237,7 +276,7 @@ const GmLore = () => {
 
       {adding ? (
         <LoreForm
-          initial={blankEntry()}
+          initial={newInitial()}
           isNew
           existingIds={existingIds}
           onSaved={onSaved}
@@ -250,7 +289,7 @@ const GmLore = () => {
       )}
 
       <p className="gm-count">
-        Showing {filtered.length} of {entries.length}
+        Showing {filtered.length} of {inTab.length}
       </p>
       <div className="gm-lore-list">
         {filtered.map((entry) => (
