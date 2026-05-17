@@ -164,8 +164,10 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           id={e.id}
           name={e.title}
           onClose={() => setShowHistory(false)}
-          onRestored={() => {
+          onRestored={(doc) => {
             setShowHistory(false);
+            if (doc) setE(toForm(doc));
+            setError(null);
             onRestored();
           }}
         />

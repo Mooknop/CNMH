@@ -169,8 +169,10 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           id={f.id}
           name={f.name}
           onClose={() => setShowHistory(false)}
-          onRestored={() => {
+          onRestored={(doc) => {
             setShowHistory(false);
+            if (doc) setF(doc);
+            setError(null);
             onRestored();
           }}
         />

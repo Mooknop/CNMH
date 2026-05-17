@@ -124,12 +124,24 @@ describe('GmQuests', () => {
     );
   });
 
-  it('opens History and restores a prior version', async () => {
+  it('opens History and restores a prior version, refreshing the form immediately', async () => {
     setContent();
-    fetchHistory.mockResolvedValue({ history: [{ archived_at: 1717000000000, data: { title: 'Older' } }] });
+    const restoredDoc = {
+      id: 'find-orb',
+      title: 'Older Title',
+      status: 'active',
+      priority: 'high',
+      location: 'Ruins',
+      giver: 'Blu',
+      description: 'Old description.',
+      notes: [],
+    };
+    fetchHistory.mockResolvedValue({ history: [{ archived_at: 1717000000000, data: restoredDoc }] });
     restoreVersion.mockResolvedValue({ ok: true });
     render(<GmQuests />);
     const form = screen.getByTestId('quest-form-find-orb');
+    expect(within(form).getByLabelText('title')).toHaveValue('Find the Orb');
+
     fireEvent.click(within(form).getByText('History'));
     await waitFor(() => expect(fetchHistory).toHaveBeenCalledWith('quest', 'find-orb'));
     fireEvent.click(screen.getByText('Restore this version'));
@@ -138,6 +150,9 @@ describe('GmQuests', () => {
     await waitFor(() =>
       expect(restoreVersion).toHaveBeenCalledWith('quest', 'find-orb', 1717000000000)
     );
+    // Form re-seeds from the restored doc without a reload.
+    expect(within(form).getByLabelText('title')).toHaveValue('Older Title');
+    expect(within(form).getByLabelText('status')).toHaveValue('active');
     expect(await screen.findByRole('status')).toHaveTextContent(/Restored\. Changes are live/i);
   });
 });

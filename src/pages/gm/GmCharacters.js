@@ -748,8 +748,10 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
           id={f.id}
           name={f.strings.name}
           onClose={() => setShowHistory(false)}
-          onRestored={() => {
+          onRestored={(doc) => {
             setShowHistory(false);
+            if (doc) setF(toForm(doc));
+            setError(null);
             onRestored();
           }}
         />
