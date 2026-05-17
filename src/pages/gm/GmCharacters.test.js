@@ -292,4 +292,54 @@ describe('GmCharacters', () => {
       expect(saveDocument).toHaveBeenCalledWith('character', 'pellias', expect.objectContaining({ id: 'pellias' }))
     );
   });
+
+  it('switches the mounted form when another character tab is clicked', () => {
+    setContent([pellias, izzy]);
+    render(<GmCharacters />);
+    expect(screen.getByTestId('character-form-pellias')).toBeInTheDocument();
+    fireEvent.click(within(screen.getByLabelText('characters')).getByText('Izzy'));
+    expect(screen.getByTestId('character-form-izzy')).toBeInTheDocument();
+    expect(screen.queryByTestId('character-form-pellias')).not.toBeInTheDocument();
+  });
+
+  it('the + New character tab shows a blank form', () => {
+    setContent([pellias]);
+    render(<GmCharacters />);
+    fireEvent.click(within(screen.getByLabelText('characters')).getByText('+ New character'));
+    expect(screen.getByTestId('character-form-new')).toBeInTheDocument();
+    expect(screen.queryByTestId('character-form-pellias')).not.toBeInTheDocument();
+  });
+
+  it('lands on the new character tab once it syncs into the list', async () => {
+    setContent([pellias]);
+    saveDocument.mockResolvedValue({ ok: true });
+    const { rerender } = render(<GmCharacters />);
+    fireEvent.click(within(screen.getByLabelText('characters')).getByText('+ New character'));
+    const form = screen.getByTestId('character-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Bob the Brave' } });
+    fireEvent.click(within(form).getByText('Create character'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    // Simulate the live content sync delivering the new character.
+    setContent([pellias, { id: 'bob-the-brave', name: 'Bob the Brave' }]);
+    rerender(<GmCharacters />);
+    expect(screen.getByTestId('character-form-bob-the-brave')).toBeInTheDocument();
+    expect(screen.queryByTestId('character-form-pellias')).not.toBeInTheDocument();
+  });
+
+  it('falls back to another tab after the active character is deleted', async () => {
+    setContent([pellias, izzy]);
+    deleteDocument.mockResolvedValue({ ok: true });
+    const { rerender } = render(<GmCharacters />);
+    fireEvent.click(within(screen.getByLabelText('characters')).getByText('Izzy'));
+    const form = screen.getByTestId('character-form-izzy');
+    fireEvent.click(within(form).getByText('Delete'));
+    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Izzy' } });
+    fireEvent.click(within(form).getByText('Delete forever'));
+    await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('character', 'izzy'));
+    // Live sync removes Izzy; the view falls back to the remaining character.
+    setContent([pellias]);
+    rerender(<GmCharacters />);
+    expect(screen.getByTestId('character-form-pellias')).toBeInTheDocument();
+    expect(screen.queryByTestId('character-form-izzy')).not.toBeInTheDocument();
+  });
 });
