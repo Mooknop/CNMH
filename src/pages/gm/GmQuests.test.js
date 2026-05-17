@@ -78,13 +78,44 @@ describe('GmQuests', () => {
     await waitFor(() => expect(saveDocument).toHaveBeenCalledWith('quest', 'brand-new-quest', expect.objectContaining({ id: 'brand-new-quest' })));
   });
 
-  it('deletes a quest after confirmation', async () => {
+  it('deletes a quest only after typed confirmation', async () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     render(<GmQuests />);
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.click(within(form).getByText('Delete'));
+    const confirmBtn = within(form).getByText('Delete forever');
+    expect(confirmBtn).toBeDisabled();
+    fireEvent.click(confirmBtn);
+    expect(deleteDocument).not.toHaveBeenCalled();
+    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Find the Orb' } });
+    fireEvent.click(within(form).getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('quest', 'find-orb'));
+  });
+
+  it('cancels a delete without calling the API', () => {
+    setContent();
+    render(<GmQuests />);
+    const form = screen.getByTestId('quest-form-find-orb');
+    fireEvent.click(within(form).getByText('Delete'));
+    fireEvent.click(within(form).getByText('Cancel'));
+    expect(within(form).queryByLabelText('confirm-input')).not.toBeInTheDocument();
+    expect(deleteDocument).not.toHaveBeenCalled();
+  });
+
+  it('warns before overwriting an existing id when creating a new quest', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmQuests />);
+    fireEvent.click(screen.getByText('+ New quest'));
+    const form = screen.getByTestId('quest-form-new');
+    fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Find Orb' } });
+    fireEvent.click(within(form).getByText('Create quest'));
+    expect(saveDocument).not.toHaveBeenCalled();
+    expect(within(form).getByText(/already exists/i)).toBeInTheDocument();
+    fireEvent.click(within(form).getByText('Overwrite'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith('quest', 'find-orb', expect.objectContaining({ id: 'find-orb' }))
+    );
   });
 });

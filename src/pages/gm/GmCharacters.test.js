@@ -259,13 +259,32 @@ describe('GmCharacters', () => {
     expect(data.actions.map((a) => a.name)).toEqual(['Exploit Vulnerability']);
   });
 
-  it('deletes a character after confirmation', async () => {
+  it('deletes a character only after typed confirmation', async () => {
     setContent([pellias]);
     deleteDocument.mockResolvedValue({ ok: true });
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     fireEvent.click(within(form).getByText('Delete'));
+    expect(within(form).getByText('Delete forever')).toBeDisabled();
+    fireEvent.click(within(form).getByText('Delete forever'));
+    expect(deleteDocument).not.toHaveBeenCalled();
+    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Pellias' } });
+    fireEvent.click(within(form).getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('character', 'pellias'));
+  });
+
+  it('warns before overwriting an existing id when creating a new character', async () => {
+    setContent([pellias]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    fireEvent.click(screen.getByText('+ New character'));
+    const form = screen.getByTestId('character-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Pellias' } });
+    fireEvent.click(within(form).getByText('Create character'));
+    expect(saveDocument).not.toHaveBeenCalled();
+    fireEvent.click(within(form).getByText('Overwrite'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith('character', 'pellias', expect.objectContaining({ id: 'pellias' }))
+    );
   });
 });

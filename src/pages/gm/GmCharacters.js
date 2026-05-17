@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
-import { slugify } from '../../utils/contentUtils';
+import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { SKILL_ABILITY_MAP, getProficiencyLabel } from '../../utils/CharacterUtils';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 // 5a: identity/abilities/saves. 5b: skills + proficiencies. 5c: the top-level
@@ -317,10 +318,11 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
   );
 };
 
-const CharacterForm = ({ initial, isNew, onSaved }) => {
+const CharacterForm = ({ initial, isNew, existingIds, onSaved }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
 
   const setStr = (k, v) => setF((c) => ({ ...c, strings: { ...c.strings, [k]: v } }));
   const setNum = (k, v) => setF((c) => ({ ...c, nums: { ...c.nums, [k]: v } }));
@@ -427,6 +429,15 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
       payload[s.key] = parsed;
     }
 
+    if (isNew && existingIds && existingIds.has(id)) {
+      setConfirm({ kind: 'collision', id, payload });
+      return;
+    }
+    await submit(id, payload);
+  };
+
+  const submit = async (id, payload) => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
@@ -439,8 +450,8 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
     }
   };
 
-  const remove = async () => {
-    if (!f.id || !window.confirm(`Delete character "${f.strings.name}"?`)) return;
+  const doRemove = async () => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
@@ -717,11 +728,29 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
           {isNew ? 'Create character' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={remove}>
+          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
             Delete
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'delete'}
+        title="Delete character"
+        message={`Permanently delete the character “${f.strings.name}”. This cannot be undone — restore it from History if you have it.`}
+        confirmLabel="Delete forever"
+        requireType={f.strings.name}
+        onConfirm={doRemove}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'collision'}
+        title="Overwrite existing entry?"
+        message={`A character with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite"
+        onConfirm={() => submit(confirm.id, confirm.payload)}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 };
@@ -729,6 +758,7 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
 const GmCharacters = () => {
   const { characters } = useContent();
   const list = Array.isArray(characters) ? characters : [];
+  const existingIds = existingIdSet(list);
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
 
@@ -742,7 +772,7 @@ const GmCharacters = () => {
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <CharacterForm initial={blankCharacter()} isNew onSaved={onSaved} />
+        <CharacterForm initial={blankCharacter()} isNew existingIds={existingIds} onSaved={onSaved} />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New character
@@ -751,7 +781,13 @@ const GmCharacters = () => {
 
       <div className="gm-character-list">
         {list.map((c) => (
-          <CharacterForm key={c.id} initial={toForm(c)} isNew={false} onSaved={onSaved} />
+          <CharacterForm
+            key={c.id}
+            initial={toForm(c)}
+            isNew={false}
+            existingIds={existingIds}
+            onSaved={onSaved}
+          />
         ))}
       </div>
     </div>

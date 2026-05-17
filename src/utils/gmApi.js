@@ -33,3 +33,14 @@ export const seedDefaults = (force = false) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildSeedPayload(force)),
   }).then(json);
+
+// Restore from a downloaded backup: a force reseed whose collections come from
+// the backup file rather than the bundled defaults. Reuses the existing seed
+// route (force replaces each provided collection wholesale).
+export const seedFromBackup = (collections) =>
+  fetch('/api/gm/seed', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ force: true, collections }),
+  }).then(json);

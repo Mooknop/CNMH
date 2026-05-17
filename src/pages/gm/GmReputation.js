@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
-import { slugify } from '../../utils/contentUtils';
+import { slugify, existingIdSet } from '../../utils/contentUtils';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 const toInt = (v) => {
@@ -12,10 +13,11 @@ const toInt = (v) => {
 const blankFaction = () => ({ name: '', reputation: 0, ranks: [] });
 const blankRank = () => ({ name: '', min: 0, max: 0, effect: '' });
 
-const FactionForm = ({ initial, isNew, onSaved }) => {
+const FactionForm = ({ initial, isNew, existingIds, onSaved }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
 
   const set = (patch) => setF((cur) => ({ ...cur, ...patch }));
   const setRank = (i, patch) =>
@@ -26,6 +28,20 @@ const FactionForm = ({ initial, isNew, onSaved }) => {
   const addRank = () => setF((cur) => ({ ...cur, ranks: [...(cur.ranks || []), blankRank()] }));
   const removeRank = (i) =>
     setF((cur) => ({ ...cur, ranks: cur.ranks.filter((_, idx) => idx !== i) }));
+
+  const submit = async (id, payload) => {
+    setConfirm(null);
+    setBusy(true);
+    setError(null);
+    try {
+      await saveDocument('faction', id, payload);
+      onSaved(isNew);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const save = async () => {
     if (!f.name.trim()) {
@@ -44,20 +60,15 @@ const FactionForm = ({ initial, isNew, onSaved }) => {
         return rank;
       }),
     };
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('faction', id, payload);
-      onSaved(isNew);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+    if (isNew && existingIds && existingIds.has(id)) {
+      setConfirm({ kind: 'collision', id, payload });
+      return;
     }
+    await submit(id, payload);
   };
 
-  const remove = async () => {
-    if (!f.id || !window.confirm(`Delete faction "${f.name}"?`)) return;
+  const doRemove = async () => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
@@ -138,11 +149,29 @@ const FactionForm = ({ initial, isNew, onSaved }) => {
           {isNew ? 'Create faction' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={remove}>
+          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
             Delete
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'delete'}
+        title="Delete faction"
+        message={`Permanently delete the faction “${f.name}”. This cannot be undone — restore it from History if you have it.`}
+        confirmLabel="Delete forever"
+        requireType={f.name}
+        onConfirm={doRemove}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'collision'}
+        title="Overwrite existing entry?"
+        message={`A faction with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite"
+        onConfirm={() => submit(confirm.id, confirm.payload)}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 };
@@ -150,6 +179,7 @@ const FactionForm = ({ initial, isNew, onSaved }) => {
 const GmReputation = () => {
   const { reputation } = useContent();
   const factions = Array.isArray(reputation?.Factions) ? reputation.Factions : [];
+  const existingIds = existingIdSet(factions);
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
 
@@ -163,7 +193,7 @@ const GmReputation = () => {
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <FactionForm initial={blankFaction()} isNew onSaved={onSaved} />
+        <FactionForm initial={blankFaction()} isNew existingIds={existingIds} onSaved={onSaved} />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New faction
@@ -172,7 +202,7 @@ const GmReputation = () => {
 
       <div className="gm-faction-list">
         {factions.map((f) => (
-          <FactionForm key={f.id} initial={f} isNew={false} onSaved={onSaved} />
+          <FactionForm key={f.id} initial={f} isNew={false} existingIds={existingIds} onSaved={onSaved} />
         ))}
       </div>
     </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
-import { slugify } from '../../utils/contentUtils';
+import { slugify, existingIdSet } from '../../utils/contentUtils';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 // month/day/year are kept as raw strings in the form and coerced on save so a
@@ -26,12 +27,27 @@ const toForm = (ev) => ({
 
 const blankEvent = () => toForm({});
 
-const EventForm = ({ initial, isNew, onSaved }) => {
+const EventForm = ({ initial, isNew, existingIds, onSaved }) => {
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
+
+  const submit = async (id, payload) => {
+    setConfirm(null);
+    setBusy(true);
+    setError(null);
+    try {
+      await saveDocument('calendar', id, payload);
+      onSaved(isNew);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const save = async () => {
     if (!e.title.trim()) {
@@ -56,20 +72,15 @@ const EventForm = ({ initial, isNew, onSaved }) => {
     if (e.description.trim()) payload.description = e.description.trim();
     if (e.details.trim()) payload.details = e.details.trim();
 
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('calendar', id, payload);
-      onSaved(isNew);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
+    if (isNew && existingIds && existingIds.has(id)) {
+      setConfirm({ kind: 'collision', id, payload });
+      return;
     }
+    await submit(id, payload);
   };
 
-  const remove = async () => {
-    if (!e.id || !window.confirm(`Delete event "${e.title}"?`)) return;
+  const doRemove = async () => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
@@ -164,11 +175,29 @@ const EventForm = ({ initial, isNew, onSaved }) => {
           {isNew ? 'Create event' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={remove}>
+          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
             Delete
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'delete'}
+        title="Delete event"
+        message={`Permanently delete the event “${e.title}”. This cannot be undone — restore it from History if you have it.`}
+        confirmLabel="Delete forever"
+        requireType={e.title}
+        onConfirm={doRemove}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'collision'}
+        title="Overwrite existing entry?"
+        message={`An event with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite"
+        onConfirm={() => submit(confirm.id, confirm.payload)}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 };
@@ -176,6 +205,7 @@ const EventForm = ({ initial, isNew, onSaved }) => {
 const GmCalendar = () => {
   const { calendarEvents } = useContent();
   const events = Array.isArray(calendarEvents) ? calendarEvents : [];
+  const existingIds = existingIdSet(events);
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
 
@@ -189,7 +219,7 @@ const GmCalendar = () => {
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <EventForm initial={blankEvent()} isNew onSaved={onSaved} />
+        <EventForm initial={blankEvent()} isNew existingIds={existingIds} onSaved={onSaved} />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New event
@@ -198,7 +228,7 @@ const GmCalendar = () => {
 
       <div className="gm-event-list">
         {events.map((ev) => (
-          <EventForm key={ev.id} initial={toForm(ev)} isNew={false} onSaved={onSaved} />
+          <EventForm key={ev.id} initial={toForm(ev)} isNew={false} existingIds={existingIds} onSaved={onSaved} />
         ))}
       </div>
     </div>

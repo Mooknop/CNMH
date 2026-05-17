@@ -92,13 +92,31 @@ describe('GmLore', () => {
     expect(typeof data.createdAt).toBe('string');
   });
 
-  it('deletes an entry after confirmation', async () => {
+  it('deletes an entry only after typed confirmation', async () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     render(<GmLore />);
     const form = screen.getByTestId('lore-form-aroden');
     fireEvent.click(within(form).getByText('Delete'));
+    expect(within(form).getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Aroden' } });
+    fireEvent.click(within(form).getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('lore', 'aroden'));
+  });
+
+  it('warns before overwriting an existing id when creating a new entry', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmLore />);
+    fireEvent.click(screen.getByText('+ New entry'));
+    const form = screen.getByTestId('lore-form-new');
+    fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Aroden' } });
+    fireEvent.change(within(form).getByLabelText('category'), { target: { value: 'History' } });
+    fireEvent.click(within(form).getByText('Create entry'));
+    expect(saveDocument).not.toHaveBeenCalled();
+    fireEvent.click(within(form).getByText('Overwrite'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith('lore', 'aroden', expect.objectContaining({ id: 'aroden' }))
+    );
   });
 });

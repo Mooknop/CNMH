@@ -116,3 +116,9 @@
 
 .gm-editor-list { list-style: none; padding: 0; }
 .gm-editor-list li { margin: 6px 0; }
+
+/* Destructive-action confirm dialog (in-app replacement for window.confirm) */
+.confirm-message { margin: 0 0 12px; line-height: 1.4; }
+.confirm-actions { justify-content: flex-end; }
+.confirm-actions .btn-danger,
+.confirm-actions .btn-primary { min-width: 120px; }

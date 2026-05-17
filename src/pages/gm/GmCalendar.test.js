@@ -83,13 +83,31 @@ describe('GmCalendar', () => {
     expect(data.date).toBeUndefined();
   });
 
-  it('deletes an event after confirmation', async () => {
+  it('deletes an event only after typed confirmation', async () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     render(<GmCalendar />);
     const form = screen.getByTestId('event-form-blu-birthday');
     fireEvent.click(within(form).getByText('Delete'));
+    expect(within(form).getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: "Blu's Birthday" } });
+    fireEvent.click(within(form).getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('calendar', 'blu-birthday'));
+  });
+
+  it('warns before overwriting an existing id when creating a new event', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCalendar />);
+    fireEvent.click(screen.getByText('+ New event'));
+    const form = screen.getByTestId('event-form-new');
+    fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Blu Birthday' } });
+    fireEvent.change(within(form).getByLabelText('recurring'), { target: { value: 'every full moon' } });
+    fireEvent.click(within(form).getByText('Create event'));
+    expect(saveDocument).not.toHaveBeenCalled();
+    fireEvent.click(within(form).getByText('Overwrite'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith('calendar', 'blu-birthday', expect.objectContaining({ id: 'blu-birthday' }))
+    );
   });
 });

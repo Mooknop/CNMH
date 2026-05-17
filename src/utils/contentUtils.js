@@ -19,6 +19,12 @@ export const slugify = (str) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'untitled';
 
+// Set of existing ids in a collection list, for slug-collision detection in
+// the GM editors (creating an entry whose slug matches an existing id would
+// silently overwrite it server-side).
+export const existingIdSet = (list) =>
+  new Set((Array.isArray(list) ? list : []).map((d) => String(d && d.id)));
+
 // Ensure a quest has an `id`. Existing ids are preserved; otherwise derive
 // from the title. Notes get index-stable ids for React keys.
 export const withQuestId = (quest, index = 0) => {
