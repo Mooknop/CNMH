@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
@@ -444,7 +444,7 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
     setError(null);
     try {
       await saveDocument('character', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -780,14 +780,27 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
 
 const GmCharacters = () => {
   const { characters } = useContent();
-  const list = Array.isArray(characters) ? characters : [];
-  const existingIds = existingIdSet(list);
-  const [adding, setAdding] = useState(false);
+  const list = useMemo(
+    () => (Array.isArray(characters) ? characters : []),
+    [characters]
+  );
+  const existingIds = useMemo(() => existingIdSet(list), [list]);
   const [flash, setFlash] = useState(null);
+  const [activeId, setActiveId] = useState(null); // character id, 'new', or null
 
-  const onSaved = (wasNew) => {
-    if (wasNew) setAdding(false);
+  const ids = list.map((c) => c.id);
+  // Resolve the effective tab: keep the chosen one if still valid, else the
+  // first character, else the New tab (empty roster). This also lands us on a
+  // freshly created character once it arrives in the synced list.
+  const current =
+    activeId && (activeId === 'new' || ids.includes(activeId))
+      ? activeId
+      : ids[0] || 'new';
+  const activeChar = current === 'new' ? null : list.find((c) => c.id === current);
+
+  const onSaved = (wasNew, id) => {
     setFlash('Saved. Changes are live for every connected player.');
+    if (wasNew && id) setActiveId(id);
   };
   const onRestored = () =>
     setFlash('Restored. Changes are live for every connected player.');
@@ -796,32 +809,46 @@ const GmCharacters = () => {
     <div className="gm-characters">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
-      {adding ? (
+      <nav className="gm-nav" aria-label="characters">
+        {list.map((c) => (
+          <button
+            key={c.id}
+            className={`gm-nav-link ${c.id === current ? 'active' : ''}`}
+            aria-pressed={c.id === current}
+            onClick={() => setActiveId(c.id)}
+          >
+            {c.name || c.id}
+          </button>
+        ))}
+        <button
+          className={`gm-nav-link ${current === 'new' ? 'active' : ''}`}
+          aria-pressed={current === 'new'}
+          onClick={() => setActiveId('new')}
+        >
+          + New character
+        </button>
+      </nav>
+
+      {/* Only the active character's (very large) form mounts. */}
+      {current === 'new' ? (
         <CharacterForm
+          key="new"
           initial={blankCharacter()}
           isNew
           existingIds={existingIds}
           onSaved={onSaved}
           onRestored={onRestored}
         />
-      ) : (
-        <button className="btn-primary" onClick={() => setAdding(true)}>
-          + New character
-        </button>
-      )}
-
-      <div className="gm-character-list">
-        {list.map((c) => (
-          <CharacterForm
-            key={c.id}
-            initial={toForm(c)}
-            isNew={false}
-            existingIds={existingIds}
-            onSaved={onSaved}
-            onRestored={onRestored}
-          />
-        ))}
-      </div>
+      ) : activeChar ? (
+        <CharacterForm
+          key={activeChar.id}
+          initial={toForm(activeChar)}
+          isNew={false}
+          existingIds={existingIds}
+          onSaved={onSaved}
+          onRestored={onRestored}
+        />
+      ) : null}
     </div>
   );
 };

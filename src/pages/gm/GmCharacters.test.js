@@ -47,11 +47,16 @@ const setContent = (chars = [pellias, izzy]) => useContent.mockReturnValue({ cha
 afterEach(() => jest.restoreAllMocks());
 
 describe('GmCharacters', () => {
-  it('renders a form per character', () => {
+  it('renders a tab per character (+ New) and mounts only the active form', () => {
     setContent();
     render(<GmCharacters />);
+    const nav = screen.getByLabelText('characters');
+    expect(within(nav).getByText('Pellias')).toBeInTheDocument();
+    expect(within(nav).getByText('Izzy')).toBeInTheDocument();
+    expect(within(nav).getByText('+ New character')).toBeInTheDocument();
+    // First character is active; the other form is not mounted.
     expect(screen.getByTestId('character-form-pellias')).toBeInTheDocument();
-    expect(screen.getByTestId('character-form-izzy')).toBeInTheDocument();
+    expect(screen.queryByTestId('character-form-izzy')).not.toBeInTheDocument();
   });
 
   it('pulls feats/strikes/actions/familiar out of Advanced; only class blocks/crafting remain', () => {
