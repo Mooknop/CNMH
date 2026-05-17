@@ -144,7 +144,10 @@ const LoreForm = ({ initial, isNew, onSaved }) => {
 
 const GmLore = () => {
   const { loreEntries } = useContent();
-  const entries = Array.isArray(loreEntries) ? loreEntries : [];
+  const entries = useMemo(
+    () => (Array.isArray(loreEntries) ? loreEntries : []),
+    [loreEntries]
+  );
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
   const [query, setQuery] = useState('');
