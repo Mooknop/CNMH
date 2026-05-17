@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { quests as defaultQuests, reputation } from '../data';
+import React, { useState } from 'react';
+import { useContent } from '../contexts/ContentContext';
 import ReputationModal from '../components/shared/ReputationModal';
 import ReputationRadarChart from '../components/shared/ReputationRadarChart';
 import './QuestTracker.css';
 
 const QuestTracker = () => {
-  const [quests, setQuests] = useState([]);
+  const { quests, reputation } = useContent();
   const [selectedFaction, setSelectedFaction] = useState(null);
-  
-  useEffect(() => {    
-    // Set quests directly from the imported data
-    setQuests(defaultQuests);
-  }, []);
-  
+
   const questsArray = Array.isArray(quests) ? quests : [];
   
   const sortedQuests = [...questsArray].sort((a, b) => {

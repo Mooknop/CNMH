@@ -13,8 +13,28 @@ not_found_handling = "single-page-application"
 name = "CAMPAIGN_SESSION"
 class_name = "CampaignSession"
 
-# SQLite-backed Durable Object class -> eligible for the free tier. Migrations
-# are valid here because the DO is defined in this same Worker.
+[[durable_objects.bindings]]
+name = "CAMPAIGN_CONTENT"
+class_name = "CampaignContent"
+
+# SQLite-backed Durable Object classes -> eligible for the free tier.
+# Migrations are valid here because the DOs are defined in this same Worker.
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["CampaignSession"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["CampaignContent"]
+
+# Cloudflare Access (Zero Trust) settings for the GM area. These are plain
+# vars (not build constants) so the GM allowlist / Access app can change
+# without rebuilding or redeploying the React app. Fill in after creating the
+# self-hosted Access application (see the slice handoff notes):
+#   CF_ACCESS_TEAM_DOMAIN = "<your-team>.cloudflareaccess.com"
+#   CF_ACCESS_AUD         = "<Application Audience (AUD) tag>"
+# GM_DEV_BYPASS is for local `wrangler dev` only — never set it in production.
+[vars]
+CF_ACCESS_TEAM_DOMAIN = ""
+CF_ACCESS_AUD = ""
+GM_EMAIL = "mooknop@gmail.com"

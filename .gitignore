@@ -11,6 +11,10 @@
 # production
 /build
 
+# wrangler local secrets / dev vars (never commit — may hold the GM bypass)
+.dev.vars
+.wrangler
+
 # misc
 .DS_Store
 .env.local

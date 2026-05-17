@@ -2,11 +2,13 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
+import { useGmAuth } from '../../hooks/useGmAuth';
 import SyncStatus from '../shared/SyncStatus';
 import './Navbar.css';
 
 const Navbar = () => {
   const { characters, activeCharacter } = useContext(CharacterContext);
+  const { isGm } = useGmAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   
@@ -42,6 +44,11 @@ const Navbar = () => {
         <li className="nav-item nav-sync">
           <SyncStatus />
         </li>
+        {isGm && (
+          <li className="nav-item">
+            <Link to="/gm" className="nav-link">GM</Link>
+          </li>
+        )}
         {/* Characters Dropdown */}
         <li className="nav-item dropdown" ref={dropdownRef}>
           <button 
