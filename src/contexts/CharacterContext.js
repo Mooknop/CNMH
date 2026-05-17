@@ -1,11 +1,11 @@
 import React, { createContext, useState, useMemo } from 'react';
-import { sampleCharacters } from '../data';
+import { useContent } from './ContentContext';
 import { getCharacterColor } from '../utils/CharacterUtils';
 
 export const CharacterContext = createContext();
 
 export const CharacterProvider = ({ children }) => {
-  const [characters] = useState(sampleCharacters);
+  const { characters } = useContent();
   const [activeCharacter, setActiveCharacter] = useState(null);
 
   const getCharacter = (id) => {

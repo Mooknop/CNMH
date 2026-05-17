@@ -6,6 +6,7 @@ import {
   quests as defaultQuests,
   reputation as defaultReputation,
   loreEntries as defaultLoreEntries,
+  sampleCharacters as defaultCharacters,
 } from '../data';
 import defaultCalendar from '../data/CalendarEvents.json';
 import traitsData from '../data/traits.json';
@@ -81,14 +82,24 @@ export const withTraitId = (trait, index = 0) => ({
 export const normalizeTraits = (arr) =>
   (Array.isArray(arr) ? arr : []).map((t, i) => withTraitId(t, i));
 
+// Character sheets already carry an `id` (e.g. "Pellias"); keep it (fall back
+// to a slug of the name) and preserve the entire deeply-nested sheet as-is.
+export const withCharacterId = (character, index = 0) => ({
+  ...character,
+  id: character.id || `${slugify(character.name)}${index ? `-${index}` : ''}`,
+});
+
+export const normalizeCharacters = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((c, i) => withCharacterId(c, i));
+
 // The default content shipped with the build, normalized for seeding/fallback.
-// Slice 5 extends this object with the character collection.
 export const defaultContent = () => ({
   quest: normalizeQuests(defaultQuests),
   faction: normalizeFactions(defaultReputation && defaultReputation.Factions),
   calendar: normalizeCalendar(defaultCalendar),
   lore: normalizeLore(defaultLoreEntries),
   trait: normalizeTraits(traitsData && traitsData.traits),
+  character: normalizeCharacters(defaultCharacters),
 });
 
 // Body for POST /api/gm/seed.

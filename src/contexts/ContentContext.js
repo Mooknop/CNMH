@@ -7,6 +7,7 @@ import {
   normalizeCalendar,
   normalizeLore,
   normalizeTraits,
+  normalizeCharacters,
   defaultContent,
 } from '../utils/contentUtils';
 
@@ -139,6 +140,7 @@ export const ContentProvider = ({ children }) => {
   const serverCalendar = serverList('calendar');
   const serverLore = serverList('lore');
   const serverTraits = serverList('trait');
+  const serverCharacters = serverList('character');
 
   const value = {
     loading,
@@ -147,7 +149,8 @@ export const ContentProvider = ({ children }) => {
       serverFactions.length ||
       serverCalendar.length ||
       serverLore.length ||
-      serverTraits.length
+      serverTraits.length ||
+      serverCharacters.length
         ? 'server'
         : 'fallback',
     quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
@@ -159,6 +162,9 @@ export const ContentProvider = ({ children }) => {
       : FALLBACK.calendar,
     loreEntries: serverLore.length ? normalizeLore(serverLore) : FALLBACK.lore,
     traits: serverTraits.length ? normalizeTraits(serverTraits) : FALLBACK.trait,
+    characters: serverCharacters.length
+      ? normalizeCharacters(serverCharacters)
+      : FALLBACK.character,
     refresh: loadSnapshot,
   };
 
@@ -173,6 +179,7 @@ const NOOP_CONTENT = {
   calendarEvents: FALLBACK.calendar,
   loreEntries: FALLBACK.lore,
   traits: FALLBACK.trait,
+  characters: FALLBACK.character,
   refresh: () => Promise.resolve(),
 };
 
