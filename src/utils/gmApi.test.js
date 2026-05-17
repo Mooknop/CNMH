@@ -1,4 +1,11 @@
-import { saveDocument, deleteDocument, seedDefaults, seedFromBackup } from './gmApi';
+import {
+  saveDocument,
+  deleteDocument,
+  seedDefaults,
+  seedFromBackup,
+  fetchHistory,
+  restoreVersion,
+} from './gmApi';
 
 const okJson = (body = { ok: true }) =>
   Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
@@ -46,6 +53,25 @@ describe('gmApi', () => {
     expect(opts.method).toBe('POST');
     const body = JSON.parse(opts.body);
     expect(body).toEqual({ force: true, collections: { lore: [{ id: 'l' }] } });
+  });
+
+  it('fetchHistory GETs the encoded history path', async () => {
+    global.fetch = jest.fn(() => okJson({ history: [{ archived_at: 1, data: { id: 'q' } }] }));
+    const res = await fetchHistory('quest', 'a b');
+    expect(res.history).toHaveLength(1);
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toBe('/api/gm/history/quest/a%20b');
+    expect(opts.credentials).toBe('include');
+    expect(opts.method).toBeUndefined();
+  });
+
+  it('restoreVersion POSTs the archived_at to the restore path', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, id: 'q1' }));
+    await restoreVersion('lore', 'q1', 1717000000000);
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toBe('/api/gm/restore/lore/q1');
+    expect(opts.method).toBe('POST');
+    expect(JSON.parse(opts.body)).toEqual({ archived_at: 1717000000000 });
   });
 
   it('throws with status text on a non-ok response', async () => {

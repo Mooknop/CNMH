@@ -11,6 +11,11 @@
 
 const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character'];
 
+// Versions kept per (collection, id). Deliberately small: character sheets are
+// 30-50 KB, so unbounded history would blow the free-tier SQLite budget for a
+// 5-player campaign. Only single-entity PUT/DELETE archive (never bulk seed).
+const HISTORY_KEEP = 5;
+
 export class CampaignContent {
   constructor(state, env) {
     this.state = state;
@@ -22,6 +27,17 @@ export class CampaignContent {
         data       TEXT NOT NULL,
         updated_at INTEGER NOT NULL,
         PRIMARY KEY (collection, id)
+      );`
+    );
+    // Prior versions, captured just before an edit/delete overwrites a row.
+    // No explicit PK — the implicit rowid orders versions and survives
+    // same-millisecond writes that a (collection,id,archived_at) key wouldn't.
+    this.state.storage.sql.exec(
+      `CREATE TABLE IF NOT EXISTS document_history (
+        collection  TEXT NOT NULL,
+        id          TEXT NOT NULL,
+        data        TEXT NOT NULL,
+        archived_at INTEGER NOT NULL
       );`
     );
   }
@@ -52,7 +68,59 @@ export class CampaignContent {
     return r.length ? r[0].n : 0;
   }
 
-  upsert(collection, id, data) {
+  // Snapshot the current row (if any) into document_history, then prune to
+  // the newest HISTORY_KEEP versions. No-op when there's nothing to archive.
+  archive(collection, id) {
+    const rows = this.state.storage.sql
+      .exec('SELECT data FROM documents WHERE collection = ? AND id = ?', collection, id)
+      .toArray();
+    if (!rows.length) return;
+    this.state.storage.sql.exec(
+      'INSERT INTO document_history (collection, id, data, archived_at) VALUES (?, ?, ?, ?)',
+      collection,
+      id,
+      rows[0].data,
+      Date.now()
+    );
+    this.state.storage.sql.exec(
+      `DELETE FROM document_history
+       WHERE collection = ? AND id = ? AND rowid NOT IN (
+         SELECT rowid FROM document_history
+         WHERE collection = ? AND id = ?
+         ORDER BY archived_at DESC, rowid DESC
+         LIMIT ?
+       )`,
+      collection,
+      id,
+      collection,
+      id,
+      HISTORY_KEEP
+    );
+  }
+
+  historyFor(collection, id) {
+    return this.state.storage.sql
+      .exec(
+        'SELECT archived_at, data FROM document_history WHERE collection = ? AND id = ? ORDER BY archived_at DESC, rowid DESC',
+        collection,
+        id
+      )
+      .toArray()
+      .map((r) => {
+        let data = null;
+        try {
+          data = JSON.parse(r.data);
+        } catch {
+          /* leave null so one corrupt version doesn't break the list */
+        }
+        return { archived_at: r.archived_at, data };
+      });
+  }
+
+  // `archive` is true only for single-entity GM writes (PUT/restore); the bulk
+  // seed loop passes false so a reseed never floods history.
+  upsert(collection, id, data, archive = false) {
+    if (archive) this.archive(collection, id);
     this.state.storage.sql.exec(
       `INSERT INTO documents (collection, id, data, updated_at)
        VALUES (?, ?, ?, ?)
@@ -65,7 +133,10 @@ export class CampaignContent {
     );
   }
 
+  // Only ever called from the single-entity DELETE route, so always archive —
+  // a deleted entity stays restorable from history.
   remove(collection, id) {
+    this.archive(collection, id);
     this.state.storage.sql.exec(
       'DELETE FROM documents WHERE collection = ? AND id = ?',
       collection,
@@ -132,6 +203,60 @@ export class CampaignContent {
       return Response.json({ ok: true, seeded });
     }
 
+    // GM history: GET /api/gm/history/:collection/:id
+    if (
+      request.method === 'GET' &&
+      parts[0] === 'api' && parts[1] === 'gm' && parts[2] === 'history' && parts.length === 5
+    ) {
+      const collection = parts[3];
+      const id = decodeURIComponent(parts[4]);
+      if (!COLLECTIONS.includes(collection)) {
+        return new Response('Unknown collection', { status: 404 });
+      }
+      return Response.json({ history: this.historyFor(collection, id) });
+    }
+
+    // GM restore: POST /api/gm/restore/:collection/:id   { archived_at }
+    if (
+      request.method === 'POST' &&
+      parts[0] === 'api' && parts[1] === 'gm' && parts[2] === 'restore' && parts.length === 5
+    ) {
+      const collection = parts[3];
+      const id = decodeURIComponent(parts[4]);
+      if (!COLLECTIONS.includes(collection)) {
+        return new Response('Unknown collection', { status: 404 });
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return new Response('Bad JSON', { status: 400 });
+      }
+      const rows = this.state.storage.sql
+        .exec(
+          'SELECT data FROM document_history WHERE collection = ? AND id = ? AND archived_at = ?',
+          collection,
+          id,
+          body.archived_at
+        )
+        .toArray();
+      if (!rows.length) {
+        return new Response('Version not found', { status: 404 });
+      }
+      let restored;
+      try {
+        restored = JSON.parse(rows[0].data);
+      } catch {
+        return new Response('Corrupt version', { status: 500 });
+      }
+      const stored = { ...restored, id };
+      // archive=true: the pre-restore state is itself captured, so a restore
+      // is reversible too.
+      this.upsert(collection, id, stored, true);
+      this.broadcast({ type: 'CONTENT_UPDATE', collection, id, data: stored });
+      return Response.json({ ok: true, id });
+    }
+
     // GM write: PUT /api/gm/:collection/:id   body = entity JSON
     if (request.method === 'PUT' && parts[0] === 'api' && parts[1] === 'gm' && parts.length === 4) {
       const collection = parts[2];
@@ -146,7 +271,7 @@ export class CampaignContent {
         return new Response('Bad JSON', { status: 400 });
       }
       const stored = { ...data, id };
-      this.upsert(collection, id, stored);
+      this.upsert(collection, id, stored, true);
       this.broadcast({ type: 'CONTENT_UPDATE', collection, id, data: stored });
       return Response.json({ ok: true, id });
     }
