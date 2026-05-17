@@ -52,7 +52,10 @@ const HistoryModal = ({ isOpen, collection, id, name, onClose, onRestored }) => 
     setError(null);
     try {
       await restoreVersion(collection, id, v.archived_at);
-      onRestored();
+      // Hand the restored document back so the editing form can re-seed its
+      // fields immediately — the live socket update alone won't, because forms
+      // intentionally don't re-sync from props mid-edit.
+      onRestored(v.data);
       onClose();
     } catch (e) {
       setError(e.message);

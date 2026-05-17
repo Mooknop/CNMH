@@ -174,8 +174,10 @@ const QuestForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           id={q.id}
           name={q.title}
           onClose={() => setShowHistory(false)}
-          onRestored={() => {
+          onRestored={(doc) => {
             setShowHistory(false);
+            if (doc) setQ(doc);
+            setError(null);
             onRestored();
           }}
         />

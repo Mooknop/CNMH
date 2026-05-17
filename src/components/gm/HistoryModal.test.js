@@ -66,7 +66,7 @@ describe('HistoryModal', () => {
     fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Find the Orb' } });
     fireEvent.click(screen.getByText('Restore'));
     await waitFor(() => expect(restoreVersion).toHaveBeenCalledWith('quest', 'find-orb', 2000));
-    expect(onRestored).toHaveBeenCalled();
+    expect(onRestored).toHaveBeenCalledWith({ title: 'Old' });
     expect(onClose).toHaveBeenCalled();
   });
 
