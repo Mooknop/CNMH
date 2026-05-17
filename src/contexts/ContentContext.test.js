@@ -195,4 +195,35 @@ describe('ContentContext', () => {
     expect(Array.isArray(val.calendarEvents)).toBe(true);
     expect(val.calendarEvents.length).toBeGreaterThan(0);
   });
+
+  it('sources lore and traits from the server when present', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: {
+              lore: [{ id: 'l1', title: 'Server Lore', category: 'Location' }],
+              trait: [{ id: 'agile', name: 'Agile', description: 'd' }],
+            },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    expect(val.loreEntries).toEqual([{ id: 'l1', title: 'Server Lore', category: 'Location' }]);
+    expect(val.traits).toEqual([{ id: 'agile', name: 'Agile', description: 'd' }]);
+  });
+
+  it('falls back to bundled lore and traits with no provider', () => {
+    let val;
+    const C = () => { val = useContent(); return null; };
+    render(<C />);
+    expect(Array.isArray(val.loreEntries)).toBe(true);
+    expect(val.loreEntries.length).toBeGreaterThan(0);
+    expect(Array.isArray(val.traits)).toBe(true);
+    expect(val.traits.length).toBeGreaterThan(0);
+  });
 });

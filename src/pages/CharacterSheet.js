@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useLore } from '../contexts/LoreContext';
-import { loreEntries } from '../data';
+import { useContent } from '../contexts/ContentContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/actions/ActionsList';
@@ -28,6 +28,7 @@ const CharacterSheet = () => {
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
   const { openLore } = useLore();
+  const { loreEntries } = useContent();
 
   useEffect(() => {
     const characterData = getCharacter(id);

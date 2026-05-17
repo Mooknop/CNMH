@@ -1,22 +1,23 @@
 import React, { useMemo } from 'react';
 import { useLore } from '../../contexts/LoreContext';
-import { loreEntries } from '../../data';
+import { useContent } from '../../contexts/ContentContext';
 import { buildBacklinkMap, getConnectionData } from '../../utils/loreUtils';
 import './LoreDrawer.css';
 
-const backlinkMap = buildBacklinkMap(loreEntries);
-
 const LoreDrawer = () => {
   const { isOpen, currentEntryId, closeLore, navigateTo, goBack, canGoBack } = useLore();
+  const { loreEntries } = useContent();
+
+  const backlinkMap = useMemo(() => buildBacklinkMap(loreEntries), [loreEntries]);
 
   const entry = useMemo(
     () => currentEntryId ? loreEntries.find(e => e.id === currentEntryId) : null,
-    [currentEntryId]
+    [currentEntryId, loreEntries]
   );
 
   const connectionData = useMemo(
     () => entry ? getConnectionData(entry, loreEntries, backlinkMap) : null,
-    [entry]
+    [entry, loreEntries, backlinkMap]
   );
 
   if (!isOpen) return null;

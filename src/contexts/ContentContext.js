@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { CAMPAIGN_ID } from '../data/campaign';
-import { loreEntries as defaultLore, reputation as defaultReputation } from '../data';
+import { reputation as defaultReputation } from '../data';
 import {
   normalizeQuests,
   normalizeFactions,
   normalizeCalendar,
+  normalizeLore,
+  normalizeTraits,
   defaultContent,
 } from '../utils/contentUtils';
 
@@ -135,11 +137,17 @@ export const ContentProvider = ({ children }) => {
   const serverQuests = serverList('quest');
   const serverFactions = serverList('faction');
   const serverCalendar = serverList('calendar');
+  const serverLore = serverList('lore');
+  const serverTraits = serverList('trait');
 
   const value = {
     loading,
     source:
-      serverQuests.length || serverFactions.length || serverCalendar.length
+      serverQuests.length ||
+      serverFactions.length ||
+      serverCalendar.length ||
+      serverLore.length ||
+      serverTraits.length
         ? 'server'
         : 'fallback',
     quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
@@ -149,9 +157,9 @@ export const ContentProvider = ({ children }) => {
     calendarEvents: serverCalendar.length
       ? normalizeCalendar(serverCalendar)
       : FALLBACK.calendar,
+    loreEntries: serverLore.length ? normalizeLore(serverLore) : FALLBACK.lore,
+    traits: serverTraits.length ? normalizeTraits(serverTraits) : FALLBACK.trait,
     refresh: loadSnapshot,
-    // Bundled passthrough until its own slice moves it into the store.
-    loreEntries: defaultLore,
   };
 
   return <ContentContext.Provider value={value}>{children}</ContentContext.Provider>;
@@ -163,8 +171,9 @@ const NOOP_CONTENT = {
   quests: FALLBACK.quest,
   reputation: defaultReputation,
   calendarEvents: FALLBACK.calendar,
+  loreEntries: FALLBACK.lore,
+  traits: FALLBACK.trait,
   refresh: () => Promise.resolve(),
-  loreEntries: defaultLore,
 };
 
 export const useContent = () => useContext(ContentContext) || NOOP_CONTENT;

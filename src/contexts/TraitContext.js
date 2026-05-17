@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import traitsData from '../data/traits.json';
+import React, { createContext, useState, useContext } from 'react';
+import { useContent } from './ContentContext';
 import TraitModal from '../components/shared/TraitModal';
 
 // Create context
@@ -11,15 +11,10 @@ export const TraitContext = createContext();
  * @param {React.ReactNode} props.children - Child components
  */
 export const TraitProvider = ({ children }) => {
-  const [traits, setTraits] = useState([]);
+  const { traits } = useContent();
   const [selectedTrait, setSelectedTrait] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Load traits data
-  useEffect(() => {
-    setTraits(traitsData.traits);
-  }, []);
-  
+
   // Function to open modal with a specific trait
   const openTraitModal = (traitName) => {
     const trait = traits.find(t => 

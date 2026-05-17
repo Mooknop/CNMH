@@ -6,6 +6,10 @@ import {
   normalizeFactions,
   withCalendarId,
   normalizeCalendar,
+  withLoreId,
+  normalizeLore,
+  withTraitId,
+  normalizeTraits,
   defaultContent,
   buildSeedPayload,
 } from './contentUtils';
@@ -93,10 +97,32 @@ describe('contentUtils', () => {
     });
   });
 
+  describe('withLoreId / normalizeLore', () => {
+    it('keeps an existing id and preserves all fields', () => {
+      const e = withLoreId({ id: 'sandpoint', title: 'Sandpoint', category: 'Location', tags: ['town'] });
+      expect(e.id).toBe('sandpoint');
+      expect(e.category).toBe('Location');
+      expect(e.tags).toEqual(['town']);
+    });
+    it('derives an id from the title when missing and tolerates non-arrays', () => {
+      expect(withLoreId({ title: 'The Lost Coast' }).id).toBe('the-lost-coast');
+      expect(normalizeLore(null)).toEqual([]);
+    });
+  });
+
+  describe('withTraitId / normalizeTraits', () => {
+    it('slugs the trait name and preserves description', () => {
+      const t = withTraitId({ name: 'Agile', description: 'Lower MAP.' });
+      expect(t.id).toBe('agile');
+      expect(t.description).toBe('Lower MAP.');
+      expect(normalizeTraits(null)).toEqual([]);
+    });
+  });
+
   describe('defaultContent / buildSeedPayload', () => {
-    it('exposes normalized quest, faction and calendar collections', () => {
+    it('exposes every managed collection, all with ids', () => {
       const dc = defaultContent();
-      for (const key of ['quest', 'faction', 'calendar']) {
+      for (const key of ['quest', 'faction', 'calendar', 'lore', 'trait']) {
         expect(dc[key].length).toBeGreaterThan(0);
         expect(dc[key].every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
       }
@@ -104,9 +130,9 @@ describe('contentUtils', () => {
     it('wraps defaults with the force flag', () => {
       expect(buildSeedPayload().force).toBe(false);
       expect(buildSeedPayload(true).force).toBe(true);
-      expect(buildSeedPayload().collections.quest.length).toBeGreaterThan(0);
-      expect(buildSeedPayload().collections.faction.length).toBeGreaterThan(0);
-      expect(buildSeedPayload().collections.calendar.length).toBeGreaterThan(0);
+      for (const key of ['quest', 'faction', 'calendar', 'lore', 'trait']) {
+        expect(buildSeedPayload().collections[key].length).toBeGreaterThan(0);
+      }
     });
   });
 });

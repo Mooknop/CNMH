@@ -3,32 +3,35 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { useLore } from '../../contexts/LoreContext';
 import LoreDrawer from './LoreDrawer';
 
-jest.mock('../../data', () => ({
-  loreEntries: [
-    {
-      id: 'aroden',
-      title: 'Aroden',
-      category: 'History',
-      content: 'A great god.\nHe died mysteriously.',
-      summary: 'A dead god.',
-      related: ['absalom'],
-      tags: ['deity', 'dead'],
-    },
-    {
-      id: 'absalom',
-      title: 'Absalom',
-      category: 'Locations',
-      content: 'A great city.',
-      summary: 'City at the center of the world.',
-      related: [],
-      tags: [],
-    },
-  ],
-}));
+const LORE = [
+  {
+    id: 'aroden',
+    title: 'Aroden',
+    category: 'History',
+    content: 'A great god.\nHe died mysteriously.',
+    summary: 'A dead god.',
+    related: ['absalom'],
+    tags: ['deity', 'dead'],
+  },
+  {
+    id: 'absalom',
+    title: 'Absalom',
+    category: 'Locations',
+    content: 'A great city.',
+    summary: 'City at the center of the world.',
+    related: [],
+    tags: [],
+  },
+];
 
 jest.mock('../../contexts/LoreContext', () => ({
   useLore: jest.fn(),
 }));
+
+jest.mock('../../contexts/ContentContext', () => ({
+  useContent: jest.fn(),
+}));
+const { useContent } = require('../../contexts/ContentContext');
 
 const closeLore = jest.fn();
 const navigateTo = jest.fn();
@@ -36,6 +39,7 @@ const goBack = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  useContent.mockReturnValue({ loreEntries: LORE });
   useLore.mockReturnValue({
     isOpen: true,
     currentEntryId: 'aroden',

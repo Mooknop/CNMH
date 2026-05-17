@@ -20,6 +20,7 @@ import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
 import GmReputation from './pages/gm/GmReputation';
 import GmCalendar from './pages/gm/GmCalendar';
+import GmLore from './pages/gm/GmLore';
 import './App.css';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
                           <Route path="quests" element={<GmQuests />} />
                           <Route path="reputation" element={<GmReputation />} />
                           <Route path="calendar" element={<GmCalendar />} />
+                          <Route path="lore" element={<GmLore />} />
                         </Route>
                       </Routes>
                     </main>

@@ -61,6 +61,9 @@ const GmDashboard = () => {
         <li>
           <Link to="/gm/calendar">Calendar</Link>
         </li>
+        <li>
+          <Link to="/gm/lore">Lore</Link>
+        </li>
       </ul>
     </div>
   );

@@ -2,8 +2,13 @@
 // Bundled JSON entities (quests, etc.) have no stable id; we derive a kebab
 // slug from the title so rows have a primary key and React keys are stable.
 
-import { quests as defaultQuests, reputation as defaultReputation } from '../data';
+import {
+  quests as defaultQuests,
+  reputation as defaultReputation,
+  loreEntries as defaultLoreEntries,
+} from '../data';
 import defaultCalendar from '../data/CalendarEvents.json';
+import traitsData from '../data/traits.json';
 
 export const slugify = (str) =>
   String(str || '')
@@ -56,12 +61,34 @@ export const withCalendarId = (event, index = 0) => {
 export const normalizeCalendar = (arr) =>
   (Array.isArray(arr) ? arr : []).map((e, i) => withCalendarId(e, i));
 
+// Lore entries already carry an `id`; keep it (fall back to a slug of the
+// title) and preserve every other field (category/summary/content/related/
+// tags/createdAt) untouched.
+export const withLoreId = (entry, index = 0) => ({
+  ...entry,
+  id: entry.id || `${slugify(entry.title)}${index ? `-${index}` : ''}`,
+});
+
+export const normalizeLore = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((e, i) => withLoreId(e, i));
+
+// Traits are reference data ({ name, description }); id is a slug of the name.
+export const withTraitId = (trait, index = 0) => ({
+  ...trait,
+  id: trait.id || `${slugify(trait.name)}${index ? `-${index}` : ''}`,
+});
+
+export const normalizeTraits = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((t, i) => withTraitId(t, i));
+
 // The default content shipped with the build, normalized for seeding/fallback.
-// Slices 4-5 extend this object with their collections.
+// Slice 5 extends this object with the character collection.
 export const defaultContent = () => ({
   quest: normalizeQuests(defaultQuests),
   faction: normalizeFactions(defaultReputation && defaultReputation.Factions),
   calendar: normalizeCalendar(defaultCalendar),
+  lore: normalizeLore(defaultLoreEntries),
+  trait: normalizeTraits(traitsData && traitsData.traits),
 });
 
 // Body for POST /api/gm/seed.

@@ -104,5 +104,7 @@
 .gm-rank-row input { flex: 1; min-width: 90px; }
 .gm-rank-row input[aria-label$="-effect"] { flex: 2; }
 
+.gm-count { color: #666; font-size: 0.85rem; margin: 8px 0; }
+
 .gm-editor-list { list-style: none; padding: 0; }
 .gm-editor-list li { margin: 6px 0; }
