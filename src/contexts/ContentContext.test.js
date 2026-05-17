@@ -166,4 +166,33 @@ describe('ContentContext', () => {
     await waitFor(() => expect(val.source).toBe('fallback'));
     expect(val.reputation.Factions.length).toBeGreaterThan(0);
   });
+
+  it('sources calendar events from the server when present, else bundled', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: {
+              calendar: [{ id: 'c1', title: 'Server Event', date: { month: 0, day: 1 } }],
+            },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    expect(val.calendarEvents).toEqual([
+      { id: 'c1', title: 'Server Event', date: { month: 0, day: 1 } },
+    ]);
+  });
+
+  it('exposes bundled calendar on the no-provider fallback', () => {
+    let val;
+    const C = () => { val = useContent(); return null; };
+    render(<C />);
+    expect(Array.isArray(val.calendarEvents)).toBe(true);
+    expect(val.calendarEvents.length).toBeGreaterThan(0);
+  });
 });

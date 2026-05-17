@@ -1,7 +1,12 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { CAMPAIGN_ID } from '../data/campaign';
 import { loreEntries as defaultLore, reputation as defaultReputation } from '../data';
-import { normalizeQuests, normalizeFactions, defaultContent } from '../utils/contentUtils';
+import {
+  normalizeQuests,
+  normalizeFactions,
+  normalizeCalendar,
+  defaultContent,
+} from '../utils/contentUtils';
 
 // Campaign content layer. Loads the authoritative snapshot from the
 // CampaignContent Durable Object (GET /api/content), subscribes to live GM
@@ -129,14 +134,21 @@ export const ContentProvider = ({ children }) => {
     serverContent && Array.isArray(serverContent[key]) ? serverContent[key] : [];
   const serverQuests = serverList('quest');
   const serverFactions = serverList('faction');
+  const serverCalendar = serverList('calendar');
 
   const value = {
     loading,
-    source: serverQuests.length || serverFactions.length ? 'server' : 'fallback',
+    source:
+      serverQuests.length || serverFactions.length || serverCalendar.length
+        ? 'server'
+        : 'fallback',
     quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
     reputation: serverFactions.length
       ? { Factions: normalizeFactions(serverFactions) }
       : defaultReputation,
+    calendarEvents: serverCalendar.length
+      ? normalizeCalendar(serverCalendar)
+      : FALLBACK.calendar,
     refresh: loadSnapshot,
     // Bundled passthrough until its own slice moves it into the store.
     loreEntries: defaultLore,
@@ -149,8 +161,9 @@ const NOOP_CONTENT = {
   loading: false,
   source: 'fallback',
   quests: FALLBACK.quest,
-  refresh: () => Promise.resolve(),
   reputation: defaultReputation,
+  calendarEvents: FALLBACK.calendar,
+  refresh: () => Promise.resolve(),
   loreEntries: defaultLore,
 };
 

@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameDate } from '../contexts/GameDateContext';
+import { useContent } from '../contexts/ContentContext';
 import MoonPhase, { MoonPhaseIndicator } from '../components/calendar/MoonPhase';
-import timelineData from '../data/CalendarEvents.json';
 import { getEventTypeClass, createCalendarHelpers } from '../utils/calendarUtils';
 import './GolarionCalendar.css';
 
@@ -17,6 +17,8 @@ const GolarionCalendar = () => {
     getMoonPhaseInfo,
   } = useGameDate();
 
+  const { calendarEvents } = useContent();
+
   const [currentMonth, setCurrentMonth] = useState(gameDate.month);
   const [currentYear, setCurrentYear] = useState(gameDate.year);
   const [selectedEvents, setSelectedEvents] = useState([]);
@@ -27,7 +29,7 @@ const GolarionCalendar = () => {
     GOLARION_WEEKDAYS,
     getDayOfWeek,
     getMoonPhaseInfo,
-    timelineData,
+    timelineData: calendarEvents,
   });
 
   // Handle day click

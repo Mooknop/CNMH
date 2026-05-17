@@ -73,6 +73,7 @@ const GmLayout = () => {
     { to: '/gm', label: 'Dashboard', end: true },
     { to: '/gm/quests', label: 'Quests' },
     { to: '/gm/reputation', label: 'Reputation' },
+    { to: '/gm/calendar', label: 'Calendar' },
   ];
 
   return (

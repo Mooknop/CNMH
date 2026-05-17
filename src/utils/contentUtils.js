@@ -3,6 +3,7 @@
 // slug from the title so rows have a primary key and React keys are stable.
 
 import { quests as defaultQuests, reputation as defaultReputation } from '../data';
+import defaultCalendar from '../data/CalendarEvents.json';
 
 export const slugify = (str) =>
   String(str || '')
@@ -43,11 +44,24 @@ export const withFactionId = (faction, index = 0) => {
 export const normalizeFactions = (arr) =>
   (Array.isArray(arr) ? arr : []).map((f, i) => withFactionId(f, i));
 
+// Calendar events vary: some carry `title`, some `name`; some have a fixed
+// `date {year?,month,day}`, some only a `recurring` rule string. Preserve all
+// original fields untouched — just stamp a stable id (slug of title|name).
+export const withCalendarId = (event, index = 0) => {
+  const label = event.title || event.name;
+  const id = event.id || `${slugify(label)}${index ? `-${index}` : ''}`;
+  return { ...event, id };
+};
+
+export const normalizeCalendar = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((e, i) => withCalendarId(e, i));
+
 // The default content shipped with the build, normalized for seeding/fallback.
-// Slices 3-5 extend this object with their collections.
+// Slices 4-5 extend this object with their collections.
 export const defaultContent = () => ({
   quest: normalizeQuests(defaultQuests),
   faction: normalizeFactions(defaultReputation && defaultReputation.Factions),
+  calendar: normalizeCalendar(defaultCalendar),
 });
 
 // Body for POST /api/gm/seed.
