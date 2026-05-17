@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
+import HistoryModal from '../../components/gm/HistoryModal';
 import './gm.css';
 
 const toInt = (v) => {
@@ -13,11 +14,12 @@ const toInt = (v) => {
 const blankFaction = () => ({ name: '', reputation: 0, ranks: [] });
 const blankRank = () => ({ name: '', min: 0, max: 0, effect: '' });
 
-const FactionForm = ({ initial, isNew, existingIds, onSaved }) => {
+const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
+  const [showHistory, setShowHistory] = useState(false);
 
   const set = (patch) => setF((cur) => ({ ...cur, ...patch }));
   const setRank = (i, patch) =>
@@ -149,11 +151,30 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved }) => {
           {isNew ? 'Create faction' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
-            Delete
-          </button>
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+              History
+            </button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+              Delete
+            </button>
+          </>
         )}
       </div>
+
+      {!isNew && (
+        <HistoryModal
+          isOpen={showHistory}
+          collection="faction"
+          id={f.id}
+          name={f.name}
+          onClose={() => setShowHistory(false)}
+          onRestored={() => {
+            setShowHistory(false);
+            onRestored();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
@@ -187,13 +208,21 @@ const GmReputation = () => {
     if (wasNew) setAdding(false);
     setFlash('Saved. Changes are live for every connected player.');
   };
+  const onRestored = () =>
+    setFlash('Restored. Changes are live for every connected player.');
 
   return (
     <div className="gm-reputation">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <FactionForm initial={blankFaction()} isNew existingIds={existingIds} onSaved={onSaved} />
+        <FactionForm
+          initial={blankFaction()}
+          isNew
+          existingIds={existingIds}
+          onSaved={onSaved}
+          onRestored={onRestored}
+        />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New faction
@@ -202,7 +231,14 @@ const GmReputation = () => {
 
       <div className="gm-faction-list">
         {factions.map((f) => (
-          <FactionForm key={f.id} initial={f} isNew={false} existingIds={existingIds} onSaved={onSaved} />
+          <FactionForm
+            key={f.id}
+            initial={f}
+            isNew={false}
+            existingIds={existingIds}
+            onSaved={onSaved}
+            onRestored={onRestored}
+          />
         ))}
       </div>
     </div>

@@ -3,9 +3,14 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import GmQuests from './GmQuests';
 
 jest.mock('../../contexts/ContentContext', () => ({ useContent: jest.fn() }));
-jest.mock('../../utils/gmApi', () => ({ saveDocument: jest.fn(), deleteDocument: jest.fn() }));
+jest.mock('../../utils/gmApi', () => ({
+  saveDocument: jest.fn(),
+  deleteDocument: jest.fn(),
+  fetchHistory: jest.fn(),
+  restoreVersion: jest.fn(),
+}));
 const { useContent } = require('../../contexts/ContentContext');
-const { saveDocument, deleteDocument } = require('../../utils/gmApi');
+const { saveDocument, deleteDocument, fetchHistory, restoreVersion } = require('../../utils/gmApi');
 
 const quests = [
   {
@@ -117,5 +122,22 @@ describe('GmQuests', () => {
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('quest', 'find-orb', expect.objectContaining({ id: 'find-orb' }))
     );
+  });
+
+  it('opens History and restores a prior version', async () => {
+    setContent();
+    fetchHistory.mockResolvedValue({ history: [{ archived_at: 1717000000000, data: { title: 'Older' } }] });
+    restoreVersion.mockResolvedValue({ ok: true });
+    render(<GmQuests />);
+    const form = screen.getByTestId('quest-form-find-orb');
+    fireEvent.click(within(form).getByText('History'));
+    await waitFor(() => expect(fetchHistory).toHaveBeenCalledWith('quest', 'find-orb'));
+    fireEvent.click(screen.getByText('Restore this version'));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Find the Orb' } });
+    fireEvent.click(screen.getByText('Restore'));
+    await waitFor(() =>
+      expect(restoreVersion).toHaveBeenCalledWith('quest', 'find-orb', 1717000000000)
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent(/Restored\. Changes are live/i);
   });
 });

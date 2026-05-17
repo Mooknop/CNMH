@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
+import HistoryModal from '../../components/gm/HistoryModal';
 import './gm.css';
 
 const toList = (csv) =>
@@ -24,11 +25,12 @@ const toForm = (e) => ({
 
 const blankEntry = () => toForm({});
 
-const LoreForm = ({ initial, isNew, existingIds, onSaved }) => {
+const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
+  const [showHistory, setShowHistory] = useState(false);
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
 
@@ -144,11 +146,30 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved }) => {
           {isNew ? 'Create entry' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
-            Delete
-          </button>
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+              History
+            </button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+              Delete
+            </button>
+          </>
         )}
       </div>
+
+      {!isNew && (
+        <HistoryModal
+          isOpen={showHistory}
+          collection="lore"
+          id={e.id}
+          name={e.title}
+          onClose={() => setShowHistory(false)}
+          onRestored={() => {
+            setShowHistory(false);
+            onRestored();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
@@ -186,6 +207,8 @@ const GmLore = () => {
     if (wasNew) setAdding(false);
     setFlash('Saved. Changes are live for every connected player.');
   };
+  const onRestored = () =>
+    setFlash('Restored. Changes are live for every connected player.');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -211,7 +234,13 @@ const GmLore = () => {
       </div>
 
       {adding ? (
-        <LoreForm initial={blankEntry()} isNew existingIds={existingIds} onSaved={onSaved} />
+        <LoreForm
+          initial={blankEntry()}
+          isNew
+          existingIds={existingIds}
+          onSaved={onSaved}
+          onRestored={onRestored}
+        />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New entry
@@ -229,6 +258,7 @@ const GmLore = () => {
             isNew={false}
             existingIds={existingIds}
             onSaved={onSaved}
+            onRestored={onRestored}
           />
         ))}
       </div>

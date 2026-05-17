@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
+import HistoryModal from '../../components/gm/HistoryModal';
 import './gm.css';
 
 const STATUSES = ['pending', 'active', 'completed'];
@@ -18,11 +19,12 @@ const blankQuest = () => ({
   notes: [],
 });
 
-const QuestForm = ({ initial, isNew, existingIds, onSaved }) => {
+const QuestForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [q, setQ] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
+  const [showHistory, setShowHistory] = useState(false);
 
   const set = (patch) => setQ((cur) => ({ ...cur, ...patch }));
   const setNote = (i, content) =>
@@ -154,11 +156,30 @@ const QuestForm = ({ initial, isNew, existingIds, onSaved }) => {
           {isNew ? 'Create quest' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
-            Delete
-          </button>
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+              History
+            </button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+              Delete
+            </button>
+          </>
         )}
       </div>
+
+      {!isNew && (
+        <HistoryModal
+          isOpen={showHistory}
+          collection="quest"
+          id={q.id}
+          name={q.title}
+          onClose={() => setShowHistory(false)}
+          onRestored={() => {
+            setShowHistory(false);
+            onRestored();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
@@ -191,6 +212,8 @@ const GmQuests = () => {
     if (wasNew) setAdding(false);
     setFlash('Saved. Changes are live for every connected player.');
   };
+  const onRestored = () =>
+    setFlash('Restored. Changes are live for every connected player.');
 
   return (
     <div className="gm-quests">
@@ -203,7 +226,13 @@ const GmQuests = () => {
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <QuestForm initial={blankQuest()} isNew existingIds={existingIds} onSaved={onSaved} />
+        <QuestForm
+          initial={blankQuest()}
+          isNew
+          existingIds={existingIds}
+          onSaved={onSaved}
+          onRestored={onRestored}
+        />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New quest
@@ -212,7 +241,14 @@ const GmQuests = () => {
 
       <div className="gm-quest-list">
         {quests.map((q) => (
-          <QuestForm key={q.id} initial={q} isNew={false} existingIds={existingIds} onSaved={onSaved} />
+          <QuestForm
+            key={q.id}
+            initial={q}
+            isNew={false}
+            existingIds={existingIds}
+            onSaved={onSaved}
+            onRestored={onRestored}
+          />
         ))}
       </div>
     </div>

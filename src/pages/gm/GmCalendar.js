@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
+import HistoryModal from '../../components/gm/HistoryModal';
 import './gm.css';
 
 // month/day/year are kept as raw strings in the form and coerced on save so a
@@ -27,11 +28,12 @@ const toForm = (ev) => ({
 
 const blankEvent = () => toForm({});
 
-const EventForm = ({ initial, isNew, existingIds, onSaved }) => {
+const EventForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
+  const [showHistory, setShowHistory] = useState(false);
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
 
@@ -175,11 +177,30 @@ const EventForm = ({ initial, isNew, existingIds, onSaved }) => {
           {isNew ? 'Create event' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
-            Delete
-          </button>
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+              History
+            </button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+              Delete
+            </button>
+          </>
         )}
       </div>
+
+      {!isNew && (
+        <HistoryModal
+          isOpen={showHistory}
+          collection="calendar"
+          id={e.id}
+          name={e.title}
+          onClose={() => setShowHistory(false)}
+          onRestored={() => {
+            setShowHistory(false);
+            onRestored();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
@@ -213,13 +234,21 @@ const GmCalendar = () => {
     if (wasNew) setAdding(false);
     setFlash('Saved. Changes are live for every connected player.');
   };
+  const onRestored = () =>
+    setFlash('Restored. Changes are live for every connected player.');
 
   return (
     <div className="gm-calendar">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <EventForm initial={blankEvent()} isNew existingIds={existingIds} onSaved={onSaved} />
+        <EventForm
+          initial={blankEvent()}
+          isNew
+          existingIds={existingIds}
+          onSaved={onSaved}
+          onRestored={onRestored}
+        />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New event
@@ -228,7 +257,14 @@ const GmCalendar = () => {
 
       <div className="gm-event-list">
         {events.map((ev) => (
-          <EventForm key={ev.id} initial={toForm(ev)} isNew={false} existingIds={existingIds} onSaved={onSaved} />
+          <EventForm
+            key={ev.id}
+            initial={toForm(ev)}
+            isNew={false}
+            existingIds={existingIds}
+            onSaved={onSaved}
+            onRestored={onRestored}
+          />
         ))}
       </div>
     </div>

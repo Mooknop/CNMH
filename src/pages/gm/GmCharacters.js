@@ -4,6 +4,7 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { SKILL_ABILITY_MAP, getProficiencyLabel } from '../../utils/CharacterUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
+import HistoryModal from '../../components/gm/HistoryModal';
 import './gm.css';
 
 // 5a: identity/abilities/saves. 5b: skills + proficiencies. 5c: the top-level
@@ -318,11 +319,12 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
   );
 };
 
-const CharacterForm = ({ initial, isNew, existingIds, onSaved }) => {
+const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
+  const [showHistory, setShowHistory] = useState(false);
 
   const setStr = (k, v) => setF((c) => ({ ...c, strings: { ...c.strings, [k]: v } }));
   const setNum = (k, v) => setF((c) => ({ ...c, nums: { ...c.nums, [k]: v } }));
@@ -728,11 +730,30 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved }) => {
           {isNew ? 'Create character' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
-            Delete
-          </button>
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
+              History
+            </button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
+              Delete
+            </button>
+          </>
         )}
       </div>
+
+      {!isNew && (
+        <HistoryModal
+          isOpen={showHistory}
+          collection="character"
+          id={f.id}
+          name={f.strings.name}
+          onClose={() => setShowHistory(false)}
+          onRestored={() => {
+            setShowHistory(false);
+            onRestored();
+          }}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
@@ -766,13 +787,21 @@ const GmCharacters = () => {
     if (wasNew) setAdding(false);
     setFlash('Saved. Changes are live for every connected player.');
   };
+  const onRestored = () =>
+    setFlash('Restored. Changes are live for every connected player.');
 
   return (
     <div className="gm-characters">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <CharacterForm initial={blankCharacter()} isNew existingIds={existingIds} onSaved={onSaved} />
+        <CharacterForm
+          initial={blankCharacter()}
+          isNew
+          existingIds={existingIds}
+          onSaved={onSaved}
+          onRestored={onRestored}
+        />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New character
@@ -787,6 +816,7 @@ const GmCharacters = () => {
             isNew={false}
             existingIds={existingIds}
             onSaved={onSaved}
+            onRestored={onRestored}
           />
         ))}
       </div>
