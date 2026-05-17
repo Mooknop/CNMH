@@ -14,25 +14,15 @@ const pellias = {
   level: 4,
   abilities: { strength: 18, dexterity: 10, constitution: 16, intelligence: 10, wisdom: 12, charisma: 12 },
   saves: { fortitude: 11, reflex: 6, will: 9 },
-  skills: { athletics: { proficiency: 2 }, lore: [{ name: 'Thassilonian', proficiency: 1 }] },
-  proficiencies: {
-    class: 1,
-    weapons: { simple: { proficiency: 1, name: 'Trained' }, martial: { proficiency: 1, name: 'Trained' }, advanced: { proficiency: 0, name: 'Untrained' }, unarmed: { proficiency: 1, name: 'Trained' } },
-    armor: { unarmored: { proficiency: 1, name: 'Trained' }, light: { proficiency: 1, name: 'Trained' }, medium: { proficiency: 1, name: 'Trained' }, heavy: { proficiency: 1, name: 'Trained' } },
-  },
-  inventory: [
-    { id: 'item-1', name: 'Full Plate', price: 30, quantity: 1, weight: 4, traits: ['Bulwark'], description: 'Heavy armor.' },
-    {
-      name: '+1 Striking Pick',
-      price: 100.1,
-      quantity: 1,
-      weight: 1,
-      potency: 1,
-      traits: ['Fatal 1d10'],
-      strikes: { proficiency: 'martial', type: 'melee', action: 1, damage: '2d6' },
-    },
-  ],
-  feats: [{ name: 'Toughness' }],
+  skills: { athletics: { proficiency: 2 } },
+  proficiencies: { class: 1, weapons: {}, armor: {} },
+  inventory: [{ id: 'item-1', name: 'Full Plate', price: 30, quantity: 1, weight: 4 }],
+  feats: [{ id: 'feat-1', name: 'Ranger Dedication', level: 2, source: 'Archetype', description: 'Hunt prey.' }],
+  strikes: [{ name: 'Pick', proficiency: 'martial', damage: '1d6' }],
+  actions: [{ name: 'Exploit Vulnerability', actionCount: 1, traits: ['Thaumaturge'] }],
+  reactions: [],
+  familiar: { name: 'Lazarus', type: 'Squox', ac: 20, hp: 20 },
+  crafting: [{ name: 'Repair Kit' }],
 };
 
 const izzy = {
@@ -64,76 +54,91 @@ describe('GmCharacters', () => {
     expect(screen.getByTestId('character-form-izzy')).toBeInTheDocument();
   });
 
-  it('pulls inventory out of Advanced and pre-fills bespoke + per-item JSON', () => {
+  it('pulls feats/strikes/actions/familiar out of Advanced; only class blocks/crafting remain', () => {
     setContent([pellias]);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
-    expect(within(form).getByLabelText('item-0-name')).toHaveValue('Full Plate');
-    expect(within(form).getByLabelText('item-0-price')).toHaveValue(30);
-    // nested item structures live in the per-item JSON box
-    expect(within(form).getByLabelText('item-1-json').value).toContain('strikes');
-    // character Advanced no longer holds inventory, but still holds feats
+    expect(within(form).getByLabelText('feats-0-name')).toHaveValue('Ranger Dedication');
+    expect(within(form).getByLabelText('feats-0-json').value).toContain('Archetype');
+    expect(within(form).getByLabelText('strikes-0-name')).toHaveValue('Pick');
+    expect(within(form).getByLabelText('actions-0-name')).toHaveValue('Exploit Vulnerability');
+    expect(within(form).getByLabelText('familiar-json').value).toContain('Lazarus');
     const adv = within(form).getByLabelText('advanced-json').value;
-    expect(adv).toContain('feats');
-    expect(adv).not.toContain('inventory');
-    expect(adv).not.toContain('Full Plate');
+    expect(adv).toContain('crafting');
+    expect(adv).not.toContain('feats');
+    expect(adv).not.toContain('familiar');
   });
 
-  it('rebuilds inventory on save, preserving nested item fields and decimals', async () => {
+  it('rebuilds array sections + object sections on save, preserving nested fields', async () => {
     setContent([pellias]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
-    fireEvent.change(within(form).getByLabelText('item-0-name'), { target: { value: 'Full Plate +1' } });
+    fireEvent.change(within(form).getByLabelText('feats-0-name'), { target: { value: 'Ranger Dedication+' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const data = saveDocument.mock.calls[0][2];
-    expect(data.inventory).toHaveLength(2);
-    expect(data.inventory[0]).toEqual(
-      expect.objectContaining({ id: 'item-1', name: 'Full Plate +1', price: 30, quantity: 1, weight: 4, traits: ['Bulwark'] })
+    expect(data.feats[0]).toEqual(
+      expect.objectContaining({ id: 'feat-1', name: 'Ranger Dedication+', level: 2, source: 'Archetype' })
     );
-    expect(data.inventory[1]).toEqual(
-      expect.objectContaining({ name: '+1 Striking Pick', price: 100.1, potency: 1, strikes: { proficiency: 'martial', type: 'melee', action: 1, damage: '2d6' } })
-    );
-    // feats still round-trips through character Advanced
-    expect(data.feats).toEqual([{ name: 'Toughness' }]);
+    expect(data.strikes[0]).toEqual({ name: 'Pick', proficiency: 'martial', damage: '1d6' });
+    expect(data.reactions).toEqual([]);
+    expect(data.familiar).toEqual({ name: 'Lazarus', type: 'Squox', ac: 20, hp: 20 });
+    expect(data.crafting).toEqual([{ name: 'Repair Kit' }]); // still via Advanced
   });
 
-  it('adds and removes inventory items', async () => {
+  it('adds and removes array entries', async () => {
     setContent([pellias]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
-    fireEvent.click(within(form).getByText('Add item'));
-    fireEvent.change(within(form).getByLabelText('item-2-name'), { target: { value: 'Torch' } });
-    fireEvent.click(within(form).getAllByText('Remove item')[0]); // drop Full Plate
+    fireEvent.click(within(form).getByText('Add feats entry'));
+    fireEvent.change(within(form).getByLabelText('feats-1-name'), { target: { value: 'Toughness' } });
+    fireEvent.click(within(form).getAllByText('Remove feats entry')[0]);
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-    const names = saveDocument.mock.calls[0][2].inventory.map((i) => i.name);
-    expect(names).toEqual(['+1 Striking Pick', 'Torch']);
+    expect(saveDocument.mock.calls[0][2].feats.map((x) => x.name)).toEqual(['Toughness']);
   });
 
-  it('blocks save when an item is missing a name', async () => {
+  it('blocks save when an array entry lacks a name or has bad JSON', async () => {
     setContent([pellias]);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
-    fireEvent.change(within(form).getByLabelText('item-0-name'), { target: { value: '' } });
+    fireEvent.change(within(form).getByLabelText('feats-0-json'), { target: { value: '{ broken' } });
     fireEvent.click(within(form).getByText('Save'));
-    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Inventory item 1 needs a name/i));
+    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Feats entry "Ranger Dedication" has invalid JSON/i));
     expect(saveDocument).not.toHaveBeenCalled();
   });
 
-  it('blocks save when a per-item JSON box is invalid', async () => {
-    setContent([pellias]);
+  it('toggles an object section and validates its JSON', async () => {
+    setContent([izzy]);
+    saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
-    const form = screen.getByTestId('character-form-pellias');
-    fireEvent.change(within(form).getByLabelText('item-0-json'), { target: { value: '{ broken' } });
+    const form = screen.getByTestId('character-form-izzy');
+    // izzy has no familiar -> add it
+    fireEvent.click(within(form).getByText('Add familiar'));
+    fireEvent.change(within(form).getByLabelText('familiar-json'), { target: { value: '{ bad' } });
     fireEvent.click(within(form).getByText('Save'));
-    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/invalid JSON in its extra fields/i));
-    expect(saveDocument).not.toHaveBeenCalled();
+    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Familiar is not valid JSON/i));
+    fireEvent.change(within(form).getByLabelText('familiar-json'), { target: { value: '{"name":"Sprout"}' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].familiar).toEqual({ name: 'Sprout' });
   });
 
-  it('still handles spellcasting (5c) and skills/proficiencies (5a/5b)', async () => {
+  it('non-having object section saves without that key', async () => {
+    setContent([izzy]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const data = saveDocument.mock.calls[0][2];
+    expect(data.familiar).toBeUndefined();
+    expect(data.animalCompanion).toBeUndefined();
+  });
+
+  it('still handles spellcasting (5c), inventory (5d), skills (5b)', async () => {
     setContent([izzy]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
@@ -148,27 +153,21 @@ describe('GmCharacters', () => {
     expect(data.inventory).toEqual([]);
   });
 
-  it('blocks saving with an empty name', async () => {
+  it('blocks saving with an empty name and rejects bad Advanced JSON', async () => {
     setContent([pellias]);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: '' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Name is required/));
-    expect(saveDocument).not.toHaveBeenCalled();
-  });
-
-  it('rejects invalid character Advanced JSON', async () => {
-    setContent([pellias]);
-    render(<GmCharacters />);
-    const form = screen.getByTestId('character-form-pellias');
-    fireEvent.change(within(form).getByLabelText('advanced-json'), { target: { value: '{ not json' } });
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Pellias' } });
+    fireEvent.change(within(form).getByLabelText('advanced-json'), { target: { value: '[]' } });
     fireEvent.click(within(form).getByText('Save'));
-    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/not valid JSON/i));
+    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/must be an object/i));
     expect(saveDocument).not.toHaveBeenCalled();
   });
 
-  it('creates a new character with a slug id derived from the name', async () => {
+  it('creates a new character with a slug id', async () => {
     setContent([]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
@@ -180,9 +179,84 @@ describe('GmCharacters', () => {
       expect(saveDocument).toHaveBeenCalledWith(
         'character',
         'bob-the-brave',
-        expect.objectContaining({ id: 'bob-the-brave', name: 'Bob the Brave', inventory: [] })
+        expect.objectContaining({ id: 'bob-the-brave', name: 'Bob the Brave', feats: [], inventory: [] })
       )
     );
+  });
+
+  it('exercises identity/abilities/saves/proficiency/lore handlers', async () => {
+    setContent([pellias]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    fireEvent.change(within(form).getByLabelText('ancestry'), { target: { value: 'Human' } });
+    fireEvent.change(within(form).getByLabelText('maxHp'), { target: { value: '62' } });
+    fireEvent.change(within(form).getByLabelText('strength'), { target: { value: '20' } });
+    fireEvent.change(within(form).getByLabelText('will'), { target: { value: '12' } });
+    fireEvent.change(within(form).getByLabelText('class-proficiency'), { target: { value: '2' } });
+    fireEvent.change(within(form).getByLabelText('simple'), { target: { value: '2' } });
+    fireEvent.change(within(form).getByLabelText('light'), { target: { value: '1' } });
+    fireEvent.click(within(form).getByText('Add lore'));
+    fireEvent.change(within(form).getByLabelText('lore-0-name'), { target: { value: 'Heraldry' } });
+    fireEvent.change(within(form).getByLabelText('lore-0-proficiency'), { target: { value: '2' } });
+    fireEvent.click(within(form).getByText('Remove')); // remove the lore row
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const data = saveDocument.mock.calls[0][2];
+    expect(data.ancestry).toBe('Human');
+    expect(data.maxHp).toBe(62);
+    expect(data.abilities.strength).toBe(20);
+    expect(data.saves.will).toBe(12);
+    expect(data.proficiencies.class).toBe(2);
+    expect(data.proficiencies.weapons.simple).toEqual({ proficiency: 2, name: 'Expert' });
+    expect(data.skills.lore).toBeUndefined();
+  });
+
+  it('exercises spellcasting slot/spell/heightened handlers', async () => {
+    setContent([izzy]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    // izzy already has slot-0 ({1:4}); add two more, edit one, remove one
+    fireEvent.click(within(form).getByText('Add slot rank'));
+    fireEvent.click(within(form).getByText('Add slot rank'));
+    fireEvent.change(within(form).getByLabelText('slot-1-level'), { target: { value: '3' } });
+    fireEvent.change(within(form).getByLabelText('slot-1-count'), { target: { value: '2' } });
+    fireEvent.click(within(form).getAllByText('Remove')[2]); // drop the empty slot-2
+    fireEvent.click(within(form).getByText('Add spell'));
+    const spell1 = within(form).getByTestId('spell-1');
+    fireEvent.change(within(spell1).getByLabelText('spell-1-name'), { target: { value: 'Heal' } });
+    fireEvent.change(within(spell1).getByLabelText('spell-1-level'), { target: { value: '1' } });
+    fireEvent.change(within(spell1).getByLabelText('spell-1-traits'), { target: { value: 'Healing, Vitality' } });
+    fireEvent.change(within(spell1).getByLabelText('spell-1-description'), { target: { value: 'Restore HP.' } });
+    fireEvent.click(within(spell1).getByText('Add heightened'));
+    fireEvent.change(within(spell1).getByLabelText('spell-1-h-0-key'), { target: { value: '+1' } });
+    fireEvent.change(within(spell1).getByLabelText('spell-1-h-0-text'), { target: { value: '+8 HP' } });
+    fireEvent.click(within(spell1).getByText('Remove')); // heightened row remove (exact text)
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const sc = saveDocument.mock.calls[0][2].spellcasting;
+    expect(sc.spell_slots).toEqual({ 1: 4, 3: 2 });
+    expect(sc.spells[1]).toEqual(expect.objectContaining({ name: 'Heal', level: 1, traits: ['Healing', 'Vitality'] }));
+  });
+
+  it('removes an object section and adds another', async () => {
+    setContent([pellias]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    fireEvent.click(within(form).getByText('Add actions entry'));
+    fireEvent.change(within(form).getByLabelText('actions-1-name'), { target: { value: 'Stride' } });
+    fireEvent.click(within(form).getAllByText(/Remove actions entry/)[1]);
+    fireEvent.click(within(form).getByText('Remove familiar'));
+    fireEvent.click(within(form).getByText('Add animal companion'));
+    fireEvent.change(within(form).getByLabelText('animalCompanion-json'), { target: { value: '{"name":"Rex"}' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const data = saveDocument.mock.calls[0][2];
+    expect(data.familiar).toBeUndefined();
+    expect(data.animalCompanion).toEqual({ name: 'Rex' });
+    expect(data.actions.map((a) => a.name)).toEqual(['Exploit Vulnerability']);
   });
 
   it('deletes a character after confirmation', async () => {

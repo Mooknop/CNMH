@@ -52,6 +52,42 @@ const itemToForm = (it) => {
   };
 };
 
+// Final slice (5e): feats / strikes / actions / reactions are arrays of very
+// heterogeneous objects where only `name` is reliably common, so each entry is
+// a bespoke name + a per-entry raw-JSON box for the rest (same faithful
+// pattern as inventory items). familiar / animalCompanion are single nested
+// objects, each given its own labelled JSON box with an add/remove toggle.
+const ARR_SECTIONS = [
+  { key: 'feats', label: 'Feats' },
+  { key: 'strikes', label: 'Strikes' },
+  { key: 'actions', label: 'Actions' },
+  { key: 'reactions', label: 'Reactions' },
+];
+const OBJ_SECTIONS = [
+  { key: 'familiar', label: 'Familiar' },
+  { key: 'animalCompanion', label: 'Animal Companion' },
+];
+
+const entryToForm = (e) => {
+  const rest = { ...e };
+  delete rest.name;
+  return { name: e && e.name != null ? String(e.name) : '', restJson: JSON.stringify(rest, null, 2) };
+};
+
+const entryFromForm = (f, label, index) => {
+  if (!f.name.trim()) throw new Error(`${label} entry ${index + 1} needs a name.`);
+  let rest;
+  try {
+    rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
+  } catch {
+    throw new Error(`${label} entry "${f.name}" has invalid JSON in its extra fields.`);
+  }
+  if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
+    throw new Error(`${label} entry "${f.name}" extra fields must be a JSON object.`);
+  }
+  return { ...rest, name: f.name.trim() };
+};
+
 // Returns the rebuilt item, or throws Error with a GM-readable message.
 const itemFromForm = (f, index) => {
   if (!f.name.trim()) throw new Error(`Inventory item ${index + 1} needs a name.`);
@@ -150,6 +186,8 @@ const toForm = (c) => {
   delete rest.proficiencies;
   delete rest.spellcasting;
   delete rest.inventory;
+  ARR_SECTIONS.forEach((s) => delete rest[s.key]);
+  OBJ_SECTIONS.forEach((s) => delete rest[s.key]);
 
   const strings = {};
   STRINGS.forEach((k) => { strings[k] = c[k] != null ? String(c[k]) : ''; });
@@ -197,6 +235,15 @@ const toForm = (c) => {
     hasSpellcasting: !!(c.spellcasting && typeof c.spellcasting === 'object'),
     spellcasting: scToForm(c.spellcasting),
     inventory: Array.isArray(c.inventory) ? c.inventory.map(itemToForm) : [],
+    arrays: ARR_SECTIONS.reduce((acc, s) => {
+      acc[s.key] = Array.isArray(c[s.key]) ? c[s.key].map(entryToForm) : [];
+      return acc;
+    }, {}),
+    objects: OBJ_SECTIONS.reduce((acc, s) => {
+      const has = !!(c[s.key] && typeof c[s.key] === 'object');
+      acc[s.key] = { has, json: JSON.stringify(has ? c[s.key] : {}, null, 2) };
+      return acc;
+    }, {}),
     advanced: JSON.stringify(rest, null, 2),
   };
 };
@@ -301,6 +348,18 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
   const addItem = () => setF((c) => ({ ...c, inventory: [...c.inventory, itemToForm({ name: '' })] }));
   const rmItem = (i) => setF((c) => ({ ...c, inventory: c.inventory.filter((_, idx) => idx !== i) }));
 
+  const setArr = (key, i, patch) =>
+    setF((c) => ({
+      ...c,
+      arrays: { ...c.arrays, [key]: c.arrays[key].map((e, idx) => (idx === i ? { ...e, ...patch } : e)) },
+    }));
+  const addArr = (key) =>
+    setF((c) => ({ ...c, arrays: { ...c.arrays, [key]: [...c.arrays[key], { name: '', restJson: '{}' }] } }));
+  const rmArr = (key, i) =>
+    setF((c) => ({ ...c, arrays: { ...c.arrays, [key]: c.arrays[key].filter((_, idx) => idx !== i) } }));
+  const setObj = (key, patch) =>
+    setF((c) => ({ ...c, objects: { ...c.objects, [key]: { ...c.objects[key], ...patch } } }));
+
   const save = async () => {
     const name = f.strings.name.trim();
     if (!name) { setError('Name is required.'); return; }
@@ -344,9 +403,28 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
 
     try {
       payload.inventory = f.inventory.map((it, idx) => itemFromForm(it, idx));
+      ARR_SECTIONS.forEach((s) => {
+        payload[s.key] = f.arrays[s.key].map((e, idx) => entryFromForm(e, s.label, idx));
+      });
     } catch (e) {
       setError(e.message);
       return;
+    }
+    for (const s of OBJ_SECTIONS) {
+      const o = f.objects[s.key];
+      if (!o.has) continue;
+      let parsed;
+      try {
+        parsed = o.json.trim() ? JSON.parse(o.json) : {};
+      } catch {
+        setError(`${s.label} is not valid JSON.`);
+        return;
+      }
+      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        setError(`${s.label} must be a JSON object.`);
+        return;
+      }
+      payload[s.key] = parsed;
     }
 
     setBusy(true);
@@ -561,8 +639,69 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
         <button className="btn-small btn-secondary" onClick={addItem}>Add item</button>
       </div>
 
+      {ARR_SECTIONS.map((s) => (
+        <div className="form-group" key={s.key}>
+          <label>{s.label}</label>
+          {f.arrays[s.key].map((e, i) => (
+            <div className="gm-card" data-testid={`${s.key}-${i}`} key={i}>
+              <div className="form-group">
+                <label>name</label>
+                <input
+                  aria-label={`${s.key}-${i}-name`}
+                  value={e.name}
+                  onChange={(ev) => setArr(s.key, i, { name: ev.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>extra fields (raw JSON)</label>
+                <textarea
+                  aria-label={`${s.key}-${i}-json`}
+                  className="gm-json"
+                  rows={4}
+                  value={e.restJson}
+                  onChange={(ev) => setArr(s.key, i, { restJson: ev.target.value })}
+                />
+              </div>
+              <button className="btn-small btn-danger" onClick={() => rmArr(s.key, i)}>
+                Remove {s.label.toLowerCase()} entry
+              </button>
+            </div>
+          ))}
+          <button className="btn-small btn-secondary" onClick={() => addArr(s.key)}>
+            Add {s.label.toLowerCase()} entry
+          </button>
+        </div>
+      ))}
+
+      {OBJ_SECTIONS.map((s) => (
+        <div className="form-group" key={s.key}>
+          <label>{s.label}</label>
+          {!f.objects[s.key].has ? (
+            <button className="btn-small btn-secondary" onClick={() => setObj(s.key, { has: true })}>
+              Add {s.label.toLowerCase()}
+            </button>
+          ) : (
+            <>
+              <textarea
+                aria-label={`${s.key}-json`}
+                className="gm-json"
+                rows={6}
+                value={f.objects[s.key].json}
+                onChange={(ev) => setObj(s.key, { json: ev.target.value })}
+              />
+              <button
+                className="btn-small btn-danger"
+                onClick={() => setObj(s.key, { has: false })}
+              >
+                Remove {s.label.toLowerCase()}
+              </button>
+            </>
+          )}
+        </div>
+      ))}
+
       <div className="form-group">
-        <label>Advanced — feats, strikes, actions, reactions, familiar, class blocks, item spells… (raw JSON)</label>
+        <label>Advanced — class blocks (thaumaturge/monk), crafting, staff/wand spells, metadata… (raw JSON)</label>
         <textarea
           aria-label="advanced-json"
           className="gm-json"
