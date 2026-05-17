@@ -10,6 +10,7 @@ import {
 } from '../data';
 import defaultCalendar from '../data/CalendarEvents.json';
 import traitsData from '../data/traits.json';
+import itemsData from '../data/items.json';
 
 export const slugify = (str) =>
   String(str || '')
@@ -88,6 +89,89 @@ export const withTraitId = (trait, index = 0) => ({
 export const normalizeTraits = (arr) =>
   (Array.isArray(arr) ? arr : []).map((t, i) => withTraitId(t, i));
 
+// Catalog items are the shared definitions (name/price/weight/traits/
+// description + optional mechanical blocks: container{capacity,ignored},
+// scroll, wand, strikes, potency, shield, actions). id is a slug of the name.
+export const withItemId = (item, index = 0) => ({
+  ...item,
+  id: item.id || `${slugify(item.name)}${index ? `-${index}` : ''}`,
+});
+
+export const normalizeItems = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((it, i) => withItemId(it, i));
+
+// id -> catalog item, for resolving inventory references.
+export const itemCatalogMap = (items) => {
+  const map = new Map();
+  (Array.isArray(items) ? items : []).forEach((it) => {
+    if (it && it.id != null) map.set(String(it.id), it);
+  });
+  return map;
+};
+
+// Resolve one inventory entry into a fully-shaped item.
+//
+// An entry with no `ref` is a legacy inline item (back-compat): returned
+// as-is, only recursing into a container's contents (which may themselves
+// be refs). An entry with `ref` is merged over its catalog definition —
+// the catalog object is spread FIRST so its mechanical blocks (.scroll,
+// .wand, .strikes, .container) survive for InventoryUtils/SpellUtils, then
+// the per-character scalars (quantity/invested/id) overlay it. A container
+// ref keeps the catalog's intrinsic {capacity,ignored} and takes its
+// contents from the reference. A dangling ref yields a visible, weightless
+// stub so bulk math never breaks (NaN-free).
+export const resolveInventoryItem = (entry, catalogMap) => {
+  if (!entry || typeof entry !== 'object') return entry;
+
+  if (entry.ref == null) {
+    if (entry.container && Array.isArray(entry.container.contents)) {
+      return {
+        ...entry,
+        container: {
+          ...entry.container,
+          contents: resolveInventory(entry.container.contents, catalogMap),
+        },
+      };
+    }
+    return entry;
+  }
+
+  const quantity = entry.quantity != null ? entry.quantity : 1;
+  const cat = catalogMap.get(String(entry.ref));
+  if (!cat) {
+    return { name: `(unknown item: ${entry.ref})`, weight: 0, quantity };
+  }
+
+  const resolved = { ...cat, quantity, id: entry.id || cat.id };
+  if (entry.invested != null) resolved.invested = entry.invested;
+  if (cat.container) {
+    resolved.container = {
+      ...cat.container,
+      contents: resolveInventory(
+        entry.container && entry.container.contents,
+        catalogMap
+      ),
+    };
+  }
+  return resolved;
+};
+
+export const resolveInventory = (list, catalogMap) =>
+  (Array.isArray(list) ? list : []).map((e) =>
+    resolveInventoryItem(e, catalogMap)
+  );
+
+// Resolve a character's inventory against the item catalog. Characters with
+// no inventory array are returned untouched (shape preserved).
+export const resolveCharacterItems = (character, items) => {
+  if (!character || typeof character !== 'object') return character;
+  if (!Array.isArray(character.inventory)) return character;
+  return {
+    ...character,
+    inventory: resolveInventory(character.inventory, itemCatalogMap(items)),
+  };
+};
+
 // Character sheets already carry an `id` (e.g. "Pellias"); keep it (fall back
 // to a slug of the name) and preserve the entire deeply-nested sheet as-is.
 export const withCharacterId = (character, index = 0) => ({
@@ -106,6 +190,7 @@ export const defaultContent = () => ({
   lore: normalizeLore(defaultLoreEntries),
   trait: normalizeTraits(traitsData && traitsData.traits),
   character: normalizeCharacters(defaultCharacters),
+  item: normalizeItems(itemsData && itemsData.items),
 });
 
 // Body for POST /api/gm/seed.
