@@ -28,6 +28,52 @@ const toInt = (v) => {
   return Number.isNaN(n) ? 0 : n;
 };
 
+// Prices/weights are often decimals (2.5, 100.1); keep them as floats.
+const toNum = (v) => {
+  const n = parseFloat(v);
+  return Number.isNaN(n) ? 0 : n;
+};
+
+// Inventory items are wildly heterogeneous (shields, strikes, bonus arrays,
+// potency, containers, invested…). Bespoke fields cover the common scalars;
+// every other key on the item round-trips through a per-item raw-JSON box,
+// mirroring the character-level Advanced pattern, so nothing is lost.
+const itemToForm = (it) => {
+  const rest = { ...it };
+  ['name', 'description', 'price', 'quantity', 'weight', 'traits'].forEach((k) => delete rest[k]);
+  return {
+    name: it.name != null ? String(it.name) : '',
+    description: it.description != null ? String(it.description) : '',
+    traits: Array.isArray(it.traits) ? it.traits.join(', ') : '',
+    price: it.price != null ? String(it.price) : '',
+    quantity: it.quantity != null ? String(it.quantity) : '',
+    weight: it.weight != null ? String(it.weight) : '',
+    restJson: JSON.stringify(rest, null, 2),
+  };
+};
+
+// Returns the rebuilt item, or throws Error with a GM-readable message.
+const itemFromForm = (f, index) => {
+  if (!f.name.trim()) throw new Error(`Inventory item ${index + 1} needs a name.`);
+  let rest;
+  try {
+    rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
+  } catch {
+    throw new Error(`Inventory item "${f.name}" has invalid JSON in its extra fields.`);
+  }
+  if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
+    throw new Error(`Inventory item "${f.name}" extra fields must be a JSON object.`);
+  }
+  const out = { ...rest, name: f.name.trim() };
+  if (f.description.trim()) out.description = f.description.trim();
+  const traits = f.traits.split(',').map((t) => t.trim()).filter(Boolean);
+  if (traits.length) out.traits = traits;
+  if (f.price.trim() !== '') out.price = toNum(f.price);
+  if (f.quantity.trim() !== '') out.quantity = toInt(f.quantity);
+  if (f.weight.trim() !== '') out.weight = toNum(f.weight);
+  return out;
+};
+
 const spellToForm = (s) => {
   const rest = { ...s };
   SPELL_STR.forEach((k) => delete rest[k]);
@@ -103,6 +149,7 @@ const toForm = (c) => {
   delete rest.skills;
   delete rest.proficiencies;
   delete rest.spellcasting;
+  delete rest.inventory;
 
   const strings = {};
   STRINGS.forEach((k) => { strings[k] = c[k] != null ? String(c[k]) : ''; });
@@ -149,6 +196,7 @@ const toForm = (c) => {
     profArmorRest: (srcProf.armor && typeof srcProf.armor === 'object') ? srcProf.armor : {},
     hasSpellcasting: !!(c.spellcasting && typeof c.spellcasting === 'object'),
     spellcasting: scToForm(c.spellcasting),
+    inventory: Array.isArray(c.inventory) ? c.inventory.map(itemToForm) : [],
     advanced: JSON.stringify(rest, null, 2),
   };
 };
@@ -248,6 +296,11 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
   const addSpell = () => setSc({ spells: [...sc.spells, spellToForm({ name: '', level: 0, baseLevel: 1 })] });
   const rmSpell = (i) => setSc({ spells: sc.spells.filter((_, idx) => idx !== i) });
 
+  const setItem = (i, patch) =>
+    setF((c) => ({ ...c, inventory: c.inventory.map((it, idx) => (idx === i ? { ...it, ...patch } : it)) }));
+  const addItem = () => setF((c) => ({ ...c, inventory: [...c.inventory, itemToForm({ name: '' })] }));
+  const rmItem = (i) => setF((c) => ({ ...c, inventory: c.inventory.filter((_, idx) => idx !== i) }));
+
   const save = async () => {
     const name = f.strings.name.trim();
     if (!name) { setError('Name is required.'); return; }
@@ -288,6 +341,13 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
     ARMOR.forEach((a) => { payload.proficiencies.armor[a] = tierEntry(toInt(f.prof.armor[a])); });
 
     if (f.hasSpellcasting) payload.spellcasting = scFromForm(f);
+
+    try {
+      payload.inventory = f.inventory.map((it, idx) => itemFromForm(it, idx));
+    } catch (e) {
+      setError(e.message);
+      return;
+    }
 
     setBusy(true);
     setError(null);
@@ -456,7 +516,53 @@ const CharacterForm = ({ initial, isNew, onSaved }) => {
       </div>
 
       <div className="form-group">
-        <label>Advanced — inventory, feats, strikes, actions, familiar, item spells… (raw JSON)</label>
+        <label>Inventory</label>
+        {f.inventory.map((it, i) => (
+          <div className="gm-card" data-testid={`item-${i}`} key={i}>
+            <div className="gm-row">
+              <div className="form-group">
+                <label>name</label>
+                <input aria-label={`item-${i}-name`} value={it.name} onChange={(e) => setItem(i, { name: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>price</label>
+                <input aria-label={`item-${i}-price`} type="number" value={it.price} onChange={(e) => setItem(i, { price: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>quantity</label>
+                <input aria-label={`item-${i}-quantity`} type="number" value={it.quantity} onChange={(e) => setItem(i, { quantity: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label>weight</label>
+                <input aria-label={`item-${i}-weight`} type="number" value={it.weight} onChange={(e) => setItem(i, { weight: e.target.value })} />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>traits (comma-separated)</label>
+              <input aria-label={`item-${i}-traits`} value={it.traits} onChange={(e) => setItem(i, { traits: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label>description</label>
+              <textarea aria-label={`item-${i}-description`} rows={2} value={it.description} onChange={(e) => setItem(i, { description: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label>extra fields — shield, strikes, bonus, potency, invested… (raw JSON)</label>
+              <textarea
+                aria-label={`item-${i}-json`}
+                className="gm-json"
+                rows={5}
+                value={it.restJson}
+                onChange={(e) => setItem(i, { restJson: e.target.value })}
+              />
+            </div>
+            <button className="btn-small btn-danger" onClick={() => rmItem(i)}>Remove item</button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addItem}>Add item</button>
+      </div>
+
+      <div className="form-group">
+        <label>Advanced — feats, strikes, actions, reactions, familiar, class blocks, item spells… (raw JSON)</label>
         <textarea
           aria-label="advanced-json"
           className="gm-json"
