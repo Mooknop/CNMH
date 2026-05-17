@@ -19,6 +19,14 @@ const calendarEvents = [
 
 const setContent = () => useContent.mockReturnValue({ calendarEvents });
 
+const multiType = [
+  { id: 'blu-birthday', title: "Blu's Birthday", type: 'personal', date: { month: 0, day: 25 } },
+  { id: 'harvest', title: 'Harvest Feast', type: 'holiday', recurring: 'every autumn' },
+  { id: 'siege', title: 'The Siege', type: 'campaign', date: { year: 4724, month: 3, day: 1 } },
+  { id: 'untyped', title: 'Untyped Note', recurring: 'whenever' }, // groups as campaign
+];
+const setMulti = () => useContent.mockReturnValue({ calendarEvents: multiType });
+
 afterEach(() => jest.restoreAllMocks());
 
 describe('GmCalendar', () => {
@@ -108,6 +116,61 @@ describe('GmCalendar', () => {
     fireEvent.click(within(form).getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('calendar', 'blu-birthday', expect.objectContaining({ id: 'blu-birthday' }))
+    );
+  });
+
+  it('renders a tab per type (All + sorted), grouping untyped as campaign', () => {
+    setMulti();
+    render(<GmCalendar />);
+    const nav = screen.getByLabelText('event types');
+    expect(within(nav).getByText('All')).toBeInTheDocument();
+    expect(within(nav).getByText('campaign')).toBeInTheDocument();
+    expect(within(nav).getByText('holiday')).toBeInTheDocument();
+    expect(within(nav).getByText('personal')).toBeInTheDocument();
+    // All tab: every event shown.
+    expect(screen.getByText('Showing 4 of 4')).toBeInTheDocument();
+    expect(screen.getByTestId('event-form-untyped')).toBeInTheDocument();
+  });
+
+  it('filters the list to the active type tab', () => {
+    setMulti();
+    render(<GmCalendar />);
+    fireEvent.click(within(screen.getByLabelText('event types')).getByText('holiday'));
+    expect(screen.getByTestId('event-form-harvest')).toBeInTheDocument();
+    expect(screen.queryByTestId('event-form-blu-birthday')).not.toBeInTheDocument();
+    expect(screen.getByText('Showing 1 of 4')).toBeInTheDocument();
+
+    // The untyped event lands under campaign.
+    fireEvent.click(within(screen.getByLabelText('event types')).getByText('campaign'));
+    expect(screen.getByTestId('event-form-siege')).toBeInTheDocument();
+    expect(screen.getByTestId('event-form-untyped')).toBeInTheDocument();
+    expect(screen.getByText('Showing 2 of 4')).toBeInTheDocument();
+  });
+
+  it('prefills a new event type from the active tab; blank under All', () => {
+    setMulti();
+    render(<GmCalendar />);
+    fireEvent.click(within(screen.getByLabelText('event types')).getByText('holiday'));
+    fireEvent.click(screen.getByText('+ New event'));
+    expect(within(screen.getByTestId('event-form-new')).getByLabelText('type')).toHaveValue('holiday');
+  });
+
+  it('new event under All leaves type blank (saves as campaign)', async () => {
+    setMulti();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCalendar />);
+    fireEvent.click(screen.getByText('+ New event'));
+    const form = screen.getByTestId('event-form-new');
+    expect(within(form).getByLabelText('type')).toHaveValue('');
+    fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Lone Event' } });
+    fireEvent.change(within(form).getByLabelText('recurring'), { target: { value: 'sometimes' } });
+    fireEvent.click(within(form).getByText('Create event'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith(
+        'calendar',
+        'lone-event',
+        expect.objectContaining({ type: 'campaign' })
+      )
     );
   });
 });
