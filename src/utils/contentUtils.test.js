@@ -10,6 +10,8 @@ import {
   normalizeLore,
   withTraitId,
   normalizeTraits,
+  withCharacterId,
+  normalizeCharacters,
   defaultContent,
   buildSeedPayload,
 } from './contentUtils';
@@ -119,10 +121,29 @@ describe('contentUtils', () => {
     });
   });
 
+  describe('withCharacterId / normalizeCharacters', () => {
+    it('keeps an existing id and preserves the whole nested sheet', () => {
+      const c = withCharacterId({
+        id: 'Pellias',
+        name: 'Pellias',
+        abilities: { strength: 18 },
+        spells: { focus: [] },
+      });
+      expect(c.id).toBe('Pellias');
+      expect(c.abilities).toEqual({ strength: 18 });
+      expect(c.spells).toEqual({ focus: [] });
+    });
+    it('derives an id from the name when missing and tolerates non-arrays', () => {
+      expect(withCharacterId({ name: 'New Hero' }).id).toBe('new-hero');
+      expect(normalizeCharacters(null)).toEqual([]);
+    });
+  });
+
   describe('defaultContent / buildSeedPayload', () => {
+    const KEYS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character'];
     it('exposes every managed collection, all with ids', () => {
       const dc = defaultContent();
-      for (const key of ['quest', 'faction', 'calendar', 'lore', 'trait']) {
+      for (const key of KEYS) {
         expect(dc[key].length).toBeGreaterThan(0);
         expect(dc[key].every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
       }
@@ -130,7 +151,7 @@ describe('contentUtils', () => {
     it('wraps defaults with the force flag', () => {
       expect(buildSeedPayload().force).toBe(false);
       expect(buildSeedPayload(true).force).toBe(true);
-      for (const key of ['quest', 'faction', 'calendar', 'lore', 'trait']) {
+      for (const key of KEYS) {
         expect(buildSeedPayload().collections[key].length).toBeGreaterThan(0);
       }
     });

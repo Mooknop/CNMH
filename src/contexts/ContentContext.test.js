@@ -226,4 +226,29 @@ describe('ContentContext', () => {
     expect(Array.isArray(val.traits)).toBe(true);
     expect(val.traits.length).toBeGreaterThan(0);
   });
+
+  it('sources characters from the server when present, else bundled', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: { character: [{ id: 'Pellias', name: 'Pellias', level: 5 }] },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    expect(val.characters).toEqual([{ id: 'Pellias', name: 'Pellias', level: 5 }]);
+  });
+
+  it('exposes bundled characters on the no-provider fallback', () => {
+    let val;
+    const C = () => { val = useContent(); return null; };
+    render(<C />);
+    expect(Array.isArray(val.characters)).toBe(true);
+    expect(val.characters.length).toBeGreaterThan(0);
+  });
 });
