@@ -4,6 +4,8 @@ import {
   normalizeQuests,
   withFactionId,
   normalizeFactions,
+  withCalendarId,
+  normalizeCalendar,
   defaultContent,
   buildSeedPayload,
 } from './contentUtils';
@@ -71,19 +73,40 @@ describe('contentUtils', () => {
     });
   });
 
+  describe('withCalendarId / normalizeCalendar', () => {
+    it('derives an id from title or name and preserves all other fields', () => {
+      const fixed = withCalendarId({
+        title: 'Xar-Azmak Defeated',
+        date: { year: 4724, month: 8, day: 1 },
+        type: 'campaign',
+      });
+      expect(fixed.id).toBe('xar-azmak-defeated');
+      expect(fixed.date).toEqual({ year: 4724, month: 8, day: 1 });
+
+      const named = withCalendarId({ name: 'Longnight', recurring: 'every new moon' });
+      expect(named.id).toBe('longnight');
+      expect(named.recurring).toBe('every new moon');
+    });
+    it('keeps an existing id and tolerates non-arrays', () => {
+      expect(withCalendarId({ id: 'keep', title: 'X' }).id).toBe('keep');
+      expect(normalizeCalendar(null)).toEqual([]);
+    });
+  });
+
   describe('defaultContent / buildSeedPayload', () => {
-    it('exposes normalized quest and faction collections', () => {
+    it('exposes normalized quest, faction and calendar collections', () => {
       const dc = defaultContent();
-      expect(dc.quest.length).toBeGreaterThan(0);
-      expect(dc.quest.every((q) => typeof q.id === 'string' && q.id.length > 0)).toBe(true);
-      expect(dc.faction.length).toBeGreaterThan(0);
-      expect(dc.faction.every((f) => typeof f.id === 'string' && f.id.length > 0)).toBe(true);
+      for (const key of ['quest', 'faction', 'calendar']) {
+        expect(dc[key].length).toBeGreaterThan(0);
+        expect(dc[key].every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
+      }
     });
     it('wraps defaults with the force flag', () => {
       expect(buildSeedPayload().force).toBe(false);
       expect(buildSeedPayload(true).force).toBe(true);
       expect(buildSeedPayload().collections.quest.length).toBeGreaterThan(0);
       expect(buildSeedPayload().collections.faction.length).toBeGreaterThan(0);
+      expect(buildSeedPayload().collections.calendar.length).toBeGreaterThan(0);
     });
   });
 });

@@ -19,6 +19,7 @@ import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
 import GmReputation from './pages/gm/GmReputation';
+import GmCalendar from './pages/gm/GmCalendar';
 import './App.css';
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
                           <Route index element={<GmDashboard />} />
                           <Route path="quests" element={<GmQuests />} />
                           <Route path="reputation" element={<GmReputation />} />
+                          <Route path="calendar" element={<GmCalendar />} />
                         </Route>
                       </Routes>
                     </main>

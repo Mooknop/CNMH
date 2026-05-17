@@ -98,6 +98,8 @@
 .gm-ok { color: var(--color-success, #2e7d32); font-weight: 600; }
 .gm-warn { color: var(--color-danger, #b3261e); font-weight: 600; }
 
+.gm-date-row .form-group { min-width: 110px; }
+
 .gm-rank-row { align-items: center; }
 .gm-rank-row input { flex: 1; min-width: 90px; }
 .gm-rank-row input[aria-label$="-effect"] { flex: 2; }

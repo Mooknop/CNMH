@@ -58,6 +58,9 @@ const GmDashboard = () => {
         <li>
           <Link to="/gm/reputation">Reputation</Link>
         </li>
+        <li>
+          <Link to="/gm/calendar">Calendar</Link>
+        </li>
       </ul>
     </div>
   );

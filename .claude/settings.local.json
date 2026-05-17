@@ -33,7 +33,8 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\components\\\\spells\\\\\" -File)",
       "Bash(findstr \"\\\\.css\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\data\")",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(git checkout *)"
     ]
   }
 }
