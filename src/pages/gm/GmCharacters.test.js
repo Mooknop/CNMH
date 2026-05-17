@@ -19,7 +19,26 @@ const characters = [
     speed: 20,
     abilities: { strength: 18, dexterity: 10, constitution: 16, intelligence: 10, wisdom: 12, charisma: 12 },
     saves: { fortitude: 11, reflex: 6, will: 9 },
-    skills: { athletics: 5 },
+    skills: {
+      athletics: { proficiency: 2 },
+      religion: { proficiency: 1 },
+      lore: [{ name: 'Thassilonian', proficiency: 1 }],
+    },
+    proficiencies: {
+      class: 1,
+      weapons: {
+        simple: { proficiency: 1, name: 'Trained' },
+        martial: { proficiency: 1, name: 'Trained' },
+        advanced: { proficiency: 0, name: 'Untrained' },
+        unarmed: { proficiency: 1, name: 'Trained' },
+      },
+      armor: {
+        unarmored: { proficiency: 1, name: 'Trained' },
+        light: { proficiency: 1, name: 'Trained' },
+        medium: { proficiency: 1, name: 'Trained' },
+        heavy: { proficiency: 0, name: 'Untrained' },
+      },
+    },
     spells: { focus: [] },
   },
 ];
@@ -36,7 +55,16 @@ describe('GmCharacters', () => {
     expect(screen.getByText('+ New character')).toBeInTheDocument();
   });
 
-  it('edits identity and saves, coercing numbers and merging the advanced JSON', async () => {
+  it('keeps skills/proficiencies out of the Advanced blob but leaves spells in', () => {
+    setContent();
+    render(<GmCharacters />);
+    const advanced = within(screen.getByTestId('character-form-pellias')).getByLabelText('advanced-json');
+    expect(advanced.value).toContain('spells');
+    expect(advanced.value).not.toContain('athletics');
+    expect(advanced.value).not.toContain('proficiencies');
+  });
+
+  it('rebuilds skills/proficiencies from the bespoke forms and merges Advanced', async () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
@@ -48,11 +76,46 @@ describe('GmCharacters', () => {
     expect(collection).toBe('character');
     expect(id).toBe('pellias');
     expect(data.level).toBe(5);
-    expect(data.abilities.strength).toBe(18);
-    expect(data.saves.will).toBe(9);
-    // deep nested sections survive via the Advanced blob
-    expect(data.skills).toEqual({ athletics: 5 });
+    // skills: trained+ kept, untrained omitted, lore preserved
+    expect(data.skills.athletics).toEqual({ proficiency: 2 });
+    expect(data.skills.religion).toEqual({ proficiency: 1 });
+    expect(data.skills.acrobatics).toBeUndefined();
+    expect(data.skills.lore).toEqual([{ name: 'Thassilonian', proficiency: 1 }]);
+    // proficiencies rebuilt with synced tier names
+    expect(data.proficiencies.class).toBe(1);
+    expect(data.proficiencies.weapons.simple).toEqual({ proficiency: 1, name: 'Trained' });
+    expect(data.proficiencies.armor.heavy).toEqual({ proficiency: 0, name: 'Untrained' });
+    // deep section still flows through Advanced
     expect(data.spells).toEqual({ focus: [] });
+  });
+
+  it('edits a skill tier and a weapon tier with synced labels', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    fireEvent.change(within(form).getByLabelText('arcana'), { target: { value: '3' } });
+    fireEvent.change(within(form).getByLabelText('martial'), { target: { value: '2' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const data = saveDocument.mock.calls[0][2];
+    expect(data.skills.arcana).toEqual({ proficiency: 3 });
+    expect(data.proficiencies.weapons.martial).toEqual({ proficiency: 2, name: 'Expert' });
+  });
+
+  it('adds and removes lore entries', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    fireEvent.click(within(form).getByText('Add lore'));
+    fireEvent.change(within(form).getByLabelText('lore-1-name'), { target: { value: 'Heraldry' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].skills.lore).toEqual([
+      { name: 'Thassilonian', proficiency: 1 },
+      { name: 'Heraldry', proficiency: 1 },
+    ]);
   });
 
   it('blocks saving with an empty name', async () => {
@@ -65,21 +128,15 @@ describe('GmCharacters', () => {
     expect(saveDocument).not.toHaveBeenCalled();
   });
 
-  it('rejects invalid advanced JSON', async () => {
+  it('rejects invalid or non-object Advanced JSON', async () => {
     setContent();
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
-    fireEvent.change(within(form).getByLabelText('advanced'), { target: { value: '{ not json' } });
+    fireEvent.change(within(form).getByLabelText('advanced-json'), { target: { value: '{ not json' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/not valid JSON/i));
-    expect(saveDocument).not.toHaveBeenCalled();
-  });
 
-  it('rejects advanced JSON that is not an object', async () => {
-    setContent();
-    render(<GmCharacters />);
-    const form = screen.getByTestId('character-form-pellias');
-    fireEvent.change(within(form).getByLabelText('advanced'), { target: { value: '[]' } });
+    fireEvent.change(within(form).getByLabelText('advanced-json'), { target: { value: '[]' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/must be an object/i));
     expect(saveDocument).not.toHaveBeenCalled();
