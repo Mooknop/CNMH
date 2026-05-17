@@ -9,30 +9,28 @@ import './gm.css';
 // front of /gm* and the Worker re-verifying /api/gm/*); this guard is UX only.
 //
 // The store must be the complete source of truth BEFORE any single edit:
-// otherwise saving one entity would flip the collection from "show bundled
+// otherwise saving one entity would flip that collection from "show bundled
 // defaults" to "show the store" while the store holds only that one row,
-// making every other entry vanish. So when the GM arrives and the store is
-// still empty, we auto-seed the bundled defaults (idempotent — only fills
-// empty collections) and hold the editors until the store is authoritative.
+// making every other entry vanish. So whenever the GM enters, we run an
+// idempotent seed of the bundled defaults (server-side it only fills EMPTY
+// collections) and hold the editors until that's confirmed. Doing it
+// unconditionally also auto-backfills any newly shipped collection (e.g. a
+// later slice) on the next GM visit, with no manual step.
 const GmLayout = () => {
   const { loading, isGm, email } = useGmAuth();
-  const { source, refresh } = useContent();
+  const { refresh } = useContent();
   const location = useLocation();
   const [seedState, setSeedState] = useState('idle'); // idle|seeding|done|error
 
   useEffect(() => {
     if (!isGm) return;
-    if (source === 'server') {
-      setSeedState('done');
-      return;
-    }
     if (seedState !== 'idle') return;
     setSeedState('seeding');
     seedDefaults(false)
       .then(() => refresh())
       .then(() => setSeedState('done'))
       .catch(() => setSeedState('error'));
-  }, [isGm, source, seedState, refresh]);
+  }, [isGm, seedState, refresh]);
 
   if (loading) {
     return <div className="gm-area gm-message">Checking GM access…</div>;
@@ -50,9 +48,9 @@ const GmLayout = () => {
     );
   }
 
-  const ready = source === 'server' || seedState === 'done';
+  const ready = seedState === 'done';
 
-  if (!ready && seedState === 'error') {
+  if (seedState === 'error') {
     return (
       <div className="gm-area gm-message">
         <h1>GM Tools</h1>
@@ -74,6 +72,7 @@ const GmLayout = () => {
   const links = [
     { to: '/gm', label: 'Dashboard', end: true },
     { to: '/gm/quests', label: 'Quests' },
+    { to: '/gm/reputation', label: 'Reputation' },
   ];
 
   return (

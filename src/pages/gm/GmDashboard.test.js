@@ -16,7 +16,7 @@ describe('GmDashboard', () => {
   it('warns and offers import when content is on the bundled fallback', () => {
     useContent.mockReturnValue({ source: 'fallback' });
     renderDash();
-    expect(screen.getByText(/has no quests yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/store is empty/i)).toBeInTheDocument();
     expect(screen.getByText(/Content source:/).textContent).toMatch(/fallback/);
   });
 

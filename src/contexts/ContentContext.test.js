@@ -135,5 +135,35 @@ describe('ContentContext', () => {
     expect(val.source).toBe('fallback');
     expect(Array.isArray(val.quests)).toBe(true);
     expect(val.quests.length).toBeGreaterThan(0);
+    expect(Array.isArray(val.reputation.Factions)).toBe(true);
+    expect(val.reputation.Factions.length).toBeGreaterThan(0);
+  });
+
+  it('sources reputation from the server faction collection when present', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: { faction: [{ id: 'f1', name: 'Live Faction', reputation: 7, ranks: [] }] },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    expect(val.reputation.Factions).toEqual([
+      { id: 'f1', name: 'Live Faction', reputation: 7, ranks: [] },
+    ]);
+  });
+
+  it('falls back to bundled reputation when the store has no factions', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() => Promise.reject(new Error('offline')));
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('fallback'));
+    expect(val.reputation.Factions.length).toBeGreaterThan(0);
   });
 });

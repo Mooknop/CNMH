@@ -34,8 +34,9 @@ const GmDashboard = () => {
 
       {source === 'fallback' && (
         <div className="gm-banner">
-          The store has no quests yet — the app is showing the bundled defaults.
-          Import them once so edits persist and sync live.
+          The store is empty — the app is showing the bundled defaults. They’re
+          imported automatically when you enter the GM area so edits persist and
+          sync live; use the buttons below to re-run it manually if needed.
         </div>
       )}
 
@@ -53,6 +54,9 @@ const GmDashboard = () => {
       <ul className="gm-editor-list">
         <li>
           <Link to="/gm/quests">Quests</Link>
+        </li>
+        <li>
+          <Link to="/gm/reputation">Reputation</Link>
         </li>
       </ul>
     </div>
