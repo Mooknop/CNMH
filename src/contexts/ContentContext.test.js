@@ -251,4 +251,44 @@ describe('ContentContext', () => {
     expect(Array.isArray(val.characters)).toBe(true);
     expect(val.characters.length).toBeGreaterThan(0);
   });
+
+  it('exposes the item catalog and resolves character inventory refs against it', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: {
+              item: [
+                { id: 'elixir', name: 'Minor Elixir of Life', price: 3, weight: 0.1, traits: ['Healing'] },
+              ],
+              character: [
+                { id: 'Pellias', name: 'Pellias', inventory: [{ ref: 'elixir', quantity: 2 }] },
+              ],
+            },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    expect(val.items).toEqual([
+      { id: 'elixir', name: 'Minor Elixir of Life', price: 3, weight: 0.1, traits: ['Healing'] },
+    ]);
+    expect(val.characters[0].inventory[0]).toMatchObject({
+      name: 'Minor Elixir of Life',
+      price: 3,
+      weight: 0.1,
+      quantity: 2,
+      id: 'elixir',
+    });
+  });
+
+  it('exposes an item catalog array on the no-provider fallback', () => {
+    let val;
+    const C = () => { val = useContent(); return null; };
+    render(<C />);
+    expect(Array.isArray(val.items)).toBe(true);
+  });
 });
