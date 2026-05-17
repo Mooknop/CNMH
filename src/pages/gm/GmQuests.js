@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
-import { slugify } from '../../utils/contentUtils';
+import { slugify, existingIdSet } from '../../utils/contentUtils';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 const STATUSES = ['pending', 'active', 'completed'];
@@ -17,10 +18,11 @@ const blankQuest = () => ({
   notes: [],
 });
 
-const QuestForm = ({ initial, isNew, onSaved }) => {
+const QuestForm = ({ initial, isNew, existingIds, onSaved }) => {
   const [q, setQ] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
 
   const set = (patch) => setQ((cur) => ({ ...cur, ...patch }));
   const setNote = (i, content) =>
@@ -33,16 +35,12 @@ const QuestForm = ({ initial, isNew, onSaved }) => {
   const removeNote = (i) =>
     setQ((cur) => ({ ...cur, notes: cur.notes.filter((_, idx) => idx !== i) }));
 
-  const save = async () => {
-    if (!q.title.trim()) {
-      setError('Title is required.');
-      return;
-    }
-    const id = q.id || slugify(q.title);
+  const submit = async (id, payload) => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
-      await saveDocument('quest', id, { ...q, id });
+      await saveDocument('quest', id, payload);
       onSaved(isNew);
     } catch (e) {
       setError(e.message);
@@ -51,8 +49,22 @@ const QuestForm = ({ initial, isNew, onSaved }) => {
     }
   };
 
-  const remove = async () => {
-    if (!q.id || !window.confirm(`Delete quest "${q.title}"?`)) return;
+  const save = async () => {
+    if (!q.title.trim()) {
+      setError('Title is required.');
+      return;
+    }
+    const id = q.id || slugify(q.title);
+    const payload = { ...q, id };
+    if (isNew && existingIds && existingIds.has(id)) {
+      setConfirm({ kind: 'collision', id, payload });
+      return;
+    }
+    await submit(id, payload);
+  };
+
+  const doRemove = async () => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
@@ -142,17 +154,36 @@ const QuestForm = ({ initial, isNew, onSaved }) => {
           {isNew ? 'Create quest' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={remove}>
+          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
             Delete
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'delete'}
+        title="Delete quest"
+        message={`Permanently delete the quest “${q.title}”. This cannot be undone — restore it from History if you have it.`}
+        confirmLabel="Delete forever"
+        requireType={q.title}
+        onConfirm={doRemove}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'collision'}
+        title="Overwrite existing entry?"
+        message={`A quest with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite"
+        onConfirm={() => submit(confirm.id, confirm.payload)}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 };
 
 const GmQuests = () => {
   const { quests, source } = useContent();
+  const existingIds = existingIdSet(quests);
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
 
@@ -172,7 +203,7 @@ const GmQuests = () => {
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
       {adding ? (
-        <QuestForm initial={blankQuest()} isNew onSaved={onSaved} />
+        <QuestForm initial={blankQuest()} isNew existingIds={existingIds} onSaved={onSaved} />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New quest
@@ -181,7 +212,7 @@ const GmQuests = () => {
 
       <div className="gm-quest-list">
         {quests.map((q) => (
-          <QuestForm key={q.id} initial={q} isNew={false} onSaved={onSaved} />
+          <QuestForm key={q.id} initial={q} isNew={false} existingIds={existingIds} onSaved={onSaved} />
         ))}
       </div>
     </div>

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
-import { slugify } from '../../utils/contentUtils';
+import { slugify, existingIdSet } from '../../utils/contentUtils';
+import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 const toList = (csv) =>
@@ -23,12 +24,27 @@ const toForm = (e) => ({
 
 const blankEntry = () => toForm({});
 
-const LoreForm = ({ initial, isNew, onSaved }) => {
+const LoreForm = ({ initial, isNew, existingIds, onSaved }) => {
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
+
+  const submit = async (id, payload) => {
+    setConfirm(null);
+    setBusy(true);
+    setError(null);
+    try {
+      await saveDocument('lore', id, payload);
+      onSaved(isNew);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const save = async () => {
     if (!e.title.trim()) {
@@ -50,20 +66,15 @@ const LoreForm = ({ initial, isNew, onSaved }) => {
       tags: toList(e.tags),
       createdAt: e.createdAt || new Date().toISOString(),
     };
-    setBusy(true);
-    setError(null);
-    try {
-      await saveDocument('lore', id, payload);
-      onSaved(isNew);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
+    if (isNew && existingIds && existingIds.has(id)) {
+      setConfirm({ kind: 'collision', id, payload });
+      return;
     }
+    await submit(id, payload);
   };
 
-  const remove = async () => {
-    if (!e.id || !window.confirm(`Delete lore entry "${e.title}"?`)) return;
+  const doRemove = async () => {
+    setConfirm(null);
     setBusy(true);
     setError(null);
     try {
@@ -133,11 +144,29 @@ const LoreForm = ({ initial, isNew, onSaved }) => {
           {isNew ? 'Create entry' : 'Save'}
         </button>
         {!isNew && (
-          <button className="btn-danger" disabled={busy} onClick={remove}>
+          <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>
             Delete
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'delete'}
+        title="Delete lore entry"
+        message={`Permanently delete the lore entry “${e.title}”. This cannot be undone — restore it from History if you have it.`}
+        confirmLabel="Delete forever"
+        requireType={e.title}
+        onConfirm={doRemove}
+        onCancel={() => setConfirm(null)}
+      />
+      <ConfirmDialog
+        isOpen={confirm?.kind === 'collision'}
+        title="Overwrite existing entry?"
+        message={`A lore entry with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite"
+        onConfirm={() => submit(confirm.id, confirm.payload)}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 };
@@ -148,6 +177,7 @@ const GmLore = () => {
     () => (Array.isArray(loreEntries) ? loreEntries : []),
     [loreEntries]
   );
+  const existingIds = useMemo(() => existingIdSet(entries), [entries]);
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
   const [query, setQuery] = useState('');
@@ -181,7 +211,7 @@ const GmLore = () => {
       </div>
 
       {adding ? (
-        <LoreForm initial={blankEntry()} isNew onSaved={onSaved} />
+        <LoreForm initial={blankEntry()} isNew existingIds={existingIds} onSaved={onSaved} />
       ) : (
         <button className="btn-primary" onClick={() => setAdding(true)}>
           + New entry
@@ -193,7 +223,13 @@ const GmLore = () => {
       </p>
       <div className="gm-lore-list">
         {filtered.map((entry) => (
-          <LoreForm key={entry.id} initial={toForm(entry)} isNew={false} onSaved={onSaved} />
+          <LoreForm
+            key={entry.id}
+            initial={toForm(entry)}
+            isNew={false}
+            existingIds={existingIds}
+            onSaved={onSaved}
+          />
         ))}
       </div>
     </div>

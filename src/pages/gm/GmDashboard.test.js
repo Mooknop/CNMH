@@ -5,8 +5,10 @@ import GmDashboard from './GmDashboard';
 
 jest.mock('../../contexts/ContentContext', () => ({ useContent: jest.fn() }));
 jest.mock('../../utils/gmApi', () => ({ seedDefaults: jest.fn() }));
+jest.mock('../../utils/gmBackup', () => ({ downloadBackup: jest.fn(), restoreBackup: jest.fn() }));
 const { useContent } = require('../../contexts/ContentContext');
 const { seedDefaults } = require('../../utils/gmApi');
+const { downloadBackup, restoreBackup } = require('../../utils/gmBackup');
 
 const renderDash = () => render(<MemoryRouter><GmDashboard /></MemoryRouter>);
 
@@ -29,17 +31,28 @@ describe('GmDashboard', () => {
     expect(seedDefaults).toHaveBeenCalledWith(false);
   });
 
-  it('force reseed asks for confirmation first', async () => {
+  it('force reseed requires typing RESEED to confirm', async () => {
     useContent.mockReturnValue({ source: 'server' });
     seedDefaults.mockResolvedValue({ ok: true, seeded: {} });
-    jest.spyOn(window, 'confirm').mockReturnValue(false);
     renderDash();
     fireEvent.click(screen.getByText(/Force reseed/i));
+    const confirmBtn = screen.getByText('Reseed');
+    expect(confirmBtn).toBeDisabled();
+    fireEvent.click(confirmBtn);
     expect(seedDefaults).not.toHaveBeenCalled();
 
-    window.confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByText(/Force reseed/i));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'RESEED' } });
+    fireEvent.click(screen.getByText('Reseed'));
     await waitFor(() => expect(seedDefaults).toHaveBeenCalledWith(true));
+  });
+
+  it('cancels a force reseed without calling the API', () => {
+    useContent.mockReturnValue({ source: 'server' });
+    renderDash();
+    fireEvent.click(screen.getByText(/Force reseed/i));
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.queryByLabelText('confirm-input')).not.toBeInTheDocument();
+    expect(seedDefaults).not.toHaveBeenCalled();
   });
 
   it('surfaces a failure message', async () => {
@@ -48,5 +61,30 @@ describe('GmDashboard', () => {
     renderDash();
     fireEvent.click(screen.getByText(/Import defaults/i));
     await waitFor(() => expect(screen.getByText(/Failed: boom/)).toBeInTheDocument());
+  });
+
+  it('downloads a backup', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    downloadBackup.mockResolvedValue({});
+    renderDash();
+    fireEvent.click(screen.getByText('Download backup'));
+    await waitFor(() => expect(screen.getByText(/Backup downloaded/)).toBeInTheDocument());
+    expect(downloadBackup).toHaveBeenCalled();
+  });
+
+  it('restores from a backup file only after typing RESTORE', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    restoreBackup.mockResolvedValue({ ok: true, seeded: { lore: 'seeded 3' } });
+    renderDash();
+    const file = new File(['{"lore":[]}'], 'backup.json', { type: 'application/json' });
+    fireEvent.change(screen.getByLabelText('restore-file'), { target: { files: [file] } });
+
+    const confirmBtn = screen.getByText('Restore');
+    expect(confirmBtn).toBeDisabled();
+    expect(screen.getByText(/backup\.json/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'RESTORE' } });
+    fireEvent.click(screen.getByText('Restore'));
+    await waitFor(() => expect(restoreBackup).toHaveBeenCalledWith(file));
+    expect(await screen.findByText(/seeded 3/)).toBeInTheDocument();
   });
 });

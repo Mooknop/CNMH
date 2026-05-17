@@ -1,4 +1,4 @@
-import { saveDocument, deleteDocument, seedDefaults } from './gmApi';
+import { saveDocument, deleteDocument, seedDefaults, seedFromBackup } from './gmApi';
 
 const okJson = (body = { ok: true }) =>
   Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
@@ -35,6 +35,17 @@ describe('gmApi', () => {
     const body = JSON.parse(opts.body);
     expect(body.force).toBe(true);
     expect(body.collections.quest.length).toBeGreaterThan(0);
+  });
+
+  it('seedFromBackup force-seeds the provided collections', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, seeded: { lore: 'seeded 3' } }));
+    const res = await seedFromBackup({ lore: [{ id: 'l' }] });
+    expect(res.seeded.lore).toBe('seeded 3');
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toBe('/api/gm/seed');
+    expect(opts.method).toBe('POST');
+    const body = JSON.parse(opts.body);
+    expect(body).toEqual({ force: true, collections: { lore: [{ id: 'l' }] } });
   });
 
   it('throws with status text on a non-ok response', async () => {

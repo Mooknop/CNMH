@@ -83,13 +83,30 @@ describe('GmReputation', () => {
     );
   });
 
-  it('deletes a faction after confirmation', async () => {
+  it('deletes a faction only after typed confirmation', async () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
-    jest.spyOn(window, 'confirm').mockReturnValue(true);
     render(<GmReputation />);
     const form = screen.getByTestId('faction-form-bunyip-club');
     fireEvent.click(within(form).getByText('Delete'));
+    expect(within(form).getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'The Bunyip Club' } });
+    fireEvent.click(within(form).getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('faction', 'bunyip-club'));
+  });
+
+  it('warns before overwriting an existing id when creating a new faction', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmReputation />);
+    fireEvent.click(screen.getByText('+ New faction'));
+    const form = screen.getByTestId('faction-form-new');
+    fireEvent.change(within(form).getByLabelText('faction-name'), { target: { value: 'Bunyip Club' } });
+    fireEvent.click(within(form).getByText('Create faction'));
+    expect(saveDocument).not.toHaveBeenCalled();
+    fireEvent.click(within(form).getByText('Overwrite'));
+    await waitFor(() =>
+      expect(saveDocument).toHaveBeenCalledWith('faction', 'bunyip-club', expect.objectContaining({ id: 'bunyip-club' }))
+    );
   });
 });

@@ -12,6 +12,7 @@ import {
   normalizeTraits,
   withCharacterId,
   normalizeCharacters,
+  existingIdSet,
   defaultContent,
   buildSeedPayload,
 } from './contentUtils';
@@ -25,6 +26,15 @@ describe('contentUtils', () => {
       expect(slugify('')).toBe('untitled');
       expect(slugify(null)).toBe('untitled');
       expect(slugify('   ***   ')).toBe('untitled');
+    });
+  });
+
+  describe('existingIdSet', () => {
+    it('builds a string Set of ids and tolerates non-arrays', () => {
+      const s = existingIdSet([{ id: 'a' }, { id: 1 }]);
+      expect(s.has('a')).toBe(true);
+      expect(s.has('1')).toBe(true);
+      expect(existingIdSet(null).size).toBe(0);
     });
   });
 
