@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { CAMPAIGN_ID } from '../data/campaign';
 import { loreEntries as defaultLore, reputation as defaultReputation } from '../data';
-import { normalizeQuests, defaultContent } from '../utils/contentUtils';
+import { normalizeQuests, normalizeFactions, defaultContent } from '../utils/contentUtils';
 
 // Campaign content layer. Loads the authoritative snapshot from the
 // CampaignContent Durable Object (GET /api/content), subscribes to live GM
@@ -121,18 +121,24 @@ export const ContentProvider = ({ children }) => {
     };
   }, [applyFull, applyUpsert, applyDelete]);
 
-  const serverQuests = serverContent && Array.isArray(serverContent.quest)
-    ? serverContent.quest
-    : [];
-  const hasServerQuests = serverQuests.length > 0;
+  // Per-collection: use the store when it holds rows, else the bundled
+  // default. `source` is 'server' if ANY managed collection is populated —
+  // the GM area still seeds every empty collection on entry, so a partially
+  // populated store can never hide a collection's other entries.
+  const serverList = (key) =>
+    serverContent && Array.isArray(serverContent[key]) ? serverContent[key] : [];
+  const serverQuests = serverList('quest');
+  const serverFactions = serverList('faction');
 
   const value = {
     loading,
-    source: hasServerQuests ? 'server' : 'fallback',
-    quests: hasServerQuests ? normalizeQuests(serverQuests) : FALLBACK.quest,
+    source: serverQuests.length || serverFactions.length ? 'server' : 'fallback',
+    quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
+    reputation: serverFactions.length
+      ? { Factions: normalizeFactions(serverFactions) }
+      : defaultReputation,
     refresh: loadSnapshot,
-    // Bundled passthroughs until their own slices move them into the store.
-    reputation: defaultReputation,
+    // Bundled passthrough until its own slice moves it into the store.
     loreEntries: defaultLore,
   };
 

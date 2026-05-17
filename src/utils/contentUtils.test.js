@@ -1,4 +1,12 @@
-import { slugify, withQuestId, normalizeQuests, defaultContent, buildSeedPayload } from './contentUtils';
+import {
+  slugify,
+  withQuestId,
+  normalizeQuests,
+  withFactionId,
+  normalizeFactions,
+  defaultContent,
+  buildSeedPayload,
+} from './contentUtils';
 
 describe('contentUtils', () => {
   describe('slugify', () => {
@@ -37,17 +45,45 @@ describe('contentUtils', () => {
     });
   });
 
+  describe('withFactionId / normalizeFactions', () => {
+    it('derives an id from the name and indexes ranks', () => {
+      const f = withFactionId({
+        name: 'The Bunyip Club',
+        reputation: -4,
+        ranks: [{ name: 'Liked', min: 5, max: 14, effect: '10% discount' }],
+      });
+      expect(f.id).toBe('the-bunyip-club');
+      expect(f.ranks[0]).toEqual({
+        id: 'the-bunyip-club-rank-0',
+        name: 'Liked',
+        min: 5,
+        max: 14,
+        effect: '10% discount',
+      });
+    });
+    it('omits effect when absent and tolerates missing ranks / preserves id', () => {
+      const f = withFactionId({ id: 'keep', name: 'X' });
+      expect(f.id).toBe('keep');
+      expect(f.ranks).toEqual([]);
+      const r = withFactionId({ name: 'Y', ranks: [{ name: 'Z', min: 0, max: 1 }] }).ranks[0];
+      expect(r.effect).toBeUndefined();
+      expect(normalizeFactions(null)).toEqual([]);
+    });
+  });
+
   describe('defaultContent / buildSeedPayload', () => {
-    it('exposes a normalized quest collection', () => {
+    it('exposes normalized quest and faction collections', () => {
       const dc = defaultContent();
-      expect(Array.isArray(dc.quest)).toBe(true);
       expect(dc.quest.length).toBeGreaterThan(0);
       expect(dc.quest.every((q) => typeof q.id === 'string' && q.id.length > 0)).toBe(true);
+      expect(dc.faction.length).toBeGreaterThan(0);
+      expect(dc.faction.every((f) => typeof f.id === 'string' && f.id.length > 0)).toBe(true);
     });
     it('wraps defaults with the force flag', () => {
       expect(buildSeedPayload().force).toBe(false);
       expect(buildSeedPayload(true).force).toBe(true);
       expect(buildSeedPayload().collections.quest.length).toBeGreaterThan(0);
+      expect(buildSeedPayload().collections.faction.length).toBeGreaterThan(0);
     });
   });
 });

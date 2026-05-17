@@ -18,6 +18,7 @@ import LoreDrawer from './components/shared/LoreDrawer';
 import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
+import GmReputation from './pages/gm/GmReputation';
 import './App.css';
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
                         <Route path="/gm" element={<GmLayout />}>
                           <Route index element={<GmDashboard />} />
                           <Route path="quests" element={<GmQuests />} />
+                          <Route path="reputation" element={<GmReputation />} />
                         </Route>
                       </Routes>
                     </main>

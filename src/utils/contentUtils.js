@@ -2,7 +2,7 @@
 // Bundled JSON entities (quests, etc.) have no stable id; we derive a kebab
 // slug from the title so rows have a primary key and React keys are stable.
 
-import { quests as defaultQuests } from '../data';
+import { quests as defaultQuests, reputation as defaultReputation } from '../data';
 
 export const slugify = (str) =>
   String(str || '')
@@ -25,10 +25,29 @@ export const withQuestId = (quest, index = 0) => {
 export const normalizeQuests = (arr) =>
   (Array.isArray(arr) ? arr : []).map((q, i) => withQuestId(q, i));
 
+// Ensure a faction has an `id` (slug of its name) and index-stable rank ids.
+export const withFactionId = (faction, index = 0) => {
+  const id = faction.id || `${slugify(faction.name)}${index ? `-${index}` : ''}`;
+  const ranks = Array.isArray(faction.ranks)
+    ? faction.ranks.map((r, i) => ({
+        id: r.id || `${id}-rank-${i}`,
+        name: r.name,
+        min: r.min,
+        max: r.max,
+        ...(r.effect != null ? { effect: r.effect } : {}),
+      }))
+    : [];
+  return { ...faction, id, ranks };
+};
+
+export const normalizeFactions = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((f, i) => withFactionId(f, i));
+
 // The default content shipped with the build, normalized for seeding/fallback.
-// Slices 2-5 extend this object with their collections.
+// Slices 3-5 extend this object with their collections.
 export const defaultContent = () => ({
   quest: normalizeQuests(defaultQuests),
+  faction: normalizeFactions(defaultReputation && defaultReputation.Factions),
 });
 
 // Body for POST /api/gm/seed.
