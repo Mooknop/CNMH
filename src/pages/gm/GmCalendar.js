@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
@@ -225,12 +225,29 @@ const EventForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
 };
 
+// Missing/blank type saves as "campaign" (see EventForm.save), so group the
+// same way the data ultimately lands.
+const typeOf = (ev) => (ev.type && ev.type.trim()) || 'campaign';
+
 const GmCalendar = () => {
   const { calendarEvents } = useContent();
-  const events = Array.isArray(calendarEvents) ? calendarEvents : [];
-  const existingIds = existingIdSet(events);
+  const events = useMemo(
+    () => (Array.isArray(calendarEvents) ? calendarEvents : []),
+    [calendarEvents]
+  );
+  const existingIds = useMemo(() => existingIdSet(events), [events]);
   const [adding, setAdding] = useState(false);
   const [flash, setFlash] = useState(null);
+  const [tab, setTab] = useState('All');
+
+  const tabs = useMemo(
+    () => ['All', ...Array.from(new Set(events.map(typeOf))).sort()],
+    [events]
+  );
+  // A removed/renamed type could leave `tab` dangling; fall back to All.
+  const activeTab = tabs.includes(tab) ? tab : 'All';
+  const visible =
+    activeTab === 'All' ? events : events.filter((ev) => typeOf(ev) === activeTab);
 
   const onSaved = (wasNew) => {
     if (wasNew) setAdding(false);
@@ -239,13 +256,33 @@ const GmCalendar = () => {
   const onRestored = () =>
     setFlash('Restored. Changes are live for every connected player.');
 
+  // Prefill the type of a new event from the active tab (All → blank, which
+  // saves as "campaign").
+  const newInitial = () => ({
+    ...blankEvent(),
+    type: activeTab === 'All' ? '' : activeTab,
+  });
+
   return (
     <div className="gm-calendar">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
+      <nav className="gm-nav" aria-label="event types">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            className={`gm-nav-link ${t === activeTab ? 'active' : ''}`}
+            aria-pressed={t === activeTab}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </nav>
+
       {adding ? (
         <EventForm
-          initial={blankEvent()}
+          initial={newInitial()}
           isNew
           existingIds={existingIds}
           onSaved={onSaved}
@@ -257,8 +294,11 @@ const GmCalendar = () => {
         </button>
       )}
 
+      <p className="gm-count">
+        Showing {visible.length} of {events.length}
+      </p>
       <div className="gm-event-list">
-        {events.map((ev) => (
+        {visible.map((ev) => (
           <EventForm
             key={ev.id}
             initial={toForm(ev)}
