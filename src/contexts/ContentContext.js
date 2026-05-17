@@ -8,6 +8,8 @@ import {
   normalizeLore,
   normalizeTraits,
   normalizeCharacters,
+  normalizeItems,
+  resolveCharacterItems,
   defaultContent,
 } from '../utils/contentUtils';
 
@@ -141,6 +143,18 @@ export const ContentProvider = ({ children }) => {
   const serverLore = serverList('lore');
   const serverTraits = serverList('trait');
   const serverCharacters = serverList('character');
+  const serverItems = serverList('item');
+
+  // The shared item catalog, then resolve every character's inventory refs
+  // against it (legacy inline items pass through unchanged). Resolving here —
+  // upstream of useCharacter — means InventoryUtils/SpellUtils/ContainerItem
+  // consume fully-shaped items and need no changes.
+  const items = serverItems.length ? normalizeItems(serverItems) : FALLBACK.item;
+  const characters = (
+    serverCharacters.length
+      ? normalizeCharacters(serverCharacters)
+      : FALLBACK.character
+  ).map((c) => resolveCharacterItems(c, items));
 
   const value = {
     loading,
@@ -150,7 +164,8 @@ export const ContentProvider = ({ children }) => {
       serverCalendar.length ||
       serverLore.length ||
       serverTraits.length ||
-      serverCharacters.length
+      serverCharacters.length ||
+      serverItems.length
         ? 'server'
         : 'fallback',
     quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
@@ -162,9 +177,8 @@ export const ContentProvider = ({ children }) => {
       : FALLBACK.calendar,
     loreEntries: serverLore.length ? normalizeLore(serverLore) : FALLBACK.lore,
     traits: serverTraits.length ? normalizeTraits(serverTraits) : FALLBACK.trait,
-    characters: serverCharacters.length
-      ? normalizeCharacters(serverCharacters)
-      : FALLBACK.character,
+    characters,
+    items,
     refresh: loadSnapshot,
   };
 
@@ -179,7 +193,8 @@ const NOOP_CONTENT = {
   calendarEvents: FALLBACK.calendar,
   loreEntries: FALLBACK.lore,
   traits: FALLBACK.trait,
-  characters: FALLBACK.character,
+  characters: FALLBACK.character.map((c) => resolveCharacterItems(c, FALLBACK.item)),
+  items: FALLBACK.item,
   refresh: () => Promise.resolve(),
 };
 

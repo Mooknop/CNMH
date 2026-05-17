@@ -12,10 +12,23 @@ import {
   normalizeTraits,
   withCharacterId,
   normalizeCharacters,
+  withItemId,
+  normalizeItems,
+  itemCatalogMap,
+  resolveInventoryItem,
+  resolveInventory,
+  resolveCharacterItems,
   existingIdSet,
   defaultContent,
   buildSeedPayload,
 } from './contentUtils';
+import { calculateItemsBulk } from './InventoryUtils';
+import {
+  findScrollItems,
+  findWandItems,
+  extractScrollSpells,
+  extractWandSpells,
+} from './SpellUtils';
 
 describe('contentUtils', () => {
   describe('slugify', () => {
@@ -164,6 +177,197 @@ describe('contentUtils', () => {
       for (const key of KEYS) {
         expect(buildSeedPayload().collections[key].length).toBeGreaterThan(0);
       }
+    });
+    it('exposes the item catalog (possibly empty pre-Slice-3) as an array of id-bearing docs', () => {
+      const dc = defaultContent();
+      expect(Array.isArray(dc.item)).toBe(true);
+      expect(dc.item.every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
+      expect(Array.isArray(buildSeedPayload().collections.item)).toBe(true);
+    });
+  });
+
+  describe('withItemId / normalizeItems', () => {
+    it('slugs the item name and preserves the definition', () => {
+      const it = withItemId({
+        name: 'Minor Elixir of Life',
+        price: 3,
+        weight: 0.1,
+        traits: ['Alchemical', 'Healing'],
+      });
+      expect(it.id).toBe('minor-elixir-of-life');
+      expect(it.price).toBe(3);
+      expect(it.traits).toEqual(['Alchemical', 'Healing']);
+    });
+    it('keeps an existing id, indexes duplicates, tolerates non-arrays', () => {
+      expect(withItemId({ id: 'keep', name: 'X' }).id).toBe('keep');
+      expect(withItemId({ name: 'Dup' }, 2).id).toBe('dup-2');
+      expect(normalizeItems(null)).toEqual([]);
+    });
+  });
+
+  describe('itemCatalogMap', () => {
+    it('indexes by string id and tolerates non-arrays', () => {
+      const m = itemCatalogMap([{ id: 'a', name: 'A' }, { id: 1, name: 'One' }]);
+      expect(m.get('a').name).toBe('A');
+      expect(m.get('1').name).toBe('One');
+      expect(itemCatalogMap(null).size).toBe(0);
+    });
+  });
+
+  describe('resolveInventoryItem', () => {
+    const catalog = itemCatalogMap([
+      { id: 'elixir', name: 'Minor Elixir of Life', price: 3, weight: 0.1, traits: ['Healing'] },
+      { id: 'backpack', name: 'Backpack', weight: 0.1, container: { capacity: 4, ignored: 2 } },
+      {
+        id: 'scroll-friendfetch',
+        name: 'Scroll of Friendfetch',
+        price: 4,
+        weight: 0,
+        scroll: { name: 'Friendfetch', level: 1, traits: ['Force'], description: 'Pull a creature.' },
+      },
+      {
+        id: 'wand-cleanse',
+        name: 'Wand of Cleanse Affliction',
+        price: 160,
+        weight: 0.1,
+        wand: { name: 'Cleanse Affliction', level: 2, description: 'Reduce an affliction stage.' },
+      },
+    ]);
+
+    it('passes a legacy inline item through unchanged', () => {
+      const inline = { name: 'Bespoke Sword', weight: 1, quantity: 1, runes: ['+1'] };
+      expect(resolveInventoryItem(inline, catalog)).toEqual(inline);
+    });
+
+    it('recurses into an inline container, resolving refs nested inside it', () => {
+      const inlineContainer = {
+        name: 'Sack',
+        weight: 0,
+        container: { capacity: 2, ignored: 0, contents: [{ ref: 'elixir', quantity: 2 }] },
+      };
+      const out = resolveInventoryItem(inlineContainer, catalog);
+      expect(out.container.contents[0].name).toBe('Minor Elixir of Life');
+      expect(out.container.contents[0].quantity).toBe(2);
+    });
+
+    it('merges a ref over its catalog definition with per-character scalars', () => {
+      const out = resolveInventoryItem({ ref: 'elixir', quantity: 2, invested: true }, catalog);
+      expect(out).toMatchObject({
+        name: 'Minor Elixir of Life',
+        price: 3,
+        weight: 0.1,
+        traits: ['Healing'],
+        quantity: 2,
+        invested: true,
+        id: 'elixir',
+      });
+    });
+
+    it('defaults quantity to 1 and id to the catalog id; omits invested when absent', () => {
+      const out = resolveInventoryItem({ ref: 'elixir' }, catalog);
+      expect(out.quantity).toBe(1);
+      expect(out.id).toBe('elixir');
+      expect('invested' in out).toBe(false);
+    });
+
+    it('honours an explicit per-character id over the catalog id', () => {
+      expect(resolveInventoryItem({ ref: 'elixir', id: 'inv-7' }, catalog).id).toBe('inv-7');
+    });
+
+    it('yields a visible weightless stub for a dangling ref (bulk stays finite)', () => {
+      const out = resolveInventoryItem({ ref: 'ghost', quantity: 3 }, catalog);
+      expect(out).toEqual({ name: '(unknown item: ghost)', weight: 0, quantity: 3 });
+      expect(Number.isFinite(calculateItemsBulk([out]))).toBe(true);
+    });
+
+    it('keeps a container catalog\'s intrinsic capacity/ignored and takes contents from the ref', () => {
+      const out = resolveInventoryItem(
+        { ref: 'backpack', container: { contents: [{ ref: 'elixir', quantity: 5 }] } },
+        catalog
+      );
+      expect(out.container.capacity).toBe(4);
+      expect(out.container.ignored).toBe(2);
+      expect(out.container.contents).toHaveLength(1);
+      expect(out.container.contents[0].name).toBe('Minor Elixir of Life');
+      expect(out.container.contents[0].quantity).toBe(5);
+    });
+
+    it('treats a container ref with no contents as empty', () => {
+      expect(resolveInventoryItem({ ref: 'backpack' }, catalog).container.contents).toEqual([]);
+    });
+
+    it('preserves nested scroll/wand spell blocks so SpellUtils still detects them', () => {
+      const scroll = resolveInventoryItem({ ref: 'scroll-friendfetch', quantity: 2 }, catalog);
+      const wand = resolveInventoryItem({ ref: 'wand-cleanse' }, catalog);
+      expect(scroll.scroll.name).toBe('Friendfetch');
+      expect(wand.wand.name).toBe('Cleanse Affliction');
+
+      const character = { inventory: [scroll, wand] };
+      expect(findScrollItems(character)).toHaveLength(1);
+      expect(findWandItems(character)).toHaveLength(1); // name "Wand of ..." survives the heuristic
+      expect(extractScrollSpells(findScrollItems(character))[0]).toMatchObject({
+        name: 'Friendfetch',
+        fromScroll: true,
+        scrollName: 'Scroll of Friendfetch',
+      });
+      expect(extractWandSpells(findWandItems(character))[0]).toMatchObject({
+        name: 'Cleanse Affliction',
+        fromWand: true,
+        wandName: 'Wand of Cleanse Affliction',
+      });
+    });
+  });
+
+  describe('resolveInventory / resolveCharacterItems', () => {
+    const items = [
+      { id: 'rope', name: 'Rope (50 ft.)', weight: 1 },
+      { id: 'torch', name: 'Torch', weight: 0.1 },
+      { id: 'backpack', name: 'Backpack', weight: 0.1, container: { capacity: 4, ignored: 2 } },
+    ];
+
+    it('maps a list and tolerates non-arrays', () => {
+      expect(resolveInventory(null, itemCatalogMap(items))).toEqual([]);
+      expect(resolveInventory([{ ref: 'rope' }], itemCatalogMap(items))[0].name).toBe('Rope (50 ft.)');
+    });
+
+    it('leaves a character with no inventory array untouched and passes non-objects through', () => {
+      const noInv = { id: 'x', name: 'X', abilities: { strength: 10 } };
+      expect(resolveCharacterItems(noInv, items)).toBe(noInv);
+      expect(resolveCharacterItems(null, items)).toBe(null);
+    });
+
+    it('golden bulk parity: a ref inventory resolves to the same bulk as the equivalent inline inventory', () => {
+      const inlineInventory = [
+        { name: 'Torch', weight: 0.1, quantity: 3 },
+        {
+          name: 'Backpack',
+          weight: 0.1,
+          quantity: 1,
+          container: {
+            capacity: 4,
+            ignored: 2,
+            contents: [
+              { name: 'Rope (50 ft.)', weight: 1, quantity: 1 },
+              { name: 'Torch', weight: 0.1, quantity: 2 },
+            ],
+          },
+        },
+      ];
+      const refInventory = [
+        { ref: 'torch', quantity: 3 },
+        {
+          ref: 'backpack',
+          quantity: 1,
+          container: {
+            contents: [
+              { ref: 'rope', quantity: 1 },
+              { ref: 'torch', quantity: 2 },
+            ],
+          },
+        },
+      ];
+      const resolved = resolveCharacterItems({ inventory: refInventory }, items).inventory;
+      expect(calculateItemsBulk(resolved)).toBe(calculateItemsBulk(inlineInventory));
     });
   });
 });
