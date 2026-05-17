@@ -44,3 +44,19 @@ export const seedFromBackup = (collections) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ force: true, collections }),
   }).then(json);
+
+// Prior versions of one entity, newest-first: [{ archived_at, data }].
+export const fetchHistory = (collection, id) =>
+  fetch(`/api/gm/history/${collection}/${encodeURIComponent(id)}`, {
+    credentials: 'include',
+  }).then(json);
+
+// Re-publish a specific archived version; the Worker archives the current
+// state first, then broadcasts the restore live like any other edit.
+export const restoreVersion = (collection, id, archivedAt) =>
+  fetch(`/api/gm/restore/${collection}/${encodeURIComponent(id)}`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ archived_at: archivedAt }),
+  }).then(json);
