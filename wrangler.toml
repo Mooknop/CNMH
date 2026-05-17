@@ -35,6 +35,6 @@ new_sqlite_classes = ["CampaignContent"]
 #   CF_ACCESS_AUD         = "<Application Audience (AUD) tag>"
 # GM_DEV_BYPASS is for local `wrangler dev` only — never set it in production.
 [vars]
-CF_ACCESS_TEAM_DOMAIN = ""
-CF_ACCESS_AUD = ""
+CF_ACCESS_TEAM_DOMAIN = "muddy-salad-62d7.cloudflareaccess.com"
+CF_ACCESS_AUD = "8c613b3ba506a65e14373fa0511acfbf7d8909eca6e97b31a1cdcd1a0c90e55e"
 GM_EMAIL = "mooknop@gmail.com"
