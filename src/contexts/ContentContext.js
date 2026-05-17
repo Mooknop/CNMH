@@ -57,28 +57,26 @@ export const ContentProvider = ({ children }) => {
     });
   }, []);
 
-  // Initial snapshot.
-  useEffect(() => {
-    let cancelled = false;
+  // Pull the authoritative snapshot. Exposed as `refresh` so the GM area can
+  // re-sync immediately after seeding without waiting on the live socket.
+  const loadSnapshot = useCallback(() => {
     if (typeof fetch !== 'function') {
       setLoading(false);
-      return undefined;
+      return Promise.resolve();
     }
-    fetch('/api/content')
+    return fetch('/api/content')
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((body) => {
-        if (!cancelled) applyFull(body.payload);
-      })
+      .then((body) => applyFull(body.payload))
       .catch(() => {
         /* stay on bundled fallback */
       })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .finally(() => setLoading(false));
   }, [applyFull]);
+
+  // Initial snapshot.
+  useEffect(() => {
+    loadSnapshot();
+  }, [loadSnapshot]);
 
   // Live edits.
   useEffect(() => {
@@ -132,6 +130,7 @@ export const ContentProvider = ({ children }) => {
     loading,
     source: hasServerQuests ? 'server' : 'fallback',
     quests: hasServerQuests ? normalizeQuests(serverQuests) : FALLBACK.quest,
+    refresh: loadSnapshot,
     // Bundled passthroughs until their own slices move them into the store.
     reputation: defaultReputation,
     loreEntries: defaultLore,
@@ -144,6 +143,7 @@ const NOOP_CONTENT = {
   loading: false,
   source: 'fallback',
   quests: FALLBACK.quest,
+  refresh: () => Promise.resolve(),
   reputation: defaultReputation,
   loreEntries: defaultLore,
 };

@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useGmAuth } from '../../hooks/useGmAuth';
+import { useContent } from '../../contexts/ContentContext';
+import { seedDefaults } from '../../utils/gmApi';
 import './gm.css';
 
 // Shell for the GM area. Real enforcement is server-side (Cloudflare Access in
 // front of /gm* and the Worker re-verifying /api/gm/*); this guard is UX only.
+//
+// The store must be the complete source of truth BEFORE any single edit:
+// otherwise saving one entity would flip the collection from "show bundled
+// defaults" to "show the store" while the store holds only that one row,
+// making every other entry vanish. So when the GM arrives and the store is
+// still empty, we auto-seed the bundled defaults (idempotent — only fills
+// empty collections) and hold the editors until the store is authoritative.
 const GmLayout = () => {
   const { loading, isGm, email } = useGmAuth();
+  const { source, refresh } = useContent();
   const location = useLocation();
+  const [seedState, setSeedState] = useState('idle'); // idle|seeding|done|error
+
+  useEffect(() => {
+    if (!isGm) return;
+    if (source === 'server') {
+      setSeedState('done');
+      return;
+    }
+    if (seedState !== 'idle') return;
+    setSeedState('seeding');
+    seedDefaults(false)
+      .then(() => refresh())
+      .then(() => setSeedState('done'))
+      .catch(() => setSeedState('error'));
+  }, [isGm, source, seedState, refresh]);
 
   if (loading) {
     return <div className="gm-area gm-message">Checking GM access…</div>;
@@ -23,6 +48,27 @@ const GmLayout = () => {
         </p>
       </div>
     );
+  }
+
+  const ready = source === 'server' || seedState === 'done';
+
+  if (!ready && seedState === 'error') {
+    return (
+      <div className="gm-area gm-message">
+        <h1>GM Tools</h1>
+        <p className="gm-warn" role="alert">
+          Couldn’t initialize the campaign store. Editing is disabled until this
+          succeeds so existing entries aren’t hidden.
+        </p>
+        <button className="btn-primary" onClick={() => setSeedState('idle')}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return <div className="gm-area gm-message">Initializing campaign store…</div>;
   }
 
   const links = [
