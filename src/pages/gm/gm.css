@@ -122,3 +122,17 @@
 .confirm-actions { justify-content: flex-end; }
 .confirm-actions .btn-danger,
 .confirm-actions .btn-primary { min-width: 120px; }
+
+/* Per-entity version history modal */
+.gm-history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.gm-history-preview {
+  max-height: 140px;
+  overflow: auto;
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+}
