@@ -37,6 +37,13 @@
   border: 1px solid var(--color-border);
 }
 
+/* Filter tabs reuse the nav-link look but are buttons, not links. */
+.gm-nav button.gm-nav-link {
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .gm-nav-link.active {
   background: var(--color-primary);
   color: #fff;
