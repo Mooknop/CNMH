@@ -291,4 +291,40 @@ describe('ContentContext', () => {
     render(<C />);
     expect(Array.isArray(val.items)).toBe(true);
   });
+
+  it('exposes rawCharacters with refs intact alongside the resolved characters', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: {
+              item: [{ id: 'elixir', name: 'Minor Elixir of Life', price: 3, weight: 0.1 }],
+              character: [
+                { id: 'Pellias', name: 'Pellias', inventory: [{ ref: 'elixir', quantity: 2 }] },
+              ],
+            },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    // Raw keeps the authored reference (GM editor edits this).
+    expect(val.rawCharacters[0].inventory[0]).toEqual({ ref: 'elixir', quantity: 2 });
+    // Resolved expands it for players.
+    expect(val.characters[0].inventory[0]).toMatchObject({
+      name: 'Minor Elixir of Life',
+      quantity: 2,
+    });
+  });
+
+  it('exposes a rawCharacters array on the no-provider fallback', () => {
+    let val;
+    const C = () => { val = useContent(); return null; };
+    render(<C />);
+    expect(Array.isArray(val.rawCharacters)).toBe(true);
+    expect(val.rawCharacters.length).toBeGreaterThan(0);
+  });
 });

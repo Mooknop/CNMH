@@ -42,7 +42,17 @@ const izzy = {
   inventory: [],
 };
 
-const setContent = (chars = [pellias, izzy]) => useContent.mockReturnValue({ characters: chars });
+const catalog = [
+  { id: 'minor-elixir-of-life', name: 'Minor Elixir of Life', price: 3, weight: 0.1, traits: ['Healing'] },
+  { id: 'backpack', name: 'Backpack', weight: 0.1, container: { capacity: 4, ignored: 2 } },
+  { id: 'torch', name: 'Torch', weight: 0.1 },
+  { id: 'rope-50ft', name: 'Rope (50 ft.)', weight: 1 },
+];
+
+// GmCharacters edits the AUTHORED docs (rawCharacters) and reads the catalog
+// (items) for the picker.
+const setContent = (chars = [pellias, izzy]) =>
+  useContent.mockReturnValue({ rawCharacters: chars, items: catalog });
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -343,7 +353,7 @@ describe('GmCharacters', () => {
     expect(screen.queryByTestId('character-form-izzy')).not.toBeInTheDocument();
   });
 
-  describe('catalog reference passthrough (Slice 3 interim)', () => {
+  describe('catalog reference rows (Slice 4)', () => {
     const refChar = {
       id: 'refguy',
       name: 'Ref Guy',
@@ -354,49 +364,131 @@ describe('GmCharacters', () => {
       proficiencies: {},
       inventory: [
         { ref: 'minor-elixir-of-life', quantity: 2, invested: true },
-        {
-          ref: 'backpack',
-          quantity: 1,
-          container: { contents: [{ ref: 'torch', quantity: 5 }] },
-        },
+        { ref: 'backpack', quantity: 1, container: { contents: [{ ref: 'torch', quantity: 5 }] } },
       ],
     };
 
-    it('shows references read-only (no bespoke item fields)', () => {
+    it('renders an editable ref row (picker + quantity + invested) with a catalog summary', () => {
       setContent([refChar]);
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-refguy');
-      expect(within(form).getByTestId('item-0-ref')).toHaveTextContent(
-        /minor-elixir-of-life × 2 · invested: true/
-      );
-      expect(within(form).getByTestId('item-1-ref')).toHaveTextContent(/backpack × 1 · container/);
-      // The inline bespoke editors must NOT render for a reference.
+      expect(within(form).getByLabelText('item-0-ref')).toHaveValue('minor-elixir-of-life');
+      expect(within(form).getByLabelText('item-0-quantity')).toHaveValue(2);
+      expect(within(form).getByLabelText('item-0-invested')).toBeChecked();
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent(/Minor Elixir of Life/);
+      // No bespoke inline editors for a reference.
       expect(within(form).queryByLabelText('item-0-name')).not.toBeInTheDocument();
-      expect(within(form).queryByLabelText('item-0-json')).not.toBeInTheDocument();
+      // The container ref shows its preserved contents count.
+      expect(within(form).getByTestId('item-1')).toHaveTextContent(/Container holds 1 item/);
     });
 
-    it('round-trips references verbatim on save (incl. nested container contents)', async () => {
+    it('saves edited quantity/invested and preserves container contents (lossless)', async () => {
       setContent([refChar]);
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-refguy');
+      fireEvent.change(within(form).getByLabelText('item-0-quantity'), { target: { value: '5' } });
+      fireEvent.click(within(form).getByLabelText('item-0-invested')); // was true -> false
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory).toEqual(refChar.inventory);
+      expect(saveDocument.mock.calls[0][2].inventory).toEqual([
+        { ref: 'minor-elixir-of-life', quantity: 5 },
+        { ref: 'backpack', quantity: 1, container: { contents: [{ ref: 'torch', quantity: 5 }] } },
+      ]);
     });
 
-    it('can remove a reference; the rest still round-trip', async () => {
+    it('repointing the picker to another catalog item drops stale carry-over', async () => {
+      setContent([refChar]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-refguy');
+      fireEvent.change(within(form).getByLabelText('item-1-ref'), { target: { value: 'torch' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      // backpack's container contents must NOT carry onto the torch ref.
+      expect(saveDocument.mock.calls[0][2].inventory[1]).toEqual({ ref: 'torch', quantity: 1 });
+    });
+
+    it('Add item creates a blank ref row (never inline) and blocks save until chosen', async () => {
+      const empty = { ...refChar, id: 'empty', name: 'Empty', inventory: [] };
+      setContent([empty]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-empty');
+      fireEvent.click(within(form).getByText('Add item'));
+      expect(within(form).getByLabelText('item-0-ref')).toBeInTheDocument();
+      expect(within(form).queryByLabelText('item-0-name')).not.toBeInTheDocument();
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/choose a catalog item/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].inventory).toEqual([{ ref: 'torch', quantity: 1 }]);
+    });
+
+    it('Duplicate to new catalog item creates a catalog doc and repoints the ref', async () => {
       setContent([refChar]);
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-refguy');
       const card0 = within(form).getByTestId('item-0');
-      fireEvent.click(within(card0).getByText('Remove item'));
+      fireEvent.change(within(card0).getByLabelText('item-0-fork-name'), {
+        target: { value: 'Major Elixir of Life' },
+      });
+      fireEvent.click(within(card0).getByText('Duplicate to new catalog item'));
+      await waitFor(() =>
+        expect(saveDocument).toHaveBeenCalledWith('item', 'major-elixir-of-life', {
+          id: 'major-elixir-of-life',
+          name: 'Major Elixir of Life',
+          price: 3,
+          weight: 0.1,
+          traits: ['Healing'],
+        })
+      );
+      expect(await within(form).findByRole('status')).toHaveTextContent(/Created catalog item/i);
+      expect(within(form).getByLabelText('item-0-ref')).toHaveValue('major-elixir-of-life');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(saveDocument).toHaveBeenCalledWith('character', 'refguy', expect.anything())
+      );
+      const charCall = saveDocument.mock.calls.find((c) => c[0] === 'character');
+      expect(charCall[2].inventory[0]).toEqual({ ref: 'major-elixir-of-life', quantity: 2, invested: true });
+    });
+
+    it('fork is rejected without a name or on an id collision', async () => {
+      setContent([refChar]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-refguy');
+      const card0 = within(form).getByTestId('item-0');
+      fireEvent.click(within(card0).getByText('Duplicate to new catalog item'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/Enter a name/i)
+      );
+      fireEvent.change(within(card0).getByLabelText('item-0-fork-name'), {
+        target: { value: 'Backpack' }, // slug 'backpack' already in catalog
+      });
+      fireEvent.click(within(card0).getByText('Duplicate to new catalog item'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/already exists/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+
+    it('flags a legacy inline item but still edits and round-trips it', async () => {
+      setContent([pellias]); // pellias has an inline { name:'Full Plate', ... }
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      expect(within(form).getByTestId('item-0-legacy')).toBeInTheDocument();
+      fireEvent.change(within(form).getByLabelText('item-0-name'), { target: { value: 'Full Plate +1' } });
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory).toEqual([
-        { ref: 'backpack', quantity: 1, container: { contents: [{ ref: 'torch', quantity: 5 }] } },
-      ]);
+      const inv = saveDocument.mock.calls[0][2].inventory;
+      expect(inv[0]).toEqual(expect.objectContaining({ name: 'Full Plate +1', price: 30, quantity: 1, weight: 4 }));
+      expect(inv[0].ref).toBeUndefined();
     });
   });
 });
