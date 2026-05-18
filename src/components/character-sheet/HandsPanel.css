@@ -1,0 +1,105 @@
+.hands-panel {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: var(--color-surface, #fff);
+}
+
+.hands-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hands-header h3 {
+  margin: 0;
+}
+
+.hands-summary {
+  margin: 0.5rem 0;
+  font-size: 0.95rem;
+}
+
+.hands-warn {
+  color: var(--color-danger, #b3261e);
+  font-weight: 600;
+}
+
+.hands-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  color: #666;
+  font-size: 0.8rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.hands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.hands-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.hands-indent {
+  margin-left: 1.25rem;
+}
+
+.hands-indent .hands-row {
+  border-style: dashed;
+  background: #fafafa;
+}
+
+.hands-row-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 10rem;
+}
+
+.hands-name {
+  font-weight: 600;
+}
+
+.hands-state {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.hands-row-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hands-ctl {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.hands-ctl-label {
+  margin-bottom: 0.15rem;
+}
+
+.hands-ctl select {
+  padding: 0.3rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
