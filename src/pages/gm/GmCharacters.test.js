@@ -378,8 +378,10 @@ describe('GmCharacters', () => {
       expect(within(form).getByTestId('item-0-summary')).toHaveTextContent(/Minor Elixir of Life/);
       // No bespoke inline editors for a reference.
       expect(within(form).queryByLabelText('item-0-name')).not.toBeInTheDocument();
-      // The container ref shows its preserved contents count.
-      expect(within(form).getByTestId('item-1')).toHaveTextContent(/Container holds 1 item/);
+      // The container ref shows an editable nested contents list.
+      expect(within(form).getByTestId('item-1-contents')).toBeInTheDocument();
+      expect(within(form).getByLabelText('item-1-c-0-ref')).toHaveValue('torch');
+      expect(within(form).getByLabelText('item-1-c-0-quantity')).toHaveValue(5);
     });
 
     it('saves edited quantity/invested and preserves container contents (lossless)', async () => {
@@ -489,6 +491,118 @@ describe('GmCharacters', () => {
       const inv = saveDocument.mock.calls[0][2].inventory;
       expect(inv[0]).toEqual(expect.objectContaining({ name: 'Full Plate +1', price: 30, quantity: 1, weight: 4 }));
       expect(inv[0].ref).toBeUndefined();
+    });
+  });
+
+  describe('container contents editor (Slice 5)', () => {
+    const packed = {
+      id: 'packrat',
+      name: 'Pack Rat',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      saves: { fortitude: 0, reflex: 0, will: 0 },
+      skills: {},
+      proficiencies: {},
+      inventory: [
+        {
+          ref: 'backpack',
+          quantity: 1,
+          container: {
+            contents: [
+              { ref: 'torch', quantity: 5 },
+              { ref: 'rope-50ft', quantity: 1 },
+            ],
+          },
+        },
+        { ref: 'gourd-head', quantity: 1, container: { contents: [] } },
+      ],
+    };
+    // gourd-head is a container in the catalog too.
+    const catWithGourd = [...catalog, { id: 'gourd-head', name: 'Gourd Head', weight: 0, container: { capacity: 1, ignored: 0 } }];
+    const setPacked = () =>
+      useContent.mockReturnValue({ rawCharacters: [packed], items: catWithGourd });
+
+    it('renders each container’s contents as nested editable ref rows', () => {
+      setPacked();
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-packrat');
+      expect(within(form).getByLabelText('item-0-c-0-ref')).toHaveValue('torch');
+      expect(within(form).getByLabelText('item-0-c-1-ref')).toHaveValue('rope-50ft');
+      expect(within(form).getByLabelText('item-0-c-1-quantity')).toHaveValue(1);
+      // Empty container still shows the (empty) contents editor.
+      expect(within(form).getByTestId('item-1-contents')).toBeInTheDocument();
+      expect(within(form).queryByLabelText('item-1-c-0-ref')).not.toBeInTheDocument();
+    });
+
+    it('round-trips a packed backpack unchanged on save (lossless)', async () => {
+      setPacked();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-packrat');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].inventory).toEqual(packed.inventory);
+    });
+
+    it('edits a content quantity and adds/removes contents', async () => {
+      setPacked();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-packrat');
+      const backpack = within(form).getByTestId('item-0-contents');
+      // edit torch qty 5 -> 9
+      fireEvent.change(within(backpack).getByLabelText('item-0-c-0-quantity'), { target: { value: '9' } });
+      // remove rope (second content)
+      const rope = within(form).getByTestId('item-0-c-1');
+      fireEvent.click(within(rope).getByText('Remove item'));
+      // add a new content and pick it
+      fireEvent.click(within(backpack).getByText('Add item to container'));
+      fireEvent.change(within(form).getByLabelText('item-0-c-1-ref'), { target: { value: 'minor-elixir-of-life' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].inventory[0]).toEqual({
+        ref: 'backpack',
+        quantity: 1,
+        container: {
+          contents: [
+            { ref: 'torch', quantity: 9 },
+            { ref: 'minor-elixir-of-life', quantity: 1 },
+          ],
+        },
+      });
+    });
+
+    it('repointing a container ref to a non-container drops the container on save', async () => {
+      setPacked();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-packrat');
+      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const inv = saveDocument.mock.calls[0][2].inventory;
+      expect(inv[0]).toEqual({ ref: 'torch', quantity: 1 });
+      expect(inv[0].container).toBeUndefined();
+    });
+
+    it('repointing a container ref to another container keeps its contents', async () => {
+      setPacked();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-packrat');
+      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'gourd-head' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].inventory[0]).toEqual({
+        ref: 'gourd-head',
+        quantity: 1,
+        container: {
+          contents: [
+            { ref: 'torch', quantity: 5 },
+            { ref: 'rope-50ft', quantity: 1 },
+          ],
+        },
+      });
     });
   });
 });
