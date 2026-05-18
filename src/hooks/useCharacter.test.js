@@ -248,7 +248,40 @@ describe('useCharacter', () => {
     };
 
     const { result } = renderHook(() => useCharacter(character));
-    
+
     expect(result.current).not.toBeNull();
+  });
+
+  // Slice 2: with no live loadout (no SessionProvider here), useCharacter
+  // returns the effective tree with derived state stamped (top-level→worn,
+  // contents→stowed). Bulk math is unit-tested in InventoryUtils /
+  // effectiveInventory; calculateItemsBulk is mocked in this file.
+  it('exposes the effective inventory with derived state stamped (empty loadout)', () => {
+    const character = {
+      id: 'effguy',
+      name: 'Eff Guy',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      inventory: [
+        { uid: 'effguy-0', ref: 'sword', weight: 1, quantity: 1 },
+        {
+          uid: 'effguy-1',
+          ref: 'backpack',
+          weight: 0.1,
+          quantity: 1,
+          container: { capacity: 4, ignored: 2, contents: [{ uid: 'effguy-2', ref: 'torch', weight: 0.1, quantity: 5 }] },
+        },
+      ],
+      feats: [],
+    };
+
+    const { result } = renderHook(() => useCharacter(character));
+    const inv = result.current.inventory;
+    expect(inv[0].state).toBe('worn');
+    expect(inv[1].state).toBe('worn');
+    expect(inv[1].container.contents[0].state).toBe('stowed');
+    // structure/uids preserved through the effective merge
+    expect(inv.map((e) => e.uid)).toEqual(['effguy-0', 'effguy-1']);
+    expect(inv[1].container.contents[0].uid).toBe('effguy-2');
   });
 });
