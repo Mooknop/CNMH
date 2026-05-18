@@ -40,13 +40,31 @@ const toNum = (v) => {
 // potency, containers, invested…). Bespoke fields cover the common scalars;
 // every other key on the item round-trips through a per-item raw-JSON box,
 // mirroring the character-level Advanced pattern, so nothing is lost.
-// Slice 3 made bundled inventories pure catalog references
-// ({ ref, quantity, [invested], [container:{contents}] }). Until the ref-aware
-// editor lands (Slices 4–5) a reference round-trips OPAQUELY through this
-// editor — shown read-only, returned untouched on save — so editing a
-// character's other sections never corrupts or drops its inventory refs.
+const omit = (obj, keys) => {
+  const out = { ...obj };
+  keys.forEach((k) => delete out[k]);
+  return out;
+};
+
+// Inventory entries are catalog references: { ref, quantity, [invested],
+// [container:{contents}] }. The picker repoints `ref`; quantity/invested are
+// per-character. Any other keys (notably a container's `contents`) are
+// preserved verbatim WHILE the ref is unchanged — the recursive
+// container-contents editor lands in Slice 5; repointing to a different
+// catalog item drops that carry-over. Legacy inline items (no `ref`) still
+// round-trip through the bespoke fields for back-compat.
 const itemToForm = (it) => {
-  if (it && it.ref != null) return { __refRaw: it };
+  if (it && it.ref != null) {
+    return {
+      __ref: true,
+      ref: String(it.ref),
+      origRef: String(it.ref),
+      quantity: it.quantity != null ? String(it.quantity) : '1',
+      invested: it.invested === true,
+      extra: omit(it, ['ref', 'quantity', 'invested']),
+      forkName: '',
+    };
+  }
   const rest = { ...it };
   ['name', 'description', 'price', 'quantity', 'weight', 'traits'].forEach((k) => delete rest[k]);
   return {
@@ -98,7 +116,17 @@ const entryFromForm = (f, label, index) => {
 
 // Returns the rebuilt item, or throws Error with a GM-readable message.
 const itemFromForm = (f, index) => {
-  if (f && f.__refRaw) return f.__refRaw; // opaque catalog reference — preserved verbatim
+  if (f && f.__ref) {
+    const ref = String(f.ref || '').trim();
+    if (!ref) throw new Error(`Inventory item ${index + 1}: choose a catalog item.`);
+    // Carry extra keys (e.g. container.contents) only while the ref is the
+    // one they belonged to; a repointed ref starts clean.
+    const base = ref === f.origRef && f.extra ? { ...f.extra } : {};
+    const out = { ...base, ref };
+    out.quantity = String(f.quantity).trim() === '' ? 1 : toInt(f.quantity);
+    if (f.invested) out.invested = true;
+    return out;
+  }
   if (!f.name.trim()) throw new Error(`Inventory item ${index + 1} needs a name.`);
   let rest;
   try {
@@ -326,10 +354,12 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
   );
 };
 
-const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
+const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const catalogList = Array.isArray(catalog) ? catalog : [];
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
   const [showHistory, setShowHistory] = useState(false);
 
@@ -356,8 +386,44 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
 
   const setItem = (i, patch) =>
     setF((c) => ({ ...c, inventory: c.inventory.map((it, idx) => (idx === i ? { ...it, ...patch } : it)) }));
-  const addItem = () => setF((c) => ({ ...c, inventory: [...c.inventory, itemToForm({ name: '' })] }));
+  // New rows are catalog references (the GM UI never authors inline items).
+  const addItem = () => setF((c) => ({ ...c, inventory: [...c.inventory, itemToForm({ ref: '', quantity: 1 })] }));
   const rmItem = (i) => setF((c) => ({ ...c, inventory: c.inventory.filter((_, idx) => idx !== i) }));
+
+  // Fork the referenced catalog item into a NEW catalog doc and repoint the
+  // row at it (replaces the old inline-fork — the catalog stays the only
+  // source of item definitions). The new doc is saved immediately; the GM
+  // still saves the character to persist the repointed ref.
+  const forkCatalog = async (i) => {
+    const it = f.inventory[i];
+    const src = catalogList.find((c) => String(c.id) === String(it.ref));
+    if (!src) {
+      setError('Pick a catalog item before duplicating it.');
+      return;
+    }
+    const name = String(it.forkName || '').trim();
+    if (!name) {
+      setError('Enter a name for the new catalog item.');
+      return;
+    }
+    const newId = slugify(name);
+    if (catalogList.some((c) => String(c.id) === newId)) {
+      setError(`A catalog item “${newId}” already exists — reference it instead.`);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await saveDocument('item', newId, { ...src, id: newId, name });
+      setItem(i, { ref: newId, origRef: newId, extra: {}, forkName: '' });
+      setNotice(`Created catalog item “${name}”. Save the character to keep this reference.`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const setArr = (key, i, patch) =>
     setF((c) => ({
@@ -616,25 +682,106 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
       <div className="form-group">
         <label>Inventory</label>
         {f.inventory.map((it, i) =>
-          it.__refRaw ? (
+          it.__ref ? (
             <div className="gm-card" data-testid={`item-${i}`} key={i}>
-              <p className="gm-count" data-testid={`item-${i}-ref`}>
-                Catalog reference: <strong>{it.__refRaw.ref}</strong> ×{' '}
-                {it.__refRaw.quantity != null ? it.__refRaw.quantity : 1}
-                {it.__refRaw.invested != null ? ` · invested: ${String(it.__refRaw.invested)}` : ''}
-                {it.__refRaw.container ? ' · container' : ''}
-              </p>
-              <p className="gm-warn">
-                Edit the shared definition in GM → Items. A per-character ref editor
-                (quantity / picker / container contents) arrives in the next update;
-                this reference is preserved as-is on save.
-              </p>
-              <button className="btn-small btn-danger" onClick={() => rmItem(i)}>
-                Remove item
-              </button>
+              {(() => {
+                const sel = catalogList.find((c) => String(c.id) === String(it.ref));
+                return (
+                  <>
+                    <div className="gm-row">
+                      <div className="form-group">
+                        <label>catalog item</label>
+                        <select
+                          aria-label={`item-${i}-ref`}
+                          value={it.ref}
+                          onChange={(e) => setItem(i, { ref: e.target.value })}
+                        >
+                          <option value="">— choose —</option>
+                          {!sel && it.ref ? (
+                            <option value={it.ref}>{it.ref} (not in catalog)</option>
+                          ) : null}
+                          {catalogList.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name || c.id}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>quantity</label>
+                        <input
+                          aria-label={`item-${i}-quantity`}
+                          type="number"
+                          value={it.quantity}
+                          onChange={(e) => setItem(i, { quantity: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>
+                          <input
+                            type="checkbox"
+                            aria-label={`item-${i}-invested`}
+                            checked={it.invested}
+                            onChange={(e) => setItem(i, { invested: e.target.checked })}
+                          />{' '}
+                          invested
+                        </label>
+                      </div>
+                    </div>
+                    {sel ? (
+                      <p className="gm-count" data-testid={`item-${i}-summary`}>
+                        {sel.name} · price {sel.price != null ? sel.price : 0} · Bulk{' '}
+                        {sel.weight != null ? sel.weight : 0}
+                        {Array.isArray(sel.traits) && sel.traits.length
+                          ? ` · ${sel.traits.join(', ')}`
+                          : ''}
+                        {sel.scroll ? ' · scroll' : ''}
+                        {sel.wand ? ' · wand' : ''}
+                        {sel.container ? ' · container' : ''}
+                      </p>
+                    ) : (
+                      <p className="gm-warn" data-testid={`item-${i}-unknown`}>
+                        Unknown catalog item “{it.ref || '(none)'}”. Pick one above.
+                      </p>
+                    )}
+                    {it.extra &&
+                      it.extra.container &&
+                      Array.isArray(it.extra.container.contents) && (
+                        <p className="gm-count">
+                          Container holds {it.extra.container.contents.length} item(s) —
+                          preserved as-is; contents editing arrives in the next update.
+                        </p>
+                      )}
+                    <div className="gm-row">
+                      <div className="form-group">
+                        <label>duplicate to new catalog item (name)</label>
+                        <input
+                          aria-label={`item-${i}-fork-name`}
+                          value={it.forkName || ''}
+                          onChange={(e) => setItem(i, { forkName: e.target.value })}
+                        />
+                      </div>
+                      <button
+                        className="btn-small btn-secondary"
+                        disabled={busy}
+                        onClick={() => forkCatalog(i)}
+                      >
+                        Duplicate to new catalog item
+                      </button>
+                    </div>
+                    <button className="btn-small btn-danger" onClick={() => rmItem(i)}>
+                      Remove item
+                    </button>
+                  </>
+                );
+              })()}
             </div>
           ) : (
             <div className="gm-card" data-testid={`item-${i}`} key={i}>
+              <p className="gm-warn" data-testid={`item-${i}-legacy`}>
+                Legacy inline item — not in the catalog. Define it in GM → Items and
+                re-add it as a reference when you can.
+              </p>
               <div className="gm-row">
                 <div className="form-group">
                   <label>name</label>
@@ -749,6 +896,7 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
         />
       </div>
 
+      {notice && <p className="gm-ok" role="status">{notice}</p>}
       {error && <p className="gm-warn" role="alert">{error}</p>}
       <div className="gm-actions">
         <button className="btn-primary" disabled={busy} onClick={save}>
@@ -804,10 +952,11 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
 };
 
 const GmCharacters = () => {
-  const { characters } = useContent();
+  // Edit the AUTHORED docs (catalog refs intact), never the resolved view.
+  const { rawCharacters, items } = useContent();
   const list = useMemo(
-    () => (Array.isArray(characters) ? characters : []),
-    [characters]
+    () => (Array.isArray(rawCharacters) ? rawCharacters : []),
+    [rawCharacters]
   );
   const existingIds = useMemo(() => existingIdSet(list), [list]);
   const [flash, setFlash] = useState(null);
@@ -861,6 +1010,7 @@ const GmCharacters = () => {
           initial={blankCharacter()}
           isNew
           existingIds={existingIds}
+          catalog={items}
           onSaved={onSaved}
           onRestored={onRestored}
         />
@@ -870,6 +1020,7 @@ const GmCharacters = () => {
           initial={toForm(activeChar)}
           isNew={false}
           existingIds={existingIds}
+          catalog={items}
           onSaved={onSaved}
           onRestored={onRestored}
         />
