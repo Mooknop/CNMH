@@ -139,10 +139,15 @@ export const resolveInventoryItem = (entry, catalogMap) => {
   const quantity = entry.quantity != null ? entry.quantity : 1;
   const cat = catalogMap.get(String(entry.ref));
   if (!cat) {
-    return { name: `(unknown item: ${entry.ref})`, weight: 0, quantity };
+    const stub = { name: `(unknown item: ${entry.ref})`, weight: 0, quantity };
+    if (entry.uid != null) stub.uid = entry.uid;
+    return stub;
   }
 
   const resolved = { ...cat, quantity, id: entry.id || cat.id };
+  // Stable per-entry id (Slice 1): carried through verbatim so the durable
+  // live-loadout layer can target this specific entry. Inert when absent.
+  if (entry.uid != null) resolved.uid = entry.uid;
   if (entry.invested != null) resolved.invested = entry.invested;
   if (cat.container) {
     resolved.container = {
