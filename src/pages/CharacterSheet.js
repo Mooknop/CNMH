@@ -11,6 +11,7 @@ import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
+import HandsPanel from '../components/character-sheet/HandsPanel';
 import { useCharacter } from '../hooks/useCharacter';
 import './CharacterSheet.css';
 
@@ -63,7 +64,12 @@ const CharacterSheet = () => {
   const renderTabContent = () => {
     switch(activeTab) {
       case 'encounter':
-        return <ActionsList character={character} characterColor={characterColor} />;
+        return (
+          <>
+            <HandsPanel character={character} characterColor={characterColor} />
+            <ActionsList character={character} characterColor={characterColor} />
+          </>
+        );
       case 'exploration':
         return <ExplorationList character={character} characterColor={characterColor} />;
       case 'spells':
