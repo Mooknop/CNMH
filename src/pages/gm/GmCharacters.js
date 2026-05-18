@@ -48,20 +48,27 @@ const omit = (obj, keys) => {
 
 // Inventory entries are catalog references: { ref, quantity, [invested],
 // [container:{contents}] }. The picker repoints `ref`; quantity/invested are
-// per-character. Any other keys (notably a container's `contents`) are
-// preserved verbatim WHILE the ref is unchanged — the recursive
-// container-contents editor lands in Slice 5; repointing to a different
-// catalog item drops that carry-over. Legacy inline items (no `ref`) still
-// round-trip through the bespoke fields for back-compat.
+// per-character. A container reference's `contents` is itself a list of
+// references, edited recursively with the same row. Non-container extra keys
+// are preserved verbatim while the ref is unchanged; repointing drops that
+// carry-over. Legacy inline items (no `ref`) still round-trip through the
+// bespoke fields for back-compat.
 const itemToForm = (it) => {
   if (it && it.ref != null) {
+    const hasContainer = !!(it.container && typeof it.container === 'object');
     return {
       __ref: true,
       ref: String(it.ref),
       origRef: String(it.ref),
       quantity: it.quantity != null ? String(it.quantity) : '1',
       invested: it.invested === true,
-      extra: omit(it, ['ref', 'quantity', 'invested']),
+      extra: omit(it, ['ref', 'quantity', 'invested', 'container']),
+      isContainer: hasContainer,
+      containerExtra: hasContainer ? omit(it.container, ['contents']) : {},
+      contents:
+        hasContainer && Array.isArray(it.container.contents)
+          ? it.container.contents.map(itemToForm)
+          : [],
       forkName: '',
     };
   }
@@ -119,12 +126,21 @@ const itemFromForm = (f, index) => {
   if (f && f.__ref) {
     const ref = String(f.ref || '').trim();
     if (!ref) throw new Error(`Inventory item ${index + 1}: choose a catalog item.`);
-    // Carry extra keys (e.g. container.contents) only while the ref is the
-    // one they belonged to; a repointed ref starts clean.
-    const base = ref === f.origRef && f.extra ? { ...f.extra } : {};
-    const out = { ...base, ref };
+    // Carry non-container extra keys only while the ref is unchanged; a
+    // repointed ref starts clean.
+    const keepExtra = ref === f.origRef;
+    const out = { ...(keepExtra && f.extra ? f.extra : {}), ref };
     out.quantity = String(f.quantity).trim() === '' ? 1 : toInt(f.quantity);
     if (f.invested) out.invested = true;
+    // A container reference always carries `container.contents` (possibly
+    // empty) — that is the per-character packing; capacity/ignored live on
+    // the catalog item. `isContainer` is kept in sync from the catalog.
+    if (f.isContainer) {
+      out.container = {
+        ...(keepExtra && f.containerExtra ? f.containerExtra : {}),
+        contents: (f.contents || []).map((c, i) => itemFromForm(c, i)),
+      };
+    }
     return out;
   }
   if (!f.name.trim()) throw new Error(`Inventory item ${index + 1} needs a name.`);
@@ -354,6 +370,145 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
   );
 };
 
+// One catalog-reference inventory row, reused recursively for a container's
+// contents (depth 1; deeper still round-trips but isn't surfaced — the data
+// is at most one level). Controlled: the parent owns the form item and gets
+// merge patches. Fork is offered at the top level only.
+const RefRow = ({ item, tag, catalogList, busy, depth, showFork, onPatch, onRemove, onFork }) => {
+  const sel = catalogList.find((c) => String(c.id) === String(item.ref));
+  const containerCatalog = !!(sel && sel.container);
+  const showContents =
+    depth < 1 &&
+    (containerCatalog || item.isContainer || (item.contents && item.contents.length > 0));
+
+  const changeRef = (newRef) => {
+    const s = catalogList.find((c) => String(c.id) === String(newRef));
+    const willContain = !!(s && s.container);
+    onPatch({
+      ref: newRef,
+      isContainer: willContain,
+      contents: willContain ? item.contents || [] : [],
+    });
+  };
+  const setContent = (j, patch) =>
+    onPatch({ contents: item.contents.map((c, k) => (k === j ? { ...c, ...patch } : c)) });
+  const addContent = () =>
+    onPatch({ contents: [...(item.contents || []), itemToForm({ ref: '', quantity: 1 })] });
+  const rmContent = (j) =>
+    onPatch({ contents: item.contents.filter((_, k) => k !== j) });
+
+  return (
+    <div className="gm-card" data-testid={tag} key={tag}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>catalog item</label>
+          <select
+            aria-label={`${tag}-ref`}
+            value={item.ref}
+            onChange={(e) => changeRef(e.target.value)}
+          >
+            <option value="">— choose —</option>
+            {!sel && item.ref ? (
+              <option value={item.ref}>{item.ref} (not in catalog)</option>
+            ) : null}
+            {catalogList.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name || c.id}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label>quantity</label>
+          <input
+            aria-label={`${tag}-quantity`}
+            type="number"
+            value={item.quantity}
+            onChange={(e) => onPatch({ quantity: e.target.value })}
+          />
+        </div>
+        <div className="form-group">
+          <label>
+            <input
+              type="checkbox"
+              aria-label={`${tag}-invested`}
+              checked={item.invested}
+              onChange={(e) => onPatch({ invested: e.target.checked })}
+            />{' '}
+            invested
+          </label>
+        </div>
+      </div>
+      {sel ? (
+        <p className="gm-count" data-testid={`${tag}-summary`}>
+          {sel.name} · price {sel.price != null ? sel.price : 0} · Bulk{' '}
+          {sel.weight != null ? sel.weight : 0}
+          {Array.isArray(sel.traits) && sel.traits.length ? ` · ${sel.traits.join(', ')}` : ''}
+          {sel.scroll ? ' · scroll' : ''}
+          {sel.wand ? ' · wand' : ''}
+          {sel.container ? ' · container' : ''}
+        </p>
+      ) : (
+        <p className="gm-warn" data-testid={`${tag}-unknown`}>
+          Unknown catalog item “{item.ref || '(none)'}”. Pick one above.
+        </p>
+      )}
+
+      {showContents && (
+        <div className="gm-card" data-testid={`${tag}-contents`}>
+          <p className="gm-count">Container contents</p>
+          {(item.contents || []).map((c, j) =>
+            c.__ref ? (
+              <RefRow
+                key={j}
+                item={c}
+                tag={`${tag}-c-${j}`}
+                catalogList={catalogList}
+                busy={busy}
+                depth={depth + 1}
+                showFork={false}
+                onPatch={(p) => setContent(j, p)}
+                onRemove={() => rmContent(j)}
+              />
+            ) : (
+              <div className="gm-card" data-testid={`${tag}-c-${j}`} key={j}>
+                <p className="gm-warn">
+                  Legacy inline item — edit it at the top level, not inside a container.
+                </p>
+                <button className="btn-small btn-danger" onClick={() => rmContent(j)}>
+                  Remove
+                </button>
+              </div>
+            )
+          )}
+          <button className="btn-small btn-secondary" onClick={addContent}>
+            Add item to container
+          </button>
+        </div>
+      )}
+
+      {showFork && (
+        <div className="gm-row">
+          <div className="form-group">
+            <label>duplicate to new catalog item (name)</label>
+            <input
+              aria-label={`${tag}-fork-name`}
+              value={item.forkName || ''}
+              onChange={(e) => onPatch({ forkName: e.target.value })}
+            />
+          </div>
+          <button className="btn-small btn-secondary" disabled={busy} onClick={onFork}>
+            Duplicate to new catalog item
+          </button>
+        </div>
+      )}
+      <button className="btn-small btn-danger" onClick={onRemove}>
+        Remove item
+      </button>
+    </div>
+  );
+};
+
 const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -416,7 +571,14 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     setNotice(null);
     try {
       await saveDocument('item', newId, { ...src, id: newId, name });
-      setItem(i, { ref: newId, origRef: newId, extra: {}, forkName: '' });
+      // Keep the character's packed contents; the copy is the same kind of item.
+      setItem(i, {
+        ref: newId,
+        origRef: newId,
+        extra: {},
+        forkName: '',
+        isContainer: !!src.container,
+      });
       setNotice(`Created catalog item “${name}”. Save the character to keep this reference.`);
     } catch (e) {
       setError(e.message);
@@ -424,6 +586,20 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
       setBusy(false);
     }
   };
+
+  // Before save, re-derive each ref's container-ness from the catalog (a
+  // freshly added/repointed ref, or a forked id not yet synced, keeps its
+  // current flag). Recurses into container contents.
+  const syncFlags = (rows) =>
+    (Array.isArray(rows) ? rows : []).map((it) => {
+      if (!it.__ref) return it;
+      const sel = catalogList.find((c) => String(c.id) === String(it.ref));
+      return {
+        ...it,
+        isContainer: sel ? !!sel.container : !!it.isContainer,
+        contents: syncFlags(it.contents || []),
+      };
+    });
 
   const setArr = (key, i, patch) =>
     setF((c) => ({
@@ -479,7 +655,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     if (f.hasSpellcasting) payload.spellcasting = scFromForm(f);
 
     try {
-      payload.inventory = f.inventory.map((it, idx) => itemFromForm(it, idx));
+      payload.inventory = syncFlags(f.inventory).map((it, idx) => itemFromForm(it, idx));
       ARR_SECTIONS.forEach((s) => {
         payload[s.key] = f.arrays[s.key].map((e, idx) => entryFromForm(e, s.label, idx));
       });
@@ -683,99 +859,18 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
         <label>Inventory</label>
         {f.inventory.map((it, i) =>
           it.__ref ? (
-            <div className="gm-card" data-testid={`item-${i}`} key={i}>
-              {(() => {
-                const sel = catalogList.find((c) => String(c.id) === String(it.ref));
-                return (
-                  <>
-                    <div className="gm-row">
-                      <div className="form-group">
-                        <label>catalog item</label>
-                        <select
-                          aria-label={`item-${i}-ref`}
-                          value={it.ref}
-                          onChange={(e) => setItem(i, { ref: e.target.value })}
-                        >
-                          <option value="">— choose —</option>
-                          {!sel && it.ref ? (
-                            <option value={it.ref}>{it.ref} (not in catalog)</option>
-                          ) : null}
-                          {catalogList.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name || c.id}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="form-group">
-                        <label>quantity</label>
-                        <input
-                          aria-label={`item-${i}-quantity`}
-                          type="number"
-                          value={it.quantity}
-                          onChange={(e) => setItem(i, { quantity: e.target.value })}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>
-                          <input
-                            type="checkbox"
-                            aria-label={`item-${i}-invested`}
-                            checked={it.invested}
-                            onChange={(e) => setItem(i, { invested: e.target.checked })}
-                          />{' '}
-                          invested
-                        </label>
-                      </div>
-                    </div>
-                    {sel ? (
-                      <p className="gm-count" data-testid={`item-${i}-summary`}>
-                        {sel.name} · price {sel.price != null ? sel.price : 0} · Bulk{' '}
-                        {sel.weight != null ? sel.weight : 0}
-                        {Array.isArray(sel.traits) && sel.traits.length
-                          ? ` · ${sel.traits.join(', ')}`
-                          : ''}
-                        {sel.scroll ? ' · scroll' : ''}
-                        {sel.wand ? ' · wand' : ''}
-                        {sel.container ? ' · container' : ''}
-                      </p>
-                    ) : (
-                      <p className="gm-warn" data-testid={`item-${i}-unknown`}>
-                        Unknown catalog item “{it.ref || '(none)'}”. Pick one above.
-                      </p>
-                    )}
-                    {it.extra &&
-                      it.extra.container &&
-                      Array.isArray(it.extra.container.contents) && (
-                        <p className="gm-count">
-                          Container holds {it.extra.container.contents.length} item(s) —
-                          preserved as-is; contents editing arrives in the next update.
-                        </p>
-                      )}
-                    <div className="gm-row">
-                      <div className="form-group">
-                        <label>duplicate to new catalog item (name)</label>
-                        <input
-                          aria-label={`item-${i}-fork-name`}
-                          value={it.forkName || ''}
-                          onChange={(e) => setItem(i, { forkName: e.target.value })}
-                        />
-                      </div>
-                      <button
-                        className="btn-small btn-secondary"
-                        disabled={busy}
-                        onClick={() => forkCatalog(i)}
-                      >
-                        Duplicate to new catalog item
-                      </button>
-                    </div>
-                    <button className="btn-small btn-danger" onClick={() => rmItem(i)}>
-                      Remove item
-                    </button>
-                  </>
-                );
-              })()}
-            </div>
+            <RefRow
+              key={i}
+              item={it}
+              tag={`item-${i}`}
+              catalogList={catalogList}
+              busy={busy}
+              depth={0}
+              showFork
+              onPatch={(p) => setItem(i, p)}
+              onRemove={() => rmItem(i)}
+              onFork={() => forkCatalog(i)}
+            />
           ) : (
             <div className="gm-card" data-testid={`item-${i}`} key={i}>
               <p className="gm-warn" data-testid={`item-${i}-legacy`}>
