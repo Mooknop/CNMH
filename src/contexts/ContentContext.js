@@ -150,11 +150,14 @@ export const ContentProvider = ({ children }) => {
   // upstream of useCharacter — means InventoryUtils/SpellUtils/ContainerItem
   // consume fully-shaped items and need no changes.
   const items = serverItems.length ? normalizeItems(serverItems) : FALLBACK.item;
-  const characters = (
-    serverCharacters.length
-      ? normalizeCharacters(serverCharacters)
-      : FALLBACK.character
-  ).map((c) => resolveCharacterItems(c, items));
+  // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
+  // editor must edit/save THAT, not the resolved view, or saving would inline
+  // every item back and defeat the catalog. `characters` is the resolved view
+  // every player-facing consumer uses.
+  const rawCharacters = serverCharacters.length
+    ? normalizeCharacters(serverCharacters)
+    : FALLBACK.character;
+  const characters = rawCharacters.map((c) => resolveCharacterItems(c, items));
 
   const value = {
     loading,
@@ -178,6 +181,7 @@ export const ContentProvider = ({ children }) => {
     loreEntries: serverLore.length ? normalizeLore(serverLore) : FALLBACK.lore,
     traits: serverTraits.length ? normalizeTraits(serverTraits) : FALLBACK.trait,
     characters,
+    rawCharacters,
     items,
     refresh: loadSnapshot,
   };
@@ -194,6 +198,7 @@ const NOOP_CONTENT = {
   loreEntries: FALLBACK.lore,
   traits: FALLBACK.trait,
   characters: FALLBACK.character.map((c) => resolveCharacterItems(c, FALLBACK.item)),
+  rawCharacters: FALLBACK.character,
   items: FALLBACK.item,
   refresh: () => Promise.resolve(),
 };
