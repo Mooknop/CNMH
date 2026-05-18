@@ -95,6 +95,38 @@ describe('SessionContext', () => {
     expect(api.getState('IzzyUncut', 'focus')).toBe(5);
   });
 
+  it('sendUpdate notifies local subscribers of the same key (same-client sync)', () => {
+    // Regression: the server broadcast excludes the sender, so a local write
+    // must notify other same-client consumers of the key directly — otherwise
+    // useCharacter's effective tree / the Bulk bar never update while
+    // HandsPanel writes the loadout on the acting player's own screen.
+    let api;
+    render(
+      <SessionProvider>
+        <Probe onReady={(s) => { api = s; }} />
+        <Subscriber characterId="Pellias" type="loadout" />
+      </SessionProvider>
+    );
+    act(() => { MockWS.last._open(); });
+    expect(screen.getByTestId('sub').textContent).toBe('none');
+    act(() => { api.sendUpdate('Pellias', 'loadout', { x: 1 }); });
+    expect(screen.getByTestId('sub').textContent).toBe('[object Object]');
+    expect(api.getState('Pellias', 'loadout')).toEqual({ x: 1 });
+  });
+
+  it('sendUpdate notifies local subscribers even while the socket is closed', () => {
+    let api;
+    render(
+      <SessionProvider>
+        <Probe onReady={(s) => { api = s; }} />
+        <Subscriber characterId="Blu" type="loadout" />
+      </SessionProvider>
+    );
+    act(() => { api.sendUpdate('Blu', 'loadout', 7); });
+    expect(MockWS.last.sent).toHaveLength(0);
+    expect(screen.getByTestId('sub').textContent).toBe('7');
+  });
+
   it('sendUpdate does not send while socket is not open but still records state', () => {
     let api;
     render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
