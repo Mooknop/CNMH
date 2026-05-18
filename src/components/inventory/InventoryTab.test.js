@@ -27,8 +27,9 @@ jest.mock('../../hooks/useCharacter', () => ({
       },
       totalBulk: 5,
       inventory: [
-        { id: '1', name: 'Longsword', weight: 1 },
-        { id: '2', name: 'Leather Armor', weight: 1 }
+        { id: '1', name: 'Longsword', weight: 1, state: 'held2' },
+        { id: '2', name: 'Leather Armor', weight: 1, state: 'dropped' },
+        { id: '3', name: 'Worn Cloak', weight: 0.5, state: 'worn' }
       ],
       skillProficiencies: {
         crafting: 1
@@ -180,5 +181,18 @@ describe('InventoryTab', () => {
     
     // Component should render without error
     expect(screen.getByTestId('containers-list')).toBeInTheDocument();
+  });
+
+  // Slice 4: effective-state badges + dropped de-emphasis
+  it('shows a state badge for non-worn items and de-emphasizes dropped rows', () => {
+    const { container } = render(
+      <InventoryTab character={mockCharacter} characterColor="#7E8C9A" />
+    );
+    // held item shows its label; worn item shows no badge
+    expect(screen.getByText('Held in 2 Hands')).toBeInTheDocument();
+    expect(screen.getByText('(dropped)')).toBeInTheDocument();
+    expect(screen.queryByText('Worn')).not.toBeInTheDocument();
+    // dropped row is visually de-emphasised
+    expect(container.querySelector('tr.inv-row-dropped')).toBeInTheDocument();
   });
 });
