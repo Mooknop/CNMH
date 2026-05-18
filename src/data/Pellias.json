@@ -279,79 +279,98 @@
   ],
   "inventory": [
     {
+      "uid": "Pellias-0",
       "ref": "full-plate",
       "quantity": 1
     },
     {
+      "uid": "Pellias-1",
       "ref": "spiked-steel-shield",
       "quantity": 1
     },
     {
+      "uid": "Pellias-2",
       "ref": "reinforced-tower-shield",
       "quantity": 1
     },
     {
+      "uid": "Pellias-3",
       "ref": "1-striking-pick",
       "quantity": 1
     },
     {
+      "uid": "Pellias-4",
       "ref": "sanitizing-pin",
       "quantity": 1
     },
     {
+      "uid": "Pellias-5",
       "ref": "rust-scrub",
       "quantity": 1
     },
     {
+      "uid": "Pellias-6",
       "ref": "minor-elixir-of-life",
       "quantity": 1
     },
     {
+      "uid": "Pellias-7",
       "ref": "gecko-potion",
       "quantity": 1
     },
     {
+      "uid": "Pellias-8",
       "ref": "wolf-fang",
       "quantity": 1
     },
     {
+      "uid": "Pellias-9",
       "ref": "backpack",
       "quantity": 1,
       "container": {
         "contents": [
           {
+            "uid": "Pellias-10",
             "ref": "bedroll",
             "quantity": 1
           },
           {
+            "uid": "Pellias-11",
             "ref": "chalk",
             "quantity": 10
           },
           {
+            "uid": "Pellias-12",
             "ref": "flint-steel",
             "quantity": 1
           },
           {
+            "uid": "Pellias-13",
             "ref": "rope-50ft",
             "quantity": 1
           },
           {
+            "uid": "Pellias-14",
             "ref": "rations",
             "quantity": 7
           },
           {
+            "uid": "Pellias-15",
             "ref": "soap",
             "quantity": 1
           },
           {
+            "uid": "Pellias-16",
             "ref": "torch",
             "quantity": 5
           },
           {
+            "uid": "Pellias-17",
             "ref": "waterskin",
             "quantity": 1
           },
           {
+            "uid": "Pellias-18",
             "ref": "1-cold-iron-light-hammer",
             "quantity": 1
           }
