@@ -342,4 +342,61 @@ describe('GmCharacters', () => {
     expect(screen.getByTestId('character-form-pellias')).toBeInTheDocument();
     expect(screen.queryByTestId('character-form-izzy')).not.toBeInTheDocument();
   });
+
+  describe('catalog reference passthrough (Slice 3 interim)', () => {
+    const refChar = {
+      id: 'refguy',
+      name: 'Ref Guy',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      saves: { fortitude: 0, reflex: 0, will: 0 },
+      skills: {},
+      proficiencies: {},
+      inventory: [
+        { ref: 'minor-elixir-of-life', quantity: 2, invested: true },
+        {
+          ref: 'backpack',
+          quantity: 1,
+          container: { contents: [{ ref: 'torch', quantity: 5 }] },
+        },
+      ],
+    };
+
+    it('shows references read-only (no bespoke item fields)', () => {
+      setContent([refChar]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-refguy');
+      expect(within(form).getByTestId('item-0-ref')).toHaveTextContent(
+        /minor-elixir-of-life × 2 · invested: true/
+      );
+      expect(within(form).getByTestId('item-1-ref')).toHaveTextContent(/backpack × 1 · container/);
+      // The inline bespoke editors must NOT render for a reference.
+      expect(within(form).queryByLabelText('item-0-name')).not.toBeInTheDocument();
+      expect(within(form).queryByLabelText('item-0-json')).not.toBeInTheDocument();
+    });
+
+    it('round-trips references verbatim on save (incl. nested container contents)', async () => {
+      setContent([refChar]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-refguy');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].inventory).toEqual(refChar.inventory);
+    });
+
+    it('can remove a reference; the rest still round-trip', async () => {
+      setContent([refChar]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-refguy');
+      const card0 = within(form).getByTestId('item-0');
+      fireEvent.click(within(card0).getByText('Remove item'));
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].inventory).toEqual([
+        { ref: 'backpack', quantity: 1, container: { contents: [{ ref: 'torch', quantity: 5 }] } },
+      ]);
+    });
+  });
 });

@@ -40,7 +40,13 @@ const toNum = (v) => {
 // potency, containers, invested…). Bespoke fields cover the common scalars;
 // every other key on the item round-trips through a per-item raw-JSON box,
 // mirroring the character-level Advanced pattern, so nothing is lost.
+// Slice 3 made bundled inventories pure catalog references
+// ({ ref, quantity, [invested], [container:{contents}] }). Until the ref-aware
+// editor lands (Slices 4–5) a reference round-trips OPAQUELY through this
+// editor — shown read-only, returned untouched on save — so editing a
+// character's other sections never corrupts or drops its inventory refs.
 const itemToForm = (it) => {
+  if (it && it.ref != null) return { __refRaw: it };
   const rest = { ...it };
   ['name', 'description', 'price', 'quantity', 'weight', 'traits'].forEach((k) => delete rest[k]);
   return {
@@ -92,6 +98,7 @@ const entryFromForm = (f, label, index) => {
 
 // Returns the rebuilt item, or throws Error with a GM-readable message.
 const itemFromForm = (f, index) => {
+  if (f && f.__refRaw) return f.__refRaw; // opaque catalog reference — preserved verbatim
   if (!f.name.trim()) throw new Error(`Inventory item ${index + 1} needs a name.`);
   let rest;
   try {
@@ -608,13 +615,31 @@ const CharacterForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => 
 
       <div className="form-group">
         <label>Inventory</label>
-        {f.inventory.map((it, i) => (
-          <div className="gm-card" data-testid={`item-${i}`} key={i}>
-            <div className="gm-row">
-              <div className="form-group">
-                <label>name</label>
-                <input aria-label={`item-${i}-name`} value={it.name} onChange={(e) => setItem(i, { name: e.target.value })} />
-              </div>
+        {f.inventory.map((it, i) =>
+          it.__refRaw ? (
+            <div className="gm-card" data-testid={`item-${i}`} key={i}>
+              <p className="gm-count" data-testid={`item-${i}-ref`}>
+                Catalog reference: <strong>{it.__refRaw.ref}</strong> ×{' '}
+                {it.__refRaw.quantity != null ? it.__refRaw.quantity : 1}
+                {it.__refRaw.invested != null ? ` · invested: ${String(it.__refRaw.invested)}` : ''}
+                {it.__refRaw.container ? ' · container' : ''}
+              </p>
+              <p className="gm-warn">
+                Edit the shared definition in GM → Items. A per-character ref editor
+                (quantity / picker / container contents) arrives in the next update;
+                this reference is preserved as-is on save.
+              </p>
+              <button className="btn-small btn-danger" onClick={() => rmItem(i)}>
+                Remove item
+              </button>
+            </div>
+          ) : (
+            <div className="gm-card" data-testid={`item-${i}`} key={i}>
+              <div className="gm-row">
+                <div className="form-group">
+                  <label>name</label>
+                  <input aria-label={`item-${i}-name`} value={it.name} onChange={(e) => setItem(i, { name: e.target.value })} />
+                </div>
               <div className="form-group">
                 <label>price</label>
                 <input aria-label={`item-${i}-price`} type="number" value={it.price} onChange={(e) => setItem(i, { price: e.target.value })} />
