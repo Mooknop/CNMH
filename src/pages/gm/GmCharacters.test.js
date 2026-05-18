@@ -54,6 +54,31 @@ const catalog = [
 const setContent = (chars = [pellias, izzy]) =>
   useContent.mockReturnValue({ rawCharacters: chars, items: catalog });
 
+// Slice 1: every saved ref entry now carries a stable `uid` (preserved or
+// minted). Shape/lossless/repoint assertions below strip it so they stay
+// focused on the non-uid content; uid behaviour is asserted separately in the
+// "stable per-entry uids (Slice 1)" block.
+const stripUids = (v) => {
+  if (Array.isArray(v)) return v.map(stripUids);
+  if (v && typeof v === 'object') {
+    const out = {};
+    Object.keys(v).forEach((k) => {
+      if (k !== 'uid') out[k] = stripUids(v[k]);
+    });
+    return out;
+  }
+  return v;
+};
+const allUids = (list, acc = []) => {
+  (Array.isArray(list) ? list : []).forEach((e) => {
+    if (e && typeof e === 'object') {
+      if (e.uid != null) acc.push(e.uid);
+      if (e.container && e.container.contents) allUids(e.container.contents, acc);
+    }
+  });
+  return acc;
+};
+
 afterEach(() => jest.restoreAllMocks());
 
 describe('GmCharacters', () => {
@@ -393,7 +418,7 @@ describe('GmCharacters', () => {
       fireEvent.click(within(form).getByLabelText('item-0-invested')); // was true -> false
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory).toEqual([
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory)).toEqual([
         { ref: 'minor-elixir-of-life', quantity: 5 },
         { ref: 'backpack', quantity: 1, container: { contents: [{ ref: 'torch', quantity: 5 }] } },
       ]);
@@ -408,7 +433,7 @@ describe('GmCharacters', () => {
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       // backpack's container contents must NOT carry onto the torch ref.
-      expect(saveDocument.mock.calls[0][2].inventory[1]).toEqual({ ref: 'torch', quantity: 1 });
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory[1])).toEqual({ ref: 'torch', quantity: 1 });
     });
 
     it('Add item creates a blank ref row (never inline) and blocks save until chosen', async () => {
@@ -428,7 +453,11 @@ describe('GmCharacters', () => {
       fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory).toEqual([{ ref: 'torch', quantity: 1 }]);
+      const added = saveDocument.mock.calls[0][2].inventory;
+      expect(stripUids(added)).toEqual([{ ref: 'torch', quantity: 1 }]);
+      // A newly-added entry is minted a fresh runtime uid.
+      expect(typeof added[0].uid).toBe('string');
+      expect(added[0].uid).toMatch(/^e-/);
     });
 
     it('Duplicate to new catalog item creates a catalog doc and repoints the ref', async () => {
@@ -457,7 +486,7 @@ describe('GmCharacters', () => {
         expect(saveDocument).toHaveBeenCalledWith('character', 'refguy', expect.anything())
       );
       const charCall = saveDocument.mock.calls.find((c) => c[0] === 'character');
-      expect(charCall[2].inventory[0]).toEqual({ ref: 'major-elixir-of-life', quantity: 2, invested: true });
+      expect(stripUids(charCall[2].inventory[0])).toEqual({ ref: 'major-elixir-of-life', quantity: 2, invested: true });
     });
 
     it('fork is rejected without a name or on an id collision', async () => {
@@ -541,7 +570,7 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-packrat');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory).toEqual(packed.inventory);
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory)).toEqual(packed.inventory);
     });
 
     it('edits a content quantity and adds/removes contents', async () => {
@@ -560,7 +589,7 @@ describe('GmCharacters', () => {
       fireEvent.change(within(form).getByLabelText('item-0-c-1-ref'), { target: { value: 'minor-elixir-of-life' } });
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory[0]).toEqual({
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory[0])).toEqual({
         ref: 'backpack',
         quantity: 1,
         container: {
@@ -581,7 +610,7 @@ describe('GmCharacters', () => {
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const inv = saveDocument.mock.calls[0][2].inventory;
-      expect(inv[0]).toEqual({ ref: 'torch', quantity: 1 });
+      expect(stripUids(inv[0])).toEqual({ ref: 'torch', quantity: 1 });
       expect(inv[0].container).toBeUndefined();
     });
 
@@ -593,7 +622,7 @@ describe('GmCharacters', () => {
       fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'gourd-head' } });
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].inventory[0]).toEqual({
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory[0])).toEqual({
         ref: 'gourd-head',
         quantity: 1,
         container: {
@@ -603,6 +632,80 @@ describe('GmCharacters', () => {
           ],
         },
       });
+    });
+  });
+
+  describe('stable per-entry uids (Slice 1)', () => {
+    const uidChar = {
+      id: 'uidguy',
+      name: 'Uid Guy',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      saves: { fortitude: 0, reflex: 0, will: 0 },
+      skills: {},
+      proficiencies: {},
+      inventory: [
+        { uid: 'uidguy-0', ref: 'minor-elixir-of-life', quantity: 2, invested: true },
+        {
+          uid: 'uidguy-1',
+          ref: 'backpack',
+          quantity: 1,
+          container: { contents: [{ uid: 'uidguy-2', ref: 'torch', quantity: 5 }] },
+        },
+      ],
+    };
+
+    it('preserves every existing uid (top-level + nested) on a lossless save', async () => {
+      useContent.mockReturnValue({ rawCharacters: [uidChar], items: catalog });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-uidguy');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const inv = saveDocument.mock.calls[0][2].inventory;
+      expect(inv[0].uid).toBe('uidguy-0');
+      expect(inv[1].uid).toBe('uidguy-1');
+      expect(inv[1].container.contents[0].uid).toBe('uidguy-2');
+      // and the rest still round-trips unchanged
+      expect(stripUids(inv)).toEqual([
+        { ref: 'minor-elixir-of-life', quantity: 2, invested: true },
+        { ref: 'backpack', quantity: 1, container: { contents: [{ ref: 'torch', quantity: 5 }] } },
+      ]);
+    });
+
+    it('keeps the uid when the picker repoints the ref (placement identity)', async () => {
+      useContent.mockReturnValue({ rawCharacters: [uidChar], items: catalog });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-uidguy');
+      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const e0 = saveDocument.mock.calls[0][2].inventory[0];
+      expect(e0.uid).toBe('uidguy-0'); // survives the repoint
+      // repoint drops only extra/container carry-over (Slice 4 behaviour);
+      // quantity/invested are explicit per-character fields and remain.
+      expect(stripUids(e0)).toEqual({ ref: 'torch', quantity: 2, invested: true });
+    });
+
+    it('mints a fresh runtime uid for an entry added to a container', async () => {
+      useContent.mockReturnValue({ rawCharacters: [uidChar], items: catalog });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-uidguy');
+      const backpack = within(form).getByTestId('item-1-contents');
+      fireEvent.click(within(backpack).getByText('Add item to container'));
+      fireEvent.change(within(form).getByLabelText('item-1-c-1-ref'), { target: { value: 'rope-50ft' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const contents = saveDocument.mock.calls[0][2].inventory[1].container.contents;
+      expect(contents[0].uid).toBe('uidguy-2'); // existing preserved
+      expect(typeof contents[1].uid).toBe('string'); // new one minted
+      expect(contents[1].uid).toMatch(/^e-/);
+      // every saved entry has a uid, all unique
+      const uids = allUids(saveDocument.mock.calls[0][2].inventory);
+      expect(uids.length).toBe(4);
+      expect(new Set(uids).size).toBe(4);
     });
   });
 });

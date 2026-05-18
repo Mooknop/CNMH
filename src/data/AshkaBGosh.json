@@ -224,43 +224,53 @@
   ],
   "inventory": [
     {
+      "uid": "AshkaBGosh-0",
       "ref": "mothers-amulet",
       "quantity": 1
     },
     {
+      "uid": "AshkaBGosh-1",
       "ref": "backpack",
       "quantity": 1,
       "container": {
         "contents": [
           {
+            "uid": "AshkaBGosh-2",
             "ref": "bedroll",
             "quantity": 1
           },
           {
+            "uid": "AshkaBGosh-3",
             "ref": "chalk",
             "quantity": 10
           },
           {
+            "uid": "AshkaBGosh-4",
             "ref": "flint-steel",
             "quantity": 1
           },
           {
+            "uid": "AshkaBGosh-5",
             "ref": "rope-50ft",
             "quantity": 1
           },
           {
+            "uid": "AshkaBGosh-6",
             "ref": "rations",
             "quantity": 7
           },
           {
+            "uid": "AshkaBGosh-7",
             "ref": "soap",
             "quantity": 1
           },
           {
+            "uid": "AshkaBGosh-8",
             "ref": "torch",
             "quantity": 5
           },
           {
+            "uid": "AshkaBGosh-9",
             "ref": "waterskin",
             "quantity": 1
           }
@@ -268,26 +278,32 @@
       }
     },
     {
+      "uid": "AshkaBGosh-10",
       "ref": "crescent-cross",
       "quantity": 1
     },
     {
+      "uid": "AshkaBGosh-11",
       "ref": "longbow",
       "quantity": 1
     },
     {
+      "uid": "AshkaBGosh-12",
       "ref": "minor-elixir-of-life",
       "quantity": 2
     },
     {
+      "uid": "AshkaBGosh-13",
       "ref": "skeleton-key",
       "quantity": 1
     },
     {
+      "uid": "AshkaBGosh-14",
       "ref": "healers-toolkit",
       "quantity": 1
     },
     {
+      "uid": "AshkaBGosh-15",
       "ref": "thieves-toolkit",
       "quantity": 1
     }

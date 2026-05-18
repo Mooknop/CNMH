@@ -16,12 +16,15 @@ const catalogMap = itemCatalogMap(items);
 
 // Resolution restamps item-level id; the original sheets only sporadically
 // carried one, so strip it (recursively through container contents) before
-// comparing shapes. Everything else must match exactly.
+// comparing shapes. `uid` (Slice 1 stable per-entry id) is likewise added
+// metadata the pre-catalog fixture predates — strip it too. Everything else
+// must match exactly.
 const stripIds = (list) =>
   (Array.isArray(list) ? list : []).map((it) => {
     if (!it || typeof it !== 'object') return it;
     const out = { ...it };
     delete out.id;
+    delete out.uid;
     if (out.container && Array.isArray(out.container.contents)) {
       out.container = { ...out.container, contents: stripIds(out.container.contents) };
     }

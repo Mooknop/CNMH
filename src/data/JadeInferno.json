@@ -214,39 +214,48 @@
   ],
   "inventory": [
     {
+      "uid": "JadeInferno-0",
       "ref": "backpack",
       "quantity": 1,
       "container": {
         "contents": [
           {
+            "uid": "JadeInferno-1",
             "ref": "bedroll",
             "quantity": 1
           },
           {
+            "uid": "JadeInferno-2",
             "ref": "chalk",
             "quantity": 10
           },
           {
+            "uid": "JadeInferno-3",
             "ref": "flint-steel",
             "quantity": 1
           },
           {
+            "uid": "JadeInferno-4",
             "ref": "rope-50ft",
             "quantity": 1
           },
           {
+            "uid": "JadeInferno-5",
             "ref": "rations",
             "quantity": 7
           },
           {
+            "uid": "JadeInferno-6",
             "ref": "soap",
             "quantity": 1
           },
           {
+            "uid": "JadeInferno-7",
             "ref": "torch",
             "quantity": 5
           },
           {
+            "uid": "JadeInferno-8",
             "ref": "waterskin",
             "quantity": 1
           }
@@ -254,50 +263,62 @@
       }
     },
     {
+      "uid": "JadeInferno-9",
       "ref": "minor-elixir-of-life",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-10",
       "ref": "sanitizing-pin",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-11",
       "ref": "rust-scrub",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-12",
       "ref": "scroll-of-pocket-library",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-13",
       "ref": "scroll-of-sleep",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-14",
       "ref": "scroll-of-runic-body",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-15",
       "ref": "xanderghuls-flawless-hammer",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-16",
       "ref": "wand-of-dizzying-colors",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-17",
       "ref": "wand-of-breathe-fire",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-18",
       "ref": "wand-of-grease",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-19",
       "ref": "scroll-of-dispel-magic",
       "quantity": 1
     },
     {
+      "uid": "JadeInferno-20",
       "ref": "crafters-eyepiece",
       "quantity": 1,
       "invested": true

@@ -299,6 +299,7 @@
   ],
   "inventory": [
     {
+      "uid": "IzzyUncut-0",
       "ref": "gourd-head",
       "quantity": 1,
       "container": {
@@ -306,39 +307,48 @@
       }
     },
     {
+      "uid": "IzzyUncut-1",
       "ref": "backpack",
       "quantity": 1,
       "container": {
         "contents": [
           {
+            "uid": "IzzyUncut-2",
             "ref": "bedroll",
             "quantity": 1
           },
           {
+            "uid": "IzzyUncut-3",
             "ref": "chalk",
             "quantity": 10
           },
           {
+            "uid": "IzzyUncut-4",
             "ref": "flint-steel",
             "quantity": 1
           },
           {
+            "uid": "IzzyUncut-5",
             "ref": "rope-50ft",
             "quantity": 1
           },
           {
+            "uid": "IzzyUncut-6",
             "ref": "rations",
             "quantity": 7
           },
           {
+            "uid": "IzzyUncut-7",
             "ref": "soap",
             "quantity": 1
           },
           {
+            "uid": "IzzyUncut-8",
             "ref": "torch",
             "quantity": 5
           },
           {
+            "uid": "IzzyUncut-9",
             "ref": "waterskin",
             "quantity": 1
           }
@@ -346,42 +356,52 @@
       }
     },
     {
+      "uid": "IzzyUncut-10",
       "ref": "vocoder-of-invisibility",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-11",
       "ref": "studded-leather-armor",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-12",
       "ref": "minor-healing-potion",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-13",
       "ref": "scroll-of-friendfetch",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-14",
       "ref": "scroll-of-cleanse-affliction",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-15",
       "ref": "sanitizing-pin",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-16",
       "ref": "rust-scrub",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-17",
       "ref": "wand-of-cleanse-affliction",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-18",
       "ref": "wand-of-create-food",
       "quantity": 1
     },
     {
+      "uid": "IzzyUncut-19",
       "ref": "horn-of-rust",
       "quantity": 1,
       "invested": true
