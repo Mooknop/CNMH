@@ -5,6 +5,9 @@
 
 import { useMemo } from 'react';
 
+import { useSyncedState } from './useSyncedState';
+import { buildEffectiveInventory } from '../utils/effectiveInventory';
+
 import {
   getAbilityModifier,
   getSkillModifier,
@@ -46,6 +49,12 @@ import { calculateItemsBulk } from '../utils/InventoryUtils';
  * @returns {Object|null} - Computed character model, or null if no character
  */
 export const useCharacter = (character) => {
+  // Durable live-loadout overrides for this character (drop / hold / stow /
+  // retrieve …). Read-only here; the Hands panel writes the same key. Empty
+  // map (no SessionProvider, or untouched) ⇒ effective tree == authored tree,
+  // so Bulk and inventory are byte-identical to before this layer existed.
+  const [loadout] = useSyncedState(`cnmh_loadout_${character?.id || 'none'}`, {});
+
   return useMemo(() => {
     if (!character) return null;
 
@@ -113,9 +122,19 @@ export const useCharacter = (character) => {
     const proficiencies = character.proficiencies || {};
     const classDC = calculateClassDC(character);
 
+    // ── Effective inventory ─────────────────────────────────────────────────
+    // The single source of truth for placement + state: authored (resolved)
+    // tree merged with the live loadout. Bulk and the inventory passthrough
+    // both read this so a dropped/retrieved/stowed item is consistent for
+    // everyone. With an empty loadout this equals the authored tree.
+    const effectiveInventory = buildEffectiveInventory(
+      character.inventory || [],
+      loadout
+    );
+
     // ── Bulk ────────────────────────────────────────────────────────────────
     const bulkStats = calculateEnhancedBulkLimit(character);
-    const totalBulk = calculateItemsBulk(character.inventory || []);
+    const totalBulk = calculateItemsBulk(effectiveInventory);
 
     // ── Combat ──────────────────────────────────────────────────────────────
     const strikes     = getStrikes(character);
@@ -181,7 +200,7 @@ export const useCharacter = (character) => {
     // All raw JSON access is funnelled through here so that the shape of
     // the player files is only known to this hook.
     const feats           = character.feats || [];
-    const inventory       = character.inventory || [];
+    const inventory       = effectiveInventory;
     const familiar        = flags.hasFamiliar ? (character.familiar || null) : null;
     const animalCompanion = flags.hasAnimalCompanion ? (character.animalCompanion || null) : null;
     const thaumaturge     = character.thaumaturge || null;
@@ -255,5 +274,5 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character]);
+  }, [character, loadout]);
 };
