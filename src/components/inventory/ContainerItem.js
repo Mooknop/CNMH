@@ -13,13 +13,25 @@ import { ITEM_STATE_LABEL } from '../../utils/itemState';
  * @param {string} props.themeColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
-const ContainerItem = ({ container, themeColor, onItemClick }) => {
+const ContainerItem = ({
+  container,
+  allContainers = [],
+  themeColor,
+  onItemClick,
+  onRetrieve,
+  onMove,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Bail early if not a container
   if (!container || !container.container) {
     return null;
   }
+
+  // Other containers the player carries — the move-between targets.
+  const otherContainers = (allContainers || []).filter(
+    (c) => c && c.uid != null && c.uid !== container.uid
+  );
   
   const { name, quantity = 1 } = container;
   const { capacity, ignored = 0, contents = [] } = container.container;
@@ -98,6 +110,7 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
                 <th style={{ backgroundColor: themeColor }}>Item</th>
                 <th style={{ backgroundColor: themeColor }}>Qty</th>
                 <th style={{ backgroundColor: themeColor }}>Bulk</th>
+                <th style={{ backgroundColor: themeColor }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -118,6 +131,35 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
                   <td>{item.quantity || 1}</td>
                   <td>
                     {formatBulk(item.weight || 0)}
+                  </td>
+                  <td className="contents-actions">
+                    {item.uid != null && (
+                      <>
+                        <button
+                          className="btn-small btn-secondary"
+                          data-testid={`stowed-${item.uid}-retrieve`}
+                          onClick={() => onRetrieve && onRetrieve(item.uid)}
+                        >
+                          Retrieve
+                        </button>{' '}
+                        {otherContainers.length > 0 && (
+                          <select
+                            aria-label={`stowed-${item.uid}-location`}
+                            defaultValue=""
+                            onChange={(e) =>
+                              e.target.value && onMove && onMove(item.uid, e.target.value)
+                            }
+                          >
+                            <option value="">Move to…</option>
+                            {otherContainers.map((c) => (
+                              <option key={c.uid} value={c.uid}>
+                                {c.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
