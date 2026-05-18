@@ -1,187 +1,157 @@
 import React, { useMemo, useState } from 'react';
 import { useCharacter } from '../../hooks/useCharacter';
-import { useSyncedState } from '../../hooks/useSyncedState';
+import { useLoadout } from '../../hooks/useLoadout';
 import ActionIcon from '../shared/ActionIcon';
-import ConfirmDialog from '../shared/ConfirmDialog';
-import { ITEM_STATE_LABEL } from '../../utils/itemState';
 import './HandsPanel.css';
 
-// Slice 3: live, player-driven loadout. Reads the effective tree from
-// useCharacter (authored ⊕ loadout) and writes per-entry overrides into the
-// durable session map cnmh_loadout_<characterId> = { [uid]: {state,container} }.
-// Setting an explicit state implies the item is on-person (container:null), so
-// it doubles as "retrieve from a container". Bulk updates live for everyone
-// because useCharacter recomputes from the same key.
-
-const STATE_OPTS = ['worn', 'held1', 'held2', 'dropped'];
+// Encounter tab: just the two hand slots + a SWAP flow. Everything else
+// (drop / pick up / stow / retrieve / unhand / release) lives in the Inventory
+// tab. Hands are derived from the effective tree; SWAP writes the loadout
+// atomically via useLoadout().setHands. Source is the character's currently
+// Worn items; an item bumped out of a hand returns to Worn.
 
 const HandsPanel = ({ character, characterColor }) => {
   const charData = useCharacter(character);
-  const cid = charData ? charData.id : (character && character.id);
-  const [, setLoadout] = useSyncedState(`cnmh_loadout_${cid || 'none'}`, {});
-  const [confirmReset, setConfirmReset] = useState(false);
+  const cid = charData ? charData.id : character && character.id;
+  const { setHands } = useLoadout(cid);
 
   const inventory = useMemo(
     () => (charData ? charData.inventory : []),
     [charData]
   );
 
-  // Top-level containers are the valid stow targets (depth-1 model).
-  const containers = useMemo(
-    () => inventory.filter((e) => e && e.container && Array.isArray(e.container.contents)),
+  // Current hand occupants from the effective tree.
+  const { slot1, slot2 } = useMemo(() => {
+    const two = inventory.find((e) => e && e.state === 'held2');
+    if (two) return { slot1: two, slot2: two };
+    const ones = inventory.filter((e) => e && e.state === 'held1');
+    const byHand = (h) => ones.find((e) => e.hand === h);
+    return {
+      slot1: byHand(1) || ones.find((e) => e.hand == null) || null,
+      slot2: byHand(2) || ones.filter((e) => e.hand == null)[1] || null,
+    };
+  }, [inventory]);
+
+  const wornItems = useMemo(
+    () => inventory.filter((e) => e && e.state === 'worn'),
     [inventory]
   );
 
-  // uid -> the container uid it currently sits in (for the location select).
-  const parentOf = useMemo(() => {
-    const m = {};
-    containers.forEach((c) =>
-      (c.container.contents || []).forEach((ch) => {
-        if (ch && ch.uid != null) m[ch.uid] = c.uid;
-      })
-    );
-    return m;
-  }, [containers]);
+  const [swapping, setSwapping] = useState(false);
+  const [pending, setPending] = useState({ h1: null, h2: null });
 
   if (!charData) return null;
 
-  const patch = (uid, p) =>
-    setLoadout((cur) => ({ ...(cur || {}), [uid]: { ...((cur || {})[uid] || {}), ...p } }));
-
-  // Any explicit state lands the item on-person (also retrieves it).
-  const setState = (uid, state) => patch(uid, { state, container: null });
-  const moveTo = (uid, containerUid) =>
-    patch(uid, { container: containerUid || null });
-
-  const handsRows = inventory.filter((e) => e && (e.state === 'held1' || e.state === 'held2'));
-  const handsUsed = handsRows.reduce((n, e) => n + (e.state === 'held2' ? 2 : 1), 0);
-
-  const containerOptions = (selfUid) =>
-    containers
-      .filter((c) => c.uid !== selfUid)
-      .map((c) => ({ value: c.uid, label: c.name || c.uid }));
-
-  const Row = ({ entry, stowed }) => {
-    const uid = entry.uid;
-    const isC = !!(entry.container && Array.isArray(entry.container.contents));
-    return (
-      <div className="hands-row" data-testid={`hands-${uid}`}>
-        <div className="hands-row-main">
-          <span className="hands-name">{entry.name}</span>
-          <span className="hands-state" data-testid={`hands-${uid}-badge`}>
-            {ITEM_STATE_LABEL[entry.state] || ITEM_STATE_LABEL.worn}
-          </span>
-        </div>
-        <div className="hands-row-controls">
-          {stowed ? (
-            <button
-              className="btn-small btn-secondary"
-              data-testid={`hands-${uid}-retrieve`}
-              onClick={() => setState(uid, 'worn')}
-              title="Retrieve to your person (2 actions)"
-            >
-              Retrieve <ActionIcon actionText="Two Actions" size="small" showTooltip={false} />
-            </button>
-          ) : (
-            <>
-              <label className="hands-ctl">
-                <span className="hands-ctl-label">State</span>
-                <select
-                  aria-label={`hands-${uid}-state`}
-                  value={STATE_OPTS.includes(entry.state) ? entry.state : 'worn'}
-                  onChange={(e) => setState(uid, e.target.value)}
-                >
-                  {STATE_OPTS.map((s) => (
-                    <option key={s} value={s}>
-                      {ITEM_STATE_LABEL[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {!isC && containers.length > 0 && (
-                <label className="hands-ctl">
-                  <span className="hands-ctl-label">Location</span>
-                  <select
-                    aria-label={`hands-${uid}-location`}
-                    value={parentOf[uid] || ''}
-                    onChange={(e) => moveTo(uid, e.target.value)}
-                  >
-                    <option value="">Carried (on person)</option>
-                    {containerOptions(uid).map((o) => (
-                      <option key={o.value} value={o.value}>
-                        Stow in {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    );
+  const openSwap = () => {
+    setPending({
+      h1: slot1 ? slot1.uid : null,
+      h2: slot2 ? slot2.uid : null,
+    });
+    setSwapping(true);
+  };
+  const cancel = () => setSwapping(false);
+  const confirm = () => {
+    setHands({ hand1: pending.h1, hand2: pending.h2 });
+    setSwapping(false);
   };
 
+  const nameFor = (uid) => {
+    if (!uid) return null;
+    const e = inventory.find((x) => x && x.uid === uid);
+    return e ? e.name : uid;
+  };
+  const assign = (hand, uid) =>
+    setPending((p) => ({ ...p, [hand]: p[hand] === uid ? null : uid }));
+
+  const Slot = ({ n, item }) => (
+    <div className="hands-slot" data-testid={`hands-slot-${n}`}>
+      <span className="hands-slot-label">Hand {n}</span>
+      <span className="hands-slot-item">{item ? item.name : 'Empty'}</span>
+    </div>
+  );
+
   return (
-    <section className="hands-panel" aria-label="hands and loadout">
+    <section className="hands-panel" aria-label="hands">
       <div className="hands-header">
-        <h3 style={{ color: characterColor }}>Hands &amp; Loadout</h3>
-        <button
-          className="btn-small btn-danger"
-          data-testid="hands-reset"
-          onClick={() => setConfirmReset(true)}
-        >
-          Reset to GM loadout
+        <h3 style={{ color: characterColor }}>Hands</h3>
+      </div>
+
+      <div className="hands-slots">
+        <Slot n={1} item={slot1} />
+        <Slot n={2} item={slot2} />
+      </div>
+
+      {!swapping ? (
+        <button className="btn-small btn-primary" data-testid="hands-swap" onClick={openSwap}>
+          Swap <ActionIcon actionText="One Action" size="small" showTooltip={false} />
         </button>
-      </div>
+      ) : (
+        <div className="hands-swap" data-testid="hands-swap-panel">
+          <div className="hands-pending">
+            <div>
+              <strong>Hand 1:</strong>{' '}
+              <span data-testid="hands-pending-1">{nameFor(pending.h1) || 'Empty'}</span>
+              {pending.h1 && (
+                <button
+                  className="btn-small btn-secondary"
+                  data-testid="hands-clear-1"
+                  onClick={() => setPending((p) => ({ ...p, h1: null }))}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div>
+              <strong>Hand 2:</strong>{' '}
+              <span data-testid="hands-pending-2">{nameFor(pending.h2) || 'Empty'}</span>
+              {pending.h2 && (
+                <button
+                  className="btn-small btn-secondary"
+                  data-testid="hands-clear-2"
+                  onClick={() => setPending((p) => ({ ...p, h2: null }))}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
 
-      <div className="hands-summary" data-testid="hands-summary">
-        {handsRows.length === 0 ? (
-          <span>Both hands free.</span>
-        ) : (
-          <>
-            <strong>In hand{handsRows.length > 1 ? 's' : ''}:</strong>{' '}
-            {handsRows.map((e) => `${e.name} (${ITEM_STATE_LABEL[e.state]})`).join(', ')}
-            {handsUsed > 2 && (
-              <span className="hands-warn"> — more than 2 hands' worth held!</span>
-            )}
-          </>
-        )}
-      </div>
+          <p className="hands-pick-hint">Choose worn items for each hand (same item in both = two-handed):</p>
+          <div className="hands-pick-list">
+            {wornItems.length === 0 && <p className="hands-empty">No worn items to draw.</p>}
+            {wornItems.map((e) => (
+              <div className="hands-pick-row" data-testid={`hands-pick-${e.uid}`} key={e.uid}>
+                <span className="hands-pick-name">{e.name}</span>
+                <span className="hands-pick-btns">
+                  <button
+                    className={`btn-small ${pending.h1 === e.uid ? 'btn-primary' : 'btn-secondary'}`}
+                    aria-label={`pick-${e.uid}-h1`}
+                    onClick={() => assign('h1', e.uid)}
+                  >
+                    Hand 1
+                  </button>
+                  <button
+                    className={`btn-small ${pending.h2 === e.uid ? 'btn-primary' : 'btn-secondary'}`}
+                    aria-label={`pick-${e.uid}-h2`}
+                    onClick={() => assign('h2', e.uid)}
+                  >
+                    Hand 2
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
 
-      <div className="hands-legend">
-        <ActionIcon actionText="One Action" size="small" showTooltip={false} /> draw / sheathe /
-        change a carried item&nbsp;·&nbsp;
-        <ActionIcon actionText="Two Actions" size="small" showTooltip={false} /> stow into or
-        retrieve from a container
-      </div>
-
-      <div className="hands-list">
-        {inventory.map((entry) => (
-          <React.Fragment key={entry.uid || entry.name}>
-            <Row entry={entry} stowed={false} />
-            {entry.container &&
-              Array.isArray(entry.container.contents) &&
-              entry.container.contents.map((ch) => (
-                <div className="hands-indent" key={ch.uid || ch.name}>
-                  <Row entry={ch} stowed />
-                </div>
-              ))}
-          </React.Fragment>
-        ))}
-      </div>
-
-      <ConfirmDialog
-        isOpen={confirmReset}
-        title="Reset to GM loadout"
-        message="Discard all live hand/placement changes for this character and return to the GM-authored loadout? This cannot be undone."
-        confirmLabel="Reset"
-        onConfirm={() => {
-          setLoadout({});
-          setConfirmReset(false);
-        }}
-        onCancel={() => setConfirmReset(false)}
-      />
+          <div className="hands-swap-actions">
+            <button className="btn-small btn-primary" data-testid="hands-confirm" onClick={confirm}>
+              Confirm
+            </button>
+            <button className="btn-small btn-secondary" data-testid="hands-cancel" onClick={cancel}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

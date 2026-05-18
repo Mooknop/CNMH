@@ -3,11 +3,14 @@
 // inventory display, Hands panel) reads this so the "real" item state is
 // consistent for everyone.
 //
-// loadout shape: { [entryUid]: { state?, container? } }
+// loadout shape: { [entryUid]: { state?, container?, hand? } }
 //   state     : 'worn'|'held1'|'held2'|'dropped'  (top-level only; an entry
 //               inside a container is always Stowed regardless)
 //   container : parent container entry's uid, or null = top-level.
 //               Absent ⇒ keep the authored placement.
+//   hand      : 1 | 2 — which hand a held1 item occupies (so the Encounter
+//               panel can render two distinct slots). Inert to Bulk/badges;
+//               carried through onto the effective entry when present.
 //
 // Constraints preserved from the authored model: containers never nest
 // (depth-1) — a container entry is always top-level, and a move whose target
@@ -70,6 +73,8 @@ export const buildEffectiveInventory = (resolvedInventory, loadout) => {
 
   const stateFor = (uid) =>
     normalizeItemState(uid != null && lo[uid] ? lo[uid].state : undefined);
+  const handFor = (uid) =>
+    uid != null && lo[uid] && lo[uid].hand ? { hand: lo[uid].hand } : null;
 
   // Rebuild immutably (never mutate the shared resolved objects). Top-level
   // state comes from the loadout (default Worn); contents are always Stowed.
@@ -82,10 +87,11 @@ export const buildEffectiveInventory = (resolvedInventory, loadout) => {
       return {
         ...entry,
         state: stateFor(uid),
+        ...handFor(uid),
         container: { ...entry.container, contents },
       };
     }
-    return { ...entry, state: stateFor(uid) };
+    return { ...entry, state: stateFor(uid), ...handFor(uid) };
   });
 };
 
