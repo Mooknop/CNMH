@@ -3,6 +3,7 @@ import React from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import { formatBulk } from '../../utils/InventoryUtils';
+import { ITEM_STATE_LABEL } from '../../utils/itemState';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
@@ -33,6 +34,15 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
             {formatBulk(item.weight || 0)}
           </span>
         </div>
+
+        {item.state && (
+          <div className="item-detail">
+            <span className="item-detail-label">State</span>
+            <span className="item-detail-value">
+              {ITEM_STATE_LABEL[item.state] || ITEM_STATE_LABEL.worn}
+            </span>
+          </div>
+        )}
 
         {item.price && (
           <div className="item-detail">
