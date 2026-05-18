@@ -2,9 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import HandsPanel from './HandsPanel';
 
-// Shared in-memory loadout store so the real useCharacter (effective tree) and
-// HandsPanel react together — a faithful end-to-end of the live layer without
-// a real WebSocket.
+// Shared in-memory loadout store so the real useCharacter (effective tree),
+// useLoadout (writer) and the panel all react together — a faithful
+// end-to-end of the live layer without a real WebSocket.
 jest.mock('../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
   const store = {};
@@ -27,9 +27,13 @@ jest.mock('../../hooks/useSyncedState', () => {
     useSyncedState,
     default: useSyncedState,
     __reset: () => Object.keys(store).forEach((k) => delete store[k]),
+    __set: (k, v) => {
+      store[k] = v;
+    },
+    __get: (k) => store[k],
   };
 });
-const { __reset } = require('../../hooks/useSyncedState');
+const sync = require('../../hooks/useSyncedState');
 
 const character = () => ({
   id: 'hero',
@@ -38,91 +42,98 @@ const character = () => ({
   abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
   inventory: [
     { uid: 'h-0', ref: 'sword', name: 'Longsword', weight: 1, quantity: 1 },
-    {
-      uid: 'h-1',
-      ref: 'backpack',
-      name: 'Backpack',
-      weight: 0.1,
-      quantity: 1,
-      container: {
-        capacity: 4,
-        ignored: 2,
-        contents: [{ uid: 'h-2', ref: 'torch', name: 'Torch', weight: 0.1, quantity: 5 }],
-      },
-    },
+    { uid: 'h-1', ref: 'shield', name: 'Shield', weight: 1, quantity: 1 },
+    { uid: 'h-2', ref: 'dagger', name: 'Dagger', weight: 0.1, quantity: 1 },
   ],
   feats: [],
 });
 
-beforeEach(() => __reset());
+beforeEach(() => sync.__reset());
 afterEach(() => jest.restoreAllMocks());
 
-const badge = (uid) => screen.getByTestId(`hands-${uid}-badge`).textContent;
+const slot = (n) => screen.getByTestId(`hands-slot-${n}`).textContent;
 
-describe('HandsPanel', () => {
-  it('renders the effective tree with derived state badges and empty hands', () => {
+describe('HandsPanel (slots + SWAP)', () => {
+  it('shows two empty slots and a Swap button when nothing is held', () => {
     render(<HandsPanel character={character()} />);
-    expect(badge('h-0')).toBe('Worn');
-    expect(badge('h-1')).toBe('Worn'); // the backpack itself
-    expect(badge('h-2')).toBe('Stowed'); // torch inside it
-    expect(screen.getByTestId('hands-summary')).toHaveTextContent('Both hands free');
+    expect(slot(1)).toMatch(/Hand 1.*Empty/);
+    expect(slot(2)).toMatch(/Hand 2.*Empty/);
+    expect(screen.getByTestId('hands-swap')).toBeInTheDocument();
   });
 
-  it('holds an item in two hands and reflects it in the summary', () => {
+  it('reflects already-held items from the effective tree in the slots', () => {
+    sync.__set('cnmh_loadout_hero', {
+      'h-0': { state: 'held1', hand: 1 },
+      'h-1': { state: 'held1', hand: 2 },
+    });
     render(<HandsPanel character={character()} />);
-    fireEvent.change(screen.getByLabelText('hands-h-0-state'), { target: { value: 'held2' } });
-    expect(badge('h-0')).toBe('Held in 2 Hands');
-    expect(screen.getByTestId('hands-summary')).toHaveTextContent('Longsword (Held in 2 Hands)');
+    expect(slot(1)).toMatch(/Longsword/);
+    expect(slot(2)).toMatch(/Shield/);
   });
 
-  it('drops an item', () => {
+  it('SWAP → assign one item per hand → Confirm puts them in hand', () => {
     render(<HandsPanel character={character()} />);
-    fireEvent.change(screen.getByLabelText('hands-h-0-state'), { target: { value: 'dropped' } });
-    expect(badge('h-0')).toBe('Dropped');
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    fireEvent.click(screen.getByLabelText('pick-h-0-h1'));
+    fireEvent.click(screen.getByLabelText('pick-h-1-h2'));
+    fireEvent.click(screen.getByTestId('hands-confirm'));
+    expect(slot(1)).toMatch(/Longsword/);
+    expect(slot(2)).toMatch(/Shield/);
+    const lo = sync.__get('cnmh_loadout_hero');
+    expect(lo['h-0']).toMatchObject({ state: 'held1', hand: 1 });
+    expect(lo['h-1']).toMatchObject({ state: 'held1', hand: 2 });
   });
 
-  it('stows a carried item into a container (becomes Stowed under it)', () => {
+  it('same item for both hands ⇒ Held in 2 Hands (occupies both slots)', () => {
     render(<HandsPanel character={character()} />);
-    fireEvent.change(screen.getByLabelText('hands-h-0-location'), { target: { value: 'h-1' } });
-    // sword is now stowed; its row renders with a Retrieve control
-    expect(badge('h-0')).toBe('Stowed');
-    expect(screen.getByTestId('hands-h-0-retrieve')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    fireEvent.click(screen.getByLabelText('pick-h-0-h1'));
+    fireEvent.click(screen.getByLabelText('pick-h-0-h2'));
+    fireEvent.click(screen.getByTestId('hands-confirm'));
+    expect(slot(1)).toMatch(/Longsword/);
+    expect(slot(2)).toMatch(/Longsword/);
+    // stored as held2 on the single uid (occupies both hands)
+    expect(sync.__get('cnmh_loadout_hero')['h-0']).toMatchObject({ state: 'held2' });
   });
 
-  it('retrieves a stowed item back onto the person (→ Worn)', () => {
+  it('Cancel discards the pending selection', () => {
     render(<HandsPanel character={character()} />);
-    expect(badge('h-2')).toBe('Stowed');
-    fireEvent.click(screen.getByTestId('hands-h-2-retrieve'));
-    expect(badge('h-2')).toBe('Worn');
-    // it now has a state selector (it is on-person)
-    expect(screen.getByLabelText('hands-h-2-state')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    fireEvent.click(screen.getByLabelText('pick-h-0-h1'));
+    fireEvent.click(screen.getByTestId('hands-cancel'));
+    expect(slot(1)).toMatch(/Empty/);
+    expect(slot(2)).toMatch(/Empty/);
   });
 
-  it('un-holding returns an item to Worn (not held, not dropped)', () => {
+  it('an item bumped out of a hand returns to Worn (re-selectable)', () => {
+    sync.__set('cnmh_loadout_hero', { 'h-0': { state: 'held1', hand: 1 } });
     render(<HandsPanel character={character()} />);
-    fireEvent.change(screen.getByLabelText('hands-h-0-state'), { target: { value: 'held1' } });
-    expect(badge('h-0')).toBe('Held in 1 Hand');
-    fireEvent.change(screen.getByLabelText('hands-h-0-state'), { target: { value: 'worn' } });
-    expect(badge('h-0')).toBe('Worn');
+    expect(slot(1)).toMatch(/Longsword/);
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    // replace Hand 1 (currently Longsword) with the Dagger
+    fireEvent.click(screen.getByLabelText('pick-h-2-h1'));
+    fireEvent.click(screen.getByTestId('hands-confirm'));
+    expect(slot(1)).toMatch(/Dagger/);
+    expect(sync.__get('cnmh_loadout_hero')['h-0']).toMatchObject({ state: 'worn' });
+    // Longsword is Worn again, so it reappears as a pickable worn item.
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    expect(screen.getByLabelText('pick-h-0-h1')).toBeInTheDocument();
   });
 
-  it('Reset to GM loadout clears every live change after confirmation', () => {
+  it('Clear empties a pending hand; Confirm leaves that hand empty', () => {
+    sync.__set('cnmh_loadout_hero', { 'h-0': { state: 'held1', hand: 1 } });
     render(<HandsPanel character={character()} />);
-    fireEvent.change(screen.getByLabelText('hands-h-0-state'), { target: { value: 'dropped' } });
-    expect(badge('h-0')).toBe('Dropped');
-
-    fireEvent.click(screen.getByTestId('hands-reset'));
-    expect(
-      screen.getByText(/Discard all live hand\/placement changes/i)
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-
-    expect(badge('h-0')).toBe('Worn'); // back to authored
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    expect(screen.getByTestId('hands-pending-1')).toHaveTextContent('Longsword');
+    fireEvent.click(screen.getByTestId('hands-clear-1'));
+    expect(screen.getByTestId('hands-pending-1')).toHaveTextContent('Empty');
+    fireEvent.click(screen.getByTestId('hands-confirm'));
+    expect(slot(1)).toMatch(/Empty/);
   });
 
-  it('shows informational 1-/2-action guidance', () => {
+  it('no Reset / State / Location controls remain', () => {
     render(<HandsPanel character={character()} />);
-    expect(screen.getByText(/draw \/ sheathe/i)).toBeInTheDocument();
-    expect(screen.getByText(/retrieve from a container/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('hands-reset')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Reset to GM loadout/i)).not.toBeInTheDocument();
   });
 });

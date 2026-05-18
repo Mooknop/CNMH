@@ -128,4 +128,25 @@ describe('buildEffectiveInventory', () => {
     buildEffectiveInventory(input, { 'c-0': { container: 'c-1', state: 'held1' } });
     expect(JSON.stringify(input)).toBe(snapshot);
   });
+
+  // Slice B: `hand` is carried onto the effective entry for the two-slot UI.
+  it('carries `hand` through onto a held1 entry; omits it otherwise', () => {
+    const eff = buildEffectiveInventory(tree(), {
+      'c-0': { state: 'held1', hand: 2 },
+    });
+    const sword = find(eff, 'c-0');
+    expect(sword.state).toBe('held1');
+    expect(sword.hand).toBe(2);
+    // an entry with no hand override has no `hand` key
+    expect('hand' in find(eff, 'c-1')).toBe(false);
+  });
+
+  it('does not stamp `hand` on stowed container contents', () => {
+    const eff = buildEffectiveInventory(tree(), {
+      'c-2': { hand: 1 }, // nonsensical on a stowed item — must be ignored
+    });
+    const torch = find(eff, 'c-2');
+    expect(torch.state).toBe('stowed');
+    expect('hand' in torch).toBe(false);
+  });
 });
