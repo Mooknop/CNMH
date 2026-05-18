@@ -22,6 +22,12 @@ export const calculateItemsBulk = (items) => {
 if (!items || !Array.isArray(items)) return 0;
 
 return items.reduce((total, item) => {
+    // A dropped item is on the ground — it (and anything inside it) stops
+    // counting toward carried Bulk. `state` is the effective state stamped by
+    // buildEffectiveInventory; absent on raw inventory ⇒ never 'dropped', so
+    // this is backward-compatible.
+    if (item && item.state === 'dropped') return total;
+
     // Item weight is already in Bulk units
     const itemBulk = (item.weight || 0) * (item.quantity || 1);
     

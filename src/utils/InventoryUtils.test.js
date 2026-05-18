@@ -120,6 +120,44 @@ describe('InventoryUtils', () => {
       ];
       expect(calculateItemsBulk(items)).toBe(3); // 1 + 1 + 1
     });
+
+    // Slice 2: a dropped entry (and anything inside it) stops counting.
+    it('excludes a dropped top-level item from carried bulk', () => {
+      const items = [
+        { weight: 2, quantity: 1, state: 'worn' },
+        { weight: 3, quantity: 1, state: 'dropped' },
+        { weight: 1, quantity: 2, state: 'held1' },
+      ];
+      expect(calculateItemsBulk(items)).toBe(4); // 2 + (skip 3) + 1*2
+    });
+
+    it('excludes a dropped container together with its whole subtree', () => {
+      const items = [
+        {
+          weight: 1,
+          state: 'dropped',
+          container: { ignored: 0, contents: [{ weight: 5, quantity: 1, state: 'stowed' }] },
+        },
+        { weight: 2, quantity: 1, state: 'worn' },
+      ];
+      expect(calculateItemsBulk(items)).toBe(2); // whole dropped backpack ignored
+    });
+
+    it('counts worn/held/stowed exactly as before (state is otherwise inert)', () => {
+      const withState = [
+        { weight: 1, quantity: 1, state: 'held2' },
+        {
+          weight: 1,
+          state: 'worn',
+          container: { ignored: 2, contents: [{ weight: 1, quantity: 5, state: 'stowed' }] },
+        },
+      ];
+      const withoutState = [
+        { weight: 1, quantity: 1 },
+        { weight: 1, container: { ignored: 2, contents: [{ weight: 1, quantity: 5 }] } },
+      ];
+      expect(calculateItemsBulk(withState)).toBe(calculateItemsBulk(withoutState));
+    });
   });
 
   describe('calculateContainerBulk', () => {
