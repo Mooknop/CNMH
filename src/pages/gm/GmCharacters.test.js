@@ -4,6 +4,7 @@ import GmCharacters from './GmCharacters';
 
 jest.mock('../../contexts/ContentContext', () => ({ useContent: jest.fn() }));
 jest.mock('../../utils/gmApi', () => ({ saveDocument: jest.fn(), deleteDocument: jest.fn() }));
+jest.mock('../../contexts/TraitContext', () => ({ useTrait: () => ({ openTraitModal: jest.fn() }) }));
 const { useContent } = require('../../contexts/ContentContext');
 const { saveDocument, deleteDocument } = require('../../utils/gmApi');
 
@@ -79,6 +80,21 @@ const allUids = (list, acc = []) => {
   return acc;
 };
 
+// The character form is now split into subtabs; only the active subtab's
+// fields are mounted (state is lifted so switching never loses edits). These
+// helpers drive the new modal-based inventory UI.
+const gotoTab = (form, label) =>
+  fireEvent.click(within(form).getByRole('button', { name: label }));
+const openItem = (form, i) =>
+  fireEvent.click(within(form).getByTestId(`item-${i}`).querySelector('.gm-inv-main'));
+const closeEditor = (form) =>
+  fireEvent.click(within(form).getByRole('button', { name: 'Done' }));
+// A CatalogPickerModal is open: choose a catalog item by name and submit it.
+const pickCatalog = (form, name) => {
+  fireEvent.click(within(form).getByRole('button', { name }));
+  fireEvent.click(within(form).getByRole('button', { name: 'Add to character' }));
+};
+
 afterEach(() => jest.restoreAllMocks());
 
 describe('GmCharacters', () => {
@@ -98,11 +114,16 @@ describe('GmCharacters', () => {
     setContent([pellias]);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Feats');
     expect(within(form).getByLabelText('feats-0-name')).toHaveValue('Ranger Dedication');
     expect(within(form).getByLabelText('feats-0-json').value).toContain('Archetype');
+    gotoTab(form, 'Strikes');
     expect(within(form).getByLabelText('strikes-0-name')).toHaveValue('Pick');
+    gotoTab(form, 'Actions');
     expect(within(form).getByLabelText('actions-0-name')).toHaveValue('Exploit Vulnerability');
+    gotoTab(form, 'Familiar');
     expect(within(form).getByLabelText('familiar-json').value).toContain('Lazarus');
+    gotoTab(form, 'Advanced');
     const adv = within(form).getByLabelText('advanced-json').value;
     expect(adv).toContain('crafting');
     expect(adv).not.toContain('feats');
@@ -114,6 +135,7 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Feats');
     fireEvent.change(within(form).getByLabelText('feats-0-name'), { target: { value: 'Ranger Dedication+' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -132,6 +154,7 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Feats');
     fireEvent.click(within(form).getByText('Add feats entry'));
     fireEvent.change(within(form).getByLabelText('feats-1-name'), { target: { value: 'Toughness' } });
     fireEvent.click(within(form).getAllByText('Remove feats entry')[0]);
@@ -144,6 +167,7 @@ describe('GmCharacters', () => {
     setContent([pellias]);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Feats');
     fireEvent.change(within(form).getByLabelText('feats-0-json'), { target: { value: '{ broken' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Feats entry "Ranger Dedication" has invalid JSON/i));
@@ -155,6 +179,7 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Familiar');
     // izzy has no familiar -> add it
     fireEvent.click(within(form).getByText('Add familiar'));
     fireEvent.change(within(form).getByLabelText('familiar-json'), { target: { value: '{ bad' } });
@@ -183,8 +208,10 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-izzy');
-    fireEvent.change(within(form).getByLabelText('sc-tradition'), { target: { value: 'Arcane' } });
+    // skills live on the (default) Stats tab; spellcasting on its own tab.
     fireEvent.change(within(form).getByLabelText('arcana'), { target: { value: '2' } });
+    gotoTab(form, 'Spellcasting');
+    fireEvent.change(within(form).getByLabelText('sc-tradition'), { target: { value: 'Arcane' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const data = saveDocument.mock.calls[0][2];
@@ -201,6 +228,7 @@ describe('GmCharacters', () => {
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Name is required/));
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Pellias' } });
+    gotoTab(form, 'Advanced');
     fireEvent.change(within(form).getByLabelText('advanced-json'), { target: { value: '[]' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/must be an object/i));
@@ -229,17 +257,19 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
+    // identity/abilities/saves/lore are on the default Stats tab
     fireEvent.change(within(form).getByLabelText('ancestry'), { target: { value: 'Human' } });
     fireEvent.change(within(form).getByLabelText('maxHp'), { target: { value: '62' } });
     fireEvent.change(within(form).getByLabelText('strength'), { target: { value: '20' } });
     fireEvent.change(within(form).getByLabelText('will'), { target: { value: '12' } });
-    fireEvent.change(within(form).getByLabelText('class-proficiency'), { target: { value: '2' } });
-    fireEvent.change(within(form).getByLabelText('simple'), { target: { value: '2' } });
-    fireEvent.change(within(form).getByLabelText('light'), { target: { value: '1' } });
     fireEvent.click(within(form).getByText('Add lore'));
     fireEvent.change(within(form).getByLabelText('lore-0-name'), { target: { value: 'Heraldry' } });
     fireEvent.change(within(form).getByLabelText('lore-0-proficiency'), { target: { value: '2' } });
     fireEvent.click(within(form).getByText('Remove')); // remove the lore row
+    gotoTab(form, 'Proficiencies');
+    fireEvent.change(within(form).getByLabelText('class-proficiency'), { target: { value: '2' } });
+    fireEvent.change(within(form).getByLabelText('simple'), { target: { value: '2' } });
+    fireEvent.change(within(form).getByLabelText('light'), { target: { value: '1' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const data = saveDocument.mock.calls[0][2];
@@ -257,6 +287,7 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Spellcasting');
     // izzy already has slot-0 ({1:4}); add two more, edit one, remove one
     fireEvent.click(within(form).getByText('Add slot rank'));
     fireEvent.click(within(form).getByText('Add slot rank'));
@@ -285,10 +316,13 @@ describe('GmCharacters', () => {
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Actions');
     fireEvent.click(within(form).getByText('Add actions entry'));
     fireEvent.change(within(form).getByLabelText('actions-1-name'), { target: { value: 'Stride' } });
     fireEvent.click(within(form).getAllByText(/Remove actions entry/)[1]);
+    gotoTab(form, 'Familiar');
     fireEvent.click(within(form).getByText('Remove familiar'));
+    gotoTab(form, 'Animal Companion');
     fireEvent.click(within(form).getByText('Add animal companion'));
     fireEvent.change(within(form).getByLabelText('animalCompanion-json'), { target: { value: '{"name":"Rex"}' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -393,19 +427,21 @@ describe('GmCharacters', () => {
       ],
     };
 
-    it('renders an editable ref row (picker + quantity + invested) with a catalog summary', () => {
+    it('shows one-line rows; clicking opens an editor with quantity/invested + contents', () => {
       setContent([refChar]);
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-refguy');
-      expect(within(form).getByLabelText('item-0-ref')).toHaveValue('minor-elixir-of-life');
+      gotoTab(form, 'Inventory');
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent(/Minor Elixir of Life/);
+      // The ref row has no inline picker/qty controls — they live in the modal.
+      expect(within(form).queryByLabelText('item-0-quantity')).not.toBeInTheDocument();
+      openItem(form, 0);
       expect(within(form).getByLabelText('item-0-quantity')).toHaveValue(2);
       expect(within(form).getByLabelText('item-0-invested')).toBeChecked();
-      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent(/Minor Elixir of Life/);
-      // No bespoke inline editors for a reference.
-      expect(within(form).queryByLabelText('item-0-name')).not.toBeInTheDocument();
-      // The container ref shows an editable nested contents list.
+      closeEditor(form);
+      // The container row opens an editor that lists its nested contents.
+      openItem(form, 1);
       expect(within(form).getByTestId('item-1-contents')).toBeInTheDocument();
-      expect(within(form).getByLabelText('item-1-c-0-ref')).toHaveValue('torch');
       expect(within(form).getByLabelText('item-1-c-0-quantity')).toHaveValue(5);
     });
 
@@ -414,8 +450,11 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-refguy');
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
       fireEvent.change(within(form).getByLabelText('item-0-quantity'), { target: { value: '5' } });
       fireEvent.click(within(form).getByLabelText('item-0-invested')); // was true -> false
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(stripUids(saveDocument.mock.calls[0][2].inventory)).toEqual([
@@ -424,33 +463,33 @@ describe('GmCharacters', () => {
       ]);
     });
 
-    it('repointing the picker to another catalog item drops stale carry-over', async () => {
+    it('repointing a row via the picker drops stale carry-over', async () => {
       setContent([refChar]);
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-refguy');
-      fireEvent.change(within(form).getByLabelText('item-1-ref'), { target: { value: 'torch' } });
+      gotoTab(form, 'Inventory');
+      openItem(form, 1);
+      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      pickCatalog(form, 'Torch');
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       // backpack's container contents must NOT carry onto the torch ref.
       expect(stripUids(saveDocument.mock.calls[0][2].inventory[1])).toEqual({ ref: 'torch', quantity: 1 });
     });
 
-    it('Add item creates a blank ref row (never inline) and blocks save until chosen', async () => {
+    it('Add item opens the picker and appends the chosen ref (mints a uid)', async () => {
       const empty = { ...refChar, id: 'empty', name: 'Empty', inventory: [] };
       setContent([empty]);
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-empty');
-      fireEvent.click(within(form).getByText('Add item'));
-      expect(within(form).getByLabelText('item-0-ref')).toBeInTheDocument();
-      expect(within(form).queryByLabelText('item-0-name')).not.toBeInTheDocument();
-      fireEvent.click(within(form).getByText('Save'));
-      await waitFor(() =>
-        expect(within(form).getByRole('alert')).toHaveTextContent(/choose a catalog item/i)
-      );
-      expect(saveDocument).not.toHaveBeenCalled();
-      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
+      gotoTab(form, 'Inventory');
+      expect(within(form).queryByTestId('item-0')).not.toBeInTheDocument();
+      fireEvent.click(within(form).getByRole('button', { name: 'Add item' }));
+      pickCatalog(form, 'Torch');
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent(/Torch/);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const added = saveDocument.mock.calls[0][2].inventory;
@@ -460,61 +499,16 @@ describe('GmCharacters', () => {
       expect(added[0].uid).toMatch(/^e-/);
     });
 
-    it('Duplicate to new catalog item creates a catalog doc and repoints the ref', async () => {
-      setContent([refChar]);
-      saveDocument.mockResolvedValue({ ok: true });
-      render(<GmCharacters />);
-      const form = screen.getByTestId('character-form-refguy');
-      const card0 = within(form).getByTestId('item-0');
-      fireEvent.change(within(card0).getByLabelText('item-0-fork-name'), {
-        target: { value: 'Major Elixir of Life' },
-      });
-      fireEvent.click(within(card0).getByText('Duplicate to new catalog item'));
-      await waitFor(() =>
-        expect(saveDocument).toHaveBeenCalledWith('item', 'major-elixir-of-life', {
-          id: 'major-elixir-of-life',
-          name: 'Major Elixir of Life',
-          price: 3,
-          weight: 0.1,
-          traits: ['Healing'],
-        })
-      );
-      expect(await within(form).findByRole('status')).toHaveTextContent(/Created catalog item/i);
-      expect(within(form).getByLabelText('item-0-ref')).toHaveValue('major-elixir-of-life');
-      fireEvent.click(within(form).getByText('Save'));
-      await waitFor(() =>
-        expect(saveDocument).toHaveBeenCalledWith('character', 'refguy', expect.anything())
-      );
-      const charCall = saveDocument.mock.calls.find((c) => c[0] === 'character');
-      expect(stripUids(charCall[2].inventory[0])).toEqual({ ref: 'major-elixir-of-life', quantity: 2, invested: true });
-    });
-
-    it('fork is rejected without a name or on an id collision', async () => {
-      setContent([refChar]);
-      render(<GmCharacters />);
-      const form = screen.getByTestId('character-form-refguy');
-      const card0 = within(form).getByTestId('item-0');
-      fireEvent.click(within(card0).getByText('Duplicate to new catalog item'));
-      await waitFor(() =>
-        expect(within(form).getByRole('alert')).toHaveTextContent(/Enter a name/i)
-      );
-      fireEvent.change(within(card0).getByLabelText('item-0-fork-name'), {
-        target: { value: 'Backpack' }, // slug 'backpack' already in catalog
-      });
-      fireEvent.click(within(card0).getByText('Duplicate to new catalog item'));
-      await waitFor(() =>
-        expect(within(form).getByRole('alert')).toHaveTextContent(/already exists/i)
-      );
-      expect(saveDocument).not.toHaveBeenCalled();
-    });
-
     it('flags a legacy inline item but still edits and round-trips it', async () => {
       setContent([pellias]); // pellias has an inline { name:'Full Plate', ... }
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
       expect(within(form).getByTestId('item-0-legacy')).toBeInTheDocument();
       fireEvent.change(within(form).getByLabelText('item-0-name'), { target: { value: 'Full Plate +1' } });
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const inv = saveDocument.mock.calls[0][2].inventory;
@@ -551,16 +545,19 @@ describe('GmCharacters', () => {
     const setPacked = () =>
       useContent.mockReturnValue({ rawCharacters: [packed], items: catWithGourd });
 
-    it('renders each container’s contents as nested editable ref rows', () => {
+    it('renders each container’s contents as nested editable rows', () => {
       setPacked();
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-packrat');
-      expect(within(form).getByLabelText('item-0-c-0-ref')).toHaveValue('torch');
-      expect(within(form).getByLabelText('item-0-c-1-ref')).toHaveValue('rope-50ft');
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
+      expect(within(form).getByLabelText('item-0-c-0-quantity')).toHaveValue(5);
       expect(within(form).getByLabelText('item-0-c-1-quantity')).toHaveValue(1);
+      closeEditor(form);
       // Empty container still shows the (empty) contents editor.
+      openItem(form, 1);
       expect(within(form).getByTestId('item-1-contents')).toBeInTheDocument();
-      expect(within(form).queryByLabelText('item-1-c-0-ref')).not.toBeInTheDocument();
+      expect(within(form).queryByLabelText('item-1-c-0-quantity')).not.toBeInTheDocument();
     });
 
     it('round-trips a packed backpack unchanged on save (lossless)', async () => {
@@ -568,6 +565,7 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-packrat');
+      gotoTab(form, 'Inventory');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(stripUids(saveDocument.mock.calls[0][2].inventory)).toEqual(packed.inventory);
@@ -578,15 +576,16 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-packrat');
-      const backpack = within(form).getByTestId('item-0-contents');
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
       // edit torch qty 5 -> 9
-      fireEvent.change(within(backpack).getByLabelText('item-0-c-0-quantity'), { target: { value: '9' } });
+      fireEvent.change(within(form).getByLabelText('item-0-c-0-quantity'), { target: { value: '9' } });
       // remove rope (second content)
-      const rope = within(form).getByTestId('item-0-c-1');
-      fireEvent.click(within(rope).getByText('Remove item'));
-      // add a new content and pick it
-      fireEvent.click(within(backpack).getByText('Add item to container'));
-      fireEvent.change(within(form).getByLabelText('item-0-c-1-ref'), { target: { value: 'minor-elixir-of-life' } });
+      fireEvent.click(within(form).getByLabelText('remove item-0-c-1'));
+      // add a new content via the shared picker
+      fireEvent.click(within(form).getByRole('button', { name: 'Add item to container' }));
+      pickCatalog(form, 'Minor Elixir of Life');
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(stripUids(saveDocument.mock.calls[0][2].inventory[0])).toEqual({
@@ -606,7 +605,11 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-packrat');
-      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
+      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      pickCatalog(form, 'Torch');
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const inv = saveDocument.mock.calls[0][2].inventory;
@@ -619,7 +622,11 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-packrat');
-      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'gourd-head' } });
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
+      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      pickCatalog(form, 'Gourd Head');
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(stripUids(saveDocument.mock.calls[0][2].inventory[0])).toEqual({
@@ -660,6 +667,7 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-uidguy');
+      gotoTab(form, 'Inventory');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const inv = saveDocument.mock.calls[0][2].inventory;
@@ -678,7 +686,11 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-uidguy');
-      fireEvent.change(within(form).getByLabelText('item-0-ref'), { target: { value: 'torch' } });
+      gotoTab(form, 'Inventory');
+      openItem(form, 0);
+      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      pickCatalog(form, 'Torch');
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const e0 = saveDocument.mock.calls[0][2].inventory[0];
@@ -693,9 +705,11 @@ describe('GmCharacters', () => {
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-uidguy');
-      const backpack = within(form).getByTestId('item-1-contents');
-      fireEvent.click(within(backpack).getByText('Add item to container'));
-      fireEvent.change(within(form).getByLabelText('item-1-c-1-ref'), { target: { value: 'rope-50ft' } });
+      gotoTab(form, 'Inventory');
+      openItem(form, 1);
+      fireEvent.click(within(form).getByRole('button', { name: 'Add item to container' }));
+      pickCatalog(form, 'Rope (50 ft.)');
+      closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       const contents = saveDocument.mock.calls[0][2].inventory[1].container.contents;

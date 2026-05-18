@@ -4,8 +4,11 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { newEntryUid } from '../../utils/uid';
 import { SKILL_ABILITY_MAP, getProficiencyLabel } from '../../utils/CharacterUtils';
+import { formatBulk } from '../../utils/InventoryUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
+import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
+import ItemEditModal from '../../components/gm/ItemEditModal';
 import './gm.css';
 
 // 5a: identity/abilities/saves. 5b: skills + proficiencies. 5c: the top-level
@@ -375,140 +378,52 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
   );
 };
 
-// One catalog-reference inventory row, reused recursively for a container's
-// contents (depth 1; deeper still round-trips but isn't surfaced — the data
-// is at most one level). Controlled: the parent owns the form item and gets
-// merge patches. Fork is offered at the top level only.
-const RefRow = ({ item, tag, catalogList, busy, depth, showFork, onPatch, onRemove, onFork }) => {
-  const sel = catalogList.find((c) => String(c.id) === String(item.ref));
-  const containerCatalog = !!(sel && sel.container);
-  const showContents =
-    depth < 1 &&
-    (containerCatalog || item.isContainer || (item.contents && item.contents.length > 0));
-
-  const changeRef = (newRef) => {
-    const s = catalogList.find((c) => String(c.id) === String(newRef));
-    const willContain = !!(s && s.container);
-    onPatch({
-      ref: newRef,
-      isContainer: willContain,
-      contents: willContain ? item.contents || [] : [],
-    });
-  };
-  const setContent = (j, patch) =>
-    onPatch({ contents: item.contents.map((c, k) => (k === j ? { ...c, ...patch } : c)) });
-  const addContent = () =>
-    onPatch({ contents: [...(item.contents || []), itemToForm({ ref: '', quantity: 1 })] });
-  const rmContent = (j) =>
-    onPatch({ contents: item.contents.filter((_, k) => k !== j) });
+// One compact inventory row: a clickable body (name · ×qty · Bulk · flags)
+// that opens the edit modal, and a red ✕ at the far right that removes the
+// entry. Controlled by the parent form; containers are a single row here —
+// their contents are edited inside the modal.
+const ItemRow = ({ item, tag, catalogList, onEdit, onRemove }) => {
+  const isRef = !!item.__ref;
+  const sel = isRef ? catalogList.find((c) => String(c.id) === String(item.ref)) : null;
+  const known = isRef && !!sel;
+  const label = isRef
+    ? sel
+      ? sel.name
+      : `${item.ref || '(none)'} (not in catalog)`
+    : item.name || '(unnamed item)';
+  const qty =
+    item.quantity === '' || item.quantity == null ? 1 : item.quantity;
+  const bulk = isRef
+    ? sel
+      ? formatBulk(sel.weight || 0)
+      : '—'
+    : formatBulk(Number(item.weight) || 0);
 
   return (
-    <div className="gm-card" data-testid={tag} key={tag}>
-      <div className="gm-row">
-        <div className="form-group">
-          <label>catalog item</label>
-          <select
-            aria-label={`${tag}-ref`}
-            value={item.ref}
-            onChange={(e) => changeRef(e.target.value)}
-          >
-            <option value="">— choose —</option>
-            {!sel && item.ref ? (
-              <option value={item.ref}>{item.ref} (not in catalog)</option>
-            ) : null}
-            {catalogList.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name || c.id}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>quantity</label>
-          <input
-            aria-label={`${tag}-quantity`}
-            type="number"
-            value={item.quantity}
-            onChange={(e) => onPatch({ quantity: e.target.value })}
-          />
-        </div>
-        <div className="form-group">
-          <label>
-            <input
-              type="checkbox"
-              aria-label={`${tag}-invested`}
-              checked={item.invested}
-              onChange={(e) => onPatch({ invested: e.target.checked })}
-            />{' '}
-            invested
-          </label>
-        </div>
-      </div>
-      {sel ? (
-        <p className="gm-count" data-testid={`${tag}-summary`}>
-          {sel.name} · price {sel.price != null ? sel.price : 0} · Bulk{' '}
-          {sel.weight != null ? sel.weight : 0}
-          {Array.isArray(sel.traits) && sel.traits.length ? ` · ${sel.traits.join(', ')}` : ''}
-          {sel.scroll ? ' · scroll' : ''}
-          {sel.wand ? ' · wand' : ''}
-          {sel.container ? ' · container' : ''}
-        </p>
-      ) : (
-        <p className="gm-warn" data-testid={`${tag}-unknown`}>
-          Unknown catalog item “{item.ref || '(none)'}”. Pick one above.
-        </p>
-      )}
-
-      {showContents && (
-        <div className="gm-card" data-testid={`${tag}-contents`}>
-          <p className="gm-count">Container contents</p>
-          {(item.contents || []).map((c, j) =>
-            c.__ref ? (
-              <RefRow
-                key={j}
-                item={c}
-                tag={`${tag}-c-${j}`}
-                catalogList={catalogList}
-                busy={busy}
-                depth={depth + 1}
-                showFork={false}
-                onPatch={(p) => setContent(j, p)}
-                onRemove={() => rmContent(j)}
-              />
-            ) : (
-              <div className="gm-card" data-testid={`${tag}-c-${j}`} key={j}>
-                <p className="gm-warn">
-                  Legacy inline item — edit it at the top level, not inside a container.
-                </p>
-                <button className="btn-small btn-danger" onClick={() => rmContent(j)}>
-                  Remove
-                </button>
-              </div>
-            )
-          )}
-          <button className="btn-small btn-secondary" onClick={addContent}>
-            Add item to container
-          </button>
-        </div>
-      )}
-
-      {showFork && (
-        <div className="gm-row">
-          <div className="form-group">
-            <label>duplicate to new catalog item (name)</label>
-            <input
-              aria-label={`${tag}-fork-name`}
-              value={item.forkName || ''}
-              onChange={(e) => onPatch({ forkName: e.target.value })}
-            />
-          </div>
-          <button className="btn-small btn-secondary" disabled={busy} onClick={onFork}>
-            Duplicate to new catalog item
-          </button>
-        </div>
-      )}
-      <button className="btn-small btn-danger" onClick={onRemove}>
-        Remove item
+    <div className="gm-inv-row" data-testid={tag}>
+      <button type="button" className="gm-inv-main" onClick={onEdit}>
+        <span
+          className={`gm-inv-label${known ? '' : ' gm-warn'}`}
+          data-testid={
+            known ? `${tag}-summary` : isRef ? `${tag}-unknown` : undefined
+          }
+        >
+          {label}
+        </span>
+        <span className="gm-inv-meta">
+          ×{qty} · Bulk {bulk}
+          {isRef && item.invested ? ' · invested' : ''}
+          {isRef && (item.isContainer || (sel && sel.container)) ? ' · container' : ''}
+          {!isRef ? ' · legacy' : ''}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="gm-inv-x"
+        aria-label={`remove ${tag}`}
+        onClick={onRemove}
+      >
+        ✕
       </button>
     </div>
   );
@@ -518,10 +433,12 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const [notice, setNotice] = useState(null);
   const catalogList = Array.isArray(catalog) ? catalog : [];
   const [confirm, setConfirm] = useState(null); // null | {kind:'delete'} | {kind:'collision',id,payload}
   const [showHistory, setShowHistory] = useState(false);
+  const [tab, setTab] = useState('stats'); // active subtab
+  const [editing, setEditing] = useState(null); // { path:[i] } | null — open item editor
+  const [picker, setPicker] = useState(null); // { kind:'top' } | { kind:'container', path } | { kind:'change', path } | null
 
   const setStr = (k, v) => setF((c) => ({ ...c, strings: { ...c.strings, [k]: v } }));
   const setNum = (k, v) => setF((c) => ({ ...c, nums: { ...c.nums, [k]: v } }));
@@ -544,52 +461,83 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
   const addSpell = () => setSc({ spells: [...sc.spells, spellToForm({ name: '', level: 0, baseLevel: 1 })] });
   const rmSpell = (i) => setSc({ spells: sc.spells.filter((_, idx) => idx !== i) });
 
-  const setItem = (i, patch) =>
-    setF((c) => ({ ...c, inventory: c.inventory.map((it, idx) => (idx === i ? { ...it, ...patch } : it)) }));
-  // New rows are catalog references (the GM UI never authors inline items).
-  const addItem = () => setF((c) => ({ ...c, inventory: [...c.inventory, itemToForm({ ref: '', quantity: 1 })] }));
-  const rmItem = (i) => setF((c) => ({ ...c, inventory: c.inventory.filter((_, idx) => idx !== i) }));
+  // Inventory entries live at a path: [i] for a top-level row, [i, j] for the
+  // j-th content of a container row (depth 1 — the data is at most one level).
+  // All edits flow through these path helpers so the row list, the edit modal
+  // and the catalog picker share one source of truth (the lifted form state).
+  const patchAt = (path, patch) =>
+    setF((c) => {
+      const inv = c.inventory.slice();
+      if (path.length === 1) {
+        inv[path[0]] = { ...inv[path[0]], ...patch };
+      } else {
+        const [i, j] = path;
+        const parent = inv[i];
+        const contents = parent.contents.slice();
+        contents[j] = { ...contents[j], ...patch };
+        inv[i] = { ...parent, contents };
+      }
+      return { ...c, inventory: inv };
+    });
 
-  // Fork the referenced catalog item into a NEW catalog doc and repoint the
-  // row at it (replaces the old inline-fork — the catalog stays the only
-  // source of item definitions). The new doc is saved immediately; the GM
-  // still saves the character to persist the repointed ref.
-  const forkCatalog = async (i) => {
-    const it = f.inventory[i];
-    const src = catalogList.find((c) => String(c.id) === String(it.ref));
-    if (!src) {
-      setError('Pick a catalog item before duplicating it.');
-      return;
-    }
-    const name = String(it.forkName || '').trim();
-    if (!name) {
-      setError('Enter a name for the new catalog item.');
-      return;
-    }
-    const newId = slugify(name);
-    if (catalogList.some((c) => String(c.id) === newId)) {
-      setError(`A catalog item “${newId}” already exists — reference it instead.`);
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    setNotice(null);
-    try {
-      await saveDocument('item', newId, { ...src, id: newId, name });
-      // Keep the character's packed contents; the copy is the same kind of item.
-      setItem(i, {
-        ref: newId,
-        origRef: newId,
-        extra: {},
-        forkName: '',
-        isContainer: !!src.container,
+  const removeAt = (path) =>
+    setF((c) => {
+      const inv = c.inventory.slice();
+      if (path.length === 1) {
+        inv.splice(path[0], 1);
+      } else {
+        const [i, j] = path;
+        const parent = inv[i];
+        inv[i] = { ...parent, contents: parent.contents.filter((_, k) => k !== j) };
+      }
+      return { ...c, inventory: inv };
+    });
+
+  // Re-point a row/content at another catalog item. Keeps `origRef` untouched
+  // so itemFromForm drops stale extra/container carry-over (ref !== origRef),
+  // and re-derives container-ness from the new catalog item.
+  const repointAt = (path, refId) =>
+    setF((c) => {
+      const s = catalogList.find((x) => String(x.id) === String(refId));
+      const willContain = !!(s && s.container);
+      const apply = (it) => ({
+        ...it,
+        ref: refId,
+        isContainer: willContain,
+        contents: willContain ? it.contents || [] : [],
       });
-      setNotice(`Created catalog item “${name}”. Save the character to keep this reference.`);
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
-    }
+      const inv = c.inventory.slice();
+      if (path.length === 1) {
+        inv[path[0]] = apply(inv[path[0]]);
+      } else {
+        const [i, j] = path;
+        const parent = inv[i];
+        const contents = parent.contents.slice();
+        contents[j] = apply(contents[j]);
+        inv[i] = { ...parent, contents };
+      }
+      return { ...c, inventory: inv };
+    });
+
+  // Append a fresh catalog reference (a new uid is minted by itemFromForm on
+  // save). target: { kind:'top' } | { kind:'container', path:[i] }.
+  const addRef = (target, refId) =>
+    setF((c) => {
+      const entry = itemToForm({ ref: refId, quantity: 1 });
+      if (target.kind === 'container') {
+        const i = target.path[0];
+        const inv = c.inventory.slice();
+        const parent = inv[i];
+        inv[i] = { ...parent, contents: [...(parent.contents || []), entry] };
+        return { ...c, inventory: inv };
+      }
+      return { ...c, inventory: [...c.inventory, entry] };
+    });
+
+  const onPickerSelect = (catalogItem) => {
+    if (!picker) return;
+    if (picker.kind === 'change') repointAt(picker.path, catalogItem.id);
+    else addRef(picker, catalogItem.id);
   };
 
   // Before save, re-derive each ref's container-ness from the catalog (a
@@ -720,283 +668,295 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     }
   };
 
+  const SUBTABS = [
+    { key: 'stats', label: 'Stats' },
+    { key: 'proficiencies', label: 'Proficiencies' },
+    { key: 'spellcasting', label: 'Spellcasting' },
+    { key: 'feats', label: 'Feats' },
+    { key: 'inventory', label: 'Inventory' },
+    { key: 'strikes', label: 'Strikes' },
+    { key: 'reactions', label: 'Reactions' },
+    { key: 'actions', label: 'Actions' },
+    { key: 'familiar', label: 'Familiar' },
+    { key: 'animalCompanion', label: 'Animal Companion' },
+    { key: 'advanced', label: 'Advanced' },
+  ];
+
+  const renderArrSection = (s) => (
+    <div className="form-group">
+      <label>{s.label}</label>
+      {f.arrays[s.key].map((e, i) => (
+        <div className="gm-card" data-testid={`${s.key}-${i}`} key={i}>
+          <div className="form-group">
+            <label>name</label>
+            <input
+              aria-label={`${s.key}-${i}-name`}
+              value={e.name}
+              onChange={(ev) => setArr(s.key, i, { name: ev.target.value })}
+            />
+          </div>
+          <div className="form-group">
+            <label>extra fields (raw JSON)</label>
+            <textarea
+              aria-label={`${s.key}-${i}-json`}
+              className="gm-json"
+              rows={4}
+              value={e.restJson}
+              onChange={(ev) => setArr(s.key, i, { restJson: ev.target.value })}
+            />
+          </div>
+          <button className="btn-small btn-danger" onClick={() => rmArr(s.key, i)}>
+            Remove {s.label.toLowerCase()} entry
+          </button>
+        </div>
+      ))}
+      <button className="btn-small btn-secondary" onClick={() => addArr(s.key)}>
+        Add {s.label.toLowerCase()} entry
+      </button>
+    </div>
+  );
+
+  const renderObjSection = (s) => (
+    <div className="form-group">
+      <label>{s.label}</label>
+      {!f.objects[s.key].has ? (
+        <button className="btn-small btn-secondary" onClick={() => setObj(s.key, { has: true })}>
+          Add {s.label.toLowerCase()}
+        </button>
+      ) : (
+        <>
+          <textarea
+            aria-label={`${s.key}-json`}
+            className="gm-json"
+            rows={6}
+            value={f.objects[s.key].json}
+            onChange={(ev) => setObj(s.key, { json: ev.target.value })}
+          />
+          <button
+            className="btn-small btn-danger"
+            onClick={() => setObj(s.key, { has: false })}
+          >
+            Remove {s.label.toLowerCase()}
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  const arrFor = (key) => ARR_SECTIONS.find((s) => s.key === key);
+  const objFor = (key) => OBJ_SECTIONS.find((s) => s.key === key);
+  const editItem = editing ? f.inventory[editing.path[0]] : null;
+  const editTag = editing ? `item-${editing.path[0]}` : 'item';
+
   return (
     <div className="gm-card" data-testid={`character-form-${f.id || 'new'}`}>
       <h3>{f.strings.name || '(new character)'}</h3>
 
-      <div className="gm-row">
-        {STRINGS.map((k) => (
-          <div className="form-group" key={k}>
-            <label>{k}</label>
-            <input aria-label={k} value={f.strings[k]} onChange={(e) => setStr(k, e.target.value)} />
-          </div>
-        ))}
-      </div>
-
-      <div className="gm-row">
-        {NUMS.map((k) => (
-          <div className="form-group" key={k}>
-            <label>{k}</label>
-            <input aria-label={k} type="number" value={f.nums[k]} onChange={(e) => setNum(k, e.target.value)} />
-          </div>
-        ))}
-      </div>
-
-      <div className="form-group">
-        <label>Abilities</label>
-        <div className="gm-row">
-          {ABILITIES.map((k) => (
-            <div className="form-group" key={k}>
-              <label>{k}</label>
-              <input aria-label={k} type="number" value={f.abilities[k]} onChange={(e) => setAbility(k, e.target.value)} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Saves</label>
-        <div className="gm-row">
-          {SAVES.map((k) => (
-            <div className="form-group" key={k}>
-              <label>{k}</label>
-              <input aria-label={k} type="number" value={f.saves[k]} onChange={(e) => setSave(k, e.target.value)} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Skills (proficiency tier)</label>
-        <div className="gm-row gm-skill-grid">
-          {SKILLS.map((sk) => (
-            <TierSelect key={sk} label={sk} value={f.skills[sk]} onChange={(v) => setSkill(sk, v)} />
-          ))}
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Lore</label>
-        {f.lore.map((l, i) => (
-          <div key={i} className="gm-row gm-rank-row">
-            <input aria-label={`lore-${i}-name`} placeholder="Lore name" value={l.name} onChange={(e) => setLore(i, { name: e.target.value })} />
-            <select aria-label={`lore-${i}-proficiency`} value={l.proficiency} onChange={(e) => setLore(i, { proficiency: e.target.value })}>
-              {TIERS.map((t) => <option key={t} value={t}>{t} · {getProficiencyLabel(t)}</option>)}
-            </select>
-            <button className="btn-small btn-danger" onClick={() => removeLore(i)}>Remove</button>
-          </div>
-        ))}
-        <button className="btn-small btn-secondary" onClick={addLore}>Add lore</button>
-      </div>
-
-      <div className="form-group">
-        <label>Proficiencies</label>
-        <div className="gm-row">
-          <TierSelect label="class" name="class-proficiency" value={f.prof.class} onChange={setProfClass} />
-        </div>
-        <p className="gm-count">Weapons</p>
-        <div className="gm-row">
-          {WEAPONS.map((w) => <TierSelect key={w} label={w} value={f.prof.weapons[w]} onChange={(v) => setWeapon(w, v)} />)}
-        </div>
-        <p className="gm-count">Armor</p>
-        <div className="gm-row">
-          {ARMOR.map((a) => <TierSelect key={a} label={a} value={f.prof.armor[a]} onChange={(v) => setArmor(a, v)} />)}
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Spellcasting</label>
-        {!f.hasSpellcasting ? (
+      <div className="gm-subtabs" aria-label="character sections">
+        {SUBTABS.map((t) => (
           <button
-            className="btn-small btn-secondary"
-            onClick={() => setF((c) => ({ ...c, hasSpellcasting: true }))}
+            key={t.key}
+            type="button"
+            className={`gm-subtab${tab === t.key ? ' active' : ''}`}
+            aria-pressed={tab === t.key}
+            onClick={() => setTab(t.key)}
           >
-            Add spellcasting
+            {t.label}
           </button>
-        ) : (
+        ))}
+      </div>
+
+      <div className="gm-subtab-content">
+        {tab === 'stats' && (
           <>
             <div className="gm-row">
-              <div className="form-group">
-                <label>tradition</label>
-                <input aria-label="sc-tradition" value={sc.tradition} onChange={(e) => setSc({ tradition: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>ability</label>
-                <input aria-label="sc-ability" value={sc.ability} onChange={(e) => setSc({ ability: e.target.value })} />
-              </div>
-              <TierSelect label="proficiency" name="sc-proficiency" value={sc.proficiency} onChange={(v) => setSc({ proficiency: v })} />
-              <div className="form-group">
-                <label>focus max</label>
-                <input aria-label="sc-focus-max" type="number" value={sc.focusMax} onChange={(e) => setSc({ focusMax: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>focus current</label>
-                <input aria-label="sc-focus-current" type="number" value={sc.focusCurrent} onChange={(e) => setSc({ focusCurrent: e.target.value })} />
+              {STRINGS.map((k) => (
+                <div className="form-group" key={k}>
+                  <label>{k}</label>
+                  <input aria-label={k} value={f.strings[k]} onChange={(e) => setStr(k, e.target.value)} />
+                </div>
+              ))}
+            </div>
+
+            <div className="gm-row">
+              {NUMS.map((k) => (
+                <div className="form-group" key={k}>
+                  <label>{k}</label>
+                  <input aria-label={k} type="number" value={f.nums[k]} onChange={(e) => setNum(k, e.target.value)} />
+                </div>
+              ))}
+            </div>
+
+            <div className="form-group">
+              <label>Abilities</label>
+              <div className="gm-row">
+                {ABILITIES.map((k) => (
+                  <div className="form-group" key={k}>
+                    <label>{k}</label>
+                    <input aria-label={k} type="number" value={f.abilities[k]} onChange={(e) => setAbility(k, e.target.value)} />
+                  </div>
+                ))}
               </div>
             </div>
 
-            <p className="gm-count">Spell slots</p>
-            {sc.slots.map((s, i) => (
-              <div key={i} className="gm-row gm-rank-row">
-                <input aria-label={`slot-${i}-level`} placeholder="rank (e.g. 1)" value={s.level} onChange={(e) => setSlot(i, { level: e.target.value })} />
-                <input aria-label={`slot-${i}-count`} type="number" placeholder="count" value={s.count} onChange={(e) => setSlot(i, { count: e.target.value })} />
-                <button className="btn-small btn-danger" onClick={() => rmSlot(i)}>Remove</button>
+            <div className="form-group">
+              <label>Saves</label>
+              <div className="gm-row">
+                {SAVES.map((k) => (
+                  <div className="form-group" key={k}>
+                    <label>{k}</label>
+                    <input aria-label={k} type="number" value={f.saves[k]} onChange={(e) => setSave(k, e.target.value)} />
+                  </div>
+                ))}
               </div>
-            ))}
-            <button className="btn-small btn-secondary" onClick={addSlot}>Add slot rank</button>
+            </div>
 
-            <p className="gm-count">Spells</p>
-            {sc.spells.map((s, i) => (
-              <SpellRow
+            <div className="form-group">
+              <label>Skills (proficiency tier)</label>
+              <div className="gm-row gm-skill-grid">
+                {SKILLS.map((sk) => (
+                  <TierSelect key={sk} label={sk} value={f.skills[sk]} onChange={(v) => setSkill(sk, v)} />
+                ))}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Lore</label>
+              {f.lore.map((l, i) => (
+                <div key={i} className="gm-row gm-rank-row">
+                  <input aria-label={`lore-${i}-name`} placeholder="Lore name" value={l.name} onChange={(e) => setLore(i, { name: e.target.value })} />
+                  <select aria-label={`lore-${i}-proficiency`} value={l.proficiency} onChange={(e) => setLore(i, { proficiency: e.target.value })}>
+                    {TIERS.map((t) => <option key={t} value={t}>{t} · {getProficiencyLabel(t)}</option>)}
+                  </select>
+                  <button className="btn-small btn-danger" onClick={() => removeLore(i)}>Remove</button>
+                </div>
+              ))}
+              <button className="btn-small btn-secondary" onClick={addLore}>Add lore</button>
+            </div>
+          </>
+        )}
+
+        {tab === 'proficiencies' && (
+          <div className="form-group">
+            <label>Proficiencies</label>
+            <div className="gm-row">
+              <TierSelect label="class" name="class-proficiency" value={f.prof.class} onChange={setProfClass} />
+            </div>
+            <p className="gm-count">Weapons</p>
+            <div className="gm-row">
+              {WEAPONS.map((w) => <TierSelect key={w} label={w} value={f.prof.weapons[w]} onChange={(v) => setWeapon(w, v)} />)}
+            </div>
+            <p className="gm-count">Armor</p>
+            <div className="gm-row">
+              {ARMOR.map((a) => <TierSelect key={a} label={a} value={f.prof.armor[a]} onChange={(v) => setArmor(a, v)} />)}
+            </div>
+          </div>
+        )}
+
+        {tab === 'spellcasting' && (
+          <div className="form-group">
+            <label>Spellcasting</label>
+            {!f.hasSpellcasting ? (
+              <button
+                className="btn-small btn-secondary"
+                onClick={() => setF((c) => ({ ...c, hasSpellcasting: true }))}
+              >
+                Add spellcasting
+              </button>
+            ) : (
+              <>
+                <div className="gm-row">
+                  <div className="form-group">
+                    <label>tradition</label>
+                    <input aria-label="sc-tradition" value={sc.tradition} onChange={(e) => setSc({ tradition: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>ability</label>
+                    <input aria-label="sc-ability" value={sc.ability} onChange={(e) => setSc({ ability: e.target.value })} />
+                  </div>
+                  <TierSelect label="proficiency" name="sc-proficiency" value={sc.proficiency} onChange={(v) => setSc({ proficiency: v })} />
+                  <div className="form-group">
+                    <label>focus max</label>
+                    <input aria-label="sc-focus-max" type="number" value={sc.focusMax} onChange={(e) => setSc({ focusMax: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>focus current</label>
+                    <input aria-label="sc-focus-current" type="number" value={sc.focusCurrent} onChange={(e) => setSc({ focusCurrent: e.target.value })} />
+                  </div>
+                </div>
+
+                <p className="gm-count">Spell slots</p>
+                {sc.slots.map((s, i) => (
+                  <div key={i} className="gm-row gm-rank-row">
+                    <input aria-label={`slot-${i}-level`} placeholder="rank (e.g. 1)" value={s.level} onChange={(e) => setSlot(i, { level: e.target.value })} />
+                    <input aria-label={`slot-${i}-count`} type="number" placeholder="count" value={s.count} onChange={(e) => setSlot(i, { count: e.target.value })} />
+                    <button className="btn-small btn-danger" onClick={() => rmSlot(i)}>Remove</button>
+                  </div>
+                ))}
+                <button className="btn-small btn-secondary" onClick={addSlot}>Add slot rank</button>
+
+                <p className="gm-count">Spells</p>
+                {sc.spells.map((s, i) => (
+                  <SpellRow
+                    key={i}
+                    index={i}
+                    spell={s}
+                    onChange={(next) => setSpell(i, next)}
+                    onRemove={() => rmSpell(i)}
+                  />
+                ))}
+                <button className="btn-small btn-secondary" onClick={addSpell}>Add spell</button>
+              </>
+            )}
+          </div>
+        )}
+
+        {tab === 'feats' && renderArrSection(arrFor('feats'))}
+        {tab === 'strikes' && renderArrSection(arrFor('strikes'))}
+        {tab === 'reactions' && renderArrSection(arrFor('reactions'))}
+        {tab === 'actions' && renderArrSection(arrFor('actions'))}
+        {tab === 'familiar' && renderObjSection(objFor('familiar'))}
+        {tab === 'animalCompanion' && renderObjSection(objFor('animalCompanion'))}
+
+        {tab === 'inventory' && (
+          <div className="form-group">
+            <label>Inventory</label>
+            {f.inventory.length === 0 && (
+              <p className="gm-count">No items yet. Use “Add item”.</p>
+            )}
+            {f.inventory.map((it, i) => (
+              <ItemRow
                 key={i}
-                index={i}
-                spell={s}
-                onChange={(next) => setSpell(i, next)}
-                onRemove={() => rmSpell(i)}
+                item={it}
+                tag={`item-${i}`}
+                catalogList={catalogList}
+                onEdit={() => setEditing({ path: [i] })}
+                onRemove={() => removeAt([i])}
               />
             ))}
-            <button className="btn-small btn-secondary" onClick={addSpell}>Add spell</button>
-          </>
+            <button
+              className="btn-small btn-secondary"
+              onClick={() => setPicker({ kind: 'top' })}
+            >
+              Add item
+            </button>
+          </div>
+        )}
+
+        {tab === 'advanced' && (
+          <div className="form-group">
+            <label>Advanced — class blocks (thaumaturge/monk), crafting, staff/wand spells, metadata… (raw JSON)</label>
+            <textarea
+              aria-label="advanced-json"
+              className="gm-json"
+              rows={12}
+              value={f.advanced}
+              onChange={(e) => setF((c) => ({ ...c, advanced: e.target.value }))}
+            />
+          </div>
         )}
       </div>
 
-      <div className="form-group">
-        <label>Inventory</label>
-        {f.inventory.map((it, i) =>
-          it.__ref ? (
-            <RefRow
-              key={i}
-              item={it}
-              tag={`item-${i}`}
-              catalogList={catalogList}
-              busy={busy}
-              depth={0}
-              showFork
-              onPatch={(p) => setItem(i, p)}
-              onRemove={() => rmItem(i)}
-              onFork={() => forkCatalog(i)}
-            />
-          ) : (
-            <div className="gm-card" data-testid={`item-${i}`} key={i}>
-              <p className="gm-warn" data-testid={`item-${i}-legacy`}>
-                Legacy inline item — not in the catalog. Define it in GM → Items and
-                re-add it as a reference when you can.
-              </p>
-              <div className="gm-row">
-                <div className="form-group">
-                  <label>name</label>
-                  <input aria-label={`item-${i}-name`} value={it.name} onChange={(e) => setItem(i, { name: e.target.value })} />
-                </div>
-              <div className="form-group">
-                <label>price</label>
-                <input aria-label={`item-${i}-price`} type="number" value={it.price} onChange={(e) => setItem(i, { price: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>quantity</label>
-                <input aria-label={`item-${i}-quantity`} type="number" value={it.quantity} onChange={(e) => setItem(i, { quantity: e.target.value })} />
-              </div>
-              <div className="form-group">
-                <label>weight</label>
-                <input aria-label={`item-${i}-weight`} type="number" value={it.weight} onChange={(e) => setItem(i, { weight: e.target.value })} />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>traits (comma-separated)</label>
-              <input aria-label={`item-${i}-traits`} value={it.traits} onChange={(e) => setItem(i, { traits: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label>description</label>
-              <textarea aria-label={`item-${i}-description`} rows={2} value={it.description} onChange={(e) => setItem(i, { description: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label>extra fields — shield, strikes, bonus, potency, invested… (raw JSON)</label>
-              <textarea
-                aria-label={`item-${i}-json`}
-                className="gm-json"
-                rows={5}
-                value={it.restJson}
-                onChange={(e) => setItem(i, { restJson: e.target.value })}
-              />
-            </div>
-            <button className="btn-small btn-danger" onClick={() => rmItem(i)}>Remove item</button>
-          </div>
-        ))}
-        <button className="btn-small btn-secondary" onClick={addItem}>Add item</button>
-      </div>
-
-      {ARR_SECTIONS.map((s) => (
-        <div className="form-group" key={s.key}>
-          <label>{s.label}</label>
-          {f.arrays[s.key].map((e, i) => (
-            <div className="gm-card" data-testid={`${s.key}-${i}`} key={i}>
-              <div className="form-group">
-                <label>name</label>
-                <input
-                  aria-label={`${s.key}-${i}-name`}
-                  value={e.name}
-                  onChange={(ev) => setArr(s.key, i, { name: ev.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>extra fields (raw JSON)</label>
-                <textarea
-                  aria-label={`${s.key}-${i}-json`}
-                  className="gm-json"
-                  rows={4}
-                  value={e.restJson}
-                  onChange={(ev) => setArr(s.key, i, { restJson: ev.target.value })}
-                />
-              </div>
-              <button className="btn-small btn-danger" onClick={() => rmArr(s.key, i)}>
-                Remove {s.label.toLowerCase()} entry
-              </button>
-            </div>
-          ))}
-          <button className="btn-small btn-secondary" onClick={() => addArr(s.key)}>
-            Add {s.label.toLowerCase()} entry
-          </button>
-        </div>
-      ))}
-
-      {OBJ_SECTIONS.map((s) => (
-        <div className="form-group" key={s.key}>
-          <label>{s.label}</label>
-          {!f.objects[s.key].has ? (
-            <button className="btn-small btn-secondary" onClick={() => setObj(s.key, { has: true })}>
-              Add {s.label.toLowerCase()}
-            </button>
-          ) : (
-            <>
-              <textarea
-                aria-label={`${s.key}-json`}
-                className="gm-json"
-                rows={6}
-                value={f.objects[s.key].json}
-                onChange={(ev) => setObj(s.key, { json: ev.target.value })}
-              />
-              <button
-                className="btn-small btn-danger"
-                onClick={() => setObj(s.key, { has: false })}
-              >
-                Remove {s.label.toLowerCase()}
-              </button>
-            </>
-          )}
-        </div>
-      ))}
-
-      <div className="form-group">
-        <label>Advanced — class blocks (thaumaturge/monk), crafting, staff/wand spells, metadata… (raw JSON)</label>
-        <textarea
-          aria-label="advanced-json"
-          className="gm-json"
-          rows={12}
-          value={f.advanced}
-          onChange={(e) => setF((c) => ({ ...c, advanced: e.target.value }))}
-        />
-      </div>
-
-      {notice && <p className="gm-ok" role="status">{notice}</p>}
       {error && <p className="gm-warn" role="alert">{error}</p>}
       <div className="gm-actions">
         <button className="btn-primary" disabled={busy} onClick={save}>
@@ -1013,6 +973,34 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
           </>
         )}
       </div>
+
+      <ItemEditModal
+        isOpen={!!editing}
+        onClose={() => setEditing(null)}
+        item={editItem}
+        tag={editTag}
+        catalogList={catalogList}
+        onPatch={(p) => editing && patchAt(editing.path, p)}
+        onRepoint={() => editing && setPicker({ kind: 'change', path: editing.path })}
+        onAddToContainer={() => editing && setPicker({ kind: 'container', path: editing.path })}
+        onContentPatch={(j, p) => editing && patchAt([editing.path[0], j], p)}
+        onContentRepoint={(j) => editing && setPicker({ kind: 'change', path: [editing.path[0], j] })}
+        onContentRemove={(j) => editing && removeAt([editing.path[0], j])}
+      />
+
+      <CatalogPickerModal
+        isOpen={!!picker}
+        onClose={() => setPicker(null)}
+        catalog={catalogList}
+        onSelect={onPickerSelect}
+        title={
+          picker && picker.kind === 'container'
+            ? 'Add an item to the container'
+            : picker && picker.kind === 'change'
+            ? 'Change catalog item'
+            : 'Add an item from the catalog'
+        }
+      />
 
       {!isNew && (
         <HistoryModal
