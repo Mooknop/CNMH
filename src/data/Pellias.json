@@ -34,7 +34,7 @@
     "intimidation": {
       "proficiency": 1
     },
-    "lore":[
+    "lore": [
       {
         "name": "Thassilonian",
         "proficiency": 1
@@ -44,12 +44,12 @@
       "proficiency": 1
     },
     "perception": {
-      "proficiency":1
+      "proficiency": 1
     },
     "religion": {
       "proficiency": 1
     },
-    "survival":{
+    "survival": {
       "proficiency": 1
     }
   },
@@ -103,16 +103,27 @@
         {
           "name": "Channel Elements",
           "actionCount": 1,
-          "traits": ["Aura", "Kineticist", "Metal", "Primal"],
+          "traits": [
+            "Aura",
+            "Kineticist",
+            "Metal",
+            "Primal"
+          ],
           "description": "You tap into your kinetic gate to make elements flow around you. Your kinetic aura activates, and as a part of this action, you can use a 1-action Elemental Blast or a 1-action stance impulse. Your kinetic aura is a 10-foot emanation where pieces of your kinetic element (or all your kinetic elements, if you can channel more than one) flow around you. The kinetic aura can't damage anything or affect the environment around you unless another ability allows it to. Channel Elements has the traits of all your kinetic elements.\nYour kinetic aura automatically deactivates if you're knocked out, you use an impulse with the overflow trait, or you Dismiss the aura. Though you can't use new impulses while your kinetic aura is deactivated, ones you already used remain, and you can still Sustain any that can be sustained. Stance impulses are linked to your kinetic aura and end when the aura deactivates."
         }
       ],
-      "strikes":[
+      "strikes": [
         {
           "name": "Melee Metal Blast",
           "actionCount": "One to Two",
           "type": "melee",
-          "traits": ["Attack", "Impulse", "Kineticist", "Metal", "Primal"],
+          "traits": [
+            "Attack",
+            "Impulse",
+            "Kineticist",
+            "Metal",
+            "Primal"
+          ],
           "damage": "1d8",
           "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage."
         },
@@ -122,7 +133,13 @@
           "type": "ranged",
           "damage": "1d8",
           "range": "30ft",
-          "traits": ["Attack", "Impulse", "Kineticist", "Metal", "Primal"],
+          "traits": [
+            "Attack",
+            "Impulse",
+            "Kineticist",
+            "Metal",
+            "Primal"
+          ],
           "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. When you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage, and has a range of 30 feet."
         }
       ]
@@ -144,7 +161,9 @@
         {
           "name": "Devoted Guardian",
           "actionCount": 1,
-          "traits": ["Champion"],
+          "traits": [
+            "Champion"
+          ],
           "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward. Select one adjacent creature. As long as your shield is raised and the creature remains adjacent to you, the creature gains a +1 circumstance bonus to their AC, or a +2 circumstance bonus if the shield you raised was a tower shield."
         }
       ]
@@ -207,7 +226,9 @@
       "freeActions": [
         {
           "name": "Primary Threat",
-          "traits": [ "Champion"],
+          "traits": [
+            "Champion"
+          ],
           "trigger": "Your turn begins and it is the first round of combat",
           "description": "You Delay while presenting an imposing afront to your enemies. Enemy creatures that go after you used Delay take a -1 circumstance penalty to attack rolls against your allies until the beginning of your next turn. Creatures can remove this penalty by spending a single action with the concentrate trait to do their own threat evaluation."
         }
@@ -223,7 +244,12 @@
         {
           "name": "Shard Strike",
           "actionCount": 2,
-          "traits": ["Impulse", "Kineticist", "Metal", "Primal"],
+          "traits": [
+            "Impulse",
+            "Kineticist",
+            "Metal",
+            "Primal"
+          ],
           "description": "Jagged metal shards form in the air and lash out in front of you. Creatures in the area attempt a Basic Reflex Save against your Class DC. Choose Shards or Spines. Shards deal 1d6 slashing damage in a 15-foot cone, and a creature that critically fails takes 1d6 persistent bleed damage. Spines deal 1d6 piercing damage in a 30-foot line, and a creature that critically fails is Clumsy 1 until the start of your next turn."
         }
       ]
@@ -234,13 +260,16 @@
       "level": 4,
       "source": "Skill",
       "description": "A prayer under your breath to the appropriate god can guide you in times of trouble. You can cast Guidance as a divine innate cantrip. Once per day, you can utter a prayer to a particularly relevant deity as part of casting Guidance, and the bonus increases to a +2. You do not need to follow the deity to ask for their guidance, but if their goals do not align with you own, they may refuse to aid you. When you are Legendary in Religion, you can utter a prayer once per hour instead of daily.",
-      "innate":[
+      "innate": [
         {
           "id": "spell-3",
           "name": "Guidance",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip","Concentrate"],
+          "traits": [
+            "Cantrip",
+            "Concentrate"
+          ],
           "actions": "One Action",
           "range": "30ft",
           "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour."
@@ -250,199 +279,81 @@
   ],
   "inventory": [
     {
-      "id": "item-1",
-      "name": "Full Plate",
-      "price": 30,
-      "traits": ["Bulwark"],
-      "quantity": 1,
-      "weight": 4.0,
-      "speedPenalty": [10, 5],
-      "description": "Plate mail consists of interlocking plates that encase nearly the entire body in a carapace of steel. It is costly and heavy, and the wearer often requires help to don it correctly, but it provides some of the best defense armor can supply. A suit of this armor comes with an undercoat of padded armor and a pair of gauntlets."
+      "ref": "full-plate",
+      "quantity": 1
     },
     {
-      "name": "Spiked Steel Shield",
-      "price": 2.5,
-      "quantity": 1,
-      "weight": 1,
-      "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
-      "shield": {
-        "health": 20,
-        "breakThreshold": 10,
-        "hardness": 5,
-        "bonus": 2
-      },
-      "strikes": {
-        "name": "Spiked Shield Bash",
-        "proficiency": "simple",
-        "type": "melee",
-        "action": 1,
-        "damage": "1d6",
-        "traits": ["Attack", "melee"]
-      }
+      "ref": "spiked-steel-shield",
+      "quantity": 1
     },
     {
-      "name": "Reinforced Tower Shield",
-      "price": 85,
-      "quantity": 1,
-      "weight": 4,
-      "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
-      "shield": {
-        "health": 64,
-        "breakThreshold": 32,
-        "hardness": 8,
-        "bonus": 2,
-        "speedPenalty": 5
-      }
-      
+      "ref": "reinforced-tower-shield",
+      "quantity": 1
     },
     {
-      "name": "+1 Striking Pick",
-      "price": 100.1,
-      "weight": 1,
-      "quantity": 1,
-      "potency": 1,
-      "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
-      "traits": ["Fatal 1d10"],
-      "strikes": {
-        "proficiency": "martial",
-        "type": "melee",
-        "action": 1,
-        "damage": "2d6"
-      }
+      "ref": "1-striking-pick",
+      "quantity": 1
     },
     {
-      "name": "Sanitizing Pin",
-      "price": 7,
-      "quantity": 1,
-      "weight": 0,
-      "traits": ["Consumable", "Magical", "Talisman", "Uncommon"],
-      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+      "ref": "sanitizing-pin",
+      "quantity": 1
     },
     {
-      "name": "Rust Scrub",
-      "price": 2,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Alchemical", "Consumable", "Uncommon"],
-      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+      "ref": "rust-scrub",
+      "quantity": 1
     },
     {
-      "name": "Minor Elixir of Life",
-      "price": 3,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Alchemical", "Consumable", "Elixir", "Healing"],
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+      "ref": "minor-elixir-of-life",
+      "quantity": 1
     },
     {
-      "name": "Gecko Potion",
-      "price": 3,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Consumable", "Magical", "Potion"],
-      "description": "A gecko potion is a sticky, tawny brown liquid with flecks of sand suspended in it. For 5 minutes after drinking this potion, your fingertips sprout thousands of microscopic, bristled hairs that cling to objects, granting you a +1 item bonus to Climb and Palm an Object, and to your Reflex DC against Disarm attempts."
+      "ref": "gecko-potion",
+      "quantity": 1
     },
     {
-      "name": "Wolf Fang",
-      "price": 3,
-      "quantity": 1,
-      "weight": 0.0,
-      "traits": ["Consumable", "Magical", "Talisman"],
-      "description": "This wolf canine is bound in a strip of leather and tied to a buckle or strap on a suit of armor. When the fang is affixed to a weapon and you succesfully trip a foe, you can activate it to deal bludgeoning damage equal to your Strength modifier to the target of your Trip."
+      "ref": "wolf-fang",
+      "quantity": 1
     },
     {
-      "name": "Backpack",
-      "price": 0.1,
+      "ref": "backpack",
       "quantity": 1,
-      "weight": 0.1,
-      "description": "A backpack for holding your gear",
-      "container":{
-        "capacity": 4,
-        "ignored": 2,
-        "contents":[
+      "container": {
+        "contents": [
           {
-            "name": "Bedroll",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "A compact mat, not too comfy but suitable for long journeys."
+            "ref": "bedroll",
+            "quantity": 1
           },
           {
-            "name": "Chalk",
-            "price": 0.001,
-            "quantity": 10,
-            "weight": 0.0,
-            "description": "Suitable for marking hard surfaces temporarily."
+            "ref": "chalk",
+            "quantity": 10
           },
           {
-            "name": "Flint & Steel",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "A camper's classic for starting fires."
+            "ref": "flint-steel",
+            "quantity": 1
           },
           {
-            "name": "Rope (50ft)",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "Sturdy rope for tying something (or someone) down."
+            "ref": "rope-50ft",
+            "quantity": 1
           },
           {
-            "name": "Rations",
-            "price": 0.04,
-            "quantity": 7,
-            "weight": 0.1,
-            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+            "ref": "rations",
+            "quantity": 7
           },
           {
-            "name": "Soap",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "Scrub a dub dub"
+            "ref": "soap",
+            "quantity": 1
           },
           {
-            "name": "Torch",
-            "price": 0.01,
-            "quantity": 5,
-            "weight": 0.1,
-            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+            "ref": "torch",
+            "quantity": 5
           },
           {
-            "name": "Waterskin",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+            "ref": "waterskin",
+            "quantity": 1
           },
           {
-            "name": "+1 Cold Iron Light Hammer",
-            "price": 75.1,
-            "potency": 1,
-            "weight": 1,
-            "quantity": 1,
-            "traits": ["Agile", "Thrown 20ft"],
-            "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
-            "strikes": [
-              {
-                "name": "Light Hammer Strike",
-                "proficiency": "martial",
-                "type": "melee",
-                "action": 1,
-                "damage": "1d6",
-                "traits": ["Attack", "Agile", "Melee"]
-              },
-              {
-                "name": "Hammer Throw",
-                "proficiency": "martial",
-                "type": "ranged",
-                "range": "20ft",
-                "action": 1,
-                "damage": "1d6",
-                "traits": ["Attack", "Agile", "Thrown"]
-              }
-            ]
+            "ref": "1-cold-iron-light-hammer",
+            "quantity": 1
           }
         ]
       }
@@ -463,54 +374,74 @@
         "name": "Serrate",
         "level": 1,
         "baseLevel": 1,
-        "traits": ["Uncommon","Champion", "Focus", "Manipulate", "Metal"],
+        "traits": [
+          "Uncommon",
+          "Champion",
+          "Focus",
+          "Manipulate",
+          "Metal"
+        ],
         "actions": "One Action",
         "range": "Touch",
         "targets": "1 metal weapon",
         "description": "With a pinch, the metal of a weapon twists, adding numerous jagged blades along its surface. Strikes with the target weapon deal an additional 1d4 slashing damage until the start of your next turn.",
         "heightened": {
-            "+2": "The extra damage increases by 1d4."
-          }
+          "+2": "The extra damage increases by 1d4."
+        }
       },
       {
         "id": "spell-2",
         "name": "Shields of the Spirit",
         "level": 1,
         "baseLevel": 1,
-        "traits": ["Uncommon","Champion","Concentrate", "Focus", "Sanctified", "Spirit"],
+        "traits": [
+          "Uncommon",
+          "Champion",
+          "Concentrate",
+          "Focus",
+          "Sanctified",
+          "Spirit"
+        ],
         "actions": "One Action",
         "requirements": "You are wielding a shield.",
         "description": "You Raise your Shield, causing ephemeral spirit shields to float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage (even if it misses).\nThe benefit applies only while an ally is in your aura, ending for any ally that leaves and applying to any that enters later. As normal, you don't count as your own ally and therefore don't get the benefits of the spirit shields yourself.",
         "heightened": {
-            "+2": "The extra damage increases by 1d4."
-          }
+          "+2": "The extra damage increases by 1d4."
+        }
       }
     ],
     "focus_points": 2,
     "class_dc": 19
   },
-  "strikes": [ 
+  "strikes": [
     {
       "name": "Unarmed Strike",
       "proficiency": "unarmed",
       "type": "melee",
       "action": 1,
       "damage": "1d4",
-      "traits": ["Attack", "Melee"],
+      "traits": [
+        "Attack",
+        "Melee"
+      ],
       "description": "Give 'em a good smack"
     }
-   ],
+  ],
   "actions": [],
   "reactions": [
     {
       "name": "Retributive Strike",
-      "traits": ["Champion"],
+      "traits": [
+        "Champion"
+      ],
       "trigger": "An enemy damages an ally within 15 feet of you.",
       "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it."
     },
     {
       "name": "Shield Block",
-      "traits": ["General"],
+      "traits": [
+        "General"
+      ],
       "trigger": "While you have your shield raised, you take damage from a physical attack.",
       "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield."
     }
