@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
+import { newEntryUid } from '../../utils/uid';
 import { SKILL_ABILITY_MAP, getProficiencyLabel } from '../../utils/CharacterUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
@@ -58,11 +59,12 @@ const itemToForm = (it) => {
     const hasContainer = !!(it.container && typeof it.container === 'object');
     return {
       __ref: true,
+      uid: it.uid,
       ref: String(it.ref),
       origRef: String(it.ref),
       quantity: it.quantity != null ? String(it.quantity) : '1',
       invested: it.invested === true,
-      extra: omit(it, ['ref', 'quantity', 'invested', 'container']),
+      extra: omit(it, ['uid', 'ref', 'quantity', 'invested', 'container']),
       isContainer: hasContainer,
       containerExtra: hasContainer ? omit(it.container, ['contents']) : {},
       contents:
@@ -127,9 +129,12 @@ const itemFromForm = (f, index) => {
     const ref = String(f.ref || '').trim();
     if (!ref) throw new Error(`Inventory item ${index + 1}: choose a catalog item.`);
     // Carry non-container extra keys only while the ref is unchanged; a
-    // repointed ref starts clean.
+    // repointed ref starts clean. `uid` is the stable per-entry id (Slice 1):
+    // preserve an existing one, mint for a newly-added entry. It is placement
+    // identity, independent of the catalog ref, so it survives a repoint
+    // (handled here, never via `extra`).
     const keepExtra = ref === f.origRef;
-    const out = { ...(keepExtra && f.extra ? f.extra : {}), ref };
+    const out = { uid: f.uid || newEntryUid(), ...(keepExtra && f.extra ? f.extra : {}), ref };
     out.quantity = String(f.quantity).trim() === '' ? 1 : toInt(f.quantity);
     if (f.invested) out.invested = true;
     // A container reference always carries `container.contents` (possibly
