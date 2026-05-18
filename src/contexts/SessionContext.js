@@ -109,6 +109,11 @@ export const SessionProvider = ({ children }) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: 'UPDATE', characterId, key: stateType, value }));
     }
+    // Also notify *local* subscribers: the server broadcast excludes the
+    // sender, so without this every other useSyncedState consumer of this key
+    // on this same client (e.g. useCharacter's effective tree + the Bulk bar
+    // while HandsPanel writes) would never see the change until a reload.
+    notify(characterId, stateType, value);
   }, []);
 
   const subscribe = useCallback((characterId, stateType, callback) => {
