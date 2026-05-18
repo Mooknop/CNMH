@@ -32,7 +32,7 @@
       "proficiency": 2
     },
     "perception": {
-      "proficiency":2
+      "proficiency": 2
     },
     "performance": {
       "proficiency": 1
@@ -40,7 +40,7 @@
     "diplomacy": {
       "proficiency": 1
     },
-    "lore":[
+    "lore": [
       {
         "name": "Bardic",
         "proficiency": 1
@@ -62,96 +62,124 @@
   },
   "proficiencies": {
     "class": 1,
-  "weapons": {
-    "simple": {
-      "proficiency": 1,
-      "name": "Trained"
+    "weapons": {
+      "simple": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "martial": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "advanced": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "unarmed": {
+        "proficiency": 1,
+        "name": "Trained"
+      }
     },
-    "martial": {
-      "proficiency": 1,
-      "name": "Trained"
-    },
-    "advanced": {
-      "proficiency": 0,
-      "name": "Untrained"
-    },
-    "unarmed": {
-      "proficiency": 1,
-      "name": "Trained"
+    "armor": {
+      "unarmored": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "light": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "medium": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "heavy": {
+        "proficiency": 0,
+        "name": "Untrained"
+      }
     }
   },
-  "armor": {
-    "unarmored": {
-      "proficiency": 1,
-      "name": "Trained"
+  "focus_spells": [
+    {
+      "id": "spell-1",
+      "name": "Inspire Courage",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Bard",
+        "Cantrip",
+        "Composition",
+        "Emotion",
+        "Enchantment",
+        "Mental"
+      ],
+      "actions": "One Action",
+      "area": "60-foot emanation",
+      "duration": "1 round",
+      "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
     },
-    "light": {
-      "proficiency": 1,
-      "name": "Trained"
+    {
+      "id": "spell-2",
+      "name": "Counter Performance",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Bard",
+        "Composition",
+        "Concentrate",
+        "Focus",
+        "Fortune",
+        "Mental"
+      ],
+      "actions": "Reaction",
+      "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
+      "area": "60-foot emanation",
+      "description": "Your performance protects you and your allies. Roll a Performance check for a type you know—it must be an auditory performance if the trigger was auditory or a visual one for a visual trigger, and this action gains the traits for the type of performance (page 243). You and allies in the area can use the better result between your Performance check and the saving throw."
     },
-    "medium": {
-      "proficiency": 0,
-      "name": "Untrained"
-    },
-    "heavy": {
-      "proficiency": 0,
-      "name": "Untrained"
-    }
-  }
-},
-"focus_spells":[
-      {
-        "id": "spell-1",
-        "name": "Inspire Courage",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
-        "actions": "One Action",
-        "area": "60-foot emanation",
-        "duration": "1 round",
-        "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
-      },
-      {
-        "id": "spell-2",
-        "name": "Counter Performance",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Bard", "Composition", "Concentrate", "Focus", "Fortune", "Mental"],
-        "actions": "Reaction",
-        "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
-        "area": "60-foot emanation",
-        "description": "Your performance protects you and your allies. Roll a Performance check for a type you know—it must be an auditory performance if the trigger was auditory or a visual one for a visual trigger, and this action gains the traits for the type of performance (page 243). You and allies in the area can use the better result between your Performance check and the saving throw."
-      },
-      {
-        "id": "spell-3",
-        "name": "Hymn of Healing",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Uncommon", "Bard", "Composition", "Concentrate", "Focus", "Healing", "Vitality"],
-        "actions": "Two Actions",
-        "duration": "sustained up to 4 rounds",
-        "area": "30-feet",
-        "targets":"1 willing creature",
-        "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
-        "heightened": {
-          "+1": "The fast healing and temporary Hit Points each increase by 2."
-        }
-      },
-      {
-        "id": "spell-4",
-        "name": "Lingering Composition",
-        "level": 0,
-        "baseLevel": 1,
-        "traits": ["Bard", "Composition", "Concentrate", "Focus", "Spellshape"],
-        "actions": "Free Action",
-        "description": "You add a flourish to your composition to extend its benefits. If your next action is to cast a cantrip composition with a duration of 1 round, attempt a Performance check. The DC is standard-difficulty of a level equal to the highestt level target of your composition.",
-        "degrees": {
-          "Critical Success": "The composition lasts 4 rounds.",
-          "Success": "The composition lasts 3 rounds.",
-          "Failure": "The composition lasts 1 round, but you don't expend a focus point for trying."
-        }
+    {
+      "id": "spell-3",
+      "name": "Hymn of Healing",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Bard",
+        "Composition",
+        "Concentrate",
+        "Focus",
+        "Healing",
+        "Vitality"
+      ],
+      "actions": "Two Actions",
+      "duration": "sustained up to 4 rounds",
+      "area": "30-feet",
+      "targets": "1 willing creature",
+      "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
+      "heightened": {
+        "+1": "The fast healing and temporary Hit Points each increase by 2."
       }
-    ],
+    },
+    {
+      "id": "spell-4",
+      "name": "Lingering Composition",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Bard",
+        "Composition",
+        "Concentrate",
+        "Focus",
+        "Spellshape"
+      ],
+      "actions": "Free Action",
+      "description": "You add a flourish to your composition to extend its benefits. If your next action is to cast a cantrip composition with a duration of 1 round, attempt a Performance check. The DC is standard-difficulty of a level equal to the highestt level target of your composition.",
+      "degrees": {
+        "Critical Success": "The composition lasts 4 rounds.",
+        "Success": "The composition lasts 3 rounds.",
+        "Failure": "The composition lasts 1 round, but you don't expend a focus point for trying."
+      }
+    }
+  ],
   "feats": [
     {
       "id": "feat-1",
@@ -159,12 +187,12 @@
       "level": 2,
       "source": "Archetype",
       "description": "The more people you have looking at you, the more content you are, and you take every opportunity to show up others when their performances are less than perfect. You gain the Upstage reaction. In addition, when you Earn Income, if the level of the task is higher than your level, you gain a +1 circumstance bonus to your check to Earn Income.",
-      "reactions":[
+      "reactions": [
         {
           "name": "Upstage",
           "trigger": "An enemy attempts a skill check and doesn’t get a critical success",
           "description": "After your foe has tried their best, you show everyone how it’s really done. Attempt a check using the same skill that triggered this reaction. The DC is typically the same as the check the enemy attempted, though the GM can adjust this as usual.",
-          "degrees":{
+          "degrees": {
             "Critical Success": "You gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn.",
             "Success": "As critical success, except you gain the benefits only if the triggering creature failed their skill check."
           }
@@ -184,14 +212,17 @@
       "level": 1,
       "source": "Leshy",
       "description": "Your body produces a nearly endless supply of hard seedpods. You gain a seedpod ranged unarmed attack that deals 1d4 bludgeoning damage; these Strikes have the manipulate trait. On a critical hit, a seedpod bursts, issuing forth a tangle of rapid-growing vines that impose a -10-foot circumstance penalty to the target's Speed for 1 round.",
-      "strikes":[
-          {
+      "strikes": [
+        {
           "name": "Seedpod",
           "proficiency": "unarmed",
           "type": "ranged",
           "action": 1,
           "damage": "1d4",
-          "traits": ["Attack", "Ranged"],
+          "traits": [
+            "Attack",
+            "Ranged"
+          ],
           "description": "Chuck one of your seed pods!"
         }
       ]
@@ -216,10 +247,15 @@
       "level": 3,
       "source": "Skill",
       "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute.",
-      "reactions":[
+      "reactions": [
         {
           "name": "Disrupting Performance",
-          "traits": ["Emotion", "General", "Mental", "Skill"],
+          "traits": [
+            "Emotion",
+            "General",
+            "Mental",
+            "Skill"
+          ],
           "trigger": "A creature you can observe within 30 feet takes a skill action with the Auditory, Concentrate, or Visual traits.",
           "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
         }
@@ -248,7 +284,13 @@
       "freeActions": [
         {
           "name": "Harmless Bystander",
-          "traits": [ "Auditory", "Concentrate", "Linguistic", "Mental", "Skill"],
+          "traits": [
+            "Auditory",
+            "Concentrate",
+            "Linguistic",
+            "Mental",
+            "Skill"
+          ],
           "trigger": "You roll initiative",
           "description": "Roll initiative using your Deception rather than Perception. Any non-ally creature must attempt to Sense Motive against you to realize you are hostile to them and they cannot make reactions against you until you take a hostile action against the creature or its allies. If you are wielding a weapon or cannot reasonably hide yourself as a bystander, the creature gets a +4 circumstance bonus to their Sense Motive. If you are observed taking a hostile action you are automatically recognized as hostile. Regardless of the result of the creature's Sense Motive, once you are observed being hostile, non-allied creatures are temporarily immune to your use of Harmless Bystander for 1 day."
         }
@@ -257,235 +299,93 @@
   ],
   "inventory": [
     {
-      "name": "Gourd Head",
+      "ref": "gourd-head",
       "quantity": 1,
-      "weight": 0.0,
-      "description": "You have a large gourd for a skull, and since you don't have a physical brain, you can use the space inside your head. You can store a collection of up to 1 Bulk of objects within your head. The DC of checks to Steal objects from inside your head increases by 4. Additionally, if you store only one object within your head, you can draw it effortlessly into your hand as part of another action to use the object. Drawing the item grants this other action the manipulate trait.",
-      "container":{
-        "capacity": 1,
-        "ignored": 0,
-        "contents":[]
+      "container": {
+        "contents": []
       }
     },
     {
-      "name": "Backpack",
-      "price": 0.1,
+      "ref": "backpack",
       "quantity": 1,
-      "weight": 0.1,
-      "description": "A backpack for holding your gear",
-      "container":{
-        "capacity": 4,
-        "ignored": 2,
-        "contents":[
+      "container": {
+        "contents": [
           {
-            "name": "Bedroll",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "A compact mat, not too comfy but suitable for long journeys."
+            "ref": "bedroll",
+            "quantity": 1
           },
           {
-            "name": "Chalk",
-            "price": 0.001,
-            "quantity": 10,
-            "weight": 0.0,
-            "description": "Suitable for marking hard surfaces temporarily."
+            "ref": "chalk",
+            "quantity": 10
           },
           {
-            "name": "Flint & Steel",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "A camper's classic for starting fires."
+            "ref": "flint-steel",
+            "quantity": 1
           },
           {
-            "name": "Rope (50ft)",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "Sturdy rope for tying something (or someone) down."
+            "ref": "rope-50ft",
+            "quantity": 1
           },
           {
-            "name": "Rations",
-            "price": 0.04,
-            "quantity": 7,
-            "weight": 0.1,
-            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+            "ref": "rations",
+            "quantity": 7
           },
           {
-            "name": "Soap",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "Scrub a dub dub"
+            "ref": "soap",
+            "quantity": 1
           },
           {
-            "name": "Torch",
-            "price": 0.01,
-            "quantity": 5,
-            "weight": 0.1,
-            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+            "ref": "torch",
+            "quantity": 5
           },
           {
-            "name": "Waterskin",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+            "ref": "waterskin",
+            "quantity": 1
           }
         ]
       }
     },
     {
-      "id": "item-1",
-      "name": "Vocoder of Invisibility",
-      "price": 50,
-      "quantity": 1,
-      "weight": 1.0,
-      "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
-      "traits": ["Magical"],
-      "actions":[
-        {
-          "name": "Unseen Din",
-          "actionCount": 1,
-          "traits": ["Illusion", "Manipulate", "Sonic"],
-          "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
-        }
-      ]
+      "ref": "vocoder-of-invisibility",
+      "quantity": 1
     },
     {
-      "id": "item-2",
-      "name": "Studded Leather Armor",
-      "price": 3,
-      "quantity": 1,
-      "weight": 1.0,
-      "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection."
+      "ref": "studded-leather-armor",
+      "quantity": 1
     },
     {
-      "id": "item-5",
-      "name": "Minor Healing Potion",
-      "price": 4,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Consumable", "Healing", "Magical", "Potion", "Vitality"],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed"
+      "ref": "minor-healing-potion",
+      "quantity": 1
     },
     {
-      "name": "Scroll of Friendfetch",
-      "price": 4,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "A single-use scroll",
-      "traits": ["Consumable", "Magical", "Scroll"],
-      "scroll":{
-        "name": "Friendfetch",
-        "level": 1,
-        "traits": ["Uncommon", "Force"],
-        "actions": "Two Actions",
-        "range": "30 feet",
-        "targets": "1 or 2 willing creatures",
-        "description": "You shoot out ephemeral, telekinetic strands that drag each target directly toward you, stopping in the closest unoccupied space to you in this path. This is forced movement."
-      }
+      "ref": "scroll-of-friendfetch",
+      "quantity": 1
     },
     {
-      "name": "Scroll of Cleanse Affliction",
-      "price": 12,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "A single-use scroll",
-      "traits": ["Consumable", "Magical", "Scroll"],
-      "scroll":{
-        "name": "Cleanse Affliction",
-        "level": 2,
-        "traits": ["Concentrate", "Healing", "Manipulate"],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 willing creature",
-        "description": "Gentle restorative magic pushes back the effects of toxins and more complex maladies. Choose an affliction on the target, such as a curse, disease, or poison. If it has advanced past stage one, reduce the stage by one. This reduction can be applied only once to a given case of an affliction, with the case ending when it's completely cured. Although the reduction can't occur again, heightened versions of this spell attempt to counteract with each casting.",
-        "heightened":{
-          "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
-          "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
-        }
-      }
+      "ref": "scroll-of-cleanse-affliction",
+      "quantity": 1
     },
     {
-      "name": "Sanitizing Pin",
-      "price": 7,
-      "quantity": 1,
-      "weight": 0,
-      "traits": ["Consumable", "Magical", "Talisman", "Uncommon"],
-      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+      "ref": "sanitizing-pin",
+      "quantity": 1
     },
     {
-      "name": "Rust Scrub",
-      "price": 2,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Alchemical", "Consumable", "Uncommon"],
-      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+      "ref": "rust-scrub",
+      "quantity": 1
     },
     {
-      "name": "Wand of Cleanse Affliction",
-      "price": 60,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Magical", "Wand"],
-      "description": "A wand containing the spell Cleanse Affliction",
-      "wand":{
-        "name": "Cleanse Affliction",
-        "level": 2,
-        "traits": ["Concentrate", "Healing", "Manipulate"],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 willing creature",
-        "description": "Gentle restorative magic pushes back the effects of toxins and more complex maladies. Choose an affliction on the target, such as a curse, disease, or poison. If it has advanced past stage one, reduce the stage by one. This reduction can be applied only once to a given case of an affliction, with the case ending when it's completely cured. Although the reduction can't occur again, heightened versions of this spell attempt to counteract with each casting.",
-        "heightened":{
-          "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
-          "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
-        }
-      }
+      "ref": "wand-of-cleanse-affliction",
+      "quantity": 1
     },
     {
-      "name": "Wand of Create Food",
-      "price": 160,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Magical", "Wand"],
-      "description": "A wand containing the spell Create Food",
-      "wand":{
-        "name": "Create Food",
-        "level": 2,
-        "traits": ["Concentrate", "Healing", "Manipulate"],
-        "actions": "1 Hour",
-        "range": "30 feet",
-        "description": "You create enough food to feed six Medium creatures for a day. This food is bland and unappealing, but it is nourishing. After 1 day, if no one has eaten the food, it decays and becomes inedible. Most Small creatures eat one-quarter as much as a Medium creature (one-sixteenth as much for most Tiny creatures), and most Large creatures eat 10 times as much (100 times as much for Huge creatures and so on).",
-        "heightened":{
-          "4th": "You can feed 12 Medium creatures.",
-          "6th": "You can feed 50 Medium creatures.",
-          "8th": "You can feed 200 Medium creatures."
-        }
-      }
+      "ref": "wand-of-create-food",
+      "quantity": 1
     },
     {
-        "name": "Horn of Rust",
-        "quantity": 1,
-        "weight": 2,
-        "traits": ["Artifact", "Unholy", "Invested", "Magical"],
-        "description": "This rusted, coiled iron horn is sizable, appearing similar in shape to a ram's horn but measuring nearly 2 feet in diameter. Flakes of rust constantly fall from it, and the item leaves hands with a rusty red stain that lingers. While the Horn of Rust's power has diminished over the ages since Xar-Azmak's death, those who carry it are still subject to its palpable chaotic influences. If you are not sanctified Unholy, you are Enfeebled 1 while carrying or using the Horn of Rust; if you are sanctified Holy, you are instead Enfeebled 2 and Stupefied 1. It can be prepared as a staff, granting four spells.",
-        "invested": true,
-        "actions":[
-          {
-            "name": "Blow the Horn",
-            "actionCount": 2,
-            "description": "Once per hour, you can blow on the horn to unleash a swirling aura of jagged, rusty metal shards that orbit you in a 5-foot emanation for 1 minute. The shards grant you a +1 item bonus to AC. Creatures and objects that begin their turn in this area take 6d6 slashing damage from the shards (DC 19 basic Reflex save). A creature damaged by this aura is exposed to a poten form of Tetanus that is a Level 5 disease and has a DC 19 Fortitude Save. Worshippers of Xar-Azmak are immune to this effect."
-          },
-          {
-            "name": "Consume Corruption",
-            "actionCount": 2,
-            "description": "Once per day, you can place the horn's bell against a diseased creature and then inhale into the mouthpiece rather than blow into it. The horn attempts to draw out the disease, casting Cleanse Affliction with a counteract modifier of +11. If the Horn of Rust succeeds at countering the disease, it gains a number of staff charges equal to half the disease's level rounded down. If it critically fails, not only is the disease not countered, but you are exposed to the disease and must attempt a saving throw against it to resist contracting the affliction yourself."
-          }
-        ]
-      }
+      "ref": "horn-of-rust",
+      "quantity": 1,
+      "invested": true
+    }
   ],
   "spellcasting": {
     "tradition": "Occult",
@@ -495,14 +395,23 @@
       "max": 3,
       "current": 1
     },
-    "spell_slots": { "1": 4, "2": 3 },
+    "spell_slots": {
+      "1": 4,
+      "2": 3
+    },
     "spells": [
       {
         "id": "spell-3",
         "name": "Daze",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Cantrip", "Concentrate", "Manipulate", "Mental", "Nonlethal"],
+        "traits": [
+          "Cantrip",
+          "Concentrate",
+          "Manipulate",
+          "Mental",
+          "Nonlethal"
+        ],
         "actions": "Two Actions",
         "range": "60 feet",
         "targets": "1 creature",
@@ -514,13 +423,17 @@
         "name": "Forbidding Ward",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Cantrip","Concentrate","Manipulate"],
+        "traits": [
+          "Cantrip",
+          "Concentrate",
+          "Manipulate"
+        ],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 ally and 1 enemy",
         "duration": "Sustained up to 1 minute",
         "description": "You ward an ally against the attacks and hostile spells from the target enemy. The target ally gains a +1 status bonus to Armor Class and saving throws against the target enemy's attacks, spells, and other effects.",
-        "heightened":{
+        "heightened": {
           "6th": "The status bonus increases to +2."
         }
       },
@@ -529,7 +442,10 @@
         "name": "Guidance",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Cantrip", "Concentrate"],
+        "traits": [
+          "Cantrip",
+          "Concentrate"
+        ],
         "actions": "One Action",
         "range": "30 feet",
         "targets": "1 creature",
@@ -541,7 +457,11 @@
         "name": "Shield",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Cantrip", "Concentrate", "Force"],
+        "traits": [
+          "Cantrip",
+          "Concentrate",
+          "Force"
+        ],
         "actions": "One Action",
         "duration": "Until the start of your next turn",
         "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield. The shield has Hardness 5. You can use the spell's reaction to reduce damage from any spell or magical effect, even if it doesn't deal physical damage. After you use Shield Block, the spell ends and you can't cast it again for 10 minutes.",
@@ -553,10 +473,16 @@
         "name": "Haunting Hymn",
         "level": 0,
         "baseLevel": 1,
-        "traits": ["Auditory", "Cantrip", "Concentrate", "Manipulate", "Sonic"],
+        "traits": [
+          "Auditory",
+          "Cantrip",
+          "Concentrate",
+          "Manipulate",
+          "Sonic"
+        ],
         "actions": "Two Actions",
         "area": "15-foot cone",
-        "defense":"Fortitude",
+        "defense": "Fortitude",
         "description": "You echo a jarring hymn that only creatures in the area can hear. The hymn deals 1d8 sonic damage, with a basic Fortitude save. If a target critically fails the save, it's also deafened for 1 minute.",
         "heightened": {
           "+2": "The damage increases by 1d8."
@@ -566,13 +492,17 @@
         "id": "spell-7",
         "name": "Summon Undead",
         "level": 1,
-        "traits": ["Concentrate", "Manipulate", "Summon"],
+        "traits": [
+          "Concentrate",
+          "Manipulate",
+          "Summon"
+        ],
         "actions": "Two Actions",
         "range": "30 feet",
         "duration": "Sustained up to 1 minute",
         "signature": true,
         "description": "You summon a creature that has the undead trait and whose level is –1 to fight for you.",
-        "heightened":{
+        "heightened": {
           "2nd": "The creature can be up to Level 1.",
           "3rd": "The creature can be up to Level 2.",
           "4th": "The creature can be up to Level 3.",
@@ -588,7 +518,12 @@
         "id": "spell-8",
         "name": "Bless",
         "level": 1,
-        "traits": ["Aura", "Concentrate", "Manipulate", "Mental"],
+        "traits": [
+          "Aura",
+          "Concentrate",
+          "Manipulate",
+          "Mental"
+        ],
         "actions": "Two Actions",
         "area": "15-foot emanation",
         "duration": "1 minute",
@@ -598,7 +533,13 @@
         "id": "spell-9",
         "name": "Fear",
         "level": 1,
-        "traits": ["Concentrate", "Emotion", "Fear", "Manipulate", "Mental"],
+        "traits": [
+          "Concentrate",
+          "Emotion",
+          "Fear",
+          "Manipulate",
+          "Mental"
+        ],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 creature",
@@ -618,7 +559,12 @@
         "id": "spell-11",
         "name": "Charitable Urge",
         "level": 2,
-        "traits": ["Concentrate", "Incapacitation", "Manipulate", "Mental"],
+        "traits": [
+          "Concentrate",
+          "Incapacitation",
+          "Manipulate",
+          "Mental"
+        ],
         "actions": "Two Actions",
         "range": "30 feet",
         "targets": "1 creature",
@@ -636,7 +582,11 @@
         "id": "spell-12",
         "name": "Noise Blast",
         "level": 2,
-        "traits": ["Concentrate", "Manipulate", "Sonic"],
+        "traits": [
+          "Concentrate",
+          "Manipulate",
+          "Sonic"
+        ],
         "actions": "Two Actions",
         "range": "60 feet",
         "area": "20-foot burst",
@@ -645,7 +595,7 @@
         "heightened": {
           "+1": "The damage increases by 1d10."
         },
-        "degrees":{
+        "degrees": {
           "Critical Success": "The target is unaffected.",
           "Success": "The target takes half damage.",
           "Failure": "The target takes full damage and is Deafened for 1 round  ",
@@ -661,9 +611,14 @@
             "name": "Erode",
             "actions": "Two Actions",
             "range": "Touch",
-            "traits": ["Attack", "Concentrate", "Magical", "Void"],
+            "traits": [
+              "Attack",
+              "Concentrate",
+              "Magical",
+              "Void"
+            ],
             "description": "You touch a creature, ushering them towards the harsh embrace of death. Make a melee spell attack roll against a foe in reach, dealing 2d10 (+1d10 per level) void damage.",
-            "degrees":{
+            "degrees": {
               "Critical Success": "The target succumbs to the call of the Void and takes double damage",
               "Success": "The target takes regular damage",
               "Failure": "The target takes damage equal to 2 + half your level",
@@ -674,14 +629,18 @@
             "name": "Rust Cloud",
             "actions": "Two Actions",
             "area": "20 foot emanation",
-            "traits": ["Concentrate", "Metal", "Magical"],
+            "traits": [
+              "Concentrate",
+              "Metal",
+              "Magical"
+            ],
             "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first."
           }
         ]
       },
       {
         "source": "Horn of Rust",
-        "special":{
+        "special": {
           "name": "Shrouded",
           "description": "When a creature is shrouded, all light within 20 feet of them is lowered in intensity by one step (bright to dim, dim to dark)."
         },
@@ -690,16 +649,25 @@
             "name": "Gloaming Backstab",
             "actions": "Two Actions",
             "range": "Touch",
-            "traits": ["Attack", "Concentrate", "Darkness", "Magical"],
+            "traits": [
+              "Attack",
+              "Concentrate",
+              "Darkness",
+              "Magical"
+            ],
             "description": "You reach into the shadows and pull out a blade of pure darkness. You deal 2d6 (+1d6 per level) void damage to a foe within your reach with a Melee Spell Attack. If you're hidden, you deal an additional 2d4 (+1d4 per level) percision damage. You become Shrouded until the end of your turn."
           },
           {
             "name": "Chains of Rust",
             "actions": "Two Actions",
             "range": "Touch",
-            "traits": ["Concentrate", "Metal", "Magical"],
+            "traits": [
+              "Concentrate",
+              "Metal",
+              "Magical"
+            ],
             "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
-            "degrees":{
+            "degrees": {
               "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
               "Critical Failure": "The creature is immobilized until the start of your next turn."
             }
@@ -713,9 +681,13 @@
             "name": "Addling Blast",
             "actions": "Two Actions",
             "area": "15 foot cone",
-            "traits": ["Concentrate", "Magical", "Mental"],
+            "traits": [
+              "Concentrate",
+              "Magical",
+              "Mental"
+            ],
             "description": "You blast a cone of disorienting mental energy to muddle your foes' minds and throw them off guard. You deal 1d4 (+1d4 per level) mental damage to all creatures in a 15-foot cone with a basic Will save.",
-            "degrees":{
+            "degrees": {
               "Success": "The creature is Off-Guard until the start of their next turn",
               "Failure": "The creature is Off-Guard and Stupefied 1 until the end of your next turn",
               "Critical Failure": "The creature is Off-Guard and Stupefied 2 until the end of your next turn"
@@ -725,9 +697,14 @@
             "name": "Psychic Thrust",
             "actions": "Two Actions",
             "range": "60 feet",
-            "traits": ["Attack", "Concentrate", "Magical", "Mental"],
+            "traits": [
+              "Attack",
+              "Concentrate",
+              "Magical",
+              "Mental"
+            ],
             "description": "You thrust psychic energy into a foe from a distance to overwhelm their mind. Make a ranged Spell Attack against a foe in range, dealing 2d6 (+1d6 per level) mental damage",
-            "degrees":{
+            "degrees": {
               "Critical Success": "You hit a mental weak spot, dealing double damage and inflicting Stupefied 3 until the end of your next turn",
               "Success": "The enemy takes regular damage and is Stupefied 2 until the end of your next turn",
               "Failure": "The enemy takes no damage, and is Stupefied 1 until the end of your next turn",
@@ -738,7 +715,7 @@
       },
       {
         "source": "Xanderghul's Flawless Hammer",
-        "special":{
+        "special": {
           "name": "Limned",
           "description": "A limned creature is surrounded by light, causing it to glow like a torch, outlining it and making its position obvious. A limned creature cant normally become concealed, though if the creature would become invisible it will become concealed instead. Attempts at stealth while Limned take a -4 penalty."
         },
@@ -747,9 +724,14 @@
             "name": "Stupefying Inception",
             "actions": "Two Actions",
             "range": "touch",
-            "traits": ["Attack", "Concentrate", "Magical", "Mental"],
+            "traits": [
+              "Attack",
+              "Concentrate",
+              "Magical",
+              "Mental"
+            ],
             "description": "You touch a foe and release overflowing mental energy into their vulnerable mind, damaging them and briefly weakening their psychic defenses. Make a Spell Attack against an enemy; you deal 2d8 (+1d8 per level) mental damage to them.",
-            "degrees":{
+            "degrees": {
               "Critical Success": "You deal double damage, and they are Stupefied 3 until the end of your next turn",
               "Success": "You deal regular damage, and they are Stupefied 2 until the end of your next turn",
               "Failure": "They take no damage, but are Stupefied 1 until the end of your next turn",
@@ -760,9 +742,13 @@
             "name": "Shining Guidance",
             "actions": "Two Actions",
             "range": "40 feet",
-            "traits": ["Concentrate", "Light", "Magical"],
+            "traits": [
+              "Concentrate",
+              "Light",
+              "Magical"
+            ],
             "description": "You call forth a guiding light to surround your foe and guide your attacks toward them. Choose an enemy in range; you deal 2d4 (+1d4 per level + half your level) fire damage with a Basic Fortitude Save.",
-            "degrees":{
+            "degrees": {
               "Critical Success": "The creature resists entirely and is unaffected",
               "Success": "The enemy is Limned until the end of your next turn. You can choose to deal no fire damage rather than half; if you do, you and your allies get a +1 circumstance bonus to attack rolls against them until the end of your next turn, as long as it remains limned",
               "Failure": "The foe is Limned until the end of your next turn. You and your allies get a +1 circumstance bonus on attack rolls against the creature until the end of your next turn, as long as it remains limned",
@@ -773,7 +759,7 @@
       },
       {
         "source": "Blu's Weird Orb",
-        "special":{
+        "special": {
           "name": "Charged",
           "description": "Using electric Eld abilities gives you Charge; while charged, you are off-guard against attacks that deal electricity damage and take a -2 on saves against electric effects. The charged condition lasts until the encounter ends, you take electric damage, or you Discharge to empower another Electric Eld Power."
         },
@@ -782,28 +768,39 @@
             "name": "Electric Surge",
             "actions": "Two Actions",
             "area": "20 foot line",
-            "traits": ["Concentrate", "Electricity", "Magical"],
+            "traits": [
+              "Concentrate",
+              "Electricity",
+              "Magical"
+            ],
             "description": "You send a surging current of electricity in front of you, shocking creatures in a line. You deal 1d4 (+1d4 per level) electric damage to all creatures in a 20ft line with a Basic Reflex Save. Choose one rider effect: you either become Charged, or you Discharge to increase the are to a 40ft line and the damage increases from d4s to d8s."
           },
           {
             "name": "Polarize",
             "actions": "Two Actions",
             "range": "30 feet",
-            "traits": ["Attack", "Electricity", "Magical"],
+            "traits": [
+              "Attack",
+              "Electricity",
+              "Magical"
+            ],
             "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 per level you have."
           }
         ]
       }
     ]
   },
-  "strikes":[
+  "strikes": [
     {
       "name": "Unarmed Strike",
       "proficiency": "unarmed",
       "type": "melee",
       "action": 1,
       "damage": "1d4",
-      "traits": ["Attack", "Melee"],
+      "traits": [
+        "Attack",
+        "Melee"
+      ],
       "description": "Give 'em a good smack"
     }
   ]

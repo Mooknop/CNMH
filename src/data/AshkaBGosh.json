@@ -40,7 +40,7 @@
     "diplomacy": {
       "proficiency": 1
     },
-    "lore":[
+    "lore": [
       {
         "name": "Esoteric",
         "proficiency": 2
@@ -60,7 +60,7 @@
       "proficiency": 1
     },
     "perception": {
-      "proficiency":2
+      "proficiency": 2
     },
     "religion": {
       "proficiency": 1
@@ -77,43 +77,43 @@
   },
   "proficiencies": {
     "class": 1,
-  "weapons": {
-    "simple": {
-      "proficiency": 1,
-      "name": "Trained"
+    "weapons": {
+      "simple": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "martial": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "advanced": {
+        "proficiency": 0,
+        "name": "Untrained"
+      },
+      "unarmed": {
+        "proficiency": 1,
+        "name": "Trained"
+      }
     },
-    "martial": {
-      "proficiency": 1,
-      "name": "Trained"
-    },
-    "advanced": {
-      "proficiency": 0,
-      "name": "Untrained"
-    },
-    "unarmed": {
-      "proficiency": 1,
-      "name": "Trained"
+    "armor": {
+      "unarmored": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "light": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "medium": {
+        "proficiency": 1,
+        "name": "Trained"
+      },
+      "heavy": {
+        "proficiency": 0,
+        "name": "Untrained"
+      }
     }
   },
-  "armor": {
-    "unarmored": {
-      "proficiency": 1,
-      "name": "Trained"
-    },
-    "light": {
-      "proficiency": 1,
-      "name": "Trained"
-    },
-    "medium": {
-      "proficiency": 1,
-      "name": "Trained"
-    },
-    "heavy": {
-      "proficiency": 0,
-      "name": "Untrained"
-    }
-  }
-},
   "feats": [
     {
       "id": "feat-1",
@@ -121,11 +121,14 @@
       "level": 2,
       "source": "Archetype",
       "description": "You become trained in Survival; if you were already trained in Survival, you instead become trained in another skill of your choice. You become trained in ranger class DC. You can use the Hunt Prey action.",
-      "actions":[
+      "actions": [
         {
           "name": "Hunt Prey",
           "actionCount": 1,
-          "traits": ["Concentrate", "Ranger"],
+          "traits": [
+            "Concentrate",
+            "Ranger"
+          ],
           "description": "You designate a single creature as your prey and focus your attacks against that creature. You gain a +2 circumstance bonus to Perception checks when you Seek your prey and a +2 circumstance bonus to Survival checks when you Track your prey.\n\nYou also ignore the penalty for making ranged attacks within your second range increment against the prey you're hunting.\n\nYou can have only one creature designated as your prey at a time. This designation lasts until your next daily preparations."
         }
       ]
@@ -185,11 +188,14 @@
       "level": 3,
       "source": "Skill",
       "description": "Whenever any caster performs magic, no matter how meager, it creates a vibrant display of runes circling around an intricate glyph known as a spell signature. As a learned student of the arcane yourself, you know all too well what information can be gleaned from such runes, such as one's personality or skill level with magic. You learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources such as having innate spells and prepared spells both, you learn both.",
-      "actions":[
+      "actions": [
         {
           "name": "Spell-Signature Reading",
           "actionCount": 1,
-          "traits": ["Concentrate", "Secret"],
+          "traits": [
+            "Concentrate",
+            "Secret"
+          ],
           "description": "You study the magical energy of a spellcaster you can see within 30 feet. Make a secret Arcana check against the spellcaster's Will DC. On a success, you learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources, you learn both."
         }
       ]
@@ -218,178 +224,72 @@
   ],
   "inventory": [
     {
-      "id": "item-1",
-      "name": "Mother's Amulet",
-      "traits":["Implement"],
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you.",
-      "reactions": [
-        {
-          "name": "Amulet's Abeyance",
-          "traits": ["Thaumaturge"],
-          "trigger": "The target of your Exploit Vulnerability would damage you or an ally within 15 feet of you and you are holding your implement.",
-          "description": "You forcefully present your amulet to turn away harm. You or a target ally within 15 feet gain resistance to all damage against the triggering damage. The resistance is equal to 2 + your level."
-        }
-      ]
+      "ref": "mothers-amulet",
+      "quantity": 1
     },
     {
-      "name": "Backpack",
-      "price": 0.1,
+      "ref": "backpack",
       "quantity": 1,
-      "weight": 0.1,
-      "description": "A backpack for holding your gear",
-      "container":{
-        "capacity": 4,
-        "ignored": 2,
-        "contents":[
+      "container": {
+        "contents": [
           {
-            "name": "Bedroll",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "A compact mat, not too comfy but suitable for long journeys."
+            "ref": "bedroll",
+            "quantity": 1
           },
           {
-            "name": "Chalk",
-            "price": 0.001,
-            "quantity": 10,
-            "weight": 0.0,
-            "description": "Suitable for marking hard surfaces temporarily."
+            "ref": "chalk",
+            "quantity": 10
           },
           {
-            "name": "Flint & Steel",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "A camper's classic for starting fires."
+            "ref": "flint-steel",
+            "quantity": 1
           },
           {
-            "name": "Rope (50ft)",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "Sturdy rope for tying something (or someone) down."
+            "ref": "rope-50ft",
+            "quantity": 1
           },
           {
-            "name": "Rations",
-            "price": 0.04,
-            "quantity": 7,
-            "weight": 0.1,
-            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+            "ref": "rations",
+            "quantity": 7
           },
           {
-            "name": "Soap",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "Scrub a dub dub"
+            "ref": "soap",
+            "quantity": 1
           },
           {
-            "name": "Torch",
-            "price": 0.01,
-            "quantity": 5,
-            "weight": 0.1,
-            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+            "ref": "torch",
+            "quantity": 5
           },
           {
-            "name": "Waterskin",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+            "ref": "waterskin",
+            "quantity": 1
           }
         ]
       }
     },
     {
-      "name": "Crescent Cross",
-      "price": 4,
-      "traits": ["Combination", "Critical Fusion", "Disarm", "Parry"],
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
-      "strikes": [
-        {
-          "name": "Crescent Cross Bolt",
-          "proficiency": "martial",
-          "type": "ranged",
-          "action": 1,
-          "damage": "1d6",
-          "range": "30ft",
-          "traits": ["Attack", "Capacity 3", "Parry", "Ranged"]
-        },
-        {
-          "name": "Crescent Cross Blade",
-          "proficiency": "martial",
-          "type": "melee",
-          "action": 1,
-          "damage": "1d4",
-          "traits": ["Attack", "Disarm", "Melee", "Parry"]
-        }
-      ]
+      "ref": "crescent-cross",
+      "quantity": 1
     },
     {
-      "name": "Longbow",
-      "price": 6,
-      "traits": ["Deadly D10", "Volley 30ft"],
-      "quantity": 1,
-      "weight": 2.0,
-      "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted. Because it's made for long range, you take a -2 penalty to attacks on creatures within 30ft with it.",
-      "strikes": [
-        {
-          "proficiency": "martial",
-          "type": "ranged",
-          "action": 1,
-          "damage": "1d8",
-          "range": "30ft",
-          "traits": ["Attack", "Deadly D10", "Ranged", "Volley 30ft"]
-        }
-      ]
+      "ref": "longbow",
+      "quantity": 1
     },
     {
-      "name": "Minor Elixir of Life",
-      "traits": ["Alchemical", "Consumable", "Elixir", "Healing"],
-      "price": 3,
-      "quantity": 2,
-      "weight": 0.1,
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+      "ref": "minor-elixir-of-life",
+      "quantity": 2
     },
     {
-      "name": "Skeleton Key",
-      "price": 125,
-      "traits": ["Magical"],
-      "quantity": 1,
-      "weight": 0,
-      "description": "A grinning skull tops the bow of this macabre key. This key can be used in place of a thieves' toolkit when attempting to Pick a Lock, and it grants a +1 item bonus to the Thievery check. If the skeleton key becomes broken due to a critical failure on the check, it works as a normal thieves' toolkit and loses its benefits until repaired.",
-      "freeActions":[
-        {
-          "name": "Loosen Lock",
-          "traits": [ "Manipulate"],
-          "description": "Once per day, the key casts Knock on a Lock you're trying to pick, granting a +4 status bonus to attempts to pick it."
-        }
-      ],
-      "secret": {
-        "name": "Shrieking Key",
-        "traits": ["Rare", "Cursed", "Magical", "Transmutation"],
-        "quantity": 1,
-        "weight": 0,
-        "description": "A skull-topped metal shrieking key appears to be a skeleton key, useful in place of thieves' tools when attempting to Pick a Lock. A shrieking key has no activation, however. When you use it to Pick a Lock, the key emits a loud shriek audible for 500 feet despite ambient noise. Physical barriers still block or muffle the shriek as normal. You also take a –2 circumstance penalty to the Thievery check rather than enjoying a bonus. After you attempt such a check with the key the first time, it magically attaches to you, returning to your possession if discarded. To use another device to Pick a Lock, you must first succeed at a DC 20 Will save."
-      }
+      "ref": "skeleton-key",
+      "quantity": 1
     },
     {
-      "name": "Healer's Toolkit",
-      "price": 5,
-      "quantity": 1,
-      "weight": 1,
-      "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
+      "ref": "healers-toolkit",
+      "quantity": 1
     },
     {
-      "name": "Thieves' Toolkit",
-      "price": 3,
-      "quantity": 1,
-      "weight": 0.1,
-      "description": "You need a thieves' toolkit to Pick Locks or Disable Devices (of some types) using the Thievery skill. If your thieves' toolkit is broken, you can repair it by replacing the lock picks with replacement picks appropriate to your toolkit; this doesn't require using the Repair action. If you wear your thieves' toolkit, you can draw and replace it as part of the action that uses it."
+      "ref": "thieves-toolkit",
+      "quantity": 1
     }
   ],
   "thaumaturge": {
@@ -414,7 +314,11 @@
     {
       "name": "Exploit Vulnerability",
       "actionCount": 1,
-      "traits": ["Esoterica", "Manipulate", "Thaumaturge"],
+      "traits": [
+        "Esoterica",
+        "Manipulate",
+        "Thaumaturge"
+      ],
       "description": "You scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.",
       "degrees": {
         "Critical Success": "You remember the creature's weaknesses, and as you empower your esoterica, you have a flash of insight that grants even more knowledge about the creature. You learn all of the creature's resistances, weaknesses, and immunities, including the amounts of the resistances and weaknesses and any unusual weaknesses or vulnerabilities, such as what spells will pass through a golem's antimagic. You can exploit either the creature's mortal weakness or personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
@@ -429,11 +333,17 @@
     "name": "Lazarus",
     "type": "Squox",
     "size": "Tiny",
-    "traits": ["Familiar"],
+    "traits": [
+      "Familiar"
+    ],
     "ac": 20,
     "hp": 20,
     "speed": "25 feet",
-    "skills": ["Stealth", "Acrobatics", "Perception"],
+    "skills": [
+      "Stealth",
+      "Acrobatics",
+      "Perception"
+    ],
     "communication": "Empathic link with Ashka within 1 mile",
     "abilities": [
       {
@@ -451,7 +361,7 @@
     ],
     "description": "A Squox is an exotic creature resembling a cross between a squirrel and a fox. Little is known about them in Golarion, not even where they are native to; the only clue to their origin is the fact that they can most often be tracked back to Elven traders though where they procure the creatures in the first place remains a mystery."
   },
-  "animalCompanion":{
+  "animalCompanion": {
     "name": "Zevira",
     "type": "Young Shadow Hound",
     "size": "Small",
@@ -472,15 +382,23 @@
       "reflex": 9,
       "will": 7
     },
-    "skills": ["Acrobatics","Athletics", "Intimidation", "Perception"],
-    "strikes":[
+    "skills": [
+      "Acrobatics",
+      "Athletics",
+      "Intimidation",
+      "Perception"
+    ],
+    "strikes": [
       {
         "name": "Bite",
         "proficiency": 1,
         "type": "melee",
         "action": 1,
         "damage": "1d8",
-        "traits": ["Attack", "Finesse"]
+        "traits": [
+          "Attack",
+          "Finesse"
+        ]
       }
     ],
     "support": "Zevira shrouds your foes in shadow when you leave an opening. Until the start of your next turn, when you damage a creature with a Strike and that creature is within reach of your Shadow Hound, both you and your hound become Concealed to the creature until the end of your next turn."

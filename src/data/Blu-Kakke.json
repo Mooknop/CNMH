@@ -37,7 +37,7 @@
     "deception": {
       "proficiency": 1
     },
-    "lore":[
+    "lore": [
       {
         "name": "Dragon",
         "proficiency": 1
@@ -51,7 +51,7 @@
       "proficiency": 2
     },
     "perception": {
-      "proficiency":1
+      "proficiency": 1
     },
     "society": {
       "proficiency": 1
@@ -105,12 +105,17 @@
       "name": "Dragon Spit",
       "level": 1,
       "description": "Many Tian-Dan claim to have dragon blood in their veins, and in your case, this is true—you can spit.",
-      "innate":[
+      "innate": [
         {
           "name": "Electric Arc",
           "level": 0,
           "baseLevel": 1,
-          "traits": ["Cantrip", "Concentrate", "Electricity", "Manipulate"],
+          "traits": [
+            "Cantrip",
+            "Concentrate",
+            "Electricity",
+            "Manipulate"
+          ],
           "actions": "Two Actions",
           "range": "30 feet",
           "targets": "1 or 2 creatures",
@@ -132,18 +137,27 @@
         {
           "name": "Dragon Stance",
           "actionCount": 1,
-          "traits": ["Monk", "Stance"],
+          "traits": [
+            "Monk",
+            "Stance"
+          ],
           "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits. While in Dragon Stance, you can ignore the first square of difficult terrain while Striding."
         }
       ],
-      "strikes":[
+      "strikes": [
         {
           "name": "Dragon Tail Strike",
           "proficiency": "unarmed",
           "type": "melee",
           "action": 1,
           "damage": "1d10",
-          "traits": ["Attack", "Backswing", "Nonlethal", "Melee", "Unarmed"],
+          "traits": [
+            "Attack",
+            "Backswing",
+            "Nonlethal",
+            "Melee",
+            "Unarmed"
+          ],
           "description": "You swing your leg through the air like a dragon swiping with its tail. You can only use this when you are in Dragon Stance."
         }
       ]
@@ -162,13 +176,18 @@
       "source": "General",
       "description": "You can patch up yourself or an adjacent ally, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore a corresponding amount of Hit Points. This doesn't remove the wounded condition.",
       "actions": [
-      {
-        "name": "Battle Medicine",
-        "actionCount": 1,
-        "traits": ["General", "Healing", "Manipulate", "Skill"],
-        "description": "You can patch up wounds, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore the corresponding amount of HP; this doesn’t remove the wounded condition. As with Treat Wounds, you can attempt checks against higher DCs if you have the minimum proficiency rank. The target is then immune to your Battle Medicine for 1 day. This does not make them immune to, or otherwise count as, Treat Wounds."
-      }
-    ]
+        {
+          "name": "Battle Medicine",
+          "actionCount": 1,
+          "traits": [
+            "General",
+            "Healing",
+            "Manipulate",
+            "Skill"
+          ],
+          "description": "You can patch up wounds, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore the corresponding amount of HP; this doesn’t remove the wounded condition. As with Treat Wounds, you can attempt checks against higher DCs if you have the minimum proficiency rank. The target is then immune to your Battle Medicine for 1 day. This does not make them immune to, or otherwise count as, Treat Wounds."
+        }
+      ]
     },
     {
       "id": "feat-5",
@@ -190,14 +209,18 @@
       "level": 2,
       "source": "Archetype",
       "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision.",
-      "strikes":[
+      "strikes": [
         {
           "name": "Ravager Claw",
           "proficiency": "unarmed",
           "type": "melee",
           "action": 1,
           "damage": "1d6",
-          "traits": ["Attack", "Agile", "Finesse"],
+          "traits": [
+            "Attack",
+            "Agile",
+            "Finesse"
+          ],
           "description": "Rend their flesh with your draconic claws."
         },
         {
@@ -206,7 +229,11 @@
           "type": "melee",
           "action": 1,
           "damage": "1d8",
-          "traits": ["Attack", "Agile", "Finesse"],
+          "traits": [
+            "Attack",
+            "Agile",
+            "Finesse"
+          ],
           "description": "Bite into your foe with magically sharp dragon teeth."
         }
       ],
@@ -214,14 +241,16 @@
         {
           "name": "Take Flight",
           "actionCount": 1,
-          "traits": ["Dragon"],
+          "traits": [
+            "Dragon"
+          ],
           "description": "You've grown a pair of scaled wings, but they're taking some getting used to. Once per round, you can fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
         }
       ]
     },
     {
       "id": "feat-8",
-      "name":"Staunch Bleeding",
+      "name": "Staunch Bleeding",
       "level": 3,
       "source": "Skill",
       "description": "You know how to pack an injury properly to stop bleeding.",
@@ -229,7 +258,11 @@
         {
           "name": "Staunch Bleeding",
           "actionCount": 1,
-          "traits": ["Concentrate", "Sorcerer", "Spellshape"],
+          "traits": [
+            "Concentrate",
+            "Sorcerer",
+            "Spellshape"
+          ],
           "description": "As a single action you can Treat Wounds to stop someone from bleeding; if you use two actions the DC is reduced by 10."
         }
       ]
@@ -243,7 +276,9 @@
       "reactions": [
         {
           "name": "Deflect Projectile",
-          "traits": ["Monk"],
+          "traits": [
+            "Monk"
+          ],
           "trigger": "You are the target of a physical ranged attack, are aware of the attack, are not off-guard, and have a free hand",
           "description": "You gain a +4 circumstance bonus to AC against the triggering attack. If the attack misses, you have deflected it. You cannot use this to deflect unusually massive ranged projectiles (such as boulders or ballista bolts)."
         }
@@ -258,7 +293,9 @@
       "reactions": [
         {
           "name": "Wing Deflection",
-          "traits": ["Draconic Ravager"],
+          "traits": [
+            "Draconic Ravager"
+          ],
           "trigger": "You are the target of a physical attack, are aware of the attack, and are not off-guard",
           "description": "You gain a +2 circumstance bonus to AC against the triggering attack."
         }
@@ -274,214 +311,119 @@
   ],
   "inventory": [
     {
-      "name": "Backpack",
-      "price": 0.1,
+      "ref": "backpack",
       "quantity": 1,
-      "weight": 0.1,
-      "description": "A backpack for holding your gear",
-      "container":{
-        "capacity": 4,
-        "ignored": 2,
-        "contents":[
+      "container": {
+        "contents": [
           {
-            "name": "Bedroll",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "A compact mat, not too comfy but suitable for long journeys."
+            "ref": "bedroll",
+            "quantity": 1
           },
           {
-            "name": "Chalk",
-            "price": 0.001,
-            "quantity": 10,
-            "weight": 0.0,
-            "description": "Suitable for marking hard surfaces temporarily."
+            "ref": "chalk",
+            "quantity": 10
           },
           {
-            "name": "Flint & Steel",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "A camper's classic for starting fires."
+            "ref": "flint-steel",
+            "quantity": 1
           },
           {
-            "name": "Rope (50ft)",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "Sturdy rope for tying something (or someone) down."
+            "ref": "rope-50ft",
+            "quantity": 1
           },
           {
-            "name": "Rations",
-            "price": 0.04,
-            "quantity": 7,
-            "weight": 0.1,
-            "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+            "ref": "rations",
+            "quantity": 7
           },
           {
-            "name": "Soap",
-            "price": 0.02,
-            "quantity": 1,
-            "weight": 0.0,
-            "description": "Scrub a dub dub"
+            "ref": "soap",
+            "quantity": 1
           },
           {
-            "name": "Torch",
-            "price": 0.01,
-            "quantity": 5,
-            "weight": 0.1,
-            "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+            "ref": "torch",
+            "quantity": 5
           },
           {
-            "name": "Waterskin",
-            "price": 0.05,
-            "quantity": 1,
-            "weight": 0.1,
-            "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+            "ref": "waterskin",
+            "quantity": 1
           }
         ]
       }
     },
     {
-      "name": "Spacious Pouch",
-      "price": 75,
+      "ref": "spacious-pouch",
       "quantity": 1,
-      "weight": 1.0,
-      "traits": ["Extradimensional", "Magical"],
-      "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
-      "container":{
-        "capacity": 25,
-        "ignored": 25,
-        "contents":[
+      "container": {
+        "contents": [
           {
-            "name": "Sterling Artisan's Tools (Talismans)",
-            "price": 50,
-            "quantity": 1,
-            "weight": 2,
-            "description": "An incredibly high-quality set of artisan tools, perfectly suited to creating Talismans. If you use them when you Craft a Talisman, you get a +1 item bonus to the check."
+            "ref": "sterling-artisans-tools-talismans",
+            "quantity": 1
           },
           {
-            "name": "Anticorrosion Oil",
-            "price": 6,
-            "quantity": 3,
-            "weight": 0.1,
-            "traits": ["Consumable", "Magical", "Oil"],
-            "description":"You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae."
+            "ref": "anticorrosion-oil",
+            "quantity": 3
           },
           {
-            "name": "Oil of Weightlessness",
-            "price": 6,
-            "quantity": 1,
-            "weight": 0.1,
-            "traits": ["Consumable", "Magical", "Oil"],
-            "description":"You can spread this shimmering oil on an item of 1 Bulk or less to make it feel weightless. It has negligible Bulk for 1 hour."
+            "ref": "oil-of-weightlessness",
+            "quantity": 1
           },
           {
-            "name": "Moderate Drakeheart Mutagen",
-            "price": 12,
-            "quantity": 2,
-            "weight": 0.1,
-            "traits": ["Alchemical", "Consumable", "Elixir", "Mutagen"],
-            "description":"Your skin grows scales like a drake, and your eyesight become sharp and your pupils slitted, but your mind and reflexes slow. You gain a +5 Item bonus to AC, a Dexterity cap of +2 (as usual, use your lowest Dexterity cap if you have more than one), and a +2 item bonus to Perception checks. If you're wearing armor, you still calculate your proficiency bonus to AC based on your proficiency in the armor you're wearing, even if the drakeheart mutagen has a higher item bonus. While under its effects, you take a –1 penalty to Will saves, Reflex saves, and all skill checks to Recall Knowledge. As a single action, you can burn through the remaining duration of the Mutagen to stride twice."
+            "ref": "moderate-drakeheart-mutagen",
+            "quantity": 2
           },
           {
-            "name": "Eye Garnets",
-            "quantity": 2,
-            "weight": 0,
-            "price": 50,
-            "description": "Large red rubies you pried from a statue of Xar-Azmak."
+            "ref": "eye-garnets",
+            "quantity": 2
           },
           {
-            "name": "Rusty, Broken Full Plate Armor",
-            "quantity": 2,
-            "weight": 5,
-            "price": 30,
-            "description": "Large red rubies you pried from a statue of Xar-Azmak."
+            "ref": "rusty-broken-full-plate-armor",
+            "quantity": 2
           },
           {
-            "name": "Midnight Milk",
-            "quantity": 1,
-            "weight": 0.1,
-            "price": 30,
-            "traits": ["Alchemical", "Consumable", "Drug", "Ingested", "Poison", "Rare"],
-            "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands."
+            "ref": "midnight-milk",
+            "quantity": 1
           }
         ]
       }
     },
     {
-      "name": "Healer's Toolkit",
-      "price": 5,
-      "quantity": 1,
-      "weight": 1,
-      "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
+      "ref": "healers-toolkit",
+      "quantity": 1
     },
     {
-      "name": "Minor Healing Potion",
-      "price": 4,
-      "quantity": 2,
-      "weight": 0.1,
-      "traits": ["Consumable", "Healing", "Magical", "Potion", "Vitality"],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed"
+      "ref": "minor-healing-potion",
+      "quantity": 2
     },
     {
-      "name": "Minor Elixir of Life",
-      "price": 3,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Alchemical", "Consumable", "Elixir", "Healing"],
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+      "ref": "minor-elixir-of-life",
+      "quantity": 1
     },
     {
-      "name": "Potion of Waterbreathing",
-      "price": 11,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Consumable", "Magical", "Potion"],
-      "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour."
+      "ref": "potion-of-waterbreathing",
+      "quantity": 1
     },
     {
-      "name": "Mysterious Blue Orb",
-      "quantity": 1,
-      "weight": 1.0,
-      "traits": ["Magical"],
-      "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him."
+      "ref": "mysterious-blue-orb",
+      "quantity": 1
     },
     {
-      "name": "Sanitizing Pin",
-      "price": 7,
-      "quantity": 1,
-      "weight": 0,
-      "traits": ["Consumable", "Magical", "Talisman", "Uncommon"],
-      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+      "ref": "sanitizing-pin",
+      "quantity": 1
     },
     {
-      "name": "Rust Scrub",
-      "price": 2,
-      "quantity": 1,
-      "weight": 0.1,
-      "traits": ["Alchemical", "Consumable", "Uncommon"],
-      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+      "ref": "rust-scrub",
+      "quantity": 1
     },
     {
-      "name": "Shuriken",
-      "price": 2,
-      "quantity": 15,
-      "weight": 0.0,
-      "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
-      "traits": ["Agile", "Monk", "Thrown", "Uncommon"],
-      "strikes":{
-        "proficiency": "simple",
-        "type": "ranged",
-        "action": 1,
-        "damage": "1d4",
-        "range": "20ft",
-        "traits": ["Attack", "Agile", "Monk", "Thrown"]
-      }
+      "ref": "shuriken",
+      "quantity": 15
     }
   ],
   "monk": {
-    "traditions": ["Dragon", "Mountain"],
+    "traditions": [
+      "Dragon",
+      "Mountain"
+    ],
     "stances": [
       {
         "name": "Dragon Stance",
@@ -495,7 +437,12 @@
         "name": "Inner Upheaval",
         "level": 1,
         "baseLevel": 1,
-        "traits": ["Uncommon", "Concentrate", "Focus", "Monk"],
+        "traits": [
+          "Uncommon",
+          "Concentrate",
+          "Focus",
+          "Monk"
+        ],
         "actions": "One Action",
         "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
         "heightened": {
@@ -507,21 +454,27 @@
     "class_dc": 19
   },
   "actions": [
-      {
-        "name": "Flurry of Blows",
-        "actionCount": 1,
-        "traits": ["Flourish", "Monk"],
-        "description": "Make two unarmed Strikes. If both hit the same creature, combine their damage for the purpose of resistances and weaknesses. Apply your multiple attack penalty to the Strikes normally. As a flourish ability, you can use Flurry of Blows only once per turn."
-      }
-    ],
-  "strikes": [ 
+    {
+      "name": "Flurry of Blows",
+      "actionCount": 1,
+      "traits": [
+        "Flourish",
+        "Monk"
+      ],
+      "description": "Make two unarmed Strikes. If both hit the same creature, combine their damage for the purpose of resistances and weaknesses. Apply your multiple attack penalty to the Strikes normally. As a flourish ability, you can use Flurry of Blows only once per turn."
+    }
+  ],
+  "strikes": [
     {
       "name": "Unarmed Strike",
       "proficiency": "unarmed",
       "type": "melee",
       "action": 1,
       "damage": "1d6",
-      "traits": ["Attack", "Melee"],
+      "traits": [
+        "Attack",
+        "Melee"
+      ],
       "description": "Give 'em a good smack"
     }
   ]
