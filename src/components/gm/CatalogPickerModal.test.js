@@ -55,15 +55,35 @@ describe('CatalogPickerModal', () => {
     expect(within(screen.getByTestId('catalog-preview')).getByText('Container')).toBeInTheDocument();
   });
 
-  it('Add is disabled until a selection is made, then submits and closes', () => {
+  it('Add is disabled until a selection is made, then submits an array and closes', () => {
     const { onSelect, onClose } = setup();
-    const add = screen.getByRole('button', { name: 'Add to character' });
+    const add = screen.getByRole('button', { name: 'Add selected' });
     expect(add).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Torch' }));
     expect(add).toBeEnabled();
     fireEvent.click(add);
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'torch' }));
+    expect(onSelect).toHaveBeenCalledWith([expect.objectContaining({ id: 'torch' })]);
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('single-select replaces the prior choice', () => {
+    const { onSelect } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Torch' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Backpack' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add selected' }));
+    expect(onSelect).toHaveBeenCalledWith([expect.objectContaining({ id: 'backpack' })]);
+  });
+
+  it('multiSelect lets several items be checked and added together', () => {
+    const { onSelect } = setup({ multiSelect: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Torch' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Minor Elixir of Life' }));
+    expect(screen.getByText('2 selected')).toBeInTheDocument();
+    // toggling one off
+    fireEvent.click(screen.getByRole('button', { name: 'Torch' }));
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add selected' }));
+    expect(onSelect).toHaveBeenCalledWith([expect.objectContaining({ id: 'minor-elixir-of-life' })]);
   });
 
   it('Cancel closes without selecting', () => {

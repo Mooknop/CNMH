@@ -90,8 +90,19 @@
   white-space: pre-wrap;
 }
 
+.catalog-picker-check {
+  display: inline-block;
+  width: 1.1em;
+  margin-right: 6px;
+}
+
 .catalog-picker-actions {
   justify-content: flex-end;
+  align-items: center;
+}
+
+.catalog-picker-count {
+  margin: 0 auto 0 0;
 }
 
 @media (max-width: 600px) {
