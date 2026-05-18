@@ -558,4 +558,18 @@ describe('ItemModal', () => {
     fireEvent.click(screen.getByRole('button'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  // Slice 4: effective ownership state shown in the detail grid
+  it('shows the item state when present', () => {
+    render(
+      <ItemModal isOpen={true} onClose={jest.fn()} item={{ ...baseItem, state: 'held1' }} />
+    );
+    expect(screen.getByText('State')).toBeInTheDocument();
+    expect(screen.getByText('Held in 1 Hand')).toBeInTheDocument();
+  });
+
+  it('omits the State row when no state is set', () => {
+    render(<ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} />);
+    expect(screen.queryByText('State')).not.toBeInTheDocument();
+  });
 });

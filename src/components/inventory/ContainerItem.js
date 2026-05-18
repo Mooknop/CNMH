@@ -4,6 +4,7 @@ import {
   calculateContainerBulk,
   formatBulk,
 } from '../../utils/InventoryUtils';
+import { ITEM_STATE_LABEL } from '../../utils/itemState';
 
 /**
  * Component for displaying a container and its contents
@@ -103,13 +104,16 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
               {sortedContents.map((item, index) => (
                 <tr key={item.id || `container-item-${index}`}>
                   <td>
-                    <button 
-                      className="item-name" 
+                    <button
+                      className="item-name"
                       onClick={() => onItemClick(item)}
                       style={{ color: themeColor }}
                     >
                       {item.name}
                     </button>
+                    <span className="item-state-badge">
+                      {ITEM_STATE_LABEL[item.state] || ITEM_STATE_LABEL.stowed}
+                    </span>
                   </td>
                   <td>{item.quantity || 1}</td>
                   <td>

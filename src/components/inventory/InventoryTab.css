@@ -151,3 +151,29 @@
       font-weight: 500; /* Make item names a bit more prominent on mobile */
     }
   }
+
+/* Slice 4: effective ownership-state badge on inventory rows */
+.item-state-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #555;
+  background: #eee;
+  vertical-align: middle;
+}
+
+.item-state-badge.dropped {
+  color: var(--color-danger, #b3261e);
+  background: rgba(179, 38, 30, 0.12);
+}
+
+.inv-row-dropped {
+  opacity: 0.55;
+}
+
+.inv-row-dropped .item-name {
+  text-decoration: line-through;
+}

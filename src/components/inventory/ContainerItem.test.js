@@ -240,4 +240,18 @@ describe('ContainerItem', () => {
       fireEvent.click(dom.querySelector('.container-header'));
     }).not.toThrow();
   });
+
+  // Slice 4: contents are labelled with their effective state (Stowed)
+  it('labels a content row with its state badge', () => {
+    const container = makeContainer({
+      container: {
+        capacity: 4,
+        ignored: 0,
+        contents: [{ id: '1', name: 'Torch', quantity: 1, weight: 0.1, state: 'stowed' }],
+      },
+    });
+    render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
+    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    expect(screen.getByText('Stowed')).toBeInTheDocument();
+  });
 });
