@@ -4,6 +4,7 @@ import ContainersList from './ContainersList';
 import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
 import CraftingModal from './CraftingModal';
 import { useCharacter } from '../../hooks/useCharacter';
+import { ITEM_STATE_LABEL } from '../../utils/itemState';
 
 /**
  * Component for displaying character inventory
@@ -108,10 +109,13 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
           <tbody>
             {sortedInventory.length > 0 ? (
               sortedInventory.map(item => (
-                <tr key={item.id || `item-${item.name}`}>
+                <tr
+                  key={item.id || `item-${item.name}`}
+                  className={item.state === 'dropped' ? 'inv-row-dropped' : undefined}
+                >
                   <td>
-                    <button 
-                      className="item-name" 
+                    <button
+                      className="item-name"
                       onClick={() => onItemClick(item)}
                       style={{ color: characterColor }}
                     >
@@ -122,6 +126,17 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
                         </span>
                       )}
                     </button>
+                    {item.state && item.state !== 'worn' && (
+                      <span
+                        className={`item-state-badge${
+                          item.state === 'dropped' ? ' dropped' : ''
+                        }`}
+                      >
+                        {item.state === 'dropped'
+                          ? '(dropped)'
+                          : ITEM_STATE_LABEL[item.state]}
+                      </span>
+                    )}
                   </td>
                   <td>{item.quantity || 1}</td>
                   <td>
