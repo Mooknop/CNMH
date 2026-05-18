@@ -21,21 +21,39 @@ jest.mock('../../hooks/useCharacter', () => ({
   useCharacter: (character) => {
     if (!character) return null;
     return {
+      id: 'hero',
       bulkStats: {
         bulkLimit: 10,
         encumberedThreshold: 7
       },
       totalBulk: 5,
       inventory: [
-        { id: '1', name: 'Longsword', weight: 1, state: 'held2' },
-        { id: '2', name: 'Leather Armor', weight: 1, state: 'dropped' },
-        { id: '3', name: 'Worn Cloak', weight: 0.5, state: 'worn' }
+        { uid: 'u1', id: '1', name: 'Longsword', weight: 1, state: 'held2' },
+        { uid: 'u2', id: '2', name: 'Leather Armor', weight: 1, state: 'dropped' },
+        { uid: 'u3', id: '3', name: 'Worn Cloak', weight: 0.5, state: 'worn' },
+        {
+          uid: 'u4', id: '4', name: 'Backpack', weight: 0.1, state: 'worn',
+          container: { capacity: 4, ignored: 1, contents: [] },
+        },
       ],
       skillProficiencies: {
         crafting: 1
       }
     };
   }
+}));
+
+const mockLoadout = {
+  drop: jest.fn(),
+  pickUp: jest.fn(),
+  stow: jest.fn(),
+  unhand: jest.fn(),
+  retrieve: jest.fn(),
+  moveToContainer: jest.fn(),
+};
+jest.mock('../../hooks/useLoadout', () => ({
+  __esModule: true,
+  useLoadout: () => mockLoadout,
 }));
 
 jest.mock('./ContainersList', () => {
@@ -53,6 +71,10 @@ jest.mock('./CraftingModal', () => {
 });
 
 describe('InventoryTab', () => {
+  beforeEach(() => {
+    Object.values(mockLoadout).forEach((fn) => fn.mockClear());
+  });
+
   const mockCharacter = {
     id: '1',
     name: 'Test Character',
@@ -194,5 +216,35 @@ describe('InventoryTab', () => {
     expect(screen.queryByText('Worn')).not.toBeInTheDocument();
     // dropped row is visually de-emphasised
     expect(container.querySelector('tr.inv-row-dropped')).toBeInTheDocument();
+  });
+
+  // Slice C: explicit per-item action buttons wired to useLoadout
+  it('worn item shows Drop + Stow (single container) and wires them', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByTestId('inv-u3-drop'));
+    expect(mockLoadout.drop).toHaveBeenCalledWith('u3');
+    // exactly one container (Backpack u4) ⇒ a direct "Stow in Backpack" button
+    fireEvent.click(screen.getByTestId('inv-u3-stow'));
+    expect(mockLoadout.stow).toHaveBeenCalledWith('u3', 'u4');
+  });
+
+  it('a container item can be Dropped but not Stowed into itself', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByTestId('inv-u4-drop')).toBeInTheDocument();
+    expect(screen.queryByTestId('inv-u4-stow')).not.toBeInTheDocument();
+  });
+
+  it('dropped item shows Pick up', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByTestId('inv-u2-pickup'));
+    expect(mockLoadout.pickUp).toHaveBeenCalledWith('u2');
+  });
+
+  it('held item shows Unhand and Release', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByTestId('inv-u1-unhand'));
+    expect(mockLoadout.unhand).toHaveBeenCalledWith('u1');
+    fireEvent.click(screen.getByTestId('inv-u1-release'));
+    expect(mockLoadout.drop).toHaveBeenCalledWith('u1'); // release == drop → Dropped
   });
 });

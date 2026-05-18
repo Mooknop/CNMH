@@ -177,3 +177,16 @@
 .inv-row-dropped .item-name {
   text-decoration: line-through;
 }
+
+/* Slice C: per-item action buttons */
+.inv-actions,
+.contents-actions {
+  white-space: nowrap;
+}
+
+.inv-actions select,
+.contents-actions select {
+  padding: 0.2rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}

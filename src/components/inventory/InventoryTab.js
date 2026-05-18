@@ -4,6 +4,7 @@ import ContainersList from './ContainersList';
 import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
 import CraftingModal from './CraftingModal';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useLoadout } from '../../hooks/useLoadout';
 import { ITEM_STATE_LABEL } from '../../utils/itemState';
 
 /**
@@ -18,6 +19,10 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
 
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
+  // Loadout writer (hooks must run unconditionally — before the early return).
+  const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(
+    charData ? charData.id : character && character.id
+  );
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = charData;
@@ -39,7 +44,87 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   );
 
   const hasCrafting = skillProficiencies.crafting > 0;
-  
+
+  // Top-level containers are the valid Stow targets (depth-1 model).
+  const containers = inventory.filter(
+    (e) => e && e.container && Array.isArray(e.container.contents)
+  );
+
+  // Explicit per-item actions (write the live loadout via useLoadout).
+  const renderActions = (item) => {
+    const uid = item.uid;
+    if (!uid) return null;
+    const st = item.state;
+    if (st === 'dropped') {
+      return (
+        <button
+          className="btn-small btn-secondary"
+          data-testid={`inv-${uid}-pickup`}
+          onClick={() => pickUp(uid)}
+        >
+          Pick up
+        </button>
+      );
+    }
+    if (st === 'held1' || st === 'held2') {
+      return (
+        <>
+          <button
+            className="btn-small btn-secondary"
+            data-testid={`inv-${uid}-unhand`}
+            onClick={() => unhand(uid)}
+          >
+            Unhand
+          </button>{' '}
+          <button
+            className="btn-small btn-danger"
+            data-testid={`inv-${uid}-release`}
+            onClick={() => drop(uid)}
+          >
+            Release
+          </button>
+        </>
+      );
+    }
+    // Worn (default).
+    const isC = !!(item.container && Array.isArray(item.container.contents));
+    const stowTargets = containers.filter((c) => c.uid !== uid);
+    return (
+      <>
+        <button
+          className="btn-small btn-danger"
+          data-testid={`inv-${uid}-drop`}
+          onClick={() => drop(uid)}
+        >
+          Drop
+        </button>{' '}
+        {!isC && stowTargets.length === 1 && (
+          <button
+            className="btn-small btn-secondary"
+            data-testid={`inv-${uid}-stow`}
+            onClick={() => stow(uid, stowTargets[0].uid)}
+          >
+            Stow in {stowTargets[0].name}
+          </button>
+        )}
+        {!isC && stowTargets.length > 1 && (
+          <select
+            aria-label={`inv-${uid}-stow-select`}
+            defaultValue=""
+            onChange={(e) => e.target.value && stow(uid, e.target.value)}
+          >
+            <option value="">Stow…</option>
+            {stowTargets.map((c) => (
+              <option key={c.uid} value={c.uid}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="inventory-tab">
       <div className="inventory-header">
@@ -104,6 +189,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
               <th style={{ backgroundColor: characterColor }}>Item</th>
               <th style={{ backgroundColor: characterColor }}>Qty</th>
               <th style={{ backgroundColor: characterColor }}>Bulk</th>
+              <th style={{ backgroundColor: characterColor }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -142,11 +228,12 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
                   <td>
                     {formatBulk(item.weight || 0)}
                   </td>
+                  <td className="inv-actions">{renderActions(item)}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="3" className="empty-inventory">
+                <td colSpan="4" className="empty-inventory">
                   No items in inventory
                 </td>
               </tr>
@@ -156,10 +243,12 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       </div>
       
       {/* Display containers section if character has any */}
-      <ContainersList 
-        inventory={sortedInventory} 
-        themeColor={characterColor} 
-        onItemClick={onItemClick} 
+      <ContainersList
+        inventory={sortedInventory}
+        themeColor={characterColor}
+        onItemClick={onItemClick}
+        onRetrieve={retrieve}
+        onMove={moveToContainer}
       />
 
       {/* Crafting Modal */}

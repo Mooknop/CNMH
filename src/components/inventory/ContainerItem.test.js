@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import ContainerItem from './ContainerItem';
 
 jest.mock('../../utils/InventoryUtils', () => ({
@@ -253,5 +253,64 @@ describe('ContainerItem', () => {
     render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
     fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
     expect(screen.getByText('Stowed')).toBeInTheDocument();
+  });
+
+  // Slice C: stowed contents get Retrieve + a Location (other containers) select
+  it('Retrieve calls onRetrieve(uid); Location lists only other containers', () => {
+    const onRetrieve = jest.fn();
+    const onMove = jest.fn();
+    const backpack = makeContainer({
+      uid: 'bp',
+      name: 'Backpack',
+      container: {
+        capacity: 4,
+        ignored: 0,
+        contents: [{ uid: 'i1', id: '1', name: 'Torch', quantity: 1, weight: 0.1, state: 'stowed' }],
+      },
+    });
+    const pouch = { uid: 'po', name: 'Pouch', container: { capacity: 1, ignored: 0, contents: [] } };
+    render(
+      <ContainerItem
+        container={backpack}
+        allContainers={[backpack, pouch]}
+        themeColor="#4a90d9"
+        onItemClick={jest.fn()}
+        onRetrieve={onRetrieve}
+        onMove={onMove}
+      />
+    );
+    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    fireEvent.click(screen.getByTestId('stowed-i1-retrieve'));
+    expect(onRetrieve).toHaveBeenCalledWith('i1');
+
+    const sel = screen.getByLabelText('stowed-i1-location');
+    // only the *other* container (Pouch) is offered, never the Backpack itself
+    expect(within(sel).queryByRole('option', { name: 'Backpack' })).not.toBeInTheDocument();
+    fireEvent.change(sel, { target: { value: 'po' } });
+    expect(onMove).toHaveBeenCalledWith('i1', 'po');
+  });
+
+  it('no Location select when there are no other containers', () => {
+    const only = makeContainer({
+      uid: 'bp',
+      container: {
+        capacity: 4,
+        ignored: 0,
+        contents: [{ uid: 'i1', id: '1', name: 'Torch', quantity: 1, weight: 0.1, state: 'stowed' }],
+      },
+    });
+    render(
+      <ContainerItem
+        container={only}
+        allContainers={[only]}
+        themeColor="#4a90d9"
+        onItemClick={jest.fn()}
+        onRetrieve={jest.fn()}
+        onMove={jest.fn()}
+      />
+    );
+    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    expect(screen.getByTestId('stowed-i1-retrieve')).toBeInTheDocument();
+    expect(screen.queryByLabelText('stowed-i1-location')).not.toBeInTheDocument();
   });
 });
