@@ -89,10 +89,11 @@ const openItem = (form, i) =>
   fireEvent.click(within(form).getByTestId(`item-${i}`).querySelector('.gm-inv-main'));
 const closeEditor = (form) =>
   fireEvent.click(within(form).getByRole('button', { name: 'Done' }));
-// A CatalogPickerModal is open: choose a catalog item by name and submit it.
-const pickCatalog = (form, name) => {
-  fireEvent.click(within(form).getByRole('button', { name }));
-  fireEvent.click(within(form).getByRole('button', { name: 'Add to character' }));
+// A CatalogPickerModal is open: choose one or more catalog items by name and
+// submit them ("Add selected" has a stable aria-label across single/multi).
+const pickCatalog = (form, ...names) => {
+  names.forEach((n) => fireEvent.click(within(form).getByRole('button', { name: n })));
+  fireEvent.click(within(form).getByRole('button', { name: 'Add selected' }));
 };
 
 afterEach(() => jest.restoreAllMocks());
@@ -497,6 +498,25 @@ describe('GmCharacters', () => {
       // A newly-added entry is minted a fresh runtime uid.
       expect(typeof added[0].uid).toBe('string');
       expect(added[0].uid).toMatch(/^e-/);
+    });
+
+    it('Add item can select and append several catalog items at once', async () => {
+      const empty = { ...refChar, id: 'empty', name: 'Empty', inventory: [] };
+      setContent([empty]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-empty');
+      gotoTab(form, 'Inventory');
+      fireEvent.click(within(form).getByRole('button', { name: 'Add item' }));
+      pickCatalog(form, 'Torch', 'Rope (50 ft.)'); // two selected, then "Add selected"
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent(/Torch/);
+      expect(within(form).getByTestId('item-1-summary')).toHaveTextContent(/Rope/);
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory)).toEqual([
+        { ref: 'torch', quantity: 1 },
+        { ref: 'rope-50ft', quantity: 1 },
+      ]);
     });
 
     it('flags a legacy inline item but still edits and round-trips it', async () => {

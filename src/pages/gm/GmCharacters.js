@@ -534,10 +534,12 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
       return { ...c, inventory: [...c.inventory, entry] };
     });
 
-  const onPickerSelect = (catalogItem) => {
-    if (!picker) return;
-    if (picker.kind === 'change') repointAt(picker.path, catalogItem.id);
-    else addRef(picker, catalogItem.id);
+  // The picker hands back an array. A re-point can only target one item
+  // (multiSelect is off for 'change'); adds append every chosen ref.
+  const onPickerSelect = (catalogItems) => {
+    if (!picker || !catalogItems.length) return;
+    if (picker.kind === 'change') repointAt(picker.path, catalogItems[0].id);
+    else catalogItems.forEach((it) => addRef(picker, it.id));
   };
 
   // Before save, re-derive each ref's container-ness from the catalog (a
@@ -993,12 +995,13 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
         onClose={() => setPicker(null)}
         catalog={catalogList}
         onSelect={onPickerSelect}
+        multiSelect={!!picker && picker.kind !== 'change'}
         title={
           picker && picker.kind === 'container'
-            ? 'Add an item to the container'
+            ? 'Add items to the container'
             : picker && picker.kind === 'change'
             ? 'Change catalog item'
-            : 'Add an item from the catalog'
+            : 'Add items from the catalog'
         }
       />
 

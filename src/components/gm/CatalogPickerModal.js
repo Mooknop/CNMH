@@ -38,28 +38,39 @@ const CatalogItemPreview = ({ item }) => {
 };
 
 /**
- * Searchable catalog item picker. The selection is local to this modal until
- * the GM presses "Add to character"; that calls onSelect(catalogItem) and the
- * caller appends it to the in-memory form (still saved only via the Save
- * button). Stacks above the item-edit modal via Modal's highZ.
+ * Searchable catalog item picker. Selections are local to this modal until
+ * the GM presses "Add selected"; that calls onSelect(catalogItems) (always an
+ * array) and the caller appends them to the in-memory form (still saved only
+ * via the Save button). Stacks above the item-edit modal via Modal's highZ.
  *
  * Props:
- *   isOpen   – visibility
- *   onClose  – close without selecting
- *   catalog  – array of catalog item docs
- *   onSelect – called with the chosen catalog item on submit
- *   title    – optional header text
+ *   isOpen      – visibility
+ *   onClose     – close without selecting
+ *   catalog     – array of catalog item docs
+ *   onSelect    – called with the array of chosen catalog items on submit
+ *   title       – optional header text
+ *   multiSelect – when true, several items can be checked and added at once;
+ *                 when false (e.g. re-pointing a row) only one can be chosen
  */
-const CatalogPickerModal = ({ isOpen, onClose, catalog, onSelect, title }) => {
+const CatalogPickerModal = ({
+  isOpen,
+  onClose,
+  catalog,
+  onSelect,
+  title,
+  multiSelect = false,
+}) => {
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [focusId, setFocusId] = useState(null);
 
   // Reset transient state each time the picker opens (the instance stays
   // mounted while closed, mirroring HistoryModal's open-effect pattern).
   useEffect(() => {
     if (isOpen) {
       setQuery('');
-      setSelectedId(null);
+      setSelectedIds([]);
+      setFocusId(null);
     }
   }, [isOpen]);
 
@@ -79,11 +90,29 @@ const CatalogPickerModal = ({ isOpen, onClose, catalog, onSelect, title }) => {
     );
   }, [list, query]);
 
-  const selected = list.find((c) => String(c.id) === String(selectedId)) || null;
+  const isSelected = (id) => selectedIds.some((x) => String(x) === String(id));
+
+  const choose = (id) => {
+    setFocusId(id);
+    if (multiSelect) {
+      setSelectedIds((prev) =>
+        prev.some((x) => String(x) === String(id))
+          ? prev.filter((x) => String(x) !== String(id))
+          : [...prev, id]
+      );
+    } else {
+      setSelectedIds([id]);
+    }
+  };
+
+  const selectedItems = selectedIds
+    .map((id) => list.find((c) => String(c.id) === String(id)))
+    .filter(Boolean);
+  const focused = list.find((c) => String(c.id) === String(focusId)) || null;
 
   const submit = () => {
-    if (!selected) return;
-    onSelect(selected);
+    if (selectedItems.length === 0) return;
+    onSelect(selectedItems);
     onClose();
   };
 
@@ -91,7 +120,10 @@ const CatalogPickerModal = ({ isOpen, onClose, catalog, onSelect, title }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={title || 'Add an item from the catalog'}
+      title={
+        title ||
+        (multiSelect ? 'Add items from the catalog' : 'Choose a catalog item')
+      }
       maxWidth="760px"
       highZ
     >
@@ -105,10 +137,7 @@ const CatalogPickerModal = ({ isOpen, onClose, catalog, onSelect, title }) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <ul
-            className="catalog-picker-results"
-            aria-label="catalog results"
-          >
+          <ul className="catalog-picker-results" aria-label="catalog results">
             {results.length === 0 && (
               <li className="gm-count">No matching catalog items.</li>
             )}
@@ -117,11 +146,16 @@ const CatalogPickerModal = ({ isOpen, onClose, catalog, onSelect, title }) => {
                 <button
                   type="button"
                   className={`catalog-picker-option${
-                    String(c.id) === String(selectedId) ? ' active' : ''
+                    isSelected(c.id) ? ' active' : ''
                   }`}
-                  aria-pressed={String(c.id) === String(selectedId)}
-                  onClick={() => setSelectedId(c.id)}
+                  aria-pressed={isSelected(c.id)}
+                  onClick={() => choose(c.id)}
                 >
+                  {multiSelect && (
+                    <span aria-hidden="true" className="catalog-picker-check">
+                      {isSelected(c.id) ? '☑' : '☐'}
+                    </span>
+                  )}
                   {c.name || c.id}
                 </button>
               </li>
@@ -129,17 +163,24 @@ const CatalogPickerModal = ({ isOpen, onClose, catalog, onSelect, title }) => {
           </ul>
         </div>
         <div className="catalog-picker-preview">
-          <CatalogItemPreview item={selected} />
+          <CatalogItemPreview item={focused} />
         </div>
       </div>
       <div className="gm-actions catalog-picker-actions">
+        {multiSelect && (
+          <span className="gm-count catalog-picker-count" aria-live="polite">
+            {selectedItems.length} selected
+          </span>
+        )}
         <button
           type="button"
           className="btn-primary"
-          disabled={!selected}
+          aria-label="Add selected"
+          disabled={selectedItems.length === 0}
           onClick={submit}
         >
-          Add to character
+          Add selected
+          {multiSelect && selectedItems.length > 0 ? ` (${selectedItems.length})` : ''}
         </button>
         <button type="button" className="btn-secondary" onClick={onClose}>
           Cancel
