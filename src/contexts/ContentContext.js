@@ -9,6 +9,7 @@ import {
   normalizeTraits,
   normalizeCharacters,
   normalizeItems,
+  normalizeSpells,
   resolveCharacterItems,
   defaultContent,
 } from '../utils/contentUtils';
@@ -144,12 +145,17 @@ export const ContentProvider = ({ children }) => {
   const serverTraits = serverList('trait');
   const serverCharacters = serverList('character');
   const serverItems = serverList('item');
+  const serverSpells = serverList('spell');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
   // upstream of useCharacter — means InventoryUtils/SpellUtils/ContainerItem
   // consume fully-shaped items and need no changes.
   const items = serverItems.length ? normalizeItems(serverItems) : FALLBACK.item;
+  // Shared spell catalog — wand/scroll/staff blocks reference it by id; it is
+  // inlined during inventory resolution below (bundled-only for now, so this
+  // is the fallback path until a GM Spell collection lands).
+  const spells = serverSpells.length ? normalizeSpells(serverSpells) : FALLBACK.spell;
   // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
   // editor must edit/save THAT, not the resolved view, or saving would inline
   // every item back and defeat the catalog. `characters` is the resolved view
@@ -157,7 +163,9 @@ export const ContentProvider = ({ children }) => {
   const rawCharacters = serverCharacters.length
     ? normalizeCharacters(serverCharacters)
     : FALLBACK.character;
-  const characters = rawCharacters.map((c) => resolveCharacterItems(c, items));
+  const characters = rawCharacters.map((c) =>
+    resolveCharacterItems(c, items, spells)
+  );
 
   const value = {
     loading,
@@ -168,7 +176,8 @@ export const ContentProvider = ({ children }) => {
       serverLore.length ||
       serverTraits.length ||
       serverCharacters.length ||
-      serverItems.length
+      serverItems.length ||
+      serverSpells.length
         ? 'server'
         : 'fallback',
     quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
@@ -183,6 +192,7 @@ export const ContentProvider = ({ children }) => {
     characters,
     rawCharacters,
     items,
+    spells,
     refresh: loadSnapshot,
   };
 
@@ -197,9 +207,12 @@ const NOOP_CONTENT = {
   calendarEvents: FALLBACK.calendar,
   loreEntries: FALLBACK.lore,
   traits: FALLBACK.trait,
-  characters: FALLBACK.character.map((c) => resolveCharacterItems(c, FALLBACK.item)),
+  characters: FALLBACK.character.map((c) =>
+    resolveCharacterItems(c, FALLBACK.item, FALLBACK.spell)
+  ),
   rawCharacters: FALLBACK.character,
   items: FALLBACK.item,
+  spells: FALLBACK.spell,
   refresh: () => Promise.resolve(),
 };
 

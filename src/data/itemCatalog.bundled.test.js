@@ -1,8 +1,8 @@
 // Slice 3 gate: the authoritative, CI-run guarantee that converting the
 // bundled sheets to catalog + refs is lossless. Runs the REAL src/utils
 // resolution + bulk + spell functions (the build script only mirrors them).
-import { sampleCharacters, items } from './index';
-import { itemCatalogMap, resolveInventory, resolveCharacterItems } from '../utils/contentUtils';
+import { sampleCharacters, items, spells } from './index';
+import { itemCatalogMap, resolveCharacterItems } from '../utils/contentUtils';
 import { calculateItemsBulk } from '../utils/InventoryUtils';
 import {
   findScrollItems,
@@ -17,14 +17,27 @@ const catalogMap = itemCatalogMap(items);
 // Resolution restamps item-level id; the original sheets only sporadically
 // carried one, so strip it (recursively through container contents) before
 // comparing shapes. `uid` (Slice 1 stable per-entry id) is likewise added
-// metadata the pre-catalog fixture predates — strip it too. Everything else
-// must match exactly.
+// metadata the pre-catalog fixture predates — strip it too. The nested
+// scroll/wand/staff spell `id` is the same story: it was always a cosmetic,
+// often-duplicated value ("spell-1") and is now the spell-catalog slug — strip
+// it the same way. Everything else must match exactly.
+const stripSpellId = (s) => {
+  if (!s || typeof s !== 'object') return s;
+  const c = { ...s };
+  delete c.id;
+  return c;
+};
 const stripIds = (list) =>
   (Array.isArray(list) ? list : []).map((it) => {
     if (!it || typeof it !== 'object') return it;
     const out = { ...it };
     delete out.id;
     delete out.uid;
+    if (out.scroll && typeof out.scroll === 'object') out.scroll = stripSpellId(out.scroll);
+    if (out.wand && typeof out.wand === 'object') out.wand = stripSpellId(out.wand);
+    if (out.staff && Array.isArray(out.staff.spells)) {
+      out.staff = { ...out.staff, spells: out.staff.spells.map(stripSpellId) };
+    }
     if (out.container && Array.isArray(out.container.contents)) {
       out.container = { ...out.container, contents: stripIds(out.container.contents) };
     }
@@ -72,7 +85,9 @@ describe('bundled item catalog (Slice 3)', () => {
     sampleCharacters.forEach((c) => {
       const original = preCatalog[c.id];
       expect(Array.isArray(original)).toBe(true);
-      const resolved = resolveInventory(c.inventory, catalogMap);
+      // Resolve via the character so artifact tiers gate on its level and
+      // spell refs inline from the catalog (mirrors ContentContext).
+      const resolved = resolveCharacterItems(c, items, spells).inventory;
       expect(stripIds(resolved)).toEqual(stripIds(original));
     });
   });
@@ -80,13 +95,13 @@ describe('bundled item catalog (Slice 3)', () => {
   it('preserves total Bulk exactly for every character (golden parity vs fixture)', () => {
     sampleCharacters.forEach((c) => {
       const original = preCatalog[c.id];
-      const resolved = resolveCharacterItems(c, items).inventory;
+      const resolved = resolveCharacterItems(c, items, spells).inventory;
       expect(calculateItemsBulk(resolved)).toBe(calculateItemsBulk(original));
     });
   });
 
   it('scrolls and wands are still detected after resolution, with named spells', () => {
-    const resolvedChars = sampleCharacters.map((c) => resolveCharacterItems(c, items));
+    const resolvedChars = sampleCharacters.map((c) => resolveCharacterItems(c, items, spells));
 
     const allScrolls = resolvedChars.flatMap(findScrollItems);
     const allWands = resolvedChars.flatMap(findWandItems);
@@ -99,5 +114,49 @@ describe('bundled item catalog (Slice 3)', () => {
     const izzy = resolvedChars.find((c) => c.id === 'IzzyUncut');
     expect(findScrollItems(izzy).length).toBeGreaterThan(0);
     expect(findWandItems(izzy).length).toBeGreaterThan(0);
+  });
+
+  it('spell catalog has unique, named, slug ids and a single deduped Cleanse Affliction', () => {
+    expect(spells.length).toBeGreaterThan(0);
+    expect(new Set(spells.map((s) => s.id)).size).toBe(spells.length);
+    expect(
+      spells.every((s) => typeof s.id === 'string' && s.id && typeof s.name === 'string' && s.name)
+    ).toBe(true);
+    // Cleanse Affliction was inlined in both a scroll and a wand — now one entry.
+    expect(spells.filter((s) => s.name === 'Cleanse Affliction')).toHaveLength(1);
+    const scroll = items.find((i) => i.id === 'scroll-of-cleanse-affliction');
+    const wand = items.find((i) => i.id === 'wand-of-cleanse-affliction');
+    expect(scroll.scroll.spellRef).toBe('cleanse-affliction');
+    expect(wand.wand.spellRef).toBe('cleanse-affliction');
+  });
+
+  it('Xanderghul’s Hammer is one catalog item: weapon + staff + artifact', () => {
+    const hammer = items.find((i) => i.id === 'xanderghuls-flawless-hammer');
+    expect(hammer.strikes).toBeTruthy();
+    expect(Array.isArray(hammer.reactions)).toBe(true);
+    expect(Array.isArray(hammer.staff && hammer.staff.spells)).toBe(true);
+    expect(hammer.staff.spells.every((s) => typeof s.ref === 'string')).toBe(true);
+    expect(Array.isArray(hammer.artifact && hammer.artifact.tiers)).toBe(true);
+
+    // Jade is level 4 — every artifact tier (incl. the staff at L4) is unlocked.
+    const jade = sampleCharacters.find((c) => c.id === 'JadeInferno');
+    const rJade = resolveCharacterItems(jade, items, spells).inventory;
+    const rHammer = rJade.find((e) => e.id === 'xanderghuls-flawless-hammer');
+    expect(rHammer.strikes && rHammer.reactions && rHammer.staff).toBeTruthy();
+    expect(rHammer.staff.spells).toHaveLength(8);
+    expect(rHammer.staff.spells.every((s) => s.name && s.ref == null)).toBe(true);
+
+    // A pre-tier owner: the staff is gated off until the artifact unlocks it.
+    const lowLvl = resolveCharacterItems({ ...jade, level: 1 }, items, spells).inventory;
+    const lowHammer = lowLvl.find((e) => e.id === 'xanderghuls-flawless-hammer');
+    expect(lowHammer.staff).toBeUndefined();
+    expect(lowHammer.strikes).toBeTruthy();
+  });
+
+  it('Blu’s orb is tagged Artifact but mechanically inert', () => {
+    const orb = items.find((i) => i.id === 'mysterious-blue-orb');
+    expect(orb.traits).toContain('Artifact');
+    expect(orb.artifact).toEqual({ tiers: [] });
+    expect(orb.strikes || orb.staff || orb.scroll || orb.wand || orb.actions).toBeFalsy();
   });
 });

@@ -16,6 +16,7 @@ import pcEntries from './lore/pcs.json';
 import questsData from './quests.json';
 import reputationData from './reputation.json';
 import itemsData from './items.json';
+import spellsData from './spells.json';
 
 // Export an array of all available character data
 export const sampleCharacters = [
@@ -48,3 +49,7 @@ export const reputation = reputationData;
 // Export the shared item catalog (empty until Slice 3 populates it; an empty
 // catalog makes inventory resolution an identity passthrough — see contentUtils).
 export const items = itemsData.items;
+
+// Export the shared spell catalog. Wand/scroll/staff blocks reference these by
+// id (`spellRef`/`ref`); resolution inlines the full spell — see contentUtils.
+export const spells = spellsData.spells;

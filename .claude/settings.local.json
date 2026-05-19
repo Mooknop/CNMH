@@ -35,7 +35,17 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mookn\\\\Documents\\\\CNMH\\\\chaotic-neutral-milk-hotel\\\\src\\\\data\")",
       "Bash(Select-Object Name)",
       "Bash(git checkout *)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(git add *)",
+      "Bash(git -c commit.gpgsign=false commit -q -m 'Slice 6b \\(2/4\\): gmApi fetchHistory + restoreVersion *)",
+      "Bash(git pull *)",
+      "Bash(git commit -m '@ *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh pr edit 28 --body ' *)",
+      "Bash(gh pr *)",
+      "Bash(node -e \"const fs=require\\('fs'\\);console.log\\(fs.readFileSync\\('src/utils/strikeUtils.js','utf8'\\).split\\(/\\\\r?\\\\n/\\).slice\\(28,76\\).map\\(\\(l,i\\)=>\\(i+29\\)+': '+l\\).join\\('\\\\n'\\)\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('src/pages/gm/GmCharacters.test.js','utf8'\\);console.log\\('LINES',t.split\\(/\\\\n/\\).length\\);console.log\\(t.slice\\(0,1800\\)\\);console.log\\('...\\\\n--- strikes refs ---'\\);t.split\\(/\\\\r?\\\\n/\\).forEach\\(\\(l,i\\)=>{if\\(/strike|ARR_SECTION|renderArr|setContent|rawCharacters/i.test\\(l\\)\\)console.log\\(\\(i+1\\)+': '+l\\)}\\);\")"
     ]
   }
 }
