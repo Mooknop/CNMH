@@ -12,8 +12,6 @@ import {
   findWandItems,
   extractWandSpells,
   extractInnateSpells,
-  findGemItems,
-  extractGemSpells,
 } from './SpellUtils';
 
 describe('SpellUtils', () => {
@@ -342,6 +340,13 @@ describe('SpellUtils', () => {
       expect(result[0].fromScroll).toBe(true);
       expect(result[0].scrollName).toBe('Scroll of Fireball');
     });
+
+    it('gates the spell on the scroll being held', () => {
+      const spell = { name: 'Fireball', level: 3 };
+      expect(extractScrollSpells([{ name: 'S', state: 'worn', scroll: spell }])[0].active).toBe(false);
+      expect(extractScrollSpells([{ name: 'S', state: 'held1', scroll: spell }])[0].active).toBe(true);
+      expect(extractScrollSpells([{ name: 'S', noHandRequired: true, scroll: spell }])[0].active).toBe(true);
+    });
   });
 
   describe('findWandItems', () => {
@@ -369,6 +374,12 @@ describe('SpellUtils', () => {
       const result = extractWandSpells(wandItems);
       expect(result[0].fromWand).toBe(true);
       expect(result[0].wandName).toBe('Wand of Fireball');
+    });
+
+    it('gates the spell on the wand being held', () => {
+      const spell = { name: 'Fireball', level: 3 };
+      expect(extractWandSpells([{ name: 'Wand', state: 'worn', wand: spell }])[0].active).toBe(false);
+      expect(extractWandSpells([{ name: 'Wand', state: 'held2', wand: spell }])[0].active).toBe(true);
     });
   });
 
@@ -400,33 +411,6 @@ describe('SpellUtils', () => {
       const result = extractInnateSpells(char);
       expect(result).toHaveLength(1);
       expect(result[0].innateSource).toBe('Elf');
-    });
-  });
-
-  describe('findGemItems', () => {
-    it('returns gem items', () => {
-      const char = {
-        inventory: [
-          { name: 'Ruby', gem: { name: 'Burning Hands', level: 1 } },
-          { name: 'Sword' },
-        ],
-      };
-      expect(findGemItems(char)).toHaveLength(1);
-    });
-
-    it('returns empty array when no inventory', () => {
-      expect(findGemItems({})).toHaveLength(0);
-    });
-  });
-
-  describe('extractGemSpells', () => {
-    it('extracts spells from gem items', () => {
-      const gemItems = [
-        { name: 'Ruby', gem: { name: 'Burning Hands', level: 1 } },
-      ];
-      const result = extractGemSpells(gemItems);
-      expect(result[0].fromGem).toBe(true);
-      expect(result[0].gemName).toBe('Ruby');
     });
   });
 });

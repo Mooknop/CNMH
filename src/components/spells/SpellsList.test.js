@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import SpellsList from './SpellsList';
 
-jest.mock('./GemSpells', () => () => <div data-testid="gem-spells" />);
 jest.mock('./SpellsHeader', () => () => <div data-testid="spells-header" />);
 jest.mock('./ViewModeToggle', () => ({ viewMode, setViewMode, hasSpellcasting, hasScrolls, hasWands }) => (
   <div data-testid="view-mode-toggle">
@@ -28,7 +27,6 @@ jest.mock('../../hooks/useCharacter', () => ({
       spellcasting: char._spellcasting || { spells: [] },
       scrollSpells: char._scrollSpells || [],
       wandSpells: char._wandSpells || [],
-      gemSpells: char._gemSpells || [],
       innateSpells: char._innateSpells || [],
       staffSpells: char._staffSpells || [],
       staff: char._staff || null,
@@ -40,7 +38,6 @@ jest.mock('../../hooks/useCharacter', () => ({
         hasInnateSpells: char._hasInnate || false,
         hasScrolls: char._hasScrolls || false,
         hasWands: char._hasWands || false,
-        hasGems: char._hasGems || false,
         hasStaff: char._hasStaff || false,
         hasEldPowers: char._hasEld || false,
         hasHarrowing: char._hasHarrowing || false,

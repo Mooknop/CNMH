@@ -78,6 +78,17 @@ describe('ActionCardList', () => {
     expect(screen.getByText(/1 to 3 Actions/)).toBeInTheDocument();
   });
 
+  it('shows the not-in-hand hint when an item action is inactive', () => {
+    const item = { ...baseItem, source: 'Wand', active: false };
+    render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+    expect(screen.getByText(/Not in hand/)).toBeInTheDocument();
+  });
+
+  it('does not show the hint for active or non-item actions', () => {
+    render(<ActionCardList items={[{ ...baseItem, active: true }]} type="action" themeColor="#fff" />);
+    expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
+  });
+
   describe('highlight feature', () => {
     it('renders highlight badge when item.highlight is set', () => {
       const item = { ...baseItem, highlight: 'Master' };

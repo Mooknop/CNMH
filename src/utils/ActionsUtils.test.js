@@ -762,3 +762,81 @@ describe('ActionsUtils', () => {
     });
   });
 });
+
+describe('hand gating (active flag)', () => {
+  const baseChar = {
+    level: 1,
+    abilities: { strength: 14, dexterity: 10 },
+    proficiencies: { weapons: { simple: { proficiency: 1 } } },
+  };
+
+  describe('getStrikes', () => {
+    it('marks an inventory weapon strike inactive when the item is worn', () => {
+      const char = {
+        ...baseChar,
+        inventory: [{ name: 'Greatsword', state: 'worn', strikes: { type: 'melee', traits: [], damage: '2d12' } }],
+      };
+      const s = getStrikes(char).find((x) => x.source === 'Greatsword');
+      expect(s.active).toBe(false);
+    });
+
+    it('marks it active when the item is held (held1 / held2)', () => {
+      const held1 = {
+        ...baseChar,
+        inventory: [{ name: 'Greatsword', state: 'held1', strikes: { type: 'melee', traits: [], damage: '2d12' } }],
+      };
+      const held2 = {
+        ...baseChar,
+        inventory: [{ name: 'Greatsword', state: 'held2', strikes: { type: 'melee', traits: [], damage: '2d12' } }],
+      };
+      expect(getStrikes(held1).find((x) => x.source === 'Greatsword').active).toBe(true);
+      expect(getStrikes(held2).find((x) => x.source === 'Greatsword').active).toBe(true);
+    });
+
+    it('honours the noHandRequired catalog override while worn', () => {
+      const char = {
+        ...baseChar,
+        inventory: [{ name: 'Handwraps', state: 'worn', noHandRequired: true, strikes: { type: 'melee', traits: [], damage: '1d4' } }],
+      };
+      expect(getStrikes(char).find((x) => x.source === 'Handwraps').active).toBe(true);
+    });
+
+    it('leaves character-defined and unarmed-fallback strikes ungated', () => {
+      const char = { ...baseChar, strikes: [{ name: 'Bite', type: 'melee', traits: [], damage: '1d8' }] };
+      expect(getStrikes(char)[0].active).toBeUndefined();
+
+      const unarmed = getStrikes({ ...baseChar }); // no strikes anywhere → fallback
+      expect(unarmed[0].name).toBe('Unarmed Strike');
+      expect(unarmed[0].active).toBeUndefined();
+    });
+  });
+
+  describe('getActions / getReactions / getFreeActions', () => {
+    it('gates inventory-sourced actions on held state', () => {
+      const worn = { inventory: [{ name: 'Wand', state: 'worn', actions: [{ name: 'Activate', actionCount: 1 }] }] };
+      const held = { inventory: [{ name: 'Wand', state: 'held1', actions: [{ name: 'Activate', actionCount: 1 }] }] };
+      expect(getActions(worn).find((a) => a.source === 'Wand').active).toBe(false);
+      expect(getActions(held).find((a) => a.source === 'Wand').active).toBe(true);
+    });
+
+    it('gates inventory reactions and free actions, leaves feat-sourced ones ungated', () => {
+      const char = {
+        reactions: [],
+        freeActions: [],
+        feats: [
+          { name: 'Feat1', reactions: [{ name: 'FeatReaction' }], freeActions: [{ name: 'FeatFree' }] },
+        ],
+        inventory: [
+          { name: 'Buckler', state: 'worn', reactions: [{ name: 'Block' }], freeActions: [{ name: 'Snap' }] },
+        ],
+      };
+      const r = getReactions(char);
+      expect(r.find((x) => x.source === 'Buckler').active).toBe(false);
+      expect(r.find((x) => x.source === 'Feat1').active).toBeUndefined();
+
+      const fa = getFreeActions(char);
+      expect(fa.find((x) => x.source === 'Buckler').active).toBe(false);
+      expect(fa.find((x) => x.source === 'Feat1').active).toBeUndefined();
+    });
+  });
+});

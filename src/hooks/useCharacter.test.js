@@ -33,8 +33,6 @@ jest.mock('../utils/SpellUtils', () => ({
   findWandItems: () => [],
   extractWandSpells: () => [],
   extractInnateSpells: () => [],
-  findGemItems: () => [],
-  extractGemSpells: () => [],
 }));
 
 jest.mock('../utils/InventoryUtils', () => ({
@@ -283,5 +281,41 @@ describe('useCharacter', () => {
     // structure/uids preserved through the effective merge
     expect(inv.map((e) => e.uid)).toEqual(['effguy-0', 'effguy-1']);
     expect(inv[1].container.contents[0].uid).toBe('effguy-2');
+  });
+
+  // Staff spells are gated on the staff inventory entry (matched by name)
+  // being held. The util mocks above don't touch staff — useCharacter
+  // computes it from character.staff + the effective tree directly.
+  describe('staff hand gating', () => {
+    const makeChar = (id) => ({
+      id,
+      name: 'Caster',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      feats: [],
+      inventory: [{ uid: `${id}-0`, name: "Xanderghul's Flawless Hammer", weight: 1, quantity: 1 }],
+      staff: {
+        name: "Xanderghul's Flawless Hammer",
+        spells: [{ id: 'ss1', name: 'Figment', level: 0 }],
+      },
+    });
+
+    afterEach(() => localStorage.clear());
+
+    it('marks staff spells inactive when the staff is merely worn (empty loadout)', () => {
+      const { result } = renderHook(() => useCharacter(makeChar('staffworn')));
+      expect(result.current.flags.staffActive).toBe(false);
+      expect(result.current.staffSpells[0].active).toBe(false);
+    });
+
+    it('marks staff spells active when the matching entry is held', () => {
+      localStorage.setItem(
+        'cnmh_loadout_staffheld',
+        JSON.stringify({ 'staffheld-0': { state: 'held1', hand: 1 } })
+      );
+      const { result } = renderHook(() => useCharacter(makeChar('staffheld')));
+      expect(result.current.flags.staffActive).toBe(true);
+      expect(result.current.staffSpells[0].active).toBe(true);
+    });
   });
 });

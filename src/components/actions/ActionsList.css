@@ -313,3 +313,18 @@
     padding: 1rem;
   }
 }
+
+/* Item-granted abilities that aren't currently usable because the source
+   item isn't held in a hand. Dimmed but still readable so the player can
+   see what drawing the item would give them. Shared by strike / action /
+   reaction / free-action cards and (via SpellsList.css) spell cards. */
+.is-inactive {
+  opacity: 0.5;
+}
+
+.ability-inactive-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  padding: 0.5rem 1rem;
+}

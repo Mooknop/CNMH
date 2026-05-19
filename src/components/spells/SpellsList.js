@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import './SpellsList.css';
 
-import GemSpells from './GemSpells';
 import SpellsHeader from './SpellsHeader';
 import ViewModeToggle from './ViewModeToggle';
 import SpellFilters from './SpellFilters';
@@ -39,7 +38,6 @@ const SpellsList = ({ character, characterColor }) => {
     spellcasting,
     scrollSpells,
     wandSpells,
-    gemSpells,
     innateSpells,
     staffSpells,
     staff,
@@ -57,7 +55,6 @@ const SpellsList = ({ character, characterColor }) => {
     hasInnateSpells: hasInnate,
     hasScrolls,
     hasWands,
-    hasGems,
     hasStaff,
     hasEldPowers,
     hasHarrowing,
@@ -78,7 +75,6 @@ const SpellsList = ({ character, characterColor }) => {
     const scrollSpellsByRank   = organizeSpellsByRank(scrollSpells);
     const wandSpellsByRank     = organizeSpellsByRank(wandSpells);
     const innateSpellsByRank   = organizeSpellsByRank(innateSpells);
-    const gemSpellsByRank      = organizeSpellsByRank(gemSpells);
     const spellsByRank         = organizeSpellsByRank(spellcasting.spells || []);
 
     const availableSpellRanks      = getAvailableRanks(spellsByRank);
@@ -86,7 +82,6 @@ const SpellsList = ({ character, characterColor }) => {
     const availableScrollSpellRanks= getAvailableRanks(scrollSpellsByRank);
     const availableWandSpellRanks  = getAvailableRanks(wandSpellsByRank);
     const availableInnateSpellRanks= getAvailableRanks(innateSpellsByRank);
-    const availableGemSpellRanks   = getAvailableRanks(gemSpellsByRank);
 
     const allAvailableRanks = [...new Set([
       ...availableSpellRanks,
@@ -94,7 +89,6 @@ const SpellsList = ({ character, characterColor }) => {
       ...availableScrollSpellRanks,
       ...availableWandSpellRanks,
       ...availableInnateSpellRanks,
-      ...availableGemSpellRanks,
     ])];
 
     const sortedRankList = getSortedRankList(allAvailableRanks);
@@ -105,7 +99,6 @@ const SpellsList = ({ character, characterColor }) => {
       ...scrollSpells,
       ...wandSpells,
       ...innateSpells,
-      ...gemSpells,
     ];
     const allDefenseTypes = getDefenseTypes(allSpells);
 
@@ -116,7 +109,7 @@ const SpellsList = ({ character, characterColor }) => {
       sortedRankList,
       allDefenseTypes,
     };
-  }, [spellcasting, scrollSpells, wandSpells, gemSpells, innateSpells, staffSpells]);
+  }, [spellcasting, scrollSpells, wandSpells, innateSpells, staffSpells]);
 
   // Effect to set the initial view mode based on what's available
   useEffect(() => {
@@ -132,7 +125,6 @@ const SpellsList = ({ character, characterColor }) => {
       if (hasStaff) availableModes.push('staff');
       if (hasScrolls) availableModes.push('scrolls');
       if (hasWands) availableModes.push('wands');
-      if (hasGems) availableModes.push('gems');
       if (hasHarrowing) availableModes.push('harrow');
       
       // Set view mode to the first available one
@@ -143,10 +135,10 @@ const SpellsList = ({ character, characterColor }) => {
         setViewMode('spells');
       }
     }
-  }, [hasSpellcasting, hasInnate, hasFocus, hasEldPowers, hasStaff, hasScrolls, hasWands, hasGems, viewMode, hasHarrowing]);
+  }, [hasSpellcasting, hasInnate, hasFocus, hasEldPowers, hasStaff, hasScrolls, hasWands, viewMode, hasHarrowing]);
   
   // If no spellcasting, focus magic, innate spells, or eld powers, show placeholder
-  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing && !hasScrolls && !hasWands && !hasGems && !hasStaff) {
+  if (!hasSpellcasting && !hasFocus && !hasInnate && !hasEldPowers && !hasHarrowing && !hasScrolls && !hasWands && !hasStaff) {
     return (
       <div className="spells-list">
         <h2 style={{ color: themeColor }}>Spellcasting</h2>
@@ -205,10 +197,7 @@ const SpellsList = ({ character, characterColor }) => {
     else if (viewMode === 'wands') {
       return filterSpellsByRank(wandSpells, activeSpellRank);
     }
-    else if (viewMode === 'gems') {
-      return filterSpellsByRank(gemSpells, activeSpellRank);
-    }
-    
+
     return [];
   };
   
@@ -248,7 +237,6 @@ const SpellsList = ({ character, characterColor }) => {
         staff={staff || {}}
         focusLabel={getFocusSpellsLabel()}
         themeColor={themeColor}
-        hasGems={hasGems}
         hasHarrowing={hasHarrowing}
       />
       
@@ -328,17 +316,6 @@ const SpellsList = ({ character, characterColor }) => {
         />
       )}
 
-      {viewMode === 'gems' && hasGems && (
-        <GemSpells 
-          spells={spellsToDisplay}
-          themeColor={themeColor}
-          characterLevel={level}
-          defenseFilter={defenseFilter}
-          activeSpellRank={activeSpellRank}
-          character={character}
-        />
-      )}
-      
       {viewMode === 'eld' && hasEldPowers && (
         <EldPowers 
           eldPowers={eldPowers}

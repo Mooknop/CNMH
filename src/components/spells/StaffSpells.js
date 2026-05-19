@@ -66,6 +66,11 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
     }
   };
 
+  // Staff spells are gated on the staff being held (useCharacter stamps the
+  // same `active` on every staff spell from the matching inventory entry).
+  // active === false ⇒ show but disabled.
+  const inactive = spells.length > 0 && spells.every((s) => s.active === false);
+
   const filtered = filterSpellsByDefense(spells, defenseFilter);
   const spellsByRank = organizeSpellsByRank(filtered);
   const ranksToShow = getSortedRankList(
@@ -75,8 +80,14 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
   const hasActiveFilter = activeSpellRank !== 'all' || defenseFilter !== 'all';
 
   return (
-    <div className="spells-container">
+    <div className={`spells-container${inactive ? ' is-inactive' : ''}`}>
       <StaffInfoBox themeColor={themeColor} />
+
+      {inactive && (
+        <div className="ability-inactive-hint">
+          Not in hand — hold the staff to cast its spells.
+        </div>
+      )}
 
       {chargesMax > 0 && (
         <div className="staff-charges-section">

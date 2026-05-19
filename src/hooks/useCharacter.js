@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 import { useSyncedState } from './useSyncedState';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
+import { itemAbilitiesActive } from '../utils/itemState';
 
 import {
   getAbilityModifier,
@@ -33,8 +34,6 @@ import {
   findWandItems,
   extractWandSpells,
   extractInnateSpells,
-  findGemItems,
-  extractGemSpells,
 } from '../utils/SpellUtils';
 
 import { calculateItemsBulk } from '../utils/InventoryUtils';
@@ -132,33 +131,50 @@ export const useCharacter = (character) => {
       loadout
     );
 
+    // Item-granted abilities (weapon strikes, item actions, scroll/wand/staff
+    // spells) are gated on the item being held in a hand. The derivation utils
+    // key off item state, so they read the effective tree — not the authored
+    // inventory — via this state-aware view. Effective entries keep every
+    // resolved field (name/scroll/wand/strikes/actions/noHandRequired) plus
+    // the live `state`/`hand`, so it is a drop-in replacement.
+    const charEff = { ...character, inventory: effectiveInventory };
+
     // ── Bulk ────────────────────────────────────────────────────────────────
     const bulkStats = calculateEnhancedBulkLimit(character);
     const totalBulk = calculateItemsBulk(effectiveInventory);
 
     // ── Combat ──────────────────────────────────────────────────────────────
-    const strikes     = getStrikes(character);
-    const actions     = getActions(character);
-    const reactions   = getReactions(character);
-    const freeActions = getFreeActions(character);
+    const strikes     = getStrikes(charEff);
+    const actions     = getActions(charEff);
+    const reactions   = getReactions(charEff);
+    const freeActions = getFreeActions(charEff);
 
     // ── Spellcasting ────────────────────────────────────────────────────────
     const spellcasting = character.spellcasting || {};
     const spellStats   = calculateSpellStats(character);
 
-    const scrollItems  = findScrollItems(character);
+    const scrollItems  = findScrollItems(charEff);
     const scrollSpells = extractScrollSpells(scrollItems);
 
-    const wandItems    = findWandItems(character);
+    const wandItems    = findWandItems(charEff);
     const wandSpells   = extractWandSpells(wandItems);
-
-    const gemItems     = findGemItems(character);
-    const gemSpells    = extractGemSpells(gemItems);
 
     const innateSpells = extractInnateSpells(character) || [];
 
     const staff       = character.staff || null;
-    const staffSpells = staff?.spells || [];
+    // The staff is a top-level object; its real placement lives on the
+    // matching effective inventory entry (linked by name). It is castable
+    // only while that entry is held (or flagged noHandRequired). No match ⇒
+    // treat as not held. Stamp `active` on each staff spell so the renderer
+    // can disable them, mirroring scroll/wand spells.
+    const staffEntry  = staff?.name
+      ? effectiveInventory.find((e) => e && e.name === staff.name)
+      : null;
+    const staffActive = staff?.name ? itemAbilitiesActive(staffEntry) : false;
+    const staffSpells = (staff?.spells || []).map((s) => ({
+      ...s,
+      active: staffActive,
+    }));
 
     const eldPowers   = spellcasting.eldPowers || [];
 
@@ -189,8 +205,8 @@ export const useCharacter = (character) => {
       hasInnateSpells          : innateSpells.length > 0,
       hasScrolls               : scrollItems.length > 0,
       hasWands                 : wandItems.length > 0,
-      hasGems                  : gemItems.length > 0,
       hasStaff                 : !!(staff?.name),
+      staffActive              : staffActive,
       hasEldPowers             : eldPowers.length > 0,
       isThaumaturge            : character.class === 'Thaumaturge' && !!character.thaumaturge,
     };
@@ -254,8 +270,6 @@ export const useCharacter = (character) => {
       scrollSpells,
       wandItems,
       wandSpells,
-      gemItems,
-      gemSpells,
       innateSpells,
       staff,
       staffSpells,

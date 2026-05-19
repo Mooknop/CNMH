@@ -2,6 +2,7 @@
 // Utilities for extracting actions, reactions, and free actions from character data.
 
 import { convertWordToNumber, parseActionCount } from './actionIconUtils';
+import { itemAbilitiesActive } from './itemState';
 
 /**
  * Normalise a single action object, resolving variable action counts and
@@ -48,7 +49,11 @@ export const getActions = (character) => {
     const inventoryActions = character.inventory
       .filter(item => item.actions && item.actions.length > 0)
       .flatMap(item =>
-        item.actions.map(action => ({ ...processActionText(action), source: item.name }))
+        item.actions.map(action => ({
+          ...processActionText(action),
+          source: item.name,
+          active: itemAbilitiesActive(item),
+        }))
       );
     allActions = [...allActions, ...inventoryActions];
   }
@@ -85,7 +90,13 @@ export const getReactions = (character) => {
   if (character.inventory) {
     const inventoryReactions = character.inventory
       .filter(item => item.reactions && item.reactions.length > 0)
-      .flatMap(item => item.reactions.map(r => ({ ...r, source: item.name })));
+      .flatMap(item =>
+        item.reactions.map(r => ({
+          ...r,
+          source: item.name,
+          active: itemAbilitiesActive(item),
+        }))
+      );
     allReactions = [...allReactions, ...inventoryReactions];
   }
 
@@ -111,7 +122,13 @@ export const getFreeActions = (character) => {
   if (character.inventory) {
     const inventoryFreeActions = character.inventory
       .filter(item => item.freeActions && item.freeActions.length > 0)
-      .flatMap(item => item.freeActions.map(fa => ({ ...fa, source: item.name })));
+      .flatMap(item =>
+        item.freeActions.map(fa => ({
+          ...fa,
+          source: item.name,
+          active: itemAbilitiesActive(item),
+        }))
+      );
     allFreeActions = [...allFreeActions, ...inventoryFreeActions];
   }
 

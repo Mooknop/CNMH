@@ -120,6 +120,13 @@ export const itemCatalogMap = (items) => {
 // ref keeps the catalog's intrinsic {capacity,ignored} and takes its
 // contents from the reference. A dangling ref yields a visible, weightless
 // stub so bulk math never breaks (NaN-free).
+//
+// Optional catalog field `noHandRequired: true` marks an item whose granted
+// abilities (strikes / item actions / scroll-wand-staff spells) work while
+// merely worn — the escape hatch from the held-in-hand gate (see
+// itemState.itemAbilitiesActive). It flows onto the effective entry for free:
+// the catalog spread below carries it, and buildEffectiveInventory spreads
+// the whole entry, so no special handling is needed here.
 export const resolveInventoryItem = (entry, catalogMap) => {
   if (!entry || typeof entry !== 'object') return entry;
 
