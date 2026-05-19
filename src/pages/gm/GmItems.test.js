@@ -273,16 +273,22 @@ describe('GmItems', () => {
     render(<GmItems />);
     fireEvent.click(screen.getByText('+ New item'));
     const form = screen.getByTestId('item-form-new');
-    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Scroll of Sleep' } });
+    // Type a name first while the editor still allows it; it's overwritten by
+    // the catalog-derived "Scroll of Sleep" once spell-kind flips to scroll.
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'placeholder' } });
     fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'scroll' } });
-    // Default hint, then a resolved-name preview once the id matches the catalog.
-    expect(within(form).getByTestId('spell-ref-preview')).toHaveTextContent(/Leave blank/i);
+    // Slice 5a: scroll uses a catalog dropdown; default hint guides the GM.
+    expect(within(form).getByTestId('spell-ref-preview')).toHaveTextContent(/Pick a spell/i);
     fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
     expect(within(form).getByTestId('spell-ref-preview')).toHaveTextContent('→ Sleep');
+    // The Name input is now derived + disabled.
+    expect(within(form).getByLabelText('name')).toHaveValue('Scroll of Sleep');
+    expect(within(form).getByLabelText('name')).toBeDisabled();
     fireEvent.click(within(form).getByText('Create item'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const [, id, data] = saveDocument.mock.calls[0];
     expect(id).toBe('scroll-of-sleep');
+    expect(data.name).toBe('Scroll of Sleep');
     expect(data.scroll).toEqual({ spellRef: 'sleep' }); // ref only — no level-0 noise
   });
 
@@ -364,6 +370,38 @@ describe('GmItems', () => {
       expect(within(form).getByRole('alert')).toHaveTextContent(/invalid JSON/i)
     );
     expect(saveDocument).not.toHaveBeenCalled();
+  });
+
+  it('hides the strikes editor on a scroll', () => {
+    setContent();
+    render(<GmItems />);
+    const scrollForm = screen.getByTestId('item-form-scroll-friendfetch');
+    expect(within(scrollForm).queryByTestId('item-strikes')).not.toBeInTheDocument();
+    // A non-scroll keeps the strikes editor visible.
+    const backpackForm = screen.getByTestId('item-form-backpack');
+    expect(within(backpackForm).getByTestId('item-strikes')).toBeInTheDocument();
+  });
+
+  it('collapses the inline spell fields by default on a scroll', () => {
+    setContent();
+    render(<GmItems />);
+    const form = screen.getByTestId('item-form-scroll-friendfetch');
+    const details = within(form).getByTestId('spell-inline-details');
+    expect(details).not.toHaveAttribute('open');
+    // Inline fields are still in the DOM (RTL can drive them on demand).
+    expect(within(form).getByLabelText('spell-name')).toHaveValue('Friendfetch');
+  });
+
+  it('auto-renames a scroll when the picked catalog spell changes', () => {
+    setContent();
+    render(<GmItems />);
+    const form = screen.getByTestId('item-form-scroll-friendfetch');
+    const nameInput = within(form).getByLabelText('name');
+    // No ref initially; the fixture authored an inline spell name "Friendfetch".
+    expect(nameInput).toHaveValue('Scroll of Friendfetch');
+    expect(nameInput).toBeDisabled();
+    fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
+    expect(nameInput).toHaveValue('Scroll of Sleep');
   });
 
   it('exposes a safe empty list when the catalog is undefined', () => {
