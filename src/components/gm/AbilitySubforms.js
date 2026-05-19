@@ -363,6 +363,231 @@ export const featFromForm = (f) => {
 
 export const blankFeat = () => featToForm({});
 
+// ----- Familiar --------------------------------------------------------------
+// One real familiar in the bundled data (Lazarus, the Squox). Managed scalars
+// cover the stat block envelope; the `abilities` list of named tricks/quirks
+// edits as add/remove name+description rows; anything unmodelled round-trips
+// through a raw-JSON box. Faithful contract identical to Strike/Action/Feat:
+// rest is JSON.stringified at toForm, re-parsed at fromForm, spread back first.
+const FAMILIAR_STR = ['name', 'type', 'size', 'speed', 'communication', 'description'];
+const FAMILIAR_NUM = ['ac', 'hp'];
+
+export const familiarToForm = (s) => {
+  const src = s && typeof s === 'object' ? s : {};
+  const rest = { ...src };
+  FAMILIAR_STR.forEach((k) => delete rest[k]);
+  FAMILIAR_NUM.forEach((k) => delete rest[k]);
+  ['traits', 'skills', 'abilities'].forEach((k) => delete rest[k]);
+  const str = {};
+  FAMILIAR_STR.forEach((k) => {
+    str[k] = src[k] != null ? String(src[k]) : '';
+  });
+  const num = {};
+  FAMILIAR_NUM.forEach((k) => {
+    num[k] = src[k] != null ? String(src[k]) : '';
+  });
+  return {
+    str,
+    num,
+    traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
+    skills: Array.isArray(src.skills) ? src.skills.join(', ') : '',
+    abilities: Array.isArray(src.abilities)
+      ? src.abilities.map((a) => ({
+          name: a && a.name != null ? String(a.name) : '',
+          description: a && a.description != null ? String(a.description) : '',
+          rest: a && typeof a === 'object'
+            ? Object.fromEntries(Object.entries(a).filter(([k]) => k !== 'name' && k !== 'description'))
+            : {},
+        }))
+      : [],
+    restJson: JSON.stringify(rest, null, 2),
+  };
+};
+
+export const familiarFromForm = (f) => {
+  let rest;
+  try {
+    rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
+  } catch {
+    throw new Error('has invalid JSON in its nested fields.');
+  }
+  if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
+    throw new Error('nested fields must be a JSON object.');
+  }
+  const out = { ...rest };
+  FAMILIAR_STR.forEach((k) => {
+    const v = f.str[k].trim();
+    if (v) out[k] = v;
+  });
+  FAMILIAR_NUM.forEach((k) => {
+    if (f.num[k].trim() !== '') out[k] = toInt(f.num[k]);
+  });
+  const traits = toList(f.traits);
+  if (traits.length) out.traits = traits;
+  const skills = toList(f.skills);
+  if (skills.length) out.skills = skills;
+  const abilities = (f.abilities || [])
+    .map((a) => {
+      const n = a.name.trim();
+      const d = a.description.trim();
+      if (!n && !d) return null;
+      return { ...(a.rest || {}), name: n, description: d };
+    })
+    .filter(Boolean);
+  if (abilities.length) out.abilities = abilities;
+  return out;
+};
+
+export const blankFamiliar = () => familiarToForm({});
+
+export const FamiliarSubform = ({ value, onChange, idPrefix }) => {
+  const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
+  const setNum = (k, v) => onChange({ ...value, num: { ...value.num, [k]: v } });
+  const setAbil = (i, patch) =>
+    onChange({
+      ...value,
+      abilities: value.abilities.map((a, idx) => (idx === i ? { ...a, ...patch } : a)),
+    });
+  const addAbil = () =>
+    onChange({
+      ...value,
+      abilities: [...value.abilities, { name: '', description: '', rest: {} }],
+    });
+  const rmAbil = (i) =>
+    onChange({ ...value, abilities: value.abilities.filter((_, idx) => idx !== i) });
+  return (
+    <div className="gm-card" data-testid={`${idPrefix}-familiar`}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>name</label>
+          <input
+            aria-label={`${idPrefix}-name`}
+            value={value.str.name}
+            onChange={(e) => setStr('name', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>type</label>
+          <input
+            aria-label={`${idPrefix}-type`}
+            value={value.str.type}
+            onChange={(e) => setStr('type', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>size</label>
+          <input
+            aria-label={`${idPrefix}-size`}
+            value={value.str.size}
+            onChange={(e) => setStr('size', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>ac</label>
+          <input
+            aria-label={`${idPrefix}-ac`}
+            type="number"
+            value={value.num.ac}
+            onChange={(e) => setNum('ac', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>hp</label>
+          <input
+            aria-label={`${idPrefix}-hp`}
+            type="number"
+            value={value.num.hp}
+            onChange={(e) => setNum('hp', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>speed</label>
+          <input
+            aria-label={`${idPrefix}-speed`}
+            value={value.str.speed}
+            onChange={(e) => setStr('speed', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>traits (comma-separated)</label>
+        <input
+          aria-label={`${idPrefix}-traits`}
+          value={value.traits}
+          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>skills (comma-separated)</label>
+        <input
+          aria-label={`${idPrefix}-skills`}
+          value={value.skills}
+          onChange={(e) => onChange({ ...value, skills: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>communication</label>
+        <input
+          aria-label={`${idPrefix}-communication`}
+          value={value.str.communication}
+          onChange={(e) => setStr('communication', e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>description</label>
+        <textarea
+          aria-label={`${idPrefix}-description`}
+          rows={3}
+          value={value.str.description}
+          onChange={(e) => setStr('description', e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>abilities</label>
+        {value.abilities.map((a, i) => (
+          <div key={i} className="gm-card" data-testid={`${idPrefix}-ability-${i}`}>
+            <div className="form-group">
+              <label>name</label>
+              <input
+                aria-label={`${idPrefix}-ability-${i}-name`}
+                value={a.name}
+                onChange={(e) => setAbil(i, { name: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>description</label>
+              <textarea
+                aria-label={`${idPrefix}-ability-${i}-description`}
+                rows={2}
+                value={a.description}
+                onChange={(e) => setAbil(i, { description: e.target.value })}
+              />
+            </div>
+            <button className="btn-small btn-danger" onClick={() => rmAbil(i)}>
+              Remove ability
+            </button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addAbil}>
+          Add ability
+        </button>
+      </div>
+      <div className="form-group">
+        <label>nested fields (raw JSON)</label>
+        <textarea
+          aria-label={`${idPrefix}-json`}
+          className="gm-json"
+          rows={3}
+          value={value.restJson}
+          onChange={(e) => onChange({ ...value, restJson: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+};
+
 export const FeatSubform = ({ value, onChange, idPrefix }) => {
   const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
   const setNum = (k, v) => onChange({ ...value, num: { ...value.num, [k]: v } });

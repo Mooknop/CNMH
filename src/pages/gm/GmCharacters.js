@@ -27,6 +27,10 @@ import {
   featFromForm,
   blankFeat,
   FeatSubform,
+  familiarToForm,
+  familiarFromForm,
+  blankFamiliar,
+  FamiliarSubform,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -197,6 +201,18 @@ const SECTION_CODEC = {
         throw new Error(`${label} entry "${f.str.name}" has ${e.message}.`);
       }
     },
+  },
+};
+
+// Per-object structured codec. When present, the section renders the codec's
+// subform instead of the generic toggleable raw-JSON textarea. familiar lands
+// in slice 4a; animalCompanion in slice 4b.
+const OBJ_CODEC = {
+  familiar: {
+    Comp: FamiliarSubform,
+    to: familiarToForm,
+    from: familiarFromForm,
+    blank: blankFamiliar,
   },
 };
 
@@ -378,7 +394,11 @@ const toForm = (c) => {
     }, {}),
     objects: OBJ_SECTIONS.reduce((acc, s) => {
       const has = !!(c[s.key] && typeof c[s.key] === 'object');
-      acc[s.key] = { has, json: JSON.stringify(has ? c[s.key] : {}, null, 2) };
+      const codec = OBJ_CODEC[s.key];
+      // Codec-backed sections carry a form state shaped by `to`; the rest still
+      // round-trip through a `{has, json}` raw-JSON box until their slice lands.
+      if (codec) acc[s.key] = { has, form: codec.to(has ? c[s.key] : {}) };
+      else acc[s.key] = { has, json: JSON.stringify(has ? c[s.key] : {}, null, 2) };
       return acc;
     }, {}),
     advanced: JSON.stringify(rest, null, 2),
@@ -717,18 +737,28 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     for (const s of OBJ_SECTIONS) {
       const o = f.objects[s.key];
       if (!o.has) continue;
-      let parsed;
-      try {
-        parsed = o.json.trim() ? JSON.parse(o.json) : {};
-      } catch {
-        setError(`${s.label} is not valid JSON.`);
-        return;
+      const codec = OBJ_CODEC[s.key];
+      if (codec) {
+        try {
+          payload[s.key] = codec.from(o.form);
+        } catch (e) {
+          setError(`${s.label} ${e.message}`);
+          return;
+        }
+      } else {
+        let parsed;
+        try {
+          parsed = o.json.trim() ? JSON.parse(o.json) : {};
+        } catch {
+          setError(`${s.label} is not valid JSON.`);
+          return;
+        }
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          setError(`${s.label} must be a JSON object.`);
+          return;
+        }
+        payload[s.key] = parsed;
       }
-      if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        setError(`${s.label} must be a JSON object.`);
-        return;
-      }
-      payload[s.key] = parsed;
     }
 
     if (isNew && existingIds && existingIds.has(id)) {
@@ -834,32 +864,55 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     );
   };
 
-  const renderObjSection = (s) => (
-    <div className="form-group">
-      <label>{s.label}</label>
-      {!f.objects[s.key].has ? (
-        <button className="btn-small btn-secondary" onClick={() => setObj(s.key, { has: true })}>
-          Add {s.label.toLowerCase()}
-        </button>
-      ) : (
-        <>
-          <textarea
-            aria-label={`${s.key}-json`}
-            className="gm-json"
-            rows={6}
-            value={f.objects[s.key].json}
-            onChange={(ev) => setObj(s.key, { json: ev.target.value })}
-          />
+  const renderObjSection = (s) => {
+    const codec = OBJ_CODEC[s.key];
+    const o = f.objects[s.key];
+    return (
+      <div className="form-group">
+        <label>{s.label}</label>
+        {!o.has ? (
           <button
-            className="btn-small btn-danger"
-            onClick={() => setObj(s.key, { has: false })}
+            className="btn-small btn-secondary"
+            onClick={() =>
+              setObj(s.key, codec ? { has: true, form: codec.blank() } : { has: true })
+            }
           >
-            Remove {s.label.toLowerCase()}
+            Add {s.label.toLowerCase()}
           </button>
-        </>
-      )}
-    </div>
-  );
+        ) : codec ? (
+          <>
+            <codec.Comp
+              value={o.form}
+              idPrefix={s.key}
+              onChange={(form) => setObj(s.key, { form })}
+            />
+            <button
+              className="btn-small btn-danger"
+              onClick={() => setObj(s.key, { has: false })}
+            >
+              Remove {s.label.toLowerCase()}
+            </button>
+          </>
+        ) : (
+          <>
+            <textarea
+              aria-label={`${s.key}-json`}
+              className="gm-json"
+              rows={6}
+              value={o.json}
+              onChange={(ev) => setObj(s.key, { json: ev.target.value })}
+            />
+            <button
+              className="btn-small btn-danger"
+              onClick={() => setObj(s.key, { has: false })}
+            >
+              Remove {s.label.toLowerCase()}
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   const arrFor = (key) => ARR_SECTIONS.find((s) => s.key === key);
   const objFor = (key) => OBJ_SECTIONS.find((s) => s.key === key);
