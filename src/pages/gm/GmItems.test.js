@@ -382,6 +382,29 @@ describe('GmItems', () => {
     expect(within(backpackForm).getByTestId('item-strikes')).toBeInTheDocument();
   });
 
+  it('hides strikes and auto-renames a wand once a catalog spell is picked', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    fireEvent.click(screen.getByText('+ New item'));
+    const form = screen.getByTestId('item-form-new');
+    fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'wand' } });
+    // Strikes section is gone, matching the scroll behaviour.
+    expect(within(form).queryByTestId('item-strikes')).not.toBeInTheDocument();
+    // Inline spell fields are collapsed by default; picking a spell auto-names.
+    expect(within(form).getByTestId('spell-inline-details')).not.toHaveAttribute('open');
+    fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
+    const nameInput = within(form).getByLabelText('name');
+    expect(nameInput).toHaveValue('Wand of Sleep');
+    expect(nameInput).toBeDisabled();
+    fireEvent.click(within(form).getByText('Create item'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, id, data] = saveDocument.mock.calls[0];
+    expect(id).toBe('wand-of-sleep');
+    expect(data.name).toBe('Wand of Sleep');
+    expect(data.wand).toEqual({ spellRef: 'sleep' });
+  });
+
   it('collapses the inline spell fields by default on a scroll', () => {
     setContent();
     render(<GmItems />);
