@@ -186,6 +186,27 @@ const itemFromForm = (f) => {
   return out;
 };
 
+// "Scroll of <Spell>" / "Wand of <Spell>" — the standard PF2e item-name shape.
+// Both slugify cleanly to scroll-of-x / wand-of-x for the new-item id default.
+const scrollWandName = (kind, spellName) =>
+  `${kind === 'scroll' ? 'Scroll' : 'Wand'} of ${spellName}`;
+
+// The derived item-name for a scroll/wand, or null when no spell is selected
+// (a dangling unknown ref keeps the existing item name unchanged — the GM can
+// repoint without losing data). For slice 5a, only scroll auto-derives; wand
+// keeps the hand-typed name until slice 5b extends this path.
+const derivedItemName = (e, spells) => {
+  if (e.spellKind !== 'scroll') return null;
+  const ref = (e.spell.spellRef || '').trim();
+  let spellName = '';
+  if (ref) {
+    const match = (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref);
+    if (match) spellName = String(match.name || '');
+  }
+  if (!spellName) spellName = e.spell.str.name.trim();
+  return spellName ? scrollWandName(e.spellKind, spellName) : null;
+};
+
 const SpellSubform = ({ kind, spell, spells, onChange }) => {
   const setStr = (k, v) => onChange({ ...spell, str: { ...spell.str, [k]: v } });
   const ref = (spell.spellRef || '').trim();
@@ -201,25 +222,18 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
   const rmH = (i) =>
     onChange({ ...spell, heightened: spell.heightened.filter((_, idx) => idx !== i) });
 
-  return (
-    <div className="gm-card" data-testid="spell-subform">
-      <p className="gm-count">{kind === 'scroll' ? 'Scroll' : 'Wand'} spell</p>
-      <div className="form-group">
-        <label>spell reference (catalog id)</label>
-        <input
-          aria-label="spell-ref"
-          placeholder="e.g. cleanse-affliction"
-          value={spell.spellRef || ''}
-          onChange={(ev) => onChange({ ...spell, spellRef: ev.target.value })}
-        />
-        <p className="gm-hint" data-testid="spell-ref-preview">
-          {ref
-            ? refMatch
-              ? `→ ${refMatch.name}`
-              : '→ (unknown spell — will show a stub until the id matches)'
-            : 'Leave blank to author an inline spell below; set it to reference the shared spell catalog.'}
-        </p>
-      </div>
+  // Slice 5a: scrolls pick their spell from the catalog and tuck the inline
+  // authoring fields into a collapsed details block. Wands keep the legacy
+  // free-text id + always-visible inline editor until slice 5b mirrors this.
+  const isScroll = kind === 'scroll';
+  const sortedSpells = (Array.isArray(spells) ? spells : [])
+    .slice()
+    .sort((a, b) =>
+      String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
+    );
+
+  const inlineFields = (
+    <>
       <div className="gm-row">
         <div className="form-group">
           <label>spell name</label>
@@ -293,6 +307,62 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
           Add heightened
         </button>
       </div>
+    </>
+  );
+
+  return (
+    <div className="gm-card" data-testid="spell-subform">
+      <p className="gm-count">{isScroll ? 'Scroll' : 'Wand'} spell</p>
+      {isScroll ? (
+        <div className="form-group">
+          <label>spell</label>
+          <select
+            aria-label="spell-ref"
+            value={spell.spellRef || ''}
+            onChange={(ev) => onChange({ ...spell, spellRef: ev.target.value })}
+          >
+            <option value="">— (author inline below) —</option>
+            {sortedSpells.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name || s.id}
+              </option>
+            ))}
+            {ref && !refMatch && <option value={ref}>(unknown: {ref})</option>}
+          </select>
+          <p className="gm-hint" data-testid="spell-ref-preview">
+            {ref
+              ? refMatch
+                ? `→ ${refMatch.name}`
+                : '→ (unknown spell — will show a stub until the id matches)'
+              : 'Pick a spell from the catalog, or expand the inline editor below to author one.'}
+          </p>
+        </div>
+      ) : (
+        <div className="form-group">
+          <label>spell reference (catalog id)</label>
+          <input
+            aria-label="spell-ref"
+            placeholder="e.g. cleanse-affliction"
+            value={spell.spellRef || ''}
+            onChange={(ev) => onChange({ ...spell, spellRef: ev.target.value })}
+          />
+          <p className="gm-hint" data-testid="spell-ref-preview">
+            {ref
+              ? refMatch
+                ? `→ ${refMatch.name}`
+                : '→ (unknown spell — will show a stub until the id matches)'
+              : 'Leave blank to author an inline spell below; set it to reference the shared spell catalog.'}
+          </p>
+        </div>
+      )}
+      {isScroll ? (
+        <details className="gm-spell-inline" data-testid="spell-inline-details">
+          <summary>Edit inline spell fields</summary>
+          {inlineFields}
+        </details>
+      ) : (
+        inlineFields
+      )}
     </div>
   );
 };
@@ -326,15 +396,25 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     }
   };
 
+  // For a scroll, the item's name is generated from the contained spell
+  // ("Scroll of <Spell>"). Recompute on every render so a fresh spell pick
+  // updates the disabled Name input + the slug-derived id for new items.
+  const derivedName = derivedItemName(e, spells);
+  const isScroll = e.spellKind === 'scroll';
+
   const save = async () => {
+    // Override the item name only when we actually derived one (a known spell
+    // picked or an inline name authored); otherwise itemFromForm's existing
+    // "needs a spell reference or a name" validation reports the real problem.
+    const candidate = derivedName ? { ...e, name: derivedName } : e;
     let body;
     try {
-      body = itemFromForm(e);
+      body = itemFromForm(candidate);
     } catch (err) {
       setError(err.message);
       return;
     }
-    const id = e.id || slugify(e.name);
+    const id = candidate.id || slugify(candidate.name);
     const payload = { ...body, id };
     if (isNew && existingIds && existingIds.has(id)) {
       setConfirm({ kind: 'collision', id, payload });
@@ -362,7 +442,15 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <div className="gm-row">
         <div className="form-group">
           <label>Name</label>
-          <input aria-label="name" value={e.name} onChange={(ev) => set({ name: ev.target.value })} />
+          <input
+            aria-label="name"
+            value={isScroll ? derivedName ?? e.name : e.name}
+            disabled={isScroll}
+            onChange={(ev) => set({ name: ev.target.value })}
+          />
+          {isScroll && (
+            <p className="gm-hint">Auto-derived from the spell selected below.</p>
+          )}
         </div>
         <div className="form-group">
           <label>price</label>
@@ -453,24 +541,29 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         />
       )}
 
-      <div className="form-group" data-testid="item-strikes">
-        <label>Strikes</label>
-        {e.strikes.map((s, i) => (
-          <div className="gm-card" data-testid={`item-strike-${i}`} key={i}>
-            <StrikeSubform
-              value={s}
-              idPrefix={`item-strike-${i}`}
-              onChange={(next) => setStrike(i, next)}
-            />
-            <button className="btn-small btn-danger" onClick={() => rmStrike(i)}>
-              Remove strike
-            </button>
-          </div>
-        ))}
-        <button className="btn-small btn-secondary" onClick={addStrike}>
-          Add strike
-        </button>
-      </div>
+      {/* A scroll has no strikes — hide the editor entirely. Slice 5b extends
+          this to wand too. itemFromForm already drops a stale `strikes` paste
+          on save, so the catalog stays clean even if data once authored one. */}
+      {!isScroll && (
+        <div className="form-group" data-testid="item-strikes">
+          <label>Strikes</label>
+          {e.strikes.map((s, i) => (
+            <div className="gm-card" data-testid={`item-strike-${i}`} key={i}>
+              <StrikeSubform
+                value={s}
+                idPrefix={`item-strike-${i}`}
+                onChange={(next) => setStrike(i, next)}
+              />
+              <button className="btn-small btn-danger" onClick={() => rmStrike(i)}>
+                Remove strike
+              </button>
+            </div>
+          ))}
+          <button className="btn-small btn-secondary" onClick={addStrike}>
+            Add strike
+          </button>
+        </div>
+      )}
 
       <div className="form-group">
         <label>extra fields — potency, shield, actions… (raw JSON)</label>
