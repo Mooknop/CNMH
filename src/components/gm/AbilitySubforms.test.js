@@ -3,6 +3,12 @@ import {
   costFromForm,
   strikeToForm,
   strikeFromForm,
+  actionToForm,
+  actionFromForm,
+  blankAction,
+  reactionToForm,
+  reactionFromForm,
+  blankReaction,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -133,6 +139,82 @@ describe('bundled strike resolve-parity (Slice 1 gate)', () => {
       const out = strikeFromForm(strikeToForm(src));
       expect(stripCost(out)).toEqual(stripCost(src));
       expect(renderActionIcons(actionText(out))).toEqual(renderActionIcons(actionText(src)));
+    });
+  });
+});
+
+describe('actionToForm / reactionToForm round-trip', () => {
+  it('preserves a real action including its unmodelled `degrees` block', () => {
+    const src = {
+      name: 'Exploit Vulnerability',
+      actionCount: 1,
+      traits: ['Esoterica', 'Manipulate', 'Thaumaturge'],
+      description: 'Scour your esoterica…',
+      degrees: { Success: 'You recall.', Failure: 'You forget.' },
+    };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+  });
+
+  it('preserves a real reaction (trigger + traits + description, no cost)', () => {
+    const src = {
+      name: 'Retributive Strike',
+      traits: ['Champion'],
+      trigger: 'An enemy damages an ally within 15 feet of you.',
+      description: 'You protect your ally and strike your foe.',
+    };
+    const out = reactionFromForm(reactionToForm(src));
+    expect(out).toEqual(src); // mode '' → no cost emitted, matches source
+  });
+
+  it('blankAction has no cost; blankReaction defaults to Reaction', () => {
+    expect(actionFromForm(blankAction())).toEqual({});
+    expect(reactionFromForm(blankReaction())).toEqual({ actions: 'Reaction' });
+  });
+
+  it('preserves requirements/frequency and an unrecognised cost', () => {
+    const src = {
+      name: 'Exotic Maneuver',
+      actions: 'Special',
+      requirements: 'You are adjacent.',
+      frequency: 'once per day',
+      traits: ['Manipulate'],
+    };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+  });
+});
+
+describe('bundled action/reaction resolve-parity (Slice 2 gate)', () => {
+  const bundledActionLists = [];
+  const bundledReactionLists = [];
+  sampleCharacters.forEach((c) => {
+    if (Array.isArray(c.actions) && c.actions.length) {
+      bundledActionLists.push([`character ${c.id} actions`, c.actions]);
+    }
+    if (Array.isArray(c.reactions) && c.reactions.length) {
+      bundledReactionLists.push([`character ${c.id} reactions`, c.reactions]);
+    }
+  });
+
+  it('covers real bundled abilities', () => {
+    expect(bundledActionLists.length + bundledReactionLists.length).toBeGreaterThan(0);
+  });
+
+  it.each(bundledActionLists)('%s round-trips losslessly', (_label, actions) => {
+    actions.forEach((src) => {
+      const out = actionFromForm(actionToForm(src));
+      expect(stripCost(out)).toEqual(stripCost(src));
+      expect(renderActionIcons(actionText(out))).toEqual(renderActionIcons(actionText(src)));
+    });
+  });
+
+  it.each(bundledReactionLists)('%s round-trips losslessly', (_label, reactions) => {
+    reactions.forEach((src) => {
+      const out = reactionFromForm(reactionToForm(src));
+      // Reactions in bundled data have no cost key; mode '' emits nothing,
+      // so the comparison includes every field as-is.
+      expect(out).toEqual(src);
     });
   });
 });
