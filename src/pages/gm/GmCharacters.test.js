@@ -85,6 +85,10 @@ const allUids = (list, acc = []) => {
 // helpers drive the new modal-based inventory UI.
 const gotoTab = (form, label) =>
   fireEvent.click(within(form).getByRole('button', { name: label }));
+// Array sections are now master-detail: open an entry's editor by clicking its
+// row in the picker list before its fields mount.
+const openRow = (form, key, i) =>
+  fireEvent.click(within(form).getByTestId(`${key}-list-${i}`));
 const openItem = (form, i) =>
   fireEvent.click(within(form).getByTestId(`item-${i}`).querySelector('.gm-inv-main'));
 const closeEditor = (form) =>
@@ -116,11 +120,14 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Feats');
+    openRow(form, 'feats', 0);
     expect(within(form).getByLabelText('feats-0-name')).toHaveValue('Ranger Dedication');
     expect(within(form).getByLabelText('feats-0-json').value).toContain('Archetype');
     gotoTab(form, 'Strikes');
+    openRow(form, 'strikes', 0);
     expect(within(form).getByLabelText('strikes-0-name')).toHaveValue('Pick');
     gotoTab(form, 'Actions');
+    openRow(form, 'actions', 0);
     expect(within(form).getByLabelText('actions-0-name')).toHaveValue('Exploit Vulnerability');
     gotoTab(form, 'Familiar');
     expect(within(form).getByLabelText('familiar-json').value).toContain('Lazarus');
@@ -137,6 +144,7 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Feats');
+    openRow(form, 'feats', 0);
     fireEvent.change(within(form).getByLabelText('feats-0-name'), { target: { value: 'Ranger Dedication+' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -156,9 +164,11 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Feats');
-    fireEvent.click(within(form).getByText('Add feats entry'));
+    openRow(form, 'feats', 0);
+    fireEvent.click(within(form).getByTestId('feats-add'));
+    // Adding auto-selects the new entry (index 1).
     fireEvent.change(within(form).getByLabelText('feats-1-name'), { target: { value: 'Toughness' } });
-    fireEvent.click(within(form).getAllByText('Remove feats entry')[0]);
+    fireEvent.click(within(form).getByTestId('feats-list-0-remove'));
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     expect(saveDocument.mock.calls[0][2].feats.map((x) => x.name)).toEqual(['Toughness']);
@@ -170,6 +180,7 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Strikes');
+    openRow(form, 'strikes', 0);
     // pellias.strikes[0] = { name:'Pick', proficiency:'martial', damage:'1d6' }
     fireEvent.change(within(form).getByLabelText('strikes-0-cost'), { target: { value: '2' } });
     fireEvent.change(within(form).getByLabelText('strikes-0-traits'), {
@@ -191,6 +202,7 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Strikes');
+    openRow(form, 'strikes', 0);
     fireEvent.change(within(form).getByLabelText('strikes-0-name'), { target: { value: '  ' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() =>
@@ -204,6 +216,7 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Feats');
+    openRow(form, 'feats', 0);
     fireEvent.change(within(form).getByLabelText('feats-0-json'), { target: { value: '{ broken' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Feats entry "Ranger Dedication" has invalid JSON/i));
@@ -353,9 +366,10 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     gotoTab(form, 'Actions');
-    fireEvent.click(within(form).getByText('Add actions entry'));
+    fireEvent.click(within(form).getByTestId('actions-add'));
+    // Adding auto-selects the new entry (index 1).
     fireEvent.change(within(form).getByLabelText('actions-1-name'), { target: { value: 'Stride' } });
-    fireEvent.click(within(form).getAllByText(/Remove actions entry/)[1]);
+    fireEvent.click(within(form).getByTestId('actions-list-1-remove'));
     gotoTab(form, 'Familiar');
     fireEvent.click(within(form).getByText('Remove familiar'));
     gotoTab(form, 'Animal Companion');
