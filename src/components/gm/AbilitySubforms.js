@@ -171,6 +171,137 @@ export const strikeFromForm = (f) => {
 
 export const blankStrike = () => strikeToForm({});
 
+// ----- Action / Reaction -----------------------------------------------------
+// Actions and reactions share the same managed scalars (a name + cost + traits
+// + the usual trigger/requirements/frequency/description envelope). Only the
+// new-entry default cost differs — reactions start as Reaction, actions are
+// unset (the GM picks 1/2/3/Variable). Faithful contract as Strike: anything
+// unmodelled (e.g. `degrees` on the bundled Exploit Vulnerability) lives in
+// `rest` and is spread back first on `fromForm`.
+const ABILITY_STR = ['name', 'trigger', 'requirements', 'frequency', 'description'];
+
+const abilityToForm = (s) => {
+  const src = s && typeof s === 'object' ? s : {};
+  const rest = { ...src };
+  ABILITY_STR.forEach((k) => delete rest[k]);
+  delete rest.traits;
+  COST_KEYS.forEach((k) => delete rest[k]);
+  const cost = costToForm(src);
+  // Cost not recognised → put the original cost keys back so they round-trip.
+  if (cost.mode === '') {
+    COST_KEYS.forEach((k) => {
+      if (src[k] !== undefined) rest[k] = src[k];
+    });
+  }
+  const str = {};
+  ABILITY_STR.forEach((k) => {
+    str[k] = src[k] != null ? String(src[k]) : '';
+  });
+  return {
+    str,
+    traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
+    cost,
+    rest,
+  };
+};
+
+const abilityFromForm = (f) => {
+  const out = { ...f.rest };
+  ABILITY_STR.forEach((k) => {
+    const v = f.str[k].trim();
+    if (v) out[k] = v;
+  });
+  const traits = toList(f.traits);
+  if (traits.length) out.traits = traits;
+  const c = costFromForm(f.cost);
+  if (c) Object.assign(out, c);
+  return out;
+};
+
+export const actionToForm = abilityToForm;
+export const actionFromForm = abilityFromForm;
+export const blankAction = () => abilityToForm({});
+
+export const reactionToForm = abilityToForm;
+export const reactionFromForm = abilityFromForm;
+export const blankReaction = () => {
+  const f = abilityToForm({});
+  f.cost = { ...f.cost, mode: 'R' };
+  return f;
+};
+
+// One shared subform for both (different idPrefix per entry); the only kind-
+// specific thing — the default cost on a new entry — is set by blank{Reaction}.
+export const AbilitySubform = ({ value, onChange, idPrefix }) => {
+  const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
+  return (
+    <div className="gm-card" data-testid={`${idPrefix}-ability`}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>name</label>
+          <input
+            aria-label={`${idPrefix}-name`}
+            value={value.str.name}
+            onChange={(e) => setStr('name', e.target.value)}
+          />
+        </div>
+        <ActionCost
+          cost={value.cost}
+          idPrefix={idPrefix}
+          onChange={(c) => onChange({ ...value, cost: c })}
+        />
+      </div>
+      <div className="form-group">
+        <label>traits (comma-separated)</label>
+        <input
+          aria-label={`${idPrefix}-traits`}
+          value={value.traits}
+          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+        />
+      </div>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>trigger</label>
+          <input
+            aria-label={`${idPrefix}-trigger`}
+            value={value.str.trigger}
+            onChange={(e) => setStr('trigger', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>requirements</label>
+          <input
+            aria-label={`${idPrefix}-requirements`}
+            value={value.str.requirements}
+            onChange={(e) => setStr('requirements', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>frequency</label>
+          <input
+            aria-label={`${idPrefix}-frequency`}
+            value={value.str.frequency}
+            onChange={(e) => setStr('frequency', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>description</label>
+        <textarea
+          aria-label={`${idPrefix}-description`}
+          rows={4}
+          value={value.str.description}
+          onChange={(e) => setStr('description', e.target.value)}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Distinct exports so the codec table reads naturally; both render the same UI.
+export const ActionSubform = AbilitySubform;
+export const ReactionSubform = AbilitySubform;
+
 export const StrikeSubform = ({ value, onChange, idPrefix }) => {
   const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
   return (
