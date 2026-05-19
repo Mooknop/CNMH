@@ -9,6 +9,12 @@ import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
 import ItemEditModal from '../../components/gm/ItemEditModal';
+import {
+  strikeToForm,
+  strikeFromForm,
+  blankStrike,
+  StrikeSubform,
+} from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
 // 5a: identity/abilities/saves. 5b: skills + proficiencies. 5c: the top-level
@@ -124,6 +130,22 @@ const entryFromForm = (f, label, index) => {
     throw new Error(`${label} entry "${f.name}" extra fields must be a JSON object.`);
   }
   return { ...rest, name: f.name.trim() };
+};
+
+// Sections with a bespoke structured sub-form instead of the generic
+// name + raw-JSON pair. `strikes` (Slice 1) uses the shared StrikeSubform;
+// feats/actions/reactions still round-trip through entryToForm/entryFromForm
+// until later slices replace them too.
+const SECTION_CODEC = {
+  strikes: {
+    Comp: StrikeSubform,
+    to: strikeToForm,
+    blank: blankStrike,
+    from: (f, label, index) => {
+      if (!f.str.name.trim()) throw new Error(`${label} entry ${index + 1} needs a name.`);
+      return strikeFromForm(f);
+    },
+  },
 };
 
 // Returns the rebuilt item, or throws Error with a GM-readable message.
@@ -297,7 +319,9 @@ const toForm = (c) => {
     spellcasting: scToForm(c.spellcasting),
     inventory: Array.isArray(c.inventory) ? c.inventory.map(itemToForm) : [],
     arrays: ARR_SECTIONS.reduce((acc, s) => {
-      acc[s.key] = Array.isArray(c[s.key]) ? c[s.key].map(entryToForm) : [];
+      const codec = SECTION_CODEC[s.key];
+      const to = codec ? codec.to : entryToForm;
+      acc[s.key] = Array.isArray(c[s.key]) ? c[s.key].map(to) : [];
       return acc;
     }, {}),
     objects: OBJ_SECTIONS.reduce((acc, s) => {
@@ -562,7 +586,11 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
       arrays: { ...c.arrays, [key]: c.arrays[key].map((e, idx) => (idx === i ? { ...e, ...patch } : e)) },
     }));
   const addArr = (key) =>
-    setF((c) => ({ ...c, arrays: { ...c.arrays, [key]: [...c.arrays[key], { name: '', restJson: '{}' }] } }));
+    setF((c) => {
+      const codec = SECTION_CODEC[key];
+      const entry = codec ? codec.blank() : { name: '', restJson: '{}' };
+      return { ...c, arrays: { ...c.arrays, [key]: [...c.arrays[key], entry] } };
+    });
   const rmArr = (key, i) =>
     setF((c) => ({ ...c, arrays: { ...c.arrays, [key]: c.arrays[key].filter((_, idx) => idx !== i) } }));
   const setObj = (key, patch) =>
@@ -612,7 +640,8 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     try {
       payload.inventory = syncFlags(f.inventory).map((it, idx) => itemFromForm(it, idx));
       ARR_SECTIONS.forEach((s) => {
-        payload[s.key] = f.arrays[s.key].map((e, idx) => entryFromForm(e, s.label, idx));
+        const from = SECTION_CODEC[s.key] ? SECTION_CODEC[s.key].from : entryFromForm;
+        payload[s.key] = f.arrays[s.key].map((e, idx) => from(e, s.label, idx));
       });
     } catch (e) {
       setError(e.message);
@@ -684,39 +713,52 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     { key: 'advanced', label: 'Advanced' },
   ];
 
-  const renderArrSection = (s) => (
-    <div className="form-group">
-      <label>{s.label}</label>
-      {f.arrays[s.key].map((e, i) => (
-        <div className="gm-card" data-testid={`${s.key}-${i}`} key={i}>
-          <div className="form-group">
-            <label>name</label>
-            <input
-              aria-label={`${s.key}-${i}-name`}
-              value={e.name}
-              onChange={(ev) => setArr(s.key, i, { name: ev.target.value })}
-            />
+  const renderArrSection = (s) => {
+    const codec = SECTION_CODEC[s.key];
+    return (
+      <div className="form-group">
+        <label>{s.label}</label>
+        {f.arrays[s.key].map((e, i) => (
+          <div className="gm-card" data-testid={`${s.key}-${i}`} key={i}>
+            {codec ? (
+              <codec.Comp
+                value={e}
+                idPrefix={`${s.key}-${i}`}
+                onChange={(next) => setArr(s.key, i, next)}
+              />
+            ) : (
+              <>
+                <div className="form-group">
+                  <label>name</label>
+                  <input
+                    aria-label={`${s.key}-${i}-name`}
+                    value={e.name}
+                    onChange={(ev) => setArr(s.key, i, { name: ev.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>extra fields (raw JSON)</label>
+                  <textarea
+                    aria-label={`${s.key}-${i}-json`}
+                    className="gm-json"
+                    rows={4}
+                    value={e.restJson}
+                    onChange={(ev) => setArr(s.key, i, { restJson: ev.target.value })}
+                  />
+                </div>
+              </>
+            )}
+            <button className="btn-small btn-danger" onClick={() => rmArr(s.key, i)}>
+              Remove {s.label.toLowerCase()} entry
+            </button>
           </div>
-          <div className="form-group">
-            <label>extra fields (raw JSON)</label>
-            <textarea
-              aria-label={`${s.key}-${i}-json`}
-              className="gm-json"
-              rows={4}
-              value={e.restJson}
-              onChange={(ev) => setArr(s.key, i, { restJson: ev.target.value })}
-            />
-          </div>
-          <button className="btn-small btn-danger" onClick={() => rmArr(s.key, i)}>
-            Remove {s.label.toLowerCase()} entry
-          </button>
-        </div>
-      ))}
-      <button className="btn-small btn-secondary" onClick={() => addArr(s.key)}>
-        Add {s.label.toLowerCase()} entry
-      </button>
-    </div>
-  );
+        ))}
+        <button className="btn-small btn-secondary" onClick={() => addArr(s.key)}>
+          Add {s.label.toLowerCase()} entry
+        </button>
+      </div>
+    );
+  };
 
   const renderObjSection = (s) => (
     <div className="form-group">

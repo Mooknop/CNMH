@@ -164,6 +164,41 @@ describe('GmCharacters', () => {
     expect(saveDocument.mock.calls[0][2].feats.map((x) => x.name)).toEqual(['Toughness']);
   });
 
+  it('edits a strike via the structured sub-form and saves a canonical cost', async () => {
+    setContent([pellias]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Strikes');
+    // pellias.strikes[0] = { name:'Pick', proficiency:'martial', damage:'1d6' }
+    fireEvent.change(within(form).getByLabelText('strikes-0-cost'), { target: { value: '2' } });
+    fireEvent.change(within(form).getByLabelText('strikes-0-traits'), {
+      target: { value: 'Attack, Melee' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].strikes[0]).toEqual({
+      name: 'Pick',
+      proficiency: 'martial',
+      damage: '1d6',
+      traits: ['Attack', 'Melee'],
+      actionCount: 2,
+    });
+  });
+
+  it('blocks save when a strike entry lacks a name', async () => {
+    setContent([pellias]);
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Strikes');
+    fireEvent.change(within(form).getByLabelText('strikes-0-name'), { target: { value: '  ' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() =>
+      expect(within(form).getByRole('alert')).toHaveTextContent(/Strikes entry 1 needs a name/i)
+    );
+    expect(saveDocument).not.toHaveBeenCalled();
+  });
+
   it('blocks save when an array entry lacks a name or has bad JSON', async () => {
     setContent([pellias]);
     render(<GmCharacters />);

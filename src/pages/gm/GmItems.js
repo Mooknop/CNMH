@@ -4,6 +4,12 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
+import {
+  strikeToForm,
+  strikeFromForm,
+  blankStrike,
+  StrikeSubform,
+} from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
 // Slice 2: the shared item catalog editor. Catalog items hold ONLY the shared
@@ -79,10 +85,21 @@ const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll
 
 const toForm = (it) => {
   const rest = { ...it };
-  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand'].forEach(
+  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes'].forEach(
     (k) => delete rest[k]
   );
+  // A weapon's `strikes` is usually an array, but a single-strike weapon
+  // (e.g. "+1 Striking Pick") stores a lone object. Edit either as a list and
+  // re-emit the same shape on save (see itemFromForm).
+  const strikesWasObject = !!(it.strikes && typeof it.strikes === 'object' && !Array.isArray(it.strikes));
+  const strikesSrc = Array.isArray(it.strikes)
+    ? it.strikes
+    : strikesWasObject
+    ? [it.strikes]
+    : [];
   return {
+    strikes: strikesSrc.map(strikeToForm),
+    strikesWasObject,
     id: it.id,
     name: it.name != null ? String(it.name) : '',
     price: it.price != null ? String(it.price) : '',
@@ -124,6 +141,15 @@ const itemFromForm = (f) => {
   }
 
   const out = { ...rest, name: f.name.trim() };
+  // Strikes have a dedicated editor now — it is the single source of truth,
+  // so a stray `strikes` pasted into the raw-JSON box never double-authors.
+  // A weapon strike's name is optional: a single-strike weapon (e.g. "+1
+  // Striking Pick") deliberately has none and inherits the item name.
+  delete out.strikes;
+  const strikes = (f.strikes || []).map(strikeFromForm);
+  if (strikes.length) {
+    out.strikes = f.strikesWasObject && strikes.length === 1 ? strikes[0] : strikes;
+  }
   if (f.description.trim()) out.description = f.description.trim();
   const traits = toList(f.traits);
   if (traits.length) out.traits = traits;
@@ -246,6 +272,11 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [showHistory, setShowHistory] = useState(false);
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
+  const setStrike = (i, next) =>
+    setE((cur) => ({ ...cur, strikes: cur.strikes.map((s, idx) => (idx === i ? next : s)) }));
+  const addStrike = () => setE((cur) => ({ ...cur, strikes: [...cur.strikes, blankStrike()] }));
+  const rmStrike = (i) =>
+    setE((cur) => ({ ...cur, strikes: cur.strikes.filter((_, idx) => idx !== i) }));
 
   const submit = async (id, payload) => {
     setConfirm(null);
@@ -387,8 +418,27 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         />
       )}
 
+      <div className="form-group" data-testid="item-strikes">
+        <label>Strikes</label>
+        {e.strikes.map((s, i) => (
+          <div className="gm-card" data-testid={`item-strike-${i}`} key={i}>
+            <StrikeSubform
+              value={s}
+              idPrefix={`item-strike-${i}`}
+              onChange={(next) => setStrike(i, next)}
+            />
+            <button className="btn-small btn-danger" onClick={() => rmStrike(i)}>
+              Remove strike
+            </button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addStrike}>
+          Add strike
+        </button>
+      </div>
+
       <div className="form-group">
-        <label>extra fields — strikes, potency, shield, actions… (raw JSON)</label>
+        <label>extra fields — potency, shield, actions… (raw JSON)</label>
         <textarea
           aria-label="rest-json"
           className="gm-json"
