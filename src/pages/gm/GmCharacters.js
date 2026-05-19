@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
 import ItemEditModal from '../../components/gm/ItemEditModal';
+import EntryListEditor from '../../components/gm/EntryListEditor';
 import {
   strikeToForm,
   strikeFromForm,
@@ -141,6 +142,7 @@ const SECTION_CODEC = {
     Comp: StrikeSubform,
     to: strikeToForm,
     blank: blankStrike,
+    nameOf: (f) => f.str.name,
     from: (f, label, index) => {
       if (!f.str.name.trim()) throw new Error(`${label} entry ${index + 1} needs a name.`);
       return strikeFromForm(f);
@@ -463,6 +465,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
   const [tab, setTab] = useState('stats'); // active subtab
   const [editing, setEditing] = useState(null); // { path:[i] } | null — open item editor
   const [picker, setPicker] = useState(null); // { kind:'top' } | { kind:'container', path } | { kind:'change', path } | null
+  const [arrSel, setArrSel] = useState({}); // { [arraySectionKey]: openEntryIndex }
 
   const setStr = (k, v) => setF((c) => ({ ...c, strings: { ...c.strings, [k]: v } }));
   const setNum = (k, v) => setF((c) => ({ ...c, nums: { ...c.nums, [k]: v } }));
@@ -585,14 +588,28 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
       ...c,
       arrays: { ...c.arrays, [key]: c.arrays[key].map((e, idx) => (idx === i ? { ...e, ...patch } : e)) },
     }));
-  const addArr = (key) =>
+  const selectArr = (key, i) => setArrSel((s) => ({ ...s, [key]: i }));
+  const addArr = (key) => {
+    // The appended entry's index is the current length; open it immediately.
+    setArrSel((s) => ({ ...s, [key]: f.arrays[key].length }));
     setF((c) => {
       const codec = SECTION_CODEC[key];
       const entry = codec ? codec.blank() : { name: '', restJson: '{}' };
       return { ...c, arrays: { ...c.arrays, [key]: [...c.arrays[key], entry] } };
     });
-  const rmArr = (key, i) =>
+  };
+  const rmArr = (key, i) => {
+    // Keep the open entry stable: deselect if it was removed, shift down if a
+    // row above it went away.
+    setArrSel((s) => {
+      const cur = s[key];
+      if (cur == null) return s;
+      if (cur === i) return { ...s, [key]: null };
+      if (cur > i) return { ...s, [key]: cur - 1 };
+      return s;
+    });
     setF((c) => ({ ...c, arrays: { ...c.arrays, [key]: c.arrays[key].filter((_, idx) => idx !== i) } }));
+  };
   const setObj = (key, patch) =>
     setF((c) => ({ ...c, objects: { ...c.objects, [key]: { ...c.objects[key], ...patch } } }));
 
@@ -713,13 +730,26 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     { key: 'advanced', label: 'Advanced' },
   ];
 
+  // Master-detail: the section's entries are a searchable picker list; only the
+  // selected entry's editor mounts on the right. The detail body is unchanged
+  // from before (codec subform, or the generic name + raw-JSON pair) so every
+  // existing per-entry testid/aria-label still resolves once a row is opened.
   const renderArrSection = (s) => {
     const codec = SECTION_CODEC[s.key];
+    const nameOf = codec && codec.nameOf ? codec.nameOf : (e) => e.name;
     return (
-      <div className="form-group">
-        <label>{s.label}</label>
-        {f.arrays[s.key].map((e, i) => (
-          <div className="gm-card" data-testid={`${s.key}-${i}`} key={i}>
+      <EntryListEditor
+        label={s.label}
+        idPrefix={s.key}
+        entries={f.arrays[s.key]}
+        selectedIndex={arrSel[s.key] ?? null}
+        onSelect={(i) => selectArr(s.key, i)}
+        onAdd={() => addArr(s.key)}
+        onRemove={(i) => rmArr(s.key, i)}
+        nameOf={nameOf}
+        addLabel={`Add ${s.label.toLowerCase()} entry`}
+        renderDetail={(e, i) => (
+          <div className="gm-card" data-testid={`${s.key}-${i}`}>
             {codec ? (
               <codec.Comp
                 value={e}
@@ -748,15 +778,9 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
                 </div>
               </>
             )}
-            <button className="btn-small btn-danger" onClick={() => rmArr(s.key, i)}>
-              Remove {s.label.toLowerCase()} entry
-            </button>
           </div>
-        ))}
-        <button className="btn-small btn-secondary" onClick={() => addArr(s.key)}>
-          Add {s.label.toLowerCase()} entry
-        </button>
-      </div>
+        )}
+      />
     );
   };
 
