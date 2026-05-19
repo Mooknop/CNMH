@@ -174,6 +174,30 @@ describe('GmCharacters', () => {
     expect(saveDocument.mock.calls[0][2].feats.map((x) => x.name)).toEqual(['Toughness']);
   });
 
+  it('edits an action via the structured sub-form and adds a reaction defaulting to R', async () => {
+    setContent([pellias]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-pellias');
+    gotoTab(form, 'Actions');
+    openRow(form, 'actions', 0);
+    fireEvent.change(within(form).getByLabelText('actions-0-cost'), { target: { value: '2' } });
+    gotoTab(form, 'Reactions');
+    fireEvent.click(within(form).getByTestId('reactions-add'));
+    // Newly added reaction auto-selects and must default to mode 'R'.
+    expect(within(form).getByLabelText('reactions-0-cost')).toHaveValue('R');
+    fireEvent.change(within(form).getByLabelText('reactions-0-name'), { target: { value: 'Shield Block' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const data = saveDocument.mock.calls[0][2];
+    // Action keeps its degrees blob + traits + description, only the cost was changed.
+    expect(data.actions[0]).toEqual(
+      expect.objectContaining({ name: 'Exploit Vulnerability', actionCount: 2, traits: ['Thaumaturge'] })
+    );
+    // Reaction emits the canonical Reaction string.
+    expect(data.reactions).toEqual([{ name: 'Shield Block', actions: 'Reaction' }]);
+  });
+
   it('edits a strike via the structured sub-form and saves a canonical cost', async () => {
     setContent([pellias]);
     saveDocument.mockResolvedValue({ ok: true });

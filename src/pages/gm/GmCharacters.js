@@ -15,6 +15,14 @@ import {
   strikeFromForm,
   blankStrike,
   StrikeSubform,
+  actionToForm,
+  actionFromForm,
+  blankAction,
+  ActionSubform,
+  reactionToForm,
+  reactionFromForm,
+  blankReaction,
+  ReactionSubform,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -137,16 +145,36 @@ const entryFromForm = (f, label, index) => {
 // name + raw-JSON pair. `strikes` (Slice 1) uses the shared StrikeSubform;
 // feats/actions/reactions still round-trip through entryToForm/entryFromForm
 // until later slices replace them too.
+// Action/Reaction share the AbilitySubform UI and the abilityTo/FromForm pair;
+// only the new-entry default cost differs (blankReaction starts as Reaction).
+// `nameOf` reads the same `str.name` path Strike uses, so EntryListEditor's
+// picker labels match what the GM types into the right pane.
+const abilityFrom = (toFn) => (f, label, index) => {
+  if (!f.str.name.trim()) throw new Error(`${label} entry ${index + 1} needs a name.`);
+  return toFn(f);
+};
+const abilityNameOf = (f) => f.str.name;
 const SECTION_CODEC = {
   strikes: {
     Comp: StrikeSubform,
     to: strikeToForm,
     blank: blankStrike,
-    nameOf: (f) => f.str.name,
-    from: (f, label, index) => {
-      if (!f.str.name.trim()) throw new Error(`${label} entry ${index + 1} needs a name.`);
-      return strikeFromForm(f);
-    },
+    nameOf: abilityNameOf,
+    from: abilityFrom(strikeFromForm),
+  },
+  actions: {
+    Comp: ActionSubform,
+    to: actionToForm,
+    blank: blankAction,
+    nameOf: abilityNameOf,
+    from: abilityFrom(actionFromForm),
+  },
+  reactions: {
+    Comp: ReactionSubform,
+    to: reactionToForm,
+    blank: blankReaction,
+    nameOf: abilityNameOf,
+    from: abilityFrom(reactionFromForm),
   },
 };
 
