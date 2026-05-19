@@ -15,6 +15,9 @@ import {
   familiarToForm,
   familiarFromForm,
   blankFamiliar,
+  animalCompanionToForm,
+  animalCompanionFromForm,
+  blankAnimalCompanion,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -345,5 +348,68 @@ describe('bundled familiar resolve-parity (Slice 4a gate)', () => {
 
   it.each(bundledFamiliars)('%s round-trips losslessly', (_label, fam) => {
     expect(familiarFromForm(familiarToForm(fam))).toEqual(fam);
+  });
+});
+
+describe('animalCompanionToForm / animalCompanionFromForm', () => {
+  it('round-trips a minimal AC (name only)', () => {
+    expect(animalCompanionFromForm(animalCompanionToForm({ name: 'Rex' }))).toEqual({ name: 'Rex' });
+  });
+
+  it('preserves ability/save blocks, numeric speed, and unknown keys', () => {
+    const src = {
+      name: 'Zevira',
+      type: 'Young Shadow Hound',
+      size: 'Small',
+      ac: 19,
+      hp: 32,
+      speed: 30,
+      senses: 'Darkvision',
+      abilities: {
+        strength: 14, dexterity: 16, constitution: 13,
+        intelligence: 2, wisdom: 12, charisma: 12,
+      },
+      saves: { fortitude: 7, reflex: 9, will: 7 },
+      skills: ['Acrobatics'],
+      strikes: [{ name: 'Bite', damage: '1d8' }],
+      support: 'Shrouds your foes.',
+    };
+    expect(animalCompanionFromForm(animalCompanionToForm(src))).toEqual(src);
+  });
+
+  it('preserves a string speed verbatim', () => {
+    const src = { name: 'Wolf', speed: '40 feet' };
+    expect(animalCompanionFromForm(animalCompanionToForm(src))).toEqual(src);
+  });
+
+  it('blankAnimalCompanion saves only the typed name', () => {
+    const f = blankAnimalCompanion();
+    f.str.name = 'Spot';
+    expect(animalCompanionFromForm(f)).toEqual({ name: 'Spot' });
+  });
+
+  it('rejects invalid JSON / non-object nested body', () => {
+    const f = blankAnimalCompanion();
+    f.restJson = '{ broken';
+    expect(() => animalCompanionFromForm(f)).toThrow(/invalid JSON/i);
+    f.restJson = '[1,2]';
+    expect(() => animalCompanionFromForm(f)).toThrow(/must be a JSON object/i);
+  });
+});
+
+describe('bundled animal companion resolve-parity (Slice 4b gate)', () => {
+  const bundledACs = [];
+  sampleCharacters.forEach((c) => {
+    if (c.animalCompanion && typeof c.animalCompanion === 'object') {
+      bundledACs.push([`character ${c.id} animalCompanion`, c.animalCompanion]);
+    }
+  });
+
+  it('covers real bundled animal companions', () => {
+    expect(bundledACs.length).toBeGreaterThan(0);
+  });
+
+  it.each(bundledACs)('%s round-trips losslessly', (_label, ac) => {
+    expect(animalCompanionFromForm(animalCompanionToForm(ac))).toEqual(ac);
   });
 });

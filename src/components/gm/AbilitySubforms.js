@@ -588,6 +588,251 @@ export const FamiliarSubform = ({ value, onChange, idPrefix }) => {
   );
 };
 
+// ----- Animal Companion -----------------------------------------------------
+// One real AC in the bundled data (Zevira). Managed envelope + ability-score
+// and save objects (mirroring the character editor's ABILITIES/SAVES, but
+// nested inside the companion). The remaining heterogeneous tail (strikes,
+// support, anything else) goes through a raw-JSON box. Speed type is
+// preserved: a numeric authored speed (e.g. 30) round-trips as a number; a
+// string authored speed (e.g. "30 feet") round-trips as a string.
+const AC_STR = ['name', 'type', 'size', 'senses', 'support'];
+const AC_NUM = ['ac', 'hp'];
+const AC_ABILITIES = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+const AC_SAVES = ['fortitude', 'reflex', 'will'];
+
+export const animalCompanionToForm = (s) => {
+  const src = s && typeof s === 'object' ? s : {};
+  const rest = { ...src };
+  AC_STR.forEach((k) => delete rest[k]);
+  AC_NUM.forEach((k) => delete rest[k]);
+  ['traits', 'skills', 'speed', 'abilities', 'saves'].forEach((k) => delete rest[k]);
+  const str = {};
+  AC_STR.forEach((k) => {
+    str[k] = src[k] != null ? String(src[k]) : '';
+  });
+  const num = {};
+  AC_NUM.forEach((k) => {
+    num[k] = src[k] != null ? String(src[k]) : '';
+  });
+  const abilities = {};
+  AC_ABILITIES.forEach((k) => {
+    abilities[k] = src.abilities && src.abilities[k] != null ? String(src.abilities[k]) : '';
+  });
+  const saves = {};
+  AC_SAVES.forEach((k) => {
+    saves[k] = src.saves && src.saves[k] != null ? String(src.saves[k]) : '';
+  });
+  return {
+    str,
+    num,
+    speed: src.speed != null ? String(src.speed) : '',
+    speedWasNumber: typeof src.speed === 'number',
+    abilities,
+    abilitiesPresent: !!(src.abilities && typeof src.abilities === 'object'),
+    saves,
+    savesPresent: !!(src.saves && typeof src.saves === 'object'),
+    traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
+    skills: Array.isArray(src.skills) ? src.skills.join(', ') : '',
+    restJson: JSON.stringify(rest, null, 2),
+  };
+};
+
+export const animalCompanionFromForm = (f) => {
+  let rest;
+  try {
+    rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
+  } catch {
+    throw new Error('has invalid JSON in its nested fields.');
+  }
+  if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
+    throw new Error('nested fields must be a JSON object.');
+  }
+  const out = { ...rest };
+  AC_STR.forEach((k) => {
+    const v = f.str[k].trim();
+    if (v) out[k] = v;
+  });
+  AC_NUM.forEach((k) => {
+    if (f.num[k].trim() !== '') out[k] = toInt(f.num[k]);
+  });
+  if (f.speed.trim() !== '') {
+    const trimmed = f.speed.trim();
+    // Preserve a numeric authored speed; fall back to the literal string when
+    // the GM has typed units ("30 feet") or the original wasn't numeric.
+    if (f.speedWasNumber && /^-?\d+$/.test(trimmed)) out.speed = toInt(trimmed);
+    else out.speed = trimmed;
+  }
+  const traits = toList(f.traits);
+  if (traits.length) out.traits = traits;
+  const skills = toList(f.skills);
+  if (skills.length) out.skills = skills;
+  // Only emit ability/save blocks if the source had them or the GM filled
+  // any field — keeps a Spartan AC payload free of zero-valued noise.
+  const anyAbility = AC_ABILITIES.some((k) => f.abilities[k].trim() !== '');
+  if (f.abilitiesPresent || anyAbility) {
+    out.abilities = {};
+    AC_ABILITIES.forEach((k) => {
+      out.abilities[k] = toInt(f.abilities[k]);
+    });
+  }
+  const anySave = AC_SAVES.some((k) => f.saves[k].trim() !== '');
+  if (f.savesPresent || anySave) {
+    out.saves = {};
+    AC_SAVES.forEach((k) => {
+      out.saves[k] = toInt(f.saves[k]);
+    });
+  }
+  return out;
+};
+
+export const blankAnimalCompanion = () => animalCompanionToForm({});
+
+export const AnimalCompanionSubform = ({ value, onChange, idPrefix }) => {
+  const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
+  const setNum = (k, v) => onChange({ ...value, num: { ...value.num, [k]: v } });
+  const setAbility = (k, v) =>
+    onChange({
+      ...value,
+      abilitiesPresent: true,
+      abilities: { ...value.abilities, [k]: v },
+    });
+  const setSave = (k, v) =>
+    onChange({ ...value, savesPresent: true, saves: { ...value.saves, [k]: v } });
+  return (
+    <div className="gm-card" data-testid={`${idPrefix}-ac`}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>name</label>
+          <input
+            aria-label={`${idPrefix}-name`}
+            value={value.str.name}
+            onChange={(e) => setStr('name', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>type</label>
+          <input
+            aria-label={`${idPrefix}-type`}
+            value={value.str.type}
+            onChange={(e) => setStr('type', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>size</label>
+          <input
+            aria-label={`${idPrefix}-size`}
+            value={value.str.size}
+            onChange={(e) => setStr('size', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>ac</label>
+          <input
+            aria-label={`${idPrefix}-ac`}
+            type="number"
+            value={value.num.ac}
+            onChange={(e) => setNum('ac', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>hp</label>
+          <input
+            aria-label={`${idPrefix}-hp`}
+            type="number"
+            value={value.num.hp}
+            onChange={(e) => setNum('hp', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>speed</label>
+          <input
+            aria-label={`${idPrefix}-speed`}
+            value={value.speed}
+            onChange={(e) => onChange({ ...value, speed: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>senses</label>
+        <input
+          aria-label={`${idPrefix}-senses`}
+          value={value.str.senses}
+          onChange={(e) => setStr('senses', e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>traits (comma-separated)</label>
+        <input
+          aria-label={`${idPrefix}-traits`}
+          value={value.traits}
+          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>skills (comma-separated)</label>
+        <input
+          aria-label={`${idPrefix}-skills`}
+          value={value.skills}
+          onChange={(e) => onChange({ ...value, skills: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>abilities</label>
+        <div className="gm-row">
+          {AC_ABILITIES.map((k) => (
+            <div className="form-group" key={k}>
+              <label>{k}</label>
+              <input
+                aria-label={`${idPrefix}-${k}`}
+                type="number"
+                value={value.abilities[k]}
+                onChange={(e) => setAbility(k, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="form-group">
+        <label>saves</label>
+        <div className="gm-row">
+          {AC_SAVES.map((k) => (
+            <div className="form-group" key={k}>
+              <label>{k}</label>
+              <input
+                aria-label={`${idPrefix}-${k}`}
+                type="number"
+                value={value.saves[k]}
+                onChange={(e) => setSave(k, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="form-group">
+        <label>support</label>
+        <textarea
+          aria-label={`${idPrefix}-support`}
+          rows={3}
+          value={value.str.support}
+          onChange={(e) => setStr('support', e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>nested fields — strikes, anything else (raw JSON)</label>
+        <textarea
+          aria-label={`${idPrefix}-json`}
+          className="gm-json"
+          rows={4}
+          value={value.restJson}
+          onChange={(e) => onChange({ ...value, restJson: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+};
+
 export const FeatSubform = ({ value, onChange, idPrefix }) => {
   const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
   const setNum = (k, v) => onChange({ ...value, num: { ...value.num, [k]: v } });
