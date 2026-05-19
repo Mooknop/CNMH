@@ -1,10 +1,11 @@
 // src/utils/SpellUtils.js
 // Shared utility functions for spell-related components
 
-import { 
-    getAbilityModifier, 
-    getProficiencyBonus 
+import {
+    getAbilityModifier,
+    getProficiencyBonus
   } from './CharacterUtils';
+import { itemAbilitiesActive } from './itemState';
   
   /**
    * Calculate spell attack modifier and DC based on character data
@@ -180,7 +181,10 @@ import {
         return {
           ...item.scroll,
           fromScroll: true,
-          scrollName: item.name
+          scrollName: item.name,
+          // Gated: a scroll's spell is castable only while the scroll is
+          // held (or the catalog flags it noHandRequired).
+          active: itemAbilitiesActive(item)
         };
       }
       return [];
@@ -211,7 +215,10 @@ export const extractWandSpells = (wandItems) => {
       return {
         ...item.wand,
         fromWand: true,
-        wandName: item.name
+        wandName: item.name,
+        // Gated: a wand's spell is castable only while the wand is held
+        // (or the catalog flags it noHandRequired).
+        active: itemAbilitiesActive(item)
       };
     }
     return [];
@@ -256,34 +263,4 @@ export const extractInnateSpells = (character) => {
   // Add other sources as needed
   
   return innateSpells;
-};
-
-/**
- * Find gem items in character inventory
- * @param {Object} character - Character object
- * @returns {Array} - Array of gem items with spells
- */
-export const findGemItems = (character) => {
-  return character.inventory
-    ? character.inventory.filter(item => item.gem)
-    : [];
-};
-
-/**
- * Extract gem spells from gem items
- * @param {Array} gemItems - Array of gem items
- * @returns {Array} - Array of gem spells
- */
-export const extractGemSpells = (gemItems) => {
-  return gemItems.flatMap(item => {
-    // Add an identifier to the spell to know it's from a gem
-    if (item.gem) {
-      return {
-        ...item.gem,
-        fromGem: true,
-        gemName: item.name
-      };
-    }
-    return [];
-  });
 };

@@ -1,6 +1,6 @@
 // src/components/spells/SpellCategorySection.js
-// Unified renderer for scroll, wand, gem, and staff spell sections.
-// Replaces ScrollSpells, WandSpells, GemSpells, and StaffSpells.
+// Unified renderer for scroll, wand, and staff spell sections.
+// Replaces ScrollSpells, WandSpells, and StaffSpells.
 import React from 'react';
 import SpellCard from './SpellCard';
 import { filterSpellsByDefense } from '../../utils/SpellUtils';

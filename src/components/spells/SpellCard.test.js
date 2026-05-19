@@ -124,12 +124,6 @@ describe('SpellCard', () => {
     expect(screen.getByText('Not Prepared')).toBeInTheDocument();
   });
 
-  it('renders gem indicator when fromGem', () => {
-    const spell = { ...baseSpell, fromGem: true, gemName: 'Ruby' };
-    render(<SpellCard spell={spell} themeColor="#ff0000" characterLevel={5} />);
-    expect(screen.getByText('Ruby')).toBeInTheDocument();
-  });
-
   it('renders scroll indicator when fromScroll', () => {
     const spell = { ...baseSpell, fromScroll: true, scrollName: 'Scroll of Fireball' };
     render(<SpellCard spell={spell} themeColor="#ff0000" characterLevel={5} />);
@@ -140,6 +134,20 @@ describe('SpellCard', () => {
     const spell = { ...baseSpell, fromWand: true, wandName: 'Wand of Fireball' };
     render(<SpellCard spell={spell} themeColor="#ff0000" characterLevel={5} />);
     expect(screen.getByText('Wand of Fireball')).toBeInTheDocument();
+  });
+
+  it('disables a scroll spell whose item is not in hand', () => {
+    const spell = { ...baseSpell, fromScroll: true, scrollName: 'Scroll of Fireball', active: false };
+    render(<SpellCard spell={spell} themeColor="#ff0000" characterLevel={5} />);
+    expect(screen.getByText('Not in hand')).toBeInTheDocument();
+    expect(screen.getByText(/hold Scroll of Fireball to cast/)).toBeInTheDocument();
+    expect(screen.getByTestId('collapsible-card').className).toContain('is-inactive');
+  });
+
+  it('does not disable a spell that is active or has no active flag', () => {
+    render(<SpellCard spell={{ ...baseSpell, fromScroll: true, scrollName: 'S', active: true }} themeColor="#ff0000" characterLevel={5} />);
+    expect(screen.queryByText('Not in hand')).not.toBeInTheDocument();
+    expect(screen.getByTestId('collapsible-card').className).not.toContain('is-inactive');
   });
 
   it('renders degrees of success when present', () => {

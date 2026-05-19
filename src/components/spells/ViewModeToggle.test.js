@@ -59,11 +59,6 @@ describe('ViewModeToggle', () => {
     expect(screen.getByText('Wands')).toBeInTheDocument();
   });
 
-  it('renders Spell Gems button when hasGems is true', () => {
-    render(<ViewModeToggle viewMode="spells" setViewMode={noop} hasGems />);
-    expect(screen.getByText('Spell Gems')).toBeInTheDocument();
-  });
-
   it('calls setViewMode when a button is clicked', () => {
     const setViewMode = jest.fn();
     render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasScrolls />);
@@ -128,10 +123,4 @@ describe('ViewModeToggle', () => {
     expect(setViewMode).toHaveBeenCalledWith('wands');
   });
 
-  it('calls setViewMode with gems when Spell Gems is clicked', () => {
-    const setViewMode = jest.fn();
-    render(<ViewModeToggle viewMode="spells" setViewMode={setViewMode} hasGems />);
-    fireEvent.click(screen.getByText('Spell Gems'));
-    expect(setViewMode).toHaveBeenCalledWith('gems');
-  });
 });

@@ -35,6 +35,11 @@ const StrikesList = ({ character, themeColor }) => {
   
   // Helper function to render a strike card
   const renderStrikeCard = (strike, index) => {
+    // Item strikes are gated on the weapon being held (see
+    // itemState.itemAbilitiesActive). active === false ⇒ show but disabled;
+    // undefined/true (character/feat/unarmed strikes) ⇒ always usable.
+    const inactive = strike.active === false;
+
     // Create header content
     const header = (
       <>
@@ -85,6 +90,12 @@ const StrikesList = ({ character, themeColor }) => {
           </div>
         )}
         
+        {inactive && (
+          <div className="ability-inactive-hint">
+            Not in hand — draw this weapon to Strike with it.
+          </div>
+        )}
+
         {/* Display item source if it exists */}
         {strike.source && strike.source !== strike.name && (
           <div className="strike-source" style={{ 
@@ -101,9 +112,9 @@ const StrikesList = ({ character, themeColor }) => {
     );
     
     return (
-      <CollapsibleCard 
+      <CollapsibleCard
         key={`strike-${index}`}
-        className="strike-card"
+        className={`strike-card${inactive ? ' is-inactive' : ''}`}
         header={header}
         themeColor={themeColor}
         style={{ borderLeft: `4px solid ${themeColor}` }}

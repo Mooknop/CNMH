@@ -122,6 +122,30 @@ describe('StrikesList', () => {
     expect(screen.getByTestId('thaumaturge-implements')).toBeInTheDocument();
   });
 
+  it('disables an item strike whose weapon is not in hand', () => {
+    const char = {
+      ...mockCharacter,
+      _strikes: [
+        { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: [], source: 'Longsword', active: false },
+      ],
+    };
+    render(<StrikesList character={char} themeColor="#ff0000" />);
+    expect(screen.getByText(/Not in hand/)).toBeInTheDocument();
+    expect(screen.getByTestId('collapsible-card').className).toContain('is-inactive');
+  });
+
+  it('does not disable a held or non-item strike', () => {
+    const char = {
+      ...mockCharacter,
+      _strikes: [
+        { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: [], source: 'Longsword', active: true },
+      ],
+    };
+    render(<StrikesList character={char} themeColor="#ff0000" />);
+    expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('collapsible-card').className).not.toContain('is-inactive');
+  });
+
   it('renders action icon for variable action count strikes', () => {
     const char = {
       ...mockCharacter,

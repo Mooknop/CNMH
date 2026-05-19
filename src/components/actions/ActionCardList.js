@@ -56,6 +56,10 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage 
         const actionText = getActionText(item);
         const highlightColor = '#d4a017';
         const cardColor = item.highlight ? highlightColor : themeColor;
+        // Item-granted actions are gated on the item being held (see
+        // itemState.itemAbilitiesActive). active === false ⇒ show but
+        // disabled; undefined/true (character/feat actions) ⇒ always usable.
+        const inactive = item.active === false;
 
         const header = (
           <>
@@ -122,6 +126,12 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage 
               </div>
             )}
 
+            {inactive && (
+              <div className="ability-inactive-hint">
+                Not in hand — hold this item to use it.
+              </div>
+            )}
+
             {item.source && (
               <div className={`${type}-source`} style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', padding: '0.5rem 1rem', fontStyle: 'italic' }}>
                 From: {item.source}
@@ -133,7 +143,7 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage 
         return (
           <CollapsibleCard
             key={`${type}-${index}`}
-            className={`${type}-card`}
+            className={`${type}-card${inactive ? ' is-inactive' : ''}`}
             header={header}
             themeColor={cardColor}
             style={{ borderLeft: `4px solid ${cardColor}` }}

@@ -138,6 +138,18 @@ describe('StaffSpells', () => {
     expect(screen.getByText('This staff has no spells.')).toBeInTheDocument();
   });
 
+  it('shows the not-in-hand hint when staff spells are inactive', () => {
+    const spells = baseSpells.map((s) => ({ ...s, active: false }));
+    render(<StaffSpells {...baseProps} spells={spells} />);
+    expect(screen.getByText('Not in hand — hold the staff to cast its spells.')).toBeInTheDocument();
+  });
+
+  it('does not show the hint when the staff is held (spells active)', () => {
+    const spells = baseSpells.map((s) => ({ ...s, active: true }));
+    render(<StaffSpells {...baseProps} spells={spells} />);
+    expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
+  });
+
   it('spell chip links point to aonprd.com', () => {
     render(<StaffSpells {...baseProps} />);
     const link = screen.getByRole('link', { name: 'Fireball' });

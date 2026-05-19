@@ -13,6 +13,11 @@ import ActionIcon from '../shared/ActionIcon';
  * @param {Object} props.character - Character data for bloodline effects (optional)
  */
 const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
+  // Scroll/wand spells are gated on the item being held (see
+  // itemState.itemAbilitiesActive). active === false ⇒ show but disabled;
+  // undefined/true (repertoire, innate, focus) ⇒ always castable.
+  const inactive = spell.active === false;
+
   // Create header content for the card
   const header = (
     <>
@@ -22,11 +27,6 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
         {spell.actions && (
           <div className="spell-actions-indicator">
             <ActionIcon actionText={spell.actions} color={themeColor} />
-          </div>
-        )}
-        {spell.fromGem && (
-          <div className="gem-indicator">
-            {spell.gemName}
           </div>
         )}
         {spell.signature && (
@@ -60,6 +60,11 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
             Innate
           </div>
         )}
+        {inactive && (
+          <div className="not-in-hand-indicator">
+            Not in hand
+          </div>
+        )}
         {spell.bloodline && (
           <div className="bloodline-indicator">
             Bloodline
@@ -72,6 +77,11 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
   // Create content for the collapsible section
   const content = (
     <>
+      {inactive && (
+        <div className="ability-inactive-hint">
+          Not in hand — hold {spell.scrollName || spell.wandName || 'this item'} to cast this spell.
+        </div>
+      )}
       <div className="spell-meta">
         {spell.traits && spell.traits.map((trait, index) => (
           <TraitTag key={index} trait={trait} />
@@ -183,7 +193,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
   return (
     <CollapsibleCard 
       key={spell.id + (spell.fromScroll ? '-scroll' : '')}
-      className={`spell-card ${spell.bloodline ? 'bloodline-spell' : ''} ${spell.signature ? 'signature-spell' : ''}`}
+      className={`spell-card ${spell.bloodline ? 'bloodline-spell' : ''} ${spell.signature ? 'signature-spell' : ''}${inactive ? ' is-inactive' : ''}`}
       header={header}
       themeColor={themeColor}
       initialExpanded={false}

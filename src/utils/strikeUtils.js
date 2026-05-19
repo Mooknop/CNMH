@@ -3,6 +3,7 @@
 
 import { getAbilityModifier, getAttackBonus } from './CharacterUtils';
 import { convertWordToNumber } from './actionIconUtils';
+import { itemAbilitiesActive } from './itemState';
 
 /**
  * Compute the ability modifier, proficiency value, attack bonus, and damage string
@@ -155,6 +156,9 @@ export const getStrikes = (character) => {
             description: weaponStrike.description || item.description || '',
             source: item.name,
             range: weaponStrike.range,
+            // Gated: a weapon's Strike is only usable while it is wielded
+            // (held), unless the catalog flags it noHandRequired.
+            active: itemAbilitiesActive(item),
           };
         });
       });
