@@ -17,8 +17,10 @@ import './gm.css';
 // {capacity,ignored} (never its per-character contents), and a scroll/wand's
 // nested spell. Per-character data (quantity / invested / which container an
 // item sits in) lives on the reference in a character's inventory, never here.
-// Rare mechanical blocks (strikes/potency/shield/actions) round-trip through a
-// per-item raw-JSON box, the same faithful pattern as the character editor.
+// Rare mechanical blocks (potency/shield/actions, and an artifact's level-gated
+// `artifact` tiers / a staff's `staff` spell list) round-trip through a per-item
+// raw-JSON box, the same faithful pattern as the character editor. A scroll/wand
+// spell can be authored inline OR set to a `spellRef` into the shared catalog.
 
 const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -44,7 +46,7 @@ const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'du
 const spellToForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
   const rest = { ...src };
-  [...SPELL_STR, 'level', 'traits', 'heightened'].forEach((k) => delete rest[k]);
+  [...SPELL_STR, 'level', 'traits', 'heightened', 'spellRef'].forEach((k) => delete rest[k]);
   const str = {};
   SPELL_STR.forEach((k) => {
     str[k] = src[k] != null ? String(src[k]) : '';
@@ -58,12 +60,20 @@ const spellToForm = (s) => {
     level: src.level != null ? String(src.level) : '0',
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     heightened,
+    spellRef: src.spellRef != null ? String(src.spellRef) : '',
     rest, // id + any unmanaged keys, preserved
   };
 };
 
 const spellFromForm = (sf) => {
-  const out = { ...sf.rest };
+  const rest = { ...sf.rest };
+  // A spell reference is the canonical form: the catalog spell supplies every
+  // field at resolution time, so emit ONLY the ref (+ any preserved rest) and
+  // skip the inline scalars entirely — no spurious empty/level-0 keys.
+  if (sf.spellRef && sf.spellRef.trim()) {
+    return { ...rest, spellRef: sf.spellRef.trim() };
+  }
+  const out = rest;
   SPELL_STR.forEach((k) => {
     const v = sf.str[k].trim();
     if (v) out[k] = v;
@@ -164,8 +174,11 @@ const itemFromForm = (f) => {
   }
 
   if (f.spellKind === 'scroll' || f.spellKind === 'wand') {
-    if (!f.spell.str.name.trim()) {
-      throw new Error(`The ${f.spellKind} spell on “${f.name}” needs a name.`);
+    const hasRef = !!(f.spell.spellRef && f.spell.spellRef.trim());
+    if (!hasRef && !f.spell.str.name.trim()) {
+      throw new Error(
+        `The ${f.spellKind} spell on “${f.name}” needs a spell reference or a name.`
+      );
     }
     out[f.spellKind] = spellFromForm(f.spell);
   }
@@ -173,8 +186,12 @@ const itemFromForm = (f) => {
   return out;
 };
 
-const SpellSubform = ({ kind, spell, onChange }) => {
+const SpellSubform = ({ kind, spell, spells, onChange }) => {
   const setStr = (k, v) => onChange({ ...spell, str: { ...spell.str, [k]: v } });
+  const ref = (spell.spellRef || '').trim();
+  const refMatch = ref
+    ? (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref)
+    : null;
   const setH = (i, patch) =>
     onChange({
       ...spell,
@@ -187,6 +204,22 @@ const SpellSubform = ({ kind, spell, onChange }) => {
   return (
     <div className="gm-card" data-testid="spell-subform">
       <p className="gm-count">{kind === 'scroll' ? 'Scroll' : 'Wand'} spell</p>
+      <div className="form-group">
+        <label>spell reference (catalog id)</label>
+        <input
+          aria-label="spell-ref"
+          placeholder="e.g. cleanse-affliction"
+          value={spell.spellRef || ''}
+          onChange={(ev) => onChange({ ...spell, spellRef: ev.target.value })}
+        />
+        <p className="gm-hint" data-testid="spell-ref-preview">
+          {ref
+            ? refMatch
+              ? `→ ${refMatch.name}`
+              : '→ (unknown spell — will show a stub until the id matches)'
+            : 'Leave blank to author an inline spell below; set it to reference the shared spell catalog.'}
+        </p>
+      </div>
       <div className="gm-row">
         <div className="form-group">
           <label>spell name</label>
@@ -265,6 +298,7 @@ const SpellSubform = ({ kind, spell, onChange }) => {
 };
 
 const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
+  const { spells } = useContent();
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -414,6 +448,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         <SpellSubform
           kind={e.spellKind}
           spell={e.spell}
+          spells={spells}
           onChange={(spell) => set({ spell })}
         />
       )}

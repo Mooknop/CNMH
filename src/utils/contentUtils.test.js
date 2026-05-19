@@ -15,6 +15,9 @@ import {
   withItemId,
   normalizeItems,
   itemCatalogMap,
+  withSpellId,
+  normalizeSpells,
+  spellCatalogMap,
   resolveInventoryItem,
   resolveInventory,
   resolveCharacterItems,
@@ -183,6 +186,13 @@ describe('contentUtils', () => {
       expect(Array.isArray(dc.item)).toBe(true);
       expect(dc.item.every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
       expect(Array.isArray(buildSeedPayload().collections.item)).toBe(true);
+    });
+    it('exposes the spell catalog as an array of id-bearing docs', () => {
+      const dc = defaultContent();
+      expect(Array.isArray(dc.spell)).toBe(true);
+      expect(dc.spell.length).toBeGreaterThan(0);
+      expect(dc.spell.every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
+      expect(Array.isArray(buildSeedPayload().collections.spell)).toBe(true);
     });
   });
 
@@ -368,6 +378,95 @@ describe('contentUtils', () => {
       ];
       const resolved = resolveCharacterItems({ inventory: refInventory }, items).inventory;
       expect(calculateItemsBulk(resolved)).toBe(calculateItemsBulk(inlineInventory));
+    });
+  });
+
+  describe('withSpellId / normalizeSpells / spellCatalogMap', () => {
+    it('slugs the spell name, keeps an existing id, indexes dupes, tolerates non-arrays', () => {
+      expect(withSpellId({ name: 'Cleanse Affliction', level: 2 }).id).toBe('cleanse-affliction');
+      expect(withSpellId({ id: 'keep', name: 'X' }).id).toBe('keep');
+      expect(withSpellId({ name: 'Dup' }, 2).id).toBe('dup-2');
+      expect(normalizeSpells(null)).toEqual([]);
+    });
+    it('indexes by string id and tolerates non-arrays', () => {
+      const m = spellCatalogMap([{ id: 'a', name: 'A' }, { id: 1, name: 'One' }]);
+      expect(m.get('a').name).toBe('A');
+      expect(m.get('1').name).toBe('One');
+      expect(spellCatalogMap(null).size).toBe(0);
+    });
+  });
+
+  describe('spell-ref resolution + artifact gating', () => {
+    const spellMap = spellCatalogMap([
+      { id: 'sleep', name: 'Sleep', level: 1, description: 'Zzz', traits: ['Mental'] },
+      { id: 'figment', name: 'Figment', level: 0, description: 'Illusion' },
+    ]);
+    const catalog = itemCatalogMap([
+      { id: 'scroll-of-sleep', name: 'Scroll of Sleep', weight: 0.1, scroll: { spellRef: 'sleep' } },
+      { id: 'wand-of-sleep', name: 'Wand of Sleep', weight: 0.1, wand: { spellRef: 'sleep', duration: 'special' } },
+      { id: 'broken-scroll', name: 'Broken Scroll', weight: 0.1, scroll: { spellRef: 'nope' } },
+      {
+        id: 'arti',
+        name: 'Artifact Staff',
+        weight: 1,
+        strikes: { damage: '1d6' },
+        staff: { name: 'Artifact Staff', spells: [{ ref: 'figment' }, { ref: 'sleep' }, { name: 'Inline', level: 3 }] },
+        artifact: { tiers: [{ level: 1, grants: ['strikes'] }, { level: 5, grants: ['staff'] }] },
+      },
+    ]);
+
+    it('inlines a scroll/wand spell ref (catalog spell + block overrides)', () => {
+      const scroll = resolveInventoryItem({ ref: 'scroll-of-sleep' }, catalog, spellMap);
+      expect(scroll.scroll).toEqual({ id: 'sleep', name: 'Sleep', level: 1, description: 'Zzz', traits: ['Mental'] });
+      const wand = resolveInventoryItem({ ref: 'wand-of-sleep' }, catalog, spellMap);
+      expect(wand.wand.name).toBe('Sleep');
+      expect(wand.wand.duration).toBe('special'); // block-local override wins
+    });
+
+    it('yields a visible level-0 stub for a dangling spell ref', () => {
+      const r = resolveInventoryItem({ ref: 'broken-scroll' }, catalog, spellMap);
+      expect(r.scroll).toEqual({ name: '(unknown spell: nope)', level: 0 });
+    });
+
+    it('leaves an inline spell block (no spellRef) untouched (back-compat)', () => {
+      const inlineCat = itemCatalogMap([
+        { id: 'old', name: 'Old Scroll', weight: 0.1, scroll: { name: 'Heal', level: 1 } },
+      ]);
+      const r = resolveInventoryItem({ ref: 'old' }, inlineCat, spellMap);
+      expect(r.scroll).toEqual({ name: 'Heal', level: 1 });
+    });
+
+    it('resolves staff spell refs and passes inline staff spells through', () => {
+      const r = resolveInventoryItem({ ref: 'arti' }, catalog, spellMap, 10);
+      expect(r.staff.spells).toHaveLength(3);
+      expect(r.staff.spells[0]).toMatchObject({ id: 'figment', name: 'Figment' });
+      expect(r.staff.spells[1]).toMatchObject({ id: 'sleep', name: 'Sleep' });
+      expect(r.staff.spells[2]).toEqual({ name: 'Inline', level: 3 });
+    });
+
+    it('gates artifact blocks by owner level (below / at / above tier)', () => {
+      const lvl1 = resolveInventoryItem({ ref: 'arti' }, catalog, spellMap, 1);
+      expect(lvl1.strikes).toBeTruthy();
+      expect(lvl1.staff).toBeUndefined(); // staff tier is level 5
+      const lvl5 = resolveInventoryItem({ ref: 'arti' }, catalog, spellMap, 5);
+      expect(lvl5.strikes).toBeTruthy();
+      expect(lvl5.staff).toBeTruthy();
+      const lvl0 = resolveInventoryItem({ ref: 'arti' }, catalog, spellMap, undefined);
+      expect(lvl0.strikes).toBeTruthy(); // defaults to level 1
+      expect(lvl0.staff).toBeUndefined();
+    });
+
+    it('resolveCharacterItems threads spells + level (3-arg) and stays back-compat (2-arg)', () => {
+      const sheet = { level: 5, inventory: [{ uid: 'u1', ref: 'arti' }] };
+      const r3 = resolveCharacterItems(sheet, [...catalog.values()], [...spellMap.values()]);
+      expect(r3.inventory[0].staff.spells[0].name).toBe('Figment');
+      expect(r3.inventory[0].uid).toBe('u1');
+      // 2-arg (no spell catalog): refs become stubs, but resolution still works.
+      const r2 = resolveCharacterItems(
+        { level: 5, inventory: [{ ref: 'scroll-of-sleep' }] },
+        [...catalog.values()]
+      );
+      expect(r2.inventory[0].scroll).toEqual({ name: '(unknown spell: sleep)', level: 0 });
     });
   });
 });

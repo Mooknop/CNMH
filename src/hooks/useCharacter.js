@@ -161,16 +161,21 @@ export const useCharacter = (character) => {
 
     const innateSpells = extractInnateSpells(character) || [];
 
-    const staff       = character.staff || null;
-    // The staff is a top-level object; its real placement lives on the
-    // matching effective inventory entry (linked by name). It is castable
-    // only while that entry is held (or flagged noHandRequired). No match ⇒
-    // treat as not held. Stamp `active` on each staff spell so the renderer
-    // can disable them, mirroring scroll/wand spells.
-    const staffEntry  = staff?.name
-      ? effectiveInventory.find((e) => e && e.name === staff.name)
-      : null;
-    const staffActive = staff?.name ? itemAbilitiesActive(staffEntry) : false;
+    // The staff lives on a resolved inventory item's `.staff` block (the
+    // ref/uid link IS the link — no fragile name matching, and artifact
+    // gating may withhold it until the owner is high enough level). It is
+    // castable only while that entry is held (or flagged noHandRequired).
+    // Legacy fallback: a top-level `character.staff` still works, linked by
+    // name as before, for any sheet not yet migrated to the catalog item.
+    const staffItem   = effectiveInventory.find((e) => e && e.staff) || null;
+    const legacyStaff = character.staff || null;
+    const staff       = staffItem ? staffItem.staff : legacyStaff;
+    const staffEntry  = staffItem
+      ? staffItem
+      : legacyStaff?.name
+        ? effectiveInventory.find((e) => e && e.name === legacyStaff.name)
+        : null;
+    const staffActive = staff ? itemAbilitiesActive(staffEntry) : false;
     const staffSpells = (staff?.spells || []).map((s) => ({
       ...s,
       active: staffActive,
@@ -205,7 +210,7 @@ export const useCharacter = (character) => {
       hasInnateSpells          : innateSpells.length > 0,
       hasScrolls               : scrollItems.length > 0,
       hasWands                 : wandItems.length > 0,
-      hasStaff                 : !!(staff?.name),
+      hasStaff                 : !!staff,
       staffActive              : staffActive,
       hasEldPowers             : eldPowers.length > 0,
       isThaumaturge            : character.class === 'Thaumaturge' && !!character.thaumaturge,

@@ -4,7 +4,7 @@
 // live-loadout layer (cnmh_loadout_<characterId>, later slices) keys on, so a
 // missing/duplicate uid would silently corrupt placement+state. Runs the REAL
 // src/utils resolution (the build script only mirrors it).
-import { sampleCharacters, items } from './index';
+import { sampleCharacters, items, spells } from './index';
 import { resolveCharacterItems } from '../utils/contentUtils';
 
 const walk = (list, fn) =>
@@ -46,7 +46,7 @@ describe('bundled inventory entry uids (Slice 1)', () => {
 
   it('resolution preserves uid on every resolved entry (incl. nested container contents)', () => {
     sampleCharacters.forEach((c) => {
-      const resolved = resolveCharacterItems(c, items);
+      const resolved = resolveCharacterItems(c, items, spells);
       const authored = [];
       walk(c.inventory, (e) => authored.push(e.uid));
       const out = [];

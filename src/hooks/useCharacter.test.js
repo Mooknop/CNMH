@@ -1,5 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { useCharacter } from './useCharacter';
+import { resolveCharacterItems } from '../utils/contentUtils';
+import { items, spells } from '../data';
 
 // Mock all the utility modules
 jest.mock('../utils/CharacterUtils', () => ({
@@ -283,32 +285,42 @@ describe('useCharacter', () => {
     expect(inv[1].container.contents[0].uid).toBe('effguy-2');
   });
 
-  // Staff spells are gated on the staff inventory entry (matched by name)
-  // being held. The util mocks above don't touch staff — useCharacter
-  // computes it from character.staff + the effective tree directly.
-  describe('staff hand gating', () => {
+  // The staff now lives on a resolved inventory item's `.staff` block; it is
+  // castable only while that entry is held. Legacy top-level `character.staff`
+  // (linked by name) is still honored as a back-compat fallback. The util
+  // mocks above don't touch staff — useCharacter derives it directly.
+  describe('staff hand gating (resolved catalog item)', () => {
+    // Post-resolution shape: the staff block rides on the inventory entry,
+    // linked by uid (no name matching).
     const makeChar = (id) => ({
       id,
       name: 'Caster',
-      level: 1,
+      level: 4,
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
       feats: [],
-      inventory: [{ uid: `${id}-0`, name: "Xanderghul's Flawless Hammer", weight: 1, quantity: 1 }],
-      staff: {
-        name: "Xanderghul's Flawless Hammer",
-        spells: [{ id: 'ss1', name: 'Figment', level: 0 }],
-      },
+      inventory: [
+        {
+          uid: `${id}-0`,
+          id: 'xanderghuls-flawless-hammer',
+          name: "Xanderghul's Flawless Hammer",
+          weight: 2,
+          quantity: 1,
+          staff: { name: "Xanderghul's Flawless Hammer", spells: [{ name: 'Figment', level: 0 }] },
+          artifact: { tiers: [{ level: 1, grants: ['staff'] }] },
+        },
+      ],
     });
 
     afterEach(() => localStorage.clear());
 
     it('marks staff spells inactive when the staff is merely worn (empty loadout)', () => {
       const { result } = renderHook(() => useCharacter(makeChar('staffworn')));
+      expect(result.current.flags.hasStaff).toBe(true);
       expect(result.current.flags.staffActive).toBe(false);
       expect(result.current.staffSpells[0].active).toBe(false);
     });
 
-    it('marks staff spells active when the matching entry is held', () => {
+    it('marks staff spells active when the matching uid entry is held', () => {
       localStorage.setItem(
         'cnmh_loadout_staffheld',
         JSON.stringify({ 'staffheld-0': { state: 'held1', hand: 1 } })
@@ -316,6 +328,49 @@ describe('useCharacter', () => {
       const { result } = renderHook(() => useCharacter(makeChar('staffheld')));
       expect(result.current.flags.staffActive).toBe(true);
       expect(result.current.staffSpells[0].active).toBe(true);
+    });
+
+    it('still honors a legacy top-level character.staff (by-name fallback)', () => {
+      const legacy = {
+        id: 'legacy',
+        name: 'Caster',
+        level: 1,
+        abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+        feats: [],
+        inventory: [{ uid: 'legacy-0', name: 'Old Staff', weight: 1, quantity: 1 }],
+        staff: { name: 'Old Staff', spells: [{ id: 'ss1', name: 'Figment', level: 0 }] },
+      };
+      const { result } = renderHook(() => useCharacter(legacy));
+      expect(result.current.flags.hasStaff).toBe(true);
+      expect(result.current.staffSpells[0].name).toBe('Figment');
+    });
+  });
+
+  // Integration: the Hammer artifact's staff tier unlocks at level 4. Resolve
+  // the real bundled catalog through resolveCharacterItems, then feed the hook.
+  describe('artifact level gating (Hammer staff)', () => {
+    const jadeRefSheet = (level) => ({
+      id: 'jadeish',
+      name: 'Jade-ish',
+      level,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      feats: [],
+      inventory: [{ uid: 'jadeish-0', ref: 'xanderghuls-flawless-hammer', quantity: 1 }],
+    });
+
+    it('hides the staff below the unlock level', () => {
+      const resolved = resolveCharacterItems(jadeRefSheet(1), items, spells);
+      const { result } = renderHook(() => useCharacter(resolved));
+      expect(result.current.flags.hasStaff).toBe(false);
+      expect(result.current.staffSpells).toEqual([]);
+    });
+
+    it('exposes the full 8-spell staff at level 4', () => {
+      const resolved = resolveCharacterItems(jadeRefSheet(4), items, spells);
+      const { result } = renderHook(() => useCharacter(resolved));
+      expect(result.current.flags.hasStaff).toBe(true);
+      expect(result.current.staffSpells).toHaveLength(8);
+      expect(result.current.staffSpells.every((s) => s.name)).toBe(true);
     });
   });
 });

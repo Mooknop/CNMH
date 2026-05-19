@@ -47,7 +47,28 @@ const items = [
   },
 ];
 
-const setContent = () => useContent.mockReturnValue({ items });
+const hammerItem = {
+  id: 'xanderghuls-flawless-hammer',
+  name: "Xanderghul's Flawless Hammer",
+  weight: 2,
+  traits: ['Artifact', 'Staff', 'Magical'],
+  description: 'An Alara’quin of the Runelord of Pride.',
+  strikes: { proficiency: 'simple', type: 'melee', action: 1, damage: '1d12' },
+  staff: {
+    name: "Xanderghul's Flawless Hammer",
+    charges: { max: 3, current: 3 },
+    spells: [{ ref: 'figment' }, { ref: 'mirror-image' }],
+  },
+  artifact: { tiers: [{ level: 1, grants: ['strikes'] }, { level: 4, grants: ['staff'] }] },
+};
+
+const spells = [
+  { id: 'sleep', name: 'Sleep', level: 1 },
+  { id: 'figment', name: 'Figment', level: 0 },
+  { id: 'mirror-image', name: 'Mirror Image', level: 2 },
+];
+
+const setContent = () => useContent.mockReturnValue({ items, spells });
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -230,7 +251,7 @@ describe('GmItems', () => {
     expect(data.wand).toMatchObject({ name: 'Cleanse Affliction', level: 2 });
   });
 
-  it('blocks saving a scroll/wand with no spell name', async () => {
+  it('blocks saving a scroll/wand with neither a spell name nor a ref', async () => {
     setContent();
     render(<GmItems />);
     fireEvent.click(screen.getByText('+ New item'));
@@ -239,9 +260,62 @@ describe('GmItems', () => {
     fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'scroll' } });
     fireEvent.click(within(form).getByText('Create item'));
     await waitFor(() =>
-      expect(within(form).getByRole('alert')).toHaveTextContent(/scroll spell on .* needs a name/i)
+      expect(within(form).getByRole('alert')).toHaveTextContent(
+        /scroll spell on .* needs a spell reference or a name/i
+      )
     );
     expect(saveDocument).not.toHaveBeenCalled();
+  });
+
+  it('creates a scroll that references the shared spell catalog (spellRef, no inline name)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    fireEvent.click(screen.getByText('+ New item'));
+    const form = screen.getByTestId('item-form-new');
+    fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Scroll of Sleep' } });
+    fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'scroll' } });
+    // Default hint, then a resolved-name preview once the id matches the catalog.
+    expect(within(form).getByTestId('spell-ref-preview')).toHaveTextContent(/Leave blank/i);
+    fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
+    expect(within(form).getByTestId('spell-ref-preview')).toHaveTextContent('→ Sleep');
+    fireEvent.click(within(form).getByText('Create item'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, id, data] = saveDocument.mock.calls[0];
+    expect(id).toBe('scroll-of-sleep');
+    expect(data.scroll).toEqual({ spellRef: 'sleep' }); // ref only — no level-0 noise
+  });
+
+  it('round-trips an existing scroll spellRef and shows an unknown-ref warning', async () => {
+    useContent.mockReturnValue({
+      items: [
+        { id: 's', name: 'S', weight: 0, scroll: { spellRef: 'ghost-spell' } },
+      ],
+      spells,
+    });
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    const form = screen.getByTestId('item-form-s');
+    expect(within(form).getByLabelText('spell-kind')).toHaveValue('scroll');
+    expect(within(form).getByLabelText('spell-ref')).toHaveValue('ghost-spell');
+    expect(within(form).getByTestId('spell-ref-preview')).toHaveTextContent(/unknown spell/i);
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].scroll).toEqual({ spellRef: 'ghost-spell' });
+  });
+
+  it('round-trips a staff + artifact item untouched through the raw-JSON box', async () => {
+    useContent.mockReturnValue({ items: [hammerItem], spells });
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    const form = screen.getByTestId('item-form-xanderghuls-flawless-hammer');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, id, data] = saveDocument.mock.calls[0];
+    expect(id).toBe('xanderghuls-flawless-hammer');
+    expect(data.staff).toEqual(hammerItem.staff);
+    expect(data.artifact).toEqual(hammerItem.artifact);
+    expect(data.strikes).toMatchObject({ damage: '1d12' });
   });
 
   it('rejects per-character / managed keys in the raw-JSON box', async () => {
