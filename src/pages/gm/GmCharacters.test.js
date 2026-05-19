@@ -130,7 +130,7 @@ describe('GmCharacters', () => {
     openRow(form, 'actions', 0);
     expect(within(form).getByLabelText('actions-0-name')).toHaveValue('Exploit Vulnerability');
     gotoTab(form, 'Familiar');
-    expect(within(form).getByLabelText('familiar-json').value).toContain('Lazarus');
+    expect(within(form).getByLabelText('familiar-name')).toHaveValue('Lazarus');
     gotoTab(form, 'Advanced');
     const adv = within(form).getByLabelText('advanced-json').value;
     expect(adv).toContain('crafting');
@@ -247,7 +247,7 @@ describe('GmCharacters', () => {
     expect(saveDocument).not.toHaveBeenCalled();
   });
 
-  it('toggles an object section and validates its JSON', async () => {
+  it('toggles the Familiar section and saves through the structured codec', async () => {
     setContent([izzy]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
@@ -255,10 +255,15 @@ describe('GmCharacters', () => {
     gotoTab(form, 'Familiar');
     // izzy has no familiar -> add it
     fireEvent.click(within(form).getByText('Add familiar'));
+    // Bad JSON in the nested-rest box should block save.
     fireEvent.change(within(form).getByLabelText('familiar-json'), { target: { value: '{ bad' } });
+    fireEvent.change(within(form).getByLabelText('familiar-name'), { target: { value: 'Sprout' } });
     fireEvent.click(within(form).getByText('Save'));
-    await waitFor(() => expect(within(form).getByRole('alert')).toHaveTextContent(/Familiar is not valid JSON/i));
-    fireEvent.change(within(form).getByLabelText('familiar-json'), { target: { value: '{"name":"Sprout"}' } });
+    await waitFor(() =>
+      expect(within(form).getByRole('alert')).toHaveTextContent(/Familiar has invalid JSON/i)
+    );
+    // Fix the nested-rest box; now the structured form saves the managed name.
+    fireEvent.change(within(form).getByLabelText('familiar-json'), { target: { value: '{}' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     expect(saveDocument.mock.calls[0][2].familiar).toEqual({ name: 'Sprout' });

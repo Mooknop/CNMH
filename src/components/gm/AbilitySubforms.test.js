@@ -12,6 +12,9 @@ import {
   featToForm,
   featFromForm,
   blankFeat,
+  familiarToForm,
+  familiarFromForm,
+  blankFamiliar,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -283,5 +286,64 @@ describe('bundled feat resolve-parity (Slice 3 gate)', () => {
       const out = featFromForm(featToForm(src));
       expect(out).toEqual(src);
     });
+  });
+});
+
+describe('familiarToForm / familiarFromForm', () => {
+  it('round-trips a simple familiar with no abilities', () => {
+    const src = { name: 'Sprout', type: 'Sprite', ac: 14, hp: 10, speed: '25 feet' };
+    expect(familiarFromForm(familiarToForm(src))).toEqual(src);
+  });
+
+  it('preserves abilities (name + description) and unknown keys via the JSON box', () => {
+    const src = {
+      name: 'Lazarus',
+      type: 'Squox',
+      size: 'Tiny',
+      traits: ['Familiar'],
+      ac: 20,
+      hp: 20,
+      speed: '25 feet',
+      skills: ['Stealth', 'Acrobatics'],
+      communication: 'Empathic link',
+      description: 'A squirrel-fox.',
+      abilities: [
+        { name: 'Manual Dexterity', description: 'Hands.' },
+        { name: 'Threat Display', description: 'Snarls.' },
+      ],
+      legacyTag: 'unknown', // round-trips through restJson
+    };
+    expect(familiarFromForm(familiarToForm(src))).toEqual(src);
+  });
+
+  it('blankFamiliar saves only the typed name', () => {
+    const f = blankFamiliar();
+    f.str.name = 'Tiny Toad';
+    expect(familiarFromForm(f)).toEqual({ name: 'Tiny Toad' });
+  });
+
+  it('rejects invalid JSON / non-object nested body', () => {
+    const f = blankFamiliar();
+    f.restJson = '{ broken';
+    expect(() => familiarFromForm(f)).toThrow(/invalid JSON/i);
+    f.restJson = '[1,2]';
+    expect(() => familiarFromForm(f)).toThrow(/must be a JSON object/i);
+  });
+});
+
+describe('bundled familiar resolve-parity (Slice 4a gate)', () => {
+  const bundledFamiliars = [];
+  sampleCharacters.forEach((c) => {
+    if (c.familiar && typeof c.familiar === 'object') {
+      bundledFamiliars.push([`character ${c.id} familiar`, c.familiar]);
+    }
+  });
+
+  it('covers real bundled familiars', () => {
+    expect(bundledFamiliars.length).toBeGreaterThan(0);
+  });
+
+  it.each(bundledFamiliars)('%s round-trips losslessly', (_label, fam) => {
+    expect(familiarFromForm(familiarToForm(fam))).toEqual(fam);
   });
 });
