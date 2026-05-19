@@ -298,4 +298,80 @@ describe('GmItems', () => {
     expect(screen.getByText(/Showing 0 of 0/)).toBeInTheDocument();
     expect(screen.getByText('+ New item')).toBeInTheDocument();
   });
+
+  describe('structured strikes', () => {
+    const strikeItems = [
+      {
+        id: 'hammer',
+        name: 'Light Hammer',
+        price: 1,
+        weight: 1,
+        strikes: [
+          { name: 'Hammer Strike', proficiency: 'martial', type: 'melee', action: 1, damage: '1d6' },
+        ],
+      },
+      {
+        id: 'striking-pick',
+        name: '+1 Striking Pick',
+        price: 100,
+        weight: 1,
+        strikes: { proficiency: 'martial', type: 'melee', action: 1, damage: '2d6' },
+      },
+    ];
+    const mock = () => useContent.mockReturnValue({ items: strikeItems });
+
+    it('renders strikes pulled out of the raw-JSON box and re-emits actionCount', async () => {
+      mock();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      const form = screen.getByTestId('item-form-hammer');
+      expect(within(form).getByLabelText('item-strike-0-name')).toHaveValue('Hammer Strike');
+      // strikes no longer round-trip through the raw-JSON box.
+      expect(within(form).getByLabelText('rest-json')).toHaveValue('{}');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].strikes).toEqual([
+        { name: 'Hammer Strike', proficiency: 'martial', type: 'melee', damage: '1d6', actionCount: 1 },
+      ]);
+    });
+
+    it('preserves a single-object strike as an object (not an array)', async () => {
+      mock();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      const form = screen.getByTestId('item-form-striking-pick');
+      expect(within(form).getByLabelText('item-strike-0-name')).toHaveValue('');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].strikes).toEqual({
+        proficiency: 'martial',
+        type: 'melee',
+        damage: '2d6',
+        actionCount: 1,
+      });
+    });
+
+    it('adds a new strike with a Variable action cost', async () => {
+      mock();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      const form = screen.getByTestId('item-form-hammer');
+      fireEvent.click(within(form).getByText('Add strike'));
+      fireEvent.change(within(form).getByLabelText('item-strike-1-name'), {
+        target: { value: 'Big Swing' },
+      });
+      fireEvent.change(within(form).getByLabelText('item-strike-1-cost'), {
+        target: { value: 'V' },
+      });
+      fireEvent.click(within(form).getByLabelText('item-strike-1-cost-v1'));
+      fireEvent.click(within(form).getByLabelText('item-strike-1-cost-v2'));
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].strikes[1]).toEqual({
+        name: 'Big Swing',
+        variableActionCount: { min: 1, max: 2 },
+        actionCount: '1 to 2',
+      });
+    });
+  });
 });
