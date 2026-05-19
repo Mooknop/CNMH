@@ -9,6 +9,9 @@ import {
   reactionToForm,
   reactionFromForm,
   blankReaction,
+  featToForm,
+  featFromForm,
+  blankFeat,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -214,6 +217,70 @@ describe('bundled action/reaction resolve-parity (Slice 2 gate)', () => {
       const out = reactionFromForm(reactionToForm(src));
       // Reactions in bundled data have no cost key; mode '' emits nothing,
       // so the comparison includes every field as-is.
+      expect(out).toEqual(src);
+    });
+  });
+});
+
+describe('featToForm / featFromForm', () => {
+  it('round-trips a simple feat (no nested arrays)', () => {
+    const src = {
+      id: 'feat-1',
+      name: 'Ranger Dedication',
+      level: 2,
+      source: 'Archetype',
+      description: 'Hunt prey.',
+    };
+    expect(featFromForm(featToForm(src))).toEqual(src);
+  });
+
+  it('preserves nested actions/strikes/freeActions/innate through the JSON box', () => {
+    const src = {
+      id: 'feat-42',
+      name: 'Kineticist Dedication',
+      level: 2,
+      source: 'Archetype',
+      description: 'Channel elements.',
+      actions: [
+        { name: 'Channel Elements', actionCount: 1, traits: ['Aura', 'Kineticist'], description: '…' },
+      ],
+      strikes: [{ name: 'Elemental Blast', proficiency: 'martial', damage: '1d8' }],
+      freeActions: [{ name: 'Toggle Aura' }],
+    };
+    expect(featFromForm(featToForm(src))).toEqual(src);
+  });
+
+  it('blankFeat saves only the name once one is typed', () => {
+    const f = blankFeat();
+    f.str.name = 'Toughness';
+    expect(featFromForm(f)).toEqual({ name: 'Toughness' });
+  });
+
+  it('rejects invalid JSON / non-object nested body', () => {
+    const f = blankFeat();
+    f.str.name = 'X';
+    f.restJson = '{ broken';
+    expect(() => featFromForm(f)).toThrow(/invalid JSON/i);
+    f.restJson = '[1,2,3]';
+    expect(() => featFromForm(f)).toThrow(/must be a JSON object/i);
+  });
+});
+
+describe('bundled feat resolve-parity (Slice 3 gate)', () => {
+  const bundledFeatLists = [];
+  sampleCharacters.forEach((c) => {
+    if (Array.isArray(c.feats) && c.feats.length) {
+      bundledFeatLists.push([`character ${c.id} feats`, c.feats]);
+    }
+  });
+
+  it('covers real bundled feats', () => {
+    expect(bundledFeatLists.length).toBeGreaterThan(0);
+  });
+
+  it.each(bundledFeatLists)('%s round-trips losslessly', (_label, feats) => {
+    feats.forEach((src) => {
+      const out = featFromForm(featToForm(src));
       expect(out).toEqual(src);
     });
   });
