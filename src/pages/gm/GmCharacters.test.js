@@ -403,7 +403,7 @@ describe('GmCharacters', () => {
     fireEvent.click(within(form).getByText('Remove familiar'));
     gotoTab(form, 'Animal Companion');
     fireEvent.click(within(form).getByText('Add animal companion'));
-    fireEvent.change(within(form).getByLabelText('animalCompanion-json'), { target: { value: '{"name":"Rex"}' } });
+    fireEvent.change(within(form).getByLabelText('animalCompanion-name'), { target: { value: 'Rex' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const data = saveDocument.mock.calls[0][2];

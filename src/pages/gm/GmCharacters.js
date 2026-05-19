@@ -31,6 +31,10 @@ import {
   familiarFromForm,
   blankFamiliar,
   FamiliarSubform,
+  animalCompanionToForm,
+  animalCompanionFromForm,
+  blankAnimalCompanion,
+  AnimalCompanionSubform,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -213,6 +217,12 @@ const OBJ_CODEC = {
     to: familiarToForm,
     from: familiarFromForm,
     blank: blankFamiliar,
+  },
+  animalCompanion: {
+    Comp: AnimalCompanionSubform,
+    to: animalCompanionToForm,
+    from: animalCompanionFromForm,
+    blank: blankAnimalCompanion,
   },
 };
 
