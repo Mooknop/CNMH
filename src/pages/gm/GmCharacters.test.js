@@ -122,7 +122,7 @@ describe('GmCharacters', () => {
     gotoTab(form, 'Feats');
     openRow(form, 'feats', 0);
     expect(within(form).getByLabelText('feats-0-name')).toHaveValue('Ranger Dedication');
-    expect(within(form).getByLabelText('feats-0-json').value).toContain('Archetype');
+    expect(within(form).getByLabelText('feats-0-source')).toHaveValue('Archetype');
     gotoTab(form, 'Strikes');
     openRow(form, 'strikes', 0);
     expect(within(form).getByLabelText('strikes-0-name')).toHaveValue('Pick');

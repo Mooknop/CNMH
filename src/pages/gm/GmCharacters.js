@@ -23,6 +23,10 @@ import {
   reactionFromForm,
   blankReaction,
   ReactionSubform,
+  featToForm,
+  featFromForm,
+  blankFeat,
+  FeatSubform,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -175,6 +179,24 @@ const SECTION_CODEC = {
     blank: blankReaction,
     nameOf: abilityNameOf,
     from: abilityFrom(reactionFromForm),
+  },
+  // Feats keep the per-entry raw-JSON box for their nested ability arrays
+  // (actions/strikes/freeActions/innate); only the envelope is structured.
+  // `from` mirrors the entryFromForm error wording so existing tests/help
+  // (e.g. "Feats entry ‘X’ has invalid JSON in its …") stay compatible.
+  feats: {
+    Comp: FeatSubform,
+    to: featToForm,
+    blank: blankFeat,
+    nameOf: abilityNameOf,
+    from: (f, label, index) => {
+      if (!f.str.name.trim()) throw new Error(`${label} entry ${index + 1} needs a name.`);
+      try {
+        return featFromForm(f);
+      } catch (e) {
+        throw new Error(`${label} entry "${f.str.name}" has ${e.message}.`);
+      }
+    },
   },
 };
 

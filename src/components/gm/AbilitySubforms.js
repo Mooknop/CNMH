@@ -302,6 +302,130 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
 export const ActionSubform = AbilitySubform;
 export const ReactionSubform = AbilitySubform;
 
+// ----- Feat ------------------------------------------------------------------
+// Feats are heterogeneous envelopes: the common scalars (name/level/source/
+// description) plus optional nested ability arrays (actions, strikes,
+// freeActions, innate, reactions) authored verbatim per the surrounding
+// gameplay. We manage the scalars and keep EVERYTHING else — including the
+// nested arrays and any feat `id` — in a per-feat raw-JSON box. The box round-
+// trips losslessly; a full nested-array editor is intentionally out of scope
+// (slice scope: structured envelope, faithful body).
+const FEAT_STR = ['name', 'source', 'description'];
+const FEAT_NUM = ['level'];
+
+export const featToForm = (s) => {
+  const src = s && typeof s === 'object' ? s : {};
+  const rest = { ...src };
+  FEAT_STR.forEach((k) => delete rest[k]);
+  FEAT_NUM.forEach((k) => delete rest[k]);
+  delete rest.traits;
+  const str = {};
+  FEAT_STR.forEach((k) => {
+    str[k] = src[k] != null ? String(src[k]) : '';
+  });
+  const num = {};
+  FEAT_NUM.forEach((k) => {
+    num[k] = src[k] != null ? String(src[k]) : '';
+  });
+  return {
+    str,
+    num,
+    traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
+    // Single source of truth for the nested body — the form box is what the
+    // GM edits, so featFromForm always re-parses it rather than carrying a
+    // separate `rest` object that could drift.
+    restJson: JSON.stringify(rest, null, 2),
+  };
+};
+
+export const featFromForm = (f) => {
+  let rest;
+  try {
+    rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
+  } catch {
+    throw new Error('invalid JSON in its nested fields');
+  }
+  if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
+    throw new Error('nested fields must be a JSON object');
+  }
+  const out = { ...rest };
+  FEAT_STR.forEach((k) => {
+    const v = f.str[k].trim();
+    if (v) out[k] = v;
+  });
+  FEAT_NUM.forEach((k) => {
+    if (f.num[k].trim() !== '') out[k] = toInt(f.num[k]);
+  });
+  const traits = toList(f.traits);
+  if (traits.length) out.traits = traits;
+  return out;
+};
+
+export const blankFeat = () => featToForm({});
+
+export const FeatSubform = ({ value, onChange, idPrefix }) => {
+  const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
+  const setNum = (k, v) => onChange({ ...value, num: { ...value.num, [k]: v } });
+  return (
+    <div className="gm-card" data-testid={`${idPrefix}-feat`}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>name</label>
+          <input
+            aria-label={`${idPrefix}-name`}
+            value={value.str.name}
+            onChange={(e) => setStr('name', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>level</label>
+          <input
+            aria-label={`${idPrefix}-level`}
+            type="number"
+            value={value.num.level}
+            onChange={(e) => setNum('level', e.target.value)}
+          />
+        </div>
+        <div className="form-group">
+          <label>source</label>
+          <input
+            aria-label={`${idPrefix}-source`}
+            value={value.str.source}
+            onChange={(e) => setStr('source', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>traits (comma-separated)</label>
+        <input
+          aria-label={`${idPrefix}-traits`}
+          value={value.traits}
+          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label>description</label>
+        <textarea
+          aria-label={`${idPrefix}-description`}
+          rows={4}
+          value={value.str.description}
+          onChange={(e) => setStr('description', e.target.value)}
+        />
+      </div>
+      <div className="form-group">
+        <label>nested fields — actions / strikes / freeActions / innate (raw JSON)</label>
+        <textarea
+          aria-label={`${idPrefix}-json`}
+          className="gm-json"
+          rows={4}
+          value={value.restJson}
+          onChange={(e) => onChange({ ...value, restJson: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+};
+
 export const StrikeSubform = ({ value, onChange, idPrefix }) => {
   const setStr = (k, v) => onChange({ ...value, str: { ...value.str, [k]: v } });
   return (
