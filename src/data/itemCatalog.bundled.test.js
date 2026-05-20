@@ -26,6 +26,7 @@ const stripSpellId = (s) => {
   const c = { ...s };
   delete c.id;
   delete c.effects; // S4 addition; fixture predates structured effects
+  delete c.grants;  // S5 addition; fixture predates granted-action grants
   return c;
 };
 const stripIds = (list) =>

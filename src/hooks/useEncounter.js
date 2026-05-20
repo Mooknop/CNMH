@@ -42,24 +42,26 @@ export const useEncounter = () => {
   const encounterRef = useRef(encounter);
   useEffect(() => { encounterRef.current = encounter; }, [encounter]);
 
-  // Sweep expired effects from every PC's effects key. Called before the
-  // encounter state advances so we can compute the correct boundary set.
+  // Sweep expired effects and granted-actions from every PC's keys. Called
+  // before the encounter state advances so we can compute the correct boundary set.
   const runExpirySweep = useCallback(
     (cur, nextTurnIdx, nextRound) => {
       const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
       for (const entry of cur.order || []) {
         if (entry.kind !== 'pc' || !entry.charId) continue;
-        const key = `cnmh_effects_${entry.charId}`;
+
+        // --- effects sweep ---
+        const effectsKey = `cnmh_effects_${entry.charId}`;
         let effects;
         try {
-          effects = JSON.parse(window.localStorage.getItem(key)) || [];
+          effects = JSON.parse(window.localStorage.getItem(effectsKey)) || [];
         } catch {
           effects = [];
         }
-        const next = effects.filter((e) => !isExpired(e.expireAt, boundaries));
-        if (next.length !== effects.length) {
-          window.localStorage.setItem(key, JSON.stringify(next));
-          sendUpdate(entry.charId, 'effects', next);
+        const nextEffects = effects.filter((e) => !isExpired(e.expireAt, boundaries));
+        if (nextEffects.length !== effects.length) {
+          window.localStorage.setItem(effectsKey, JSON.stringify(nextEffects));
+          sendUpdate(entry.charId, 'effects', nextEffects);
           effects
             .filter((e) => isExpired(e.expireAt, boundaries))
             .forEach((e) => {
@@ -69,6 +71,32 @@ export const useEncounter = () => {
                 return {
                   ...base,
                   log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired on ${entry.name}` })],
+                };
+              });
+            });
+        }
+
+        // --- granted actions sweep ---
+        const grantsKey = `cnmh_grantedactions_${entry.charId}`;
+        let grants;
+        try {
+          grants = JSON.parse(window.localStorage.getItem(grantsKey)) || [];
+        } catch {
+          grants = [];
+        }
+        const nextGrants = grants.filter((g) => !isExpired(g.expireAt, boundaries));
+        if (nextGrants.length !== grants.length) {
+          window.localStorage.setItem(grantsKey, JSON.stringify(nextGrants));
+          sendUpdate(entry.charId, 'grantedactions', nextGrants);
+          grants
+            .filter((g) => isExpired(g.expireAt, boundaries))
+            .forEach((g) => {
+              const name = g.action?.name || g.source || 'Granted action';
+              setEncounter((c) => {
+                const base = c || defaultEncounter();
+                return {
+                  ...base,
+                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired for ${entry.name}` })],
                 };
               });
             });
