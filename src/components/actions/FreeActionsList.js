@@ -18,7 +18,7 @@ const SectionDivider = ({ label, themeColor }) => (
   </div>
 );
 
-const FreeActionsList = ({ character, themeColor }) => {
+const FreeActionsList = ({ character, themeColor, encounterMode, onUse }) => {
   const { freeActions } = useCharacter(character);
 
   return (
@@ -28,12 +28,16 @@ const FreeActionsList = ({ character, themeColor }) => {
         type="free-action"
         themeColor={themeColor}
         emptyMessage="No unique free actions available for this character."
+        encounterMode={encounterMode}
+        onUse={onUse}
       />
       <SectionDivider label="Basic" themeColor={themeColor} />
       <ActionCardList
         items={BASIC_ENCOUNTER_FREE_ACTIONS}
         type="free-action"
         themeColor={themeColor}
+        encounterMode={encounterMode}
+        onUse={onUse}
       />
     </div>
   );

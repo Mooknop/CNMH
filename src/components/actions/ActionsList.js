@@ -1,14 +1,48 @@
 // src/components/actions/ActionsList.js
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import CharacterActionsList from './CharacterActionsList';
 import ReactionsList from './ReactionsList';
 import FreeActionsList from './FreeActionsList';
+import { useEncounter } from '../../hooks/useEncounter';
+import { useTurnState } from '../../hooks/useTurnState';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
   const [activeSection, setActiveSection] = useState('actions');
 
+  const { encounter, appendLog } = useEncounter();
+  const { spendActions, spendReaction } = useTurnState(character.id);
+
+  const encounterMode = !!(encounter && encounter.active && encounter.phase === 'in-progress');
+
   const themeColor = characterColor || 'var(--color-primary)';
+
+  const handleUse = useCallback(
+    (item, cost) => {
+      if (cost === 'reaction') {
+        spendReaction(item.name);
+        appendLog({
+          type: 'action',
+          charId: character.id,
+          text: `${character.name} used ${item.name} (reaction)`,
+        });
+      } else if (cost === 0) {
+        appendLog({
+          type: 'action',
+          charId: character.id,
+          text: `${character.name} used ${item.name} (free action)`,
+        });
+      } else {
+        spendActions(cost, item.name);
+        appendLog({
+          type: 'action',
+          charId: character.id,
+          text: `${character.name} used ${item.name} (${cost} act)`,
+        });
+      }
+    },
+    [character.id, character.name, spendActions, spendReaction, appendLog]
+  );
 
   return (
     <div className="actions-list">
@@ -40,13 +74,28 @@ const ActionsList = ({ character, characterColor }) => {
 
       <div className="section-content">
         {activeSection === 'actions' && (
-          <CharacterActionsList character={character} themeColor={themeColor} />
+          <CharacterActionsList
+            character={character}
+            themeColor={themeColor}
+            encounterMode={encounterMode}
+            onUse={handleUse}
+          />
         )}
         {activeSection === 'reactions' && (
-          <ReactionsList character={character} themeColor={themeColor} />
+          <ReactionsList
+            character={character}
+            themeColor={themeColor}
+            encounterMode={encounterMode}
+            onUse={handleUse}
+          />
         )}
         {activeSection === 'free' && (
-          <FreeActionsList character={character} themeColor={themeColor} />
+          <FreeActionsList
+            character={character}
+            themeColor={themeColor}
+            encounterMode={encounterMode}
+            onUse={handleUse}
+          />
         )}
       </div>
     </div>
