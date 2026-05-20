@@ -60,3 +60,9 @@
 .effects-panel-remove:hover {
   opacity: 1;
 }
+
+.effects-panel-expiry {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

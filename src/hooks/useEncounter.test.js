@@ -13,6 +13,26 @@ jest.mock('./useSyncedState', () => {
   };
 });
 
+// Session context — expiry sweep uses sendUpdate; not exercised in these unit tests.
+jest.mock('../contexts/SessionContext', () => ({
+  useSession: () => ({ sendUpdate: jest.fn(), getState: jest.fn(() => []) }),
+}));
+
+// pf2eEffects — sweep looks up effect names; no effects in these tests.
+jest.mock('../data/pf2eEffects', () => {
+  const list = [];
+  return { __esModule: true, default: list, getEffect: () => null };
+});
+
+// expiry utilities — keep the sweep a no-op in unit tests so they only
+// test the encounter state machine, not side-effect wiring.
+jest.mock('../utils/expiry', () => ({
+  boundariesCrossedBy: jest.fn(() => []),
+  isExpired: jest.fn(() => false),
+  resolveExpireAt: jest.fn(() => null),
+  expiryLabel: jest.fn(() => null),
+}));
+
 import { useEncounter } from './useEncounter';
 
 const setup = () => renderHook(() => useEncounter());
