@@ -44,7 +44,7 @@ const CharacterActionsList = ({ character, themeColor, encounterMode, onUse }) =
 
   return (
     <div className="actions-container">
-      <StrikesList character={character} themeColor={themeColor} />
+      <StrikesList character={character} themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
       {isThaumaturge && (
         <ThaumaturgeExploitsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
       )}
