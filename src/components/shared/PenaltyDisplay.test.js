@@ -103,10 +103,10 @@ describe('PenaltyDisplay — with active penalty', () => {
     expect(container.querySelector('[role="tooltip"]')).toBeInTheDocument();
   });
 
-  it('renders "Condition Penalty" title in tooltip', () => {
+  it('renders "Modifiers" title in tooltip', () => {
     const { container } = render(<PenaltyDisplay base={16} penalty={penalty2} />);
     const tooltip = container.querySelector('.pd-tooltip');
-    expect(within(tooltip).getByText('Condition Penalty')).toBeInTheDocument();
+    expect(within(tooltip).getByText('Modifiers')).toBeInTheDocument();
   });
 
   it('renders source label in tooltip row', () => {

@@ -12,6 +12,12 @@
   font-weight: inherit;
 }
 
+/* The adjusted (buffed) value */
+.pd-bonus {
+  color: #2e7d32;
+  font-weight: inherit;
+}
+
 /* Small delta badge, e.g. "−3" */
 .pd-delta {
   font-size: 0.6em;
@@ -19,6 +25,10 @@
   opacity: 0.8;
   line-height: 1;
   align-self: flex-start;
+}
+
+.pd-delta--bonus {
+  color: #2e7d32;
 }
 
 /* Tooltip bubble — hidden by default, shown on hover */
@@ -80,6 +90,12 @@
 
 .pd-tooltip-penalty {
   color: #e74c3c;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pd-tooltip-bonus {
+  color: #4caf50;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

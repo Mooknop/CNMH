@@ -2,11 +2,13 @@ import React from 'react';
 import './PenaltyDisplay.css';
 
 /**
- * Renders a stat value with an inline condition-penalty tooltip.
+ * Renders a stat value with an inline modifier tooltip.
  *
  * Props:
- *   base      – raw numeric value before penalties
- *   penalty   – { total: -N, sources: [{ label, penalty }] }  from ConditionUtils
+ *   base      – raw numeric value before modifiers
+ *   penalty   – { total: N, sources: [{ label, penalty?, bonus?, isBuff? }] }
+ *               from ConditionUtils, EffectUtils, or combineModifiers().
+ *               total < 0 = net penalty (red), total > 0 = net bonus (green).
  *   format    – 'number' (default) | 'modifier' (prepends + sign)
  *   className – forwarded to the wrapper span
  */
@@ -23,19 +25,27 @@ const PenaltyDisplay = ({ base, penalty, format = 'number', className = '' }) =>
     ? (adjusted >= 0 ? `+${adjusted}` : `${adjusted}`)
     : String(adjusted);
   const deltaStr = penalty.total > 0 ? `+${penalty.total}` : String(penalty.total);
+  const isNetBonus = penalty.total > 0;
 
   return (
     <span className={`pd-wrapper ${className}`}>
-      <span className="pd-penalized">{displayAdjusted}</span>
-      <span className="pd-delta">{deltaStr}</span>
+      <span className={isNetBonus ? 'pd-bonus' : 'pd-penalized'}>{displayAdjusted}</span>
+      <span className={isNetBonus ? 'pd-delta pd-delta--bonus' : 'pd-delta'}>{deltaStr}</span>
       <div className="pd-tooltip" role="tooltip">
-        <div className="pd-tooltip-title">Condition Penalty</div>
-        {penalty.sources.map((s, i) => (
-          <div key={i} className="pd-tooltip-row">
-            <span className="pd-tooltip-label">{s.label}</span>
-            <span className="pd-tooltip-penalty">{s.penalty > 0 ? `+${s.penalty}` : s.penalty}</span>
-          </div>
-        ))}
+        <div className="pd-tooltip-title">Modifiers</div>
+        {penalty.sources.map((s, i) => {
+          const isBuff = s.isBuff || (s.bonus != null && s.bonus > 0 && s.penalty == null);
+          const amount = s.bonus != null ? s.bonus : s.penalty;
+          const displayAmount = amount > 0 ? `+${amount}` : String(amount);
+          return (
+            <div key={i} className="pd-tooltip-row">
+              <span className="pd-tooltip-label">{s.label}</span>
+              <span className={isBuff ? 'pd-tooltip-bonus' : 'pd-tooltip-penalty'}>
+                {displayAmount}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </span>
   );
