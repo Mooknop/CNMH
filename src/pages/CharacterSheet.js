@@ -12,6 +12,7 @@ import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionM
 import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
+import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import { useCharacter } from '../hooks/useCharacter';
 import './CharacterSheet.css';
 
@@ -66,6 +67,7 @@ const CharacterSheet = () => {
       case 'encounter':
         return (
           <>
+            <InitiativeEntry charId={character.id} />
             <HandsPanel character={character} characterColor={characterColor} />
             <ActionsList character={character} characterColor={characterColor} />
           </>
