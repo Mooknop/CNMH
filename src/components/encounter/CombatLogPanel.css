@@ -1,0 +1,64 @@
+.combat-log-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.combat-log-toggle {
+  width: 100%;
+  background: var(--color-bg-light);
+  border: none;
+  padding: 8px 12px;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.combat-log-toggle:hover {
+  background: var(--color-bg-lighter);
+}
+
+.combat-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.combat-log-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 4px 12px;
+  font-size: 0.82rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.combat-log-entry--round {
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  color: var(--color-primary);
+}
+
+.combat-log-entry--system {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.combat-log-icon {
+  flex: none;
+  width: 14px;
+  text-align: center;
+}
+
+.combat-log-text {
+  flex: 1;
+}
