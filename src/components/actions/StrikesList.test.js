@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import StrikesList from './StrikesList';
 
 jest.mock('../shared/CollapsibleCard', () => ({ header, children, className }) => (
@@ -144,6 +144,55 @@ describe('StrikesList', () => {
     render(<StrikesList character={char} themeColor="#ff0000" />);
     expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
     expect(screen.getByTestId('collapsible-card').className).not.toContain('is-inactive');
+  });
+
+  describe('encounterMode', () => {
+    const longsword = { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: [], actionCount: 1 };
+
+    it('shows no Use button without encounterMode', () => {
+      const char = { ...mockCharacter, _strikes: [longsword] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode={false} onUse={jest.fn()} />);
+      expect(screen.queryByRole('button', { name: /Use Longsword/ })).toBeNull();
+    });
+
+    it('shows Use button in encounterMode', () => {
+      const char = { ...mockCharacter, _strikes: [longsword] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={jest.fn()} />);
+      expect(screen.getByRole('button', { name: 'Use Longsword' })).toBeInTheDocument();
+    });
+
+    it('calls onUse with strike and cost', () => {
+      const onUse = jest.fn();
+      const char = { ...mockCharacter, _strikes: [longsword] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Use Longsword' }));
+      expect(onUse).toHaveBeenCalledWith(longsword, 1);
+    });
+
+    it('inactive strike shows no Use button', () => {
+      const char = { ...mockCharacter, _strikes: [{ ...longsword, active: false }] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={jest.fn()} />);
+      expect(screen.queryByRole('button', { name: /Use Longsword/ })).toBeNull();
+    });
+
+    it('variable-cost strike shows cost dropdown and Use button', () => {
+      const strike = { ...longsword, variableActionCount: { min: 1, max: 3 } };
+      const char = { ...mockCharacter, _strikes: [strike] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={jest.fn()} />);
+      expect(screen.getByRole('combobox', { name: 'Action count for Longsword' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Use Longsword' })).toBeInTheDocument();
+    });
+
+    it('variable-cost Use calls onUse with selected cost', () => {
+      const onUse = jest.fn();
+      const strike = { ...longsword, variableActionCount: { min: 1, max: 3 } };
+      const char = { ...mockCharacter, _strikes: [strike] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={onUse} />);
+      const sel = screen.getByRole('combobox', { name: 'Action count for Longsword' });
+      fireEvent.change(sel, { target: { value: '2' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Use Longsword' }));
+      expect(onUse).toHaveBeenCalledWith(strike, 2);
+    });
   });
 
   it('renders action icon for variable action count strikes', () => {
