@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ActionCardList from './ActionCardList';
 
 jest.mock('../shared/ActionIcon', () => () => <div data-testid="action-icon" />);
@@ -87,6 +87,70 @@ describe('ActionCardList', () => {
   it('does not show the hint for active or non-item actions', () => {
     render(<ActionCardList items={[{ ...baseItem, active: true }]} type="action" themeColor="#fff" />);
     expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
+  });
+
+  describe('encounterMode', () => {
+    it('does not show Use button when encounterMode is false', () => {
+      render(<ActionCardList items={[baseItem]} type="action" encounterMode={false} onUse={jest.fn()} />);
+      expect(screen.queryByRole('button', { name: /Use Strike/ })).toBeNull();
+    });
+
+    it('shows Use button in encounter mode', () => {
+      render(<ActionCardList items={[baseItem]} type="action" encounterMode onUse={jest.fn()} />);
+      expect(screen.getByRole('button', { name: 'Use Strike' })).toBeInTheDocument();
+    });
+
+    it('Use button label shows action cost', () => {
+      const item = { ...baseItem, name: 'Triple Strike', actionCount: 3 };
+      render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
+      expect(screen.getByRole('button', { name: 'Use Triple Strike' }).textContent).toContain('3 act');
+    });
+
+    it('calls onUse with item and cost when Use is clicked', () => {
+      const onUse = jest.fn();
+      render(<ActionCardList items={[baseItem]} type="action" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Use Strike' }));
+      expect(onUse).toHaveBeenCalledWith(baseItem, 1);
+    });
+
+    it('Use button for reaction type passes "reaction" as cost', () => {
+      const onUse = jest.fn();
+      const reaction = { name: 'Shield Block', traits: [], description: 'Block.' };
+      render(<ActionCardList items={[reaction]} type="reaction" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Use Shield Block' }));
+      expect(onUse).toHaveBeenCalledWith(reaction, 'reaction');
+    });
+
+    it('Use button for free-action type passes 0 as cost', () => {
+      const onUse = jest.fn();
+      const fa = { name: 'Release', traits: [], description: 'Drop something.' };
+      render(<ActionCardList items={[fa]} type="free-action" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Use Release' }));
+      expect(onUse).toHaveBeenCalledWith(fa, 0);
+    });
+
+    it('inactive items do not show Use button', () => {
+      const item = { ...baseItem, source: 'Wand', active: false };
+      render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
+      expect(screen.queryByRole('button', { name: /Use Strike/ })).toBeNull();
+    });
+
+    it('variable-cost action shows a cost dropdown and Use button', () => {
+      const item = { ...baseItem, variableActionCount: { min: 1, max: 3 } };
+      render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
+      expect(screen.getByRole('combobox', { name: `Action count for ${item.name}` })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Use Strike' })).toBeInTheDocument();
+    });
+
+    it('variable-cost Use calls onUse with selected cost', () => {
+      const onUse = jest.fn();
+      const item = { ...baseItem, variableActionCount: { min: 1, max: 3 } };
+      render(<ActionCardList items={[item]} type="action" encounterMode onUse={onUse} />);
+      const select = screen.getByRole('combobox', { name: `Action count for ${item.name}` });
+      fireEvent.change(select, { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Use Strike' }));
+      expect(onUse).toHaveBeenCalledWith(item, 3);
+    });
   });
 
   describe('highlight feature', () => {

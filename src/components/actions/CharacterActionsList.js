@@ -31,7 +31,7 @@ const profLabel = (rank) => {
   return null;
 };
 
-const CharacterActionsList = ({ character, themeColor }) => {
+const CharacterActionsList = ({ character, themeColor, encounterMode, onUse }) => {
   const { actions, flags, thaumaturge, skillProficiencies } = useCharacter(character);
   const { isThaumaturge } = flags;
 
@@ -53,16 +53,18 @@ const CharacterActionsList = ({ character, themeColor }) => {
         type="action"
         themeColor={themeColor}
         emptyMessage="No unique actions available for this character."
+        encounterMode={encounterMode}
+        onUse={onUse}
       />
 
       <SectionDivider label="Offensive" themeColor={themeColor} />
-      <ActionCardList items={withHighlights(BASIC_ACTIONS_OFFENSIVE)} type="action" themeColor={themeColor} />
+      <ActionCardList items={withHighlights(BASIC_ACTIONS_OFFENSIVE)} type="action" themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
 
       <SectionDivider label="Defensive" themeColor={themeColor} />
-      <ActionCardList items={withHighlights(BASIC_ACTIONS_DEFENSIVE)} type="action" themeColor={themeColor} />
+      <ActionCardList items={withHighlights(BASIC_ACTIONS_DEFENSIVE)} type="action" themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
 
       <SectionDivider label="Movement" themeColor={themeColor} />
-      <ActionCardList items={withHighlights(BASIC_ACTIONS_MOVEMENT)} type="action" themeColor={themeColor} />
+      <ActionCardList items={withHighlights(BASIC_ACTIONS_MOVEMENT)} type="action" themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
     </div>
   );
 };

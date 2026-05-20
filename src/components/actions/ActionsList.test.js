@@ -6,6 +6,21 @@ jest.mock('./CharacterActionsList', () => () => <div data-testid="character-acti
 jest.mock('./ReactionsList', () => () => <div data-testid="reactions-list" />);
 jest.mock('./FreeActionsList', () => () => <div data-testid="free-actions-list" />);
 
+jest.mock('../../hooks/useEncounter', () => ({
+  useEncounter: () => ({
+    encounter: { active: false, phase: 'idle', order: [], log: [], round: 0, currentTurnIndex: 0 },
+    appendLog: jest.fn(),
+  }),
+}));
+
+jest.mock('../../hooks/useTurnState', () => ({
+  useTurnState: () => ({
+    turnState: { actionsSpent: 0, reactionAvailable: false, reactionSpent: false, hasStartedFirstTurn: false, actionsLog: [] },
+    spendActions: jest.fn(),
+    spendReaction: jest.fn(),
+  }),
+}));
+
 const mockCharacter = { id: '1', name: 'Test', level: 1, actions: [], reactions: [], freeActions: [] };
 
 describe('ActionsList', () => {

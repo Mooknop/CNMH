@@ -20,15 +20,43 @@ const getDegreeColor = (degree) => {
   return 'var(--color-text)';
 };
 
+function VariableCostUseButton({ item, onUse }) {
+  const [cost, setCost] = React.useState(item.variableActionCount.min);
+  const { min, max } = item.variableActionCount;
+  return (
+    <span className="action-use-variable">
+      <select
+        aria-label={`Action count for ${item.name}`}
+        value={cost}
+        onChange={(e) => setCost(Number(e.target.value))}
+      >
+        {Array.from({ length: max - min + 1 }, (_, i) => {
+          const v = min + i;
+          return <option key={v} value={v}>{v} act</option>;
+        })}
+      </select>
+      <button
+        className="btn-encounter-use"
+        onClick={() => onUse && onUse(item, cost)}
+        aria-label={`Use ${item.name}`}
+      >
+        Use
+      </button>
+    </span>
+  );
+}
+
 /**
  * Renders a list of action/reaction/free-action cards in a grid.
  *
- * @param {Object[]} items   - Array of action objects from useCharacter()
+ * @param {Object[]} items          - Array of action objects from useCharacter()
  * @param {'action'|'reaction'|'free-action'} type
  * @param {string}   themeColor
- * @param {string}   emptyMessage - Shown when items is empty
+ * @param {string}   emptyMessage   - Shown when items is empty
+ * @param {boolean}  encounterMode  - When true, shows "Use" buttons per card
+ * @param {Function} onUse          - Called with (item, cost) when Use is clicked
  */
-const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage }) => {
+const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage, encounterMode, onUse }) => {
   const isReactionLike = type === 'reaction' || type === 'free-action';
   const iconText = type === 'reaction' ? 'Reaction' : type === 'free-action' ? 'Free Action' : null;
 
@@ -129,6 +157,36 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage 
             {inactive && (
               <div className="ability-inactive-hint">
                 Not in hand — hold this item to use it.
+              </div>
+            )}
+
+            {encounterMode && !inactive && (
+              <div className="action-use-row">
+                {type === 'action' && item.variableActionCount ? (
+                  <VariableCostUseButton item={item} onUse={onUse} />
+                ) : (
+                  <button
+                    className="btn-encounter-use"
+                    onClick={() => {
+                      const cost =
+                        type === 'reaction'
+                          ? 'reaction'
+                          : type === 'free-action'
+                          ? 0
+                          : item.actionCount || 1;
+                      onUse && onUse(item, cost);
+                    }}
+                    aria-label={`Use ${item.name}`}
+                  >
+                    Use (
+                    {type === 'reaction'
+                      ? 'reaction'
+                      : type === 'free-action'
+                      ? 'free'
+                      : `${item.actionCount || 1} act`}
+                    )
+                  </button>
+                )}
               </div>
             )}
 
