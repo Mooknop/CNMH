@@ -18,6 +18,16 @@ export const test = base.extend<{
       if (!res.ok()) {
         throw new Error(`Staging reset failed: ${res.status()} ${await res.text()}`);
       }
+      // Guard against Cloudflare Access serving a 200 login-page HTML when the
+      // service token isn't recognized — we'd see ok() but no JSON body.
+      const ct = res.headers()['content-type'] || '';
+      if (!ct.includes('application/json')) {
+        throw new Error(`Staging reset returned non-JSON (likely Access interstitial): ${ct}`);
+      }
+      const body = await res.json();
+      if (body.ok !== true) {
+        throw new Error(`Staging reset returned unexpected body: ${JSON.stringify(body)}`);
+      }
     });
   },
 });
