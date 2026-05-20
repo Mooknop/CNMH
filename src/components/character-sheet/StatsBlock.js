@@ -7,6 +7,8 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { computeEffectBonuses, combineModifiers } from '../../utils/EffectUtils';
+import { useEffects } from '../../hooks/useEffects';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
 
@@ -96,6 +98,11 @@ const StatsBlock = ({ character, characterColor }) => {
   // Compute condition penalties for every displayed stat
   const effects = computeConditionEffects(hydratedConditions, character?.keyAbility, level);
 
+  // Compute effect bonuses (buffs applied by spells/abilities) and combine with penalties
+  const { effects: activeEffects } = useEffects(characterKey);
+  const bonuses = computeEffectBonuses(activeEffects);
+  const mod = (stat) => combineModifiers(effects[stat], bonuses[stat]);
+
   // Helper: raw attack bonus as a number (no formatting) so PenaltyDisplay can apply the delta
   const attackNum = (abilityMod, proficiency) =>
     abilityMod + getProficiencyBonus(proficiency, level);
@@ -145,19 +152,19 @@ const StatsBlock = ({ character, characterColor }) => {
               <div className="defense">
                 <div className="defense-name" style={{ color: themeColor }}>Fort</div>
                 <div className="defense-value">
-                  <PenaltyDisplay base={saves.fortitude} penalty={effects.fort} format="modifier" />
+                  <PenaltyDisplay base={saves.fortitude} penalty={mod('fort')} format="modifier" />
                 </div>
               </div>
               <div className="defense">
                 <div className="defense-name" style={{ color: themeColor }}>Ref</div>
                 <div className="defense-value">
-                  <PenaltyDisplay base={saves.reflex} penalty={effects.reflex} format="modifier" />
+                  <PenaltyDisplay base={saves.reflex} penalty={mod('reflex')} format="modifier" />
                 </div>
               </div>
               <div className="defense">
                 <div className="defense-name" style={{ color: themeColor }}>Will</div>
                 <div className="defense-value">
-                  <PenaltyDisplay base={saves.will} penalty={effects.will} format="modifier" />
+                  <PenaltyDisplay base={saves.will} penalty={mod('will')} format="modifier" />
                 </div>
               </div>
             </div>
@@ -173,7 +180,7 @@ const StatsBlock = ({ character, characterColor }) => {
                 <div className="proficiency-item">
                   <span className="proficiency-name" style={{ color: themeColor }}>
                     <strong>
-                      <PenaltyDisplay base={classDC} penalty={effects.classDC} />
+                      <PenaltyDisplay base={classDC} penalty={mod('classDC')} />
                     </strong>
                   </span>
                 </div>
@@ -193,13 +200,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, effects.meleeAttack)}
+                        {renderAttackBonus(strMod, proficiencies.weapons.unarmed?.proficiency || 0, mod('meleeAttack'))}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, effects.rangedAttack)}
+                        {renderAttackBonus(dexMod, proficiencies.weapons.unarmed?.proficiency || 0, mod('rangedAttack'))}
                       </div>
                     </div>
                   </div>
@@ -217,13 +224,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0, effects.meleeAttack)}
+                        {renderAttackBonus(strMod, proficiencies.weapons.simple?.proficiency || 0, mod('meleeAttack'))}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0, effects.rangedAttack)}
+                        {renderAttackBonus(dexMod, proficiencies.weapons.simple?.proficiency || 0, mod('rangedAttack'))}
                       </div>
                     </div>
                   </div>
@@ -241,13 +248,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0, effects.meleeAttack)}
+                        {renderAttackBonus(strMod, proficiencies.weapons.martial?.proficiency || 0, mod('meleeAttack'))}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0, effects.rangedAttack)}
+                        {renderAttackBonus(dexMod, proficiencies.weapons.martial?.proficiency || 0, mod('rangedAttack'))}
                       </div>
                     </div>
                   </div>
@@ -265,13 +272,13 @@ const StatsBlock = ({ character, characterColor }) => {
                     <div className="bonus-container">
                       <div className="attack-type">Melee (STR)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0, effects.meleeAttack)}
+                        {renderAttackBonus(strMod, proficiencies.weapons.advanced?.proficiency || 0, mod('meleeAttack'))}
                       </div>
                     </div>
                     <div className="bonus-container">
                       <div className="attack-type">Ranged (DEX)</div>
                       <div className="attack-bonus" style={{ color: themeColor }}>
-                        {renderAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, effects.rangedAttack)}
+                        {renderAttackBonus(dexMod, proficiencies.weapons.advanced?.proficiency || 0, mod('rangedAttack'))}
                       </div>
                     </div>
                   </div>
@@ -290,13 +297,13 @@ const StatsBlock = ({ character, characterColor }) => {
                       <div className="bonus-container">
                         <div className="attack-type">Melee (STR)</div>
                         <div className="attack-bonus" style={{ color: themeColor }}>
-                          {renderAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0, effects.meleeAttack)}
+                          {renderAttackBonus(strMod, proficiencies.weapons.class?.proficiency || 0, mod('meleeAttack'))}
                         </div>
                       </div>
                       <div className="bonus-container">
                         <div className="attack-type">Ranged (DEX)</div>
                         <div className="attack-bonus" style={{ color: themeColor }}>
-                          {renderAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0, effects.rangedAttack)}
+                          {renderAttackBonus(dexMod, proficiencies.weapons.class?.proficiency || 0, mod('rangedAttack'))}
                         </div>
                       </div>
                     </div>
@@ -316,7 +323,7 @@ const StatsBlock = ({ character, characterColor }) => {
                       <div className="bonus-container">
                         <div className="attack-type">Melee (STR/DEX)</div>
                         <div className="attack-bonus" style={{ color: themeColor }}>
-                          {renderAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0, effects.meleeAttack)}
+                          {renderAttackBonus(Math.max(strMod, dexMod), proficiencies.weapons.finesse?.proficiency || 0, mod('meleeAttack'))}
                         </div>
                       </div>
                     </div>
@@ -380,13 +387,13 @@ const StatsBlock = ({ character, characterColor }) => {
           <div className="hp-box" style={{ borderColor: themeColor }}>
             <div className="defense-name" style={{ color: themeColor }}>HP</div>
             <div className="defense-value">
-              <PenaltyDisplay base={maxHp} penalty={effects.maxHp} />
+              <PenaltyDisplay base={maxHp} penalty={mod('maxHp')} />
             </div>
           </div>
           <div className="ac-box">
             <div className="defense-name">AC</div>
             <div className="defense-value">
-              <PenaltyDisplay base={ac} penalty={effects.ac} />
+              <PenaltyDisplay base={ac} penalty={mod('ac')} />
             </div>
           </div>
           <button
@@ -421,7 +428,7 @@ const StatsBlock = ({ character, characterColor }) => {
               <div className="attribute">
                 <span className="attribute-label" style={{ color: themeColor, fontWeight: '600', fontSize: '0.9rem' }}>Speed</span>
                 <span className="attribute-value" style={{ display: 'block', fontWeight: '700', fontSize: '1.1rem' }}>
-                  <PenaltyDisplay base={speed || 69} penalty={effects.speed} /> feet
+                  <PenaltyDisplay base={speed || 69} penalty={mod('speed')} /> feet
                 </span>
               </div>
               {senses && (

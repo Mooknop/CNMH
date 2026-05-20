@@ -15,6 +15,8 @@ import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
+import EffectsPanel from '../components/character-sheet/EffectsPanel';
+import EffectsModal from '../components/character-sheet/EffectsModal';
 import { useCharacter } from '../hooks/useCharacter';
 import './CharacterSheet.css';
 
@@ -28,6 +30,7 @@ const CharacterSheet = () => {
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
 
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
@@ -147,10 +150,10 @@ const CharacterSheet = () => {
             )}
 
             {hasAnimalCompanion && (
-              <button 
-                className="familiar-button" 
+              <button
+                className="familiar-button"
                 onClick={() => setIsAnimalCompanionOpen(true)}
-                style={{ 
+                style={{
                   backgroundColor: characterColor,
                   color: 'white',
                   border: 'none',
@@ -166,11 +169,30 @@ const CharacterSheet = () => {
                 {animalCompanion.name}
               </button>
             )}
+
+            <button
+              className="familiar-button"
+              onClick={() => setIsEffectsModalOpen(true)}
+              style={{
+                backgroundColor: '#2e7d32',
+                color: 'white',
+                border: 'none',
+                padding: '0.5rem 1rem',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              ✦ Apply Effect
+            </button>
           </div>
       </div>
       
       <div className="character-content">
         <StatsBlock character={character} characterColor={characterColor} />
+        <EffectsPanel charId={character.id} themeColor={characterColor} />
         
         <div className="character-tabs">
           <div className="tabs-header">
@@ -243,6 +265,15 @@ const CharacterSheet = () => {
           characterColor={characterColor}
         />
       )}
+
+      {/* Effects Modal */}
+      <EffectsModal
+        isOpen={isEffectsModalOpen}
+        onClose={() => setIsEffectsModalOpen(false)}
+        themeColor={characterColor}
+        selfCharId={character.id}
+        selfName={character.name}
+      />
     </div>
     </div>
   );
