@@ -3,78 +3,93 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import { parseActionCount } from '../../utils/actionIconUtils';
 
-/**
- * Component to render a spell card with expandable details
- * @param {Object} props
- * @param {Object} props.spell - The spell data
- * @param {string} props.themeColor - Theme color from character
- * @param {number} props.characterLevel - Character's level for cantrip scaling
- * @param {Object} props.character - Character data for bloodline effects (optional)
- */
-const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
-  // Scroll/wand spells are gated on the item being held (see
-  // itemState.itemAbilitiesActive). active === false ⇒ show but disabled;
-  // undefined/true (repertoire, innate, focus) ⇒ always castable.
+function VariableCostUseButton({ spell, onUse }) {
+  const [cost, setCost] = React.useState(spell.variableActionCount.min);
+  const { min, max } = spell.variableActionCount;
+  return (
+    <span className="action-use-variable">
+      <select
+        aria-label={`Action count for ${spell.name}`}
+        value={cost}
+        onChange={(e) => setCost(Number(e.target.value))}
+      >
+        {Array.from({ length: max - min + 1 }, (_, i) => {
+          const v = min + i;
+          return <option key={v} value={v}>{v} act</option>;
+        })}
+      </select>
+      <button
+        className="btn-encounter-use"
+        onClick={() => onUse && onUse(spell, cost)}
+        aria-label={`Cast ${spell.name}`}
+      >
+        Cast
+      </button>
+    </span>
+  );
+}
+
+const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode, onUse }) => {
   const inactive = spell.active === false;
 
-  // Create header content for the card
+  const rawCost = spell.actions ? parseActionCount(spell.actions) : null;
+  // parseActionCount returns -1 for reaction, -2 for free action
+  const spellCost = rawCost === -1 ? 'reaction' : rawCost === -2 ? 0 : rawCost;
+  const isVariable = spell.variableActionCount != null;
+
+  let headerRight = null;
+  if (encounterMode && !inactive && onUse) {
+    if (isVariable) {
+      headerRight = <VariableCostUseButton spell={spell} onUse={onUse} />;
+    } else if (spellCost !== null) {
+      const costLabel = spellCost === 'reaction' ? 'reaction' : spellCost === 0 ? 'free' : `${spellCost} act`;
+      headerRight = (
+        <button
+          className="btn-encounter-use"
+          onClick={() => onUse(spell, spellCost)}
+          aria-label={`Cast ${spell.name}`}
+        >
+          Cast ({costLabel})
+        </button>
+      );
+    }
+  }
+
+  const metaParts = [spell.defense, spell.range, spell.area].filter(Boolean);
+
   const header = (
-    <>
-      <h3 style={{ color: themeColor }}>{spell.name}</h3>
-      <div className="spell-header-meta">
-        {/* Action indicators now come first */}
-        {spell.actions && (
-          <div className="spell-actions-indicator">
-            <ActionIcon actionText={spell.actions} color={themeColor} />
-          </div>
-        )}
-        {spell.signature && (
-          <div className="signature-indicator">
-            Signature
-          </div>
-        )}
-        <span className="spell-rank-indicator" style={{ backgroundColor: themeColor }}>
-          {spell.level === 0 
-            ? `Cantrip ${spell.baseLevel} (${Math.ceil(characterLevel / 2)})`
-            : `Rank ${spell.level}`
-          }
-        </span>
-        {spell.prepared !== undefined && (
-          <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
-            {spell.prepared ? 'Prepared' : 'Not Prepared'}
-          </div>
-        )}
-        {spell.fromScroll && (
-          <div className="scroll-indicator">
-            {spell.scrollName}
-          </div>
-        )}
-        {spell.fromWand && (
-          <div className="wand-indicator">
-            {spell.wandName}
-          </div>
-        )}
-        {spell.fromInnate && (
-          <div className="innate-indicator">
-            Innate
-          </div>
-        )}
-        {inactive && (
-          <div className="not-in-hand-indicator">
-            Not in hand
-          </div>
-        )}
-        {spell.bloodline && (
-          <div className="bloodline-indicator">
-            Bloodline
-          </div>
-        )}
+    <div className="spell-header-compact">
+      <div className="spell-header-top">
+        <h3 className="spell-name" style={{ color: themeColor }}>
+          {spell.name}
+          {spell.signature && <span className="spell-sig-glyph" title="Signature Spell"> ★</span>}
+          {spell.bloodline && !spell.signature && <span className="spell-bloodline-glyph" title="Bloodline Spell"> ✦</span>}
+        </h3>
+        <div className="spell-header-icons">
+          {spell.actions && (
+            <ActionIcon actionText={spell.actions} color={themeColor} size="small" />
+          )}
+          <span className="spell-rank-badge" style={{ color: themeColor }}>
+            {spell.level === 0
+              ? `C${Math.ceil((characterLevel || 1) / 2)}`
+              : `R${spell.level}`}
+          </span>
+        </div>
       </div>
-    </>
+      {(spell.traits?.length > 0 || metaParts.length > 0) && (
+        <div className="spell-header-detail">
+          {spell.traits?.map((t, i) => <TraitTag key={i} trait={t} />)}
+          {metaParts.length > 0 && (
+            <span className="spell-meta-inline">{metaParts.join(' · ')}</span>
+          )}
+          {inactive && <span className="not-in-hand-badge">Not in hand</span>}
+        </div>
+      )}
+    </div>
   );
-  
-  // Create content for the collapsible section
+
   const content = (
     <>
       {inactive && (
@@ -82,11 +97,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
           Not in hand — hold {spell.scrollName || spell.wandName || 'this item'} to cast this spell.
         </div>
       )}
-      <div className="spell-meta">
-        {spell.traits && spell.traits.map((trait, index) => (
-          <TraitTag key={index} trait={trait} />
-        ))}
-      </div>
+
       <div className="spell-details">
         {spell.actions && (
           <div className="spell-actions">
@@ -125,7 +136,23 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
           </div>
         )}
       </div>
-      
+
+      {spell.prepared !== undefined && (
+        <div className={`prepared-indicator ${spell.prepared ? 'prepared' : 'not-prepared'}`}>
+          {spell.prepared ? 'Prepared' : 'Not Prepared'}
+        </div>
+      )}
+
+      {spell.fromScroll && (
+        <div className="scroll-indicator">{spell.scrollName}</div>
+      )}
+      {spell.fromWand && (
+        <div className="wand-indicator">{spell.wandName}</div>
+      )}
+      {spell.fromInnate && (
+        <div className="innate-indicator">Innate</div>
+      )}
+
       {spell.trigger && (
         <div className="reaction-trigger">
           <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
@@ -133,30 +160,25 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
         </div>
       )}
 
-      {/* Blood Magic effect for bloodline spells */}
       {spell.bloodline && character?.spellcasting?.bloodline?.blood_magic && (
         <div className="spell-blood-magic">
           <span className="blood-magic-label" style={{ color: themeColor }}>Blood Magic:</span>
           <p className="blood-magic-effect">{character.spellcasting.bloodline.blood_magic}</p>
         </div>
       )}
-      
-      {/* Signature spell explanation if applicable */}
+
       {spell.signature && (
         <div className="signature-explanation">
           <span className="signature-label" style={{ color: themeColor }}>Signature Spell:</span>
           <p className="signature-effect">
-            As a signature spell, you can cast this at any rank up to your highest available spell rank 
+            As a signature spell, you can cast this at any rank up to your highest available spell rank
             without knowing it in a specific Rank.
           </p>
         </div>
       )}
-      
-      <div className="spell-description">
-        {spell.description}
-      </div>
-      
-      {/* Degrees of Success Section */}
+
+      <div className="spell-description">{spell.description}</div>
+
       {spell.degrees && (
         <div className="spell-degrees">
           <span className="degrees-label" style={{ color: themeColor }}>Degrees of Success:</span>
@@ -168,8 +190,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
           ))}
         </div>
       )}
-      
-      {/* Heightened Effects Section */}
+
       {spell.heightened && (
         <div className="spell-heightened">
           <span className="heightened-label" style={{ color: themeColor }}>Heightened:</span>
@@ -189,12 +210,13 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
       )}
     </>
   );
-  
+
   return (
-    <CollapsibleCard 
+    <CollapsibleCard
       key={spell.id + (spell.fromScroll ? '-scroll' : '')}
-      className={`spell-card ${spell.bloodline ? 'bloodline-spell' : ''} ${spell.signature ? 'signature-spell' : ''}${inactive ? ' is-inactive' : ''}`}
+      className={`spell-card${spell.bloodline ? ' bloodline-spell' : ''}${spell.signature ? ' signature-spell' : ''}${inactive ? ' is-inactive' : ''}`}
       header={header}
+      headerRight={headerRight}
       themeColor={themeColor}
       initialExpanded={false}
     >

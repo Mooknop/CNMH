@@ -1,0 +1,34 @@
+/* src/components/spells/MagicModal.css */
+
+.magic-category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.magic-category-btn {
+  padding: 1rem 0.5rem;
+  background: transparent;
+  border: 2px solid var(--category-color, var(--color-primary));
+  color: var(--category-color, var(--color-primary));
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  min-height: 52px;
+}
+
+.magic-category-btn:hover,
+.magic-category-btn:active {
+  background-color: var(--category-color, var(--color-primary));
+  color: white;
+}
+
+@media (max-width: 400px) {
+  .magic-category-grid {
+    grid-template-columns: 1fr;
+  }
+}

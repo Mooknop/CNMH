@@ -1,36 +1,7 @@
 import React from 'react';
 import { organizeSpellsByRank, getSortedRankList } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
-
-const SpellNameChip = ({ spell, character }) => {
-  const isSignature = !!spell.signature;
-  const isBloodline = !!spell.bloodline;
-
-  const chipClass = `spell-name-chip${isSignature ? ' signature-indicator' : isBloodline ? ' bloodline-indicator' : ''}`;
-  const symbol = isSignature ? '★' : isBloodline ? '✦' : null;
-  const tooltipText = isSignature
-    ? 'Signature Spell: Cast at any rank up to your highest available spell rank.'
-    : isBloodline
-    ? (character?.spellcasting?.bloodline?.blood_magic || '')
-    : null;
-
-  const aonUrl = `https://2e.aonprd.com/Search.aspx?q=${encodeURIComponent(spell.name)}`;
-
-  return (
-    <div className={chipClass}>
-      <a
-        className="chip-name"
-        href={aonUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {spell.name}
-      </a>
-      {symbol && <span className="chip-symbol">{symbol}</span>}
-      {tooltipText && <div className="spell-tooltip">{tooltipText}</div>}
-    </div>
-  );
-};
+import SpellCard from './SpellCard';
 
 const FocusSpellsList = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
@@ -143,11 +114,13 @@ const FocusSpellsList = ({ character, characterColor }) => {
               {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
             </span>
           </div>
-          <div className="spell-chips-row">
+          <div className="cards-grid">
             {spellsByRank[rank].map(spell => (
-              <SpellNameChip
+              <SpellCard
                 key={spell.id || spell.name}
                 spell={spell}
+                themeColor={themeColor}
+                characterLevel={character.level}
                 character={character}
               />
             ))}

@@ -78,6 +78,7 @@ const GmLayout = () => {
     { to: '/gm/characters', label: 'Characters' },
     { to: '/gm/items', label: 'Items' },
     { to: '/gm/spells', label: 'Spells' },
+    { to: '/gm/effects', label: 'Effects' },
     { to: '/gm/encounter', label: 'Encounter' },
   ];
 

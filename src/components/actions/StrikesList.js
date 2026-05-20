@@ -61,27 +61,36 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
     return `${count} Action${count !== 1 ? 's' : ''}`;
   };
   
-  // Helper function to render a strike card
   const renderStrikeCard = (strike, index) => {
-    // Item strikes are gated on the weapon being held (see
-    // itemState.itemAbilitiesActive). active === false ⇒ show but disabled;
-    // undefined/true (character/feat/unarmed strikes) ⇒ always usable.
     const inactive = strike.active === false;
 
-    // Create header content
+    const headerRight = encounterMode && !inactive
+      ? (strike.variableActionCount
+          ? <VariableCostUseButton strike={strike} onUse={onUse} />
+          : (
+            <button
+              className="btn-encounter-use"
+              onClick={() => onUse && onUse(strike, strike.actionCount || 1)}
+              aria-label={`Use ${strike.name}`}
+            >
+              Use ({strike.actionCount || 1} act)
+            </button>
+          )
+        )
+      : null;
+
     const header = (
       <>
         <h3 style={{ color: themeColor }}>{strike.name}</h3>
         <div className="action-icons">
-          <ActionIcon 
-            actionText={strike.actions || getActionText(strike)} 
-            color={themeColor} 
+          <ActionIcon
+            actionText={strike.actions || getActionText(strike)}
+            color={themeColor}
           />
         </div>
       </>
     );
-    
-    // Create content
+
     const content = (
       <>
         <div className="strike-traits">
@@ -89,19 +98,16 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
             <TraitTag key={i} trait={trait} />
           ))}
         </div>
-        
+
         <div className="strike-details">
           <div className="strike-attack">
             <span className="detail-label">Attack</span>
             <span className="detail-value" style={{ color: themeColor }}>{strike.attackMod}</span>
           </div>
-          
           <div className="strike-damage">
             <span className="detail-label">Damage</span>
             <span className="detail-value" style={{ color: themeColor }}>{strike.damage}</span>
           </div>
-          
-          {/* Add range display for ranged weapons */}
           {(strike.type === 'ranged' || strike.range) && (
             <div className="strike-range">
               <span className="detail-label">Range</span>
@@ -111,39 +117,20 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
             </div>
           )}
         </div>
-        
+
         {strike.description && (
-          <div className="strike-description">
-            {strike.description}
-          </div>
+          <div className="strike-description">{strike.description}</div>
         )}
-        
+
         {inactive && (
           <div className="ability-inactive-hint">
             Not in hand — draw this weapon to Strike with it.
           </div>
         )}
 
-        {encounterMode && !inactive && (
-          <div className="action-use-row">
-            {strike.variableActionCount ? (
-              <VariableCostUseButton strike={strike} onUse={onUse} />
-            ) : (
-              <button
-                className="btn-encounter-use"
-                onClick={() => onUse && onUse(strike, strike.actionCount || 1)}
-                aria-label={`Use ${strike.name}`}
-              >
-                Use ({strike.actionCount || 1} act)
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Display item source if it exists */}
         {strike.source && strike.source !== strike.name && (
-          <div className="strike-source" style={{ 
-            fontSize: '0.8rem', 
+          <div className="strike-source" style={{
+            fontSize: '0.8rem',
             color: '#666',
             borderTop: '1px solid #eee',
             padding: '0.5rem 1rem',
@@ -154,12 +141,13 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
         )}
       </>
     );
-    
+
     return (
       <CollapsibleCard
         key={`strike-${index}`}
         className={`strike-card${inactive ? ' is-inactive' : ''}`}
         header={header}
+        headerRight={headerRight}
         themeColor={themeColor}
         style={{ borderLeft: `4px solid ${themeColor}` }}
       >

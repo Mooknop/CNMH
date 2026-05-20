@@ -24,6 +24,7 @@ import GmLore from './pages/gm/GmLore';
 import GmCharacters from './pages/gm/GmCharacters';
 import GmItems from './pages/gm/GmItems';
 import GmSpells from './pages/gm/GmSpells';
+import GmEffects from './pages/gm/GmEffects';
 import GmEncounter from './pages/gm/GmEncounter';
 import './App.css';
 
@@ -56,6 +57,7 @@ function App() {
                           <Route path="characters" element={<GmCharacters />} />
                           <Route path="items" element={<GmItems />} />
                           <Route path="spells" element={<GmSpells />} />
+                          <Route path="effects" element={<GmEffects />} />
                           <Route path="encounter" element={<GmEncounter />} />
                         </Route>
                       </Routes>

@@ -2,6 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FocusSpellsList from './FocusSpellsList';
 
+jest.mock('./SpellCard', () => ({ spell }) => (
+  <div data-testid="spell-card">{spell.name}</div>
+));
+
 jest.mock('../../utils/SpellUtils', () => ({
   organizeSpellsByRank: (spells) => {
     const result = { cantrips: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [] };
@@ -171,9 +175,5 @@ describe('FocusSpellsList', () => {
     expect(screen.getByText(/no focus spells available/i)).toBeInTheDocument();
   });
 
-  it('chip links point to aonprd.com', () => {
-    render(<FocusSpellsList character={baseCharacter} characterColor="#333" />);
-    const link = screen.getByRole('link', { name: 'Divine Lance' });
-    expect(link).toHaveAttribute('href', expect.stringContaining('aonprd.com'));
-  });
+
 });

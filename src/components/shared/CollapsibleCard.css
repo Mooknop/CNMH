@@ -13,20 +13,39 @@
   }
   
   .collapsible-header {
+    display: flex;
+    align-items: stretch;
+    background: rgb(240, 240, 240, .05);
+    transition: background-color 0.2s ease;
+  }
+
+  .collapsible-toggle {
+    flex: 1;
+    min-width: 0;
     padding: 0.75rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgb(240, 240, 240, .05);
-    transition: background-color 0.2s ease;
+    cursor: pointer;
+    gap: 0.5rem;
   }
-  
-  .collapsible-header:hover {
+
+  .collapsible-toggle:hover {
     background-color: #e8e8e8;
   }
-  
+
+  .collapsible-header-right {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    flex-shrink: 0;
+    border-left: 1px solid var(--color-border, #e0e0e0);
+    min-height: 44px;
+  }
+
   .expand-icon {
     font-size: 0.8rem;
+    flex-shrink: 0;
     transition: transform 0.2s ease;
   }
   

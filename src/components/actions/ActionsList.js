@@ -3,15 +3,21 @@ import React, { useCallback, useState } from 'react';
 import CharacterActionsList from './CharacterActionsList';
 import ReactionsList from './ReactionsList';
 import FreeActionsList from './FreeActionsList';
+import MagicModal from '../spells/MagicModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
+import { useCharacter } from '../../hooks/useCharacter';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
   const [activeSection, setActiveSection] = useState('actions');
+  const [isMagicOpen, setIsMagicOpen] = useState(false);
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
+  const { flags } = useCharacter(character);
+  const hasMagic = flags.hasSpellcasting || flags.hasFocusSpells || flags.hasInnateSpells
+    || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
 
   const encounterMode = !!(encounter && encounter.active && encounter.phase === 'in-progress');
 
@@ -79,6 +85,7 @@ const ActionsList = ({ character, characterColor }) => {
             themeColor={themeColor}
             encounterMode={encounterMode}
             onUse={handleUse}
+            onMagicOpen={hasMagic ? () => setIsMagicOpen(true) : undefined}
           />
         )}
         {activeSection === 'reactions' && (
@@ -98,6 +105,15 @@ const ActionsList = ({ character, characterColor }) => {
           />
         )}
       </div>
+
+      {hasMagic && (
+        <MagicModal
+          isOpen={isMagicOpen}
+          onClose={() => setIsMagicOpen(false)}
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
     </div>
   );
 };

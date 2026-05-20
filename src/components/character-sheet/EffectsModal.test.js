@@ -2,15 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import EffectsModal from './EffectsModal';
 
-// Minimal catalog for testing
-jest.mock('../../data/pf2eEffects', () => {
-  const effects = [
-    { id: 'heroism-1', name: 'Heroism 1', description: '+1 status to attacks and saves', modifiers: [] },
-    { id: 'bless', name: 'Bless', description: '+1 status to attack rolls', modifiers: [] },
-  ];
-  effects.getEffect = (id) => effects.find((e) => e.id === id);
-  return effects;
-});
 
 const mockGetState = jest.fn(() => []);
 const mockSendUpdate = jest.fn();
@@ -28,6 +19,10 @@ jest.mock('../../contexts/ContentContext', () => ({
     characters: [
       { id: 'char-a', name: 'Pellias' },
       { id: 'char-b', name: 'Ashka' },
+    ],
+    effects: [
+      { id: 'heroism-1', name: 'Heroism 1', description: '+1 status to attacks and saves', modifiers: [] },
+      { id: 'bless', name: 'Bless', description: '+1 status to attack rolls', modifiers: [] },
     ],
   }),
 }));

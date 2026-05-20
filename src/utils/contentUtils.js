@@ -12,6 +12,7 @@ import defaultCalendar from '../data/CalendarEvents.json';
 import traitsData from '../data/traits.json';
 import itemsData from '../data/items.json';
 import spellsData from '../data/spells.json';
+import defaultEffects from '../data/pf2eEffects';
 
 export const slugify = (str) =>
   String(str || '')
@@ -120,6 +121,13 @@ export const withSpellId = (spell, index = 0) => ({
 
 export const normalizeSpells = (arr) =>
   (Array.isArray(arr) ? arr : []).map((s, i) => withSpellId(s, i));
+
+export const normalizeEffects = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((e) => ({
+    ...e,
+    id: e.id || slugify(e.name),
+    modifiers: Array.isArray(e.modifiers) ? e.modifiers : [],
+  }));
 
 // id -> catalog spell, for resolving wand/scroll/staff spell references.
 export const spellCatalogMap = (spells) => {
@@ -321,6 +329,7 @@ export const defaultContent = () => ({
   character: normalizeCharacters(defaultCharacters),
   item: normalizeItems(itemsData && itemsData.items),
   spell: normalizeSpells(spellsData && spellsData.spells),
+  effect: normalizeEffects(defaultEffects),
 });
 
 // Body for POST /api/gm/seed.

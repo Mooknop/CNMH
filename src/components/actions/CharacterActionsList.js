@@ -1,7 +1,7 @@
 // src/components/actions/CharacterActionsList.js
-import React from 'react';
+import React, { useState } from 'react';
 import ActionCardList from './ActionCardList';
-import StrikesList from './StrikesList';
+import ActionCategoryModal from './ActionCategoryModal';
 import ThaumaturgeExploitsDisplay from './ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../hooks/useCharacter';
 import {
@@ -9,20 +9,7 @@ import {
   BASIC_ACTIONS_DEFENSIVE,
   BASIC_ACTIONS_MOVEMENT,
 } from '../../data/encounterActions';
-
-const SectionDivider = ({ label, themeColor }) => (
-  <div style={{
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
-    margin: '1.5rem 0 0.5rem',
-  }}>
-    <span style={{ color: themeColor, fontWeight: '700', fontSize: '0.8rem', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-      {label}
-    </span>
-    <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
-  </div>
-);
+import './CharacterActionsList.css';
 
 const profLabel = (rank) => {
   if (rank >= 4) return 'Legendary';
@@ -31,9 +18,11 @@ const profLabel = (rank) => {
   return null;
 };
 
-const CharacterActionsList = ({ character, themeColor, encounterMode, onUse }) => {
+const CharacterActionsList = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
   const { actions, flags, thaumaturge, skillProficiencies } = useCharacter(character);
   const { isThaumaturge } = flags;
+
+  const [openModal, setOpenModal] = useState(null); // 'offensive'|'defensive'|'movement'|null
 
   const withHighlights = (items) =>
     items.map((action) => {
@@ -42,29 +31,78 @@ const CharacterActionsList = ({ character, themeColor, encounterMode, onUse }) =
       return label ? { ...action, highlight: label } : action;
     });
 
+  const categoryButtons = [
+    { key: 'offensive', label: 'Offensive' },
+    { key: 'defensive', label: 'Defensive' },
+    { key: 'movement', label: 'Movement' },
+    { key: 'magic', label: 'Magic' },
+  ];
+
   return (
     <div className="actions-container">
-      <StrikesList character={character} themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
+      {/* Character-specific custom actions stay inline */}
       {isThaumaturge && (
         <ThaumaturgeExploitsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
       )}
-      <ActionCardList
-        items={actions}
-        type="action"
+      {actions.length > 0 && (
+        <ActionCardList
+          items={actions}
+          type="action"
+          themeColor={themeColor}
+          emptyMessage=""
+          encounterMode={encounterMode}
+          onUse={onUse}
+        />
+      )}
+
+      {/* Category buttons */}
+      <div className="action-category-buttons">
+        {categoryButtons.map(({ key, label }) => (
+          <button
+            key={key}
+            className="action-category-btn"
+            style={{ '--category-color': themeColor }}
+            onClick={() => key === 'magic' ? onMagicOpen?.() : setOpenModal(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Offensive modal */}
+      <ActionCategoryModal
+        isOpen={openModal === 'offensive'}
+        onClose={() => setOpenModal(null)}
+        title="Offensive"
         themeColor={themeColor}
-        emptyMessage="No unique actions available for this character."
+        items={withHighlights(BASIC_ACTIONS_OFFENSIVE)}
+        showStrikes
+        character={character}
         encounterMode={encounterMode}
         onUse={onUse}
       />
 
-      <SectionDivider label="Offensive" themeColor={themeColor} />
-      <ActionCardList items={withHighlights(BASIC_ACTIONS_OFFENSIVE)} type="action" themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
+      {/* Defensive modal */}
+      <ActionCategoryModal
+        isOpen={openModal === 'defensive'}
+        onClose={() => setOpenModal(null)}
+        title="Defensive"
+        themeColor={themeColor}
+        items={withHighlights(BASIC_ACTIONS_DEFENSIVE)}
+        encounterMode={encounterMode}
+        onUse={onUse}
+      />
 
-      <SectionDivider label="Defensive" themeColor={themeColor} />
-      <ActionCardList items={withHighlights(BASIC_ACTIONS_DEFENSIVE)} type="action" themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
-
-      <SectionDivider label="Movement" themeColor={themeColor} />
-      <ActionCardList items={withHighlights(BASIC_ACTIONS_MOVEMENT)} type="action" themeColor={themeColor} encounterMode={encounterMode} onUse={onUse} />
+      {/* Movement modal */}
+      <ActionCategoryModal
+        isOpen={openModal === 'movement'}
+        onClose={() => setOpenModal(null)}
+        title="Movement"
+        themeColor={themeColor}
+        items={withHighlights(BASIC_ACTIONS_MOVEMENT)}
+        encounterMode={encounterMode}
+        onUse={onUse}
+      />
     </div>
   );
 };
