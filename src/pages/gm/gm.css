@@ -251,3 +251,64 @@
   margin: 8px 0 0;
   font-size: 0.75rem;
 }
+
+/* GM encounter panel — initiative + turn controls. */
+.gm-encounter-header h2 {
+  margin: 0 0 4px;
+}
+.gm-encounter-status {
+  background: #f3f4f6;
+  border-left: 3px solid #6b7280;
+  padding: 6px 12px;
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+.gm-encounter-order {
+  margin-top: 12px;
+}
+.gm-encounter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gm-encounter-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  background: #fff;
+}
+.gm-encounter-row.is-current {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+.gm-encounter-row.is-enemy {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+.gm-encounter-row.is-enemy.is-current {
+  background: #ffedd5;
+  border-color: #ea580c;
+}
+.gm-encounter-name {
+  font-weight: 600;
+}
+.gm-encounter-kind {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.gm-encounter-init {
+  font-variant-numeric: tabular-nums;
+  color: #374151;
+}
+.gm-encounter-add-enemy {
+  margin-top: 12px;
+}
