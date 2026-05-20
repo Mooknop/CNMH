@@ -59,6 +59,10 @@ const StatsBlock = ({ character, characterColor }) => {
 
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
+
+  // Effect bonuses must be called unconditionally (Rules of Hooks)
+  const { effects: activeEffects } = useEffects(characterKey);
+
   if (!charData) return null;
 
   const {
@@ -98,8 +102,7 @@ const StatsBlock = ({ character, characterColor }) => {
   // Compute condition penalties for every displayed stat
   const effects = computeConditionEffects(hydratedConditions, character?.keyAbility, level);
 
-  // Compute effect bonuses (buffs applied by spells/abilities) and combine with penalties
-  const { effects: activeEffects } = useEffects(characterKey);
+  // Combine condition penalties with effect bonuses
   const bonuses = computeEffectBonuses(activeEffects);
   const mod = (stat) => combineModifiers(effects[stat], bonuses[stat]);
 
