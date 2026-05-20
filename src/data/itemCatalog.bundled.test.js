@@ -25,6 +25,7 @@ const stripSpellId = (s) => {
   if (!s || typeof s !== 'object') return s;
   const c = { ...s };
   delete c.id;
+  delete c.effects; // S4 addition; fixture predates structured effects
   return c;
 };
 const stripIds = (list) =>
