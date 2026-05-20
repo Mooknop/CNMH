@@ -13,6 +13,8 @@ import ItemModal from '../components/inventory/ItemModal';
 import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
+import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
+import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import { useCharacter } from '../hooks/useCharacter';
 import './CharacterSheet.css';
 
@@ -68,8 +70,10 @@ const CharacterSheet = () => {
         return (
           <>
             <InitiativeEntry charId={character.id} />
+            <TurnTrackerPanel charId={character.id} characterName={character.name} />
             <HandsPanel character={character} characterColor={characterColor} />
             <ActionsList character={character} characterColor={characterColor} />
+            <CombatLogPanel />
           </>
         );
       case 'exploration':
