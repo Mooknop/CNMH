@@ -12,7 +12,7 @@ import { filterSpellsByDefense } from '../../utils/SpellUtils';
  * @param {string} props.defenseFilter - Active defense filter
  * @param {Object} props.character - Character data for additional context
  */
-const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, character }) => {
+const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, character, onCast }) => {
   // Filter spells by defense type
   const filteredSpells = filterSpellsByDefense(spells, defenseFilter);
   
@@ -46,7 +46,7 @@ const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, 
           <div className="innate-spells-list">
             <div className="cards-grid">
               {filteredSpells.map(spell => (
-                <SpellCard 
+                <SpellCard
                   key={spell.id}
                   spell={{
                     ...spell,
@@ -56,6 +56,7 @@ const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, 
                   themeColor={themeColor}
                   characterLevel={characterLevel}
                   character={character}
+                  onCast={onCast}
                 />
               ))}
             </div>

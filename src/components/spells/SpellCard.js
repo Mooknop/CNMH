@@ -12,7 +12,7 @@ import ActionIcon from '../shared/ActionIcon';
  * @param {number} props.characterLevel - Character's level for cantrip scaling
  * @param {Object} props.character - Character data for bloodline effects (optional)
  */
-const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
+const SpellCard = ({ spell, themeColor, characterLevel, character, onCast }) => {
   // Scroll/wand spells are gated on the item being held (see
   // itemState.itemAbilitiesActive). active === false ⇒ show but disabled;
   // undefined/true (repertoire, innate, focus) ⇒ always castable.
@@ -185,6 +185,19 @@ const SpellCard = ({ spell, themeColor, characterLevel, character }) => {
       {spell.fromInnate && spell.innateSource && (
         <div className="innate-source">
           <span>Source: {spell.innateSource}</span>
+        </div>
+      )}
+
+      {/* Encounter mode: Cast button */}
+      {onCast && !inactive && (
+        <div className="action-use-row" style={{ marginTop: '0.5rem' }}>
+          <button
+            className="btn-encounter-use"
+            style={{ backgroundColor: themeColor, borderColor: themeColor }}
+            onClick={(e) => { e.stopPropagation(); onCast(spell); }}
+          >
+            Cast ({spell.actions || '?'})
+          </button>
         </div>
       )}
     </>
