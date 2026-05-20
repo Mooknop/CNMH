@@ -5,6 +5,7 @@ import ReactionsList from './ReactionsList';
 import FreeActionsList from './FreeActionsList';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
+import { useGrantedActions } from '../../hooks/useGrantedActions';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
@@ -12,6 +13,7 @@ const ActionsList = ({ character, characterColor }) => {
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
+  const { grantedActions, removeGrantedAction } = useGrantedActions(character.id);
 
   const encounterMode = !!(encounter && encounter.active && encounter.phase === 'in-progress');
 
@@ -44,9 +46,44 @@ const ActionsList = ({ character, characterColor }) => {
     [character.id, character.name, spendActions, spendReaction, appendLog]
   );
 
+  const handleUseGranted = useCallback(
+    (grant) => {
+      const cost = grant.action?.cost ?? 1;
+      spendActions(cost, grant.action?.name || grant.source);
+      appendLog({
+        type: 'action',
+        charId: character.id,
+        text: `${character.name} used ${grant.action?.name || grant.source} (granted, ${cost} act)`,
+      });
+      removeGrantedAction(grant.id);
+    },
+    [character.id, character.name, spendActions, appendLog, removeGrantedAction]
+  );
+
   return (
     <div className="actions-list">
       <h2 style={{ color: themeColor }}>Encounter</h2>
+
+      {encounterMode && grantedActions.length > 0 && (
+        <div className="granted-actions-section" aria-label="Granted actions">
+          <h3 className="granted-actions-title">Granted Actions</h3>
+          {grantedActions.map((grant) => (
+            <div key={grant.id} className="granted-action-row">
+              <span className="granted-action-name">{grant.action?.name || grant.source}</span>
+              {grant.action?.description && (
+                <span className="granted-action-desc">{grant.action.description}</span>
+              )}
+              <button
+                className="btn-encounter-use"
+                aria-label={`Use granted ${grant.action?.name || grant.source}`}
+                onClick={() => handleUseGranted(grant)}
+              >
+                Use ({grant.action?.cost ?? 1} act)
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="section-tabs">
         <button
