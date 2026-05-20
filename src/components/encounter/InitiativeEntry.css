@@ -1,0 +1,35 @@
+.initiative-entry {
+  background: #fef9e7;
+  border: 1px solid #d4a017;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.initiative-entry-prompt {
+  flex: 1 1 320px;
+  font-size: 0.95rem;
+  color: #4a3a00;
+}
+
+.initiative-entry-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #4a3a00;
+}
+
+.initiative-entry-field input {
+  width: 5rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #b8860b;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 1rem;
+}
