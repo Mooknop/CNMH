@@ -55,7 +55,7 @@ jobs:
       - name: Run E2E suite
         run: npm run test:e2e
         env:
-          E2E_BASE_URL: https://cnmh-staging.workers.dev
+          E2E_BASE_URL: https://cnmh-staging.mooknop.workers.dev
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
 
