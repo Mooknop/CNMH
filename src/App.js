@@ -27,6 +27,13 @@ import GmSpells from './pages/gm/GmSpells';
 import GmEncounter from './pages/gm/GmEncounter';
 import './App.css';
 
+const IS_STAGING = process.env.REACT_APP_ENVIRONMENT === 'staging';
+
+function StagingBanner() {
+  if (!IS_STAGING) return null;
+  return <div className="staging-banner">STAGING — not production</div>;
+}
+
 function App() {
   return (
     <SessionProvider>
@@ -36,7 +43,8 @@ function App() {
             <TraitProvider>
               <LoreProvider>
                 <Router>
-                  <div className="app-container">
+                  <div className={`app-container${IS_STAGING ? ' app-staging' : ''}`}>
+                    <StagingBanner />
                     <Navbar />
                     <main className="main-content">
                       <Routes>

@@ -67,7 +67,11 @@ export async function verifyAccess(request, env) {
   if (claims.exp && Date.now() >= claims.exp * 1000) return null;
   const audClaim = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
   if (!audClaim.includes(aud)) return null;
-  if (!claims.email || claims.email.toLowerCase() !== gmEmail.toLowerCase()) return null;
+  // Service tokens (Playwright runner) have email ending in "@access".
+  // AUD + cryptographic signature already scope them to this Access app;
+  // the email allowlist check is only relevant for human logins.
+  const isServiceToken = typeof claims.email === 'string' && claims.email.endsWith('@access');
+  if (!isServiceToken && (!claims.email || claims.email.toLowerCase() !== gmEmail.toLowerCase())) return null;
 
   let keys;
   try {
