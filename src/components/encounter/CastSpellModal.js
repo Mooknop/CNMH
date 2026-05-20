@@ -43,11 +43,12 @@ const CastSpellModal = ({
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character?.id || 'nobody');
 
-  const [targets, setTargets] = useState({}); // effectIndex → charId
+  const [targets, setTargets] = useState({}); // effectIndex/grantIndex → charId
 
   if (!spell || !character) return null;
 
   const spellEffects = Array.isArray(spell.effects) ? spell.effects : [];
+  const spellGrants = Array.isArray(spell.grants) ? spell.grants : [];
   const cost = parseActionCost(spell.actions);
 
   // Find the caster's encounter entry (for resolveExpireAt)
@@ -118,6 +119,48 @@ const CastSpellModal = ({
         text: `${character.name} cast ${spell.name}`,
       });
     }
+
+    // Write any granted actions to each target
+    spellGrants.forEach((grant, idx) => {
+      const targetId =
+        grant.applyTo === 'self'
+          ? character.id
+          : (targets[`g${idx}`] ?? character.id);
+
+      const targetEntry = (encounter.order || []).find(
+        (e) => e.kind === 'pc' && e.charId === targetId
+      );
+      const targetEntryId = targetEntry?.entryId || null;
+
+      const expireAt = resolveExpireAt(
+        grant.duration || null,
+        encounter,
+        casterEntryId,
+        targetEntryId
+      );
+
+      const current = getState(targetId, 'grantedactions') || [];
+      const newGrant = {
+        id: newEntryUid(),
+        action: grant.action,
+        source: spell.name,
+        grantedBy: character.id,
+        expireAt: expireAt || undefined,
+        ts: Date.now(),
+      };
+      const next = [...current, newGrant];
+      const key = `cnmh_grantedactions_${targetId}`;
+      writeLocal(key, next);
+      sendUpdate(targetId, 'grantedactions', next);
+
+      const targetChar = characters.find((c) => c.id === targetId);
+      const targetName = targetChar?.name || targetId;
+      appendLog({
+        type: 'action',
+        charId: character.id,
+        text: `${character.name} granted ${grant.action?.name || spell.name} to ${targetName}`,
+      });
+    });
 
     // Debit action cost
     if (cost === 'reaction') {
@@ -191,12 +234,58 @@ const CastSpellModal = ({
         </>
       )}
 
-      {spellEffects.length === 0 && (
+      {spellEffects.length === 0 && spellGrants.length === 0 && (
         <>
           <hr className="ct-divider" />
           <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0 0 1rem' }}>
             No structured effects — use Apply Effect to apply buffs manually.
           </p>
+        </>
+      )}
+
+      {/* Per-grant target pickers */}
+      {spellGrants.length > 0 && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Grant Actions</h3>
+            {spellGrants.map((grant, idx) => {
+              const options = getTargetOptions(grant.applyTo || 'ally');
+              return (
+                <div key={idx} style={{ marginBottom: '0.75rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                    {grant.action?.name || spell.name}
+                    {grant.action?.description && (
+                      <span style={{ display: 'block', fontStyle: 'italic', fontSize: '0.8rem' }}>
+                        {grant.action.description}
+                      </span>
+                    )}
+                  </label>
+                  {grant.applyTo !== 'self' && (
+                    <select
+                      aria-label={`grant-target-${idx}`}
+                      value={targets[`g${idx}`] ?? character.id}
+                      onChange={(e) =>
+                        setTargets((prev) => ({ ...prev, [`g${idx}`]: e.target.value }))
+                      }
+                      style={{ display: 'block', marginTop: '4px', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--color-border)' }}
+                    >
+                      {options.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}{c.id === character.id ? ' (you)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {grant.duration && (
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                      ({grant.duration.until === 'rounds' ? `${grant.duration.rounds} rounds` : grant.duration.until})
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </section>
         </>
       )}
 
