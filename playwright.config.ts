@@ -27,6 +27,18 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      // Runs all specs. GM editor specs are desktop-only by directory convention
+      // (e2e/specs/gm/**); player-surface specs in e2e/specs/player/** run on
+      // both this project and mobile-chromium below.
+    },
+    {
+      name: 'mobile-chromium',
+      use: { ...devices['Pixel 7'] },
+      // Player-surface only — GM Tools has no responsive design.
+      testMatch: ['**/specs/player/**'],
+    },
   ],
 });
