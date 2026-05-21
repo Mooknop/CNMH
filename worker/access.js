@@ -67,11 +67,15 @@ export async function verifyAccess(request, env) {
   if (claims.exp && Date.now() >= claims.exp * 1000) return null;
   const audClaim = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
   if (!audClaim.includes(aud)) return null;
-  // Service tokens (Playwright runner) have email ending in "@access".
-  // AUD + cryptographic signature already scope them to this Access app;
-  // the email allowlist check is only relevant for human logins.
-  const isServiceToken = typeof claims.email === 'string' && claims.email.endsWith('@access');
-  if (!isServiceToken && (!claims.email || claims.email.toLowerCase() !== gmEmail.toLowerCase())) return null;
+  // Service tokens (e.g. Playwright runner) carry `common_name` instead of
+  // `email`. AUD + signature already prove the JWT came from the matching
+  // Access app, which only mints tokens for identities its policies allow —
+  // so for service tokens, that's sufficient. Human logins still require the
+  // GM_EMAIL allowlist match as defense-in-depth.
+  const tokenEmail = typeof claims.email === 'string' ? claims.email : null;
+  const tokenName = typeof claims.common_name === 'string' ? claims.common_name : null;
+  const isServiceToken = tokenName !== null || (tokenEmail !== null && tokenEmail.endsWith('@access'));
+  if (!isServiceToken && (!tokenEmail || tokenEmail.toLowerCase() !== gmEmail.toLowerCase())) return null;
 
   let keys;
   try {
@@ -102,5 +106,5 @@ export async function verifyAccess(request, env) {
   }
   if (!ok) return null;
 
-  return { email: claims.email };
+  return { email: tokenEmail || tokenName };
 }
