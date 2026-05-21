@@ -353,8 +353,9 @@ test.describe('Lore editor', () => {
     await form.getByLabel('summary').fill('Replacement');
     await form.getByRole('button', { name: 'Create entry' }).click();
 
-    // ConfirmDialog appears (no requireType for collision — plain confirm)
-    await expect(page.getByRole('dialog')).toContainText('already exists');
+    // ConfirmDialog appears (no requireType for collision — plain confirm).
+    // Modal renders as div.modal-container, not a role="dialog" element.
+    await expect(page.locator('.modal-container')).toContainText('already exists');
     await page.getByRole('button', { name: 'Overwrite' }).click();
     await expectSaved(page);
 
