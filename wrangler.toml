@@ -38,3 +38,31 @@ new_sqlite_classes = ["CampaignContent"]
 CF_ACCESS_TEAM_DOMAIN = "muddy-salad-62d7.cloudflareaccess.com"
 CF_ACCESS_AUD = "8c613b3ba506a65e14373fa0511acfbf7d8909eca6e97b31a1cdcd1a0c90e55e"
 GM_EMAIL = "mooknop@gmail.com"
+
+# ── Staging environment ───────────────────────────────────────────────────────
+# Deploy with: wrangler deploy --env staging
+# First deploy (one-time): creates the Worker and applies DO migrations.
+[env.staging]
+name = "cnmh-staging"
+
+[env.staging.vars]
+CF_ACCESS_TEAM_DOMAIN = "muddy-salad-62d7.cloudflareaccess.com"
+CF_ACCESS_AUD = "bdd0b8f2b83dd8d4d75823baac65397bc6f6cde99751c4900724e6e570ea08c2"
+GM_EMAIL = "mooknop@gmail.com"
+ENVIRONMENT = "staging"
+
+[[env.staging.durable_objects.bindings]]
+name = "CAMPAIGN_SESSION"
+class_name = "CampaignSession"
+
+[[env.staging.durable_objects.bindings]]
+name = "CAMPAIGN_CONTENT"
+class_name = "CampaignContent"
+
+[[env.staging.migrations]]
+tag = "v1"
+new_sqlite_classes = ["CampaignSession"]
+
+[[env.staging.migrations]]
+tag = "v2"
+new_sqlite_classes = ["CampaignContent"]

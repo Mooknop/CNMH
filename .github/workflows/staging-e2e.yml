@@ -1,0 +1,94 @@
+name: Staging CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+# One shared staging Worker: latest push wins, earlier runs cancelled.
+concurrency:
+  group: staging-ci
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      # build:app skips the unit-test phase (covered by test.yml on PRs).
+      - name: Build React app
+        run: npm run build:app
+        env:
+          REACT_APP_ENVIRONMENT: staging
+
+      - name: Deploy to cnmh-staging
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy --env staging
+
+  e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Debug — direct curl with service token
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          echo "=== Secret lengths (non-zero = present) ==="
+          echo "CF_ACCESS_CLIENT_ID length: ${#CF_ACCESS_CLIENT_ID}"
+          echo "CF_ACCESS_CLIENT_SECRET length: ${#CF_ACCESS_CLIENT_SECRET}"
+          echo ""
+          echo "=== GET /api/gm/whoami (with service token, no redirect follow) ==="
+          curl -is \
+            -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
+            -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET" \
+            https://cnmh-staging.mooknop.workers.dev/api/gm/whoami \
+            | head -40
+          echo ""
+          echo "=== POST /api/gm/_test/reset (with service token, no redirect follow) ==="
+          curl -is -X POST \
+            -H "CF-Access-Client-Id: $CF_ACCESS_CLIENT_ID" \
+            -H "CF-Access-Client-Secret: $CF_ACCESS_CLIENT_SECRET" \
+            https://cnmh-staging.mooknop.workers.dev/api/gm/_test/reset \
+            | head -40
+          echo ""
+          echo "=== Public /api/content (no auth, sanity check) ==="
+          curl -is https://cnmh-staging.mooknop.workers.dev/api/content | head -20
+
+      - name: Run E2E suite
+        run: npm run test:e2e
+        env:
+          E2E_BASE_URL: https://cnmh-staging.mooknop.workers.dev
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

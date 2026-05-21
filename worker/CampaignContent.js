@@ -171,6 +171,17 @@ export class CampaignContent {
     const url = new URL(request.url);
     const parts = url.pathname.split('/').filter(Boolean); // e.g. ['api','gm','quest','x']
 
+    // Internal reset — only invoked by Worker's /api/gm/_test/reset handler.
+    // Not reachable externally: the Worker intercepts that path before proxying.
+    if (request.method === 'POST' && url.pathname === '/_internal/reset') {
+      if (!url.searchParams.has('keep_content')) {
+        this.state.storage.sql.exec('DELETE FROM document_history');
+        this.state.storage.sql.exec('DELETE FROM documents');
+      }
+      this.broadcast({ type: 'FULL_CONTENT', payload: this.snapshot() });
+      return Response.json({ ok: true });
+    }
+
     // Public read: GET /api/content
     if (request.method === 'GET' && url.pathname === '/api/content') {
       return Response.json({ payload: this.snapshot() });

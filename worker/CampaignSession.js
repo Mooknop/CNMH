@@ -13,6 +13,19 @@ export class CampaignSession {
   }
 
   async fetch(request) {
+    // Internal reset — only invoked by Worker's /api/gm/_test/reset handler.
+    const url = new URL(request.url);
+    if (request.method === 'POST' && url.pathname === '/_internal/reset') {
+      if (!url.searchParams.has('keep_session')) {
+        await this.state.storage.delete(STATE_KEY);
+        const empty = JSON.stringify({ type: 'FULL_STATE', payload: {} });
+        for (const peer of this.state.getWebSockets()) {
+          try { peer.send(empty); } catch { /* peer gone */ }
+        }
+      }
+      return Response.json({ ok: true });
+    }
+
     if (request.headers.get('Upgrade') !== 'websocket') {
       return new Response('Expected WebSocket', { status: 426 });
     }
