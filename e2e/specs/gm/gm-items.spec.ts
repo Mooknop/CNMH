@@ -39,7 +39,7 @@ test.describe('Item catalog editor', () => {
 
     await page.getByRole('button', { name: '+ New item' }).click();
     const form = page.getByTestId('item-form-new');
-    await form.getByLabel('name').fill('E2E Sword');
+    await form.getByLabel('name', { exact: true }).fill('E2E Sword');
     await form.getByLabel('price').fill('10');
     await form.getByLabel('weight').fill('1');
     await form.getByLabel('traits').fill('Martial, Sword');
@@ -90,7 +90,7 @@ test.describe('Item catalog editor', () => {
 
     await page.getByRole('button', { name: '+ New item' }).click();
     const form = page.getByTestId('item-form-new');
-    await form.getByLabel('name').fill('E2E Backpack');
+    await form.getByLabel('name', { exact: true }).fill('E2E Backpack');
     await form.getByLabel('weight').fill('1');
     await form.getByLabel('is-container').check();
     await form.getByLabel('container-capacity').fill('3');
@@ -174,7 +174,7 @@ test.describe('Item catalog editor', () => {
     await expect(form.getByTestId('spell-ref-preview')).toContainText('→ Fireball');
 
     // Name input is disabled and auto-derived
-    const nameInput = form.getByLabel('name');
+    const nameInput = form.getByLabel('name', { exact: true });
     await expect(nameInput).toBeDisabled();
     await expect(nameInput).toHaveValue('Scroll of Fireball');
 
@@ -215,7 +215,7 @@ test.describe('Item catalog editor', () => {
     await form.getByLabel('spell-kind').selectOption('wand');
     await form.locator('[data-testid="spell-subform"]').getByLabel('spell-ref').selectOption('fireball');
 
-    await expect(form.getByLabel('name')).toHaveValue('Wand of Fireball');
+    await expect(form.getByLabel('name', { exact: true })).toHaveValue('Wand of Fireball');
     await expect(form.getByTestId('item-strikes')).not.toBeVisible();
 
     await form.getByRole('button', { name: 'Create item' }).click();
@@ -251,7 +251,7 @@ test.describe('Item catalog editor', () => {
     await subform.getByLabel('spell-level').fill('2');
 
     // Auto-name derives from the inline spell name when no catalog ref
-    await expect(form.getByLabel('name')).toHaveValue('Scroll of Custom Blast');
+    await expect(form.getByLabel('name', { exact: true })).toHaveValue('Scroll of Custom Blast');
 
     await form.getByRole('button', { name: 'Create item' }).click();
     await expectSaved(page);
@@ -282,7 +282,7 @@ test.describe('Item catalog editor', () => {
 
     await page.getByRole('button', { name: '+ New item' }).click();
     const form = page.getByTestId('item-form-new');
-    await form.getByLabel('name').fill('E2E Staff');
+    await form.getByLabel('name', { exact: true }).fill('E2E Staff');
     await form.getByLabel('traits').fill('Magical, Staff, Artifact');
 
     const staffJson = JSON.stringify(
