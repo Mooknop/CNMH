@@ -26,7 +26,7 @@ async function expectSaved(page: import('@playwright/test').Page) {
 
 /** Navigate to a named subtab within the active character form. */
 async function goTab(form: import('@playwright/test').Locator, tabLabel: string) {
-  await form.locator('[aria-label="character sections"]').getByRole('button', { name: tabLabel }).click();
+  await form.locator('[aria-label="character sections"]').getByRole('button', { name: tabLabel, exact: true }).click();
 }
 
 /** Add an entry to an array section via EntryListEditor and wait for the detail pane. */
@@ -75,7 +75,7 @@ test.describe('Character editor', () => {
     await form.getByLabel('class').fill('Wizard');
     await form.getByLabel('level').fill('5');
     await form.getByLabel('maxHp').fill('50');
-    await form.getByLabel('ac').fill('18');
+    await form.getByLabel('ac', { exact: true }).fill('18');
     await form.getByLabel('speed').fill('25');
 
     await form.getByLabel('strength').fill('10');
@@ -368,7 +368,7 @@ test.describe('Character editor', () => {
       type: 'Toad',
       ac: 15,
       hp: 5,
-      speed: 20,
+      speed: '20',
     });
     expect(char.familiar.abilities[0]).toMatchObject({
       name: 'Darkvision',
@@ -402,7 +402,7 @@ test.describe('Character editor', () => {
     await expect(picker).toBeVisible();
 
     // Select the seeded item
-    await picker.getByRole('listbox', { name: 'catalog results' }).getByRole('button', { name: 'E2E Longsword' }).click();
+    await picker.locator('[aria-label="catalog results"]').getByRole('button', { name: 'E2E Longsword' }).click();
     await picker.getByRole('button', { name: 'Add selected' }).click();
 
     // Picker closes; item row appears
