@@ -35,10 +35,9 @@ const CharacterSheet = () => {
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
   const { openLore } = useLore();
-  const { loreEntries, loading } = useContent();
+  const { loreEntries } = useContent();
 
   useEffect(() => {
-    if (loading) return; // wait for server content before deciding to redirect
     const characterData = getCharacter(id);
     if (characterData) {
       setCharacter(characterData);
@@ -46,7 +45,7 @@ const CharacterSheet = () => {
     } else {
       navigate('/');
     }
-  }, [id, loading, getCharacter, setActiveCharacter, navigate]);
+  }, [id, getCharacter, setActiveCharacter, navigate]);
   
   // Handle opening the item detail modal
   const handleItemClick = (item) => {
