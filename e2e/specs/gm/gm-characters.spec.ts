@@ -66,6 +66,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     // Stats tab is default; fill all managed scalar fields
@@ -114,6 +115,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Skills');
@@ -155,6 +157,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Prof');
@@ -186,6 +189,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Spells');
@@ -236,6 +240,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Feats');
@@ -280,6 +285,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Combat');
@@ -333,6 +339,7 @@ test.describe('Character editor', () => {
     request,
   }) => {
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Familiar');
@@ -383,6 +390,7 @@ test.describe('Character editor', () => {
     });
 
     await page.goto('/gm/characters');
+    await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     await form.getByLabel('name', { exact: true }).fill('E2E Char Inventory');
