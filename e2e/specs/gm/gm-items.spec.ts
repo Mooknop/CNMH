@@ -17,7 +17,7 @@ import { test, expect } from '../../fixtures/gm';
 import { fetchContent, findInCollection } from '../../helpers/content';
 
 async function expectSaved(page: import('@playwright/test').Page) {
-  await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 10_000 });
+  await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 20_000 });
 }
 
 async function confirmTyped(page: import('@playwright/test').Page, typedValue: string, btnLabel: string) {

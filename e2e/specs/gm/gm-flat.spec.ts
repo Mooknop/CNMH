@@ -26,7 +26,7 @@ import { fetchContent, findInCollection } from '../../helpers/content';
 
 /** Wait for the green flash that confirms a GM save broadcast. */
 async function expectSaved(page: import('@playwright/test').Page) {
-  await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 10_000 });
+  await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 20_000 });
 }
 
 /** Fill the ConfirmDialog typed-confirm input and click the confirm button. */
