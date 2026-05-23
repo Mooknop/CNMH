@@ -35,9 +35,14 @@ const CharacterSheet = () => {
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
   const { openLore } = useLore();
-  const { loreEntries } = useContent();
+  const { loreEntries, loading } = useContent();
 
   useEffect(() => {
+    // Wait for the server snapshot before deciding to redirect — otherwise the
+    // initial render runs while characters=FALLBACK and would push us to '/'
+    // every time a direct deep-link landed on a character not in the bundled
+    // defaults (e.g., a freshly-seeded character on staging).
+    if (loading) return;
     const characterData = getCharacter(id);
     if (characterData) {
       setCharacter(characterData);
@@ -45,7 +50,7 @@ const CharacterSheet = () => {
     } else {
       navigate('/');
     }
-  }, [id, getCharacter, setActiveCharacter, navigate]);
+  }, [id, loading, getCharacter, setActiveCharacter, navigate]);
   
   // Handle opening the item detail modal
   const handleItemClick = (item) => {
