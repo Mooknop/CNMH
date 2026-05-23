@@ -12,6 +12,10 @@ export default defineConfig({
   // 1 retry (not 2) caps write-amplification on the shared CF staging DO.
   // A deterministic flake still gets one chance; a real failure surfaces fast.
   retries: process.env.CI ? 1 : 0,
+  // 60s (not Playwright's default 30s) gives slower staging saves room before
+  // Playwright tears down the request context — the "Request context disposed"
+  // cascade on retry beforeEach is the symptom of the prior 30s being too tight.
+  timeout: 60_000,
   reporter: process.env.CI ? [['html'], ['github']] : 'list',
 
   use: {

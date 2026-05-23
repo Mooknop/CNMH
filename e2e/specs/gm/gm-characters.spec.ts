@@ -21,7 +21,7 @@ import { fetchContent, findInCollection } from '../../helpers/content';
 // ---------------------------------------------------------------------------
 
 async function expectSaved(page: import('@playwright/test').Page) {
-  await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 10_000 });
+  await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 20_000 });
 }
 
 /** Navigate to a named subtab within the active character form. */
