@@ -1,7 +1,12 @@
 name: Staging CI
 
+# Manual-only: a recurring CF DO free-tier writes-exhaustion (2026-05-22 and
+# again 2026-05-23) showed that per-PR-push runs add up faster than the model
+# predicted. The 30-min timeout-minutes rail prevents single-run runaways but
+# doesn't help with cumulative-across-PRs accumulation. Reverting to PR-trigger
+# once we have either (a) a paid-tier upgrade, or (b) per-test reset-free flow
+# (unique IDs, no shared-DO wipes between tests).
 on:
-  pull_request:
   workflow_dispatch:
 
 # One shared staging Worker: latest push wins, earlier runs cancelled.
