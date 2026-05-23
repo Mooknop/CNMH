@@ -66,7 +66,7 @@ const CharacterSheet = () => {
   // Data layer — all character reads go through this hook
   const characterModel = useCharacter(character);
 
-  if (!character || !characterModel) return <div>Loading character...</div>;
+  if (!character || !characterModel) return <div data-testid="character-loading">Loading character...</div>;
 
   const { flags, familiar, animalCompanion } = characterModel;
   const { hasFamiliar, hasAnimalCompanion, hasSpellcasting, hasFocusSpells } = flags;
