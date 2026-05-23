@@ -18,7 +18,7 @@
  */
 
 import { test, expect } from '../../fixtures/gm';
-import { fetchContent, findInCollection } from '../../helpers/content';
+import { fetchContent, findInCollection, waitForContent } from '../../helpers/content';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -84,9 +84,7 @@ test.describe('Quest editor', () => {
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
-    payload = await fetchContent(request);
-    entry = findInCollection(payload, 'quest', 'e2e-quest');
-    expect(entry).toMatchObject({ status: 'completed' });
+    await waitForContent(request, 'quest', 'e2e-quest', (e) => !!e && (e as any).status === 'completed');
 
     // --- Delete ---
     await savedForm.getByRole('button', { name: 'Delete' }).click();
@@ -95,8 +93,7 @@ test.describe('Quest editor', () => {
 
     await expect(page.getByTestId('quest-form-e2e-quest')).not.toBeVisible();
 
-    payload = await fetchContent(request);
-    expect(findInCollection(payload, 'quest', 'e2e-quest')).toBeUndefined();
+    await waitForContent(request, 'quest', 'e2e-quest', (e) => e === undefined);
   });
 });
 
@@ -146,9 +143,7 @@ test.describe('Faction editor', () => {
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
-    payload = await fetchContent(request);
-    entry = findInCollection(payload, 'faction', 'e2e-faction');
-    expect(entry).toMatchObject({ reputation: 15 });
+    await waitForContent(request, 'faction', 'e2e-faction', (e) => !!e && (e as any).reputation === 15);
 
     // --- Delete ---
     await savedForm.getByRole('button', { name: 'Delete' }).click();
@@ -157,8 +152,7 @@ test.describe('Faction editor', () => {
 
     await expect(page.getByTestId('faction-form-e2e-faction')).not.toBeVisible();
 
-    payload = await fetchContent(request);
-    expect(findInCollection(payload, 'faction', 'e2e-faction')).toBeUndefined();
+    await waitForContent(request, 'faction', 'e2e-faction', (e) => e === undefined);
   });
 });
 
@@ -291,9 +285,7 @@ test.describe('Lore editor', () => {
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
-    payload = await fetchContent(request);
-    entry = findInCollection(payload, 'lore', 'e2e-location');
-    expect(entry).toMatchObject({ summary: 'Updated summary for E2E Location.' });
+    await waitForContent(request, 'lore', 'e2e-location', (e) => !!e && (e as any).summary === 'Updated summary for E2E Location.');
 
     // --- Delete ---
     await savedForm.getByRole('button', { name: 'Delete' }).click();
@@ -302,8 +294,7 @@ test.describe('Lore editor', () => {
 
     await expect(page.getByTestId('lore-form-e2e-location')).not.toBeVisible();
 
-    payload = await fetchContent(request);
-    expect(findInCollection(payload, 'lore', 'e2e-location')).toBeUndefined();
+    await waitForContent(request, 'lore', 'e2e-location', (e) => e === undefined);
   });
 
   test('category tab filter shows only matching entries', async ({ page, seed }) => {
