@@ -39,6 +39,9 @@ jobs:
     name: E2E tests
     runs-on: ubuntu-latest
     needs: [deploy]
+    # Hard ceiling so a runaway test loop can't burn the day's CF DO write
+    # budget (the 17h Slice 4 incident on 2026-05-21 motivated this).
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -84,6 +87,20 @@ jobs:
           E2E_BASE_URL: https://cnmh-staging.mooknop.workers.dev
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+
+      - name: Write budget summary
+        if: always()
+        run: |
+          # Static estimate based on the cost model documented in the plan:
+          # reset (2) + seed (~25) + N saves (3 each) ≈ 35 writes per test on average.
+          # Surfaces budget consumption so we notice creep before hitting the 100k cap.
+          TEST_COUNT=$(find e2e/specs -name '*.spec.ts' -exec grep -c "^\s*test(" {} \; | awk '{sum+=$1} END {print sum}')
+          EST_WRITES=$((TEST_COUNT * 35))
+          echo "=== E2E Write Budget Summary ==="
+          echo "Tests in suite: $TEST_COUNT"
+          echo "Estimated writes per run: ~$EST_WRITES (model: ~35 writes/test)"
+          echo "Daily CF DO free-tier limit: 100,000 rows_written"
+          echo "Headroom: ~$((100000 / (EST_WRITES > 0 ? EST_WRITES : 1))) full passing runs/day"
 
       - name: Upload Playwright report
         if: failure()

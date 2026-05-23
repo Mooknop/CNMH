@@ -9,7 +9,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // 1 retry (not 2) caps write-amplification on the shared CF staging DO.
+  // A deterministic flake still gets one chance; a real failure surfaces fast.
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['html'], ['github']] : 'list',
 
   use: {
