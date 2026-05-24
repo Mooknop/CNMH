@@ -231,7 +231,7 @@ export const calculateBulkLimit = (character) => {
 
 export const calculateClassDC = (character) => {
   const level = character.level || 1;
-  const keyAbilityMod = getAbilityModifier(character.abilities[character.keyAbility]);
+  const keyAbilityMod = getAbilityModifier(character.abilities?.[character.keyAbility]);
   const classProficiency = character.proficiencies?.class || 1; // Default to Trained
   const proficiencyBonus = getProficiencyBonus(classProficiency, level, character);
   
