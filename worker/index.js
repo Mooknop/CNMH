@@ -61,6 +61,13 @@ export default {
       return Response.json({ ok: true });
     }
 
+    // DO write-budget chip — read-only, no writes.
+    if (request.method === 'GET' && url.pathname === '/api/gm/usage') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+      return contentStub(env).fetch(new Request(new URL('/_internal/usage', request.url).toString()));
+    }
+
     // GM writes — verified server-side before reaching the content DO.
     if (url.pathname.startsWith('/api/gm/')) {
       const gm = await verifyAccess(request, env);
