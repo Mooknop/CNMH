@@ -5,10 +5,8 @@ import GmLayout from './GmLayout';
 
 jest.mock('../../hooks/useGmAuth', () => ({ useGmAuth: jest.fn() }));
 jest.mock('../../contexts/ContentContext', () => ({ useContent: jest.fn() }));
-jest.mock('../../utils/gmApi', () => ({
-  seedDefaults: jest.fn(),
-  fetchUsage: jest.fn().mockReturnValue(new Promise(() => {})),
-}));
+jest.mock('../../utils/gmApi', () => ({ seedDefaults: jest.fn() }));
+jest.mock('../../components/gm/UsageChip', () => () => null);
 const { useGmAuth } = require('../../hooks/useGmAuth');
 const { useContent } = require('../../contexts/ContentContext');
 const { seedDefaults } = require('../../utils/gmApi');
