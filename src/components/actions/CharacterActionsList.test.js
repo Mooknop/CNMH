@@ -9,6 +9,7 @@ jest.mock('./StrikesList', () => () => <div data-testid="strikes-list" />);
 jest.mock('./ThaumaturgeExploitsDisplay', () => () => (
   <div data-testid="thaumaturge-exploits">Exploits</div>
 ));
+jest.mock('./ActionCategoryModal', () => () => null);
 
 const mockUseCharacter = jest.fn();
 jest.mock('../../hooks/useCharacter', () => ({
@@ -34,21 +35,20 @@ describe('CharacterActionsList', () => {
     expect(() => render(<CharacterActionsList character={mockCharacter} />)).not.toThrow();
   });
 
-  it('renders StrikesList', () => {
+  it('renders Offensive, Defensive, Movement, and Magic category buttons', () => {
     render(<CharacterActionsList character={mockCharacter} />);
-    expect(screen.getByTestId('strikes-list')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Offensive' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Defensive' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Movement' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Magic' })).toBeInTheDocument();
   });
 
-  it('renders ActionCardList for unique character actions', () => {
+  it('renders ActionCardList for unique character actions when non-empty', () => {
+    mockUseCharacter.mockReturnValue(
+      makeModel({ actions: [{ name: 'Custom Action', actionCount: 1 }] })
+    );
     render(<CharacterActionsList character={mockCharacter} />);
     expect(screen.getAllByTestId('action-card-list').length).toBeGreaterThan(0);
-  });
-
-  it('renders Offensive, Defensive, and Movement section dividers', () => {
-    render(<CharacterActionsList character={mockCharacter} />);
-    expect(screen.getByText('Offensive')).toBeInTheDocument();
-    expect(screen.getByText('Defensive')).toBeInTheDocument();
-    expect(screen.getByText('Movement')).toBeInTheDocument();
   });
 
   it('does not show ThaumaturgeExploitsDisplay for non-thaumaturge', () => {
@@ -69,7 +69,6 @@ describe('CharacterActionsList', () => {
       mockUseCharacter.mockReturnValue(
         makeModel({ skillProficiencies: { athletics: 1, deception: 0, stealth: 0 } })
       );
-      // ActionCardList is mocked — just verify it renders without error
       expect(() => render(<CharacterActionsList character={mockCharacter} />)).not.toThrow();
     });
 

@@ -38,16 +38,16 @@ describe('SpellCard', () => {
     expect(screen.getByText('Fireball')).toBeInTheDocument();
   });
 
-  it('renders rank indicator for non-cantrip', () => {
+  it('renders compact rank badge for non-cantrip', () => {
     render(<SpellCard spell={baseSpell} themeColor="#ff0000" characterLevel={5} />);
-    expect(screen.getByText('Rank 3')).toBeInTheDocument();
+    expect(screen.getByText('R3')).toBeInTheDocument();
   });
 
-  it('renders cantrip indicator with scaled rank', () => {
+  it('renders compact cantrip badge with scaled rank', () => {
     const cantripSpell = { ...baseSpell, level: 0, baseLevel: 1 };
     render(<SpellCard spell={cantripSpell} themeColor="#ff0000" characterLevel={5} />);
     // Math.ceil(5/2) = 3
-    expect(screen.getByText('Cantrip 1 (3)')).toBeInTheDocument();
+    expect(screen.getByText('C3')).toBeInTheDocument();
   });
 
   it('renders action icon when spell has actions', () => {
@@ -103,7 +103,7 @@ describe('SpellCard', () => {
   it('renders Signature indicator when spell is signature', () => {
     const spell = { ...baseSpell, signature: true };
     render(<SpellCard spell={spell} themeColor="#ff0000" characterLevel={5} />);
-    expect(screen.getByText('Signature')).toBeInTheDocument();
+    expect(screen.getByTitle('Signature Spell')).toBeInTheDocument();
   });
 
   it('renders Innate indicator when spell is from innate', () => {
@@ -173,7 +173,7 @@ describe('SpellCard', () => {
   it('renders bloodline indicator when spell is bloodline', () => {
     const spell = { ...baseSpell, bloodline: 'Draconic' };
     render(<SpellCard spell={spell} themeColor="#ff0000" characterLevel={5} />);
-    expect(screen.getByText('Bloodline')).toBeInTheDocument();
+    expect(screen.getByTitle('Bloodline Spell')).toBeInTheDocument();
   });
 
   it('renders innate source when fromInnate and innateSource present', () => {

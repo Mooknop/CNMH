@@ -5,6 +5,16 @@ import ActionsList from './ActionsList';
 jest.mock('./CharacterActionsList', () => () => <div data-testid="character-actions-list" />);
 jest.mock('./ReactionsList', () => () => <div data-testid="reactions-list" />);
 jest.mock('./FreeActionsList', () => () => <div data-testid="free-actions-list" />);
+jest.mock('../spells/MagicModal', () => () => null);
+
+jest.mock('../../hooks/useCharacter', () => ({
+  useCharacter: () => ({
+    flags: {
+      hasSpellcasting: false, hasFocusSpells: false, hasInnateSpells: false,
+      hasScrolls: false, hasWands: false, hasStaff: false, hasEldPowers: false, hasHarrowing: false,
+    },
+  }),
+}));
 
 jest.mock('../../hooks/useEncounter', () => ({
   useEncounter: () => ({

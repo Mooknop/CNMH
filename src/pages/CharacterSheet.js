@@ -4,7 +4,6 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import { useLore } from '../contexts/LoreContext';
 import { useContent } from '../contexts/ContentContext';
 import StatsBlock from '../components/character-sheet/StatsBlock';
-import SpellsList from '../components/spells/SpellsList';
 import ActionsList from '../components/actions/ActionsList';
 import ExplorationList from '../components/actions/ExplorationList';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
@@ -69,7 +68,7 @@ const CharacterSheet = () => {
   if (!character || !characterModel) return <div data-testid="character-loading">Loading character...</div>;
 
   const { flags, familiar, animalCompanion } = characterModel;
-  const { hasFamiliar, hasAnimalCompanion, hasSpellcasting, hasFocusSpells } = flags;
+  const { hasFamiliar, hasAnimalCompanion } = flags;
   
   // Function to render the active tab content
   const renderTabContent = () => {
@@ -86,8 +85,6 @@ const CharacterSheet = () => {
         );
       case 'exploration':
         return <ExplorationList character={character} characterColor={characterColor} />;
-      case 'spells':
-        return <SpellsList character={character} characterColor={characterColor} />;
       case 'inventory':
         return (
           <InventoryTab
@@ -217,16 +214,6 @@ const CharacterSheet = () => {
               Exploration
             </button>
 
-            {/* Combined spellcasting tab - only shown if character has spellcasting OR focus spells */}
-            {(hasSpellcasting || hasFocusSpells) && (
-              <button 
-                className={`tab-button ${activeTab === 'spells' ? 'active' : ''}`}
-                onClick={() => setActiveTab('spells')}
-                style={{ backgroundColor: activeTab === 'spells' ? characterColor : '' }}
-              >
-                Magic
-              </button>
-            )}
             
             <button 
               className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`}

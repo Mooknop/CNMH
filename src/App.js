@@ -24,14 +24,35 @@ import GmLore from './pages/gm/GmLore';
 import GmCharacters from './pages/gm/GmCharacters';
 import GmItems from './pages/gm/GmItems';
 import GmSpells from './pages/gm/GmSpells';
+import GmEffects from './pages/gm/GmEffects';
 import GmEncounter from './pages/gm/GmEncounter';
 import './App.css';
 
 const IS_STAGING = process.env.REACT_APP_ENVIRONMENT === 'staging';
+const GIT_SHA = process.env.REACT_APP_GIT_SHA || '';
+const SHORT_SHA = GIT_SHA.slice(0, 7);
+const COMMIT_URL = GIT_SHA ? `https://github.com/Mooknop/CNMH/commit/${GIT_SHA}` : null;
 
 function StagingBanner() {
   if (!IS_STAGING) return null;
-  return <div className="staging-banner">STAGING — not production</div>;
+  return (
+    <div className="staging-banner">
+      STAGING — not production
+      {COMMIT_URL && (
+        <>
+          {' · '}
+          <a
+            href={COMMIT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="staging-banner-link"
+          >
+            {SHORT_SHA}
+          </a>
+        </>
+      )}
+    </div>
+  );
 }
 
 function App() {
@@ -64,6 +85,7 @@ function App() {
                           <Route path="characters" element={<GmCharacters />} />
                           <Route path="items" element={<GmItems />} />
                           <Route path="spells" element={<GmSpells />} />
+                          <Route path="effects" element={<GmEffects />} />
                           <Route path="encounter" element={<GmEncounter />} />
                         </Route>
                       </Routes>

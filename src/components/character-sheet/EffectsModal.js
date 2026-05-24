@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Modal from '../shared/Modal';
-import PF2E_EFFECTS from '../../data/pf2eEffects';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -19,7 +18,7 @@ const EffectsModal = ({
   highZ = false,
 }) => {
   const { getState, sendUpdate } = useSession();
-  const { characters } = useContent();
+  const { characters, effects: effectCatalog } = useContent();
   const { encounter, appendLog } = useEncounter();
   const [targetId, setTargetId] = useState(selfCharId);
 
@@ -83,7 +82,7 @@ const EffectsModal = ({
       <section className="ct-section">
         <h3 className="ct-section-title">Choose Effect</h3>
         <div className="ct-browser-grid">
-          {PF2E_EFFECTS.map((def) => (
+          {(effectCatalog || []).map((def) => (
             <button
               key={def.id}
               className="ct-browser-card"

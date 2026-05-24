@@ -1,11 +1,13 @@
 import React from 'react';
 import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 import './EffectsPanel.css';
-import { getEffect } from '../../data/pf2eEffects';
 import { expiryLabel } from '../../utils/expiry';
 
 const EffectsPanel = ({ charId, themeColor }) => {
   const { effects, removeEffect } = useEffects(charId);
+  const { effects: effectCatalog } = useContent();
+  const getEffect = (id) => (effectCatalog || []).find((e) => e.id === id) || null;
 
   if (effects.length === 0) return null;
 

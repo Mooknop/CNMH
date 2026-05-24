@@ -25,6 +25,10 @@ async function waitForSheet(page: import('@playwright/test').Page, charId: strin
   await expect(page.getByRole('heading', { name: charName, level: 1 })).toBeVisible({ timeout: 15_000 });
 }
 
+// TODO (EncounterTabRefresh): Magic tab was removed from CharacterSheet. Spells are now
+// accessed via the MagicModal opened from the Actions/Encounter tab. When unskipping this
+// suite, replace openMagic() with: click the "Magic" button in CharacterActionsList, then
+// select the appropriate sub-view inside MagicModal.
 async function openMagic(page: import('@playwright/test').Page) {
   await page.getByRole('button', { name: 'Magic' }).click();
 }

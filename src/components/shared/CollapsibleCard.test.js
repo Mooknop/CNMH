@@ -130,14 +130,14 @@ describe('CollapsibleCard', () => {
     expect(screen.getByText('Second paragraph')).toBeInTheDocument();
   });
 
-  it('should have cursor pointer on header', () => {
+  it('should have cursor pointer on the toggle area', () => {
     const { container } = render(
       <CollapsibleCard header="Test">
         <p>Content</p>
       </CollapsibleCard>
     );
-    
-    const header = container.querySelector('.collapsible-header');
-    expect(header).toHaveStyle('cursor: pointer');
+
+    const toggle = container.querySelector('.collapsible-toggle');
+    expect(toggle).toHaveStyle('cursor: pointer');
   });
 });

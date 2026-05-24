@@ -89,6 +89,30 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
         // disabled; undefined/true (character/feat actions) ⇒ always usable.
         const inactive = item.active === false;
 
+        const cost =
+          type === 'reaction' ? 'reaction'
+          : type === 'free-action' ? 0
+          : item.actionCount || 1;
+        const costLabel =
+          type === 'reaction' ? 'reaction'
+          : type === 'free-action' ? 'free'
+          : `${item.actionCount || 1} act`;
+
+        const headerRight = encounterMode && !inactive
+          ? (type === 'action' && item.variableActionCount
+              ? <VariableCostUseButton item={item} onUse={onUse} />
+              : (
+                <button
+                  className="btn-encounter-use"
+                  onClick={() => onUse && onUse(item, cost)}
+                  aria-label={`Use ${item.name}`}
+                >
+                  Use ({costLabel})
+                </button>
+              )
+            )
+          : null;
+
         const header = (
           <>
             <h3 style={{ color: themeColor }}>{item.name}</h3>
@@ -116,14 +140,6 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
             <div className={`${type}-traits`}>
               {item.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
             </div>
-
-            {/* Action count label — only for standard actions */}
-            {type === 'action' && (
-              <div className="action-count-text">
-                <span className="detail-label">Actions:</span>
-                <span className="detail-value"> {actionText}</span>
-              </div>
-            )}
 
             {/* Trigger — only for reactions / free actions */}
             {isReactionLike && item.trigger && (
@@ -160,36 +176,6 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
               </div>
             )}
 
-            {encounterMode && !inactive && (
-              <div className="action-use-row">
-                {type === 'action' && item.variableActionCount ? (
-                  <VariableCostUseButton item={item} onUse={onUse} />
-                ) : (
-                  <button
-                    className="btn-encounter-use"
-                    onClick={() => {
-                      const cost =
-                        type === 'reaction'
-                          ? 'reaction'
-                          : type === 'free-action'
-                          ? 0
-                          : item.actionCount || 1;
-                      onUse && onUse(item, cost);
-                    }}
-                    aria-label={`Use ${item.name}`}
-                  >
-                    Use (
-                    {type === 'reaction'
-                      ? 'reaction'
-                      : type === 'free-action'
-                      ? 'free'
-                      : `${item.actionCount || 1} act`}
-                    )
-                  </button>
-                )}
-              </div>
-            )}
-
             {item.source && (
               <div className={`${type}-source`} style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', padding: '0.5rem 1rem', fontStyle: 'italic' }}>
                 From: {item.source}
@@ -203,6 +189,7 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
             key={`${type}-${index}`}
             className={`${type}-card${inactive ? ' is-inactive' : ''}`}
             header={header}
+            headerRight={headerRight}
             themeColor={cardColor}
             style={{ borderLeft: `4px solid ${cardColor}` }}
           >

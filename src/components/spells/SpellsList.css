@@ -205,17 +205,84 @@
 }
 
 /* CollapsibleCard integration for spell cards */
-.spell-card .collapsible-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.spell-card .collapsible-toggle {
+  align-items: flex-start;
 }
 
-.spell-card .collapsible-header h3 {
+.spell-card .collapsible-toggle h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--color-primary);
-  flex-grow: 1;
+}
+
+/* Compact spell header — two rows inside the toggle area */
+.spell-header-compact {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.spell-header-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.spell-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.spell-sig-glyph {
+  color: #c0a020;
+  font-size: 0.85em;
+}
+
+.spell-bloodline-glyph {
+  font-size: 0.85em;
+}
+
+.spell-header-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.spell-rank-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.spell-header-detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.spell-meta-inline {
+  color: var(--color-text-muted, #666);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.not-in-hand-badge {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 20px;
+  background-color: #eeeeee;
+  color: #757575;
+  border: 1px solid #cccccc;
 }
 
 .spell-header-meta {

@@ -5,10 +5,11 @@ import ActionCardList from './ActionCardList';
 jest.mock('../shared/ActionIcon', () => () => <div data-testid="action-icon" />);
 
 jest.mock('../shared/CollapsibleCard', () =>
-  function DummyCollapsibleCard({ header, children, style }) {
+  function DummyCollapsibleCard({ header, headerRight, children, style }) {
     return (
       <div data-testid="collapsible-card" style={style}>
         <div data-testid="card-header">{header}</div>
+        {headerRight && <div data-testid="card-header-right">{headerRight}</div>}
         <div>{children}</div>
       </div>
     );
@@ -72,10 +73,10 @@ describe('ActionCardList', () => {
     expect(screen.getByText('You take damage.')).toBeInTheDocument();
   });
 
-  it('renders variable action count text', () => {
-    const item = { ...baseItem, actionCount: 1, variableActionCount: { min: 1, max: 3 } };
+  it('renders variable action count item name', () => {
+    const item = { ...baseItem, name: 'Flexible Strike', actionCount: 1, variableActionCount: { min: 1, max: 3 } };
     render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
-    expect(screen.getByText(/1 to 3 Actions/)).toBeInTheDocument();
+    expect(screen.getByText('Flexible Strike')).toBeInTheDocument();
   });
 
   it('shows the not-in-hand hint when an item action is inactive', () => {

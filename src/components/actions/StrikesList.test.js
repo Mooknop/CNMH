@@ -2,9 +2,10 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import StrikesList from './StrikesList';
 
-jest.mock('../shared/CollapsibleCard', () => ({ header, children, className }) => (
+jest.mock('../shared/CollapsibleCard', () => ({ header, headerRight, children, className }) => (
   <div data-testid="collapsible-card" className={className}>
-    <div>{header}</div>
+    <div data-testid="card-header">{header}</div>
+    {headerRight && <div data-testid="card-header-right">{headerRight}</div>}
     <div>{children}</div>
   </div>
 ));

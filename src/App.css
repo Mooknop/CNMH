@@ -28,7 +28,16 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   line-height: 22px;
-  pointer-events: none;
+}
+
+.staging-banner-link {
+  color: inherit;
+  text-decoration: underline;
+  pointer-events: auto;
+}
+
+.staging-banner-link:hover {
+  color: #fff;
 }
 
 .app-staging .main-content {

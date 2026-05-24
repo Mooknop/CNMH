@@ -9,6 +9,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from '../../utils/EffectUtils';
 import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { getCondition, hydrateConditions } from '../../data/pf2eConditions';
 
@@ -60,8 +61,9 @@ const StatsBlock = ({ character, characterColor }) => {
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
 
-  // Effect bonuses must be called unconditionally (Rules of Hooks)
+  // Effect bonuses and catalog must be called unconditionally (Rules of Hooks)
   const { effects: activeEffects } = useEffects(characterKey);
+  const { effects: effectCatalog } = useContent();
 
   if (!charData) return null;
 
@@ -103,7 +105,7 @@ const StatsBlock = ({ character, characterColor }) => {
   const effects = computeConditionEffects(hydratedConditions, character?.keyAbility, level);
 
   // Combine condition penalties with effect bonuses
-  const bonuses = computeEffectBonuses(activeEffects);
+  const bonuses = computeEffectBonuses(activeEffects, effectCatalog);
   const mod = (stat) => combineModifiers(effects[stat], bonuses[stat]);
 
   // Helper: raw attack bonus as a number (no formatting) so PenaltyDisplay can apply the delta
