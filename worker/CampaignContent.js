@@ -20,6 +20,8 @@ export class CampaignContent {
   constructor(state, env) {
     this.state = state;
     this.env = env;
+    this.writesSinceRestart = 0;
+    this.startedAt = Date.now();
     this.state.storage.sql.exec(
       `CREATE TABLE IF NOT EXISTS documents (
         collection TEXT NOT NULL,
@@ -40,6 +42,10 @@ export class CampaignContent {
         archived_at INTEGER NOT NULL
       );`
     );
+  }
+
+  bumpUsage(rowsWritten) {
+    this.writesSinceRestart += rowsWritten ?? 0;
   }
 
   // --- snapshot helpers -----------------------------------------------------
@@ -75,14 +81,14 @@ export class CampaignContent {
       .exec('SELECT data FROM documents WHERE collection = ? AND id = ?', collection, id)
       .toArray();
     if (!rows.length) return;
-    this.state.storage.sql.exec(
+    this.bumpUsage(this.state.storage.sql.exec(
       'INSERT INTO document_history (collection, id, data, archived_at) VALUES (?, ?, ?, ?)',
       collection,
       id,
       rows[0].data,
       Date.now()
-    );
-    this.state.storage.sql.exec(
+    ).rowsWritten);
+    this.bumpUsage(this.state.storage.sql.exec(
       `DELETE FROM document_history
        WHERE collection = ? AND id = ? AND rowid NOT IN (
          SELECT rowid FROM document_history
@@ -95,7 +101,7 @@ export class CampaignContent {
       collection,
       id,
       HISTORY_KEEP
-    );
+    ).rowsWritten);
   }
 
   historyFor(collection, id) {
@@ -121,7 +127,7 @@ export class CampaignContent {
   // seed loop passes false so a reseed never floods history.
   upsert(collection, id, data, archive = false) {
     if (archive) this.archive(collection, id);
-    this.state.storage.sql.exec(
+    this.bumpUsage(this.state.storage.sql.exec(
       `INSERT INTO documents (collection, id, data, updated_at)
        VALUES (?, ?, ?, ?)
        ON CONFLICT (collection, id)
@@ -130,18 +136,18 @@ export class CampaignContent {
       id,
       JSON.stringify(data),
       Date.now()
-    );
+    ).rowsWritten);
   }
 
   // Only ever called from the single-entity DELETE route, so always archive —
   // a deleted entity stays restorable from history.
   remove(collection, id) {
     this.archive(collection, id);
-    this.state.storage.sql.exec(
+    this.bumpUsage(this.state.storage.sql.exec(
       'DELETE FROM documents WHERE collection = ? AND id = ?',
       collection,
       id
-    );
+    ).rowsWritten);
   }
 
   broadcast(message) {
@@ -175,11 +181,21 @@ export class CampaignContent {
     // Not reachable externally: the Worker intercepts that path before proxying.
     if (request.method === 'POST' && url.pathname === '/_internal/reset') {
       if (!url.searchParams.has('keep_content')) {
-        this.state.storage.sql.exec('DELETE FROM document_history');
-        this.state.storage.sql.exec('DELETE FROM documents');
+        this.bumpUsage(this.state.storage.sql.exec('DELETE FROM document_history').rowsWritten);
+        this.bumpUsage(this.state.storage.sql.exec('DELETE FROM documents').rowsWritten);
       }
       this.broadcast({ type: 'FULL_CONTENT', payload: this.snapshot() });
       return Response.json({ ok: true });
+    }
+
+    // In-memory write counter — zero overhead (no DB writes).
+    // Resets when the DO hibernates/migrates (CF behavior); label says "since restart".
+    if (request.method === 'GET' && url.pathname === '/_internal/usage') {
+      return Response.json({
+        writesSinceRestart: this.writesSinceRestart,
+        startedAt: this.startedAt,
+        limit: 100000,
+      });
     }
 
     // Public read: GET /api/content
@@ -204,7 +220,7 @@ export class CampaignContent {
           seeded[collection] = 'skipped (not empty)';
           continue;
         }
-        if (force) this.state.storage.sql.exec('DELETE FROM documents WHERE collection = ?', collection);
+        if (force) this.bumpUsage(this.state.storage.sql.exec('DELETE FROM documents WHERE collection = ?', collection).rowsWritten);
         for (const doc of docs) {
           if (doc && doc.id != null) this.upsert(collection, String(doc.id), doc);
         }
