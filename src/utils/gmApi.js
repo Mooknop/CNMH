@@ -60,3 +60,7 @@ export const restoreVersion = (collection, id, archivedAt) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ archived_at: archivedAt }),
   }).then(json);
+
+// In-memory write counter since the DO last restarted.
+export const fetchUsage = () =>
+  fetch('/api/gm/usage', { credentials: 'include' }).then(json);

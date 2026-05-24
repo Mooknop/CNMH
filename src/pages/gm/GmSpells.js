@@ -2,9 +2,21 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
+import PF2E_EFFECTS from '../../data/pf2eEffects';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import './gm.css';
+
+const APPLY_TO_OPTIONS = ['self', 'ally', 'target', 'all-allies'];
+const DURATION_UNTIL_OPTIONS = [
+  'caster-turn-end',
+  'caster-turn-start',
+  'target-turn-end',
+  'target-turn-start',
+  'round-end',
+  'rounds',
+  'manual',
+];
 
 // Spell catalog editor. Shape mirrors `src/data/spells.json` and the nested
 // spell sub-form already used by GmItems for scroll/wand items: managed
@@ -24,10 +36,16 @@ const toList = (csv) =>
 
 const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration', 'description'];
 
+const blankEffect = () => ({
+  effectId: '',
+  applyTo: 'self',
+  duration: { until: 'caster-turn-end', rounds: '1' },
+});
+
 const toForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
   const rest = { ...src };
-  ['id', ...SPELL_STR, 'level', 'traits', 'heightened'].forEach((k) => delete rest[k]);
+  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects'].forEach((k) => delete rest[k]);
   const str = {};
   SPELL_STR.forEach((k) => {
     str[k] = src[k] != null ? String(src[k]) : '';
@@ -36,17 +54,28 @@ const toForm = (s) => {
     src.heightened && typeof src.heightened === 'object'
       ? Object.entries(src.heightened).map(([key, text]) => ({ key, text: String(text) }))
       : [];
+  const effects = Array.isArray(src.effects)
+    ? src.effects.map((e) => ({
+        effectId: String(e.effectId || ''),
+        applyTo: String(e.applyTo || 'self'),
+        duration: {
+          until: String(e.duration?.until || 'caster-turn-end'),
+          rounds: String(e.duration?.rounds ?? '1'),
+        },
+      }))
+    : [];
   return {
     id: src.id,
     str,
     level: src.level != null ? String(src.level) : '0',
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     heightened,
+    effects,
     restJson: JSON.stringify(rest, null, 2),
   };
 };
 
-const blankSpell = () => toForm({});
+const blankSpell = () => toForm({ effects: [] });
 
 // Returns the rebuilt spell payload, or throws Error with a GM-readable message.
 const fromForm = (f) => {
@@ -73,6 +102,14 @@ const fromForm = (f) => {
     if (r.key.trim()) h[r.key.trim()] = r.text;
   });
   if (Object.keys(h).length) out.heightened = h;
+  const effects = (f.effects || [])
+    .filter((e) => e.effectId.trim())
+    .map((e) => {
+      const dur = { until: e.duration.until };
+      if (e.duration.until === 'rounds') dur.rounds = toInt(e.duration.rounds) || 1;
+      return { effectId: e.effectId.trim(), applyTo: e.applyTo, duration: dur };
+    });
+  if (effects.length) out.effects = effects;
   return out;
 };
 
@@ -94,6 +131,24 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     setE((cur) => ({ ...cur, heightened: [...cur.heightened, { key: '', text: '' }] }));
   const rmH = (i) =>
     setE((cur) => ({ ...cur, heightened: cur.heightened.filter((_, idx) => idx !== i) }));
+
+  // Effects subform helpers
+  const setEff = (i, patch) =>
+    setE((cur) => ({
+      ...cur,
+      effects: (cur.effects || []).map((ef, idx) => (idx === i ? { ...ef, ...patch } : ef)),
+    }));
+  const setEffDur = (i, patch) =>
+    setE((cur) => ({
+      ...cur,
+      effects: (cur.effects || []).map((ef, idx) =>
+        idx === i ? { ...ef, duration: { ...ef.duration, ...patch } } : ef
+      ),
+    }));
+  const addEff = () =>
+    setE((cur) => ({ ...cur, effects: [...(cur.effects || []), blankEffect()] }));
+  const rmEff = (i) =>
+    setE((cur) => ({ ...cur, effects: (cur.effects || []).filter((_, idx) => idx !== i) }));
 
   const submit = async (id, payload) => {
     setConfirm(null);
@@ -215,6 +270,50 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           Add heightened
         </button>
       </div>
+      <div className="form-group">
+        <label>Structured Effects (auto-apply on Cast in encounter mode)</label>
+        {(e.effects || []).map((eff, i) => (
+          <div key={i} className="gm-row gm-rank-row" style={{ alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px', marginBottom: '6px' }}>
+            <select
+              aria-label={`effect-id-${i}`}
+              value={eff.effectId}
+              onChange={(ev) => setEff(i, { effectId: ev.target.value })}
+            >
+              <option value="">— choose effect —</option>
+              {PF2E_EFFECTS.map((ef) => (
+                <option key={ef.id} value={ef.id}>{ef.name}</option>
+              ))}
+            </select>
+            <select
+              aria-label={`effect-applyto-${i}`}
+              value={eff.applyTo}
+              onChange={(ev) => setEff(i, { applyTo: ev.target.value })}
+            >
+              {APPLY_TO_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+            <select
+              aria-label={`effect-until-${i}`}
+              value={eff.duration.until}
+              onChange={(ev) => setEffDur(i, { until: ev.target.value })}
+            >
+              {DURATION_UNTIL_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
+            {eff.duration.until === 'rounds' && (
+              <input
+                aria-label={`effect-rounds-${i}`}
+                type="number"
+                min="1"
+                value={eff.duration.rounds}
+                onChange={(ev) => setEffDur(i, { rounds: ev.target.value })}
+                style={{ width: '60px' }}
+              />
+            )}
+            <button className="btn-small btn-danger" onClick={() => rmEff(i)}>Remove</button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addEff}>Add effect</button>
+      </div>
+
       <div className="form-group">
         <label>Extra fields — bloodline, anything else (raw JSON)</label>
         <textarea

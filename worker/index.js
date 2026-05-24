@@ -45,6 +45,29 @@ export default {
       return Response.json({ email: gm.email });
     }
 
+    // Test data reset — staging only, Access-protected.
+    // Wipes both DOs so each test run starts from a clean slate.
+    // ?keep_session=1 and ?keep_content=1 opt out of clearing that DO.
+    if (request.method === 'POST' && url.pathname === '/api/gm/_test/reset') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+      if (env.ENVIRONMENT !== 'staging') return new Response('Not found', { status: 404 });
+      const resetUrl = new URL('/_internal/reset', request.url);
+      if (url.searchParams.has('keep_session')) resetUrl.searchParams.set('keep_session', '1');
+      if (url.searchParams.has('keep_content')) resetUrl.searchParams.set('keep_content', '1');
+      await contentStub(env).fetch(new Request(resetUrl.toString(), { method: 'POST' }));
+      const sessionId = env.CAMPAIGN_SESSION.idFromName(CAMPAIGN_ID);
+      await env.CAMPAIGN_SESSION.get(sessionId).fetch(new Request(resetUrl.toString(), { method: 'POST' }));
+      return Response.json({ ok: true });
+    }
+
+    // DO write-budget chip — read-only, no writes.
+    if (request.method === 'GET' && url.pathname === '/api/gm/usage') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+      return contentStub(env).fetch(new Request(new URL('/_internal/usage', request.url).toString()));
+    }
+
     // GM writes — verified server-side before reaching the content DO.
     if (url.pathname.startsWith('/api/gm/')) {
       const gm = await verifyAccess(request, env);

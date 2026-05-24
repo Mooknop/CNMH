@@ -2,6 +2,9 @@
   "name": "chaotic-neutral-milk-hotel",
   "version": "0.1.0",
   "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  },
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -17,8 +20,10 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build && npm run test:ci",
+    "build:app": "react-scripts build",
     "test": "react-scripts test",
     "test:ci": "react-scripts test --watchAll=false --coverage --passWithNoTests",
+    "test:e2e": "playwright test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

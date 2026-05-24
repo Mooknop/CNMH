@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import { useContent } from '../../contexts/ContentContext';
 import { seedDefaults } from '../../utils/gmApi';
+import UsageChip from '../../components/gm/UsageChip';
 import './gm.css';
 
 // Shell for the GM area. Real enforcement is server-side (Cloudflare Access in
@@ -86,7 +87,10 @@ const GmLayout = () => {
     <div className="gm-area">
       <header className="gm-header">
         <h1>GM Tools</h1>
-        <span className="gm-identity">{email}</span>
+        <div className="gm-header-right">
+          <UsageChip />
+          <span className="gm-identity">{email}</span>
+        </div>
       </header>
       <nav className="gm-nav">
         {links.map((l) => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import './SpellsList.css';
 
 import SpellsHeader from './SpellsHeader';
@@ -19,7 +19,9 @@ import {
   getSortedRankList,
 } from '../../utils/SpellUtils';
 import Harrowing from './Harrowing';
+import CastSpellModal from '../encounter/CastSpellModal';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useEncounter } from '../../hooks/useEncounter';
 
 /**
  * Main component for displaying spells in different categories
@@ -28,10 +30,21 @@ import { useCharacter } from '../../hooks/useCharacter';
  * @param {string} props.characterColor - Theme color for the character
  */
 const SpellsList = ({ character, characterColor }) => {
-  // State for filters and view mode
+  // State for filters, view mode, and encounter cast modal
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
   const [viewMode, setViewMode] = useState(null); // Initialize to null, will be set after determining available modes
+  const [castingSpell, setCastingSpell] = useState(null);
+
+  // Encounter mode: show Cast buttons when it's this character's turn
+  const { encounter } = useEncounter();
+  const currentEntry = encounter?.order?.[encounter?.currentTurnIndex];
+  const isMyTurn =
+    !!(encounter?.active &&
+      encounter.phase === 'in-progress' &&
+      currentEntry?.kind === 'pc' &&
+      currentEntry?.charId === character?.id);
+  const onCast = useCallback((spell) => setCastingSpell(spell), []);
 
   // Data layer — all character reads go through this hook
   const {
@@ -272,6 +285,7 @@ const SpellsList = ({ character, characterColor }) => {
           characterLevel={level}
           defenseFilter={defenseFilter}
           character={character}
+          onCast={isMyTurn ? onCast : undefined}
         />
       )}
       
@@ -339,6 +353,17 @@ const SpellsList = ({ character, characterColor }) => {
         <div className="empty-state">
           <p>No innate spells available for this character.</p>
         </div>
+      )}
+
+      {/* Cast spell modal — opened from SpellCard Cast buttons in encounter mode */}
+      {castingSpell && (
+        <CastSpellModal
+          isOpen={!!castingSpell}
+          onClose={() => setCastingSpell(null)}
+          spell={castingSpell}
+          character={character}
+          themeColor={themeColor}
+        />
       )}
     </div>
   );

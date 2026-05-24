@@ -45,7 +45,9 @@
       "Bash(gh pr edit 28 --body ' *)",
       "Bash(gh pr *)",
       "Bash(node -e \"const fs=require\\('fs'\\);console.log\\(fs.readFileSync\\('src/utils/strikeUtils.js','utf8'\\).split\\(/\\\\r?\\\\n/\\).slice\\(28,76\\).map\\(\\(l,i\\)=>\\(i+29\\)+': '+l\\).join\\('\\\\n'\\)\\);\")",
-      "Bash(node -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('src/pages/gm/GmCharacters.test.js','utf8'\\);console.log\\('LINES',t.split\\(/\\\\n/\\).length\\);console.log\\(t.slice\\(0,1800\\)\\);console.log\\('...\\\\n--- strikes refs ---'\\);t.split\\(/\\\\r?\\\\n/\\).forEach\\(\\(l,i\\)=>{if\\(/strike|ARR_SECTION|renderArr|setContent|rawCharacters/i.test\\(l\\)\\)console.log\\(\\(i+1\\)+': '+l\\)}\\);\")"
+      "Bash(node -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('src/pages/gm/GmCharacters.test.js','utf8'\\);console.log\\('LINES',t.split\\(/\\\\n/\\).length\\);console.log\\(t.slice\\(0,1800\\)\\);console.log\\('...\\\\n--- strikes refs ---'\\);t.split\\(/\\\\r?\\\\n/\\).forEach\\(\\(l,i\\)=>{if\\(/strike|ARR_SECTION|renderArr|setContent|rawCharacters/i.test\\(l\\)\\)console.log\\(\\(i+1\\)+': '+l\\)}\\);\")",
+      "Bash(git ls-tree *)",
+      "Bash(git merge *)"
     ]
   }
 }

@@ -13,6 +13,26 @@ jest.mock('./useSyncedState', () => {
   };
 });
 
+// Session context — expiry sweep uses sendUpdate; not exercised in these unit tests.
+jest.mock('../contexts/SessionContext', () => ({
+  useSession: () => ({ sendUpdate: jest.fn(), getState: jest.fn(() => []) }),
+}));
+
+// pf2eEffects — sweep looks up effect names; no effects in these tests.
+jest.mock('../data/pf2eEffects', () => {
+  const list = [];
+  return { __esModule: true, default: list, getEffect: () => null };
+});
+
+// expiry utilities — keep the sweep a no-op in unit tests so they only
+// test the encounter state machine, not side-effect wiring.
+jest.mock('../utils/expiry', () => ({
+  boundariesCrossedBy: jest.fn(() => []),
+  isExpired: jest.fn(() => false),
+  resolveExpireAt: jest.fn(() => null),
+  expiryLabel: jest.fn(() => null),
+}));
+
 import { useEncounter } from './useEncounter';
 
 const setup = () => renderHook(() => useEncounter());
@@ -172,5 +192,106 @@ describe('useEncounter', () => {
     expect(log[0]).toMatchObject({ type: 'note', text: 'hi' });
     expect(typeof log[0].id).toBe('string');
     expect(typeof log[0].ts).toBe('number');
+  });
+
+  describe('expiry sweep — granted actions', () => {
+    let isExpiredMock;
+
+    beforeEach(() => {
+      localStorage.clear();
+      const expiry = require('../utils/expiry');
+      isExpiredMock = expiry.isExpired;
+      isExpiredMock.mockReturnValue(false);
+    });
+
+    afterEach(() => {
+      isExpiredMock.mockReturnValue(false);
+    });
+
+    const startInProgress = (result) => {
+      act(() => result.current.startEncounter([pellias, ashka]));
+      const entries = result.current.encounter.order;
+      act(() => result.current.setInitiative(entries[0].entryId, 20));
+      act(() => result.current.setInitiative(entries[1].entryId, 10));
+      act(() => result.current.beginRound1());
+    };
+
+    it('sweeps expired granted actions from localStorage on advanceTurn', () => {
+      const expiredGrant = {
+        id: 'g-1',
+        action: { name: 'Enthusiastic Strike', cost: 1 },
+        source: 'Infectious Enthusiasm',
+        expireAt: { round: 1, boundary: 'turn-end' },
+        ts: 1000,
+      };
+      const liveGrant = {
+        id: 'g-2',
+        action: { name: 'Other', cost: 1 },
+        source: 'Other Spell',
+        expireAt: { round: 5, boundary: 'turn-end' },
+        ts: 1001,
+      };
+
+      const { result } = setup();
+      startInProgress(result);
+
+      const key = `cnmh_grantedactions_${pellias.id}`;
+      localStorage.setItem(key, JSON.stringify([expiredGrant, liveGrant]));
+
+      // isExpired returns true only for round-1 entries
+      isExpiredMock.mockImplementation(
+        (expireAt) => expireAt?.round === 1 && expireAt?.boundary === 'turn-end'
+      );
+
+      act(() => result.current.advanceTurn());
+
+      const stored = JSON.parse(localStorage.getItem(key));
+      expect(stored).toHaveLength(1);
+      expect(stored[0].id).toBe('g-2');
+    });
+
+    it('logs expiry message for swept grants', () => {
+      const expiredGrant = {
+        id: 'g-1',
+        action: { name: 'Enthusiastic Strike', cost: 1 },
+        source: 'Infectious Enthusiasm',
+        expireAt: { round: 1, boundary: 'turn-end' },
+        ts: 1000,
+      };
+
+      const { result } = setup();
+      startInProgress(result);
+
+      const key = `cnmh_grantedactions_${pellias.id}`;
+      localStorage.setItem(key, JSON.stringify([expiredGrant]));
+
+      isExpiredMock.mockReturnValue(true);
+
+      act(() => result.current.advanceTurn());
+
+      const log = result.current.encounter.log;
+      expect(log.some((l) => l.text.includes('Enthusiastic Strike') && l.text.includes('expired'))).toBe(true);
+    });
+
+    it('does not modify localStorage if no grants expired', () => {
+      const liveGrant = {
+        id: 'g-live',
+        action: { name: 'Something', cost: 1 },
+        source: 'Spell',
+        expireAt: { round: 99, boundary: 'turn-end' },
+        ts: 1000,
+      };
+
+      const { result } = setup();
+      startInProgress(result);
+
+      const key = `cnmh_grantedactions_${pellias.id}`;
+      localStorage.setItem(key, JSON.stringify([liveGrant]));
+
+      // isExpired returns false (default)
+      const beforeSpy = JSON.stringify(JSON.parse(localStorage.getItem(key)));
+      act(() => result.current.advanceTurn());
+      expect(localStorage.getItem(key)).toBe(beforeSpy);
+    });
   });
 });

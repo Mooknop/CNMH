@@ -18,9 +18,38 @@
   padding-bottom: 8px;
 }
 
+.gm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .gm-identity {
   font-size: 0.85rem;
   color: #666;
+}
+
+.gm-usage-chip {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  color: #555;
+  white-space: nowrap;
+}
+
+.gm-usage-chip.warning {
+  background: #fff8e1;
+  border-color: #f9a825;
+  color: #7a5100;
+}
+
+.gm-usage-chip.danger {
+  background: #fce4ec;
+  border-color: #c62828;
+  color: #b71c1c;
 }
 
 .gm-nav {

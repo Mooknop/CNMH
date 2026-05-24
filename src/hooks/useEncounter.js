@@ -1,5 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useSyncedState } from './useSyncedState';
+import { useSession } from '../contexts/SessionContext';
+import { getEffect } from '../data/pf2eEffects';
+import { boundariesCrossedBy, isExpired } from '../utils/expiry';
 import {
   defaultEncounter,
   makePcEntry,
@@ -32,6 +35,76 @@ const makeLogEntry = (entry) => ({
 
 export const useEncounter = () => {
   const [encounter, setEncounter] = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
+  const { sendUpdate } = useSession();
+
+  // Ref so the sweep callbacks always see the latest encounter without
+  // adding it as a useCallback dependency (avoids recreating on every turn).
+  const encounterRef = useRef(encounter);
+  useEffect(() => { encounterRef.current = encounter; }, [encounter]);
+
+  // Sweep expired effects and granted-actions from every PC's keys. Called
+  // before the encounter state advances so we can compute the correct boundary set.
+  const runExpirySweep = useCallback(
+    (cur, nextTurnIdx, nextRound) => {
+      const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
+      for (const entry of cur.order || []) {
+        if (entry.kind !== 'pc' || !entry.charId) continue;
+
+        // --- effects sweep ---
+        const effectsKey = `cnmh_effects_${entry.charId}`;
+        let effects;
+        try {
+          effects = JSON.parse(window.localStorage.getItem(effectsKey)) || [];
+        } catch {
+          effects = [];
+        }
+        const nextEffects = effects.filter((e) => !isExpired(e.expireAt, boundaries));
+        if (nextEffects.length !== effects.length) {
+          window.localStorage.setItem(effectsKey, JSON.stringify(nextEffects));
+          sendUpdate(entry.charId, 'effects', nextEffects);
+          effects
+            .filter((e) => isExpired(e.expireAt, boundaries))
+            .forEach((e) => {
+              const name = getEffect(e.effectId)?.name || e.effectId;
+              setEncounter((c) => {
+                const base = c || defaultEncounter();
+                return {
+                  ...base,
+                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired on ${entry.name}` })],
+                };
+              });
+            });
+        }
+
+        // --- granted actions sweep ---
+        const grantsKey = `cnmh_grantedactions_${entry.charId}`;
+        let grants;
+        try {
+          grants = JSON.parse(window.localStorage.getItem(grantsKey)) || [];
+        } catch {
+          grants = [];
+        }
+        const nextGrants = grants.filter((g) => !isExpired(g.expireAt, boundaries));
+        if (nextGrants.length !== grants.length) {
+          window.localStorage.setItem(grantsKey, JSON.stringify(nextGrants));
+          sendUpdate(entry.charId, 'grantedactions', nextGrants);
+          grants
+            .filter((g) => isExpired(g.expireAt, boundaries))
+            .forEach((g) => {
+              const name = g.action?.name || g.source || 'Granted action';
+              setEncounter((c) => {
+                const base = c || defaultEncounter();
+                return {
+                  ...base,
+                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired for ${entry.name}` })],
+                };
+              });
+            });
+        }
+      }
+    },
+    [sendUpdate, setEncounter]
+  );
 
   const appendLog = useCallback(
     (entry) =>
@@ -129,18 +202,21 @@ export const useEncounter = () => {
   );
 
   const advanceTurn = useCallback(
-    () =>
-      setEncounter((cur) => {
-        const base = cur || defaultEncounter();
-        if (base.phase !== 'in-progress') return base;
-        const { currentTurnIndex: nextIdx, round: nextRound } = nextTurnIndex(
-          base.order,
-          base.currentTurnIndex || 0,
-          base.round || 1
-        );
-        const next = (base.order || [])[nextIdx];
-        const log = [...(base.log || [])];
-        if (nextRound !== (base.round || 1)) {
+    () => {
+      const cur = encounterRef.current || defaultEncounter();
+      if (cur.phase !== 'in-progress') return;
+      const { currentTurnIndex: nextIdx, round: nextRound } = nextTurnIndex(
+        cur.order,
+        cur.currentTurnIndex || 0,
+        cur.round || 1
+      );
+      // Expiry sweep runs before the state update so it reads current encounter
+      runExpirySweep(cur, nextIdx, nextRound);
+      setEncounter((base) => {
+        const b = base || defaultEncounter();
+        const next = (b.order || [])[nextIdx];
+        const log = [...(b.log || [])];
+        if (nextRound !== (b.round || 1)) {
           log.push(makeLogEntry({ type: 'round', round: nextRound, text: `Round ${nextRound} begins` }));
         }
         if (next) {
@@ -153,20 +229,24 @@ export const useEncounter = () => {
             })
           );
         }
-        return { ...base, currentTurnIndex: nextIdx, round: nextRound, log };
-      }),
-    [setEncounter]
+        return { ...b, currentTurnIndex: nextIdx, round: nextRound, log };
+      });
+    },
+    [runExpirySweep, setEncounter]
   );
 
   const beginNextRound = useCallback(
-    () =>
-      setEncounter((cur) => {
-        const base = cur || defaultEncounter();
-        if (base.phase !== 'in-progress') return base;
-        const round = (base.round || 1) + 1;
-        const first = (base.order || [])[0];
+    () => {
+      const cur = encounterRef.current || defaultEncounter();
+      if (cur.phase !== 'in-progress') return;
+      const round = (cur.round || 1) + 1;
+      // Sweep: treat this as advancing past the last entry to index 0, round+1
+      runExpirySweep(cur, 0, round);
+      setEncounter((base) => {
+        const b = base || defaultEncounter();
+        const first = (b.order || [])[0];
         const log = [
-          ...(base.log || []),
+          ...(b.log || []),
           makeLogEntry({ type: 'round', round, text: `Round ${round} begins` }),
         ];
         if (first) {
@@ -179,9 +259,10 @@ export const useEncounter = () => {
             })
           );
         }
-        return { ...base, currentTurnIndex: 0, round, log };
-      }),
-    [setEncounter]
+        return { ...b, currentTurnIndex: 0, round, log };
+      });
+    },
+    [runExpirySweep, setEncounter]
   );
 
   const endEncounter = useCallback(

@@ -5,7 +5,7 @@ import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import { parseActionCount } from '../../utils/actionIconUtils';
 
-function VariableCostUseButton({ spell, onUse }) {
+function VariableCostUseButton({ spell, onCast }) {
   const [cost, setCost] = React.useState(spell.variableActionCount.min);
   const { min, max } = spell.variableActionCount;
   return (
@@ -22,7 +22,7 @@ function VariableCostUseButton({ spell, onUse }) {
       </select>
       <button
         className="btn-encounter-use"
-        onClick={() => onUse && onUse(spell, cost)}
+        onClick={() => onCast && onCast(spell, cost)}
         aria-label={`Cast ${spell.name}`}
       >
         Cast
@@ -31,7 +31,10 @@ function VariableCostUseButton({ spell, onUse }) {
   );
 }
 
-const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode, onUse }) => {
+const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode, onCast }) => {
+  // Scroll/wand spells are gated on the item being held (see
+  // itemState.itemAbilitiesActive). active === false ⇒ show but disabled;
+  // undefined/true (repertoire, innate, focus) ⇒ always castable.
   const inactive = spell.active === false;
 
   const rawCost = spell.actions ? parseActionCount(spell.actions) : null;
@@ -40,15 +43,15 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
   const isVariable = spell.variableActionCount != null;
 
   let headerRight = null;
-  if (encounterMode && !inactive && onUse) {
+  if (encounterMode && !inactive && onCast) {
     if (isVariable) {
-      headerRight = <VariableCostUseButton spell={spell} onUse={onUse} />;
+      headerRight = <VariableCostUseButton spell={spell} onCast={onCast} />;
     } else if (spellCost !== null) {
       const costLabel = spellCost === 'reaction' ? 'reaction' : spellCost === 0 ? 'free' : `${spellCost} act`;
       headerRight = (
         <button
           className="btn-encounter-use"
-          onClick={() => onUse(spell, spellCost)}
+          onClick={() => onCast(spell, spellCost)}
           aria-label={`Cast ${spell.name}`}
         >
           Cast ({costLabel})
@@ -206,6 +209,19 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
       {spell.fromInnate && spell.innateSource && (
         <div className="innate-source">
           <span>Source: {spell.innateSource}</span>
+        </div>
+      )}
+
+      {/* Encounter mode: Cast button */}
+      {onCast && !inactive && (
+        <div className="action-use-row" style={{ marginTop: '0.5rem' }}>
+          <button
+            className="btn-encounter-use"
+            style={{ backgroundColor: themeColor, borderColor: themeColor }}
+            onClick={(e) => { e.stopPropagation(); onCast(spell); }}
+          >
+            Cast ({spell.actions || '?'})
+          </button>
         </div>
       )}
     </>

@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
 import './EffectsPanel.css';
+import { expiryLabel } from '../../utils/expiry';
 
 const EffectsPanel = ({ charId, themeColor }) => {
   const { effects, removeEffect } = useEffects(charId);
@@ -22,9 +23,15 @@ const EffectsPanel = ({ charId, themeColor }) => {
         {effects.map((entry) => {
           const def = getEffect(entry.effectId);
           const name = def ? def.name : entry.effectId;
+          const expLabel = expiryLabel(entry.expireAt);
           return (
             <li key={entry.id} className="effects-panel-item">
               <span className="effects-panel-name">{name}</span>
+              {expLabel && (
+                <span className="effects-panel-expiry" title={`Expires: ${expLabel}`}>
+                  {expLabel}
+                </span>
+              )}
               <button
                 className="effects-panel-remove"
                 onClick={() => removeEffect(entry.id)}
