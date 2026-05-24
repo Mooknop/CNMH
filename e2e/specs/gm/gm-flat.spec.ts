@@ -11,14 +11,15 @@
  *  - slug-collision overwrite confirm (ConfirmDialog plain path)
  *  - category / type tab filter (Lore + Calendar nav strips)
  *
- * Each test resets both DOs so data never bleeds between tests.
+ * Reset-free: each test uses unique IDs so data never bleeds between tests.
  * Tests that pre-need existing content use the `seed` fixture.
  *
  * Desktop-only: GM Tools has no responsive layout.
  */
 
 import { test, expect } from '../../fixtures/gm';
-import { fetchContent, findInCollection, waitForContent } from '../../helpers/content';
+import { fetchContent, findInCollection } from '../../helpers/content';
+import { testId, testTitle } from '../../helpers/ids';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,20 +41,19 @@ async function confirmTyped(page: import('@playwright/test').Page, typedValue: s
 // ---------------------------------------------------------------------------
 
 test.describe('Quest editor', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   test('create, edit, and delete a quest round-trips through the DO', async ({
     page,
     request,
   }) => {
+    const id = testId('quest');
+    const title = testTitle('quest', id);
+
     await page.goto('/gm/quests');
 
     // --- Create ---
     await page.getByRole('button', { name: '+ New quest' }).click();
     const form = page.getByTestId('quest-form-new');
-    await form.getByLabel('title').fill('E2E Quest');
+    await form.getByLabel('title').fill(title);
     await form.getByLabel('status').selectOption('active');
     await form.getByLabel('priority').selectOption('high');
     await form.getByLabel('location').fill('Sandpoint');
@@ -64,14 +64,14 @@ test.describe('Quest editor', () => {
 
     // New form collapses; entry card appears
     await expect(page.getByTestId('quest-form-new')).not.toBeVisible();
-    await expect(page.getByTestId('quest-form-e2e-quest')).toBeVisible();
+    await expect(page.getByTestId(`quest-form-${id}`)).toBeVisible();
 
     // /api/content reflects the new quest
     let payload = await fetchContent(request);
-    let entry = findInCollection(payload, 'quest', 'e2e-quest');
+    let entry = findInCollection(payload, 'quest', id);
     expect(entry).toMatchObject({
-      id: 'e2e-quest',
-      title: 'E2E Quest',
+      id,
+      title,
       status: 'active',
       priority: 'high',
       location: 'Sandpoint',
@@ -79,21 +79,24 @@ test.describe('Quest editor', () => {
     });
 
     // --- Edit ---
-    const savedForm = page.getByTestId('quest-form-e2e-quest');
+    const savedForm = page.getByTestId(`quest-form-${id}`);
     await savedForm.getByLabel('status').selectOption('completed');
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
-    await waitForContent(request, 'quest', 'e2e-quest', (e) => !!e && (e as any).status === 'completed');
+    payload = await fetchContent(request);
+    entry = findInCollection(payload, 'quest', id);
+    expect(entry).toMatchObject({ status: 'completed' });
 
     // --- Delete ---
     await savedForm.getByRole('button', { name: 'Delete' }).click();
-    await confirmTyped(page, 'E2E Quest', 'Delete forever');
+    await confirmTyped(page, title, 'Delete forever');
     await expectSaved(page);
 
-    await expect(page.getByTestId('quest-form-e2e-quest')).not.toBeVisible();
+    await expect(page.getByTestId(`quest-form-${id}`)).not.toBeVisible();
 
-    await waitForContent(request, 'quest', 'e2e-quest', (e) => e === undefined);
+    payload = await fetchContent(request);
+    expect(findInCollection(payload, 'quest', id)).toBeUndefined();
   });
 });
 
@@ -102,20 +105,19 @@ test.describe('Quest editor', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Faction editor', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   test('create with rank tier, edit reputation score, and delete', async ({
     page,
     request,
   }) => {
+    const id = testId('faction');
+    const name = testTitle('faction', id);
+
     await page.goto('/gm/reputation');
 
     // --- Create ---
     await page.getByRole('button', { name: '+ New faction' }).click();
     const form = page.getByTestId('faction-form-new');
-    await form.getByLabel('faction-name').fill('E2E Faction');
+    await form.getByLabel('faction-name').fill(name);
     await form.getByLabel('reputation').fill('5');
     await form.getByRole('button', { name: 'Add tier' }).click();
     await form.getByLabel('rank-0-name').fill('Neutral');
@@ -126,33 +128,36 @@ test.describe('Faction editor', () => {
     await expectSaved(page);
 
     await expect(page.getByTestId('faction-form-new')).not.toBeVisible();
-    await expect(page.getByTestId('faction-form-e2e-faction')).toBeVisible();
+    await expect(page.getByTestId(`faction-form-${id}`)).toBeVisible();
 
     let payload = await fetchContent(request);
-    let entry = findInCollection(payload, 'faction', 'e2e-faction');
+    let entry = findInCollection(payload, 'faction', id);
     expect(entry).toMatchObject({
-      id: 'e2e-faction',
-      name: 'E2E Faction',
+      id,
+      name,
       reputation: 5,
       ranks: [{ name: 'Neutral', min: 0, max: 10, effect: 'No bonuses' }],
     });
 
     // --- Edit ---
-    const savedForm = page.getByTestId('faction-form-e2e-faction');
+    const savedForm = page.getByTestId(`faction-form-${id}`);
     await savedForm.getByLabel('reputation').fill('15');
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
-    await waitForContent(request, 'faction', 'e2e-faction', (e) => !!e && (e as any).reputation === 15);
+    payload = await fetchContent(request);
+    entry = findInCollection(payload, 'faction', id);
+    expect(entry).toMatchObject({ reputation: 15 });
 
     // --- Delete ---
     await savedForm.getByRole('button', { name: 'Delete' }).click();
-    await confirmTyped(page, 'E2E Faction', 'Delete forever');
+    await confirmTyped(page, name, 'Delete forever');
     await expectSaved(page);
 
-    await expect(page.getByTestId('faction-form-e2e-faction')).not.toBeVisible();
+    await expect(page.getByTestId(`faction-form-${id}`)).not.toBeVisible();
 
-    await waitForContent(request, 'faction', 'e2e-faction', (e) => e === undefined);
+    payload = await fetchContent(request);
+    expect(findInCollection(payload, 'faction', id)).toBeUndefined();
   });
 });
 
@@ -161,19 +166,18 @@ test.describe('Faction editor', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Calendar editor', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   test('create a fixed-date event and assert it appears in the type tab', async ({
     page,
     request,
   }) => {
+    const id = testId('festival');
+    const title = testTitle('festival', id);
+
     await page.goto('/gm/calendar');
 
     await page.getByRole('button', { name: '+ New event' }).click();
     const form = page.getByTestId('event-form-new');
-    await form.getByLabel('title').fill('E2E Festival');
+    await form.getByLabel('title').fill(title);
     await form.getByLabel('type').fill('festival');
     await form.getByLabel('month').fill('4');
     await form.getByLabel('day').fill('15');
@@ -182,19 +186,19 @@ test.describe('Calendar editor', () => {
     await expectSaved(page);
 
     await expect(page.getByTestId('event-form-new')).not.toBeVisible();
-    await expect(page.getByTestId('event-form-e2e-festival')).toBeVisible();
+    await expect(page.getByTestId(`event-form-${id}`)).toBeVisible();
 
     // Type tab "festival" appears and filters to this event
     const nav = page.getByRole('navigation', { name: 'event types' });
     await expect(nav.getByRole('button', { name: 'festival' })).toBeVisible();
     await nav.getByRole('button', { name: 'festival' }).click();
-    await expect(page.getByTestId('event-form-e2e-festival')).toBeVisible();
+    await expect(page.getByTestId(`event-form-${id}`)).toBeVisible();
 
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'calendar', 'e2e-festival');
+    const entry = findInCollection(payload, 'calendar', id);
     expect(entry).toMatchObject({
-      id: 'e2e-festival',
-      title: 'E2E Festival',
+      id,
+      title,
       type: 'festival',
       date: { month: 4, day: 15 },
     });
@@ -204,37 +208,43 @@ test.describe('Calendar editor', () => {
     page,
     request,
   }) => {
+    const id = testId('moon');
+    const title = testTitle('moon', id);
+
     await page.goto('/gm/calendar');
 
     await page.getByRole('button', { name: '+ New event' }).click();
     const form = page.getByTestId('event-form-new');
-    await form.getByLabel('title').fill('E2E Moon');
+    await form.getByLabel('title').fill(title);
     await form.getByLabel('type').fill('astronomical');
     await form.getByLabel('recurring').fill('every full moon');
     await form.getByLabel('description').fill('Recurring lunar event.');
     await form.getByRole('button', { name: 'Create event' }).click();
     await expectSaved(page);
 
-    await expect(page.getByTestId('event-form-e2e-moon')).toBeVisible();
+    await expect(page.getByTestId(`event-form-${id}`)).toBeVisible();
 
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'calendar', 'e2e-moon');
+    const entry = findInCollection(payload, 'calendar', id);
     expect(entry).toMatchObject({ recurring: 'every full moon' });
     // A recurring-only event has no `date` key
     expect(entry).not.toHaveProperty('date');
   });
 
   test('delete a calendar event with typed confirm', async ({ page, seed }) => {
-    await seed({ calendar: [{ id: 'e2e-delete-me', title: 'E2E Delete Me', type: 'campaign', date: { month: 1, day: 1 } }] });
+    const id = testId('del');
+    const title = testTitle('del', id);
+
+    await seed({ calendar: [{ id, title, type: 'campaign', date: { month: 1, day: 1 } }] });
 
     await page.goto('/gm/calendar');
-    await expect(page.getByTestId('event-form-e2e-delete-me')).toBeVisible();
+    await expect(page.getByTestId(`event-form-${id}`)).toBeVisible();
 
-    await page.getByTestId('event-form-e2e-delete-me').getByRole('button', { name: 'Delete' }).click();
-    await confirmTyped(page, 'E2E Delete Me', 'Delete forever');
+    await page.getByTestId(`event-form-${id}`).getByRole('button', { name: 'Delete' }).click();
+    await confirmTyped(page, title, 'Delete forever');
     await expectSaved(page);
 
-    await expect(page.getByTestId('event-form-e2e-delete-me')).not.toBeVisible();
+    await expect(page.getByTestId(`event-form-${id}`)).not.toBeVisible();
   });
 });
 
@@ -243,20 +253,19 @@ test.describe('Calendar editor', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('Lore editor', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   test('create, edit summary, and delete a lore entry round-trips', async ({
     page,
     request,
   }) => {
+    const id = testId('location');
+    const title = testTitle('location', id);
+
     await page.goto('/gm/lore');
 
     // --- Create ---
     await page.getByRole('button', { name: '+ New entry' }).click();
     const form = page.getByTestId('lore-form-new');
-    await form.getByLabel('title').fill('E2E Location');
+    await form.getByLabel('title').fill(title);
     await form.getByLabel('category').fill('Location');
     await form.getByLabel('summary').fill('A place for automated testing.');
     await form.getByLabel('content').fill('Detailed lore content goes here.');
@@ -266,13 +275,13 @@ test.describe('Lore editor', () => {
     await expectSaved(page);
 
     await expect(page.getByTestId('lore-form-new')).not.toBeVisible();
-    await expect(page.getByTestId('lore-form-e2e-location')).toBeVisible();
+    await expect(page.getByTestId(`lore-form-${id}`)).toBeVisible();
 
     let payload = await fetchContent(request);
-    let entry = findInCollection(payload, 'lore', 'e2e-location');
+    let entry = findInCollection(payload, 'lore', id);
     expect(entry).toMatchObject({
-      id: 'e2e-location',
-      title: 'E2E Location',
+      id,
+      title,
       category: 'Location',
       summary: 'A place for automated testing.',
       related: ['e2e-quest', 'some-npc'],
@@ -280,28 +289,36 @@ test.describe('Lore editor', () => {
     });
 
     // --- Edit ---
-    const savedForm = page.getByTestId('lore-form-e2e-location');
+    const savedForm = page.getByTestId(`lore-form-${id}`);
     await savedForm.getByLabel('summary').fill('Updated summary for E2E Location.');
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
-    await waitForContent(request, 'lore', 'e2e-location', (e) => !!e && (e as any).summary === 'Updated summary for E2E Location.');
+    payload = await fetchContent(request);
+    entry = findInCollection(payload, 'lore', id);
+    expect(entry).toMatchObject({ summary: 'Updated summary for E2E Location.' });
 
     // --- Delete ---
     await savedForm.getByRole('button', { name: 'Delete' }).click();
-    await confirmTyped(page, 'E2E Location', 'Delete forever');
+    await confirmTyped(page, title, 'Delete forever');
     await expectSaved(page);
 
-    await expect(page.getByTestId('lore-form-e2e-location')).not.toBeVisible();
+    await expect(page.getByTestId(`lore-form-${id}`)).not.toBeVisible();
 
-    await waitForContent(request, 'lore', 'e2e-location', (e) => e === undefined);
+    payload = await fetchContent(request);
+    expect(findInCollection(payload, 'lore', id)).toBeUndefined();
   });
 
   test('category tab filter shows only matching entries', async ({ page, seed }) => {
+    const locId = testId('loc');
+    const npcId = testId('npc');
+    const locTitle = testTitle('loc', locId);
+    const npcTitle = testTitle('npc', npcId);
+
     await seed({
       lore: [
-        { id: 'loc-one', title: 'Loc One', category: 'Location', summary: '', content: '', related: [], tags: [] },
-        { id: 'npc-one', title: 'Npc One', category: 'NPC', summary: '', content: '', related: [], tags: [] },
+        { id: locId, title: locTitle, category: 'Location', summary: '', content: '', related: [], tags: [] },
+        { id: npcId, title: npcTitle, category: 'NPC', summary: '', content: '', related: [], tags: [] },
       ],
     });
 
@@ -309,18 +326,18 @@ test.describe('Lore editor', () => {
 
     // "All" tab shows both
     const nav = page.getByRole('navigation', { name: 'lore categories' });
-    await expect(page.getByTestId('lore-form-loc-one')).toBeVisible();
-    await expect(page.getByTestId('lore-form-npc-one')).toBeVisible();
+    await expect(page.getByTestId(`lore-form-${locId}`)).toBeVisible();
+    await expect(page.getByTestId(`lore-form-${npcId}`)).toBeVisible();
 
     // Switch to Location tab
     await nav.getByRole('button', { name: 'Location' }).click();
-    await expect(page.getByTestId('lore-form-loc-one')).toBeVisible();
-    await expect(page.getByTestId('lore-form-npc-one')).not.toBeVisible();
+    await expect(page.getByTestId(`lore-form-${locId}`)).toBeVisible();
+    await expect(page.getByTestId(`lore-form-${npcId}`)).not.toBeVisible();
 
     // Switch to NPC tab
     await nav.getByRole('button', { name: 'NPC' }).click();
-    await expect(page.getByTestId('lore-form-npc-one')).toBeVisible();
-    await expect(page.getByTestId('lore-form-loc-one')).not.toBeVisible();
+    await expect(page.getByTestId(`lore-form-${npcId}`)).toBeVisible();
+    await expect(page.getByTestId(`lore-form-${locId}`)).not.toBeVisible();
   });
 
   test('slug collision triggers overwrite confirm and saves successfully', async ({
@@ -328,18 +345,21 @@ test.describe('Lore editor', () => {
     seed,
     request,
   }) => {
-    // Pre-seed an entry with id "e2e-collision"
+    const baseId = testId('collision');
+    const baseTitle = testTitle('collision', baseId);
+
+    // Pre-seed an entry with the unique id
     await seed({
-      lore: [{ id: 'e2e-collision', title: 'E2E Collision', category: 'Location', summary: 'Original', content: '', related: [], tags: [] }],
+      lore: [{ id: baseId, title: baseTitle, category: 'Location', summary: 'Original', content: '', related: [], tags: [] }],
     });
 
     await page.goto('/gm/lore');
-    await expect(page.getByTestId('lore-form-e2e-collision')).toBeVisible();
+    await expect(page.getByTestId(`lore-form-${baseId}`)).toBeVisible();
 
     // Click + New entry and fill the same title → same slug → collision
     await page.getByRole('button', { name: '+ New entry' }).click();
     const form = page.getByTestId('lore-form-new');
-    await form.getByLabel('title').fill('E2E Collision');
+    await form.getByLabel('title').fill(baseTitle);
     await form.getByLabel('category').fill('Location');
     await form.getByLabel('summary').fill('Replacement');
     await form.getByRole('button', { name: 'Create entry' }).click();
@@ -351,7 +371,7 @@ test.describe('Lore editor', () => {
     await expectSaved(page);
 
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'lore', 'e2e-collision');
+    const entry = findInCollection(payload, 'lore', baseId);
     expect(entry).toMatchObject({ summary: 'Replacement' });
   });
 });

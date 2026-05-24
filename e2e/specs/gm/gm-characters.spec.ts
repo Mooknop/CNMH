@@ -7,14 +7,18 @@
  * nested innate JSON), strikes/actions/reactions via master-detail, familiar
  * envelope, and inventory catalog references.
  *
- * Each test resets both DOs, creates a fresh character through the UI, and
- * asserts the saved shape via both the DOM flash and /api/content.
+ * Each test creates a fresh character through the UI and asserts the saved
+ * shape via both the DOM flash and /api/content.
+ *
+ * Reset-free: each test uses a unique character name so data never bleeds
+ * between tests.
  *
  * Desktop-only: GM Tools has no responsive layout.
  */
 
 import { test, expect } from '../../fixtures/gm';
 import { fetchContent, findInCollection } from '../../helpers/content';
+import { testId, testTitle } from '../../helpers/ids';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,10 +57,6 @@ async function createChar(form: import('@playwright/test').Locator, page: import
 // ---------------------------------------------------------------------------
 
 test.describe('Character editor', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   // -------------------------------------------------------------------------
   // 1. Identity, abilities, and saves
   // -------------------------------------------------------------------------
@@ -65,12 +65,15 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
     // Stats tab is default; fill all managed scalar fields
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Stats');
+    await form.getByLabel('name', { exact: true }).fill(charName);
     await form.getByLabel('ancestry').fill('Elf');
     await form.getByLabel('class').fill('Wizard');
     await form.getByLabel('level').fill('5');
@@ -89,12 +92,12 @@ test.describe('Character editor', () => {
     await form.getByLabel('reflex').fill('12');
     await form.getByLabel('will').fill('14');
 
-    const id = await createChar(form, page, 'E2E Char Stats');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id);
 
     expect(char).toMatchObject({
-      name: 'E2E Char Stats',
+      name: charName,
       ancestry: 'Elf',
       class: 'Wizard',
       level: 5,
@@ -114,11 +117,14 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Skills');
+    await form.getByLabel('name', { exact: true }).fill(charName);
 
     // Set Acrobatics to Expert (tier 2) and leave all others at 0 (untrained)
     await form.getByLabel('acrobatics').selectOption('2');
@@ -128,7 +134,7 @@ test.describe('Character editor', () => {
     await form.getByLabel('lore-0-name').fill('Library Lore');
     await form.getByLabel('lore-0-proficiency').selectOption('1');
 
-    const id = await createChar(form, page, 'E2E Char Skills');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
@@ -156,11 +162,14 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Prof');
+    await form.getByLabel('name', { exact: true }).fill(charName);
     await goTab(form, 'Proficiencies');
 
     // Set class proficiency to Expert (tier 2)
@@ -170,7 +179,7 @@ test.describe('Character editor', () => {
     // Set medium armor to Expert (tier 2)
     await form.getByLabel('medium').selectOption('2');
 
-    const id = await createChar(form, page, 'E2E Char Prof');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
@@ -188,11 +197,14 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Spells');
+    await form.getByLabel('name', { exact: true }).fill(charName);
     await goTab(form, 'Spellcasting');
 
     await form.getByRole('button', { name: 'Add spellcasting' }).click();
@@ -215,7 +227,7 @@ test.describe('Character editor', () => {
     await form.getByLabel('spell-0-range').fill('500 feet');
     await form.getByLabel('spell-0-traits').fill('Fire, Evocation');
 
-    const id = await createChar(form, page, 'E2E Char Spells');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
@@ -239,11 +251,14 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Feats');
+    await form.getByLabel('name', { exact: true }).fill(charName);
     await goTab(form, 'Feats');
     await addEntry(form, 'feats', 'Add feats entry');
 
@@ -259,7 +274,7 @@ test.describe('Character editor', () => {
     });
     await form.getByLabel('feats-0-json').fill(innateJson);
 
-    const id = await createChar(form, page, 'E2E Char Feats');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
@@ -284,11 +299,14 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Combat');
+    await form.getByLabel('name', { exact: true }).fill(charName);
 
     // --- Strike (1-action cost) ---
     await goTab(form, 'Strikes');
@@ -311,7 +329,7 @@ test.describe('Character editor', () => {
     // Default cost is Reaction (R); check it saved that way without changing it
     await form.getByLabel('reactions-0-trigger').fill('An enemy attacks an ally adjacent to you.');
 
-    const id = await createChar(form, page, 'E2E Char Combat');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
@@ -338,11 +356,14 @@ test.describe('Character editor', () => {
     page,
     request,
   }) => {
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
+
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Familiar');
+    await form.getByLabel('name', { exact: true }).fill(charName);
     await goTab(form, 'Familiar');
 
     await form.getByRole('button', { name: 'Add familiar' }).click();
@@ -359,7 +380,7 @@ test.describe('Character editor', () => {
     await form.getByLabel('familiar-ability-0-name').fill('Darkvision');
     await form.getByLabel('familiar-ability-0-description').fill('See in the dark.');
 
-    const id = await createChar(form, page, 'E2E Char Familiar');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
@@ -385,15 +406,17 @@ test.describe('Character editor', () => {
     request,
     seed,
   }) => {
-    await seed({
-      item: [{ id: 'e2e-longsword', name: 'E2E Longsword', weight: 1, price: 1 }],
-    });
+    const swordId = testId('longsword');
+    await seed({ item: [{ id: swordId, name: 'E2E Longsword', weight: 1, price: 1 }] });
+
+    const charId = testId('char');
+    const charName = testTitle('char', charId);
 
     await page.goto('/gm/characters');
     await page.getByRole('button', { name: '+ New character' }).click();
     const form = page.getByTestId('character-form-new');
 
-    await form.getByLabel('name', { exact: true }).fill('E2E Char Inventory');
+    await form.getByLabel('name', { exact: true }).fill(charName);
     await goTab(form, 'Inventory');
 
     // Open catalog picker
@@ -408,11 +431,11 @@ test.describe('Character editor', () => {
     // Picker closes; item row appears
     await expect(form.getByTestId('item-0')).toBeVisible();
 
-    const id = await createChar(form, page, 'E2E Char Inventory');
+    const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
     const char = findInCollection(payload, 'character', id) as any;
 
-    expect(char.inventory[0]).toMatchObject({ ref: 'e2e-longsword', quantity: 1 });
+    expect(char.inventory[0]).toMatchObject({ ref: swordId, quantity: 1 });
     expect(char.inventory[0].uid).toBeTruthy(); // uid was minted on save
   });
 });

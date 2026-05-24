@@ -6,11 +6,14 @@
  * typed confirm. Also verifies the raw-JSON extra-fields box round-trips
  * without stomping managed scalars.
  *
+ * Reset-free: each test uses unique IDs so data never bleeds between tests.
+ *
  * Desktop-only: GM Tools has no responsive layout.
  */
 
 import { test, expect } from '../../fixtures/gm';
 import { fetchContent, findInCollection } from '../../helpers/content';
+import { testId, testTitle } from '../../helpers/ids';
 
 async function expectSaved(page: import('@playwright/test').Page) {
   await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 10_000 });
@@ -22,20 +25,19 @@ async function confirmTyped(page: import('@playwright/test').Page, typedValue: s
 }
 
 test.describe('Spell catalog editor', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   // ---------------------------------------------------------------------------
   // 1. Create, edit, and delete a spell (full CRUD)
   // ---------------------------------------------------------------------------
 
   test('create, edit range, and delete a spell round-trips', async ({ page, request }) => {
+    const id = testId('fireball');
+    const name = testTitle('fireball', id);
+
     await page.goto('/gm/spells');
     await page.getByRole('button', { name: '+ New spell' }).click();
     const form = page.getByTestId('spell-form-new');
 
-    await form.getByLabel('name').fill('E2E Fireball');
+    await form.getByLabel('name').fill(name);
     await form.getByLabel('level').fill('3');
     await form.getByLabel('traits').fill('Fire, Evocation');
     await form.getByLabel('range').fill('500 feet');
@@ -46,13 +48,13 @@ test.describe('Spell catalog editor', () => {
     await expectSaved(page);
 
     await expect(page.getByTestId('spell-form-new')).not.toBeVisible();
-    await expect(page.getByTestId('spell-form-e2e-fireball')).toBeVisible();
+    await expect(page.getByTestId(`spell-form-${id}`)).toBeVisible();
 
     let payload = await fetchContent(request);
-    let entry = findInCollection(payload, 'spell', 'e2e-fireball');
+    let entry = findInCollection(payload, 'spell', id);
     expect(entry).toMatchObject({
-      id: 'e2e-fireball',
-      name: 'E2E Fireball',
+      id,
+      name,
       level: 3,
       traits: ['Fire', 'Evocation'],
       range: '500 feet',
@@ -60,23 +62,23 @@ test.describe('Spell catalog editor', () => {
     });
 
     // Edit range
-    const savedForm = page.getByTestId('spell-form-e2e-fireball');
+    const savedForm = page.getByTestId(`spell-form-${id}`);
     await savedForm.getByLabel('range').fill('120 feet');
     await savedForm.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
     payload = await fetchContent(request);
-    entry = findInCollection(payload, 'spell', 'e2e-fireball');
+    entry = findInCollection(payload, 'spell', id);
     expect(entry).toMatchObject({ range: '120 feet' });
 
     // Delete
     await savedForm.getByRole('button', { name: 'Delete' }).click();
-    await confirmTyped(page, 'E2E Fireball', 'Delete forever');
+    await confirmTyped(page, name, 'Delete forever');
     await expectSaved(page);
 
-    await expect(page.getByTestId('spell-form-e2e-fireball')).not.toBeVisible();
+    await expect(page.getByTestId(`spell-form-${id}`)).not.toBeVisible();
     payload = await fetchContent(request);
-    expect(findInCollection(payload, 'spell', 'e2e-fireball')).toBeUndefined();
+    expect(findInCollection(payload, 'spell', id)).toBeUndefined();
   });
 
   // ---------------------------------------------------------------------------
@@ -84,11 +86,14 @@ test.describe('Spell catalog editor', () => {
   // ---------------------------------------------------------------------------
 
   test('heightened entry map round-trips', async ({ page, request }) => {
+    const id = testId('heal');
+    const name = testTitle('heal', id);
+
     await page.goto('/gm/spells');
     await page.getByRole('button', { name: '+ New spell' }).click();
     const form = page.getByTestId('spell-form-new');
 
-    await form.getByLabel('name').fill('E2E Heal');
+    await form.getByLabel('name').fill(name);
     await form.getByLabel('level').fill('1');
 
     await form.getByRole('button', { name: 'Add heightened' }).click();
@@ -103,7 +108,7 @@ test.describe('Spell catalog editor', () => {
     await expectSaved(page);
 
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'spell', 'e2e-heal') as any;
+    const entry = findInCollection(payload, 'spell', id) as any;
     expect(entry.heightened).toMatchObject({
       '+1': 'Adds 1d8 per additional rank.',
       '3rd': 'Target two creatures.',
@@ -115,11 +120,14 @@ test.describe('Spell catalog editor', () => {
   // ---------------------------------------------------------------------------
 
   test('restJson extra fields merge with managed scalars on save', async ({ page, request }) => {
+    const id = testId('dispel');
+    const name = testTitle('dispel', id);
+
     await page.goto('/gm/spells');
     await page.getByRole('button', { name: '+ New spell' }).click();
     const form = page.getByTestId('spell-form-new');
 
-    await form.getByLabel('name').fill('E2E Dispel Magic');
+    await form.getByLabel('name').fill(name);
     await form.getByLabel('level').fill('3');
     await form.getByLabel('range').fill('120 feet');
 
@@ -130,9 +138,9 @@ test.describe('Spell catalog editor', () => {
     await expectSaved(page);
 
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'spell', 'e2e-dispel-magic') as any;
+    const entry = findInCollection(payload, 'spell', id) as any;
     // Managed scalars survive
-    expect(entry).toMatchObject({ name: 'E2E Dispel Magic', level: 3, range: '120 feet' });
+    expect(entry).toMatchObject({ name, level: 3, range: '120 feet' });
     // Extra-JSON fields also present
     expect(entry.counteract).toBe(true);
     expect(entry.bloodline).toBe('arcane');

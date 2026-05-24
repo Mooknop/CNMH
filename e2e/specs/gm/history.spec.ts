@@ -14,31 +14,33 @@
  *  - Assert: form summary now shows V1, /api/content reflects V1, and the
  *    pre-restore V3 was itself archived (history is now [V3, V2, V1]).
  *
+ * Reset-free: uses a unique lore ID per run so data never bleeds between tests.
+ *
  * Desktop-only: GM Tools has no responsive layout.
  */
 
 import { test, expect } from '../../fixtures/gm';
 import { fetchContent, findInCollection } from '../../helpers/content';
+import { testId, testTitle } from '../../helpers/ids';
 
 async function expectSaved(page: import('@playwright/test').Page) {
   await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 20_000 });
 }
 
 test.describe('Lore history', () => {
-  test.beforeEach(async ({ reset }) => {
-    await reset();
-  });
-
   test('edit twice, list 2 versions, restore older, pre-restore archived', async ({
     page,
     seed,
     request,
   }) => {
+    const id = testId('hist');
+    const title = testTitle('hist', id);
+
     // Seed at V1 (seed path passes archive=false, so history starts empty)
     await seed({
       lore: [{
-        id: 'e2e-hist',
-        title: 'E2E Hist',
+        id,
+        title,
         category: 'Location',
         summary: 'V1',
         content: '',
@@ -48,7 +50,7 @@ test.describe('Lore history', () => {
     });
 
     await page.goto('/gm/lore');
-    const form = page.getByTestId('lore-form-e2e-hist');
+    const form = page.getByTestId(`lore-form-${id}`);
     await expect(form).toBeVisible();
 
     // --- Edit V1 → V2 (archives V1) ---
@@ -65,7 +67,7 @@ test.describe('Lore history', () => {
     await form.getByRole('button', { name: 'History' }).click();
     // Disambiguate from any ConfirmDialog (also .modal-container) by matching
     // the HistoryModal's title text "History — <name>".
-    const historyModal = page.locator('.modal-container').filter({ hasText: 'History — E2E Hist' });
+    const historyModal = page.locator('.modal-container').filter({ hasText: `History — ${title}` });
     await expect(historyModal).toBeVisible();
     // Each version card has data-testid="version-<archived_at>"; count them
     const versionCards = historyModal.locator('[data-testid^="version-"]');
@@ -76,7 +78,7 @@ test.describe('Lore history', () => {
     await versionCards.nth(1).getByRole('button', { name: 'Restore this version' }).click();
 
     // ConfirmDialog appears with requireType=<title>. Type the title and confirm.
-    await page.getByLabel('confirm-input').fill('E2E Hist');
+    await page.getByLabel('confirm-input').fill(title);
     await page.getByRole('button', { name: 'Restore', exact: true }).click();
 
     // Restore broadcasts "Changes are live" via the same flash
@@ -89,8 +91,8 @@ test.describe('Lore history', () => {
 
     // --- Assert /api/content reflects V1 ---
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'lore', 'e2e-hist') as any;
-    expect(entry).toMatchObject({ id: 'e2e-hist', summary: 'V1' });
+    const entry = findInCollection(payload, 'lore', id) as any;
+    expect(entry).toMatchObject({ id, summary: 'V1' });
 
     // --- Assert pre-restore (V3) was itself archived ---
     // The restore path archives the current row before overwriting, so opening
