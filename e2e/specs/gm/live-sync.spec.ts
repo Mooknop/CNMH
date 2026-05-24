@@ -10,12 +10,11 @@
  *
  * Desktop-only (GM Tools have no responsive layout).
  *
- * Cost: heavier than typical because two contexts each fetch /api/content +
- * open a WebSocket, but the writes are still just reset (2) + 1 UI save (3)
- * = ~5 writes per test.
+ * Reset-free: uses a unique quest ID per run. Cost: ~3 writes (1 UI save).
  */
 
 import { test, expect } from '../../fixtures/gm';
+import { testId, testTitle } from '../../helpers/ids';
 
 // New browser contexts created via browser.newContext() do NOT inherit the
 // per-project `use.extraHTTPHeaders`; pass them explicitly so CF Access lets
@@ -36,9 +35,9 @@ const ctxOptions = () => {
 test.describe('GM live-sync', () => {
   test('quest created in one GM tab broadcasts to another GM tab', async ({
     browser,
-    reset,
   }) => {
-    await reset();
+    const id = testId('live');
+    const title = testTitle('live', id);
 
     const contextA = await browser.newContext(ctxOptions());
     const contextB = await browser.newContext(ctxOptions());
@@ -62,17 +61,17 @@ test.describe('GM live-sync', () => {
       // --- pageA: create a quest ---
       await pageA.getByRole('button', { name: '+ New quest' }).click();
       const formA = pageA.getByTestId('quest-form-new');
-      await formA.getByLabel('title').fill('E2E Live Sync Quest');
+      await formA.getByLabel('title').fill(title);
       await formA.getByLabel('status').selectOption('active');
       await formA.getByLabel('priority').selectOption('high');
       await formA.getByLabel('description').fill('Broadcast test.');
       await formA.getByRole('button', { name: 'Create quest' }).click();
 
-      // pageA: the saved form appears (id slug = 'e2e-live-sync-quest')
-      await expect(pageA.getByTestId('quest-form-e2e-live-sync-quest')).toBeVisible({ timeout: 20_000 });
+      // pageA: the saved form appears
+      await expect(pageA.getByTestId(`quest-form-${id}`)).toBeVisible({ timeout: 20_000 });
 
       // pageB: same form must appear via WebSocket CONTENT_UPDATE — no reload
-      await expect(pageB.getByTestId('quest-form-e2e-live-sync-quest')).toBeVisible({ timeout: 20_000 });
+      await expect(pageB.getByTestId(`quest-form-${id}`)).toBeVisible({ timeout: 20_000 });
     } finally {
       await contextA.close();
       await contextB.close();
