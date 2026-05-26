@@ -18,6 +18,7 @@ const toForm = (e) => ({
   title: e.title || '',
   category: e.category || '',
   image: e.image || '',
+  imagePosition: e.imagePosition || { x: 50, y: 50 },
   summary: e.summary || '',
   content: e.content || '',
   related: Array.isArray(e.related) ? e.related.join(', ') : '',
@@ -70,7 +71,7 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       tags: toList(e.tags),
       createdAt: e.createdAt || new Date().toISOString(),
     };
-    if (e.image) payload.image = e.image;
+    if (e.image) { payload.image = e.image; payload.imagePosition = e.imagePosition; }
     if (isNew && existingIds && existingIds.has(id)) {
       setConfirm({ kind: 'collision', id, payload });
       return;
@@ -112,7 +113,7 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 
       <div className="form-group">
         <label>Image</label>
-        <ImageField value={e.image} onChange={(v) => set({ image: v })} ariaLabel="lore-image" />
+        <ImageField value={e.image} onChange={(v) => set({ image: v })} position={e.imagePosition} onPositionChange={(p) => set({ imagePosition: p })} ariaLabel="lore-image" />
       </div>
 
       <div className="form-group">

@@ -585,4 +585,11 @@ describe('ItemModal', () => {
     const { container } = render(<ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} />);
     expect(container.querySelector('.entity-image')).toBeNull();
   });
+
+  it('applies object-position style when item.imagePosition is set', () => {
+    const item = { ...baseItem, image: 'img_sword.jpg', imagePosition: { x: 25, y: 80 } };
+    const { container } = render(<ItemModal isOpen={true} onClose={jest.fn()} item={item} />);
+    const img = container.querySelector('.entity-image');
+    expect(img.style.objectPosition).toBe('25% 80%');
+  });
 });

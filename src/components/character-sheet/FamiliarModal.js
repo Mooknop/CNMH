@@ -53,7 +53,7 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
       <Modal isOpen={isOpen} onClose={onClose} title={familiarData.name} themeColor={themeColor} maxWidth="600px">
         <div className="familiar-basic-info">
           {familiarData.image && (
-            <img src={`/api/images/${familiarData.image}`} alt="" className="entity-image" />
+            <img src={`/api/images/${familiarData.image}`} alt="" className="entity-image" style={familiarData.imagePosition ? { objectPosition: `${familiarData.imagePosition.x}% ${familiarData.imagePosition.y}%` } : undefined} />
           )}
           <div className="familiar-traits">
             <span className="trait-label">Type:</span>

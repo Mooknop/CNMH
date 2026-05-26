@@ -395,6 +395,7 @@ const toForm = (c) => {
     profWeaponsRest: (srcProf.weapons && typeof srcProf.weapons === 'object') ? srcProf.weapons : {},
     profArmorRest: (srcProf.armor && typeof srcProf.armor === 'object') ? srcProf.armor : {},
     image: c.image || '',
+    imagePosition: c.imagePosition || { x: 50, y: 50 },
     hasSpellcasting: !!(c.spellcasting && typeof c.spellcasting === 'object'),
     spellcasting: scToForm(c.spellcasting),
     inventory: Array.isArray(c.inventory) ? c.inventory.map(itemToForm) : [],
@@ -734,7 +735,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     WEAPONS.forEach((w) => { payload.proficiencies.weapons[w] = tierEntry(toInt(f.prof.weapons[w])); });
     ARMOR.forEach((a) => { payload.proficiencies.armor[a] = tierEntry(toInt(f.prof.armor[a])); });
 
-    if (f.image) payload.image = f.image;
+    if (f.image) { payload.image = f.image; payload.imagePosition = f.imagePosition; }
     if (f.hasSpellcasting) payload.spellcasting = scFromForm(f);
 
     try {
@@ -973,7 +974,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
 
             <div className="form-group">
               <label>Portrait</label>
-              <ImageField value={f.image} onChange={(v) => setF((c) => ({ ...c, image: v }))} ariaLabel="character-image" />
+              <ImageField value={f.image} onChange={(v) => setF((c) => ({ ...c, image: v }))} position={f.imagePosition} onPositionChange={(p) => setF((c) => ({ ...c, imagePosition: p }))} ariaLabel="character-image" />
             </div>
 
             <div className="form-group">

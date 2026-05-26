@@ -8,12 +8,37 @@
   align-items: flex-start;
 }
 
+.image-field-preview-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.image-field-preview-wrap--interactive {
+  cursor: crosshair;
+}
+
 .image-field-preview {
   width: 80px;
   height: 80px;
   object-fit: cover;
   border-radius: 6px;
-  flex-shrink: 0;
+  display: block;
+}
+
+.image-field-focal-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
 
 .image-field-empty {

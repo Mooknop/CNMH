@@ -103,7 +103,7 @@ const CharacterSheet = () => {
     <div className="character-sheet">
       <div className="character-header">
         {character.image && (
-          <img src={`/api/images/${character.image}`} alt="" className="entity-image" />
+          <img src={`/api/images/${character.image}`} alt="" className="entity-image" style={character.imagePosition ? { objectPosition: `${character.imagePosition.x}% ${character.imagePosition.y}%` } : undefined} />
         )}
         <h1 style={{ color: characterColor }}>{character.name}</h1>
         <p className="character-subtitle">

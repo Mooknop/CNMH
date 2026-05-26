@@ -118,6 +118,7 @@ const toForm = (it) => {
     traits: Array.isArray(it.traits) ? it.traits.join(', ') : '',
     description: it.description != null ? String(it.description) : '',
     image: it.image || '',
+    imagePosition: it.imagePosition || { x: 50, y: 50 },
     hasContainer: !!it.container,
     containerCapacity:
       it.container && it.container.capacity != null ? String(it.container.capacity) : '',
@@ -163,7 +164,7 @@ const itemFromForm = (f) => {
     out.strikes = f.strikesWasObject && strikes.length === 1 ? strikes[0] : strikes;
   }
   if (f.description.trim()) out.description = f.description.trim();
-  if (f.image) out.image = f.image;
+  if (f.image) { out.image = f.image; out.imagePosition = f.imagePosition; }
   const traits = toList(f.traits);
   if (traits.length) out.traits = traits;
   if (f.price.trim() !== '') out.price = toNum(f.price);
@@ -466,7 +467,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 
       <div className="form-group">
         <label>Image</label>
-        <ImageField value={e.image} onChange={(v) => set({ image: v })} ariaLabel="item-image" />
+        <ImageField value={e.image} onChange={(v) => set({ image: v })} position={e.imagePosition} onPositionChange={(p) => set({ imagePosition: p })} ariaLabel="item-image" />
       </div>
 
       <div className="form-group">
