@@ -327,4 +327,40 @@ describe('ContentContext', () => {
     expect(Array.isArray(val.rawCharacters)).toBe(true);
     expect(val.rawCharacters.length).toBeGreaterThan(0);
   });
+
+  it('exposes images as an empty array on the no-provider fallback', () => {
+    let val;
+    const C = () => { val = useContent(); return null; };
+    render(<C />);
+    expect(Array.isArray(val.images)).toBe(true);
+    expect(val.images).toHaveLength(0);
+  });
+
+  it('sources images from the server image collection when present', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            payload: { image: [{ id: 'img_abc.jpg', name: 'Pellias', folder: 'portraits', mimeType: 'image/jpeg', createdAt: 1700000000000 }] },
+          }),
+      })
+    );
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('server'));
+    expect(val.images).toEqual([
+      { id: 'img_abc.jpg', name: 'Pellias', folder: 'portraits', mimeType: 'image/jpeg', createdAt: 1700000000000 },
+    ]);
+  });
+
+  it('falls back to empty images array when the store has none', async () => {
+    let val;
+    const Cap = () => { val = useContent(); return null; };
+    mockFetch(() => Promise.reject(new Error('offline')));
+    render(<ContentProvider><Cap /></ContentProvider>);
+    await waitFor(() => expect(val.source).toBe('fallback'));
+    expect(val.images).toEqual([]);
+  });
 });

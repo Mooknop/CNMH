@@ -68,11 +68,125 @@ export default {
       return contentStub(env).fetch(new Request(new URL('/_internal/usage', request.url).toString()));
     }
 
+    // Image upload: POST /api/gm/images — Access-gated, writes bytes to R2,
+    // then records the catalog entry in the content DO.
+    if (request.method === 'POST' && url.pathname === '/api/gm/images') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+
+      let formData;
+      try {
+        formData = await request.formData();
+      } catch {
+        return new Response('Expected multipart/form-data', { status: 400 });
+      }
+      const file = formData.get('file');
+      if (!file || typeof file.arrayBuffer !== 'function') {
+        return new Response('Missing file field', { status: 400 });
+      }
+
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+      const mime = file.type;
+      if (!ALLOWED_TYPES.includes(mime)) {
+        return new Response('Only JPEG, PNG, and WebP are allowed', { status: 415 });
+      }
+
+      const MAX_BYTES = 1.5 * 1024 * 1024;
+      const bytes = await file.arrayBuffer();
+      if (bytes.byteLength > MAX_BYTES) {
+        return new Response('File too large (max 1.5 MB after resize)', { status: 413 });
+      }
+
+      const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+      const id = `img_${crypto.randomUUID()}${EXT[mime]}`;
+      await env.CAMPAIGN_IMAGES.put(id, bytes, { httpMetadata: { contentType: mime } });
+
+      const name = (formData.get('name') || file.name || id).slice(0, 200);
+      const folder = (formData.get('folder') || '').slice(0, 100).trim();
+      const createdAt = Date.now();
+      const catalogEntry = { id, name, folder, mimeType: mime, createdAt };
+
+      await contentStub(env).fetch(
+        new Request(`${url.origin}/api/gm/image/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(catalogEntry),
+        })
+      );
+
+      return Response.json(catalogEntry, { status: 201 });
+    }
+
+    // Image delete: POST /api/gm/images/:id/delete — checks for references first.
+    if (request.method === 'POST' && url.pathname.match(/^\/api\/gm\/images\/[^/]+\/delete$/)) {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+
+      const id = decodeURIComponent(url.pathname.split('/')[4]);
+
+      // Read the full content snapshot to check references.
+      const snapRes = await contentStub(env).fetch(
+        new Request(`${url.origin}/api/content`, { method: 'GET' })
+      );
+      const snap = await snapRes.json();
+      const payload = snap.payload || {};
+
+      const references = [];
+      // Check items
+      for (const item of payload.item || []) {
+        if (item.image === id) {
+          references.push({ collection: 'item', id: item.id, name: item.name || item.id });
+        }
+      }
+      // Check lore entries
+      for (const entry of payload.lore || []) {
+        if (entry.image === id) {
+          references.push({ collection: 'lore', id: entry.id, name: entry.title || entry.id });
+        }
+      }
+      // Check characters (incl. nested familiar + animalCompanion)
+      for (const char of payload.character || []) {
+        if (char.image === id) {
+          references.push({ collection: 'character', id: char.id, name: char.name || char.id });
+        }
+        if (char.familiar && char.familiar.image === id) {
+          references.push({ collection: 'character', id: char.id, name: `${char.name || char.id} (familiar)` });
+        }
+        if (char.animalCompanion && char.animalCompanion.image === id) {
+          references.push({ collection: 'character', id: char.id, name: `${char.name || char.id} (animal companion)` });
+        }
+      }
+
+      if (references.length > 0) {
+        return Response.json({ references }, { status: 409 });
+      }
+
+      await env.CAMPAIGN_IMAGES.delete(id);
+      await contentStub(env).fetch(
+        new Request(`${url.origin}/api/gm/image/${encodeURIComponent(id)}`, { method: 'DELETE' })
+      );
+
+      return Response.json({ ok: true });
+    }
+
     // GM writes — verified server-side before reaching the content DO.
     if (url.pathname.startsWith('/api/gm/')) {
       const gm = await verifyAccess(request, env);
       if (!gm) return new Response('Forbidden', { status: 403 });
       return contentStub(env).fetch(request);
+    }
+
+    // Image serve: GET /api/images/:key — public, streams from R2 with
+    // immutable cache headers (the key is a UUID, so bytes never change).
+    if (request.method === 'GET' && url.pathname.startsWith('/api/images/')) {
+      const key = decodeURIComponent(url.pathname.slice('/api/images/'.length));
+      if (!key) return new Response('Not found', { status: 404 });
+      const object = await env.CAMPAIGN_IMAGES.get(key);
+      if (!object) return new Response('Not found', { status: 404 });
+      const headers = new Headers();
+      headers.set('Content-Type', object.httpMetadata?.contentType || 'application/octet-stream');
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      return new Response(object.body, { headers });
     }
 
     // Everything else: static assets. `not_found_handling = single-page-
