@@ -10,6 +10,7 @@ import HistoryModal from '../../components/gm/HistoryModal';
 import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
 import ItemEditModal from '../../components/gm/ItemEditModal';
 import EntryListEditor from '../../components/gm/EntryListEditor';
+import ImageField from '../../components/gm/ImageField';
 import {
   strikeToForm,
   strikeFromForm,
@@ -393,6 +394,7 @@ const toForm = (c) => {
     profRest,
     profWeaponsRest: (srcProf.weapons && typeof srcProf.weapons === 'object') ? srcProf.weapons : {},
     profArmorRest: (srcProf.armor && typeof srcProf.armor === 'object') ? srcProf.armor : {},
+    image: c.image || '',
     hasSpellcasting: !!(c.spellcasting && typeof c.spellcasting === 'object'),
     spellcasting: scToForm(c.spellcasting),
     inventory: Array.isArray(c.inventory) ? c.inventory.map(itemToForm) : [],
@@ -732,6 +734,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     WEAPONS.forEach((w) => { payload.proficiencies.weapons[w] = tierEntry(toInt(f.prof.weapons[w])); });
     ARMOR.forEach((a) => { payload.proficiencies.armor[a] = tierEntry(toInt(f.prof.armor[a])); });
 
+    if (f.image) payload.image = f.image;
     if (f.hasSpellcasting) payload.spellcasting = scFromForm(f);
 
     try {
@@ -966,6 +969,11 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
                   <input aria-label={k} type="number" value={f.nums[k]} onChange={(e) => setNum(k, e.target.value)} />
                 </div>
               ))}
+            </div>
+
+            <div className="form-group">
+              <label>Portrait</label>
+              <ImageField value={f.image} onChange={(v) => setF((c) => ({ ...c, image: v }))} ariaLabel="character-image" />
             </div>
 
             <div className="form-group">

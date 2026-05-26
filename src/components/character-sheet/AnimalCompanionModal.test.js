@@ -361,4 +361,21 @@ describe('AnimalCompanionModal', () => {
     // The count badge should now show 1 instead of —
     expect(screen.getAllByText('1').length).toBeGreaterThan(0);
   });
+
+  it('renders entity image when animalCompanion.image is set', () => {
+    const companion = { ...baseCompanion, image: 'img_companion.jpg' };
+    const { container } = render(
+      <AnimalCompanionModal isOpen={true} onClose={jest.fn()} animalCompanion={companion} character={baseCharacter} />
+    );
+    const img = container.querySelector('.entity-image');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('src', '/api/images/img_companion.jpg');
+  });
+
+  it('does not render entity image when animalCompanion.image is absent', () => {
+    const { container } = render(
+      <AnimalCompanionModal isOpen={true} onClose={jest.fn()} animalCompanion={baseCompanion} character={baseCharacter} />
+    );
+    expect(container.querySelector('.entity-image')).toBeNull();
+  });
 });

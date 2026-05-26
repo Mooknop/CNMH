@@ -236,4 +236,17 @@ describe('CharacterSheet', () => {
     // Should either show loading or be empty
     expect(container).toBeInTheDocument();
   });
+
+  it('renders entity image when character.image is set', () => {
+    const withImage = { ...mockCharacter, image: 'img_hero.jpg' };
+    const { container } = renderWithRouter(withImage);
+    const img = container.querySelector('.entity-image');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('src', '/api/images/img_hero.jpg');
+  });
+
+  it('does not render entity image when character.image is absent', () => {
+    const { container } = renderWithRouter(mockCharacter);
+    expect(container.querySelector('.entity-image')).toBeNull();
+  });
 });

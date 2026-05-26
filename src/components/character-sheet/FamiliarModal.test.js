@@ -334,4 +334,21 @@ describe('FamiliarModal', () => {
     fireEvent.click(screen.getByText('Off-Guard').closest('button'));
     expect(screen.getAllByText('1').length).toBeGreaterThan(0);
   });
+
+  it('renders entity image when familiar.image is set', () => {
+    const familiar = { ...baseFamiliar, image: 'img_familiar.jpg' };
+    const { container } = render(
+      <FamiliarModal isOpen={true} onClose={jest.fn()} familiar={familiar} character={baseCharacter} />
+    );
+    const img = container.querySelector('.entity-image');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('src', '/api/images/img_familiar.jpg');
+  });
+
+  it('does not render entity image when familiar.image is absent', () => {
+    const { container } = render(
+      <FamiliarModal isOpen={true} onClose={jest.fn()} familiar={baseFamiliar} character={baseCharacter} />
+    );
+    expect(container.querySelector('.entity-image')).toBeNull();
+  });
 });

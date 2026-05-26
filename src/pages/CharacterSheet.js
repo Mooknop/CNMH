@@ -102,6 +102,9 @@ const CharacterSheet = () => {
     <div className="character-sheet-page">
     <div className="character-sheet">
       <div className="character-header">
+        {character.image && (
+          <img src={`/api/images/${character.image}`} alt="" className="entity-image" />
+        )}
         <h1 style={{ color: characterColor }}>{character.name}</h1>
         <p className="character-subtitle">
           Level {character.level} {character.ancestry} {character.background} {character.class}

@@ -4,6 +4,7 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
+import ImageField from '../../components/gm/ImageField';
 import './gm.css';
 
 const toList = (csv) =>
@@ -16,6 +17,7 @@ const toForm = (e) => ({
   id: e.id,
   title: e.title || '',
   category: e.category || '',
+  image: e.image || '',
   summary: e.summary || '',
   content: e.content || '',
   related: Array.isArray(e.related) ? e.related.join(', ') : '',
@@ -68,6 +70,7 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       tags: toList(e.tags),
       createdAt: e.createdAt || new Date().toISOString(),
     };
+    if (e.image) payload.image = e.image;
     if (isNew && existingIds && existingIds.has(id)) {
       setConfirm({ kind: 'collision', id, payload });
       return;
@@ -105,6 +108,11 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
             onChange={(ev) => set({ category: ev.target.value })}
           />
         </div>
+      </div>
+
+      <div className="form-group">
+        <label>Image</label>
+        <ImageField value={e.image} onChange={(v) => set({ image: v })} ariaLabel="lore-image" />
       </div>
 
       <div className="form-group">

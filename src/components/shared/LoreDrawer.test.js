@@ -124,4 +124,20 @@ describe('LoreDrawer', () => {
     fireEvent.click(backBtn);
     expect(goBack).toHaveBeenCalledTimes(1);
   });
+
+  it('renders entity image when entry.image is set', () => {
+    const loreWithImage = LORE.map((e) =>
+      e.id === 'aroden' ? { ...e, image: 'img_aroden.jpg' } : e
+    );
+    useContent.mockReturnValue({ loreEntries: loreWithImage });
+    const { container } = render(<LoreDrawer />);
+    const img = container.querySelector('.entity-image');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('src', '/api/images/img_aroden.jpg');
+  });
+
+  it('does not render entity image when entry.image is absent', () => {
+    const { container } = render(<LoreDrawer />);
+    expect(container.querySelector('.entity-image')).toBeNull();
+  });
 });
