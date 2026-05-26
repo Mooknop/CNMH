@@ -572,4 +572,17 @@ describe('ItemModal', () => {
     render(<ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} />);
     expect(screen.queryByText('State')).not.toBeInTheDocument();
   });
+
+  it('renders entity image when item.image is set', () => {
+    const item = { ...baseItem, image: 'img_sword.jpg' };
+    const { container } = render(<ItemModal isOpen={true} onClose={jest.fn()} item={item} />);
+    const img = container.querySelector('.entity-image');
+    expect(img).not.toBeNull();
+    expect(img).toHaveAttribute('src', '/api/images/img_sword.jpg');
+  });
+
+  it('does not render entity image when item.image is absent', () => {
+    const { container } = render(<ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} />);
+    expect(container.querySelector('.entity-image')).toBeNull();
+  });
 });

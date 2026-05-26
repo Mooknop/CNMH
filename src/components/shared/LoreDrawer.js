@@ -53,6 +53,10 @@ const LoreDrawer = () => {
               <span className="lore-drawer-category">{entry.category}</span>
             </div>
 
+            {entry.image && (
+              <img src={`/api/images/${entry.image}`} alt="" className="entity-image" />
+            )}
+
             {(entry.tags || []).length > 0 && (
               <div className="lore-drawer-tags">
                 {entry.tags.map(tag => (

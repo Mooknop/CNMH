@@ -68,7 +68,7 @@ const spells = [
   { id: 'mirror-image', name: 'Mirror Image', level: 2 },
 ];
 
-const setContent = () => useContent.mockReturnValue({ items, spells });
+const setContent = () => useContent.mockReturnValue({ items, spells, images: [] });
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -507,6 +507,29 @@ describe('GmItems', () => {
         variableActionCount: { min: 1, max: 2 },
         actionCount: '1 to 2',
       });
+    });
+  });
+
+  describe('image round-trip', () => {
+    it('saves image id when item has an image', async () => {
+      const withImage = { ...items[0], image: 'img_elixir.jpg' };
+      useContent.mockReturnValue({ items: [withImage], spells: [], images: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      const form = screen.getByTestId('item-form-minor-elixir-of-life');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].image).toBe('img_elixir.jpg');
+    });
+
+    it('omits image key when item has no image', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      const form = screen.getByTestId('item-form-minor-elixir-of-life');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].image).toBeUndefined();
     });
   });
 });

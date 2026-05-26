@@ -53,7 +53,7 @@ const catalog = [
 // GmCharacters edits the AUTHORED docs (rawCharacters) and reads the catalog
 // (items) for the picker.
 const setContent = (chars = [pellias, izzy]) =>
-  useContent.mockReturnValue({ rawCharacters: chars, items: catalog });
+  useContent.mockReturnValue({ rawCharacters: chars, items: catalog, images: [] });
 
 // Slice 1: every saved ref entry now carries a stable `uid` (preserved or
 // minted). Shape/lossless/repoint assertions below strip it so they stay
@@ -818,6 +818,29 @@ describe('GmCharacters', () => {
       const uids = allUids(saveDocument.mock.calls[0][2].inventory);
       expect(uids.length).toBe(4);
       expect(new Set(uids).size).toBe(4);
+    });
+  });
+
+  describe('image round-trip', () => {
+    it('saves image id when character has an image', async () => {
+      const withImage = { ...pellias, image: 'img_portrait.jpg' };
+      setContent([withImage]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].image).toBe('img_portrait.jpg');
+    });
+
+    it('omits image key when character has no image', async () => {
+      setContent([pellias]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].image).toBeUndefined();
     });
   });
 });

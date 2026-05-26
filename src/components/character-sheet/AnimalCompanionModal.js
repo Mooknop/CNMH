@@ -63,6 +63,9 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
     <>
       <Modal isOpen={isOpen} onClose={onClose} title={companionData.name} themeColor={themeColor} maxWidth="700px">
         <div className="companion-basic-info">
+          {companionData.image && (
+            <img src={`/api/images/${companionData.image}`} alt="" className="entity-image" />
+          )}
           <div className="companion-traits">
             <span className="trait-label">Type:</span>
             <span className="trait-value">{companionData.type}</span>

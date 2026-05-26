@@ -29,7 +29,7 @@ const loreEntries = [
   },
 ];
 
-const setContent = () => useContent.mockReturnValue({ loreEntries });
+const setContent = () => useContent.mockReturnValue({ loreEntries, images: [] });
 
 const multiCategory = [
   { id: 'sandpoint', title: 'Sandpoint', category: 'Location', tags: ['town'] },
@@ -37,7 +37,7 @@ const multiCategory = [
   { id: 'aroden', title: 'Aroden', category: 'History', tags: ['deity'] },
   { id: 'desna', title: 'Desna', category: 'Religion', tags: ['deity'] },
 ];
-const setMulti = () => useContent.mockReturnValue({ loreEntries: multiCategory });
+const setMulti = () => useContent.mockReturnValue({ loreEntries: multiCategory, images: [] });
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -179,5 +179,28 @@ describe('GmLore', () => {
         expect.objectContaining({ category: 'Religion' })
       )
     );
+  });
+
+  describe('image round-trip', () => {
+    it('saves image id when lore entry has an image', async () => {
+      const withImage = { ...loreEntries[0], image: 'img_sandpoint.jpg' };
+      useContent.mockReturnValue({ loreEntries: [withImage], images: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      const form = screen.getByTestId('lore-form-sandpoint');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].image).toBe('img_sandpoint.jpg');
+    });
+
+    it('omits image key when lore entry has no image', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      const form = screen.getByTestId('lore-form-sandpoint');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].image).toBeUndefined();
+    });
   });
 });

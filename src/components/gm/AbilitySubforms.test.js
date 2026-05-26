@@ -332,6 +332,11 @@ describe('familiarToForm / familiarFromForm', () => {
     f.restJson = '[1,2]';
     expect(() => familiarFromForm(f)).toThrow(/must be a JSON object/i);
   });
+
+  it('round-trips image id', () => {
+    const src = { name: 'Sprout', type: 'Sprite', ac: 14, hp: 10, image: 'img_familiar.jpg' };
+    expect(familiarFromForm(familiarToForm(src))).toEqual(src);
+  });
 });
 
 describe('bundled familiar resolve-parity (Slice 4a gate)', () => {
@@ -394,6 +399,11 @@ describe('animalCompanionToForm / animalCompanionFromForm', () => {
     expect(() => animalCompanionFromForm(f)).toThrow(/invalid JSON/i);
     f.restJson = '[1,2]';
     expect(() => animalCompanionFromForm(f)).toThrow(/must be a JSON object/i);
+  });
+
+  it('round-trips image id', () => {
+    const src = { name: 'Rex', type: 'Dog', image: 'img_companion.jpg' };
+    expect(animalCompanionFromForm(animalCompanionToForm(src))).toEqual(src);
   });
 });
 

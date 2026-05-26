@@ -4,6 +4,7 @@
 // blob that carries every unmodelled key verbatim and is spread back first on
 // `fromForm`, so nothing is ever lost.
 import React from 'react';
+import ImageField from './ImageField';
 
 export const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -400,6 +401,7 @@ export const familiarToForm = (s) => {
             : {},
         }))
       : [],
+    image: src.image || '',
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -435,6 +437,7 @@ export const familiarFromForm = (f) => {
     })
     .filter(Boolean);
   if (abilities.length) out.abilities = abilities;
+  if (f.image) out.image = f.image;
   return out;
 };
 
@@ -545,6 +548,10 @@ export const FamiliarSubform = ({ value, onChange, idPrefix }) => {
         />
       </div>
       <div className="form-group">
+        <label>Image</label>
+        <ImageField value={value.image} onChange={(v) => onChange({ ...value, image: v })} ariaLabel={`${idPrefix}-image`} />
+      </div>
+      <div className="form-group">
         <label>abilities</label>
         {value.abilities.map((a, i) => (
           <div key={i} className="gm-card" data-testid={`${idPrefix}-ability-${i}`}>
@@ -633,6 +640,7 @@ export const animalCompanionToForm = (s) => {
     savesPresent: !!(src.saves && typeof src.saves === 'object'),
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     skills: Array.isArray(src.skills) ? src.skills.join(', ') : '',
+    image: src.image || '',
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -682,6 +690,7 @@ export const animalCompanionFromForm = (f) => {
       out.saves[k] = toInt(f.saves[k]);
     });
   }
+  if (f.image) out.image = f.image;
   return out;
 };
 
@@ -818,6 +827,10 @@ export const AnimalCompanionSubform = ({ value, onChange, idPrefix }) => {
           value={value.str.support}
           onChange={(e) => setStr('support', e.target.value)}
         />
+      </div>
+      <div className="form-group">
+        <label>Image</label>
+        <ImageField value={value.image} onChange={(v) => onChange({ ...value, image: v })} ariaLabel={`${idPrefix}-image`} />
       </div>
       <div className="form-group">
         <label>nested fields — strikes, anything else (raw JSON)</label>

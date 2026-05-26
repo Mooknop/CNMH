@@ -13,6 +13,9 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={item.name} themeColor={themeColor} maxWidth="500px" highZ>
+      {item.image && (
+        <img src={`/api/images/${item.image}`} alt="" className="entity-image" />
+      )}
       {/* Display traits if they exist */}
       {item.traits && item.traits.length > 0 && (
         <div className="item-traits">
