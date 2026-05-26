@@ -54,7 +54,7 @@ const LoreDrawer = () => {
             </div>
 
             {entry.image && (
-              <img src={`/api/images/${entry.image}`} alt="" className="entity-image" />
+              <img src={`/api/images/${entry.image}`} alt="" className="entity-image" style={entry.imagePosition ? { objectPosition: `${entry.imagePosition.x}% ${entry.imagePosition.y}%` } : undefined} />
             )}
 
             {(entry.tags || []).length > 0 && (

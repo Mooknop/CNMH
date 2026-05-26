@@ -402,6 +402,7 @@ export const familiarToForm = (s) => {
         }))
       : [],
     image: src.image || '',
+    imagePosition: src.imagePosition || { x: 50, y: 50 },
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -437,7 +438,7 @@ export const familiarFromForm = (f) => {
     })
     .filter(Boolean);
   if (abilities.length) out.abilities = abilities;
-  if (f.image) out.image = f.image;
+  if (f.image) { out.image = f.image; out.imagePosition = f.imagePosition; }
   return out;
 };
 
@@ -549,7 +550,7 @@ export const FamiliarSubform = ({ value, onChange, idPrefix }) => {
       </div>
       <div className="form-group">
         <label>Image</label>
-        <ImageField value={value.image} onChange={(v) => onChange({ ...value, image: v })} ariaLabel={`${idPrefix}-image`} />
+        <ImageField value={value.image} onChange={(v) => onChange({ ...value, image: v })} position={value.imagePosition} onPositionChange={(p) => onChange({ ...value, imagePosition: p })} ariaLabel={`${idPrefix}-image`} />
       </div>
       <div className="form-group">
         <label>abilities</label>
@@ -641,6 +642,7 @@ export const animalCompanionToForm = (s) => {
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     skills: Array.isArray(src.skills) ? src.skills.join(', ') : '',
     image: src.image || '',
+    imagePosition: src.imagePosition || { x: 50, y: 50 },
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -690,7 +692,7 @@ export const animalCompanionFromForm = (f) => {
       out.saves[k] = toInt(f.saves[k]);
     });
   }
-  if (f.image) out.image = f.image;
+  if (f.image) { out.image = f.image; out.imagePosition = f.imagePosition; }
   return out;
 };
 
@@ -830,7 +832,7 @@ export const AnimalCompanionSubform = ({ value, onChange, idPrefix }) => {
       </div>
       <div className="form-group">
         <label>Image</label>
-        <ImageField value={value.image} onChange={(v) => onChange({ ...value, image: v })} ariaLabel={`${idPrefix}-image`} />
+        <ImageField value={value.image} onChange={(v) => onChange({ ...value, image: v })} position={value.imagePosition} onPositionChange={(p) => onChange({ ...value, imagePosition: p })} ariaLabel={`${idPrefix}-image`} />
       </div>
       <div className="form-group">
         <label>nested fields — strikes, anything else (raw JSON)</label>

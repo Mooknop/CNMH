@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { uploadImage } from '../../utils/gmApi';
 import { resizeImageToBlob } from '../../utils/imageUpload';
@@ -6,8 +6,9 @@ import './ImageField.css';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const folderOf = (img) => (img.folder && String(img.folder).trim()) || 'Uncategorized';
+const DEFAULT_POSITION = { x: 50, y: 50 };
 
-const ImageField = ({ value, onChange, ariaLabel = 'image' }) => {
+const ImageField = ({ value, onChange, position, onPositionChange, ariaLabel = 'image' }) => {
   const { images } = useContent();
   const catalog = useMemo(() => (Array.isArray(images) ? images : []), [images]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -16,6 +17,8 @@ const ImageField = ({ value, onChange, ariaLabel = 'image' }) => {
   const [pickerTab, setPickerTab] = useState('All');
   const [query, setQuery] = useState('');
   const fileRef = useRef(null);
+
+  const pos = position || DEFAULT_POSITION;
 
   const current = catalog.find((img) => img.id === value) || null;
 
@@ -38,6 +41,14 @@ const ImageField = ({ value, onChange, ariaLabel = 'image' }) => {
     setPickerOpen(false);
     setQuery('');
   };
+
+  const handleFocalClick = useCallback((e) => {
+    if (!onPositionChange) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    onPositionChange({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+  }, [onPositionChange]);
 
   const onFileChange = async (ev) => {
     const file = ev.target.files && ev.target.files[0];
@@ -65,12 +76,27 @@ const ImageField = ({ value, onChange, ariaLabel = 'image' }) => {
     <div className="image-field" data-testid={`image-field-${ariaLabel}`}>
       <div className="image-field-row">
         {value && current ? (
-          <img
-            src={`/api/images/${value}`}
-            alt={current.name}
-            className="image-field-preview"
-            aria-label={`${ariaLabel}-preview`}
-          />
+          <div
+            className={`image-field-preview-wrap${onPositionChange ? ' image-field-preview-wrap--interactive' : ''}`}
+            onClick={onPositionChange ? handleFocalClick : undefined}
+            aria-label={onPositionChange ? `${ariaLabel}-focal-area` : undefined}
+            title={onPositionChange ? 'Click to set focal point' : undefined}
+          >
+            <img
+              src={`/api/images/${value}`}
+              alt={current.name}
+              className="image-field-preview"
+              style={{ objectPosition: `${pos.x}% ${pos.y}%` }}
+              aria-label={`${ariaLabel}-preview`}
+            />
+            {onPositionChange && (
+              <span
+                className="image-field-focal-dot"
+                style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                aria-hidden="true"
+              />
+            )}
+          </div>
         ) : (
           <div className="image-field-empty" aria-label={`${ariaLabel}-empty`}>No image</div>
         )}

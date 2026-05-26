@@ -333,8 +333,8 @@ describe('familiarToForm / familiarFromForm', () => {
     expect(() => familiarFromForm(f)).toThrow(/must be a JSON object/i);
   });
 
-  it('round-trips image id', () => {
-    const src = { name: 'Sprout', type: 'Sprite', ac: 14, hp: 10, image: 'img_familiar.jpg' };
+  it('round-trips image id and imagePosition', () => {
+    const src = { name: 'Sprout', type: 'Sprite', ac: 14, hp: 10, image: 'img_familiar.jpg', imagePosition: { x: 30, y: 70 } };
     expect(familiarFromForm(familiarToForm(src))).toEqual(src);
   });
 });
@@ -401,8 +401,8 @@ describe('animalCompanionToForm / animalCompanionFromForm', () => {
     expect(() => animalCompanionFromForm(f)).toThrow(/must be a JSON object/i);
   });
 
-  it('round-trips image id', () => {
-    const src = { name: 'Rex', type: 'Dog', image: 'img_companion.jpg' };
+  it('round-trips image id and imagePosition', () => {
+    const src = { name: 'Rex', type: 'Dog', image: 'img_companion.jpg', imagePosition: { x: 20, y: 40 } };
     expect(animalCompanionFromForm(animalCompanionToForm(src))).toEqual(src);
   });
 });

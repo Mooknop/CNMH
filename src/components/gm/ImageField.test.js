@@ -115,4 +115,51 @@ describe('ImageField', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
     expect(screen.getByText(/network error/i)).toBeInTheDocument();
   });
+
+  describe('focal point', () => {
+    it('applies object-position from position prop to the preview image', () => {
+      const { container } = render(
+        <ImageField value="img_abc.jpg" onChange={jest.fn()} position={{ x: 30, y: 70 }} onPositionChange={jest.fn()} ariaLabel="test" />
+      );
+      const img = container.querySelector('.image-field-preview');
+      expect(img.style.objectPosition).toBe('30% 70%');
+    });
+
+    it('shows focal dot when onPositionChange is provided', () => {
+      const { container } = render(
+        <ImageField value="img_abc.jpg" onChange={jest.fn()} position={{ x: 50, y: 50 }} onPositionChange={jest.fn()} ariaLabel="test" />
+      );
+      expect(container.querySelector('.image-field-focal-dot')).not.toBeNull();
+    });
+
+    it('does not show focal dot without onPositionChange', () => {
+      const { container } = render(
+        <ImageField value="img_abc.jpg" onChange={jest.fn()} ariaLabel="test" />
+      );
+      expect(container.querySelector('.image-field-focal-dot')).toBeNull();
+    });
+
+    it('calls onPositionChange with calculated x/y when preview area is clicked', () => {
+      const onPositionChange = jest.fn();
+      const { container } = render(
+        <ImageField value="img_abc.jpg" onChange={jest.fn()} position={{ x: 50, y: 50 }} onPositionChange={onPositionChange} ariaLabel="test" />
+      );
+      const wrap = container.querySelector('.image-field-preview-wrap');
+      // Mock getBoundingClientRect to a 100×100 box at origin
+      jest.spyOn(wrap, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
+      fireEvent.click(wrap, { clientX: 25, clientY: 75 });
+      expect(onPositionChange).toHaveBeenCalledWith({ x: 25, y: 75 });
+    });
+
+    it('clamps focal point to 0–100', () => {
+      const onPositionChange = jest.fn();
+      const { container } = render(
+        <ImageField value="img_abc.jpg" onChange={jest.fn()} position={{ x: 50, y: 50 }} onPositionChange={onPositionChange} ariaLabel="test" />
+      );
+      const wrap = container.querySelector('.image-field-preview-wrap');
+      jest.spyOn(wrap, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 100, height: 100 });
+      fireEvent.click(wrap, { clientX: -10, clientY: 150 });
+      expect(onPositionChange).toHaveBeenCalledWith({ x: 0, y: 100 });
+    });
+  });
 });
