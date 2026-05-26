@@ -9,7 +9,7 @@ const folderOf = (img) => (img.folder && String(img.folder).trim()) || 'Uncatego
 
 const ImageField = ({ value, onChange, ariaLabel = 'image' }) => {
   const { images } = useContent();
-  const catalog = Array.isArray(images) ? images : [];
+  const catalog = useMemo(() => (Array.isArray(images) ? images : []), [images]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
