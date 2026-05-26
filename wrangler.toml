@@ -17,6 +17,10 @@ class_name = "CampaignSession"
 name = "CAMPAIGN_CONTENT"
 class_name = "CampaignContent"
 
+[[r2_buckets]]
+binding = "CAMPAIGN_IMAGES"
+bucket_name = "cnmh-images"
+
 # SQLite-backed Durable Object classes -> eligible for the free tier.
 # Migrations are valid here because the DOs are defined in this same Worker.
 [[migrations]]
@@ -66,3 +70,7 @@ new_sqlite_classes = ["CampaignSession"]
 [[env.staging.migrations]]
 tag = "v2"
 new_sqlite_classes = ["CampaignContent"]
+
+[[env.staging.r2_buckets]]
+binding = "CAMPAIGN_IMAGES"
+bucket_name = "cnmh-staging-images"

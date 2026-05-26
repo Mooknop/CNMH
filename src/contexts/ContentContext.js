@@ -11,6 +11,7 @@ import {
   normalizeItems,
   normalizeSpells,
   normalizeEffects,
+  normalizeImages,
   resolveCharacterItems,
   defaultContent,
 } from '../utils/contentUtils';
@@ -148,6 +149,7 @@ export const ContentProvider = ({ children }) => {
   const serverItems = serverList('item');
   const serverSpells = serverList('spell');
   const serverEffects = serverList('effect');
+  const serverImages = serverList('image');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
@@ -159,6 +161,7 @@ export const ContentProvider = ({ children }) => {
   // is the fallback path until a GM Spell collection lands).
   const spells = serverSpells.length ? normalizeSpells(serverSpells) : FALLBACK.spell;
   const effects = serverEffects.length ? normalizeEffects(serverEffects) : FALLBACK.effect;
+  const images = serverImages.length ? normalizeImages(serverImages) : FALLBACK.image;
   // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
   // editor must edit/save THAT, not the resolved view, or saving would inline
   // every item back and defeat the catalog. `characters` is the resolved view
@@ -180,7 +183,8 @@ export const ContentProvider = ({ children }) => {
       serverTraits.length ||
       serverCharacters.length ||
       serverItems.length ||
-      serverSpells.length
+      serverSpells.length ||
+      serverImages.length
         ? 'server'
         : 'fallback',
     quests: serverQuests.length ? normalizeQuests(serverQuests) : FALLBACK.quest,
@@ -197,6 +201,7 @@ export const ContentProvider = ({ children }) => {
     items,
     spells,
     effects,
+    images,
     refresh: loadSnapshot,
   };
 
@@ -218,6 +223,7 @@ const NOOP_CONTENT = {
   items: FALLBACK.item,
   spells: FALLBACK.spell,
   effects: FALLBACK.effect,
+  images: FALLBACK.image,
   refresh: () => Promise.resolve(),
 };
 

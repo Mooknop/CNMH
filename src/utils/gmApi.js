@@ -64,3 +64,34 @@ export const restoreVersion = (collection, id, archivedAt) =>
 // In-memory write counter since the DO last restarted.
 export const fetchUsage = () =>
   fetch('/api/gm/usage', { credentials: 'include' }).then(json);
+
+// Upload an image file to R2 and register it in the image catalog.
+// `resizeImageToBlob` should be called before this to keep uploads small.
+export const uploadImage = async (blob, { name, folder } = {}) => {
+  const body = new FormData();
+  body.append('file', blob, name || 'image');
+  if (name) body.append('name', name);
+  if (folder) body.append('folder', folder);
+  return json(await fetch('/api/gm/images', {
+    method: 'POST',
+    credentials: 'include',
+    body,
+  }));
+};
+
+// Delete an image from R2 + the catalog. On 409 the server returns
+// { references: [{collection, id, name}] } and this throws a ReferenceError
+// with `.references` attached so callers can surface the list.
+export const deleteImage = async (id) => {
+  const res = await fetch(`/api/gm/images/${encodeURIComponent(id)}/delete`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (res.status === 409) {
+    const body = await res.json().catch(() => ({}));
+    const err = new Error('Image is in use');
+    err.references = body.references || [];
+    throw err;
+  }
+  return json(res);
+};

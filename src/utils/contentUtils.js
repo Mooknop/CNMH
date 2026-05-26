@@ -309,6 +309,16 @@ export const resolveCharacterItems = (character, items, spells) => {
   };
 };
 
+// Image catalog: each entry is { id, name, folder, mimeType, createdAt }. The
+// id is the R2 object key (img_<uuid>.<ext>) and is stable across renames.
+export const withImageId = (img, index = 0) => ({
+  ...img,
+  id: img.id || `img-${index}`,
+});
+
+export const normalizeImages = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((img, i) => withImageId(img, i));
+
 // Character sheets already carry an `id` (e.g. "Pellias"); keep it (fall back
 // to a slug of the name) and preserve the entire deeply-nested sheet as-is.
 export const withCharacterId = (character, index = 0) => ({
@@ -330,6 +340,7 @@ export const defaultContent = () => ({
   item: normalizeItems(itemsData && itemsData.items),
   spell: normalizeSpells(spellsData && spellsData.spells),
   effect: normalizeEffects(defaultEffects),
+  image: [],
 });
 
 // Body for POST /api/gm/seed.

@@ -134,6 +134,9 @@ const GmDashboard = () => {
         <li>
           <Link to="/gm/characters">Characters</Link>
         </li>
+        <li>
+          <Link to="/gm/images">Images</Link>
+        </li>
       </ul>
 
       <ConfirmDialog
