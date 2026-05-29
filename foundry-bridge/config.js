@@ -5,7 +5,7 @@
 // BRIDGE_SECRET: must match the value of the BRIDGE_SECRET Worker secret
 //   (set via `wrangler secret put BRIDGE_SECRET`).
 
-export const WORKER_WSS_URL = 'wss://cnmh-staging.mooknop.workers.dev';
+export const WORKER_WSS_URL = 'wss://cnmh.mooknop.workers.dev';
 export const CAMPAIGN_ID    = 'osprey-covey';
 export const BRIDGE_SECRET  = 'Sanctuary';
 
