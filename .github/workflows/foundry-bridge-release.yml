@@ -1,0 +1,41 @@
+name: Foundry Bridge — Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate module.json
+        run: jq -e . foundry-bridge/module.json > /dev/null
+
+      - name: Stamp version and download URL into module.json
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          DL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/cnmh-bridge.zip"
+          jq --arg v "$VER" --arg d "$DL" \
+            '.version = $v | .download = $d' \
+            foundry-bridge/module.json > module.json.tmp
+          mv module.json.tmp foundry-bridge/module.json
+
+      - name: Package module zip
+        run: |
+          cd foundry-bridge
+          zip -r ../cnmh-bridge.zip .
+          cd ..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            cnmh-bridge.zip
+            foundry-bridge/module.json
+          generate_release_notes: true
