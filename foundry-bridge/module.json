@@ -1,0 +1,14 @@
+{
+  "id": "cnmh-bridge",
+  "title": "CNMH Bridge",
+  "description": "Bridges this Foundry world to the CNMH app over WebSocket. Connects to the Cloudflare session relay and syncs combat, character state, and token movement.",
+  "version": "0.1.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "esmodules": ["bridge.js"],
+  "manifest": "https://github.com/Mooknop/CNMH/releases/latest/download/module.json",
+  "download": "https://github.com/Mooknop/CNMH/releases/download/v0.1.0/cnmh-bridge.zip",
+  "authors": [{ "name": "Stanislav" }]
+}
