@@ -1,0 +1,31 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to prod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build React app
+        run: npm run build:app
+        env:
+          REACT_APP_ENVIRONMENT: production
+          REACT_APP_GIT_SHA: ${{ github.sha }}
+
+      - name: Deploy Worker + Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: deploy
