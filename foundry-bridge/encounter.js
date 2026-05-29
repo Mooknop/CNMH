@@ -8,7 +8,8 @@
 // this module calls combat.nextTurn() in Foundry, which triggers updateCombat and
 // pushes the updated state back down.
 
-import { ACTOR_MAP_REVERSE, BRIDGE_UPDATE_FLAG } from './utils.js';
+import { ACTOR_MAP_REVERSE } from './config.js';
+import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import { getCombatantActorId, getCombatantInitiative } from './pf2eAdapter.js';
 
 let _sendUpdate = null;  // injected by bridge.js on init
