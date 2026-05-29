@@ -11,7 +11,8 @@
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import { getCombatantActorId, getCombatantInitiative } from './pf2eAdapter.js';
 
-let _sendUpdate = null;  // injected by bridge.js on init
+let _sendUpdate    = null;  // injected by bridge.js on init
+let _activeCombatId = null;  // stored on createCombat/updateCombat for reliable lookup
 
 // Actor map received from the app via cnmh_actormap_global.
 // Shape: { [foundryActorId]: cnmhCharId }
@@ -26,20 +27,31 @@ export function updateActorMap(map) {
 export function initEncounter(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 
-  Hooks.on('createCombat',       (combat)              => pushEncounterState(combat));
-  Hooks.on('deleteCombat',       ()                    => pushIdleState());
-  Hooks.on('createCombatant',    (combatant)           => pushEncounterState(combatant.combat));
-  Hooks.on('deleteCombatant',    (combatant)           => pushEncounterState(combatant.combat));
-  Hooks.on('updateCombat',       (combat, diff, opts)  => onUpdateCombat(combat, diff, opts));
+  Hooks.on('createCombat',    (combat)             => { _activeCombatId = combat.id; pushEncounterState(combat); });
+  Hooks.on('deleteCombat',    ()                   => { _activeCombatId = null;     pushIdleState(); });
+  Hooks.on('createCombatant', (combatant)          => pushEncounterState(combatant.combat));
+  Hooks.on('deleteCombatant', (combatant)          => pushEncounterState(combatant.combat));
+  Hooks.on('updateCombat',    (combat, diff, opts) => { _activeCombatId = combat.id; onUpdateCombat(combat, diff, opts); });
 }
 
 // Handle incoming relay message addressed to 'global'/'encounter' channel.
 // The bridge calls this when it sees cnmh_turncmd_global arrive.
 export async function handleTurnCommand(value) {
+  console.log('CNMH Bridge | handleTurnCommand received:', value);
   if (value?.action !== 'next-turn') return;
-  const combat = game.combat;
-  if (!combat) return;
-  await combat.nextTurn();
+  // Prefer the stored combat ID over game.combat — game.combat can be null if the
+  // GM navigated to a different scene while combat is still active.
+  const combat = (_activeCombatId ? game.combats?.get(_activeCombatId) : null) ?? game.combat;
+  if (!combat) {
+    console.warn('CNMH Bridge | handleTurnCommand: no active combat found (id:', _activeCombatId, ')');
+    return;
+  }
+  console.log('CNMH Bridge | calling combat.nextTurn() on', combat.id);
+  try {
+    await combat.nextTurn();
+  } catch (err) {
+    console.error('CNMH Bridge | combat.nextTurn() failed:', err);
+  }
 }
 
 function onUpdateCombat(combat, diff, opts) {
