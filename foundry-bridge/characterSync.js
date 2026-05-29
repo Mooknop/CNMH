@@ -5,8 +5,8 @@
 // App → Foundry: incoming relay updates for hp/heroPoints are written back to
 //   the Foundry actor. Tagged with _bridgeSource:'app' to prevent echo loops.
 
-import { ACTOR_MAP, ACTOR_MAP_REVERSE, BRIDGE_SOURCE_FLAG, isBridgeEcho } from './utils.js';
-import { slugToAppConditionId } from './utils.js';
+import { ACTOR_MAP, ACTOR_MAP_REVERSE } from './config.js';
+import { BRIDGE_SOURCE_FLAG, isBridgeEcho, slugToAppConditionId } from './utils.js';
 import {
   getHp, getHeroPoints, getConditions,
 } from './pf2eAdapter.js';
