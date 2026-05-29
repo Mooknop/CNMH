@@ -46,6 +46,7 @@ export const useEncounter = () => {
   // before the encounter state advances so we can compute the correct boundary set.
   const runExpirySweep = useCallback(
     (cur, nextTurnIdx, nextRound) => {
+      if (cur.foundryCombatId) return;
       const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
       for (const entry of cur.order || []) {
         if (entry.kind !== 'pc' || !entry.charId) continue;
@@ -205,6 +206,7 @@ export const useEncounter = () => {
     () => {
       const cur = encounterRef.current || defaultEncounter();
       if (cur.phase !== 'in-progress') return;
+      if (cur.foundryCombatId) return;
       const { currentTurnIndex: nextIdx, round: nextRound } = nextTurnIndex(
         cur.order,
         cur.currentTurnIndex || 0,
