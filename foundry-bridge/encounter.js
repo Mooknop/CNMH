@@ -8,11 +8,20 @@
 // this module calls combat.nextTurn() in Foundry, which triggers updateCombat and
 // pushes the updated state back down.
 
-import { ACTOR_MAP_REVERSE } from './config.js';
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import { getCombatantActorId, getCombatantInitiative } from './pf2eAdapter.js';
 
 let _sendUpdate = null;  // injected by bridge.js on init
+
+// Actor map received from the app via cnmh_actormap_global.
+// Shape: { [foundryActorId]: cnmhCharId }
+// The app is the authoritative owner; the bridge just reads it for belt-and-suspenders
+// resolution so pushes are already correct before the app re-derives them.
+let _actorMap = {};
+
+export function updateActorMap(map) {
+  _actorMap = map || {};
+}
 
 export function initEncounter(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
@@ -67,11 +76,17 @@ function buildEncounterPayload(combat) {
   if (!combat.active && round > 0) phase = 'ended';
 
   const order = (combat.combatants ?? []).map((c) => {
-    const actorId = getCombatantActorId(c);
-    const charId  = actorId ? (ACTOR_MAP_REVERSE[actorId] ?? null) : null;
-    return charId
-      ? { entryId: c.id, kind: 'pc',    charId, name: c.name, initiative: getCombatantInitiative(c) }
-      : { entryId: c.id, kind: 'enemy',         name: c.name, initiative: getCombatantInitiative(c) };
+    const foundryActorId = getCombatantActorId(c);
+    // Primary resolution: use the app-maintained actormap (set by GM in GmEncounter).
+    const charId = foundryActorId ? (_actorMap[foundryActorId] ?? null) : null;
+    return {
+      entryId:       c.id,
+      kind:          charId ? 'pc' : 'enemy',
+      name:          c.name,
+      initiative:    getCombatantInitiative(c),
+      foundryActorId,
+      ...(charId ? { charId } : {}),
+    };
   });
 
   // Keep initiative order consistent with how Foundry sorted them.

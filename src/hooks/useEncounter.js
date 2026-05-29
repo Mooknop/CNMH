@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { getEffect } from '../data/pf2eEffects';
@@ -24,7 +24,8 @@ import {
 // semantics, but within a single client a quick spendActions+appendLog pair
 // never reads a stale closure.
 
-const ENCOUNTER_KEY = 'cnmh_encounter_global';
+const ENCOUNTER_KEY  = 'cnmh_encounter_global';
+const ACTORMAP_KEY   = 'cnmh_actormap_global';
 
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
@@ -35,12 +36,28 @@ const makeLogEntry = (entry) => ({
 
 export const useEncounter = () => {
   const [encounter, setEncounter] = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
+  const [actorMap, setActorMap]   = useSyncedState(ACTORMAP_KEY, {});
   const { sendUpdate } = useSession();
 
-  // Ref so the sweep callbacks always see the latest encounter without
+  // Resolve Foundry actor IDs → CNMH charIds using the GM-maintained actorMap.
+  // Components always receive resolved entries so they never need to know about
+  // foundryActorId or the raw kind:'enemy' default.
+  const resolvedEncounter = useMemo(() => {
+    const raw = encounter || defaultEncounter();
+    if (!raw.order || !Object.keys(actorMap).length) return raw;
+    const resolvedOrder = raw.order.map((entry) => {
+      if (entry.kind === 'pc' || !entry.foundryActorId) return entry;
+      const charId = actorMap[entry.foundryActorId];
+      if (!charId) return entry;
+      return { ...entry, kind: 'pc', charId };
+    });
+    return { ...raw, order: resolvedOrder };
+  }, [encounter, actorMap]);
+
+  // Ref so the sweep callbacks always see the latest resolved encounter without
   // adding it as a useCallback dependency (avoids recreating on every turn).
-  const encounterRef = useRef(encounter);
-  useEffect(() => { encounterRef.current = encounter; }, [encounter]);
+  const encounterRef = useRef(resolvedEncounter);
+  useEffect(() => { encounterRef.current = resolvedEncounter; }, [resolvedEncounter]);
 
   // Sweep expired effects and granted-actions from every PC's keys. Called
   // before the encounter state advances so we can compute the correct boundary set.
@@ -273,7 +290,9 @@ export const useEncounter = () => {
   );
 
   return {
-    encounter: encounter || defaultEncounter(),
+    encounter: resolvedEncounter,
+    actorMap,
+    setActorMap,
     startEncounter,
     setInitiative,
     addEnemy,
