@@ -9,7 +9,7 @@
 // movement) and exposes sendUpdate for those modules to push outbound messages.
 
 import { WORKER_WSS_URL, CAMPAIGN_ID, BRIDGE_SECRET } from './config.js';
-import { initEncounter, handleTurnCommand }            from './encounter.js';
+import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 
@@ -116,14 +116,24 @@ function schedulePing() {
 function dispatch(msg) {
   if (msg.type === 'PONG') return;
 
-  // Initial state snapshot: seed Foundry-side state if needed (currently no-op;
-  // Foundry is always the source of truth for canvas/combat).
-  if (msg.type === 'FULL_STATE') return;
+  if (msg.type === 'FULL_STATE') {
+    // Seed the actor map from persisted session state so the first encounter
+    // push already has correct charId resolution.
+    const map = msg.payload?.global?.actormap;
+    if (map) updateActorMap(map);
+    return;
+  }
 
   if (msg.type !== 'UPDATE') return;
 
   const { characterId, key, value } = msg;
   if (!characterId || !key) return;
+
+  // Actor map updated by GM in GmEncounter → refresh bridge-side resolution.
+  if (characterId === 'global' && key === 'actormap') {
+    updateActorMap(value);
+    return;
+  }
 
   // Encounter turn command from app → drive Foundry combat.
   if (characterId === 'global' && key === 'turncmd') {
