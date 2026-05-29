@@ -76,7 +76,11 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
       text: `${characterName} submitted their turn`,
     });
 
-    advanceTurn();
+    if (encounter.foundryCombatId) {
+      sendUpdate('global', 'turncmd', { action: 'next-turn', ts: Date.now() });
+    } else {
+      advanceTurn();
+    }
 
     if (nextEntry && nextEntry.kind === 'pc') {
       const key = `cnmh_turnstate_${nextEntry.charId}`;

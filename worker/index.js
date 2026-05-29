@@ -18,6 +18,20 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // Foundry bridge — authenticated with a shared secret, forwards to the
+    // same CampaignSession DO as player devices. The bridge becomes a normal
+    // session peer: it sends/receives { type:'UPDATE', characterId, key, value }.
+    if (url.pathname.startsWith('/bridge/')) {
+      const campaignId = url.pathname.split('/')[2];
+      if (!campaignId) return new Response('Missing campaign id', { status: 400 });
+      const secret = url.searchParams.get('key');
+      if (!env.BRIDGE_SECRET || secret !== env.BRIDGE_SECRET) {
+        return new Response('Forbidden', { status: 403 });
+      }
+      const id = env.CAMPAIGN_SESSION.idFromName(campaignId);
+      return env.CAMPAIGN_SESSION.get(id).fetch(request);
+    }
+
     // Real-time session sync (unchanged).
     if (url.pathname.startsWith('/session/')) {
       const campaignId = url.pathname.split('/')[2];
