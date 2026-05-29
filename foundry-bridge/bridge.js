@@ -13,6 +13,7 @@ import { initEncounter, handleTurnCommand }            from './encounter.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 
+const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
 const PING_INTERVAL_MS = 30_000;
 
@@ -29,6 +30,25 @@ function sendUpdate(characterId, key, value) {
 
 // --- Foundry lifecycle ---
 
+Hooks.once('init', () => {
+  game.settings.register(MODULE_ID, 'workerUrl', {
+    name: 'Worker WebSocket URL',
+    hint: 'wss:// URL of the CNMH Cloudflare Worker. Change this to switch between staging and production without a new module release.',
+    scope: 'world',
+    config: true,
+    type: String,
+    default: WORKER_WSS_URL,
+  });
+  game.settings.register(MODULE_ID, 'campaignId', {
+    name: 'Campaign ID',
+    hint: 'Session key used by the Worker (default: osprey-covey).',
+    scope: 'world',
+    config: true,
+    type: String,
+    default: CAMPAIGN_ID,
+  });
+});
+
 Hooks.once('ready', () => {
   console.log('CNMH Bridge | Foundry ready — connecting to session relay');
   initEncounter(sendUpdate);
@@ -40,7 +60,9 @@ Hooks.once('ready', () => {
 // --- WebSocket management ---
 
 function connect() {
-  const url = `${WORKER_WSS_URL}/bridge/${CAMPAIGN_ID}?key=${encodeURIComponent(BRIDGE_SECRET)}`;
+  const workerUrl  = game.settings.get(MODULE_ID, 'workerUrl')  || WORKER_WSS_URL;
+  const campaignId = game.settings.get(MODULE_ID, 'campaignId') || CAMPAIGN_ID;
+  const url = `${workerUrl}/bridge/${campaignId}?key=${encodeURIComponent(BRIDGE_SECRET)}`;
   let ws;
   try {
     ws = new WebSocket(url);
