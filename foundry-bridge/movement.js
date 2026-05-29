@@ -8,7 +8,8 @@
 //
 // All canvas/geometry calls go through pf2eAdapter.js.
 
-import { TOKEN_MAP, BRIDGE_SOURCE_FLAG } from './utils.js';
+import { TOKEN_MAP } from './config.js';
+import { BRIDGE_SOURCE_FLAG } from './utils.js';
 import {
   getSpeed,
   getTokenGridPosition,
