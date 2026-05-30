@@ -19,7 +19,7 @@ import {
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   getGridSize, getAllTokens, getTokenDimensions,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
-  getTokenById, resolveCombatantToken, setUserTargets,
+  getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
@@ -253,5 +253,20 @@ describe('targeting (Slice 2)', () => {
   test('setUserTargets passes resolved token ids to the user API', () => {
     setUserTargets([makeToken({ id: 't1' }), makeToken({ id: 't2' }), null]);
     expect(global.game.user.updateTokenTargets).toHaveBeenCalledWith(['t1', 't2']);
+  });
+
+  test('checkFlanking delegates to token.isFlanking and returns its boolean', () => {
+    const attacker = makeToken({ isFlanking: true });
+    const target   = makeToken();
+    expect(checkFlanking(attacker, target)).toBe(true);
+    expect(attacker.isFlanking).toHaveBeenCalledWith(target);
+
+    const notFlanking = makeToken({ isFlanking: false });
+    expect(checkFlanking(notFlanking, target)).toBe(false);
+  });
+
+  test('checkFlanking returns false safely when token lacks isFlanking', () => {
+    expect(checkFlanking({}, makeToken())).toBe(false);
+    expect(checkFlanking(null, makeToken())).toBe(false);
   });
 });

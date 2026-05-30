@@ -106,11 +106,17 @@ export function makeToken(opts = {}) {
     id = autoId('token'),
     x = 0, y = 0, width = 1, height = 1,
     actor = null,
+    // isFlanking: PF2e TokenPF2e method. Pass a boolean to set a fixed return
+    // value, or a function to control per-call. Defaults to false (not flanking).
+    isFlanking = false,
   } = opts;
   return {
     id,
     x, y,
     actor,
+    isFlanking: jest.fn().mockImplementation(
+      typeof isFlanking === 'function' ? isFlanking : () => isFlanking
+    ),
     document: {
       width, height,
       update: jest.fn().mockResolvedValue(undefined),

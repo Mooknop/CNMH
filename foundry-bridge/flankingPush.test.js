@@ -1,14 +1,12 @@
 // flankingPush tests: payload shape and push-on-hook behaviour.
-// The geometry itself is fully covered in flanking.test.js.
+//
+// Now that the geometry is delegated to the PF2e system (TokenPF2e.isFlanking),
+// tests control flanking by setting isFlanking return values on mock tokens
+// rather than positioning them geometrically.
 
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { updateActorMap } from './encounter.js';
 import { makeCombat, makeCombatant, makeToken } from './test/foundryMock.js';
-
-const G = 100;
-function tok(id, col, row) {
-  return makeToken({ id, x: col * G, y: row * G });
-}
 
 let send;
 
@@ -41,7 +39,6 @@ function setup({ pcTokens = [], enemyTokens = [] } = {}) {
 describe('pushFlankedState', () => {
   it('pushes empty map when no combat', () => {
     send = jest.fn();
-    updateActorMap({});
     global.game.combat = null;
     initFlankingPush(send);
     pushFlankedState();
@@ -49,17 +46,16 @@ describe('pushFlankedState', () => {
   });
 
   it('pushes empty map when no PCs in the combat', () => {
-    const eToken = tok('tok-goblin', 5, 5);
+    const eToken = makeToken({ id: 'tok-goblin' });
     setup({ enemyTokens: [{ entryId: 'cbt-goblin', token: eToken }] });
     pushFlankedState();
     expect(send).toHaveBeenCalledWith('global', 'flanked', {});
   });
 
-  it('pushes byCharIds for flanked enemies, keyed by combatantId (entryId)', () => {
-    // Pellias left, Ashka right, goblin in the middle.
-    const pA = { charId: 'Pellias', token: tok('tok-pellias', 4, 5) };
-    const pB = { charId: 'Ashka',   token: tok('tok-ashka',   6, 5) };
-    const enemy = { entryId: 'cbt-goblin', token: tok('tok-goblin', 5, 5) };
+  it('includes an enemy when the PF2e system says a PC is flanking it', () => {
+    const pA = { charId: 'Pellias', token: makeToken({ id: 'tok-pellias', isFlanking: true }) };
+    const pB = { charId: 'Ashka',   token: makeToken({ id: 'tok-ashka',   isFlanking: true }) };
+    const enemy = { entryId: 'cbt-goblin', token: makeToken({ id: 'tok-goblin' }) };
     setup({ pcTokens: [pA, pB], enemyTokens: [enemy] });
 
     pushFlankedState();
@@ -68,11 +64,10 @@ describe('pushFlankedState', () => {
     expect(payload['cbt-goblin'].byCharIds.sort()).toEqual(['Ashka', 'Pellias']);
   });
 
-  it('does not list the enemy under an entryId that is not flanked', () => {
-    // Both PCs on the same side.
-    const pA = { charId: 'Pellias', token: tok('tok-pellias', 4, 5) };
-    const pB = { charId: 'Ashka',   token: tok('tok-ashka',   4, 6) };
-    const enemy = { entryId: 'cbt-goblin', token: tok('tok-goblin', 5, 5) };
+  it('excludes an enemy when isFlanking returns false for all PCs', () => {
+    const pA = { charId: 'Pellias', token: makeToken({ id: 'tok-pellias', isFlanking: false }) };
+    const pB = { charId: 'Ashka',   token: makeToken({ id: 'tok-ashka',   isFlanking: false }) };
+    const enemy = { entryId: 'cbt-goblin', token: makeToken({ id: 'tok-goblin' }) };
     setup({ pcTokens: [pA, pB], enemyTokens: [enemy] });
 
     pushFlankedState();
@@ -81,10 +76,39 @@ describe('pushFlankedState', () => {
     expect(payload).toEqual({});
   });
 
-  it('re-evaluates when createCombat Foundry hook fires', () => {
-    const pA = { charId: 'Pellias', token: tok('tok-pellias', 4, 5) };
-    const pB = { charId: 'Ashka',   token: tok('tok-ashka',   6, 5) };
-    const enemy = { entryId: 'cbt-goblin', token: tok('tok-goblin', 5, 5) };
+  it('only lists PCs for which isFlanking returns true', () => {
+    // Only Pellias is flanking; Ashka is not.
+    const tokGoblin  = makeToken({ id: 'tok-goblin' });
+    const tokPellias = makeToken({ id: 'tok-pellias', isFlanking: (t) => t === tokGoblin });
+    const tokAshka   = makeToken({ id: 'tok-ashka',   isFlanking: false });
+    setup({
+      pcTokens:    [{ charId: 'Pellias', token: tokPellias }, { charId: 'Ashka', token: tokAshka }],
+      enemyTokens: [{ entryId: 'cbt-goblin', token: tokGoblin }],
+    });
+
+    pushFlankedState();
+
+    const [[, , payload]] = send.mock.calls;
+    expect(payload['cbt-goblin'].byCharIds).toEqual(['Pellias']);
+  });
+
+  it('delegates to PF2e: calls isFlanking with the enemy token as argument', () => {
+    const tokGoblin  = makeToken({ id: 'tok-goblin' });
+    const tokPellias = makeToken({ id: 'tok-pellias', isFlanking: true });
+    setup({
+      pcTokens:    [{ charId: 'Pellias', token: tokPellias }],
+      enemyTokens: [{ entryId: 'cbt-goblin', token: tokGoblin }],
+    });
+
+    pushFlankedState();
+
+    expect(tokPellias.isFlanking).toHaveBeenCalledWith(tokGoblin);
+  });
+
+  it('re-evaluates when createCombat hook fires', () => {
+    const pA = { charId: 'Pellias', token: makeToken({ id: 'tok-pellias', isFlanking: true }) };
+    const pB = { charId: 'Ashka',   token: makeToken({ id: 'tok-ashka',   isFlanking: true }) };
+    const enemy = { entryId: 'cbt-goblin', token: makeToken({ id: 'tok-goblin' }) };
     setup({ pcTokens: [pA, pB], enemyTokens: [enemy] });
 
     global.Hooks.fire('createCombat');
@@ -94,13 +118,12 @@ describe('pushFlankedState', () => {
     }));
   });
 
-  it('re-evaluates when updateToken Foundry hook fires', () => {
-    const pA = { charId: 'Pellias', token: tok('tok-pellias', 4, 5) };
-    const pB = { charId: 'Ashka',   token: tok('tok-ashka',   6, 5) };
-    const enemy = { entryId: 'cbt-goblin', token: tok('tok-goblin', 5, 5) };
+  it('re-evaluates when updateToken hook fires', () => {
+    const pA = { charId: 'Pellias', token: makeToken({ id: 'tok-pellias', isFlanking: true }) };
+    const pB = { charId: 'Ashka',   token: makeToken({ id: 'tok-ashka',   isFlanking: true }) };
+    const enemy = { entryId: 'cbt-goblin', token: makeToken({ id: 'tok-goblin' }) };
     setup({ pcTokens: [pA, pB], enemyTokens: [enemy] });
 
-    // Simulate Foundry token update hook.
     global.Hooks.fire('updateToken');
 
     expect(send).toHaveBeenCalledWith('global', 'flanked', expect.objectContaining({
