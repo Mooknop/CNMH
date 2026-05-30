@@ -19,9 +19,11 @@ import {
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
   getGridSize, getAllTokens, getTokenDimensions,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
+  getTokenById, resolveCombatantToken, setUserTargets,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
+  makeCombat, makeCombatant,
 } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
@@ -218,5 +220,38 @@ describe('movement measurement contract', () => {
     expect(hasWallCollision(0, 0, 100, 0)).toBe(false);
     global.CONFIG.Canvas.polygonBackends.move.testCollision = () => true;
     expect(hasWallCollision(0, 0, 100, 0)).toBe(true);
+  });
+});
+
+describe('targeting (Slice 2)', () => {
+  test('getTokenById reads canvas.tokens.get', () => {
+    const token = makeToken({ id: 'tok-x' });
+    global.canvas.tokens.placeables = [token];
+    expect(getTokenById('tok-x')).toBe(token);
+    expect(getTokenById('missing')).toBeNull();
+  });
+
+  test('resolveCombatantToken maps an entryId → combatant tokenId → placed token', () => {
+    const token = makeToken({ id: 'tok-goblin' });
+    const combat = makeCombat({
+      combatants: [makeCombatant({ id: 'cbt-goblin', tokenId: 'tok-goblin' })],
+    });
+    global.game.combat = combat;
+    global.canvas.tokens.placeables = [token];
+    expect(resolveCombatantToken('cbt-goblin')).toBe(token);
+  });
+
+  test('resolveCombatantToken returns null for an unknown entry / no combat', () => {
+    const combat = makeCombat({ combatants: [makeCombatant({ id: 'cbt-a', tokenId: 'tok-a' })] });
+    global.game.combat = combat;
+    global.canvas.tokens.placeables = [makeToken({ id: 'tok-a' })];
+    expect(resolveCombatantToken('cbt-zzz')).toBeNull();
+    global.game.combat = null;
+    expect(resolveCombatantToken('cbt-a')).toBeNull();
+  });
+
+  test('setUserTargets passes resolved token ids to the user API', () => {
+    setUserTargets([makeToken({ id: 't1' }), makeToken({ id: 't2' }), null]);
+    expect(global.game.user.updateTokenTargets).toHaveBeenCalledWith(['t1', 't2']);
   });
 });
