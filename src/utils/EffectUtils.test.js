@@ -138,6 +138,32 @@ describe('computeEffectBonuses', () => {
     });
   });
 
+  describe('raised shield circumstance bonus to AC (Slice 1)', () => {
+    // Mirrors the synthetic def useShield injects: +shieldBonus circumstance AC.
+    const raisedShield = (amount) => ({
+      id: 'raised-shield',
+      name: 'Raised Shield',
+      modifiers: [{ stat: 'ac', kind: 'circumstance', amount }],
+    });
+
+    it('raised shield (+2) and the Shield cantrip (+1) do not stack — highest applies', () => {
+      const result = computeEffectBonuses(
+        [entry('raised-shield'), entry('shield-spell')],
+        [...catalog, raisedShield(2)]
+      );
+      expect(result.ac.total).toBe(2); // only the higher circumstance bonus
+      expect(result.ac.sources).toEqual([{ label: 'Raised Shield', bonus: 2 }]);
+    });
+
+    it('raised shield (circumstance) still stacks with Mage Armor (item)', () => {
+      const result = computeEffectBonuses(
+        [entry('raised-shield'), entry('mage-armor')],
+        [...catalog, raisedShield(2)]
+      );
+      expect(result.ac.total).toBe(3); // 2 circumstance + 1 item
+    });
+  });
+
   describe('effects without modifiers', () => {
     it('effects with empty modifiers array are ignored', () => {
       const result = computeEffectBonuses([entry('no-mods')], catalog);

@@ -2,7 +2,7 @@
 import React from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import { formatBulk } from '../../utils/InventoryUtils';
+import { formatBulk, normalizeShield } from '../../utils/InventoryUtils';
 import { ITEM_STATE_LABEL } from '../../utils/itemState';
 import './ItemModal.css';
 
@@ -10,6 +10,9 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
   if (!isOpen || !item) return null;
 
   const themeColor = characterColor || 'var(--color-primary)';
+  // Normalize so legacy { health, breakThreshold } and canonical
+  // { hp, brokenThreshold } shields both display correctly.
+  const shield = normalizeShield(item.shield);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={item.name} themeColor={themeColor} maxWidth="500px" highZ>
@@ -56,38 +59,38 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
       </div>
 
       {/* Shield properties */}
-      {item.shield && (
+      {shield && (
         <div className="shield-properties">
           <h3 style={{ color: themeColor }}>Shield Properties</h3>
           <div className="item-detail-grid">
-            {item.shield.bonus && (
+            {shield.bonus !== undefined && (
               <div className="item-detail">
                 <span className="item-detail-label">AC Bonus</span>
-                <span className="item-detail-value">+{item.shield.bonus}</span>
+                <span className="item-detail-value">+{shield.bonus}</span>
               </div>
             )}
-            {item.shield.hardness !== undefined && (
+            {shield.hardness !== undefined && (
               <div className="item-detail">
                 <span className="item-detail-label">Hardness</span>
-                <span className="item-detail-value">{item.shield.hardness}</span>
+                <span className="item-detail-value">{shield.hardness}</span>
               </div>
             )}
-            {item.shield.hp !== undefined && (
+            {shield.hp !== undefined && (
               <div className="item-detail">
                 <span className="item-detail-label">Hit Points</span>
-                <span className="item-detail-value">{item.shield.hp}</span>
+                <span className="item-detail-value">{shield.hp}</span>
               </div>
             )}
-            {item.shield.broken_threshold !== undefined && (
+            {shield.brokenThreshold !== undefined && (
               <div className="item-detail">
                 <span className="item-detail-label">Broken Threshold</span>
-                <span className="item-detail-value">{item.shield.broken_threshold}</span>
+                <span className="item-detail-value">{shield.brokenThreshold}</span>
               </div>
             )}
           </div>
           <div className="shield-info">
-            <strong>Shield Rules:</strong> Raise this shield for +{item.shield.bonus || 0} AC.
-            It has {item.shield.hardness || 0} Hardness and {item.shield.hp || 0} HP.
+            <strong>Shield Rules:</strong> Raise this shield for +{shield.bonus || 0} AC.
+            It has {shield.hardness || 0} Hardness and {shield.hp || 0} HP.
           </div>
         </div>
       )}

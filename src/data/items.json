@@ -382,8 +382,8 @@
       "weight": 4,
       "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
       "shield": {
-        "health": 64,
-        "breakThreshold": 32,
+        "hp": 64,
+        "brokenThreshold": 32,
         "hardness": 8,
         "bonus": 2,
         "speedPenalty": 5
@@ -604,8 +604,8 @@
       "weight": 1,
       "description": "Like wooden shields, steel shields come in a variety of shapes and sizes. Though more expensive than wooden shields, they are much more durable.",
       "shield": {
-        "health": 20,
-        "breakThreshold": 10,
+        "hp": 20,
+        "brokenThreshold": 10,
         "hardness": 5,
         "bonus": 2
       },

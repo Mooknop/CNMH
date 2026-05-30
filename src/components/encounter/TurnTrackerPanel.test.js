@@ -307,4 +307,92 @@ describe('TurnTrackerPanel', () => {
     expect(screen.queryByLabelText(/Move to 6,5/)).toBeNull();
     Date.now.mockRestore();
   });
+
+  // ── Raise a Shield (Slice 1) ────────────────────────────────────────────
+  const startMyTurnShield = (getDrv) => {
+    act(() => getDrv().startEncounter([pellias]));
+    const [p] = getDrv().encounter.order;
+    act(() => getDrv().setInitiative(p.entryId, 12));
+    act(() => getDrv().beginRound1());
+  };
+
+  const shieldInv = [{
+    uid: 'sh', name: 'Steel Shield', state: 'held1',
+    shield: { bonus: 2, hardness: 5, hp: 20, brokenThreshold: 10 },
+  }];
+
+  it('shows a Raise a Shield control when a shield is held on my turn', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} />
+      </>
+    );
+    startMyTurnShield(() => drv);
+    expect(screen.getByLabelText('Raise a Shield')).toBeInTheDocument();
+  });
+
+  it('shows no shield control when no shield is held', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={[]} />
+      </>
+    );
+    startMyTurnShield(() => drv);
+    expect(screen.queryByLabelText('Raise a Shield')).toBeNull();
+  });
+
+  it('raising the shield spends one action and switches to Lower', () => {
+    let drv, tsDriver;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} />
+      </>
+    );
+    startMyTurnShield(() => drv);
+
+    fireEvent.click(screen.getByLabelText('Raise a Shield'));
+    expect(tsDriver.turnState.actionsSpent).toBe(1);
+    expect(screen.getByLabelText('Lower Shield')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Raise a Shield')).toBeNull();
+  });
+
+  it('Raise is disabled when the held shield is broken', () => {
+    let drv;
+    const brokenInv = [{ ...shieldInv[0], shield: { bonus: 2, hardness: 5, hp: 10, brokenThreshold: 10 } }];
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={brokenInv} />
+      </>
+    );
+    startMyTurnShield(() => drv);
+    expect(screen.getByLabelText('Raise a Shield')).toBeDisabled();
+  });
+
+  it('auto-lowers the shield at the start of the next turn', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} />
+      </>
+    );
+    startMyTurnShield(() => drv);
+
+    fireEvent.click(screen.getByLabelText('Raise a Shield'));
+    expect(screen.getByLabelText('Lower Shield')).toBeInTheDocument();
+
+    // Advance to the next round (single PC → back to Pellias, new turn token).
+    act(() => drv.beginNextRound());
+
+    // Raise a Shield expired at the start of the new turn.
+    expect(screen.getByLabelText('Raise a Shield')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Lower Shield')).toBeNull();
+  });
 });
