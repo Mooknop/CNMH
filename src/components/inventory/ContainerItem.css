@@ -142,3 +142,35 @@
       padding: 0.5rem 0.75rem;
     }
   }
+/* ── Dark shell overrides ─────────────────────────────────── */
+
+.cs-content .container-item {
+  border-color: var(--shell-border);
+  box-shadow: none;
+}
+
+.cs-content .container-title h3 {
+  color: var(--shell-text-primary);
+}
+
+.cs-content .container-status {
+  color: var(--shell-text-tertiary);
+}
+
+.cs-content .contents-table th {
+  background: rgba(192, 68, 14, 0.2);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .contents-table td {
+  border-bottom-color: var(--shell-border);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .container-ignored {
+  color: var(--shell-text-tertiary);
+}
+
+.cs-content .empty-container {
+  color: var(--shell-text-tertiary);
+}

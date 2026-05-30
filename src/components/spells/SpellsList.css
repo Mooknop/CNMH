@@ -995,3 +995,48 @@
   color: #757575;
   border: 1px solid #cccccc;
 }
+
+/* ── Dark shell overrides ─────────────────────────────────── */
+
+.cs-content .spell-level-tab {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .spell-level-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--shell-border-strong);
+}
+
+.cs-content .spell-level-tab.active {
+  background: var(--color-theme, var(--ember-base));
+  color: white;
+  border-color: var(--color-theme, var(--ember-base));
+}
+
+.cs-content .defense-filter {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+}
+
+.cs-content .filter-label {
+  color: var(--ember-light);
+}
+
+.cs-content .defense-filter-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .defense-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--shell-border-strong);
+}
+
+.cs-content .defense-filter-btn.active {
+  background: var(--color-theme, var(--ember-base));
+  color: white;
+  border-color: var(--color-theme, var(--ember-base));
+}
