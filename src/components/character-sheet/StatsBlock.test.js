@@ -189,6 +189,36 @@ describe('StatsBlock', () => {
     expect(screen.getByText('16')).toBeInTheDocument(); // ac
   });
 
+  it('renders hero point pips reflecting the current value', () => {
+    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, heroPoints: 1, setHeroPoints: jest.fn() });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    // heroPoints=1 → pip 1 filled (spend), pips 2 & 3 empty (add)
+    expect(screen.getByLabelText('Spend hero point 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Add hero point 2')).toBeInTheDocument();
+    expect(screen.getByLabelText('Add hero point 3')).toBeInTheDocument();
+  });
+
+  it('clicking an empty hero pip adds a point; a filled pip spends one', () => {
+    const setHeroPoints = jest.fn();
+    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, heroPoints: 1, setHeroPoints });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+
+    fireEvent.click(screen.getByLabelText('Add hero point 2'));
+    expect(setHeroPoints.mock.calls[0][0](1)).toBe(2); // increment
+
+    fireEvent.click(screen.getByLabelText('Spend hero point 1'));
+    expect(setHeroPoints.mock.calls[1][0](1)).toBe(0); // decrement
+  });
+
+  it('hero points are clamped to the 0–3 range', () => {
+    const setHeroPoints = jest.fn();
+    mockUseCharacter.mockReturnValueOnce({ ...defaultCharData, heroPoints: 3, setHeroPoints });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    // All three filled — clicking the third spends down, never exceeds max
+    fireEvent.click(screen.getByLabelText('Spend hero point 3'));
+    expect(setHeroPoints.mock.calls[0][0](3)).toBe(2);
+  });
+
   it('should display size', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
     expect(screen.getByText('Medium')).toBeInTheDocument();

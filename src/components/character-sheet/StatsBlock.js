@@ -79,7 +79,23 @@ const StatsBlock = ({ character, characterColor }) => {
     speed,
     senses,
     hp,
+    heroPoints,
+    setHeroPoints,
   } = charData;
+
+  // Hero points: GM awards them in Foundry, players spend them here. The pip
+  // click mirrors the focus-pool UX — tap a filled pip to spend one, an empty
+  // pip to add one. setHeroPoints broadcasts cnmh_heropoints_<id>, which the
+  // bridge writes back to the Foundry actor.
+  const HERO_POINTS_MAX = 3;
+  const handleHeroPointClick = (i) => {
+    if (!setHeroPoints) return;
+    if (i < (heroPoints ?? 0)) {
+      setHeroPoints((prev) => Math.max((prev ?? 0) - 1, 0));
+    } else {
+      setHeroPoints((prev) => Math.min((prev ?? 0) + 1, HERO_POINTS_MAX));
+    }
+  };
 
   const themeColor = characterColor || 'var(--color-primary)';
   const strMod = abilityModifiers.strength;
@@ -425,6 +441,31 @@ const StatsBlock = ({ character, characterColor }) => {
               {activeConditions.length > 0 ? activeConditions.length : '—'}
             </div>
           </button>
+        </div>
+      </div>
+
+      {/* Hero Points */}
+      <div className="hero-points-row">
+        <span className="hero-points-label" style={{ color: themeColor }}>
+          Hero Points
+        </span>
+        <div className="hero-points-pips" role="group" aria-label="Hero points">
+          {Array.from({ length: HERO_POINTS_MAX }, (_, i) => {
+            const filled = i < (heroPoints ?? 0);
+            return (
+              <button
+                key={i}
+                type="button"
+                className={`hero-pip${filled ? ' hero-pip--filled' : ''}`}
+                style={filled
+                  ? { backgroundColor: themeColor, borderColor: themeColor }
+                  : { borderColor: themeColor }}
+                aria-label={filled ? `Spend hero point ${i + 1}` : `Add hero point ${i + 1}`}
+                aria-pressed={filled}
+                onClick={() => handleHeroPointClick(i)}
+              />
+            );
+          })}
         </div>
       </div>
 
