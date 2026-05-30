@@ -280,3 +280,49 @@
 .ttp-shieldblock {
   white-space: nowrap;
 }
+
+/* ── Dark shell overrides ─────────────────────────────────── */
+
+.cs-content .ttp-panel {
+  background: transparent;
+  border-color: var(--shell-border);
+}
+
+.cs-content .ttp-status {
+  background: rgba(255, 255, 255, 0.04);
+  border-left-color: var(--color-theme, var(--ember-base));
+  color: var(--shell-text-primary);
+}
+
+.cs-content .ttp-status--setup {
+  background: rgba(245, 158, 11, 0.08);
+  border-left-color: var(--gold-mid);
+  color: var(--gold-light);
+}
+
+.cs-content .ttp-round {
+  color: var(--color-theme, var(--ember-base));
+}
+
+.cs-content .ttp-controls {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--shell-border);
+}
+
+.cs-content .ttp-pip {
+  border-color: var(--shell-border-strong);
+  background: transparent;
+}
+
+.cs-content .ttp-pip--filled {
+  background: var(--color-theme, var(--ember-base));
+  border-color: var(--color-theme, var(--ember-base));
+}
+
+.cs-content .ttp-over-budget {
+  color: var(--color-danger);
+}
+
+.cs-content .ttp-reaction--available {
+  color: var(--color-theme, var(--ember-base));
+}

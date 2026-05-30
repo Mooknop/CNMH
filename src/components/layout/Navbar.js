@@ -44,6 +44,14 @@ const Navbar = () => {
         <li className="nav-item nav-sync">
           <SyncStatus />
         </li>
+        {activeCharacter && (
+          <li className="nav-item">
+            <div className="nav-active-char">
+              <div className="nav-active-dot" />
+              <span>{activeCharacter.name}</span>
+            </div>
+          </li>
+        )}
         {isGm && (
           <li className="nav-item">
             <Link to="/gm" className="nav-link">GM</Link>

@@ -32,7 +32,7 @@ jest.mock('../hooks/useCharacter', () => ({
       flags: {
         hasFamiliar: false,
         hasAnimalCompanion: false,
-        hasSpellcasting: false,
+        hasSpellcasting: true,
         hasFocusSpells: false
       },
       familiar: null,
@@ -156,8 +156,10 @@ describe('CharacterSheet', () => {
     expect(screen.getByText('Test Character')).toBeInTheDocument();
   });
 
-  it('should display stats block initially', () => {
+  it('should display stats block on the Stats tab', () => {
     renderWithRouter(mockCharacter);
+    // StatsBlock now lives in the Stats bottom-rail tab, not the default tab.
+    fireEvent.click(screen.getByRole('button', { name: 'Stats' }));
     expect(screen.getByTestId('stats-block')).toBeInTheDocument();
   });
 

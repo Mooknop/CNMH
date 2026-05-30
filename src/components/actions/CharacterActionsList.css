@@ -39,3 +39,16 @@
     min-height: 48px;
   }
 }
+
+/* ── Dark shell overrides ─────────────────────────────────── */
+
+.cs-content .action-category-btn {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .action-category-btn:hover,
+.cs-content .action-category-btn:active {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--shell-text-primary);
+}

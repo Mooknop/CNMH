@@ -513,3 +513,68 @@
     padding: 0.2rem 0.4rem;
   }
 }
+
+/* ── Dark shell overrides (applied when inside .cs-content) ── */
+
+.cs-content .stats-block {
+  background: transparent;
+  box-shadow: none;
+  padding: var(--space-4);
+}
+
+/* HP and AC are shown in the pinned masthead — hide the duplicate display-only
+   boxes here. The Conditions button and hero-point pips stay because they are
+   the interactive editors (the masthead versions are read-only). */
+.cs-content .hp-box,
+.cs-content .ac-box {
+  display: none;
+}
+
+.cs-content .stats-tabs {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cs-content .tab-button {
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .tab-button:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .tab-button.active {
+  background: var(--color-theme, var(--ember-base));
+  color: white;
+}
+
+.cs-content .ability {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--shell-border);
+}
+
+.cs-content .ability-name {
+  color: var(--color-theme, var(--ember-base));
+}
+
+.cs-content .ability-mod {
+  color: var(--shell-text-primary);
+}
+
+.cs-content .condition-box {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.cs-content .condition-box--active {
+  border-color: var(--gold-mid);
+}
+
+.cs-content .proficiency-value {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cs-content .character-attributes {
+  background: transparent;
+  border: var(--dark-card-border);
+}

@@ -78,7 +78,12 @@ describe('Navbar', () => {
       activeCharacter: { id: '1', name: 'Tharivol' },
     });
     fireEvent.click(screen.getByText(/Characters/));
-    const link = screen.getByText('Tharivol').closest('a');
+    // The active character's name now also appears in the navbar chip, so
+    // scope the assertion to the dropdown anchor specifically.
+    const link = screen
+      .getAllByText('Tharivol')
+      .map((el) => el.closest('a'))
+      .find(Boolean);
     expect(link).toHaveClass('active');
   });
 });

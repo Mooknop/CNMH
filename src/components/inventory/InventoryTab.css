@@ -190,3 +190,46 @@
   border: 1px solid var(--color-border-medium);
   border-radius: var(--radius-sm);
 }
+
+/* ── Dark shell overrides ─────────────────────────────────── */
+
+.cs-content .inventory-tab h2 {
+  color: var(--ember-light);
+}
+
+.cs-content .crafting-button {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid var(--shell-border-strong) !important;
+  color: var(--shell-text-secondary) !important;
+}
+
+.cs-content .crafting-button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--shell-text-primary) !important;
+}
+
+.cs-content .bulk-labels {
+  color: var(--shell-text-tertiary);
+}
+
+.cs-content .bulk-warning {
+  background: rgba(230, 81, 0, 0.12);
+  border-left-color: var(--color-warning);
+  color: #ffb74d;
+}
+
+.cs-content .bulk-warning.severe {
+  background: rgba(183, 28, 28, 0.15);
+  border-left-color: var(--color-danger);
+  color: var(--peril-light);
+}
+
+.cs-content .item-state-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .item-state-badge.dropped {
+  color: var(--peril-light);
+  background: rgba(239, 83, 80, 0.12);
+}
