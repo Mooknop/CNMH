@@ -26,9 +26,17 @@ export function initFlankingPush(sendUpdateFn) {
   // v13/v14: updateToken fires on the token document after the move is applied.
   Hooks.on('updateToken', () => pushFlankedState());
 
-  // Also re-evaluate at every turn advance (tokens haven't moved, but the
-  // "can act" status implicitly changes — and it's cheap to recompute).
+  // Re-evaluate at every turn advance (tokens haven't moved, but the "can act"
+  // status may change — and it's cheap to recompute).
   Hooks.on('updateCombat', () => pushFlankedState());
+
+  // Re-evaluate when combat starts (combatants and tokens are now known).
+  Hooks.on('createCombat', () => pushFlankedState());
+
+  // If combat is already active when the bridge connects, the actormap will
+  // arrive via FULL_STATE a moment later (bridge.js calls pushFlankedState after
+  // seeding the map from FULL_STATE). Nothing to do here — avoid pushing before
+  // the actormap is seeded, which would misclassify all combatants as enemies.
 }
 
 export function pushFlankedState() {
