@@ -7,7 +7,7 @@
 .main-content {
   flex: 1;
   padding: var(--space-8);
-  margin-top: 60px;
+  margin-top: 52px;
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
@@ -42,6 +42,17 @@
 
 .app-staging .main-content {
   margin-top: 82px;
+}
+
+/* The banner is a fixed 22px strip at top:0. The navbar and the fixed
+   character-sheet page are also viewport-fixed, so they must be pushed down
+   below the banner on staging (margin-top only helps in-flow .main-content). */
+.app-staging .navbar {
+  top: 22px;
+}
+
+.app-staging .character-sheet-page {
+  top: 74px; /* 22px banner + 52px navbar */
 }
 
 .btn-primary {
