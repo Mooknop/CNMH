@@ -27,6 +27,10 @@ export function initMovement(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 }
 
+// PF2e movement is always in 5ft increments; measurePath can return IEEE noise
+// (e.g. 14.9999996), so snap to the nearest 5.
+const snapFeet = (n) => Math.round(n / 5) * 5;
+
 function resolveToken(charId) {
   const actorMap = getActorMap();
   const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
@@ -60,7 +64,7 @@ export async function handleMoveConfirm(charId, value) {
 
   const { destination } = value;
   const { x, y } = gridToPixels(destination.col, destination.row);
-  const feetMoved = measureMoveCost(token.x, token.y, x, y);
+  const feetMoved = snapFeet(measureMoveCost(token.x, token.y, x, y));
 
   // v13: TokenDocument.update({x,y}) works for movement on both v13 and v14.
   // [v14-MIGRATION]: v14 introduced a dedicated movement pipeline (TokenDocument.move /
@@ -78,9 +82,7 @@ export async function handleMoveConfirm(charId, value) {
 async function getReachableSquares(token, moveType) {
   const gridSize  = canvas.scene?.grid?.size ?? 100;
   const speed     = getSpeed(token.actor);
-  const maxFeet   = moveType === 'step'           ? 5
-                  : moveType === 'double-stride'   ? speed * 2
-                  :                                 speed;
+  const maxFeet   = moveType === 'step' ? 5 : speed;
   const maxSquares = maxFeet / 5;
 
   const { col: originCol, row: originRow } = getTokenGridPosition(token);
@@ -94,7 +96,7 @@ async function getReachableSquares(token, moveType) {
       const row  = originRow + dr;
       const { x: destX, y: destY } = gridToPixels(col, row);
 
-      const cost = measureMoveCost(token.x, token.y, destX, destY);
+      const cost = snapFeet(measureMoveCost(token.x, token.y, destX, destY));
       if (cost > maxFeet) continue;
 
       if (hasWallCollision(token.x, token.y, destX, destY)) {
