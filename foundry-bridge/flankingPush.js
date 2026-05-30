@@ -8,9 +8,8 @@
 // badge. Feature modules read it at strike time to know whether to apply
 // off-guard (−2 circumstance to AC, attacker-relative).
 
-import { computeFlanking } from './flanking.js';
 import { getActorMap } from './encounter.js';
-import { getGridSize, getCombatTokenMap } from './pf2eAdapter.js';
+import { getCombatTokenMap, checkFlanking } from './pf2eAdapter.js';
 
 let _sendUpdate = null;
 let _latest = {};
@@ -42,32 +41,42 @@ export function initFlankingPush(sendUpdateFn) {
 export function pushFlankedState() {
   if (!_sendUpdate) return;
 
-  const actorMap = getActorMap();
-  const gridSize = getGridSize();
+  const actorMap  = getActorMap();
   const combatMap = getCombatTokenMap(); // [{ combatantId, actorId, token }]
 
   const send0 = () => { _latest = {}; _sendUpdate('global', 'flanked', {}); };
 
   if (!combatMap.length) { send0(); return; }
 
-  // Split into PC entries and enemy tokens using the app-maintained actor map.
-  const pcEntries   = [];
-  const enemyTokens = [];
+  // Split into PC entries and enemy entries using the app-maintained actor map.
+  const pcEntries     = [];
+  const enemyEntries  = [];
 
-  for (const { combatantId, actorId, token } of combatMap) {
-    const charId = actorId ? (actorMap[actorId] ?? null) : null;
+  for (const entry of combatMap) {
+    const charId = entry.actorId ? (actorMap[entry.actorId] ?? null) : null;
     if (charId) {
-      pcEntries.push({ charId, token });
+      pcEntries.push({ charId, token: entry.token });
     } else {
-      // Use the combatant id (= entryId in the app's encounter order) as the
-      // key so the app can look it up directly in encounter.order.
-      enemyTokens.push({ ...token, id: combatantId });
+      enemyEntries.push({ combatantId: entry.combatantId, token: entry.token });
     }
   }
 
-  if (!pcEntries.length || !enemyTokens.length) { send0(); return; }
+  if (!pcEntries.length || !enemyEntries.length) { send0(); return; }
 
-  const result = computeFlanking(enemyTokens, pcEntries, gridSize);
+  // Delegate flanking detection to the PF2e system.
+  // TokenPF2e.isFlanking(target) returns true when this token AND at least one
+  // ally are on opposite sides of the target. The system handles diagonal rules,
+  // reach weapons, multi-square tokens, and wall blocking — we don't need to.
+  const result = {};
+  for (const { combatantId, token: enemyToken } of enemyEntries) {
+    const byCharIds = pcEntries
+      .filter(({ token: pcToken }) => checkFlanking(pcToken, enemyToken))
+      .map(({ charId }) => charId);
+    if (byCharIds.length > 0) {
+      result[combatantId] = { byCharIds };
+    }
+  }
+
   _latest = result;
   _sendUpdate('global', 'flanked', result);
 }

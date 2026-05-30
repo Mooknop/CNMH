@@ -63,46 +63,29 @@ describe('handleAction — targeting', () => {
 describe('handleAction — off-guard annotation', () => {
   beforeEach(() => { global.canvas.tokens.placeables = []; updateActorMap({}); });
 
-  test('offGuard is true for flanked enemy when attacker is a flanker', () => {
-    // Pellias left (4,5), Ashka right (6,5), goblin center (5,5) → flanked.
-    const tokPellias = tok('tok-pellias', 4, 5);
-    const tokAshka   = tok('tok-ashka',   6, 5);
-    const tokGoblin  = tok('tok-goblin',  5, 5);
+  function setupFlankingCombat({ pelliasIsFlanking = false, ashkaIsFlanking = false } = {}) {
+    const tokPellias = makeToken({ id: 'tok-pellias', isFlanking: pelliasIsFlanking });
+    const tokAshka   = makeToken({ id: 'tok-ashka',   isFlanking: ashkaIsFlanking });
+    const tokGoblin  = makeToken({ id: 'tok-goblin' });
     global.canvas.tokens.placeables = [tokPellias, tokAshka, tokGoblin];
     updateActorMap({ 'actor-pellias': 'Pellias', 'actor-ashka': 'Ashka' });
-
-    const combat = makeCombat({ combatants: [
+    global.game.combat = makeCombat({ combatants: [
       makeCombatant({ id: 'cbt-pellias', actorId: 'actor-pellias', tokenId: 'tok-pellias' }),
       makeCombatant({ id: 'cbt-ashka',   actorId: 'actor-ashka',   tokenId: 'tok-ashka' }),
       makeCombatant({ id: 'cbt-goblin',  actorId: null,            tokenId: 'tok-goblin' }),
     ]});
-    global.game.combat = combat;
-
     initFlankingPush(jest.fn());
     pushFlankedState();
+  }
 
+  test('offGuard is true when PF2e says the attacker is flanking the target', () => {
+    setupFlankingCombat({ pelliasIsFlanking: true, ashkaIsFlanking: true });
     const result = handleAction('Pellias', { kind: 'strike', targets: ['cbt-goblin'] });
     expect(result[0].offGuard).toBe(true);
   });
 
-  test('offGuard is false when attacker is not a flanker', () => {
-    const tokPellias = tok('tok-pellias', 4, 5);
-    const tokAshka   = tok('tok-ashka',   6, 5);
-    const tokGoblin  = tok('tok-goblin',  5, 5);
-    global.canvas.tokens.placeables = [tokPellias, tokAshka, tokGoblin];
-    updateActorMap({ 'actor-pellias': 'Pellias', 'actor-ashka': 'Ashka' });
-
-    const combat = makeCombat({ combatants: [
-      makeCombatant({ id: 'cbt-pellias', actorId: 'actor-pellias', tokenId: 'tok-pellias' }),
-      makeCombatant({ id: 'cbt-ashka',   actorId: 'actor-ashka',   tokenId: 'tok-ashka' }),
-      makeCombatant({ id: 'cbt-goblin',  actorId: null,            tokenId: 'tok-goblin' }),
-    ]});
-    global.game.combat = combat;
-
-    initFlankingPush(jest.fn());
-    pushFlankedState();
-
-    // Izzy is not a flanker (not in the combat).
+  test('offGuard is false when PF2e says the attacker is not flanking', () => {
+    setupFlankingCombat({ pelliasIsFlanking: false, ashkaIsFlanking: false });
     const result = handleAction('IzzyUncut', { kind: 'strike', targets: ['cbt-goblin'] });
     expect(result[0].offGuard).toBe(false);
   });

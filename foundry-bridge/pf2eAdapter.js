@@ -178,6 +178,15 @@ export function getCombatTokenMap() {
   }).filter((e) => e.token);
 }
 
+// Ask the PF2e system whether attackerToken is flanking targetToken.
+// TokenPF2e.isFlanking(target) returns true when this token AND at least one
+// allied token are on opposite sides of target — the system handles diagonal
+// rules, reach, multi-square tokens, and wall-blocking correctly.
+// v14 MIGRATION: isFlanking lives on the TokenPF2e placeable, unchanged in v14.
+export function checkFlanking(attackerToken, targetToken) {
+  return attackerToken?.isFlanking?.(targetToken) ?? false;
+}
+
 // --- Token geometry ---
 // v14 uses canvas.grid for measurement. All grid/geometry calls go through here.
 
