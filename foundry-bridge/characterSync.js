@@ -19,8 +19,13 @@ export function initCharacterSync(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 
   Hooks.on('updateActor', onUpdateActor);
-  Hooks.on('createEmbeddedDocuments', onEmbeddedDocumentsChanged);
-  Hooks.on('deleteEmbeddedDocuments', onEmbeddedDocumentsChanged);
+  // Conditions — including dying/wounded/doomed — are condition-type Items on the
+  // actor. Foundry fires per-document hooks (createItem/updateItem/deleteItem),
+  // not a generic createEmbeddedDocuments hook. updateItem catches badge changes
+  // (e.g. Dying 1 → 2).
+  Hooks.on('createItem', onConditionItemChanged);
+  Hooks.on('updateItem', onConditionItemChanged);
+  Hooks.on('deleteItem', onConditionItemChanged);
 }
 
 // Called by bridge.js when an incoming relay UPDATE arrives for a character key.
@@ -66,17 +71,22 @@ function onUpdateActor(actor, diff, options) {
   }
 }
 
-function onEmbeddedDocumentsChanged(parent, type, docs) {
-  if (type !== 'Item') return;
-  const hasCondition = docs.some((d) => d.type === 'condition');
-  if (!hasCondition) return;
+function onConditionItemChanged(item) {
+  if (item?.type !== 'condition') return;
+  const actor = item.parent;
+  if (!actor || actor.documentName !== 'Actor') return;
 
-  const charId = getActorMap()[parent.id];
+  const charId = getActorMap()[actor.id];
   if (!charId) return;
 
-  const conditions = getConditions(parent).map((c) => ({
+  // Push the full condition list…
+  const conditions = getConditions(actor).map((c) => ({
     id:    slugToAppConditionId(c.slug),
     value: c.value,
   }));
   _sendUpdate?.(charId, 'conditions', conditions);
+
+  // …and re-push HP, since dying/wounded/doomed surface in the HP box and are
+  // applied as condition items rather than direct actor-attribute writes.
+  _sendUpdate?.(charId, 'hp', getHp(actor));
 }
