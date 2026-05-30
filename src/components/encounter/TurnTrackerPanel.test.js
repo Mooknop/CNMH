@@ -464,6 +464,25 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText('Target in Foundry')).not.toBeDisabled();
   });
 
+  // ── Flanking badge (Slice 3) ──────────────────────────────────────────────
+  it('shows a flanked badge on enemy order entry when flanked state arrives', () => {
+    let drv, setFlanked;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_flanked_global" onReady={(s) => (setFlanked = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+
+    // Simulate bridge pushing flanked state.
+    act(() => setFlanked({ [goblin.entryId]: { byCharIds: ['Pellias', 'Ashka'] } }));
+
+    expect(screen.getByLabelText('Goblin is flanked')).toBeInTheDocument();
+  });
+
   it('clears the selection at the start of the next turn', () => {
     let drv;
     render(

@@ -60,6 +60,15 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   // the start of the wielder's next turn (see the turn-reset effect below).
   const { heldShield, raised, broken, raiseShield, lowerShield } = useShield(charId, inventory);
 
+  // ── Flanking (Slice 3) ───────────────────────────────────────────────────
+  // Bridge pushes { [enemyEntryId]: { byCharIds:[...] } } whenever tokens move or
+  // turns advance. We read it here so both the order strip and the target picker
+  // can show the flanked badge without prop-drilling.
+  const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
+  // Whether the acting character is a flanker for a given enemy entryId.
+  const isFlanking = (entryId) =>
+    !!(flankedMap?.[entryId]?.byCharIds?.includes(charId));
+
   // ── Targeting (Slice 2) ───────────────────────────────────────────────────
   const { targets, selectable, isTargeted, toggleTarget, clearTargets, targetNames } =
     useTargeting(charId, encounter?.order || []);
@@ -243,6 +252,9 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
               aria-current={isCurrent ? 'true' : undefined}
             >
               <span className="ttp-entry-name">{entry.name}</span>
+              {entry.kind === 'enemy' && flankedMap?.[entry.entryId] && (
+                <span className="ttp-flanked-badge" aria-label={`${entry.name} is flanked`} title="Flanked">⚔</span>
+              )}
               <span className="ttp-entry-init">
                 {entry.initiative !== null && entry.initiative !== undefined
                   ? entry.initiative
@@ -349,6 +361,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           <TargetPicker
             selectable={selectable}
             isTargeted={isTargeted}
+            isFlanking={isFlanking}
             onToggle={toggleTarget}
           />
           <div className="ttp-target-actions">
