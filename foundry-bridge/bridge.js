@@ -13,7 +13,7 @@ import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 import { handleAction } from './targeting.js';
-import { initFlankingPush } from './flankingPush.js';
+import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -123,7 +123,10 @@ function dispatch(msg) {
     // Seed the actor map from persisted session state so the first encounter
     // push already has correct charId resolution.
     const map = msg.payload?.global?.actormap;
-    if (map) updateActorMap(map);
+    if (map) {
+      updateActorMap(map);
+      pushFlankedState(); // actorMap just became valid — re-evaluate with correct PC set
+    }
     return;
   }
 
@@ -135,6 +138,7 @@ function dispatch(msg) {
   // Actor map updated by GM in GmEncounter → refresh bridge-side resolution.
   if (characterId === 'global' && key === 'actormap') {
     updateActorMap(value);
+    pushFlankedState(); // PC set changed — re-evaluate immediately
     return;
   }
 

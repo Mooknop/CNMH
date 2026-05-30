@@ -81,6 +81,19 @@ describe('pushFlankedState', () => {
     expect(payload).toEqual({});
   });
 
+  it('re-evaluates when createCombat Foundry hook fires', () => {
+    const pA = { charId: 'Pellias', token: tok('tok-pellias', 4, 5) };
+    const pB = { charId: 'Ashka',   token: tok('tok-ashka',   6, 5) };
+    const enemy = { entryId: 'cbt-goblin', token: tok('tok-goblin', 5, 5) };
+    setup({ pcTokens: [pA, pB], enemyTokens: [enemy] });
+
+    global.Hooks.fire('createCombat');
+
+    expect(send).toHaveBeenCalledWith('global', 'flanked', expect.objectContaining({
+      'cbt-goblin': expect.any(Object),
+    }));
+  });
+
   it('re-evaluates when updateToken Foundry hook fires', () => {
     const pA = { charId: 'Pellias', token: tok('tok-pellias', 4, 5) };
     const pB = { charId: 'Ashka',   token: tok('tok-ashka',   6, 5) };
