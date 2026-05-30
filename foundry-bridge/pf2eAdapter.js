@@ -33,6 +33,11 @@ export function getFocusPool(actor) {
 }
 
 export function getSpeed(actor) {
+  // PF2e moved land speed from system.attributes.speed to system.movement.speeds
+  // (deprecated since PF2e 7.5.0). Prefer the new path; the old path is only read
+  // as a fallback for older data, so the deprecation warning never fires normally.
+  const land = actor.system?.movement?.speeds?.land;
+  if (land) return land.total ?? land.value ?? 25;
   return actor.system?.attributes?.speed?.total ?? 25;
 }
 
