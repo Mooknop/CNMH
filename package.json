@@ -23,6 +23,7 @@
     "build:app": "react-scripts build",
     "test": "react-scripts test",
     "test:ci": "react-scripts test --watchAll=false --coverage --passWithNoTests",
+    "test:bridge": "jest --config foundry-bridge/jest.config.js",
     "test:e2e": "playwright test",
     "eject": "react-scripts eject"
   },

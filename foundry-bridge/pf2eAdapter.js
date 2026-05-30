@@ -7,6 +7,8 @@
 //   2. Update the two canvas functions marked [v14-MIGRATION] below
 //   3. Re-verify system.* data paths (stable across v13→v14 for PF2e 6.x)
 
+import { BRIDGE_SOURCE_FLAG } from './utils.js';
+
 // --- Actor data ---
 
 export function getHp(actor) {
@@ -49,6 +51,50 @@ export function getConditions(actor) {
   }));
 }
 
+// --- Actor lookup & writes ---
+
+export function getActorById(actorId) {
+  return game.actors?.get(actorId) ?? null;
+}
+
+export function getActorId(actor) {
+  return actor?.id ?? null;
+}
+
+// The active token(s) for an actor on the current scene. PCs have a single token;
+// companions/familiars are separate actors, so callers take the first.
+export function getActorTokens(actor) {
+  return actor?.getActiveTokens?.() ?? [];
+}
+
+// Write HP back to the actor, tagged so the bridge's own updateActor hook ignores
+// the echo (see isBridgeEcho).
+export function updateActorHp(actor, { current, temp }) {
+  return actor.update({
+    'system.attributes.hp.value': current,
+    'system.attributes.hp.temp':  temp ?? 0,
+  }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+}
+
+export function updateActorHeroPoints(actor, value) {
+  return actor.update({
+    'system.resources.heroPoints.value': value,
+  }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+}
+
+// --- Condition items (createItem/updateItem/deleteItem hook payloads) ---
+
+export function isConditionItem(item) {
+  return item?.type === 'condition';
+}
+
+// The owning Actor of a condition Item, or null if the item isn't on an actor.
+export function getConditionItemActor(item) {
+  const actor = item?.parent;
+  if (!actor || actor.documentName !== 'Actor') return null;
+  return actor;
+}
+
 // --- Combat data ---
 
 export function getCombatantActorId(combatant) {
@@ -63,11 +109,55 @@ export function getCombatantInitiative(combatant) {
   return combatant.initiative ?? null;
 }
 
+// --- Combat lookup & lifecycle ---
+
+export function getCombatById(combatId) {
+  return game.combats?.get(combatId) ?? null;
+}
+
+export function getActiveCombat() {
+  return game.combat ?? null;
+}
+
+export function advanceCombatTurn(combat) {
+  return combat.nextTurn();
+}
+
+// The version-independent combat snapshot the encounter payload is built from.
+// Keeping these reads here means a v14 Combat API rename touches only this file.
+export function getCombatState(combat) {
+  return {
+    active:            combat.active,
+    started:           combat.started,
+    round:             combat.round ?? 0,
+    turn:              combat.turn  ?? 0,
+    combatants:        combat.combatants ?? [],
+    activeCombatantId: combat.combatant?.id ?? null,
+  };
+}
+
 // --- Token geometry ---
 // v14 uses canvas.grid for measurement. All grid/geometry calls go through here.
 
+export function getGridSize() {
+  return canvas.scene?.grid?.size ?? 100;
+}
+
+// All placed tokens on the current scene (for occupancy / flanking geometry).
+export function getAllTokens() {
+  return canvas.tokens?.placeables ?? [];
+}
+
+// A token's footprint in grid squares, clamped to a 1×1 minimum.
+export function getTokenDimensions(token) {
+  return {
+    width:  Math.max(1, Math.round(token.document?.width  ?? 1)),
+    height: Math.max(1, Math.round(token.document?.height ?? 1)),
+  };
+}
+
 export function getTokenGridPosition(token) {
-  const gridSize = canvas.scene?.grid?.size ?? 100;
+  const gridSize = getGridSize();
   return {
     col: Math.round(token.x / gridSize),
     row: Math.round(token.y / gridSize),
@@ -75,8 +165,17 @@ export function getTokenGridPosition(token) {
 }
 
 export function gridToPixels(col, row) {
-  const gridSize = canvas.scene?.grid?.size ?? 100;
+  const gridSize = getGridSize();
   return { x: col * gridSize, y: row * gridSize };
+}
+
+// Move a token to a pixel position, tagged so the bridge's own move/update hooks
+// ignore the echo.
+// [v14-MIGRATION]: v14 introduced a dedicated movement pipeline (TokenDocument.move /
+// the moveToken hook). The update() path still functions on v13 and v14; migrate
+// here (one switch point) for waypoint support and smoother animation.
+export function moveToken(token, x, y) {
+  return token.document.update({ x, y }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true });
 }
 
 // Measure movement cost in feet between two pixel points using the PF2e diagonal rule.

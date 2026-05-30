@@ -9,7 +9,10 @@
 // pushes the updated state back down.
 
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
-import { getCombatantActorId, getCombatantInitiative } from './pf2eAdapter.js';
+import {
+  getCombatantActorId, getCombatantInitiative,
+  getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
+} from './pf2eAdapter.js';
 
 let _sendUpdate    = null;  // injected by bridge.js on init
 let _activeCombatId = null;  // stored on createCombat/updateCombat for reliable lookup
@@ -42,11 +45,11 @@ export function initEncounter(sendUpdateFn) {
 // The bridge calls this when it sees cnmh_turncmd_global arrive.
 export async function handleTurnCommand(value) {
   if (value?.action !== 'next-turn') return;
-  // Prefer the stored combat ID over game.combat — game.combat can be null if the
-  // GM navigated to a different scene while combat is still active.
-  const combat = (_activeCombatId ? game.combats?.get(_activeCombatId) : null) ?? game.combat;
+  // Prefer the stored combat ID over the active combat — the active combat can be
+  // null if the GM navigated to a different scene while combat is still running.
+  const combat = (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
   if (!combat) return;
-  await combat.nextTurn();
+  await advanceCombatTurn(combat);
 }
 
 function onUpdateCombat(combat, diff, opts) {
@@ -73,16 +76,14 @@ function pushIdleState() {
 }
 
 function buildEncounterPayload(combat) {
-  const started  = combat.started;
-  const round    = combat.round ?? 0;
-  const turnIdx  = combat.turn  ?? 0;
+  const { active, started, round, combatants, activeCombatantId } = getCombatState(combat);
 
   let phase = 'idle';
-  if (combat.active && !started) phase = 'setup';
-  if (combat.active && started)  phase = 'in-progress';
-  if (!combat.active && round > 0) phase = 'ended';
+  if (active && !started) phase = 'setup';
+  if (active && started)  phase = 'in-progress';
+  if (!active && round > 0) phase = 'ended';
 
-  const order = (combat.combatants ?? []).map((c) => {
+  const order = combatants.map((c) => {
     const foundryActorId = getCombatantActorId(c);
     // Primary resolution: use the app-maintained actormap (set by GM in GmEncounter).
     const charId = foundryActorId ? (_actorMap[foundryActorId] ?? null) : null;
@@ -104,13 +105,12 @@ function buildEncounterPayload(combat) {
   });
 
   // Map Foundry's turn index to the sorted order index.
-  const activeCombatantId = combat.combatant?.id ?? null;
-  const currentTurnIndex  = activeCombatantId
+  const currentTurnIndex = activeCombatantId
     ? sortedOrder.findIndex((e) => e.entryId === activeCombatantId)
     : 0;
 
   return {
-    active:           combat.active,
+    active,
     phase,
     round,
     currentTurnIndex: Math.max(0, currentTurnIndex),

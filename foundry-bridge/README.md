@@ -1,0 +1,64 @@
+# CNMH Foundry Bridge (`cnmh-bridge`)
+
+A Foundry VTT module that connects a world to the CNMH app over the Cloudflare
+session relay. The bridge is a normal session peer: it sends and receives
+`{ type:'UPDATE', characterId, key, value }` messages alongside the player
+devices.
+
+## Layout
+
+| File | Role |
+| --- | --- |
+| `bridge.js` | Entry point. WebSocket lifecycle + incoming-message dispatch. |
+| `encounter.js` | Combat hooks ↔ app encounter/turn tracker. |
+| `characterSync.js` | HP / conditions / hero points sync (both directions). |
+| `movement.js` | Token movement: reachable-square picker + move write-back. |
+| `pf2eAdapter.js` | **The seam.** Every Foundry / canvas / actor / combat / PF2e API call. |
+| `utils.js` | Echo-loop guard flags, condition-slug map, log ids. |
+| `config.js` | Per-campaign config (worker URL, secret, actor/token maps). |
+
+Feature modules hold logic and never touch a Foundry global directly — all of
+that goes through `pf2eAdapter.js`. See [`MIGRATION.md`](./MIGRATION.md) for why
+and how that protects version upgrades.
+
+## Relay keys (single source of truth)
+
+Keys are `cnmh_<key>_<charId>`; encounter-wide data uses `characterId: 'global'`.
+Request/response pairs correlate via an echoed `ts` / `reqTs` (or `reqId`).
+**Keep this table in sync when adding a channel** — the app and bridge both read
+from it.
+
+| Key | Direction | charId | Payload |
+| --- | --- | --- | --- |
+| `actormap` | app → bridge | `global` | `{ [foundryActorId]: charId }` |
+| `encounter` | bridge → app | `global` | `{ active, phase, round, currentTurnIndex, order[], log[], foundryCombatId }` |
+| `turncmd` | app → bridge | `global` | `{ action: 'next-turn' }` |
+| `hp` | both | charId | `{ current, max, temp, dying, wounded, doomed }` |
+| `conditions` | bridge → app | charId | `[{ id, value }]` |
+| `heropoints` | both | charId | `number` |
+| `movereq` | app → bridge | charId | `{ moveType, ts }` |
+| `moveopts` | bridge → app | charId | `{ origin, reachable[], blocked[], gridSize, maxFeet, reqTs }` |
+| `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts }` |
+| `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs }` |
+
+## Tests
+
+The bridge has its own jest project (it lives outside `src/`, so it does not run
+under the CRA `react-scripts test`):
+
+```sh
+npm run test:bridge            # one-shot
+npm run test:bridge -- --watch
+```
+
+It runs with **no real Foundry present** — `test/setup.js` installs mocked
+Foundry globals (`game`, `canvas`, `Hooks`, `CONFIG`, `WebSocket`) via the
+factories in `test/foundryMock.js`. Two layers:
+
+- **Feature-module unit tests** (`encounter.test.js`, `characterSync.test.js`,
+  `movement.test.js`) — exercise the logic against the mocked adapter. These are
+  version-independent.
+- **Adapter contract tests** (`pf2eAdapter.test.js`) — pin the exact Foundry/PF2e
+  data shapes, driven by captured fixtures in `__fixtures__/<version>/`. These
+  are the early-warning tripwire for a version bump. See
+  [`__fixtures__/README.md`](./__fixtures__/README.md).
