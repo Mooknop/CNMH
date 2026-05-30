@@ -12,13 +12,18 @@
 // UI) rather than a static TOKEN_MAP. charId → foundryActorId → the actor's
 // active token on the current scene.
 import { getActorMap } from './encounter.js';
-import { BRIDGE_SOURCE_FLAG } from './utils.js';
 import {
   getSpeed,
+  getGridSize,
+  getAllTokens,
+  getTokenDimensions,
+  getActorById,
+  getActorTokens,
   getTokenGridPosition,
   gridToPixels,
   measureMoveCost,
   hasWallCollision,
+  moveToken,
 } from './pf2eAdapter.js';
 
 let _sendUpdate = null;
@@ -35,12 +40,11 @@ const snapFeet = (n) => Math.round(n / 5) * 5;
 // your movement on top of another creature). Accounts for multi-square tokens.
 function occupiedCells(movingToken, gridSize) {
   const occupied = new Set();
-  for (const t of canvas.tokens?.placeables ?? []) {
+  for (const t of getAllTokens()) {
     if (t.id === movingToken.id) continue;
     const baseCol = Math.round(t.x / gridSize);
     const baseRow = Math.round(t.y / gridSize);
-    const w = Math.max(1, Math.round(t.document?.width  ?? 1));
-    const h = Math.max(1, Math.round(t.document?.height ?? 1));
+    const { width: w, height: h } = getTokenDimensions(t);
     for (let c = 0; c < w; c++) {
       for (let r = 0; r < h; r++) {
         occupied.add(`${baseCol + c},${baseRow + r}`);
@@ -54,11 +58,11 @@ function resolveToken(charId) {
   const actorMap = getActorMap();
   const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
   if (!actorId) return null;
-  const actor = game.actors?.get(actorId);
+  const actor = getActorById(actorId);
   if (!actor) return null;
   // PCs have a single token on the scene; companions/familiars are separate
   // actors, so the first active token is the PC's own.
-  const tokens = actor.getActiveTokens?.() ?? [];
+  const tokens = getActorTokens(actor);
   return tokens[0] ?? null;
 }
 
@@ -85,11 +89,7 @@ export async function handleMoveConfirm(charId, value) {
   const { x, y } = gridToPixels(destination.col, destination.row);
   const feetMoved = snapFeet(measureMoveCost(token.x, token.y, x, y));
 
-  // v13: TokenDocument.update({x,y}) works for movement on both v13 and v14.
-  // [v14-MIGRATION]: v14 introduced a dedicated movement pipeline (TokenDocument.move /
-  // the moveToken hook). Consider migrating for smoother animation and waypoint support,
-  // but the update() path still functions and is safe to keep for now.
-  await token.document.update({ x, y }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true });
+  await moveToken(token, x, y);
 
   _sendUpdate?.(charId, 'movedone', {
     newPosition: { col: destination.col, row: destination.row, x, y },
@@ -99,7 +99,7 @@ export async function handleMoveConfirm(charId, value) {
 }
 
 async function getReachableSquares(token, moveType) {
-  const gridSize  = canvas.scene?.grid?.size ?? 100;
+  const gridSize  = getGridSize();
   const speed     = getSpeed(token.actor);
   const maxFeet   = moveType === 'step' ? 5 : speed;
   const maxSquares = maxFeet / 5;
