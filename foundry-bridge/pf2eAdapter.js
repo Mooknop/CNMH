@@ -75,19 +75,25 @@ export function gridToPixels(col, row) {
 }
 
 // Measure movement cost in feet between two pixel points using the PF2e diagonal rule.
-// v13: measurePath takes [{ray}] segments.
-// [v14-MIGRATION]: signature changed to take waypoint coordinates directly:
-//   canvas.grid.measurePath([{x:fromX,y:fromY},{x:toX,y:toY}]).distance
+// Movement cost in scene distance units (feet) between two pixel points,
+// honoring the scene's diagonal rule (PF2e's alternating 5/10 when configured).
+// v12/v13: measurePath takes an array of {x,y} waypoints and returns { distance }.
 export function measureMoveCost(fromX, fromY, toX, toY) {
-  const segments = [{ ray: new Ray({ x: fromX, y: fromY }, { x: toX, y: toY }) }];
-  return canvas.grid.measurePath(segments).distance;
+  const path = canvas.grid.measurePath([
+    { x: fromX, y: fromY },
+    { x: toX,   y: toY },
+  ]);
+  return path.distance;
 }
 
-// Check for wall/move collision along a ray.
-// v13: canvas.walls.checkCollision(ray, {type:'move'}) using a Ray object.
-// [v14-MIGRATION]: canvas.walls.checkCollision was removed; use:
-//   CONFIG.Canvas.polygonBackends.move.testCollision(origin, destination, {type:'move'})
+// True if a wall blocks movement between two pixel points.
+// v12/v13: canvas.walls.checkCollision was removed; collision goes through the
+// move polygon backend. mode:'any' returns a boolean.
 export function hasWallCollision(fromX, fromY, toX, toY) {
-  const ray = new Ray({ x: fromX, y: fromY }, { x: toX, y: toY });
-  return canvas.walls.checkCollision(ray, { type: 'move' });
+  const origin      = { x: fromX, y: fromY };
+  const destination = { x: toX,   y: toY };
+  return CONFIG.Canvas.polygonBackends.move.testCollision(origin, destination, {
+    type: 'move',
+    mode: 'any',
+  });
 }
