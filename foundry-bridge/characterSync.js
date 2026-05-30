@@ -5,7 +5,9 @@
 // App → Foundry: incoming relay updates for hp/heroPoints are written back to
 //   the Foundry actor. Tagged with _bridgeSource:'app' to prevent echo loops.
 
-import { ACTOR_MAP, ACTOR_MAP_REVERSE } from './config.js';
+// Actor→charId resolution uses the app-maintained actorMap (set by GM in the
+// encounter UI and stored in session state) rather than the static config.js map.
+import { getActorMap } from './encounter.js';
 import { BRIDGE_SOURCE_FLAG, isBridgeEcho, slugToAppConditionId } from './utils.js';
 import {
   getHp, getHeroPoints, getConditions,
@@ -23,7 +25,9 @@ export function initCharacterSync(sendUpdateFn) {
 
 // Called by bridge.js when an incoming relay UPDATE arrives for a character key.
 export async function handleCharacterUpdate(charId, key, value) {
-  const actorId = ACTOR_MAP[charId];
+  // Reverse lookup: charId → foundryActorId using the app-maintained map.
+  const actorMap = getActorMap();
+  const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
   if (!actorId) return;
   const actor = game.actors.get(actorId);
   if (!actor) return;
@@ -45,7 +49,7 @@ export async function handleCharacterUpdate(charId, key, value) {
 function onUpdateActor(actor, diff, options) {
   if (isBridgeEcho(options)) return;
 
-  const charId = ACTOR_MAP_REVERSE[actor.id];
+  const charId = getActorMap()[actor.id];
   if (!charId) return;
 
   const hpDiff = diff.system?.attributes?.hp;
@@ -67,7 +71,7 @@ function onEmbeddedDocumentsChanged(parent, type, docs) {
   const hasCondition = docs.some((d) => d.type === 'condition');
   if (!hasCondition) return;
 
-  const charId = ACTOR_MAP_REVERSE[parent.id];
+  const charId = getActorMap()[parent.id];
   if (!charId) return;
 
   const conditions = getConditions(parent).map((c) => ({

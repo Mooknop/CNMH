@@ -52,9 +52,14 @@ export const useCharacter = (character) => {
   // retrieve …). Read-only here; the Hands panel writes the same key. Empty
   // map (no SessionProvider, or untouched) ⇒ effective tree == authored tree,
   // so Bulk and inventory are byte-identical to before this layer existed.
-  const [loadout] = useSyncedState(`cnmh_loadout_${character?.id || 'none'}`, {});
+  const [loadout]     = useSyncedState(`cnmh_loadout_${character?.id || 'none'}`, {});
+  const [hp, setHp]   = useSyncedState(
+    `cnmh_hp_${character?.id || 'none'}`,
+    () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
+  );
+  const [heroPoints, setHeroPoints] = useSyncedState(`cnmh_heropoints_${character?.id || 'none'}`, 0);
 
-  return useMemo(() => {
+  const charMemo = useMemo(() => {
     if (!character) return null;
 
     // ── Identity ────────────────────────────────────────────────────────────
@@ -294,4 +299,12 @@ export const useCharacter = (character) => {
       monk,
     };
   }, [character, loadout]);
+
+  // Combine the memoized computed character with the live sync state.
+  // Wrapped in useMemo so downstream components don't re-render when neither
+  // the character data nor the synced values have actually changed.
+  return useMemo(
+    () => charMemo ? { ...charMemo, hp, setHp, heroPoints, setHeroPoints } : null,
+    [charMemo, hp, setHp, heroPoints, setHeroPoints]
+  );
 };

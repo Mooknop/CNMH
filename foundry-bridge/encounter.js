@@ -24,6 +24,10 @@ export function updateActorMap(map) {
   _actorMap = map || {};
 }
 
+export function getActorMap() {
+  return _actorMap;
+}
+
 export function initEncounter(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 
@@ -37,21 +41,12 @@ export function initEncounter(sendUpdateFn) {
 // Handle incoming relay message addressed to 'global'/'encounter' channel.
 // The bridge calls this when it sees cnmh_turncmd_global arrive.
 export async function handleTurnCommand(value) {
-  console.log('CNMH Bridge | handleTurnCommand received:', value);
   if (value?.action !== 'next-turn') return;
   // Prefer the stored combat ID over game.combat — game.combat can be null if the
   // GM navigated to a different scene while combat is still active.
   const combat = (_activeCombatId ? game.combats?.get(_activeCombatId) : null) ?? game.combat;
-  if (!combat) {
-    console.warn('CNMH Bridge | handleTurnCommand: no active combat found (id:', _activeCombatId, ')');
-    return;
-  }
-  console.log('CNMH Bridge | calling combat.nextTurn() on', combat.id);
-  try {
-    await combat.nextTurn();
-  } catch (err) {
-    console.error('CNMH Bridge | combat.nextTurn() failed:', err);
-  }
+  if (!combat) return;
+  await combat.nextTurn();
 }
 
 function onUpdateCombat(combat, diff, opts) {

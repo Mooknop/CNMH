@@ -184,7 +184,8 @@ describe('StatsBlock', () => {
 
   it('should display HP and AC values', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('8')).toBeInTheDocument(); // maxHp
+    // HP shows as "current / max" — 8 appears in both spans when at full health
+    expect(screen.getAllByText('8').length).toBeGreaterThan(0);
     expect(screen.getByText('16')).toBeInTheDocument(); // ac
   });
 

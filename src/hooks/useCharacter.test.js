@@ -125,8 +125,10 @@ describe('useCharacter', () => {
 
     rerender(character);
 
-    // Should return the same memoized object
-    expect(result.current).toBe(firstResult);
+    // Should return equivalent data when character hasn't changed.
+    // toStrictEqual rather than toBe because the combined memo object includes
+    // synced-state setters whose references differ across the mock's renders.
+    expect(result.current).toStrictEqual(firstResult);
   });
 
   it('should update when character changes', () => {
