@@ -13,6 +13,7 @@ import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 import { handleAction } from './targeting.js';
+import { initFlankingPush } from './flankingPush.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -55,6 +56,7 @@ Hooks.once('ready', () => {
   initEncounter(sendUpdate);
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
+  initFlankingPush(sendUpdate);
   connect();
 });
 

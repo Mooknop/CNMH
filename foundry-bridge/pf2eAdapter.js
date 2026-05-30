@@ -165,6 +165,19 @@ export function setUserTargets(tokens) {
   game.user?.updateTokenTargets?.(ids);
 }
 
+// Flanking (Slice 3): enumerate token-id → placed-token for all tokens in the
+// current scene. Returns an array of { id, token } only for tokens that are
+// actually placed (getActiveTokens returns a live list).
+export function getCombatTokenMap() {
+  const combat = getActiveCombat();
+  if (!combat) return [];
+  return (combat.combatants ?? []).map((c) => {
+    const tokenId = getCombatantTokenId(c);
+    const token = tokenId ? getTokenById(tokenId) : null;
+    return { combatantId: c.id, actorId: getCombatantActorId(c), token };
+  }).filter((e) => e.token);
+}
+
 // --- Token geometry ---
 // v14 uses canvas.grid for measurement. All grid/geometry calls go through here.
 

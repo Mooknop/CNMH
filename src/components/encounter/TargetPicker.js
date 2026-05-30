@@ -4,10 +4,11 @@ import React from 'react';
 // encounter entry (name + pc/enemy kind). Reusable by the turn tracker now and
 // by Strike/spell "Use" affordances in later slices.
 //
-// @param {Array}    selectable - entries [{ entryId, kind, name }]
-// @param {Function} isTargeted - (entryId) => boolean
-// @param {Function} onToggle   - (entryId) => void
-const TargetPicker = ({ selectable, isTargeted, onToggle }) => {
+// @param {Array}    selectable  - entries [{ entryId, kind, name }]
+// @param {Function} isTargeted  - (entryId) => boolean
+// @param {Function} isFlanking  - (entryId) => boolean — true when this PC flanks that entry
+// @param {Function} onToggle    - (entryId) => void
+const TargetPicker = ({ selectable, isTargeted, isFlanking, onToggle }) => {
   if (!selectable || selectable.length === 0) {
     return <div className="ttp-targets-empty">No targets available</div>;
   }
@@ -29,6 +30,9 @@ const TargetPicker = ({ selectable, isTargeted, onToggle }) => {
             onClick={() => onToggle(e.entryId)}
           >
             <span className="ttp-target-name">{e.name}</span>
+            {isFlanking?.(e.entryId) && (
+              <span className="ttp-flanked-badge" aria-label={`${e.name} is flanked`} title="Flanked">⚔</span>
+            )}
             <span className="ttp-target-kind">{e.kind === 'enemy' ? 'enemy' : 'pc'}</span>
           </button>
         );

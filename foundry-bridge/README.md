@@ -13,7 +13,9 @@ devices.
 | `encounter.js` | Combat hooks ↔ app encounter/turn tracker. |
 | `characterSync.js` | HP / conditions / hero points sync (both directions). |
 | `movement.js` | Token movement: reachable-square picker + move write-back. |
-| `targeting.js` | Combat-action targeting: resolve entry ids → set Foundry user targets. |
+| `targeting.js` | Combat-action targeting: resolve entry ids → set Foundry user targets; off-guard annotation for flanking melee strikes. |
+| `flanking.js` | Pure geometry — `computeFlanking` (no Foundry globals). |
+| `flankingPush.js` | Hooks into token-move / turn-advance to push flanked state to the app. |
 | `pf2eAdapter.js` | **The seam.** Every Foundry / canvas / actor / combat / PF2e API call. |
 | `utils.js` | Echo-loop guard flags, condition-slug map, log ids. |
 | `config.js` | Per-campaign config (worker URL, secret, actor/token maps). |
@@ -42,7 +44,8 @@ from it.
 | `moveconfirm` | app → bridge | charId | `{ destination, moveType, actionCost, ts }` |
 | `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs }` |
 | `shieldraise` | app (↔ Foundry mirror TBD) | charId | `{ raised, uid, ts }` — Raise a Shield state |
-| `action` | app → bridge | charId | `{ kind:'strike'\|'spell'\|'save-effect', sourceUid, targets:[entryId], ts }` — sets Foundry's user target set |
+| `action` | app → bridge | charId | `{ kind:'strike'\|'spell'\|'save-effect', sourceUid, targets:[entryId], ts }` — sets Foundry's user target set; bridge annotates each target with `offGuard:true` if attacker is a flanker |
+| `flanked` | bridge → app | `global` | `{ [enemyEntryId]: { byCharIds:[charId,...] } }` — pushed on token-move and turn-advance |
 
 ## Tests
 
