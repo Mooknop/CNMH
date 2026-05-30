@@ -9,6 +9,7 @@ jest.mock('../shared/TraitTag', () => {
 });
 
 jest.mock('../../utils/InventoryUtils', () => ({
+  ...jest.requireActual('../../utils/InventoryUtils'),
   formatBulk: (b) => (b === 0 ? '—' : String(b)),
 }));
 

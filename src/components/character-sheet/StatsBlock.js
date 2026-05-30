@@ -6,6 +6,7 @@ import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useShield } from '../../hooks/useShield';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from '../../utils/EffectUtils';
 import { useEffects } from '../../hooks/useEffects';
@@ -65,6 +66,11 @@ const StatsBlock = ({ character, characterColor }) => {
   const { effects: activeEffects } = useEffects(characterKey);
   const { effects: effectCatalog } = useContent();
 
+  // A raised shield contributes a circumstance bonus to AC, modeled as a
+  // synthetic effect injected into the same computeEffectBonuses pipeline (so
+  // stacking with Take Cover / the Shield cantrip is handled by bestOfKind).
+  const { shieldEffect } = useShield(characterKey, charData?.inventory);
+
   if (!charData) return null;
 
   const {
@@ -121,8 +127,11 @@ const StatsBlock = ({ character, characterColor }) => {
   // Compute condition penalties for every displayed stat
   const effects = computeConditionEffects(hydratedConditions, character?.keyAbility, level);
 
-  // Combine condition penalties with effect bonuses
-  const bonuses = computeEffectBonuses(activeEffects, effectCatalog);
+  // Combine condition penalties with effect bonuses. A raised shield appends a
+  // synthetic active-effect entry + its dynamic catalog def (bonus = shield AC).
+  const effectsList = shieldEffect ? [...activeEffects, shieldEffect.entry] : activeEffects;
+  const catalogList = shieldEffect ? [...(effectCatalog || []), shieldEffect.def] : effectCatalog;
+  const bonuses = computeEffectBonuses(effectsList, catalogList);
   const mod = (stat) => combineModifiers(effects[stat], bonuses[stat]);
 
   // Helper: raw attack bonus as a number (no formatting) so PenaltyDisplay can apply the delta

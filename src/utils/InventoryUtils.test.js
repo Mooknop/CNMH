@@ -5,6 +5,8 @@ import {
   isContainer,
   formatDecimal,
   getBulkStatus,
+  normalizeShield,
+  isShieldBroken,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -283,6 +285,70 @@ describe('InventoryUtils', () => {
     it('should handle bulk above threshold', () => {
       const result = getBulkStatus(7.1, 10, 7);
       expect(result.isEncumbered).toBe(true);
+    });
+  });
+
+  describe('normalizeShield', () => {
+    const canonical = { bonus: 2, hardness: 5, hp: 20, brokenThreshold: 10 };
+
+    it('returns null for a non-shield', () => {
+      expect(normalizeShield(null)).toBeNull();
+      expect(normalizeShield(undefined)).toBeNull();
+      expect(normalizeShield('nope')).toBeNull();
+    });
+
+    it('maps legacy { health, breakThreshold } to canonical', () => {
+      const legacy = { bonus: 2, hardness: 5, health: 20, breakThreshold: 10 };
+      expect(normalizeShield(legacy)).toEqual(canonical);
+    });
+
+    it('maps the ItemModal { broken_threshold } spelling to canonical', () => {
+      const legacy = { bonus: 2, hardness: 5, hp: 20, broken_threshold: 10 };
+      expect(normalizeShield(legacy)).toEqual(canonical);
+    });
+
+    it('is idempotent on already-canonical data', () => {
+      expect(normalizeShield(canonical)).toEqual(canonical);
+    });
+
+    it('legacy and canonical shapes normalize equal', () => {
+      const legacy = { health: 20, breakThreshold: 10, hardness: 5, bonus: 2 };
+      expect(normalizeShield(legacy)).toEqual(normalizeShield(canonical));
+    });
+
+    it('preserves extra fields and only emits keys that are present', () => {
+      const out = normalizeShield({ health: 64, breakThreshold: 32, speedPenalty: 5 });
+      expect(out).toEqual({ hp: 64, brokenThreshold: 32, speedPenalty: 5 });
+    });
+
+    it('drops legacy keys (no stale duplicates left behind)', () => {
+      const out = normalizeShield({ health: 20, breakThreshold: 10, hardness: 5, bonus: 2 });
+      expect(out).not.toHaveProperty('health');
+      expect(out).not.toHaveProperty('breakThreshold');
+      expect(out).not.toHaveProperty('broken_threshold');
+    });
+  });
+
+  describe('isShieldBroken', () => {
+    it('is false for a non-shield', () => {
+      expect(isShieldBroken(null)).toBe(false);
+    });
+
+    it('is false when HP is above the broken threshold', () => {
+      expect(isShieldBroken({ hp: 20, brokenThreshold: 10 })).toBe(false);
+    });
+
+    it('is true when HP is at or below the broken threshold', () => {
+      expect(isShieldBroken({ hp: 10, brokenThreshold: 10 })).toBe(true);
+      expect(isShieldBroken({ health: 5, breakThreshold: 10 })).toBe(true);
+    });
+
+    it('honors an explicit broken flag', () => {
+      expect(isShieldBroken({ hp: 99, brokenThreshold: 10, broken: true })).toBe(true);
+    });
+
+    it('is false when HP/threshold are unknown', () => {
+      expect(isShieldBroken({ bonus: 2, hardness: 5 })).toBe(false);
     });
   });
 });

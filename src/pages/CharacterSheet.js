@@ -77,7 +77,7 @@ const CharacterSheet = () => {
         return (
           <>
             <InitiativeEntry charId={character.id} />
-            <TurnTrackerPanel charId={character.id} characterName={character.name} />
+            <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
             <HandsPanel character={character} characterColor={characterColor} />
             <ActionsList character={character} characterColor={characterColor} />
             <CombatLogPanel />

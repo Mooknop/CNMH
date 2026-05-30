@@ -393,4 +393,43 @@ describe('StatsBlock', () => {
     // AC was 16, Off-Guard applies -2 → AC should show 14
     expect(screen.getByText('14')).toBeInTheDocument();
   });
+
+  describe('raised shield', () => {
+    const heldShield = {
+      uid: 'shield-1',
+      name: 'Steel Shield',
+      state: 'held1',
+      shield: { bonus: 2, hardness: 5, hp: 20, brokenThreshold: 10 },
+    };
+    const withShield = (extra = {}) => ({ ...defaultCharData, inventory: [heldShield], ...extra });
+
+    it('un-raised shield does not change AC (base AC excludes the shield)', () => {
+      mockUseCharacter.mockReturnValue(withShield());
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      // AC still 16 — identical to a character holding no shield.
+      expect(screen.getByText('16')).toBeInTheDocument();
+      expect(screen.queryByText('18')).toBeNull();
+    });
+
+    it('raised shield adds its circumstance bonus to AC', () => {
+      localStorage.setItem('cnmh_shieldraise_1', JSON.stringify({ raised: true, uid: 'shield-1', ts: 1 }));
+      mockUseCharacter.mockReturnValue(withShield());
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      // 16 + 2 (Raised Shield circumstance) = 18.
+      expect(screen.getByText('18')).toBeInTheDocument();
+    });
+
+    it('a broken raised shield grants no bonus', () => {
+      localStorage.setItem('cnmh_shieldraise_1', JSON.stringify({ raised: true, uid: 'shield-1', ts: 1 }));
+      mockUseCharacter.mockReturnValue(withShield({
+        inventory: [{ ...heldShield, shield: { bonus: 2, hardness: 5, hp: 10, brokenThreshold: 10 } }],
+      }));
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.getByText('16')).toBeInTheDocument();
+      expect(screen.queryByText('18')).toBeNull();
+    });
+    // Stacking of the raised shield with another circumstance AC bonus
+    // (Take Cover / Shield cantrip) — only the highest applies — is unit-tested
+    // directly against bestOfKind in EffectUtils.test.js.
+  });
 });

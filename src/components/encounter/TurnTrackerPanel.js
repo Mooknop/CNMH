@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useShield } from '../../hooks/useShield';
 import { useSession } from '../../contexts/SessionContext';
 import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
@@ -48,10 +49,14 @@ const ReactionIcon = ({ state }) => {
   );
 };
 
-const TurnTrackerPanel = ({ charId, characterName }) => {
+const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   const { encounter, advanceTurn, appendLog } = useEncounter();
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
   const { sendUpdate } = useSession();
+
+  // Raise a Shield (Slice 1). Only renders when a shield is held; auto-lowers at
+  // the start of the wielder's next turn (see the turn-reset effect below).
+  const { heldShield, raised, broken, raiseShield, lowerShield } = useShield(charId, inventory);
 
   // ── Movement (Feature 3) ──────────────────────────────────────────────────
   // moveStage: null | 'choosing' | 'awaiting-opts' | 'picking' | 'awaiting-done'
@@ -130,8 +135,12 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
     if (phase !== 'in-progress') return;
     if (isMyTurn && turnState?.turnToken !== turnToken) {
       resetForNewTurn(turnToken);
+      // "Until the start of your next turn" — a raised shield expires now.
+      // Gated on the persisted turn token (not a ref) so remounting mid-turn
+      // never drops a shield the player raised this turn.
+      if (raised) lowerShield();
     }
-  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn]);
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, raised, lowerShield]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -170,6 +179,18 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
       writeLocal(key, RESET_STATE);
       sendUpdate(nextEntry.charId, 'turnstate', RESET_STATE);
     }
+  };
+
+  const handleRaiseShield = () => {
+    if (!heldShield || broken) return;
+    raiseShield(heldShield.uid);
+    spendActions(1, 'Raise a Shield');
+    appendLog({ type: 'action', charId, text: `${characterName} raised a shield` });
+  };
+
+  const handleLowerShield = () => {
+    lowerShield();
+    appendLog({ type: 'action', charId, text: `${characterName} lowered their shield` });
   };
 
   const reactionState = !hasStartedFirstTurn
@@ -255,6 +276,30 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
               aria-label="Move"
             >
               Move
+            </button>
+          )}
+
+          {heldShield && !raised && (
+            <button
+              className="btn-secondary ttp-shield"
+              onClick={handleRaiseShield}
+              disabled={broken}
+              title={broken
+                ? 'Shield is broken — no bonus until repaired'
+                : `Raise ${heldShield.name || 'shield'} (+${heldShield.shield?.bonus ?? 0} AC)`}
+              aria-label="Raise a Shield"
+            >
+              🛡 Raise{broken ? ' (Broken)' : ''}
+            </button>
+          )}
+
+          {heldShield && raised && (
+            <button
+              className="btn-secondary ttp-shield ttp-shield--raised"
+              onClick={handleLowerShield}
+              aria-label="Lower Shield"
+            >
+              🛡 Lower
             </button>
           )}
 

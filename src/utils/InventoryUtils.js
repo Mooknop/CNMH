@@ -76,6 +76,59 @@ return !!item && !!item.container;
 };
 
 /**
+ * Normalize a shield block to the canonical key spelling:
+ *   { bonus?, hardness?, hp?, brokenThreshold?, ...extras }
+ *
+ * Historical drift: some authored data uses { health, breakThreshold } while
+ * ItemModal/items.json used { hp, broken_threshold }. This maps every legacy
+ * spelling onto the canonical keys so the rest of the app only ever sees one
+ * shape. Idempotent — feeding canonical data back through returns it unchanged.
+ * Only keys actually present are emitted (no defaults injected), so callers can
+ * still distinguish "absent" from "zero". Preserves extra fields (e.g.
+ * speedPenalty). Returns null for non-shields.
+ *
+ * @param {Object|null|undefined} shield - raw shield block
+ * @returns {Object|null} canonical shield block, or null
+ */
+export const normalizeShield = (shield) => {
+  if (!shield || typeof shield !== 'object') return null;
+  // Pull every known HP/threshold spelling out so the spread of `rest` can't
+  // re-introduce a legacy key. bonus/hardness already share their canonical name.
+  const {
+    health, hp,
+    breakThreshold, broken_threshold, brokenThreshold,
+    ...rest
+  } = shield;
+
+  const out = { ...rest };
+
+  const resolvedHp = hp ?? health;
+  if (resolvedHp !== undefined) out.hp = resolvedHp;
+
+  const resolvedBt = brokenThreshold ?? breakThreshold ?? broken_threshold;
+  if (resolvedBt !== undefined) out.brokenThreshold = resolvedBt;
+
+  return out;
+};
+
+/**
+ * Whether a normalized shield is broken (its HP at or below its broken
+ * threshold). A broken shield grants no AC bonus and cannot Shield Block.
+ * Honors an explicit `broken: true` flag (set by the Foundry HP mirror in a
+ * later slice) and falls back to the HP/threshold comparison.
+ *
+ * @param {Object|null} shield - a shield block (canonical or legacy)
+ * @returns {boolean}
+ */
+export const isShieldBroken = (shield) => {
+  const s = normalizeShield(shield);
+  if (!s) return false;
+  if (s.broken === true) return true;
+  if (s.hp === undefined || s.brokenThreshold === undefined) return false;
+  return s.hp <= s.brokenThreshold;
+};
+
+/**
  * Format to a decimal place if needed
  * @param {number} value - Value to format
  * @returns {string} - Formatted value
