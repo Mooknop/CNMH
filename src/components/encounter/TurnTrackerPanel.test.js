@@ -396,6 +396,51 @@ describe('TurnTrackerPanel', () => {
     expect(screen.queryByLabelText('Lower Shield')).toBeNull();
   });
 
+  // ── Shield Block reaction (Slice 4) ──────────────────────────────────────
+  function startAndRaiseShield(getDrv) {
+    startMyTurnShield(getDrv);
+    fireEvent.click(screen.getByLabelText('Raise a Shield'));
+  }
+
+  it('Shield Block bar appears when shield is raised', () => {
+    let drv;
+    render(<><EncounterDriver onReady={(e) => (drv = e)} /><TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} /></>);
+    startAndRaiseShield(() => drv);
+    expect(screen.getByLabelText('Shield Block')).toBeInTheDocument();
+    expect(screen.getByLabelText('Shield Block damage')).toBeInTheDocument();
+  });
+
+  it('clicking Block with a damage value spends reaction and logs the result', () => {
+    let drv, tsDriver;
+    render(<><EncounterDriver onReady={(e) => (drv = e)} /><TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} /><TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} /></>);
+    startAndRaiseShield(() => drv);
+
+    fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+    fireEvent.click(screen.getByLabelText('Shield Block'));
+
+    expect(tsDriver.turnState.reactionSpent).toBe(true);
+    // Result logged: H5 on 12 → 5 prevented, shield 13HP
+    const log = drv.encounter.log;
+    expect(log.some((e) => e.text.includes('5 prevented'))).toBe(true);
+  });
+
+  it('Block button is disabled with no damage entered', () => {
+    let drv;
+    render(<><EncounterDriver onReady={(e) => (drv = e)} /><TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} /></>);
+    startAndRaiseShield(() => drv);
+    expect(screen.getByLabelText('Shield Block')).toBeDisabled();
+  });
+
+  it('Block button is disabled after the reaction is spent', () => {
+    let drv;
+    render(<><EncounterDriver onReady={(e) => (drv = e)} /><TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} /></>);
+    startAndRaiseShield(() => drv);
+    fireEvent.change(screen.getByLabelText('Shield Block damage'), { target: { value: '12' } });
+    fireEvent.click(screen.getByLabelText('Shield Block'));
+    // After spending the reaction the button should be disabled.
+    expect(screen.getByLabelText('Shield Block')).toBeDisabled();
+  });
+
   // ── Targeting (Slice 2) ─────────────────────────────────────────────────
   // Pellias + an enemy in the order so there is something to target.
   const startMyTurnWithEnemy = (getDrv) => {
@@ -502,4 +547,23 @@ describe('TurnTrackerPanel', () => {
     // New turn → selection cleared, picker closed.
     expect(screen.getByLabelText('Target')).not.toHaveTextContent('(1)');
   });
+
+  // ── Shield Block reaction (Slice 4) ──────────────────────────────────────
+  function startAndRaiseShield(getDrv) {
+    startMyTurnShield(getDrv);
+    fireEvent.click(screen.getByLabelText('Raise a Shield'));
+  }
+
+  it('Shield Block button appears when shield is raised', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" inventory={shieldInv} />
+      </>
+    );
+    startAndRaiseShield(() => drv);
+    expect(screen.getByLabelText('Shield Block')).toBeInTheDocument();
+  });
+
 });

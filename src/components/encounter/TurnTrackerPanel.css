@@ -260,3 +260,23 @@
   opacity: 0.85;
   vertical-align: middle;
 }
+
+/* Shield Block reaction bar (Slice 4) */
+.ttp-shieldblock-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.ttp-shieldblock-input {
+  width: 100px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.ttp-shieldblock {
+  white-space: nowrap;
+}

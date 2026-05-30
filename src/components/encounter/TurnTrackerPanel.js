@@ -53,12 +53,14 @@ const ReactionIcon = ({ state }) => {
 
 const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   const { encounter, advanceTurn, appendLog } = useEncounter();
-  const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
+  const { turnState, spendActions, spendReaction, resetForNewTurn } = useTurnState(charId);
   const { sendUpdate } = useSession();
 
-  // Raise a Shield (Slice 1). Only renders when a shield is held; auto-lowers at
-  // the start of the wielder's next turn (see the turn-reset effect below).
-  const { heldShield, raised, broken, raiseShield, lowerShield } = useShield(charId, inventory);
+  // Raise a Shield / Shield Block (Slices 1 + 4).
+  const { heldShield, raised, broken, raiseShield, lowerShield, applyBlock } =
+    useShield(charId, inventory);
+  // Shield Block damage input — player enters the incoming hit; '' hides the bar.
+  const [blockDamage, setBlockDamage] = useState('');
 
   // ── Flanking (Slice 3) ───────────────────────────────────────────────────
   // Bridge pushes { [enemyEntryId]: { byCharIds:[...] } } whenever tokens move or
@@ -212,6 +214,25 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
     appendLog({ type: 'action', charId, text: `${characterName} lowered their shield` });
   };
 
+  // Shield Block (Slice 4) — reaction, available on any in-progress turn while
+  // the shield is raised and the reaction hasn't been spent yet.
+  const canShieldBlock =
+    raised && !broken && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
+
+  const handleShieldBlock = () => {
+    const dealt = parseInt(blockDamage, 10);
+    if (!canShieldBlock || isNaN(dealt) || dealt < 0) return;
+    const result = applyBlock(dealt);
+    if (!result) return;
+    spendReaction('Shield Block');
+    setBlockDamage('');
+    if (result.broken) lowerShield();
+    const detail = result.broken
+      ? `shield broke! (${result.prevented} prevented)`
+      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
+    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}` });
+  };
+
   // Send the current target selection to the bridge, which sets Foundry's user
   // target set. kind defaults to 'strike' (the common case); later slices emit
   // 'spell'/'save-effect' with a real sourceUid through this same channel.
@@ -351,6 +372,34 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
             aria-label="Submit turn"
           >
             Submit Turn
+          </button>
+        </div>
+      )}
+
+      {/* Shield Block reaction (Slice 4) — visible any in-progress turn while raised */}
+      {isInProgress && heldShield && raised && (
+        <div className="ttp-shieldblock-bar">
+          <input
+            type="number"
+            min="0"
+            className="ttp-shieldblock-input"
+            placeholder="Damage taken"
+            aria-label="Shield Block damage"
+            value={blockDamage}
+            onChange={(e) => setBlockDamage(e.target.value)}
+          />
+          <button
+            className="btn-secondary ttp-shieldblock"
+            onClick={handleShieldBlock}
+            disabled={!canShieldBlock || blockDamage === '' || parseInt(blockDamage, 10) < 0}
+            aria-label="Shield Block"
+            title={
+              !canShieldBlock
+                ? (reactionSpent ? 'Reaction already spent' : 'Reaction not yet available')
+                : 'Block this damage with your shield (reaction)'
+            }
+          >
+            🛡 Block ↩
           </button>
         </div>
       )}
