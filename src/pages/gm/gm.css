@@ -341,3 +341,42 @@
 .gm-encounter-add-enemy {
   margin-top: 12px;
 }
+
+/* GM save request panel */
+.gm-save-request {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.gm-save-request h3 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.gm-save-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.gm-save-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.gm-save-dc { width: 70px; }
+.gm-save-effect { width: 150px; }
+
+.gm-save-basic {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px !important;
+}

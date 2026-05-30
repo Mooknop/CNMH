@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
+import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import './gm.css';
 
 // Read-only mirror of the live Foundry combat, plus a one-time actor assignment
@@ -71,6 +72,10 @@ const GmEncounter = () => {
             </>
           )}
         </div>
+      )}
+
+      {phase !== 'idle' && (
+        <GmSaveRequest pcEntries={order.filter((e) => e.kind === 'pc' && e.charId)} />
       )}
 
       {phase !== 'idle' && (
