@@ -1,38 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
-
-:root {
-  /* Brand colors */
-  --color-primary: #5e2929;
-  --color-primary-hover: #7a3939;
-  --color-danger: #b71c1c;
-  --color-warning: #f57c00;
-  --color-success: #2e7d32;
-  --color-success-blue: #1976d2;
-  --color-crit-fail: #c62828;
-
-  /* Neutral palette */
-  --color-text: #333;
-  --color-text-muted: #666;
-  --color-border: #eee;
-  --color-border-medium: #ddd;
-  --color-bg-light: #f0f0f0;
-  --color-bg-lighter: #f9f9f9;
-
-  /* Border radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-
-  /* Z-index scale */
-  --z-navbar: 1000;
-  --z-dropdown: 1001;
-  --z-tooltip: 1000;
-  --z-modal-overlay: 1050;
-  --z-modal: 1051;
-  --z-modal-header: 1052;
-  --z-modal-high-overlay: 1100;
-  --z-modal-high: 1101;
-}
+@import './pf2e-tokens.css';
 
 * {
   box-sizing: border-box;
@@ -40,13 +6,11 @@
 
 body {
   margin: 0;
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #333;
-  background-color: #f5f5f5;
+  color: var(--color-text);
+  background-color: var(--color-surface-page);
 }
 
 code {
@@ -60,6 +24,6 @@ code {
   width: 180px;
   height: 180px;
   object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-3);
 }

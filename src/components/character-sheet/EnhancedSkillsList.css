@@ -1,12 +1,12 @@
 .enhanced-skills-list {
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  padding: var(--space-6);
+  margin-bottom: var(--space-8);
 }
 
 .enhanced-skills-list h2 {
   margin-top: 0;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
   color: var(--color-primary);
   font-size: 1.2rem;
 }
@@ -35,19 +35,19 @@
 }
 
 .skill-card.trained-color {
-  border-left: 4px solid #5e9c29; /* Green */
+  border-left: 4px solid #5e9c29;
 }
 
 .skill-card.expert-color {
-  border-left: 4px solid #2980b9; /* Blue */
+  border-left: 4px solid #2980b9;
 }
 
 .skill-card.master-color {
-  border-left: 4px solid #8e44ad; /* Purple */
+  border-left: 4px solid #8e44ad;
 }
 
 .skill-card.legendary-color {
-  border-left: 4px solid #f39c12; /* Gold */
+  border-left: 4px solid #f39c12;
 }
 
 /* Special styling for improvised skills */
@@ -70,12 +70,13 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  min-height: var(--tap-target-min);
 }
 
 .skill-name-section h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--color-primary));
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -84,14 +85,14 @@
 
 .skill-ability {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--color-text-muted);
   margin-top: 0.25rem;
 }
 
 .skill-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .skill-modifier {
@@ -99,7 +100,7 @@
   font-weight: 700;
   min-width: 2.5rem;
   text-align: center;
-  color: #333; /* Dark text color for better visibility */
+  color: var(--color-text);
 }
 
 /* Proficiency text colors */
@@ -111,45 +112,45 @@
 }
 
 .skill-proficiency.untrained-color {
-  color: #7f8c8d; /* Gray */
+  color: #7f8c8d;
 }
 
 .skill-proficiency.trained-color {
-  color: #5e9c29; /* Green */
+  color: #5e9c29;
 }
 
 .skill-proficiency.expert-color {
-  color: #2980b9; /* Blue */
+  color: #2980b9;
 }
 
 .skill-proficiency.master-color {
-  color: #8e44ad; /* Purple */
+  color: #8e44ad;
 }
 
 .skill-proficiency.legendary-color {
-  color: #f39c12; /* Gold */
+  color: #f39c12;
 }
 
 /* Item bonus styling */
 .item-bonus-indicator {
   font-size: 0.8rem;
   font-style: italic;
-  color: #2980b9; /* Blue */
+  color: #2980b9;
   display: block;
   margin-top: 0.2rem;
 }
 
 .skill-item-bonus {
-  padding: 0.75rem;
-  background-color: #e8f4fc; /* Light blue background */
+  padding: var(--space-3);
+  background-color: #e8f4fc;
   border-radius: var(--radius-sm);
-  margin-bottom: 1rem;
-  border-left: 3px solid #2980b9; /* Blue */
+  margin-bottom: var(--space-4);
+  border-left: 3px solid #2980b9;
 }
 
 .item-bonus-label {
   font-weight: 600;
-  margin-right: 0.5rem;
+  margin-right: var(--space-2);
 }
 
 .item-bonus-value {
@@ -158,7 +159,7 @@
 
 /* Skill actions section in the collapsible content */
 .skill-actions {
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .skill-actions h4 {
@@ -175,8 +176,8 @@
 }
 
 .skill-action {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+  padding: var(--space-2) 0;
+  border-bottom: var(--card-border);
   display: flex;
   flex-direction: column;
 }
@@ -187,13 +188,21 @@
 
 .action-name {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text);
   margin-bottom: 0.25rem;
 }
 
 .action-description {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--color-text-muted);
+}
+
+/* Skill row — tap-safe */
+.skill-row,
+.skill-item {
+  min-height: var(--tap-target-min);
+  display: flex;
+  align-items: center;
 }
 
 /* Background highlight for expanded skill based on proficiency */
@@ -220,7 +229,7 @@
 /* Special styling for improvised skill actions */
 .skill-card.improvised-skill .skill-actions {
   background-color: #fafafa;
-  border-top: 1px dashed #ddd;
+  border-top: 1px dashed var(--color-border-medium);
 }
 
 /* Media query for smaller screens */
@@ -230,7 +239,7 @@
     gap: 0.25rem;
     align-items: flex-end;
   }
-  
+
   .skill-proficiency {
     min-width: auto;
   }

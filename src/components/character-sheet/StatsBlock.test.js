@@ -117,15 +117,12 @@ describe('StatsBlock', () => {
     expect(screen.getByText('Will')).toBeInTheDocument();
   });
 
-  it('should apply theme color to ability names', () => {
+  it('should apply theme color via CSS custom property on the stats-block container', () => {
     const { container } = render(
       <StatsBlock character={mockCharacter} characterColor="#ff0000" />
     );
-    
-    const abilityNames = container.querySelectorAll('.ability-name');
-    abilityNames.forEach(el => {
-      expect(el).toHaveStyle('color: #ff0000');
-    });
+    const statsBlock = container.querySelector('.stats-block');
+    expect(statsBlock).toHaveStyle('--color-theme: #ff0000');
   });
 
   it('should use default theme color if not provided', () => {
@@ -352,12 +349,13 @@ describe('StatsBlock', () => {
     const { container } = render(
       <StatsBlock character={mockCharacter} characterColor="#ff0000" />
     );
-    // Initially 'abilities' tab is active
+    // Initially 'abilities' tab is active — class drives the highlight, not inline style
     const tabButtons = container.querySelectorAll('.tab-button');
-    expect(tabButtons[0]).toHaveStyle('background-color: #ff0000');
+    expect(tabButtons[0]).toHaveClass('active');
     // After clicking proficiencies
     fireEvent.click(screen.getByText('Proficiencies'));
-    expect(tabButtons[1]).toHaveStyle('background-color: #ff0000');
+    expect(tabButtons[1]).toHaveClass('active');
+    expect(tabButtons[0]).not.toHaveClass('active');
   });
 
   it('renders the CONDITIONS button in the hp-defense row', () => {

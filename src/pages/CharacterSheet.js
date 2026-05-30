@@ -102,13 +102,13 @@ const CharacterSheet = () => {
   };
   
   return (
-    <div className="character-sheet-page">
+    <div className="character-sheet-page" style={{ '--color-theme': characterColor }}>
     <div className="character-sheet">
       <div className="character-header">
         {character.image && (
           <img src={`/api/images/${character.image}`} alt="" className="entity-image" style={character.imagePosition ? { objectPosition: `${character.imagePosition.x}% ${character.imagePosition.y}%` } : undefined} />
         )}
-        <h1 style={{ color: characterColor }}>{character.name}</h1>
+        <h1>{character.name}</h1>
         <p className="character-subtitle">
           Level {character.level} {character.ancestry} {character.background} {character.class}
         </p>
@@ -119,17 +119,6 @@ const CharacterSheet = () => {
               <button
                 className="familiar-button"
                 onClick={() => openLore(character.loreEntryId)}
-                style={{
-                  backgroundColor: characterColor,
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
               >
                 <span role="img" aria-label="Lore">📖</span>
                 Lore
@@ -137,20 +126,9 @@ const CharacterSheet = () => {
             )}
 
             {hasFamiliar && (
-              <button 
-                className="familiar-button" 
+              <button
+                className="familiar-button"
                 onClick={() => setIsFamiliarModalOpen(true)}
-                style={{ 
-                  backgroundColor: characterColor,
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
               >
                 <span className="familiar-icon" role="img" aria-label="Familiar">🐾</span>
                 {familiar.name}
@@ -161,17 +139,6 @@ const CharacterSheet = () => {
               <button
                 className="familiar-button"
                 onClick={() => setIsAnimalCompanionOpen(true)}
-                style={{
-                  backgroundColor: characterColor,
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
               >
                 <span className="familiar-icon" role="img" aria-label="Animal Companion">🐾</span>
                 {animalCompanion.name}
@@ -181,17 +148,7 @@ const CharacterSheet = () => {
             <button
               className="familiar-button"
               onClick={() => setIsEffectsModalOpen(true)}
-              style={{
-                backgroundColor: '#2e7d32',
-                color: 'white',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}
+              style={{ backgroundColor: '#2e7d32' }}
             >
               ✦ Apply Effect
             </button>
@@ -207,7 +164,6 @@ const CharacterSheet = () => {
             <button
               className={`tab-button ${activeTab === 'encounter' ? 'active' : ''}`}
               onClick={() => setActiveTab('encounter')}
-              style={{ backgroundColor: activeTab === 'encounter' ? characterColor : '' }}
             >
               Encounter
             </button>
@@ -215,16 +171,13 @@ const CharacterSheet = () => {
             <button
               className={`tab-button ${activeTab === 'exploration' ? 'active' : ''}`}
               onClick={() => setActiveTab('exploration')}
-              style={{ backgroundColor: activeTab === 'exploration' ? characterColor : '' }}
             >
               Exploration
             </button>
 
-            
-            <button 
+            <button
               className={`tab-button ${activeTab === 'inventory' ? 'active' : ''}`}
               onClick={() => setActiveTab('inventory')}
-              style={{ backgroundColor: activeTab === 'inventory' ? characterColor : '' }}
             >
               Inventory
             </button>
