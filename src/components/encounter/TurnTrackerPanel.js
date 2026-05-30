@@ -50,7 +50,7 @@ const ReactionIcon = ({ state }) => {
 
 const TurnTrackerPanel = ({ charId, characterName }) => {
   const { encounter, advanceTurn, appendLog } = useEncounter();
-  const { turnState, spendActions } = useTurnState(charId);
+  const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
   const { sendUpdate } = useSession();
 
   // ── Movement (Feature 3) ──────────────────────────────────────────────────
@@ -108,14 +108,32 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
     setPendingMoveType(null);
   };
 
-  if (!encounter || encounter.phase === 'idle') return null;
-
-  const order = encounter.order || [];
-  const currentEntry = order[encounter.currentTurnIndex] || null;
+  // ── Turn identity (computed before the early return so the self-reset effect
+  // can use it without violating the Rules of Hooks) ────────────────────────
+  const order = encounter?.order || [];
+  const currentTurnIndex = encounter?.currentTurnIndex ?? 0;
+  const currentEntry = order[currentTurnIndex] || null;
   const isMyTurn =
-    currentEntry &&
+    !!currentEntry &&
     currentEntry.kind === 'pc' &&
     currentEntry.charId === charId;
+  const phase = encounter?.phase;
+  const turnToken = `${encounter?.round ?? 0}:${currentTurnIndex}`;
+
+  // Reset my own turnstate when my turn begins. This is the authoritative reset
+  // path — relying on the previous actor to reset the "next" PC is unreliable
+  // once Foundry interleaves enemy turns (a PC after an enemy would never get
+  // reset, leaving stale actionsSpent that disables their Submit Turn button).
+  // Comparing against the *persisted* token (not a ref) means remounting the
+  // panel mid-turn won't wipe actions already spent this turn.
+  useEffect(() => {
+    if (phase !== 'in-progress') return;
+    if (isMyTurn && turnState?.turnToken !== turnToken) {
+      resetForNewTurn(turnToken);
+    }
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn]);
+
+  if (!encounter || encounter.phase === 'idle') return null;
 
   const { actionsSpent, reactionAvailable, reactionSpent, hasStartedFirstTurn } =
     turnState || defaultTurnState();

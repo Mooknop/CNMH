@@ -198,7 +198,7 @@ describe('TurnTrackerPanel', () => {
     }));
   });
 
-  it('reaction icon shows unavailable state before first turn', () => {
+  it('reaction is available at the start of your turn (regained each turn)', () => {
     let drv;
     render(
       <>
@@ -210,7 +210,8 @@ describe('TurnTrackerPanel', () => {
     const [p] = drv.encounter.order;
     act(() => drv.setInitiative(p.entryId, 12));
     act(() => drv.beginRound1());
-    expect(screen.getByLabelText(/unavailable until your first turn/i)).toBeInTheDocument();
+    // The self-reset on turn start gives a fresh turn: reaction available.
+    expect(screen.getByLabelText('Reaction (available)')).toBeInTheDocument();
   });
 
   // ── Movement (Feature 3) ────────────────────────────────────────────────
