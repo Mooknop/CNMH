@@ -395,4 +395,92 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText('Raise a Shield')).toBeInTheDocument();
     expect(screen.queryByLabelText('Lower Shield')).toBeNull();
   });
+
+  // ── Targeting (Slice 2) ─────────────────────────────────────────────────
+  // Pellias + an enemy in the order so there is something to target.
+  const startMyTurnWithEnemy = (getDrv) => {
+    act(() => getDrv().startEncounter([pellias]));
+    act(() => getDrv().addEnemy('Goblin', 8));
+    const [p] = getDrv().encounter.order;
+    act(() => getDrv().setInitiative(p.entryId, 15));
+    act(() => getDrv().beginRound1());
+  };
+
+  it('the target picker lists the live order excluding self', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+
+    fireEvent.click(screen.getByLabelText('Target'));
+    // Enemy is selectable; self (Pellias) is not.
+    expect(screen.getByLabelText('Target Goblin')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Target Pellias')).toBeNull();
+  });
+
+  it('selecting targets and confirming emits cnmh_action with the right entryIds', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+
+    fireEvent.click(screen.getByLabelText('Target'));
+    fireEvent.click(screen.getByLabelText('Target Goblin'));
+
+    jest.spyOn(Date, 'now').mockReturnValue(777);
+    fireEvent.click(screen.getByLabelText('Target in Foundry'));
+    Date.now.mockRestore();
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'action', {
+      kind: 'strike',
+      sourceUid: null,
+      targets: [goblin.entryId],
+      ts: 777,
+    });
+  });
+
+  it('Target in Foundry is disabled until at least one target is selected', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+
+    fireEvent.click(screen.getByLabelText('Target'));
+    expect(screen.getByLabelText('Target in Foundry')).toBeDisabled();
+    fireEvent.click(screen.getByLabelText('Target Goblin'));
+    expect(screen.getByLabelText('Target in Foundry')).not.toBeDisabled();
+  });
+
+  it('clears the selection at the start of the next turn', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+
+    fireEvent.click(screen.getByLabelText('Target'));
+    fireEvent.click(screen.getByLabelText('Target Goblin'));
+    // The toggle reflects the count.
+    expect(screen.getByLabelText('Target')).toHaveTextContent('(1)');
+
+    act(() => drv.beginNextRound());
+    // New turn → selection cleared, picker closed.
+    expect(screen.getByLabelText('Target')).not.toHaveTextContent('(1)');
+  });
 });

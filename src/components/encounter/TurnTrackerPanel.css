@@ -194,3 +194,61 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* Targeting (Slice 2) */
+.ttp-target-ui {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ttp-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ttp-target-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface, #fff);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.ttp-target-chip--on {
+  background-color: #2e5d8c;
+  border-color: #2e5d8c;
+  color: #fff;
+}
+
+.ttp-target-chip--enemy {
+  border-color: #b3402e;
+}
+
+.ttp-target-chip--enemy.ttp-target-chip--on {
+  background-color: #b3402e;
+  border-color: #b3402e;
+}
+
+.ttp-target-kind {
+  font-size: 0.7rem;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+
+.ttp-target-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ttp-targets-empty {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}

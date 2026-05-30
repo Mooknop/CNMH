@@ -177,10 +177,13 @@ function defaultMeasurePath(gridSize) {
 export function makeCanvas(opts = {}) {
   const gridSize = opts.gridSize ?? 100;
   const measurePath = opts.measurePath ?? defaultMeasurePath(gridSize);
+  // `get` reads tokens.placeables live so tests can reassign it after install.
+  const tokens = { placeables: opts.placeables ?? [] };
+  tokens.get = (id) => (tokens.placeables || []).find((t) => t.id === id) ?? null;
   return {
     scene: { grid: { size: gridSize } },
     grid: { size: gridSize, measurePath },
-    tokens: { placeables: opts.placeables ?? [] },
+    tokens,
     walls: {},
   };
 }
@@ -201,6 +204,7 @@ export function makeGame(opts = {}) {
     combat: opts.combat ?? null,
     combats: makeCollection(opts.combats ?? []),
     actors: makeCollection(opts.actors ?? []),
+    user: opts.user ?? { id: 'user1', targets: new Set(), updateTokenTargets: jest.fn() },
     settings: {
       register: jest.fn(),
       get: jest.fn((_mod, key) => (opts.settings ?? {})[key]),

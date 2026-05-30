@@ -136,6 +136,35 @@ export function getCombatState(combat) {
   };
 }
 
+// --- Targeting (Slice 2) ---
+
+export function getTokenById(tokenId) {
+  return canvas.tokens?.get?.(tokenId) ?? null;
+}
+
+// Resolve a combat entry (combatant id, the app's entryId) to its placed token
+// on the current scene. combat.combatants is a Foundry Collection (Map-like);
+// fall back to array .find for the test mock.
+export function resolveCombatantToken(entryId) {
+  const combat = getActiveCombat();
+  if (!combat) return null;
+  const combatants = combat.combatants;
+  const combatant = combatants?.get?.(entryId)
+    ?? (Array.isArray(combatants) ? combatants.find((c) => c.id === entryId) : null);
+  if (!combatant) return null;
+  const tokenId = getCombatantTokenId(combatant);
+  const token = tokenId ? getTokenById(tokenId) : null;
+  // A combatant can also expose its token document directly.
+  return token ?? combatant.token?.object ?? combatant.token ?? null;
+}
+
+// Set the current user's target set (what attack/save automation reads in
+// Foundry). updateTokenTargets is the v11+ user API.
+export function setUserTargets(tokens) {
+  const ids = (tokens || []).map((t) => t?.id).filter(Boolean);
+  game.user?.updateTokenTargets?.(ids);
+}
+
 // --- Token geometry ---
 // v14 uses canvas.grid for measurement. All grid/geometry calls go through here.
 

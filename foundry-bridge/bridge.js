@@ -12,6 +12,7 @@ import { WORKER_WSS_URL, CAMPAIGN_ID, BRIDGE_SECRET } from './config.js';
 import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
+import { handleAction } from './targeting.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -154,6 +155,12 @@ function dispatch(msg) {
   // HP / hero points write-back from app → Foundry actor.
   if (key === 'hp' || key === 'heropoints') {
     handleCharacterUpdate(characterId, key, value);
+    return;
+  }
+
+  // Action targeting from app → set Foundry's user target set.
+  if (key === 'action') {
+    handleAction(characterId, value);
     return;
   }
 }

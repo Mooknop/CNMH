@@ -3,9 +3,11 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
+import { useTargeting } from '../../hooks/useTargeting';
 import { useSession } from '../../contexts/SessionContext';
 import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
+import TargetPicker from './TargetPicker';
 import './TurnTrackerPanel.css';
 
 // PF2e movement actions the player can pick before requesting reachable squares.
@@ -57,6 +59,11 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   // Raise a Shield (Slice 1). Only renders when a shield is held; auto-lowers at
   // the start of the wielder's next turn (see the turn-reset effect below).
   const { heldShield, raised, broken, raiseShield, lowerShield } = useShield(charId, inventory);
+
+  // ── Targeting (Slice 2) ───────────────────────────────────────────────────
+  const { targets, selectable, isTargeted, toggleTarget, clearTargets, targetNames } =
+    useTargeting(charId, encounter?.order || []);
+  const [showTargets, setShowTargets] = useState(false);
 
   // ── Movement (Feature 3) ──────────────────────────────────────────────────
   // moveStage: null | 'choosing' | 'awaiting-opts' | 'picking' | 'awaiting-done'
@@ -139,8 +146,11 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
       if (raised) lowerShield();
+      // A fresh turn starts with no targets selected.
+      clearTargets();
+      setShowTargets(false);
     }
-  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, raised, lowerShield]);
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, raised, lowerShield, clearTargets]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -191,6 +201,16 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   const handleLowerShield = () => {
     lowerShield();
     appendLog({ type: 'action', charId, text: `${characterName} lowered their shield` });
+  };
+
+  // Send the current target selection to the bridge, which sets Foundry's user
+  // target set. kind defaults to 'strike' (the common case); later slices emit
+  // 'spell'/'save-effect' with a real sourceUid through this same channel.
+  const sendTargets = (kind = 'strike', sourceUid = null) => {
+    if (!targets.length) return;
+    sendUpdate(charId, 'action', { kind, sourceUid, targets, ts: Date.now() });
+    appendLog({ type: 'action', charId, text: `${characterName} targets ${targetNames.join(', ')}` });
+    setShowTargets(false);
   };
 
   const reactionState = !hasStartedFirstTurn
@@ -304,6 +324,15 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           )}
 
           <button
+            className={`btn-secondary ttp-target-toggle${showTargets ? ' ttp-target-toggle--open' : ''}`}
+            onClick={() => setShowTargets((s) => !s)}
+            aria-label="Target"
+            aria-pressed={showTargets}
+          >
+            🎯 Target{targets.length > 0 ? ` (${targets.length})` : ''}
+          </button>
+
+          <button
             className="btn-primary ttp-submit"
             onClick={handleSubmit}
             disabled={!canSubmit}
@@ -311,6 +340,35 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           >
             Submit Turn
           </button>
+        </div>
+      )}
+
+      {/* Targeting sub-UI (Slice 2) */}
+      {isInProgress && isMyTurn && showTargets && (
+        <div className="ttp-target-ui" role="group" aria-label="Targeting">
+          <TargetPicker
+            selectable={selectable}
+            isTargeted={isTargeted}
+            onToggle={toggleTarget}
+          />
+          <div className="ttp-target-actions">
+            <button
+              className="btn-primary"
+              onClick={() => sendTargets()}
+              disabled={targets.length === 0}
+              aria-label="Target in Foundry"
+            >
+              Target in Foundry
+            </button>
+            <button
+              className="btn-text"
+              onClick={() => { clearTargets(); }}
+              disabled={targets.length === 0}
+              aria-label="clear-targets"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       )}
 
