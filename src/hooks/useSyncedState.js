@@ -30,7 +30,7 @@ export const useSyncedState = (key, initialValue) => {
   const stateType = match ? match[1] : null;
   const characterId = match ? match[2] : null;
 
-  const [value, setValue] = useState(() => {
+  const computeInitial = () => {
     if (synced) {
       const server = getState(characterId, stateType);
       if (server !== undefined) return server;
@@ -38,11 +38,24 @@ export const useSyncedState = (key, initialValue) => {
     const local = readLocal(key);
     if (local.found) return local.value;
     return typeof initialValue === 'function' ? initialValue() : initialValue;
-  });
+  };
+
+  const [value, setValue] = useState(computeInitial);
 
   // Track the latest value so functional updaters never read a stale closure.
   const latest = useRef(value);
-  latest.current = value;
+  const prevKey = useRef(key);
+
+  // When the key changes (e.g. switching characters on a shared hook instance),
+  // re-derive the value for the new key synchronously. Without this the previous
+  // key's value lingers until a server UPDATE for the new key happens to arrive.
+  let current = value;
+  if (prevKey.current !== key) {
+    prevKey.current = key;
+    current = computeInitial();
+    setValue(current);
+  }
+  latest.current = current;
 
   useEffect(() => {
     if (!synced) return undefined;
@@ -61,7 +74,7 @@ export const useSyncedState = (key, initialValue) => {
     if (synced) sendUpdate(characterId, stateType, next);
   }, [key, synced, characterId, stateType, sendUpdate]);
 
-  return [value, setAndSync];
+  return [current, setAndSync];
 };
 
 export default useSyncedState;

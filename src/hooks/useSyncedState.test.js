@@ -77,4 +77,29 @@ describe('useSyncedState', () => {
     unmount();
     expect(unsub).toHaveBeenCalled();
   });
+
+  it('re-derives the value when the key changes (e.g. switching characters)', () => {
+    const stored = { Pellias: 18, Ashka: 42 };
+    mockSession.getState = (c, t) => (t === 'hp' ? stored[c] : undefined);
+    const { result, rerender } = renderHook(
+      ({ key }) => useSyncedState(key, 0),
+      { initialProps: { key: 'cnmh_hp_Pellias' } }
+    );
+    expect(result.current[0]).toBe(18);
+    // Switch to a different character on the same hook instance.
+    rerender({ key: 'cnmh_hp_Ashka' });
+    expect(result.current[0]).toBe(42);
+  });
+
+  it('falls back to initialValue when the new key has no stored value', () => {
+    const { result, rerender } = renderHook(
+      ({ key }) => useSyncedState(key, () => ({ current: 0 })),
+      { initialProps: { key: 'cnmh_hp_Pellias' } }
+    );
+    localStorage.setItem('cnmh_hp_Pellias', JSON.stringify({ current: 5 }));
+    rerender({ key: 'cnmh_hp_Pellias' }); // same key — no reset
+    // Now switch to an untouched character; should reset to the fresh initial.
+    rerender({ key: 'cnmh_hp_Nobody' });
+    expect(result.current[0]).toEqual({ current: 0 });
+  });
 });
