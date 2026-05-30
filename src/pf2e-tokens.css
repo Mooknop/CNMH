@@ -256,6 +256,42 @@
   --z-modal-header:        1052;
   --z-modal-high-overlay:  1100;
   --z-modal-high:          1101;
+
+
+  /* ————————————————————————————————————————————————————————
+   * DARK SHELL — character sheet game-menu theme
+   * Aliased to the palette above where an exact value exists.
+   * ———————————————————————————————————————————————————————— */
+
+  /* Shell surfaces */
+  --shell-bg:              #12100e;
+  --shell-surface:         var(--void-deep);   /* #1a1612 */
+  --shell-surface-raised:  #1e1a16;
+  --shell-border:          rgba(255, 255, 255, 0.07);
+  --shell-border-strong:   rgba(255, 255, 255, 0.12);
+
+  /* Text on dark */
+  --shell-text-primary:    #f5ede4;
+  --shell-text-secondary:  rgba(255, 255, 255, 0.55);
+  --shell-text-tertiary:   rgba(255, 255, 255, 0.28);
+
+  /* Background atmosphere overlay — darkens Background.png to ~12% visibility */
+  --bg-overlay:            rgba(10, 8, 6, 0.88);
+
+  /* Card surfaces on dark shell */
+  --dark-card-bg:          rgba(28, 24, 18, 0.82);
+  --dark-card-border:      1px solid rgba(255, 255, 255, 0.07);
+  --dark-card-radius:      var(--radius-lg);
+
+  /* Bottom rail */
+  --rail-height:           54px;
+  --rail-bg:               rgba(16, 12, 8, 0.96);
+  --rail-border:           rgba(255, 255, 255, 0.07);
+  --rail-active:           var(--color-theme, var(--ember-base));
+
+  /* Masthead portrait column */
+  --portrait-width:        80px;
+  --portrait-fade-width:   20px;
 }
 
 
