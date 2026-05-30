@@ -1,0 +1,23 @@
+{
+  "id": "MVvMwyyIRSnYQDwm",
+  "name": "Pellias",
+  "type": "character",
+  "system": {
+    "attributes": {
+      "hp": { "value": 32, "max": 48, "temp": 5 },
+      "dying": { "value": 0, "max": 4 },
+      "wounded": { "value": 1 },
+      "doomed": { "value": 0 }
+    },
+    "resources": {
+      "heroPoints": { "value": 2, "max": 3 },
+      "focus": { "value": 1, "max": 2 }
+    },
+    "movement": { "speeds": { "land": { "value": 25, "total": 30 } } }
+  },
+  "items": [
+    { "type": "condition", "system": { "slug": "frightened", "value": { "value": 2 } } },
+    { "type": "condition", "system": { "slug": "off-guard", "value": { "value": null } } },
+    { "type": "weapon", "system": { "slug": "longsword" } }
+  ]
+}

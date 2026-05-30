@@ -1,0 +1,11 @@
+{
+  "id": "9aQbZ2kLpR3mNxYt",
+  "active": true,
+  "started": true,
+  "round": 2,
+  "turn": 1,
+  "combatants": [
+    { "id": "cbt-pellias", "actorId": "MVvMwyyIRSnYQDwm", "tokenId": "tok-pellias", "initiative": 18, "name": "Pellias" },
+    { "id": "cbt-goblin", "actorId": "npc-goblin-1", "tokenId": "tok-goblin", "initiative": 22, "name": "Goblin Warrior" }
+  ]
+}

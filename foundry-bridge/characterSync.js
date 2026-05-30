@@ -8,9 +8,11 @@
 // Actor→charId resolution uses the app-maintained actorMap (set by GM in the
 // encounter UI and stored in session state) rather than the static config.js map.
 import { getActorMap } from './encounter.js';
-import { BRIDGE_SOURCE_FLAG, isBridgeEcho, slugToAppConditionId } from './utils.js';
+import { isBridgeEcho, slugToAppConditionId } from './utils.js';
 import {
   getHp, getHeroPoints, getConditions,
+  getActorById, getActorId, updateActorHp, updateActorHeroPoints,
+  isConditionItem, getConditionItemActor,
 } from './pf2eAdapter.js';
 
 let _sendUpdate = null;
@@ -34,27 +36,22 @@ export async function handleCharacterUpdate(charId, key, value) {
   const actorMap = getActorMap();
   const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
   if (!actorId) return;
-  const actor = game.actors.get(actorId);
+  const actor = getActorById(actorId);
   if (!actor) return;
 
   if (key === 'hp') {
-    await actor.update({
-      'system.attributes.hp.value': value.current,
-      'system.attributes.hp.temp':  value.temp ?? 0,
-    }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+    await updateActorHp(actor, { current: value.current, temp: value.temp });
   }
 
   if (key === 'heropoints') {
-    await actor.update({
-      'system.resources.heroPoints.value': value,
-    }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+    await updateActorHeroPoints(actor, value);
   }
 }
 
 function onUpdateActor(actor, diff, options) {
   if (isBridgeEcho(options)) return;
 
-  const charId = getActorMap()[actor.id];
+  const charId = getActorMap()[getActorId(actor)];
   if (!charId) return;
 
   const hpDiff = diff.system?.attributes?.hp;
@@ -72,11 +69,11 @@ function onUpdateActor(actor, diff, options) {
 }
 
 function onConditionItemChanged(item) {
-  if (item?.type !== 'condition') return;
-  const actor = item.parent;
-  if (!actor || actor.documentName !== 'Actor') return;
+  if (!isConditionItem(item)) return;
+  const actor = getConditionItemActor(item);
+  if (!actor) return;
 
-  const charId = getActorMap()[actor.id];
+  const charId = getActorMap()[getActorId(actor)];
   if (!charId) return;
 
   // Push the full condition list…
