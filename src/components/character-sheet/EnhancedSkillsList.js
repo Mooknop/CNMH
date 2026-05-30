@@ -2,6 +2,7 @@ import React from 'react';
 import './EnhancedSkillsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
+import ProficiencyPips from '../shared/ProficiencyPips';
 import { getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
@@ -287,7 +288,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
 
           const header = (
             <div className="skill-name-section">
-              <h3 style={{ color: themeColor }}>
+              <h3>
                 {skill.name}
                 <div className="skill-ability">
                   {skill.ability.charAt(0).toUpperCase() + skill.ability.slice(1)} ({abilityModStr})
@@ -298,7 +299,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
                   <PenaltyDisplay base={modifier} penalty={condPenalty} format="modifier" />
                 </div>
                 <div className={`skill-proficiency ${proficiencyColorClass}`}>
-                  {getProficiencyLabel(proficiency)}
+                  <ProficiencyPips rank={proficiency} showLabel={false} />
                   {itemBonus > 0 && (
                     <span className="item-bonus-indicator"> (+{itemBonus} item)</span>
                   )}
@@ -359,7 +360,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
             className={`skill-card ${getProficiencyColor(loreProficiency)}`}
             header={
               <div className="skill-name-section">
-                <h3 style={{ color: themeColor }}>
+                <h3>
                   {loreSkill.name} Lore
                   <div className="skill-ability">(Intelligence)</div>
                 </h3>
@@ -368,7 +369,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
                     <PenaltyDisplay base={loreModifier} penalty={lorePenalty} format="modifier" />
                   </div>
                   <div className={`skill-proficiency ${getProficiencyColor(loreProficiency)}`}>
-                    {getProficiencyLabel(loreProficiency)}
+                    <ProficiencyPips rank={loreProficiency} showLabel={false} />
                   </div>
                 </div>
               </div>

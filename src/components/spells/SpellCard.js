@@ -3,6 +3,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import ActionSymbol from '../shared/ActionSymbol';
 import { parseActionCount } from '../../utils/actionIconUtils';
 
 function VariableCostUseButton({ spell, onCast }) {
@@ -105,7 +106,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
         {spell.actions && (
           <div className="spell-actions">
             <span className="detail-label">Actions:</span>
-            <span className="detail-value">{spell.actions}</span>
+            <span className="detail-value"><ActionSymbol cost={spell.actions} /></span>
           </div>
         )}
         {spell.defense && (

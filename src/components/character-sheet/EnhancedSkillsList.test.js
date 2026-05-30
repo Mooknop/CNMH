@@ -82,9 +82,10 @@ describe('EnhancedSkillsList', () => {
     expect(screen.getByText('+5')).toBeInTheDocument();
   });
 
-  it('renders proficiency labels', () => {
-    render(<EnhancedSkillsList character={{ id: '1' }} />);
-    expect(screen.getAllByText('Trained').length).toBeGreaterThan(0);
+  it('renders proficiency pips', () => {
+    const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+    // Proficiency is now shown as pip dots; verify the pip structure is present
+    expect(container.querySelectorAll('.prof-pips').length).toBeGreaterThan(0);
   });
 
   it('accepts activeConditions prop without crashing', () => {
