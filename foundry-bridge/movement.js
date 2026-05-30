@@ -8,7 +8,10 @@
 //
 // All canvas/geometry calls go through pf2eAdapter.js.
 
-import { TOKEN_MAP } from './config.js';
+// Token resolution uses the app-maintained actorMap (set by GM in the encounter
+// UI) rather than a static TOKEN_MAP. charId → foundryActorId → the actor's
+// active token on the current scene.
+import { getActorMap } from './encounter.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 import {
   getSpeed,
@@ -24,25 +27,35 @@ export function initMovement(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 }
 
+function resolveToken(charId) {
+  const actorMap = getActorMap();
+  const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
+  if (!actorId) return null;
+  const actor = game.actors?.get(actorId);
+  if (!actor) return null;
+  // PCs have a single token on the scene; companions/familiars are separate
+  // actors, so the first active token is the PC's own.
+  const tokens = actor.getActiveTokens?.() ?? [];
+  return tokens[0] ?? null;
+}
+
 // Called by bridge.js when cnmh_movereq_<charId> arrives.
 export async function handleMoveRequest(charId, value) {
-  const tokenId = TOKEN_MAP[charId];
-  if (!tokenId) return;
-  const token = canvas.tokens.get(tokenId);
+  const token = resolveToken(charId);
   if (!token) return;
 
   const moveType = value?.moveType ?? 'stride';
   const options  = await getReachableSquares(token, moveType);
   if (!options) return;
 
-  _sendUpdate?.(charId, 'moveopts', options);
+  // Echo the request ts so the app can correlate this response to its request
+  // and ignore stale option sets from a previous move.
+  _sendUpdate?.(charId, 'moveopts', { ...options, reqTs: value?.ts ?? null });
 }
 
 // Called by bridge.js when cnmh_moveconfirm_<charId> arrives.
 export async function handleMoveConfirm(charId, value) {
-  const tokenId = TOKEN_MAP[charId];
-  if (!tokenId) return;
-  const token = canvas.tokens.get(tokenId);
+  const token = resolveToken(charId);
   if (!token) return;
 
   const { destination } = value;
@@ -58,6 +71,7 @@ export async function handleMoveConfirm(charId, value) {
   _sendUpdate?.(charId, 'movedone', {
     newPosition: { col: destination.col, row: destination.row, x, y },
     feetMoved,
+    reqTs: value?.ts ?? null,
   });
 }
 

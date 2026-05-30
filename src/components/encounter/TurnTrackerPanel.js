@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSession } from '../../contexts/SessionContext';
 import { nextTurnIndex } from '../../utils/encounterUtils';
+import MoveGridPicker from './MoveGridPicker';
 import './TurnTrackerPanel.css';
+
+// PF2e movement actions the player can pick before requesting reachable squares.
+const MOVE_ACTIONS = [
+  { type: 'step',          label: 'Step',          cost: 1 },
+  { type: 'stride',        label: 'Stride',        cost: 1 },
+  { type: 'double-stride', label: 'Double Stride', cost: 2 },
+];
 
 const RESET_STATE = {
   actionsSpent: 0,
@@ -42,8 +51,63 @@ const ReactionIcon = ({ state }) => {
 
 const TurnTrackerPanel = ({ charId, characterName }) => {
   const { encounter, advanceTurn, appendLog } = useEncounter();
-  const { turnState } = useTurnState(charId);
+  const { turnState, spendActions } = useTurnState(charId);
   const { sendUpdate } = useSession();
+
+  // ── Movement (Feature 3) ──────────────────────────────────────────────────
+  // moveStage: null | 'choosing' | 'awaiting-opts' | 'picking' | 'awaiting-done'
+  const [moveStage, setMoveStage]       = useState(null);
+  const [pendingMoveType, setPendingMoveType] = useState(null);
+  const [pickerOpts, setPickerOpts]     = useState(null);
+  const moveSessionTs = useRef(null);
+  // Bridge responses arrive as cnmh_* keys via the relay.
+  const [moveOpts] = useSyncedState(`cnmh_moveopts_${charId}`, null);
+  const [moveDone] = useSyncedState(`cnmh_movedone_${charId}`, null);
+
+  // Reachable squares arrived → open the picker (only for the request we made).
+  useEffect(() => {
+    if (moveStage === 'awaiting-opts' && moveOpts && moveOpts.reqTs === moveSessionTs.current) {
+      setPickerOpts(moveOpts);
+      setMoveStage('picking');
+    }
+  }, [moveOpts, moveStage]);
+
+  // Move completed in Foundry → log it and close.
+  useEffect(() => {
+    if (moveStage === 'awaiting-done' && moveDone && moveDone.reqTs === moveSessionTs.current) {
+      appendLog({ type: 'action', charId, text: `${characterName} moved ${moveDone.feetMoved} ft` });
+      setMoveStage(null);
+      setPickerOpts(null);
+      setPendingMoveType(null);
+    }
+  }, [moveDone, moveStage, appendLog, charId, characterName]);
+
+  const requestMove = (moveType) => {
+    const ts = Date.now();
+    moveSessionTs.current = ts;
+    setPendingMoveType(moveType);
+    setMoveStage('awaiting-opts');
+    sendUpdate(charId, 'movereq', { moveType, ts });
+  };
+
+  const confirmMove = (destination) => {
+    const action = MOVE_ACTIONS.find((a) => a.type === pendingMoveType);
+    const cost = action?.cost ?? 1;
+    sendUpdate(charId, 'moveconfirm', {
+      destination,
+      moveType: pendingMoveType,
+      actionCost: cost,
+      ts: moveSessionTs.current,
+    });
+    spendActions(cost, action?.label || 'Move');
+    setMoveStage('awaiting-done');
+  };
+
+  const cancelMove = () => {
+    setMoveStage(null);
+    setPickerOpts(null);
+    setPendingMoveType(null);
+  };
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -61,6 +125,8 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
 
   const handleSubmit = () => {
     if (!canSubmit) return;
+
+    cancelMove(); // close any open move UI when the turn ends
 
     // Determine next actor BEFORE advancing so we can reset their state.
     const { currentTurnIndex: nextIdx } = nextTurnIndex(
@@ -165,6 +231,16 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
 
           <ReactionIcon state={reactionState} />
 
+          {moveStage === null && (
+            <button
+              className="btn-secondary ttp-move"
+              onClick={() => setMoveStage('choosing')}
+              aria-label="Move"
+            >
+              Move
+            </button>
+          )}
+
           <button
             className="btn-primary ttp-submit"
             onClick={handleSubmit}
@@ -174,6 +250,44 @@ const TurnTrackerPanel = ({ charId, characterName }) => {
             Submit Turn
           </button>
         </div>
+      )}
+
+      {/* Movement sub-UI */}
+      {isInProgress && isMyTurn && moveStage === 'choosing' && (
+        <div className="ttp-move-choose" role="group" aria-label="Choose move action">
+          {MOVE_ACTIONS.map((a) => (
+            <button
+              key={a.type}
+              className="btn-secondary"
+              onClick={() => requestMove(a.type)}
+              aria-label={`move-${a.type}`}
+            >
+              {a.label} <span className="ttp-move-cost">({a.cost})</span>
+            </button>
+          ))}
+          <button className="btn-text" onClick={cancelMove} aria-label="cancel-move">
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {isInProgress && isMyTurn && moveStage === 'awaiting-opts' && (
+        <div className="ttp-move-status">Calculating reachable squares…</div>
+      )}
+
+      {isInProgress && isMyTurn && moveStage === 'picking' && pickerOpts && (
+        <MoveGridPicker
+          origin={pickerOpts.origin}
+          reachable={pickerOpts.reachable}
+          blocked={pickerOpts.blocked}
+          maxFeet={pickerOpts.maxFeet}
+          onSelect={confirmMove}
+          onCancel={cancelMove}
+        />
+      )}
+
+      {isInProgress && isMyTurn && moveStage === 'awaiting-done' && (
+        <div className="ttp-move-status">Moving…</div>
       )}
     </div>
   );
