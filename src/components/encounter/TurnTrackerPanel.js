@@ -9,9 +9,8 @@ import './TurnTrackerPanel.css';
 
 // PF2e movement actions the player can pick before requesting reachable squares.
 const MOVE_ACTIONS = [
-  { type: 'step',          label: 'Step',          cost: 1 },
-  { type: 'stride',        label: 'Stride',        cost: 1 },
-  { type: 'double-stride', label: 'Double Stride', cost: 2 },
+  { type: 'step',   label: 'Step',   cost: 1 },
+  { type: 'stride', label: 'Stride', cost: 1 },
 ];
 
 const RESET_STATE = {

@@ -27,6 +27,29 @@ export function initMovement(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
 }
 
+// PF2e movement is always in 5ft increments; measurePath can return IEEE noise
+// (e.g. 14.9999996), so snap to the nearest 5.
+const snapFeet = (n) => Math.round(n / 5) * 5;
+
+// Grid cells occupied by other tokens (you can move through allies but can't end
+// your movement on top of another creature). Accounts for multi-square tokens.
+function occupiedCells(movingToken, gridSize) {
+  const occupied = new Set();
+  for (const t of canvas.tokens?.placeables ?? []) {
+    if (t.id === movingToken.id) continue;
+    const baseCol = Math.round(t.x / gridSize);
+    const baseRow = Math.round(t.y / gridSize);
+    const w = Math.max(1, Math.round(t.document?.width  ?? 1));
+    const h = Math.max(1, Math.round(t.document?.height ?? 1));
+    for (let c = 0; c < w; c++) {
+      for (let r = 0; r < h; r++) {
+        occupied.add(`${baseCol + c},${baseRow + r}`);
+      }
+    }
+  }
+  return occupied;
+}
+
 function resolveToken(charId) {
   const actorMap = getActorMap();
   const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
@@ -60,7 +83,7 @@ export async function handleMoveConfirm(charId, value) {
 
   const { destination } = value;
   const { x, y } = gridToPixels(destination.col, destination.row);
-  const feetMoved = measureMoveCost(token.x, token.y, x, y);
+  const feetMoved = snapFeet(measureMoveCost(token.x, token.y, x, y));
 
   // v13: TokenDocument.update({x,y}) works for movement on both v13 and v14.
   // [v14-MIGRATION]: v14 introduced a dedicated movement pipeline (TokenDocument.move /
@@ -78,12 +101,11 @@ export async function handleMoveConfirm(charId, value) {
 async function getReachableSquares(token, moveType) {
   const gridSize  = canvas.scene?.grid?.size ?? 100;
   const speed     = getSpeed(token.actor);
-  const maxFeet   = moveType === 'step'           ? 5
-                  : moveType === 'double-stride'   ? speed * 2
-                  :                                 speed;
+  const maxFeet   = moveType === 'step' ? 5 : speed;
   const maxSquares = maxFeet / 5;
 
   const { col: originCol, row: originRow } = getTokenGridPosition(token);
+  const occupied  = occupiedCells(token, gridSize);
   const reachable = [];
   const blocked   = [];
 
@@ -94,10 +116,16 @@ async function getReachableSquares(token, moveType) {
       const row  = originRow + dr;
       const { x: destX, y: destY } = gridToPixels(col, row);
 
-      const cost = measureMoveCost(token.x, token.y, destX, destY);
+      const cost = snapFeet(measureMoveCost(token.x, token.y, destX, destY));
       if (cost > maxFeet) continue;
 
       if (hasWallCollision(token.x, token.y, destX, destY)) {
+        blocked.push({ col, row });
+        continue;
+      }
+
+      // Can't end movement on another creature's square.
+      if (occupied.has(`${col},${row}`)) {
         blocked.push({ col, row });
         continue;
       }
