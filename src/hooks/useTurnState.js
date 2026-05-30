@@ -47,14 +47,18 @@ export const useTurnState = (charId) => {
     [setTurnState]
   );
 
+  // turnToken identifies the turn this reset corresponds to (e.g. "round:index").
+  // Persisting it lets a freshly-mounted panel tell "new turn" (reset) apart from
+  // "remounted mid-turn" (don't wipe actions already spent).
   const resetForNewTurn = useCallback(
-    () =>
+    (turnToken = null) =>
       setTurnState(() => ({
         actionsSpent: 0,
         reactionAvailable: true,
         reactionSpent: false,
         hasStartedFirstTurn: true,
         actionsLog: [],
+        turnToken,
       })),
     [setTurnState]
   );
