@@ -3,7 +3,6 @@ import './EnhancedSkillsList.css';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import ProficiencyPips from '../shared/ProficiencyPips';
-import { getProficiencyLabel } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 

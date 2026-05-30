@@ -5,7 +5,7 @@ import FeatsList from '../character-sheet/FeatsList';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import ProficiencyPips from '../shared/ProficiencyPips';
-import { formatModifier, getProficiencyBonus, getProficiencyLabel } from '../../utils/CharacterUtils';
+import { formatModifier, getProficiencyBonus } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useShield } from '../../hooks/useShield';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
