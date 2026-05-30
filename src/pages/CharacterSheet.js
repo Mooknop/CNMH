@@ -13,6 +13,8 @@ import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
+import SavePrompt from '../components/encounter/SavePrompt';
+
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
 import EffectsModal from '../components/character-sheet/EffectsModal';
@@ -76,6 +78,7 @@ const CharacterSheet = () => {
       case 'encounter':
         return (
           <>
+            <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} />
             <InitiativeEntry charId={character.id} />
             <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
             <HandsPanel character={character} characterColor={characterColor} />
