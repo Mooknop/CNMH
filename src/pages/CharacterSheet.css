@@ -1,7 +1,7 @@
-/* Character Sheet Page Container with Background */
+/* ── Page shell ─────────────────────────────────────────────── */
 .character-sheet-page {
   position: fixed;
-  top: 60px;
+  top: 52px;                       /* updated navbar height */
   left: 0;
   right: 0;
   bottom: 0;
@@ -11,451 +11,531 @@
   background-attachment: fixed;
   background-repeat: no-repeat;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* Dark overlay effect like Dashboard */
+/* Heavy dark overlay — image contributes warmth, not scene */
 .character-sheet-page::before {
   content: '';
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: var(--shadow-lg);
-  z-index: 1;
+  background: var(--bg-overlay);
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Main content container */
+/* ── Character sheet layout container ───────────────────── */
 .character-sheet {
   position: relative;
-  z-index: 2;
-  max-width: 900px;
+  z-index: 1;
+  max-width: 640px;
   margin: 0 auto;
-  padding: var(--space-8);
+  padding: 0;
+  padding-bottom: calc(var(--rail-height) + env(safe-area-inset-bottom, 0px));
 }
 
-/* Character Header with transparency */
-.character-header {
-  background: var(--color-surface-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: var(--card-backdrop);
-  margin-bottom: var(--space-8);
+/* ── Masthead ────────────────────────────────────────────── */
+.cs-masthead {
+  display: grid;
+  grid-template-columns: var(--portrait-width) 1fr;
+  min-height: 110px;
   position: relative;
-  padding: var(--space-6);
-  padding-left: calc(var(--accent-bar-width) + var(--space-6));
+  overflow: hidden;
+  border-bottom: 1px solid var(--shell-border);
 }
 
-.character-header::before {
-  content: '';
+/* Portrait column */
+.cs-portrait {
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid var(--shell-border);
+}
+
+/* The portrait reuses the .entity-image element (kept for test + semantics)
+   but fills the masthead column rather than the default 180px box. */
+.cs-portrait .cs-portrait-img {
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--accent-bar-width);
-  background: var(--color-theme, var(--color-primary));
-  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center top;
 }
 
-.character-header h1 {
-  margin-bottom: var(--space-2);
-  color: var(--color-theme, var(--color-primary));
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  font-family: var(--font-display);
-  font-size: var(--text-display);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-wide);
-  line-height: var(--leading-tight);
-}
-
-.character-subtitle {
-  color: var(--color-text-muted);
-  font-size: 1.1rem;
-  margin-bottom: var(--space-4);
-}
-
-.character-actions {
-  display: flex;
-  gap: var(--space-2);
+.cs-portrait-fallback {
   position: absolute;
-  top: var(--space-6);
-  right: var(--space-6);
-}
-
-.familiar-button {
+  inset: 0;
+  background: rgba(192, 68, 14, 0.07);
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-theme, var(--color-primary));
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-4);
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-md);
 }
 
-.familiar-button:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.familiar-icon {
-  margin-right: var(--space-2);
-  font-size: 1.2rem;
-}
-
-.character-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
-}
-
-/* Stats Block with transparency */
-.stats-block {
-  background: var(--color-surface-card);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: var(--card-backdrop);
-  padding: var(--space-6);
-}
-
-.core-stats {
-  margin-bottom: var(--space-6);
-}
-
-.hp-defense {
+.cs-monogram {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(192, 68, 14, 0.35);
   display: flex;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-.hp-box, .ac-box {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: var(--card-backdrop);
-  padding: var(--space-3) var(--space-5);
-  text-align: center;
-  min-width: 120px;
-  flex: 1;
-}
-
-.hp-box {
-  border: 2px solid var(--color-theme, var(--color-primary));
-}
-
-.ac-box {
-  border: 2px solid var(--color-text-secondary);
-}
-
-.character-sheet .defense-name {
-  font-weight: bold;
-  color: var(--color-theme, var(--color-primary));
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-}
-
-.character-sheet .defense-value {
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
-  color: var(--color-text);
-  line-height: 1;
-}
-
-/* Character Attributes Section */
-.character-attributes {
-  background: rgba(255, 255, 255, .01);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: var(--card-backdrop);
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.attribute {
-  text-align: center;
-}
-
-.attribute-label {
-  color: var(--color-theme, var(--color-primary));
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.attribute-value {
-  display: block;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-/* Tab Navigation Styling with transparency */
-.stats-tabs {
-  display: flex;
-  margin-bottom: var(--space-4);
-  background: rgba(224, 224, 224, 0.9);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
-.tab-button {
-  flex: 1;
-  padding: var(--space-3) var(--space-4);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--color-text-secondary);
-  transition: all 0.2s;
-  text-align: center;
-  min-height: var(--tap-target-min);
-}
-
-.tab-button:hover {
-  background: rgba(208, 208, 208, 0.9);
-}
-
-.tab-button.active {
-  background-color: var(--color-theme, var(--color-primary));
-  color: white;
-}
-
-/* Tab Content Container with transparency */
-.tab-content {
-  background: var(--color-surface-overlay);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: var(--space-5);
-}
-
-/* Tabs Container with transparency */
-.character-tabs {
-  background: var(--color-surface-card);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.tabs-header {
-  display: flex;
-  background: rgba(224, 224, 224, 0.9);
-}
-
-/* Abilities Section Styling */
-.abilities-section {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-.character-sheet .ability {
-  text-align: center;
-  background: var(--color-surface-overlay);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-}
-
-.character-sheet .ability-name {
-  font-weight: bold;
-  color: var(--color-theme, var(--color-primary));
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
-}
-
-.character-sheet .ability-score {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  margin-bottom: 0.25rem;
-  line-height: 1;
-}
-
-.character-sheet .ability-mod {
   font-size: 1rem;
-  color: var(--color-text-muted);
+  font-weight: 700;
+  color: rgba(192, 68, 14, 0.65);
 }
 
-/* Saving Throws Section */
-.saving-throws {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-4);
+/* Right-edge feather so portrait bleeds into info column */
+.cs-portrait-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--portrait-fade-width);
+  background: linear-gradient(to right, transparent, rgba(10, 8, 6, 0.7));
+  pointer-events: none;
 }
 
-.save {
-  text-align: center;
-  background: rgba(255, 255, 255, 0.8);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+/* Info column */
+.cs-info {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 13px 12px;
 }
 
-.save-name {
-  font-weight: bold;
-  color: var(--color-theme, var(--color-primary));
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+/* Dark warm gradient behind the info column — the scene shows through faintly */
+.cs-info-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(40, 28, 16, 0.92) 0%, rgba(12, 10, 8, 0.96) 100%);
+  pointer-events: none;
 }
 
-.save-value {
-  font-size: 1.25rem;
-  font-weight: bold;
+.cs-info-content {
+  position: relative;
+  z-index: 1;
 }
 
-/* Inventory Tab Styling with Bulk Management */
-.inventory-tab h2 {
-  margin-top: 0;
-  margin-bottom: var(--space-6);
-  color: var(--color-primary);
-  font-size: 1.2rem;
+.cs-char-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--shell-text-primary);
+  line-height: 1.1;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
+  margin: 0 0 3px;
 }
 
-/* Bulk Management Styles */
-.bulk-management {
-  margin-bottom: var(--space-8);
-  background: rgba(245, 245, 245, 0.6);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(5px);
+.cs-char-sub {
+  font-family: var(--font-display);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin: 0 0 8px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
-.bulk-status {
-  margin-bottom: var(--space-4);
-}
-
-.bulk-labels {
+/* Conditions strip */
+.cs-conditions {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
 }
 
-.bulk-progress-container {
-  width: 100%;
-  height: 0.75rem;
-  background: rgba(224, 224, 224, 0.9);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-2);
-  overflow: hidden;
+.cs-cond {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 500;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--shell-text-primary);
+  border: 1px solid var(--shell-border-strong);
 }
 
-.bulk-progress-bar {
-  height: 100%;
-  transition: width 0.3s ease, background-color 0.3s ease;
+.cs-cond-val {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  margin-left: 1px;
+  color: var(--gold-light);
 }
 
-.bulk-warning {
-  margin-top: 0.75rem;
-  padding: var(--space-3);
-  background: rgba(255, 243, 224, 0.95);
-  border-left: 4px solid var(--color-warning);
-  color: #e65100;
-  font-size: 0.9rem;
-  border-radius: var(--radius-sm);
-  backdrop-filter: blur(5px);
+/* Masthead action buttons */
+.cs-masthead-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-.bulk-warning.severe {
-  background: rgba(255, 235, 238, 0.95);
-  border-left: 4px solid var(--color-danger);
-  color: var(--color-danger);
-}
-
-/* Inventory List */
-.inventory-list {
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
-.inventory-list table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.inventory-list th {
-  background-color: var(--color-primary);
-  color: white;
-  text-align: left;
-  padding: var(--space-3) var(--space-4);
-}
-
-.inventory-list th:first-child {
-  border-top-left-radius: var(--radius-lg);
-}
-
-.inventory-list th:last-child {
-  border-top-right-radius: var(--radius-lg);
-}
-
-.inventory-list td {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid rgba(238, 238, 238, 0.8);
-  background: rgba(255, 255, 255, 0.5);
-  min-height: var(--tap-target-min);
-}
-
-.item-name {
-  color: var(--color-text);
+.cs-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--shell-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-secondary);
   cursor: pointer;
-  transition: color 0.2s;
-  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  min-height: 26px;
+}
+
+.cs-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--shell-text-primary);
+}
+
+.cs-action-btn--effect {
+  border-color: rgba(46, 125, 50, 0.35);
+  background: rgba(46, 125, 50, 0.1);
+  color: var(--verdant-light);
+}
+
+.cs-action-btn--effect:hover {
+  background: rgba(46, 125, 50, 0.18);
+}
+
+.cs-action-btn i {
+  font-size: 12px;
+}
+
+/* ── Vitals strip ────────────────────────────────────────── */
+.cs-vitals {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.cs-vital {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  border-right: 1px solid var(--shell-border);
+}
+
+.cs-vital:last-child {
+  border-right: none;
+}
+
+.cs-vital-val {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--shell-text-primary);
+}
+
+.cs-vital-val--hp {
+  color: var(--ember-base);
+}
+
+.cs-vital-max {
+  font-size: 0.7rem;
+  color: var(--shell-text-tertiary);
+  margin-left: 1px;
+}
+
+/* Hero point pips in vitals */
+.cs-vital-val--hero {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.cs-hero-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(196, 154, 46, 0.4);
+  background: transparent;
   display: inline-block;
 }
 
-.item-name:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
+.cs-hero-pip--filled {
+  background: var(--gold-mid);
+  border-color: var(--gold-mid);
 }
 
-.empty-inventory {
-  text-align: center;
+.cs-vital-lbl {
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-top: 3px;
+}
+
+/* ── Ability scores strip ────────────────────────────────── */
+.cs-abilities {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.cs-abl {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 7px 0;
+  border-right: 1px solid var(--shell-border);
+}
+
+.cs-abl:last-child {
+  border-right: none;
+}
+
+.cs-abl-score {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+  line-height: 1;
+}
+
+.cs-abl-mod {
+  font-size: 0.6rem;
+  color: var(--ember-base);
+  margin-top: 1px;
+}
+
+.cs-abl-name {
+  font-size: 0.45rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-top: 2px;
+}
+
+/* ── Scrollable content zone ─────────────────────────────── */
+.cs-content {
+  padding: 12px;
+  min-height: 200px;
+}
+
+.cs-empty {
   padding: var(--space-8);
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  color: var(--shell-text-tertiary);
+  font-size: 0.85rem;
 }
 
-/* Remove the border and background from components when used in tabs */
-.tab-content .skills-list,
-.tab-content .feats-list {
-  background-color: transparent;
+/* Dark card base — all tab content panels use this */
+.cs-content .stat-card,
+.cs-content .stats-block,
+.cs-content .inventory-tab,
+.cs-content .actions-list,
+.cs-content .exploration-list,
+.cs-content .effects-panel,
+.cs-content .hands-panel,
+.cs-content .ttp-panel,
+.cs-content .initiative-entry {
+  background: var(--dark-card-bg);
+  border: var(--dark-card-border);
+  border-radius: var(--dark-card-radius);
+  margin-bottom: 10px;
+}
+
+/* Override white backgrounds that bleed through */
+.cs-content .tab-content,
+.cs-content .ability,
+.cs-content .hp-box,
+.cs-content .ac-box,
+.cs-content .condition-box,
+.cs-content .save,
+.cs-content .defense {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--shell-border);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .defense-value,
+.cs-content .ability-mod,
+.cs-content .ability-score,
+.cs-content .save-value {
+  color: var(--shell-text-primary);
+}
+
+.cs-content .tab-content {
+  border-radius: var(--radius-md);
+}
+
+/* Inventory dark overrides */
+.cs-content .bulk-management {
+  background: rgba(255, 255, 255, 0.03);
+  border: var(--dark-card-border);
+}
+
+.cs-content .bulk-progress-container {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cs-content .inventory-list {
+  background: transparent;
+}
+
+.cs-content .inventory-list th {
+  background: rgba(192, 68, 14, 0.25);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .inventory-list td {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--shell-border);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .item-name {
+  color: var(--shell-text-primary);
+}
+
+.cs-content .item-name:hover {
+  color: var(--ember-light);
+}
+
+.cs-content .empty-inventory {
+  background: transparent;
+  color: var(--shell-text-tertiary);
+}
+
+/* Container items */
+.cs-content .container-header {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .container-header:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.cs-content .container-contents {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.cs-content .container-bulk-bar-wrapper {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* TurnTrackerPanel dark overrides */
+.cs-content .ttp-status {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .ttp-controls {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--shell-border);
+}
+
+.cs-content .ttp-entry {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .ttp-entry--current {
+  background: rgba(192, 68, 14, 0.15);
+  border-color: var(--ember-base);
+  color: var(--shell-text-primary);
+}
+
+.cs-content .ttp-entry--enemy {
+  background: rgba(255, 152, 0, 0.08);
+  border-color: rgba(255, 152, 0, 0.25);
+}
+
+/* ── Bottom navigation rail ──────────────────────────────── */
+.cs-rail {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 640px;
+  height: var(--rail-height);
+  background: var(--rail-bg);
+  border-top: 1px solid var(--shell-border);
+  display: flex;
+  align-items: stretch;
+  z-index: var(--z-navbar);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.cs-rail-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  border-top: 2px solid transparent;
+  cursor: pointer;
   padding: 0;
-  margin-bottom: 0;
+  transition: border-color 0.15s, color 0.15s;
+  min-height: var(--tap-target-min);
+  -webkit-tap-highlight-color: transparent;
 }
 
+.cs-rail-tab i {
+  font-size: 18px;
+  color: var(--shell-text-tertiary);
+  line-height: 1;
+}
+
+.cs-rail-tab span {
+  font-family: var(--font-ui);
+  font-size: 0.45rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.cs-rail-tab--active {
+  border-top-color: var(--rail-active);
+}
+
+.cs-rail-tab--active i {
+  color: var(--rail-active);
+}
+
+.cs-rail-tab--active span {
+  color: var(--rail-active);
+}
+
+/* Detail view helpers (used in ItemModal, SpellsList) */
 .detail-label {
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--shell-text-secondary);
 }
 
 .detail-value {
-  color: var(--color-text);
+  color: var(--shell-text-primary);
 }
 
 .heightened-label {
   display: block;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--ember-light);
   margin-bottom: var(--space-2);
 }
 
@@ -469,65 +549,27 @@
   margin-right: var(--space-2);
 }
 
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
-  .character-sheet-page {
-    padding: var(--space-4);
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .cs-char-name {
+    font-size: 0.9rem;
   }
 
-  .character-sheet {
-    padding: var(--space-4);
+  .cs-content {
+    padding: 10px;
   }
 
-  .character-header {
-    padding: var(--space-4);
-    padding-left: calc(var(--accent-bar-width) + var(--space-4));
-    margin-bottom: var(--space-4);
-  }
-
-  .character-actions {
-    position: static;
-    margin-top: var(--space-4);
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .tabs-header {
-    flex-direction: column;
-  }
-
-  .tab-button {
-    padding: var(--space-3);
-  }
-
-  .bulk-labels {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .inventory-list th,
-  .inventory-list td {
-    padding: var(--space-3) var(--space-2);
-  }
-
-  .item-name {
-    font-weight: 500;
-  }
-
-  .item-name::after {
-    content: " 🔍";
-    font-size: 0.8rem;
-    opacity: 0.7;
+  .cs-rail-tab i {
+    font-size: 16px;
   }
 }
 
-@media (max-width: 480px) {
-  .abilities-section {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-2);
+@media (max-width: 360px) {
+  :root {
+    --portrait-width: 68px;
   }
 
-  .saving-throws {
-    grid-template-columns: 1fr;
+  .cs-abl-score {
+    font-size: 0.72rem;
   }
 }
