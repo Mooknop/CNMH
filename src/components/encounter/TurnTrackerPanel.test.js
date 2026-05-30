@@ -31,10 +31,18 @@ jest.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate }),
 }));
 
-const { __reset } = require('../../hooks/useSyncedState');
+const { __reset, useSyncedState } = require('../../hooks/useSyncedState');
 import TurnTrackerPanel from './TurnTrackerPanel';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
+
+// Lets a test inject bridge responses (cnmh_moveopts_* / cnmh_movedone_*) into
+// the shared synced-state store.
+const SyncDriver = ({ skey, onReady }) => {
+  const [, set] = useSyncedState(skey, null);
+  React.useEffect(() => { onReady(set); }, [set, onReady]);
+  return null;
+};
 
 const pellias = { id: 'Pellias', name: 'Pellias' };
 const ashka = { id: 'Ashka', name: 'Ashka' };
@@ -203,5 +211,99 @@ describe('TurnTrackerPanel', () => {
     act(() => drv.setInitiative(p.entryId, 12));
     act(() => drv.beginRound1());
     expect(screen.getByLabelText(/unavailable until your first turn/i)).toBeInTheDocument();
+  });
+
+  // ── Movement (Feature 3) ────────────────────────────────────────────────
+  // getDrv re-reads the live hook value (the outer var is reassigned on each
+  // re-render via onReady, so a captured-by-value reference would go stale).
+  const startMyTurn = (getDrv) => {
+    act(() => getDrv().startEncounter([pellias]));
+    const [p] = getDrv().encounter.order;
+    act(() => getDrv().setInitiative(p.entryId, 12));
+    act(() => getDrv().beginRound1());
+  };
+
+  it('Move button reveals action choices and requests reachable squares', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    fireEvent.click(screen.getByLabelText('Move'));
+    expect(screen.getByLabelText('move-stride')).toBeInTheDocument();
+
+    jest.spyOn(Date, 'now').mockReturnValue(999);
+    fireEvent.click(screen.getByLabelText('move-stride'));
+    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'movereq', { moveType: 'stride', ts: 999 });
+    Date.now.mockRestore();
+  });
+
+  it('renders the grid on options, confirms a move, spends actions, and closes on done', () => {
+    let drv, tsDriver, setOpts, setDone;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+        <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    jest.spyOn(Date, 'now').mockReturnValue(555);
+    fireEvent.click(screen.getByLabelText('Move'));
+    fireEvent.click(screen.getByLabelText('move-stride'));
+
+    // Bridge responds with reachable squares, correlated by reqTs.
+    act(() => setOpts({
+      reqTs: 555,
+      origin: { col: 5, row: 5 },
+      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+      blocked: [],
+      maxFeet: 25,
+    }));
+
+    // Grid appears; choose the reachable square.
+    fireEvent.click(screen.getByLabelText(/Move to 6,5/));
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
+      destination: { col: 6, row: 5 }, moveType: 'stride', actionCost: 1, ts: 555,
+    }));
+    expect(tsDriver.turnState.actionsSpent).toBe(1);
+
+    // Bridge confirms the move completed → UI closes, Move button returns.
+    act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
+    expect(screen.getByLabelText('Move')).toBeInTheDocument();
+    Date.now.mockRestore();
+  });
+
+  it('ignores stale option sets from a previous request', () => {
+    let drv, setOpts;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    jest.spyOn(Date, 'now').mockReturnValue(100);
+    fireEvent.click(screen.getByLabelText('Move'));
+    fireEvent.click(screen.getByLabelText('move-stride'));
+
+    // A stale response (different reqTs) must not open the grid.
+    act(() => setOpts({
+      reqTs: 1, origin: { col: 5, row: 5 },
+      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+      blocked: [], maxFeet: 25,
+    }));
+    expect(screen.queryByLabelText(/Move to 6,5/)).toBeNull();
+    Date.now.mockRestore();
   });
 });
