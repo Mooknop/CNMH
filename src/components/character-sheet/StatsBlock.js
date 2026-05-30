@@ -78,6 +78,7 @@ const StatsBlock = ({ character, characterColor }) => {
     size,
     speed,
     senses,
+    hp,
   } = charData;
 
   const themeColor = characterColor || 'var(--color-primary)';
@@ -392,8 +393,19 @@ const StatsBlock = ({ character, characterColor }) => {
           <div className="hp-box" style={{ borderColor: themeColor }}>
             <div className="defense-name" style={{ color: themeColor }}>HP</div>
             <div className="defense-value">
+              <span className="hp-current">{hp?.current ?? maxHp}</span>
+              {' / '}
               <PenaltyDisplay base={maxHp} penalty={mod('maxHp')} />
             </div>
+            {hp?.temp > 0 && (
+              <div className="hp-temp">+{hp.temp} temp</div>
+            )}
+            {(hp?.dying > 0 || hp?.wounded > 0) && (
+              <div className="hp-status">
+                {hp.dying  > 0 && <span className="hp-dying">Dying {hp.dying}</span>}
+                {hp.wounded > 0 && <span className="hp-wounded">Wounded {hp.wounded}</span>}
+              </div>
+            )}
           </div>
           <div className="ac-box">
             <div className="defense-name">AC</div>
