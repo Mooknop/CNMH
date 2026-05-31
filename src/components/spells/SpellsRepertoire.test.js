@@ -30,6 +30,8 @@ jest.mock('../../utils/SpellUtils', () => ({
 const makeSpell = (id, name, level = 1) => ({ id, name, level });
 
 describe('SpellsRepertoire', () => {
+  beforeEach(() => localStorage.clear());
+
   it('renders spell names as chips when spells are provided', () => {
     const spells = [makeSpell('s1', 'Fireball', 1), makeSpell('s2', 'Magic Missile', 1)];
     const character = { spellcasting: { bloodline: null } };
@@ -47,7 +49,7 @@ describe('SpellsRepertoire', () => {
     expect(screen.getByText('Magic Missile')).toBeInTheDocument();
   });
 
-  it('renders slot bubbles for non-cantrip ranks', () => {
+  it('renders a slot bar for non-cantrip ranks', () => {
     const spells = [makeSpell('s1', 'Fireball', 1)];
     const character = { spellcasting: { bloodline: null } };
     render(
@@ -60,11 +62,12 @@ describe('SpellsRepertoire', () => {
         character={character}
       />
     );
-    const filledBubbles = screen.getAllByLabelText('Available slot');
-    expect(filledBubbles).toHaveLength(3);
+    expect(
+      screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ })
+    ).toBeInTheDocument();
   });
 
-  it('marks a slot as spent when a filled bubble is clicked', () => {
+  it('tapping the slot bar spends one slot', () => {
     const spells = [makeSpell('s1', 'Fireball', 1)];
     const character = { spellcasting: { bloodline: null } };
     render(
@@ -77,13 +80,13 @@ describe('SpellsRepertoire', () => {
         character={character}
       />
     );
-    const firstBubble = screen.getAllByLabelText('Available slot')[0];
-    fireEvent.click(firstBubble);
-    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
-    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ }));
+    expect(
+      screen.getByRole('button', { name: /Rank 1 spell slots: 2 of 3 remaining/ })
+    ).toBeInTheDocument();
   });
 
-  it('does not render slot bubbles for cantrips', () => {
+  it('does not render a slot bar for cantrips', () => {
     const spells = [makeSpell('s1', 'Detect Magic', 0)];
     const character = { spellcasting: { bloodline: null } };
     render(
@@ -96,8 +99,27 @@ describe('SpellsRepertoire', () => {
         character={character}
       />
     );
-    expect(screen.queryByLabelText('Available slot')).toBeNull();
+    expect(screen.queryByRole('button', { name: /spell slots:/ })).toBeNull();
     expect(screen.getByText('Detect Magic')).toBeInTheDocument();
+  });
+
+  it('Rest button restores all spell slots', () => {
+    const spells = [makeSpell('s1', 'Fireball', 1)];
+    const character = { spellcasting: { bloodline: null } };
+    render(
+      <SpellsRepertoire
+        spells={spells}
+        spellSlots={{ '1': 3 }}
+        themeColor="#4a90d9"
+        characterLevel={5}
+        defenseFilter="all"
+        character={character}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ }));
+    expect(screen.getByRole('button', { name: /2 of 3 remaining/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Rest: restore all spell slots' }));
+    expect(screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ })).toBeInTheDocument();
   });
 
   it('renders ★ symbol on signature spells', () => {

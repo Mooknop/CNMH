@@ -46,14 +46,16 @@ const SpellsRepertoire = ({
     () => Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0]))
   );
 
-  const handleBubbleClick = (rank, i) => {
+  const handleSpend = (rank) => {
     const total = spellSlots[rank] || 0;
     const spent = slotsSpent[rank] || 0;
-    if (i < total - spent) {
-      setSlotsSpent(prev => ({ ...prev, [rank]: Math.min(spent + 1, total) }));
-    } else {
-      setSlotsSpent(prev => ({ ...prev, [rank]: Math.max(spent - 1, 0) }));
+    if (spent < total) {
+      setSlotsSpent(prev => ({ ...prev, [rank]: spent + 1 }));
     }
+  };
+
+  const handleRest = () => {
+    setSlotsSpent(Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0])));
   };
 
   const filtered = filterSpellsByDefense(spells, defenseFilter);
@@ -62,11 +64,28 @@ const SpellsRepertoire = ({
     Object.keys(spellsByRank).filter(r => spellsByRank[r].length > 0)
   ).slice(1); // drop the leading 'all' entry
 
+  const hasNonCantripSlots = Object.keys(spellSlots || {}).some(
+    k => k !== 'cantrips' && (spellSlots[k] || 0) > 0
+  );
+
   return (
     <div className="spells-container">
+      {hasNonCantripSlots && (
+        <div className="repertoire-rest-row">
+          <button
+            className="btn-secondary btn-small"
+            aria-label="Rest: restore all spell slots"
+            onClick={handleRest}
+          >
+            Rest
+          </button>
+        </div>
+      )}
+
       {ranksToShow.map(rank => {
         const total = spellSlots?.[rank] || 0;
         const spent = slotsSpent[rank] || 0;
+        const remaining = total - spent;
 
         return (
           <div className="repertoire-rank-section" key={rank}>
@@ -75,20 +94,19 @@ const SpellsRepertoire = ({
                 {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
               </span>
               {rank !== 'cantrips' && total > 0 && (
-                <div className="slot-bubbles">
-                  {Array.from({ length: total }, (_, i) => {
-                    const isFilled = i < total - spent;
-                    return (
-                      <button
-                        key={i}
-                        className={`slot-bubble ${isFilled ? 'slot-filled' : 'slot-empty'}`}
-                        style={isFilled ? { backgroundColor: themeColor, borderColor: themeColor } : { borderColor: themeColor }}
-                        onClick={() => handleBubbleClick(rank, i)}
-                        aria-label={isFilled ? 'Available slot' : 'Spent slot'}
-                      />
-                    );
-                  })}
-                </div>
+                <button
+                  className="slot-bar"
+                  style={{ borderColor: themeColor }}
+                  disabled={remaining === 0}
+                  onClick={() => handleSpend(rank)}
+                  aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining`}
+                >
+                  <span
+                    className="slot-bar-fill"
+                    style={{ width: `${(remaining / total) * 100}%`, backgroundColor: themeColor }}
+                  />
+                  <span className="slot-bar-label">{remaining}/{total}</span>
+                </button>
               )}
             </div>
             <div className="spell-chips-row">
