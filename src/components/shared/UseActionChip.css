@@ -1,0 +1,126 @@
+.use-chip {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid rgba(192, 68, 14, 0.5);
+  background: rgba(192, 68, 14, 0.12);
+  cursor: pointer;
+  min-height: 38px;
+  padding: 0;
+  font-family: var(--font-ui);
+  transition: background-color 0.15s ease;
+}
+
+.use-chip:hover {
+  background: rgba(192, 68, 14, 0.22);
+}
+
+.use-chip-cost {
+  display: flex;
+  align-items: center;
+  padding: 0 9px;
+  background: rgba(192, 68, 14, 0.25);
+  border-right: 1px solid rgba(192, 68, 14, 0.4);
+}
+
+.use-chip-cost .action-sym {
+  font-size: 0.8rem;
+  color: var(--ember-light);
+  letter-spacing: 1px;
+}
+
+.use-chip-label {
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-primary, #f5ede4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+}
+
+/* Reaction — arcane purple */
+.use-chip--reaction {
+  border-color: rgba(122, 84, 186, 0.5);
+  background: rgba(122, 84, 186, 0.12);
+}
+.use-chip--reaction:hover {
+  background: rgba(122, 84, 186, 0.22);
+}
+.use-chip--reaction .use-chip-cost {
+  background: rgba(122, 84, 186, 0.25);
+  border-right-color: rgba(122, 84, 186, 0.4);
+}
+.use-chip--reaction .use-chip-cost .action-sym {
+  color: var(--arcane-light);
+}
+
+/* Free action — verdant green */
+.use-chip--free {
+  border-color: rgba(61, 148, 88, 0.5);
+  background: rgba(61, 148, 88, 0.12);
+}
+.use-chip--free:hover {
+  background: rgba(61, 148, 88, 0.22);
+}
+.use-chip--free .use-chip-cost {
+  background: rgba(61, 148, 88, 0.25);
+  border-right-color: rgba(61, 148, 88, 0.4);
+}
+.use-chip--free .use-chip-cost .action-sym {
+  color: var(--verdant-light);
+}
+
+/* Variable cost — gold */
+.use-chip--variable {
+  border-color: rgba(196, 154, 46, 0.5);
+  background: rgba(196, 154, 46, 0.12);
+}
+.use-chip--variable:hover {
+  background: rgba(196, 154, 46, 0.18);
+}
+.use-chip-select {
+  background: rgba(196, 154, 46, 0.2);
+  border: none;
+  border-right: 1px solid rgba(196, 154, 46, 0.4);
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0 8px;
+  cursor: pointer;
+  outline: none;
+}
+.use-chip--variable .use-chip-label {
+  color: var(--gold-light);
+}
+
+/* Inactive — held-item gate */
+.use-chip--disabled {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.use-chip--disabled .use-chip-cost {
+  background: rgba(255, 255, 255, 0.05);
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+.use-chip--disabled .use-chip-cost .action-sym {
+  color: rgba(255, 255, 255, 0.4);
+}
+.use-chip--disabled .use-chip-label {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Light-context fallback (GM preview pages, light surfaces) */
+.gm-preview .use-chip-label,
+.light-surface .use-chip-label {
+  color: var(--color-text);
+}

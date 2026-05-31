@@ -5,6 +5,7 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import UseActionChip from '../shared/UseActionChip';
 
 const DEGREE_COLORS = {
   'Critical Success': 'var(--color-success)',
@@ -20,31 +21,6 @@ const getDegreeColor = (degree) => {
   return 'var(--color-text)';
 };
 
-function VariableCostUseButton({ item, onUse }) {
-  const [cost, setCost] = React.useState(item.variableActionCount.min);
-  const { min, max } = item.variableActionCount;
-  return (
-    <span className="action-use-variable">
-      <select
-        aria-label={`Action count for ${item.name}`}
-        value={cost}
-        onChange={(e) => setCost(Number(e.target.value))}
-      >
-        {Array.from({ length: max - min + 1 }, (_, i) => {
-          const v = min + i;
-          return <option key={v} value={v}>{v} act</option>;
-        })}
-      </select>
-      <button
-        className="btn-encounter-use"
-        onClick={() => onUse && onUse(item, cost)}
-        aria-label={`Use ${item.name}`}
-      >
-        Use
-      </button>
-    </span>
-  );
-}
 
 /**
  * Renders a list of action/reaction/free-action cards in a grid.
@@ -89,28 +65,22 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
         // disabled; undefined/true (character/feat actions) ⇒ always usable.
         const inactive = item.active === false;
 
-        const cost =
-          type === 'reaction' ? 'reaction'
-          : type === 'free-action' ? 0
-          : item.actionCount || 1;
-        const costLabel =
+        const chipCost =
           type === 'reaction' ? 'reaction'
           : type === 'free-action' ? 'free'
-          : `${item.actionCount || 1} act`;
+          : item.actionCount || 1;
 
-        const headerRight = encounterMode && !inactive
-          ? (type === 'action' && item.variableActionCount
-              ? <VariableCostUseButton item={item} onUse={onUse} />
-              : (
-                <button
-                  className="btn-encounter-use"
-                  onClick={() => onUse && onUse(item, cost)}
-                  aria-label={`Use ${item.name}`}
-                >
-                  Use ({costLabel})
-                </button>
-              )
-            )
+        const headerRight = encounterMode
+          ? (
+            <UseActionChip
+              cost={chipCost}
+              verb="Use"
+              name={item.name}
+              inactive={inactive}
+              variableRange={type === 'action' ? item.variableActionCount : undefined}
+              onUse={(c) => onUse && onUse(item, c)}
+            />
+          )
           : null;
 
         const header = (
