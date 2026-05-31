@@ -34,7 +34,7 @@ const ActionsList = ({ character, characterColor }) => {
           charId: character.id,
           text: `${character.name} used ${item.name} (reaction)`,
         });
-      } else if (cost === 0) {
+      } else if (cost === 'free' || cost === 0) {
         appendLog({
           type: 'action',
           charId: character.id,

@@ -269,3 +269,67 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Dark game-menu overrides ─────────────────────────────── */
+
+.item-detail-label,
+.strike-detail-label {
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.45));
+}
+
+.item-detail-value,
+.strike-detail-value {
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+.item-detail-grid,
+.strike-details,
+.item-action,
+.item-reaction,
+.item-free-action,
+.scroll-details,
+.wand-details {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.item-traits {
+  border-bottom-color: var(--shell-border, rgba(255, 255, 255, 0.07));
+}
+
+.item-description h3,
+.item-actions h3,
+.item-reactions h3,
+.item-free-actions h3,
+.item-strikes h3,
+.item-scroll h3,
+.item-wand h3,
+.shield-properties h3 {
+  color: var(--ember-light, #f5803e);
+  border-bottom-color: var(--shell-border, rgba(255, 255, 255, 0.07));
+}
+
+.item-description p,
+.action-description,
+.reaction-description,
+.free-action-description {
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.action-name,
+.reaction-name,
+.free-action-name,
+.strike-name,
+.scroll-name,
+.wand-name {
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+.shield-info {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-left-color: var(--color-theme, var(--ember-base));
+}
+
+.reaction-trigger,
+.free-action-trigger {
+  background-color: rgba(196, 154, 46, 0.08);
+}

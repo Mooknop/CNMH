@@ -4,33 +4,9 @@ import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import ThaumaturgeImplementsDisplay from './ThaumaturgeImplementsDisplay';
+import UseActionChip from '../shared/UseActionChip';
 import { useCharacter } from '../../hooks/useCharacter';
 
-function VariableCostUseButton({ strike, onUse }) {
-  const [cost, setCost] = React.useState(strike.variableActionCount.min);
-  const { min, max } = strike.variableActionCount;
-  return (
-    <span className="action-use-variable">
-      <select
-        aria-label={`Action count for ${strike.name}`}
-        value={cost}
-        onChange={(e) => setCost(Number(e.target.value))}
-      >
-        {Array.from({ length: max - min + 1 }, (_, i) => {
-          const v = min + i;
-          return <option key={v} value={v}>{v} act</option>;
-        })}
-      </select>
-      <button
-        className="btn-encounter-use"
-        onClick={() => onUse && onUse(strike, cost)}
-        aria-label={`Use ${strike.name}`}
-      >
-        Use
-      </button>
-    </span>
-  );
-}
 
 /**
  * Component to render character's strikes, separated into melee and ranged categories
@@ -65,18 +41,15 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
     const inactive = strike.active === false;
 
     const headerRight = encounterMode && !inactive
-      ? (strike.variableActionCount
-          ? <VariableCostUseButton strike={strike} onUse={onUse} />
-          : (
-            <button
-              className="btn-encounter-use"
-              onClick={() => onUse && onUse(strike, strike.actionCount || 1)}
-              aria-label={`Use ${strike.name}`}
-            >
-              Use ({strike.actionCount || 1} act)
-            </button>
-          )
-        )
+      ? (
+        <UseActionChip
+          cost={strike.actionCount || 1}
+          verb="Use"
+          name={strike.name}
+          variableRange={strike.variableActionCount}
+          onUse={(c) => onUse && onUse(strike, c)}
+        />
+      )
       : null;
 
     const header = (

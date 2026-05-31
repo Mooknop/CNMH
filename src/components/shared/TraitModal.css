@@ -17,3 +17,14 @@
   border-top: 1px solid #eee;
   padding-top: 1rem;
 }
+
+/* ── Dark game-menu overrides ─────────────────────────────── */
+
+.trait-description {
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.trait-source {
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.45));
+  border-top-color: var(--shell-border, rgba(255, 255, 255, 0.07));
+}

@@ -573,3 +573,26 @@
     font-size: 0.72rem;
   }
 }
+
+/* ── Buttons on the dark sheet ────────────────────────────── */
+
+.character-sheet .btn-secondary {
+  color: var(--shell-text-secondary);
+  border-color: var(--shell-border-strong);
+}
+
+.character-sheet .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--shell-text-primary);
+}
+
+.character-sheet .btn-danger {
+  color: #ef5350;
+  border-color: rgba(239, 83, 80, 0.5);
+}
+
+.character-sheet .btn-danger:hover {
+  background-color: rgba(183, 28, 28, 0.8);
+  color: #fff;
+}

@@ -4,33 +4,8 @@ import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import ActionSymbol from '../shared/ActionSymbol';
+import UseActionChip from '../shared/UseActionChip';
 import { parseActionCount } from '../../utils/actionIconUtils';
-
-function VariableCostUseButton({ spell, onCast }) {
-  const [cost, setCost] = React.useState(spell.variableActionCount.min);
-  const { min, max } = spell.variableActionCount;
-  return (
-    <span className="action-use-variable">
-      <select
-        aria-label={`Action count for ${spell.name}`}
-        value={cost}
-        onChange={(e) => setCost(Number(e.target.value))}
-      >
-        {Array.from({ length: max - min + 1 }, (_, i) => {
-          const v = min + i;
-          return <option key={v} value={v}>{v} act</option>;
-        })}
-      </select>
-      <button
-        className="btn-encounter-use"
-        onClick={() => onCast && onCast(spell, cost)}
-        aria-label={`Cast ${spell.name}`}
-      >
-        Cast
-      </button>
-    </span>
-  );
-}
 
 const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode, onCast }) => {
   // Scroll/wand spells are gated on the item being held (see
@@ -45,18 +20,15 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
 
   let headerRight = null;
   if (encounterMode && !inactive && onCast) {
-    if (isVariable) {
-      headerRight = <VariableCostUseButton spell={spell} onCast={onCast} />;
-    } else if (spellCost !== null) {
-      const costLabel = spellCost === 'reaction' ? 'reaction' : spellCost === 0 ? 'free' : `${spellCost} act`;
+    if (isVariable || spellCost !== null) {
       headerRight = (
-        <button
-          className="btn-encounter-use"
-          onClick={() => onCast(spell, spellCost)}
-          aria-label={`Cast ${spell.name}`}
-        >
-          Cast ({costLabel})
-        </button>
+        <UseActionChip
+          cost={spellCost === 0 ? 'free' : spellCost}
+          verb="Cast"
+          name={spell.name}
+          variableRange={isVariable ? spell.variableActionCount : undefined}
+          onUse={(c) => onCast(spell, c)}
+        />
       );
     }
   }
@@ -213,18 +185,6 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
         </div>
       )}
 
-      {/* Encounter mode: Cast button */}
-      {onCast && !inactive && (
-        <div className="action-use-row" style={{ marginTop: '0.5rem' }}>
-          <button
-            className="btn-encounter-use"
-            style={{ backgroundColor: themeColor, borderColor: themeColor }}
-            onClick={(e) => { e.stopPropagation(); onCast(spell); }}
-          >
-            Cast ({spell.actions || '?'})
-          </button>
-        </div>
-      )}
     </>
   );
 

@@ -32,3 +32,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Dark game-menu overrides ─────────────────────────────── */
+
+.modal-body .magic-category-btn {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.modal-body .magic-category-btn:hover,
+.modal-body .magic-category-btn:active {
+  background-color: var(--category-color, var(--ember-base));
+  color: #fff;
+}

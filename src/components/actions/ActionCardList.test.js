@@ -101,10 +101,10 @@ describe('ActionCardList', () => {
       expect(screen.getByRole('button', { name: 'Use Strike' })).toBeInTheDocument();
     });
 
-    it('Use button label shows action cost', () => {
+    it('Use button is present for a 3-action item', () => {
       const item = { ...baseItem, name: 'Triple Strike', actionCount: 3 };
       render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
-      expect(screen.getByRole('button', { name: 'Use Triple Strike' }).textContent).toContain('3 act');
+      expect(screen.getByRole('button', { name: 'Use Triple Strike' })).toBeInTheDocument();
     });
 
     it('calls onUse with item and cost when Use is clicked', () => {
@@ -122,18 +122,19 @@ describe('ActionCardList', () => {
       expect(onUse).toHaveBeenCalledWith(reaction, 'reaction');
     });
 
-    it('Use button for free-action type passes 0 as cost', () => {
+    it('Use button for free-action type passes "free" as cost', () => {
       const onUse = jest.fn();
       const fa = { name: 'Release', traits: [], description: 'Drop something.' };
       render(<ActionCardList items={[fa]} type="free-action" encounterMode onUse={onUse} />);
       fireEvent.click(screen.getByRole('button', { name: 'Use Release' }));
-      expect(onUse).toHaveBeenCalledWith(fa, 0);
+      expect(onUse).toHaveBeenCalledWith(fa, 'free');
     });
 
-    it('inactive items do not show Use button', () => {
+    it('inactive items show a disabled Hold chip instead of Use', () => {
       const item = { ...baseItem, source: 'Wand', active: false };
       render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
       expect(screen.queryByRole('button', { name: /Use Strike/ })).toBeNull();
+      expect(screen.getByText('Hold')).toBeInTheDocument();
     });
 
     it('variable-cost action shows a cost dropdown and Use button', () => {

@@ -326,3 +326,21 @@
 .cs-content .ttp-reaction--available {
   color: var(--color-theme, var(--ember-base));
 }
+
+.cs-content .ttp-shield--raised {
+  background-color: rgba(55, 138, 221, 0.25);
+  color: #85b7eb;
+  border-color: rgba(55, 138, 221, 0.5);
+}
+
+.cs-content .ttp-target-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--shell-border-strong, rgba(255, 255, 255, 0.12));
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.cs-content .ttp-target-chip--on {
+  background: rgba(192, 68, 14, 0.18);
+  border-color: var(--color-theme, var(--ember-base));
+  color: var(--shell-text-primary, #f5ede4);
+}

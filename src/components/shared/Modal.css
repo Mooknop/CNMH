@@ -1,35 +1,35 @@
 /* src/components/shared/Modal.css
-   Shared styles for the generic Modal wrapper component.
-   All modal overlays, containers, headers, and close buttons should be
-   styled here rather than duplicated in individual modal CSS files.
-*/
+   Dark game-menu modal shell. Drives all modals app-wide. */
 
 /* ---------- Overlay ---------- */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background-color: rgba(6, 4, 2, 0.78);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal-overlay);
+  padding: 1rem;
 }
 
-/* Elevated stack – used when the modal must appear above other floating UI */
 .modal-overlay--high {
   z-index: var(--z-modal-high-overlay);
 }
 
 /* ---------- Dialog container ---------- */
 .modal-container {
-  background-color: white;
+  background-color: var(--shell-surface, #1a1612);
+  background-image: linear-gradient(
+    135deg,
+    rgba(40, 28, 16, 0.4) 0%,
+    rgba(12, 10, 8, 0.2) 100%
+  );
   width: 90%;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--shell-border-strong, rgba(255, 255, 255, 0.12));
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -53,22 +53,34 @@
 
 .modal-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
-/* Themed variant: background-color and color are set via inline style */
+/* Themed variant: colored bar set via inline style (themeColor).
+   Keep the close button white. */
+.modal-header--themed {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.modal-header--themed h2 {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 .modal-header--themed .modal-close-button {
-  color: white;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* Plain variant (no themeColor): styled like a section divider */
+/* Plain variant — engraved divider on dark */
 .modal-header:not(.modal-header--themed) {
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--shell-border, rgba(255, 255, 255, 0.07));
 }
 
 .modal-header:not(.modal-header--themed) h2 {
-  color: var(--color-primary);
-  font-size: 1.3rem;
+  color: var(--ember-light, #f5803e);
 }
 
 /* ---------- Close button ---------- */
@@ -82,19 +94,19 @@
 }
 
 .modal-header:not(.modal-header--themed) .modal-close-button {
-  color: #666;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 .modal-header:not(.modal-header--themed) .modal-close-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-  color: #333;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--shell-text-primary, #f5ede4);
 }
 
 /* ---------- Body ---------- */
@@ -102,6 +114,35 @@
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+/* Body text defaults — anything not explicitly coloured reads light */
+.modal-body p,
+.modal-body span,
+.modal-body label,
+.modal-body li,
+.modal-body td {
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.modal-body strong {
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+/* Form fields inside modals */
+.modal-body input,
+.modal-body textarea,
+.modal-body select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--shell-border-strong, rgba(255, 255, 255, 0.12));
+  color: var(--shell-text-primary, #f5ede4);
+  border-radius: var(--radius-md);
+}
+
+.modal-body input::placeholder,
+.modal-body textarea::placeholder {
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.28));
 }
 
 /* ---------- Responsive ---------- */
