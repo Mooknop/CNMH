@@ -5,7 +5,7 @@
 
 /* Crafting Skill Info */
 .crafting-skill-info {
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   padding: 1rem;
   margin-bottom: 1.5rem;
@@ -22,7 +22,7 @@
 
 .stat-label {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--shell-text-secondary);
   margin-bottom: 0.5rem;
   font-weight: 500;
 }
@@ -30,14 +30,14 @@
 .stat-value {
   font-size: 1.3rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
 }
 
 /* Tab Navigation */
 .crafting-tabs {
   display: flex;
   margin-bottom: 1.5rem;
-  background-color: #e0e0e0;
+  background: var(--surface-inset);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -49,23 +49,25 @@
   border: none;
   cursor: pointer;
   font-weight: 500;
-  color: #444;
+  color: var(--shell-text-secondary);
   transition: background-color 0.2s, color 0.2s;
   text-align: center;
 }
 
 .tab-button:hover {
-  background-color: #d0d0d0;
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
 }
 
 .tab-button.active {
-  background-color: var(--color-primary);
-  color: white;
+  background: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  box-shadow: inset 0 -2px 0 var(--tab-active-border);
 }
 
 /* Tab Content */
 .tab-content {
-  background-color: white;
+  background: transparent;
 }
 
 /* Crafting Rules Styles */
@@ -76,23 +78,23 @@
 .rules-section h3 {
   margin-top: 0;
   margin-bottom: 1rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1.3rem;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--shell-border);
   padding-bottom: 0.5rem;
 }
 
 .rules-section h4 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1.1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.25rem;
 }
 
 .activity-header {
-  background-color: #f5f5f5;
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
@@ -103,12 +105,12 @@
 
 .activity-time {
   font-weight: 600;
-  color: #333;
+  color: var(--shell-text-primary);
 }
 
 .activity-traits {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--shell-text-secondary);
   font-style: italic;
 }
 
@@ -121,12 +123,12 @@
 .requirements-section li,
 .special-section li {
   margin-bottom: 0.5rem;
-  color: #333;
+  color: var(--shell-text-primary);
 }
 
 .description-section p {
   margin: 0.75rem 0;
-  color: #333;
+  color: var(--shell-text-primary);
 }
 
 /* Degrees of Success */
@@ -137,9 +139,9 @@
 .degree-entry {
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
-  border-left: 4px solid #ddd;
+  border-left: 4px solid var(--shell-border);
 }
 
 .degree-level {
@@ -166,7 +168,7 @@
 }
 
 .degree-description {
-  color: #333;
+  color: var(--shell-text-primary);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -178,7 +180,7 @@
 
 /* Earnings Table - Mobile-First Approach */
 .earnings-table {
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   padding: 1rem;
   margin-top: 0.75rem;
@@ -197,10 +199,10 @@
 
 .table-header {
   font-weight: 600;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.75rem;
   margin-bottom: 0.5rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
 }
 
 .table-header span:first-child {
@@ -219,14 +221,14 @@
 
 .table-note {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--shell-text-secondary);
   font-style: italic;
   margin-top: 0.5rem;
 }
 
 /* Special Rules */
 .special-section li strong {
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
 }
 
 /* Known Recipes Styles */
@@ -242,11 +244,10 @@
 }
 
 .recipe-card {
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
-  border-left: 4px solid var(--color-primary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--color-theme, var(--ember-base));
 }
 
 .recipe-header {
@@ -259,13 +260,13 @@
 .recipe-header h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
 }
 
 .recipe-weight {
   font-size: 0.9rem;
-  color: #666;
-  background-color: #e0e0e0;
+  color: var(--shell-text-secondary);
+  background: var(--surface-raised);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
 }
@@ -276,16 +277,16 @@
 
 .recipe-description p {
   margin: 0;
-  color: #333;
+  color: var(--shell-text-primary);
   line-height: 1.5;
 }
 
 .recipe-types h4 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.25rem;
 }
 
@@ -296,10 +297,10 @@
 }
 
 .type-entry {
-  background-color: white;
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   padding: 0.75rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--shell-border);
 }
 
 .type-header {
@@ -312,12 +313,12 @@
 
 .type-name {
   font-weight: 600;
-  color: #333;
+  color: var(--shell-text-primary);
   font-size: 1rem;
 }
 
 .type-level {
-  background-color: var(--color-primary);
+  background: var(--color-theme, var(--ember-base));
   color: white;
   padding: 0.2rem 0.5rem;
   border-radius: var(--radius-sm);
@@ -326,8 +327,8 @@
 }
 
 .type-price {
-  background-color: #f0f0f0;
-  color: #333;
+  background: var(--surface-raised);
+  color: var(--shell-text-primary);
   padding: 0.2rem 0.5rem;
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
@@ -335,7 +336,7 @@
 }
 
 .type-effect {
-  color: #555;
+  color: var(--shell-text-secondary);
   font-size: 0.95rem;
   line-height: 1.4;
 }
@@ -344,9 +345,9 @@
 .empty-recipes {
   text-align: center;
   padding: 3rem 2rem;
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   border-radius: var(--radius-lg);
-  color: #666;
+  color: var(--shell-text-secondary);
 }
 
 .empty-recipes p {
@@ -356,7 +357,7 @@
 .empty-note {
   font-size: 0.9rem;
   font-style: italic;
-  color: #888;
+  color: var(--shell-text-tertiary);
 }
 
 /* Responsive adjustments */
@@ -378,12 +379,11 @@
   
   .table-row {
     display: block; /* Stack items vertically */
-    background-color: white;
+    background: var(--surface-inset);
     border-radius: var(--radius-md);
     padding: 1rem;
     margin-bottom: 0.75rem;
-    border: 1px solid #ddd;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--shell-border);
   }
   
   .table-row span {
@@ -395,8 +395,8 @@
   
   .table-row span:first-child {
     font-weight: 600;
-    color: var(--color-primary);
-    border-bottom: 1px solid #eee;
+    color: var(--color-theme, var(--ember-light));
+    border-bottom: 1px solid var(--shell-border);
     padding-bottom: 0.5rem;
     margin-bottom: 0.75rem;
     font-size: 1rem;
@@ -420,8 +420,8 @@
     gap: 0.5rem;
   }
   /* Add labels for mobile */
-  .table-row span:nth-child(2)::before { content: "Critical Success: "; font-weight: 500; color: #666; }
-  .table-row span:nth-child(3)::before { content: "Success: "; font-weight: 500; color: #666; }
+  .table-row span:nth-child(2)::before { content: "Critical Success: "; font-weight: 500; color: var(--shell-text-secondary); }
+  .table-row span:nth-child(3)::before { content: "Success: "; font-weight: 500; color: var(--shell-text-secondary); }
   
   .recipe-header {
     flex-direction: column;
