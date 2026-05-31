@@ -30,7 +30,8 @@
 .section-tabs {
   display: flex;
   margin-bottom: var(--space-6);
-  background-color: #e0e0e0;
+  background: var(--surface-inset);
+  border: var(--dark-card-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -42,18 +43,19 @@
   border: none;
   cursor: pointer;
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--shell-text-secondary);
   transition: background-color 0.2s, color 0.2s;
   text-align: center;
 }
 
 .section-tab:hover {
-  background-color: #d0d0d0;
+  background-color: var(--surface-inset-hover);
 }
 
 .section-tab.active {
-  background-color: var(--color-primary);
-  color: white;
+  background: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  border-bottom: 2px solid var(--tab-active-border);
 }
 
 /* Content container */
@@ -117,8 +119,9 @@
 
 .trait-tag {
   font-size: 0.8rem;
-  background-color: #e0e0e0;
-  color: var(--color-text);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  border: 1px solid var(--shell-border);
   padding: 0.2rem var(--space-2);
   border-radius: 3px;
 }
@@ -163,8 +166,9 @@
 /* Trigger sections for reactions and free actions */
 .reaction-trigger,
 .free-action-trigger {
-  padding: 0.75rem 0;
-  background-color: #fff8e1;
+  padding: 0.75rem;
+  background: var(--surface-trigger);
+  border-left: 3px solid var(--color-theme, var(--ember-base));
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-2);
   display: flex;
@@ -174,13 +178,13 @@
 .trigger-label {
   font-weight: 600;
   font-size: 0.85rem;
-  color: var(--color-primary);
+  color: var(--gold-light);
   margin-bottom: 0.25rem;
 }
 
 .trigger-text {
   font-size: 0.9rem;
-  color: var(--color-text);
+  color: var(--shell-text-secondary);
 }
 
 /* Source attribution */
@@ -239,13 +243,14 @@
 }
 
 .thaumaturge-description {
-  background: var(--color-surface-overlay);
-  border-left: 3px solid var(--color-primary);
+  background: var(--surface-inset);
+  border-left: 3px solid var(--color-theme, var(--ember-base));
   padding: var(--space-4);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   margin-bottom: var(--space-6);
   font-size: 0.95rem;
   line-height: 1.5;
+  color: var(--shell-text-secondary);
 }
 
 .implements-list,
@@ -257,10 +262,10 @@
 
 .implement-card,
 .exploit-card {
-  background: var(--color-surface-overlay);
+  background: var(--surface-inset);
+  border: var(--dark-card-border);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   padding: var(--space-5);
-  box-shadow: var(--shadow-sm);
   border-left-width: 4px;
   border-left-style: solid;
 }
@@ -270,7 +275,7 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.5;
-  color: var(--color-text);
+  color: var(--shell-text-secondary);
 }
 
 /* Responsive adjustment for mobile */

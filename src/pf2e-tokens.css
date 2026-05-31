@@ -292,6 +292,21 @@
   /* Masthead portrait column */
   --portrait-width:        80px;
   --portrait-fade-width:   20px;
+
+  /* ── Semantic surfaces — one knob per surface kind ───────────
+     Route every dark box through these; future palette tweaks
+     are a single edit here rather than a file sweep.          */
+  --surface-card:        var(--dark-card-bg);          /* main cards/panels */
+  --surface-inset:       rgba(255, 255, 255, 0.04);    /* sub-boxes, stat blocks, rules */
+  --surface-inset-hover: rgba(255, 255, 255, 0.08);
+  --surface-raised:      rgba(255, 255, 255, 0.06);    /* controls, active tabs */
+  --surface-arcane:      rgba(122, 84, 186, 0.10);     /* blood-magic / bloodline tint */
+  --surface-trigger:     rgba(196, 154, 46, 0.08);     /* trigger / reminder boxes */
+
+  /* Active-tab look — single source of truth */
+  --tab-active-bg:       var(--surface-raised);
+  --tab-active-border:   var(--color-theme, var(--ember-base));
+  --tab-active-text:     var(--color-theme, var(--ember-light));
 }
 
 

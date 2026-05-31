@@ -1,59 +1,64 @@
-/* src/components/shared/CollapsibleCard.css */
+/* src/components/shared/CollapsibleCard.css
+   Dark is the baseline — used on the character sheet and PartyWealth alike. */
+
 .collapsible-card {
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    margin-bottom: 1rem;
-    transition: box-shadow 0.2s ease;
-  }
-  
-  .collapsible-card:hover {
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-  }
-  
-  .collapsible-header {
-    display: flex;
-    align-items: stretch;
-    background: rgb(240, 240, 240, .05);
-    transition: background-color 0.2s ease;
-  }
+  background: var(--surface-card);
+  border: var(--dark-card-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  margin-bottom: 1rem;
+  transition: box-shadow 0.2s ease;
+}
 
-  .collapsible-toggle {
-    flex: 1;
-    min-width: 0;
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    gap: 0.5rem;
-  }
+.collapsible-card:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
 
-  .collapsible-toggle:hover {
-    background-color: #e8e8e8;
-  }
+.collapsible-header {
+  display: flex;
+  align-items: stretch;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
 
-  .collapsible-header-right {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 0.75rem;
-    flex-shrink: 0;
-    border-left: 1px solid var(--color-border, #e0e0e0);
-    min-height: 44px;
-  }
+.collapsible-toggle {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.5rem;
+  color: var(--shell-text-primary);
+}
 
-  .expand-icon {
-    font-size: 0.8rem;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-  }
-  
-  .collapsible-content {
-    animation: fadeIn 0.2s ease;
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+.collapsible-toggle:hover {
+  background-color: var(--surface-inset-hover);
+}
+
+.collapsible-header-right {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  flex-shrink: 0;
+  border-left: 1px solid var(--shell-border);
+  min-height: 44px;
+}
+
+.expand-icon {
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  color: var(--shell-text-tertiary);
+  transition: transform 0.2s ease;
+}
+
+.collapsible-content {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
