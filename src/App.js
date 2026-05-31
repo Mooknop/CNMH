@@ -27,6 +27,7 @@ import GmSpells from './pages/gm/GmSpells';
 import GmEffects from './pages/gm/GmEffects';
 import GmEncounter from './pages/gm/GmEncounter';
 import GmImages from './pages/gm/GmImages';
+import GmTheme from './pages/gm/GmTheme';
 import './App.css';
 
 const IS_STAGING = process.env.REACT_APP_ENVIRONMENT === 'staging';
@@ -89,6 +90,7 @@ function App() {
                           <Route path="effects" element={<GmEffects />} />
                           <Route path="encounter" element={<GmEncounter />} />
                           <Route path="images" element={<GmImages />} />
+                          <Route path="theme" element={<GmTheme />} />
                         </Route>
                       </Routes>
                     </main>

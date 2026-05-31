@@ -165,7 +165,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
         maxWidth="500px"
       >
         {availableCategories.length === 0 ? (
-          <p style={{ padding: '1rem', color: '#666' }}>
+          <p style={{ padding: '1rem', color: 'var(--shell-text-tertiary)' }}>
             No spellcasting available for this character.
           </p>
         ) : (

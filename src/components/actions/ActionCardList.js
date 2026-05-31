@@ -147,7 +147,7 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
             )}
 
             {item.source && (
-              <div className={`${type}-source`} style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', padding: '0.5rem 1rem', fontStyle: 'italic' }}>
+              <div className={`${type}-source`}>
                 From: {item.source}
               </div>
             )}

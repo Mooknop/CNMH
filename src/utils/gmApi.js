@@ -61,6 +61,14 @@ export const restoreVersion = (collection, id, archivedAt) =>
     body: JSON.stringify({ archived_at: archivedAt }),
   }).then(json);
 
+export const saveTheme = (themeDoc) =>
+  fetch('/api/gm/theme/campaign', {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(themeDoc),
+  }).then(json);
+
 // In-memory write counter since the DO last restarted.
 export const fetchUsage = () =>
   fetch('/api/gm/usage', { credentials: 'include' }).then(json);

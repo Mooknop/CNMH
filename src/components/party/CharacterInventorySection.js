@@ -141,7 +141,8 @@ const CharacterInventorySection = ({
       className="character-inventory-section"
       header={headerContent}
       themeColor={characterColor}
-      initialExpanded={false} // Start collapsed by default
+      initialExpanded={false}
+      style={{ borderLeft: `4px solid ${characterColor || 'var(--color-theme)'}` }}
     >
       {collapsibleContent}
     </CollapsibleCard>

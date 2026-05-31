@@ -48,7 +48,7 @@ const CharacterSheet = () => {
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
   const { openLore } = useLore();
-  const { loreEntries, loading } = useContent();
+  const { loreEntries, loading, theme } = useContent();
 
   useEffect(() => {
     // Wait for the server snapshot before deciding to redirect — otherwise the
@@ -145,8 +145,14 @@ const CharacterSheet = () => {
     }
   };
 
+  const overrideColor = theme?.accentOverrides?.[character?.id];
+  const resolvedAccent = overrideColor || characterColor;
+
   return (
-    <div className="character-sheet-page" style={{ '--color-theme': characterColor }}>
+    <div
+      className="character-sheet-page"
+      style={resolvedAccent ? { '--color-theme': resolvedAccent } : undefined}
+    >
       <div className="character-sheet">
 
         {/* ── Masthead ──────────────────────────────────────────── */}

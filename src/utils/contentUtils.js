@@ -329,6 +329,40 @@ export const withCharacterId = (character, index = 0) => ({
 export const normalizeCharacters = (arr) =>
   (Array.isArray(arr) ? arr : []).map((c, i) => withCharacterId(c, i));
 
+export const DEFAULT_THEME = {
+  id: 'campaign',
+  preset: 'ember',
+  palette: {
+    accent: '#c0440e',
+    accentMid: '#e85d1a',
+    gold: '#c49a2e',
+    arcane: '#7a54ba',
+    verdant: '#3d9458',
+    peril: '#ef5350',
+    bg: '#12100e',
+    surface: '#1a1612',
+    surfaceCard: 'rgba(28, 24, 18, 0.82)',
+    text: '#f5ede4',
+    textSecondary: 'rgba(255, 255, 255, 0.7)',
+    textTertiary: 'rgba(255, 255, 255, 0.45)',
+    border: 'rgba(255, 255, 255, 0.07)',
+    borderStrong: 'rgba(255, 255, 255, 0.12)',
+  },
+  accentOverrides: {},
+};
+
+export const normalizeTheme = (raw) => {
+  const list = Array.isArray(raw) ? raw : [];
+  const doc = list.find((d) => d.id === 'campaign');
+  if (!doc) return DEFAULT_THEME;
+  return {
+    ...DEFAULT_THEME,
+    ...doc,
+    palette: { ...DEFAULT_THEME.palette, ...(doc.palette || {}) },
+    accentOverrides: { ...(doc.accentOverrides || {}) },
+  };
+};
+
 // The default content shipped with the build, normalized for seeding/fallback.
 export const defaultContent = () => ({
   quest: normalizeQuests(defaultQuests),
@@ -341,6 +375,7 @@ export const defaultContent = () => ({
   spell: normalizeSpells(spellsData && spellsData.spells),
   effect: normalizeEffects(defaultEffects),
   image: [],
+  theme: [DEFAULT_THEME],
 });
 
 // Body for POST /api/gm/seed.
