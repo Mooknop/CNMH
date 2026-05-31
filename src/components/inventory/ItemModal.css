@@ -3,22 +3,14 @@
    styles live in src/components/shared/Modal.css.
 */
 
-/* Item Traits Styling */
+/* Item Traits Styling — chip itself comes from shared TraitTag.css */
 .item-traits {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid #eee;
-}
-
-.trait-tag {
-  font-size: 0.8rem;
-  background-color: #e0e0e0;
-  color: #333;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
+  border-bottom: 1px solid var(--shell-border);
 }
 
 .item-detail-grid {

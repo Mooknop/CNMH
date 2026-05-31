@@ -1,5 +1,5 @@
 .feats-list {
-  background-color: #f9f9f9;
+  background: transparent;
   border-radius: var(--radius-lg);
   padding: 1.5rem;
 }
@@ -7,7 +7,7 @@
 .feats-list h2 {
   margin-top: 0;
   margin-bottom: 1.5rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1.2rem;
 }
 
@@ -27,7 +27,7 @@
 .feat-card .collapsible-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   margin-bottom: 0.25rem;
 }
 
@@ -44,31 +44,25 @@
 }
 
 .feat-level {
-  color: #666;
+  color: var(--shell-text-secondary);
 }
 
 .feat-source {
-  color: #888;
+  color: var(--shell-text-tertiary);
 }
 
 .feat-description {
   padding: 0.75rem 0;
   font-size: 0.9rem;
-  color: #333;
+  color: var(--shell-text-secondary);
 }
 
-.trait-tag {
-  font-size: 0.8rem;
-  background-color: #e0e0e0;
-  color: #333;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-}
+/* .trait-tag chip styling comes from shared TraitTag.css */
 
 .empty-state {
   text-align: center;
   padding: 2rem;
-  background-color: #f9f9f9;
+  background: transparent;
   border-radius: var(--radius-lg);
   margin: 1rem 0;
 }

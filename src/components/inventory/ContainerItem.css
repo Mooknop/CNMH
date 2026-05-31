@@ -1,10 +1,9 @@
 /* src/components/character-sheet/ContainerItem.css */
 .container-item {
     margin-top: 2rem;
-    border: 1px solid #eee;
+    border: 1px solid var(--shell-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
   
   .container-header {
@@ -12,13 +11,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    background-color: #f9f9f9;
+    background: var(--surface-inset);
     cursor: pointer;
     transition: background-color 0.2s ease;
   }
   
   .container-header:hover {
-    background-color: #f0f0f0;
+    background: var(--surface-inset-hover);
   }
   
   .container-title {
@@ -28,13 +27,14 @@
   .container-title h3 {
     margin: 0 0 0.5rem 0;
     font-size: 1.2rem;
+    color: var(--shell-text-primary);
   }
-  
+
   .container-status {
     display: flex;
     gap: 0.5rem;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--shell-text-tertiary);
   }
   
   .container-toggle {
@@ -49,7 +49,7 @@
   /* Container bulk bar styling */
   .container-bulk-bar-wrapper {
     height: 0.5rem;
-    background-color: #e0e0e0;
+    background: var(--surface-raised);
     overflow: hidden;
   }
   
@@ -61,7 +61,7 @@
   /* Container contents styling */
   .container-contents {
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(0, 0, 0, 0.15);
   }
   
   .contents-table {
@@ -70,7 +70,8 @@
   }
   
   .contents-table th {
-    color: white;
+    background: rgba(192, 68, 14, 0.2);
+    color: var(--shell-text-primary);
     text-align: left;
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
@@ -86,7 +87,8 @@
   
   .contents-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--shell-border);
+    color: var(--shell-text-primary);
     font-size: 0.95rem;
   }
   
@@ -111,14 +113,14 @@
   }
   
   .container-ignored {
-    color: #888;
+    color: var(--shell-text-tertiary);
     font-style: italic;
   }
   
   .empty-container {
     padding: 1.5rem;
     text-align: center;
-    color: #888;
+    color: var(--shell-text-tertiary);
     font-style: italic;
   }
   
@@ -142,35 +144,3 @@
       padding: 0.5rem 0.75rem;
     }
   }
-/* ── Dark shell overrides ─────────────────────────────────── */
-
-.cs-content .container-item {
-  border-color: var(--shell-border);
-  box-shadow: none;
-}
-
-.cs-content .container-title h3 {
-  color: var(--shell-text-primary);
-}
-
-.cs-content .container-status {
-  color: var(--shell-text-tertiary);
-}
-
-.cs-content .contents-table th {
-  background: rgba(192, 68, 14, 0.2);
-  color: var(--shell-text-primary);
-}
-
-.cs-content .contents-table td {
-  border-bottom-color: var(--shell-border);
-  color: var(--shell-text-primary);
-}
-
-.cs-content .container-ignored {
-  color: var(--shell-text-tertiary);
-}
-
-.cs-content .empty-container {
-  color: var(--shell-text-tertiary);
-}

@@ -5,7 +5,7 @@
 
 .familiar-basic-info {
   margin-bottom: 1.5rem;
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   padding: 1rem;
   border-radius: var(--radius-md);
 }
@@ -25,7 +25,7 @@
 .familiar-defenses {
   display: flex;
   justify-content: space-between;
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   padding: 1rem;
   border-radius: var(--radius-md);
 }
@@ -39,9 +39,9 @@
 .familiar-section h4 {
   margin-top: 0;
   margin-bottom: 0.5rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1.1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.25rem;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .familiar-ability {
-  background-color: #f9f9f9;
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
   padding: 1rem;
 }
@@ -65,7 +65,7 @@
 .familiar-ability h5 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
-  color: #333;
+  color: var(--shell-text-primary);
 }
 
 .familiar-ability p {
@@ -75,8 +75,8 @@
 
 /* Condition button sits inline with the other defense boxes */
 .condition-btn {
-  background: white;
-  border: 2px dashed #aaa;
+  background: var(--surface-inset);
+  border: 2px dashed var(--shell-border-strong);
   border-radius: var(--radius-md);
   cursor: pointer;
   padding: 0.25rem 0.75rem;
@@ -88,7 +88,7 @@
 }
 
 .condition-btn:hover {
-  border-color: #888;
+  border-color: var(--shell-text-tertiary);
 }
 
 .condition-btn--active {

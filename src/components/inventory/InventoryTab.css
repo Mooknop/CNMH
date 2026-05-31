@@ -187,7 +187,9 @@
 .inv-actions select,
 .contents-actions select {
   padding: 0.2rem;
-  border: 1px solid var(--color-border-medium);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-primary);
   border-radius: var(--radius-sm);
 }
 

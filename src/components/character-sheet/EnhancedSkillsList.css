@@ -7,7 +7,7 @@
 .enhanced-skills-list h2 {
   margin-top: 0;
   margin-bottom: var(--space-6);
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1.2rem;
 }
 
@@ -19,7 +19,7 @@
 
 /* CollapsibleCard integration for skill cards */
 .skill-card {
-  background-color: white;
+  background: var(--surface-card);
   border-radius: var(--radius-md);
   overflow: hidden;
   transition: box-shadow 0.2s ease;
@@ -52,11 +52,11 @@
 
 /* Special styling for improvised skills */
 .skill-card.improvised-skill.untrained-color {
-  border-left: 4px dashed #666;
+  border-left: 4px dashed var(--shell-border-strong);
 }
 
 .improvised-skill .collapsible-header {
-  background-color: #fafbfc;
+  background: var(--surface-inset);
 }
 
 .feat-notice {
@@ -85,7 +85,7 @@
 
 .skill-ability {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--shell-text-tertiary);
   margin-top: 0.25rem;
 }
 
@@ -100,7 +100,7 @@
   font-weight: 700;
   min-width: 2.5rem;
   text-align: center;
-  color: var(--color-text);
+  color: var(--shell-text-primary);
 }
 
 /* Proficiency text colors */
@@ -142,7 +142,7 @@
 
 .skill-item-bonus {
   padding: var(--space-3);
-  background-color: #e8f4fc;
+  background: rgba(70, 130, 200, 0.15);
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-4);
   border-left: 3px solid #2980b9;
@@ -165,7 +165,7 @@
 .skill-actions h4 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   font-size: 1rem;
 }
 
@@ -188,13 +188,13 @@
 
 .action-name {
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--shell-text-primary);
   margin-bottom: 0.25rem;
 }
 
 .action-description {
   font-size: 0.9rem;
-  color: var(--color-text-muted);
+  color: var(--shell-text-secondary);
 }
 
 /* Skill row — tap-safe */
@@ -207,29 +207,29 @@
 
 /* Background highlight for expanded skill based on proficiency */
 .skill-card.untrained-color .skill-actions {
-  background-color: #f8f9fa;
+  background: var(--surface-inset);
 }
 
 .skill-card.trained-color .skill-actions {
-  background-color: #f1f9ee;
+  background: rgba(94, 156, 41, 0.1);
 }
 
 .skill-card.expert-color .skill-actions {
-  background-color: #eef6fc;
+  background: rgba(41, 128, 185, 0.1);
 }
 
 .skill-card.master-color .skill-actions {
-  background-color: #f5eefa;
+  background: rgba(142, 68, 173, 0.1);
 }
 
 .skill-card.legendary-color .skill-actions {
-  background-color: #fff7e8;
+  background: rgba(243, 156, 18, 0.1);
 }
 
 /* Special styling for improvised skill actions */
 .skill-card.improvised-skill .skill-actions {
-  background-color: #fafafa;
-  border-top: 1px dashed var(--color-border-medium);
+  background: var(--surface-inset);
+  border-top: 1px dashed var(--shell-border-strong);
 }
 
 /* Media query for smaller screens */

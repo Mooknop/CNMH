@@ -1,9 +1,9 @@
 .hands-panel {
-  border: 1px solid #ddd;
+  border: 1px solid var(--shell-border);
   border-radius: 8px;
   padding: 0.75rem 1rem;
   margin-bottom: 1rem;
-  background: var(--color-surface, #fff);
+  background: var(--surface-card);
 }
 
 .hands-header h3 {
@@ -23,16 +23,16 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--shell-border);
   border-radius: 6px;
-  background: #fafafa;
+  background: var(--surface-inset);
 }
 
 .hands-slot-label {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #888;
+  color: var(--shell-text-tertiary);
 }
 
 .hands-slot-item {
@@ -40,7 +40,7 @@
 }
 
 .hands-swap {
-  border-top: 1px dashed #e0e0e0;
+  border-top: 1px dashed var(--shell-border-strong);
   padding-top: 0.75rem;
 }
 
@@ -57,7 +57,7 @@
 
 .hands-pick-hint {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--shell-text-secondary);
   margin: 0.25rem 0 0.4rem;
 }
 
@@ -75,7 +75,7 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.3rem 0.5rem;
-  border: 1px solid #eee;
+  border: 1px solid var(--shell-border);
   border-radius: 6px;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .hands-empty {
-  color: #888;
+  color: var(--shell-text-tertiary);
   font-size: 0.85rem;
   margin: 0.25rem 0;
 }
