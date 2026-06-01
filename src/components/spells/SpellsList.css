@@ -978,9 +978,9 @@
 }
 
 .modal-body .spell-level-tab.active {
-  background: var(--color-theme, var(--theme-accent));
-  color: var(--tab-active-text);
-  border-color: var(--color-theme, var(--theme-accent));
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
 }
 
 .modal-body .defense-filter-btn {
@@ -995,9 +995,9 @@
 }
 
 .modal-body .defense-filter-btn.active {
-  background: var(--color-theme, var(--theme-accent));
-  color: var(--tab-active-text);
-  border-color: var(--color-theme, var(--theme-accent));
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
 }
 
 .modal-body .spellcasting-stats {
