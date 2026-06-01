@@ -64,7 +64,7 @@
 
 .countdown-label {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .countdown-days {
@@ -115,7 +115,7 @@
 .moon-name-short {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 /* Moon indicator for calendar days */
@@ -168,7 +168,7 @@
 
 .moon-phase-legend h4 {
   margin: 0 0 1rem 0;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
   font-size: 1.2rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -198,7 +198,7 @@
 .legend-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .moon-lore {

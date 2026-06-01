@@ -293,7 +293,6 @@ const CastSpellModal = ({
         <button className="btn-secondary" onClick={onClose}>Cancel</button>
         <button
           className="btn-primary"
-          style={{ backgroundColor: themeColor, borderColor: themeColor }}
           onClick={handleCast}
           aria-label="confirm-cast"
         >

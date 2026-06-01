@@ -23,26 +23,26 @@
 
 .label {
   font-weight: bold;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
   font-size: 0.9rem;
 }
 
 .value {
   font-size: 1.2rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .current-rank-details {
   background: rgba(94, 41, 41, 0.3);
   padding: 1rem;
   border-radius: var(--radius-md);
-  border: 2px solid var(--color-primary);
+  border: 2px solid var(--color-theme, var(--theme-accent));
   box-shadow: 0 0 10px rgba(94, 41, 41, 0.3);
 }
 
 .current-rank-details h3 {
   margin: 0 0 1rem 0;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
   font-size: 1.1rem;
 }
 

@@ -87,21 +87,24 @@
   transform: scale(0.98);
 }
 
-/* Primary — solid theme/ember fill */
+/* Primary — accent tint + opaque outline */
 .btn-primary {
-  background-color: var(--color-theme, var(--color-primary));
-  color: #fff;
-  border-color: var(--color-theme, var(--color-primary));
+  background-color: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  color: var(--accent-text, #e85d1a);
+  border-color: var(--accent-outline, var(--color-primary));
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
+  background-color: var(--accent-tint-hover, rgba(192, 68, 14, 0.22));
+}
+
+.btn-primary:active {
+  background-color: var(--accent-tint-active, rgba(192, 68, 14, 0.30));
 }
 
 .btn-primary:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  filter: none;
 }
 
 /* Secondary — outline that adapts to its background.

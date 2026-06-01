@@ -300,10 +300,10 @@ const PartySummary = () => {
               {Object.entries(bestSkillCharacters)
                 .sort((a, b) => a[0].localeCompare(b[0])) // Sort alphabetically by skill name
                 .map(([skillName, data]) => (
-                <div 
-                  key={skillName} 
-                  className="skill-specialist-card" 
-                  style={{ borderLeftColor: data.color }}
+                <div
+                  key={skillName}
+                  className="skill-specialist-card"
+                  style={{ borderLeftColor: data.color, '--color-theme': data.color }}
                 >
                   <div className="skill-name">{formatSkillName(skillName)}</div>
                   <div className="specialist-info">
@@ -311,7 +311,7 @@ const PartySummary = () => {
                       <div className="specialist-name">{data.name}</div>
                       <div className="specialist-class">{data.class}</div>
                     </div>
-                    <div className="skill-modifier" style={{ backgroundColor: data.color }}>
+                    <div className="skill-modifier accent-chip">
                       {formatModifier(data.modifier)}
                     </div>
                   </div>

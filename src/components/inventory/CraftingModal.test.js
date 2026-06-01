@@ -148,18 +148,17 @@ describe('CraftingModal', () => {
         characterColor="#ff0000"
       />
     );
-    expect(container.querySelector('.modal-header')).toHaveStyle(
-      'background-color: #ff0000'
-    );
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#ff0000');
+    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
   });
 
   it('uses default color when characterColor is absent', () => {
     const { container } = render(
       <CraftingModal isOpen={true} onClose={jest.fn()} character={baseCharacter} />
     );
-    expect(container.querySelector('.modal-header')).toHaveStyle(
-      'background-color: var(--color-primary)'
-    );
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('var(--color-primary)');
   });
 
   it('renders proficiency label in skill stat area', () => {

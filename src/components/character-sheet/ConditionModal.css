@@ -60,7 +60,8 @@
   width: 1.4rem;
   height: 1.4rem;
   border-radius: 50%;
-  color: white;
+  background: var(--color-theme, var(--theme-accent));
+  color: var(--theme-bg, #12100e);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -252,7 +253,8 @@
 }
 
 .ct-browser-card--active {
-  background: rgba(192, 68, 14, 0.12);
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-color: var(--accent-outline, var(--color-theme));
 }
 
 .ct-browser-name {

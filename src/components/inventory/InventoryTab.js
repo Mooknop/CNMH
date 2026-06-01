@@ -128,22 +128,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   return (
     <div className="inventory-tab">
       <div className="inventory-header">
-        <h2 style={{ color: characterColor }}>Inventory</h2>
+        <h2>Inventory</h2>
         {hasCrafting && (
-          <button 
-            className="crafting-button" 
+          <button
+            className="btn-primary btn-small crafting-button"
             onClick={() => setIsCraftingOpen(true)}
-            style={{ 
-              backgroundColor: characterColor,
-              color: 'white',
-              border: 'none',
-              padding: '0.5rem 1rem',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
           >
             <span className="familiar-icon" role="img" aria-label="Crafting">🔨</span>
             Crafting
@@ -186,10 +175,10 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         <table>
           <thead>
             <tr>
-              <th style={{ backgroundColor: characterColor }}>Item</th>
-              <th style={{ backgroundColor: characterColor }}>Qty</th>
-              <th style={{ backgroundColor: characterColor }}>Bulk</th>
-              <th style={{ backgroundColor: characterColor }}>Actions</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Bulk</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>

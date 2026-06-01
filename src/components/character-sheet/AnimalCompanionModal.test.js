@@ -261,9 +261,9 @@ describe('AnimalCompanionModal', () => {
         characterColor="#cc0000"
       />
     );
-    expect(container.querySelector('.modal-header')).toHaveStyle(
-      'background-color: #cc0000'
-    );
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#cc0000');
+    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
   });
 
   it('uses default color when characterColor is absent', () => {
@@ -275,9 +275,8 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    expect(container.querySelector('.modal-header')).toHaveStyle(
-      'background-color: var(--color-primary)'
-    );
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('var(--color-primary)');
   });
 
   it('calls onClose when overlay is clicked', () => {

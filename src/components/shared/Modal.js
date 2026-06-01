@@ -22,16 +22,19 @@ const Modal = ({ isOpen, onClose, title, themeColor, maxWidth, highZ, children }
   const overlayClass = `modal-overlay${highZ ? ' modal-overlay--high' : ''}`;
   const containerClass = `modal-container${highZ ? ' modal-container--high' : ''}`;
   const headerClass = `modal-header${themeColor ? ' modal-header--themed' : ''}`;
-  const headerStyle = themeColor ? { backgroundColor: themeColor, color: 'white' } : {};
+  const containerStyle = {
+    maxWidth: maxWidth || '600px',
+    ...(themeColor ? { '--color-theme': themeColor } : {}),
+  };
 
   return (
     <div className={overlayClass} onClick={onClose}>
       <div
         className={containerClass}
-        style={{ maxWidth: maxWidth || '600px' }}
+        style={containerStyle}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className={headerClass} style={headerStyle}>
+        <div className={headerClass}>
           <h2>{title}</h2>
           <button className="modal-close-button" onClick={onClose}>&times;</button>
         </div>

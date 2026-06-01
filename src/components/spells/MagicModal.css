@@ -10,8 +10,8 @@
 .magic-category-btn {
   padding: 1rem 0.5rem;
   background: transparent;
-  border: 2px solid var(--category-color, var(--color-primary));
-  color: var(--category-color, var(--color-primary));
+  border: 2px solid var(--category-color, var(--color-theme, var(--theme-accent)));
+  color: var(--category-color, var(--color-theme, var(--theme-accent)));
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: 1rem;
@@ -23,7 +23,7 @@
 
 .magic-category-btn:hover,
 .magic-category-btn:active {
-  background-color: var(--category-color, var(--color-primary));
+  background-color: var(--category-color, var(--color-theme, var(--theme-accent)));
   color: white;
 }
 
@@ -41,6 +41,6 @@
 
 .modal-body .magic-category-btn:hover,
 .modal-body .magic-category-btn:active {
-  background-color: var(--category-color, var(--ember-base));
+  background-color: var(--category-color, var(--color-theme, var(--theme-accent)));
   color: #fff;
 }

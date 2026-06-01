@@ -37,7 +37,7 @@ const ConditionModal = ({
                   <span className="ct-active-name">
                     {cond.name}
                     {cond.valued && (
-                      <span className="ct-value-badge" style={{ backgroundColor: themeColor }}>
+                      <span className="ct-value-badge">
                         {cond.value}
                       </span>
                     )}

@@ -19,7 +19,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ember-base);
+  color: var(--theme-accent, var(--ember-base));
   text-decoration: none;
 }
 
@@ -139,9 +139,9 @@
 }
 
 .dropdown-item.active {
-  color: var(--ember-light);
-  background: rgba(192, 68, 14, 0.12);
-  border-left: 3px solid var(--ember-base);
+  color: var(--color-theme, var(--theme-accent));
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-left: 3px solid var(--color-theme, var(--theme-accent));
   padding-left: calc(1rem - 3px);
 }
 

@@ -54,7 +54,8 @@ describe('TraitModal', () => {
     const { container } = render(
       <TraitModal isOpen={true} onClose={() => {}} trait={mockTrait} themeColor="#ff0000" />
     );
-    const header = container.querySelector('.modal-header');
-    expect(header.style.backgroundColor).toBe('rgb(255, 0, 0)');
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#ff0000');
+    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
   });
 });

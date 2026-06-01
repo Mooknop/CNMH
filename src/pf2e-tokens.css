@@ -341,9 +341,23 @@
   --table-header-text:   var(--theme-text);
 
   /* Active-tab look — single source of truth */
-  --tab-active-bg:       var(--color-theme, var(--theme-accent));
-  --tab-active-border:   var(--color-theme, var(--theme-accent));
-  --tab-active-text:     #ffffff;
+  --tab-active-bg:       var(--accent-tint);
+  --tab-active-border:   var(--accent-outline);
+  --tab-active-text:     var(--accent-text);
+
+  /* Table header tint */
+  --table-header-bg:     var(--accent-tint);
+  --table-header-text:   var(--theme-text);
+
+  /* ════════════════════════════════════════════════════════════
+   * ACCENT TINT + OUTLINE RECIPE
+   * Follows GM preset AND per-character override via --color-theme.
+   * ════════════════════════════════════════════════════════════ */
+  --accent-tint:         color-mix(in srgb, var(--color-theme) 14%, transparent);
+  --accent-tint-hover:   color-mix(in srgb, var(--color-theme) 22%, transparent);
+  --accent-tint-active:  color-mix(in srgb, var(--color-theme) 30%, transparent);
+  --accent-outline:      var(--color-theme);
+  --accent-text:         color-mix(in srgb, var(--color-theme) 70%, var(--theme-text));
 }
 
 
@@ -398,6 +412,15 @@
 
 .pip.filled         { background: var(--pip-color-filled); border-color: var(--pip-color-filled); }
 .pip.legendary      { background: var(--pip-color-legend); border-color: var(--pip-color-legend); }
+
+/* Accent tint + outline chip — use for badges, tabs, contextual buttons */
+.accent-chip {
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-outline);
+  color: var(--accent-text);
+}
+.accent-chip:hover  { background: var(--accent-tint-hover); }
+.accent-chip:active { background: var(--accent-tint-active); }
 
 .tap-row {
   min-height: var(--tap-target-min);

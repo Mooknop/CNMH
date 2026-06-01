@@ -107,10 +107,10 @@ const ContainerItem = ({
           <table className="contents-table">
             <thead>
               <tr>
-                <th style={{ backgroundColor: themeColor }}>Item</th>
-                <th style={{ backgroundColor: themeColor }}>Qty</th>
-                <th style={{ backgroundColor: themeColor }}>Bulk</th>
-                <th style={{ backgroundColor: themeColor }}>Actions</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Bulk</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -120,7 +120,6 @@ const ContainerItem = ({
                     <button
                       className="item-name"
                       onClick={() => onItemClick(item)}
-                      style={{ color: themeColor }}
                     >
                       {item.name}
                     </button>
