@@ -3,9 +3,9 @@ import { useLore } from '../../contexts/LoreContext';
 import './LoreDiscoveryPanel.css';
 
 const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) => {
-  if (!entry) return null;
-
   const { openLore } = useLore();
+
+  if (!entry) return null;
 
   const { outgoingByCategory = {}, incomingByCategory = {} } = connectionData || {};
   const outgoingCategories = Object.keys(outgoingByCategory).sort();

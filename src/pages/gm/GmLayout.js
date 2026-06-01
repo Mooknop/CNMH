@@ -82,6 +82,7 @@ const GmLayout = () => {
     { to: '/gm/effects', label: 'Effects' },
     { to: '/gm/encounter', label: 'Encounter' },
     { to: '/gm/images', label: 'Images' },
+    { to: '/gm/theme', label: 'Theme' },
   ];
 
   return (

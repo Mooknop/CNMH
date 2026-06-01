@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { CAMPAIGN_ID } from '../data/campaign';
 import { reputation as defaultReputation } from '../data';
 import {
@@ -12,9 +12,11 @@ import {
   normalizeSpells,
   normalizeEffects,
   normalizeImages,
+  normalizeTheme,
   resolveCharacterItems,
   defaultContent,
 } from '../utils/contentUtils';
+import { paletteToVars } from '../utils/themeVars';
 
 // Campaign content layer. Loads the authoritative snapshot from the
 // CampaignContent Durable Object (GET /api/content), subscribes to live GM
@@ -150,6 +152,7 @@ export const ContentProvider = ({ children }) => {
   const serverSpells = serverList('spell');
   const serverEffects = serverList('effect');
   const serverImages = serverList('image');
+  const serverTheme = serverList('theme');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
@@ -172,6 +175,21 @@ export const ContentProvider = ({ children }) => {
   const characters = rawCharacters.map((c) =>
     resolveCharacterItems(c, items, spells)
   );
+
+  const theme = useMemo(
+    () => normalizeTheme(serverTheme.length ? serverTheme : FALLBACK.theme),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(serverTheme)]
+  );
+
+  // Inject the themeable CSS vars onto :root whenever the theme changes.
+  useEffect(() => {
+    const root = document.documentElement;
+    const vars = paletteToVars(theme.palette);
+    Object.entries(vars).forEach(([k, v]) => {
+      if (v != null) root.style.setProperty(k, v);
+    });
+  }, [theme]);
 
   const value = {
     loading,
@@ -202,6 +220,7 @@ export const ContentProvider = ({ children }) => {
     spells,
     effects,
     images,
+    theme,
     refresh: loadSnapshot,
   };
 
@@ -224,6 +243,7 @@ const NOOP_CONTENT = {
   spells: FALLBACK.spell,
   effects: FALLBACK.effect,
   images: FALLBACK.image,
+  theme: FALLBACK.theme ? FALLBACK.theme[0] : undefined,
   refresh: () => Promise.resolve(),
 };
 

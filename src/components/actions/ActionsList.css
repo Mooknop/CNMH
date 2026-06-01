@@ -88,7 +88,7 @@
 .free-action-card .collapsible-header h3 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent-mid));
   flex-grow: 1;
 }
 
@@ -101,7 +101,7 @@
 .reaction-icon,
 .free-action-icon {
   font-size: 1.2rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent-mid));
 }
 
 /* Traits styling */
@@ -144,13 +144,13 @@
 
 .detail-label {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--shell-text-tertiary);
   margin-bottom: 0.25rem;
 }
 
 .detail-value {
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--shell-text-primary);
 }
 
 /* Descriptions */
@@ -160,7 +160,8 @@
 .free-action-description {
   padding: 0.75rem 0;
   font-size: 0.9rem;
-  color: var(--color-text);
+  color: var(--shell-text-secondary);
+  line-height: 1.5;
 }
 
 /* Trigger sections for reactions and free actions */
@@ -193,10 +194,9 @@
 .reaction-source,
 .free-action-source {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
-  border-top: var(--card-border);
-  padding-top: var(--space-2);
-  margin-top: var(--space-2);
+  color: var(--shell-text-tertiary);
+  border-top: 1px solid var(--shell-border);
+  padding: 0.5rem 1rem;
   font-style: italic;
 }
 

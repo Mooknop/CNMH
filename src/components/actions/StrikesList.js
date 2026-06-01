@@ -102,13 +102,7 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
         )}
 
         {strike.source && strike.source !== strike.name && (
-          <div className="strike-source" style={{
-            fontSize: '0.8rem',
-            color: '#666',
-            borderTop: '1px solid #eee',
-            padding: '0.5rem 1rem',
-            fontStyle: 'italic'
-          }}>
+          <div className="strike-source">
             From: {strike.source}
           </div>
         )}

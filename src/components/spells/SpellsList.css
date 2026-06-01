@@ -965,3 +965,52 @@
   border-color: var(--tab-active-border);
 }
 
+/* ── Explicit modal-body scope so spell UI works inside MagicModal ── */
+.modal-body .spell-level-tab {
+  background: var(--surface-inset);
+  border-color: var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+
+.modal-body .spell-level-tab:hover {
+  background: var(--surface-inset-hover);
+  border-color: var(--shell-border-strong);
+}
+
+.modal-body .spell-level-tab.active {
+  background: var(--color-theme, var(--theme-accent));
+  color: var(--tab-active-text);
+  border-color: var(--color-theme, var(--theme-accent));
+}
+
+.modal-body .defense-filter-btn {
+  background: var(--surface-inset);
+  border-color: var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+
+.modal-body .defense-filter-btn:hover {
+  background: var(--surface-inset-hover);
+  border-color: var(--shell-border-strong);
+}
+
+.modal-body .defense-filter-btn.active {
+  background: var(--color-theme, var(--theme-accent));
+  color: var(--tab-active-text);
+  border-color: var(--color-theme, var(--theme-accent));
+}
+
+.modal-body .spellcasting-stats {
+  background: var(--surface-inset);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+}
+
+.modal-body .stat-label {
+  color: var(--shell-text-tertiary);
+}
+
+.modal-body .stat-value {
+  color: var(--color-theme, var(--theme-accent-mid));
+}
+

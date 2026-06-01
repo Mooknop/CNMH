@@ -117,9 +117,10 @@
   --color-primary-active:  var(--ember-dark);
   --color-primary-subtle:  var(--ember-pale);
 
-  /* Character theme accent (overridden per-character via JS) */
-  --color-theme:           var(--ember-base);
-  --color-theme-hover:     var(--ember-mid);
+  /* Character theme accent (overridden per-character via JS;
+     falls back to the global --theme-accent set by the GM) */
+  --color-theme:           var(--theme-accent);
+  --color-theme-hover:     var(--theme-accent-mid);
   --color-theme-subtle:    var(--ember-pale);
 
   /* Semantic states */
@@ -258,36 +259,68 @@
   --z-modal-high:          1101;
 
 
-  /* ————————————————————————————————————————————————————————
-   * DARK SHELL — character sheet game-menu theme
-   * Aliased to the palette above where an exact value exists.
-   * ———————————————————————————————————————————————————————— */
+  /* ════════════════════════════════════════════════════════════
+   * THEMEABLE — the only values the GM theme config rewrites.
+   * The runtime injector (ContentContext) overrides exactly these
+   * names on :root. Everything below this block references them.
+   * ════════════════════════════════════════════════════════════ */
+
+  /* Accent ramps */
+  --theme-accent:        #c0440e;   /* ember — primary accent / HP / active */
+  --theme-accent-mid:    #e85d1a;
+  --theme-accent-soft:   rgba(192, 68, 14, 0.25);
+  --theme-gold:          #c49a2e;   /* legendary / hero points / treasure   */
+  --theme-arcane:        #7a54ba;   /* spells / magic                        */
+  --theme-verdant:       #3d9458;   /* healing / positive conditions         */
+  --theme-peril:         #ef5350;   /* danger / dying / crit fail            */
 
   /* Shell surfaces */
-  --shell-bg:              #12100e;
-  --shell-surface:         var(--void-deep);   /* #1a1612 */
+  --theme-bg:            #12100e;   /* page background                       */
+  --theme-surface:       #1a1612;   /* nav / rail / raised chrome            */
+  --theme-surface-card:  rgba(28, 24, 18, 0.82);  /* card body              */
+  --theme-surface-inset: rgba(255, 255, 255, 0.04);
+  --theme-surface-inset-hover: rgba(255, 255, 255, 0.08);
+
+  /* Shell text */
+  --theme-text:          #f5ede4;   /* primary body text on dark             */
+  --theme-text-secondary:rgba(255, 255, 255, 0.7);
+  --theme-text-tertiary: rgba(255, 255, 255, 0.45);
+
+  /* Shell borders */
+  --theme-border:        rgba(255, 255, 255, 0.07);
+  --theme-border-strong: rgba(255, 255, 255, 0.12);
+
+  /* ════════════════════════════════════════════════════════════
+   * DARK SHELL — character sheet game-menu theme
+   * Aliased to the THEMEABLE layer above; future GM palette
+   * changes flow through here automatically.
+   * ════════════════════════════════════════════════════════════ */
+
+  /* Shell surfaces */
+  --shell-bg:              var(--theme-bg);
+  --shell-surface:         var(--theme-surface);
   --shell-surface-raised:  #1e1a16;
-  --shell-border:          rgba(255, 255, 255, 0.07);
-  --shell-border-strong:   rgba(255, 255, 255, 0.12);
+  --shell-border:          var(--theme-border);
+  --shell-border-strong:   var(--theme-border-strong);
 
   /* Text on dark */
-  --shell-text-primary:    #f5ede4;
-  --shell-text-secondary:  rgba(255, 255, 255, 0.55);
-  --shell-text-tertiary:   rgba(255, 255, 255, 0.28);
+  --shell-text-primary:    var(--theme-text);
+  --shell-text-secondary:  var(--theme-text-secondary);
+  --shell-text-tertiary:   var(--theme-text-tertiary);
 
   /* Background atmosphere overlay — darkens Background.png to ~12% visibility */
   --bg-overlay:            rgba(10, 8, 6, 0.88);
 
   /* Card surfaces on dark shell */
-  --dark-card-bg:          rgba(28, 24, 18, 0.82);
-  --dark-card-border:      1px solid rgba(255, 255, 255, 0.07);
+  --dark-card-bg:          var(--theme-surface-card);
+  --dark-card-border:      1px solid var(--theme-border);
   --dark-card-radius:      var(--radius-lg);
 
   /* Bottom rail */
   --rail-height:           54px;
   --rail-bg:               rgba(16, 12, 8, 0.96);
-  --rail-border:           rgba(255, 255, 255, 0.07);
-  --rail-active:           var(--color-theme, var(--ember-base));
+  --rail-border:           var(--theme-border);
+  --rail-active:           var(--color-theme, var(--theme-accent));
 
   /* Masthead portrait column */
   --portrait-width:        80px;
@@ -297,16 +330,20 @@
      Route every dark box through these; future palette tweaks
      are a single edit here rather than a file sweep.          */
   --surface-card:        var(--dark-card-bg);          /* main cards/panels */
-  --surface-inset:       rgba(255, 255, 255, 0.04);    /* sub-boxes, stat blocks, rules */
-  --surface-inset-hover: rgba(255, 255, 255, 0.08);
+  --surface-inset:       var(--theme-surface-inset);   /* sub-boxes, stat blocks, rules */
+  --surface-inset-hover: var(--theme-surface-inset-hover);
   --surface-raised:      rgba(255, 255, 255, 0.06);    /* controls, active tabs */
   --surface-arcane:      rgba(122, 84, 186, 0.10);     /* blood-magic / bloodline tint */
   --surface-trigger:     rgba(196, 154, 46, 0.08);     /* trigger / reminder boxes */
 
+  /* Table header — ember-tinted look used by all inventory tables */
+  --table-header-bg:     var(--theme-accent-soft);
+  --table-header-text:   var(--theme-text);
+
   /* Active-tab look — single source of truth */
-  --tab-active-bg:       var(--surface-raised);
-  --tab-active-border:   var(--color-theme, var(--ember-base));
-  --tab-active-text:     var(--color-theme, var(--ember-light));
+  --tab-active-bg:       var(--color-theme, var(--theme-accent));
+  --tab-active-border:   var(--color-theme, var(--theme-accent));
+  --tab-active-text:     #ffffff;
 }
 
 
