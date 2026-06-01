@@ -200,18 +200,18 @@ describe('CastSpellModal', () => {
   describe('spell with ally-target effect', () => {
     it('renders a target picker', () => {
       render(<CastSpellModal {...defaultProps} spell={spellWithTargetEffect} />);
-      expect(screen.getByLabelText('target-0')).toBeInTheDocument();
+      expect(screen.getByRole('group', { name: 'Select targets' })).toBeInTheDocument();
     });
 
-    it('target picker includes both characters', () => {
+    it('target picker includes both characters as chips', () => {
       render(<CastSpellModal {...defaultProps} spell={spellWithTargetEffect} />);
-      expect(screen.getByRole('option', { name: 'Pellias (you)' })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: 'Ashka' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Target Pellias' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Target Ashka' })).toBeInTheDocument();
     });
 
-    it('changing target picker updates the target for the effect', () => {
+    it('clicking a target chip applies the effect to that character', () => {
       render(<CastSpellModal {...defaultProps} spell={spellWithTargetEffect} />);
-      fireEvent.change(screen.getByLabelText('target-0'), { target: { value: 'char-b' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Target Ashka' }));
       fireEvent.click(screen.getByLabelText('confirm-cast'));
       expect(mockSendUpdate).toHaveBeenCalledWith(
         'char-b',
@@ -222,7 +222,7 @@ describe('CastSpellModal', () => {
 
     it('logs the cast with target name', () => {
       render(<CastSpellModal {...defaultProps} spell={spellWithTargetEffect} />);
-      fireEvent.change(screen.getByLabelText('target-0'), { target: { value: 'char-b' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Target Ashka' }));
       fireEvent.click(screen.getByLabelText('confirm-cast'));
       expect(mockAppendLog).toHaveBeenCalledWith(
         expect.objectContaining({ text: 'Pellias cast Bless on Ashka' })

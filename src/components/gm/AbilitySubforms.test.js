@@ -194,6 +194,30 @@ describe('actionToForm / reactionToForm round-trip', () => {
   });
 });
 
+describe('action with structured effects round-trip', () => {
+  it('round-trips effects and preserves other unmodelled keys', () => {
+    const src = {
+      name: 'Runic Strike',
+      actionCount: 2,
+      description: 'Strike with runes.',
+      degrees: { Success: 'Apply effect.' },
+      effects: [
+        { effectId: 'heroism-1', applyTo: 'target', duration: { until: 'rounds', rounds: 3 } },
+        { effectId: 'bless',     applyTo: 'all-allies', duration: { until: 'caster-turn-end' } },
+      ],
+    };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+  });
+
+  it('an action without effects still round-trips with no effects key emitted', () => {
+    const src = { name: 'Stride', actionCount: 1, description: 'Move.' };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+    expect(out.effects).toBeUndefined();
+  });
+});
+
 describe('bundled action/reaction resolve-parity (Slice 2 gate)', () => {
   const bundledActionLists = [];
   const bundledReactionLists = [];

@@ -18,7 +18,6 @@ import SpellsList from '../components/spells/SpellsList';
 
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
-import EffectsModal from '../components/character-sheet/EffectsModal';
 import { useCharacter } from '../hooks/useCharacter';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { hydrateConditions } from '../data/pf2eConditions';
@@ -43,7 +42,6 @@ const CharacterSheet = () => {
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
-  const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
 
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
@@ -242,13 +240,6 @@ const CharacterSheet = () => {
                     {animalCompanion.name}
                   </button>
                 )}
-                <button
-                  className="cs-action-btn cs-action-btn--effect"
-                  onClick={() => setIsEffectsModalOpen(true)}
-                >
-                  <i className="ti ti-sparkles" aria-hidden="true" />
-                  Effect
-                </button>
               </div>
             </div>
           </div>
@@ -346,13 +337,6 @@ const CharacterSheet = () => {
           characterColor={characterColor}
         />
       )}
-      <EffectsModal
-        isOpen={isEffectsModalOpen}
-        onClose={() => setIsEffectsModalOpen(false)}
-        themeColor={characterColor}
-        selfCharId={character.id}
-        selfName={character.name}
-      />
     </div>
   );
 };
