@@ -1,0 +1,95 @@
+.trr-section {
+  margin-top: 12px;
+}
+
+.trr-dc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.trr-defense-label { font-weight: 600; }
+
+.trr-dc-badge {
+  background: var(--color-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+
+.trr-defense-select {
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+
+.trr-entry-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.trr-roll-input {
+  width: 80px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.trr-nat-toggle {
+  display: flex;
+  gap: 6px;
+}
+
+.trr-nat-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.trr-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.trr-result-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+.trr-result-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.trr-result-dc {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.trr-result-degree {
+  font-weight: 700;
+}
+
+.trr-no-dc {
+  opacity: 0.65;
+  font-style: italic;
+  font-size: 0.85rem;
+}

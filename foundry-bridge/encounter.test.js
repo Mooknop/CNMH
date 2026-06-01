@@ -5,7 +5,7 @@
 import {
   initEncounter, handleTurnCommand, updateActorMap, getActorMap,
 } from './encounter.js';
-import { makeCombat, makeCombatant } from './test/foundryMock.js';
+import { makeCombat, makeCombatant, makeActor } from './test/foundryMock.js';
 
 let send;
 
@@ -63,6 +63,35 @@ describe('encounter payload push', () => {
     expect(goblin.charId).toBeUndefined();
     expect(pellias.kind).toBe('pc');
     expect(pellias.charId).toBe('Pellias');
+  });
+
+  test('enemy combatant entry includes defenses when an actor is present', () => {
+    const goblinActor = makeActor({ id: 'actor-goblin' });
+    goblinActor.system.attributes.ac = { value: 15 };
+    goblinActor.system.saves = { fortitude: { value: 8 }, reflex: { value: 5 }, will: { value: 3 } };
+    goblinActor.system.attributes.immunities  = [];
+    goblinActor.system.attributes.resistances = [];
+    goblinActor.system.attributes.weaknesses  = [];
+    global.game.actors.set('actor-goblin', goblinActor);
+
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+
+    const { order } = send.mock.calls[0][2];
+    const goblin = order.find((e) => e.name === 'Goblin');
+    expect(goblin.defenses).toEqual({
+      ac: 15,
+      saves: { fortitude: 8, reflex: 5, will: 3 },
+      immunities: [], resistances: [], weaknesses: [],
+    });
+  });
+
+  test('combatant entry without an actor omits defenses', () => {
+    // Pellias has an actor; Goblin has no actor in game.actors in this test variant.
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+
+    const { order } = send.mock.calls[0][2];
+    const goblin = order.find((e) => e.name === 'Goblin');
+    expect(goblin.defenses).toBeUndefined();
   });
 
   test('currentTurnIndex maps the active combatant into the sorted order', () => {

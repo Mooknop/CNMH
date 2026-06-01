@@ -10,7 +10,7 @@
 
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import {
-  getCombatantActorId, getCombatantInitiative,
+  getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
 } from './pf2eAdapter.js';
 
@@ -87,13 +87,16 @@ function buildEncounterPayload(combat) {
     const foundryActorId = getCombatantActorId(c);
     // Primary resolution: use the app-maintained actormap (set by GM in GmEncounter).
     const charId = foundryActorId ? (_actorMap[foundryActorId] ?? null) : null;
+    const actor    = getCombatantActor(c);
+    const defenses = actor ? getDefenses(actor) : undefined;
     return {
       entryId:       c.id,
       kind:          charId ? 'pc' : 'enemy',
       name:          c.name,
       initiative:    getCombatantInitiative(c),
       foundryActorId,
-      ...(charId ? { charId } : {}),
+      ...(charId    ? { charId }    : {}),
+      ...(defenses  ? { defenses }  : {}),
     };
   });
 

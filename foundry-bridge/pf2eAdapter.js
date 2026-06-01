@@ -51,6 +51,30 @@ export function getConditions(actor) {
   }));
 }
 
+// Returns defensive stats for an actor: AC, save modifiers, and IWR.
+// Saves are returned as modifiers (not DCs); the app derives DC = 10 + modifier.
+// Returns null when actor is absent.
+export function getDefenses(actor) {
+  if (!actor) return null;
+  return {
+    ac: actor.system?.attributes?.ac?.value ?? null,
+    saves: {
+      fortitude: actor.system?.saves?.fortitude?.value ?? null,
+      reflex:    actor.system?.saves?.reflex?.value    ?? null,
+      will:      actor.system?.saves?.will?.value      ?? null,
+    },
+    immunities:  (actor.system?.attributes?.immunities  ?? []).map((i) => i.type).filter(Boolean),
+    resistances: (actor.system?.attributes?.resistances ?? []).map((r) => ({ type: r.type, value: r.value })).filter((r) => r.type),
+    weaknesses:  (actor.system?.attributes?.weaknesses  ?? []).map((w) => ({ type: w.type, value: w.value })).filter((w) => w.type),
+  };
+}
+
+// Resolve a combatant to its live actor document. Prefers the already-embedded
+// actor reference (combatant.actor); falls back to game.actors lookup.
+export function getCombatantActor(combatant) {
+  return combatant.actor ?? getActorById(getCombatantActorId(combatant)) ?? null;
+}
+
 // --- Actor lookup & writes ---
 
 export function getActorById(actorId) {

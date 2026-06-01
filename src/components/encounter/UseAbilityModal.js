@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
+import TargetRollResolver from './TargetRollResolver';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
 import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
+import { DEFENSE_LABELS } from '../../utils/defense';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
 const parseActionCost = (actionsText) => {
@@ -55,6 +57,8 @@ const UseAbilityModal = ({
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character?.id || 'nobody');
 
+  const resolverRef = useRef(null);
+
   const order = encounter?.order || [];
 
   const { targets, selectable, isTargeted, toggleTarget } =
@@ -78,11 +82,27 @@ const UseAbilityModal = ({
   const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
 
+  // Determine which defense this action targets (explicit tag, or Attack trait → AC).
+  const effectiveDefense = ability.targetDefense ||
+    (ability.traits?.includes('Attack') ? 'ac' : null);
+
+  // Enemy targets that have defense data and a resolvable defense.
+  const resolverTargets = effectiveDefense
+    ? selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses)
+    : [];
+
   const confirmEnabled = !needsPicker || targets.length > 0;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
+    const rollResults = resolverRef.current?.getResults() ?? null;
+
+    // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
+    const coveredByRoll = new Set(
+      rollResults ? rollResults.filter((r) => r.degree != null).map((r) => r.entryId) : []
+    );
+
     if (hasEffects) {
       applyAbility({
         ability,
@@ -99,13 +119,37 @@ const UseAbilityModal = ({
         verb: effectiveVerb,
       });
     } else {
-      const allTargetNames = [...targetCharIds.map(charName), ...enemyTargetNames].join(', ');
-      appendLog({
-        type:   'action',
-        charId: character.id,
-        text:   allTargetNames
-          ? `${character.name} ${effectiveVerb} ${ability.name} on ${allTargetNames}`
-          : `${character.name} ${effectiveVerb} ${ability.name}`,
+      // Generic action log — omit enemies whose roll result will be logged below.
+      const genericNames = [
+        ...targetCharIds.map(charName),
+        ...selectedEntries
+          .filter((e) => e.kind === 'enemy' && !coveredByRoll.has(e.entryId))
+          .map((e) => e.name),
+      ].join(', ');
+      if (genericNames || coveredByRoll.size === 0) {
+        appendLog({
+          type:   'action',
+          charId: character.id,
+          text:   genericNames
+            ? `${character.name} ${effectiveVerb} ${ability.name} on ${genericNames}`
+            : `${character.name} ${effectiveVerb} ${ability.name}`,
+        });
+      }
+    }
+
+    if (rollResults) {
+      const defLabel = DEFENSE_LABELS[effectiveDefense] || effectiveDefense;
+      const degreeMap = effectiveDefense === 'ac'
+        ? { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }
+        : { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' };
+      rollResults.forEach((r) => {
+        if (!r.degree) return;
+        const degreeLabel = degreeMap[r.degree] || r.degree;
+        appendLog({
+          type:   'action',
+          charId: character.id,
+          text:   `${character.name} ${effectiveVerb} ${ability.name} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}`,
+        });
       });
     }
 
@@ -174,6 +218,13 @@ const UseAbilityModal = ({
                 onToggle={toggleTarget}
               />
             )}
+            {resolverTargets.length > 0 && (
+              <TargetRollResolver
+                ref={resolverRef}
+                enemyTargets={resolverTargets}
+                targetDefense={effectiveDefense}
+              />
+            )}
           </section>
         </>
       )}
@@ -211,6 +262,13 @@ const UseAbilityModal = ({
               isTargeted={isTargeted}
               onToggle={toggleTarget}
             />
+            {resolverTargets.length > 0 && (
+              <TargetRollResolver
+                ref={resolverRef}
+                enemyTargets={resolverTargets}
+                targetDefense={effectiveDefense}
+              />
+            )}
           </section>
         </>
       )}
