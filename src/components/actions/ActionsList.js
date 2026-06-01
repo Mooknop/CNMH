@@ -9,7 +9,6 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useGrantedActions } from '../../hooks/useGrantedActions';
-import { abilityHasStructuredEffects } from '../../utils/applyAbility';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
@@ -30,8 +29,9 @@ const ActionsList = ({ character, characterColor }) => {
 
   const handleUse = useCallback(
     (item, cost) => {
-      // Abilities with structured effects/grants open the targeting modal in encounter mode.
-      if (encounterMode && abilityHasStructuredEffects(item)) {
+      // Open the targeting modal in encounter mode unless the action explicitly
+      // opts out (requiresTarget: false — pure movement like Stride, Stand, etc.).
+      if (encounterMode && item.requiresTarget !== false) {
         setUsingAbility({ ability: item, cost });
         return;
       }

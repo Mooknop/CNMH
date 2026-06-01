@@ -62,9 +62,9 @@ const UseAbilityModal = ({
 
   if (!ability || !character) return null;
 
-  const effects    = Array.isArray(ability.effects) ? ability.effects : [];
-  const grants     = Array.isArray(ability.grants)  ? ability.grants  : [];
-  const hasEffects = effects.length > 0 || grants.length > 0;
+  const effects     = Array.isArray(ability.effects) ? ability.effects : [];
+  const grants      = Array.isArray(ability.grants)  ? ability.grants  : [];
+  const hasEffects  = effects.length > 0 || grants.length > 0;
   const needsPicker = abilityNeedsPicker(ability);
 
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
@@ -79,6 +79,8 @@ const UseAbilityModal = ({
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
 
   const confirmEnabled = !needsPicker || targets.length > 0;
+
+  const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
     if (hasEffects) {
@@ -97,10 +99,13 @@ const UseAbilityModal = ({
         verb: effectiveVerb,
       });
     } else {
+      const allTargetNames = [...targetCharIds.map(charName), ...enemyTargetNames].join(', ');
       appendLog({
         type:   'action',
         charId: character.id,
-        text:   `${character.name} ${effectiveVerb} ${ability.name}`,
+        text:   allTargetNames
+          ? `${character.name} ${effectiveVerb} ${ability.name} on ${allTargetNames}`
+          : `${character.name} ${effectiveVerb} ${ability.name}`,
       });
     }
 
@@ -200,9 +205,13 @@ const UseAbilityModal = ({
       {!hasEffects && (
         <>
           <hr className="ct-divider" />
-          <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0 0 1rem' }}>
-            No structured effects defined for this ability.
-          </p>
+          <section className="ct-section">
+            <TargetPicker
+              selectable={selectable}
+              isTargeted={isTargeted}
+              onToggle={toggleTarget}
+            />
+          </section>
         </>
       )}
 

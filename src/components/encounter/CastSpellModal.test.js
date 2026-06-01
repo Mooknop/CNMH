@@ -133,9 +133,9 @@ describe('CastSpellModal', () => {
   });
 
   describe('spell with no structured effects', () => {
-    it('shows the no-effects message', () => {
+    it('shows a target picker so the cast target can be logged', () => {
       render(<CastSpellModal {...defaultProps} spell={spellNoEffects} />);
-      expect(screen.getByText(/No structured effects/)).toBeInTheDocument();
+      expect(screen.getByRole('group', { name: 'Select targets' })).toBeInTheDocument();
     });
 
     it('clicking Cast logs the cast and spends actions', () => {
