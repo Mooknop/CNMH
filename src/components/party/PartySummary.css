@@ -119,7 +119,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 0.2rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .char-class {
@@ -255,7 +255,7 @@
 .strength-name {
   font-weight: 600;
   margin-bottom: 0.2rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .strength-class {
@@ -265,7 +265,7 @@
 
 .strength-abilities {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
   font-size: 0.9rem;
 }
 
@@ -307,7 +307,7 @@
 
 .skill-name {
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
   margin-bottom: 0.5rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid rgba(238, 238, 238, 0.6);
@@ -327,31 +327,29 @@
 .specialist-name {
   font-weight: 500;
   font-size: 0.9rem;
-  color: var(--color-primary);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .specialist-class {
-  color: #666;
+  color: var(--shell-text-secondary, rgba(255,255,255,0.7));
   font-size: 0.8rem;
 }
 
 .skill-modifier {
   font-weight: 600;
-  color: white;
   padding: 0.15rem 0.4rem;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
   min-width: 32px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .no-skill-data {
   text-align: center;
   padding: 2rem;
-  background: rgba(249, 249, 249, 0.8);
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
-  color: #666;
+  color: var(--shell-text-secondary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(2px);
 }

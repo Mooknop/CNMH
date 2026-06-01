@@ -44,8 +44,8 @@
 
 .combat-log-entry--round {
   font-weight: 700;
-  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-theme, var(--theme-accent)) 8%, transparent);
+  color: var(--color-theme, var(--theme-accent));
 }
 
 .combat-log-entry--system {

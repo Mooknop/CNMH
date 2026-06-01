@@ -95,21 +95,18 @@ const ActionsList = ({ character, characterColor }) => {
         <button
           className={`section-tab ${activeSection === 'actions' ? 'active' : ''}`}
           onClick={() => setActiveSection('actions')}
-          style={{ backgroundColor: activeSection === 'actions' ? themeColor : '' }}
         >
           Actions
         </button>
         <button
           className={`section-tab ${activeSection === 'reactions' ? 'active' : ''}`}
           onClick={() => setActiveSection('reactions')}
-          style={{ backgroundColor: activeSection === 'reactions' ? themeColor : '' }}
         >
           Reactions
         </button>
         <button
           className={`section-tab ${activeSection === 'free' ? 'active' : ''}`}
           onClick={() => setActiveSection('free')}
-          style={{ backgroundColor: activeSection === 'free' ? themeColor : '' }}
         >
           Free Actions
         </button>

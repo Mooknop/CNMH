@@ -59,19 +59,18 @@
   letter-spacing: 0.03em;
 }
 
-/* Themed variant: colored bar set via inline style (themeColor).
-   Keep the close button white. */
+/* Themed variant: --color-theme bridged via inline style; tint + accent border. */
 .modal-header--themed {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-bottom: 1px solid var(--accent-outline, var(--color-primary));
 }
 
 .modal-header--themed h2 {
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  color: var(--accent-text, #e85d1a);
 }
 
 .modal-header--themed .modal-close-button {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
 }
 
 /* Plain variant — engraved divider on dark */

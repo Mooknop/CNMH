@@ -313,7 +313,7 @@
 
 .cs-abl-mod {
   font-size: 0.6rem;
-  color: var(--ember-base);
+  color: var(--color-theme, var(--theme-accent));
   margin-top: 1px;
 }
 
@@ -408,7 +408,7 @@
 }
 
 .cs-content .item-name:hover {
-  color: var(--ember-light);
+  color: var(--color-theme, var(--theme-accent-mid));
 }
 
 .cs-content .empty-inventory {
@@ -452,8 +452,8 @@
 }
 
 .cs-content .ttp-entry--current {
-  background: rgba(192, 68, 14, 0.15);
-  border-color: var(--ember-base);
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-color: var(--accent-outline, var(--color-theme));
   color: var(--shell-text-primary);
 }
 
@@ -535,7 +535,7 @@
 .heightened-label {
   display: block;
   font-weight: 600;
-  color: var(--ember-light);
+  color: var(--color-theme, var(--theme-accent-mid));
   margin-bottom: var(--space-2);
 }
 

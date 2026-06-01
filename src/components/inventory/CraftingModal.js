@@ -24,7 +24,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
       <div className="crafting-skill-info">
         <div className="skill-stat">
           <span className="stat-label">Crafting Skill</span>
-          <span className="stat-value" style={{ color: themeColor }}>
+          <span className="stat-value">
             {formatModifier(craftingModifier)} ({proficiencyLabel})
           </span>
         </div>
@@ -35,14 +35,12 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
         <button
           className={`tab-button ${activeTab === 'rules' ? 'active' : ''}`}
           onClick={() => setActiveTab('rules')}
-          style={{ backgroundColor: activeTab === 'rules' ? themeColor : '' }}
         >
           Crafting Rules
         </button>
         <button
           className={`tab-button ${activeTab === 'recipes' ? 'active' : ''}`}
           onClick={() => setActiveTab('recipes')}
-          style={{ backgroundColor: activeTab === 'recipes' ? themeColor : '' }}
         >
           Known Recipes ({knownRecipes.length})
         </button>
@@ -53,14 +51,14 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
         {activeTab === 'rules' && (
           <div className="crafting-rules">
             <div className="rules-section">
-              <h3 style={{ color: themeColor }}>Craft Activity</h3>
+              <h3>Craft Activity</h3>
               <div className="activity-header">
                 <span className="activity-time">8-16 hours (or more)</span>
                 <span className="activity-traits">Concentrate, Exploration, Manipulate</span>
               </div>
 
               <div className="requirements-section">
-                <h4 style={{ color: themeColor }}>Requirements</h4>
+                <h4>Requirements</h4>
                 <ul>
                   <li>The item is Common, or you have a crafting recipe for it.</li>
                   <li>If the item is 9th level or higher, you must be a master in Crafting, and if it's 17th or higher, you must be legendary.</li>
@@ -94,7 +92,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
               </div>
 
               <div className="degrees-section">
-                <h4 style={{ color: themeColor }}>Degrees of Success</h4>
+                <h4>Degrees of Success</h4>
                 <div className="degree-entry">
                   <span className="degree-level critical-success">Critical Success:</span>
                   <span className="degree-description">
@@ -126,7 +124,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
               </div>
 
               <div className="earnings-section">
-                <h4 style={{ color: themeColor }}>Crafting Earnings</h4>
+                <h4>Crafting Earnings</h4>
                 <div className="earnings-table">
                   <div className="table-header">
                     <span></span>
@@ -142,7 +140,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
               </div>
 
               <div className="special-section">
-                <h4 style={{ color: themeColor }}>Special Rules</h4>
+                <h4>Special Rules</h4>
                 <ul>
                   <li>
                     <strong>Alchemical and Magical Items</strong> If you want to Craft alchemical items
@@ -174,7 +172,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
                 {knownRecipes.map((recipe, index) => (
                   <div key={index} className="recipe-card">
                     <div className="recipe-header">
-                      <h3 style={{ color: themeColor }}>{recipe.name}</h3>
+                      <h3>{recipe.name}</h3>
                       <span className="recipe-weight">Bulk: {formatBulk(recipe.weight)}</span>
                     </div>
 
@@ -184,7 +182,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
 
                     {recipe.types && recipe.types.length > 0 && (
                       <div className="recipe-types">
-                        <h4 style={{ color: themeColor }}>Variants</h4>
+                        <h4>Variants</h4>
                         <div className="types-list">
                           {recipe.types.map((type, typeIndex) => (
                             <div key={typeIndex} className="type-entry">

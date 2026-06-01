@@ -144,7 +144,7 @@
 
 .reaction-trigger,
 .free-action-trigger {
-  background-color: #fff8e1;
+  background: var(--surface-trigger);
   padding: 0.75rem;
   border-radius: var(--radius-sm);
   margin-bottom: 0.75rem;
@@ -234,8 +234,8 @@
 .scroll-level,
 .wand-level {
   padding: 0.25rem 0.5rem;
-  background-color: var(--color-primary);
-  color: white;
+  background: var(--color-theme, var(--theme-accent));
+  color: var(--theme-bg, #12100e);
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
 }
@@ -296,7 +296,7 @@
 .item-scroll h3,
 .item-wand h3,
 .shield-properties h3 {
-  color: var(--ember-light, #f5803e);
+  color: var(--color-theme, var(--theme-accent-mid));
   border-bottom-color: var(--shell-border, rgba(255, 255, 255, 0.07));
 }
 

@@ -159,9 +159,9 @@
   font-size: 0.8rem;
   padding: 3px 10px;
   border-radius: var(--radius-sm);
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  color: var(--accent-text, var(--color-theme));
+  border: 1px solid var(--accent-outline, var(--color-theme));
   cursor: pointer;
   white-space: nowrap;
 }
@@ -340,7 +340,7 @@
 }
 
 .cs-content .ttp-target-chip--on {
-  background: rgba(192, 68, 14, 0.18);
-  border-color: var(--color-theme, var(--ember-base));
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-color: var(--accent-outline, var(--color-theme));
   color: var(--shell-text-primary, #f5ede4);
 }

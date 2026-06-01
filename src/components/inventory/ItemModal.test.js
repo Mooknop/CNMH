@@ -522,16 +522,17 @@ describe('ItemModal', () => {
     const { container } = render(
       <ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} characterColor="#ff0000" />
     );
-    const header = container.querySelector('.modal-header');
-    expect(header).toHaveStyle('background-color: #ff0000');
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#ff0000');
+    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
   });
 
   it('uses default color when characterColor is absent', () => {
     const { container } = render(
       <ItemModal isOpen={true} onClose={jest.fn()} item={baseItem} />
     );
-    const header = container.querySelector('.modal-header');
-    expect(header).toHaveStyle('background-color: var(--color-primary)');
+    const modalContainer = container.querySelector('.modal-container');
+    expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('var(--color-primary)');
   });
 
   // --- close behaviour ---

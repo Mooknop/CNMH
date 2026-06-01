@@ -47,7 +47,7 @@ const ThemePreview = ({ themeColor }) => (
   <div className="theme-preview-card">
     <div className="preview-card-header" style={{ borderLeft: `4px solid ${themeColor}` }}>
       <span className="preview-card-name" style={{ color: themeColor }}>Strike: Longsword</span>
-      <span className="preview-chip" style={{ background: themeColor }}>◆ Use</span>
+      <span className="preview-chip" style={{ background: `color-mix(in srgb, ${themeColor} 14%, transparent)`, border: `1px solid ${themeColor}`, color: themeColor }}>◆ Use</span>
     </div>
     <div className="preview-card-body">
       <div className="preview-detail-row">
@@ -60,11 +60,11 @@ const ThemePreview = ({ themeColor }) => (
       </div>
     </div>
     <div className="preview-tabs">
-      <button className="preview-tab active" style={{ background: themeColor, borderColor: themeColor }}>Encounter</button>
+      <button className="preview-tab active" style={{ background: `color-mix(in srgb, ${themeColor} 14%, transparent)`, borderBottomColor: themeColor, color: themeColor }}>Encounter</button>
       <button className="preview-tab">Inventory</button>
       <button className="preview-tab">Spells</button>
     </div>
-    <div className="preview-table-header" style={{ background: `${themeColor}40` }}>
+    <div className="preview-table-header" style={{ background: `color-mix(in srgb, ${themeColor} 14%, transparent)` }}>
       <span>Item</span><span>Bulk</span><span>Value</span>
     </div>
   </div>

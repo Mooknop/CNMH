@@ -64,8 +64,9 @@
 }
 
 .gm-md-option.active {
-  background: var(--color-primary);
-  color: #fff;
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-color: var(--accent-outline, var(--color-primary));
+  color: var(--accent-text, var(--color-primary));
 }
 
 .gm-md-remove {

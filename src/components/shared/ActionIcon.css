@@ -36,11 +36,11 @@
   }
   
   .reaction-icon {
-    color: var(--color-primary);
+    color: var(--color-theme, var(--theme-accent));
   }
   
   .free-action-icon {
-    color: var(--color-primary);
+    color: var(--color-theme, var(--theme-accent));
   }
   
   /* Tooltip styles */
