@@ -12,6 +12,7 @@ import path from 'path';
 
 import {
   getHp, getHeroPoints, getFocusPool, getSpeed, getConditions,
+  getDefenses, getCombatantActor,
   getActorById, getActorId, getActorTokens,
   updateActorHp, updateActorHeroPoints,
   isConditionItem, getConditionItemActor,
@@ -268,5 +269,83 @@ describe('targeting (Slice 2)', () => {
   test('checkFlanking returns false safely when token lacks isFlanking', () => {
     expect(checkFlanking({}, makeToken())).toBe(false);
     expect(checkFlanking(null, makeToken())).toBe(false);
+  });
+});
+
+describe('getDefenses', () => {
+  function makeActorWithDefenses(opts = {}) {
+    const actor = makeActor({ id: opts.id || 'a1' });
+    actor.system.attributes.ac = { value: opts.ac ?? 18 };
+    actor.system.saves = {
+      fortitude: { value: opts.fortitude ?? 10 },
+      reflex:    { value: opts.reflex    ?? 7  },
+      will:      { value: opts.will      ?? 5  },
+    };
+    actor.system.attributes.immunities  = opts.immunities  ?? [];
+    actor.system.attributes.resistances = opts.resistances ?? [];
+    actor.system.attributes.weaknesses  = opts.weaknesses  ?? [];
+    return actor;
+  }
+
+  test('returns AC and save modifiers from system.*', () => {
+    const actor = makeActorWithDefenses({ ac: 22, fortitude: 12, reflex: 8, will: 6 });
+    expect(getDefenses(actor)).toEqual({
+      ac: 22,
+      saves: { fortitude: 12, reflex: 8, will: 6 },
+      immunities:  [],
+      resistances: [],
+      weaknesses:  [],
+    });
+  });
+
+  test('returns null for AC when system path is absent', () => {
+    const actor = makeActor({ id: 'bare' });
+    const d = getDefenses(actor);
+    expect(d.ac).toBeNull();
+    expect(d.saves.fortitude).toBeNull();
+    expect(d.saves.reflex).toBeNull();
+    expect(d.saves.will).toBeNull();
+  });
+
+  test('maps immunities to type strings', () => {
+    const actor = makeActorWithDefenses({
+      immunities: [{ type: 'fire' }, { type: 'poison' }],
+    });
+    expect(getDefenses(actor).immunities).toEqual(['fire', 'poison']);
+  });
+
+  test('maps resistances and weaknesses to { type, value } objects', () => {
+    const actor = makeActorWithDefenses({
+      resistances: [{ type: 'cold', value: 5 }],
+      weaknesses:  [{ type: 'fire', value: 10 }],
+    });
+    const d = getDefenses(actor);
+    expect(d.resistances).toEqual([{ type: 'cold', value: 5 }]);
+    expect(d.weaknesses).toEqual([{ type: 'fire', value: 10 }]);
+  });
+
+  test('returns null when actor is null', () => {
+    expect(getDefenses(null)).toBeNull();
+    expect(getDefenses(undefined)).toBeNull();
+  });
+});
+
+describe('getCombatantActor', () => {
+  test('prefers the embedded actor reference', () => {
+    const actor = makeActor({ id: 'a1' });
+    const cbt = makeCombatant({ id: 'c1', actorId: 'a1', actor });
+    expect(getCombatantActor(cbt)).toBe(actor);
+  });
+
+  test('falls back to game.actors lookup when actor is null', () => {
+    const actor = makeActor({ id: 'a2' });
+    global.game.actors.set('a2', actor);
+    const cbt = makeCombatant({ id: 'c2', actorId: 'a2', actor: null });
+    expect(getCombatantActor(cbt)).toBe(actor);
+  });
+
+  test('returns null when neither path resolves', () => {
+    const cbt = makeCombatant({ id: 'c3', actorId: null, actor: null });
+    expect(getCombatantActor(cbt)).toBeNull();
   });
 });

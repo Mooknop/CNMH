@@ -194,6 +194,40 @@ describe('actionToForm / reactionToForm round-trip', () => {
   });
 });
 
+describe('action targetDefense round-trip', () => {
+  it('round-trips targetDefense: ac through the form', () => {
+    const src = { name: 'Strike', actionCount: 1, targetDefense: 'ac' };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips targetDefense: fortitude through the form', () => {
+    const src = { name: 'Grapple', actionCount: 1, targetDefense: 'fortitude' };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips targetDefense: reflex through the form', () => {
+    const src = { name: 'Trip', actionCount: 1, targetDefense: 'reflex' };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips targetDefense: will through the form', () => {
+    const src = { name: 'Demoralize', actionCount: 1, targetDefense: 'will' };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('omits targetDefense when not set', () => {
+    const src = { name: 'Ready', actionCount: 2 };
+    const out = actionFromForm(actionToForm(src));
+    expect(out.targetDefense).toBeUndefined();
+  });
+
+  it('does not double-write targetDefense through the rest blob', () => {
+    const src = { name: 'Grapple', actionCount: 1, targetDefense: 'fortitude' };
+    const form = actionToForm(src);
+    expect(form.rest.targetDefense).toBeUndefined();
+  });
+});
+
 describe('action with structured effects round-trip', () => {
   it('round-trips effects and preserves other unmodelled keys', () => {
     const src = {

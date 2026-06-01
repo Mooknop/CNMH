@@ -182,7 +182,7 @@ export const getStrikes = (character) => {
     });
   }
 
-  // Post-process: normalise Metal Blast variable actions, fill in missing type
+  // Post-process: normalise Metal Blast variable actions, fill in missing type, tag defense
   return allStrikes
     .map(strike => {
       if (strike.name?.includes('Metal Blast')) {
@@ -193,6 +193,7 @@ export const getStrikes = (character) => {
     .map(strike => ({
       ...strike,
       type: strike.type || (strike.traits?.includes('Ranged') ? 'ranged' : 'melee'),
+      targetDefense: 'ac',
     }));
 };
 

@@ -3,6 +3,7 @@ export const BASIC_ACTIONS_OFFENSIVE = [
     name: 'Strike',
     actionCount: 1,
     traits: ['Attack'],
+    targetDefense: 'ac',
     description: 'You attack with a weapon you\'re wielding or with an unarmed attack, targeting one creature within your reach (for melee attacks) or within range (for ranged attacks).',
   },
   {
@@ -23,6 +24,7 @@ export const BASIC_ACTIONS_OFFENSIVE = [
     actionCount: 1,
     traits: ['Attack'],
     highlightSkill: 'athletics',
+    targetDefense: 'fortitude',
     description: '(Athletics) You attempt to grab a creature or object with your free hand. Attempt an Athletics check against the target\'s Fortitude DC. If you succeed, the target gains the grabbed condition. If you critically succeed, the target is restrained instead.',
   },
   {
@@ -30,6 +32,7 @@ export const BASIC_ACTIONS_OFFENSIVE = [
     actionCount: 1,
     traits: ['Attack'],
     highlightSkill: 'athletics',
+    targetDefense: 'fortitude',
     description: '(Athletics) You push an enemy away from you. Attempt an Athletics check against your target\'s Fortitude DC. If you succeed, you push the target 5 feet away from you. You can follow the target to stay adjacent to it if you choose.',
   },
   {
@@ -37,6 +40,7 @@ export const BASIC_ACTIONS_OFFENSIVE = [
     actionCount: 1,
     traits: ['Attack'],
     highlightSkill: 'athletics',
+    targetDefense: 'reflex',
     description: '(Athletics) You try to throw your opponent off balance. Attempt an Athletics check against the target\'s Reflex DC. If you succeed, the target falls and gains the prone condition.',
   },
   {
@@ -44,6 +48,7 @@ export const BASIC_ACTIONS_OFFENSIVE = [
     actionCount: 1,
     traits: ['Attack'],
     highlightSkill: 'athletics',
+    targetDefense: 'reflex',
     description: '(Athletics, trained) You try to knock something out of an opponent\'s grasp. Attempt an Athletics check against the target\'s Reflex DC. If you succeed, the item becomes loosely held; if you critically succeed, you may take the item or move it to a free hand of your choice.',
   },
   {
@@ -51,6 +56,7 @@ export const BASIC_ACTIONS_OFFENSIVE = [
     actionCount: 1,
     traits: ['Attack'],
     highlightSkill: 'athletics',
+    targetDefense: 'reflex',
     description: '(Athletics, trained) You try to move an opponent to a location beneficial to you. Attempt an Athletics check against the target\'s Reflex DC. If you succeed, you move the target up to 5 feet into a space within your reach; if you critically succeed, up to 10 feet.',
   },
 ];
@@ -154,6 +160,7 @@ export const BASIC_ACTIONS_MOVEMENT = [
     name: 'Tumble Through',
     actionCount: 1,
     traits: ['Move'],
+    targetDefense: 'reflex',
     description: '(Acrobatics) You Stride up to your Speed. During this movement you can move through the space of one enemy. Attempt an Acrobatics check against the enemy\'s Reflex DC as you try to move through their space.',
   },
   {

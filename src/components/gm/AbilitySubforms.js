@@ -190,6 +190,7 @@ const abilityToForm = (s) => {
   COST_KEYS.forEach((k) => delete rest[k]);
   // Pull effects into managed form state so it's not double-written via rest.
   delete rest.effects;
+  delete rest.targetDefense;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -206,6 +207,7 @@ const abilityToForm = (s) => {
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     cost,
     effects: effectsToForm(src.effects),
+    targetDefense: src.targetDefense || '',
     rest,
   };
 };
@@ -222,6 +224,7 @@ const abilityFromForm = (f) => {
   if (c) Object.assign(out, c);
   const effects = effectsFromForm(f.effects);
   if (effects.length) out.effects = effects;
+  if (f.targetDefense) out.targetDefense = f.targetDefense;
   return out;
 };
 
@@ -265,6 +268,20 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
           value={value.traits}
           onChange={(e) => onChange({ ...value, traits: e.target.value })}
         />
+      </div>
+      <div className="form-group">
+        <label>targets defense</label>
+        <select
+          aria-label={`${idPrefix}-target-defense`}
+          value={value.targetDefense}
+          onChange={(e) => onChange({ ...value, targetDefense: e.target.value })}
+        >
+          <option value="">— (none)</option>
+          <option value="ac">AC</option>
+          <option value="fortitude">Fortitude DC</option>
+          <option value="reflex">Reflex DC</option>
+          <option value="will">Will DC</option>
+        </select>
       </div>
       <div className="gm-row">
         <div className="form-group">
