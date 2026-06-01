@@ -60,10 +60,6 @@ const SpellFilters = ({
                   key={defense}
                   className={`defense-filter-btn ${defenseFilter === defense ? 'active' : ''}`}
                   onClick={() => setDefenseFilter(defense)}
-                  style={{ 
-                    backgroundColor: defenseFilter === defense ? themeColor : '',
-                    borderColor: defenseFilter === defense ? themeColor : ''
-                  }}
                 >
                   {defense === 'all' ? 'All' : defense === 'none' ? 'None' : defense}
                 </button>

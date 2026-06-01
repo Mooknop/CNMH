@@ -13,14 +13,14 @@
  * @param {string} props.focusLabel - Label for focus spells button
  * @param {string} props.themeColor - Theme color
  */
-const ViewModeToggle = ({ 
-  viewMode, 
-  setViewMode, 
+const ViewModeToggle = ({
+  viewMode,
+  setViewMode,
   hasSpellcasting,
   hasFocus,
   hasInnate,
   hasEldPowers,
-  hasStaff, 
+  hasStaff,
   hasScrolls,
   hasWands,
   staff,
@@ -31,52 +31,36 @@ const ViewModeToggle = ({
   return (
     <div className="view-mode-toggle">
       {hasSpellcasting && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'spells' ? 'active' : ''}`}
           onClick={() => setViewMode('spells')}
-          style={{ 
-            backgroundColor: viewMode === 'spells' ? themeColor : '',
-            borderColor: viewMode === 'spells' ? themeColor : ''
-          }}
         >
           Repertoire
         </button>
       )}
-      
+
       {hasInnate && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'innate' ? 'active' : ''}`}
           onClick={() => setViewMode('innate')}
-          style={{ 
-            backgroundColor: viewMode === 'innate' ? themeColor : '',
-            borderColor: viewMode === 'innate' ? themeColor : ''
-          }}
         >
           Innate
         </button>
       )}
-      
+
       {hasFocus && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'focus' ? 'active' : ''}`}
           onClick={() => setViewMode('focus')}
-          style={{ 
-            backgroundColor: viewMode === 'focus' ? themeColor : '',
-            borderColor: viewMode === 'focus' ? themeColor : ''
-          }}
         >
           {focusLabel}
         </button>
       )}
 
       {hasEldPowers && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'eld' ? 'active' : ''}`}
           onClick={() => setViewMode('eld')}
-          style={{ 
-            backgroundColor: viewMode === 'eld' ? themeColor : '',
-            borderColor: viewMode === 'eld' ? themeColor : ''
-          }}
         >
           Eld Powers
         </button>
@@ -86,54 +70,38 @@ const ViewModeToggle = ({
         <button
           className={`view-mode-btn ${viewMode === 'harrow' ? 'active' : ''}`}
           onClick={() => setViewMode('harrow')}
-          style={{ 
-            backgroundColor: viewMode === 'harrow' ? themeColor : '',
-            borderColor: viewMode === 'harrow' ? themeColor : ''
-          }}
         >
           Harrowing
         </button>
       )}
-      
+
       {hasStaff && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'staff' ? 'active' : ''}`}
           onClick={() => setViewMode('staff')}
-          style={{ 
-            backgroundColor: viewMode === 'staff' ? themeColor : '',
-            borderColor: viewMode === 'staff' ? themeColor : ''
-          }}
         >
           {staff.name}
         </button>
       )}
-      
+
       {hasScrolls && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'scrolls' ? 'active' : ''}`}
           onClick={() => setViewMode('scrolls')}
-          style={{ 
-            backgroundColor: viewMode === 'scrolls' ? themeColor : '',
-            borderColor: viewMode === 'scrolls' ? themeColor : ''
-          }}
         >
           Scrolls
         </button>
       )}
-      
+
       {hasWands && (
-        <button 
+        <button
           className={`view-mode-btn ${viewMode === 'wands' ? 'active' : ''}`}
           onClick={() => setViewMode('wands')}
-          style={{ 
-            backgroundColor: viewMode === 'wands' ? themeColor : '',
-            borderColor: viewMode === 'wands' ? themeColor : ''
-          }}
         >
           Wands
         </button>
       )}
-      
+
     </div>
   );
 };
