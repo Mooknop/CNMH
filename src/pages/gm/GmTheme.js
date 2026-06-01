@@ -109,7 +109,7 @@ const GmTheme = () => {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
 
-  const palette = draft.palette || {};
+  const palette = useMemo(() => draft.palette || {}, [draft.palette]);
   const previewVars = useMemo(() => paletteToVars(palette), [palette]);
   const themeColor = palette.accent || 'var(--theme-accent)';
 

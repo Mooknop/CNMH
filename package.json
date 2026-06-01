@@ -20,10 +20,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && npm run test:ci",
+    "build": "npm run lint && react-scripts build && npm run test:ci",
     "build:app": "react-scripts build",
+    "lint": "eslint src --ext .js,.jsx --ignore-pattern **/*.test.js --ignore-pattern **/*.test.jsx --max-warnings 0",
     "test": "react-scripts test",
-    "test:ci": "react-scripts test --watchAll=false --coverage --passWithNoTests",
+    "test:ci": "npm run lint && react-scripts test --watchAll=false --coverage --passWithNoTests",
     "test:bridge": "jest --config foundry-bridge/jest.config.js",
     "test:e2e": "playwright test",
     "eject": "react-scripts eject"
