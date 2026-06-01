@@ -4,7 +4,7 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
-import EffectsSubform, { effectsToForm, effectsFromForm, blankEffect } from '../../components/gm/EffectsSubform';
+import EffectsSubform, { effectsToForm, effectsFromForm } from '../../components/gm/EffectsSubform';
 import './gm.css';
 
 // Spell catalog editor. Shape mirrors `src/data/spells.json` and the nested
