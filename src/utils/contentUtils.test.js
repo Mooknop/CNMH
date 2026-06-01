@@ -24,6 +24,8 @@ import {
   existingIdSet,
   defaultContent,
   buildSeedPayload,
+  DEFAULT_THEME,
+  normalizeTheme,
 } from './contentUtils';
 import { calculateItemsBulk } from './InventoryUtils';
 import {
@@ -165,6 +167,52 @@ describe('contentUtils', () => {
     });
   });
 
+  describe('DEFAULT_THEME / normalizeTheme', () => {
+    it('DEFAULT_THEME has the expected ember palette', () => {
+      expect(DEFAULT_THEME.id).toBe('campaign');
+      expect(DEFAULT_THEME.preset).toBe('ember');
+      expect(DEFAULT_THEME.palette.accent).toBe('#c0440e');
+      expect(DEFAULT_THEME.accentOverrides).toEqual({});
+    });
+
+    it('returns DEFAULT_THEME when the list is empty', () => {
+      expect(normalizeTheme([])).toEqual(DEFAULT_THEME);
+    });
+
+    it('returns DEFAULT_THEME when the list is not an array', () => {
+      expect(normalizeTheme(null)).toEqual(DEFAULT_THEME);
+      expect(normalizeTheme(undefined)).toEqual(DEFAULT_THEME);
+    });
+
+    it('returns DEFAULT_THEME when no campaign doc is present', () => {
+      expect(normalizeTheme([{ id: 'other' }])).toEqual(DEFAULT_THEME);
+    });
+
+    it('merges a partial palette over the defaults', () => {
+      const theme = normalizeTheme([{
+        id: 'campaign',
+        preset: 'custom',
+        palette: { accent: '#ff0000' },
+      }]);
+      expect(theme.palette.accent).toBe('#ff0000');
+      expect(theme.palette.gold).toBe(DEFAULT_THEME.palette.gold);
+      expect(theme.preset).toBe('custom');
+    });
+
+    it('merges accentOverrides', () => {
+      const theme = normalizeTheme([{
+        id: 'campaign',
+        accentOverrides: { pellias: '#aabbcc' },
+      }]);
+      expect(theme.accentOverrides.pellias).toBe('#aabbcc');
+    });
+
+    it('defaults accentOverrides to {} when absent', () => {
+      const theme = normalizeTheme([{ id: 'campaign' }]);
+      expect(theme.accentOverrides).toEqual({});
+    });
+  });
+
   describe('defaultContent / buildSeedPayload', () => {
     const KEYS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character'];
     it('exposes every managed collection, all with ids', () => {
@@ -193,6 +241,12 @@ describe('contentUtils', () => {
       expect(dc.spell.length).toBeGreaterThan(0);
       expect(dc.spell.every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
       expect(Array.isArray(buildSeedPayload().collections.spell)).toBe(true);
+    });
+    it('includes the theme collection with the default campaign doc', () => {
+      const dc = defaultContent();
+      expect(Array.isArray(dc.theme)).toBe(true);
+      expect(dc.theme.length).toBe(1);
+      expect(dc.theme[0].id).toBe('campaign');
     });
   });
 
