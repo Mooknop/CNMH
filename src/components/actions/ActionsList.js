@@ -4,15 +4,18 @@ import CharacterActionsList from './CharacterActionsList';
 import ReactionsList from './ReactionsList';
 import FreeActionsList from './FreeActionsList';
 import MagicModal from '../spells/MagicModal';
+import UseAbilityModal from '../encounter/UseAbilityModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useGrantedActions } from '../../hooks/useGrantedActions';
+import { abilityHasStructuredEffects } from '../../utils/applyAbility';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
   const [activeSection, setActiveSection] = useState('actions');
   const [isMagicOpen, setIsMagicOpen] = useState(false);
+  const [usingAbility, setUsingAbility] = useState(null); // { ability, cost } | null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -27,6 +30,12 @@ const ActionsList = ({ character, characterColor }) => {
 
   const handleUse = useCallback(
     (item, cost) => {
+      // Abilities with structured effects/grants open the targeting modal in encounter mode.
+      if (encounterMode && abilityHasStructuredEffects(item)) {
+        setUsingAbility({ ability: item, cost });
+        return;
+      }
+
       if (cost === 'reaction') {
         spendReaction(item.name);
         appendLog({
@@ -49,7 +58,7 @@ const ActionsList = ({ character, characterColor }) => {
         });
       }
     },
-    [character.id, character.name, spendActions, spendReaction, appendLog]
+    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode]
   );
 
   const handleUseGranted = useCallback(
@@ -144,6 +153,18 @@ const ActionsList = ({ character, characterColor }) => {
         <MagicModal
           isOpen={isMagicOpen}
           onClose={() => setIsMagicOpen(false)}
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
+
+      {usingAbility && (
+        <UseAbilityModal
+          isOpen
+          onClose={() => setUsingAbility(null)}
+          ability={usingAbility.ability}
+          cost={usingAbility.cost}
+          verb="Use"
           character={character}
           themeColor={themeColor}
         />

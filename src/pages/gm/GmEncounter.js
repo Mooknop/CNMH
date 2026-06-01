@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
+import EffectsModal from '../../components/character-sheet/EffectsModal';
 import './gm.css';
 
 // Read-only mirror of the live Foundry combat, plus a one-time actor assignment
@@ -12,6 +13,7 @@ import './gm.css';
 const GmEncounter = () => {
   const { characters } = useContent();
   const { encounter, actorMap, setActorMap } = useEncounter();
+  const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
 
   const phase        = encounter?.phase          || 'idle';
   const order        = encounter?.order          || [];
@@ -58,6 +60,13 @@ const GmEncounter = () => {
         ) : (
           <p className="gm-help">Waiting for combat to start in Foundry.</p>
         )}
+        <button
+          className="btn-secondary"
+          aria-label="Apply Effect to character"
+          onClick={() => setIsEffectsModalOpen(true)}
+        >
+          Apply Effect
+        </button>
       </header>
 
       {phase !== 'idle' && (
@@ -118,6 +127,12 @@ const GmEncounter = () => {
           </ul>
         </div>
       )}
+      <EffectsModal
+        isOpen={isEffectsModalOpen}
+        onClose={() => setIsEffectsModalOpen(false)}
+        selfCharId="gm"
+        selfName="GM"
+      />
     </div>
   );
 };

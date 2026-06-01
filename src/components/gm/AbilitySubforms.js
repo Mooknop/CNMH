@@ -5,6 +5,7 @@
 // `fromForm`, so nothing is ever lost.
 import React from 'react';
 import ImageField from './ImageField';
+import EffectsSubform, { effectsToForm, effectsFromForm } from './EffectsSubform';
 
 export const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -187,6 +188,8 @@ const abilityToForm = (s) => {
   ABILITY_STR.forEach((k) => delete rest[k]);
   delete rest.traits;
   COST_KEYS.forEach((k) => delete rest[k]);
+  // Pull effects into managed form state so it's not double-written via rest.
+  delete rest.effects;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -202,6 +205,7 @@ const abilityToForm = (s) => {
     str,
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     cost,
+    effects: effectsToForm(src.effects),
     rest,
   };
 };
@@ -216,6 +220,8 @@ const abilityFromForm = (f) => {
   if (traits.length) out.traits = traits;
   const c = costFromForm(f.cost);
   if (c) Object.assign(out, c);
+  const effects = effectsFromForm(f.effects);
+  if (effects.length) out.effects = effects;
   return out;
 };
 
@@ -295,6 +301,11 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
           onChange={(e) => setStr('description', e.target.value)}
         />
       </div>
+      <EffectsSubform
+        value={value.effects || []}
+        onChange={(next) => onChange({ ...value, effects: next })}
+        idPrefix={`${idPrefix}-`}
+      />
     </div>
   );
 };

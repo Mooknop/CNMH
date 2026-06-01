@@ -3,11 +3,9 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
-import { useTargeting } from '../../hooks/useTargeting';
 import { useSession } from '../../contexts/SessionContext';
 import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
-import TargetPicker from './TargetPicker';
 import './TurnTrackerPanel.css';
 
 // PF2e movement actions the player can pick before requesting reachable squares.
@@ -64,17 +62,8 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
 
   // ── Flanking (Slice 3) ───────────────────────────────────────────────────
   // Bridge pushes { [enemyEntryId]: { byCharIds:[...] } } whenever tokens move or
-  // turns advance. We read it here so both the order strip and the target picker
-  // can show the flanked badge without prop-drilling.
+  // turns advance. We read it here so the order strip can show the flanked badge.
   const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
-  // Whether the acting character is a flanker for a given enemy entryId.
-  const isFlanking = (entryId) =>
-    !!(flankedMap?.[entryId]?.byCharIds?.includes(charId));
-
-  // ── Targeting (Slice 2) ───────────────────────────────────────────────────
-  const { targets, selectable, isTargeted, toggleTarget, clearTargets, targetNames } =
-    useTargeting(charId, encounter?.order || []);
-  const [showTargets, setShowTargets] = useState(false);
 
   // ── Movement (Feature 3) ──────────────────────────────────────────────────
   // moveStage: null | 'choosing' | 'awaiting-opts' | 'picking' | 'awaiting-done'
@@ -157,11 +146,8 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
       if (raised) lowerShield();
-      // A fresh turn starts with no targets selected.
-      clearTargets();
-      setShowTargets(false);
     }
-  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, raised, lowerShield, clearTargets]);
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, raised, lowerShield]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -231,16 +217,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
       ? `shield broke! (${result.prevented} prevented)`
       : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
     appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}` });
-  };
-
-  // Send the current target selection to the bridge, which sets Foundry's user
-  // target set. kind defaults to 'strike' (the common case); later slices emit
-  // 'spell'/'save-effect' with a real sourceUid through this same channel.
-  const sendTargets = (kind = 'strike', sourceUid = null) => {
-    if (!targets.length) return;
-    sendUpdate(charId, 'action', { kind, sourceUid, targets, ts: Date.now() });
-    appendLog({ type: 'action', charId, text: `${characterName} targets ${targetNames.join(', ')}` });
-    setShowTargets(false);
   };
 
   const reactionState = !hasStartedFirstTurn
@@ -357,15 +333,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           )}
 
           <button
-            className={`btn-secondary ttp-target-toggle${showTargets ? ' ttp-target-toggle--open' : ''}`}
-            onClick={() => setShowTargets((s) => !s)}
-            aria-label="Target"
-            aria-pressed={showTargets}
-          >
-            🎯 Target{targets.length > 0 ? ` (${targets.length})` : ''}
-          </button>
-
-          <button
             className="btn-primary ttp-submit"
             onClick={handleSubmit}
             disabled={!canSubmit}
@@ -401,36 +368,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           >
             🛡 Block ↩
           </button>
-        </div>
-      )}
-
-      {/* Targeting sub-UI (Slice 2) */}
-      {isInProgress && isMyTurn && showTargets && (
-        <div className="ttp-target-ui" role="group" aria-label="Targeting">
-          <TargetPicker
-            selectable={selectable}
-            isTargeted={isTargeted}
-            isFlanking={isFlanking}
-            onToggle={toggleTarget}
-          />
-          <div className="ttp-target-actions">
-            <button
-              className="btn-primary"
-              onClick={() => sendTargets()}
-              disabled={targets.length === 0}
-              aria-label="Target in Foundry"
-            >
-              Target in Foundry
-            </button>
-            <button
-              className="btn-text"
-              onClick={() => { clearTargets(); }}
-              disabled={targets.length === 0}
-              aria-label="clear-targets"
-            >
-              Clear
-            </button>
-          </div>
         </div>
       )}
 
