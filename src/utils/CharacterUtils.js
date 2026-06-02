@@ -188,16 +188,27 @@ export const getSkillModifier = (character, skillId) => {
 };
 
 /**
- * Calculate attack bonus based on ability modifier and proficiency
- * @param {number} abilityMod - The ability modifier 
+ * Calculate attack bonus as a number (ability modifier + proficiency bonus).
+ * Use this when the result will be used in arithmetic (e.g. roll resolution).
+ * @param {number} abilityMod - The ability modifier
+ * @param {number} proficiency - Proficiency rank
+ * @param {number} level - Character level
+ * @returns {number}
+ */
+export const getAttackBonusValue = (abilityMod, proficiency, level) => {
+  return abilityMod + getProficiencyBonus(proficiency, level);
+};
+
+/**
+ * Calculate attack bonus as a formatted string (e.g. "+5").
+ * Use this for display-only contexts (StatsBlock, etc.).
+ * @param {number} abilityMod - The ability modifier
  * @param {number} proficiency - Proficiency rank
  * @param {number} level - Character level
  * @returns {string} - Formatted attack bonus
  */
 export const getAttackBonus = (abilityMod, proficiency, level) => {
-  const profBonus = getProficiencyBonus(proficiency, level);
-  const bonus = abilityMod + profBonus;
-  return formatModifier(bonus);
+  return formatModifier(getAttackBonusValue(abilityMod, proficiency, level));
 };
 
 /**

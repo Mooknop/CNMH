@@ -1,6 +1,7 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from '../../utils/defense';
+import { formatModifier } from '../../utils/CharacterUtils';
 import './TargetRollResolver.css';
 
 // Degree labels differ by context: AC uses attack terminology, saves use save terminology.
@@ -11,7 +12,7 @@ const DEGREE_LABELS_AC = {
   criticalFailure: { label: 'Critical Miss',  cls: 'save-crit-failure' },
 };
 
-const DEGREE_LABELS_SAVE = {
+export const DEGREE_LABELS_SAVE = {
   criticalSuccess: { label: 'Critical Success', cls: 'save-crit-success' },
   success:         { label: 'Success',          cls: 'save-success' },
   failure:         { label: 'Failure',          cls: 'save-failure' },
@@ -23,32 +24,37 @@ function degreeLabels(defense) {
 }
 
 /**
- * Inline roll-resolver for the UseAbilityModal. Shows a single total input +
- * nat-20/nat-1 toggle; computes per-target degree of success live.
+ * Inline roll-resolver for the UseAbilityModal. The player enters a RAW d20 face;
+ * the component adds `rollBonus` to compute the total and auto-detects nat 20 / nat 1
+ * from the entered face. When `rollBonus` is null the input behaves as a manual total
+ * (backward-compatible with actions that have no derivable bonus).
  *
  * Exposes `getResults()` via ref so the parent can read the latest results at
  * confirm time — avoids lifting state and the associated useEffect stale-closure
  * problems when enemyTargets change (target selection happens in the same modal).
  *
- * @param {Array}  enemyTargets  - encounter entries (kind:'enemy', with defenses)
- * @param {string} targetDefense - 'ac'|'fortitude'|'reflex'|'will'|'' ('' = show override)
- * @param {object} ref           - forwarded ref; exposes { getResults() }
+ * @param {Array}       enemyTargets  - encounter entries (kind:'enemy', with defenses)
+ * @param {string}      targetDefense - 'ac'|'fortitude'|'reflex'|'will'|'' ('' = show override)
+ * @param {number|null} rollBonus     - actor's net bonus to add to the raw d20; null = manual-total mode
+ * @param {object}      ref           - forwarded ref; exposes { getResults() }
  */
-const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '' }, ref) => {
-  const [totalInput,      setTotalInput]      = useState('');
-  const [isNat20,         setIsNat20]         = useState(false);
-  const [isNat1,          setIsNat1]          = useState(false);
+const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '', rollBonus = null }, ref) => {
+  const [d20Input,       setD20Input]       = useState('');
   const [defenseOverride, setDefenseOverride] = useState('ac');
 
   const effectiveDefense = targetDefense || defenseOverride;
-  const total = parseInt(totalInput, 10);
-  const hasTotal = !isNaN(total);
 
-  // d20 face: only 20 or 1 shift the degree; any other value is neutral.
-  const d20face = isNat20 ? 20 : isNat1 ? 1 : 10;
+  const d20 = parseInt(d20Input, 10);
+  const hasD20 = !isNaN(d20);
+
+  // When rollBonus is provided, derive total from d20 + bonus (and nat 20/1 from face).
+  // When rollBonus is null (no derivable bonus), treat the input as the raw total instead —
+  // nat 20 / nat 1 are detected from the value directly.
+  const total   = hasD20 ? (rollBonus !== null ? d20 + rollBonus : d20) : NaN;
+  const d20face = hasD20 ? d20 : 10; // 10 is the neutral face (no degree shift)
 
   const computeResults = () => {
-    if (!hasTotal) return null;
+    if (!hasD20) return null;
     return enemyTargets.map((entry) => {
       const dc = defenseDC(entry.defenses, effectiveDefense);
       const degree = dc != null
@@ -67,6 +73,9 @@ const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '' }
   if (enemyTargets.length === 0) return null;
 
   const labels = degreeLabels(effectiveDefense);
+
+  const bonusDisplay = rollBonus !== null ? formatModifier(rollBonus) : null;
+  const totalDisplay = hasD20 && rollBonus !== null ? total : null;
 
   return (
     <div className="trr-section">
@@ -100,37 +109,21 @@ const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '' }
         <input
           type="number"
           className="trr-roll-input"
-          placeholder="total"
-          aria-label="roll total"
-          value={totalInput}
-          onChange={(e) => setTotalInput(e.target.value)}
+          placeholder={rollBonus !== null ? 'd20' : 'total'}
+          aria-label="raw d20"
+          value={d20Input}
+          onChange={(e) => setD20Input(e.target.value)}
         />
-        <div className="trr-nat-toggle">
-          <label>
-            <input
-              type="checkbox"
-              checked={isNat20}
-              onChange={(e) => {
-                setIsNat20(e.target.checked);
-                if (e.target.checked) setIsNat1(false);
-              }}
-              aria-label="natural 20"
-            />
-            nat 20
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={isNat1}
-              onChange={(e) => {
-                setIsNat1(e.target.checked);
-                if (e.target.checked) setIsNat20(false);
-              }}
-              aria-label="natural 1"
-            />
-            nat 1
-          </label>
-        </div>
+        {bonusDisplay && (
+          <span className="trr-bonus-badge" aria-label="roll bonus">
+            {bonusDisplay}
+          </span>
+        )}
+        {totalDisplay !== null && (
+          <span className="trr-total-badge" aria-label="computed total">
+            = {totalDisplay}
+          </span>
+        )}
       </div>
 
       {results && (

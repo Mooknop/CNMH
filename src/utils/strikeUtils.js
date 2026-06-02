@@ -1,7 +1,7 @@
 // src/utils/strikeUtils.js
 // Utilities for computing and categorizing character strikes.
 
-import { getAbilityModifier, getAttackBonus } from './CharacterUtils';
+import { getAbilityModifier, getAttackBonusValue } from './CharacterUtils';
 import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
 
@@ -45,7 +45,7 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
     proficiencyValue = character.proficiencies?.weapons?.simple?.proficiency || 0;
   }
 
-  const attackBonus = getAttackBonus(abilityMod, proficiencyValue, character.level || 0);
+  const attackBonus = getAttackBonusValue(abilityMod, proficiencyValue, character.level || 0);
 
   let damageString = strike.damage || defaultDamage;
   if ((isMelee || isThrown) && strMod !== 0 && !damageString.includes('+') && !damageString.includes('-')) {
@@ -133,15 +133,7 @@ export const getStrikes = (character) => {
         return strikesArray.map(weaponStrike => {
           const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character);
 
-          // Apply potency rune bonus if present
-          let attackBonus = baseBonus;
-          if (item.potency) {
-            if (attackBonus.startsWith('+')) {
-              attackBonus = `+${parseInt(attackBonus.substring(1)) + item.potency}`;
-            } else {
-              attackBonus = `${attackBonus}+${item.potency}`;
-            }
-          }
+          const attackBonus = baseBonus + (item.potency || 0);
 
           const strikeName = weaponStrike.name ||
             (weaponStrike.type === 'melee' ? `${item.name} Melee Strike` : `${item.name} Ranged Strike`);
@@ -169,7 +161,7 @@ export const getStrikes = (character) => {
   if (allStrikes.length === 0) {
     const unarmedProficiency = character.proficiencies?.weapons?.unarmed?.proficiency || 0;
     const strMod = getAbilityModifier(character.abilities?.strength || 10);
-    const attackBonus = getAttackBonus(strMod, unarmedProficiency, character.level || 0);
+    const attackBonus = getAttackBonusValue(strMod, unarmedProficiency, character.level || 0);
 
     allStrikes.push({
       name: 'Unarmed Strike',

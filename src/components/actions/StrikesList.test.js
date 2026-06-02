@@ -45,7 +45,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: ['versatile P'] },
+        { name: 'Longsword', type: 'melee', attackMod: 7, damage: '1d8+4', traits: ['versatile P'] },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -59,7 +59,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Shortbow', type: 'ranged', attackMod: '+5', damage: '1d6', range: '60 feet', traits: [] },
+        { name: 'Shortbow', type: 'ranged', attackMod: 5, damage: '1d6', range: '60 feet', traits: [] },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -72,7 +72,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Sling', type: 'ranged', attackMod: '+3', damage: '1d6', traits: [] },
+        { name: 'Sling', type: 'ranged', attackMod: 3, damage: '1d6', traits: [] },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -83,7 +83,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Dagger', type: 'melee', attackMod: '+5', damage: '1d4', traits: ['agile', 'finesse'] },
+        { name: 'Dagger', type: 'melee', attackMod: 5, damage: '1d4', traits: ['agile', 'finesse'] },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -94,7 +94,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Unarmed', type: 'melee', attackMod: '+3', damage: '1d4', traits: [], description: 'A basic punch.' },
+        { name: 'Unarmed', type: 'melee', attackMod: 3, damage: '1d4', traits: [], description: 'A basic punch.' },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -105,7 +105,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Vine Strike', type: 'melee', attackMod: '+3', damage: '1d4', traits: [], source: 'Wild Shape' },
+        { name: 'Vine Strike', type: 'melee', attackMod: 3, damage: '1d4', traits: [], source: 'Wild Shape' },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -127,7 +127,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: [], source: 'Longsword', active: false },
+        { name: 'Longsword', type: 'melee', attackMod: 7, damage: '1d8+4', traits: [], source: 'Longsword', active: false },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -139,7 +139,7 @@ describe('StrikesList', () => {
     const char = {
       ...mockCharacter,
       _strikes: [
-        { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: [], source: 'Longsword', active: true },
+        { name: 'Longsword', type: 'melee', attackMod: 7, damage: '1d8+4', traits: [], source: 'Longsword', active: true },
       ],
     };
     render(<StrikesList character={char} themeColor="#ff0000" />);
@@ -148,7 +148,7 @@ describe('StrikesList', () => {
   });
 
   describe('encounterMode', () => {
-    const longsword = { name: 'Longsword', type: 'melee', attackMod: '+7', damage: '1d8+4', traits: [], actionCount: 1 };
+    const longsword = { name: 'Longsword', type: 'melee', attackMod: 7, damage: '1d8+4', traits: [], actionCount: 1 };
 
     it('shows no Use button without encounterMode', () => {
       const char = { ...mockCharacter, _strikes: [longsword] };
@@ -203,7 +203,7 @@ describe('StrikesList', () => {
         {
           name: 'Snap Shot',
           type: 'ranged',
-          attackMod: '+4',
+          attackMod: 4,
           damage: '1d6',
           traits: [],
           variableActionCount: { min: 1, max: 3 },

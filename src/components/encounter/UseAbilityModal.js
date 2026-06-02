@@ -7,8 +7,11 @@ import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
+import { useEffects } from '../../hooks/useEffects';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { resolveActionRoll } from '../../utils/rollResolution';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
 const parseActionCost = (actionsText) => {
@@ -59,6 +62,10 @@ const UseAbilityModal = ({
 
   const resolverRef = useRef(null);
 
+  // Read the actor's active conditions and effects (same sources StatsBlock uses).
+  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
+  const { effects: activeEffects } = useEffects(character?.id || '');
+
   const order = encounter?.order || [];
 
   const { targets, selectable, isTargeted, toggleTarget } =
@@ -82,12 +89,19 @@ const UseAbilityModal = ({
   const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
 
-  // Determine which defense this action targets (explicit tag, or Attack trait → AC).
-  const effectiveDefense = ability.targetDefense ||
-    (ability.traits?.includes('Attack') ? 'ac' : null);
+  // Resolve roll profile — includes condition/effect netting for the actor.
+  const rollProfile = resolveActionRoll(ability, character, {
+    conditions: activeConditions || [],
+    effects: activeEffects || [],
+  });
 
-  // Enemy targets that have defense data and a resolvable defense.
-  const resolverTargets = effectiveDefense
+  // Which defense to show on the resolver (actor-roll only).
+  const effectiveDefense = rollProfile.mode === 'actor-roll'
+    ? rollProfile.defense
+    : (ability.targetDefense || (ability.traits?.includes('Attack') ? 'ac' : null));
+
+  // Enemy targets that have defense data and a resolvable defense (actor-roll path only).
+  const resolverTargets = (rollProfile.mode === 'actor-roll' && effectiveDefense)
     ? selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses)
     : [];
 
@@ -166,6 +180,17 @@ const UseAbilityModal = ({
     (e) => e.applyTo === 'self' || e.applyTo === 'all-allies'
   );
 
+  // The roll resolution section: either the inline resolver (actor-roll) or nothing (target-save
+  // will be implemented in Slice B once encounter saveRequests are added).
+  const rollSection = resolverTargets.length > 0 ? (
+    <TargetRollResolver
+      ref={resolverRef}
+      enemyTargets={resolverTargets}
+      targetDefense={effectiveDefense}
+      rollBonus={rollProfile.bonus}
+    />
+  ) : null;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -218,13 +243,7 @@ const UseAbilityModal = ({
                 onToggle={toggleTarget}
               />
             )}
-            {resolverTargets.length > 0 && (
-              <TargetRollResolver
-                ref={resolverRef}
-                enemyTargets={resolverTargets}
-                targetDefense={effectiveDefense}
-              />
-            )}
+            {rollSection}
           </section>
         </>
       )}
@@ -262,13 +281,7 @@ const UseAbilityModal = ({
               isTargeted={isTargeted}
               onToggle={toggleTarget}
             />
-            {resolverTargets.length > 0 && (
-              <TargetRollResolver
-                ref={resolverRef}
-                enemyTargets={resolverTargets}
-                targetDefense={effectiveDefense}
-              />
-            )}
+            {rollSection}
           </section>
         </>
       )}

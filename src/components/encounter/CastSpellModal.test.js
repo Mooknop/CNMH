@@ -12,7 +12,11 @@ let mockResolveExpireAt;
 
 
 jest.mock('../../contexts/SessionContext', () => ({
-  useSession: () => ({ getState: mockGetState, sendUpdate: mockSendUpdate }),
+  useSession: () => ({ getState: mockGetState, sendUpdate: mockSendUpdate, subscribe: () => () => {} }),
+}));
+
+jest.mock('../../hooks/useEffects', () => ({
+  useEffects: () => ({ effects: [], removeEffect: jest.fn() }),
 }));
 
 jest.mock('../../contexts/ContentContext', () => ({

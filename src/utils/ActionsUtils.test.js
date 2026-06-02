@@ -14,10 +14,11 @@ import {
 // Mock CharacterUtils to avoid dependencies
 jest.mock('./CharacterUtils', () => ({
   getAbilityModifier: (score) => Math.floor((score - 10) / 2),
+  getAttackBonusValue: (abilityMod, proficiency, level) => abilityMod + proficiency * 2 + level,
   getAttackBonus: (abilityMod, proficiency, level) => {
-    let bonus = abilityMod + proficiency * 2 + level;
+    const bonus = abilityMod + proficiency * 2 + level;
     return bonus >= 0 ? `+${bonus}` : `${bonus}`;
-  }
+  },
 }));
 
 describe('ActionsUtils', () => {
@@ -56,7 +57,7 @@ describe('ActionsUtils', () => {
       
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Longsword');
-      expect(result[0].attackMod).toBe('+5'); // +2 str mod, +2 trained, +1 level
+      expect(result[0].attackMod).toBe(5); // +2 str mod, +2 trained, +1 level
     });
 
     it('should handle finesse weapons correctly', () => {
@@ -78,7 +79,7 @@ describe('ActionsUtils', () => {
       
       expect(result).toHaveLength(1);
       // Should use DEX mod (2) not STR mod (0)
-      expect(result[0].attackMod).toBe('+5'); // +2 dex mod, +2 trained, +1 level
+      expect(result[0].attackMod).toBe(5); // +2 dex mod, +2 trained, +1 level
     });
 
     it('should add ability modifier to damage for melee weapons', () => {
@@ -489,7 +490,7 @@ describe('ActionsUtils', () => {
       };
       const result = getStrikes(char);
       // DEX mod = +2, proficiency 1 → +2, level 1 → total = +5
-      expect(result[0].attackMod).toBe('+5');
+      expect(result[0].attackMod).toBe(5);
     });
 
     it('uses explicit proficiency when strike.proficiency matches weapons entry', () => {
@@ -500,7 +501,7 @@ describe('ActionsUtils', () => {
       };
       const result = getStrikes(char);
       // proficiency = 2 → +4, STR 10 → 0, level 1 → +5
-      expect(result[0].attackMod).toBe('+5');
+      expect(result[0].attackMod).toBe(5);
     });
 
     it('uses unarmed proficiency when Unarmed trait present', () => {
@@ -511,7 +512,7 @@ describe('ActionsUtils', () => {
       };
       const result = getStrikes(char);
       // unarmed proficiency = 2 → +4, STR 10 → 0, level 1 → +5
-      expect(result[0].attackMod).toBe('+5');
+      expect(result[0].attackMod).toBe(5);
     });
 
     it('does NOT append damage modifier when strMod is 0 for melee', () => {
@@ -564,7 +565,7 @@ describe('ActionsUtils', () => {
       };
       const result = getStrikes(char);
       // CON 16 → mod 3, simple proficiency 1 (from baseChar), level 1 → 3 + (1*2+1) = 3+3 = +6
-      expect(result.find(s => s.source === 'Kinetic Blast').attackMod).toBe('+6');
+      expect(result.find(s => s.source === 'Kinetic Blast').attackMod).toBe(6);
     });
 
     it('feat strike with Thrown trait appends STR to damage', () => {
@@ -637,7 +638,7 @@ describe('ActionsUtils', () => {
       const result = getStrikes(char);
       const sword = result.find(s => s.source === 'Magic Sword');
       // base = +3 (0 STR, +2 trained, +1 level), potency +2 → +5
-      expect(sword.attackMod).toBe('+5');
+      expect(sword.attackMod).toBe(5);
     });
 
     it('resolves type from Ranged trait when type is absent', () => {
