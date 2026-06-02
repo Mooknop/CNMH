@@ -153,6 +153,54 @@ export const resolveFocusSpells = (arr, spellMap) => {
   });
 };
 
+// All known locations of a focus/devotion/ki/bloodline spell list inside a
+// character document. Each path is an array of string keys (deep-get / deep-set).
+// Mirrors FocusSpellsList.getFocusSpells()'s priority order.
+export const FOCUS_SPELL_PATHS = [
+  ['focus_spells'],
+  ['champion', 'devotion_spells'],
+  ['monk', 'ki_spells'],
+  ['spellcasting', 'bloodline', 'focus_spells'],
+  ['witchwarper', 'warpSpells'],
+];
+
+// Deep-get a value along a key path, or undefined when any segment is absent.
+const deepGet = (obj, path) =>
+  path.reduce((cur, k) => (cur != null && typeof cur === 'object' ? cur[k] : undefined), obj);
+
+// Return a clone of obj with value set at path, creating intermediate objects
+// only when they already exist one level up (never inserts missing containers).
+const deepSet = (obj, path, value) => {
+  if (!path.length) return obj;
+  const [head, ...rest] = path;
+  if (rest.length === 0) return { ...obj, [head]: value };
+  if (obj[head] == null || typeof obj[head] !== 'object') return obj;
+  return { ...obj, [head]: deepSet(obj[head], rest, value) };
+};
+
+// Returns a clone of liveDoc with focus-spell arrays replaced by the spellRef
+// form found in bundledDoc, for each FOCUS_SPELL_PATH where bundledDoc has an
+// array containing at least one spellRef entry. Leaves liveDoc unchanged when no
+// path applies (e.g., the bundled character has no focus spells). Idempotent:
+// if the live array already contains only spellRef entries, the result is equal.
+//
+// Used by the dashboard backfill action to re-point seeded character docs that
+// were created before Slice C. The read-modify-write pattern preserves any
+// live GM edits to other fields (inventory, feats, etc.).
+export const repointFocusSpells = (liveDoc, bundledDoc) => {
+  let out = liveDoc;
+  for (const path of FOCUS_SPELL_PATHS) {
+    const bundledArr = deepGet(bundledDoc, path);
+    if (!Array.isArray(bundledArr)) continue;
+    const hasRef = bundledArr.some((e) => e && typeof e === 'object' && e.spellRef != null);
+    if (!hasRef) continue;
+    // Skip if the live array is already content-equal (idempotent).
+    if (JSON.stringify(deepGet(out, path)) === JSON.stringify(bundledArr)) continue;
+    out = deepSet(out, path, bundledArr);
+  }
+  return out;
+};
+
 // Resolve a wand/scroll spell block. With no `spellRef` it is a legacy inline
 // spell (back-compat) — returned untouched, exactly like an inline inventory
 // entry. With `spellRef` the catalog spell is spread FIRST so its full shape

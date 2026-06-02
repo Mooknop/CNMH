@@ -1,13 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../../contexts/ContentContext';
-import { seedDefaults } from '../../utils/gmApi';
+import { seedDefaults, seedMissing, repointFocusSpellsToCatalog } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 const GmDashboard = () => {
-  const { source } = useContent();
+  const { source, rawCharacters } = useContent();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   // null | {kind:'reseed'} | {kind:'restore', file}
@@ -21,6 +21,25 @@ const GmDashboard = () => {
     try {
       const res = await seedDefaults(force);
       setMsg(`Done: ${JSON.stringify(res.seeded)}`);
+    } catch (e) {
+      setMsg(`Failed: ${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const applyNewDefaults = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const seedRes = await seedMissing();
+      const repointRes = await repointFocusSpellsToCatalog(rawCharacters);
+      setMsg(
+        `Done: ${JSON.stringify(seedRes.seeded)}` +
+        (repointRes.repointed.length
+          ? `; repointed focus spells: ${repointRes.repointed.join(', ')}`
+          : '; focus spells already up to date')
+      );
     } catch (e) {
       setMsg(`Failed: ${e.message}`);
     } finally {
@@ -80,6 +99,9 @@ const GmDashboard = () => {
       <div className="gm-actions">
         <button className="btn-primary" disabled={busy} onClick={() => runSeed(false)}>
           Import defaults (only empty collections)
+        </button>
+        <button className="btn-secondary" disabled={busy} onClick={applyNewDefaults}>
+          Apply new defaults (non-destructive)
         </button>
         <button
           className="btn-danger"
