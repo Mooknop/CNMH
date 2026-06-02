@@ -5,7 +5,10 @@ import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import EffectsSubform, { effectsToForm, effectsFromForm } from '../../components/gm/EffectsSubform';
-import { rollToForm, rollFromForm, RollSourceControl } from '../../components/gm/AbilitySubforms';
+import {
+  rollToForm, rollFromForm, RollSourceControl,
+  foundryEffectToForm, foundryEffectFromForm, FoundryEffectControl,
+} from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
 // Spell catalog editor. Shape mirrors `src/data/spells.json` and the nested
@@ -29,7 +32,7 @@ const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'du
 const toForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
   const rest = { ...src };
-  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll'].forEach((k) => delete rest[k]);
+  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll', 'foundryEffect'].forEach((k) => delete rest[k]);
   const str = {};
   SPELL_STR.forEach((k) => {
     str[k] = src[k] != null ? String(src[k]) : '';
@@ -47,6 +50,7 @@ const toForm = (s) => {
     heightened,
     effects,
     roll: rollToForm(src.roll),
+    foundryEffect: foundryEffectToForm(src.foundryEffect),
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -82,6 +86,8 @@ const fromForm = (f) => {
   if (effects.length) out.effects = effects;
   const roll = rollFromForm(f.roll);
   if (roll) out.roll = roll;
+  const foundryEffect = foundryEffectFromForm(f.foundryEffect);
+  if (foundryEffect) out.foundryEffect = foundryEffect;
   return out;
 };
 
@@ -194,6 +200,11 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         value={e.roll || rollToForm(null)}
         idPrefix="spell"
         onChange={(r) => set({ roll: r })}
+      />
+      <FoundryEffectControl
+        value={e.foundryEffect || foundryEffectToForm(null)}
+        idPrefix="spell"
+        onChange={(fe) => set({ foundryEffect: fe })}
       />
       <div className="form-group">
         <label>Description</label>
