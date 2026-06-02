@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import TargetRollResolver from './TargetRollResolver';
+import ChainedStrikeSection from './ChainedStrikeSection';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -61,6 +62,7 @@ const UseAbilityModal = ({
   const { spendActions, spendReaction } = useTurnState(character?.id || 'nobody');
 
   const resolverRef = useRef(null);
+  const chainRef    = useRef(null);
 
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
@@ -89,6 +91,11 @@ const UseAbilityModal = ({
   const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
 
+  // Enemy targets with defense data — used by both the regular resolver and the chain section.
+  const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
+
+  const hasChainStrike = ability.chain?.into === 'strike';
+
   // Resolve roll profile — includes condition/effect netting for the actor.
   const rollProfile = resolveActionRoll(ability, character, {
     conditions: activeConditions || [],
@@ -102,7 +109,7 @@ const UseAbilityModal = ({
 
   // Enemy targets that have defense data and a resolvable defense (actor-roll path only).
   const resolverTargets = (rollProfile.mode === 'actor-roll' && effectiveDefense)
-    ? selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses)
+    ? enemyWithDefenses
     : [];
 
   // For target-save: enemy targets whose save mod we can read (used in the save request).
@@ -115,7 +122,8 @@ const UseAbilityModal = ({
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
-    const rollResults = resolverRef.current?.getResults() ?? null;
+    const rollResults  = resolverRef.current?.getResults() ?? null;
+    const chainResults = chainRef.current?.getResults() ?? null;
 
     // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
     const coveredByRoll = new Set(
@@ -169,6 +177,27 @@ const UseAbilityModal = ({
           charId: character.id,
           text:   `${character.name} ${effectiveVerb} ${ability.name} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}`,
         });
+      });
+    }
+
+    // Log chained strike results (Inner Upheaval and similar).
+    if (chainResults) {
+      const strikeLabel = chainResults.mode === 'flurry' ? 'Flurry of Blows' : chainResults.strikeName;
+      chainResults.rolls.forEach((rollSet, rollIdx) => {
+        if (!rollSet) return;
+        const strikeNum = chainResults.mode === 'flurry' ? ` (${rollIdx + 1})` : '';
+        rollSet.forEach((r) => {
+          const degreeLabel = r.degree
+            ? ({ criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }[r.degree] || r.degree)
+            : null;
+          const resultText = degreeLabel
+            ? `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel} · dmg ${chainResults.damage}`
+            : `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} · dmg ${chainResults.damage}`;
+          appendLog({ type: 'action', charId: character.id, text: resultText });
+        });
+        if (!rollSet.length) {
+          appendLog({ type: 'action', charId: character.id, text: `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} · dmg ${chainResults.damage}` });
+        }
       });
     }
 
@@ -318,7 +347,24 @@ const UseAbilityModal = ({
               isTargeted={isTargeted}
               onToggle={toggleTarget}
             />
-            {rollSection}
+            {hasChainStrike ? (
+              <>
+                <h3 className="ct-section-title" style={{ marginTop: '0.75rem' }}>
+                  {ability.chain.modes?.includes('flurry') ? 'Strike or Flurry of Blows' : 'Strike'}
+                  <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>
+                    (included in {costDisplay})
+                  </span>
+                </h3>
+                <ChainedStrikeSection
+                  ref={chainRef}
+                  character={character}
+                  chain={ability.chain}
+                  enemyTargets={enemyWithDefenses}
+                  conditions={activeConditions || []}
+                  effects={activeEffects || []}
+                />
+              </>
+            ) : rollSection}
           </section>
         </>
       )}

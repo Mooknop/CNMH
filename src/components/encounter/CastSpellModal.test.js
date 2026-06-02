@@ -77,6 +77,23 @@ jest.mock('../shared/Modal', () =>
   }
 );
 
+jest.mock('./ChainedStrikeSection', () => {
+  const { forwardRef, useImperativeHandle, createElement } = require('react');
+  // eslint-disable-next-line react/display-name
+  return forwardRef(({ chain }, ref) => {
+    useImperativeHandle(ref, () => ({
+      getResults: () => ({
+        mode: 'strike',
+        strikeName: 'Unarmed Strike',
+        attackBonus: 9,
+        damage: '1d6+4 + 1d6',
+        rolls: [[{ entryId: 'e-enemy', name: 'Goblin', dc: 15, total: 19, degree: 'success' }]],
+      }),
+    }));
+    return createElement('div', { 'data-testid': 'chained-strike-section' }, `chain-into=${chain.into}`);
+  });
+});
+
 const character = { id: 'char-a', name: 'Pellias' };
 const themeColor = '#7b3f00';
 
@@ -289,6 +306,46 @@ describe('CastSpellModal', () => {
       render(<CastSpellModal {...defaultProps} spell={savespell} />);
       fireEvent.click(screen.getByLabelText('confirm-cast'));
       expect(mockSpendActions).toHaveBeenCalledWith(2, expect.any(String));
+    });
+  });
+
+  describe('chained strike ability (Inner Upheaval)', () => {
+    const chainAbility = {
+      id: 'inner-upheaval',
+      name: 'Inner Upheaval',
+      actions: 'One Action',
+      chain: { into: 'strike', cost: 'included', modes: ['strike', 'flurry'], strikeTrait: 'Unarmed', attackBonus: 1, damageBonus: '1d6' },
+    };
+
+    it('renders the ChainedStrikeSection for a chained ability', () => {
+      render(<CastSpellModal {...defaultProps} spell={chainAbility} />);
+      expect(screen.getByTestId('chained-strike-section')).toBeInTheDocument();
+    });
+
+    it('shows the included-cost note', () => {
+      render(<CastSpellModal {...defaultProps} spell={chainAbility} />);
+      expect(screen.getByText(/included in/i)).toBeInTheDocument();
+    });
+
+    it('spends only the parent ability cost (not double)', () => {
+      render(<CastSpellModal {...defaultProps} spell={chainAbility} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSpendActions).toHaveBeenCalledWith(1, 'Cast Inner Upheaval');
+      expect(mockSpendActions).toHaveBeenCalledTimes(1);
+    });
+
+    it('logs the augmented strike result on confirm', () => {
+      render(<CastSpellModal {...defaultProps} spell={chainAbility} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('Unarmed Strike') && t.includes('Goblin'))).toBe(true);
+    });
+
+    it('log includes damage string', () => {
+      render(<CastSpellModal {...defaultProps} spell={chainAbility} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('1d6'))).toBe(true);
     });
   });
 
