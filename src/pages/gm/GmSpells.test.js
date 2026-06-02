@@ -168,4 +168,49 @@ describe('GmSpells', () => {
     expect(screen.getByText('Showing 0 of 0')).toBeInTheDocument();
     expect(screen.getByText('+ New spell')).toBeInTheDocument();
   });
+
+  it('round-trips foundryEffect — set persists to saved payload', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.change(within(form).getByLabelText('spell-foundry-effect-ref'), {
+      target: { value: 'Compendium.pf2e.spell-effects.Item.testUUID' },
+    });
+    fireEvent.change(within(form).getByLabelText('spell-foundry-effect-apply-to'), {
+      target: { value: 'all-allies' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.foundryEffect).toEqual({
+      ref: 'Compendium.pf2e.spell-effects.Item.testUUID',
+      applyTo: 'all-allies',
+    });
+  });
+
+  it('round-trips foundryEffect — unset emits no foundryEffect key', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.foundryEffect).toBeUndefined();
+  });
+
+  it('foundryEffect does not leak into the raw-JSON box on existing spells', () => {
+    const spellsWithEffect = [
+      {
+        ...spells[0],
+        foundryEffect: { ref: 'Compendium.pf2e.spell-effects.Item.abc', applyTo: 'self' },
+      },
+    ];
+    useContent.mockReturnValue({ spells: spellsWithEffect });
+    render(<GmSpells />);
+    const box = screen.getByLabelText('rest-json');
+    const parsed = JSON.parse(box.value);
+    expect(parsed.foundryEffect).toBeUndefined();
+  });
 });

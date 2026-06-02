@@ -92,6 +92,56 @@ export const RollSourceControl = ({ value, onChange, idPrefix }) => {
   );
 };
 
+// ----- Foundry effect link ---------------------------------------------------
+// Codec for the optional ability.foundryEffect config object.
+// ref: Foundry compendium UUID (paste from right-click → Copy UUID in Foundry).
+// applyTo: mirrors applyAbility's resolveApplyTargets values.
+//
+// Round-trip contract: delete from `rest` on toForm; only emit if ref is set.
+
+export const foundryEffectToForm = (fe) => ({
+  ref:     fe?.ref     || '',
+  applyTo: fe?.applyTo || '',
+});
+
+export const foundryEffectFromForm = (f) => {
+  if (!f || !f.ref.trim()) return null;
+  return {
+    ref:     f.ref.trim(),
+    applyTo: f.applyTo || 'self',
+  };
+};
+
+export const FoundryEffectControl = ({ value, onChange, idPrefix }) => {
+  const set = (patch) => onChange({ ...value, ...patch });
+  return (
+    <div className="form-group">
+      <label>Foundry effect UUID</label>
+      <input
+        aria-label={`${idPrefix}-foundry-effect-ref`}
+        placeholder="Compendium.pf2e.spell-effects.Item.…"
+        value={value.ref}
+        onChange={(e) => set({ ref: e.target.value })}
+        style={{ width: '100%' }}
+      />
+      {value.ref.trim() && (
+        <select
+          aria-label={`${idPrefix}-foundry-effect-apply-to`}
+          value={value.applyTo}
+          onChange={(e) => set({ applyTo: e.target.value })}
+          style={{ marginTop: '4px' }}
+        >
+          <option value="">— apply to (default: self)</option>
+          <option value="self">self</option>
+          <option value="ally">ally (picked target)</option>
+          <option value="all-allies">all allies</option>
+          <option value="target">target (picked)</option>
+        </select>
+      )}
+    </div>
+  );
+};
+
 // ----- Action cost -----------------------------------------------------------
 // One simple control (1 · 2 · 3 · R · Variable). Authored data uses any of
 // `action` / `actionCount` (number OR "One to Two") / `variableActionCount` /
@@ -259,11 +309,12 @@ const abilityToForm = (s) => {
   ABILITY_STR.forEach((k) => delete rest[k]);
   delete rest.traits;
   COST_KEYS.forEach((k) => delete rest[k]);
-  // Pull effects, targetDefense, and roll into managed form state so they are
-  // not double-written via rest.
+  // Pull effects, targetDefense, roll, and foundryEffect into managed form state
+  // so they are not double-written via rest.
   delete rest.effects;
   delete rest.targetDefense;
   delete rest.roll;
+  delete rest.foundryEffect;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -282,6 +333,7 @@ const abilityToForm = (s) => {
     effects: effectsToForm(src.effects),
     targetDefense: src.targetDefense || '',
     roll: rollToForm(src.roll),
+    foundryEffect: foundryEffectToForm(src.foundryEffect),
     rest,
   };
 };
@@ -301,6 +353,8 @@ const abilityFromForm = (f) => {
   if (f.targetDefense) out.targetDefense = f.targetDefense;
   const roll = rollFromForm(f.roll);
   if (roll) out.roll = roll;
+  const foundryEffect = foundryEffectFromForm(f.foundryEffect);
+  if (foundryEffect) out.foundryEffect = foundryEffect;
   return out;
 };
 
@@ -363,6 +417,11 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
         value={value.roll || rollToForm(null)}
         idPrefix={idPrefix}
         onChange={(r) => onChange({ ...value, roll: r })}
+      />
+      <FoundryEffectControl
+        value={value.foundryEffect || foundryEffectToForm(null)}
+        idPrefix={idPrefix}
+        onChange={(fe) => onChange({ ...value, foundryEffect: fe })}
       />
       <div className="gm-row">
         <div className="form-group">

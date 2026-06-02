@@ -18,6 +18,8 @@ import {
   animalCompanionToForm,
   animalCompanionFromForm,
   blankAnimalCompanion,
+  foundryEffectToForm,
+  foundryEffectFromForm,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -225,6 +227,47 @@ describe('action targetDefense round-trip', () => {
     const src = { name: 'Grapple', actionCount: 1, targetDefense: 'fortitude' };
     const form = actionToForm(src);
     expect(form.rest.targetDefense).toBeUndefined();
+  });
+});
+
+describe('foundryEffectToForm / foundryEffectFromForm', () => {
+  it('round-trips a set foundryEffect with explicit applyTo', () => {
+    const src = { ref: 'Compendium.pf2e.spell-effects.Item.abc123', applyTo: 'all-allies' };
+    expect(foundryEffectFromForm(foundryEffectToForm(src))).toEqual(src);
+  });
+
+  it('defaults applyTo to self when not supplied', () => {
+    const src = { ref: 'Compendium.pf2e.spell-effects.Item.abc123' };
+    const out = foundryEffectFromForm(foundryEffectToForm(src));
+    expect(out).toEqual({ ref: 'Compendium.pf2e.spell-effects.Item.abc123', applyTo: 'self' });
+  });
+
+  it('returns null when ref is empty', () => {
+    expect(foundryEffectFromForm(foundryEffectToForm(null))).toBeNull();
+    expect(foundryEffectFromForm(foundryEffectToForm({ ref: '' }))).toBeNull();
+    expect(foundryEffectFromForm({ ref: '   ' })).toBeNull();
+  });
+
+  it('round-trips through an action — set', () => {
+    const src = {
+      name: 'Courageous Anthem',
+      actionCount: 1,
+      foundryEffect: { ref: 'Compendium.pf2e.spell-effects.Item.xyz', applyTo: 'all-allies' },
+    };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips through an action — unset (no foundryEffect key emitted)', () => {
+    const src = { name: 'Stride', actionCount: 1 };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+    expect(out.foundryEffect).toBeUndefined();
+  });
+
+  it('does not double-write foundryEffect through the rest blob', () => {
+    const src = { name: 'Anthem', foundryEffect: { ref: 'Compendium.pf2e.x.Item.1' } };
+    const form = actionToForm(src);
+    expect(form.rest.foundryEffect).toBeUndefined();
   });
 });
 
