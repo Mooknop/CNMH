@@ -237,10 +237,16 @@
             "name": "Enthusiastic Strike",
             "cost": 1,
             "description": "Concentrate. +1 status bonus to attack rolls, Will saves, or Charisma-based skill checks until the start of your next turn.",
-            "traits": ["Concentrate", "Emotion", "Mental"]
+            "traits": [
+              "Concentrate",
+              "Emotion",
+              "Mental"
+            ]
           },
           "applyTo": "ally",
-          "duration": { "until": "target-turn-start" }
+          "duration": {
+            "until": "target-turn-start"
+          }
         }
       ]
     },
@@ -354,30 +360,54 @@
       "name": "Serrate",
       "level": 1,
       "baseLevel": 1,
-      "traits": ["Uncommon", "Champion", "Focus", "Manipulate", "Metal"],
+      "traits": [
+        "Uncommon",
+        "Champion",
+        "Focus",
+        "Manipulate",
+        "Metal"
+      ],
       "actions": "One Action",
       "range": "Touch",
       "targets": "1 metal weapon",
       "description": "With a pinch, the metal of a weapon twists, adding numerous jagged blades along its surface. Strikes with the target weapon deal an additional 1d4 slashing damage until the start of your next turn.",
-      "heightened": { "+2": "The extra damage increases by 1d4." }
+      "heightened": {
+        "+2": "The extra damage increases by 1d4."
+      }
     },
     {
       "id": "shields-of-the-spirit",
       "name": "Shields of the Spirit",
       "level": 1,
       "baseLevel": 1,
-      "traits": ["Uncommon", "Champion", "Concentrate", "Focus", "Sanctified", "Spirit"],
+      "traits": [
+        "Uncommon",
+        "Champion",
+        "Concentrate",
+        "Focus",
+        "Sanctified",
+        "Spirit"
+      ],
       "actions": "One Action",
       "requirements": "You are wielding a shield.",
       "description": "You Raise your Shield, causing ephemeral spirit shields to float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage (even if it misses).\nThe benefit applies only while an ally is in your aura, ending for any ally that leaves and applying to any that enters later. As normal, you don't count as your own ally and therefore don't get the benefits of the spirit shields yourself.",
-      "heightened": { "+2": "The extra damage increases by 1d4." }
+      "heightened": {
+        "+2": "The extra damage increases by 1d4."
+      }
     },
     {
       "id": "inspire-courage",
       "name": "Inspire Courage",
       "level": 0,
       "baseLevel": 1,
-      "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+      "traits": [
+        "Bard",
+        "Cantrip",
+        "Composition",
+        "Emotion",
+        "Enchantment",
+        "Mental"
+      ],
       "actions": "One Action",
       "area": "60-foot emanation",
       "duration": "1 round",
@@ -388,7 +418,14 @@
       "name": "Counter Performance",
       "level": 0,
       "baseLevel": 1,
-      "traits": ["Bard", "Composition", "Concentrate", "Focus", "Fortune", "Mental"],
+      "traits": [
+        "Bard",
+        "Composition",
+        "Concentrate",
+        "Focus",
+        "Fortune",
+        "Mental"
+      ],
       "actions": "Reaction",
       "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
       "area": "60-foot emanation",
@@ -399,20 +436,36 @@
       "name": "Hymn of Healing",
       "level": 0,
       "baseLevel": 1,
-      "traits": ["Uncommon", "Bard", "Composition", "Concentrate", "Focus", "Healing", "Vitality"],
+      "traits": [
+        "Uncommon",
+        "Bard",
+        "Composition",
+        "Concentrate",
+        "Focus",
+        "Healing",
+        "Vitality"
+      ],
       "actions": "Two Actions",
       "duration": "sustained up to 4 rounds",
       "area": "30-feet",
       "targets": "1 willing creature",
       "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
-      "heightened": { "+1": "The fast healing and temporary Hit Points each increase by 2." }
+      "heightened": {
+        "+1": "The fast healing and temporary Hit Points each increase by 2."
+      }
     },
     {
       "id": "lingering-composition",
       "name": "Lingering Composition",
       "level": 0,
       "baseLevel": 1,
-      "traits": ["Bard", "Composition", "Concentrate", "Focus", "Spellshape"],
+      "traits": [
+        "Bard",
+        "Composition",
+        "Concentrate",
+        "Focus",
+        "Spellshape"
+      ],
       "actions": "Free Action",
       "description": "You add a flourish to your composition to extend its benefits. If your next action is to cast a cantrip composition with a duration of 1 round, attempt a Performance check. The DC is standard-difficulty of a level equal to the highestt level target of your composition.",
       "degrees": {
@@ -426,7 +479,12 @@
       "name": "Ancestral Memories",
       "level": 1,
       "baseLevel": 1,
-      "traits": ["Uncommon", "Concentrate", "Focus", "Sorcerer"],
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Focus",
+        "Sorcerer"
+      ],
       "actions": "One Action",
       "description": "The memories of long-dead spellcasters grant you their knowledge, making your spells more formidable. You gain either a +1 status bonus to the next spell attack roll you attempt before the end of your turn or an enemy within 60 feet takes a –1 status penalty to the next saving throw they attempt against a spell you cast before the end of your turn.",
       "heightened": {
@@ -439,10 +497,28 @@
       "name": "Inner Upheaval",
       "level": 1,
       "baseLevel": 1,
-      "traits": ["Uncommon", "Concentrate", "Focus", "Monk"],
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Focus",
+        "Monk"
+      ],
       "actions": "One Action",
       "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
-      "heightened": { "+4": "The extra damage increases to 1d6." }
+      "heightened": {
+        "+4": "The extra damage increases to 1d6."
+      },
+      "chain": {
+        "into": "strike",
+        "cost": "included",
+        "modes": [
+          "strike",
+          "flurry"
+        ],
+        "strikeTrait": "Unarmed",
+        "attackBonus": 1,
+        "damageBonus": "1d6"
+      }
     }
   ]
 }

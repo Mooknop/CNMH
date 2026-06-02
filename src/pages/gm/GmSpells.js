@@ -8,6 +8,7 @@ import EffectsSubform, { effectsToForm, effectsFromForm } from '../../components
 import {
   rollToForm, rollFromForm, RollSourceControl,
   foundryEffectToForm, foundryEffectFromForm, FoundryEffectControl,
+  chainToForm, chainFromForm, ChainControl,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -32,7 +33,7 @@ const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'du
 const toForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
   const rest = { ...src };
-  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll', 'foundryEffect'].forEach((k) => delete rest[k]);
+  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll', 'foundryEffect', 'chain'].forEach((k) => delete rest[k]);
   const str = {};
   SPELL_STR.forEach((k) => {
     str[k] = src[k] != null ? String(src[k]) : '';
@@ -51,6 +52,7 @@ const toForm = (s) => {
     effects,
     roll: rollToForm(src.roll),
     foundryEffect: foundryEffectToForm(src.foundryEffect),
+    chain: chainToForm(src.chain),
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -88,6 +90,8 @@ const fromForm = (f) => {
   if (roll) out.roll = roll;
   const foundryEffect = foundryEffectFromForm(f.foundryEffect);
   if (foundryEffect) out.foundryEffect = foundryEffect;
+  const chain = chainFromForm(f.chain);
+  if (chain) out.chain = chain;
   return out;
 };
 
@@ -205,6 +209,11 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         value={e.foundryEffect || foundryEffectToForm(null)}
         idPrefix="spell"
         onChange={(fe) => set({ foundryEffect: fe })}
+      />
+      <ChainControl
+        value={e.chain || chainToForm(null)}
+        idPrefix="spell"
+        onChange={(c) => set({ chain: c })}
       />
       <div className="form-group">
         <label>Description</label>

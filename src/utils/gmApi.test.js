@@ -5,6 +5,7 @@ import {
   seedFromBackup,
   seedMissing,
   repointFocusSpellsToCatalog,
+  syncChainConfig,
   fetchHistory,
   restoreVersion,
 } from './gmApi';
@@ -125,6 +126,54 @@ describe('gmApi', () => {
     ];
     const res = await repointFocusSpellsToCatalog(liveChars);
     expect(res.repointed).toHaveLength(0);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe('syncChainConfig', () => {
+  it('patches a stale spell chain', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, id: 'inner-upheaval' }));
+    const liveSpells = [
+      { id: 'inner-upheaval', name: 'Inner Upheaval', level: 1 }, // no chain yet
+    ];
+    const res = await syncChainConfig(liveSpells, []);
+    expect(res.patched).toContain('spell:inner-upheaval');
+    const putCalls = global.fetch.mock.calls.filter(
+      ([url, opts]) => url.includes('/api/gm/spell/') && opts.method === 'PUT'
+    );
+    expect(putCalls.length).toBeGreaterThan(0);
+    const body = JSON.parse(putCalls[0][1].body);
+    expect(body.chain).toMatchObject({ into: 'strike', cost: 'included' });
+  });
+
+  it('patches a stale character feat action chain', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, id: 'JadeInferno' }));
+    const liveChars = [
+      {
+        id: 'JadeInferno',
+        feats: [
+          { id: 'feat-5', actions: [{ name: 'Reach Spell', actionCount: 1 }] },
+          { id: 'feat-8', actions: [{ name: 'Harrow Casting', actionCount: 1 }] },
+        ],
+      },
+    ];
+    const res = await syncChainConfig([], liveChars);
+    expect(res.patched).toContain('character:JadeInferno');
+    const putCalls = global.fetch.mock.calls.filter(
+      ([url, opts]) => url.includes('/api/gm/character/') && opts.method === 'PUT'
+    );
+    expect(putCalls.length).toBeGreaterThan(0);
+    const body = JSON.parse(putCalls[0][1].body);
+    const reachSpell = body.feats.find((f) => f.id === 'feat-5')?.actions?.[0];
+    expect(reachSpell?.chain).toMatchObject({ into: 'spell', cost: 'added' });
+  });
+
+  it('is a no-op when chain config is already current', async () => {
+    global.fetch = jest.fn();
+    const bundledChain = { into: 'strike', cost: 'included', modes: ['strike', 'flurry'], strikeTrait: 'Unarmed', attackBonus: 1, damageBonus: '1d6' };
+    const liveSpells = [{ id: 'inner-upheaval', name: 'Inner Upheaval', chain: bundledChain }];
+    const res = await syncChainConfig(liveSpells, []);
+    expect(res.patched).toHaveLength(0);
     expect(global.fetch).not.toHaveBeenCalled();
   });
 });

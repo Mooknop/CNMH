@@ -8,10 +8,11 @@ jest.mock('../../utils/gmApi', () => ({
   seedDefaults: jest.fn(),
   seedMissing: jest.fn(),
   repointFocusSpellsToCatalog: jest.fn(),
+  syncChainConfig: jest.fn(),
 }));
 jest.mock('../../utils/gmBackup', () => ({ downloadBackup: jest.fn(), restoreBackup: jest.fn() }));
 const { useContent } = require('../../contexts/ContentContext');
-const { seedDefaults, seedMissing, repointFocusSpellsToCatalog } = require('../../utils/gmApi');
+const { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig } = require('../../utils/gmApi');
 const { downloadBackup, restoreBackup } = require('../../utils/gmBackup');
 
 const renderDash = () => render(<MemoryRouter><GmDashboard /></MemoryRouter>);
@@ -76,25 +77,30 @@ describe('GmDashboard', () => {
     expect(downloadBackup).toHaveBeenCalled();
   });
 
-  it('"Apply new defaults" runs seedMissing + repointFocusSpellsToCatalog and shows result', async () => {
-    useContent.mockReturnValue({ source: 'server', rawCharacters: [{ id: 'Pellias' }] });
+  it('"Apply new defaults" runs all three migrations and shows combined result', async () => {
+    useContent.mockReturnValue({ source: 'server', rawCharacters: [{ id: 'Pellias' }], spells: [] });
     seedMissing.mockResolvedValue({ ok: true, seeded: { spell: 'added 8 (skipped 10 existing)' } });
     repointFocusSpellsToCatalog.mockResolvedValue({ repointed: ['Pellias'] });
+    syncChainConfig.mockResolvedValue({ patched: ['spell:inner-upheaval', 'character:JadeInferno'] });
     renderDash();
     fireEvent.click(screen.getByText(/Apply new defaults/i));
     await waitFor(() => expect(screen.getByText(/added 8/)).toBeInTheDocument());
     expect(seedMissing).toHaveBeenCalled();
     expect(repointFocusSpellsToCatalog).toHaveBeenCalledWith([{ id: 'Pellias' }]);
+    expect(syncChainConfig).toHaveBeenCalledWith([], [{ id: 'Pellias' }]);
     expect(screen.getByText(/repointed focus spells: Pellias/)).toBeInTheDocument();
+    expect(screen.getByText(/synced chain config: spell:inner-upheaval/)).toBeInTheDocument();
   });
 
-  it('"Apply new defaults" reports already up to date when nothing to repoint', async () => {
-    useContent.mockReturnValue({ source: 'server', rawCharacters: [] });
+  it('"Apply new defaults" reports all up to date when nothing to migrate', async () => {
+    useContent.mockReturnValue({ source: 'server', rawCharacters: [], spells: [] });
     seedMissing.mockResolvedValue({ ok: true, seeded: {} });
     repointFocusSpellsToCatalog.mockResolvedValue({ repointed: [] });
+    syncChainConfig.mockResolvedValue({ patched: [] });
     renderDash();
     fireEvent.click(screen.getByText(/Apply new defaults/i));
     await waitFor(() => expect(screen.getByText(/already up to date/)).toBeInTheDocument());
+    expect(screen.getByText(/chain config already up to date/)).toBeInTheDocument();
   });
 
   it('restores from a backup file only after typing RESTORE', async () => {

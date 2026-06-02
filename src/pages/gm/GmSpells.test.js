@@ -213,4 +213,47 @@ describe('GmSpells', () => {
     const parsed = JSON.parse(box.value);
     expect(parsed.foundryEffect).toBeUndefined();
   });
+
+  it('round-trips chain — strike kind persists to saved payload', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    const form = screen.getByTestId('spell-form-guidance');
+    // Select "Strike / Flurry of Blows"
+    fireEvent.change(within(form).getByLabelText('spell-chain-into'), {
+      target: { value: 'strike' },
+    });
+    fireEvent.change(within(form).getByLabelText('spell-chain-attack-bonus'), {
+      target: { value: '1' },
+    });
+    fireEvent.change(within(form).getByLabelText('spell-chain-damage-bonus'), {
+      target: { value: '1d6' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.chain).toMatchObject({ into: 'strike', attackBonus: 1, damageBonus: '1d6' });
+  });
+
+  it('round-trips chain — unset emits no chain key', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.chain).toBeUndefined();
+  });
+
+  it('chain does not leak into the raw-JSON box on existing spells', () => {
+    const spellsWithChain = [
+      { ...spells[0], chain: { into: 'strike', cost: 'included', modes: ['strike'], attackBonus: 1 } },
+    ];
+    useContent.mockReturnValue({ spells: spellsWithChain });
+    render(<GmSpells />);
+    const box = screen.getByLabelText('rest-json');
+    const parsed = JSON.parse(box.value);
+    expect(parsed.chain).toBeUndefined();
+  });
 });
