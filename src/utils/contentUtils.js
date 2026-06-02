@@ -138,6 +138,21 @@ export const spellCatalogMap = (spells) => {
   return map;
 };
 
+// Resolve a focus/devotion/ki spell list. Each entry with a `spellRef` is
+// replaced by the catalog spell (+ entry-local overrides); entries without
+// `spellRef` pass through unchanged (inline back-compat). Same dangling-ref
+// stub as resolveSpellBlock so organizeSpellsByRank / React keys never break.
+export const resolveFocusSpells = (arr, spellMap) => {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map((entry) => {
+    if (!entry || typeof entry !== 'object' || entry.spellRef == null) return entry;
+    const spell = spellMap && spellMap.get(String(entry.spellRef));
+    if (!spell) return { name: `(unknown spell: ${entry.spellRef})`, level: 0 };
+    const { spellRef, ...overrides } = entry;
+    return { ...spell, ...overrides };
+  });
+};
+
 // Resolve a wand/scroll spell block. With no `spellRef` it is a legacy inline
 // spell (back-compat) — returned untouched, exactly like an inline inventory
 // entry. With `spellRef` the catalog spell is spread FIRST so its full shape

@@ -389,44 +389,10 @@
     ],
     "devotion_spells": [
       {
-        "id": "spell-1",
-        "name": "Serrate",
-        "level": 1,
-        "baseLevel": 1,
-        "traits": [
-          "Uncommon",
-          "Champion",
-          "Focus",
-          "Manipulate",
-          "Metal"
-        ],
-        "actions": "One Action",
-        "range": "Touch",
-        "targets": "1 metal weapon",
-        "description": "With a pinch, the metal of a weapon twists, adding numerous jagged blades along its surface. Strikes with the target weapon deal an additional 1d4 slashing damage until the start of your next turn.",
-        "heightened": {
-          "+2": "The extra damage increases by 1d4."
-        }
+        "spellRef": "serrate"
       },
       {
-        "id": "spell-2",
-        "name": "Shields of the Spirit",
-        "level": 1,
-        "baseLevel": 1,
-        "traits": [
-          "Uncommon",
-          "Champion",
-          "Concentrate",
-          "Focus",
-          "Sanctified",
-          "Spirit"
-        ],
-        "actions": "One Action",
-        "requirements": "You are wielding a shield.",
-        "description": "You Raise your Shield, causing ephemeral spirit shields to float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage (even if it misses).\nThe benefit applies only while an ally is in your aura, ending for any ally that leaves and applying to any that enters later. As normal, you don't count as your own ally and therefore don't get the benefits of the spirit shields yourself.",
-        "heightened": {
-          "+2": "The extra damage increases by 1d4."
-        }
+        "spellRef": "shields-of-the-spirit"
       }
     ],
     "focus_points": 2,

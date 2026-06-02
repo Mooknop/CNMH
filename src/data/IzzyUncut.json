@@ -101,83 +101,16 @@
   },
   "focus_spells": [
     {
-      "id": "spell-1",
-      "name": "Inspire Courage",
-      "level": 0,
-      "baseLevel": 1,
-      "traits": [
-        "Bard",
-        "Cantrip",
-        "Composition",
-        "Emotion",
-        "Enchantment",
-        "Mental"
-      ],
-      "actions": "One Action",
-      "area": "60-foot emanation",
-      "duration": "1 round",
-      "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
+      "spellRef": "inspire-courage"
     },
     {
-      "id": "spell-2",
-      "name": "Counter Performance",
-      "level": 0,
-      "baseLevel": 1,
-      "traits": [
-        "Bard",
-        "Composition",
-        "Concentrate",
-        "Focus",
-        "Fortune",
-        "Mental"
-      ],
-      "actions": "Reaction",
-      "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
-      "area": "60-foot emanation",
-      "description": "Your performance protects you and your allies. Roll a Performance check for a type you know—it must be an auditory performance if the trigger was auditory or a visual one for a visual trigger, and this action gains the traits for the type of performance (page 243). You and allies in the area can use the better result between your Performance check and the saving throw."
+      "spellRef": "counter-performance"
     },
     {
-      "id": "spell-3",
-      "name": "Hymn of Healing",
-      "level": 0,
-      "baseLevel": 1,
-      "traits": [
-        "Uncommon",
-        "Bard",
-        "Composition",
-        "Concentrate",
-        "Focus",
-        "Healing",
-        "Vitality"
-      ],
-      "actions": "Two Actions",
-      "duration": "sustained up to 4 rounds",
-      "area": "30-feet",
-      "targets": "1 willing creature",
-      "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
-      "heightened": {
-        "+1": "The fast healing and temporary Hit Points each increase by 2."
-      }
+      "spellRef": "hymn-of-healing"
     },
     {
-      "id": "spell-4",
-      "name": "Lingering Composition",
-      "level": 0,
-      "baseLevel": 1,
-      "traits": [
-        "Bard",
-        "Composition",
-        "Concentrate",
-        "Focus",
-        "Spellshape"
-      ],
-      "actions": "Free Action",
-      "description": "You add a flourish to your composition to extend its benefits. If your next action is to cast a cantrip composition with a duration of 1 round, attempt a Performance check. The DC is standard-difficulty of a level equal to the highestt level target of your composition.",
-      "degrees": {
-        "Critical Success": "The composition lasts 4 rounds.",
-        "Success": "The composition lasts 3 rounds.",
-        "Failure": "The composition lasts 1 round, but you don't expend a focus point for trying."
-      }
+      "spellRef": "lingering-composition"
     }
   ],
   "feats": [
