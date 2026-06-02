@@ -1,8 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import TargetRollResolver from './TargetRollResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
+import ChainedSpellSection from './ChainedSpellSection';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -64,6 +65,10 @@ const UseAbilityModal = ({
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
 
+  // Tracks the spell-chain total cost so the confirm button label stays accurate.
+  const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
+  const onSpellChainCostChange = useCallback((cost) => setSpellChainTotalCost(cost), []);
+
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
   const { effects: activeEffects } = useEffects(character?.id || '');
@@ -80,9 +85,17 @@ const UseAbilityModal = ({
   const hasEffects  = effects.length > 0 || grants.length > 0;
   const needsPicker = abilityNeedsPicker(ability);
 
+  const hasChainStrike = ability.chain?.into === 'strike';
+  const hasChainSpell  = ability.chain?.into === 'spell';
+
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
   const effectiveVerb = verb.toLowerCase();
-  const costDisplay   = costToDisplay(ability, effectiveCost);
+  // For spell chains the total cost = parent + chosen spell; use it in the button once known.
+  const confirmCost   = (hasChainSpell && spellChainTotalCost != null) ? spellChainTotalCost : effectiveCost;
+  // Spell-chain total is numeric — bypass costToDisplay which would show ability.actions instead.
+  const costDisplay   = (hasChainSpell && typeof confirmCost === 'number')
+    ? String(confirmCost)
+    : costToDisplay(ability, confirmCost);
 
   const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character.id);
   const casterEntryId  = casterEntry?.entryId || null;
@@ -93,8 +106,6 @@ const UseAbilityModal = ({
 
   // Enemy targets with defense data — used by both the regular resolver and the chain section.
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
-
-  const hasChainStrike = ability.chain?.into === 'strike';
 
   // Resolve roll profile — includes condition/effect netting for the actor.
   const rollProfile = resolveActionRoll(ability, character, {
@@ -181,7 +192,7 @@ const UseAbilityModal = ({
     }
 
     // Log chained strike results (Inner Upheaval and similar).
-    if (chainResults) {
+    if (chainResults && hasChainStrike) {
       const strikeLabel = chainResults.mode === 'flurry' ? 'Flurry of Blows' : chainResults.strikeName;
       chainResults.rolls.forEach((rollSet, rollIdx) => {
         if (!rollSet) return;
@@ -219,10 +230,55 @@ const UseAbilityModal = ({
       });
     }
 
-    if (effectiveCost === 'reaction') {
+    // Log chained spell results (Reach Spell, Harrow Casting, etc.).
+    if (hasChainSpell && chainResults) {
+      const label = chainResults.modifier
+        ? `${chainResults.spellName} [${chainResults.modifier}]`
+        : chainResults.spellName;
+      if (chainResults.rollResults) {
+        chainResults.rollResults.forEach((r) => {
+          const degreeLabel = r.degree
+            ? ({ criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss',
+                 ...{ criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' } }[r.degree] || r.degree)
+            : null;
+          appendLog({
+            type: 'action', charId: character.id,
+            text: degreeLabel
+              ? `${character.name} ${effectiveVerb} ${ability.name} → ${label} vs ${r.name}: ${r.total} → ${degreeLabel}`
+              : `${character.name} ${effectiveVerb} ${ability.name} → ${label}`,
+          });
+        });
+      } else {
+        appendLog({
+          type: 'action', charId: character.id,
+          text: `${character.name} ${effectiveVerb} ${ability.name} → ${label}`,
+        });
+      }
+      // Push save request for the chained spell if it's target-save.
+      if (chainResults.rollProfile?.mode === 'target-save'
+          && chainResults.saveTargets?.length > 0
+          && chainResults.rollProfile.dc != null) {
+        addSaveRequest({
+          casterId: character.id, casterName: character.name,
+          abilityName: `${ability.name} → ${chainResults.spellName}`,
+          save: chainResults.rollProfile.defense,
+          dc: chainResults.rollProfile.dc,
+          basic: false,
+          targets: chainResults.saveTargets.map((e) => ({
+            entryId: e.entryId, name: e.name,
+            saveMod: e.defenses?.saves?.[chainResults.rollProfile.defense] ?? null,
+          })),
+        });
+      }
+    }
+
+    const costToSpend = hasChainSpell && chainResults?.totalCost != null
+      ? chainResults.totalCost
+      : effectiveCost;
+    if (costToSpend === 'reaction') {
       spendReaction(`${verb} ${ability.name}`);
-    } else if (effectiveCost > 0) {
-      spendActions(effectiveCost, `${verb} ${ability.name}`);
+    } else if (costToSpend > 0) {
+      spendActions(costToSpend, `${verb} ${ability.name}`);
     }
 
     onClose();
@@ -352,7 +408,7 @@ const UseAbilityModal = ({
                 <h3 className="ct-section-title" style={{ marginTop: '0.75rem' }}>
                   {ability.chain.modes?.includes('flurry') ? 'Strike or Flurry of Blows' : 'Strike'}
                   <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>
-                    (included in {costDisplay})
+                    (included in {effectiveCost})
                   </span>
                 </h3>
                 <ChainedStrikeSection
@@ -362,6 +418,22 @@ const UseAbilityModal = ({
                   enemyTargets={enemyWithDefenses}
                   conditions={activeConditions || []}
                   effects={activeEffects || []}
+                />
+              </>
+            ) : hasChainSpell ? (
+              <>
+                <h3 className="ct-section-title" style={{ marginTop: '0.75rem' }}>
+                  Cast a Spell
+                </h3>
+                <ChainedSpellSection
+                  ref={chainRef}
+                  character={character}
+                  chain={ability.chain}
+                  parentCost={effectiveCost}
+                  enemyTargets={enemyWithDefenses}
+                  conditions={activeConditions || []}
+                  effects={activeEffects || []}
+                  onTotalCostChange={onSpellChainCostChange}
                 />
               </>
             ) : rollSection}

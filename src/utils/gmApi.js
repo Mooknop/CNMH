@@ -71,12 +71,13 @@ export const repointFocusSpellsToCatalog = async (liveCharacters) => {
 };
 
 // Propagate `chain` config from the bundled defaults to the live (seeded) DO.
-// Covers two document kinds:
-//   - spell docs: patch any bundled spell that carries a `chain` field but the
-//     live doc is missing or has a different `chain` value.
-//   - character docs: patch bundled feat actions that carry a `chain` field
-//     (matched by feat id + action name) onto the matching live character doc.
-// Both are idempotent (JSON equality short-circuit) and non-destructive.
+// Covers:
+//   - spell docs: patch any bundled spell with a `chain` field whose live copy
+//     is missing or has a different `chain` value.
+//   - character docs: patch bundled feat actions AND top-level character actions
+//     that carry a `chain` field (matched by feat-id + action-name / action-name)
+//     onto the matching live character doc, preserving all other fields.
+// All patches are idempotent (JSON equality short-circuit) and non-destructive.
 // Returns { patched: ['spell:inner-upheaval', 'character:JadeInferno', ...] }.
 export const syncChainConfig = async (liveSpells, liveCharacters) => {
   const bundled = defaultContent();
@@ -97,32 +98,54 @@ export const syncChainConfig = async (liveSpells, liveCharacters) => {
     patched.push(`spell:${bundledSpell.id}`);
   }
 
-  // ── Characters: feat actions ──────────────────────────────────────────────
+  // ── Characters ────────────────────────────────────────────────────────────
   const liveCharById = new Map(
     (Array.isArray(liveCharacters) ? liveCharacters : [])
       .filter((c) => c && c.id != null)
       .map((c) => [String(c.id), c])
   );
+
+  // Patch an array of actions against their bundled counterparts (matched by name).
+  const patchActionArray = (liveActions, bundledActions) => {
+    if (!Array.isArray(bundledActions) || !Array.isArray(liveActions)) return liveActions;
+    const next = liveActions.map((la) => {
+      const ba = bundledActions.find((a) => a.name === la.name);
+      if (!ba?.chain) return la;
+      if (JSON.stringify(la.chain) === JSON.stringify(ba.chain)) return la;
+      return { ...la, chain: ba.chain };
+    });
+    return JSON.stringify(next) === JSON.stringify(liveActions) ? liveActions : next;
+  };
+
   for (const bundledChar of (bundled.character || [])) {
-    if (!bundledChar?.id || !Array.isArray(bundledChar.feats)) continue;
+    if (!bundledChar?.id) continue;
     const live = liveCharById.get(String(bundledChar.id));
     if (!live) continue;
-    let changed = false;
-    const patchedFeats = (live.feats || []).map((liveFeat) => {
-      const bundledFeat = bundledChar.feats.find((f) => f.id === liveFeat.id);
-      if (!bundledFeat || !Array.isArray(bundledFeat.actions)) return liveFeat;
-      const patchedActions = (liveFeat.actions || []).map((liveAction) => {
-        const bundledAction = bundledFeat.actions.find((a) => a.name === liveAction.name);
-        if (!bundledAction?.chain) return liveAction;
-        if (JSON.stringify(liveAction.chain) === JSON.stringify(bundledAction.chain)) return liveAction;
-        changed = true;
-        return { ...liveAction, chain: bundledAction.chain };
+
+    let doc = live;
+
+    // Patch feat actions (e.g. Jade's Reach Spell, Harrow Casting).
+    if (Array.isArray(bundledChar.feats) && Array.isArray(doc.feats)) {
+      const patchedFeats = doc.feats.map((liveFeat) => {
+        const bf = bundledChar.feats.find((f) => f.id === liveFeat.id);
+        const next = patchActionArray(liveFeat.actions, bf?.actions);
+        return next === liveFeat.actions ? liveFeat : { ...liveFeat, actions: next };
       });
-      if (!changed) return liveFeat;
-      return { ...liveFeat, actions: patchedActions };
-    });
-    if (!changed) continue;
-    await saveDocument('character', String(bundledChar.id), { ...live, feats: patchedFeats });
+      if (JSON.stringify(patchedFeats) !== JSON.stringify(doc.feats)) {
+        doc = { ...doc, feats: patchedFeats };
+      }
+    }
+
+    // Patch top-level character actions (e.g. Blu-Kakke's Flurry of Blows).
+    if (Array.isArray(bundledChar.actions) && Array.isArray(doc.actions)) {
+      const patchedActions = patchActionArray(doc.actions, bundledChar.actions);
+      if (patchedActions !== doc.actions) {
+        doc = { ...doc, actions: patchedActions };
+      }
+    }
+
+    if (doc === live) continue;
+    await saveDocument('character', String(bundledChar.id), doc);
     patched.push(`character:${bundledChar.id}`);
   }
 
