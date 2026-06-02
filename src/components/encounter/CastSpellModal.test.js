@@ -94,6 +94,24 @@ jest.mock('./ChainedStrikeSection', () => {
   });
 });
 
+jest.mock('./ChainedSpellSection', () => {
+  const { forwardRef, useImperativeHandle, useEffect, createElement } = require('react');
+  // eslint-disable-next-line react/display-name
+  return forwardRef(({ chain, parentCost, onTotalCostChange }, ref) => {
+    useImperativeHandle(ref, () => ({
+      getResults: () => ({
+        spellId: 'light', spellName: 'Light', spellCost: 2, totalCost: 3,
+        rollResults: null, saveTargets: null,
+        rollProfile: { mode: 'none', bonus: null, dc: null, defense: null },
+        modifier: chain.modifier || null,
+      }),
+      getTotalCost: () => 3,
+    }));
+    useEffect(() => { onTotalCostChange?.(3); }, [onTotalCostChange]);
+    return createElement('div', { 'data-testid': 'chained-spell-section' }, `chain-into=${chain.into}`);
+  });
+});
+
 const character = { id: 'char-a', name: 'Pellias' };
 const themeColor = '#7b3f00';
 
@@ -369,6 +387,66 @@ describe('CastSpellModal', () => {
       // The roll bonus badge should appear when the resolver is shown
       // (no enemy targets in mock so resolver doesn't appear, but modal renders)
       expect(screen.getByText('Cast: Scorching Ray')).toBeInTheDocument();
+    });
+  });
+
+  describe('chained spell ability (Reach Spell, Harrow Casting)', () => {
+    const reachSpell = {
+      id: 'reach-spell',
+      name: 'Reach Spell',
+      actions: 'One Action',
+      chain: { into: 'spell', cost: 'added', spellFilter: 'has-range', modifier: 'Range increased by 30 feet' },
+    };
+
+    it('renders ChainedSpellSection for a spell-chain ability', () => {
+      render(<CastSpellModal {...defaultProps} spell={reachSpell} />);
+      expect(screen.getByTestId('chained-spell-section')).toBeInTheDocument();
+    });
+
+    it('shows the additive total cost in the confirm button (1 parent + 2 spell = 3)', () => {
+      render(<CastSpellModal {...defaultProps} spell={reachSpell} />);
+      expect(screen.getByLabelText('confirm-cast')).toHaveTextContent('Cast (3)');
+    });
+
+    it('spends the total cost (3) on confirm, not just parent cost (1)', () => {
+      render(<CastSpellModal {...defaultProps} spell={reachSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSpendActions).toHaveBeenCalledWith(3, expect.any(String));
+      expect(mockSpendActions).toHaveBeenCalledTimes(1);
+    });
+
+    it('logs the combined cast on confirm', () => {
+      render(<CastSpellModal {...defaultProps} spell={reachSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('Reach Spell') && t.includes('Light'))).toBe(true);
+    });
+  });
+
+  describe('Flurry of Blows as standalone chain ability', () => {
+    const flurryAction = {
+      name: 'Flurry of Blows',
+      actionCount: 1,
+      traits: ['Flourish', 'Monk'],
+      chain: { into: 'strike', cost: 'included', modes: ['flurry'] },
+    };
+
+    it('renders ChainedStrikeSection for Flurry of Blows', () => {
+      render(<CastSpellModal {...defaultProps} spell={flurryAction} />);
+      expect(screen.getByTestId('chained-strike-section')).toBeInTheDocument();
+    });
+
+    it('spends only 1 action (the Flurry cost, strike included)', () => {
+      render(<CastSpellModal {...defaultProps} spell={flurryAction} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSpendActions).toHaveBeenCalledWith(1, expect.any(String));
+    });
+
+    it('logs the strike result on confirm', () => {
+      render(<CastSpellModal {...defaultProps} spell={flurryAction} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('Flurry of Blows') || t.includes('Unarmed Strike'))).toBe(true);
     });
   });
 });

@@ -168,6 +168,26 @@ describe('syncChainConfig', () => {
     expect(reachSpell?.chain).toMatchObject({ into: 'spell', cost: 'added' });
   });
 
+  it('patches a stale top-level character action chain (Flurry of Blows)', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, id: 'Blu-Kakke' }));
+    const liveChars = [
+      {
+        id: 'Blu-Kakke',
+        feats: [],
+        actions: [{ name: 'Flurry of Blows', actionCount: 1 }], // no chain yet
+      },
+    ];
+    const res = await syncChainConfig([], liveChars);
+    expect(res.patched).toContain('character:Blu-Kakke');
+    const putCalls = global.fetch.mock.calls.filter(
+      ([url, opts]) => url.includes('/api/gm/character/') && opts.method === 'PUT'
+    );
+    expect(putCalls.length).toBeGreaterThan(0);
+    const body = JSON.parse(putCalls[0][1].body);
+    const flurry = body.actions?.find((a) => a.name === 'Flurry of Blows');
+    expect(flurry?.chain).toMatchObject({ into: 'strike', cost: 'included', modes: ['flurry'] });
+  });
+
   it('is a no-op when chain config is already current', async () => {
     global.fetch = jest.fn();
     const bundledChain = { into: 'strike', cost: 'included', modes: ['strike', 'flurry'], strikeTrait: 'Unarmed', attackBonus: 1, damageBonus: '1d6' };
