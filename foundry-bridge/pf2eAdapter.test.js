@@ -21,6 +21,7 @@ import {
   getGridSize, getAllTokens, getTokenDimensions,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
+  applyEffectByUuid,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
@@ -347,5 +348,41 @@ describe('getCombatantActor', () => {
   test('returns null when neither path resolves', () => {
     const cbt = makeCombatant({ id: 'c3', actorId: null, actor: null });
     expect(getCombatantActor(cbt)).toBeNull();
+  });
+});
+
+describe('applyEffectByUuid (Slice B)', () => {
+  test('resolves UUID, clones source, creates embedded Item tagged for echo guard', async () => {
+    const actor = makeActor();
+    const src   = { toObject: jest.fn().mockReturnValue({ type: 'effect', name: 'Effect: Courageous Anthem' }) };
+    global.fromUuid = jest.fn().mockResolvedValue(src);
+
+    await applyEffectByUuid(actor, 'Compendium.pf2e.spell-effects.Item.abc');
+
+    expect(global.fromUuid).toHaveBeenCalledWith('Compendium.pf2e.spell-effects.Item.abc');
+    expect(src.toObject).toHaveBeenCalled();
+    expect(actor.createEmbeddedDocuments).toHaveBeenCalledWith(
+      'Item',
+      [{ type: 'effect', name: 'Effect: Courageous Anthem' }],
+      { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+  });
+
+  test('returns null when fromUuid resolves to null (invalid / wrong pack)', async () => {
+    const actor = makeActor();
+    global.fromUuid = jest.fn().mockResolvedValue(null);
+
+    const result = await applyEffectByUuid(actor, 'bad-uuid');
+
+    expect(result).toBeNull();
+    expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+
+  test('returns null when actor is null', async () => {
+    const src = { toObject: jest.fn().mockReturnValue({}) };
+    global.fromUuid = jest.fn().mockResolvedValue(src);
+
+    const result = await applyEffectByUuid(null, 'Compendium.pf2e.x.Item.1');
+    expect(result).toBeNull();
   });
 });

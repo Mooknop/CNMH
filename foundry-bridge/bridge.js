@@ -13,6 +13,7 @@ import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 import { handleAction } from './targeting.js';
+import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 
 const MODULE_ID = 'cnmh-bridge';
@@ -167,6 +168,12 @@ function dispatch(msg) {
   // Action targeting from app → set Foundry's user target set.
   if (key === 'action') {
     handleAction(characterId, value);
+    return;
+  }
+
+  // Foundry effect application from app → clone effect item onto target actors.
+  if (key === 'applyeffect') {
+    handleApplyEffect(characterId, value);
     return;
   }
 }

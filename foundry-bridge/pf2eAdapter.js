@@ -106,6 +106,20 @@ export function updateActorHeroPoints(actor, value) {
   }, { [BRIDGE_SOURCE_FLAG]: 'app' });
 }
 
+// Apply a PF2e effect item to an actor by Foundry compendium UUID.
+// Resolves the UUID, clones the source document, and creates it as an embedded
+// Item on the actor — producing the effect icon/aura visible in Foundry.
+// Tagged with BRIDGE_SOURCE_FLAG so the characterSync createItem hook ignores it
+// (the hook already guards with isConditionItem, but tagging is belt-and-suspenders).
+// Returns null when the UUID resolves to nothing (invalid / wrong pack).
+export async function applyEffectByUuid(actor, ref) {
+  // eslint-disable-next-line no-undef
+  const source = await fromUuid(ref);
+  if (!source || !actor) return null;
+  return actor.createEmbeddedDocuments('Item', [source.toObject()],
+    { [BRIDGE_SOURCE_FLAG]: 'app' });
+}
+
 // --- Condition items (createItem/updateItem/deleteItem hook payloads) ---
 
 export function isConditionItem(item) {
