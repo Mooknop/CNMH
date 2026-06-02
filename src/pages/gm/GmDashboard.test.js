@@ -4,10 +4,14 @@ import { MemoryRouter } from 'react-router-dom';
 import GmDashboard from './GmDashboard';
 
 jest.mock('../../contexts/ContentContext', () => ({ useContent: jest.fn() }));
-jest.mock('../../utils/gmApi', () => ({ seedDefaults: jest.fn() }));
+jest.mock('../../utils/gmApi', () => ({
+  seedDefaults: jest.fn(),
+  seedMissing: jest.fn(),
+  repointFocusSpellsToCatalog: jest.fn(),
+}));
 jest.mock('../../utils/gmBackup', () => ({ downloadBackup: jest.fn(), restoreBackup: jest.fn() }));
 const { useContent } = require('../../contexts/ContentContext');
-const { seedDefaults } = require('../../utils/gmApi');
+const { seedDefaults, seedMissing, repointFocusSpellsToCatalog } = require('../../utils/gmApi');
 const { downloadBackup, restoreBackup } = require('../../utils/gmBackup');
 
 const renderDash = () => render(<MemoryRouter><GmDashboard /></MemoryRouter>);
@@ -70,6 +74,27 @@ describe('GmDashboard', () => {
     fireEvent.click(screen.getByText('Download backup'));
     await waitFor(() => expect(screen.getByText(/Backup downloaded/)).toBeInTheDocument());
     expect(downloadBackup).toHaveBeenCalled();
+  });
+
+  it('"Apply new defaults" runs seedMissing + repointFocusSpellsToCatalog and shows result', async () => {
+    useContent.mockReturnValue({ source: 'server', rawCharacters: [{ id: 'Pellias' }] });
+    seedMissing.mockResolvedValue({ ok: true, seeded: { spell: 'added 8 (skipped 10 existing)' } });
+    repointFocusSpellsToCatalog.mockResolvedValue({ repointed: ['Pellias'] });
+    renderDash();
+    fireEvent.click(screen.getByText(/Apply new defaults/i));
+    await waitFor(() => expect(screen.getByText(/added 8/)).toBeInTheDocument());
+    expect(seedMissing).toHaveBeenCalled();
+    expect(repointFocusSpellsToCatalog).toHaveBeenCalledWith([{ id: 'Pellias' }]);
+    expect(screen.getByText(/repointed focus spells: Pellias/)).toBeInTheDocument();
+  });
+
+  it('"Apply new defaults" reports already up to date when nothing to repoint', async () => {
+    useContent.mockReturnValue({ source: 'server', rawCharacters: [] });
+    seedMissing.mockResolvedValue({ ok: true, seeded: {} });
+    repointFocusSpellsToCatalog.mockResolvedValue({ repointed: [] });
+    renderDash();
+    fireEvent.click(screen.getByText(/Apply new defaults/i));
+    await waitFor(() => expect(screen.getByText(/already up to date/)).toBeInTheDocument());
   });
 
   it('restores from a backup file only after typing RESTORE', async () => {

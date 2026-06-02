@@ -2,7 +2,7 @@
 // cookie rides automatically; the Worker re-verifies it before the write
 // reaches the content Durable Object, which then broadcasts the change live.
 
-import { buildSeedPayload } from './contentUtils';
+import { buildSeedPayload, defaultContent, repointFocusSpells } from './contentUtils';
 
 const json = async (res) => {
   if (!res.ok) {
@@ -33,6 +33,42 @@ export const seedDefaults = (force = false) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildSeedPayload(force)),
   }).then(json);
+
+// Add bundled default documents that are absent from the DO without touching
+// existing ones. Safe to run on a populated world; idempotent. Reusable for
+// any future content drop.
+export const seedMissing = () =>
+  fetch('/api/gm/seed', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode: 'fill-missing', collections: defaultContent() }),
+  }).then(json);
+
+// For each bundled character whose focus-spell arrays were re-pointed to
+// spellRef form in Slice C, find the matching live document (by id) in
+// liveCharacters and patch it if needed. Uses a read-modify-write so all
+// other live fields (inventory, GM edits) are preserved.
+// Returns { repointed: [charId, ...] }.
+export const repointFocusSpellsToCatalog = async (liveCharacters) => {
+  const bundled = defaultContent().character;
+  const liveById = new Map(
+    (Array.isArray(liveCharacters) ? liveCharacters : [])
+      .filter((c) => c && c.id != null)
+      .map((c) => [String(c.id), c])
+  );
+  const repointed = [];
+  for (const bundledChar of bundled) {
+    if (!bundledChar || bundledChar.id == null) continue;
+    const live = liveById.get(String(bundledChar.id));
+    if (!live) continue;
+    const patched = repointFocusSpells(live, bundledChar);
+    if (patched === live) continue;
+    await saveDocument('character', String(bundledChar.id), patched);
+    repointed.push(String(bundledChar.id));
+  }
+  return { repointed };
+};
 
 // Restore from a downloaded backup: a force reseed whose collections come from
 // the backup file rather than the bundled defaults. Reuses the existing seed

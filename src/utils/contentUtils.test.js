@@ -19,6 +19,7 @@ import {
   normalizeSpells,
   spellCatalogMap,
   resolveFocusSpells,
+  repointFocusSpells,
   resolveInventoryItem,
   resolveInventory,
   resolveCharacterItems,
@@ -608,5 +609,74 @@ describe('resolveFocusSpells', () => {
 
     const bluFocus = [{ spellRef: 'inner-upheaval' }];
     expect(resolveFocusSpells(bluFocus, bundledMap)[0].name).toBe('Inner Upheaval');
+  });
+});
+
+describe('repointFocusSpells', () => {
+  const REF_SPELLS = [{ spellRef: 'inspire-courage' }, { spellRef: 'counter-performance' }];
+
+  it('patches focus_spells when bundled has spellRef entries', () => {
+    const live    = { id: 'Izzy', name: 'Izzy', focus_spells: [{ id: 'spell-1', name: 'Inspire Courage' }] };
+    const bundled = { id: 'Izzy', focus_spells: REF_SPELLS };
+    const out = repointFocusSpells(live, bundled);
+    expect(out.focus_spells).toEqual(REF_SPELLS);
+    expect(out.name).toBe('Izzy'); // other fields preserved
+  });
+
+  it('patches champion.devotion_spells', () => {
+    const live    = { id: 'Pellias', champion: { devotion_spells: [{ id: 's1', name: 'Serrate' }], focus_points: 2 } };
+    const bundled = { id: 'Pellias', champion: { devotion_spells: [{ spellRef: 'serrate' }] } };
+    const out = repointFocusSpells(live, bundled);
+    expect(out.champion.devotion_spells).toEqual([{ spellRef: 'serrate' }]);
+    expect(out.champion.focus_points).toBe(2); // sibling fields untouched
+  });
+
+  it('patches nested spellcasting.bloodline.focus_spells', () => {
+    const live    = { id: 'Jade', spellcasting: { bloodline: { name: 'Imperial', focus_spells: [{ id: 'f1', name: 'Ancestral' }] } } };
+    const bundled = { id: 'Jade', spellcasting: { bloodline: { focus_spells: [{ spellRef: 'ancestral-memories', bloodline: true }] } } };
+    const out = repointFocusSpells(live, bundled);
+    expect(out.spellcasting.bloodline.focus_spells).toEqual([{ spellRef: 'ancestral-memories', bloodline: true }]);
+    expect(out.spellcasting.bloodline.name).toBe('Imperial'); // sibling preserved
+  });
+
+  it('patches monk.ki_spells', () => {
+    const live    = { id: 'Blu', monk: { ki_spells: [{ id: 'k1', name: 'Inner Upheaval' }], focus_points: 1 } };
+    const bundled = { id: 'Blu', monk: { ki_spells: [{ spellRef: 'inner-upheaval' }] } };
+    const out = repointFocusSpells(live, bundled);
+    expect(out.monk.ki_spells).toEqual([{ spellRef: 'inner-upheaval' }]);
+    expect(out.monk.focus_points).toBe(1);
+  });
+
+  it('is idempotent — already-patched doc returns equal result (same reference)', () => {
+    const live    = { id: 'Izzy', focus_spells: REF_SPELLS };
+    const bundled = { id: 'Izzy', focus_spells: REF_SPELLS };
+    const out = repointFocusSpells(live, bundled);
+    expect(out).toBe(live); // identical reference when nothing changed
+  });
+
+  it('is a no-op when bundled has no spellRef arrays', () => {
+    const live    = { id: 'NoFocus', feats: [{ name: 'Toughness' }] };
+    const bundled = { id: 'NoFocus', feats: [{ name: 'Toughness' }] };
+    expect(repointFocusSpells(live, bundled)).toBe(live);
+  });
+
+  it('is a no-op when bundled focus array is inline (no spellRef)', () => {
+    const live    = { id: 'Old', focus_spells: [{ id: 'x', name: 'X' }] };
+    const bundled = { id: 'Old', focus_spells: [{ id: 'x', name: 'X' }] }; // inline, no spellRef
+    expect(repointFocusSpells(live, bundled)).toBe(live);
+  });
+
+  it('applies to all 4 bundled characters that were migrated in Slice C', () => {
+    const bundled = defaultContent().character;
+    const charNames = ['Pellias', 'IzzyUncut', 'JadeInferno', 'Blu-Kakke'];
+    for (const id of charNames) {
+      const bChar = bundled.find((c) => c.id === id);
+      expect(bChar).toBeTruthy();
+      // Simulate a "live" doc that still has inline spells (pre-Slice C).
+      const fakeInline = { ...bChar };
+      const out = repointFocusSpells(fakeInline, bChar);
+      // Result must equal bChar (same spellRef arrays), even if reference differs.
+      expect(JSON.stringify(out)).toBe(JSON.stringify(bChar));
+    }
   });
 });

@@ -74,6 +74,15 @@ export class CampaignContent {
     return r.length ? r[0].n : 0;
   }
 
+  idsIn(collection) {
+    return new Set(
+      this.state.storage.sql
+        .exec('SELECT id FROM documents WHERE collection = ?', collection)
+        .toArray()
+        .map((r) => r.id)
+    );
+  }
+
   // Snapshot the current row (if any) into document_history, then prune to
   // the newest HISTORY_KEEP versions. No-op when there's nothing to archive.
   archive(collection, id) {
@@ -203,7 +212,10 @@ export class CampaignContent {
       return Response.json({ payload: this.snapshot() });
     }
 
-    // GM seed: POST /api/gm/seed  { force?, collections: { quest: [...] } }
+    // GM seed: POST /api/gm/seed  { force?, mode?, collections: { quest: [...] } }
+    //   mode:'fill-missing' — add only docs whose id is absent; never overwrites.
+    //   force:true          — delete-then-replace each collection (destructive).
+    //   default             — skip non-empty collections (idempotent safe seed).
     if (request.method === 'POST' && url.pathname === '/api/gm/seed') {
       let body;
       try {
@@ -212,10 +224,23 @@ export class CampaignContent {
         return new Response('Bad JSON', { status: 400 });
       }
       const force = !!body.force;
+      const fillMissing = body.mode === 'fill-missing';
       const collections = body.collections || {};
       const seeded = {};
       for (const [collection, docs] of Object.entries(collections)) {
         if (!COLLECTIONS.includes(collection) || !Array.isArray(docs)) continue;
+        if (fillMissing) {
+          const existing = this.idsIn(collection);
+          let added = 0;
+          for (const doc of docs) {
+            if (doc && doc.id != null && !existing.has(String(doc.id))) {
+              this.upsert(collection, String(doc.id), doc);
+              added++;
+            }
+          }
+          seeded[collection] = `added ${added} (skipped ${docs.length - added} existing)`;
+          continue;
+        }
         if (!force && this.countIn(collection) > 0) {
           seeded[collection] = 'skipped (not empty)';
           continue;

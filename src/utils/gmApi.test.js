@@ -3,6 +3,8 @@ import {
   deleteDocument,
   seedDefaults,
   seedFromBackup,
+  seedMissing,
+  repointFocusSpellsToCatalog,
   fetchHistory,
   restoreVersion,
 } from './gmApi';
@@ -79,5 +81,50 @@ describe('gmApi', () => {
       Promise.resolve({ ok: false, status: 403, text: () => Promise.resolve('Forbidden') })
     );
     await expect(saveDocument('quest', 'x', {})).rejects.toThrow('403 Forbidden');
+  });
+
+  it('seedMissing POSTs mode:fill-missing with bundled collections', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, seeded: { spell: 'added 8 (skipped 10 existing)' } }));
+    const res = await seedMissing();
+    expect(res.seeded.spell).toMatch(/added/);
+    const [url, opts] = global.fetch.mock.calls[0];
+    expect(url).toBe('/api/gm/seed');
+    expect(opts.method).toBe('POST');
+    const body = JSON.parse(opts.body);
+    expect(body.mode).toBe('fill-missing');
+    expect(body.force).toBeUndefined();
+    expect(Array.isArray(body.collections.spell)).toBe(true);
+    expect(body.collections.spell.length).toBeGreaterThan(0);
+  });
+
+  it('repointFocusSpellsToCatalog calls saveDocument for characters that need patching', async () => {
+    global.fetch = jest.fn(() => okJson({ ok: true, id: 'Pellias' }));
+    const liveChars = [
+      // Pellias has old inline devotion_spells — needs patching
+      { id: 'Pellias', champion: { devotion_spells: [{ id: 's1', name: 'Serrate', level: 1 }] } },
+      // A character not in the bundled defaults — ignored
+      { id: 'NonBundled', focus_spells: [] },
+    ];
+    const res = await repointFocusSpellsToCatalog(liveChars);
+    expect(res.repointed).toContain('Pellias');
+    // saveDocument is called at least once (for Pellias)
+    const putCalls = global.fetch.mock.calls.filter(([url, opts]) =>
+      url.includes('/api/gm/character/') && opts.method === 'PUT'
+    );
+    expect(putCalls.length).toBeGreaterThan(0);
+    // The patched doc should have spellRef entries
+    const patchedBody = JSON.parse(putCalls[0][1].body);
+    expect(patchedBody.champion.devotion_spells[0]).toHaveProperty('spellRef');
+  });
+
+  it('repointFocusSpellsToCatalog is a no-op for already-patched characters', async () => {
+    global.fetch = jest.fn();
+    const liveChars = [
+      // Pellias with spellRef entries already — no change needed
+      { id: 'Pellias', champion: { devotion_spells: [{ spellRef: 'serrate' }, { spellRef: 'shields-of-the-spirit' }] } },
+    ];
+    const res = await repointFocusSpellsToCatalog(liveChars);
+    expect(res.repointed).toHaveLength(0);
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });
