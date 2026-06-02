@@ -93,3 +93,19 @@
   font-style: italic;
   font-size: 0.85rem;
 }
+
+.trr-bonus-badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: center;
+}
+
+.trr-total-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  opacity: 0.85;
+}

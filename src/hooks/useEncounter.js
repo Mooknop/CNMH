@@ -7,6 +7,7 @@ import {
   defaultEncounter,
   makePcEntry,
   makeEnemyEntry,
+  makeSaveRequest,
   sortByInitiative,
   nextTurnIndex,
   everyEntryHasInitiative,
@@ -289,6 +290,30 @@ export const useEncounter = () => {
     [setEncounter]
   );
 
+  const addSaveRequest = useCallback(
+    (req) =>
+      setEncounter((cur) => {
+        const base = cur || defaultEncounter();
+        return {
+          ...base,
+          saveRequests: [...(base.saveRequests || []), makeSaveRequest(req)],
+        };
+      }),
+    [setEncounter]
+  );
+
+  const removeSaveRequest = useCallback(
+    (id) =>
+      setEncounter((cur) => {
+        const base = cur || defaultEncounter();
+        return {
+          ...base,
+          saveRequests: (base.saveRequests || []).filter((r) => r.id !== id),
+        };
+      }),
+    [setEncounter]
+  );
+
   return {
     encounter: resolvedEncounter,
     actorMap,
@@ -302,6 +327,8 @@ export const useEncounter = () => {
     beginNextRound,
     endEncounter,
     appendLog,
+    addSaveRequest,
+    removeSaveRequest,
   };
 };
 

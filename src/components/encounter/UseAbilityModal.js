@@ -57,7 +57,7 @@ const UseAbilityModal = ({
 }) => {
   const { getState, sendUpdate } = useSession();
   const { characters } = useContent();
-  const { encounter, appendLog } = useEncounter();
+  const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character?.id || 'nobody');
 
   const resolverRef = useRef(null);
@@ -103,6 +103,11 @@ const UseAbilityModal = ({
   // Enemy targets that have defense data and a resolvable defense (actor-roll path only).
   const resolverTargets = (rollProfile.mode === 'actor-roll' && effectiveDefense)
     ? selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses)
+    : [];
+
+  // For target-save: enemy targets whose save mod we can read (used in the save request).
+  const saveTargets = rollProfile.mode === 'target-save'
+    ? selectedEntries.filter((e) => e.kind === 'enemy')
     : [];
 
   const confirmEnabled = !needsPicker || targets.length > 0;
@@ -167,6 +172,24 @@ const UseAbilityModal = ({
       });
     }
 
+    // Push a save request to the GM for target-save abilities.
+    if (rollProfile.mode === 'target-save' && saveTargets.length > 0 && rollProfile.dc != null) {
+      const targets = saveTargets.map((e) => ({
+        entryId: e.entryId,
+        name: e.name,
+        saveMod: e.defenses?.saves?.[rollProfile.defense] ?? null,
+      }));
+      addSaveRequest({
+        casterId: character.id,
+        casterName: character.name,
+        abilityName: ability.name,
+        save: rollProfile.defense,
+        dc: rollProfile.dc,
+        basic: !!(ability.basic),
+        targets,
+      });
+    }
+
     if (effectiveCost === 'reaction') {
       spendReaction(`${verb} ${ability.name}`);
     } else if (effectiveCost > 0) {
@@ -180,16 +203,30 @@ const UseAbilityModal = ({
     (e) => e.applyTo === 'self' || e.applyTo === 'all-allies'
   );
 
-  // The roll resolution section: either the inline resolver (actor-roll) or nothing (target-save
-  // will be implemented in Slice B once encounter saveRequests are added).
-  const rollSection = resolverTargets.length > 0 ? (
-    <TargetRollResolver
-      ref={resolverRef}
-      enemyTargets={resolverTargets}
-      targetDefense={effectiveDefense}
-      rollBonus={rollProfile.bonus}
-    />
-  ) : null;
+  // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
+  let rollSection = null;
+  if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
+    rollSection = (
+      <TargetRollResolver
+        ref={resolverRef}
+        enemyTargets={resolverTargets}
+        targetDefense={effectiveDefense}
+        rollBonus={rollProfile.bonus}
+      />
+    );
+  } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {
+    const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
+    rollSection = (
+      <div className="ct-save-request-preview" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+        <strong>Save request → GM:</strong> {saveLabel} DC {rollProfile.dc}
+        <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
+          {saveTargets.map((e) => (
+            <li key={e.entryId}>{e.name}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <Modal
