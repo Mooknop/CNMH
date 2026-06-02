@@ -79,6 +79,7 @@ export function makeActor(opts = {}) {
     itemTypes: { condition: conditionItems },
     getActiveTokens: () => tokens,
     update: jest.fn().mockResolvedValue(undefined),
+    createEmbeddedDocuments: jest.fn().mockResolvedValue([]),
   };
 
   // Back-link condition items to their parent actor.
@@ -278,6 +279,9 @@ export function installFoundryGlobals(overrides = {}) {
   global.canvas   = overrides.canvas ?? makeCanvas(overrides.canvasOpts);
   global.CONFIG   = overrides.CONFIG ?? makeConfig(overrides.configOpts);
   global.WebSocket = overrides.WebSocket ?? makeWebSocketClass();
+  // fromUuid: Foundry async UUID resolver. Tests override per-scenario;
+  // the default returns null so unrelated tests are unaffected.
+  global.fromUuid = overrides.fromUuid ?? jest.fn().mockResolvedValue(null);
   return {
     Hooks: global.Hooks,
     game: global.game,
@@ -293,4 +297,5 @@ export function clearFoundryGlobals() {
   delete global.canvas;
   delete global.CONFIG;
   delete global.WebSocket;
+  delete global.fromUuid;
 }

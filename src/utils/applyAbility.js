@@ -97,6 +97,22 @@ export function applyAbility({
     }
   });
 
+  // ── Foundry effect link ─────────────────────────────────────────────────────
+  // Independent of effects[]/grants[]: if the ability has a foundryEffect config,
+  // tell the bridge to clone the compendium effect item onto the target tokens.
+  const fe = ability.foundryEffect;
+  if (fe?.ref) {
+    const feResolved = resolveApplyTargets(fe.applyTo || 'self', caster, targetCharIds, order);
+    const feTargets  = feResolved.map((r) => r.entryId).filter(Boolean);
+    sendUpdate(caster.id, 'applyeffect', {
+      ref:     fe.ref,
+      op:      'apply',
+      targets: feTargets,
+      source:  name,
+      ts:      Date.now(),
+    });
+  }
+
   // ── Structured grants ───────────────────────────────────────────────────────
   grants.forEach((grant) => {
     const resolved = resolveApplyTargets(grant.applyTo || 'ally', caster, targetCharIds, order);

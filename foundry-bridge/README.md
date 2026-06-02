@@ -45,6 +45,7 @@ from it.
 | `movedone` | bridge → app | charId | `{ newPosition, feetMoved, reqTs }` |
 | `shieldraise` | app (↔ Foundry mirror TBD) | charId | `{ raised, uid, ts }` — Raise a Shield state |
 | `action` | app → bridge | charId | `{ kind:'strike'\|'spell'\|'save-effect', sourceUid, targets:[entryId], ts }` — sets Foundry's user target set; bridge annotates each target with `offGuard:true` if attacker is a flanker |
+| `applyeffect` | app → bridge | charId | `{ ref, op:'apply', targets:[entryId], source, ts }` — bridge clones the compendium effect item onto each target actor (apply-only; removal is Foundry's own concern) |
 | `flanked` | bridge → app | `global` | `{ [enemyEntryId]: { byCharIds:[charId,...] } }` — pushed on token-move and turn-advance |
 
 ## Tests
