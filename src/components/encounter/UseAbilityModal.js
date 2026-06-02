@@ -7,8 +7,11 @@ import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
+import { useEffects } from '../../hooks/useEffects';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { resolveActionRoll } from '../../utils/rollResolution';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
 const parseActionCost = (actionsText) => {
@@ -54,10 +57,14 @@ const UseAbilityModal = ({
 }) => {
   const { getState, sendUpdate } = useSession();
   const { characters } = useContent();
-  const { encounter, appendLog } = useEncounter();
+  const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character?.id || 'nobody');
 
   const resolverRef = useRef(null);
+
+  // Read the actor's active conditions and effects (same sources StatsBlock uses).
+  const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
+  const { effects: activeEffects } = useEffects(character?.id || '');
 
   const order = encounter?.order || [];
 
@@ -82,13 +89,25 @@ const UseAbilityModal = ({
   const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
 
-  // Determine which defense this action targets (explicit tag, or Attack trait → AC).
-  const effectiveDefense = ability.targetDefense ||
-    (ability.traits?.includes('Attack') ? 'ac' : null);
+  // Resolve roll profile — includes condition/effect netting for the actor.
+  const rollProfile = resolveActionRoll(ability, character, {
+    conditions: activeConditions || [],
+    effects: activeEffects || [],
+  });
 
-  // Enemy targets that have defense data and a resolvable defense.
-  const resolverTargets = effectiveDefense
+  // Which defense to show on the resolver (actor-roll only).
+  const effectiveDefense = rollProfile.mode === 'actor-roll'
+    ? rollProfile.defense
+    : (ability.targetDefense || (ability.traits?.includes('Attack') ? 'ac' : null));
+
+  // Enemy targets that have defense data and a resolvable defense (actor-roll path only).
+  const resolverTargets = (rollProfile.mode === 'actor-roll' && effectiveDefense)
     ? selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses)
+    : [];
+
+  // For target-save: enemy targets whose save mod we can read (used in the save request).
+  const saveTargets = rollProfile.mode === 'target-save'
+    ? selectedEntries.filter((e) => e.kind === 'enemy')
     : [];
 
   const confirmEnabled = !needsPicker || targets.length > 0;
@@ -153,6 +172,24 @@ const UseAbilityModal = ({
       });
     }
 
+    // Push a save request to the GM for target-save abilities.
+    if (rollProfile.mode === 'target-save' && saveTargets.length > 0 && rollProfile.dc != null) {
+      const targets = saveTargets.map((e) => ({
+        entryId: e.entryId,
+        name: e.name,
+        saveMod: e.defenses?.saves?.[rollProfile.defense] ?? null,
+      }));
+      addSaveRequest({
+        casterId: character.id,
+        casterName: character.name,
+        abilityName: ability.name,
+        save: rollProfile.defense,
+        dc: rollProfile.dc,
+        basic: !!(ability.basic),
+        targets,
+      });
+    }
+
     if (effectiveCost === 'reaction') {
       spendReaction(`${verb} ${ability.name}`);
     } else if (effectiveCost > 0) {
@@ -165,6 +202,31 @@ const UseAbilityModal = ({
   const staticEffects = effects.filter(
     (e) => e.applyTo === 'self' || e.applyTo === 'all-allies'
   );
+
+  // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
+  let rollSection = null;
+  if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
+    rollSection = (
+      <TargetRollResolver
+        ref={resolverRef}
+        enemyTargets={resolverTargets}
+        targetDefense={effectiveDefense}
+        rollBonus={rollProfile.bonus}
+      />
+    );
+  } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {
+    const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
+    rollSection = (
+      <div className="ct-save-request-preview" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+        <strong>Save request → GM:</strong> {saveLabel} DC {rollProfile.dc}
+        <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
+          {saveTargets.map((e) => (
+            <li key={e.entryId}>{e.name}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <Modal
@@ -218,13 +280,7 @@ const UseAbilityModal = ({
                 onToggle={toggleTarget}
               />
             )}
-            {resolverTargets.length > 0 && (
-              <TargetRollResolver
-                ref={resolverRef}
-                enemyTargets={resolverTargets}
-                targetDefense={effectiveDefense}
-              />
-            )}
+            {rollSection}
           </section>
         </>
       )}
@@ -262,13 +318,7 @@ const UseAbilityModal = ({
               isTargeted={isTargeted}
               onToggle={toggleTarget}
             />
-            {resolverTargets.length > 0 && (
-              <TargetRollResolver
-                ref={resolverRef}
-                enemyTargets={resolverTargets}
-                targetDefense={effectiveDefense}
-              />
-            )}
+            {rollSection}
           </section>
         </>
       )}

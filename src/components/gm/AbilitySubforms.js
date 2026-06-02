@@ -6,6 +6,7 @@
 import React from 'react';
 import ImageField from './ImageField';
 import EffectsSubform, { effectsToForm, effectsFromForm } from './EffectsSubform';
+import { SKILL_ABILITY_MAP } from '../../utils/CharacterUtils';
 
 export const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -20,6 +21,76 @@ export const toList = (csv) =>
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+
+// ----- Roll source -----------------------------------------------------------
+// Codec for the optional ability.roll config object.
+// Types: '' (infer) | 'strike' | 'spell-attack' | 'skill' | 'spell-dc' | 'flat'
+//
+// Round-trip contract: delete from `rest` on toForm so it is not double-written;
+// only emit if type is set, so existing actions without roll config are unaffected.
+
+const ROLL_SKILL_IDS = Object.keys(SKILL_ABILITY_MAP).sort();
+
+export const rollToForm = (r) => ({
+  type:  r?.type  || '',
+  skill: r?.skill || '',
+  bonus: r?.bonus != null ? String(r.bonus) : '',
+});
+
+export const rollFromForm = (f) => {
+  if (!f || !f.type) return null;
+  const out = { type: f.type };
+  if (f.type === 'skill' && f.skill) out.skill = f.skill;
+  if (f.bonus !== '') {
+    const n = parseFloat(f.bonus);
+    if (!isNaN(n)) out.bonus = n;
+  }
+  return out;
+};
+
+export const RollSourceControl = ({ value, onChange, idPrefix }) => {
+  const set = (patch) => onChange({ ...value, ...patch });
+  return (
+    <div className="form-group">
+      <label>roll source</label>
+      <select
+        aria-label={`${idPrefix}-roll-type`}
+        value={value.type}
+        onChange={(e) => set({ type: e.target.value, skill: '', bonus: '' })}
+      >
+        <option value="">— (infer automatically)</option>
+        <option value="strike">Strike attack</option>
+        <option value="spell-attack">Spell attack</option>
+        <option value="skill">Skill</option>
+        <option value="spell-dc">Spell DC (save)</option>
+        <option value="flat">Flat bonus</option>
+      </select>
+      {value.type === 'skill' && (
+        <select
+          aria-label={`${idPrefix}-roll-skill`}
+          value={value.skill}
+          onChange={(e) => set({ skill: e.target.value })}
+          style={{ marginTop: '4px' }}
+        >
+          <option value="">— pick skill</option>
+          {ROLL_SKILL_IDS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+      )}
+      {value.type === 'flat' && (
+        <input
+          type="number"
+          aria-label={`${idPrefix}-roll-bonus`}
+          placeholder="bonus"
+          value={value.bonus}
+          onChange={(e) => set({ bonus: e.target.value })}
+          style={{ marginTop: '4px', width: '80px' }}
+        />
+      )}
+    </div>
+  );
+};
 
 // ----- Action cost -----------------------------------------------------------
 // One simple control (1 · 2 · 3 · R · Variable). Authored data uses any of
@@ -188,9 +259,11 @@ const abilityToForm = (s) => {
   ABILITY_STR.forEach((k) => delete rest[k]);
   delete rest.traits;
   COST_KEYS.forEach((k) => delete rest[k]);
-  // Pull effects into managed form state so it's not double-written via rest.
+  // Pull effects, targetDefense, and roll into managed form state so they are
+  // not double-written via rest.
   delete rest.effects;
   delete rest.targetDefense;
+  delete rest.roll;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -208,6 +281,7 @@ const abilityToForm = (s) => {
     cost,
     effects: effectsToForm(src.effects),
     targetDefense: src.targetDefense || '',
+    roll: rollToForm(src.roll),
     rest,
   };
 };
@@ -225,6 +299,8 @@ const abilityFromForm = (f) => {
   const effects = effectsFromForm(f.effects);
   if (effects.length) out.effects = effects;
   if (f.targetDefense) out.targetDefense = f.targetDefense;
+  const roll = rollFromForm(f.roll);
+  if (roll) out.roll = roll;
   return out;
 };
 
@@ -283,6 +359,11 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
           <option value="will">Will DC</option>
         </select>
       </div>
+      <RollSourceControl
+        value={value.roll || rollToForm(null)}
+        idPrefix={idPrefix}
+        onChange={(r) => onChange({ ...value, roll: r })}
+      />
       <div className="gm-row">
         <div className="form-group">
           <label>trigger</label>

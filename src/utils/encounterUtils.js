@@ -15,6 +15,18 @@ export const defaultEncounter = () => ({
   currentTurnIndex: 0,
   order: [],
   log: [],
+  saveRequests: [], // pending save requests from players to the GM
+});
+
+// saveRequest shape:
+// { id, ts, casterId, casterName, abilityName, save, dc, basic,
+//   targets:[{entryId,name,saveMod}], status:'pending'|'resolved' }
+let _saveReqCounter = 0;
+export const makeSaveRequest = (req) => ({
+  ...req,
+  id: `savereq-${Date.now()}-${++_saveReqCounter}`,
+  ts: Date.now(),
+  status: 'pending',
 });
 
 export const isPc = (entry) => !!entry && entry.kind === 'pc';

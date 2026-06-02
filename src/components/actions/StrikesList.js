@@ -6,6 +6,7 @@ import ActionIcon from '../shared/ActionIcon';
 import ThaumaturgeImplementsDisplay from './ThaumaturgeImplementsDisplay';
 import UseActionChip from '../shared/UseActionChip';
 import { useCharacter } from '../../hooks/useCharacter';
+import { formatModifier } from '../../utils/CharacterUtils';
 
 
 /**
@@ -75,7 +76,7 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
         <div className="strike-details">
           <div className="strike-attack">
             <span className="detail-label">Attack</span>
-            <span className="detail-value" style={{ color: themeColor }}>{strike.attackMod}</span>
+            <span className="detail-value" style={{ color: themeColor }}>{formatModifier(strike.attackMod)}</span>
           </div>
           <div className="strike-damage">
             <span className="detail-label">Damage</span>

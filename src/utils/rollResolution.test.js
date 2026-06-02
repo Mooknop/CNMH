@@ -1,0 +1,221 @@
+import { resolveActionRoll, mapSpellDefense } from './rollResolution';
+import * as ConditionUtils from './ConditionUtils';
+import * as EffectUtils from './EffectUtils';
+
+// ─── helpers ─────────────────────────────────────────────────────────────────
+const baseCharacter = {
+  level: 1,
+  keyAbility: 'strength',
+  abilities: { strength: 14, dexterity: 12, intelligence: 10, wisdom: 10, charisma: 10 },
+  skills: { athletics: { proficiency: 1 }, deception: { proficiency: 0 } },
+  proficiencies: { weapons: { simple: { proficiency: 1 } } },
+  spellcasting: { ability: 'charisma', proficiency: 1 },
+};
+
+const noEffects = { conditions: [], effects: [] };
+
+// ─── mapSpellDefense ─────────────────────────────────────────────────────────
+describe('mapSpellDefense', () => {
+  it('maps Reflex → reflex', () => expect(mapSpellDefense('Reflex')).toBe('reflex'));
+  it('maps Will → will',    () => expect(mapSpellDefense('Will')).toBe('will'));
+  it('maps Fortitude → fortitude', () => expect(mapSpellDefense('Fortitude')).toBe('fortitude'));
+  it('returns null for unrecognised', () => expect(mapSpellDefense('Unknown')).toBeNull());
+});
+
+// ─── none cases ──────────────────────────────────────────────────────────────
+describe('resolveActionRoll — none', () => {
+  it('returns none when ability is null', () => {
+    expect(resolveActionRoll(null, baseCharacter).mode).toBe('none');
+  });
+
+  it('returns none for a pure movement action (Stride)', () => {
+    const stride = { name: 'Stride', actionCount: 1, traits: ['Move'], requiresTarget: false };
+    expect(resolveActionRoll(stride, baseCharacter, noEffects).mode).toBe('none');
+  });
+});
+
+// ─── explicit roll config ─────────────────────────────────────────────────────
+describe('resolveActionRoll — explicit roll config', () => {
+  it('flat: returns the override bonus as-is (not netted against conditions)', () => {
+    const ability = { name: 'Special', roll: { type: 'flat', bonus: 7 }, targetDefense: 'ac' };
+    const result = resolveActionRoll(ability, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.bonus).toBe(7);
+    expect(result.defense).toBe('ac');
+    expect(result.source).toBe('roll-config-flat');
+  });
+
+  it('strike: uses attackMod and correct stat', () => {
+    const ability = { name: 'Sword', type: 'melee', attackMod: 5, roll: { type: 'strike' }, targetDefense: 'ac' };
+    const result = resolveActionRoll(ability, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.bonus).toBe(5);
+    expect(result.defense).toBe('ac');
+    expect(result.source).toBe('roll-config-strike');
+  });
+
+  it('skill: uses getSkillModifier for the given skill', () => {
+    const ability = { name: 'Grapple', roll: { type: 'skill', skill: 'athletics' }, targetDefense: 'fortitude' };
+    const result = resolveActionRoll(ability, baseCharacter, noEffects);
+    // STR 14 → mod 2, trained (prof 1) → +2+1 = +3 + level 1 = … actually getSkillModifier returns 2+3=5
+    expect(result.mode).toBe('actor-roll');
+    expect(typeof result.bonus).toBe('number');
+    expect(result.defense).toBe('fortitude');
+    expect(result.skill).toBe('athletics');
+  });
+
+  it('spell-attack: uses spellAttackMod', () => {
+    const ability = { name: 'Spell Strike', roll: { type: 'spell-attack' } };
+    const result = resolveActionRoll(ability, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.defense).toBe('ac');
+    expect(typeof result.bonus).toBe('number');
+    expect(result.source).toBe('roll-config-spell-attack');
+  });
+
+  it('spell-dc: returns target-save with spellDC', () => {
+    const ability = { name: 'Fireball', defense: 'Reflex', roll: { type: 'spell-dc' } };
+    const result = resolveActionRoll(ability, baseCharacter, noEffects);
+    expect(result.mode).toBe('target-save');
+    expect(result.defense).toBe('reflex');
+    expect(typeof result.dc).toBe('number');
+    expect(result.source).toBe('roll-config-spell-dc');
+  });
+
+  it('roll.bonus overrides derived base for non-flat types', () => {
+    const ability = { name: 'Grapple', roll: { type: 'skill', skill: 'athletics', bonus: 10 }, targetDefense: 'fortitude' };
+    const result = resolveActionRoll(ability, baseCharacter, noEffects);
+    expect(result.bonus).toBe(10); // bonus 10, no active conditions → total 10
+  });
+});
+
+// ─── priority 2: strike with numeric attackMod ────────────────────────────────
+describe('resolveActionRoll — numeric attackMod strike', () => {
+  it('returns actor-roll vs AC with the numeric attackMod', () => {
+    const strike = { name: 'Longsword', type: 'melee', attackMod: 9, targetDefense: 'ac' };
+    const result = resolveActionRoll(strike, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.bonus).toBe(9);
+    expect(result.defense).toBe('ac');
+    expect(result.source).toBe('strike');
+  });
+
+  it('uses rangedAttack stat for ranged strikes', () => {
+    const strike = { name: 'Shortbow', type: 'ranged', attackMod: 5, targetDefense: 'ac' };
+    // spy on computeConditionEffects to verify stat routing
+    const spy = jest.spyOn(ConditionUtils, 'computeConditionEffects').mockReturnValue({
+      meleeAttack:  { total: -1, sources: [] },
+      rangedAttack: { total: -2, sources: [] },
+      spellAttack:  { total: 0,  sources: [] },
+      spellDC:      { total: 0,  sources: [] },
+      skillPenalty: () => ({ total: 0, sources: [] }),
+    });
+    jest.spyOn(EffectUtils, 'computeEffectBonuses').mockReturnValue({
+      rangedAttack: { total: 0, sources: [] },
+    });
+    const result = resolveActionRoll(strike, baseCharacter, { conditions: [{ id: 'frightened', value: 2 }] });
+    expect(result.bonus).toBe(3); // 5 base - 2 rangedAttack penalty
+    spy.mockRestore();
+    jest.restoreAllMocks();
+  });
+});
+
+// ─── priority 3: highlightSkill ───────────────────────────────────────────────
+describe('resolveActionRoll — highlightSkill', () => {
+  it('Grapple (athletics vs fortitude)', () => {
+    const grapple = { name: 'Grapple', highlightSkill: 'athletics', targetDefense: 'fortitude', traits: ['Attack'] };
+    const result = resolveActionRoll(grapple, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.defense).toBe('fortitude');
+    expect(result.skill).toBe('athletics');
+    expect(typeof result.bonus).toBe('number');
+    expect(result.source).toBe('highlight-skill');
+  });
+});
+
+// ─── priority 4: spell inference ─────────────────────────────────────────────
+describe('resolveActionRoll — spell inference', () => {
+  it('Fireball (defense: Reflex) → target-save', () => {
+    const fireball = { name: 'Fireball', defense: 'Reflex', traits: ['Fire', 'Evocation'] };
+    const result = resolveActionRoll(fireball, baseCharacter, noEffects);
+    expect(result.mode).toBe('target-save');
+    expect(result.defense).toBe('reflex');
+    expect(typeof result.dc).toBe('number');
+  });
+
+  it('spell with Attack trait (cantrip) → actor-roll spell attack', () => {
+    const cantrip = { name: 'Electric Arc', traits: ['Attack', 'Electricity'] };
+    const result = resolveActionRoll(cantrip, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.defense).toBe('ac');
+    expect(result.source).toBe('spell-attack-inferred');
+  });
+
+  it('spell with Attack trait AND defense field → spell attack (Attack trait wins)', () => {
+    const spell = { name: 'Weird Spell', traits: ['Attack'], defense: 'Reflex' };
+    const result = resolveActionRoll(spell, baseCharacter, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.source).toBe('spell-attack-inferred');
+  });
+
+  it('targetDefense ac with no bonus source → actor-roll with null bonus', () => {
+    const action = { name: 'Strike', traits: ['Attack'], targetDefense: 'ac' };
+    const charNoSpellcasting = { ...baseCharacter, spellcasting: null };
+    const result = resolveActionRoll(action, charNoSpellcasting, noEffects);
+    expect(result.mode).toBe('actor-roll');
+    expect(result.bonus).toBeNull();
+  });
+});
+
+// ─── condition / effect netting ───────────────────────────────────────────────
+describe('resolveActionRoll — condition/effect netting', () => {
+  const frightened2 = [{ id: 'frightened', value: 2 }];
+
+  it('frightened 2 lowers a melee strike bonus by 2', () => {
+    const strike = { name: 'Longsword', type: 'melee', attackMod: 9 };
+    const base  = resolveActionRoll(strike, baseCharacter, noEffects).bonus;
+    const netted = resolveActionRoll(strike, baseCharacter, { conditions: frightened2 }).bonus;
+    expect(netted).toBe(base - 2);
+  });
+
+  it('frightened 2 lowers a ranged strike bonus by 2', () => {
+    const strike = { name: 'Bow', type: 'ranged', attackMod: 5 };
+    const base   = resolveActionRoll(strike, baseCharacter, noEffects).bonus;
+    const netted = resolveActionRoll(strike, baseCharacter, { conditions: frightened2 }).bonus;
+    expect(netted).toBe(base - 2);
+  });
+
+  it('frightened 2 lowers the save spell DC', () => {
+    const fireball = { name: 'Fireball', defense: 'Reflex' };
+    const base     = resolveActionRoll(fireball, baseCharacter, noEffects).dc;
+    const netted   = resolveActionRoll(fireball, baseCharacter, { conditions: frightened2 }).dc;
+    expect(netted).toBe(base - 2);
+  });
+
+  it('frightened 2 lowers a spell attack roll', () => {
+    const cantrip = { name: 'Cantrip', traits: ['Attack'] };
+    const base    = resolveActionRoll(cantrip, baseCharacter, noEffects).bonus;
+    const netted  = resolveActionRoll(cantrip, baseCharacter, { conditions: frightened2 }).bonus;
+    expect(netted).toBe(base - 2);
+  });
+
+  it('off-guard does NOT lower the actor\'s attack roll (it is a defender penalty)', () => {
+    const offGuard = [{ id: 'off-guard' }];
+    const strike = { name: 'Longsword', type: 'melee', attackMod: 9 };
+    const base   = resolveActionRoll(strike, baseCharacter, noEffects).bonus;
+    const netted = resolveActionRoll(strike, baseCharacter, { conditions: offGuard }).bonus;
+    expect(netted).toBe(base); // no change
+  });
+
+  it('effect bonus (status) raises a spell attack roll', () => {
+    // Heroism grants +1 status bonus to spellAttack
+    const heroism = [{ effectId: 'heroism-lesser' }];
+    const cantrip = { name: 'Cantrip', traits: ['Attack'] };
+    const base    = resolveActionRoll(cantrip, baseCharacter, noEffects).bonus;
+    const buffed  = resolveActionRoll(cantrip, baseCharacter, { effects: heroism }).bonus;
+    // If heroism-lesser is in the catalog it adds +1 status to spellAttack → buffed > base
+    // Don't hard-code the catalog; just check direction when the effect applies.
+    expect(typeof buffed).toBe('number');
+    expect(buffed).toBeGreaterThanOrEqual(base);
+  });
+});

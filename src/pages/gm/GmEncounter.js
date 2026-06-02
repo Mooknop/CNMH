@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
+import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import './gm.css';
 
@@ -86,6 +87,8 @@ const GmEncounter = () => {
       {phase !== 'idle' && (
         <GmSaveRequest pcEntries={order.filter((e) => e.kind === 'pc' && e.charId)} />
       )}
+
+      {phase !== 'idle' && <RequestedSaves />}
 
       {phase !== 'idle' && (
         <div className="gm-encounter-order">
