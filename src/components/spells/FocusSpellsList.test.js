@@ -6,6 +6,16 @@ jest.mock('./SpellCard', () => ({ spell }) => (
   <div data-testid="spell-card">{spell.name}</div>
 ));
 
+jest.mock('../../contexts/ContentContext', () => ({
+  useContent: jest.fn(),
+}));
+
+const { useContent } = require('../../contexts/ContentContext');
+// Restore default before each test so clearAllMocks doesn't leave it undefined.
+beforeEach(() => {
+  useContent.mockReturnValue({ spells: [] });
+});
+
 jest.mock('../../utils/SpellUtils', () => ({
   organizeSpellsByRank: (spells) => {
     const result = { cantrips: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [] };
@@ -174,6 +184,46 @@ describe('FocusSpellsList', () => {
     render(<FocusSpellsList character={char} characterColor="#333" />);
     expect(screen.getByText(/no focus spells available/i)).toBeInTheDocument();
   });
+});
 
+describe('FocusSpellsList — spellRef resolution', () => {
+  const catalogSpell = {
+    id: 'inspire-courage',
+    name: 'Inspire Courage',
+    level: 0,
+    traits: ['Composition'],
+  };
 
+  beforeEach(() => localStorage.clear());
+
+  it('resolves a spellRef entry via the catalog and renders the spell name', () => {
+    useContent.mockReturnValue({ spells: [catalogSpell] });
+    const char = {
+      id: '1', level: 3, class: 'Bard',
+      focus_spells: [{ spellRef: 'inspire-courage' }],
+      spellcasting: { focus: { max: 1, current: 1 } },
+    };
+    render(<FocusSpellsList character={char} characterColor="#333" />);
+    expect(screen.getByText('Inspire Courage')).toBeInTheDocument();
+  });
+
+  it('renders a visible stub when spellRef is not in catalog', () => {
+    useContent.mockReturnValue({ spells: [] });
+    const char = {
+      id: '1', level: 3,
+      focus_spells: [{ spellRef: 'nonexistent-spell' }],
+    };
+    render(<FocusSpellsList character={char} characterColor="#333" />);
+    expect(screen.getByText(/unknown spell: nonexistent-spell/i)).toBeInTheDocument();
+  });
+
+  it('inline entries (no spellRef) still render unchanged — back-compat', () => {
+    useContent.mockReturnValue({ spells: [] });
+    const char = {
+      id: '1', level: 3,
+      focus_spells: [{ id: 'fs1', name: 'Divine Lance', level: 1 }],
+    };
+    render(<FocusSpellsList character={char} characterColor="#333" />);
+    expect(screen.getByText('Divine Lance')).toBeInTheDocument();
+  });
 });

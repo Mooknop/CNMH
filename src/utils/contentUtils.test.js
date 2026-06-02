@@ -18,6 +18,7 @@ import {
   withSpellId,
   normalizeSpells,
   spellCatalogMap,
+  resolveFocusSpells,
   resolveInventoryItem,
   resolveInventory,
   resolveCharacterItems,
@@ -522,5 +523,90 @@ describe('contentUtils', () => {
       );
       expect(r2.inventory[0].scroll).toEqual({ name: '(unknown spell: sleep)', level: 0 });
     });
+  });
+});
+
+describe('resolveFocusSpells', () => {
+  const focusMap = spellCatalogMap([
+    { id: 'inspire-courage', name: 'Inspire Courage', level: 0, traits: ['Composition'] },
+    { id: 'shields-of-the-spirit', name: 'Shields of the Spirit', level: 1, traits: ['Champion', 'Focus'] },
+  ]);
+
+  it('resolves a spellRef entry to the full catalog spell', () => {
+    const result = resolveFocusSpells([{ spellRef: 'inspire-courage' }], focusMap);
+    expect(result[0]).toMatchObject({ id: 'inspire-courage', name: 'Inspire Courage', level: 0 });
+  });
+
+  it('applies entry-local overrides on top of the catalog spell', () => {
+    const result = resolveFocusSpells(
+      [{ spellRef: 'inspire-courage', bloodline: true }],
+      focusMap
+    );
+    expect(result[0].name).toBe('Inspire Courage');
+    expect(result[0].bloodline).toBe(true);
+  });
+
+  it('yields a visible level-0 stub for a dangling spellRef', () => {
+    const result = resolveFocusSpells([{ spellRef: 'nope' }], focusMap);
+    expect(result[0]).toEqual({ name: '(unknown spell: nope)', level: 0 });
+  });
+
+  it('passes through inline entries without spellRef unchanged (back-compat)', () => {
+    const inline = { id: 'fs1', name: 'Divine Lance', level: 1 };
+    const result = resolveFocusSpells([inline], focusMap);
+    expect(result[0]).toBe(inline);
+  });
+
+  it('handles mixed inline + ref arrays', () => {
+    const inline = { id: 'fs1', name: 'Divine Lance', level: 1 };
+    const result = resolveFocusSpells(
+      [inline, { spellRef: 'inspire-courage' }, { spellRef: 'nope' }],
+      focusMap
+    );
+    expect(result[0]).toBe(inline);
+    expect(result[1].name).toBe('Inspire Courage');
+    expect(result[2].name).toMatch(/unknown spell/);
+  });
+
+  it('returns the input unchanged when it is not an array', () => {
+    expect(resolveFocusSpells(null, focusMap)).toBeNull();
+    expect(resolveFocusSpells(undefined, focusMap)).toBeUndefined();
+  });
+
+  it('resolves with an empty map — all spellRefs become stubs', () => {
+    const result = resolveFocusSpells([{ spellRef: 'any' }], new Map());
+    expect(result[0]).toEqual({ name: '(unknown spell: any)', level: 0 });
+  });
+
+  it('bundled focus spells resolve correctly after migration', () => {
+    const { spells } = require('../data/spells.json');
+    const bundledMap = spellCatalogMap(spells);
+    const pelliasFocus = [
+      { spellRef: 'serrate' },
+      { spellRef: 'shields-of-the-spirit' },
+    ];
+    const resolved = resolveFocusSpells(pelliasFocus, bundledMap);
+    expect(resolved[0].name).toBe('Serrate');
+    expect(resolved[1].name).toBe('Shields of the Spirit');
+    expect(resolved[1].traits).toContain('Champion');
+
+    const izzyFocus = [
+      { spellRef: 'inspire-courage' },
+      { spellRef: 'counter-performance' },
+      { spellRef: 'hymn-of-healing' },
+      { spellRef: 'lingering-composition' },
+    ];
+    const izzyResolved = resolveFocusSpells(izzyFocus, bundledMap);
+    expect(izzyResolved.map(s => s.name)).toEqual([
+      'Inspire Courage', 'Counter Performance', 'Hymn of Healing', 'Lingering Composition',
+    ]);
+
+    const jadeFocus = [{ spellRef: 'ancestral-memories', bloodline: true }];
+    const jadeResolved = resolveFocusSpells(jadeFocus, bundledMap);
+    expect(jadeResolved[0].name).toBe('Ancestral Memories');
+    expect(jadeResolved[0].bloodline).toBe(true);
+
+    const bluFocus = [{ spellRef: 'inner-upheaval' }];
+    expect(resolveFocusSpells(bluFocus, bundledMap)[0].name).toBe('Inner Upheaval');
   });
 });

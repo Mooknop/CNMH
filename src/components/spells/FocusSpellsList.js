@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { organizeSpellsByRank, getSortedRankList } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
+import { useContent } from '../../contexts/ContentContext';
+import { spellCatalogMap, resolveFocusSpells } from '../../utils/contentUtils';
 
 const FocusSpellsList = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
+  const { spells: catalogSpells } = useContent();
+  const spellMap = useMemo(() => spellCatalogMap(catalogSpells), [catalogSpells]);
 
   const getFocusSpellsLabel = () => {
     if (character.champion) return 'Devotion Spells';
@@ -50,7 +54,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
   };
 
   const focusSpellsLabel = getFocusSpellsLabel();
-  const focusSpells = getFocusSpells();
+  const focusSpells = resolveFocusSpells(getFocusSpells(), spellMap);
   const focusInfo = getFocusInfo();
   const focusMax = focusInfo?.max ?? 0;
 

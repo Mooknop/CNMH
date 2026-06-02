@@ -348,6 +348,101 @@
       "area": "10-foot emanation",
       "duration": "10 minutes",
       "description": "An illusory parade with dozens of participants and performers appears around you, following you as you move. The parade is lively and noisy, providing enough cover and distraction to hide among the crowd. You and other creatures can Hide and Sneak inside the crowd, though creatures that disbelieve the illusion still see creatures within as normal. You can choose to send the parade off with a 2-action activity, which has the concentrate trait. When you do so, the parade no longer follows you and instead continues traveling in the direction of your choice. The parade travels 100 feet over 1 round and then disappears as the spell is Dismissed. You can otherwise Dismiss the spell normally if you prefer."
+    },
+    {
+      "id": "serrate",
+      "name": "Serrate",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": ["Uncommon", "Champion", "Focus", "Manipulate", "Metal"],
+      "actions": "One Action",
+      "range": "Touch",
+      "targets": "1 metal weapon",
+      "description": "With a pinch, the metal of a weapon twists, adding numerous jagged blades along its surface. Strikes with the target weapon deal an additional 1d4 slashing damage until the start of your next turn.",
+      "heightened": { "+2": "The extra damage increases by 1d4." }
+    },
+    {
+      "id": "shields-of-the-spirit",
+      "name": "Shields of the Spirit",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": ["Uncommon", "Champion", "Concentrate", "Focus", "Sanctified", "Spirit"],
+      "actions": "One Action",
+      "requirements": "You are wielding a shield.",
+      "description": "You Raise your Shield, causing ephemeral spirit shields to float within your champion's aura. The shields last until the start of your next turn or until you're no longer raising your shield, whichever comes first. While one of your allies is in your champion's aura, the shields grant them a +1 status bonus to AC, and each time an enemy makes an attack against the ally, the enemy takes 1d4 spirit damage (even if it misses).\nThe benefit applies only while an ally is in your aura, ending for any ally that leaves and applying to any that enters later. As normal, you don't count as your own ally and therefore don't get the benefits of the spirit shields yourself.",
+      "heightened": { "+2": "The extra damage increases by 1d4." }
+    },
+    {
+      "id": "inspire-courage",
+      "name": "Inspire Courage",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": ["Bard", "Cantrip", "Composition", "Emotion", "Enchantment", "Mental"],
+      "actions": "One Action",
+      "area": "60-foot emanation",
+      "duration": "1 round",
+      "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
+    },
+    {
+      "id": "counter-performance",
+      "name": "Counter Performance",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": ["Bard", "Composition", "Concentrate", "Focus", "Fortune", "Mental"],
+      "actions": "Reaction",
+      "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
+      "area": "60-foot emanation",
+      "description": "Your performance protects you and your allies. Roll a Performance check for a type you know—it must be an auditory performance if the trigger was auditory or a visual one for a visual trigger, and this action gains the traits for the type of performance (page 243). You and allies in the area can use the better result between your Performance check and the saving throw."
+    },
+    {
+      "id": "hymn-of-healing",
+      "name": "Hymn of Healing",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": ["Uncommon", "Bard", "Composition", "Concentrate", "Focus", "Healing", "Vitality"],
+      "actions": "Two Actions",
+      "duration": "sustained up to 4 rounds",
+      "area": "30-feet",
+      "targets": "1 willing creature",
+      "description": "Your glorious singing mends wounds and provides a temporary respite from harm. The target gains fast healing 2. When you Cast the Spell and the first time each round you Sustain the Spell, the target gains 2 temporary Hit Points, which last for 1 round.",
+      "heightened": { "+1": "The fast healing and temporary Hit Points each increase by 2." }
+    },
+    {
+      "id": "lingering-composition",
+      "name": "Lingering Composition",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": ["Bard", "Composition", "Concentrate", "Focus", "Spellshape"],
+      "actions": "Free Action",
+      "description": "You add a flourish to your composition to extend its benefits. If your next action is to cast a cantrip composition with a duration of 1 round, attempt a Performance check. The DC is standard-difficulty of a level equal to the highestt level target of your composition.",
+      "degrees": {
+        "Critical Success": "The composition lasts 4 rounds.",
+        "Success": "The composition lasts 3 rounds.",
+        "Failure": "The composition lasts 1 round, but you don't expend a focus point for trying."
+      }
+    },
+    {
+      "id": "ancestral-memories",
+      "name": "Ancestral Memories",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": ["Uncommon", "Concentrate", "Focus", "Sorcerer"],
+      "actions": "One Action",
+      "description": "The memories of long-dead spellcasters grant you their knowledge, making your spells more formidable. You gain either a +1 status bonus to the next spell attack roll you attempt before the end of your turn or an enemy within 60 feet takes a –1 status penalty to the next saving throw they attempt against a spell you cast before the end of your turn.",
+      "heightened": {
+        "5th": "The bonus increases to +2 or the penalty increases to –2.",
+        "8th": "The bonus increases to +3 or the penalty increases to –3."
+      }
+    },
+    {
+      "id": "inner-upheaval",
+      "name": "Inner Upheaval",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": ["Uncommon", "Concentrate", "Focus", "Monk"],
+      "actions": "One Action",
+      "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
+      "heightened": { "+4": "The extra damage increases to 1d6." }
     }
   ]
 }
