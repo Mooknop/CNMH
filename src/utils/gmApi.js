@@ -70,6 +70,65 @@ export const repointFocusSpellsToCatalog = async (liveCharacters) => {
   return { repointed };
 };
 
+// Propagate `chain` config from the bundled defaults to the live (seeded) DO.
+// Covers two document kinds:
+//   - spell docs: patch any bundled spell that carries a `chain` field but the
+//     live doc is missing or has a different `chain` value.
+//   - character docs: patch bundled feat actions that carry a `chain` field
+//     (matched by feat id + action name) onto the matching live character doc.
+// Both are idempotent (JSON equality short-circuit) and non-destructive.
+// Returns { patched: ['spell:inner-upheaval', 'character:JadeInferno', ...] }.
+export const syncChainConfig = async (liveSpells, liveCharacters) => {
+  const bundled = defaultContent();
+  const patched = [];
+
+  // ── Spells ────────────────────────────────────────────────────────────────
+  const liveSpellById = new Map(
+    (Array.isArray(liveSpells) ? liveSpells : [])
+      .filter((s) => s && s.id != null)
+      .map((s) => [String(s.id), s])
+  );
+  for (const bundledSpell of (bundled.spell || [])) {
+    if (!bundledSpell?.id || !bundledSpell.chain) continue;
+    const live = liveSpellById.get(String(bundledSpell.id));
+    if (!live) continue;
+    if (JSON.stringify(live.chain) === JSON.stringify(bundledSpell.chain)) continue;
+    await saveDocument('spell', String(bundledSpell.id), { ...live, chain: bundledSpell.chain });
+    patched.push(`spell:${bundledSpell.id}`);
+  }
+
+  // ── Characters: feat actions ──────────────────────────────────────────────
+  const liveCharById = new Map(
+    (Array.isArray(liveCharacters) ? liveCharacters : [])
+      .filter((c) => c && c.id != null)
+      .map((c) => [String(c.id), c])
+  );
+  for (const bundledChar of (bundled.character || [])) {
+    if (!bundledChar?.id || !Array.isArray(bundledChar.feats)) continue;
+    const live = liveCharById.get(String(bundledChar.id));
+    if (!live) continue;
+    let changed = false;
+    const patchedFeats = (live.feats || []).map((liveFeat) => {
+      const bundledFeat = bundledChar.feats.find((f) => f.id === liveFeat.id);
+      if (!bundledFeat || !Array.isArray(bundledFeat.actions)) return liveFeat;
+      const patchedActions = (liveFeat.actions || []).map((liveAction) => {
+        const bundledAction = bundledFeat.actions.find((a) => a.name === liveAction.name);
+        if (!bundledAction?.chain) return liveAction;
+        if (JSON.stringify(liveAction.chain) === JSON.stringify(bundledAction.chain)) return liveAction;
+        changed = true;
+        return { ...liveAction, chain: bundledAction.chain };
+      });
+      if (!changed) return liveFeat;
+      return { ...liveFeat, actions: patchedActions };
+    });
+    if (!changed) continue;
+    await saveDocument('character', String(bundledChar.id), { ...live, feats: patchedFeats });
+    patched.push(`character:${bundledChar.id}`);
+  }
+
+  return { patched };
+};
+
 // Restore from a downloaded backup: a force reseed whose collections come from
 // the backup file rather than the bundled defaults. Reuses the existing seed
 // route (force replaces each provided collection wholesale).

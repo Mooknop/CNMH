@@ -20,6 +20,8 @@ import {
   blankAnimalCompanion,
   foundryEffectToForm,
   foundryEffectFromForm,
+  chainToForm,
+  chainFromForm,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -522,5 +524,57 @@ describe('bundled animal companion resolve-parity (Slice 4b gate)', () => {
 
   it.each(bundledACs)('%s round-trips losslessly', (_label, ac) => {
     expect(animalCompanionFromForm(animalCompanionToForm(ac))).toEqual(ac);
+  });
+});
+
+describe('chainToForm / chainFromForm', () => {
+  it('round-trips a strike chain with all fields', () => {
+    const src = { into: 'strike', cost: 'included', modes: ['strike', 'flurry'], strikeTrait: 'Unarmed', attackBonus: 1, damageBonus: '1d6' };
+    expect(chainFromForm(chainToForm(src))).toEqual(src);
+  });
+
+  it('round-trips a spell chain', () => {
+    const src = { into: 'spell', cost: 'added', spellFilter: 'has-range', modifier: 'Range +30 ft' };
+    expect(chainFromForm(chainToForm(src))).toEqual(src);
+  });
+
+  it('returns null when into is empty', () => {
+    expect(chainFromForm(chainToForm(null))).toBeNull();
+    expect(chainFromForm(chainToForm({ into: '' }))).toBeNull();
+    expect(chainFromForm(null)).toBeNull();
+  });
+
+  it('defaults cost to included when not set', () => {
+    const out = chainFromForm(chainToForm({ into: 'strike' }));
+    expect(out.cost).toBe('included');
+  });
+
+  it('omits optional strike fields when blank', () => {
+    const out = chainFromForm(chainToForm({ into: 'strike', cost: 'included' }));
+    expect(out.strikeTrait).toBeUndefined();
+    expect(out.attackBonus).toBeUndefined();
+    expect(out.damageBonus).toBeUndefined();
+    expect(out.modes).toBeUndefined();
+  });
+
+  it('round-trips through an action — set', () => {
+    const { actionToForm, actionFromForm } = require('./AbilitySubforms');
+    const src = { name: 'Inner Upheaval', actionCount: 1, chain: { into: 'strike', cost: 'included', modes: ['strike'], attackBonus: 1 } };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips through an action — unset (no chain key emitted)', () => {
+    const { actionToForm, actionFromForm } = require('./AbilitySubforms');
+    const src = { name: 'Stride', actionCount: 1 };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+    expect(out.chain).toBeUndefined();
+  });
+
+  it('does not double-write chain through the rest blob', () => {
+    const { actionToForm } = require('./AbilitySubforms');
+    const src = { name: 'Reach Spell', actionCount: 1, chain: { into: 'spell', cost: 'added' } };
+    const form = actionToForm(src);
+    expect(form.rest.chain).toBeUndefined();
   });
 });

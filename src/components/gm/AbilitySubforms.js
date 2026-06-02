@@ -142,6 +142,148 @@ export const FoundryEffectControl = ({ value, onChange, idPrefix }) => {
   );
 };
 
+// ----- Chain config ----------------------------------------------------------
+// Codec for the optional ability.chain config object.
+// Marks an ability as chaining into a base sub-action and augmenting it.
+//   into: 'strike' — chains into a Strike or Flurry (cost typically 'included')
+//   into: 'spell'  — chains into Cast a Spell (cost typically 'added')
+//
+// Round-trip contract: delete from `rest` on toForm; only emit if into is set.
+
+export const chainToForm = (c) => ({
+  into:         c?.into         || '',
+  cost:         c?.cost         || 'included',
+  // strike kind
+  modeStrike:   !!(c?.modes?.includes('strike')),
+  modeFlurry:   !!(c?.modes?.includes('flurry')),
+  strikeTrait:  c?.strikeTrait  || '',
+  attackBonus:  c?.attackBonus  != null ? String(c.attackBonus) : '',
+  damageBonus:  c?.damageBonus  || '',
+  // spell kind
+  spellFilter:  c?.spellFilter  || 'any',
+  modifier:     c?.modifier     || '',
+});
+
+export const chainFromForm = (f) => {
+  if (!f || !f.into) return null;
+  const out = { into: f.into, cost: f.cost || 'included' };
+  if (f.into === 'strike') {
+    const modes = [];
+    if (f.modeStrike) modes.push('strike');
+    if (f.modeFlurry) modes.push('flurry');
+    if (modes.length) out.modes = modes;
+    if (f.strikeTrait?.trim()) out.strikeTrait = f.strikeTrait.trim();
+    if (f.attackBonus !== '') {
+      const n = parseFloat(f.attackBonus);
+      if (!isNaN(n)) out.attackBonus = n;
+    }
+    if (f.damageBonus?.trim()) out.damageBonus = f.damageBonus.trim();
+  }
+  if (f.into === 'spell') {
+    if (f.spellFilter && f.spellFilter !== 'any') out.spellFilter = f.spellFilter;
+    if (f.modifier?.trim()) out.modifier = f.modifier.trim();
+  }
+  return out;
+};
+
+export const ChainControl = ({ value, onChange, idPrefix }) => {
+  const set = (patch) => onChange({ ...value, ...patch });
+  return (
+    <div className="form-group">
+      <label>chains into sub-action</label>
+      <select
+        aria-label={`${idPrefix}-chain-into`}
+        value={value.into}
+        onChange={(e) => set({ into: e.target.value })}
+      >
+        <option value="">— (no chain)</option>
+        <option value="strike">Strike / Flurry of Blows</option>
+        <option value="spell">Cast a Spell (Spellshape)</option>
+      </select>
+
+      {value.into && (
+        <select
+          aria-label={`${idPrefix}-chain-cost`}
+          value={value.cost}
+          onChange={(e) => set({ cost: e.target.value })}
+          style={{ marginTop: '4px' }}
+        >
+          <option value="included">included in parent cost</option>
+          <option value="added">added on top of sub-action cost</option>
+        </select>
+      )}
+
+      {value.into === 'strike' && (
+        <>
+          <div className="gm-row" style={{ marginTop: '4px' }}>
+            <label>
+              <input
+                type="checkbox"
+                aria-label={`${idPrefix}-chain-mode-strike`}
+                checked={!!value.modeStrike}
+                onChange={(e) => set({ modeStrike: e.target.checked })}
+              />{' '}
+              Strike
+            </label>
+            <label style={{ marginLeft: '12px' }}>
+              <input
+                type="checkbox"
+                aria-label={`${idPrefix}-chain-mode-flurry`}
+                checked={!!value.modeFlurry}
+                onChange={(e) => set({ modeFlurry: e.target.checked })}
+              />{' '}
+              Flurry of Blows
+            </label>
+          </div>
+          <input
+            aria-label={`${idPrefix}-chain-strike-trait`}
+            placeholder="strike trait filter (e.g. Unarmed — blank = any)"
+            value={value.strikeTrait}
+            onChange={(e) => set({ strikeTrait: e.target.value })}
+            style={{ marginTop: '4px', width: '100%' }}
+          />
+          <input
+            type="number"
+            aria-label={`${idPrefix}-chain-attack-bonus`}
+            placeholder="attack bonus (e.g. 1)"
+            value={value.attackBonus}
+            onChange={(e) => set({ attackBonus: e.target.value })}
+            style={{ marginTop: '4px', width: '80px' }}
+          />
+          <input
+            aria-label={`${idPrefix}-chain-damage-bonus`}
+            placeholder="damage bonus (e.g. 1d6)"
+            value={value.damageBonus}
+            onChange={(e) => set({ damageBonus: e.target.value })}
+            style={{ marginTop: '4px', marginLeft: '8px', width: '80px' }}
+          />
+        </>
+      )}
+
+      {value.into === 'spell' && (
+        <>
+          <select
+            aria-label={`${idPrefix}-chain-spell-filter`}
+            value={value.spellFilter}
+            onChange={(e) => set({ spellFilter: e.target.value })}
+            style={{ marginTop: '4px' }}
+          >
+            <option value="any">any spell</option>
+            <option value="has-range">spells with a range (not touch/self)</option>
+          </select>
+          <input
+            aria-label={`${idPrefix}-chain-modifier`}
+            placeholder="modifier note (e.g. Range increased by 30 feet)"
+            value={value.modifier}
+            onChange={(e) => set({ modifier: e.target.value })}
+            style={{ marginTop: '4px', width: '100%' }}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 // ----- Action cost -----------------------------------------------------------
 // One simple control (1 · 2 · 3 · R · Variable). Authored data uses any of
 // `action` / `actionCount` (number OR "One to Two") / `variableActionCount` /
@@ -309,12 +451,13 @@ const abilityToForm = (s) => {
   ABILITY_STR.forEach((k) => delete rest[k]);
   delete rest.traits;
   COST_KEYS.forEach((k) => delete rest[k]);
-  // Pull effects, targetDefense, roll, and foundryEffect into managed form state
-  // so they are not double-written via rest.
+  // Pull effects, targetDefense, roll, foundryEffect, and chain into managed form
+  // state so they are not double-written via rest.
   delete rest.effects;
   delete rest.targetDefense;
   delete rest.roll;
   delete rest.foundryEffect;
+  delete rest.chain;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -334,6 +477,7 @@ const abilityToForm = (s) => {
     targetDefense: src.targetDefense || '',
     roll: rollToForm(src.roll),
     foundryEffect: foundryEffectToForm(src.foundryEffect),
+    chain: chainToForm(src.chain),
     rest,
   };
 };
@@ -355,6 +499,8 @@ const abilityFromForm = (f) => {
   if (roll) out.roll = roll;
   const foundryEffect = foundryEffectFromForm(f.foundryEffect);
   if (foundryEffect) out.foundryEffect = foundryEffect;
+  const chain = chainFromForm(f.chain);
+  if (chain) out.chain = chain;
   return out;
 };
 
@@ -422,6 +568,11 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
         value={value.foundryEffect || foundryEffectToForm(null)}
         idPrefix={idPrefix}
         onChange={(fe) => onChange({ ...value, foundryEffect: fe })}
+      />
+      <ChainControl
+        value={value.chain || chainToForm(null)}
+        idPrefix={idPrefix}
+        onChange={(c) => onChange({ ...value, chain: c })}
       />
       <div className="gm-row">
         <div className="form-group">

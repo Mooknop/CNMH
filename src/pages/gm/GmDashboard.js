@@ -1,13 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useContent } from '../../contexts/ContentContext';
-import { seedDefaults, seedMissing, repointFocusSpellsToCatalog } from '../../utils/gmApi';
+import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import './gm.css';
 
 const GmDashboard = () => {
-  const { source, rawCharacters } = useContent();
+  const { source, rawCharacters, spells: rawSpells } = useContent();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   // null | {kind:'reseed'} | {kind:'restore', file}
@@ -32,14 +32,17 @@ const GmDashboard = () => {
     setBusy(true);
     setMsg(null);
     try {
-      const seedRes = await seedMissing();
+      const seedRes    = await seedMissing();
       const repointRes = await repointFocusSpellsToCatalog(rawCharacters);
-      setMsg(
-        `Done: ${JSON.stringify(seedRes.seeded)}` +
-        (repointRes.repointed.length
-          ? `; repointed focus spells: ${repointRes.repointed.join(', ')}`
-          : '; focus spells already up to date')
-      );
+      const chainRes   = await syncChainConfig(rawSpells, rawCharacters);
+      const parts = [`Done: ${JSON.stringify(seedRes.seeded)}`];
+      parts.push(repointRes.repointed.length
+        ? `repointed focus spells: ${repointRes.repointed.join(', ')}`
+        : 'focus spells already up to date');
+      parts.push(chainRes.patched.length
+        ? `synced chain config: ${chainRes.patched.join(', ')}`
+        : 'chain config already up to date');
+      setMsg(parts.join('; '));
     } catch (e) {
       setMsg(`Failed: ${e.message}`);
     } finally {
