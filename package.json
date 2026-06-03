@@ -27,6 +27,7 @@
     "test:ci": "npm run lint && react-scripts test --watchAll=false --coverage --passWithNoTests",
     "test:bridge": "jest --config foundry-bridge/jest.config.js",
     "test:e2e": "playwright test",
+    "snapshot:content": "node scripts/snapshotContent.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

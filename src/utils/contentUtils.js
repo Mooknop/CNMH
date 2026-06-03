@@ -7,11 +7,13 @@ import {
   reputation as defaultReputation,
   loreEntries as defaultLoreEntries,
   sampleCharacters as defaultCharacters,
+  calendarEvents as defaultCalendar,
+  traits as defaultTraits,
+  items as defaultItems,
+  spells as defaultSpells,
+  images as defaultImages,
+  themeDocs as defaultThemeDocs,
 } from '../data';
-import defaultCalendar from '../data/CalendarEvents.json';
-import traitsData from '../data/traits.json';
-import itemsData from '../data/items.json';
-import spellsData from '../data/spells.json';
 import defaultEffects from '../data/pf2eEffects';
 
 export const slugify = (str) =>
@@ -430,15 +432,15 @@ export const normalizeTheme = (raw) => {
 export const defaultContent = () => ({
   quest: normalizeQuests(defaultQuests),
   faction: normalizeFactions(defaultReputation && defaultReputation.Factions),
-  calendar: normalizeCalendar(defaultCalendar),
+  calendar: normalizeCalendar(defaultCalendar || []),
   lore: normalizeLore(defaultLoreEntries),
-  trait: normalizeTraits(traitsData && traitsData.traits),
+  trait: normalizeTraits(defaultTraits || []),
   character: normalizeCharacters(defaultCharacters),
-  item: normalizeItems(itemsData && itemsData.items),
-  spell: normalizeSpells(spellsData && spellsData.spells),
+  item: normalizeItems(defaultItems || []),
+  spell: normalizeSpells(defaultSpells || []),
   effect: normalizeEffects(defaultEffects),
-  image: [],
-  theme: [DEFAULT_THEME],
+  image: normalizeImages(defaultImages || []),
+  theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
 });
 
 // Body for POST /api/gm/seed.

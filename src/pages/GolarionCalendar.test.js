@@ -43,8 +43,6 @@ jest.mock('../components/calendar/MoonPhase', () => {
   return MoonPhase;
 });
 
-jest.mock('../data/CalendarEvents.json', () => [], { virtual: true });
-
 describe('GolarionCalendar', () => {
   it('renders without crashing', async () => {
     await act(async () => { renderWithRouter(<GolarionCalendar />); });

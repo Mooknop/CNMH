@@ -79,8 +79,8 @@ export const repointFocusSpellsToCatalog = async (liveCharacters) => {
 //     onto the matching live character doc, preserving all other fields.
 // All patches are idempotent (JSON equality short-circuit) and non-destructive.
 // Returns { patched: ['spell:inner-upheaval', 'character:JadeInferno', ...] }.
-export const syncChainConfig = async (liveSpells, liveCharacters) => {
-  const bundled = defaultContent();
+export const syncChainConfig = async (liveSpells, liveCharacters, _bundled = null) => {
+  const bundled = _bundled ?? defaultContent();
   const patched = [];
 
   // ── Spells ────────────────────────────────────────────────────────────────
