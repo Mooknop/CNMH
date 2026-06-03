@@ -160,6 +160,14 @@ const PF2E_EFFECTS = [
     description: 'Character gains a fly Speed equal to their land Speed. Track manually.',
     modifiers: [],
   },
+
+  // ── Treat Wounds immunity (scoped to the healer who applied it) ──────
+  {
+    id: 'treat-wounds-immunity',
+    name: 'Treat Wounds Immunity',
+    description: 'Cannot be healed by Treat Wounds or Battle Medicine from the specific healer who applied this effect. Applied automatically on a successful Treat Wounds or Battle Medicine check. Remove to allow re-treatment.',
+    modifiers: [],
+  },
 ];
 
 export default PF2E_EFFECTS;

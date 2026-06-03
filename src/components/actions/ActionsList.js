@@ -5,6 +5,7 @@ import ReactionsList from './ReactionsList';
 import FreeActionsList from './FreeActionsList';
 import MagicModal from '../spells/MagicModal';
 import UseAbilityModal from '../encounter/UseAbilityModal';
+import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -15,6 +16,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [activeSection, setActiveSection] = useState('actions');
   const [isMagicOpen, setIsMagicOpen] = useState(false);
   const [usingAbility, setUsingAbility] = useState(null); // { ability, cost } | null
+  const [treatWoundsOpen, setTreatWoundsOpen] = useState(false);
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -29,6 +31,12 @@ const ActionsList = ({ character, characterColor }) => {
 
   const handleUse = useCallback(
     (item, cost) => {
+      // Battle Medicine has its own resolution flow.
+      if (item.name === 'Battle Medicine') {
+        setTreatWoundsOpen(true);
+        return;
+      }
+
       // Open the targeting modal in encounter mode unless the action explicitly
       // opts out (requiresTarget: false — pure movement like Stride, Stand, etc.).
       if (encounterMode && item.requiresTarget !== false) {
@@ -169,6 +177,15 @@ const ActionsList = ({ character, characterColor }) => {
           themeColor={themeColor}
         />
       )}
+
+      <TreatWoundsModal
+        isOpen={treatWoundsOpen}
+        onClose={() => setTreatWoundsOpen(false)}
+        mode="battle-medicine"
+        healer={character}
+        themeColor={themeColor}
+        actionCost={encounterMode ? 1 : 0}
+      />
     </div>
   );
 };
