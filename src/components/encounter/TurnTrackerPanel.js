@@ -6,6 +6,7 @@ import { useShield } from '../../hooks/useShield';
 import { useSession } from '../../contexts/SessionContext';
 import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
+import BestiaryModal from './BestiaryModal';
 import './TurnTrackerPanel.css';
 
 // PF2e movement actions the player can pick before requesting reachable squares.
@@ -59,6 +60,9 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
     useShield(charId, inventory);
   // Shield Block damage input — player enters the incoming hit; '' hides the bar.
   const [blockDamage, setBlockDamage] = useState('');
+
+  // ── Bestiary ──────────────────────────────────────────────────────────────
+  const [bestiaryOpen, setBestiaryOpen] = useState(false);
 
   // ── Flanking (Slice 3) ───────────────────────────────────────────────────
   // Bridge pushes { [enemyEntryId]: { byCharIds:[...] } } whenever tokens move or
@@ -229,6 +233,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
 
   const isSetup = encounter.phase === 'setup';
   const isInProgress = encounter.phase === 'in-progress';
+  const enemies = order.filter((e) => e.kind === 'enemy');
 
   return (
     <div className="ttp-panel" role="region" aria-label="Encounter tracker">
@@ -407,6 +412,24 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
 
       {isInProgress && isMyTurn && moveStage === 'awaiting-done' && (
         <div className="ttp-move-status">Moving…</div>
+      )}
+
+      {enemies.length > 0 && (
+        <button
+          className="btn-secondary ttp-bestiary"
+          onClick={() => setBestiaryOpen(true)}
+          aria-label="Open Bestiary"
+        >
+          Bestiary
+        </button>
+      )}
+
+      {bestiaryOpen && (
+        <BestiaryModal
+          isOpen
+          onClose={() => setBestiaryOpen(false)}
+          enemies={enemies}
+        />
       )}
     </div>
   );

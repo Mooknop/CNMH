@@ -487,4 +487,48 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText('Shield Block')).toBeInTheDocument();
   });
 
+  // ── Bestiary button ───────────────────────────────────────────────────────
+
+  it('shows Bestiary button when enemies are present', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    expect(screen.getByLabelText('Open Bestiary')).toBeInTheDocument();
+  });
+
+  it('hides Bestiary button when there are no enemies', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias]));
+    const [p] = drv.encounter.order;
+    act(() => drv.setInitiative(p.entryId, 15));
+    act(() => drv.beginRound1());
+    expect(screen.queryByLabelText('Open Bestiary')).not.toBeInTheDocument();
+  });
+
+  it('opens BestiaryModal when Bestiary button is clicked', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    fireEvent.click(screen.getByLabelText('Open Bestiary'));
+    // Modal is open: the modal heading and the enemy name both appear.
+    expect(screen.getAllByText('Bestiary').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Goblin').length).toBeGreaterThanOrEqual(1);
+  });
+
 });

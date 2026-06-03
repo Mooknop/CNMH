@@ -1,0 +1,278 @@
+/* BestiaryModal — two-pane picker: enemy list left, stat block right */
+
+.bm-layout {
+  display: flex;
+  gap: 16px;
+  min-height: 0;
+  height: 100%;
+}
+
+/* ---------- Left list ---------- */
+.bm-list {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 520px;
+  border-right: 1px solid var(--shell-border, rgba(255, 255, 255, 0.07));
+  padding-right: 12px;
+}
+
+.bm-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 4px);
+  padding: 8px 10px;
+  cursor: pointer;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+  font: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.bm-list-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+.bm-list-item--active {
+  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
+  border-color: var(--accent-outline, var(--color-primary, #c0440e));
+  color: var(--accent-text, #e85d1a);
+}
+
+.bm-thumb {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--shell-border-strong, rgba(255, 255, 255, 0.12));
+  flex-shrink: 0;
+}
+
+.bm-list-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.bm-list-level {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ---------- Right detail pane ---------- */
+.bm-detail-pane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  max-height: 520px;
+}
+
+.bm-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bm-img-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.bm-creature-img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-lg, 8px);
+  border: 2px solid var(--shell-border-strong, rgba(255, 255, 255, 0.12));
+}
+
+.bm-detail-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+.bm-level {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
+}
+
+/* ---------- Traits ---------- */
+.bm-traits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* ---------- Recall Knowledge DC ---------- */
+.bm-rk-dc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-tint, rgba(192, 68, 14, 0.1));
+  border: 1px solid var(--accent-outline, var(--color-primary, #c0440e));
+  border-radius: var(--radius-sm, 4px);
+  padding: 6px 10px;
+}
+
+.bm-rk-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
+  flex: 1;
+}
+
+.bm-rk-value {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-text, #e85d1a);
+}
+
+.bm-rarity-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
+}
+
+/* ---------- Stats grid ---------- */
+.bm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+}
+
+.bm-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--shell-border, rgba(255, 255, 255, 0.05));
+}
+
+.bm-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
+}
+
+.bm-stat-value {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+/* ---------- Saves ---------- */
+.bm-saves {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bm-saves-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
+}
+
+.bm-saves-row {
+  display: flex;
+  gap: 16px;
+}
+
+.bm-save-item {
+  display: flex;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.bm-save-name {
+  font-size: 0.78rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
+}
+
+/* ---------- IWR ---------- */
+.bm-iwr {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.bm-iwr-label {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
+  flex-shrink: 0;
+}
+
+.bm-iwr-values {
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+/* ---------- Description ---------- */
+.bm-description {
+  margin: 4px 0 0;
+  line-height: 1.55;
+  font-size: 0.88rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+  white-space: pre-wrap;
+}
+
+/* ---------- Empty states ---------- */
+.bm-no-statblock,
+.bm-empty {
+  font-size: 0.88rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.45));
+  font-style: italic;
+  margin: 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 600px) {
+  .bm-layout {
+    flex-direction: column;
+  }
+
+  .bm-list {
+    flex: none;
+    max-height: 140px;
+    border-right: none;
+    border-bottom: 1px solid var(--shell-border, rgba(255, 255, 255, 0.07));
+    padding-right: 0;
+    padding-bottom: 8px;
+  }
+
+  .bm-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

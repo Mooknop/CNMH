@@ -11,6 +11,7 @@
 import { BRIDGE_UPDATE_FLAG } from './utils.js';
 import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
+  getBestiaryInfo,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
 } from './pf2eAdapter.js';
 
@@ -89,6 +90,8 @@ function buildEncounterPayload(combat) {
     const charId = foundryActorId ? (_actorMap[foundryActorId] ?? null) : null;
     const actor    = getCombatantActor(c);
     const defenses = actor ? getDefenses(actor) : undefined;
+    const isEnemy  = !charId;
+    const bestiary = (isEnemy && actor) ? getBestiaryInfo(actor) : undefined;
     return {
       entryId:       c.id,
       kind:          charId ? 'pc' : 'enemy',
@@ -97,6 +100,7 @@ function buildEncounterPayload(combat) {
       foundryActorId,
       ...(charId    ? { charId }    : {}),
       ...(defenses  ? { defenses }  : {}),
+      ...(bestiary  ? { bestiary }  : {}),
     };
   });
 

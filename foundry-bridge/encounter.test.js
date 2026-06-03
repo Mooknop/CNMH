@@ -94,6 +94,50 @@ describe('encounter payload push', () => {
     expect(goblin.defenses).toBeUndefined();
   });
 
+  test('enemy entry includes bestiary when an actor is present', () => {
+    const goblinActor = makeActor({
+      id: 'actor-goblin',
+      img: 'tokens/goblin.webp',
+      level: 1,
+      rarity: 'common',
+      traits: ['goblin', 'humanoid'],
+      perception: 5,
+      publicNotes: '<p>A goblin.</p>',
+    });
+    global.game.actors.set('actor-goblin', goblinActor);
+
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+
+    const { order } = send.mock.calls[0][2];
+    const goblin = order.find((e) => e.name === 'Goblin');
+    expect(goblin.bestiary).toBeDefined();
+    expect(goblin.bestiary.level).toBe(1);
+    expect(goblin.bestiary.rarity).toBe('common');
+    expect(goblin.bestiary.img).toBe('tokens/goblin.webp');
+    expect(goblin.bestiary.description).toBe('A goblin.');
+  });
+
+  test('PC entry does not include bestiary even when an actor is present', () => {
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    const pelliasActor = makeActor({ id: 'actor-pellias', level: 5 });
+    global.game.actors.set('actor-pellias', pelliasActor);
+
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+
+    const { order } = send.mock.calls[0][2];
+    const pellias = order.find((e) => e.name === 'Pellias');
+    expect(pellias.kind).toBe('pc');
+    expect(pellias.bestiary).toBeUndefined();
+  });
+
+  test('enemy entry without an actor omits bestiary', () => {
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+
+    const { order } = send.mock.calls[0][2];
+    const goblin = order.find((e) => e.name === 'Goblin');
+    expect(goblin.bestiary).toBeUndefined();
+  });
+
   test('currentTurnIndex maps the active combatant into the sorted order', () => {
     // Pellias is combatants[0] but sorts second by initiative; make him active.
     global.Hooks.fire('createCombat', combatWithGoblinAndPellias({ activeTurnIndex: 0 }));
