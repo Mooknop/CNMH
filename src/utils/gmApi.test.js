@@ -130,41 +130,13 @@ describe('gmApi', () => {
   });
 });
 
-// Chain config lives in the DO and is propagated by syncChainConfig. These
-// tests pass explicit bundled fixtures so they don't depend on snapshot content.
-const BUNDLED_CHAIN_FIXTURES = {
-  spell: [
-    {
-      id: 'inner-upheaval',
-      name: 'Inner Upheaval',
-      level: 1,
-      chain: { into: 'strike', cost: 'included', modes: ['strike', 'flurry'], strikeTrait: 'Unarmed', attackBonus: 1, damageBonus: '1d6' },
-    },
-  ],
-  character: [
-    {
-      id: 'JadeInferno',
-      feats: [
-        { id: 'feat-5', actions: [{ name: 'Reach Spell', actionCount: 1, chain: { into: 'spell', cost: 'added' } }] },
-        { id: 'feat-8', actions: [{ name: 'Harrow Casting', actionCount: 1, chain: { into: 'spell', cost: 'included' } }] },
-      ],
-      actions: [],
-    },
-    {
-      id: 'Blu-Kakke',
-      feats: [],
-      actions: [{ name: 'Flurry of Blows', actionCount: 1, chain: { into: 'strike', cost: 'included', modes: ['flurry'] } }],
-    },
-  ],
-};
-
 describe('syncChainConfig', () => {
   it('patches a stale spell chain', async () => {
     global.fetch = jest.fn(() => okJson({ ok: true, id: 'inner-upheaval' }));
     const liveSpells = [
       { id: 'inner-upheaval', name: 'Inner Upheaval', level: 1 }, // no chain yet
     ];
-    const res = await syncChainConfig(liveSpells, [], BUNDLED_CHAIN_FIXTURES);
+    const res = await syncChainConfig(liveSpells, []);
     expect(res.patched).toContain('spell:inner-upheaval');
     const putCalls = global.fetch.mock.calls.filter(
       ([url, opts]) => url.includes('/api/gm/spell/') && opts.method === 'PUT'
@@ -185,7 +157,7 @@ describe('syncChainConfig', () => {
         ],
       },
     ];
-    const res = await syncChainConfig([], liveChars, BUNDLED_CHAIN_FIXTURES);
+    const res = await syncChainConfig([], liveChars);
     expect(res.patched).toContain('character:JadeInferno');
     const putCalls = global.fetch.mock.calls.filter(
       ([url, opts]) => url.includes('/api/gm/character/') && opts.method === 'PUT'
@@ -205,7 +177,7 @@ describe('syncChainConfig', () => {
         actions: [{ name: 'Flurry of Blows', actionCount: 1 }], // no chain yet
       },
     ];
-    const res = await syncChainConfig([], liveChars, BUNDLED_CHAIN_FIXTURES);
+    const res = await syncChainConfig([], liveChars);
     expect(res.patched).toContain('character:Blu-Kakke');
     const putCalls = global.fetch.mock.calls.filter(
       ([url, opts]) => url.includes('/api/gm/character/') && opts.method === 'PUT'
@@ -220,7 +192,7 @@ describe('syncChainConfig', () => {
     global.fetch = jest.fn();
     const bundledChain = { into: 'strike', cost: 'included', modes: ['strike', 'flurry'], strikeTrait: 'Unarmed', attackBonus: 1, damageBonus: '1d6' };
     const liveSpells = [{ id: 'inner-upheaval', name: 'Inner Upheaval', chain: bundledChain }];
-    const res = await syncChainConfig(liveSpells, [], BUNDLED_CHAIN_FIXTURES);
+    const res = await syncChainConfig(liveSpells, []);
     expect(res.patched).toHaveLength(0);
     expect(global.fetch).not.toHaveBeenCalled();
   });

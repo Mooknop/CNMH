@@ -4727,7 +4727,14 @@
             "Flourish",
             "Monk"
           ],
-          "actionCount": 1
+          "actionCount": 1,
+          "chain": {
+            "into": "strike",
+            "cost": "included",
+            "modes": [
+              "flurry"
+            ]
+          }
         }
       ],
       "reactions": []
@@ -6292,28 +6299,32 @@
           "name": "Harrower Dedication",
           "source": "Archetype",
           "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw.",
-          "level": 2
+          "level": 2,
+          "actions": []
         },
         {
           "id": "feat-2",
           "name": "Otherworldly Magic",
           "source": "Ancestry",
           "description": "Your elven blood runs strong enough to grant you magical abilities. You gain an extra Arcane cantrip.",
-          "level": 1
+          "level": 1,
+          "actions": []
         },
         {
           "id": "feat-3",
           "name": "Alchemical Crafting",
           "source": "Skill",
           "description": "You can use the Craft activity to create alchemical items. When you select this feat, you immediately add the formulas for four common 1st-level alchemical items to your formula book.",
-          "level": 2
+          "level": 2,
+          "actions": []
         },
         {
           "id": "feat-4",
           "name": "Hobnobber",
           "source": "Skill",
           "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2).",
-          "level": 1
+          "level": 1,
+          "actions": []
         },
         {
           "id": "feat-5",
@@ -6326,7 +6337,13 @@
                 "Sorcerer",
                 "Spellshape"
               ],
-              "description": "You  can extend your spells’ range. If the next action you use is to Cast a Spell that has a range, increase that spell’s range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet."
+              "description": "You  can extend your spells’ range. If the next action you use is to Cast a Spell that has a range, increase that spell’s range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
+              "chain": {
+                "into": "spell",
+                "cost": "added",
+                "spellFilter": "has-range",
+                "modifier": "Range increased by 30 feet (touch → 30 ft)"
+              }
             }
           ],
           "name": "Reach Spell",
@@ -6339,14 +6356,16 @@
           "name": "Tell Fortune",
           "source": "Skill",
           "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week.",
-          "level": 3
+          "level": 3,
+          "actions": []
         },
         {
           "id": "feat-7",
           "name": "Split Shot",
           "source": "Sorcerer",
           "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals hafl the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
-          "level": 4
+          "level": 4,
+          "actions": []
         },
         {
           "id": "feat-8",
@@ -6359,7 +6378,13 @@
                 "Harrower",
                 "Spellshape"
               ],
-              "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn."
+              "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn.",
+              "chain": {
+                "into": "spell",
+                "cost": "added",
+                "spellFilter": "any",
+                "modifier": "Draw a Harrow card before the spell; DC 11 flat check or lose your Harrow Omen"
+              }
             }
           ],
           "name": "Harrow Casting",
@@ -6372,7 +6397,8 @@
           "name": "Glad-Hand",
           "source": "Skill",
           "description": "First impressions are your strong suit. When you meet someone in a casual or social situation, you can immediately attempt a Diplomacy check to Make an Impression on that creature rather than needing to converse for 1 minute. If you fail, you can engage in 1 minute of conversation and attempt a new check at the end of the time rather than accepting the failure.",
-          "level": 4
+          "level": 4,
+          "actions": []
         }
       ],
       "strikes": [
@@ -7165,9 +7191,13 @@
       "name": "Mysterious Blue Orb",
       "weight": 1,
       "traits": [
+        "Artifact",
         "Magical"
       ],
-      "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him."
+      "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him.",
+      "artifact": {
+        "tiers": []
+      }
     },
     {
       "id": "oil-of-weightlessness",
@@ -7265,21 +7295,7 @@
         "Scroll"
       ],
       "scroll": {
-        "name": "Cleanse Affliction",
-        "level": 2,
-        "traits": [
-          "Concentrate",
-          "Healing",
-          "Manipulate"
-        ],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 willing creature",
-        "description": "Gentle restorative magic pushes back the effects of toxins and more complex maladies. Choose an affliction on the target, such as a curse, disease, or poison. If it has advanced past stage one, reduce the stage by one. This reduction can be applied only once to a given case of an affliction, with the case ending when it's completely cured. Although the reduction can't occur again, heightened versions of this spell attempt to counteract with each casting.",
-        "heightened": {
-          "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
-          "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
-        }
+        "spellRef": "cleanse-affliction"
       }
     },
     {
@@ -7630,21 +7646,7 @@
       ],
       "description": "A wand containing the spell Cleanse Affliction",
       "wand": {
-        "name": "Cleanse Affliction",
-        "level": 2,
-        "traits": [
-          "Concentrate",
-          "Healing",
-          "Manipulate"
-        ],
-        "actions": "Two Actions",
-        "range": "Touch",
-        "targets": "1 willing creature",
-        "description": "Gentle restorative magic pushes back the effects of toxins and more complex maladies. Choose an affliction on the target, such as a curse, disease, or poison. If it has advanced past stage one, reduce the stage by one. This reduction can be applied only once to a given case of an affliction, with the case ending when it's completely cured. Although the reduction can't occur again, heightened versions of this spell attempt to counteract with each casting.",
-        "heightened": {
-          "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
-          "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
-        }
+        "spellRef": "cleanse-affliction"
       }
     },
     {
@@ -7761,6 +7763,8 @@
       "name": "Xanderghul's Flawless Hammer",
       "weight": 2,
       "traits": [
+        "Artifact",
+        "Staff",
         "Unique",
         "Magical",
         "Reach",
@@ -7789,7 +7793,61 @@
           "trigger": "You would be adversely affected by an emotion effect",
           "description": "The hammer tries to neutralize the triggering effect with its own emotion, attempting a counteract check. If the check succeeds, you feel a sudden rush of intense pride and the counteracted effect doesn't take hold of you."
         }
-      ]
+      ],
+      "staff": {
+        "name": "Xanderghul's Flawless Hammer",
+        "description": "At the height of the ancient Thassilonian Empire Emperor Xin crafted seven Alara'quin, magical weapons of extraordinary power. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the Runelord of Pride.",
+        "type": "Greater",
+        "itemLevel": 6,
+        "bulkValue": 1,
+        "charges": {
+          "max": 3,
+          "current": 3
+        },
+        "spells": [
+          {
+            "ref": "figment"
+          },
+          {
+            "ref": "infectious-enthusiasm"
+          },
+          {
+            "ref": "illusory-object"
+          },
+          {
+            "ref": "fashionista"
+          },
+          {
+            "ref": "overselling-flourish"
+          },
+          {
+            "ref": "mirror-image"
+          },
+          {
+            "ref": "illusory-creature"
+          },
+          {
+            "ref": "instant-parade"
+          }
+        ]
+      },
+      "artifact": {
+        "tiers": [
+          {
+            "level": 1,
+            "grants": [
+              "strikes",
+              "reactions"
+            ]
+          },
+          {
+            "level": 4,
+            "grants": [
+              "staff"
+            ]
+          }
+        ]
+      }
     }
   ],
   "spell": [
@@ -8076,6 +8134,17 @@
       "description": "You focus your qi into devastating magical attacks. Make an unarmed Strike or Flurry of Blows (this doesn't change the limit on using only one flourish per turn). You gain a +1 status bonus to your attack rolls with the Strikes, and the Strikes deal 1d6 extra damage. This damage can be any of the following types of your choice, chosen each time you Strike: force, spirit, vitality, or void.",
       "heightened": {
         "+4": "The extra damage increases to 1d6."
+      },
+      "chain": {
+        "into": "strike",
+        "cost": "included",
+        "modes": [
+          "strike",
+          "flurry"
+        ],
+        "strikeTrait": "Unarmed",
+        "attackBonus": 1,
+        "damageBonus": "1d6"
       }
     },
     {
