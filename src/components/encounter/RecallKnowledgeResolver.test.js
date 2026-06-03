@@ -125,10 +125,11 @@ test('success shows the choice picker', () => {
   expect(screen.getByRole('button', { name: /Apply/i })).toBeDisabled();
 });
 
-test('choice picker has all expected options', () => {
+test('choice picker has all expected options including AC/Perception/Speed', () => {
   renderResolver();
   fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
-  ['Fortitude save', 'Reflex save', 'Will save', 'Lowest save', 'Highest save',
+  ['Armor Class', 'Perception', 'Speed',
+   'Fortitude save', 'Reflex save', 'Will save', 'Lowest save', 'Highest save',
    'Immunities', 'Resistances', 'Weaknesses'].forEach((label) => {
     expect(screen.getByLabelText(label)).toBeInTheDocument();
   });
@@ -150,12 +151,12 @@ test('Confirm calls resolve with correct args on success', () => {
   fireEvent.click(screen.getByLabelText('Reflex save'));
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({
-    degree:    'success',
-    choice:    'reflex',
-    by:        'c1',
-    byName:    'Vex',
-    skill:     'Arcana',
-    d20:       20,
+    degree:  'success',
+    choices: ['reflex'],
+    by:      'c1',
+    byName:  'Vex',
+    skill:   'Arcana',
+    d20:     20,
   }));
   expect(onDone).toHaveBeenCalled();
 });

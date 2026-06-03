@@ -42,6 +42,7 @@ jest.mock('../../utils/CharacterUtils', () => ({
     const labels = { 0: 'Untrained', 1: 'Trained', 2: 'Expert', 3: 'Master', 4: 'Legendary' };
     return labels[prof] || 'Untrained';
   },
+  getLoreSkillModifier: () => 7,
 }));
 
 describe('EnhancedSkillsList', () => {

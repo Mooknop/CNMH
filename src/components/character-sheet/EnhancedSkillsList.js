@@ -5,12 +5,14 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import ProficiencyPips from '../shared/ProficiencyPips';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { getLoreSkillModifier } from '../../utils/CharacterUtils';
 
 const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';
 
   // Data layer — all character reads go through this hook
+  const charModel = useCharacter(character);
   const {
     skillModifiers,
     skillProficiencies,
@@ -20,7 +22,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
     level,
     inventory,
     flags,
-  } = useCharacter(character);
+  } = charModel;
 
   const hasUntrainedImprovisation = flags.hasUntrainedImprovisation;
 
@@ -348,8 +350,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
       {loreSkills.map((loreSkill) => {
         const loreId = `lore-${loreSkill.name.toLowerCase().replace(/\s+/g, '-')}`;
         const loreProficiency = loreSkill.proficiency || 0;
-        const abilityMod = abilityModifiers.intelligence;
-        const loreModifier = abilityMod + level + loreSkill.proficiency * 2;
+        const loreModifier = getLoreSkillModifier(charModel, loreSkill.name);
         const lorePenalty = condEffects.skillPenalty('intelligence');
 
         return (

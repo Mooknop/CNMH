@@ -6,6 +6,7 @@ import ActionIcon from '../shared/ActionIcon';
 import ThaumaturgeImplementsDisplay from './ThaumaturgeImplementsDisplay';
 import UseActionChip from '../shared/UseActionChip';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { formatModifier } from '../../utils/CharacterUtils';
 
 
@@ -20,6 +21,8 @@ import { formatModifier } from '../../utils/CharacterUtils';
 const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
   const { strikes, flags, thaumaturge } = useCharacter(character);
   const { isThaumaturge } = flags;
+  const { exploitFor } = useExploitVulnerability();
+  const activeExploit = character?.id ? exploitFor(character.id) : null;
 
   // Separate strikes into melee and ranged categories
   const meleeStrikes = strikes.filter(strike => strike.type === 'melee');
@@ -65,8 +68,21 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
       </>
     );
 
+    const exploitLabel = (() => {
+      if (!activeExploit) return null;
+      const parts = activeExploit.type === 'mortal'
+        ? `Mortal Weakness — ${activeExploit.weaknessType} ${activeExploit.value} vs ${activeExploit.targetName}`
+        : `Personal Antithesis — weakness ${activeExploit.value} vs ${activeExploit.targetName}`;
+      return activeExploit.magical ? `${parts} · magical` : parts;
+    })();
+
     const content = (
       <>
+        {exploitLabel && (
+          <div className="strike-exploit-badge" data-testid="strike-exploit-badge">
+            {exploitLabel}
+          </div>
+        )}
         <div className="strike-traits">
           {strike.traits && strike.traits.map((trait, i) => (
             <TraitTag key={i} trait={trait} />

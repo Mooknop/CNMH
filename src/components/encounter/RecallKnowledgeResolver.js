@@ -15,15 +15,20 @@ const SKILL_LABELS = {
   society:    'Society',
 };
 
+// Auto-revealed on any success; not pickable.
+// All remaining facts are pickable.
 const CHOICE_OPTIONS = [
-  { value: 'fortitude', label: 'Fortitude save' },
-  { value: 'reflex',    label: 'Reflex save' },
-  { value: 'will',      label: 'Will save' },
-  { value: 'lowest',    label: 'Lowest save' },
-  { value: 'highest',   label: 'Highest save' },
-  { value: 'immunities',   label: 'Immunities' },
-  { value: 'resistances',  label: 'Resistances' },
-  { value: 'weaknesses',   label: 'Weaknesses' },
+  { value: 'ac',          label: 'Armor Class' },
+  { value: 'perception',  label: 'Perception' },
+  { value: 'speed',       label: 'Speed' },
+  { value: 'fortitude',   label: 'Fortitude save' },
+  { value: 'reflex',      label: 'Reflex save' },
+  { value: 'will',        label: 'Will save' },
+  { value: 'lowest',      label: 'Lowest save' },
+  { value: 'highest',     label: 'Highest save' },
+  { value: 'immunities',  label: 'Immunities' },
+  { value: 'resistances', label: 'Resistances' },
+  { value: 'weaknesses',  label: 'Weaknesses' },
 ];
 
 const DEGREE_INFO = {
@@ -32,6 +37,9 @@ const DEGREE_INFO = {
   failure:         { label: 'Failure',           cls: 'tw-degree--failure'      },
   criticalFailure: { label: 'Critical Failure',  cls: 'tw-degree--crit-failure' },
 };
+
+// How many facts the player picks per degree.
+const CHOICE_LIMIT = { success: 1, criticalSuccess: 2 };
 
 const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }) => {
   const { characters } = useContent();
@@ -46,7 +54,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }
 
   const [selectedSkill, setSelectedSkill] = useState(recommended[0] || 'arcana');
   const [d20Input, setD20Input]           = useState('');
-  const [choice, setChoice]               = useState(null);
+  const [choices, setChoices]             = useState([]);
 
   const skillMod  = charModel?.skillModifiers?.[selectedSkill] ?? 0;
   const dc        = bestiary?.level != null
@@ -61,15 +69,24 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }
     ? computeSaveDegree({ d20, total, dc })
     : null;
 
-  const needsChoice = degree === 'success';
-  const confirmEnabled = hasD20 && degree != null && (!needsChoice || choice != null);
+  const limit       = degree ? CHOICE_LIMIT[degree] ?? 0 : 0;
+  const needsChoice = limit > 0;
+  const confirmEnabled = hasD20 && degree != null && (!needsChoice || choices.length === limit);
+
+  const toggleChoice = (value) => {
+    setChoices((prev) => {
+      if (prev.includes(value)) return prev.filter((v) => v !== value);
+      if (prev.length >= limit) return prev; // cap reached — ignore
+      return [...prev, value];
+    });
+  };
 
   const handleConfirm = () => {
     if (!confirmEnabled) return;
     resolve(enemy.entryId, {
       degree,
       defenses,
-      choice: needsChoice ? choice : null,
+      choices: needsChoice ? choices : [],
       by:     actingCharId,
       byName: actingCharName,
       skill:  SKILL_LABELS[selectedSkill] || selectedSkill,
@@ -130,7 +147,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }
             max="20"
             aria-label="raw d20"
             value={d20Input}
-            onChange={(e) => { setD20Input(e.target.value); setChoice(null); }}
+            onChange={(e) => { setD20Input(e.target.value); setChoices([]); }}
           />
           <span className="trr-bonus-badge" aria-label="skill modifier">
             {formatModifier(skillMod)}
@@ -146,26 +163,42 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }
         </div>
       </section>
 
-      {/* Choice picker (only on success) */}
+      {/* Choice picker (success: pick 1; crit success: pick 2) */}
       {needsChoice && (
         <section className="ct-section" data-testid="rkr-choice-section">
-          <h3 className="ct-section-title">What did you learn?</h3>
+          <h3 className="ct-section-title">
+            {limit === 1 ? 'What did you learn?' : `What did you learn? (pick ${limit})`}
+          </h3>
+          <p className="rkr-auto-note">
+            You also learn the creature&apos;s name, description, and current HP automatically.
+          </p>
           <div className="rkr-choice-list" role="group" aria-label="Choose what to learn">
-            {CHOICE_OPTIONS.map((opt) => (
-              <label key={opt.value} className="rkr-choice-item">
-                <input
-                  type="radio"
-                  name="rkr-choice"
-                  value={opt.value}
-                  checked={choice === opt.value}
-                  onChange={() => setChoice(opt.value)}
-                />
-                <span>{opt.label}</span>
-              </label>
-            ))}
+            {CHOICE_OPTIONS.map((opt) => {
+              const checked   = choices.includes(opt.value);
+              const disabled  = !checked && choices.length >= limit;
+              return (
+                <label
+                  key={opt.value}
+                  className={`rkr-choice-item${disabled ? ' rkr-choice-item--disabled' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    name="rkr-choice"
+                    value={opt.value}
+                    checked={checked}
+                    disabled={disabled}
+                    onChange={() => toggleChoice(opt.value)}
+                  />
+                  <span>{opt.label}</span>
+                </label>
+              );
+            })}
           </div>
         </section>
       )}
+
+      {/* Success auto-note (no choice needed for failure) */}
+      {degree === 'success' && !needsChoice && null}
 
       {/* Crit-failure note */}
       {degree === 'criticalFailure' && (

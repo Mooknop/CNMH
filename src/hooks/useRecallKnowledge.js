@@ -25,11 +25,11 @@ export const useRecallKnowledge = () => {
   );
 
   const resolve = useCallback(
-    (entryId, { degree, defenses, choice, by, byName, skill, d20, total, dc }) => {
+    (entryId, { degree, defenses, choices, by, byName, skill, d20, total, dc }) => {
       setKnowledge((cur) => {
         const prev = cur?.[entryId] || defaultRecord();
         const { next, learned } = applyRecallKnowledge(prev, {
-          degree, defenses, choice, charId: by,
+          degree, defenses, choices, charId: by,
         });
         const historyEntry = { ts: Date.now(), by, byName, skill, d20, total, dc, degree, learned };
         return {
@@ -39,8 +39,18 @@ export const useRecallKnowledge = () => {
       });
 
       const learnedStr = (() => {
-        if (degree === 'criticalSuccess') return 'everything revealed';
-        if (degree === 'success') return `learned: ${choice}`;
+        if (degree === 'criticalSuccess') {
+          const facts = Array.isArray(choices) && choices.length > 0
+            ? `identity/description/HP + ${choices.join(', ')}`
+            : 'identity/description/HP';
+          return facts;
+        }
+        if (degree === 'success') {
+          const facts = Array.isArray(choices) && choices.length > 0
+            ? `identity/description/HP + ${choices.join(', ')}`
+            : 'identity/description/HP';
+          return facts;
+        }
         if (degree === 'criticalFailure') return 'locked out';
         return 'nothing learned';
       })();
@@ -65,12 +75,24 @@ export const useRecallKnowledge = () => {
     [setKnowledge]
   );
 
+  // Merge an external record update (e.g. from Exploit Vulnerability reveals).
+  const mergeRecord = useCallback(
+    (entryId, updater) => {
+      setKnowledge((cur) => {
+        const prev = cur?.[entryId] || defaultRecord();
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        return { ...cur, [entryId]: next };
+      });
+    },
+    [setKnowledge]
+  );
+
   const clearAll = useCallback(
     () => setKnowledge({}),
     [setKnowledge]
   );
 
-  return { knowledge, recordFor, resolve, clearLock, clearAll };
+  return { knowledge, recordFor, resolve, mergeRecord, clearLock, clearAll };
 };
 
 export default useRecallKnowledge;

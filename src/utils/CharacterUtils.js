@@ -300,10 +300,34 @@ export const calculateTotalContainerIgnoredBulk = (inventory) => {
     if (item.container && item.container.ignored) {
       const ignoredBulk = item.container.ignored;
       const quantity = item.quantity || 1;
-      
+
       // Multiple containers of the same type each provide their ignored bulk
       return total + (ignoredBulk * quantity);
     }
     return total;
   }, 0);
+};
+
+/**
+ * Returns the computed modifier for a Lore skill by name.
+ * Lore skills are always Intelligence-based; formula: Int mod + level + proficiency * 2.
+ * Matching is case-insensitive on the skill name stem (e.g. 'Esoteric' matches 'Esoteric Lore').
+ * Returns 0 when the character or skill is not found.
+ * @param {Object} charModel - Computed character model from useCharacter
+ * @param {string} loreName  - Lore skill name to look for (stem, e.g. 'Esoteric')
+ * @returns {number}
+ */
+export const getLoreSkillModifier = (charModel, loreName) => {
+  if (!charModel || !loreName) return 0;
+  const needle = loreName.toLowerCase().trim();
+  const loreSkills = charModel.loreSkills || [];
+  const match = loreSkills.find(
+    (ls) => ls.name.toLowerCase().trim() === needle ||
+             ls.name.toLowerCase().trim().replace(/\s+lore$/, '') === needle
+  );
+  if (!match) return 0;
+  const intMod   = charModel.abilityModifiers?.intelligence ?? 0;
+  const level    = charModel.level ?? 0;
+  const profRank = match.proficiency ?? 0;
+  return intMod + level + profRank * 2;
 };
