@@ -15,6 +15,7 @@ import GolarionCalendar from './pages/GolarionCalendar';
 import HistoryTimeline from './pages/HistoryTimeline';
 import PartySummary from './components/party/PartySummary';
 import LoreDrawer from './components/shared/LoreDrawer';
+import ActorMapSync from './components/encounter/ActorMapSync';
 import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
@@ -61,6 +62,7 @@ function App() {
   return (
     <SessionProvider>
       <ContentProvider>
+        <ActorMapSync />
         <GameDateProvider>
           <CharacterProvider>
             <TraitProvider>

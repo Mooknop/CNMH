@@ -56,8 +56,8 @@ const GmLayout = () => {
       <div className="gm-area gm-message">
         <h1>GM Tools</h1>
         <p className="gm-warn" role="alert">
-          Couldn’t initialize the campaign store. Editing is disabled until this
-          succeeds so existing entries aren’t hidden.
+          Couldn't initialize the campaign store. Editing is disabled until this
+          succeeds so existing entries aren't hidden.
         </p>
         <button className="btn-primary" onClick={() => setSeedState('idle')}>
           Retry

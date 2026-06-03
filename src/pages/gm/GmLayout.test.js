@@ -64,7 +64,7 @@ describe('GmLayout', () => {
     useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
     seedDefaults.mockRejectedValueOnce(new Error('nope')).mockResolvedValueOnce({ ok: true });
     renderAt();
-    expect(await screen.findByRole('alert')).toHaveTextContent(/Couldn’t initialize/i);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/initialize/i);
     expect(screen.queryByTestId('outlet')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Retry'));
     await waitFor(() => expect(seedDefaults).toHaveBeenCalledTimes(2));

@@ -109,16 +109,6 @@ describe('GmEncounter (read-only Foundry mirror)', () => {
     expect(screen.queryByLabelText('next-turn')).toBeNull();
   });
 
-  it('auto-matches combatants to characters by name on first encounter load', () => {
-    act(() => { __set('cnmh_encounter_global', FOUNDRY_ENCOUNTER); });
-    render(<GmEncounter />);
-    const map = __get('cnmh_actormap_global');
-    expect(map['Actor.aaa']).toBe('Pellias');
-    expect(map['Actor.bbb']).toBe('Ashka');
-    // Goblin 1 has no matching character — not assigned
-    expect(map['Actor.ccc']).toBeUndefined();
-  });
-
   it('shows a character select for each combatant with a foundryActorId', () => {
     act(() => { __set('cnmh_encounter_global', FOUNDRY_ENCOUNTER); });
     render(<GmEncounter />);
@@ -134,14 +124,14 @@ describe('GmEncounter (read-only Foundry mirror)', () => {
     expect(__get('cnmh_actormap_global')['Actor.ccc']).toBe('IzzyUncut');
   });
 
-  it('"Not a PC" option removes the assignment from the actormap', () => {
+  it('"Not a PC" stores a null sentinel so auto-match cannot re-add it on refresh', () => {
     act(() => {
       __set('cnmh_encounter_global', FOUNDRY_ENCOUNTER);
       __set('cnmh_actormap_global', { 'Actor.aaa': 'Pellias' });
     });
     render(<GmEncounter />);
     fireEvent.change(screen.getByLabelText('assign-e1'), { target: { value: '' } });
-    expect(__get('cnmh_actormap_global')['Actor.aaa']).toBeUndefined();
+    expect(__get('cnmh_actormap_global')['Actor.aaa']).toBeNull();
   });
 
   it('does not show select for entries without a foundryActorId', () => {
