@@ -54,6 +54,14 @@ export function makeActor(opts = {}) {
     speed = 25,
     conditions = [],
     tokens = [],
+    // Bestiary / NPC fields
+    img = null,
+    level = null,
+    rarity = 'common',
+    traits = [],
+    size = null,
+    perception = null,
+    publicNotes = '',
   } = opts;
 
   const conditionItems = conditions.map((c) =>
@@ -62,6 +70,7 @@ export function makeActor(opts = {}) {
   const actor = {
     id,
     name,
+    img,
     documentName: 'Actor',
     system: {
       attributes: {
@@ -69,12 +78,23 @@ export function makeActor(opts = {}) {
         dying:   { value: hp.dying   ?? 0 },
         wounded: { value: hp.wounded ?? 0 },
         doomed:  { value: hp.doomed  ?? 0 },
+        ...(perception !== null ? { perception: { value: perception } } : {}),
       },
       resources: {
         heroPoints: { value: heroPoints },
         focus:      { value: focus.value ?? 0, max: focus.max ?? 0 },
       },
       movement: { speeds: { land: { value: speed, total: speed } } },
+      details: {
+        level: { value: level },
+        publicNotes,
+      },
+      traits: {
+        rarity,
+        value: traits,
+        ...(size !== null ? { size: { value: size } } : {}),
+      },
+      ...(perception !== null ? { perception: { mod: perception } } : {}),
     },
     itemTypes: { condition: conditionItems },
     getActiveTokens: () => tokens,

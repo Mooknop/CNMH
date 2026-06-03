@@ -51,6 +51,30 @@ export function getConditions(actor) {
   }));
 }
 
+// Returns bestiary data for an NPC/enemy actor: level, rarity, traits, image,
+// perception, speed, HP, and a plain-text description (HTML stripped).
+// Returns null when actor is absent. All fields have safe fallbacks so partial
+// actor data never throws.
+export function getBestiaryInfo(actor) {
+  if (!actor) return null;
+  const img = actor.img || actor.prototypeToken?.texture?.src || null;
+  const level = actor.system?.details?.level?.value ?? null;
+  const rarity = actor.system?.traits?.rarity ?? 'common';
+  const traitSlugs = Array.isArray(actor.system?.traits?.value)
+    ? actor.system.traits.value
+    : [];
+  const size = actor.system?.traits?.size?.value ?? null;
+  const traits = size ? [size, ...traitSlugs] : traitSlugs;
+  const perception = actor.system?.perception?.mod
+    ?? actor.system?.attributes?.perception?.value
+    ?? null;
+  const speed = getSpeed(actor);
+  const hp = getHp(actor);
+  const rawDescription = actor.system?.details?.publicNotes ?? '';
+  const description = rawDescription.replace(/<[^>]+>/g, '').trim();
+  return { img, level, rarity, traits, perception, speed, hp, description };
+}
+
 // Returns defensive stats for an actor: AC, save modifiers, and IWR.
 // Saves are returned as modifiers (not DCs); the app derives DC = 10 + modifier.
 // Returns null when actor is absent.

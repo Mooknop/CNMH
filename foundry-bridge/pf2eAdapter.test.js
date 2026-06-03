@@ -22,6 +22,7 @@ import {
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
   applyEffectByUuid,
+  getBestiaryInfo,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
@@ -384,5 +385,55 @@ describe('applyEffectByUuid (Slice B)', () => {
 
     const result = await applyEffectByUuid(null, 'Compendium.pf2e.x.Item.1');
     expect(result).toBeNull();
+  });
+});
+
+describe('getBestiaryInfo', () => {
+  test('reads all fields from a fully-populated NPC actor', () => {
+    const actor = makeActor({
+      img: 'tokens/goblin.webp',
+      level: 3,
+      rarity: 'uncommon',
+      traits: ['humanoid', 'goblin'],
+      size: 'sm',
+      perception: 7,
+      hp: { value: 30, max: 36 },
+      speed: 30,
+      publicNotes: '<p>A <strong>sneaky</strong> goblin.</p>',
+    });
+    const info = getBestiaryInfo(actor);
+    expect(info).toEqual({
+      img: 'tokens/goblin.webp',
+      level: 3,
+      rarity: 'uncommon',
+      traits: ['sm', 'humanoid', 'goblin'],
+      perception: 7,
+      speed: 30,
+      hp: expect.objectContaining({ current: 30, max: 36 }),
+      description: 'A sneaky goblin.',
+    });
+  });
+
+  test('strips HTML tags from publicNotes', () => {
+    const actor = makeActor({ publicNotes: '<h2>Title</h2><ul><li>Item</li></ul>' });
+    expect(getBestiaryInfo(actor).description).toBe('TitleItem');
+  });
+
+  test('returns empty description when publicNotes is absent', () => {
+    const actor = makeActor({ publicNotes: '' });
+    expect(getBestiaryInfo(actor).description).toBe('');
+  });
+
+  test('defaults rarity to common when not set', () => {
+    const actor = makeActor({});
+    expect(getBestiaryInfo(actor).rarity).toBe('common');
+  });
+
+  test('returns null for null actor', () => {
+    expect(getBestiaryInfo(null)).toBeNull();
+  });
+
+  test('returns null for undefined actor', () => {
+    expect(getBestiaryInfo(undefined)).toBeNull();
   });
 });
