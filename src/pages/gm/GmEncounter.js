@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
@@ -6,10 +6,13 @@ import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import './gm.css';
 
-// Read-only mirror of the live Foundry combat, plus a one-time actor assignment
-// UI. Encounter lifecycle is owned by Foundry via the bridge. The GM assigns
-// Foundry combatants to CNMH characters here; the mapping is stored in session
-// state and persists across reloads.
+// Read-only mirror of the live Foundry combat, plus a manual actor assignment
+// UI. Encounter lifecycle is owned by Foundry via the bridge. Actor-map
+// auto-matching by name runs app-wide via ActorMapSync; here the GM can
+// override individual assignments or explicitly mark a combatant as "Not a PC".
+//
+// "Not a PC" stores null (not a deletion) so ActorMapSync's write-guard treats
+// it as a decided slot and never re-matches it on refresh.
 
 const GmEncounter = () => {
   const { characters } = useContent();
@@ -22,29 +25,11 @@ const GmEncounter = () => {
   const currentIndex = encounter?.currentTurnIndex ?? 0;
   const foundryLinked = !!encounter?.foundryCombatId;
 
-  // Auto-match combatants to characters by exact name on first appearance.
-  useEffect(() => {
-    if (!order.length || !characters?.length) return;
-    const additions = {};
-    for (const entry of order) {
-      if (!entry.foundryActorId) continue;
-      if (actorMap[entry.foundryActorId]) continue; // already assigned
-      const match = characters.find(
-        (c) => c.name.toLowerCase() === entry.name.toLowerCase()
-      );
-      if (match) additions[entry.foundryActorId] = match.id;
-    }
-    if (Object.keys(additions).length) {
-      setActorMap((prev) => ({ ...(prev || {}), ...additions }));
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [encounter?.foundryCombatId, order.length]);
-
   const handleAssign = (foundryActorId, charId) => {
     setActorMap((prev) => {
       const next = { ...(prev || {}) };
       if (charId === '') {
-        delete next[foundryActorId];
+        next[foundryActorId] = null; // explicit sentinel: "not a PC, don't re-match"
       } else {
         next[foundryActorId] = charId;
       }
