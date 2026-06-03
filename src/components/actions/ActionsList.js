@@ -178,14 +178,16 @@ const ActionsList = ({ character, characterColor }) => {
         />
       )}
 
-      <TreatWoundsModal
-        isOpen={treatWoundsOpen}
-        onClose={() => setTreatWoundsOpen(false)}
-        mode="battle-medicine"
-        healer={character}
-        themeColor={themeColor}
-        actionCost={encounterMode ? 1 : 0}
-      />
+      {treatWoundsOpen && (
+        <TreatWoundsModal
+          isOpen
+          onClose={() => setTreatWoundsOpen(false)}
+          mode="battle-medicine"
+          healer={character}
+          themeColor={themeColor}
+          actionCost={encounterMode ? 1 : 0}
+        />
+      )}
     </div>
   );
 };

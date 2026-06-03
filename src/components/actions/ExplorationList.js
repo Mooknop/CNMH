@@ -207,14 +207,16 @@ const ExplorationList = ({ character, characterColor }) => {
         );
       })}
 
-      <TreatWoundsModal
-        isOpen={treatWoundsOpen}
-        onClose={() => setTreatWoundsOpen(false)}
-        mode="treat-wounds"
-        healer={character}
-        themeColor={themeColor}
-        actionCost={0}
-      />
+      {treatWoundsOpen && (
+        <TreatWoundsModal
+          isOpen
+          onClose={() => setTreatWoundsOpen(false)}
+          mode="treat-wounds"
+          healer={character}
+          themeColor={themeColor}
+          actionCost={0}
+        />
+      )}
     </div>
   );
 };
