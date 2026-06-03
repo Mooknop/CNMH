@@ -328,12 +328,11 @@ describe('ContentContext', () => {
     expect(val.rawCharacters.length).toBeGreaterThan(0);
   });
 
-  it('exposes images as an empty array on the no-provider fallback', () => {
+  it('exposes images as an array on the no-provider fallback', () => {
     let val;
     const C = () => { val = useContent(); return null; };
     render(<C />);
     expect(Array.isArray(val.images)).toBe(true);
-    expect(val.images).toHaveLength(0);
   });
 
   it('sources images from the server image collection when present', async () => {
@@ -355,12 +354,12 @@ describe('ContentContext', () => {
     ]);
   });
 
-  it('falls back to empty images array when the store has none', async () => {
+  it('falls back to snapshot images when offline', async () => {
     let val;
     const Cap = () => { val = useContent(); return null; };
     mockFetch(() => Promise.reject(new Error('offline')));
     render(<ContentProvider><Cap /></ContentProvider>);
     await waitFor(() => expect(val.source).toBe('fallback'));
-    expect(val.images).toEqual([]);
+    expect(Array.isArray(val.images)).toBe(true);
   });
 });

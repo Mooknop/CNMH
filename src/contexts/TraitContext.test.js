@@ -2,11 +2,13 @@ import React from 'react';
 import { render, screen, act } from '@testing-library/react';
 import { TraitProvider, useTrait, TraitContext } from './TraitContext';
 
-jest.mock('../data/traits.json', () => ({
-  traits: [
-    { name: 'Fire', description: 'Associated with fire.' },
-    { name: 'Cold', description: 'Associated with cold.' },
-  ],
+jest.mock('./ContentContext', () => ({
+  useContent: () => ({
+    traits: [
+      { id: 'fire', name: 'Fire', description: 'Associated with fire.' },
+      { id: 'cold', name: 'Cold', description: 'Associated with cold.' },
+    ],
+  }),
 }));
 
 jest.mock('../components/shared/TraitModal', () => ({ isOpen, trait, onClose }) =>
