@@ -330,3 +330,14 @@
   font-style: italic;
   padding: var(--space-2) var(--space-4);
 }
+
+.strike-exploit-badge {
+  margin-bottom: var(--space-3, 0.5rem);
+  padding: 5px 10px;
+  background: rgba(220, 20, 60, 0.1);
+  border-left: 3px solid #dc143c;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--shell-text-primary, #f5ede4);
+}

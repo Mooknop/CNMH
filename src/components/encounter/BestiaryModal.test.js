@@ -9,8 +9,6 @@ jest.mock('../shared/TraitTag', () => {
   return TraitTag;
 });
 
-// RecallKnowledgeResolver — renders a placeholder stub so BestiaryModal renders
-// correctly without wiring its own deep dependency chain.
 jest.mock('./RecallKnowledgeResolver', () => {
   const RecallKnowledgeResolver = ({ onDone }) => (
     <div data-testid="rkr-stub">
@@ -18,6 +16,15 @@ jest.mock('./RecallKnowledgeResolver', () => {
     </div>
   );
   return RecallKnowledgeResolver;
+});
+
+jest.mock('./ExploitVulnerabilityResolver', () => {
+  const ExploitVulnerabilityResolver = ({ onDone }) => (
+    <div data-testid="evr-stub">
+      <button onClick={onDone}>Cancel</button>
+    </div>
+  );
+  return ExploitVulnerabilityResolver;
 });
 
 // ── Mutable hook state ────────────────────────────────────────────────────────
@@ -28,22 +35,45 @@ const mockClearLock = jest.fn();
 jest.mock('../../hooks/useRecallKnowledge', () => ({
   useRecallKnowledge: () => ({
     recordFor: (entryId) => mockRecord[entryId] || {
-      all: false,
+      identity: false,
       description: false,
       hp: false,
+      ac: false,
+      perception: false,
+      speed: false,
       saves: { fortitude: false, reflex: false, will: false },
       iwr: { immunities: false, resistances: false, weaknesses: false },
+      weaknessesRevealed: {},
       lockedOut: {},
       history: [],
     },
-    resolve:   jest.fn(),
-    clearLock: mockClearLock,
+    resolve:     jest.fn(),
+    mergeRecord: jest.fn(),
+    clearLock:   mockClearLock,
+  }),
+}));
+
+let mockExploit = {};
+jest.mock('../../hooks/useExploitVulnerability', () => ({
+  useExploitVulnerability: () => ({
+    exploitFor: (charId) => mockExploit[charId] ?? null,
+    apply: jest.fn(),
+    clear: jest.fn(),
   }),
 }));
 
 let mockIsGm = false;
 jest.mock('../../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ loading: false, isGm: mockIsGm, email: null }),
+}));
+
+// Acting character — non-Thaumaturge by default.
+let mockCharFlags = { isThaumaturge: false };
+jest.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ characters: [] }),
+}));
+jest.mock('../../hooks/useCharacter', () => ({
+  useCharacter: () => ({ flags: mockCharFlags }),
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -63,7 +93,7 @@ const goblin = {
     description: 'A sneaky goblin warrior.',
   },
   defenses: {
-    ac: 17,  // intentionally different from hp values so absence can be asserted uniquely
+    ac: 17,
     saves: { fortitude: 4, reflex: 6, will: 2 },
     immunities: ['fire'],
     resistances: [],
@@ -116,7 +146,9 @@ function renderModal(props = {}) {
 
 beforeEach(() => {
   mockRecord = {};
+  mockExploit = {};
   mockIsGm   = false;
+  mockCharFlags = { isThaumaturge: false };
   mockClearLock.mockClear();
 });
 
@@ -142,14 +174,13 @@ describe('BestiaryModal — default redacted state', () => {
   test('name in detail pane is redacted (not shown as text)', () => {
     renderModal({ enemies: [goblin] });
     const detail = screen.getByTestId('bm-detail');
-    // Name text should NOT be present — it's replaced by a .bm-redacted bar
     expect(detail).not.toHaveTextContent('Goblin Warrior');
   });
 
-  test('AC is redacted — value 16 not shown', () => {
+  test('AC is redacted — value 17 not shown', () => {
     renderModal({ enemies: [goblin] });
     const detail = screen.getByTestId('bm-detail');
-    expect(detail).not.toHaveTextContent('16');
+    expect(detail).not.toHaveTextContent('17');
   });
 
   test('description is redacted — text not shown', () => {
@@ -157,7 +188,7 @@ describe('BestiaryModal — default redacted state', () => {
     expect(screen.queryByText('A sneaky goblin warrior.')).not.toBeInTheDocument();
   });
 
-  test('RK DC box is hidden when not fully revealed', () => {
+  test('RK DC box is hidden when identity not revealed', () => {
     renderModal({ enemies: [goblin] });
     expect(screen.queryByTestId('bm-rk-dc')).not.toBeInTheDocument();
   });
@@ -168,9 +199,13 @@ describe('BestiaryModal — default redacted state', () => {
     expect(btn).not.toBeDisabled();
   });
 
+  test('Exploit Vulnerability button is NOT shown for non-Thaumaturge', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.queryByTestId('bm-ev-btn')).not.toBeInTheDocument();
+  });
+
   test('list item name is redacted', () => {
     renderModal();
-    // No list button should show text "Goblin Warrior" or "Cave Troll"
     const listItems = screen.getAllByRole('option');
     listItems.forEach((item) => {
       expect(item).not.toHaveTextContent('Goblin Warrior');
@@ -185,21 +220,30 @@ describe('BestiaryModal — default redacted state', () => {
   });
 });
 
-// ── After success reveal (description + hp + one save) ───────────────────────
+// ── After success reveal (identity + description + hp + one fact) ─────────────
 
-describe('BestiaryModal — after success (description + hp + reflex)', () => {
+describe('BestiaryModal — after success (identity + description + hp + reflex)', () => {
   beforeEach(() => {
     mockRecord = {
       e1: {
-        all: false,
+        identity: true,
         description: true,
         hp: true,
+        ac: false,
+        perception: false,
+        speed: false,
         saves: { fortitude: false, reflex: true, will: false },
         iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {},
         lockedOut: {},
         history: [],
       },
     };
+  });
+
+  test('name is revealed', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('Goblin Warrior');
   });
 
   test('description is revealed', () => {
@@ -219,39 +263,117 @@ describe('BestiaryModal — after success (description + hp + reflex)', () => {
 
   test('fortitude save is still redacted', () => {
     renderModal({ enemies: [goblin] });
-    // +4 should not appear
     expect(screen.getByTestId('bm-detail')).not.toHaveTextContent('+4');
   });
 
   test('AC is still redacted — value 17 not shown', () => {
     renderModal({ enemies: [goblin] });
-    expect(screen.getByTestId('bm-detail')).not.toHaveTextContent('17'); // AC 17
+    expect(screen.getByTestId('bm-detail')).not.toHaveTextContent('17');
   });
 
   test('immunities still redacted — no "fire" text', () => {
     renderModal({ enemies: [goblin] });
     expect(screen.queryByText(/fire/i)).not.toBeInTheDocument();
   });
+
+  test('RK DC box shown once identity is revealed', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-rk-dc')).toHaveTextContent('15');
+  });
+
+  test('list item name is shown when identity revealed', () => {
+    renderModal();
+    const options = screen.getAllByRole('option');
+    expect(options[0]).toHaveTextContent('Goblin Warrior');
+  });
 });
 
-// ── After success reveal with IWR choice ─────────────────────────────────────
+// ── After success with AC revealed ───────────────────────────────────────────
 
-describe('BestiaryModal — after success (weaknesses revealed)', () => {
+describe('BestiaryModal — after success (identity + ac revealed)', () => {
   beforeEach(() => {
     mockRecord = {
       e1: {
-        all: false,
+        identity: true,
         description: true,
         hp: true,
+        ac: true,
+        perception: false,
+        speed: false,
         saves: { fortitude: false, reflex: false, will: false },
-        iwr: { immunities: false, resistances: false, weaknesses: true },
+        iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {},
         lockedOut: {},
         history: [],
       },
     };
   });
 
-  test('weaknesses value is shown', () => {
+  test('AC value 17 is shown', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('17');
+  });
+
+  test('saves are still redacted', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-detail')).not.toHaveTextContent('+6');
+  });
+});
+
+// ── Partial weakness reveal (Exploit Vulnerability success) ───────────────────
+
+describe('BestiaryModal — partial weakness reveal from Exploit Vulnerability', () => {
+  beforeEach(() => {
+    mockRecord = {
+      e1: {
+        identity: true,
+        description: true,
+        hp: true,
+        ac: false,
+        perception: false,
+        speed: false,
+        saves: { fortitude: false, reflex: false, will: false },
+        iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: { cold: true },
+        lockedOut: {},
+        history: [],
+      },
+    };
+  });
+
+  test('revealed weakness type is shown', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('cold');
+  });
+
+  test('immunities are still redacted', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.queryByText(/fire/i)).not.toBeInTheDocument();
+  });
+});
+
+// ── After success with full IWR weaknesses choice ────────────────────────────
+
+describe('BestiaryModal — after success (weaknesses category revealed)', () => {
+  beforeEach(() => {
+    mockRecord = {
+      e1: {
+        identity: true,
+        description: true,
+        hp: true,
+        ac: false,
+        perception: false,
+        speed: false,
+        saves: { fortitude: false, reflex: false, will: false },
+        iwr: { immunities: false, resistances: false, weaknesses: true },
+        weaknessesRevealed: {},
+        lockedOut: {},
+        history: [],
+      },
+    };
+  });
+
+  test('all weakness values are shown', () => {
     renderModal({ enemies: [goblin] });
     expect(screen.getByTestId('bm-detail')).toHaveTextContent('cold');
   });
@@ -262,17 +384,21 @@ describe('BestiaryModal — after success (weaknesses revealed)', () => {
   });
 });
 
-// ── After crit success (everything revealed) ─────────────────────────────────
+// ── After crit success (identity + 2 picks) ──────────────────────────────────
 
-describe('BestiaryModal — after critical success (all revealed)', () => {
+describe('BestiaryModal — after critical success (identity + AC + fortitude)', () => {
   beforeEach(() => {
     mockRecord = {
       e1: {
-        all: true,
+        identity: true,
         description: true,
         hp: true,
-        saves: { fortitude: true, reflex: true, will: true },
-        iwr: { immunities: true, resistances: true, weaknesses: true },
+        ac: true,
+        perception: false,
+        speed: false,
+        saves: { fortitude: true, reflex: false, will: false },
+        iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {},
         lockedOut: {},
         history: [],
       },
@@ -286,7 +412,17 @@ describe('BestiaryModal — after critical success (all revealed)', () => {
 
   test('AC is shown', () => {
     renderModal({ enemies: [goblin] });
-    expect(screen.getByTestId('bm-detail')).toHaveTextContent('17'); // AC 17
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('17');
+  });
+
+  test('fortitude is shown (+4)', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('+4');
+  });
+
+  test('reflex is still redacted (+6 not shown)', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByTestId('bm-detail')).not.toHaveTextContent('+6');
   });
 
   test('description is shown', () => {
@@ -298,30 +434,73 @@ describe('BestiaryModal — after critical success (all revealed)', () => {
     renderModal({ enemies: [goblin] });
     expect(screen.getByTestId('bm-rk-dc')).toHaveTextContent('15');
   });
+});
 
-  test('all three saves are shown', () => {
+// ── Exploit Vulnerability button (Thaumaturge only) ──────────────────────────
+
+describe('BestiaryModal — Exploit Vulnerability button', () => {
+  test('EV button shown for Thaumaturge', () => {
+    mockCharFlags = { isThaumaturge: true };
     renderModal({ enemies: [goblin] });
-    const detail = screen.getByTestId('bm-detail');
-    expect(detail).toHaveTextContent('+4');  // Fort
-    expect(detail).toHaveTextContent('+6');  // Ref
-    expect(detail).toHaveTextContent('+2');  // Will
+    expect(screen.getByTestId('bm-ev-btn')).toBeInTheDocument();
   });
 
-  test('immunities shown', () => {
+  test('EV button not shown for non-Thaumaturge', () => {
+    mockCharFlags = { isThaumaturge: false };
     renderModal({ enemies: [goblin] });
-    expect(screen.getByTestId('bm-detail')).toHaveTextContent('fire');
+    expect(screen.queryByTestId('bm-ev-btn')).not.toBeInTheDocument();
   });
 
-  test('weaknesses shown', () => {
+  test('clicking EV button opens the EV resolver stub', () => {
+    mockCharFlags = { isThaumaturge: true };
     renderModal({ enemies: [goblin] });
-    expect(screen.getByTestId('bm-detail')).toHaveTextContent('cold');
+    fireEvent.click(screen.getByTestId('bm-ev-btn'));
+    expect(screen.getByTestId('evr-stub')).toBeInTheDocument();
   });
 
-  test('list item name is shown when all revealed', () => {
-    renderModal();
-    // Goblin is first and is fully revealed
-    const listItems = screen.getAllByRole('option');
-    expect(listItems[0]).toHaveTextContent('Goblin Warrior');
+  test('EV resolver cancel hides the resolver', () => {
+    mockCharFlags = { isThaumaturge: true };
+    renderModal({ enemies: [goblin] });
+    fireEvent.click(screen.getByTestId('bm-ev-btn'));
+    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
+    expect(screen.queryByTestId('evr-stub')).not.toBeInTheDocument();
+  });
+});
+
+// ── Active exploit badge ──────────────────────────────────────────────────────
+
+describe('BestiaryModal — active exploit badge', () => {
+  test('badge shown when this enemy is the current exploit target', () => {
+    mockExploit = {
+      c1: {
+        targetEntryId: 'e1',
+        targetName: 'Goblin Warrior',
+        type: 'antithesis',
+        weaknessType: null,
+        value: 4,
+        magical: true,
+      },
+    };
+    renderModal({ enemies: [goblin] });
+    const badge = screen.getByTestId('bm-exploit-badge');
+    expect(badge).toHaveTextContent('Personal Antithesis');
+    expect(badge).toHaveTextContent('weakness 4');
+    expect(badge).toHaveTextContent('magical');
+  });
+
+  test('badge not shown when a different enemy is the target', () => {
+    mockExploit = {
+      c1: {
+        targetEntryId: 'e2',
+        targetName: 'Cave Troll',
+        type: 'antithesis',
+        weaknessType: null,
+        value: 4,
+        magical: false,
+      },
+    };
+    renderModal({ enemies: [goblin] });
+    expect(screen.queryByTestId('bm-exploit-badge')).not.toBeInTheDocument();
   });
 });
 
@@ -331,11 +510,15 @@ describe('BestiaryModal — locked out character', () => {
   beforeEach(() => {
     mockRecord = {
       e1: {
-        all: false,
+        identity: false,
         description: false,
         hp: false,
+        ac: false,
+        perception: false,
+        speed: false,
         saves: { fortitude: false, reflex: false, will: false },
         iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {},
         lockedOut: { c1: true },
         history: [],
       },
@@ -384,19 +567,34 @@ describe('BestiaryModal — locked out character', () => {
 
 describe('BestiaryModal — navigation', () => {
   test('shows first enemy detail by default', () => {
-    mockRecord = { e1: { all: true, description: true, hp: true, saves: { fortitude: true, reflex: true, will: true }, iwr: { immunities: true, resistances: true, weaknesses: true }, lockedOut: {}, history: [] } };
+    mockRecord = {
+      e1: {
+        identity: true, description: true, hp: true, ac: true, perception: true, speed: true,
+        saves: { fortitude: true, reflex: true, will: true },
+        iwr: { immunities: true, resistances: true, weaknesses: true },
+        weaknessesRevealed: {}, lockedOut: {}, history: [],
+      },
+    };
     renderModal();
     expect(screen.getByTestId('bm-detail')).toHaveTextContent('Goblin Warrior');
   });
 
   test('switches detail when a different enemy is clicked', () => {
     mockRecord = {
-      e1: { all: true, description: true, hp: true, saves: { fortitude: true, reflex: true, will: true }, iwr: { immunities: true, resistances: true, weaknesses: true }, lockedOut: {}, history: [] },
-      e2: { all: true, description: true, hp: true, saves: { fortitude: true, reflex: true, will: true }, iwr: { immunities: true, resistances: true, weaknesses: true }, lockedOut: {}, history: [] },
+      e1: {
+        identity: true, description: true, hp: true, ac: true, perception: true, speed: true,
+        saves: { fortitude: true, reflex: true, will: true },
+        iwr: { immunities: true, resistances: true, weaknesses: true },
+        weaknessesRevealed: {}, lockedOut: {}, history: [],
+      },
+      e2: {
+        identity: true, description: true, hp: true, ac: true, perception: true, speed: true,
+        saves: { fortitude: true, reflex: true, will: true },
+        iwr: { immunities: true, resistances: true, weaknesses: true },
+        weaknessesRevealed: {}, lockedOut: {}, history: [],
+      },
     };
     renderModal();
-    // The troll list item has no text content while redacted, but aria-label on the button is still present
-    // Click the second list item (troll)
     const options = screen.getAllByRole('option');
     fireEvent.click(options[1]);
     expect(screen.getByTestId('bm-detail')).toHaveTextContent('Cave Troll');

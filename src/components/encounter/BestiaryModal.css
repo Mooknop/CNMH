@@ -269,8 +269,28 @@
   border-top: 1px solid var(--shell-border, rgba(255, 255, 255, 0.07));
 }
 
+.bm-action-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .bm-rk-btn {
-  width: 100%;
+  flex: 1;
+}
+
+.bm-exploit-badge {
+  margin: 6px 0;
+  padding: 6px 10px;
+  background: rgba(220, 20, 60, 0.12);
+  border-left: 3px solid #dc143c;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.85rem;
+  color: var(--shell-text-primary, #f5ede4);
+}
+
+.bm-exploit-label {
+  font-weight: 600;
 }
 
 .bm-rk-locked {

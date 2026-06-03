@@ -3,8 +3,12 @@ import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import { recallKnowledgeDC } from '../../utils/recallKnowledge';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
+import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useGmAuth } from '../../hooks/useGmAuth';
+import { useContent } from '../../contexts/ContentContext';
+import { useCharacter } from '../../hooks/useCharacter';
 import RecallKnowledgeResolver from './RecallKnowledgeResolver';
+import ExploitVulnerabilityResolver from './ExploitVulnerabilityResolver';
 import './BestiaryModal.css';
 
 // A solid redacted bar in place of a hidden value.
@@ -43,11 +47,20 @@ const SignedMod = ({ value, revealed }) => {
 const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
   const { bestiary, defenses, name, entryId } = enemy;
   const { recordFor, clearLock } = useRecallKnowledge();
+  const { exploitFor } = useExploitVulnerability();
   const { isGm } = useGmAuth();
-  const [resolverOpen, setResolverOpen] = useState(false);
+  const { characters } = useContent();
+  const rawActingChar = characters.find((c) => c.id === actingCharId) || null;
+  const actingCharModel = useCharacter(rawActingChar);
+  const isThaumaturge = actingCharModel?.flags?.isThaumaturge ?? false;
+
+  // 'none' | 'rk' | 'ev'
+  const [resolverOpen, setResolverOpen] = useState('none');
 
   const record = recordFor(entryId);
-  const all    = record.all;
+  const exploit = exploitFor(actingCharId);
+  const activeExploit = exploit?.targetEntryId === entryId ? exploit : null;
+
   const lockedForMe = !!(record.lockedOut?.[actingCharId]);
 
   if (!bestiary && !defenses) {
@@ -63,6 +76,21 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
     ? recallKnowledgeDC(bestiary.level, bestiary.rarity)
     : null;
 
+  // Granular reveal flags.
+  const identityRevealed     = !!(record.identity);
+  const descriptionRevealed  = !!(record.description);
+  const hpRevealed           = !!(record.hp);
+  const acRevealed           = !!(record.ac);
+  const perceptionRevealed   = !!(record.perception);
+  const speedRevealed        = !!(record.speed);
+
+  // Partial weakness reveal from Exploit Vulnerability (per-type).
+  const weaknessesFullyRevealed = !!(record.iwr?.weaknesses);
+  const partialWeaknesses = !weaknessesFullyRevealed
+    ? (defenses?.weaknesses || []).filter((w) => record.weaknessesRevealed?.[w.type])
+    : [];
+  const anyWeaknessRevealed = weaknessesFullyRevealed || partialWeaknesses.length > 0;
+
   return (
     <div className="bm-detail" data-testid="bm-detail">
       {/* Image — always visible */}
@@ -77,28 +105,28 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
         </div>
       )}
 
-      {/* Name — redacted until crit success */}
+      {/* Name — redacted until identity revealed */}
       <h3 className="bm-detail-name">
-        {all ? name : <Redacted width="8ch" label={`${name} name redacted`} />}
+        {identityRevealed ? name : <Redacted width="8ch" label={`${name} name redacted`} />}
       </h3>
 
       {bestiary?.level != null && (
         <div className="bm-level">
-          {all ? `Creature ${bestiary.level}` : <Redacted width="6ch" />}
+          {identityRevealed ? `Creature ${bestiary.level}` : <Redacted width="6ch" />}
         </div>
       )}
 
       {/* Traits */}
       {bestiary?.traits?.length > 0 && (
         <div className="bm-traits">
-          {all
+          {identityRevealed
             ? bestiary.traits.map((t) => <TraitTag key={t} trait={t} />)
             : <Redacted width="10ch" />}
         </div>
       )}
 
-      {/* RK DC box — only shown once fully revealed */}
-      {rkDC != null && all && (
+      {/* RK DC box — shown once identity is known */}
+      {rkDC != null && identityRevealed && (
         <div className="bm-rk-dc" data-testid="bm-rk-dc">
           <span className="bm-rk-label">Recall Knowledge DC</span>
           <span className="bm-rk-value">{rkDC}</span>
@@ -108,23 +136,35 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
         </div>
       )}
 
+      {/* Active exploit badge */}
+      {activeExploit && (
+        <div className="bm-exploit-badge" data-testid="bm-exploit-badge">
+          <span className="bm-exploit-label">
+            {activeExploit.type === 'mortal'
+              ? `Mortal Weakness — ${activeExploit.weaknessType} ${activeExploit.value}`
+              : `Personal Antithesis — weakness ${activeExploit.value}`}
+            {activeExploit.magical ? ' · magical' : ''}
+          </span>
+        </div>
+      )}
+
       <div className="bm-stats-grid">
-        <StatRow label="AC"         value={defenses?.ac ?? null} revealed={all} redactWidth="3ch" />
+        <StatRow label="AC"   value={defenses?.ac ?? null} revealed={acRevealed} redactWidth="3ch" />
         {bestiary?.hp != null && (
           <StatRow
             label="HP"
             value={`${bestiary.hp.current} / ${bestiary.hp.max}`}
-            revealed={record.hp || all}
+            revealed={hpRevealed}
           />
         )}
         {bestiary?.perception != null && (
           <div className="bm-stat-row">
             <span className="bm-stat-label">Perception</span>
-            <SignedMod value={bestiary.perception} revealed={all} />
+            <SignedMod value={bestiary.perception} revealed={perceptionRevealed} />
           </div>
         )}
         {bestiary?.speed != null && (
-          <StatRow label="Speed" value={`${bestiary.speed} ft.`} revealed={all} />
+          <StatRow label="Speed" value={`${bestiary.speed} ft.`} revealed={speedRevealed} />
         )}
       </div>
 
@@ -135,35 +175,35 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
           <div className="bm-saves-row">
             <span className="bm-save-item">
               <span className="bm-save-name">Fort</span>
-              <SignedMod value={defenses.saves.fortitude} revealed={record.saves?.fortitude || all} />
+              <SignedMod value={defenses.saves.fortitude} revealed={record.saves?.fortitude} />
             </span>
             <span className="bm-save-item">
               <span className="bm-save-name">Ref</span>
-              <SignedMod value={defenses.saves.reflex} revealed={record.saves?.reflex || all} />
+              <SignedMod value={defenses.saves.reflex} revealed={record.saves?.reflex} />
             </span>
             <span className="bm-save-item">
               <span className="bm-save-name">Will</span>
-              <SignedMod value={defenses.saves.will} revealed={record.saves?.will || all} />
+              <SignedMod value={defenses.saves.will} revealed={record.saves?.will} />
             </span>
           </div>
         </div>
       )}
 
       {/* IWR */}
-      {defenses?.immunities?.length > 0 && (record.iwr?.immunities || all) && (
+      {defenses?.immunities?.length > 0 && (record.iwr?.immunities) && (
         <div className="bm-iwr">
           <span className="bm-iwr-label">Immunities</span>
           <span className="bm-iwr-values">{defenses.immunities.join(', ')}</span>
         </div>
       )}
-      {defenses?.immunities?.length > 0 && !(record.iwr?.immunities || all) && (
+      {defenses?.immunities?.length > 0 && !(record.iwr?.immunities) && (
         <div className="bm-iwr">
           <span className="bm-iwr-label">Immunities</span>
           <Redacted width="8ch" />
         </div>
       )}
 
-      {defenses?.resistances?.length > 0 && (record.iwr?.resistances || all) && (
+      {defenses?.resistances?.length > 0 && (record.iwr?.resistances) && (
         <div className="bm-iwr">
           <span className="bm-iwr-label">Resistances</span>
           <span className="bm-iwr-values">
@@ -171,57 +211,81 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
           </span>
         </div>
       )}
-      {defenses?.resistances?.length > 0 && !(record.iwr?.resistances || all) && (
+      {defenses?.resistances?.length > 0 && !(record.iwr?.resistances) && (
         <div className="bm-iwr">
           <span className="bm-iwr-label">Resistances</span>
           <Redacted width="8ch" />
         </div>
       )}
 
-      {defenses?.weaknesses?.length > 0 && (record.iwr?.weaknesses || all) && (
+      {/* Weaknesses — supports full reveal (iwr.weaknesses) or partial (weaknessesRevealed) */}
+      {defenses?.weaknesses?.length > 0 && (
         <div className="bm-iwr">
           <span className="bm-iwr-label">Weaknesses</span>
-          <span className="bm-iwr-values">
-            {defenses.weaknesses.map((w) => `${w.type} ${w.value}`).join(', ')}
-          </span>
-        </div>
-      )}
-      {defenses?.weaknesses?.length > 0 && !(record.iwr?.weaknesses || all) && (
-        <div className="bm-iwr">
-          <span className="bm-iwr-label">Weaknesses</span>
-          <Redacted width="8ch" />
+          {anyWeaknessRevealed ? (
+            <span className="bm-iwr-values">
+              {weaknessesFullyRevealed
+                ? defenses.weaknesses.map((w) => `${w.type} ${w.value}`).join(', ')
+                : partialWeaknesses.map((w) => `${w.type} ${w.value}`).join(', ')}
+            </span>
+          ) : (
+            <Redacted width="8ch" />
+          )}
         </div>
       )}
 
       {/* Description */}
-      {(record.description || all)
+      {descriptionRevealed
         ? bestiary?.description && (
             <p className="bm-description">{bestiary.description}</p>
           )
         : <Redacted width="100%" label="description redacted" />
       }
 
-      {/* Recall Knowledge trigger */}
+      {/* Recall Knowledge + Exploit Vulnerability triggers */}
       <div className="bm-rk-section">
-        {resolverOpen ? (
+        {resolverOpen === 'rk' && (
           <RecallKnowledgeResolver
             enemy={enemy}
             actingCharId={actingCharId}
             actingCharName={actingCharName}
             themeColor={themeColor}
-            onDone={() => setResolverOpen(false)}
+            onDone={() => setResolverOpen('none')}
           />
-        ) : (
+        )}
+        {resolverOpen === 'ev' && (
+          <ExploitVulnerabilityResolver
+            enemy={enemy}
+            actingCharId={actingCharId}
+            actingCharName={actingCharName}
+            themeColor={themeColor}
+            onDone={() => setResolverOpen('none')}
+          />
+        )}
+        {resolverOpen === 'none' && (
           <>
-            <button
-              type="button"
-              className="btn-secondary bm-rk-btn"
-              onClick={() => setResolverOpen(true)}
-              disabled={lockedForMe}
-              aria-label="Recall Knowledge"
-            >
-              Recall Knowledge
-            </button>
+            <div className="bm-action-row">
+              <button
+                type="button"
+                className="btn-secondary bm-rk-btn"
+                onClick={() => setResolverOpen('rk')}
+                disabled={lockedForMe}
+                aria-label="Recall Knowledge"
+              >
+                Recall Knowledge
+              </button>
+              {isThaumaturge && (
+                <button
+                  type="button"
+                  className="btn-secondary bm-rk-btn"
+                  onClick={() => setResolverOpen('ev')}
+                  aria-label="Exploit Vulnerability"
+                  data-testid="bm-ev-btn"
+                >
+                  Exploit Vulnerability
+                </button>
+              )}
+            </div>
             {lockedForMe && (
               <p className="bm-rk-locked" data-testid="bm-rk-locked">
                 You can&apos;t recall more about this creature.
@@ -277,7 +341,7 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
           {(enemies || []).map((enemy) => {
             const isFocused = enemy.entryId === (focused?.entryId ?? null);
             const record    = recordFor(enemy.entryId);
-            const allRevealed = record.all;
+            const identityRevealed = record.identity;
             return (
               <button
                 key={enemy.entryId}
@@ -297,11 +361,11 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
                   />
                 )}
                 <span className="bm-list-name">
-                  {allRevealed
+                  {identityRevealed
                     ? enemy.name
                     : <span className="bm-redacted bm-redacted--inline" style={{ width: '7ch' }} aria-label="name redacted" aria-hidden="true" />}
                 </span>
-                {enemy.bestiary?.level != null && allRevealed && (
+                {enemy.bestiary?.level != null && identityRevealed && (
                   <span className="bm-list-level">CR {enemy.bestiary.level}</span>
                 )}
               </button>

@@ -77,11 +77,15 @@ export function recallKnowledgeSkills(traits = []) {
 
 export function defaultRecord() {
   return {
-    all: false,
-    description: false,
-    hp: false,
+    identity: false,        // name + level + traits — auto-revealed on any success
+    description: false,     // auto-revealed on any success
+    hp: false,              // auto-revealed on any success
+    ac: false,              // pickable option
+    perception: false,      // pickable option
+    speed: false,           // pickable option
     saves: { fortitude: false, reflex: false, will: false },
     iwr: { immunities: false, resistances: false, weaknesses: false },
+    weaknessesRevealed: {}, // { [type]: true } — partial single-weakness reveal (EV success)
     lockedOut: {},
     history: [],
   };
@@ -92,15 +96,15 @@ export function isLockedFor(record, charId) {
 }
 
 export function isFieldRevealed(record, field) {
-  return !!(record?.all || record?.[field]);
+  return !!(record?.[field]);
 }
 
 export function isSaveRevealed(record, saveKey) {
-  return !!(record?.all || record?.saves?.[saveKey]);
+  return !!(record?.saves?.[saveKey]);
 }
 
 export function isIwrRevealed(record, iwrKey) {
-  return !!(record?.all || record?.iwr?.[iwrKey]);
+  return !!(record?.iwr?.[iwrKey]);
 }
 
 // Resolves 'lowest'/'highest' save choice to a concrete save key.
@@ -117,35 +121,48 @@ function resolveAbstractSave(choice, saves) {
   return entries.reduce((a, b) => (b[1] > a[1] ? b : a))[0];
 }
 
-// Pure reducer — returns { next: updatedRecord, learned: string|null }.
-// `choice` is one of: 'fortitude'|'reflex'|'will'|'lowest'|'highest'|
-//                     'immunities'|'resistances'|'weaknesses'
+// Applies a single choice to a record. Returns { next, learned }.
+function applyOneChoice(record, choice, defenses) {
+  const saveKeys = ['fortitude', 'reflex', 'will'];
+  const iwrKeys  = ['immunities', 'resistances', 'weaknesses'];
+
+  if (['ac', 'perception', 'speed'].includes(choice)) {
+    return { next: { ...record, [choice]: true }, learned: choice };
+  }
+  if (saveKeys.includes(choice)) {
+    return { next: { ...record, saves: { ...record.saves, [choice]: true } }, learned: choice };
+  }
+  if (choice === 'lowest' || choice === 'highest') {
+    const resolved = resolveAbstractSave(choice, defenses?.saves);
+    return { next: { ...record, saves: { ...record.saves, [resolved]: true } }, learned: resolved };
+  }
+  if (iwrKeys.includes(choice)) {
+    return { next: { ...record, iwr: { ...record.iwr, [choice]: true } }, learned: choice };
+  }
+  return { next: record, learned: null };
+}
+
+// Pure reducer — returns { next: updatedRecord, learned: string[]|null }.
+// `choices` is an array of picks:
+//   success       → 1 choice applied
+//   criticalSuccess → 2 choices applied
+// Each choice is one of: 'ac'|'perception'|'speed'|
+//   'fortitude'|'reflex'|'will'|'lowest'|'highest'|
+//   'immunities'|'resistances'|'weaknesses'
 // `defenses` is the enemy's defenses object (for lowest/highest resolution).
-export function applyRecallKnowledge(record, { degree, defenses, choice, charId }) {
+export function applyRecallKnowledge(record, { degree, defenses, choices, charId }) {
   const base = record || defaultRecord();
 
-  if (degree === 'criticalSuccess') {
-    return { next: { ...base, all: true }, learned: null };
-  }
-
-  if (degree === 'success') {
-    const saveKeys = ['fortitude', 'reflex', 'will'];
-    const iwrKeys  = ['immunities', 'resistances', 'weaknesses'];
-    let next = { ...base, description: true, hp: true };
-    let learned = null;
-
-    if (saveKeys.includes(choice)) {
-      learned = choice;
-      next = { ...next, saves: { ...next.saves, [choice]: true } };
-    } else if (choice === 'lowest' || choice === 'highest') {
-      learned = resolveAbstractSave(choice, defenses?.saves);
-      next = { ...next, saves: { ...next.saves, [learned]: true } };
-    } else if (iwrKeys.includes(choice)) {
-      learned = choice;
-      next = { ...next, iwr: { ...next.iwr, [choice]: true } };
+  if (degree === 'criticalSuccess' || degree === 'success') {
+    // Auto-reveal identity (name/level/traits), description, and HP on any success.
+    let next = { ...base, identity: true, description: true, hp: true };
+    const learnedList = [];
+    for (const c of (choices || [])) {
+      const { next: n, learned } = applyOneChoice(next, c, defenses);
+      next = n;
+      if (learned) learnedList.push(learned);
     }
-
-    return { next, learned };
+    return { next, learned: learnedList.length > 0 ? learnedList : null };
   }
 
   if (degree === 'criticalFailure') {
@@ -158,4 +175,41 @@ export function applyRecallKnowledge(record, { degree, defenses, choice, charId 
 
   // failure — no change
   return { next: base, learned: null };
+}
+
+// ── Exploit Vulnerability helpers ───────────────────────────────────────────
+
+// Personal Antithesis weakness value = 2 + half level (rounded down).
+export function personalAntithesisValue(level) {
+  return 2 + Math.floor((level || 0) / 2);
+}
+
+// Returns { type, value } for the single highest weakness, or null when none.
+export function highestWeakness(defenses) {
+  const ws = defenses?.weaknesses;
+  if (!ws || ws.length === 0) return null;
+  return ws.reduce((best, w) => (w.value > best.value ? w : best));
+}
+
+// Applies the knowledge reveals from Exploit Vulnerability.
+// success      → adds the highest weakness type to weaknessesRevealed (partial)
+// critSuccess  → reveals all three IWR categories
+// other        → unchanged
+export function revealFromExploit(record, degree, defenses) {
+  const base = record || defaultRecord();
+  if (degree === 'criticalSuccess') {
+    return {
+      ...base,
+      iwr: { immunities: true, resistances: true, weaknesses: true },
+    };
+  }
+  if (degree === 'success') {
+    const hw = highestWeakness(defenses);
+    if (!hw) return base;
+    return {
+      ...base,
+      weaknessesRevealed: { ...(base.weaknessesRevealed || {}), [hw.type]: true },
+    };
+  }
+  return base;
 }
