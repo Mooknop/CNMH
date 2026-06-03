@@ -248,6 +248,68 @@
   white-space: pre-wrap;
 }
 
+/* ---------- Redacted bars ---------- */
+.bm-redacted {
+  display: inline-block;
+  height: 0.85em;
+  background: var(--shell-text-tertiary, rgba(255, 255, 255, 0.28));
+  border-radius: var(--radius-sm, 4px);
+  vertical-align: middle;
+  min-width: 2ch;
+}
+
+.bm-redacted--inline {
+  height: 0.7em;
+}
+
+/* ---------- Recall Knowledge section ---------- */
+.bm-rk-section {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--shell-border, rgba(255, 255, 255, 0.07));
+}
+
+.bm-rk-btn {
+  width: 100%;
+}
+
+.bm-rk-locked {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  color: var(--save-crit-failure-fg, #d94f4f);
+  font-style: italic;
+}
+
+.bm-rk-gm-locks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.bm-rk-gm-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
+}
+
+.bm-rk-unlock-btn {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--save-crit-failure-fg, #d94f4f);
+  background: transparent;
+  color: var(--save-crit-failure-fg, #d94f4f);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.bm-rk-unlock-btn:hover {
+  background: color-mix(in srgb, var(--save-crit-failure-fg, #d94f4f) 15%, transparent);
+}
+
 /* ---------- Empty states ---------- */
 .bm-no-statblock,
 .bm-empty {

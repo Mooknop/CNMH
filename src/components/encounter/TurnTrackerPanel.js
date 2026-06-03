@@ -429,6 +429,8 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           isOpen
           onClose={() => setBestiaryOpen(false)}
           enemies={enemies}
+          actingCharId={charId}
+          actingCharName={characterName}
         />
       )}
     </div>

@@ -27,6 +27,7 @@ import {
 
 const ENCOUNTER_KEY  = 'cnmh_encounter_global';
 const ACTORMAP_KEY   = 'cnmh_actormap_global';
+const KNOWLEDGE_KEY  = 'cnmh_knowledge_global';
 
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
@@ -36,8 +37,9 @@ const makeLogEntry = (entry) => ({
 });
 
 export const useEncounter = () => {
-  const [encounter, setEncounter] = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
-  const [actorMap, setActorMap]   = useSyncedState(ACTORMAP_KEY, {});
+  const [encounter, setEncounter]   = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
+  const [actorMap, setActorMap]     = useSyncedState(ACTORMAP_KEY, {});
+  const [, setKnowledge]            = useSyncedState(KNOWLEDGE_KEY, {});
   const { sendUpdate } = useSession();
 
   // Resolve Foundry actor IDs → CNMH charIds using the GM-maintained actorMap.
@@ -286,8 +288,11 @@ export const useEncounter = () => {
   );
 
   const endEncounter = useCallback(
-    () => setEncounter(() => defaultEncounter()),
-    [setEncounter]
+    () => {
+      setEncounter(() => defaultEncounter());
+      setKnowledge({});
+    },
+    [setEncounter, setKnowledge]
   );
 
   const addSaveRequest = useCallback(
