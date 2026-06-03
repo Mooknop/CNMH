@@ -1,0 +1,88 @@
+.tw-target-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tw-dc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tw-dc-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.tw-dc-btn:hover {
+  border-color: var(--color-primary);
+}
+
+.tw-dc-btn--on {
+  border-color: currentColor;
+  background: color-mix(in srgb, var(--color-theme, var(--color-primary)) 15%, transparent);
+}
+
+.tw-dc-value {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.tw-dc-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.tw-degree-chip {
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tw-degree--crit-success { background: var(--save-crit-success-bg, #1a4a1a); color: var(--save-crit-success-fg, #6fcf6f); }
+.tw-degree--success      { background: var(--save-success-bg, #1a3a1a);      color: var(--save-success-fg, #5cb85c);     }
+.tw-degree--failure      { background: var(--save-failure-bg, #3a2a1a);      color: var(--save-failure-fg, #e69545);     }
+.tw-degree--crit-failure { background: var(--save-crit-failure-bg, #4a1a1a); color: var(--save-crit-failure-fg, #d94f4f); }
+
+.tw-hint-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  min-width: 80px;
+}
+
+.tw-locked-notice {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.tw-immunity-notice {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--save-crit-failure-bg, #4a1a1a) 60%, transparent);
+  color: var(--save-crit-failure-fg, #d94f4f);
+  font-size: 0.85rem;
+  border: 1px solid var(--save-crit-failure-fg, #d94f4f);
+}
+
+.tw-footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}

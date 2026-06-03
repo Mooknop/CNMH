@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
+import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
@@ -31,6 +32,7 @@ const ExplorationList = ({ character, characterColor }) => {
     `cnmh_exploration_${characterKey}`,
     null
   );
+  const [treatWoundsOpen, setTreatWoundsOpen] = useState(false);
 
   if (!characterModel) return null;
 
@@ -173,6 +175,8 @@ const ExplorationList = ({ character, characterColor }) => {
                   </>
                 );
 
+                const isTreatWounds = activity.name === 'Treat Wounds';
+
                 return (
                   <CollapsibleCard
                     key={index}
@@ -186,6 +190,15 @@ const ExplorationList = ({ character, characterColor }) => {
                       {activity.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
                     </div>
                     <div className="exploration-description">{activity.description}</div>
+                    {isTreatWounds && (
+                      <button
+                        className="btn-primary"
+                        style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
+                        onClick={() => setTreatWoundsOpen(true)}
+                      >
+                        Treat Wounds
+                      </button>
+                    )}
                   </CollapsibleCard>
                 );
               })}
@@ -193,6 +206,17 @@ const ExplorationList = ({ character, characterColor }) => {
           </div>
         );
       })}
+
+      {treatWoundsOpen && (
+        <TreatWoundsModal
+          isOpen
+          onClose={() => setTreatWoundsOpen(false)}
+          mode="treat-wounds"
+          healer={character}
+          themeColor={themeColor}
+          actionCost={0}
+        />
+      )}
     </div>
   );
 };
