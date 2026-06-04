@@ -219,26 +219,47 @@
   gap: var(--space-2);
 }
 
-/* Spell cards — arcane left border, rank badge top-right */
+/* Spell cards — tap-to-open buttons; arcane left border, rank badge top-right */
 .spell-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--shell-border);
   border-left: 3px solid var(--theme-arcane, var(--arcane-mid));
   background: var(--surface-slab);
   border-radius: var(--radius-md);
+  padding: var(--space-3);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
   position: relative;
 }
 
-.spell-card .collapsible-toggle {
-  align-items: flex-start;
+.spell-card:hover,
+.spell-card:focus-visible {
+  background: var(--surface-inset-hover);
+  outline: none;
 }
 
-.spell-card .collapsible-toggle h3 {
-  margin: 0;
-  font-size: var(--text-base);
-  font-weight: 700;
+.spell-card.is-inactive {
+  opacity: 0.55;
+}
+
+.spell-card .spell-name {
   color: var(--shell-text-primary);
 }
 
-/* Compact spell header — two rows inside the toggle area */
+/* Chevron affordance on the right edge */
+.spell-card-chevron {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--shell-text-tertiary);
+}
+
+/* Compact spell header — two stacked rows */
 .spell-header-compact {
   flex: 1;
   min-width: 0;

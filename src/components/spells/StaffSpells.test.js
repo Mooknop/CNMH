@@ -55,7 +55,7 @@ describe('StaffSpells', () => {
 
   it('renders charge bubbles equal to charges.max', () => {
     render(<StaffSpells {...baseProps} />);
-    const bubbles = screen.getAllByRole('button');
+    const bubbles = screen.getAllByLabelText(/slot/i);
     expect(bubbles).toHaveLength(3);
   });
 
@@ -91,7 +91,7 @@ describe('StaffSpells', () => {
     const staff = { name: 'Plain Staff' };
     render(<StaffSpells {...baseProps} staff={staff} />);
     expect(screen.queryByText('Charges')).not.toBeInTheDocument();
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(screen.queryAllByLabelText(/slot/i)).toHaveLength(0);
   });
 
   it('does not render charges section when charges.max is 0', () => {
