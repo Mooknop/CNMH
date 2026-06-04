@@ -16,25 +16,25 @@ const SpellsHeader = ({ character, themeColor }) => {
     <div className="spellcasting-stats">
       <div className="spellcasting-tradition">
         <span className="stat-label">Tradition</span>
-        <span className="stat-value" style={{ color: themeColor }}>
+        <span className="stat-value" >
           {spellcasting.tradition}
         </span>
       </div>
       <div className="spell-proficiency">
         <span className="stat-label">Proficiency</span>
-        <span className="stat-value" style={{ color: themeColor }}>
+        <span className="stat-value" >
           {getProficiencyLabel(spellcasting.proficiency)}
         </span>
       </div>
       <div className="spell-attack">
         <span className="stat-label">Spell Attack</span>
-        <span className="stat-value" style={{ color: themeColor }}>
+        <span className="stat-value" >
           +{spellAttackMod}
         </span>
       </div>
       <div className="spell-dc">
         <span className="stat-label">Spell DC</span>
-        <span className="stat-value" style={{ color: themeColor }}>
+        <span className="stat-value" >
           {spellDC}
         </span>
       </div>

@@ -34,7 +34,7 @@ const SpellNameChip = ({ spell, character }) => {
 
 const WandInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
-    <h3 style={{ color: themeColor }}>Using Wands</h3>
+    <h3 >Using Wands</h3>
     <p className="bloodline-description">
       To cast a spell from a wand, you must hold the wand in one hand and activate it with a Cast a Spell activity.
       This uses the spell's normal number of actions. A spell cast from a wand has the standard effects of that spell for someone
@@ -93,7 +93,7 @@ const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, charac
       {ranksToShow.map(rank => (
         <div className="repertoire-rank-section" key={rank}>
           <div className="rank-section-header">
-            <span className="rank-label" style={{ color: themeColor }}>
+            <span className="rank-label" >
               {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
             </span>
           </div>
@@ -106,10 +106,7 @@ const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, charac
                 {state !== 'overcharged' ? (
                   <button
                     className={`slot-bubble ${state === 'available' ? 'slot-filled' : 'slot-empty'}`}
-                    style={state === 'available'
-                      ? { backgroundColor: themeColor, borderColor: themeColor }
-                      : { borderColor: themeColor }}
-                    onClick={() => handleSlotClick(key)}
+                      onClick={() => handleSlotClick(key)}
                     aria-label={state === 'available' ? 'Available slot' : 'Spent slot'}
                   />
                 ) : (
@@ -122,7 +119,6 @@ const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, charac
                 {state === 'used' && (
                   <button
                     className="wand-overcharge-btn"
-                    style={{ color: themeColor, borderColor: themeColor }}
                     onClick={() => handleOvercharge(key)}
                   >
                     Overcharge

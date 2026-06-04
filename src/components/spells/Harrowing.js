@@ -30,9 +30,9 @@ const Harrowing = ({ character, themeColor }) => {
   return (
     <div className="harrowing">
       <div className="harrowing-header">
-        <h3 style={{ color: themeColor }}>Harrowing</h3>
+        <h3 >Harrowing</h3>
         <div className="deck-info">
-              <h5 style={{ color: themeColor }}>About Harrow Decks</h5>
+              <h5 >About Harrow Decks</h5>
               <p>
                 Used by gamblers and seers alike, this deck of cards comes in several varieties. Simple harrow decks are made from low-quality paper and typically have only an icon and a number to signify the suit and alignment. These simple decks are mostly used for games of chance, as the actual image and significance of the cards are irrelevant for such games. Common harrow decks are made from higher-quality paper and feature illustrations—harrow readers typically use these decks. Fine harrow decks are made from a variety of materials, such as high-quality paper, woods, bone, ivory, or metal.
               </p>
@@ -44,7 +44,7 @@ const Harrowing = ({ character, themeColor }) => {
         <CollapsibleCard 
           className="reference-card"
           header={
-            <h4 style={{ color: themeColor }}>Harrow Suits</h4>
+            <h4 >Harrow Suits</h4>
           }
           themeColor={themeColor}
           initialExpanded={false}
@@ -72,7 +72,7 @@ const Harrowing = ({ character, themeColor }) => {
         <CollapsibleCard 
           className="reference-card"
           header={<>
-            <h4 style={{ color: themeColor }}>Tell Fortune</h4>
+            <h4 >Tell Fortune</h4>
           </>}
           themeColor={themeColor}
           initialExpanded={false}
@@ -82,7 +82,7 @@ const Harrowing = ({ character, themeColor }) => {
                 Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week.
             </p>
             <div className="suits-section">
-              <h5 style={{ color: themeColor }}>Augury</h5>
+              <h5 >Augury</h5>
               <div className="suits-grid">
                 <div className="suit-card">
                   <h6 className="suit-name">You gain a vague glimpse of the future.</h6>
@@ -103,7 +103,7 @@ const Harrowing = ({ character, themeColor }) => {
           className="ritual-card"
           header={
             <>
-              <h4 style={{ color: themeColor }}>Harrowing Ritual</h4>
+              <h4 >Harrowing Ritual</h4>
               <div className="ritual-meta">
                 <TraitTag trait="Divination" />
                 <TraitTag trait="Fortune" />
@@ -145,7 +145,7 @@ const Harrowing = ({ character, themeColor }) => {
             </div>
             
             <div className="ritual-usage">
-              <h5 style={{ color: themeColor }}>Usage</h5>
+              <h5 >Usage</h5>
               <p>
                 The target of harrowing must describe a set of events or course of action they intend to attempt in the near future— something like "hunting down a specific wanted criminal" or "traveling to Varisia to investigate the Storval Stairs."
               </p>
@@ -161,7 +161,7 @@ const Harrowing = ({ character, themeColor }) => {
             className="feat-card"
             header={
               <>
-                <h4 style={{ color: themeColor }}>Harrow Casting</h4>
+                <h4 >Harrow Casting</h4>
                 <div className="feat-meta">
                   <div className="feat-actions">
                     <ActionIcon actionText="One Action" color={themeColor} />
@@ -180,7 +180,7 @@ const Harrowing = ({ character, themeColor }) => {
               
               
               <div className="feat-requirements">
-                <span className="requirements-label" style={{ color: themeColor }}>Requirements:</span>
+                <span className="requirements-label" >Requirements:</span>
                 <span className="requirements-text">
                   You have an active harrow omen.
                 </span>
@@ -193,7 +193,7 @@ const Harrowing = ({ character, themeColor }) => {
               </div>
               
               <div className="suit-benefits">
-                <h5 style={{ color: themeColor }}>Suit Effects</h5>
+                <h5 >Suit Effects</h5>
                 <div className="benefits-grid">
                   <div className="suit-benefit">
                     <span className="suit-name">Hammer:</span>

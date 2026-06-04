@@ -422,9 +422,8 @@ const StatsBlock = ({ character, characterColor }) => {
           <button
             className={`condition-box${activeConditions.length > 0 ? ' condition-box--active' : ''}`}
             onClick={() => setIsConditionModalOpen(true)}
-            style={activeConditions.length > 0 ? { borderColor: '#d4a017' } : {}}
           >
-            <div className="defense-name" style={{ color: activeConditions.length > 0 ? '#d4a017' : undefined }}>
+            <div className="defense-name">
               CONDITIONS
             </div>
             <div className="defense-value condition-count">

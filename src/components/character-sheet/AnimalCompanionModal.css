@@ -141,6 +141,8 @@
 
 .condition-btn--active {
   border-style: solid;
+  border-color: var(--color-condition-highlight);
+  color: var(--color-condition-highlight);
 }
 
 /* Responsive */

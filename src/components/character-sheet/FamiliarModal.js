@@ -94,9 +94,8 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
             <button
               className={`defense condition-btn${hasConditions ? ' condition-btn--active' : ''}`}
               onClick={() => setIsConditionModalOpen(true)}
-              style={hasConditions ? { borderColor: '#d4a017', color: '#d4a017' } : {}}
             >
-              <span className="defense-label" style={hasConditions ? { color: '#d4a017' } : {}}>
+              <span className="defense-label">
                 Conditions
               </span>
               <span className="defense-value">{hasConditions ? activeConditions.length : '—'}</span>
@@ -127,7 +126,7 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
           <div className="familiar-details">
             {familiarData.skills && (
               <div className="familiar-section">
-                <h4 style={{ color: themeColor }}>Skills</h4>
+                <h4 >Skills</h4>
                 <p>{familiarData.skills.join(", ")}: +7</p>
                 <p>All Other Skills: +3</p>
               </div>
@@ -135,21 +134,21 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
 
             {familiarData.senses && (
               <div className="familiar-section">
-                <h4 style={{ color: themeColor }}>Senses</h4>
+                <h4 >Senses</h4>
                 <p>{familiarData.senses.join(", ")}</p>
               </div>
             )}
 
             {familiarData.communication && (
               <div className="familiar-section">
-                <h4 style={{ color: themeColor }}>Communication</h4>
+                <h4 >Communication</h4>
                 <p>{familiarData.communication}</p>
               </div>
             )}
 
             {familiarData.abilities && (
               <div className="familiar-section">
-                <h4 style={{ color: themeColor }}>Familiar Abilities</h4>
+                <h4 >Familiar Abilities</h4>
                 <div className="familiar-abilities-list">
                   {familiarData.abilities.map((ability, index) => (
                     <div key={index} className="familiar-ability">
@@ -163,7 +162,7 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
 
             {familiarData.description && (
               <div className="familiar-section">
-                <h4 style={{ color: themeColor }}>Description</h4>
+                <h4 >Description</h4>
                 <p>{familiarData.description}</p>
               </div>
             )}

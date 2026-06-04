@@ -17,7 +17,7 @@ const FeatsList = ({ character, characterColor }) => {
             // Create header content
             const header = (
               <>
-                <h3 style={{ color: themeColor }}>{feat.name}</h3>
+                <h3>{feat.name}</h3>
                 <div className="feat-meta">
                   <span className="feat-level">Level {feat.level}</span>
                   {feat.source && <span className="feat-source">{feat.source}</span>}

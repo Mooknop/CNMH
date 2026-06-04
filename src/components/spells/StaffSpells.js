@@ -34,7 +34,7 @@ const SpellNameChip = ({ spell, character }) => {
 
 const StaffInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
-    <h3 style={{ color: themeColor }}>Staff Rules</h3>
+    <h3 >Staff Rules</h3>
     <p className="bloodline-description">
       Each day during your daily preparations, you can prepare a staff to add charges to it for free.
       This gives the staff a number of charges equal to the level of your highest-level spell slot.
@@ -92,7 +92,7 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
       {chargesMax > 0 && (
         <div className="staff-charges-section">
           <div className="rank-section-header">
-            <span className="rank-label" style={{ color: themeColor }}>Charges</span>
+            <span className="rank-label" >Charges</span>
             <div className="slot-bubbles">
               {Array.from({ length: chargesMax }, (_, i) => {
                 const isFilled = i < chargesMax - chargesSpent;
@@ -100,7 +100,6 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
                   <button
                     key={i}
                     className={`slot-bubble ${isFilled ? 'slot-filled' : 'slot-empty'}`}
-                    style={isFilled ? { backgroundColor: themeColor, borderColor: themeColor } : { borderColor: themeColor }}
                     onClick={() => handleChargeClick(i)}
                     aria-label={isFilled ? 'Available slot' : 'Spent slot'}
                   />
@@ -114,7 +113,7 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
       {ranksToShow.map(rank => (
         <div className="repertoire-rank-section" key={rank}>
           <div className="rank-section-header">
-            <span className="rank-label" style={{ color: themeColor }}>
+            <span className="rank-label" >
               {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
             </span>
           </div>
