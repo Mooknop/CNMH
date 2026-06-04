@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import InventoryTab from './InventoryTab';
 
-// Mock dependencies
 jest.mock('../../utils/InventoryUtils', () => ({
   formatBulk: (bulk) => {
     if (bulk === 0) return '—';
@@ -14,18 +13,32 @@ jest.mock('../../utils/InventoryUtils', () => ({
     isEncumbered: used > threshold && used <= limit,
     isOverencumbered: used > limit
   }),
-  calculateItemsBulk: jest.fn(() => 5)
 }));
 
 jest.mock('../../hooks/useCharacter', () => ({
   useCharacter: (character) => {
     if (!character) return null;
+    if (character.id === 'empty') {
+      return {
+        id: 'empty',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 0,
+        inventory: [],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
+    if (character.id === 'enc' || character.id === 'over') {
+      return {
+        id: character.id,
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: character.id === 'over' ? 15 : 8,
+        inventory: [{ uid: 'x', id: 'x', name: 'Anvil', weight: 8, state: 'worn' }],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
     return {
       id: 'hero',
-      bulkStats: {
-        bulkLimit: 10,
-        encumberedThreshold: 7
-      },
+      bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
       totalBulk: 5,
       inventory: [
         { uid: 'u1', id: '1', name: 'Longsword', weight: 1, state: 'held2' },
@@ -36,214 +49,117 @@ jest.mock('../../hooks/useCharacter', () => ({
           container: { capacity: 4, ignored: 1, contents: [] },
         },
       ],
-      skillProficiencies: {
-        crafting: 1
-      }
+      skillProficiencies: { crafting: 1 },
     };
   }
 }));
 
-const mockLoadout = {
-  drop: jest.fn(),
-  pickUp: jest.fn(),
-  stow: jest.fn(),
-  unhand: jest.fn(),
-  retrieve: jest.fn(),
-  moveToContainer: jest.fn(),
-};
-jest.mock('../../hooks/useLoadout', () => ({
-  __esModule: true,
-  useLoadout: () => mockLoadout,
-}));
+// ItemCard internals are tested separately; here we just verify the list wiring.
+jest.mock('./ItemCard', () => {
+  return function DummyItemCard({ item, onClick }) {
+    return (
+      <button data-testid={`item-card-${item.uid}`} onClick={() => onClick(item)}>
+        {item.name}
+      </button>
+    );
+  };
+});
 
 jest.mock('./ContainersList', () => {
-  return function DummyContainersList({ inventory }) {
+  return function DummyContainersList() {
     return <div data-testid="containers-list">Containers List</div>;
   };
 });
 
 jest.mock('./CraftingModal', () => {
-  return function DummyCraftingModal({ isOpen, onClose }) {
-    return isOpen ? (
-      <div data-testid="crafting-modal">Crafting Modal</div>
-    ) : null;
+  return function DummyCraftingModal({ isOpen }) {
+    return isOpen ? <div data-testid="crafting-modal">Crafting Modal</div> : null;
   };
 });
 
+const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
+
 describe('InventoryTab', () => {
-  beforeEach(() => {
-    Object.values(mockLoadout).forEach((fn) => fn.mockClear());
+  it('renders without crashing', () => {
+    expect(() => render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />)).not.toThrow();
   });
 
-  const mockCharacter = {
-    id: '1',
-    name: 'Test Character',
-    level: 1,
-    inventory: [
-      { id: '1', name: 'Longsword', weight: 1 },
-      { id: '2', name: 'Leather Armor', weight: 1 }
-    ],
-    skills: {
-      crafting: 1
-    }
-  };
-
-  it('should render without crashing', () => {
-    expect(() =>
-      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />)
-    ).not.toThrow();
+  it('handles null character gracefully', () => {
+    expect(() => render(<InventoryTab character={null} characterColor="#7E8C9A" />)).not.toThrow();
   });
 
-  it('should handle null character gracefully', () => {
-    expect(() =>
-      render(<InventoryTab character={null} characterColor="#7E8C9A" />)
-    ).not.toThrow();
-  });
-
-  it('should display inventory header', () => {
+  it('displays the inventory header', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    
     expect(screen.getByText('Inventory')).toBeInTheDocument();
   });
 
-  it('should display bulk information', () => {
+  it('displays bulk information', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    
     expect(screen.getByText(/Bulk Used:/)).toBeInTheDocument();
     expect(screen.getByText(/Encumbered at:/)).toBeInTheDocument();
     expect(screen.getByText(/Maximum:/)).toBeInTheDocument();
   });
 
-  it('should apply character color to header', () => {
-    const { container } = render(
-      <InventoryTab character={mockCharacter} characterColor="#ff0000" />
-    );
-    const header = container.querySelector('.inventory-header h2');
-    expect(header).toBeInTheDocument();
-  });
-
-  it('should show crafting button if character has crafting proficiency', () => {
+  it('renders an item card for each inventory entry', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    
-    const craftingButton = screen.queryByText('Crafting');
-    expect(craftingButton).toBeInTheDocument();
+    expect(screen.getByTestId('item-card-u1')).toBeInTheDocument();
+    expect(screen.getByTestId('item-card-u2')).toBeInTheDocument();
+    expect(screen.getByTestId('item-card-u3')).toBeInTheDocument();
+    expect(screen.getByTestId('item-card-u4')).toBeInTheDocument();
   });
 
-  it('should apply theme color to crafting button', () => {
-    render(<InventoryTab character={mockCharacter} characterColor="#ff0000" />);
-
-    const craftingButton = screen.getByText('Crafting');
-    expect(craftingButton.closest('button')).toHaveClass('btn-primary');
-  });
-
-  it('should open crafting modal when button clicked', () => {
+  it('sorts items alphabetically by name', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    
-    const craftingButton = screen.getByText('Crafting');
-    fireEvent.click(craftingButton);
-    
+    const cards = screen.getAllByTestId(/^item-card-/);
+    const names = cards.map((c) => c.textContent);
+    expect(names).toEqual(['Backpack', 'Leather Armor', 'Longsword', 'Worn Cloak']);
+  });
+
+  it('calls onItemClick when an item card is tapped', () => {
+    const onItemClick = jest.fn();
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" onItemClick={onItemClick} />);
+    fireEvent.click(screen.getByTestId('item-card-u3'));
+    expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'u3', name: 'Worn Cloak' }));
+  });
+
+  it('shows the crafting button when the character has crafting proficiency', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('Crafting').closest('button')).toHaveClass('btn-primary');
+  });
+
+  it('opens the crafting modal when the button is clicked', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByText('Crafting'));
     expect(screen.getByTestId('crafting-modal')).toBeInTheDocument();
   });
 
-  it('should render bulk progress bar', () => {
-    const { container } = render(
-      <InventoryTab character={mockCharacter} characterColor="#7E8C9A" />
-    );
-    
+  it('renders the bulk progress bar at the correct width', () => {
+    const { container } = render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
     const progressBar = container.querySelector('.bulk-progress-bar');
     expect(progressBar).toBeInTheDocument();
+    expect(progressBar).toHaveStyle('width: 50%'); // 5 / 10
   });
 
-  it('should update bulk progress bar width based on usage', () => {
-    const { container } = render(
-      <InventoryTab character={mockCharacter} characterColor="#7E8C9A" />
-    );
-    
-    const progressBar = container.querySelector('.bulk-progress-bar');
-    // bulkUsed (5) / bulkLimit (10) = 50%
-    expect(progressBar).toHaveStyle('width: 50%');
-  });
-
-  it('should use danger color for overencumbered status', () => {
-    // Mock overencumbered status
-    jest.mock('../../hooks/useCharacter', () => ({
-      useCharacter: () => ({
-        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
-        totalBulk: 15, // Overencumbered
-        inventory: [],
-        skillProficiencies: { crafting: 0 }
-      })
-    }));
-
-    // Just verify it renders without error with various loads
-    expect(() => {
-      render(
-        <InventoryTab character={mockCharacter} characterColor="#7E8C9A" />
-      );
-    }).not.toThrow();
-  });
-
-  it('should render ContainersList component', () => {
+  it('renders the ContainersList', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    
     expect(screen.getByTestId('containers-list')).toBeInTheDocument();
   });
 
-  it('should call onItemClick handler when provided', () => {
-    const onItemClick = jest.fn();
-    
-    render(
-      <InventoryTab 
-        character={mockCharacter} 
-        characterColor="#7E8C9A" 
-        onItemClick={onItemClick}
-      />
-    );
-    
-    // Component should render without error
-    expect(screen.getByTestId('containers-list')).toBeInTheDocument();
+  it('shows the empty message when inventory is empty', () => {
+    render(<InventoryTab character={{ id: 'empty' }} characterColor="#7E8C9A" />);
+    expect(screen.getByText('No items in inventory')).toBeInTheDocument();
   });
 
-  // Slice 4: effective-state badges + dropped de-emphasis
-  it('shows a state badge for non-worn items and de-emphasizes dropped rows', () => {
-    const { container } = render(
-      <InventoryTab character={mockCharacter} characterColor="#7E8C9A" />
-    );
-    // held item shows its label; worn item shows no badge
-    expect(screen.getByText('Held in 2 Hands')).toBeInTheDocument();
-    expect(screen.getByText('(dropped)')).toBeInTheDocument();
-    expect(screen.queryByText('Worn')).not.toBeInTheDocument();
-    // dropped row is visually de-emphasised
-    expect(container.querySelector('tr.inv-row-dropped')).toBeInTheDocument();
+  it('shows the encumbered warning and an amber bar when over the threshold', () => {
+    const { container } = render(<InventoryTab character={{ id: 'enc' }} characterColor="#7E8C9A" />);
+    expect(screen.getByText(/^Encumbered:/)).toBeInTheDocument();
+    expect(container.querySelector('.bulk-progress-bar')).toHaveStyle('background-color: var(--color-warning)');
   });
 
-  // Slice C: explicit per-item action buttons wired to useLoadout
-  it('worn item shows Drop + Stow (single container) and wires them', () => {
-    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByTestId('inv-u3-drop'));
-    expect(mockLoadout.drop).toHaveBeenCalledWith('u3');
-    // exactly one container (Backpack u4) ⇒ a direct "Stow in Backpack" button
-    fireEvent.click(screen.getByTestId('inv-u3-stow'));
-    expect(mockLoadout.stow).toHaveBeenCalledWith('u3', 'u4');
-  });
-
-  it('a container item can be Dropped but not Stowed into itself', () => {
-    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByTestId('inv-u4-drop')).toBeInTheDocument();
-    expect(screen.queryByTestId('inv-u4-stow')).not.toBeInTheDocument();
-  });
-
-  it('dropped item shows Pick up', () => {
-    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByTestId('inv-u2-pickup'));
-    expect(mockLoadout.pickUp).toHaveBeenCalledWith('u2');
-  });
-
-  it('held item shows Unhand and Release', () => {
-    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByTestId('inv-u1-unhand'));
-    expect(mockLoadout.unhand).toHaveBeenCalledWith('u1');
-    fireEvent.click(screen.getByTestId('inv-u1-release'));
-    expect(mockLoadout.drop).toHaveBeenCalledWith('u1'); // release == drop → Dropped
+  it('shows the overencumbered warning and a danger bar when over the limit', () => {
+    const { container } = render(<InventoryTab character={{ id: 'over' }} characterColor="#7E8C9A" />);
+    expect(screen.getByText(/^Overencumbered:/)).toBeInTheDocument();
+    expect(container.querySelector('.bulk-warning.severe')).toBeInTheDocument();
+    expect(container.querySelector('.bulk-progress-bar')).toHaveStyle('background-color: var(--color-danger)');
   });
 });

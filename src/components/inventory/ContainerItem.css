@@ -31,7 +31,7 @@
   margin: 0;
   font-size: var(--text-base);
   font-weight: 700;
-  color: var(--shell-text-primary);
+  color: var(--color-theme, var(--ember-light));
 }
 
 .container-status {
@@ -51,6 +51,7 @@
 
 .toggle-icon {
   font-size: var(--text-sm);
+  color: var(--color-theme, var(--shell-text-tertiary));
   transition: transform 0.2s;
 }
 
