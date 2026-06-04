@@ -1,149 +1,157 @@
-/* src/components/character-sheet/ContainerItem.css */
+/* src/components/inventory/ContainerItem.css */
+
+/* Container as fold row — header expands to nested bulk bar + item table */
 .container-item {
-    margin-top: 2rem;
-    border: 1px solid var(--shell-border);
-    border-left: 4px solid var(--color-theme, var(--theme-accent));
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-  
+  margin-top: var(--space-3);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.container-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-inset);
+  cursor: pointer;
+  min-height: var(--tap-target-min);
+  transition: background 0.15s;
+}
+
+.container-header:hover {
+  background: var(--surface-inset-hover);
+}
+
+.container-title {
+  flex: 1;
+}
+
+.container-title h3 {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.container-status {
+  display: flex;
+  gap: var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--shell-text-tertiary);
+  margin-top: 2px;
+}
+
+.container-toggle {
+  padding-left: var(--space-3);
+  color: var(--shell-text-tertiary);
+}
+
+.toggle-icon {
+  font-size: var(--text-sm);
+  transition: transform 0.2s;
+}
+
+/* Container bulk bar — compact proportional fill */
+.container-bulk-bar-wrapper {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.container-bulk-bar {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  background: linear-gradient(90deg, var(--verdant-mid), var(--gold-mid));
+}
+
+/* Container contents — indented dark area */
+.container-contents {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.contents-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.contents-table th {
+  background: var(--accent-tint);
+  color: var(--shell-text-primary);
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.contents-table th:first-child {
+  border-top-left-radius: var(--radius-sm);
+}
+
+.contents-table th:last-child {
+  border-top-right-radius: var(--radius-sm);
+}
+
+.contents-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--shell-border);
+  color: var(--shell-text-primary);
+  font-size: var(--text-base);
+}
+
+.contents-table tr:last-child td {
+  border-bottom: none;
+}
+
+.item-name {
+  color: var(--shell-text-primary);
+  cursor: pointer;
+  transition: color 0.15s;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  font-weight: 500;
+}
+
+.item-name:hover {
+  color: var(--color-theme, var(--ember-light));
+  text-decoration: underline;
+}
+
+.container-ignored {
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+}
+
+.empty-container {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--shell-text-tertiary);
+  font-size: var(--text-sm);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
   .container-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: var(--surface-inset);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-  }
-  
-  .container-header:hover {
-    background: var(--surface-inset-hover);
-  }
-  
-  .container-title {
-    flex: 1;
-  }
-  
-  .container-title h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.2rem;
-    color: var(--shell-text-primary);
+    padding: var(--space-3);
   }
 
   .container-status {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: var(--shell-text-tertiary);
+    flex-direction: column;
+    gap: 2px;
   }
-  
-  .container-toggle {
-    padding-left: 1rem;
-  }
-  
-  .toggle-icon {
-    font-size: 0.8rem;
-    transition: transform 0.2s ease;
-  }
-  
-  /* Container bulk bar styling */
-  .container-bulk-bar-wrapper {
-    height: 0.5rem;
-    background: var(--surface-raised);
-    overflow: hidden;
-  }
-  
-  .container-bulk-bar {
-    height: 100%;
-    transition: width 0.3s ease, background-color 0.3s ease;
-  }
-  
-  /* Container contents styling */
-  .container-contents {
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.15);
-  }
-  
-  .contents-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .contents-table th {
-    background: var(--table-header-bg, var(--theme-accent-soft));
-    color: var(--table-header-text, var(--theme-text));
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-  }
-  
-  .contents-table th:first-child {
-    border-top-left-radius: 6px;
-  }
-  
-  .contents-table th:last-child {
-    border-top-right-radius: 6px;
-  }
-  
+
+  .contents-table th,
   .contents-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--shell-border);
-    color: var(--shell-text-primary);
-    font-size: 0.95rem;
+    padding: var(--space-2);
   }
-  
-  .contents-table tr:last-child td {
-    border-bottom: none;
-  }
-  
-  .item-name {
-    color: var(--color-theme, var(--theme-accent));
-    cursor: pointer;
-    transition: color 0.2s;
-    text-decoration: none;
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    text-align: left;
-  }
-  
-  .item-name:hover {
-    text-decoration: underline;
-  }
-  
-  .container-ignored {
-    color: var(--shell-text-tertiary);
-    font-style: italic;
-  }
-  
-  .empty-container {
-    padding: 1.5rem;
-    text-align: center;
-    color: var(--shell-text-tertiary);
-    font-style: italic;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .container-header {
-      padding: 0.75rem 1rem;
-    }
-    
-    .container-title h3 {
-      font-size: 1.1rem;
-    }
-    
-    .container-status {
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    
-    .contents-table th, 
-    .contents-table td {
-      padding: 0.5rem 0.75rem;
-    }
-  }
+}

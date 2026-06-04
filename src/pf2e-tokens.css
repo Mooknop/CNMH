@@ -202,9 +202,9 @@
    * ———————————————————————————————————————————————————————— */
 
   --shadow-sm:   0 1px 3px rgba(0,0,0,0.12);
-  --shadow-md:   0 4px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.5);
+  --shadow-md:   0 4px 14px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
   --shadow-card: var(--shadow-md);
-  --shadow-lg:   0 4px 20px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.6);
+  --shadow-lg:   0 6px 22px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
 
 
   /* ————————————————————————————————————————————————————————
@@ -277,8 +277,8 @@
   /* Shell surfaces */
   --theme-bg:            #12100e;   /* page background                       */
   --theme-surface:       #1a1612;   /* nav / rail / raised chrome            */
-  --theme-surface-card:  rgba(28, 24, 18, 0.82);  /* card body              */
-  --theme-surface-inset: rgba(255, 255, 255, 0.04);
+  --theme-surface-card:  rgba(26, 22, 17, 0.9);    /* card body              */
+  --theme-surface-inset: rgba(255, 255, 255, 0.05);
   --theme-surface-inset-hover: rgba(255, 255, 255, 0.08);
 
   /* Shell text */
@@ -287,7 +287,7 @@
   --theme-text-tertiary: rgba(255, 255, 255, 0.45);
 
   /* Shell borders */
-  --theme-border:        rgba(255, 255, 255, 0.07);
+  --theme-border:        rgba(255, 255, 255, 0.09);
   --theme-border-strong: rgba(255, 255, 255, 0.12);
 
   /* ════════════════════════════════════════════════════════════
@@ -332,7 +332,7 @@
   --surface-card:        var(--dark-card-bg);          /* main cards/panels */
   --surface-inset:       var(--theme-surface-inset);   /* sub-boxes, stat blocks, rules */
   --surface-inset-hover: var(--theme-surface-inset-hover);
-  --surface-raised:      rgba(255, 255, 255, 0.06);    /* controls, active tabs */
+  --surface-raised:      rgba(255, 255, 255, 0.07);    /* controls, active tabs */
   --surface-arcane:      rgba(122, 84, 186, 0.10);     /* blood-magic / bloodline tint */
   --surface-trigger:     rgba(196, 154, 46, 0.08);     /* trigger / reminder boxes */
 
@@ -358,6 +358,27 @@
   --accent-tint-active:  color-mix(in srgb, var(--color-theme) 30%, transparent);
   --accent-outline:      var(--color-theme);
   --accent-text:         color-mix(in srgb, var(--color-theme) 70%, var(--theme-text));
+
+  /* ── New tokens for dark game-menu redesign ────────────────── */
+
+  /* Accent glow — restrained, accent-driven (token chip, current-turn pip, token on move grid) */
+  --accent-glow: 0 0 0 1px var(--accent-outline),
+                 0 0 12px -3px color-mix(in srgb, var(--color-theme) 55%, transparent);
+
+  /* Corner-bracket framing (Stat Slabs, focus-mode panels) */
+  --bracket-color: var(--accent-outline);
+  --bracket-size:  11px;
+
+  /* Slot / focus pips — distinct from proficiency pip colors */
+  --slot-pip-filled: var(--theme-arcane);
+  --slot-pip-empty:  var(--iron-light);
+
+  /* Stat slab surface + radius */
+  --surface-slab:  var(--surface-raised);
+  --slab-radius:   var(--radius-lg);
+
+  /* Sticky meter backdrop (inventory bulk bar) */
+  --surface-sticky: var(--shell-surface);
 }
 
 

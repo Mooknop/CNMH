@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useLore } from '../contexts/LoreContext';
 import { useContent } from '../contexts/ContentContext';
+import { useEncounter } from '../hooks/useEncounter';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import ActionsList from '../components/actions/ActionsList';
 import ExplorationList from '../components/actions/ExplorationList';
@@ -24,11 +25,11 @@ import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
 
 const RAIL_TABS = [
-  { id: 'encounter', icon: 'ti-sword',      label: 'Encounter' },
-  { id: 'explore',   icon: 'ti-map',        label: 'Explore'   },
-  { id: 'inventory', icon: 'ti-backpack',   label: 'Inventory' },
   { id: 'stats',     icon: 'ti-chart-dots', label: 'Stats'     },
+  { id: 'explore',   icon: 'ti-map',        label: 'Explore'   },
   { id: 'spells',    icon: 'ti-sparkles',   label: 'Spells'    },
+  { id: 'inventory', icon: 'ti-backpack',   label: 'Inventory' },
+  { id: 'encounter', icon: 'ti-sword',      label: 'Encounter' },
 ];
 
 const CharacterSheet = () => {
@@ -36,7 +37,7 @@ const CharacterSheet = () => {
   const navigate = useNavigate();
   const { getCharacter, setActiveCharacter, activeCharacterColor } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
-  const [activeTab, setActiveTab] = useState('encounter');
+  const [activeTab, setActiveTab] = useState('stats');
   // Valid values: 'encounter' | 'explore' | 'inventory' | 'stats' | 'spells'
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
@@ -76,6 +77,7 @@ const CharacterSheet = () => {
 
   // Data layer — all character reads go through this hook
   const characterModel = useCharacter(character);
+  const { encounter } = useEncounter();
 
   // Conditions are owned (written) by StatsBlock's ConditionModal via this same
   // synced key. We read it here — without touching useCharacter — so the
@@ -108,9 +110,19 @@ const CharacterSheet = () => {
         return (
           <>
             <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} />
-            <InitiativeEntry charId={character.id} />
-            <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
-            <HandsPanel character={character} characterColor={characterColor} />
+            {encounter?.active ? (
+              <>
+                <InitiativeEntry charId={character.id} />
+                <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
+                <HandsPanel character={character} characterColor={characterColor} />
+              </>
+            ) : (
+              <div className="cs-encounter-idle">
+                <span className="cs-encounter-idle-title">No Active Encounter</span>
+                <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
+                <InitiativeEntry charId={character.id} />
+              </div>
+            )}
             <ActionsList character={character} characterColor={characterColor} />
             <CombatLogPanel />
           </>
