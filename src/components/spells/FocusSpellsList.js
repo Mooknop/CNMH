@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { organizeSpellsByRank, getSortedRankList } from '../../utils/SpellUtils';
+import { organizeSpellsByRank, getSortedRankList, getFocusInfo } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
 import { useContent } from '../../contexts/ContentContext';
@@ -39,23 +39,9 @@ const FocusSpellsList = ({ character, characterColor }) => {
     return [];
   };
 
-  const getFocusInfo = () => {
-    if (character.champion?.focus_points !== undefined) {
-      return { max: character.champion.focus_points, current: character.champion.focus_points };
-    }
-    if (character.monk?.focus_points !== undefined) {
-      return { max: character.monk.focus_points, current: character.monk.focus_points };
-    }
-    if (character.spellcasting?.focus?.max !== undefined) {
-      const { max, current } = character.spellcasting.focus;
-      return { max, current: current ?? max };
-    }
-    return null;
-  };
-
   const focusSpellsLabel = getFocusSpellsLabel();
   const focusSpells = resolveFocusSpells(getFocusSpells(), spellMap);
-  const focusInfo = getFocusInfo();
+  const focusInfo = getFocusInfo(character);
   const focusMax = focusInfo?.max ?? 0;
 
   const [pointsSpent, setPointsSpent] = useLocalStorage(
@@ -92,7 +78,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
       {focusInfo && focusMax > 0 && (
         <div className="staff-charges-section">
           <div className="rank-section-header">
-            <span className="rank-label" style={{ color: themeColor }}>Focus Points</span>
+            <span className="rank-label">Focus Points</span>
             <div className="slot-bubbles">
               {Array.from({ length: focusMax }, (_, i) => {
                 const isFilled = i < focusMax - pointsSpent;
@@ -100,7 +86,6 @@ const FocusSpellsList = ({ character, characterColor }) => {
                   <button
                     key={i}
                     className={`slot-bubble ${isFilled ? 'slot-filled' : 'slot-empty'}`}
-                    style={isFilled ? { backgroundColor: themeColor, borderColor: themeColor } : { borderColor: themeColor }}
                     onClick={() => handlePointClick(i)}
                     aria-label={isFilled ? 'Available slot' : 'Spent slot'}
                   />
@@ -114,11 +99,11 @@ const FocusSpellsList = ({ character, characterColor }) => {
       {ranksToShow.map(rank => (
         <div className="repertoire-rank-section" key={rank}>
           <div className="rank-section-header">
-            <span className="rank-label" style={{ color: themeColor }}>
+            <span className="rank-label">
               {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
             </span>
           </div>
-          <div className="cards-grid">
+          <div className="spells-grid">
             {spellsByRank[rank].map(spell => (
               <SpellCard
                 key={spell.id || spell.name}
@@ -140,7 +125,7 @@ const FocusSpellsList = ({ character, characterColor }) => {
 
       {character.spellcasting?.bloodline && (
         <div className="bloodline-info">
-          <h3 style={{ color: themeColor }}>Imperious Defense</h3>
+          <h3>Imperious Defense</h3>
           <div className="bloodline-magic">
             <span className="bloodline-magic-effect">{character.spellcasting.bloodline.blood_magic}</span>
           </div>

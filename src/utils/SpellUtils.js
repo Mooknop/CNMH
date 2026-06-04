@@ -261,6 +261,27 @@ export const extractInnateSpells = (character) => {
   }
   
   // Add other sources as needed
-  
+
   return innateSpells;
+};
+
+/**
+ * Resolve a character's focus-point pool ({ max, current }) regardless of which
+ * class-specific shape it lives in. Returns null when the character has no focus pool.
+ * @param {Object} character
+ * @returns {{max:number, current:number}|null}
+ */
+export const getFocusInfo = (character) => {
+  if (!character) return null;
+  if (character.champion?.focus_points !== undefined) {
+    return { max: character.champion.focus_points, current: character.champion.focus_points };
+  }
+  if (character.monk?.focus_points !== undefined) {
+    return { max: character.monk.focus_points, current: character.monk.focus_points };
+  }
+  if (character.spellcasting?.focus?.max !== undefined) {
+    const { max, current } = character.spellcasting.focus;
+    return { max, current: current ?? max };
+  }
+  return null;
 };
