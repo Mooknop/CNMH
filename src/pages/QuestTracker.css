@@ -1,8 +1,8 @@
-/* Quest Tracker Page Styles with Background and Transparency */
+/* Quest Tracker — dark shell */
 
 .quest-tracker-page {
   position: fixed;
-  top: 60px; /* Account for navbar height */
+  top: 60px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -15,26 +15,20 @@
   overflow-y: auto;
 }
 
-/* Dark overlay effect like Dashboard */
 .quest-tracker-page::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.3);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg-overlay);
+  pointer-events: none;
   z-index: 1;
 }
 
-/* Ensure all content is above the overlay */
 .quest-tracker-page > * {
   position: relative;
   z-index: 2;
 }
 
-/* Center the content */
 .quest-tracker {
   max-width: 900px;
   margin: 0 auto;
@@ -43,25 +37,22 @@
 
 .quest-tracker h1 {
   margin-bottom: 2rem;
-  color: #ffffff;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  color: var(--shell-text-primary);
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.5rem;
   font-size: 2rem;
   font-weight: 700;
 }
 
-/* Quest count display with transparency styling */
+/* Quest count summary */
 .quest-count-display {
   margin-bottom: 1.5rem;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--surface-inset);
   border-radius: var(--radius-lg);
-  color: #333;
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-secondary);
   font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(5px);
 }
 
 .quests-list {
@@ -70,44 +61,33 @@
   gap: 2rem;
 }
 
-/* Quest cards with transparency and enhanced background styling */
+/* Quest cards */
 .quest-card {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(5px);
+  background: var(--surface-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--shell-border);
+  border-left: 4px solid var(--shell-border-strong);
   overflow: hidden;
-  border-left: 5px solid #ddd;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.2s;
 }
 
 .quest-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-lg);
 }
 
-.quest-card.active {
-  border-left-color: var(--color-success); /* Green for active quests */
-}
+.quest-card.active  { border-left-color: var(--verdant-mid); }
+.quest-card.pending { border-left-color: var(--color-warning); }
+.quest-card.completed { border-left-color: var(--iron-mid); }
 
-.quest-card.pending {
-  border-left-color: var(--color-warning); /* Orange for pending quests */
-}
-
-.quest-card.completed {
-  border-left-color: #757575; /* Gray for completed quests */
-}
-
-/* Quest header with enhanced transparency */
+/* Quest header */
 .quest-header {
-  background: rgba(249, 249, 249, 0.7);
+  background: var(--surface-inset);
   padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  backdrop-filter: blur(3px);
+  border-bottom: 1px solid var(--shell-border);
 }
 
 .quest-title-section {
@@ -115,66 +95,46 @@
 }
 
 .quest-header h2 {
-  margin: 0 0 0.5rem 0;
-  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+  color: var(--color-theme, var(--ember-light));
   font-size: 1.3rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .quest-meta {
   display: flex;
   gap: 1.5rem;
-  color: #666;
-  font-size: 0.9rem;
+  color: var(--shell-text-tertiary);
+  font-size: var(--text-sm);
 }
 
-/* Priority badges with enhanced styling */
+/* Priority / status badges */
 .quest-priority {
   padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
-.quest-priority.high {
-  background-color: var(--color-crit-fail); /* Red for high priority */
-}
+.quest-priority.high   { background: var(--d-cf-bg);   color: var(--d-cf-fg);   border: 1px solid var(--d-cf-border);   }
+.quest-priority.medium { background: var(--d-fail-bg);  color: var(--d-fail-fg); border: 1px solid var(--d-fail-border); }
+.quest-priority.low    { background: var(--d-crit-bg);  color: var(--d-crit-fg); border: 1px solid var(--d-crit-border); }
 
-.quest-priority.medium {
-  background-color: var(--color-warning); /* Orange for medium priority */
-}
-
-.quest-priority.low {
-  background-color: var(--color-success); /* Green for low priority */
-}
-
-/* Status badges with enhanced styling */
 .quest-status {
-  font-weight: 600;
-  padding: 0.5rem 1rem;
+  font-weight: 700;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
 }
 
-.active .quest-status {
-  background-color: var(--color-success); /* Green for active */
-}
+.active   .quest-status { background: var(--d-crit-bg); color: var(--d-crit-fg); border: 1px solid var(--d-crit-border); }
+.pending  .quest-status { background: var(--d-fail-bg);  color: var(--d-fail-fg); border: 1px solid var(--d-fail-border); }
+.completed .quest-status { background: var(--surface-raised); color: var(--shell-text-tertiary); border: 1px solid var(--shell-border-strong); }
 
-.pending .quest-status {
-  background-color: var(--color-warning); /* Orange for pending */
-}
-
-.completed .quest-status {
-  background-color: #757575; /* Gray for completed */
-}
-
-/* Quest details section with transparency */
+/* Quest details */
 .quest-details {
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .quest-info {
@@ -184,21 +144,21 @@
 .quest-info p {
   margin: 0.75rem 0;
   line-height: 1.6;
+  color: var(--shell-text-secondary);
 }
 
 .quest-info strong {
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
 }
 
-/* Quest notes section styling */
+/* Notes */
 .quest-notes h3 {
-  color: var(--color-primary);
+  color: var(--color-theme, var(--ember-light));
   margin-top: 0;
   margin-bottom: 1rem;
   font-size: 1.1rem;
-  border-bottom: 1px solid rgba(238, 238, 238, 0.8);
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.5rem;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .notes-list {
@@ -207,22 +167,19 @@
   gap: 1rem;
 }
 
-/* Individual quest note styling with transparency */
 .quest-note {
-  background: rgba(249, 249, 249, 0.8);
+  background: var(--surface-inset);
   border-radius: var(--radius-lg);
   padding: 1rem;
-  border: 1px solid rgba(238, 238, 238, 0.6);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(2px);
+  border: 1px solid var(--shell-border);
 }
 
 .note-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.5rem;
-  font-size: 0.85rem;
-  color: #666;
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
 }
 
 .note-author {
@@ -231,106 +188,32 @@
 }
 
 .note-content {
-  font-size: 0.95rem;
+  font-size: var(--text-sm);
   line-height: 1.5;
+  color: var(--shell-text-secondary);
 }
 
-/* Empty states with transparency */
+/* Empty states */
 .empty-notes {
-  color: #888;
+  color: var(--shell-text-tertiary);
   font-style: italic;
   padding: 1rem;
   text-align: center;
-  background: rgba(248, 249, 250, 0.7);
+  background: var(--surface-inset);
   border-radius: var(--radius-md);
-  border: 1px dashed rgba(204, 204, 204, 0.8);
+  border: 1px dashed var(--shell-border-strong);
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem 2rem;
-  background: rgba(249, 249, 249, 0.8);
-  border-radius: 12px;
-  color: #666;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(5px);
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .quest-tracker-page {
-    padding: 1.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .quest-tracker-page {
-    padding: 1rem;
-  }
-  
-  .quest-tracker h1 {
-    font-size: 1.5rem;
-  }
-  
-  .quest-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-  
-  .quest-meta {
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  
-  .quest-status {
-    align-self: flex-start;
-  }
-}
-
-/* Reputation Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 2rem;
+  background: var(--surface-inset);
   border-radius: var(--radius-lg);
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  color: var(--shell-text-tertiary);
+  border: 1px solid var(--shell-border);
 }
 
-.modal-content h2 {
-  margin-top: 0;
-  color: var(--color-primary);
-}
-
-.modal-content button {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.modal-content button:hover {
-  background: #4a2020;
-}
-
-/* Reputation Buttons */
+/* Reputation buttons (dark glass style — sits on dark overlay) */
 .reputation-buttons {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -339,29 +222,55 @@
 }
 
 .reputation-button {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: var(--surface-raised);
+  border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-lg);
   padding: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.15s, border-color 0.15s;
   text-align: center;
-  color: white;
+  color: var(--shell-text-primary);
 }
 
 .reputation-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: var(--surface-inset-hover);
+  border-color: var(--accent-outline);
 }
 
 .faction-name {
-  font-weight: bold;
+  font-weight: 700;
   margin-bottom: 0.5rem;
   font-size: 1.1rem;
+  color: var(--shell-text-primary);
 }
 
 .faction-standing {
-  font-size: 0.9rem;
-  opacity: 0.9;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .quest-tracker-page { padding: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+  .quest-tracker-page { padding: 1rem; }
+
+  .quest-tracker h1 { font-size: 1.5rem; }
+
+  .quest-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .quest-meta {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .quest-status {
+    align-self: flex-start;
+  }
 }
