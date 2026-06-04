@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import './InventoryTab.css';
+import './ItemCard.css';
+import ItemCard from './ItemCard';
 import ContainersList from './ContainersList';
 import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
 import CraftingModal from './CraftingModal';
 import { useCharacter } from '../../hooks/useCharacter';
-import { useLoadout } from '../../hooks/useLoadout';
-import { ITEM_STATE_LABEL } from '../../utils/itemState';
 
 /**
- * Component for displaying character inventory
+ * Component for displaying character inventory as item cards.
+ * Loadout actions (drop/stow/etc.) live in the ItemModal opened on tap.
  * @param {Object} props
  * @param {Object} props.character - Character data
  * @param {string} props.characterColor - Theme color
@@ -19,10 +20,6 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
 
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
-  // Loadout writer (hooks must run unconditionally — before the early return).
-  const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(
-    charData ? charData.id : character && character.id
-  );
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = charData;
@@ -45,86 +42,6 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
 
   const hasCrafting = skillProficiencies.crafting > 0;
 
-  // Top-level containers are the valid Stow targets (depth-1 model).
-  const containers = inventory.filter(
-    (e) => e && e.container && Array.isArray(e.container.contents)
-  );
-
-  // Explicit per-item actions (write the live loadout via useLoadout).
-  const renderActions = (item) => {
-    const uid = item.uid;
-    if (!uid) return null;
-    const st = item.state;
-    if (st === 'dropped') {
-      return (
-        <button
-          className="btn-small btn-secondary"
-          data-testid={`inv-${uid}-pickup`}
-          onClick={() => pickUp(uid)}
-        >
-          Pick up
-        </button>
-      );
-    }
-    if (st === 'held1' || st === 'held2') {
-      return (
-        <>
-          <button
-            className="btn-small btn-secondary"
-            data-testid={`inv-${uid}-unhand`}
-            onClick={() => unhand(uid)}
-          >
-            Unhand
-          </button>{' '}
-          <button
-            className="btn-small btn-danger"
-            data-testid={`inv-${uid}-release`}
-            onClick={() => drop(uid)}
-          >
-            Release
-          </button>
-        </>
-      );
-    }
-    // Worn (default).
-    const isC = !!(item.container && Array.isArray(item.container.contents));
-    const stowTargets = containers.filter((c) => c.uid !== uid);
-    return (
-      <>
-        <button
-          className="btn-small btn-danger"
-          data-testid={`inv-${uid}-drop`}
-          onClick={() => drop(uid)}
-        >
-          Drop
-        </button>{' '}
-        {!isC && stowTargets.length === 1 && (
-          <button
-            className="btn-small btn-secondary"
-            data-testid={`inv-${uid}-stow`}
-            onClick={() => stow(uid, stowTargets[0].uid)}
-          >
-            Stow in {stowTargets[0].name}
-          </button>
-        )}
-        {!isC && stowTargets.length > 1 && (
-          <select
-            aria-label={`inv-${uid}-stow-select`}
-            defaultValue=""
-            onChange={(e) => e.target.value && stow(uid, e.target.value)}
-          >
-            <option value="">Stow…</option>
-            {stowTargets.map((c) => (
-              <option key={c.uid} value={c.uid}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </>
-    );
-  };
-
   return (
     <div className="inventory-tab">
       <div className="inventory-header">
@@ -146,23 +63,23 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
             <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
             <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
           </div>
-          
+
           <div className="bulk-progress-container">
-            <div 
-              className="bulk-progress-bar" 
-              style={{ 
+            <div
+              className="bulk-progress-bar"
+              style={{
                 width: `${Math.min(bulkPercentage, 100)}%`,
                 backgroundColor: getBulkBarColor()
               }}
             />
           </div>
-          
+
           {isEncumbered && !isOverencumbered && (
             <div className="bulk-warning">
               Encumbered: -10 feet to Speed and your movements become clumsy and inexact. You take a -1 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
             </div>
           )}
-          
+
           {isOverencumbered && (
             <div className="bulk-warning severe">
               Overencumbered: -15 feet to Speed and your movements become clumsy and inexact. You take a -2 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
@@ -170,74 +87,26 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
           )}
         </div>
       </div>
-      
-      <div className="inventory-list">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Bulk</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedInventory.length > 0 ? (
-              sortedInventory.map(item => (
-                <tr
-                  key={item.id || `item-${item.name}`}
-                  className={item.state === 'dropped' ? 'inv-row-dropped' : undefined}
-                >
-                  <td>
-                    <button
-                      className="item-name"
-                      onClick={() => onItemClick(item)}
-                      style={{ color: characterColor }}
-                    >
-                      {item.name}
-                      {item.container && (
-                        <span className="container-indicator" title="This item is a container">
-                          📦
-                        </span>
-                      )}
-                    </button>
-                    {item.state && item.state !== 'worn' && (
-                      <span
-                        className={`item-state-badge${
-                          item.state === 'dropped' ? ' dropped' : ''
-                        }`}
-                      >
-                        {item.state === 'dropped'
-                          ? '(dropped)'
-                          : ITEM_STATE_LABEL[item.state]}
-                      </span>
-                    )}
-                  </td>
-                  <td>{item.quantity || 1}</td>
-                  <td>
-                    {formatBulk(item.weight || 0)}
-                  </td>
-                  <td className="inv-actions">{renderActions(item)}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="4" className="empty-inventory">
-                  No items in inventory
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+      <div className="item-card-list">
+        {sortedInventory.length > 0 ? (
+          sortedInventory.map((item) => (
+            <ItemCard
+              key={item.id || `item-${item.name}`}
+              item={item}
+              onClick={onItemClick}
+            />
+          ))
+        ) : (
+          <div className="item-card-list--empty">No items in inventory</div>
+        )}
       </div>
-      
+
       {/* Display containers section if character has any */}
       <ContainersList
         inventory={sortedInventory}
         themeColor={characterColor}
         onItemClick={onItemClick}
-        onRetrieve={retrieve}
-        onMove={moveToContainer}
       />
 
       {/* Crafting Modal */}

@@ -2,17 +2,97 @@
 import React from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import { formatBulk, normalizeShield } from '../../utils/InventoryUtils';
-import { ITEM_STATE_LABEL } from '../../utils/itemState';
+import { formatBulk, normalizeShield, isContainer } from '../../utils/InventoryUtils';
+import { ITEM_STATE_LABEL, isHeldState } from '../../utils/itemState';
+import { useCharacter } from '../../hooks/useCharacter';
+import { useLoadout } from '../../hooks/useLoadout';
 import './ItemModal.css';
 
-const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
+const ItemModal = ({ isOpen, onClose, item, character, characterColor }) => {
+  // Hooks must run unconditionally (before the early return).
+  const charData = useCharacter(character);
+  const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(character?.id);
+
   if (!isOpen || !item) return null;
 
   const themeColor = characterColor || 'var(--color-primary)';
   // Normalize so legacy { health, breakThreshold } and canonical
   // { hp, brokenThreshold } shields both display correctly.
   const shield = normalizeShield(item.shield);
+
+  // ── Loadout actions, scoped to the item's current ownership state ──
+  const uid = item.uid;
+  const containers = (charData?.inventory || []).filter(isContainer);
+  const parent = containers.find((c) =>
+    (c.container?.contents || []).some((ci) => ci.uid === uid)
+  );
+  const isContainerItem = isContainer(item);
+  const stowTargets = containers.filter((c) => c.uid !== uid);
+  const moveTargets = containers.filter((c) => c.uid !== uid && c.uid !== parent?.uid);
+
+  // Run a loadout mutation then close so the refreshed list is visible.
+  const act = (fn) => { fn(); onClose(); };
+
+  const renderActions = () => {
+    if (!uid) return null;
+    const st = item.state;
+    if (st === 'dropped') {
+      return (
+        <button className="btn-small btn-secondary" data-testid="item-action-pickup" onClick={() => act(() => pickUp(uid))}>
+          Pick up
+        </button>
+      );
+    }
+    if (isHeldState(st)) {
+      return (
+        <>
+          <button className="btn-small btn-secondary" data-testid="item-action-unhand" onClick={() => act(() => unhand(uid))}>
+            Unhand
+          </button>
+          <button className="btn-small btn-danger" data-testid="item-action-release" onClick={() => act(() => drop(uid))}>
+            Release
+          </button>
+        </>
+      );
+    }
+    if (st === 'stowed') {
+      return (
+        <>
+          <button className="btn-small btn-secondary" data-testid="item-action-retrieve" onClick={() => act(() => retrieve(uid))}>
+            Retrieve
+          </button>
+          {moveTargets.map((c) => (
+            <button
+              key={c.uid}
+              className="btn-small btn-secondary"
+              onClick={() => act(() => moveToContainer(uid, c.uid))}
+            >
+              Move to {c.name}
+            </button>
+          ))}
+        </>
+      );
+    }
+    // Worn (default).
+    return (
+      <>
+        <button className="btn-small btn-danger" data-testid="item-action-drop" onClick={() => act(() => drop(uid))}>
+          Drop
+        </button>
+        {!isContainerItem && stowTargets.map((c) => (
+          <button
+            key={c.uid}
+            className="btn-small btn-secondary"
+            onClick={() => act(() => stow(uid, c.uid))}
+          >
+            Stow in {c.name}
+          </button>
+        ))}
+      </>
+    );
+  };
+
+  const actions = renderActions();
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={item.name} themeColor={themeColor} maxWidth="500px" highZ>
@@ -61,7 +141,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
       {/* Shield properties */}
       {shield && (
         <div className="shield-properties">
-          <h3 style={{ color: themeColor }}>Shield Properties</h3>
+          <h3>Shield Properties</h3>
           <div className="item-detail-grid">
             {shield.bonus !== undefined && (
               <div className="item-detail">
@@ -114,7 +194,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                   <span className="action-name">{action.name}</span>
                   <div className="action-count">
                     {action.actionCount && Array.from({ length: action.actionCount }, (_, i) => (
-                      <span key={i} className="action-icon" style={{ color: themeColor }}>⚬</span>
+                      <span key={i} className="action-icon">⚬</span>
                     ))}
                   </div>
                 </div>
@@ -141,7 +221,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
               <div key={index} className="item-reaction">
                 <div className="reaction-header">
                   <span className="reaction-name">{reaction.name}</span>
-                  <div className="reaction-icon" style={{ color: themeColor }}>⟳</div>
+                  <div className="reaction-icon">⟳</div>
                 </div>
                 {reaction.traits && reaction.traits.length > 0 && (
                   <div className="reaction-traits">
@@ -152,7 +232,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                 )}
                 {reaction.trigger && (
                   <div className="reaction-trigger">
-                    <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
+                    <span className="trigger-label">Trigger</span>
                     <span className="trigger-text">{reaction.trigger}</span>
                   </div>
                 )}
@@ -172,7 +252,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
               <div key={index} className="item-free-action">
                 <div className="free-action-header">
                   <span className="free-action-name">{freeAction.name}</span>
-                  <div className="free-action-icon" style={{ color: themeColor }}>◆</div>
+                  <div className="free-action-icon">◆</div>
                 </div>
                 {freeAction.traits && freeAction.traits.length > 0 && (
                   <div className="free-action-traits">
@@ -183,7 +263,7 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
                 )}
                 {freeAction.trigger && (
                   <div className="free-action-trigger">
-                    <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
+                    <span className="trigger-label">Trigger</span>
                     <span className="trigger-text">{freeAction.trigger}</span>
                   </div>
                 )}
@@ -296,6 +376,11 @@ const ItemModal = ({ isOpen, onClose, item, characterColor }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Loadout actions — state-appropriate (drop / stow / retrieve / …) */}
+      {actions && (
+        <div className="item-modal-actions">{actions}</div>
       )}
     </Modal>
   );

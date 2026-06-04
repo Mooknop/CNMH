@@ -10,40 +10,37 @@ import { isContainer } from '../../utils/InventoryUtils';
  * @param {string} props.themeColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
-const ContainersList = ({ inventory, themeColor, onItemClick, onRetrieve, onMove }) => {
+const ContainersList = ({ inventory, themeColor, onItemClick }) => {
   if (!inventory || !Array.isArray(inventory)) {
     return null;
   }
-  
+
   // Filter inventory to only include containers
   const containers = inventory.filter(isContainer);
-  
+
   // If no containers found, don't render anything
   if (containers.length === 0) {
     return null;
   }
-  
+
   return (
     <div className="containers-section">
-      <h3 style={{ color: themeColor }}>Containers</h3>
-      
+      <h3>Containers</h3>
+
       <div className="containers-info">
         <p>
           Containers can reduce the effective Bulk of items stored within them, making them valuable for managing your carrying capacity.
           It takes two actions to stow an item or retrieve a stowed item, rather than the usual single action for interacting with an item that is worn on your person.
         </p>
       </div>
-      
+
       <div className="containers-list">
         {containers.map((container, index) => (
           <ContainerItem
             key={container.id || `container-${index}`}
             container={container}
-            allContainers={containers}
             themeColor={themeColor}
             onItemClick={onItemClick}
-            onRetrieve={onRetrieve}
-            onMove={onMove}
           />
         ))}
       </div>

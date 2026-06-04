@@ -13,6 +13,24 @@ jest.mock('../../utils/InventoryUtils', () => ({
   formatBulk: (b) => (b === 0 ? '—' : String(b)),
 }));
 
+const mockLoadout = {
+  drop: jest.fn(),
+  pickUp: jest.fn(),
+  stow: jest.fn(),
+  unhand: jest.fn(),
+  retrieve: jest.fn(),
+  moveToContainer: jest.fn(),
+};
+jest.mock('../../hooks/useLoadout', () => ({
+  __esModule: true,
+  useLoadout: () => mockLoadout,
+}));
+
+// useCharacter only feeds the container list for stow/move targets here.
+jest.mock('../../hooks/useCharacter', () => ({
+  useCharacter: (c) => (c ? { inventory: c.__inventory || [] } : null),
+}));
+
 const baseItem = {
   name: 'Iron Sword',
   quantity: 1,
@@ -593,5 +611,64 @@ describe('ItemModal', () => {
     const { container } = render(<ItemModal isOpen={true} onClose={jest.fn()} item={item} />);
     const img = container.querySelector('.entity-image');
     expect(img.style.objectPosition).toBe('25% 80%');
+  });
+});
+
+describe('ItemModal — loadout action footer', () => {
+  const backpack = { uid: 'bp', name: 'Backpack', container: { capacity: 4, contents: [] } };
+  const pouch = { uid: 'po', name: 'Pouch', container: { capacity: 1, contents: [] } };
+  const character = { id: 'hero', __inventory: [backpack, pouch] };
+
+  const open = (item, char = character) =>
+    render(<ItemModal isOpen onClose={jest.fn()} item={item} character={char} />);
+
+  beforeEach(() => {
+    Object.values(mockLoadout).forEach((fn) => fn.mockClear());
+  });
+
+  it('renders no action footer when the item has no uid', () => {
+    open({ name: 'Loose Coin', state: 'worn' });
+    expect(screen.queryByText('Drop')).not.toBeInTheDocument();
+  });
+
+  it('worn item shows Drop + Stow in each container and wires them', () => {
+    open({ uid: 'i1', name: 'Cloak', state: 'worn' });
+    fireEvent.click(screen.getByTestId('item-action-drop'));
+    expect(mockLoadout.drop).toHaveBeenCalledWith('i1');
+    fireEvent.click(screen.getByText('Stow in Backpack'));
+    expect(mockLoadout.stow).toHaveBeenCalledWith('i1', 'bp');
+    expect(screen.getByText('Stow in Pouch')).toBeInTheDocument();
+  });
+
+  it('a worn container item can be dropped but not stowed into a container', () => {
+    open({ uid: 'bp', name: 'Backpack', state: 'worn', container: { capacity: 4, contents: [] } });
+    expect(screen.getByTestId('item-action-drop')).toBeInTheDocument();
+    expect(screen.queryByText(/Stow in/)).not.toBeInTheDocument();
+  });
+
+  it('dropped item shows Pick up', () => {
+    open({ uid: 'i2', name: 'Armor', state: 'dropped' });
+    fireEvent.click(screen.getByTestId('item-action-pickup'));
+    expect(mockLoadout.pickUp).toHaveBeenCalledWith('i2');
+  });
+
+  it('held item shows Unhand and Release', () => {
+    open({ uid: 'i3', name: 'Sword', state: 'held2' });
+    fireEvent.click(screen.getByTestId('item-action-unhand'));
+    expect(mockLoadout.unhand).toHaveBeenCalledWith('i3');
+    fireEvent.click(screen.getByTestId('item-action-release'));
+    expect(mockLoadout.drop).toHaveBeenCalledWith('i3');
+  });
+
+  it('stowed item shows Retrieve + Move to other containers (excluding its parent)', () => {
+    const stowed = { uid: 'i4', name: 'Torch', state: 'stowed' };
+    const bpWithTorch = { ...backpack, container: { capacity: 4, contents: [stowed] } };
+    open(stowed, { id: 'hero', __inventory: [bpWithTorch, pouch] });
+    fireEvent.click(screen.getByTestId('item-action-retrieve'));
+    expect(mockLoadout.retrieve).toHaveBeenCalledWith('i4');
+    // Parent (Backpack) is excluded; only Pouch is offered.
+    expect(screen.queryByText('Move to Backpack')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Move to Pouch'));
+    expect(mockLoadout.moveToContainer).toHaveBeenCalledWith('i4', 'po');
   });
 });

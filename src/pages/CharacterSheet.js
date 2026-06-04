@@ -346,6 +346,7 @@ const CharacterSheet = () => {
           isOpen={isItemModalOpen}
           onClose={closeItemModal}
           item={selectedItem}
+          character={character}
           characterColor={characterColor}
         />
       )}

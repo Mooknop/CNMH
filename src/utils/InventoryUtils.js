@@ -200,3 +200,25 @@ export const getLevelBasedDc = (level) => {
         return 0;
     }
 };
+
+/**
+ * Return an item's rarity trait ('Uncommon' | 'Rare' | 'Unique') if present,
+ * else null. Common items carry no rarity trait. Case-insensitive match,
+ * returns the original-cased trait so callers can display it verbatim.
+ */
+export const getItemRarity = (item) => {
+  const traits = (item && item.traits) || [];
+  return traits.find((t) =>
+    ['uncommon', 'rare', 'unique'].includes(String(t).toLowerCase())
+  ) || null;
+};
+
+/**
+ * Whether an item should read as magical (gets the arcane card border).
+ * True when it carries the Magical trait or has an embedded scroll/wand spell.
+ */
+export const isItemMagical = (item) => {
+  if (!item) return false;
+  if (item.scroll || item.wand) return true;
+  return ((item.traits) || []).some((t) => String(t).toLowerCase() === 'magical');
+};

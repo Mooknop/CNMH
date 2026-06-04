@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ContainerItem from './ContainerItem';
 
 jest.mock('../../utils/InventoryUtils', () => ({
@@ -11,18 +11,28 @@ jest.mock('../../utils/InventoryUtils', () => ({
   formatBulk: jest.fn((b) => (b === 0 ? '—' : String(b))),
 }));
 
+// Container contents are rendered as ItemCards; mock to assert wiring only.
+jest.mock('./ItemCard', () => {
+  return function DummyItemCard({ item, onClick }) {
+    return (
+      <button className="mock-item-card" onClick={() => onClick(item)}>
+        {item.name}
+      </button>
+    );
+  };
+});
+
 const { calculateContainerBulk } = require('../../utils/InventoryUtils');
 
 const makeContainer = (overrides = {}) => ({
   name: 'Backpack',
   quantity: 1,
-  container: {
-    capacity: 4,
-    ignored: 0,
-    contents: [],
-  },
+  container: { capacity: 4, ignored: 0, contents: [] },
   ...overrides,
 });
+
+const expand = () =>
+  fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
 
 describe('ContainerItem', () => {
   beforeEach(() => {
@@ -47,31 +57,17 @@ describe('ContainerItem', () => {
   });
 
   it('shows quantity in parentheses when quantity > 1', () => {
-    render(
-      <ContainerItem
-        container={makeContainer({ quantity: 3 })}
-        themeColor="#4a90d9"
-        onItemClick={jest.fn()}
-      />
-    );
+    render(<ContainerItem container={makeContainer({ quantity: 3 })} themeColor="#4a90d9" onItemClick={jest.fn()} />);
     expect(screen.getByText(/\(3\)/)).toBeInTheDocument();
   });
 
   it('does not show quantity in parentheses when quantity is 1', () => {
-    render(
-      <ContainerItem
-        container={makeContainer({ quantity: 1 })}
-        themeColor="#4a90d9"
-        onItemClick={jest.fn()}
-      />
-    );
+    render(<ContainerItem container={makeContainer({ quantity: 1 })} themeColor="#4a90d9" onItemClick={jest.fn()} />);
     expect(screen.queryByText(/\(\d\)/)).toBeNull();
   });
 
   it('shows ignored bulk label when ignored > 0', () => {
-    const container = makeContainer({
-      container: { capacity: 4, ignored: 2, contents: [] },
-    });
+    const container = makeContainer({ container: { capacity: 4, ignored: 2, contents: [] } });
     render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
     expect(screen.getByText(/ignored/)).toBeInTheDocument();
   });
@@ -83,29 +79,20 @@ describe('ContainerItem', () => {
 
   it('progress bar uses danger color when percentFull >= 100', () => {
     calculateContainerBulk.mockReturnValue({ contentsBulk: 4, percentFull: 100 });
-    const { container } = render(
-      <ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />
-    );
-    const bar = container.querySelector('.container-bulk-bar');
-    expect(bar).toHaveStyle('background-color: var(--color-danger)');
+    const { container } = render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />);
+    expect(container.querySelector('.container-bulk-bar')).toHaveStyle('background-color: var(--color-danger)');
   });
 
   it('progress bar uses warning color when percentFull >= 75 and < 100', () => {
     calculateContainerBulk.mockReturnValue({ contentsBulk: 3, percentFull: 80 });
-    const { container } = render(
-      <ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />
-    );
-    const bar = container.querySelector('.container-bulk-bar');
-    expect(bar).toHaveStyle('background-color: var(--color-warning)');
+    const { container } = render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />);
+    expect(container.querySelector('.container-bulk-bar')).toHaveStyle('background-color: var(--color-warning)');
   });
 
   it('progress bar uses themeColor when percentFull < 75', () => {
     calculateContainerBulk.mockReturnValue({ contentsBulk: 1, percentFull: 40 });
-    const { container } = render(
-      <ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />
-    );
-    const bar = container.querySelector('.container-bulk-bar');
-    expect(bar).toHaveStyle('background-color: #4a90d9');
+    const { container } = render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />);
+    expect(container.querySelector('.container-bulk-bar')).toHaveStyle('background-color: #4a90d9');
   });
 
   it('shows collapsed arrow (▶) initially', () => {
@@ -113,204 +100,75 @@ describe('ContainerItem', () => {
     expect(screen.getByText('▶')).toBeInTheDocument();
   });
 
-  it('shows expanded arrow (▼) after clicking header', () => {
+  it('shows expanded arrow (▼) after clicking the header', () => {
     render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />);
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    expand();
     expect(screen.getByText('▼')).toBeInTheDocument();
   });
 
-  it('does not show contents table when collapsed', () => {
+  it('does not show contents when collapsed', () => {
     const container = makeContainer({
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ id: '1', name: 'Sword', quantity: 1, weight: 1 }],
-      },
+      container: { capacity: 4, ignored: 0, contents: [{ id: '1', name: 'Sword', weight: 1 }] },
     });
-    const { container: dom } = render(
-      <ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />
-    );
+    const { container: dom } = render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
     expect(dom.querySelector('.container-contents')).toBeNull();
   });
 
-  it('shows contents table when expanded and contents is non-empty', () => {
+  it('shows content item cards when expanded', () => {
     const container = makeContainer({
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ id: '1', name: 'Sword', quantity: 1, weight: 1 }],
-      },
+      container: { capacity: 4, ignored: 0, contents: [{ id: '1', name: 'Sword', weight: 1 }] },
     });
     render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    expand();
     expect(screen.getByText('Sword')).toBeInTheDocument();
   });
 
   it('sorts contents alphabetically when expanded', () => {
     const container = makeContainer({
       container: {
-        capacity: 4,
-        ignored: 0,
+        capacity: 4, ignored: 0,
         contents: [
-          { id: '2', name: 'Zebra Cloak', quantity: 1, weight: 0.1 },
-          { id: '1', name: 'Apple Potion', quantity: 1, weight: 0.1 },
+          { id: '2', name: 'Zebra Cloak', weight: 0.1 },
+          { id: '1', name: 'Apple Potion', weight: 0.1 },
         ],
       },
     });
-    const { container: dom } = render(
-      <ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />
-    );
-    fireEvent.click(dom.querySelector('.container-header'));
-    const buttons = dom.querySelectorAll('.item-name');
-    expect(buttons[0]).toHaveTextContent('Apple Potion');
-    expect(buttons[1]).toHaveTextContent('Zebra Cloak');
+    const { container: dom } = render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
+    expand();
+    const cards = dom.querySelectorAll('.mock-item-card');
+    expect(cards[0]).toHaveTextContent('Apple Potion');
+    expect(cards[1]).toHaveTextContent('Zebra Cloak');
   });
 
-  it('calls onItemClick when a content item button is clicked', () => {
+  it('calls onItemClick when a content card is clicked', () => {
     const onItemClick = jest.fn();
-    const swordItem = { id: '1', name: 'Sword', quantity: 1, weight: 1 };
-    const container = makeContainer({
-      container: { capacity: 4, ignored: 0, contents: [swordItem] },
-    });
-    const { container: dom } = render(
-      <ContainerItem container={container} themeColor="#4a90d9" onItemClick={onItemClick} />
-    );
-    fireEvent.click(dom.querySelector('.container-header'));
+    const swordItem = { id: '1', name: 'Sword', weight: 1 };
+    const container = makeContainer({ container: { capacity: 4, ignored: 0, contents: [swordItem] } });
+    render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={onItemClick} />);
+    expand();
     fireEvent.click(screen.getByText('Sword'));
     expect(onItemClick).toHaveBeenCalledWith(swordItem);
   });
 
   it('shows empty container message when expanded but contents is empty', () => {
     render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={jest.fn()} />);
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    expand();
     expect(screen.getByText('This container is empty')).toBeInTheDocument();
   });
 
   it('does not show empty message when contents is non-empty', () => {
     const container = makeContainer({
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ id: '1', name: 'Sword', quantity: 1, weight: 1 }],
-      },
+      container: { capacity: 4, ignored: 0, contents: [{ id: '1', name: 'Sword', weight: 1 }] },
     });
     render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
+    expand();
     expect(screen.queryByText('This container is empty')).toBeNull();
   });
 
-  it('handles contents being undefined gracefully (returns empty array)', () => {
-    const container = makeContainer({
-      container: { capacity: 4, ignored: 0 },
-    });
+  it('handles contents being undefined gracefully', () => {
+    const container = makeContainer({ container: { capacity: 4, ignored: 0 } });
     expect(() =>
       render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />)
     ).not.toThrow();
-  });
-
-  it('renders quantity fallback of 1 for content items when quantity is absent', () => {
-    const container = makeContainer({
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ id: '1', name: 'Potion', weight: 0 }],
-      },
-    });
-    const { container: dom } = render(
-      <ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />
-    );
-    fireEvent.click(dom.querySelector('.container-header'));
-    // The quantity cell should show "1" as fallback
-    const cells = dom.querySelectorAll('tbody td:nth-child(2)');
-    expect(cells[0]).toHaveTextContent('1');
-  });
-
-  it('uses item.id as key when present', () => {
-    const container = makeContainer({
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ id: 'abc', name: 'Potion', weight: 0 }],
-      },
-    });
-    expect(() => {
-      const { container: dom } = render(
-        <ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />
-      );
-      fireEvent.click(dom.querySelector('.container-header'));
-    }).not.toThrow();
-  });
-
-  // Slice 4: contents are labelled with their effective state (Stowed)
-  it('labels a content row with its state badge', () => {
-    const container = makeContainer({
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ id: '1', name: 'Torch', quantity: 1, weight: 0.1, state: 'stowed' }],
-      },
-    });
-    render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={jest.fn()} />);
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
-    expect(screen.getByText('Stowed')).toBeInTheDocument();
-  });
-
-  // Slice C: stowed contents get Retrieve + a Location (other containers) select
-  it('Retrieve calls onRetrieve(uid); Location lists only other containers', () => {
-    const onRetrieve = jest.fn();
-    const onMove = jest.fn();
-    const backpack = makeContainer({
-      uid: 'bp',
-      name: 'Backpack',
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ uid: 'i1', id: '1', name: 'Torch', quantity: 1, weight: 0.1, state: 'stowed' }],
-      },
-    });
-    const pouch = { uid: 'po', name: 'Pouch', container: { capacity: 1, ignored: 0, contents: [] } };
-    render(
-      <ContainerItem
-        container={backpack}
-        allContainers={[backpack, pouch]}
-        themeColor="#4a90d9"
-        onItemClick={jest.fn()}
-        onRetrieve={onRetrieve}
-        onMove={onMove}
-      />
-    );
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
-    fireEvent.click(screen.getByTestId('stowed-i1-retrieve'));
-    expect(onRetrieve).toHaveBeenCalledWith('i1');
-
-    const sel = screen.getByLabelText('stowed-i1-location');
-    // only the *other* container (Pouch) is offered, never the Backpack itself
-    expect(within(sel).queryByRole('option', { name: 'Backpack' })).not.toBeInTheDocument();
-    fireEvent.change(sel, { target: { value: 'po' } });
-    expect(onMove).toHaveBeenCalledWith('i1', 'po');
-  });
-
-  it('no Location select when there are no other containers', () => {
-    const only = makeContainer({
-      uid: 'bp',
-      container: {
-        capacity: 4,
-        ignored: 0,
-        contents: [{ uid: 'i1', id: '1', name: 'Torch', quantity: 1, weight: 0.1, state: 'stowed' }],
-      },
-    });
-    render(
-      <ContainerItem
-        container={only}
-        allContainers={[only]}
-        themeColor="#4a90d9"
-        onItemClick={jest.fn()}
-        onRetrieve={jest.fn()}
-        onMove={jest.fn()}
-      />
-    );
-    fireEvent.click(screen.getByRole('heading', { level: 3 }).closest('.container-header'));
-    expect(screen.getByTestId('stowed-i1-retrieve')).toBeInTheDocument();
-    expect(screen.queryByLabelText('stowed-i1-location')).not.toBeInTheDocument();
   });
 });

@@ -1,0 +1,131 @@
+/* ItemCard — compact inventory card (name + meta chips + held glyph + chevron) */
+
+.item-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  background: var(--surface-slab);
+  border: 1px solid var(--shell-border);
+  border-left: 3px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  min-height: var(--tap-target-min);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.item-card:hover,
+.item-card:focus-visible {
+  background: var(--surface-inset-hover);
+  outline: none;
+}
+
+/* Magical items — arcane left border */
+.item-card--magical {
+  border-left-color: var(--theme-arcane, var(--arcane-mid));
+}
+
+/* Dropped items — faded + struck through name */
+.item-card--dropped {
+  opacity: 0.55;
+}
+
+.item-card--dropped .item-card-name {
+  text-decoration: line-through;
+}
+
+.item-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.item-card-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--shell-text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.item-card-container-icon {
+  font-size: 0.85em;
+  opacity: 0.8;
+}
+
+.item-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.item-chip {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--shell-text-tertiary);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
+.item-chip--state {
+  color: var(--shell-text-secondary);
+  border-color: var(--shell-border-strong);
+}
+
+/* Rarity chips — match the spec (uncommon = gold, rare = arcane, unique = pink) */
+.item-rarity--uncommon {
+  color: var(--gold-light);
+  border-color: rgba(196, 154, 46, 0.5);
+  text-transform: capitalize;
+}
+
+.item-rarity--rare {
+  color: var(--arcane-light);
+  border-color: var(--theme-arcane, var(--arcane-mid));
+  text-transform: capitalize;
+}
+
+.item-rarity--unique {
+  color: #e08bb0;
+  border-color: rgba(198, 84, 132, 0.5);
+  text-transform: capitalize;
+}
+
+/* Held glyph */
+.item-card-held {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.item-card-chevron {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--shell-text-tertiary);
+}
+
+/* Card list container */
+.item-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item-card-list--empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--shell-text-tertiary);
+  font-size: var(--text-sm);
+}
