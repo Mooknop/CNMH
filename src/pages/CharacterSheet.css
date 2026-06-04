@@ -549,6 +549,53 @@
   margin-right: var(--space-2);
 }
 
+/* ── Encounter idle state ────────────────────────────────── */
+.cs-encounter-idle {
+  border: 1px dashed var(--shell-border-strong);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 10px;
+}
+
+.cs-encounter-idle-title {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--shell-text-secondary);
+}
+
+.cs-encounter-idle-sub {
+  font-size: 0.7rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* Reusable section header used by Encounter action list + Spells rank headers */
+.cs-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--shell-text-secondary);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.cs-section-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--shell-border);
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 480px) {
   .cs-char-name {
