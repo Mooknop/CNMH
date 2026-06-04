@@ -206,8 +206,15 @@ describe('CharacterSheet', () => {
     }
   });
 
-  it('should display actions tab by default', () => {
+  it('should display stats block by default', () => {
     renderWithRouter(mockCharacter);
+    expect(screen.getByTestId('stats-block')).toBeInTheDocument();
+  });
+
+  it('should display actions list when Encounter tab is active', () => {
+    renderWithRouter(mockCharacter);
+    const encounterBtn = screen.getByRole('button', { name: /encounter/i });
+    fireEvent.click(encounterBtn);
     expect(screen.getByTestId('actions-list')).toBeInTheDocument();
   });
 
