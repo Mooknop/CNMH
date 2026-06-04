@@ -1,88 +1,125 @@
 .tw-target-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
+/* DC segmented control — recipe-B pill buttons */
 .tw-dc-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-1);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-full);
+  padding: 3px;
 }
 
 .tw-dc-btn {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  gap: 1px;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-full);
+  border: none;
   background: transparent;
   cursor: pointer;
-  color: var(--color-text);
-  transition: border-color 0.15s, background 0.15s;
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  transition: background 0.15s, color 0.15s;
+  min-height: 44px;
 }
 
 .tw-dc-btn:hover {
-  border-color: var(--color-primary);
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
 }
 
 .tw-dc-btn--on {
-  border-color: currentColor;
-  background: color-mix(in srgb, var(--color-theme, var(--color-primary)) 15%, transparent);
+  background: var(--tab-active-bg);
+  color: var(--tab-active-text);
+  border: 1px solid var(--tab-active-border);
 }
 
 .tw-dc-value {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
+  line-height: 1;
 }
 
 .tw-dc-hint {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
   white-space: nowrap;
 }
 
+.tw-dc-btn--on .tw-dc-hint {
+  color: var(--accent-text);
+}
+
+/* Degree result chips — load-bearing colors */
 .tw-degree-chip {
-  padding: 3px 8px;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  border: 1px solid;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
-.tw-degree--crit-success { background: var(--save-crit-success-bg, #1a4a1a); color: var(--save-crit-success-fg, #6fcf6f); }
-.tw-degree--success      { background: var(--save-success-bg, #1a3a1a);      color: var(--save-success-fg, #5cb85c);     }
-.tw-degree--failure      { background: var(--save-failure-bg, #3a2a1a);      color: var(--save-failure-fg, #e69545);     }
-.tw-degree--crit-failure { background: var(--save-crit-failure-bg, #4a1a1a); color: var(--save-crit-failure-fg, #d94f4f); }
+.tw-degree--crit-success {
+  background: var(--d-crit-bg);
+  border-color: var(--d-crit-border);
+  color: var(--d-crit-fg);
+}
+
+.tw-degree--success {
+  background: var(--d-succ-bg);
+  border-color: var(--d-succ-border);
+  color: var(--d-succ-fg);
+}
+
+.tw-degree--failure {
+  background: var(--d-fail-bg);
+  border-color: var(--d-fail-border);
+  color: var(--d-fail-fg);
+}
+
+.tw-degree--crit-failure {
+  background: var(--d-cf-bg);
+  border-color: var(--d-cf-border);
+  color: var(--d-cf-fg);
+}
 
 .tw-hint-label {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
   font-style: italic;
   min-width: 80px;
 }
 
 .tw-locked-notice {
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
   font-style: italic;
   margin: 0;
 }
 
 .tw-immunity-notice {
-  margin-top: 0.75rem;
-  padding: 0.75rem 1rem;
+  margin-top: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--save-crit-failure-bg, #4a1a1a) 60%, transparent);
-  color: var(--save-crit-failure-fg, #d94f4f);
-  font-size: 0.85rem;
-  border: 1px solid var(--save-crit-failure-fg, #d94f4f);
+  background: var(--d-cf-bg);
+  color: var(--d-cf-fg);
+  font-size: var(--text-sm);
+  border: 1px solid var(--d-cf-border);
 }
 
 .tw-footer {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   justify-content: flex-end;
-  margin-top: 1rem;
+  margin-top: var(--space-4);
 }

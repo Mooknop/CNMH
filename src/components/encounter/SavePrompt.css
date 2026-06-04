@@ -1,84 +1,140 @@
 .save-prompt {
-  border: 2px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: var(--color-surface, #fff);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: 10px;
+  background: var(--surface-inset);
 }
 
 .save-prompt-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
-.save-prompt-icon { font-size: 1.2rem; }
+.save-prompt-icon {
+  font-size: var(--text-lg);
+  color: var(--shell-text-tertiary);
+}
 
 .save-prompt-title {
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: var(--text-base);
+  color: var(--shell-text-primary);
 }
 
 .save-prompt-details {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
 }
 
-.save-prompt-type { font-weight: 600; }
+.save-prompt-type {
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
 
 .save-prompt-dc {
-  background: var(--color-border);
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-weight: 600;
+  background: var(--surface-raised);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--shell-text-primary);
 }
 
-.save-prompt-basic { opacity: 0.75; }
+.save-prompt-basic {
+  opacity: 0.7;
+  font-style: italic;
+}
 
 .save-prompt-mod {
-  opacity: 0.8;
   margin-left: auto;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
 }
 
+/* Roll input row */
 .save-prompt-entry {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
 }
 
 .save-prompt-input {
-  width: 80px;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  font-size: 1rem;
+  width: 64px;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--shell-text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
   text-align: center;
 }
 
+/* Result card — tinted by degree */
 .save-result {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid;
   font-weight: 700;
+  margin-top: var(--space-2);
 }
 
-.save-result-total { font-size: 1.4rem; }
-.save-result-degree { font-size: 0.95rem; flex: 1; }
+.save-result-total {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.save-result-degree {
+  font-size: var(--text-base);
+  flex: 1;
+}
 
 .save-result-dismiss {
   margin-left: auto;
-  opacity: 0.7;
-  font-size: 0.85rem;
+  opacity: 0.6;
+  font-size: var(--text-sm);
+  cursor: pointer;
 }
 
-.save-crit-success { background: #1a5c2a; color: #fff; }
-.save-success      { background: #2e5d8c; color: #fff; }
-.save-failure      { background: #7a4c1d; color: #fff; }
-.save-crit-failure { background: #6b1515; color: #fff; }
+/* Degree result colors — load-bearing, do not change */
+.save-crit-success {
+  background: var(--d-crit-bg);
+  border-color: var(--d-crit-border);
+  color: var(--d-crit-fg);
+}
+
+.save-success {
+  background: var(--d-succ-bg);
+  border-color: var(--d-succ-border);
+  color: var(--d-succ-fg);
+}
+
+.save-failure {
+  background: var(--d-fail-bg);
+  border-color: var(--d-fail-border);
+  color: var(--d-fail-fg);
+}
+
+.save-crit-failure {
+  background: var(--d-cf-bg);
+  border-color: var(--d-cf-border);
+  color: var(--d-cf-fg);
+}

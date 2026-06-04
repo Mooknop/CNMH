@@ -359,6 +359,30 @@
   --accent-outline:      var(--color-theme);
   --accent-text:         color-mix(in srgb, var(--color-theme) 70%, var(--theme-text));
 
+  /* ── Degree-of-success surface + text pairs — load-bearing, do not change ── */
+  --d-crit-bg:     rgba(61, 148, 88, 0.18);
+  --d-crit-fg:     #6fcf97;
+  --d-crit-border: rgba(61, 148, 88, 0.5);
+  --d-succ-bg:     rgba(74, 120, 196, 0.18);
+  --d-succ-fg:     #9cc0f0;
+  --d-succ-border: rgba(74, 120, 196, 0.5);
+  --d-fail-bg:     rgba(217, 122, 43, 0.18);
+  --d-fail-fg:     #e8a86a;
+  --d-fail-border: rgba(217, 122, 43, 0.5);
+  --d-cf-bg:       rgba(192, 57, 43, 0.18);
+  --d-cf-fg:       #d94f4f;
+  --d-cf-border:   rgba(192, 57, 43, 0.5);
+
+  /* Save / heal / roll resolver aliases — point to the degree pairs above */
+  --save-crit-success-bg: var(--d-crit-bg);
+  --save-crit-success-fg: var(--d-crit-fg);
+  --save-success-bg:      var(--d-succ-bg);
+  --save-success-fg:      var(--d-succ-fg);
+  --save-failure-bg:      var(--d-fail-bg);
+  --save-failure-fg:      var(--d-fail-fg);
+  --save-crit-failure-bg: var(--d-cf-bg);
+  --save-crit-failure-fg: var(--d-cf-fg);
+
   /* ── New tokens for dark game-menu redesign ────────────────── */
 
   /* Accent glow — restrained, accent-driven (token chip, current-turn pip, token on move grid) */
