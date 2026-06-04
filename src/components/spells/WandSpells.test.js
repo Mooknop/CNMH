@@ -45,42 +45,42 @@ describe('WandSpells', () => {
     expect(screen.getByText('Using Wands')).toBeInTheDocument();
   });
 
-  it('renders spell names as chips', () => {
+  it('renders spell names as cards', () => {
     render(<WandSpells {...baseProps} />);
     expect(screen.getByText('Dizzying Colors')).toBeInTheDocument();
     expect(screen.getByText('Fireball')).toBeInTheDocument();
   });
 
-  it('renders one slot bubble per wand, all initially available', () => {
+  it('renders one charge bubble per wand, all initially available', () => {
     render(<WandSpells {...baseProps} />);
-    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
-    expect(screen.queryAllByLabelText('Spent slot')).toHaveLength(0);
+    expect(screen.getAllByLabelText('Available charge')).toHaveLength(2);
+    expect(screen.queryAllByLabelText('Spent charge')).toHaveLength(0);
   });
 
   it('clicking an available bubble marks the wand as used', () => {
     render(<WandSpells {...baseProps} />);
-    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
-    expect(screen.getAllByLabelText('Available slot')).toHaveLength(1);
-    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
+    fireEvent.click(screen.getAllByLabelText('Available charge')[0]);
+    expect(screen.getAllByLabelText('Available charge')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Spent charge')).toHaveLength(1);
   });
 
   it('clicking a spent bubble resets the wand to available', () => {
     render(<WandSpells {...baseProps} />);
-    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
-    fireEvent.click(screen.getByLabelText('Spent slot'));
-    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+    fireEvent.click(screen.getAllByLabelText('Available charge')[0]);
+    fireEvent.click(screen.getByLabelText('Spent charge'));
+    expect(screen.getAllByLabelText('Available charge')).toHaveLength(2);
   });
 
   it('shows Overcharge button only for used wands', () => {
     render(<WandSpells {...baseProps} />);
     expect(screen.queryByRole('button', { name: /overcharge/i })).not.toBeInTheDocument();
-    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getAllByLabelText('Available charge')[0]);
     expect(screen.getByRole('button', { name: /overcharge/i })).toBeInTheDocument();
   });
 
   it('clicking Overcharge marks the wand as overcharged', () => {
     render(<WandSpells {...baseProps} />);
-    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getAllByLabelText('Available charge')[0]);
     fireEvent.click(screen.getByRole('button', { name: /overcharge/i }));
     expect(screen.getByText(/Overcharged/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Overcharge' })).not.toBeInTheDocument();
@@ -88,18 +88,18 @@ describe('WandSpells', () => {
 
   it('clicking the overcharged label resets the wand to available', () => {
     render(<WandSpells {...baseProps} />);
-    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
+    fireEvent.click(screen.getAllByLabelText('Available charge')[0]);
     fireEvent.click(screen.getByRole('button', { name: /overcharge/i }));
     fireEvent.click(screen.getByText(/Overcharged/));
-    expect(screen.getAllByLabelText('Available slot')).toHaveLength(2);
+    expect(screen.getAllByLabelText('Available charge')).toHaveLength(2);
     expect(screen.queryByText(/Overcharged/)).not.toBeInTheDocument();
   });
 
   it('each wand tracks state independently', () => {
     render(<WandSpells {...baseProps} />);
-    fireEvent.click(screen.getAllByLabelText('Available slot')[0]);
-    expect(screen.getAllByLabelText('Available slot')).toHaveLength(1);
-    expect(screen.getAllByLabelText('Spent slot')).toHaveLength(1);
+    fireEvent.click(screen.getAllByLabelText('Available charge')[0]);
+    expect(screen.getAllByLabelText('Available charge')).toHaveLength(1);
+    expect(screen.getAllByLabelText('Spent charge')).toHaveLength(1);
   });
 
   it('groups spells into rank sections', () => {
@@ -128,11 +128,5 @@ describe('WandSpells', () => {
   it('shows generic empty message when no wands in inventory', () => {
     render(<WandSpells {...baseProps} spells={[]} />);
     expect(screen.getByText('No wands in inventory.')).toBeInTheDocument();
-  });
-
-  it('chip links point to aonprd.com', () => {
-    render(<WandSpells {...baseProps} />);
-    const link = screen.getByRole('link', { name: 'Dizzying Colors' });
-    expect(link).toHaveAttribute('href', expect.stringContaining('aonprd.com'));
   });
 });

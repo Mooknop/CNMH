@@ -20,6 +20,22 @@ jest.mock('../../utils/SpellUtils', () => ({
     if (filter === 'all') return spells;
     return spells.filter(s => s.defense === filter);
   },
+  organizeSpellsByRank: (spells) => {
+    const result = { cantrips: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [] };
+    spells.forEach(s => {
+      const rank = s.level === 0 ? 'cantrips' : (s.level || 1);
+      if (result[rank]) result[rank].push(s);
+    });
+    return result;
+  },
+  getSortedRankList: (ranks) => {
+    const sorted = ['all'];
+    if (ranks.includes('cantrips')) sorted.push('cantrips');
+    for (let i = 1; i <= 10; i++) {
+      if (ranks.includes(String(i))) sorted.push(String(i));
+    }
+    return sorted;
+  },
 }));
 
 const baseCharacter = { name: 'Aria', level: 5 };
@@ -27,6 +43,7 @@ const baseCharacter = { name: 'Aria', level: 5 };
 const makeSpell = (id, name, innateSource = 'Ancestry') => ({
   id,
   name,
+  level: 1,
   innateSource,
 });
 

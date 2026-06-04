@@ -230,10 +230,7 @@ const SpellsList = ({ character, characterColor }) => {
     <div className="spells-list">
       {/* Spellcasting statistics - only show if character has spellcasting */}
       {hasSpellcasting && (
-        <SpellsHeader 
-          character={character} 
-          themeColor={themeColor} 
-        />
+        <SpellsHeader character={character} />
       )}
       
       {/* View mode toggle */}

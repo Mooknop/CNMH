@@ -38,7 +38,7 @@ const baseProps = {
 };
 
 describe('ScrollSpells', () => {
-  it('renders spell names as chips', () => {
+  it('renders spell names as cards', () => {
     render(<ScrollSpells {...baseProps} />);
     expect(screen.getByText('Pocket Library')).toBeInTheDocument();
     expect(screen.getByText('Fireball')).toBeInTheDocument();
@@ -72,14 +72,8 @@ describe('ScrollSpells', () => {
     expect(screen.getByText('No scrolls in inventory.')).toBeInTheDocument();
   });
 
-  it('chip links point to aonprd.com', () => {
+  it('renders no interactive charge bubbles', () => {
     render(<ScrollSpells {...baseProps} />);
-    const link = screen.getByRole('link', { name: 'Fireball' });
-    expect(link).toHaveAttribute('href', expect.stringContaining('aonprd.com'));
-  });
-
-  it('renders no interactive bubbles', () => {
-    render(<ScrollSpells {...baseProps} />);
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(screen.queryAllByLabelText(/charge/i)).toHaveLength(0);
   });
 });

@@ -33,6 +33,20 @@ jest.mock('../../utils/SpellUtils', () => ({
     }
     return sorted;
   },
+  getFocusInfo: (character) => {
+    if (!character) return null;
+    if (character.champion?.focus_points !== undefined) {
+      return { max: character.champion.focus_points, current: character.champion.focus_points };
+    }
+    if (character.monk?.focus_points !== undefined) {
+      return { max: character.monk.focus_points, current: character.monk.focus_points };
+    }
+    if (character.spellcasting?.focus?.max !== undefined) {
+      const { max, current } = character.spellcasting.focus;
+      return { max, current: current ?? max };
+    }
+    return null;
+  },
 }));
 
 const baseFocusSpell = {

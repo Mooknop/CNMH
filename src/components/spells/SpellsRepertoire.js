@@ -1,36 +1,23 @@
 import React from 'react';
 import { organizeSpellsByRank, getSortedRankList, filterSpellsByDefense } from '../../utils/SpellUtils';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
+import SpellCard from './SpellCard';
 
-const SpellNameChip = ({ spell, character }) => {
-  const isSignature = !!spell.signature;
-  const isBloodline = !!spell.bloodline;
-
-  const chipClass = `spell-name-chip${isSignature ? ' signature-indicator' : isBloodline ? ' bloodline-indicator' : ''}`;
-  const symbol = isSignature ? '★' : isBloodline ? '✦' : null;
-  const tooltipText = isSignature
-    ? 'Signature Spell: Cast at any rank up to your highest available spell rank.'
-    : isBloodline
-    ? (character?.spellcasting?.bloodline?.blood_magic || '')
-    : null;
-
-  const aonUrl = `https://2e.aonprd.com/Search.aspx?q=${encodeURIComponent(spell.name)}`;
-
-  return (
-    <div className={chipClass}>
-      <a
-        className="chip-name"
-        href={aonUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {spell.name}
-      </a>
-      {symbol && <span className="chip-symbol">{symbol}</span>}
-      {tooltipText && <div className="spell-tooltip">{tooltipText}</div>}
-    </div>
-  );
-};
+/**
+ * Clickable slot-pip ledger shown in a rank header. Tapping spends one slot.
+ */
+const RankSlotPips = ({ rank, total, remaining, onSpend }) => (
+  <button
+    className="rank-slot-pips"
+    disabled={remaining === 0}
+    onClick={onSpend}
+    aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining. Tap to spend one.`}
+  >
+    {Array.from({ length: total }, (_, i) => (
+      <span key={i} className={`rank-slot-pip${i < remaining ? ' filled' : ''}`} />
+    ))}
+  </button>
+);
 
 const SpellsRepertoire = ({
   spells,
@@ -90,29 +77,25 @@ const SpellsRepertoire = ({
         return (
           <div className="repertoire-rank-section" key={rank}>
             <div className="rank-section-header">
-              <span className="rank-label" >
+              <span className="rank-label">
                 {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
               </span>
               {rank !== 'cantrips' && total > 0 && (
-                <button
-                  className="slot-bar"
-                  disabled={remaining === 0}
-                  onClick={() => handleSpend(rank)}
-                  aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining`}
-                >
-                  <span
-                    className="slot-bar-fill"
-                    style={{ width: `${(remaining / total) * 100}%` }}
-                  />
-                  <span className="slot-bar-label">{remaining}/{total}</span>
-                </button>
+                <RankSlotPips
+                  rank={rank}
+                  total={total}
+                  remaining={remaining}
+                  onSpend={() => handleSpend(rank)}
+                />
               )}
             </div>
-            <div className="spell-chips-row">
+            <div className="spells-grid">
               {spellsByRank[rank].map(spell => (
-                <SpellNameChip
+                <SpellCard
                   key={spell.id || spell.name}
                   spell={spell}
+                  themeColor={themeColor}
+                  characterLevel={characterLevel}
                   character={character}
                 />
               ))}
@@ -123,10 +106,10 @@ const SpellsRepertoire = ({
 
       {character?.spellcasting?.bloodline != null && (
         <div className="bloodline-info">
-          <h3 >Imperial Blood Magic:</h3>
+          <h3>Imperial Blood Magic:</h3>
           <p className="bloodline-magic-effect">Whenever you cast a bloodline spell you choose one blood magic effect you know to benefit from.</p>
           <div className="bloodline-info">
-            <h3 >Imperious Defense</h3>
+            <h3>Imperious Defense</h3>
             <span className="bloodline-magic-effect">{character.spellcasting.bloodline.blood_magic}</span>
           </div>
         </div>

@@ -100,7 +100,7 @@ describe('StaffSpells', () => {
     expect(screen.queryByText('Charges')).not.toBeInTheDocument();
   });
 
-  it('renders spell names as chips', () => {
+  it('renders spell names as cards', () => {
     render(<StaffSpells {...baseProps} />);
     expect(screen.getByText('Fireball')).toBeInTheDocument();
     expect(screen.getByText('Produce Flame')).toBeInTheDocument();
@@ -148,11 +148,5 @@ describe('StaffSpells', () => {
     const spells = baseSpells.map((s) => ({ ...s, active: true }));
     render(<StaffSpells {...baseProps} spells={spells} />);
     expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
-  });
-
-  it('spell chip links point to aonprd.com', () => {
-    render(<StaffSpells {...baseProps} />);
-    const link = screen.getByRole('link', { name: 'Fireball' });
-    expect(link).toHaveAttribute('href', expect.stringContaining('aonprd.com'));
   });
 });
