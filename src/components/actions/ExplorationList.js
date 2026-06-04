@@ -1,6 +1,7 @@
+// src/components/actions/ExplorationList.js
 import React, { useState } from 'react';
-import CollapsibleCard from '../shared/CollapsibleCard';
-import TraitTag from '../shared/TraitTag';
+import ActionRow from '../shared/ActionRow';
+import ActionDetailModal from '../encounter/ActionDetailModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
@@ -14,21 +15,16 @@ const profLabel = (rank) => {
   return null;
 };
 
-const SectionDivider = ({ label }) => (
-  <div className="el-section-divider">
-    <span className="el-section-label">{label}</span>
-    <div className="el-section-line" />
-  </div>
-);
-
 const ExplorationList = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
   const characterModel = useCharacter(character);
   const characterKey = character?.id || 'unknown';
+
   const [activeActivityName, setActiveActivityName] = useLocalStorage(
     `cnmh_exploration_${characterKey}`,
     null
   );
+  const [openActivity, setOpenActivity]   = useState(null);
   const [treatWoundsOpen, setTreatWoundsOpen] = useState(false);
 
   if (!characterModel) return null;
@@ -55,21 +51,21 @@ const ExplorationList = ({ character, characterColor }) => {
 
   const activeActivity = activities.find((a) => a.name === activeActivityName) || null;
 
-  const toggleActive = (name) => {
+  const toggleActive = (name) =>
     setActiveActivityName((prev) => (prev === name ? null : name));
-  };
 
   return (
     <div className="exploration-list" style={{ '--el-theme-color': themeColor }}>
       <h2 className="el-heading">Exploration</h2>
 
+      {/* Active activity banner */}
       {activeActivity && (
         <div className="exploration-active-banner">
           <div className="el-banner-top">
             <div className="el-banner-info">
               <div className="el-banner-eyebrow">Active Activity</div>
               <div className="el-banner-name-row">
-                <h3 className="el-banner-name">{activeActivity.name}</h3>
+                <span className="el-banner-name">{activeActivity.name}</span>
                 {activeActivity.highlight && (
                   <span className="el-highlight-badge">✦ {activeActivity.highlight}</span>
                 )}
@@ -82,67 +78,44 @@ const ExplorationList = ({ character, characterColor }) => {
               Clear
             </button>
           </div>
-          <div className="exploration-traits">
-            {activeActivity.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
-          </div>
-          <div className="el-banner-desc">{activeActivity.description}</div>
         </div>
       )}
 
+      {/* Activity rows grouped by category */}
       {CATEGORY_ORDER.map((category) => {
         const group = activities.filter((a) => a.category === category);
         if (group.length === 0) return null;
 
         return (
           <div key={category}>
-            <SectionDivider label={category} />
+            <div className="el-section-divider">
+              <span className="el-section-label">{category}</span>
+              <div className="el-section-line" />
+            </div>
             <div className="el-activity-list">
               {group.map((activity, index) => {
                 const isActive = activeActivityName === activity.name;
-
-                const header = (
-                  <>
-                    <h3 className="el-activity-name">{activity.name}</h3>
-                    {activity.highlight && (
-                      <span className="el-highlight-badge">✦ {activity.highlight}</span>
-                    )}
-                    <div className="el-activity-meta">
-                      {activity.skill && (
-                        <span className="el-activity-skill">{activity.skill}</span>
-                      )}
-                      <button
-                        className={`el-set-active-btn${isActive ? ' el-set-active-btn--on' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); toggleActive(activity.name); }}
-                      >
-                        {isActive ? '✓ Active' : 'Set Active'}
-                      </button>
-                    </div>
-                  </>
-                );
+                const rightLabel = activity.highlight
+                  ? `✦ ${activity.highlight}`
+                  : activity.skill || null;
 
                 const isTreatWounds = activity.name === 'Treat Wounds';
 
                 return (
-                  <CollapsibleCard
+                  <ActionRow
                     key={index}
-                    className={`exploration-card${isActive ? ' exploration-card--active' : ''}`}
-                    header={header}
-                    themeColor={activity.highlight ? '#d4a017' : themeColor}
-                    initialExpanded={false}
-                  >
-                    <div className="exploration-traits">
-                      {activity.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
-                    </div>
-                    <div className="exploration-description">{activity.description}</div>
-                    {isTreatWounds && (
-                      <button
-                        className="btn-primary el-treat-btn"
-                        onClick={() => setTreatWoundsOpen(true)}
-                      >
-                        Treat Wounds
-                      </button>
-                    )}
-                  </CollapsibleCard>
+                    glyph="→"
+                    name={activity.name}
+                    rightLabel={rightLabel}
+                    active={isActive}
+                    onClick={() => {
+                      if (isTreatWounds) {
+                        setTreatWoundsOpen(true);
+                      } else {
+                        setOpenActivity(activity);
+                      }
+                    }}
+                  />
                 );
               })}
             </div>
@@ -150,6 +123,20 @@ const ExplorationList = ({ character, characterColor }) => {
         );
       })}
 
+      {/* Activity detail modal */}
+      {openActivity && (
+        <ActionDetailModal
+          item={openActivity}
+          type="activity"
+          isOpen={true}
+          onClose={() => setOpenActivity(null)}
+          themeColor={themeColor}
+          isActive={activeActivityName === openActivity?.name}
+          onSetActive={() => toggleActive(openActivity?.name)}
+        />
+      )}
+
+      {/* Treat Wounds shortcut */}
       {treatWoundsOpen && (
         <TreatWoundsModal
           isOpen

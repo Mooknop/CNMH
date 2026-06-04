@@ -2,19 +2,72 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ActionCardList from './ActionCardList';
 
-jest.mock('../shared/ActionIcon', () => () => <div data-testid="action-icon" />);
+// ActionCardList now renders ActionRows; tapping a row opens ActionDetailModal.
+// Mock both so we control what's rendered without their full dependency trees.
 
-jest.mock('../shared/CollapsibleCard', () =>
-  function DummyCollapsibleCard({ header, headerRight, children, style }) {
+jest.mock('../shared/ActionRow', () =>
+  function DummyActionRow({ name, glyph, rightLabel, active, inactive, onClick }) {
     return (
-      <div data-testid="collapsible-card" style={style}>
-        <div data-testid="card-header">{header}</div>
-        {headerRight && <div data-testid="card-header-right">{headerRight}</div>}
-        <div>{children}</div>
-      </div>
+      <button
+        data-testid="action-row"
+        data-active={active}
+        data-inactive={inactive}
+        onClick={onClick}
+      >
+        {glyph && <span data-testid="row-glyph">{glyph}</span>}
+        <span data-testid="row-name">{name}</span>
+        {rightLabel && <span data-testid="row-chip">{rightLabel}</span>}
+      </button>
     );
   }
 );
+
+jest.mock('../encounter/ActionDetailModal', () => {
+  const React = require('react');
+  return function DummyActionDetailModal({
+    item, type, isOpen, onClose, encounterMode, onUse, isActive, onSetActive,
+  }) {
+    const [cost, setCost] = React.useState((item && item.actionCount) || 1);
+    if (!item || !isOpen) return null;
+    return (
+      <div data-testid="action-detail-modal">
+        {item.description && <p>{item.description}</p>}
+        {item.source && <p>From: {item.source}</p>}
+        {(type === 'reaction' || type === 'free-action') && item.trigger && (
+          <p>{item.trigger}</p>
+        )}
+        {item.active === false && <p>Not in hand — hold this item to use it.</p>}
+        {item.highlight && <span>✦ {item.highlight}</span>}
+        {encounterMode && item.variableActionCount && (
+          <select
+            aria-label={`Action count for ${item.name}`}
+            value={cost}
+            onChange={(e) => setCost(Number(e.target.value))}
+          >
+            {[1, 2, 3]
+              .filter((n) => n >= item.variableActionCount.min && n <= item.variableActionCount.max)
+              .map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        )}
+        {encounterMode && item.active !== false && (
+          <button
+            onClick={() => {
+              const c = type === 'reaction' ? 'reaction'
+                : type === 'free-action' ? 'free'
+                : item.variableActionCount ? cost
+                : (item.actionCount || 1);
+              onUse && onUse(item, c);
+            }}
+          >
+            Use {item.name}
+          </button>
+        )}
+        {encounterMode && item.active === false && <span>Hold</span>}
+        <button onClick={onClose}>Close</button>
+      </div>
+    );
+  };
+});
 
 jest.mock('../shared/TraitTag', () => ({ trait }) => <span>{trait}</span>);
 
@@ -40,76 +93,104 @@ describe('ActionCardList', () => {
     expect(screen.getByText(/No reactions available/)).toBeInTheDocument();
   });
 
-  it('renders a card for each item', () => {
+  it('renders a row for each item', () => {
     const items = [baseItem, { ...baseItem, name: 'Stride', traits: ['Move'] }];
     render(<ActionCardList items={items} type="action" themeColor="#fff" />);
-    expect(screen.getAllByTestId('collapsible-card')).toHaveLength(2);
+    expect(screen.getAllByTestId('action-row')).toHaveLength(2);
   });
 
-  it('renders item names', () => {
+  it('renders item names in rows', () => {
     render(<ActionCardList items={[baseItem]} type="action" themeColor="#fff" />);
-    expect(screen.getByText('Strike')).toBeInTheDocument();
+    expect(screen.getByTestId('row-name')).toHaveTextContent('Strike');
   });
 
-  it('renders trait tags', () => {
+  it('renders first trait as row chip', () => {
     render(<ActionCardList items={[baseItem]} type="action" themeColor="#fff" />);
-    expect(screen.getByText('Attack')).toBeInTheDocument();
+    expect(screen.getByTestId('row-chip')).toHaveTextContent('Attack');
   });
 
-  it('renders item description', () => {
+  it('opens detail modal when a row is clicked', () => {
     render(<ActionCardList items={[baseItem]} type="action" themeColor="#fff" />);
+    expect(screen.queryByTestId('action-detail-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('action-row'));
+    expect(screen.getByTestId('action-detail-modal')).toBeInTheDocument();
+  });
+
+  it('closes modal when close button is clicked', () => {
+    render(<ActionCardList items={[baseItem]} type="action" themeColor="#fff" />);
+    fireEvent.click(screen.getByTestId('action-row'));
+    expect(screen.getByTestId('action-detail-modal')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Close'));
+    expect(screen.queryByTestId('action-detail-modal')).not.toBeInTheDocument();
+  });
+
+  it('renders item description inside the modal', () => {
+    render(<ActionCardList items={[baseItem]} type="action" themeColor="#fff" />);
+    fireEvent.click(screen.getByTestId('action-row'));
     expect(screen.getByText('A basic attack.')).toBeInTheDocument();
   });
 
-  it('shows source when provided', () => {
+  it('shows source when provided (in modal)', () => {
     const item = { ...baseItem, source: 'Power Feat' };
     render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+    fireEvent.click(screen.getByTestId('action-row'));
     expect(screen.getByText(/Power Feat/)).toBeInTheDocument();
   });
 
-  it('shows trigger for reaction-type items', () => {
+  it('shows trigger for reaction-type items (in modal)', () => {
     const reaction = { name: 'Shield Block', trigger: 'You take damage.', traits: [], description: 'Block it.' };
     render(<ActionCardList items={[reaction]} type="reaction" themeColor="#fff" />);
+    fireEvent.click(screen.getByTestId('action-row'));
     expect(screen.getByText('You take damage.')).toBeInTheDocument();
   });
 
-  it('renders variable action count item name', () => {
-    const item = { ...baseItem, name: 'Flexible Strike', actionCount: 1, variableActionCount: { min: 1, max: 3 } };
+  it('renders variable action count item name in row', () => {
+    const item = { ...baseItem, name: 'Flexible Strike', variableActionCount: { min: 1, max: 3 } };
     render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
-    expect(screen.getByText('Flexible Strike')).toBeInTheDocument();
+    expect(screen.getByTestId('row-name')).toHaveTextContent('Flexible Strike');
   });
 
-  it('shows the not-in-hand hint when an item action is inactive', () => {
+  it('shows the not-in-hand hint when an item action is inactive (in modal)', () => {
     const item = { ...baseItem, source: 'Wand', active: false };
     render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+    fireEvent.click(screen.getByTestId('action-row'));
     expect(screen.getByText(/Not in hand/)).toBeInTheDocument();
   });
 
-  it('does not show the hint for active or non-item actions', () => {
+  it('marks inactive rows with the inactive data attribute', () => {
+    const item = { ...baseItem, active: false };
+    render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+    expect(screen.getByTestId('action-row')).toHaveAttribute('data-inactive', 'true');
+  });
+
+  it('does not mark active rows as inactive', () => {
     render(<ActionCardList items={[{ ...baseItem, active: true }]} type="action" themeColor="#fff" />);
-    expect(screen.queryByText(/Not in hand/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('action-row')).toHaveAttribute('data-inactive', 'false');
   });
 
   describe('encounterMode', () => {
-    it('does not show Use button when encounterMode is false', () => {
-      render(<ActionCardList items={[baseItem]} type="action" encounterMode={false} onUse={jest.fn()} />);
+    it('does not show Use button before a row is tapped', () => {
+      render(<ActionCardList items={[baseItem]} type="action" encounterMode onUse={jest.fn()} />);
       expect(screen.queryByRole('button', { name: /Use Strike/ })).toBeNull();
     });
 
-    it('shows Use button in encounter mode', () => {
+    it('shows Use button in encounter mode after tapping row', () => {
       render(<ActionCardList items={[baseItem]} type="action" encounterMode onUse={jest.fn()} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.getByRole('button', { name: 'Use Strike' })).toBeInTheDocument();
     });
 
     it('Use button is present for a 3-action item', () => {
       const item = { ...baseItem, name: 'Triple Strike', actionCount: 3 };
       render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.getByRole('button', { name: 'Use Triple Strike' })).toBeInTheDocument();
     });
 
     it('calls onUse with item and cost when Use is clicked', () => {
       const onUse = jest.fn();
       render(<ActionCardList items={[baseItem]} type="action" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       fireEvent.click(screen.getByRole('button', { name: 'Use Strike' }));
       expect(onUse).toHaveBeenCalledWith(baseItem, 1);
     });
@@ -118,6 +199,7 @@ describe('ActionCardList', () => {
       const onUse = jest.fn();
       const reaction = { name: 'Shield Block', traits: [], description: 'Block.' };
       render(<ActionCardList items={[reaction]} type="reaction" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       fireEvent.click(screen.getByRole('button', { name: 'Use Shield Block' }));
       expect(onUse).toHaveBeenCalledWith(reaction, 'reaction');
     });
@@ -126,13 +208,15 @@ describe('ActionCardList', () => {
       const onUse = jest.fn();
       const fa = { name: 'Release', traits: [], description: 'Drop something.' };
       render(<ActionCardList items={[fa]} type="free-action" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       fireEvent.click(screen.getByRole('button', { name: 'Use Release' }));
       expect(onUse).toHaveBeenCalledWith(fa, 'free');
     });
 
-    it('inactive items show a disabled Hold chip instead of Use', () => {
+    it('inactive items show Hold text instead of Use button', () => {
       const item = { ...baseItem, source: 'Wand', active: false };
       render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.queryByRole('button', { name: /Use Strike/ })).toBeNull();
       expect(screen.getByText('Hold')).toBeInTheDocument();
     });
@@ -140,6 +224,7 @@ describe('ActionCardList', () => {
     it('variable-cost action shows a cost dropdown and Use button', () => {
       const item = { ...baseItem, variableActionCount: { min: 1, max: 3 } };
       render(<ActionCardList items={[item]} type="action" encounterMode onUse={jest.fn()} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.getByRole('combobox', { name: `Action count for ${item.name}` })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Use Strike' })).toBeInTheDocument();
     });
@@ -148,6 +233,7 @@ describe('ActionCardList', () => {
       const onUse = jest.fn();
       const item = { ...baseItem, variableActionCount: { min: 1, max: 3 } };
       render(<ActionCardList items={[item]} type="action" encounterMode onUse={onUse} />);
+      fireEvent.click(screen.getByTestId('action-row'));
       const select = screen.getByRole('combobox', { name: `Action count for ${item.name}` });
       fireEvent.change(select, { target: { value: '3' } });
       fireEvent.click(screen.getByRole('button', { name: 'Use Strike' }));
@@ -156,40 +242,31 @@ describe('ActionCardList', () => {
   });
 
   describe('highlight feature', () => {
-    it('renders highlight badge when item.highlight is set', () => {
+    it('renders highlight badge in modal when item.highlight is set', () => {
       const item = { ...baseItem, highlight: 'Master' };
       render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.getByText(/✦ Master/)).toBeInTheDocument();
     });
 
-    it('renders Legendary badge correctly', () => {
+    it('renders Legendary badge correctly in modal', () => {
       const item = { ...baseItem, highlight: 'Legendary' };
       render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.getByText(/✦ Legendary/)).toBeInTheDocument();
     });
 
-    it('renders Expert badge correctly', () => {
+    it('renders Expert badge correctly in modal', () => {
       const item = { ...baseItem, highlight: 'Expert' };
       render(<ActionCardList items={[item]} type="action" themeColor="#fff" />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.getByText(/✦ Expert/)).toBeInTheDocument();
     });
 
     it('does not render a highlight badge when highlight is not set', () => {
       render(<ActionCardList items={[baseItem]} type="action" themeColor="#fff" />);
+      fireEvent.click(screen.getByTestId('action-row'));
       expect(screen.queryByText(/✦/)).not.toBeInTheDocument();
-    });
-
-    it('applies gold border color style when item is highlighted', () => {
-      const item = { ...baseItem, highlight: 'Master' };
-      render(<ActionCardList items={[item]} type="action" themeColor="#aabbcc" />);
-      const card = screen.getByTestId('collapsible-card');
-      expect(card.style.borderLeft).toContain('#d4a017');
-    });
-
-    it('applies theme color border when item is not highlighted', () => {
-      render(<ActionCardList items={[baseItem]} type="action" themeColor="#aabbcc" />);
-      const card = screen.getByTestId('collapsible-card');
-      expect(card.style.borderLeft).toContain('#aabbcc');
     });
   });
 });

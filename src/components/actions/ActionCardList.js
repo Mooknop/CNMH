@@ -1,50 +1,33 @@
 // src/components/actions/ActionCardList.js
-// Unified renderer for actions, reactions, and free actions.
-// Replaces CharacterActionsList, ReactionsList, and FreeActionsList.
-import React from 'react';
-import CollapsibleCard from '../shared/CollapsibleCard';
-import TraitTag from '../shared/TraitTag';
-import ActionIcon from '../shared/ActionIcon';
-import UseActionChip from '../shared/UseActionChip';
+// Renders a flat list of ActionRows. Tapping a row opens ActionDetailModal.
+// In encounterMode the modal's Use button wires to spendActions / spendReaction.
+import React, { useState } from 'react';
+import ActionRow from '../shared/ActionRow';
+import ActionDetailModal from '../encounter/ActionDetailModal';
 
-const DEGREE_COLORS = {
-  'Critical Success': 'var(--color-success)',
-  'Success':          'var(--color-success-blue)',
-  'Failure':          'var(--color-warning)',
-  'Critical Failure': 'var(--color-crit-fail)',
-};
+const GLYPH = { 1: '◆', 2: '◆◆', 3: '◆◆◆' };
 
-const getDegreeColor = (degree) => {
-  for (const [key, color] of Object.entries(DEGREE_COLORS)) {
-    if (degree.includes(key)) return color;
+const getGlyph = (type, item) => {
+  if (type === 'reaction')    return '↺';
+  if (type === 'free-action') return '⬦';
+  if (item.variableActionCount) {
+    const { min, max } = item.variableActionCount;
+    return `${GLYPH[min] || '◆'}–${GLYPH[max] || '◆◆◆'}`;
   }
-  return 'var(--color-text)';
+  return GLYPH[item.actionCount || 1] || '◆';
 };
 
+const isGoldType = (type) => type === 'reaction' || type === 'free-action';
 
-/**
- * Renders a list of action/reaction/free-action cards in a grid.
- *
- * @param {Object[]} items          - Array of action objects from useCharacter()
- * @param {'action'|'reaction'|'free-action'} type
- * @param {string}   themeColor
- * @param {string}   emptyMessage   - Shown when items is empty
- * @param {boolean}  encounterMode  - When true, shows "Use" buttons per card
- * @param {Function} onUse          - Called with (item, cost) when Use is clicked
- */
-const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage, encounterMode, onUse }) => {
-  const isReactionLike = type === 'reaction' || type === 'free-action';
-  const iconText = type === 'reaction' ? 'Reaction' : type === 'free-action' ? 'Free Action' : null;
-
-  const getActionText = (item) => {
-    if (iconText) return iconText;
-    if (item.variableActionCount) {
-      const { min, max } = item.variableActionCount;
-      return `${min} to ${max} Actions`;
-    }
-    const count = item.actionCount || 1;
-    return `${count} Action${count !== 1 ? 's' : ''}`;
-  };
+const ActionCardList = ({
+  items = [],
+  type = 'action',
+  themeColor,
+  emptyMessage,
+  encounterMode = false,
+  onUse,
+}) => {
+  const [openItem, setOpenItem] = useState(null);
 
   if (items.length === 0) {
     return (
@@ -55,119 +38,40 @@ const ActionCardList = ({ items = [], type = 'action', themeColor, emptyMessage,
   }
 
   return (
-    <div className="cards-grid">
-      {items.map((item, index) => {
-        const actionText = getActionText(item);
-        const highlightColor = '#d4a017';
-        const cardColor = item.highlight ? highlightColor : themeColor;
-        // Item-granted actions are gated on the item being held (see
-        // itemState.itemAbilitiesActive). active === false ⇒ show but
-        // disabled; undefined/true (character/feat actions) ⇒ always usable.
-        const inactive = item.active === false;
+    <>
+      <div className="action-row-list">
+        {items.map((item, index) => {
+          const glyph     = getGlyph(type, item);
+          const goldGlyph = isGoldType(type);
+          // Primary trait chip for the right label
+          const rightLabel = item.traits?.[0] ?? null;
 
-        const chipCost =
-          type === 'reaction' ? 'reaction'
-          : type === 'free-action' ? 'free'
-          : item.actionCount || 1;
-
-        const headerRight = encounterMode
-          ? (
-            <UseActionChip
-              cost={chipCost}
-              verb="Use"
+          return (
+            <ActionRow
+              key={`${type}-${index}`}
+              glyph={glyph}
+              glyphColor={goldGlyph ? 'gold' : undefined}
               name={item.name}
-              inactive={inactive}
-              variableRange={type === 'action' ? item.variableActionCount : undefined}
-              onUse={(c) => onUse && onUse(item, c)}
+              rightLabel={rightLabel}
+              inactive={item.active === false}
+              onClick={() => setOpenItem(item)}
             />
-          )
-          : null;
+          );
+        })}
+      </div>
 
-        const header = (
-          <>
-            <h3 style={{ color: themeColor }}>{item.name}</h3>
-            {item.highlight && (
-              <span style={{
-                color: highlightColor,
-                fontSize: '0.7rem',
-                fontWeight: '700',
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap',
-                marginLeft: '0.4rem',
-              }}>
-                ✦ {item.highlight}
-              </span>
-            )}
-            <div className={`${type}-icon`}>
-              <ActionIcon actionText={item.actions || actionText} color={themeColor} />
-            </div>
-          </>
-        );
-
-        const content = (
-          <>
-            <div className={`${type}-traits`}>
-              {item.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
-            </div>
-
-            {/* Trigger — only for reactions / free actions */}
-            {isReactionLike && item.trigger && (
-              <div className={`${type}-trigger`}>
-                <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
-                <span className="trigger-text">{item.trigger}</span>
-              </div>
-            )}
-
-            {item.description && (
-              <div className={`${type}-description`}>{item.description}</div>
-            )}
-
-            {/* Degrees of success — actions only */}
-            {type === 'action' && item.degrees && (
-              <div className="action-degrees">
-                <span className="degrees-label" style={{ color: themeColor, fontWeight: 'bold', display: 'block', marginTop: '0.75rem', marginBottom: '0.5rem' }}>
-                  Degrees of Success:
-                </span>
-                {Object.entries(item.degrees).map(([degree, effect], i) => (
-                  <div key={i} className="degree-entry" style={{ marginBottom: '0.5rem', paddingLeft: '1rem' }}>
-                    <span className="degree-level" style={{ fontWeight: 'bold', color: getDegreeColor(degree) }}>
-                      {degree}:
-                    </span>
-                    <span className="degree-effect" style={{ marginLeft: '0.5rem' }}>{effect}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {inactive && (
-              <div className="ability-inactive-hint">
-                Not in hand — hold this item to use it.
-              </div>
-            )}
-
-            {item.source && (
-              <div className={`${type}-source`}>
-                From: {item.source}
-              </div>
-            )}
-          </>
-        );
-
-        return (
-          <CollapsibleCard
-            key={`${type}-${index}`}
-            className={`${type}-card${inactive ? ' is-inactive' : ''}`}
-            header={header}
-            headerRight={headerRight}
-            themeColor={cardColor}
-            style={{ borderLeft: `4px solid ${cardColor}` }}
-          >
-            {content}
-          </CollapsibleCard>
-        );
-      })}
-    </div>
+      {openItem && (
+        <ActionDetailModal
+          item={openItem}
+          type={type}
+          isOpen={true}
+          onClose={() => setOpenItem(null)}
+          themeColor={themeColor}
+          encounterMode={encounterMode}
+          onUse={onUse}
+        />
+      )}
+    </>
   );
 };
 

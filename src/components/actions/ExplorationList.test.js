@@ -2,14 +2,43 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ExplorationList from './ExplorationList';
 
-jest.mock('../shared/CollapsibleCard', () =>
-  function DummyCollapsibleCard({ header, children }) {
+// ExplorationList now renders ActionRows + opens ActionDetailModal on tap.
+// Mock both to isolate ExplorationList behaviour.
+
+jest.mock('../shared/ActionRow', () =>
+  function DummyActionRow({ name, rightLabel, active, onClick }) {
     return (
-      <div data-testid="collapsible-card">
-        <div data-testid="card-header">{header}</div>
-        <div>{children}</div>
+      <button data-testid="action-row" data-active={active} onClick={onClick}>
+        <span data-testid="row-name">{name}</span>
+        {rightLabel && <span data-testid="row-chip">{rightLabel}</span>}
+      </button>
+    );
+  }
+);
+
+jest.mock('../encounter/ActionDetailModal', () =>
+  function DummyActionDetailModal({ item, type, isOpen, onClose, isActive, onSetActive }) {
+    if (!item || !isOpen) return null;
+    return (
+      <div data-testid="activity-detail-modal">
+        <span>{item.name}</span>
+        {type === 'activity' && onSetActive && (
+          <button
+            onClick={() => { onSetActive(); onClose(); }}
+          >
+            {isActive ? '✓ Active — Clear' : 'Set as active'}
+          </button>
+        )}
+        <button onClick={onClose}>Close</button>
       </div>
     );
+  }
+);
+
+jest.mock('../encounter/TreatWoundsModal', () =>
+  function DummyTreatWoundsModal({ isOpen, onClose }) {
+    if (!isOpen) return null;
+    return <div data-testid="treat-wounds-modal"><button onClick={onClose}>Close</button></div>;
   }
 );
 
@@ -109,23 +138,26 @@ describe('ExplorationList', () => {
     expect(screen.getAllByText('Healing').length).toBeGreaterThan(0);
   });
 
-  it('shows highlight badge when relevant skill is Expert or better', () => {
+  it('shows highlight badge as row chip when relevant skill is Expert or better', () => {
     const { useCharacter } = require('../../hooks/useCharacter');
     useCharacter.mockReturnValue(makeCharacterModel({ skillProficiencies: { stealth: 2 } }));
     render(<ExplorationList character={mockCharacter} />);
-    expect(screen.getByText(/✦ Expert/)).toBeInTheDocument();
+    const chips = screen.getAllByTestId('row-chip');
+    expect(chips.some((c) => c.textContent.includes('✦ Expert'))).toBe(true);
   });
 
-  it('shows Master badge when skill is rank 3', () => {
+  it('shows Master badge in row chip when skill is rank 3', () => {
     const { useCharacter } = require('../../hooks/useCharacter');
     useCharacter.mockReturnValue(makeCharacterModel({ skillProficiencies: { perception: 3 } }));
     render(<ExplorationList character={mockCharacter} />);
-    expect(screen.getAllByText(/✦ Master/).length).toBeGreaterThan(0);
+    const chips = screen.getAllByTestId('row-chip');
+    expect(chips.some((c) => c.textContent.includes('✦ Master'))).toBe(true);
   });
 
   it('shows no highlight badge when all skills are below Expert', () => {
     render(<ExplorationList character={mockCharacter} />);
-    expect(screen.queryByText(/✦/)).not.toBeInTheDocument();
+    const chips = screen.queryAllByTestId('row-chip');
+    expect(chips.every((c) => !c.textContent.includes('✦'))).toBe(true);
   });
 
   it('shows active activity banner when an activity is selected', () => {
@@ -140,10 +172,20 @@ describe('ExplorationList', () => {
     expect(screen.queryByText('Active Activity')).not.toBeInTheDocument();
   });
 
-  it('calls setter when Set Active button is clicked', () => {
+  it('opens activity detail modal when a row is clicked', () => {
     render(<ExplorationList character={mockCharacter} />);
-    const buttons = screen.getAllByRole('button', { name: 'Set Active' });
-    fireEvent.click(buttons[0]);
+    const rows = screen.getAllByTestId('action-row');
+    fireEvent.click(rows[0]);
+    expect(screen.getByTestId('activity-detail-modal')).toBeInTheDocument();
+  });
+
+  it('calls setter when Set as active button is clicked in modal', () => {
+    render(<ExplorationList character={mockCharacter} />);
+    const rows = screen.getAllByTestId('action-row');
+    // Find a non-Treat-Wounds row (Treat Wounds opens TreatWoundsModal instead)
+    const nonTWRow = rows.find((r) => !r.textContent.includes('Treat Wounds'));
+    fireEvent.click(nonTWRow);
+    fireEvent.click(screen.getByRole('button', { name: 'Set as active' }));
     expect(mockSetter).toHaveBeenCalled();
   });
 
@@ -154,9 +196,27 @@ describe('ExplorationList', () => {
     expect(mockSetter).toHaveBeenCalledWith(null);
   });
 
-  it('shows Active button label for the selected activity', () => {
+  it('shows Active — Clear label for the selected activity in modal', () => {
     require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Hustle', mockSetter]);
     render(<ExplorationList character={mockCharacter} />);
-    expect(screen.getByRole('button', { name: /✓ Active/ })).toBeInTheDocument();
+    // Find the Hustle row (it will be marked active)
+    const hustleRow = screen.getAllByTestId('action-row').find(
+      (r) => r.querySelector('[data-testid="row-name"]')?.textContent === 'Hustle'
+    );
+    expect(hustleRow).toBeTruthy();
+    fireEvent.click(hustleRow);
+    expect(screen.getByRole('button', { name: /✓ Active — Clear/ })).toBeInTheDocument();
+  });
+
+  it('opens TreatWoundsModal directly when Treat Wounds row is clicked', () => {
+    const { useCharacter } = require('../../hooks/useCharacter');
+    useCharacter.mockReturnValue(makeCharacterModel({ skillProficiencies: { medicine: 1 } }));
+    render(<ExplorationList character={mockCharacter} />);
+    const twRow = screen.getAllByTestId('action-row').find(
+      (r) => r.querySelector('[data-testid="row-name"]')?.textContent === 'Treat Wounds'
+    );
+    expect(twRow).toBeTruthy();
+    fireEvent.click(twRow);
+    expect(screen.getByTestId('treat-wounds-modal')).toBeInTheDocument();
   });
 });

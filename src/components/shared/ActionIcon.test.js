@@ -22,10 +22,12 @@ describe('ActionIcon', () => {
     expect(icons).toHaveLength(1);
   });
 
-  it('should render multiple action icons', () => {
+  it('should render multiple action icons as a single glyph', () => {
     const { container } = render(<ActionIcon actionText="Three Actions" />);
     const icons = container.querySelectorAll('.action-icon');
-    expect(icons).toHaveLength(3);
+    // Three actions now render as one ◆◆◆ glyph span, not three separate icons
+    expect(icons).toHaveLength(1);
+    expect(icons[0].textContent).toBe('◆◆◆');
   });
 
   it('should render reaction icon', () => {
@@ -57,12 +59,13 @@ describe('ActionIcon', () => {
     expect(mediumContainer.querySelector('.action-icon-medium')).toBeInTheDocument();
   });
 
-  it('should apply custom color style', () => {
+  it('should render without crashing when color prop is passed', () => {
+    // Color now comes from var(--accent-text) in CSS, not from an inline style prop.
+    // Verify the component still renders without errors.
     const { container } = render(
       <ActionIcon actionText="One Action" color="#ff0000" />
     );
-    const icon = container.querySelector('.action-icon');
-    expect(icon).toHaveStyle('color: #ff0000');
+    expect(container.querySelector('.action-icon')).toBeInTheDocument();
   });
 
   it('should show tooltip when showTooltip is true', () => {
@@ -82,10 +85,12 @@ describe('ActionIcon', () => {
     expect(tooltip).not.toBeInTheDocument();
   });
 
-  it('should handle two actions text', () => {
+  it('should handle two actions text as a single glyph', () => {
     const { container } = render(<ActionIcon actionText="Two Actions" />);
     const icons = container.querySelectorAll('.action-icon');
-    expect(icons).toHaveLength(2);
+    // Two actions render as one ◆◆ glyph span
+    expect(icons).toHaveLength(1);
+    expect(icons[0].textContent).toBe('◆◆');
   });
 
   it('should be case-insensitive', () => {

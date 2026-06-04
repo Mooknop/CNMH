@@ -1,93 +1,77 @@
-/* src/components/shared/ActionIcon.css */
+/* ActionIcon — Cinzel action-economy glyphs (◆ ◆◆ ◆◆◆ ↺ ⬦) */
+
+.action-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
 
 .action-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    line-height: 1;
-    margin: 0 1px;
-  }
-  
-  .action-icon-small {
-    font-size: 0.9rem;
-  }
-  
-  .action-icon-medium {
-    font-size: 1.2rem;
-  }
-  
-  .action-icon-large {
-    font-size: 1.5rem;
-  }
-  
-  .action-count {
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .variable-action-count {
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .variable-action-count .action-range-separator {
-    margin: 0 2px;
-  }
-  
-  .reaction-icon {
-    color: var(--color-theme, var(--theme-accent));
-  }
-  
-  .free-action-icon {
-    color: var(--color-theme, var(--theme-accent));
-  }
-  
-  /* Tooltip styles */
-  .action-icon-wrapper {
-    position: relative;
-    display: inline-flex;
-  }
-  
-  .action-icon-wrapper:hover .action-tooltip {
-    visibility: visible;
-    opacity: 1;
-  }
-  
-  .action-tooltip {
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    font-size: 0.8rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-sm);
-    white-space: nowrap;
-    transition: opacity 0.2s ease-in-out;
-    pointer-events: none;
-    z-index: var(--z-modal-overlay);
-    margin-bottom: 5px;
-  }
-  
-  .action-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
-  }
-  
-  /* Make tooltips more accessible on mobile devices */
-  @media (max-width: 768px) {
-    .action-tooltip {
-      font-size: 0.7rem;
-      padding: 0.2rem 0.4rem;
-    }
-  }
+  font-family: var(--font-display);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--accent-text);
+  letter-spacing: -1px;
+}
+
+/* Reaction and free action use gold to distinguish from standard pips */
+.action-icon--reaction,
+.action-icon--free {
+  color: var(--gold-mid);
+}
+
+.action-range-separator {
+  margin: 0 2px;
+  color: var(--shell-text-tertiary);
+  font-size: 0.7em;
+}
+
+/* Size variants */
+.action-icon-small  .action-icon { font-size: 0.75rem; }
+.action-icon-medium .action-icon { font-size: 0.9rem;  }
+.action-icon-large  .action-icon { font-size: 1.1rem;  }
+
+.action-count,
+.variable-action-count {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Tooltip */
+.action-icon-wrapper:hover .action-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.action-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--void-deepest);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  pointer-events: none;
+  z-index: var(--z-modal-overlay);
+}
+
+.action-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -4px;
+  border: 4px solid transparent;
+  border-top-color: var(--shell-border-strong);
+}
