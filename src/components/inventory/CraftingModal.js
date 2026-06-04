@@ -30,16 +30,22 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
+      {/* 3-tab pill-strip navigation */}
       <div className="crafting-tabs">
         <button
-          className={`tab-button ${activeTab === 'rules' ? 'active' : ''}`}
+          className={`crafting-tab${activeTab === 'rules' ? ' crafting-tab--active' : ''}`}
           onClick={() => setActiveTab('rules')}
         >
-          Crafting Rules
+          Rules
         </button>
         <button
-          className={`tab-button ${activeTab === 'recipes' ? 'active' : ''}`}
+          className={`crafting-tab${activeTab === 'earnings' ? ' crafting-tab--active' : ''}`}
+          onClick={() => setActiveTab('earnings')}
+        >
+          Earnings
+        </button>
+        <button
+          className={`crafting-tab${activeTab === 'recipes' ? ' crafting-tab--active' : ''}`}
           onClick={() => setActiveTab('recipes')}
         >
           Known Recipes ({knownRecipes.length})
@@ -47,95 +53,68 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
       </div>
 
       {/* Tab Content */}
-      <div className="tab-content">
+      <div className="crafting-tab-content">
+
+        {/* ── Rules ─────────────────────────────────────────── */}
         {activeTab === 'rules' && (
           <div className="crafting-rules">
             <div className="rules-section">
               <h3>Craft Activity</h3>
               <div className="activity-header">
-                <span className="activity-time">8-16 hours (or more)</span>
-                <span className="activity-traits">Concentrate, Exploration, Manipulate</span>
+                <span className="activity-time">8–16 hours (or more)</span>
+                <span className="activity-traits">Concentrate · Exploration · Manipulate</span>
               </div>
 
               <div className="requirements-section">
                 <h4>Requirements</h4>
                 <ul>
                   <li>The item is Common, or you have a crafting recipe for it.</li>
-                  <li>If the item is 9th level or higher, you must be a master in Crafting, and if it's 17th or higher, you must be legendary.</li>
-                  <li>You have an appropriate set of tools and, in many cases, a workshop. For example, you need access to a smithy to forge a metal shield, or an alchemist's lab to produce alchemical items.</li>
-                  <li>You must have raw materials worth at least half the item's Price. If you're in a settlement, you can usually spend currency to get the amount of raw materials you need, except in the case of rarer precious materials.</li>
+                  <li>If the item is 9th level or higher, you must be a master in Crafting; 17th or higher requires legendary.</li>
+                  <li>You have an appropriate set of tools and, in many cases, a workshop.</li>
+                  <li>You must have raw materials worth at least half the item's Price.</li>
                 </ul>
               </div>
 
               <div className="description-section">
                 <p>
                   You attempt a Crafting check after you spend 16 hours of work (2 days), or 8 hours (1 day) if you have the item's formula.
-                  These hours need not be consecutive, but must be done in 1 hour increments.
                 </p>
-
                 <p>
-                  If your attempt to create the item is successful, you expend the raw materials you
-                  supplied. You can pay the remaining portion of the item's Price in materials to
-                  complete the item immediately, or you can spend additional downtime days working on
-                  the item to reduce the materials needed. For each additional day you spend, reduce
-                  the value of the materials you need to expend to complete the item. This amount is
-                  determined using the Income Earned table, based on your proficiency rank in Crafting
-                  and using your own level as the task level.
-                </p>
-
-                <p>
-                  If your attempt to create the item is successful, you expend the raw materials you
-                  supplied. You can pay the remaining portion of the item's Price in materials to
-                  complete the item immediately, or you can spend additional downtime days working on
-                  the item to reduce the materials needed.
+                  If your attempt to create the item is successful, you expend the raw materials you supplied.
+                  You can pay the remaining portion of the item's Price in materials to complete the item immediately,
+                  or spend additional downtime days working to reduce the materials needed.
                 </p>
               </div>
 
               <div className="degrees-section">
                 <h4>Degrees of Success</h4>
-                <div className="degree-entry">
-                  <span className="degree-level critical-success">Critical Success:</span>
+                <div className="degree-entry degree-entry--crit-success">
+                  <span className="degree-level">Critical Success</span>
                   <span className="degree-description">
                     Your attempt is successful. Each additional day spent Crafting reduces the materials
-                    needed to complete the item by an amount based on your level + 1 and your proficiency rank.
+                    needed by an amount based on your level + 1 and your proficiency rank.
                   </span>
                 </div>
-                <div className="degree-entry">
-                  <span className="degree-level success">Success:</span>
+                <div className="degree-entry degree-entry--success">
+                  <span className="degree-level">Success</span>
                   <span className="degree-description">
-                    Your attempt is successful. Each additional day spent Crafting reduces the materials
-                    needed to complete the item by an amount based on your level and your proficiency rank.
+                    Your attempt is successful. Each additional day reduces materials based on your level
+                    and proficiency rank.
                   </span>
                 </div>
-                <div className="degree-entry">
-                  <span className="degree-level failure">Failure:</span>
+                <div className="degree-entry degree-entry--failure">
+                  <span className="degree-level">Failure</span>
                   <span className="degree-description">
                     You fail to complete the item. You can salvage the raw materials you supplied for
                     their full value. If you want to try again, you must start over.
                   </span>
                 </div>
-                <div className="degree-entry">
-                  <span className="degree-level critical-failure">Critical Failure:</span>
+                <div className="degree-entry degree-entry--crit-failure">
+                  <span className="degree-level">Critical Failure</span>
                   <span className="degree-description">
                     You fail to complete the item. You ruin 10% of the raw materials you supplied,
-                    but you can salvage the rest. If you want to try again, you must start over.
+                    but can salvage the rest. If you want to try again, you must start over.
                   </span>
-                </div>
-              </div>
-
-              <div className="earnings-section">
-                <h4>Crafting Earnings</h4>
-                <div className="earnings-table">
-                  <div className="table-header">
-                    <span></span>
-                    <span>Critical Success</span>
-                    <span>Success</span>
-                  </div>
-                  <div className="table-row">
-                    <span>8hrs of work saves: </span>
-                    <span>9 sp</span>
-                    <span>7 sp</span>
-                  </div>
                 </div>
               </div>
 
@@ -143,21 +122,16 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
                 <h4>Special Rules</h4>
                 <ul>
                   <li>
-                    <strong>Alchemical and Magical Items</strong> If you want to Craft alchemical items
-                    or magic items, you need to select the skill feat for Alchemical Crafting or Magical
-                    Crafting in addition to being trained.
+                    <strong>Alchemical and Magical Items</strong> — Requires the Alchemical Crafting
+                    or Magical Crafting skill feat in addition to being trained.
                   </li>
                   <li>
-                    <strong>Consumables and Ammunition</strong> You can Craft items with the consumable
-                    trait in batches, making up to four of the same item at once with a single check.
-                    This requires you to include the raw materials for all the items in the batch at the
-                    start, and you must complete the batch all at once.
+                    <strong>Consumables and Ammunition</strong> — You can Craft up to four identical
+                    consumable items at once with a single check.
                   </li>
                   <li>
-                    <strong>Formulas</strong> A written formula for an item helps you create it with less
-                    difficulty. This has two functions. First, it reduces the time needed to start Crafting
-                    from 2 days to 1, as you have less preparation to do. Second, you can Craft uncommon
-                    and rarer items if you're able to acquire their formulas.
+                    <strong>Formulas</strong> — Reduces start time from 2 days to 1, and lets you
+                    Craft uncommon and rarer items if you have their formulas.
                   </li>
                 </ul>
               </div>
@@ -165,6 +139,48 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
           </div>
         )}
 
+        {/* ── Earnings ──────────────────────────────────────── */}
+        {activeTab === 'earnings' && (
+          <div className="crafting-earnings">
+            <p className="earnings-intro">
+              For each additional day you spend after the first 2, reduce the remaining materials
+              needed based on your Crafting proficiency and character level (Income Earned table).
+              Below are approximate savings per 8-hour work period.
+            </p>
+            <table className="earnings-table" aria-label="Crafting earnings by degree of success">
+              <thead>
+                <tr>
+                  <th>Result</th>
+                  <th>Savings / 8 hrs</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="earnings-row earnings-row--crit-success">
+                  <td className="earnings-degree">Critical Success</td>
+                  <td className="earnings-value">9 sp</td>
+                </tr>
+                <tr className="earnings-row earnings-row--success">
+                  <td className="earnings-degree">Success</td>
+                  <td className="earnings-value">7 sp</td>
+                </tr>
+                <tr className="earnings-row earnings-row--failure">
+                  <td className="earnings-degree">Failure</td>
+                  <td className="earnings-value">2 sp</td>
+                </tr>
+                <tr className="earnings-row earnings-row--crit-failure">
+                  <td className="earnings-degree">Critical Failure</td>
+                  <td className="earnings-value">—</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="earnings-note">
+              Actual savings scale with your character level and proficiency rank.
+              These values reflect a level-appropriate baseline.
+            </p>
+          </div>
+        )}
+
+        {/* ── Recipes ───────────────────────────────────────── */}
         {activeTab === 'recipes' && (
           <div className="known-recipes">
             {knownRecipes.length > 0 ? (
@@ -192,9 +208,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
                                 <span className="type-price">{type.price} gp</span>
                                 <span className="type-dc">DC {getLevelBasedDc(type.level)}</span>
                               </div>
-                              <div className="type-effect">
-                                {type.effect}
-                              </div>
+                              <div className="type-effect">{type.effect}</div>
                             </div>
                           ))}
                         </div>
@@ -214,6 +228,7 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
             )}
           </div>
         )}
+
       </div>
     </Modal>
   );

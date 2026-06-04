@@ -33,9 +33,26 @@ describe('CraftingModal', () => {
     expect(screen.getByText('Crafting')).toBeInTheDocument();
   });
 
-  it('shows Crafting Rules tab content by default', () => {
+  it('shows Rules tab content by default', () => {
     render(<CraftingModal isOpen={true} onClose={jest.fn()} character={baseCharacter} />);
     expect(screen.getByText('Craft Activity')).toBeInTheDocument();
+  });
+
+  it('shows all three tab buttons', () => {
+    render(<CraftingModal isOpen={true} onClose={jest.fn()} character={baseCharacter} />);
+    expect(screen.getByRole('button', { name: 'Rules' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Earnings' })).toBeInTheDocument();
+    expect(screen.getByText(/Known Recipes/)).toBeInTheDocument();
+  });
+
+  it('switches to Earnings tab and shows degree-colored rows', () => {
+    render(<CraftingModal isOpen={true} onClose={jest.fn()} character={baseCharacter} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Earnings' }));
+    expect(screen.getByText('Critical Success')).toBeInTheDocument();
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('Failure')).toBeInTheDocument();
+    expect(screen.getByText('Critical Failure')).toBeInTheDocument();
+    expect(screen.queryByText('Craft Activity')).toBeNull();
   });
 
   it('switches to Known Recipes tab on click', () => {
@@ -45,10 +62,10 @@ describe('CraftingModal', () => {
     expect(screen.queryByText('Craft Activity')).toBeNull();
   });
 
-  it('switches back to Crafting Rules tab on click', () => {
+  it('switches back to Rules tab from Recipes', () => {
     render(<CraftingModal isOpen={true} onClose={jest.fn()} character={baseCharacter} />);
     fireEvent.click(screen.getByText(/Known Recipes/));
-    fireEvent.click(screen.getByText('Crafting Rules'));
+    fireEvent.click(screen.getByRole('button', { name: 'Rules' }));
     expect(screen.getByText('Craft Activity')).toBeInTheDocument();
   });
 
