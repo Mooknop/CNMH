@@ -19,7 +19,7 @@ const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, 
   return (
     <div className="innate-spells-container">
       <div className="innate-details">
-        <h3 style={{ color: themeColor }}>Innate Spellcasting</h3>
+        <h3 >Innate Spellcasting</h3>
         <p className="innate-description">
           Innate spells are magical abilities that you can cast without a spellcasting class. These often come from
           your ancestry, feats, or other special abilities. Unlike normal spells, innate spells don't require spell slots.
@@ -27,7 +27,7 @@ const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, 
         
         {/* Innate casting rules section */}
         <div className="bloodline-info">
-          <h3 style={{ color: themeColor }}>Innate Spellcasting Rules</h3>
+          <h3 >Innate Spellcasting Rules</h3>
           <p className="bloodline-description">
             Innate spells don't use spell slots, and you can cast them a specified number of times per day.
             If an innate spell is a cantrip, you can cast it at will, as often as you want.

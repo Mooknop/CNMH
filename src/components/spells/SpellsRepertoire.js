@@ -90,20 +90,19 @@ const SpellsRepertoire = ({
         return (
           <div className="repertoire-rank-section" key={rank}>
             <div className="rank-section-header">
-              <span className="rank-label" style={{ color: themeColor }}>
+              <span className="rank-label" >
                 {rank === 'cantrips' ? 'Cantrips' : `Rank ${rank}`}
               </span>
               {rank !== 'cantrips' && total > 0 && (
                 <button
                   className="slot-bar"
-                  style={{ borderColor: themeColor }}
                   disabled={remaining === 0}
                   onClick={() => handleSpend(rank)}
                   aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining`}
                 >
                   <span
                     className="slot-bar-fill"
-                    style={{ width: `${(remaining / total) * 100}%`, backgroundColor: themeColor }}
+                    style={{ width: `${(remaining / total) * 100}%` }}
                   />
                   <span className="slot-bar-label">{remaining}/{total}</span>
                 </button>
@@ -124,10 +123,10 @@ const SpellsRepertoire = ({
 
       {character?.spellcasting?.bloodline != null && (
         <div className="bloodline-info">
-          <h3 style={{ color: themeColor }}>Imperial Blood Magic:</h3>
+          <h3 >Imperial Blood Magic:</h3>
           <p className="bloodline-magic-effect">Whenever you cast a bloodline spell you choose one blood magic effect you know to benefit from.</p>
           <div className="bloodline-info">
-            <h3 style={{ color: themeColor }}>Imperious Defense</h3>
+            <h3 >Imperious Defense</h3>
             <span className="bloodline-magic-effect">{character.spellcasting.bloodline.blood_magic}</span>
           </div>
         </div>

@@ -27,7 +27,7 @@ const SpellFilters = ({
       {(rankList.length > 2 || defenseTypes.length > 2 )&& (<div className="defense-filter">
         {rankList.length > 2 && (
           <div>
-            <span className="filter-label" style={{ color: themeColor }}>
+            <span className="filter-label" >
               Spell Rank:
             </span>
             <div className="spell-level-tabs">
@@ -36,10 +36,6 @@ const SpellFilters = ({
                   key={rank}
                   className={`spell-level-tab ${activeSpellRank === rank ? 'active' : ''}`}
                   onClick={() => setActiveSpellRank(rank)}
-                  style={{ 
-                    backgroundColor: activeSpellRank === rank ? themeColor : '',
-                    borderColor: activeSpellRank === rank ? themeColor : ''
-                  }}
                 >
                   {formatSpellRank(rank)}
                 </button>
@@ -51,7 +47,7 @@ const SpellFilters = ({
         {/* Defense type filter */}
         {defenseTypes.length > 2 && (
           <div>
-            <span className="filter-label" style={{ color: themeColor }}>
+            <span className="filter-label" >
               Defense:
             </span>
             <div className="defense-buttons">

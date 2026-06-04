@@ -34,18 +34,20 @@
 }
 
 .eld-source-selector label {
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--shell-text-primary);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-theme, var(--ember-light));
 }
 
 .eld-source-selector select {
   flex: 1;
   max-width: 300px;
   padding: 0.5rem;
-  border: 1px solid var(--shell-border-strong);
+  border: 1px solid var(--color-theme, var(--shell-border-strong));
   border-radius: var(--radius-sm);
-  font-size: 1rem;
+  font-size: var(--text-sm);
   background: rgba(255, 255, 255, 0.05);
   color: var(--shell-text-primary);
   cursor: pointer;

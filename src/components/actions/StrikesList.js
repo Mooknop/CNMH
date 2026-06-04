@@ -58,7 +58,7 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
 
     const header = (
       <>
-        <h3 style={{ color: themeColor }}>{strike.name}</h3>
+        <h3>{strike.name}</h3>
         <div className="action-icons">
           <ActionIcon
             actionText={strike.actions || getActionText(strike)}
@@ -92,16 +92,16 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
         <div className="strike-details">
           <div className="strike-attack">
             <span className="detail-label">Attack</span>
-            <span className="detail-value" style={{ color: themeColor }}>{formatModifier(strike.attackMod)}</span>
+            <span className="detail-value">{formatModifier(strike.attackMod)}</span>
           </div>
           <div className="strike-damage">
             <span className="detail-label">Damage</span>
-            <span className="detail-value" style={{ color: themeColor }}>{strike.damage}</span>
+            <span className="detail-value">{strike.damage}</span>
           </div>
           {(strike.type === 'ranged' || strike.range) && (
             <div className="strike-range">
               <span className="detail-label">Range</span>
-              <span className="detail-value" style={{ color: themeColor }}>
+              <span className="detail-value">
                 {strike.range || '30 feet'}
               </span>
             </div>
@@ -133,7 +133,6 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
         header={header}
         headerRight={headerRight}
         themeColor={themeColor}
-        style={{ borderLeft: `4px solid ${themeColor}` }}
       >
         {content}
       </CollapsibleCard>
@@ -152,15 +151,7 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
           {/* Melee Strikes Section */}
           {meleeStrikes.length > 0 && (
             <div className="strikes-section">
-              <h3 className="strike-category-header" style={{
-                color: themeColor,
-                borderBottom: `1px solid ${themeColor}`,
-                paddingBottom: '0.5rem',
-                marginTop: '1rem',
-                marginBottom: '1rem'
-              }}>
-                Melee Strikes
-              </h3>
+              <h3 className="strike-category-header">Melee Strikes</h3>
               <div className="cards-grid">
                 {meleeStrikes.map((strike, index) => renderStrikeCard(strike, `melee-${index}`))}
               </div>
@@ -170,15 +161,7 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
           {/* Ranged Strikes Section */}
           {rangedStrikes.length > 0 && (
             <div className="strikes-section">
-              <h3 className="strike-category-header" style={{ 
-                color: themeColor,
-                borderBottom: `1px solid ${themeColor}`,
-                paddingBottom: '0.5rem',
-                marginTop: '2rem',
-                marginBottom: '1rem'
-              }}>
-                Ranged Strikes
-              </h3>
+              <h3 className="strike-category-header">Ranged Strikes</h3>
               <div className="cards-grid">
                 {rangedStrikes.map((strike, index) => renderStrikeCard(strike, `ranged-${index}`))}
               </div>

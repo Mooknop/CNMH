@@ -16,7 +16,7 @@ const EffectsPanel = ({ charId, themeColor }) => {
   return (
     <div className="effects-panel" aria-label="Active effects">
       <div className="effects-panel-header">
-        <span className="effects-panel-title" style={{ color: themeColor }}>
+        <span className="effects-panel-title">
           EFFECTS
         </span>
         <span className="effects-panel-count">{effects.length}</span>

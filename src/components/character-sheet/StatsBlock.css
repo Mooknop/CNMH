@@ -412,6 +412,15 @@
   }
 }
 
+/* Conditions button alert state — gold highlight */
+.condition-box--active {
+  border-color: var(--color-condition-highlight) !important;
+}
+
+.condition-box--active .defense-name {
+  color: var(--color-condition-highlight);
+}
+
 /* ── Dark shell overrides ────────────────────────────────── */
 
 .cs-content .stats-block {

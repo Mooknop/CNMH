@@ -38,7 +38,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
   const header = (
     <div className="spell-header-compact">
       <div className="spell-header-top">
-        <h3 className="spell-name" style={{ color: themeColor }}>
+        <h3 className="spell-name" >
           {spell.name}
           {spell.signature && <span className="spell-sig-glyph" title="Signature Spell"> ★</span>}
           {spell.bloodline && !spell.signature && <span className="spell-bloodline-glyph" title="Bloodline Spell"> ✦</span>}
@@ -47,7 +47,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
           {spell.actions && (
             <ActionIcon actionText={spell.actions} color={themeColor} size="small" />
           )}
-          <span className="spell-rank-badge" style={{ color: themeColor }}>
+          <span className="spell-rank-badge" >
             {spell.level === 0
               ? `C${Math.ceil((characterLevel || 1) / 2)}`
               : `R${spell.level}`}
@@ -131,21 +131,21 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
 
       {spell.trigger && (
         <div className="reaction-trigger">
-          <span className="trigger-label" style={{ color: themeColor }}>Trigger</span>
+          <span className="trigger-label" >Trigger</span>
           <span className="trigger-text">{spell.trigger}</span>
         </div>
       )}
 
       {spell.bloodline && character?.spellcasting?.bloodline?.blood_magic && (
         <div className="spell-blood-magic">
-          <span className="blood-magic-label" style={{ color: themeColor }}>Blood Magic:</span>
+          <span className="blood-magic-label" >Blood Magic:</span>
           <p className="blood-magic-effect">{character.spellcasting.bloodline.blood_magic}</p>
         </div>
       )}
 
       {spell.signature && (
         <div className="signature-explanation">
-          <span className="signature-label" style={{ color: themeColor }}>Signature Spell:</span>
+          <span className="signature-label" >Signature Spell:</span>
           <p className="signature-effect">
             As a signature spell, you can cast this at any rank up to your highest available spell rank
             without knowing it in a specific Rank.
@@ -157,7 +157,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
 
       {spell.degrees && (
         <div className="spell-degrees">
-          <span className="degrees-label" style={{ color: themeColor }}>Degrees of Success:</span>
+          <span className="degrees-label" >Degrees of Success:</span>
           {Object.entries(spell.degrees).map(([degree, effect], index) => (
             <div key={index} className="degree-entry">
               <span className="degree-level">{degree}:</span>
@@ -169,7 +169,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
 
       {spell.heightened && (
         <div className="spell-heightened">
-          <span className="heightened-label" style={{ color: themeColor }}>Heightened:</span>
+          <span className="heightened-label" >Heightened:</span>
           {Object.entries(spell.heightened).map(([level, effect], index) => (
             <div key={index} className="heightened-entry">
               <span className="heightened-level">{level}:</span>

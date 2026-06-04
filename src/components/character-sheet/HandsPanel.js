@@ -73,7 +73,7 @@ const HandsPanel = ({ character, characterColor }) => {
   return (
     <section className="hands-panel" aria-label="hands">
       <div className="hands-header">
-        <h3 style={{ color: characterColor }}>Hands</h3>
+        <h3>Hands</h3>
       </div>
 
       <div className="hands-slots">

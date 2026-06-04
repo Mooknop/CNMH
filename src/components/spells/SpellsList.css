@@ -278,10 +278,12 @@
 }
 
 .spell-rank-badge {
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
-  opacity: 0.8;
+  opacity: 0.9;
   white-space: nowrap;
+  color: var(--color-theme, var(--shell-text-secondary));
 }
 
 .spell-header-detail {
@@ -615,9 +617,9 @@
 .bloodline-info h3 {
   margin-top: 0;
   margin-bottom: 0.75rem;
-  color: var(--arcane-light);
+  color: var(--color-theme, var(--arcane-light));
   font-size: 1.3rem;
-  border-bottom: 1px solid rgba(122, 84, 186, 0.3);
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 0.5rem;
 }
 
@@ -790,7 +792,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--shell-text-secondary);
+  color: var(--color-theme, var(--shell-text-secondary));
 }
 
 /* Slot pips in rank header — arcane color, distinct from proficiency */
@@ -847,6 +849,7 @@
   height: 100%;
   transition: width 0.18s ease;
   opacity: 0.5;
+  background: var(--color-theme, var(--ember-base));
 }
 
 .slot-bar-label {
@@ -949,10 +952,29 @@
   margin-bottom: 0.35rem;
 }
 
+/* Slot bubbles — theme-colored; class applied conditionally in JS */
+.slot-bubble {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--color-theme, var(--ember-base));
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.slot-bubble.slot-filled {
+  background: var(--color-theme, var(--ember-base));
+}
+
 .wand-overcharge-btn {
   font-size: 0.72rem;
   padding: 0.1rem 0.45rem;
-  border: 1px solid;
+  border: 1px solid var(--color-theme, var(--ember-base));
+  color: var(--color-theme, var(--ember-light));
   border-radius: 12px;
   background: transparent;
   cursor: pointer;

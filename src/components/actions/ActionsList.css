@@ -16,10 +16,11 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--shell-text-tertiary);
-  margin-bottom: var(--space-1);
+  color: var(--color-theme, var(--ember-light));
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
   padding-bottom: var(--space-1);
-  border-bottom: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--color-theme, var(--shell-border));
 }
 
 .strikes-section {
@@ -95,6 +96,10 @@
 }
 
 /* Strike card inner detail */
+.strike-card {
+  border-left: 3px solid var(--color-theme, var(--ember-base));
+}
+
 .strike-card .collapsible-header {
   background: rgba(255, 255, 255, 0.01);
 }
@@ -145,8 +150,8 @@
 }
 
 .detail-value {
-  font-weight: 600;
-  color: var(--shell-text-primary);
+  font-weight: 700;
+  color: var(--color-theme, var(--shell-text-primary));
 }
 
 .strike-description {
@@ -185,8 +190,21 @@
   margin-top: 0;
   margin-bottom: var(--space-3);
   font-size: var(--text-md);
-  border-bottom: 1px solid var(--shell-border);
+  font-weight: 700;
+  border-bottom: 1px solid var(--color-theme, var(--shell-border));
   padding-bottom: var(--space-2);
+  color: var(--color-theme, var(--ember-light));
+}
+
+/* Implement and exploit cards — left border uses theme color */
+.implement-card,
+.exploit-card {
+  border-left-color: var(--color-theme, var(--ember-base));
+}
+
+.implement-card h4,
+.exploit-card h4 {
+  margin-top: 0;
   color: var(--color-theme, var(--ember-light));
 }
 

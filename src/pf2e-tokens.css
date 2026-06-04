@@ -383,6 +383,10 @@
   --save-crit-failure-bg: var(--d-cf-bg);
   --save-crit-failure-fg: var(--d-cf-fg);
 
+  /* ── Semantic alert color ─────────────────────────────────────── */
+  /* Condition badge highlight — gold, distinct from proficiency rank gold */
+  --color-condition-highlight: var(--gold-mid);
+
   /* ── New tokens for dark game-menu redesign ────────────────── */
 
   /* Accent glow — restrained, accent-driven (token chip, current-turn pip, token on move grid) */

@@ -85,7 +85,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
         <div className="companion-stats">
           {/* Ability Scores */}
           <div className="companion-abilities">
-            <h3 style={{ color: themeColor }}>Ability Scores</h3>
+            <h3>Ability Scores</h3>
             <div className="ability-scores">
               <div className="ability">
                 <span className="ability-name">STR</span>
@@ -137,9 +137,8 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             <button
               className={`defense condition-btn${hasConditions ? ' condition-btn--active' : ''}`}
               onClick={() => setIsConditionModalOpen(true)}
-              style={hasConditions ? { borderColor: '#d4a017', color: '#d4a017' } : {}}
             >
-              <span className="defense-label" style={hasConditions ? { color: '#d4a017' } : {}}>
+              <span className="defense-label">
                 Conditions
               </span>
               <span className="defense-value">{hasConditions ? activeConditions.length : '—'}</span>
@@ -172,7 +171,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             {/* Skills */}
             {companionData.skills && (
               <div className="companion-section">
-                <h4 style={{ color: themeColor }}>Skills</h4>
+                <h4 >Skills</h4>
                 <p>{companionData.skills.join(", ")}</p>
               </div>
             )}
@@ -180,7 +179,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             {/* Strikes */}
             {companionData.strikes && companionData.strikes.length > 0 && (
               <div className="companion-section">
-                <h4 style={{ color: themeColor }}>Strikes</h4>
+                <h4 >Strikes</h4>
                 <div className="companion-strikes-list">
                   {companionData.strikes.map((strike, index) => (
                     <div key={index} className="companion-strike">
@@ -211,7 +210,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             {/* Support Benefit */}
             {companionData.support && (
               <div className="companion-section">
-                <h4 style={{ color: themeColor }}>Support Benefit</h4>
+                <h4 >Support Benefit</h4>
                 <p>{companionData.support}</p>
               </div>
             )}
@@ -219,7 +218,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             {/* Special Abilities */}
             {companionData.abilities && companionData.abilities.length > 0 && (
               <div className="companion-section">
-                <h4 style={{ color: themeColor }}>Special Abilities</h4>
+                <h4 >Special Abilities</h4>
                 <div className="companion-abilities-list">
                   {companionData.abilities.map((ability, index) => (
                     <div key={index} className="companion-ability">
@@ -234,7 +233,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             {/* Description */}
             {companionData.description && (
               <div className="companion-section">
-                <h4 style={{ color: themeColor }}>Description</h4>
+                <h4 >Description</h4>
                 <p>{companionData.description}</p>
               </div>
             )}
