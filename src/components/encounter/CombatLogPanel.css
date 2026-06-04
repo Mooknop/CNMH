@@ -1,28 +1,36 @@
 .combat-log-panel {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--shell-border);
   border-radius: var(--radius-md);
-  margin-top: 16px;
+  margin-top: var(--space-4);
   overflow: hidden;
+  background: var(--surface-inset);
 }
 
 .combat-log-toggle {
   width: 100%;
-  background: var(--color-bg-light);
+  background: transparent;
   border: none;
-  padding: 8px 12px;
+  border-bottom: 1px solid var(--shell-border);
+  padding: var(--space-2) var(--space-3);
   text-align: left;
   font: inherit;
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: var(--tap-target-min);
+  transition: background 0.15s, color 0.15s;
 }
 
 .combat-log-toggle:hover {
-  background: var(--color-bg-lighter);
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-secondary);
 }
 
 .combat-log-list {
@@ -36,20 +44,21 @@
 .combat-log-entry {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  padding: 4px 12px;
-  font-size: 0.82rem;
-  border-top: 1px solid var(--color-border);
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  border-top: 1px solid var(--shell-border);
+  color: var(--shell-text-secondary);
 }
 
 .combat-log-entry--round {
   font-weight: 700;
-  background: color-mix(in srgb, var(--color-theme, var(--theme-accent)) 8%, transparent);
-  color: var(--color-theme, var(--theme-accent));
+  background: var(--accent-tint);
+  color: var(--accent-text);
 }
 
 .combat-log-entry--system {
-  color: var(--color-text-muted);
+  color: var(--shell-text-tertiary);
   font-style: italic;
 }
 
@@ -57,6 +66,7 @@
   flex: none;
   width: 14px;
   text-align: center;
+  color: var(--shell-text-tertiary);
 }
 
 .combat-log-text {

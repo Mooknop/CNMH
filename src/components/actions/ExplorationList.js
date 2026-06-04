@@ -5,17 +5,7 @@ import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
-
-const HIGHLIGHT_COLOR = '#d4a017';
-
-const SectionDivider = ({ label, themeColor }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '1.5rem 0 0.5rem' }}>
-    <span style={{ color: themeColor, fontWeight: '700', fontSize: '0.8rem', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-      {label}
-    </span>
-    <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
-  </div>
-);
+import './ExplorationList.css';
 
 const profLabel = (rank) => {
   if (rank >= 4) return 'Legendary';
@@ -23,6 +13,13 @@ const profLabel = (rank) => {
   if (rank >= 2) return 'Expert';
   return null;
 };
+
+const SectionDivider = ({ label }) => (
+  <div className="el-section-divider">
+    <span className="el-section-label">{label}</span>
+    <div className="el-section-line" />
+  </div>
+);
 
 const ExplorationList = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
@@ -63,60 +60,32 @@ const ExplorationList = ({ character, characterColor }) => {
   };
 
   return (
-    <div className="exploration-list">
-      <h2 style={{ color: themeColor }}>Exploration</h2>
+    <div className="exploration-list" style={{ '--el-theme-color': themeColor }}>
+      <h2 className="el-heading">Exploration</h2>
 
       {activeActivity && (
-        <div
-          className="exploration-active-banner"
-          style={{
-            border: `2px solid ${themeColor}`,
-            borderRadius: '8px',
-            padding: '1rem 1.25rem',
-            marginBottom: '1.25rem',
-            backgroundColor: 'var(--color-surface-raised, rgba(0,0,0,0.15))',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-            <div>
-              <div style={{ fontSize: '0.7rem', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase', color: themeColor, marginBottom: '0.25rem' }}>
-                Active Activity
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-                <h3 style={{ color: themeColor, margin: 0, fontSize: '1.2rem' }}>{activeActivity.name}</h3>
+        <div className="exploration-active-banner">
+          <div className="el-banner-top">
+            <div className="el-banner-info">
+              <div className="el-banner-eyebrow">Active Activity</div>
+              <div className="el-banner-name-row">
+                <h3 className="el-banner-name">{activeActivity.name}</h3>
                 {activeActivity.highlight && (
-                  <span style={{ color: HIGHLIGHT_COLOR, fontSize: '0.7rem', fontWeight: '700', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                    ✦ {activeActivity.highlight}
-                  </span>
+                  <span className="el-highlight-badge">✦ {activeActivity.highlight}</span>
                 )}
               </div>
               {activeActivity.skill && (
-                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>
-                  {activeActivity.skill}
-                </div>
+                <div className="el-banner-skill">{activeActivity.skill}</div>
               )}
             </div>
-            <button
-              onClick={() => setActiveActivityName(null)}
-              style={{
-                background: 'none',
-                border: `1px solid ${themeColor}`,
-                borderRadius: '4px',
-                color: themeColor,
-                cursor: 'pointer',
-                fontSize: '0.75rem',
-                padding: '0.25rem 0.5rem',
-                flexShrink: 0,
-                marginLeft: '1rem',
-              }}
-            >
+            <button className="el-clear-btn" onClick={() => setActiveActivityName(null)}>
               Clear
             </button>
           </div>
-          <div className="exploration-traits" style={{ marginBottom: '0.5rem' }}>
+          <div className="exploration-traits">
             {activeActivity.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
           </div>
-          <div style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>{activeActivity.description}</div>
+          <div className="el-banner-desc">{activeActivity.description}</div>
         </div>
       )}
 
@@ -126,48 +95,24 @@ const ExplorationList = ({ character, characterColor }) => {
 
         return (
           <div key={category}>
-            <SectionDivider label={category} themeColor={themeColor} />
-            <div className="cards-grid">
+            <SectionDivider label={category} />
+            <div className="el-activity-list">
               {group.map((activity, index) => {
                 const isActive = activeActivityName === activity.name;
-                const cardColor = activity.highlight ? HIGHLIGHT_COLOR : themeColor;
 
                 const header = (
                   <>
-                    <h3 style={{ color: themeColor }}>{activity.name}</h3>
+                    <h3 className="el-activity-name">{activity.name}</h3>
                     {activity.highlight && (
-                      <span style={{
-                        color: HIGHLIGHT_COLOR,
-                        fontSize: '0.7rem',
-                        fontWeight: '700',
-                        letterSpacing: '0.05em',
-                        textTransform: 'uppercase',
-                        whiteSpace: 'nowrap',
-                        marginLeft: '0.4rem',
-                      }}>
-                        ✦ {activity.highlight}
-                      </span>
+                      <span className="el-highlight-badge">✦ {activity.highlight}</span>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto' }}>
+                    <div className="el-activity-meta">
                       {activity.skill && (
-                        <span className="exploration-skill" style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
-                          {activity.skill}
-                        </span>
+                        <span className="el-activity-skill">{activity.skill}</span>
                       )}
                       <button
+                        className={`el-set-active-btn${isActive ? ' el-set-active-btn--on' : ''}`}
                         onClick={(e) => { e.stopPropagation(); toggleActive(activity.name); }}
-                        style={{
-                          background: isActive ? themeColor : 'none',
-                          border: `1px solid ${themeColor}`,
-                          borderRadius: '4px',
-                          color: isActive ? 'white' : themeColor,
-                          cursor: 'pointer',
-                          fontSize: '0.7rem',
-                          fontWeight: '600',
-                          padding: '0.2rem 0.5rem',
-                          whiteSpace: 'nowrap',
-                          flexShrink: 0,
-                        }}
                       >
                         {isActive ? '✓ Active' : 'Set Active'}
                       </button>
@@ -182,9 +127,8 @@ const ExplorationList = ({ character, characterColor }) => {
                     key={index}
                     className={`exploration-card${isActive ? ' exploration-card--active' : ''}`}
                     header={header}
-                    themeColor={cardColor}
+                    themeColor={activity.highlight ? '#d4a017' : themeColor}
                     initialExpanded={false}
-                    style={(activity.highlight || isActive) ? { borderLeft: `4px solid ${cardColor}` } : {}}
                   >
                     <div className="exploration-traits">
                       {activity.traits?.map((trait, i) => <TraitTag key={i} trait={trait} />)}
@@ -192,8 +136,7 @@ const ExplorationList = ({ character, characterColor }) => {
                     <div className="exploration-description">{activity.description}</div>
                     {isTreatWounds && (
                       <button
-                        className="btn-primary"
-                        style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
+                        className="btn-primary el-treat-btn"
                         onClick={() => setTreatWoundsOpen(true)}
                       >
                         Treat Wounds

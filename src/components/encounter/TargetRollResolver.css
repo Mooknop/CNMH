@@ -1,111 +1,166 @@
 .trr-section {
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .trr-dc-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  font-size: 0.9rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
-.trr-defense-label { font-weight: 600; }
+.trr-defense-label {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
 
 .trr-dc-badge {
-  background: var(--color-border);
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-weight: 600;
+  background: var(--surface-raised);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: var(--shell-text-primary);
 }
 
 .trr-defense-select {
-  padding: 3px 6px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  font-size: 0.85rem;
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
+  font-size: var(--text-sm);
 }
 
+/* Roll input row */
 .trr-entry-row {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .trr-roll-input {
-  width: 80px;
-  padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  font-size: 1rem;
+  width: 64px;
+  min-height: 44px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border-strong);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--shell-text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
   text-align: center;
 }
 
 .trr-nat-toggle {
   display: flex;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .trr-nat-toggle label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.85rem;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
   cursor: pointer;
   user-select: none;
 }
 
+/* Per-target result chips — tinted by degree */
 .trr-results {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 .trr-result-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  font-size: var(--text-sm);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+}
+
+/* Degree tints applied via JS className — load-bearing */
+.trr-result-chip[data-degree="crit-success"] {
+  background: var(--d-crit-bg);
+  border-color: var(--d-crit-border);
+  color: var(--d-crit-fg);
+}
+
+.trr-result-chip[data-degree="success"] {
+  background: var(--d-succ-bg);
+  border-color: var(--d-succ-border);
+  color: var(--d-succ-fg);
+}
+
+.trr-result-chip[data-degree="failure"] {
+  background: var(--d-fail-bg);
+  border-color: var(--d-fail-border);
+  color: var(--d-fail-fg);
+}
+
+.trr-result-chip[data-degree="crit-failure"] {
+  background: var(--d-cf-bg);
+  border-color: var(--d-cf-border);
+  color: var(--d-cf-fg);
 }
 
 .trr-result-name {
-  font-weight: 600;
+  font-weight: 700;
   flex: 1;
 }
 
 .trr-result-dc {
-  opacity: 0.8;
-  font-size: 0.8rem;
+  opacity: 0.75;
+  font-size: var(--text-xs);
 }
 
 .trr-result-degree {
   font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .trr-no-dc {
-  opacity: 0.65;
+  opacity: 0.55;
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
 }
 
 .trr-bonus-badge {
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
-  background: var(--color-border);
-  font-size: 0.9rem;
-  font-weight: 600;
+  background: var(--surface-raised);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
   min-width: 36px;
   text-align: center;
 }
 
 .trr-total-badge {
-  font-size: 0.9rem;
-  font-weight: 600;
-  opacity: 0.85;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--shell-text-secondary);
 }
