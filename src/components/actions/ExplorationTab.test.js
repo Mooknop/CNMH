@@ -3,8 +3,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ExplorationTab from './ExplorationTab';
 
 let mockMode = 'exploration';
+let mockMoveEnabled = true;
 jest.mock('../../hooks/usePlayMode', () => ({
-  usePlayMode: () => ({ mode: mockMode }),
+  usePlayMode: () => ({ mode: mockMode, moveEnabled: mockMoveEnabled }),
 }));
 
 jest.mock('./ExplorationList', () =>
@@ -19,10 +20,17 @@ jest.mock('./ExplorationMove', () =>
   }
 );
 
+jest.mock('./ExplorationDoors', () =>
+  function DummyExplorationDoors({ charId }) {
+    return <div data-testid="exploration-doors" data-charid={charId} />;
+  }
+);
+
 const character = { id: 'char-1', name: 'Pellias' };
 
 beforeEach(() => {
   mockMode = 'exploration';
+  mockMoveEnabled = true;
 });
 
 describe('ExplorationTab', () => {
@@ -46,10 +54,11 @@ describe('ExplorationTab', () => {
     expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
   });
 
-  it('switches to Movement subtab showing ExplorationMove', () => {
+  it('switches to Movement subtab showing ExplorationMove + ExplorationDoors when enabled', () => {
     render(<ExplorationTab character={character} />);
     fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
     expect(screen.getByTestId('exploration-move')).toBeInTheDocument();
+    expect(screen.getByTestId('exploration-doors')).toBeInTheDocument();
     expect(screen.queryByTestId('exploration-list')).not.toBeInTheDocument();
   });
 
@@ -57,6 +66,15 @@ describe('ExplorationTab', () => {
     render(<ExplorationTab character={character} />);
     fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
     expect(screen.getByTestId('exploration-move')).toHaveAttribute('data-charid', 'char-1');
+  });
+
+  it('shows disabled placeholder and hides both panels when movement is off', () => {
+    mockMoveEnabled = false;
+    render(<ExplorationTab character={character} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
+    expect(screen.getByText(/movement is currently disabled by the gm/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('exploration-doors')).not.toBeInTheDocument();
   });
 
   it('Activity pill is aria-pressed when active', () => {

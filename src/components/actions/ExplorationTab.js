@@ -9,10 +9,11 @@ import './ExplorationTab.css';
 // exploration mode. Shows a placeholder when in downtime mode.
 
 const ExplorationTab = ({ character, characterColor }) => {
-  const { mode } = usePlayMode();
+  const { mode, moveEnabled } = usePlayMode();
   const [subtab, setSubtab] = useState('activity');
   const [moveDoneTs, setMoveDoneTs] = useState(null);
   const handleMoveDone = useCallback(() => setMoveDoneTs(Date.now()), []);
+  const movementAllowed = mode === 'exploration' && moveEnabled;
 
   if (mode === 'downtime') {
     return (
@@ -46,10 +47,16 @@ const ExplorationTab = ({ character, characterColor }) => {
         <ExplorationList character={character} characterColor={characterColor} />
       )}
       {subtab === 'movement' && (
-        <>
-          <ExplorationMove charId={character?.id} onMoveDone={handleMoveDone} />
-          <ExplorationDoors charId={character?.id} moveDoneTs={moveDoneTs} />
-        </>
+        movementAllowed ? (
+          <>
+            <ExplorationMove charId={character?.id} onMoveDone={handleMoveDone} />
+            <ExplorationDoors charId={character?.id} moveDoneTs={moveDoneTs} />
+          </>
+        ) : (
+          <div className="et-move-disabled">
+            <p>Token movement is currently disabled by the GM.</p>
+          </div>
+        )
       )}
     </div>
   );
