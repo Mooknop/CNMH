@@ -4,14 +4,14 @@
   gap: var(--space-3);
 }
 
-.et-pills {
+/* Per-player toggle between Movement and the Activity picker (only shown once
+   the party is ready). */
+.et-toggle-row {
   display: flex;
-  gap: var(--space-1);
-  padding-bottom: var(--space-1);
-  border-bottom: 1px solid var(--theme-border, var(--shell-border));
+  justify-content: flex-end;
 }
 
-.et-pill {
+.et-toggle {
   background: none;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -24,13 +24,20 @@
   transition: color 0.15s, border-color 0.15s;
 }
 
-.et-pill:hover {
+.et-toggle:hover {
   color: var(--theme-text, var(--shell-text));
+  border-color: var(--color-theme, var(--theme-accent));
 }
 
-.et-pill--active {
-  border-color: var(--color-theme, var(--theme-accent));
-  color: var(--color-theme, var(--theme-accent));
+/* "Waiting for the party" hint under the Activity picker. */
+.et-waiting {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  text-align: center;
+  margin: 0;
+  padding: var(--space-2) var(--space-4) 0;
 }
 
 /* Downtime placeholder */

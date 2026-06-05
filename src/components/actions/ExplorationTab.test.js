@@ -8,6 +8,17 @@ jest.mock('../../hooks/usePlayMode', () => ({
   usePlayMode: () => ({ mode: mockMode, moveEnabled: mockMoveEnabled }),
 }));
 
+let mockReady = false;
+jest.mock('../../hooks/useExplorationReady', () => ({
+  useExplorationReady: () => ({ ready: mockReady }),
+}));
+
+const mockSetOwnActivity = jest.fn();
+jest.mock('../../hooks/useSyncedState', () => ({
+  __esModule: true,
+  useSyncedState: () => [null, mockSetOwnActivity],
+}));
+
 jest.mock('./ExplorationList', () =>
   function DummyExplorationList() {
     return <div data-testid="exploration-list" />;
@@ -29,8 +40,10 @@ jest.mock('./ExplorationDoors', () =>
 const character = { id: 'char-1', name: 'Pellias' };
 
 beforeEach(() => {
+  jest.clearAllMocks();
   mockMode = 'exploration';
   mockMoveEnabled = true;
+  mockReady = false;
 });
 
 describe('ExplorationTab', () => {
@@ -39,54 +52,60 @@ describe('ExplorationTab', () => {
     render(<ExplorationTab character={character} />);
     expect(screen.getByText('Downtime')).toBeInTheDocument();
     expect(screen.getByText(/coming in a future update/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Activity' })).not.toBeInTheDocument();
   });
 
-  it('shows Activity and Movement subtab buttons in exploration mode', () => {
-    render(<ExplorationTab character={character} />);
-    expect(screen.getByRole('button', { name: 'Activity' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Movement' })).toBeInTheDocument();
+  describe('Activity state (party not ready)', () => {
+    it('shows the Activity picker and a waiting hint', () => {
+      render(<ExplorationTab character={character} />);
+      expect(screen.getByTestId('exploration-list')).toBeInTheDocument();
+      expect(screen.getByText(/waiting for the party/i)).toBeInTheDocument();
+    });
+
+    it('does not show Movement controls or the change-activity toggle', () => {
+      render(<ExplorationTab character={character} />);
+      expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /change activity/i })).not.toBeInTheDocument();
+    });
   });
 
-  it('defaults to Activity subtab showing ExplorationList', () => {
-    render(<ExplorationTab character={character} />);
-    expect(screen.getByTestId('exploration-list')).toBeInTheDocument();
-    expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
-  });
+  describe('Movement state (party ready)', () => {
+    beforeEach(() => {
+      mockReady = true;
+    });
 
-  it('switches to Movement subtab showing ExplorationMove + ExplorationDoors when enabled', () => {
-    render(<ExplorationTab character={character} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
-    expect(screen.getByTestId('exploration-move')).toBeInTheDocument();
-    expect(screen.getByTestId('exploration-doors')).toBeInTheDocument();
-    expect(screen.queryByTestId('exploration-list')).not.toBeInTheDocument();
-  });
+    it('shows Movement controls by default with no waiting hint', () => {
+      render(<ExplorationTab character={character} />);
+      expect(screen.getByTestId('exploration-move')).toBeInTheDocument();
+      expect(screen.getByTestId('exploration-doors')).toBeInTheDocument();
+      expect(screen.queryByTestId('exploration-list')).not.toBeInTheDocument();
+      expect(screen.queryByText(/waiting for the party/i)).not.toBeInTheDocument();
+    });
 
-  it('passes charId to ExplorationMove', () => {
-    render(<ExplorationTab character={character} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
-    expect(screen.getByTestId('exploration-move')).toHaveAttribute('data-charid', 'char-1');
-  });
+    it('passes charId to ExplorationMove', () => {
+      render(<ExplorationTab character={character} />);
+      expect(screen.getByTestId('exploration-move')).toHaveAttribute('data-charid', 'char-1');
+    });
 
-  it('shows disabled placeholder and hides both panels when movement is off', () => {
-    mockMoveEnabled = false;
-    render(<ExplorationTab character={character} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
-    expect(screen.getByText(/movement is currently disabled by the gm/i)).toBeInTheDocument();
-    expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('exploration-doors')).not.toBeInTheDocument();
-  });
+    it('shows the disabled placeholder when movement is off', () => {
+      mockMoveEnabled = false;
+      render(<ExplorationTab character={character} />);
+      expect(screen.getByText(/movement is currently disabled by the gm/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
+    });
 
-  it('Activity pill is aria-pressed when active', () => {
-    render(<ExplorationTab character={character} />);
-    expect(screen.getByRole('button', { name: 'Activity' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Movement' })).toHaveAttribute('aria-pressed', 'false');
-  });
+    it('lets the player peek at the Activity picker and back, just for themselves', () => {
+      render(<ExplorationTab character={character} />);
+      // Default: movement shown
+      expect(screen.getByTestId('exploration-move')).toBeInTheDocument();
 
-  it('Movement pill is aria-pressed after switching', () => {
-    render(<ExplorationTab character={character} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Movement' }));
-    expect(screen.getByRole('button', { name: 'Movement' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'Activity' })).toHaveAttribute('aria-pressed', 'false');
+      fireEvent.click(screen.getByRole('button', { name: /change activity/i }));
+      expect(screen.getByTestId('exploration-list')).toBeInTheDocument();
+      expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
+      // No waiting hint when ready — peeking is a personal choice
+      expect(screen.queryByText(/waiting for the party/i)).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /back to movement/i }));
+      expect(screen.getByTestId('exploration-move')).toBeInTheDocument();
+    });
   });
 });
