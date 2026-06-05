@@ -102,6 +102,13 @@ describe('useTokenMovement', () => {
     // called synchronously here are batched with the effect's own setters — no
     // nested act needed. requestMoveRefresh closes only over stable refs (state
     // setters + sessionTs), so capturing it from the initial render is safe.
+    //
+    // Date.now must return distinct values for requestMove (T1) and the
+    // subsequent requestMoveRefresh (T2) so the stale-reqTs guard fires correctly
+    // — on fast CI machines both can land in the same millisecond otherwise.
+    let tsCounter = 1000;
+    jest.spyOn(Date, 'now').mockImplementation(() => tsCounter++);
+
     let refreshFn;
     const { result } = setup({
       onMoveDone: () => { refreshFn?.('stride'); },
@@ -109,11 +116,16 @@ describe('useTokenMovement', () => {
     refreshFn = result.current.requestMoveRefresh;
 
     act(() => result.current.requestMove('stride'));
-    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
-    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], maxFeet: 30, reqTs });
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts; // = 1000
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
     act(() => result.current.confirmMove({ col: 6, row: 5 }));
     pushMoveDone({ newPosition: { col: 6, row: 5 }, feetMoved: 5, reqTs });
+
+    // requestMoveRefresh used a distinct ts (1001+), so the old opts are stale
+    // and ignored — the fresh probe is in flight but opts haven't arrived yet.
     expect(result.current.stage).toBe('awaiting-opts');
     expect(result.current.isRefreshing).toBe(true);
+
+    Date.now.mockRestore();
   });
 });
