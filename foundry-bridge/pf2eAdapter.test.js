@@ -18,7 +18,7 @@ import {
   isConditionItem, getConditionItemActor,
   getCombatantActorId, getCombatantTokenId, getCombatantInitiative,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
-  getGridSize, getAllTokens, getTokenDimensions,
+  getGridSize, getAllTokens, getTokenDimensions, getTokenDisposition,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
   applyEffectByUuid,
@@ -223,6 +223,13 @@ describe('movement measurement contract', () => {
     expect(hasWallCollision(0, 0, 100, 0)).toBe(false);
     global.CONFIG.Canvas.polygonBackends.move.testCollision = () => true;
     expect(hasWallCollision(0, 0, 100, 0)).toBe(true);
+  });
+
+  test('getTokenDisposition reads document.disposition (defaults to 0)', () => {
+    expect(getTokenDisposition(makeToken({ disposition: 1 }))).toBe(1);
+    expect(getTokenDisposition(makeToken({ disposition: -1 }))).toBe(-1);
+    expect(getTokenDisposition(makeToken())).toBe(0);
+    expect(getTokenDisposition(null)).toBe(0);
   });
 });
 

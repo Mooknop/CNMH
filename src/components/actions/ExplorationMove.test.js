@@ -56,15 +56,22 @@ describe('ExplorationMove', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('shows Move Token button when stage is null and not refreshing', () => {
+  it('auto-requests the grid on mount when idle (no Move Token button)', () => {
     render(<ExplorationMove charId="char-1" />);
-    expect(screen.getByRole('button', { name: 'Move Token' })).toBeInTheDocument();
+    expect(mockMovement.requestMove).toHaveBeenCalledWith('stride');
+    expect(screen.queryByRole('button', { name: 'Move Token' })).not.toBeInTheDocument();
   });
 
-  it('calls requestMove with stride when Move Token clicked', () => {
+  it('does not auto-request when not in exploration mode', () => {
+    mockPlayMode.mode = 'encounter';
     render(<ExplorationMove charId="char-1" />);
-    fireEvent.click(screen.getByRole('button', { name: 'Move Token' }));
-    expect(mockMovement.requestMove).toHaveBeenCalledWith('stride');
+    expect(mockMovement.requestMove).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-request when movement is disabled', () => {
+    mockPlayMode.moveEnabled = false;
+    render(<ExplorationMove charId="char-1" />);
+    expect(mockMovement.requestMove).not.toHaveBeenCalled();
   });
 
   it('shows calculating status when stage is awaiting-opts', () => {

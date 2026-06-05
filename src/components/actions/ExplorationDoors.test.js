@@ -76,11 +76,9 @@ describe('ExplorationDoors', () => {
     );
   });
 
-  it('sends doorreq when Detect Doors clicked', () => {
+  it('has no manual Detect Doors button (detection is silent)', () => {
     render(<ExplorationDoors charId="char-1" />);
-    mockSendUpdate.mockClear();
-    fireEvent.click(screen.getByRole('button', { name: 'Detect Doors' }));
-    expect(mockSendUpdate).toHaveBeenCalledWith('char-1', 'doorreq', expect.any(Object));
+    expect(screen.queryByRole('button', { name: /detect doors/i })).not.toBeInTheDocument();
   });
 
   it('sends doorreq when moveDoneTs changes', () => {

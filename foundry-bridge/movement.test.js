@@ -41,19 +41,31 @@ describe('handleMoveRequest', () => {
     expect(opts.blocked).toHaveLength(0);
   });
 
-  test("an ally's square is blocked, not reachable", async () => {
-    const ally = makeToken({ id: 'tok-ally', x: 600, y: 500 }); // grid (6,5)
+  test("an ally's square is blocked as kind 'ally', not reachable", async () => {
+    // disposition FRIENDLY (1) → classified as an ally obstacle.
+    const ally = makeToken({ id: 'tok-ally', x: 600, y: 500, disposition: 1 }); // grid (6,5)
     setupPellias({ allies: [ally] });
 
     await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
     const { reachable, blocked } = send.mock.calls[0][2];
 
-    expect(blocked).toContainEqual({ col: 6, row: 5 });
+    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'ally' });
     expect(reachable).toHaveLength(7);
     expect(reachable.find((s) => s.col === 6 && s.row === 5)).toBeUndefined();
   });
 
-  test('a wall-blocked square is reported blocked', async () => {
+  test("a hostile token's square is blocked as kind 'enemy'", async () => {
+    // disposition HOSTILE (-1) → classified as an enemy obstacle.
+    const enemy = makeToken({ id: 'tok-goblin', x: 600, y: 500, disposition: -1 }); // grid (6,5)
+    setupPellias({ allies: [enemy] });
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
+    const { blocked } = send.mock.calls[0][2];
+
+    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'enemy' });
+  });
+
+  test("a wall-blocked square is reported blocked as kind 'wall'", async () => {
     setupPellias();
     // Collision is measured CENTER-to-CENTER. Pellias' token is at (500,500) on a
     // 100px grid, so origin centre is (550,550) and the (6,5) cell centre is
@@ -63,7 +75,7 @@ describe('handleMoveRequest', () => {
 
     await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
     const { reachable, blocked } = send.mock.calls[0][2];
-    expect(blocked).toContainEqual({ col: 6, row: 5 });
+    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'wall' });
     expect(reachable).toHaveLength(7);
   });
 
@@ -92,7 +104,7 @@ describe('handleMoveRequest', () => {
 
     await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
     const { reachable, blocked } = send.mock.calls[0][2];
-    expect(blocked).toContainEqual({ col: 6, row: 5 });
+    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'wall' });
     expect(reachable.find((s) => s.col === 6 && s.row === 5)).toBeUndefined();
   });
 

@@ -5,9 +5,14 @@ import './ExplorationDoors.css';
 
 const DOOR_STATE_LABEL = { 0: 'Closed', 1: 'Open', 2: 'Locked' };
 
-// Renders nearby doors for a character in exploration mode. Sends a doorreq
-// whenever it mounts and again when moveDoneTs changes (the player moved).
-// Also exposes a manual "Detect Doors" refresh button.
+// Per-state door glyph. Closed/locked share the solid door; open shows the ajar
+// door. Kept as emoji so the separate Claude Design pass can swap in art freely.
+const DOOR_GLYPH = { 0: '🚪', 1: '🔓', 2: '🔒' };
+
+// Renders nearby doors for a character in exploration mode. Detection is silent:
+// it sends a doorreq when it mounts and again when moveDoneTs changes (the
+// player moved). No manual button — if we're connected to a token, adjacent
+// doors just appear.
 
 const ExplorationDoors = ({ charId, moveDoneTs }) => {
   const { sendUpdate } = useSession();
@@ -39,9 +44,6 @@ const ExplorationDoors = ({ charId, moveDoneTs }) => {
     <div className="ed-panel">
       <div className="ed-header">
         <span className="ed-title">Nearby Doors</span>
-        <button className="btn-secondary ed-detect-btn" onClick={detect}>
-          Detect Doors
-        </button>
       </div>
 
       {doors.length === 0 ? (
@@ -49,7 +51,17 @@ const ExplorationDoors = ({ charId, moveDoneTs }) => {
       ) : (
         <ul className="ed-list">
           {doors.map((door) => (
-            <li key={door.wallId} className="ed-door">
+            <li
+              key={door.wallId}
+              className={`ed-door ed-door--${door.state}`}
+            >
+              <span
+                className="ed-door-icon"
+                key={door.state}
+                aria-hidden="true"
+              >
+                {DOOR_GLYPH[door.state] ?? '🚪'}
+              </span>
               <span className={`ed-door-state ed-door-state--${door.state}`}>
                 {DOOR_STATE_LABEL[door.state] ?? 'Unknown'}
               </span>

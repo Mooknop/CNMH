@@ -3,6 +3,7 @@
 // Protocol (all modeled as cnmh_* keys so the session relay relays them):
 //   App → bridge:  cnmh_movereq_<charId>     = { moveType, ts }
 //   Bridge → app:  cnmh_moveopts_<charId>    = { origin, reachable[], blocked[], gridSize, maxFeet }
+//                  blocked[] entries carry kind: 'wall' | 'ally' | 'enemy'
 //   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts }
 //   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved }
 //
@@ -20,6 +21,7 @@ import {
   getActorById,
   getActorTokens,
   getTokenGridPosition,
+  getTokenDisposition,
   gridToPixels,
   measureMoveCost,
   hasWallCollision,
@@ -38,16 +40,20 @@ const snapFeet = (n) => Math.round(n / 5) * 5;
 
 // Grid cells occupied by other tokens (you can move through allies but can't end
 // your movement on top of another creature). Accounts for multi-square tokens.
+// Returns a Map of "col,row" → 'ally' | 'enemy' so the UI can differentiate
+// which kind of creature blocks each square. Disposition > 0 (friendly) reads
+// as an ally; neutral/hostile read as an enemy.
 function occupiedCells(movingToken, gridSize) {
-  const occupied = new Set();
+  const occupied = new Map();
   for (const t of getAllTokens()) {
     if (t.id === movingToken.id) continue;
+    const side = getTokenDisposition(t) > 0 ? 'ally' : 'enemy';
     const baseCol = Math.round(t.x / gridSize);
     const baseRow = Math.round(t.y / gridSize);
     const { width: w, height: h } = getTokenDimensions(t);
     for (let c = 0; c < w; c++) {
       for (let r = 0; r < h; r++) {
-        occupied.add(`${baseCol + c},${baseRow + r}`);
+        occupied.set(`${baseCol + c},${baseRow + r}`, side);
       }
     }
   }
@@ -141,13 +147,15 @@ async function getReachableSquares(token, moveType) {
       if (cost > maxFeet) continue;
 
       if (hasWallCollision(fromX, fromY, toX, toY)) {
-        blocked.push({ col, row });
+        blocked.push({ col, row, kind: 'wall' });
         continue;
       }
 
-      // Can't end movement on another creature's square.
-      if (occupied.has(`${col},${row}`)) {
-        blocked.push({ col, row });
+      // Can't end movement on another creature's square. kind is 'ally' or
+      // 'enemy' so the picker can color the obstacle accordingly.
+      const occupant = occupied.get(`${col},${row}`);
+      if (occupant) {
+        blocked.push({ col, row, kind: occupant });
         continue;
       }
 

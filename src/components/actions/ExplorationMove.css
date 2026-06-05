@@ -2,10 +2,6 @@
   margin-bottom: var(--space-4);
 }
 
-.em-move-btn {
-  width: 100%;
-}
-
 .em-status {
   font-family: var(--font-ui);
   font-size: var(--text-sm);

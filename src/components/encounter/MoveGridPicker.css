@@ -56,11 +56,24 @@
   background: rgba(196, 154, 46, 0.45);
 }
 
-/* Blocked — load-bearing red */
-.mgp-cell--blocked {
-  background: rgba(192, 57, 57, 0.28);
-  border-color: rgba(192, 57, 57, 0.45);
-  opacity: 0.7;
+/* Blocked obstacles — differentiated by what blocks the square.
+   Wall: neutral stone grey. Ally: teal/blue. Enemy: load-bearing red. */
+.mgp-cell--blocked-wall {
+  background: rgba(140, 140, 150, 0.30);
+  border-color: rgba(140, 140, 150, 0.55);
+  opacity: 0.8;
+}
+
+.mgp-cell--blocked-ally {
+  background: rgba(54, 142, 168, 0.30);
+  border-color: rgba(54, 142, 168, 0.55);
+  opacity: 0.85;
+}
+
+.mgp-cell--blocked-enemy {
+  background: rgba(192, 57, 57, 0.30);
+  border-color: rgba(192, 57, 57, 0.55);
+  opacity: 0.85;
 }
 
 /* Out of range */
@@ -68,6 +81,45 @@
   background: transparent;
   border-color: var(--shell-border);
   opacity: 0.35;
+}
+
+/* Obstacle legend */
+.mgp-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.65rem;
+  color: var(--theme-text-secondary, #888);
+}
+
+.mgp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mgp-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+.mgp-swatch--wall {
+  background: rgba(140, 140, 150, 0.30);
+  border-color: rgba(140, 140, 150, 0.55);
+}
+
+.mgp-swatch--ally {
+  background: rgba(54, 142, 168, 0.30);
+  border-color: rgba(54, 142, 168, 0.55);
+}
+
+.mgp-swatch--enemy {
+  background: rgba(192, 57, 57, 0.30);
+  border-color: rgba(192, 57, 57, 0.55);
 }
 
 .mgp-cancel {
