@@ -36,11 +36,14 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
     }
   }, [moveOpts, stage]);
 
-  // Move done in Foundry → notify caller, reset stage.
+  // Move done in Foundry → reset stage, then notify caller.
+  // Order matters: setStage(null) must queue before onMoveDone so that if the
+  // caller (e.g. ExplorationMove) immediately calls requestMoveRefresh, its
+  // setStage('awaiting-opts') is the last setter queued and wins the React batch.
   useEffect(() => {
     if (stage === 'awaiting-done' && moveDone && moveDone.reqTs === sessionTs.current) {
-      onMoveDone?.(moveDone);
       setStage(null);
+      onMoveDone?.(moveDone);
     }
   }, [moveDone, stage, onMoveDone]);
 

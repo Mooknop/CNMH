@@ -84,12 +84,37 @@ describe('MoveGridPicker', () => {
     expect(legend).toBeInTheDocument();
   });
 
-  it('grid radius derives from maxFeet (25ft → 11×11)', () => {
+  it('trims grid to reachable extent + 1 wall layer', () => {
+    // baseProps: reachable extends to col 12 (offset +2 from origin col 10).
+    // extent=2, radius=min(5, 2+1)=3, span=7 → 7×7 = 49 cells.
     const { container } = render(
       <MoveGridPicker {...baseProps} maxFeet={25} onSelect={jest.fn()} onCancel={jest.fn()} />
     );
-    // 11 columns × 11 rows = 121 cells
     const cells = container.querySelectorAll('.mgp-cell');
-    expect(cells).toHaveLength(121);
+    expect(cells).toHaveLength(49);
+  });
+
+  it('uses full theoretical radius in open terrain (reachable fills the range)', () => {
+    // Build a set of reachable squares that fills a 5-square radius (maxFeet=25).
+    // The farthest square is at offset 5 → extent=5, radius=min(5, 5+1)=5, span=11 → 11×11.
+    const reachable = [];
+    for (let dc = -5; dc <= 5; dc++) {
+      for (let dr = -5; dr <= 5; dr++) {
+        if (dc === 0 && dr === 0) continue;
+        reachable.push({ col: 10 + dc, row: 10 + dr, feet: Math.max(Math.abs(dc), Math.abs(dr)) * 5, terrain: 'normal' });
+      }
+    }
+    const { container } = render(
+      <MoveGridPicker
+        origin={{ col: 10, row: 10 }}
+        reachable={reachable}
+        blocked={[]}
+        maxFeet={25}
+        onSelect={jest.fn()}
+        onCancel={jest.fn()}
+      />
+    );
+    const cells = container.querySelectorAll('.mgp-cell');
+    expect(cells).toHaveLength(121); // 11×11 — no trimming in open terrain
   });
 });
