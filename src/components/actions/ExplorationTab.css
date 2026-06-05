@@ -1,0 +1,58 @@
+.et-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.et-pills {
+  display: flex;
+  gap: var(--space-1);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--theme-border, var(--shell-border));
+}
+
+.et-pill {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.et-pill:hover {
+  color: var(--theme-text, var(--shell-text));
+}
+
+.et-pill--active {
+  border-color: var(--color-theme, var(--theme-accent));
+  color: var(--color-theme, var(--theme-accent));
+}
+
+/* Downtime placeholder */
+.et-downtime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.et-downtime-label {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--arcane-mid, var(--theme-arcane));
+}
+
+.et-downtime-sub {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: 0;
+}

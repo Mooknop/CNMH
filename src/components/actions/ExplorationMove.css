@@ -1,0 +1,21 @@
+.em-panel {
+  margin-bottom: var(--space-4);
+}
+
+.em-move-btn {
+  width: 100%;
+}
+
+.em-status {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  padding: var(--space-2) 0;
+  text-align: center;
+}
+
+.em-status--refresh {
+  font-size: var(--text-xs);
+  opacity: 0.6;
+  margin-bottom: var(--space-1);
+}

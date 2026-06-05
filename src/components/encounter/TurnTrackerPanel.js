@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
 import { useSession } from '../../contexts/SessionContext';
+import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
@@ -70,58 +71,38 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
 
   // ── Movement (Feature 3) ──────────────────────────────────────────────────
-  // moveStage: null | 'choosing' | 'awaiting-opts' | 'picking' | 'awaiting-done'
-  const [moveStage, setMoveStage]       = useState(null);
-  const [pendingMoveType, setPendingMoveType] = useState(null);
-  const [pickerOpts, setPickerOpts]     = useState(null);
-  const moveSessionTs = useRef(null);
-  // Bridge responses arrive as cnmh_* keys via the relay.
-  const [moveOpts] = useSyncedState(`cnmh_moveopts_${charId}`, null);
-  const [moveDone] = useSyncedState(`cnmh_movedone_${charId}`, null);
+  // isChoosingMove: local-only state for the Step/Stride selection UI.
+  // The rest of the state machine lives in useTokenMovement.
+  const [isChoosingMove, setIsChoosingMove] = useState(false);
 
-  // Reachable squares arrived → open the picker (only for the request we made).
-  useEffect(() => {
-    if (moveStage === 'awaiting-opts' && moveOpts && moveOpts.reqTs === moveSessionTs.current) {
-      setPickerOpts(moveOpts);
-      setMoveStage('picking');
-    }
-  }, [moveOpts, moveStage]);
-
-  // Move completed in Foundry → log it and close.
-  useEffect(() => {
-    if (moveStage === 'awaiting-done' && moveDone && moveDone.reqTs === moveSessionTs.current) {
-      appendLog({ type: 'action', charId, text: `${characterName} moved ${moveDone.feetMoved} ft` });
-      setMoveStage(null);
-      setPickerOpts(null);
-      setPendingMoveType(null);
-    }
-  }, [moveDone, moveStage, appendLog, charId, characterName]);
+  const {
+    stage: moveStage,
+    pickerOpts,
+    pendingMoveType,
+    requestMove: rawRequestMove,
+    confirmMove: rawConfirmMove,
+    cancelMove: rawCancelMove,
+  } = useTokenMovement(charId, {
+    onMoveDone: (done) => {
+      appendLog({ type: 'action', charId, text: `${characterName} moved ${done.feetMoved} ft` });
+    },
+  });
 
   const requestMove = (moveType) => {
-    const ts = Date.now();
-    moveSessionTs.current = ts;
-    setPendingMoveType(moveType);
-    setMoveStage('awaiting-opts');
-    sendUpdate(charId, 'movereq', { moveType, ts });
+    setIsChoosingMove(false);
+    rawRequestMove(moveType);
   };
 
   const confirmMove = (destination) => {
     const action = MOVE_ACTIONS.find((a) => a.type === pendingMoveType);
     const cost = action?.cost ?? 1;
-    sendUpdate(charId, 'moveconfirm', {
-      destination,
-      moveType: pendingMoveType,
-      actionCost: cost,
-      ts: moveSessionTs.current,
-    });
     spendActions(cost, action?.label || 'Move');
-    setMoveStage('awaiting-done');
+    rawConfirmMove(destination, cost);
   };
 
   const cancelMove = () => {
-    setMoveStage(null);
-    setPickerOpts(null);
-    setPendingMoveType(null);
+    setIsChoosingMove(false);
+    rawCancelMove();
   };
 
   // ── Turn identity (computed before the early return so the self-reset effect
@@ -303,10 +284,10 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
 
           <ReactionIcon state={reactionState} />
 
-          {moveStage === null && (
+          {moveStage === null && !isChoosingMove && (
             <button
               className="btn-secondary ttp-move"
-              onClick={() => setMoveStage('choosing')}
+              onClick={() => setIsChoosingMove(true)}
               aria-label="Move"
             >
               Move
@@ -377,7 +358,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
       )}
 
       {/* Movement sub-UI */}
-      {isInProgress && isMyTurn && moveStage === 'choosing' && (
+      {isInProgress && isMyTurn && isChoosingMove && moveStage === null && (
         <div className="ttp-move-choose" role="group" aria-label="Choose move action">
           {MOVE_ACTIONS.map((a) => (
             <button
