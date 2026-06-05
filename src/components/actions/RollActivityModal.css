@@ -1,0 +1,181 @@
+/* RollActivityModal — skill-check resolver for exploration activities */
+
+.ram-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Secret-roll notice */
+.ram-secret-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  background: var(--surface-trigger);
+  border-left: 3px solid var(--gold-mid);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  line-height: var(--leading-snug);
+}
+
+.ram-secret-icon {
+  color: var(--gold-light);
+  font-size: var(--text-base);
+  flex-shrink: 0;
+}
+
+/* Label above a field */
+.ram-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+/* Skill picker */
+.ram-skill-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ram-skill-btn {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.ram-skill-btn:hover {
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.ram-skill-btn--active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.ram-empty {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+}
+
+/* Net bonus display */
+.ram-bonus-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.ram-bonus-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary);
+}
+
+.ram-bonus-value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.ram-bonus-note {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+/* d20 + DC inputs */
+.ram-inputs {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.ram-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.ram-input {
+  width: 4.5rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-align: center;
+}
+
+.ram-input:focus {
+  outline: none;
+  border-color: var(--accent-outline);
+}
+
+/* Running total */
+.ram-total-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.ram-total-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.ram-total-value {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+/* Degree of success */
+.ram-degree {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ram-degree--criticalSuccess { background: var(--d-crit-bg); color: var(--d-crit-fg); }
+.ram-degree--success         { background: var(--d-succ-bg); color: var(--d-succ-fg); }
+.ram-degree--failure         { background: var(--d-fail-bg); color: var(--d-fail-fg); }
+.ram-degree--criticalFailure { background: var(--d-cf-bg);   color: var(--d-cf-fg);   }
+
+/* Footer */
+.ram-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}

@@ -33,6 +33,7 @@ const degreeModifier = (label) => {
  * @param {Function} onUse          – (item, cost) callback when Use tapped
  * @param {boolean}  isActive       – for activities: currently active
  * @param {Function} onSetActive    – for activities: set/clear active
+ * @param {Function} onRoll         – for activities: open the roll modal
  */
 const ActionDetailModal = ({
   item,
@@ -44,6 +45,7 @@ const ActionDetailModal = ({
   onUse,
   isActive = false,
   onSetActive,
+  onRoll,
 }) => {
   if (!item) return null;
 
@@ -137,6 +139,16 @@ const ActionDetailModal = ({
               variableRange={type === 'action' ? item.variableActionCount : undefined}
               onUse={(c) => { onUse && onUse(item, c); onClose(); }}
             />
+          )}
+
+          {/* Exploration: Roll Check button */}
+          {isActivity && onRoll && item.mechanics?.roll && (
+            <button
+              className="adm-roll-btn"
+              onClick={() => { onRoll(); onClose(); }}
+            >
+              Roll Check
+            </button>
           )}
 
           {/* Exploration: Set Active toggle */}

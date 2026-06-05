@@ -111,6 +111,31 @@
   color: var(--shell-text-secondary);
 }
 
+.el-banner-buttons {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.el-roll-btn {
+  background: none;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-2);
+  min-height: 30px;
+  transition: background 0.15s;
+}
+
+.el-roll-btn:hover {
+  background: var(--surface-3);
+}
+
 .el-clear-btn {
   flex-shrink: 0;
   background: none;

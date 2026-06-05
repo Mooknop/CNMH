@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import ActionRow from '../shared/ActionRow';
 import ActionDetailModal from '../encounter/ActionDetailModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
+import RollActivityModal from './RollActivityModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
@@ -31,6 +32,7 @@ const ExplorationList = ({ character, characterColor }) => {
     null
   );
   const [openActivity, setOpenActivity]   = useState(null);
+  const [rollActivity, setRollActivity]   = useState(null);
   const [treatWoundsOpen, setTreatWoundsOpen] = useState(false);
 
   if (!characterModel) return null;
@@ -83,9 +85,16 @@ const ExplorationList = ({ character, characterColor }) => {
                 <div className="el-banner-skill">{activeActivity.skill}</div>
               )}
             </div>
-            <button className="el-clear-btn" onClick={() => setActiveActivityName(null)}>
-              Clear
-            </button>
+            <div className="el-banner-buttons">
+              {activeActivity.mechanics?.roll && (
+                <button className="el-roll-btn" onClick={() => setRollActivity(activeActivity)}>
+                  Roll Check
+                </button>
+              )}
+              <button className="el-clear-btn" onClick={() => setActiveActivityName(null)}>
+                Clear
+              </button>
+            </div>
           </div>
           {activeActivity.mechanics?.note && (
             <div className="el-banner-note">{activeActivity.mechanics.note}</div>
@@ -145,6 +154,18 @@ const ExplorationList = ({ character, characterColor }) => {
           themeColor={themeColor}
           isActive={activeActivityName === openActivity?.name}
           onSetActive={() => toggleActive(openActivity?.name)}
+          onRoll={openActivity?.mechanics?.roll ? () => setRollActivity(openActivity) : undefined}
+        />
+      )}
+
+      {/* Roll check modal */}
+      {rollActivity && (
+        <RollActivityModal
+          isOpen={true}
+          onClose={() => setRollActivity(null)}
+          activity={rollActivity}
+          character={character}
+          themeColor={themeColor}
         />
       )}
 

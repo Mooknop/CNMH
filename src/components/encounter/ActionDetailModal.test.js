@@ -227,6 +227,34 @@ describe('ActionDetailModal', () => {
       );
       expect(screen.queryByRole('button', { name: /Set as active/ })).not.toBeInTheDocument();
     });
+
+    it('shows Roll Check button when activity has a roll and onRoll is provided', () => {
+      const rollActivity = { name: 'Coerce', traits: [], description: 'Coerce.', mechanics: { roll: { type: 'skill', skill: 'intimidation' } } };
+      const onRoll = jest.fn();
+      render(
+        <ActionDetailModal item={rollActivity} type="activity" isOpen onClose={jest.fn()} onRoll={onRoll} />
+      );
+      expect(screen.getByRole('button', { name: 'Roll Check' })).toBeInTheDocument();
+    });
+
+    it('calls onRoll and onClose when Roll Check is clicked', () => {
+      const rollActivity = { name: 'Coerce', traits: [], description: 'Coerce.', mechanics: { roll: { type: 'skill', skill: 'intimidation' } } };
+      const onRoll = jest.fn();
+      const onClose = jest.fn();
+      render(
+        <ActionDetailModal item={rollActivity} type="activity" isOpen onClose={onClose} onRoll={onRoll} />
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Roll Check' }));
+      expect(onRoll).toHaveBeenCalled();
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it('does not show Roll Check button when activity has no roll', () => {
+      render(
+        <ActionDetailModal item={activity} type="activity" isOpen onClose={jest.fn()} onRoll={jest.fn()} />
+      );
+      expect(screen.queryByRole('button', { name: 'Roll Check' })).not.toBeInTheDocument();
+    });
   });
 
   it('renders variable action text when variableActionCount is provided', () => {
