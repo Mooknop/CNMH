@@ -22,6 +22,7 @@ export const EXPLORATION_ACTIVITIES = [
     highlightSkills: ['stealth'],
     mechanics: {
       speed: 'half',
+      // roll handled in Slice 3 (success → hidden effect applied)
       note: 'On a successful Stealth check you are Hidden from creatures that haven\'t noticed you.',
     },
     description: 'You attempt a Stealth check at the start of exploration to try to avoid notice. If you succeed, you gain the benefits of the Avoiding Notice exploration activity (hidden from creatures that haven\'t noticed you). You move at half speed while Avoiding Notice.',
@@ -79,7 +80,10 @@ export const EXPLORATION_ACTIVITIES = [
     traits: ['Concentrate', 'Exploration', 'Secret'],
     skill: 'Survival',
     highlightSkills: ['survival'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: { type: 'skill', skill: 'survival', secret: true },
+    },
     description: 'Using your innate sense of direction, you can determine which way is north and roughly where you are. You can also attempt to find your way to a specific location. You move at full speed while using this activity.',
   },
 
@@ -90,7 +94,11 @@ export const EXPLORATION_ACTIVITIES = [
     traits: ['Auditory', 'Concentrate', 'Emotion', 'Exploration', 'Linguistic', 'Mental'],
     skill: 'Intimidation',
     highlightSkills: ['intimidation'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      // +4 circumstance bonus is part of the Coerce action itself
+      roll: { type: 'skill', skill: 'intimidation', circumstanceBonus: 4, circumstanceLabel: 'Coerce' },
+    },
     description: 'With threats, you attempt to convince a creature to do what you want. Attempt an Intimidation check with a +4 circumstance bonus against the target\'s Will DC, modified by their attitude toward you. On a success they comply until end of scene; on a critical success until end of next encounter.',
   },
   {
@@ -100,6 +108,7 @@ export const EXPLORATION_ACTIVITIES = [
     skill: 'Perception',
     mechanics: {
       speed: 'full',
+      // Roll handled in Slice 4 (Follow the Expert cross-char link)
       note: 'You gain a +2 circumstance bonus to a skill an expert party member is using, while they succeed.',
     },
     description: 'You follow another party member who is performing a different exploration activity. You must be able to see and hear the expert. You gain a +2 circumstance bonus to any skill checks the expert makes that you also need to attempt (such as Stealth or Recall Knowledge), as long as the expert succeeds.',
@@ -110,7 +119,10 @@ export const EXPLORATION_ACTIVITIES = [
     traits: ['Exploration', 'Secret'],
     skill: 'Diplomacy',
     highlightSkills: ['diplomacy'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: { type: 'skill', skill: 'diplomacy', secret: true },
+    },
     description: 'You canvass local sources for information about a specific topic. Attempt a Diplomacy check against a DC determined by the local rumor mill and how obscure the information is. After 2 hours of gathering information you get the GM\'s report.',
   },
   {
@@ -119,7 +131,10 @@ export const EXPLORATION_ACTIVITIES = [
     traits: ['Concentrate', 'Exploration', 'Manipulate', 'Secret'],
     skill: 'Deception',
     highlightSkills: ['deception'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: { type: 'skill', skill: 'deception', secret: true },
+    },
     description: 'You create a disguise to pass as a different type of person, a specific individual, or a different ancestry. Attempt a Deception check. Onlookers make Perception checks to see through your disguise; you use your Deception check result against their Perception DCs.',
   },
   {
@@ -128,7 +143,10 @@ export const EXPLORATION_ACTIVITIES = [
     traits: ['Auditory', 'Concentrate', 'Emotion', 'Exploration', 'Linguistic', 'Mental'],
     skill: 'Diplomacy',
     highlightSkills: ['diplomacy'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: { type: 'skill', skill: 'diplomacy' },
+    },
     description: 'With at least 1 minute of conversation, you can attempt to change a creature\'s attitude toward you. Attempt a Diplomacy check against the creature\'s Will DC to improve their attitude one step (two steps on a critical success).',
   },
   {
@@ -137,7 +155,10 @@ export const EXPLORATION_ACTIVITIES = [
     traits: ['Auditory', 'Concentrate', 'Emotion', 'Exploration', 'Linguistic', 'Mental'],
     skill: 'Diplomacy',
     highlightSkills: ['diplomacy'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: { type: 'skill', skill: 'diplomacy' },
+    },
     description: 'You ask a creature to do something. Attempt a Diplomacy check against the creature\'s Will DC. The DC is adjusted based on how reasonable the request is. On a success the creature agrees; on a failure they refuse.',
   },
 
@@ -150,6 +171,10 @@ export const EXPLORATION_ACTIVITIES = [
     mechanics: {
       speed: 'half',
       note: 'Attempt Recall Knowledge checks on what you encounter as you travel.',
+      roll: {
+        type: 'skill-pick',
+        skills: ['arcana', 'nature', 'occultism', 'religion', 'society', 'crafting'],
+      },
     },
     description: 'You attempt to learn more about your surroundings as you travel. You move at half speed and spend time studying your environment, attempting Recall Knowledge checks on creatures, hazards, and events you encounter.',
   },
@@ -160,7 +185,14 @@ export const EXPLORATION_ACTIVITIES = [
     skill: 'Arcana / Occultism / Religion / Society (trained)',
     highlightSkills: ['arcana', 'occultism', 'religion', 'society'],
     requiresTrainedInAny: ['arcana', 'occultism', 'religion', 'society'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: {
+        type: 'skill-pick',
+        skills: ['arcana', 'occultism', 'religion', 'society'],
+        secret: true,
+      },
+    },
     description: 'You study a piece of writing to decode it. Attempt the appropriate skill check (Arcana, Occultism, Religion, or Society) against the DC determined by the complexity of the writing. You must be trained in the skill to attempt this.',
   },
 
@@ -175,6 +207,11 @@ export const EXPLORATION_ACTIVITIES = [
     mechanics: {
       speed: 'half',
       note: 'Magical auras within 30 feet are automatically detected as you travel.',
+      roll: {
+        type: 'skill-pick',
+        skills: ['arcana', 'nature', 'occultism', 'religion'],
+        secret: true,
+      },
     },
     description: 'You cast detect magic at regular intervals, scanning for magical auras while you travel. You move at half speed. Any magical auras you pass within 30 feet are automatically detected, as well as most magical items.',
   },
@@ -197,7 +234,14 @@ export const EXPLORATION_ACTIVITIES = [
     highlightSkills: ['arcana', 'nature', 'occultism', 'religion'],
     requiresFlag: 'hasSpellcasting',
     requiresTrainedInAny: ['arcana', 'nature', 'occultism', 'religion'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: {
+        type: 'skill-pick',
+        skills: ['arcana', 'nature', 'occultism', 'religion'],
+        secret: true,
+      },
+    },
     description: 'Using the appropriate skill, you can attempt to identify a magic item or ongoing magical effect. The DC is set by the GM based on the rarity of the magic. You must be trained in the skill to attempt this.',
   },
   {
@@ -208,7 +252,13 @@ export const EXPLORATION_ACTIVITIES = [
     highlightSkills: ['arcana', 'nature', 'occultism', 'religion'],
     requiresFlag: 'hasSpellcasting',
     requiresTrainedInAny: ['arcana', 'nature', 'occultism', 'religion'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: {
+        type: 'skill-pick',
+        skills: ['arcana', 'nature', 'occultism', 'religion'],
+      },
+    },
     description: 'You spend time learning a new spell from a spellbook or another caster. Attempt a skill check against the spell\'s DC. On a success you add the spell to your spell list or spellbook. The process takes 1 hour per spell level.',
   },
 

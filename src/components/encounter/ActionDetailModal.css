@@ -136,6 +136,25 @@
   margin-top: var(--space-1);
 }
 
+/* Roll Check button (exploration) */
+.adm-roll-btn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  min-height: var(--tap-target-min);
+  transition: background 0.15s;
+}
+
+.adm-roll-btn:hover {
+  background: var(--surface-3);
+}
+
 /* Set-as-active button (exploration) */
 .adm-set-active-btn {
   padding: var(--space-2) var(--space-4);

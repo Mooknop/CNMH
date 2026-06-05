@@ -119,6 +119,36 @@ describe('explorationActivities data', () => {
       expect(hustle.mechanics.speed).toBe('double');
     });
 
+    it('Coerce has a fixed-skill roll with a circumstance bonus', () => {
+      const coerce = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Coerce');
+      expect(coerce.mechanics.roll.type).toBe('skill');
+      expect(coerce.mechanics.roll.skill).toBe('intimidation');
+      expect(coerce.mechanics.roll.circumstanceBonus).toBe(4);
+    });
+
+    it('Gather Information has a secret diplomacy roll', () => {
+      const gi = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Gather Information');
+      expect(gi.mechanics.roll.type).toBe('skill');
+      expect(gi.mechanics.roll.secret).toBe(true);
+    });
+
+    it('Identify Magic uses a skill-pick roll from magic skills', () => {
+      const im = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Identify Magic');
+      expect(im.mechanics.roll.type).toBe('skill-pick');
+      expect(im.mechanics.roll.skills).toContain('arcana');
+    });
+
+    it('activities with skill-pick rolls declare at least one skill', () => {
+      const pickActivities = EXPLORATION_ACTIVITIES.filter(
+        (a) => a.mechanics.roll?.type === 'skill-pick'
+      );
+      expect(pickActivities.length).toBeGreaterThan(0);
+      pickActivities.forEach((a) => {
+        expect(Array.isArray(a.mechanics.roll.skills)).toBe(true);
+        expect(a.mechanics.roll.skills.length).toBeGreaterThan(0);
+      });
+    });
+
     it('Avoid Notice is in Scouting and highlights stealth', () => {
       const an = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Avoid Notice');
       expect(an.category).toBe('Scouting');

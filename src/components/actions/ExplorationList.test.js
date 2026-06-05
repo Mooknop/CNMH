@@ -42,6 +42,18 @@ jest.mock('../encounter/TreatWoundsModal', () =>
   }
 );
 
+jest.mock('./RollActivityModal', () =>
+  function DummyRollActivityModal({ isOpen, onClose, activity }) {
+    if (!isOpen) return null;
+    return (
+      <div data-testid="roll-activity-modal">
+        <span>{activity?.name}</span>
+        <button onClick={onClose}>Close</button>
+      </div>
+    );
+  }
+);
+
 jest.mock('../shared/TraitTag', () => ({ trait }) => <span>{trait}</span>);
 
 const mockSetter = jest.fn();
@@ -177,6 +189,25 @@ describe('ExplorationList', () => {
     render(<ExplorationList character={mockCharacter} />);
     expect(screen.getByText('×2 Speed')).toBeInTheDocument();
     expect(screen.getByText(/Fatigued after Constitution modifier/)).toBeInTheDocument();
+  });
+
+  it('shows Roll Check button on banner when active activity has a roll', () => {
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Make an Impression', mockSetter]);
+    render(<ExplorationList character={mockCharacter} />);
+    expect(screen.getByRole('button', { name: 'Roll Check' })).toBeInTheDocument();
+  });
+
+  it('opens the roll modal when banner Roll Check is clicked', () => {
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Make an Impression', mockSetter]);
+    render(<ExplorationList character={mockCharacter} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Roll Check' }));
+    expect(screen.getByTestId('roll-activity-modal')).toBeInTheDocument();
+  });
+
+  it('does not show Roll Check button on banner for activities without a roll', () => {
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Hustle', mockSetter]);
+    render(<ExplorationList character={mockCharacter} />);
+    expect(screen.queryByRole('button', { name: 'Roll Check' })).not.toBeInTheDocument();
   });
 
   it('opens activity detail modal when a row is clicked', () => {
