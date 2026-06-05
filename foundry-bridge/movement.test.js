@@ -25,8 +25,8 @@ beforeEach(() => {
 });
 
 describe('handleMoveRequest', () => {
-  test('step yields the 8 adjacent squares, echoing reqTs', async () => {
-    setupPellias();
+  test('step yields the 8 adjacent squares, echoing reqTs + speed', async () => {
+    setupPellias({ speed: 10 });
     await handleMoveRequest('Pellias', { moveType: 'step', ts: 999 });
 
     expect(send).toHaveBeenCalledTimes(1);
@@ -34,7 +34,7 @@ describe('handleMoveRequest', () => {
     expect(charId).toBe('Pellias');
     expect(key).toBe('moveopts');
     expect(opts.origin).toEqual({ col: 5, row: 5 });
-    expect(opts.maxFeet).toBe(5);
+    expect(opts.speed).toBe(10);
     expect(opts.gridSize).toBe(100);
     expect(opts.reqTs).toBe(999);
     expect(opts.reachable).toHaveLength(8);
@@ -108,13 +108,14 @@ describe('handleMoveRequest', () => {
     expect(reachable.find((s) => s.col === 6 && s.row === 5)).toBeUndefined();
   });
 
-  test('stride uses full land speed (2 squares → 5x5 minus center)', async () => {
-    setupPellias({ speed: 10 });
+  test('stride probes the same 8 neighbours (stepper), not a speed-radius grid', async () => {
+    setupPellias({ speed: 30 });
     await handleMoveRequest('Pellias', { moveType: 'stride', ts: 1 });
-    const { maxFeet, reachable } = send.mock.calls[0][2];
-    expect(maxFeet).toBe(10);
-    // 5x5 block (radius 2) minus the origin = 24 squares, all within 10ft chebyshev.
-    expect(reachable).toHaveLength(24);
+    const { reachable, blocked, speed } = send.mock.calls[0][2];
+    // Stepper always probes one cell out regardless of Speed; Speed rides along
+    // for the app's per-step action accounting.
+    expect(reachable.length + blocked.length).toBe(8);
+    expect(speed).toBe(30);
   });
 
   test('unmapped character → no options pushed', async () => {

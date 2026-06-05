@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import ExplorationMove from './ExplorationMove';
 
 const mockPlayMode = {
@@ -20,7 +20,11 @@ const mockMovement = {
   cancelMove: jest.fn(),
 };
 jest.mock('../../hooks/useTokenMovement', () => ({
-  useTokenMovement: () => mockMovement,
+  useTokenMovement: (charId, opts) => {
+    // Capture onMoveDone so tests can simulate the bridge confirming a step.
+    mockMovement.lastOpts = opts;
+    return mockMovement;
+  },
 }));
 
 jest.mock('../encounter/MoveGridPicker', () =>
@@ -96,12 +100,33 @@ describe('ExplorationMove', () => {
     expect(mockMovement.confirmMove).toHaveBeenCalledWith({ x: 100, y: 200 });
   });
 
-  it('calls cancelMove when Cancel is clicked', () => {
+  it('calls cancelMove when Done is clicked', () => {
     mockMovement.stage = 'picking';
-    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30 };
     render(<ExplorationMove charId="char-1" />);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(mockMovement.cancelMove).toHaveBeenCalled();
+  });
+
+  it('accumulates a distance readout across steps and resets on Done', () => {
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30 };
+    render(<ExplorationMove charId="char-1" />);
+
+    // No readout before any step.
+    expect(screen.queryByLabelText('Distance walked')).not.toBeInTheDocument();
+
+    // Simulate two confirmed 5-ft steps via the captured onMoveDone.
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
+    expect(screen.getByLabelText('Distance walked')).toHaveTextContent('Moved 10 ft');
+
+    // Each step chains a refresh probe.
+    expect(mockMovement.requestMoveRefresh).toHaveBeenCalledWith('stride');
+
+    // Done resets the tally.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByLabelText('Distance walked')).not.toBeInTheDocument();
   });
 
   it('shows Moving status when stage is awaiting-done', () => {

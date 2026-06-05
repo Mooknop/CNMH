@@ -125,3 +125,45 @@
 .mgp-cancel {
   align-self: stretch;
 }
+
+/* ── Step-pad mode (8-direction D-pad) ──────────────────────────────────────
+   A compact 3x3 of bigger, finger-friendly cells with direction arrows. */
+.mgp--step .mgp-grid {
+  gap: 4px;
+}
+
+.mgp--step .mgp-cell {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Arrow cells get a tactile press. */
+.mgp--step .mgp-cell--reachable,
+.mgp--step .mgp-cell--difficult {
+  transition: transform 0.06s ease, background 0.12s ease;
+}
+
+.mgp--step .mgp-cell--reachable:active,
+.mgp--step .mgp-cell--difficult:active {
+  transform: scale(0.9);
+}
+
+/* Origin dot — the token "you are here" pip at the pad's center. */
+.mgp--step .mgp-cell--origin {
+  color: var(--accent-text, var(--accent-outline));
+  font-size: 1.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mgp--step .mgp-cell--reachable,
+  .mgp--step .mgp-cell--difficult {
+    transition: none;
+  }
+  .mgp--step .mgp-cell--reachable:active,
+  .mgp--step .mgp-cell--difficult:active {
+    transform: none;
+  }
+}

@@ -191,6 +191,15 @@
   margin-left: auto;
 }
 
+/* Live Stride distance readout (feet walked / Speed) shown while stepping. */
+.ttp-move-dist {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  white-space: nowrap;
+}
+
 /* "Use" button on action cards */
 .action-use-row {
   display: flex;

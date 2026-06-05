@@ -58,9 +58,11 @@ describe('useTokenMovement', () => {
     const { result } = setup();
     act(() => result.current.requestMove('stride'));
     const reqTs = mockSendUpdate.mock.calls[0][2].ts;
-    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], maxFeet: 30, reqTs });
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
     expect(result.current.stage).toBe('picking');
-    expect(result.current.pickerOpts).toMatchObject({ origin: { col: 5, row: 5 } });
+    // pickerOpts passes the bridge payload through verbatim, incl. speed for the
+    // consumer's action accounting.
+    expect(result.current.pickerOpts).toMatchObject({ origin: { col: 5, row: 5 }, speed: 30 });
   });
 
   it('ignores moveopts from a stale request (reqTs mismatch)', () => {

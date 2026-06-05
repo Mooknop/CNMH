@@ -15,3 +15,15 @@
   opacity: 0.6;
   margin-bottom: var(--space-1);
 }
+
+.em-distance {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  text-align: center;
+  padding: var(--space-1) 0;
+}
+
+.em-distance strong {
+  color: var(--theme-text, var(--shell-text));
+}

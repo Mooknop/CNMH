@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -70,38 +70,71 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   // turns advance. We read it here so the order strip can show the flanked badge.
   const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
 
-  // ── Movement (Feature 3) ──────────────────────────────────────────────────
-  // isChoosingMove: local-only state for the Step/Stride selection UI.
-  // The rest of the state machine lives in useTokenMovement.
+  // ── Movement (Feature 3) — 8-direction stepper ─────────────────────────────
+  // isChoosingMove: local-only Step/Stride selection UI.
+  // feetThisAction: feet walked under the current Stride action. A Stride covers
+  // up to the character's Speed for 1 action; crossing each Speed increment
+  // charges another action. A Step is its own dedicated single 5-ft action.
   const [isChoosingMove, setIsChoosingMove] = useState(false);
+  const [feetThisAction, setFeetThisAction] = useState(0);
+
+  // requestMoveRefresh / cancelMove are returned by the hook below but are
+  // referenced inside onMoveDone (which the hook needs as input) — bridge them
+  // through refs to break the cycle. moveTypeRef/speedRef likewise carry the
+  // live move type and Speed into the callback without stale closures.
+  const requestMoveRefreshRef = useRef(null);
+  const cancelMoveRef = useRef(null);
+  const moveTypeRef = useRef(null);
+  const speedRef = useRef(0);
+
+  const handleMoveDone = useCallback((done) => {
+    const stepFeet = done?.feetMoved ?? 5;
+    appendLog({ type: 'action', charId, text: `${characterName} moved ${stepFeet} ft` });
+
+    if (moveTypeRef.current === 'step') {
+      // A Step is a single dedicated action: one 5-ft move, then close the pad.
+      spendActions(1, 'Step');
+      cancelMoveRef.current?.();
+      return;
+    }
+
+    // Stride: charge the 1st action on the 1st step, and one more each time the
+    // running distance would cross the character's Speed.
+    const speed = speedRef.current || stepFeet;
+    const needNewAction = feetThisAction === 0 || feetThisAction + stepFeet > speed;
+    if (needNewAction) {
+      spendActions(1, 'Stride');
+      setFeetThisAction(stepFeet);
+    } else {
+      setFeetThisAction(feetThisAction + stepFeet);
+    }
+    requestMoveRefreshRef.current?.('stride'); // keep the pad open to chain steps
+  }, [feetThisAction, spendActions, appendLog, charId, characterName]);
 
   const {
     stage: moveStage,
     pickerOpts,
     pendingMoveType,
     requestMove: rawRequestMove,
+    requestMoveRefresh,
     confirmMove: rawConfirmMove,
     cancelMove: rawCancelMove,
-  } = useTokenMovement(charId, {
-    onMoveDone: (done) => {
-      appendLog({ type: 'action', charId, text: `${characterName} moved ${done.feetMoved} ft` });
-    },
-  });
+  } = useTokenMovement(charId, { onMoveDone: handleMoveDone });
+
+  requestMoveRefreshRef.current = requestMoveRefresh;
+  cancelMoveRef.current = rawCancelMove;
+  speedRef.current = pickerOpts?.speed || speedRef.current;
 
   const requestMove = (moveType) => {
     setIsChoosingMove(false);
+    moveTypeRef.current = moveType;
+    if (moveType === 'stride') setFeetThisAction(0);
     rawRequestMove(moveType);
-  };
-
-  const confirmMove = (destination) => {
-    const action = MOVE_ACTIONS.find((a) => a.type === pendingMoveType);
-    const cost = action?.cost ?? 1;
-    spendActions(cost, action?.label || 'Move');
-    rawConfirmMove(destination, cost);
   };
 
   const cancelMove = () => {
     setIsChoosingMove(false);
+    setFeetThisAction(0);
     rawCancelMove();
   };
 
@@ -127,6 +160,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
     if (phase !== 'in-progress') return;
     if (isMyTurn && turnState?.turnToken !== turnToken) {
       resetForNewTurn(turnToken);
+      setFeetThisAction(0); // distance budget is per-turn
       // "Until the start of your next turn" — a raised shield expires now.
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
@@ -284,6 +318,12 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
 
           <ReactionIcon state={reactionState} />
 
+          {moveStage !== null && pendingMoveType === 'stride' && (
+            <span className="ttp-move-dist" aria-label="Stride distance">
+              {feetThisAction}/{pickerOpts?.speed ?? speedRef.current} ft
+            </span>
+          )}
+
           {moveStage === null && !isChoosingMove && (
             <button
               className="btn-secondary ttp-move"
@@ -385,8 +425,10 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           origin={pickerOpts.origin}
           reachable={pickerOpts.reachable}
           blocked={pickerOpts.blocked}
-          maxFeet={pickerOpts.maxFeet}
-          onSelect={confirmMove}
+          radius={1}
+          stepMode
+          cancelLabel="Done"
+          onSelect={rawConfirmMove}
           onCancel={cancelMove}
         />
       )}

@@ -243,7 +243,22 @@ describe('TurnTrackerPanel', () => {
     Date.now.mockRestore();
   });
 
-  it('renders the grid on options, confirms a move, spends actions, and closes on done', () => {
+  // Drive one eastward step through the real movement hook: feed reachable
+  // neighbours, tap the East arrow, then confirm the move completed. Date.now is
+  // mocked to a constant so every reqTs correlates.
+  const stepEast = (setOpts, setDone) => {
+    act(() => setOpts({
+      reqTs: 555,
+      origin: { col: 5, row: 5 },
+      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
+      blocked: [],
+      speed: 25,
+    }));
+    fireEvent.click(screen.getByLabelText('Step east'));
+    act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
+  };
+
+  it('Stride charges 1 action per Speed of accumulated stepping', () => {
     let drv, tsDriver, setOpts, setDone;
     render(
       <>
@@ -260,25 +275,51 @@ describe('TurnTrackerPanel', () => {
     fireEvent.click(screen.getByLabelText('Move'));
     fireEvent.click(screen.getByLabelText('move-stride'));
 
-    // Bridge responds with reachable squares, correlated by reqTs.
-    act(() => setOpts({
-      reqTs: 555,
-      origin: { col: 5, row: 5 },
-      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-      blocked: [],
-      maxFeet: 25,
-    }));
-
-    // Grid appears; choose the reachable square.
-    fireEvent.click(screen.getByLabelText(/Move to 6,5/));
-
+    // First step spends the Stride action; the confirm carries no action cost
+    // (accounting happens on move-done, not on confirm).
+    stepEast(setOpts, setDone);
     expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
-      destination: { col: 6, row: 5 }, moveType: 'stride', actionCost: 1, ts: 555,
+      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 555,
     }));
     expect(tsDriver.turnState.actionsSpent).toBe(1);
+    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('5/25 ft');
 
-    // Bridge confirms the move completed → UI closes, Move button returns.
-    act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
+    // Steps 2–5 stay within the 25ft Speed → still 1 action.
+    for (let i = 0; i < 4; i++) stepEast(setOpts, setDone);
+    expect(tsDriver.turnState.actionsSpent).toBe(1);
+    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('25/25 ft');
+
+    // Step 6 crosses Speed → a 2nd Stride action, distance resets to this step.
+    stepEast(setOpts, setDone);
+    expect(tsDriver.turnState.actionsSpent).toBe(2);
+    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('5/25 ft');
+
+    Date.now.mockRestore();
+  });
+
+  it('Step spends exactly one action and closes the pad', () => {
+    let drv, tsDriver, setOpts, setDone;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
+        <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    jest.spyOn(Date, 'now').mockReturnValue(555);
+    fireEvent.click(screen.getByLabelText('Move'));
+    fireEvent.click(screen.getByLabelText('move-step'));
+    stepEast(setOpts, setDone);
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
+      moveType: 'step', ts: 555,
+    }));
+    expect(tsDriver.turnState.actionsSpent).toBe(1);
+    // Single dedicated action → pad closes, Move button returns.
     expect(screen.getByLabelText('Move')).toBeInTheDocument();
     Date.now.mockRestore();
   });
@@ -302,9 +343,9 @@ describe('TurnTrackerPanel', () => {
     act(() => setOpts({
       reqTs: 1, origin: { col: 5, row: 5 },
       reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-      blocked: [], maxFeet: 25,
+      blocked: [], speed: 25,
     }));
-    expect(screen.queryByLabelText(/Move to 6,5/)).toBeNull();
+    expect(screen.queryByLabelText('Step east')).toBeNull();
     Date.now.mockRestore();
   });
 
