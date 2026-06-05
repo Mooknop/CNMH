@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import ExplorationList from './ExplorationList';
 import ExplorationMove from './ExplorationMove';
+import ExplorationDoors from './ExplorationDoors';
 import './ExplorationTab.css';
 
 // Wrapper for the Explore tab. Shows Activity / Movement subtabs when in
@@ -10,6 +11,8 @@ import './ExplorationTab.css';
 const ExplorationTab = ({ character, characterColor }) => {
   const { mode } = usePlayMode();
   const [subtab, setSubtab] = useState('activity');
+  const [moveDoneTs, setMoveDoneTs] = useState(null);
+  const handleMoveDone = useCallback(() => setMoveDoneTs(Date.now()), []);
 
   if (mode === 'downtime') {
     return (
@@ -43,7 +46,10 @@ const ExplorationTab = ({ character, characterColor }) => {
         <ExplorationList character={character} characterColor={characterColor} />
       )}
       {subtab === 'movement' && (
-        <ExplorationMove charId={character?.id} />
+        <>
+          <ExplorationMove charId={character?.id} onMoveDone={handleMoveDone} />
+          <ExplorationDoors charId={character?.id} moveDoneTs={moveDoneTs} />
+        </>
       )}
     </div>
   );

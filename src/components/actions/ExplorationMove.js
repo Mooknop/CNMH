@@ -10,16 +10,18 @@ import './ExplorationMove.css';
 // and immediately refreshes the grid from the new origin so moves can chain
 // in real time. The picker stays open until the player hits Done (Cancel).
 
-const ExplorationMove = ({ charId }) => {
+const ExplorationMove = ({ charId, onMoveDone }) => {
   const { mode, moveEnabled } = usePlayMode();
 
-  // Use a ref so onMoveDone can call requestMoveRefresh without a circular
-  // dependency between the callback and the hook call.
+  // Use a ref so the internal callback can call requestMoveRefresh without a
+  // circular dependency. Also calls the optional onMoveDone prop so parent
+  // components (e.g. ExplorationTab) know when a move completes.
   const requestMoveRefreshRef = useRef(null);
 
-  const handleMoveDone = useCallback(() => {
+  const handleMoveDone = useCallback((payload) => {
     requestMoveRefreshRef.current?.('stride');
-  }, []);
+    onMoveDone?.(payload);
+  }, [onMoveDone]);
 
   const {
     stage,
