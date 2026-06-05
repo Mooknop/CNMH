@@ -58,4 +58,13 @@ describe('usePlayMode', () => {
     act(() => result.current.setMoveEnabled(false));
     expect(result.current.moveEnabled).toBe(false);
   });
+
+  it('defaults moveOverride to false and setMoveOverride toggles it', () => {
+    const { result } = setup();
+    expect(result.current.moveOverride).toBe(false);
+    act(() => result.current.setMoveOverride(true));
+    expect(result.current.moveOverride).toBe(true);
+    act(() => result.current.setMoveOverride(false));
+    expect(result.current.moveOverride).toBe(false);
+  });
 });
