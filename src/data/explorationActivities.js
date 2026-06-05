@@ -22,7 +22,7 @@ export const EXPLORATION_ACTIVITIES = [
     highlightSkills: ['stealth'],
     mechanics: {
       speed: 'half',
-      // roll handled in Slice 3 (success → hidden effect applied)
+      roll: { type: 'skill', skill: 'stealth', onSuccessEffect: 'avoid-notice-hidden' },
       note: 'On a successful Stealth check you are Hidden from creatures that haven\'t noticed you.',
     },
     description: 'You attempt a Stealth check at the start of exploration to try to avoid notice. If you succeed, you gain the benefits of the Avoiding Notice exploration activity (hidden from creatures that haven\'t noticed you). You move at half speed while Avoiding Notice.',
@@ -70,6 +70,7 @@ export const EXPLORATION_ACTIVITIES = [
     highlightSkills: ['perception'],
     mechanics: {
       speed: 'half',
+      roll: { type: 'skill', skill: 'perception', secret: true },
       note: 'Seek everything within 30 feet, detecting hidden creatures and concealed features.',
     },
     description: 'You move at half speed and Seek everything within 30 feet of you, detecting any hidden creatures or objects as you go. While Searching, you can detect secret doors and other concealed features.',
@@ -280,7 +281,10 @@ export const EXPLORATION_ACTIVITIES = [
     skill: 'Medicine (trained)',
     highlightSkills: ['medicine'],
     requiresTrainedInAny: ['medicine'],
-    mechanics: { speed: 'full' },
+    mechanics: {
+      speed: 'full',
+      roll: { type: 'skill', skill: 'medicine', target: 'party-pc', onSuccessEffect: 'treat-poison-resist' },
+    },
     description: 'You treat a poisoned creature during exploration. Attempt a Medicine check with the DC depending on the poison. On a success you grant the target a +2 circumstance bonus to saving throws against the poison.',
   },
 ];

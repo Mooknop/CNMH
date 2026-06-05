@@ -149,6 +149,25 @@ describe('explorationActivities data', () => {
       });
     });
 
+    it('Avoid Notice has a stealth roll with an on-success effect', () => {
+      const an = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Avoid Notice');
+      expect(an.mechanics.roll.skill).toBe('stealth');
+      expect(an.mechanics.roll.onSuccessEffect).toBe('avoid-notice-hidden');
+    });
+
+    it('Treat Poison has a medicine roll targeting a party PC with an on-success effect', () => {
+      const tp = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Treat Poison');
+      expect(tp.mechanics.roll.skill).toBe('medicine');
+      expect(tp.mechanics.roll.target).toBe('party-pc');
+      expect(tp.mechanics.roll.onSuccessEffect).toBe('treat-poison-resist');
+    });
+
+    it('Search has a secret Perception roll', () => {
+      const s = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Search');
+      expect(s.mechanics.roll.skill).toBe('perception');
+      expect(s.mechanics.roll.secret).toBe(true);
+    });
+
     it('Avoid Notice is in Scouting and highlights stealth', () => {
       const an = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Avoid Notice');
       expect(an.category).toBe('Scouting');
