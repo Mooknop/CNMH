@@ -303,6 +303,15 @@ export function measureMoveCost(fromX, fromY, toX, toY) {
   return path.distance;
 }
 
+// All player-character actors on this world (hasPlayerOwner = true, type =
+// 'character'). Used to push cnmh_roster_global so the app can resolve
+// charId → token outside of active combat.
+export function getPlayerActors() {
+  return (game.actors?.contents ?? []).filter(
+    (a) => a.type === 'character' && a.hasPlayerOwner
+  );
+}
+
 // True if a wall blocks movement between two pixel points.
 // v12/v13: canvas.walls.checkCollision was removed; collision goes through the
 // move polygon backend. mode:'any' returns a boolean.

@@ -4,6 +4,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
+import PlayModeControl from '../../components/gm/PlayModeControl';
 import './gm.css';
 
 // Read-only mirror of the live Foundry combat, plus a manual actor assignment
@@ -39,6 +40,7 @@ const GmEncounter = () => {
 
   return (
     <div className="gm-encounter">
+      <PlayModeControl />
       <header className="gm-encounter-header">
         <h2>Encounter</h2>
         {foundryLinked ? (

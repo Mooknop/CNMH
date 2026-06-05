@@ -6,7 +6,8 @@ import { useContent } from '../contexts/ContentContext';
 import { useEncounter } from '../hooks/useEncounter';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import ActionsList from '../components/actions/ActionsList';
-import ExplorationList from '../components/actions/ExplorationList';
+import ExplorationTab from '../components/actions/ExplorationTab';
+import PlayModeBadge from '../components/playmode/PlayModeBadge';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
@@ -128,7 +129,7 @@ const CharacterSheet = () => {
           </>
         );
       case 'explore':
-        return <ExplorationList character={character} characterColor={characterColor} />;
+        return <ExplorationTab character={character} characterColor={characterColor} />;
       case 'inventory':
         return (
           <InventoryTab
@@ -200,7 +201,10 @@ const CharacterSheet = () => {
           <div className="cs-info">
             <div className="cs-info-bg" aria-hidden="true" />
             <div className="cs-info-content">
-              <h1 className="cs-char-name">{character.name}</h1>
+              <div className="cs-name-row">
+                <h1 className="cs-char-name">{character.name}</h1>
+                <PlayModeBadge />
+              </div>
               <p className="cs-char-sub">
                 {[
                   character.ancestry,

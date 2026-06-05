@@ -15,6 +15,7 @@ import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.j
 import { handleAction } from './targeting.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
+import { getPlayerActors, getActorId } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -61,6 +62,17 @@ Hooks.once('ready', () => {
   connect();
 });
 
+// Push the PC roster once connected so the app can resolve charId → token
+// even before a combat has run (exploration movement depends on actorMap).
+function pushRoster() {
+  const actors = getPlayerActors();
+  const roster = actors.map((a) => ({ actorId: getActorId(a), name: a.name }));
+  sendUpdate('global', 'roster', roster);
+}
+
+Hooks.on('createActor', (actor) => { if (actor.hasPlayerOwner) pushRoster(); });
+Hooks.on('deleteActor', (actor) => { if (actor.hasPlayerOwner) pushRoster(); });
+
 // --- WebSocket management ---
 
 function connect() {
@@ -81,6 +93,7 @@ function connect() {
     console.log('CNMH Bridge | Connected to session relay');
     clearTimeout(_reconnTimer);
     schedulePing();
+    pushRoster();
   };
 
   ws.onclose = (evt) => {
@@ -135,6 +148,12 @@ function dispatch(msg) {
 
   const { characterId, key, value } = msg;
   if (!characterId || !key) return;
+
+  // App requests a fresh roster (e.g. after reconnect).
+  if (characterId === 'global' && key === 'rosterreq') {
+    pushRoster();
+    return;
+  }
 
   // Actor map updated by GM in GmEncounter → refresh bridge-side resolution.
   if (characterId === 'global' && key === 'actormap') {
