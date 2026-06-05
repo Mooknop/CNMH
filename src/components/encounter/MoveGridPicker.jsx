@@ -7,12 +7,15 @@ import './MoveGridPicker.css';
 // Props:
 //   origin     { col, row }
 //   reachable  [{ col, row, feet, terrain }]
-//   blocked    [{ col, row }]
+//   blocked    [{ col, row, kind }]   kind: 'wall' | 'ally' | 'enemy'
 //   maxFeet    number   (drives the grid radius)
 //   onSelect   ({ col, row }) => void
 //   onCancel   () => void
 
 const keyOf = (col, row) => `${col},${row}`;
+
+// Blocked-obstacle kinds → human label for aria/legend.
+const BLOCK_LABEL = { wall: 'Wall', ally: 'Ally', enemy: 'Enemy' };
 
 const MoveGridPicker = ({ origin, reachable = [], blocked = [], maxFeet = 25, onSelect, onCancel }) => {
   if (!origin) return null;
@@ -21,7 +24,8 @@ const MoveGridPicker = ({ origin, reachable = [], blocked = [], maxFeet = 25, on
   const span = radius * 2 + 1;
 
   const reachableMap = new Map(reachable.map((s) => [keyOf(s.col, s.row), s]));
-  const blockedSet = new Set(blocked.map((b) => keyOf(b.col, b.row)));
+  // Older payloads may omit kind; default those obstacles to 'wall'.
+  const blockedMap = new Map(blocked.map((b) => [keyOf(b.col, b.row), b.kind ?? 'wall']));
 
   const cells = [];
   for (let dr = -radius; dr <= radius; dr++) {
@@ -31,14 +35,18 @@ const MoveGridPicker = ({ origin, reachable = [], blocked = [], maxFeet = 25, on
       const k = keyOf(col, row);
       const isOrigin = dc === 0 && dr === 0;
       const square = reachableMap.get(k);
-      const isBlocked = blockedSet.has(k);
+      const blockKind = blockedMap.get(k);
 
       let status = 'out';
+      let kind = null;
       if (isOrigin) status = 'origin';
       else if (square) status = square.terrain === 'difficult' ? 'difficult' : 'reachable';
-      else if (isBlocked) status = 'blocked';
+      else if (blockKind) {
+        status = `blocked-${blockKind}`;
+        kind = blockKind;
+      }
 
-      cells.push({ key: k, col, row, status, feet: square?.feet });
+      cells.push({ key: k, col, row, status, kind, feet: square?.feet });
     }
   }
 
@@ -63,11 +71,23 @@ const MoveGridPicker = ({ origin, reachable = [], blocked = [], maxFeet = 25, on
             <div
               key={c.key}
               className={`mgp-cell mgp-cell--${c.status}`}
-              aria-hidden="true"
+              aria-label={c.kind ? `Blocked by ${BLOCK_LABEL[c.kind]}` : undefined}
+              aria-hidden={c.kind ? undefined : 'true'}
             />
           )
         )}
       </div>
+      <ul className="mgp-legend" aria-label="Obstacle legend">
+        <li className="mgp-legend-item">
+          <span className="mgp-swatch mgp-swatch--wall" aria-hidden="true" />Wall
+        </li>
+        <li className="mgp-legend-item">
+          <span className="mgp-swatch mgp-swatch--ally" aria-hidden="true" />Ally
+        </li>
+        <li className="mgp-legend-item">
+          <span className="mgp-swatch mgp-swatch--enemy" aria-hidden="true" />Enemy
+        </li>
+      </ul>
       <button type="button" className="btn-secondary mgp-cancel" onClick={onCancel}>
         Cancel
       </button>

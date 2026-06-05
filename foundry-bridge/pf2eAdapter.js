@@ -269,6 +269,13 @@ export function getTokenDimensions(token) {
   };
 }
 
+// A token's disposition relative to the party. Foundry's CONST.TOKEN_DISPOSITIONS:
+// FRIENDLY = 1, NEUTRAL = 0, HOSTILE = -1, SECRET = -2. Used to classify which
+// kind of creature blocks a movement square (ally vs enemy).
+export function getTokenDisposition(token) {
+  return token?.document?.disposition ?? token?.disposition ?? 0;
+}
+
 export function getTokenGridPosition(token) {
   const gridSize = getGridSize();
   return {

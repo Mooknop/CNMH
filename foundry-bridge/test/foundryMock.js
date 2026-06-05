@@ -127,6 +127,8 @@ export function makeToken(opts = {}) {
     id = autoId('token'),
     x = 0, y = 0, width = 1, height = 1,
     actor = null,
+    // Foundry CONST.TOKEN_DISPOSITIONS: FRIENDLY = 1, NEUTRAL = 0, HOSTILE = -1.
+    disposition = 0,
     // isFlanking: PF2e TokenPF2e method. Pass a boolean to set a fixed return
     // value, or a function to control per-call. Defaults to false (not flanking).
     isFlanking = false,
@@ -139,7 +141,7 @@ export function makeToken(opts = {}) {
       typeof isFlanking === 'function' ? isFlanking : () => isFlanking
     ),
     document: {
-      width, height,
+      width, height, disposition,
       update: jest.fn().mockResolvedValue(undefined),
     },
   };

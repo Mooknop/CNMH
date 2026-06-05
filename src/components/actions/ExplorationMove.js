@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import MoveGridPicker from '../encounter/MoveGridPicker';
@@ -6,9 +6,10 @@ import './ExplorationMove.css';
 
 // Exploration-mode token movement panel. When the GM enables movement and the
 // effective mode is 'exploration', a player can move their Foundry token freely
-// at full speed with no action cost. Selecting a square auto-confirms the move
-// and immediately refreshes the grid from the new origin so moves can chain
-// in real time. The picker stays open until the player hits Done (Cancel).
+// at full speed with no action cost. The grid opens automatically (no
+// preliminary "Move Token" button): selecting a square auto-confirms the move
+// and immediately refreshes the grid from the new origin so moves can chain in
+// real time. Cancel re-requests a fresh grid rather than closing for good.
 
 const ExplorationMove = ({ charId, onMoveDone }) => {
   const { mode, moveEnabled } = usePlayMode();
@@ -35,19 +36,24 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
 
   requestMoveRefreshRef.current = requestMoveRefresh;
 
-  if (mode !== 'exploration' || !moveEnabled) return null;
+  // Auto-open the grid whenever movement is idle — on mount and again after a
+  // Cancel — so the controls are always open when player movement is enabled.
+  // Gated on !isRefreshing so it never fires mid chain-refresh. requestMove is
+  // recreated each render, so reach it through a ref to keep this effect keyed
+  // only on the idle transition.
+  const requestMoveRef = useRef(null);
+  requestMoveRef.current = requestMove;
+  const active = mode === 'exploration' && moveEnabled;
+  useEffect(() => {
+    if (active && stage === null && !isRefreshing) {
+      requestMoveRef.current?.('stride');
+    }
+  }, [active, stage, isRefreshing]);
+
+  if (!active) return null;
 
   return (
     <div className="em-panel">
-      {stage === null && !isRefreshing && (
-        <button
-          className="btn-secondary em-move-btn"
-          onClick={() => requestMove('stride')}
-        >
-          Move Token
-        </button>
-      )}
-
       {stage === 'awaiting-opts' && !isRefreshing && (
         <div className="em-status">Calculating reachable squares…</div>
       )}

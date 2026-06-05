@@ -50,6 +50,40 @@ describe('MoveGridPicker', () => {
     expect(onCancel).toHaveBeenCalled();
   });
 
+  it('classifies blocked squares by kind (wall / ally / enemy)', () => {
+    const props = {
+      origin: { col: 10, row: 10 },
+      reachable: [],
+      blocked: [
+        { col: 10, row: 9, kind: 'wall' },
+        { col: 11, row: 9, kind: 'ally' },
+        { col: 9, row: 9, kind: 'enemy' },
+      ],
+      maxFeet: 25,
+    };
+    const { container } = render(
+      <MoveGridPicker {...props} onSelect={jest.fn()} onCancel={jest.fn()} />
+    );
+    expect(container.querySelector('.mgp-cell--blocked-wall')).toBeInTheDocument();
+    expect(container.querySelector('.mgp-cell--blocked-ally')).toBeInTheDocument();
+    expect(container.querySelector('.mgp-cell--blocked-enemy')).toBeInTheDocument();
+    expect(screen.getByLabelText('Blocked by Ally')).toBeInTheDocument();
+    expect(screen.getByLabelText('Blocked by Enemy')).toBeInTheDocument();
+  });
+
+  it('defaults blocked squares without a kind to wall (back-compat)', () => {
+    const { container } = render(
+      <MoveGridPicker {...baseProps} onSelect={jest.fn()} onCancel={jest.fn()} />
+    );
+    expect(container.querySelector('.mgp-cell--blocked-wall')).toBeInTheDocument();
+  });
+
+  it('renders an obstacle legend', () => {
+    render(<MoveGridPicker {...baseProps} onSelect={jest.fn()} onCancel={jest.fn()} />);
+    const legend = screen.getByLabelText('Obstacle legend');
+    expect(legend).toBeInTheDocument();
+  });
+
   it('grid radius derives from maxFeet (25ft → 11×11)', () => {
     const { container } = render(
       <MoveGridPicker {...baseProps} maxFeet={25} onSelect={jest.fn()} onCancel={jest.fn()} />
