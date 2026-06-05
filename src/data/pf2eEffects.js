@@ -161,6 +161,16 @@ const PF2E_EFFECTS = [
     modifiers: [],
   },
 
+  // ── Defend (exploration activity) ───────────────────────────────────
+  {
+    id: 'defend',
+    name: 'Defend',
+    description: 'Moving at half Speed with your shield raised: +2 circumstance bonus to Perception checks to detect hazards. You cannot be surprised, and can use Shield Block while traveling.',
+    modifiers: [
+      { stat: 'perception', kind: 'circumstance', amount: 2 },
+    ],
+  },
+
   // ── Treat Wounds immunity (scoped to the healer who applied it) ──────
   {
     id: 'treat-wounds-immunity',

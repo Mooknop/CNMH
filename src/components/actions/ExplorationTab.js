@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useExplorationReady } from '../../hooks/useExplorationReady';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useExplorationEffect } from '../../hooks/useExplorationEffect';
+import { EXPLORATION_ACTIVITIES } from '../../data/explorationActivities';
 import ExplorationList from './ExplorationList';
 import ExplorationMove from './ExplorationMove';
 import ExplorationDoors from './ExplorationDoors';
@@ -23,9 +25,17 @@ const ExplorationTab = ({ character, characterColor }) => {
   const movementAllowed = mode === 'exploration' && moveEnabled;
 
   // Own-pick mirror — lets the tab clear this player's activity when a new
-  // exploration beat begins. Stays in sync with ExplorationList's own copy of
-  // the same key through the session's local subscriber fanout.
-  const [, setOwnActivity] = useSyncedState(`cnmh_exploration_${character?.id}`, null);
+  // exploration beat begins, and drives the activity-scoped self-buff. Stays in
+  // sync with ExplorationList's own copy of the same key through the session's
+  // local subscriber fanout.
+  const [ownActivity, setOwnActivity] = useSyncedState(`cnmh_exploration_${character?.id}`, null);
+
+  // Apply/clear the active activity's self-buff (e.g. Defend's +2 Perception)
+  // while in exploration. Cleared automatically when the pick changes, is
+  // cleared, or the effective mode leaves exploration.
+  const activeDef = EXPLORATION_ACTIVITIES.find((a) => a.name === ownActivity) || null;
+  const desiredEffectId = mode === 'exploration' ? (activeDef?.mechanics?.effect || null) : null;
+  useExplorationEffect(character?.id, desiredEffectId);
 
   // Reset to the Activity state whenever exploration is (re)entered, so each
   // beat starts fresh. Seed prevMode with the current mode so a mid-beat mount

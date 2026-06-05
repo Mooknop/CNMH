@@ -22,6 +22,7 @@ import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
 import { useCharacter } from '../hooks/useCharacter';
 import { useSyncedState } from '../hooks/useSyncedState';
+import { useFocusReset } from '../hooks/useFocusReset';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
 
@@ -79,6 +80,9 @@ const CharacterSheet = () => {
   // Data layer — all character reads go through this hook
   const characterModel = useCharacter(character);
   const { encounter } = useEncounter();
+
+  // Outside Encounter mode, focus points refresh to full (replaces Refocus).
+  useFocusReset(character?.id);
 
   // Conditions are owned (written) by StatsBlock's ConditionModal via this same
   // synced key. We read it here — without touching useCharacter — so the
