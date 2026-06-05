@@ -87,7 +87,15 @@ export async function handleMoveConfirm(charId, value) {
 
   const { destination } = value;
   const { x, y } = gridToPixels(destination.col, destination.row);
-  const feetMoved = snapFeet(measureMoveCost(token.x, token.y, x, y));
+
+  // Measure feet center-to-center (token position is the cell's top-left).
+  const gridSize = getGridSize();
+  const { width: tW, height: tH } = getTokenDimensions(token);
+  const offX = (tW * gridSize) / 2;
+  const offY = (tH * gridSize) / 2;
+  const feetMoved = snapFeet(
+    measureMoveCost(token.x + offX, token.y + offY, x + offX, y + offY)
+  );
 
   await moveToken(token, x, y);
 
@@ -109,17 +117,30 @@ async function getReachableSquares(token, moveType) {
   const reachable = [];
   const blocked   = [];
 
+  // Measure cost / wall collision center-to-center. token.x/token.y and
+  // gridToPixels() both yield a cell's TOP-LEFT corner; a corner-to-corner ray
+  // runs along grid lines where walls sit, producing spurious collisions and
+  // wrongly blocking open squares. Foundry's collision backend expects the
+  // creature centers.
+  const { width: tW, height: tH } = getTokenDimensions(token);
+  const offX = (tW * gridSize) / 2;
+  const offY = (tH * gridSize) / 2;
+  const fromX = token.x + offX;
+  const fromY = token.y + offY;
+
   for (let dc = -maxSquares; dc <= maxSquares; dc++) {
     for (let dr = -maxSquares; dr <= maxSquares; dr++) {
       if (dc === 0 && dr === 0) continue;
       const col  = originCol + dc;
       const row  = originRow + dr;
       const { x: destX, y: destY } = gridToPixels(col, row);
+      const toX = destX + offX;
+      const toY = destY + offY;
 
-      const cost = snapFeet(measureMoveCost(token.x, token.y, destX, destY));
+      const cost = snapFeet(measureMoveCost(fromX, fromY, toX, toY));
       if (cost > maxFeet) continue;
 
-      if (hasWallCollision(token.x, token.y, destX, destY)) {
+      if (hasWallCollision(fromX, fromY, toX, toY)) {
         blocked.push({ col, row });
         continue;
       }

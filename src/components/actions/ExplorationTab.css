@@ -56,3 +56,19 @@
   color: var(--theme-text-secondary, var(--shell-text-secondary));
   margin: 0;
 }
+
+/* Movement-disabled placeholder (GM toggle off or door auto-off) */
+.et-move-disabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.et-move-disabled p {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: 0;
+}

@@ -55,14 +55,45 @@ describe('handleMoveRequest', () => {
 
   test('a wall-blocked square is reported blocked', async () => {
     setupPellias();
-    // Block movement into (6,5) only.
+    // Collision is measured CENTER-to-CENTER. Pellias' token is at (500,500) on a
+    // 100px grid, so origin centre is (550,550) and the (6,5) cell centre is
+    // (650,550). Block movement into (6,5) only.
     global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
-      dest.x === 600 && dest.y === 500;
+      dest.x === 650 && dest.y === 550;
 
     await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
     const { reachable, blocked } = send.mock.calls[0][2];
     expect(blocked).toContainEqual({ col: 6, row: 5 });
     expect(reachable).toHaveLength(7);
+  });
+
+  test('center-to-center: a wall on the grid line is NOT a false block', async () => {
+    setupPellias();
+    // Regression for the corner-to-corner bug. A corner-origin ray from (500,500)
+    // would clip a wall lying on the x=600 / y=500 grid lines; the center ray from
+    // (550,550) does not. Simulate "only the literal cell corners collide" — the
+    // center ray to every neighbour should pass, so nothing is blocked.
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      // Old (buggy) corner coords would have been multiples of 100; assert the
+      // backend is never queried with a corner-aligned point.
+      dest.x % 100 === 0 && dest.y % 100 === 0;
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
+    const { reachable, blocked } = send.mock.calls[0][2];
+    expect(blocked).toHaveLength(0);
+    expect(reachable).toHaveLength(8);
+  });
+
+  test('center-to-center: a wall crossing the centre ray IS blocked', async () => {
+    setupPellias();
+    // Wall crosses the centre-to-centre segment into (6,5) → genuinely blocked.
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      dest.x === 650 && dest.y === 550;
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
+    const { reachable, blocked } = send.mock.calls[0][2];
+    expect(blocked).toContainEqual({ col: 6, row: 5 });
+    expect(reachable.find((s) => s.col === 6 && s.row === 5)).toBeUndefined();
   });
 
   test('stride uses full land speed (2 squares → 5x5 minus center)', async () => {
