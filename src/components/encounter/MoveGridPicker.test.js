@@ -117,4 +117,55 @@ describe('MoveGridPicker', () => {
     const cells = container.querySelectorAll('.mgp-cell');
     expect(cells).toHaveLength(121); // 11×11 — no trimming in open terrain
   });
+
+  describe('step-pad mode', () => {
+    const stepProps = {
+      origin: { col: 5, row: 5 },
+      reachable: [
+        { col: 5, row: 4, feet: 5, terrain: 'normal' }, // N
+        { col: 6, row: 5, feet: 5, terrain: 'normal' }, // E
+        { col: 4, row: 6, feet: 5, terrain: 'normal' }, // SW
+      ],
+      blocked: [{ col: 6, row: 4, kind: 'wall' }], // NE
+      stepMode: true,
+      radius: 1,
+    };
+
+    it('radius={1} forces a 3×3 grid regardless of maxFeet', () => {
+      const { container } = render(
+        <MoveGridPicker {...stepProps} maxFeet={60} onSelect={jest.fn()} onCancel={jest.fn()} />
+      );
+      expect(container.querySelectorAll('.mgp-cell')).toHaveLength(9);
+      expect(container.querySelector('.mgp--step')).toBeInTheDocument();
+    });
+
+    it('renders direction arrow glyphs and labels instead of feet', () => {
+      render(<MoveGridPicker {...stepProps} onSelect={jest.fn()} onCancel={jest.fn()} />);
+      const north = screen.getByLabelText('Step north');
+      expect(north).toHaveTextContent('↑');
+      expect(screen.getByLabelText('Step east')).toHaveTextContent('→');
+      expect(screen.getByLabelText('Step southwest')).toHaveTextContent('↙');
+    });
+
+    it('still colors blocked cells by kind in step mode', () => {
+      const { container } = render(
+        <MoveGridPicker {...stepProps} onSelect={jest.fn()} onCancel={jest.fn()} />
+      );
+      expect(container.querySelector('.mgp-cell--blocked-wall')).toBeInTheDocument();
+    });
+
+    it('onSelect fires with the stepped cell', () => {
+      const onSelect = jest.fn();
+      render(<MoveGridPicker {...stepProps} onSelect={onSelect} onCancel={jest.fn()} />);
+      fireEvent.click(screen.getByLabelText('Step east'));
+      expect(onSelect).toHaveBeenCalledWith({ col: 6, row: 5 });
+    });
+  });
+
+  it('cancelLabel customizes the dismiss button text', () => {
+    render(
+      <MoveGridPicker {...baseProps} cancelLabel="Done" onSelect={jest.fn()} onCancel={jest.fn()} />
+    );
+    expect(screen.getByText('Done')).toBeInTheDocument();
+  });
 });

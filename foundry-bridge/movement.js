@@ -1,9 +1,19 @@
-// Feature 3: Token movement via grid picker.
+// Feature 3: Token movement via an 8-direction 5-ft stepper.
+//
+// Instead of scanning a whole speed-radius grid with one straight ray per square
+// (which can't see around walls — it disagrees with Foundry both ways), the
+// bridge probes only the 8 cells adjacent to the token. Each step is a single
+// 5-ft move to a neighbour, validated with one short center-to-center collision
+// test — which IS the real movement path, so it always matches Foundry. The app
+// renders the 8 neighbours as a 3x3 D-pad and chains a fresh probe after every
+// step; it accumulates traveled distance to charge actions in encounter mode.
 //
 // Protocol (all modeled as cnmh_* keys so the session relay relays them):
 //   App → bridge:  cnmh_movereq_<charId>     = { moveType, ts }
-//   Bridge → app:  cnmh_moveopts_<charId>    = { origin, reachable[], blocked[], gridSize, maxFeet }
-//                  blocked[] entries carry kind: 'wall' | 'ally' | 'enemy'
+//   Bridge → app:  cnmh_moveopts_<charId>    = { origin, reachable[], blocked[], gridSize, speed }
+//                  reachable[] entries: { col, row, feet, terrain }
+//                  blocked[]   entries: { col, row, kind: 'wall' | 'ally' | 'enemy' }
+//                  speed = actor land Speed (ft), for action accounting
 //   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts }
 //   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved }
 //
@@ -72,13 +82,14 @@ export function resolveToken(charId) {
   return tokens[0] ?? null;
 }
 
-// Called by bridge.js when cnmh_movereq_<charId> arrives.
+// Called by bridge.js when cnmh_movereq_<charId> arrives. moveType (step vs
+// stride) no longer affects the probe — both step one cell at a time — but the
+// app still sends it so it can apply the right action accounting client-side.
 export async function handleMoveRequest(charId, value) {
   const token = resolveToken(charId);
   if (!token) return;
 
-  const moveType = value?.moveType ?? 'stride';
-  const options  = await getReachableSquares(token, moveType);
+  const options = await getStepNeighbors(token);
   if (!options) return;
 
   // Echo the request ts so the app can correlate this response to its request
@@ -112,11 +123,15 @@ export async function handleMoveConfirm(charId, value) {
   });
 }
 
-async function getReachableSquares(token, moveType) {
-  const gridSize  = getGridSize();
-  const speed     = getSpeed(token.actor);
-  const maxFeet   = moveType === 'step' ? 5 : speed;
-  const maxSquares = maxFeet / 5;
+// Probe the 8 cells adjacent to the token's current cell. Each candidate is a
+// single 5-ft step, so one short center-to-center collision test is the actual
+// movement path — accurate, unlike a long straight ray that can't route around
+// walls. No speed-radius scan and no cost cap: every direct neighbour is a legal
+// single step (terrain just tags it difficult). `speed` rides along so the app
+// can charge a Stride action per Speed of accumulated distance.
+async function getStepNeighbors(token) {
+  const gridSize = getGridSize();
+  const speed    = getSpeed(token.actor);
 
   const { col: originCol, row: originRow } = getTokenGridPosition(token);
   const occupied  = occupiedCells(token, gridSize);
@@ -125,26 +140,22 @@ async function getReachableSquares(token, moveType) {
 
   // Measure cost / wall collision center-to-center. token.x/token.y and
   // gridToPixels() both yield a cell's TOP-LEFT corner; a corner-to-corner ray
-  // runs along grid lines where walls sit, producing spurious collisions and
-  // wrongly blocking open squares. Foundry's collision backend expects the
-  // creature centers.
+  // runs along grid lines where walls sit, producing spurious collisions.
+  // Foundry's collision backend expects the creature centers.
   const { width: tW, height: tH } = getTokenDimensions(token);
   const offX = (tW * gridSize) / 2;
   const offY = (tH * gridSize) / 2;
   const fromX = token.x + offX;
   const fromY = token.y + offY;
 
-  for (let dc = -maxSquares; dc <= maxSquares; dc++) {
-    for (let dr = -maxSquares; dr <= maxSquares; dr++) {
+  for (let dc = -1; dc <= 1; dc++) {
+    for (let dr = -1; dr <= 1; dr++) {
       if (dc === 0 && dr === 0) continue;
       const col  = originCol + dc;
       const row  = originRow + dr;
       const { x: destX, y: destY } = gridToPixels(col, row);
       const toX = destX + offX;
       const toY = destY + offY;
-
-      const cost = snapFeet(measureMoveCost(fromX, fromY, toX, toY));
-      if (cost > maxFeet) continue;
 
       if (hasWallCollision(fromX, fromY, toX, toY)) {
         blocked.push({ col, row, kind: 'wall' });
@@ -159,7 +170,8 @@ async function getReachableSquares(token, moveType) {
         continue;
       }
 
-      // A square costs more than straight-line distance → difficult terrain.
+      // A step costing more than its straight-line distance → difficult terrain.
+      const cost = snapFeet(measureMoveCost(fromX, fromY, toX, toY));
       const straightFeet = Math.max(Math.abs(dc), Math.abs(dr)) * 5;
       const terrain = cost > straightFeet ? 'difficult' : 'normal';
       reachable.push({ col, row, feet: cost, terrain });
@@ -171,6 +183,6 @@ async function getReachableSquares(token, moveType) {
     reachable,
     blocked,
     gridSize,
-    maxFeet,
+    speed,
   };
 }
