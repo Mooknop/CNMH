@@ -20,7 +20,16 @@ const BLOCK_LABEL = { wall: 'Wall', ally: 'Ally', enemy: 'Enemy' };
 const MoveGridPicker = ({ origin, reachable = [], blocked = [], maxFeet = 25, onSelect, onCancel }) => {
   if (!origin) return null;
 
-  const radius = Math.max(1, Math.round(maxFeet / 5));
+  // Trim the displayed grid to what's actually useful: the farthest reachable
+  // square + 1 cell of context (the wall/obstacle just beyond). In open terrain
+  // this equals the full theoretical radius; in a walled room the grid shrinks
+  // so players don't stare at a sea of unreachable empty squares.
+  const theoreticalRadius = Math.max(1, Math.round(maxFeet / 5));
+  const maxReachExtent = reachable.reduce(
+    (max, s) => Math.max(max, Math.abs(s.col - origin.col), Math.abs(s.row - origin.row)),
+    0
+  );
+  const radius = Math.min(theoreticalRadius, Math.max(1, maxReachExtent + 1));
   const span = radius * 2 + 1;
 
   const reachableMap = new Map(reachable.map((s) => [keyOf(s.col, s.row), s]));
