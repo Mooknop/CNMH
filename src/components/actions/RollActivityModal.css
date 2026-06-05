@@ -172,6 +172,45 @@
 .ram-degree--failure         { background: var(--d-fail-bg); color: var(--d-fail-fg); }
 .ram-degree--criticalFailure { background: var(--d-cf-bg);   color: var(--d-cf-fg);   }
 
+/* Apply effect row */
+.ram-apply-row {
+  display: flex;
+  align-items: center;
+}
+
+.ram-apply-btn {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-outline);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ram-apply-btn:hover:not(:disabled) {
+  background: var(--accent-tint-hover);
+}
+
+.ram-apply-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.ram-apply-done {
+  font-size: var(--text-sm);
+  color: var(--d-succ-fg);
+  background: var(--d-succ-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  text-align: center;
+}
+
 /* Footer */
 .ram-footer {
   display: flex;

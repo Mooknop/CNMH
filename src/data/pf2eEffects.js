@@ -171,6 +171,24 @@ const PF2E_EFFECTS = [
     ],
   },
 
+  // ── Avoid Notice (exploration activity) ────────────────────────────
+  {
+    id: 'avoid-notice-hidden',
+    name: 'Avoiding Notice',
+    description: 'Successful Stealth check at start of exploration — Hidden from creatures that haven\'t noticed you.',
+    modifiers: [],
+  },
+
+  // ── Treat Poison (exploration activity) ────────────────────────────
+  {
+    id: 'treat-poison-resist',
+    name: 'Treat Poison',
+    description: '+2 circumstance bonus to saving throws against the poison being treated.',
+    modifiers: [
+      { stat: 'fort', kind: 'circumstance', amount: 2 },
+    ],
+  },
+
   // ── Treat Wounds immunity (scoped to the healer who applied it) ──────
   {
     id: 'treat-wounds-immunity',
