@@ -68,6 +68,22 @@ describe('explorationActivities data', () => {
         }
       });
     });
+
+    it('every activity declares a valid travel pace in mechanics', () => {
+      EXPLORATION_ACTIVITIES.forEach((activity) => {
+        expect(activity.mechanics).toBeDefined();
+        expect(['half', 'double', 'full']).toContain(activity.mechanics.speed);
+      });
+    });
+
+    it('mechanics.note is a non-empty string when present', () => {
+      EXPLORATION_ACTIVITIES.forEach((activity) => {
+        if (activity.mechanics.note !== undefined) {
+          expect(typeof activity.mechanics.note).toBe('string');
+          expect(activity.mechanics.note.length).toBeGreaterThan(0);
+        }
+      });
+    });
   });
 
   describe('specific activity spot-checks', () => {
@@ -87,11 +103,20 @@ describe('explorationActivities data', () => {
       expect(dm.requiresAnyFlag).toContain('hasFocusSpells');
     });
 
-    it('Refocus requires focus spells flag and is in Magic', () => {
+    it('Refocus has been removed (focus refreshes outside encounters instead)', () => {
       const rf = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Refocus');
-      expect(rf).toBeDefined();
-      expect(rf.category).toBe('Magic');
-      expect(rf.requiresFlag).toBe('hasFocusSpells');
+      expect(rf).toBeUndefined();
+    });
+
+    it('Defend grants the defend self-buff at half speed', () => {
+      const def = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Defend');
+      expect(def.mechanics.speed).toBe('half');
+      expect(def.mechanics.effect).toBe('defend');
+    });
+
+    it('Hustle travels at double speed', () => {
+      const hustle = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Hustle');
+      expect(hustle.mechanics.speed).toBe('double');
     });
 
     it('Avoid Notice is in Scouting and highlights stealth', () => {

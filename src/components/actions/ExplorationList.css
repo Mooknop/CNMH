@@ -92,6 +92,25 @@
   white-space: nowrap;
 }
 
+.el-banner-pace {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--el-theme-color, var(--accent-text));
+  border: 1px solid var(--el-theme-color, var(--accent-outline));
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-1);
+  white-space: nowrap;
+}
+
+.el-banner-note {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--shell-text-secondary);
+}
+
 .el-clear-btn {
   flex-shrink: 0;
   background: none;

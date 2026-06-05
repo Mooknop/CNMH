@@ -15,6 +15,12 @@ const profLabel = (rank) => {
   return null;
 };
 
+const PACE_LABEL = {
+  half: '½ Speed',
+  double: '×2 Speed',
+  full: 'Full Speed',
+};
+
 const ExplorationList = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
   const characterModel = useCharacter(character);
@@ -66,6 +72,9 @@ const ExplorationList = ({ character, characterColor }) => {
               <div className="el-banner-eyebrow">Active Activity</div>
               <div className="el-banner-name-row">
                 <span className="el-banner-name">{activeActivity.name}</span>
+                {activeActivity.mechanics?.speed && (
+                  <span className="el-banner-pace">{PACE_LABEL[activeActivity.mechanics.speed]}</span>
+                )}
                 {activeActivity.highlight && (
                   <span className="el-highlight-badge">✦ {activeActivity.highlight}</span>
                 )}
@@ -78,6 +87,9 @@ const ExplorationList = ({ character, characterColor }) => {
               Clear
             </button>
           </div>
+          {activeActivity.mechanics?.note && (
+            <div className="el-banner-note">{activeActivity.mechanics.note}</div>
+          )}
         </div>
       )}
 

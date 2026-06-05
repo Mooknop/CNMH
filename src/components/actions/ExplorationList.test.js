@@ -172,6 +172,13 @@ describe('ExplorationList', () => {
     expect(screen.queryByText('Active Activity')).not.toBeInTheDocument();
   });
 
+  it('shows the travel pace and mechanics note on the active banner', () => {
+    require('../../hooks/useSyncedState').useSyncedState.mockReturnValue(['Hustle', mockSetter]);
+    render(<ExplorationList character={mockCharacter} />);
+    expect(screen.getByText('×2 Speed')).toBeInTheDocument();
+    expect(screen.getByText(/Fatigued after Constitution modifier/)).toBeInTheDocument();
+  });
+
   it('opens activity detail modal when a row is clicked', () => {
     render(<ExplorationList character={mockCharacter} />);
     const rows = screen.getAllByTestId('action-row');
