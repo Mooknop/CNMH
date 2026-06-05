@@ -312,6 +312,38 @@ export function getPlayerActors() {
   );
 }
 
+// --- Door / wall data ---
+
+export function getSceneWalls() {
+  return canvas.walls?.placeables ?? [];
+}
+
+export function getWallById(id) {
+  return canvas.walls?.get?.(id) ?? null;
+}
+
+// A wall is a door when door > 0 (1 = door, 2 = secret door).
+export function isDoor(wall) {
+  return (wall?.document?.door ?? wall?.door ?? 0) > 0;
+}
+
+// Door state: 0 = closed, 1 = open, 2 = locked.
+export function getDoorState(wall) {
+  return wall?.document?.ds ?? wall?.ds ?? 0;
+}
+
+// Returns the wall's endpoint coords as [x1, y1, x2, y2].
+export function getWallCoords(wall) {
+  return wall?.document?.c ?? wall?.c ?? [0, 0, 0, 0];
+}
+
+// Set a door's state (0 closed / 1 open / 2 locked).
+// Tagged with BRIDGE_SOURCE_FLAG so the bridge's own updateWall handler
+// can skip the echo when it originates from the app.
+export function setDoorState(wall, ds) {
+  return wall.document.update({ ds }, { [BRIDGE_SOURCE_FLAG]: 'app' });
+}
+
 // True if a wall blocks movement between two pixel points.
 // v12/v13: canvas.walls.checkCollision was removed; collision goes through the
 // move polygon backend. mode:'any' returns a boolean.

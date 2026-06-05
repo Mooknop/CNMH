@@ -1,0 +1,74 @@
+.ed-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm, 8px);
+  padding: var(--space-sm, 8px) 0;
+}
+
+.ed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ed-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted, #888);
+}
+
+.ed-detect-btn {
+  font-size: 0.8rem;
+  padding: 2px 10px;
+}
+
+.ed-empty {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #888);
+  margin: 0;
+}
+
+.ed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ed-door {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--color-surface-raised, rgba(255,255,255,0.04));
+}
+
+.ed-door-state {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ed-door-state--0 { color: var(--color-text, inherit); }
+.ed-door-state--1 { color: var(--color-theme, #7aa2f7); }
+.ed-door-state--2 { color: var(--color-text-muted, #888); }
+
+.ed-door-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.ed-door-btn {
+  font-size: 0.8rem;
+  padding: 2px 10px;
+}
+
+.ed-door-locked {
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #888);
+  font-style: italic;
+}

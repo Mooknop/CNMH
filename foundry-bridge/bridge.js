@@ -13,6 +13,7 @@ import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 import { handleAction } from './targeting.js';
+import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { getPlayerActors, getActorId } from './pf2eAdapter.js';
@@ -59,6 +60,7 @@ Hooks.once('ready', () => {
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
   initFlankingPush(sendUpdate);
+  initDoors(sendUpdate);
   connect();
 });
 
@@ -175,6 +177,16 @@ function dispatch(msg) {
   }
   if (key === 'moveconfirm') {
     handleMoveConfirm(characterId, value);
+    return;
+  }
+
+  // Door detection / interaction.
+  if (key === 'doorreq') {
+    handleDoorRequest(characterId, value);
+    return;
+  }
+  if (key === 'doorinteract') {
+    handleDoorInteract(characterId, value);
     return;
   }
 

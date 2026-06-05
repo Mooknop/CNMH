@@ -54,7 +54,7 @@ function occupiedCells(movingToken, gridSize) {
   return occupied;
 }
 
-function resolveToken(charId) {
+export function resolveToken(charId) {
   const actorMap = getActorMap();
   const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
   if (!actorId) return null;
