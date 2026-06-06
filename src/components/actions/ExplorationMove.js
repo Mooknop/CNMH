@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
+import { useGmAuth } from '../../hooks/useGmAuth';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import MoveGridPicker from '../encounter/MoveGridPicker';
 import './ExplorationMove.css';
 
@@ -14,7 +16,9 @@ import './ExplorationMove.css';
 
 const ExplorationMove = ({ charId, onMoveDone }) => {
   const { mode, moveEnabled } = usePlayMode();
+  const { isGm } = useGmAuth();
   const [feetTotal, setFeetTotal] = useState(0);
+  const [, setExploreDist] = useSyncedState('cnmh_exploredist_global', 0);
 
   // Use a ref so the internal callback can call requestMoveRefresh without a
   // circular dependency. Also calls the optional onMoveDone prop so parent
@@ -22,10 +26,12 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
   const requestMoveRefreshRef = useRef(null);
 
   const handleMoveDone = useCallback((payload) => {
-    setFeetTotal((f) => f + (payload?.feetMoved ?? 0));
+    const feet = payload?.feetMoved ?? 0;
+    setFeetTotal((f) => f + feet);
+    if (isGm && feet > 0) setExploreDist((d) => d + feet);
     requestMoveRefreshRef.current?.('stride');
     onMoveDone?.(payload);
-  }, [onMoveDone]);
+  }, [onMoveDone, isGm, setExploreDist]);
 
   const {
     stage,
@@ -39,11 +45,14 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
 
   requestMoveRefreshRef.current = requestMoveRefresh;
 
-  // "Done" resets the distance tally; the pad re-opens via the idle effect.
+  // "Done" resets the local tally; the GM also zeroes the shared tally (the
+  // ExplorationTimeControl's Apply does this too, but Done after not applying
+  // a suggestion should also clean it up).
   const handleDone = useCallback(() => {
     setFeetTotal(0);
+    if (isGm) setExploreDist(0);
     cancelMove();
-  }, [cancelMove]);
+  }, [cancelMove, isGm, setExploreDist]);
 
   // Auto-open the grid whenever movement is idle — on mount and again after a
   // Cancel — so the controls are always open when player movement is enabled.

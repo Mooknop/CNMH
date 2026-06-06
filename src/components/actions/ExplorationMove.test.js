@@ -10,6 +10,20 @@ jest.mock('../../hooks/usePlayMode', () => ({
   usePlayMode: () => mockPlayMode,
 }));
 
+let mockIsGm = true;
+jest.mock('../../hooks/useGmAuth', () => ({
+  useGmAuth: () => ({ isGm: mockIsGm }),
+}));
+
+let mockExploreDist = 0;
+const mockSetExploreDist = jest.fn();
+jest.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: (key) => {
+    if (key === 'cnmh_exploredist_global') return [mockExploreDist, mockSetExploreDist];
+    return [null, jest.fn()];
+  },
+}));
+
 const mockMovement = {
   stage: null,
   pickerOpts: null,
@@ -40,6 +54,11 @@ jest.mock('../encounter/MoveGridPicker', () =>
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockIsGm = true;
+  mockExploreDist = 0;
+  mockSetExploreDist.mockImplementation((updater) => {
+    mockExploreDist = typeof updater === 'function' ? updater(mockExploreDist) : updater;
+  });
   mockPlayMode.mode = 'exploration';
   mockPlayMode.moveEnabled = true;
   mockMovement.stage = null;
@@ -142,5 +161,42 @@ describe('ExplorationMove', () => {
     render(<ExplorationMove charId="char-1" />);
     expect(screen.getByText(/updating/i)).toBeInTheDocument();
     expect(screen.getByTestId('move-grid-picker')).toBeInTheDocument();
+  });
+
+  it('GM: increments cnmh_exploredist_global on each step', () => {
+    mockIsGm = true;
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+    render(<ExplorationMove charId="char-1" />);
+
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 10 }));
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
+
+    expect(mockSetExploreDist).toHaveBeenCalledTimes(2);
+    expect(mockExploreDist).toBe(15);
+  });
+
+  it('non-GM: does not increment cnmh_exploredist_global', () => {
+    mockIsGm = false;
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+    render(<ExplorationMove charId="char-1" />);
+
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 10 }));
+
+    expect(mockSetExploreDist).not.toHaveBeenCalled();
+  });
+
+  it('GM: resets cnmh_exploredist_global to 0 on Done', () => {
+    mockIsGm = true;
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+    render(<ExplorationMove charId="char-1" />);
+
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 10 }));
+    mockSetExploreDist.mockClear();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mockSetExploreDist).toHaveBeenCalledWith(0);
   });
 });

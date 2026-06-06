@@ -27,6 +27,8 @@ jest.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate }),
 }));
 
+jest.mock('./ExplorationTimeControl', () => () => <div data-testid="exploration-time-control" />);
+
 const mockAdvanceHours = jest.fn();
 const mockAdvanceDays = jest.fn();
 jest.mock('../../contexts/GameDateContext', () => ({

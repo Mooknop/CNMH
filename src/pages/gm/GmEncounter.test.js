@@ -31,6 +31,7 @@ jest.mock('../../hooks/useSyncedState', () => {
 });
 
 jest.mock('../../contexts/ContentContext', () => ({ useContent: jest.fn() }));
+jest.mock('../../components/gm/ExplorationTimeControl', () => () => null);
 
 const { __reset, __set, __get } = require('../../hooks/useSyncedState');
 const { useContent } = require('../../contexts/ContentContext');
