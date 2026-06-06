@@ -186,6 +186,31 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Downtime block-level actions: Advance + Close */
+.pmc-downtime-block {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pmc-downtime-ready {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin-right: var(--space-2);
+}
+
+.pmc-pill--danger {
+  border-color: var(--crimson-mid, #c0392b);
+  color: var(--crimson-mid, #c0392b);
+}
+
+.pmc-pill--danger:hover {
+  background: var(--crimson-mid, #c0392b);
+  color: #fff;
+}
+
 /* Exploration time-advance controls */
 .pmc-explore-time {
   display: flex;
