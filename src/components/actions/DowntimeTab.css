@@ -66,6 +66,55 @@
   margin: var(--space-1) 0 0;
 }
 
+/* Days-used sub-header shown once the player has committed any days. */
+.dt-days-used {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: var(--space-1) 0 0;
+}
+
+/* Per-activity progress summary (accumulate hours / instant roll count). */
+.dt-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-surface, var(--shell-surface));
+}
+
+.dt-progress-heading {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.dt-progress-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.dt-progress-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text, var(--shell-text));
+}
+
+.dt-progress-value {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--arcane-mid, var(--theme-arcane));
+  font-weight: 600;
+}
+
 /* Crafting recipe browser launcher (moved here from Inventory). */
 .dt-crafting-row {
   display: flex;
