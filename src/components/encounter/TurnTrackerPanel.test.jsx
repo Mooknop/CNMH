@@ -511,10 +511,6 @@ describe('TurnTrackerPanel', () => {
   });
 
   // ── Shield Block reaction (Slice 4) ──────────────────────────────────────
-  function startAndRaiseShield(getDrv) {
-    startMyTurnShield(getDrv);
-    fireEvent.click(screen.getByLabelText('Raise a Shield'));
-  }
 
   it('Shield Block button appears when shield is raised', () => {
     let drv;

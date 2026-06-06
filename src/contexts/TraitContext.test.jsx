@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
-import { TraitProvider, useTrait, TraitContext } from './TraitContext';
+import { TraitProvider, useTrait } from './TraitContext';
 
 vi.mock('./ContentContext', () => ({
   useContent: () => ({

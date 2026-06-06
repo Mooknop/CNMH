@@ -175,7 +175,7 @@ describe('StatsBlock', () => {
     render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
 
     // The hook returns modifiers like +2, +1 etc
-    const modifierDivs = screen.getAllByText(/^[\+\-]\d+$/);
+    const modifierDivs = screen.getAllByText(/^[+-]\d+$/);
     expect(modifierDivs.length).toBeGreaterThan(0);
   });
 

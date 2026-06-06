@@ -11,10 +11,10 @@ vi.mock('./useSyncedState', () => {
   return {
     __esModule: true,
     useSyncedState: (key, init) => {
-      if (key === 'cnmh_roster_global') {
-        return ReactLib.useState(mockRoster);
-      }
-      return ReactLib.useState(typeof init === 'function' ? init() : init);
+      const initial = key === 'cnmh_roster_global'
+        ? mockRoster
+        : (typeof init === 'function' ? init() : init);
+      return ReactLib.useState(initial);
     },
   };
 });

@@ -13,7 +13,7 @@ vi.mock('../../utils/defense', () => ({
 }));
 vi.mock('./TargetRollResolver', () => {
   const { forwardRef, useImperativeHandle } = require('react');
-  // eslint-disable-next-line react/display-name
+   
   return { default: forwardRef(({ enemyTargets, rollBonus }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => enemyTargets.map((e) => ({

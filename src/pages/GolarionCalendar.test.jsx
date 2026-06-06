@@ -113,7 +113,6 @@ describe('GolarionCalendar', () => {
 
   it('renders the current game date day with current-date class', async () => {
     await act(async () => { renderWithRouter(<GolarionCalendar />); });
-    const { container } = { container: document.body };
     const currentDayCell = document.querySelector('.current-date');
     expect(currentDayCell).toBeInTheDocument();
   });

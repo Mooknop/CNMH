@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import HandsPanel from './HandsPanel';
 
 // Shared in-memory loadout store so the real useCharacter (effective tree),

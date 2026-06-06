@@ -5,10 +5,15 @@
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
+    "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.45.0",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/coverage-v8": "^4.1.8",
     "babel-jest": "^30.4.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
     "jest": "^29.7.0",
     "jsdom": "^29.1.1",
     "vite": "^8.0.16",
@@ -30,19 +35,13 @@
     "start": "vite",
     "build": "npm run lint && vite build && npm run test:ci",
     "build:app": "vite build",
-    "lint": "eslint src --ext .js,.jsx --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "test": "vitest",
     "test:ci": "npm run lint && vitest run --coverage --passWithNoTests",
     "test:bridge": "jest --config foundry-bridge/jest.config.js",
     "test:bridge:ci": "jest --config foundry-bridge/jest.config.js --ci --coverage",
     "test:e2e": "playwright test",
     "snapshot:content": "node scripts/snapshotContent.js"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [

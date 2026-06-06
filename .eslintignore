@@ -1,7 +1,0 @@
-# Exclude test files from the strict production lint gate.
-# The 477 pre-existing testing-library style violations (no-node-access,
-# no-container, render-result-naming-convention) live here; fixing them
-# is a separate task. Production source files must be clean.
-src/**/*.test.js
-src/**/*.test.jsx
-foundry-bridge/

@@ -19,7 +19,7 @@ vi.mock('./useSyncedState', () => {
 });
 
 import { __reset } from './useSyncedState';
-import { useShield, RAISED_SHIELD_EFFECT_ID } from './useShield';
+import { useShield } from './useShield';
 
 const heldSteelShield = {
   uid: 'shield-1',

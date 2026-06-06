@@ -80,7 +80,7 @@ vi.mock('../shared/Modal', () => ({
 
 vi.mock('./ChainedStrikeSection', () => {
   const { forwardRef, useImperativeHandle, createElement } = require('react');
-  // eslint-disable-next-line react/display-name
+   
   return { default: forwardRef(({ chain }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => ({
@@ -97,7 +97,7 @@ vi.mock('./ChainedStrikeSection', () => {
 
 vi.mock('./ChainedSpellSection', () => {
   const { forwardRef, useImperativeHandle, useEffect, createElement } = require('react');
-  // eslint-disable-next-line react/display-name
+   
   return { default: forwardRef(({ chain, parentCost, onTotalCostChange }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => ({

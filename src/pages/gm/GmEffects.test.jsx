@@ -6,7 +6,7 @@ vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../utils/gmApi', () => ({ saveDocument: vi.fn(), deleteDocument: vi.fn() }));
 vi.mock('../../components/gm/HistoryModal', () => ({ default: () => null }));
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, deleteDocument } from '../../utils/gmApi';
+import { saveDocument } from '../../utils/gmApi';
 
 const effects = [
   {
