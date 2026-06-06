@@ -201,6 +201,11 @@
   margin-right: var(--space-2);
 }
 
+.pmc-downtime-ready--done {
+  color: var(--verdant-mid, var(--theme-verdant));
+  font-weight: 700;
+}
+
 .pmc-pill--danger {
   border-color: var(--crimson-mid, #c0392b);
   color: var(--crimson-mid, #c0392b);

@@ -92,4 +92,17 @@ describe('useDowntimePartyReady', () => {
     const { result } = renderHook(() => useDowntimePartyReady(3), { wrapper: Wrapper });
     expect(result.current.readyCount).toBe(1);
   });
+
+  it('returns allReady:false and readyCount:0 when blockDays is 0 (no active block)', () => {
+    // getDaysCommitted(ledger) >= 0 is trivially true without this guard
+    const entries = Array(3).fill({ day: 'Research', night: null });
+    const { Wrapper } = makeWrapper(chars, {
+      a_downtime: { ledger: entries },
+      b_downtime: { ledger: entries },
+      c_downtime: { ledger: entries },
+    });
+    const { result } = renderHook(() => useDowntimePartyReady(0), { wrapper: Wrapper });
+    expect(result.current.allReady).toBe(false);
+    expect(result.current.readyCount).toBe(0);
+  });
 });

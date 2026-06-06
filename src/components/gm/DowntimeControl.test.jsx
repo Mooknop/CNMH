@@ -145,30 +145,16 @@ describe('DowntimeControl', () => {
   });
 
   describe('block actions', () => {
-    it('does not show block actions when no block is active', () => {
+    it('does not show Close block when no block is active', () => {
       render(<DowntimeControl />);
-      expect(screen.queryByRole('button', { name: /Advance/ })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Close block' })).not.toBeInTheDocument();
     });
 
-    it('shows Advance and Close block buttons when a block is active', () => {
+    it('shows Close block (and no manual Advance button) when a block is active', () => {
       useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
       render(<DowntimeControl />);
-      expect(screen.getByRole('button', { name: 'Advance 7 days' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Close block' })).toBeInTheDocument();
-    });
-
-    it('Advance N days calls advanceDays with the block day count', () => {
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
-      render(<DowntimeControl />);
-      fireEvent.click(screen.getByRole('button', { name: 'Advance 7 days' }));
-      expect(mockAdvanceDays).toHaveBeenCalledWith(7);
-    });
-
-    it('singularises "Advance 1 day" for a 1-day block', () => {
-      useSyncedState.mockReturnValue([{ days: 1, active: true }, mockSetBlock]);
-      render(<DowntimeControl />);
-      expect(screen.getByRole('button', { name: 'Advance 1 day' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Advance/ })).not.toBeInTheDocument();
     });
 
     it('Close block sets the block to inactive', () => {
@@ -184,6 +170,57 @@ describe('DowntimeControl', () => {
       useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
       render(<DowntimeControl />);
       expect(screen.getByText('3/5 ready')).toBeInTheDocument();
+    });
+
+    it('shows "advancing…" suffix when allReady is true', () => {
+      useDowntimePartyReady.mockReturnValue({ readyCount: 5, total: 5, allReady: true });
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(screen.getByText(/5\/5 ready.*advancing/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('auto-advance', () => {
+    it('auto-advances and closes the block when allReady becomes true', () => {
+      useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      const { rerender } = render(<DowntimeControl />);
+      expect(mockAdvanceDays).not.toHaveBeenCalled();
+
+      useDowntimePartyReady.mockReturnValue({ readyCount: 5, total: 5, allReady: true });
+      rerender(<DowntimeControl />);
+
+      expect(mockAdvanceDays).toHaveBeenCalledWith(7);
+      expect(mockSetBlock).toHaveBeenCalledWith(expect.any(Function));
+      const updater = mockSetBlock.mock.calls[0][0];
+      expect(updater({ days: 7, active: true, startedAt: mockGameDate })).toEqual({
+        days: 7, active: false, startedAt: mockGameDate,
+      });
+    });
+
+    it('does not auto-advance when allReady is false', () => {
+      useDowntimePartyReady.mockReturnValue({ readyCount: 3, total: 5, allReady: false });
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(mockAdvanceDays).not.toHaveBeenCalled();
+    });
+
+    it('does not auto-advance when the block is inactive', () => {
+      useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
+      useSyncedState.mockReturnValue([{ days: 7, active: false }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(mockAdvanceDays).not.toHaveBeenCalled();
+    });
+
+    it('does not double-fire if allReady stays true across re-renders', () => {
+      useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      const { rerender } = render(<DowntimeControl />);
+
+      useDowntimePartyReady.mockReturnValue({ readyCount: 5, total: 5, allReady: true });
+      rerender(<DowntimeControl />);
+      rerender(<DowntimeControl />); // extra render should not re-fire
+      expect(mockAdvanceDays).toHaveBeenCalledTimes(1);
     });
   });
 });
