@@ -8,6 +8,8 @@ import StatsBlock from '../components/character-sheet/StatsBlock';
 import ActionsList from '../components/actions/ActionsList';
 import ExplorationTab from '../components/actions/ExplorationTab';
 import PlayModeBadge from '../components/playmode/PlayModeBadge';
+import { usePlayMode } from '../hooks/usePlayMode';
+import { PLAY_MODES } from '../data/playModes';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
@@ -28,10 +30,9 @@ import './CharacterSheet.css';
 
 const RAIL_TABS = [
   { id: 'stats',     icon: 'ti-chart-dots', label: 'Stats'     },
-  { id: 'explore',   icon: 'ti-map',        label: 'Explore'   },
+  { id: 'play',      icon: null,            label: null        }, // mode-aware slot (Explore/Encounter/Downtime)
   { id: 'spells',    icon: 'ti-sparkles',   label: 'Spells'    },
   { id: 'inventory', icon: 'ti-backpack',   label: 'Inventory' },
-  { id: 'encounter', icon: 'ti-sword',      label: 'Encounter' },
 ];
 
 const CharacterSheet = () => {
@@ -40,7 +41,8 @@ const CharacterSheet = () => {
   const { getCharacter, setActiveCharacter, activeCharacterColor } = useContext(CharacterContext);
   const [character, setCharacter] = useState(null);
   const [activeTab, setActiveTab] = useState('stats');
-  // Valid values: 'encounter' | 'explore' | 'inventory' | 'stats' | 'spells'
+  // Valid values: 'stats' | 'play' | 'spells' | 'inventory'
+  // 'play' is the mode-aware slot — its icon/label/contents follow usePlayMode().
   const [isFamiliarModalOpen, setIsFamiliarModalOpen] = useState(false);
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -80,6 +82,7 @@ const CharacterSheet = () => {
   // Data layer — all character reads go through this hook
   const characterModel = useCharacter(character);
   const { encounter } = useEncounter();
+  const { mode } = usePlayMode();
 
   // Outside Encounter mode, focus points refresh to full (replaces Refocus).
   useFocusReset(character?.id);
@@ -111,28 +114,32 @@ const CharacterSheet = () => {
   // Function to render the active tab content
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'encounter':
-        return (
-          <>
-            <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} />
-            {encounter?.active ? (
-              <>
-                <InitiativeEntry charId={character.id} />
-                <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
-                <HandsPanel character={character} characterColor={characterColor} />
-              </>
-            ) : (
-              <div className="cs-encounter-idle">
-                <span className="cs-encounter-idle-title">No Active Encounter</span>
-                <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
-                <InitiativeEntry charId={character.id} />
-              </div>
-            )}
-            <ActionsList character={character} characterColor={characterColor} />
-            <CombatLogPanel />
-          </>
-        );
-      case 'explore':
+      case 'play':
+        // Mode-aware slot: encounter content during combat, otherwise the
+        // exploration flow (ExplorationTab also renders the downtime placeholder
+        // internally when mode === 'downtime').
+        if (mode === 'encounter') {
+          return (
+            <>
+              <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} />
+              {encounter?.active ? (
+                <>
+                  <InitiativeEntry charId={character.id} />
+                  <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
+                  <HandsPanel character={character} characterColor={characterColor} />
+                </>
+              ) : (
+                <div className="cs-encounter-idle">
+                  <span className="cs-encounter-idle-title">No Active Encounter</span>
+                  <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
+                  <InitiativeEntry charId={character.id} />
+                </div>
+              )}
+              <ActionsList character={character} characterColor={characterColor} />
+              <CombatLogPanel />
+            </>
+          );
+        }
         return <ExplorationTab character={character} characterColor={characterColor} />;
       case 'inventory':
         return (
@@ -318,18 +325,24 @@ const CharacterSheet = () => {
 
         {/* ── Bottom navigation rail ───────────────────────────── */}
         <nav className="cs-rail" aria-label="Character sheet sections">
-          {RAIL_TABS.map(({ id: tabId, icon, label }) => (
-            <button
-              key={tabId}
-              className={`cs-rail-tab${activeTab === tabId ? ' cs-rail-tab--active' : ''}`}
-              onClick={() => setActiveTab(tabId)}
-              aria-label={label}
-              aria-current={activeTab === tabId ? 'page' : undefined}
-            >
-              <i className={`ti ${icon}`} aria-hidden="true" />
-              <span>{label}</span>
-            </button>
-          ))}
+          {RAIL_TABS.map(({ id: tabId, icon, label }) => {
+            // The 'play' slot mirrors the active play mode's icon/label.
+            const modeDef = PLAY_MODES[mode] || PLAY_MODES.exploration;
+            const tabIcon = tabId === 'play' ? modeDef.icon : icon;
+            const tabLabel = tabId === 'play' ? modeDef.label : label;
+            return (
+              <button
+                key={tabId}
+                className={`cs-rail-tab${activeTab === tabId ? ' cs-rail-tab--active' : ''}`}
+                onClick={() => setActiveTab(tabId)}
+                aria-label={tabLabel}
+                aria-current={activeTab === tabId ? 'page' : undefined}
+              >
+                <i className={`ti ${tabIcon}`} aria-hidden="true" />
+                <span>{tabLabel}</span>
+              </button>
+            );
+          })}
         </nav>
 
       </div>
