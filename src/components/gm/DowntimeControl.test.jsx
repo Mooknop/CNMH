@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import DowntimeControl from './DowntimeControl';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 
 const mockAdvanceHours = vi.fn();
 const mockAdvanceDays = vi.fn();
@@ -20,6 +21,10 @@ vi.mock('../../contexts/GameDateContext', () => ({
 const mockSetBlock = vi.fn();
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: vi.fn(() => [null, mockSetBlock]),
+}));
+
+vi.mock('../../hooks/useDowntimePartyReady', () => ({
+  useDowntimePartyReady: vi.fn(() => ({ readyCount: 0, total: 5, allReady: false })),
 }));
 
 beforeEach(() => {
@@ -136,6 +141,49 @@ describe('DowntimeControl', () => {
       render(<DowntimeControl />);
       expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument();
       expect(screen.getByText('4 days granted')).toBeInTheDocument();
+    });
+  });
+
+  describe('block actions', () => {
+    it('does not show block actions when no block is active', () => {
+      render(<DowntimeControl />);
+      expect(screen.queryByRole('button', { name: /Advance/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Close block' })).not.toBeInTheDocument();
+    });
+
+    it('shows Advance and Close block buttons when a block is active', () => {
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(screen.getByRole('button', { name: 'Advance 7 days' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Close block' })).toBeInTheDocument();
+    });
+
+    it('Advance N days calls advanceDays with the block day count', () => {
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      fireEvent.click(screen.getByRole('button', { name: 'Advance 7 days' }));
+      expect(mockAdvanceDays).toHaveBeenCalledWith(7);
+    });
+
+    it('singularises "Advance 1 day" for a 1-day block', () => {
+      useSyncedState.mockReturnValue([{ days: 1, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(screen.getByRole('button', { name: 'Advance 1 day' })).toBeInTheDocument();
+    });
+
+    it('Close block sets the block to inactive', () => {
+      const block = { days: 7, active: true, startedAt: mockGameDate };
+      useSyncedState.mockReturnValue([block, mockSetBlock]);
+      render(<DowntimeControl />);
+      fireEvent.click(screen.getByRole('button', { name: 'Close block' }));
+      expect(mockSetBlock).toHaveBeenCalledWith({ ...block, active: false });
+    });
+
+    it('shows party readiness from useDowntimePartyReady', () => {
+      useDowntimePartyReady.mockReturnValue({ readyCount: 3, total: 5, allReady: false });
+      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(screen.getByText('3/5 ready')).toBeInTheDocument();
     });
   });
 });

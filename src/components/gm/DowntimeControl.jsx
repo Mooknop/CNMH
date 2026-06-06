@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
 // downtime days (`cnmh_downtimeblock_global`) that players allocate to
@@ -39,6 +40,18 @@ const DowntimeControl = () => {
 
   const periodInvalid = !periodValue || parseInt(periodValue, 10) <= 0;
 
+  const { readyCount, total } = useDowntimePartyReady(block?.active ? block?.days : 0);
+
+  const advanceBlock = () => {
+    if (!block?.active) return;
+    advanceDays(block.days);
+  };
+
+  const closeBlock = () => {
+    if (!block) return;
+    setBlock({ ...block, active: false });
+  };
+
   return (
     <div className="pmc-downtime">
       <span className="pmc-label">Downtime Period</span>
@@ -67,6 +80,23 @@ const DowntimeControl = () => {
           </span>
         )}
       </div>
+
+      {block?.active && (
+        <>
+          <span className="pmc-label">Block Actions</span>
+          <div className="pmc-downtime-block">
+            <span className="pmc-downtime-ready">
+              {readyCount}/{total} ready
+            </span>
+            <button className="pmc-pill" onClick={advanceBlock}>
+              Advance {block.days} day{block.days === 1 ? '' : 's'}
+            </button>
+            <button className="pmc-pill pmc-pill--danger" onClick={closeBlock}>
+              Close block
+            </button>
+          </div>
+        </>
+      )}
 
       <span className="pmc-label">Advance Time</span>
 
