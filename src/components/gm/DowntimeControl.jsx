@@ -1,5 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { CharacterContext } from '../../contexts/CharacterContext';
+import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
+import { usePlayMode } from '../../hooks/usePlayMode';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 
@@ -10,8 +13,12 @@ import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 // block early without advancing time. Quick buttons / custom field handle ad-hoc
 // time nudges independent of the downtime block.
 const DowntimeControl = () => {
+  const { characters } = useContext(CharacterContext) || {};
+  const { getState } = useSession();
+  const { setGmMode } = usePlayMode();
   const { advanceHours, advanceDays, formatGameDate, formatClockTime, gameDate } = useGameDate();
   const [block, setBlock] = useSyncedState('cnmh_downtimeblock_global', null);
+  const [, setSummary] = useSyncedState('cnmh_downtimesummary_global', null);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('hours');
   const [periodValue, setPeriodValue] = useState('');
@@ -44,12 +51,18 @@ const DowntimeControl = () => {
   // Primitive deps to avoid spurious effect re-runs when block reference changes.
   const blockActive = block?.active ?? false;
   const blockDays = block?.days ?? 0;
+  const blockStartedAt = block?.startedAt ?? null;
 
   const { readyCount, total, allReady } = useDowntimePartyReady(blockActive ? blockDays : 0);
 
-  // Auto-advance: when every PC commits their last day, move the clock forward
-  // by the full block and mark the block inactive. A ref prevents double-fire
-  // if the component re-renders while allReady is still true.
+  // Capture latest characters without adding the array to effect deps.
+  const charactersRef = useRef(characters);
+  charactersRef.current = characters;
+
+  // Auto-advance: when every PC commits their last day, write a summary,
+  // advance the clock, close the block, and return to Exploration mode.
+  // A ref prevents double-fire if the component re-renders while allReady
+  // is still true.
   const autoAdvancedRef = useRef(false);
   useEffect(() => {
     if (!blockActive) {
@@ -58,9 +71,16 @@ const DowntimeControl = () => {
     }
     if (!allReady || autoAdvancedRef.current) return;
     autoAdvancedRef.current = true;
+
+    const summaryChars = (charactersRef.current || []).map((c) => {
+      const dt = getState(c.id, 'downtime') || {};
+      return { id: c.id, name: c.name, selected: dt.selected || [], ledger: dt.ledger || [] };
+    });
+    setSummary({ period: { days: blockDays, startedAt: blockStartedAt }, chars: summaryChars });
     advanceDays(blockDays);
     setBlock((prev) => (prev ? { ...prev, active: false } : prev));
-  }, [allReady, blockActive, blockDays, advanceDays, setBlock]);
+    setGmMode('exploration');
+  }, [allReady, blockActive, blockDays, blockStartedAt, advanceDays, setBlock, setGmMode, setSummary, getState]);
 
   const closeBlock = () => {
     if (!block) return;

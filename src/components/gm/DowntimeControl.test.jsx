@@ -4,6 +4,16 @@ import DowntimeControl from './DowntimeControl';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 
+// DowntimeControl now pulls setGmMode + character state for the summary
+const mockSetGmMode = vi.fn();
+vi.mock('../../hooks/usePlayMode', () => ({
+  usePlayMode: vi.fn(() => ({ setGmMode: mockSetGmMode })),
+}));
+
+vi.mock('../../contexts/SessionContext', () => ({
+  useSession: vi.fn(() => ({ getState: vi.fn(() => null), sendUpdate: vi.fn() })),
+}));
+
 const mockAdvanceHours = vi.fn();
 const mockAdvanceDays = vi.fn();
 const mockGameDate = { day: 5, month: 2, year: 4725 };
@@ -27,9 +37,16 @@ vi.mock('../../hooks/useDowntimePartyReady', () => ({
   useDowntimePartyReady: vi.fn(() => ({ readyCount: 0, total: 5, allReady: false })),
 }));
 
+// Helper: mock both useSyncedState calls (block key + summary key).
+const withBlock = (block) =>
+  useSyncedState.mockImplementation((key) =>
+    key === 'cnmh_downtimeblock_global' ? [block, mockSetBlock] : [null, vi.fn()]
+  );
+
 beforeEach(() => {
   vi.clearAllMocks();
-  useSyncedState.mockReturnValue([null, mockSetBlock]);
+  withBlock(null);
+  useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
 });
 
 describe('DowntimeControl', () => {
@@ -137,7 +154,7 @@ describe('DowntimeControl', () => {
     });
 
     it('shows Update and the granted days when a block is already active', () => {
-      useSyncedState.mockReturnValue([{ days: 4, active: true }, mockSetBlock]);
+      withBlock({ days: 4, active: true });
       render(<DowntimeControl />);
       expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument();
       expect(screen.getByText('4 days granted')).toBeInTheDocument();
@@ -151,7 +168,7 @@ describe('DowntimeControl', () => {
     });
 
     it('shows Close block (and no manual Advance button) when a block is active', () => {
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      withBlock({ days: 7, active: true });
       render(<DowntimeControl />);
       expect(screen.getByRole('button', { name: 'Close block' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /^Advance/ })).not.toBeInTheDocument();
@@ -159,7 +176,7 @@ describe('DowntimeControl', () => {
 
     it('Close block sets the block to inactive', () => {
       const block = { days: 7, active: true, startedAt: mockGameDate };
-      useSyncedState.mockReturnValue([block, mockSetBlock]);
+      withBlock(block);
       render(<DowntimeControl />);
       fireEvent.click(screen.getByRole('button', { name: 'Close block' }));
       expect(mockSetBlock).toHaveBeenCalledWith({ ...block, active: false });
@@ -167,54 +184,67 @@ describe('DowntimeControl', () => {
 
     it('shows party readiness from useDowntimePartyReady', () => {
       useDowntimePartyReady.mockReturnValue({ readyCount: 3, total: 5, allReady: false });
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      withBlock({ days: 7, active: true });
       render(<DowntimeControl />);
       expect(screen.getByText('3/5 ready')).toBeInTheDocument();
     });
 
     it('shows "advancing…" suffix when allReady is true', () => {
       useDowntimePartyReady.mockReturnValue({ readyCount: 5, total: 5, allReady: true });
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      withBlock({ days: 7, active: true });
       render(<DowntimeControl />);
       expect(screen.getByText(/5\/5 ready.*advancing/i)).toBeInTheDocument();
     });
   });
 
   describe('auto-advance', () => {
-    it('auto-advances and closes the block when allReady becomes true', () => {
+    it('writes summary, advances clock, closes block, and switches to Exploration', () => {
+      const mockSetSummary = vi.fn();
+      const activeBlock = { days: 7, active: true, startedAt: mockGameDate };
+      useSyncedState.mockImplementation((key) =>
+        key === 'cnmh_downtimeblock_global'
+          ? [activeBlock, mockSetBlock]
+          : [null, mockSetSummary]
+      );
+
       useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
       const { rerender } = render(<DowntimeControl />);
       expect(mockAdvanceDays).not.toHaveBeenCalled();
 
       useDowntimePartyReady.mockReturnValue({ readyCount: 5, total: 5, allReady: true });
       rerender(<DowntimeControl />);
 
+      // Summary written (chars is empty — no CharacterContext provider in this test)
+      expect(mockSetSummary).toHaveBeenCalledWith(
+        expect.objectContaining({ period: { days: 7, startedAt: mockGameDate }, chars: [] })
+      );
+      // Clock advanced
       expect(mockAdvanceDays).toHaveBeenCalledWith(7);
+      // Block closed via functional updater
       expect(mockSetBlock).toHaveBeenCalledWith(expect.any(Function));
       const updater = mockSetBlock.mock.calls[0][0];
       expect(updater({ days: 7, active: true, startedAt: mockGameDate })).toEqual({
         days: 7, active: false, startedAt: mockGameDate,
       });
+      // Mode switched to Exploration
+      expect(mockSetGmMode).toHaveBeenCalledWith('exploration');
     });
 
     it('does not auto-advance when allReady is false', () => {
-      useDowntimePartyReady.mockReturnValue({ readyCount: 3, total: 5, allReady: false });
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
+      withBlock({ days: 7, active: true });
       render(<DowntimeControl />);
       expect(mockAdvanceDays).not.toHaveBeenCalled();
     });
 
     it('does not auto-advance when the block is inactive', () => {
-      useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
-      useSyncedState.mockReturnValue([{ days: 7, active: false }, mockSetBlock]);
+      withBlock({ days: 7, active: false });
       render(<DowntimeControl />);
       expect(mockAdvanceDays).not.toHaveBeenCalled();
     });
 
     it('does not double-fire if allReady stays true across re-renders', () => {
+      withBlock({ days: 7, active: true });
       useDowntimePartyReady.mockReturnValue({ readyCount: 0, total: 5, allReady: false });
-      useSyncedState.mockReturnValue([{ days: 7, active: true }, mockSetBlock]);
       const { rerender } = render(<DowntimeControl />);
 
       useDowntimePartyReady.mockReturnValue({ readyCount: 5, total: 5, allReady: true });
