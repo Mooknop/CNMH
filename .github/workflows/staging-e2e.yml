@@ -1,14 +1,14 @@
 name: Staging CI
 
-# Opt-in PR trigger: apply the 'run-e2e' label to a PR to fire this workflow.
-# Path-filtered so pushes that don't touch app/worker/e2e code skip the run.
-# cancel-in-progress means only the latest push on a given PR runs at once,
-# preventing cumulative write-budget drain from rapid pushes.
-# workflow_dispatch always runs (for manual one-off runs / debugging).
+# Staging deploy runs automatically on every PR that touches app/worker code
+# (path-filtered). The e2e job is decoupled and stays opt-in — apply the
+# 'run-e2e' label (or use workflow_dispatch) to run it — so the shared staging
+# Worker's CF DO write budget isn't drained by routine pushes.
+# cancel-in-progress means only the latest push on a given PR runs at once.
 on:
   workflow_dispatch:
   pull_request:
-    types: [labeled, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
     paths:
       - 'src/**'
       - 'worker/**'
@@ -28,7 +28,7 @@ jobs:
   deploy:
     name: Deploy to staging
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
+    # Decoupled from e2e: runs on any qualifying PR push or manual dispatch.
     steps:
       - uses: actions/checkout@v4
 
@@ -40,11 +40,11 @@ jobs:
       - run: npm ci
 
       # build:app skips the unit-test phase (covered by test.yml on PRs).
-      - name: Build React app
+      - name: Build app
         run: npm run build:app
         env:
-          REACT_APP_ENVIRONMENT: staging
-          REACT_APP_GIT_SHA: ${{ github.sha }}
+          VITE_ENVIRONMENT: staging
+          VITE_GIT_SHA: ${{ github.sha }}
 
       - name: Deploy to cnmh-staging
         uses: cloudflare/wrangler-action@v3

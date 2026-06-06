@@ -6,24 +6,24 @@ let mockRoster = [];
 let mockOrder = [];
 let mockFoundryCombatId = null;
 
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const ReactLib = require('react');
   return {
     __esModule: true,
     useSyncedState: (key, init) => {
-      if (key === 'cnmh_roster_global') {
-        return ReactLib.useState(mockRoster);
-      }
-      return ReactLib.useState(typeof init === 'function' ? init() : init);
+      const initial = key === 'cnmh_roster_global'
+        ? mockRoster
+        : (typeof init === 'function' ? init() : init);
+      return ReactLib.useState(initial);
     },
   };
 });
 
-const mockSetActorMap = jest.fn();
+const mockSetActorMap = vi.fn();
 let mockActorMap = {};
 let mockCharacters = [];
 
-jest.mock('./useEncounter', () => ({
+vi.mock('./useEncounter', () => ({
   useEncounter: () => ({
     encounter: { active: true, foundryCombatId: mockFoundryCombatId, order: mockOrder },
     actorMap: mockActorMap,
@@ -31,14 +31,14 @@ jest.mock('./useEncounter', () => ({
   }),
 }));
 
-jest.mock('../contexts/ContentContext', () => ({
+vi.mock('../contexts/ContentContext', () => ({
   useContent: () => ({ characters: mockCharacters }),
 }));
 
 import { useActorMapAutoMatch } from './useActorMapAutoMatch';
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockActorMap = {};
   mockCharacters = [];
   mockRoster = [];

@@ -103,20 +103,20 @@ describe('resolveActionRoll — numeric attackMod strike', () => {
   it('uses rangedAttack stat for ranged strikes', () => {
     const strike = { name: 'Shortbow', type: 'ranged', attackMod: 5, targetDefense: 'ac' };
     // spy on computeConditionEffects to verify stat routing
-    const spy = jest.spyOn(ConditionUtils, 'computeConditionEffects').mockReturnValue({
+    const spy = vi.spyOn(ConditionUtils, 'computeConditionEffects').mockReturnValue({
       meleeAttack:  { total: -1, sources: [] },
       rangedAttack: { total: -2, sources: [] },
       spellAttack:  { total: 0,  sources: [] },
       spellDC:      { total: 0,  sources: [] },
       skillPenalty: () => ({ total: 0, sources: [] }),
     });
-    jest.spyOn(EffectUtils, 'computeEffectBonuses').mockReturnValue({
+    vi.spyOn(EffectUtils, 'computeEffectBonuses').mockReturnValue({
       rangedAttack: { total: 0, sources: [] },
     });
     const result = resolveActionRoll(strike, baseCharacter, { conditions: [{ id: 'frightened', value: 2 }] });
     expect(result.bonus).toBe(3); // 5 base - 2 rangedAttack penalty
     spy.mockRestore();
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 });
 

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 
 let mockSession;
-jest.mock('../contexts/SessionContext', () => ({
+vi.mock('../contexts/SessionContext', () => ({
   useSession: () => mockSession,
 }));
 
@@ -10,8 +10,8 @@ import { useSyncedState } from './useSyncedState';
 const noopSession = () => ({
   connected: false,
   getState: () => undefined,
-  sendUpdate: jest.fn(),
-  subscribe: jest.fn(() => jest.fn()),
+  sendUpdate: vi.fn(),
+  subscribe: vi.fn(() => vi.fn()),
 });
 
 beforeEach(() => {
@@ -54,7 +54,7 @@ describe('useSyncedState', () => {
 
   it('applies incoming subscribed updates and caches them locally', () => {
     let captured;
-    mockSession.subscribe = jest.fn((c, t, cb) => { captured = cb; return jest.fn(); });
+    mockSession.subscribe = vi.fn((c, t, cb) => { captured = cb; return vi.fn(); });
     const { result } = renderHook(() => useSyncedState('cnmh_conditions_Pellias', []));
     act(() => { captured([{ id: 'frightened' }]); });
     expect(result.current[0]).toEqual([{ id: 'frightened' }]);
@@ -71,8 +71,8 @@ describe('useSyncedState', () => {
   });
 
   it('unsubscribes on unmount', () => {
-    const unsub = jest.fn();
-    mockSession.subscribe = jest.fn(() => unsub);
+    const unsub = vi.fn();
+    mockSession.subscribe = vi.fn(() => unsub);
     const { unmount } = renderHook(() => useSyncedState('cnmh_slots_JadeInferno', {}));
     unmount();
     expect(unsub).toHaveBeenCalled();

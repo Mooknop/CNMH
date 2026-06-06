@@ -1,20 +1,21 @@
 import { renderHook } from '@testing-library/react';
 import { useExplorationEffect, EXPLORATION_EFFECT_SOURCE } from './useExplorationEffect';
+import { useSyncedState } from './useSyncedState';
 
 // Drive the reconcile logic through a controllable useSyncedState mock so we can
 // assert exactly what gets written to cnmh_effects_<charId>.
 let mockEffects;
-const mockSetEffects = jest.fn();
-jest.mock('./useSyncedState', () => ({ useSyncedState: jest.fn() }));
+const mockSetEffects = vi.fn();
+vi.mock('./useSyncedState', () => ({ useSyncedState: vi.fn() }));
 
-jest.mock('../utils/uid', () => ({ newEntryUid: () => 'uid-fixed' }));
+vi.mock('../utils/uid', () => ({ newEntryUid: () => 'uid-fixed' }));
 
 describe('useExplorationEffect', () => {
   beforeEach(() => {
     mockEffects = [];
     // resetMocks wipes the implementation before each test, so re-install one
     // that reads the live module-level value.
-    require('./useSyncedState').useSyncedState.mockImplementation(() => [mockEffects, mockSetEffects]);
+    useSyncedState.mockImplementation(() => [mockEffects, mockSetEffects]);
   });
 
   // Resolve the array the component asked setEffects to store.

@@ -1,0 +1,202 @@
+import React from 'react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import ExplorationMove from './ExplorationMove';
+
+const mockPlayMode = {
+  mode: 'exploration',
+  moveEnabled: true,
+};
+vi.mock('../../hooks/usePlayMode', () => ({
+  usePlayMode: () => mockPlayMode,
+}));
+
+let mockIsGm = true;
+vi.mock('../../hooks/useGmAuth', () => ({
+  useGmAuth: () => ({ isGm: mockIsGm }),
+}));
+
+let mockExploreDist = 0;
+const mockSetExploreDist = vi.fn();
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: (key) => {
+    if (key === 'cnmh_exploredist_global') return [mockExploreDist, mockSetExploreDist];
+    return [null, vi.fn()];
+  },
+}));
+
+const mockMovement = {
+  stage: null,
+  pickerOpts: null,
+  isRefreshing: false,
+  requestMove: vi.fn(),
+  requestMoveRefresh: vi.fn(),
+  confirmMove: vi.fn(),
+  cancelMove: vi.fn(),
+};
+vi.mock('../../hooks/useTokenMovement', () => ({
+  useTokenMovement: (charId, opts) => {
+    // Capture onMoveDone so tests can simulate the bridge confirming a step.
+    mockMovement.lastOpts = opts;
+    return mockMovement;
+  },
+}));
+
+vi.mock('../encounter/MoveGridPicker', () => ({
+  default: function DummyMoveGridPicker({ onSelect, onCancel }) {
+    return (
+      <div data-testid="move-grid-picker">
+        <button onClick={() => onSelect({ x: 100, y: 200 })}>Select Square</button>
+        <button onClick={onCancel}>Cancel</button>
+      </div>
+    );
+  }
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockIsGm = true;
+  mockExploreDist = 0;
+  mockSetExploreDist.mockImplementation((updater) => {
+    mockExploreDist = typeof updater === 'function' ? updater(mockExploreDist) : updater;
+  });
+  mockPlayMode.mode = 'exploration';
+  mockPlayMode.moveEnabled = true;
+  mockMovement.stage = null;
+  mockMovement.pickerOpts = null;
+  mockMovement.isRefreshing = false;
+});
+
+describe('ExplorationMove', () => {
+  it('renders nothing when mode is not exploration', () => {
+    mockPlayMode.mode = 'encounter';
+    const { container } = render(<ExplorationMove charId="char-1" />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('renders nothing when moveEnabled is false', () => {
+    mockPlayMode.moveEnabled = false;
+    const { container } = render(<ExplorationMove charId="char-1" />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('auto-requests the grid on mount when idle (no Move Token button)', () => {
+    render(<ExplorationMove charId="char-1" />);
+    expect(mockMovement.requestMove).toHaveBeenCalledWith('stride');
+    expect(screen.queryByRole('button', { name: 'Move Token' })).not.toBeInTheDocument();
+  });
+
+  it('does not auto-request when not in exploration mode', () => {
+    mockPlayMode.mode = 'encounter';
+    render(<ExplorationMove charId="char-1" />);
+    expect(mockMovement.requestMove).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-request when movement is disabled', () => {
+    mockPlayMode.moveEnabled = false;
+    render(<ExplorationMove charId="char-1" />);
+    expect(mockMovement.requestMove).not.toHaveBeenCalled();
+  });
+
+  it('shows calculating status when stage is awaiting-opts', () => {
+    mockMovement.stage = 'awaiting-opts';
+    render(<ExplorationMove charId="char-1" />);
+    expect(screen.getByText(/calculating reachable squares/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Move Token' })).not.toBeInTheDocument();
+  });
+
+  it('shows picker when stage is picking', () => {
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    render(<ExplorationMove charId="char-1" />);
+    expect(screen.getByTestId('move-grid-picker')).toBeInTheDocument();
+  });
+
+  it('calls confirmMove when a square is selected', () => {
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    render(<ExplorationMove charId="char-1" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Select Square' }));
+    expect(mockMovement.confirmMove).toHaveBeenCalledWith({ x: 100, y: 200 });
+  });
+
+  it('calls cancelMove when Done is clicked', () => {
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30 };
+    render(<ExplorationMove charId="char-1" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mockMovement.cancelMove).toHaveBeenCalled();
+  });
+
+  it('accumulates a distance readout across steps and resets on Done', () => {
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], speed: 30 };
+    render(<ExplorationMove charId="char-1" />);
+
+    // No readout before any step.
+    expect(screen.queryByLabelText('Distance walked')).not.toBeInTheDocument();
+
+    // Simulate two confirmed 5-ft steps via the captured onMoveDone.
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
+    expect(screen.getByLabelText('Distance walked')).toHaveTextContent('Moved 10 ft');
+
+    // Each step chains a refresh probe.
+    expect(mockMovement.requestMoveRefresh).toHaveBeenCalledWith('stride');
+
+    // Done resets the tally.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByLabelText('Distance walked')).not.toBeInTheDocument();
+  });
+
+  it('shows Moving status when stage is awaiting-done', () => {
+    mockMovement.stage = 'awaiting-done';
+    render(<ExplorationMove charId="char-1" />);
+    expect(screen.getByText(/moving/i)).toBeInTheDocument();
+  });
+
+  it('shows Updating overlay and picker while refreshing with opts', () => {
+    mockMovement.stage = 'awaiting-opts';
+    mockMovement.isRefreshing = true;
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [], maxFeet: 30 };
+    render(<ExplorationMove charId="char-1" />);
+    expect(screen.getByText(/updating/i)).toBeInTheDocument();
+    expect(screen.getByTestId('move-grid-picker')).toBeInTheDocument();
+  });
+
+  it('GM: increments cnmh_exploredist_global on each step', () => {
+    mockIsGm = true;
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+    render(<ExplorationMove charId="char-1" />);
+
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 10 }));
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 5 }));
+
+    expect(mockSetExploreDist).toHaveBeenCalledTimes(2);
+    expect(mockExploreDist).toBe(15);
+  });
+
+  it('non-GM: does not increment cnmh_exploredist_global', () => {
+    mockIsGm = false;
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+    render(<ExplorationMove charId="char-1" />);
+
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 10 }));
+
+    expect(mockSetExploreDist).not.toHaveBeenCalled();
+  });
+
+  it('GM: resets cnmh_exploredist_global to 0 on Done', () => {
+    mockIsGm = true;
+    mockMovement.stage = 'picking';
+    mockMovement.pickerOpts = { origin: { x: 0, y: 0 }, reachable: [], blocked: [] };
+    render(<ExplorationMove charId="char-1" />);
+
+    act(() => mockMovement.lastOpts.onMoveDone({ feetMoved: 10 }));
+    mockSetExploreDist.mockClear();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mockSetExploreDist).toHaveBeenCalledWith(0);
+  });
+});

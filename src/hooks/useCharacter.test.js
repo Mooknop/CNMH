@@ -4,31 +4,31 @@ import { resolveCharacterItems } from '../utils/contentUtils';
 import { items, spells } from '../data';
 
 // Mock all the utility modules
-jest.mock('../utils/CharacterUtils', () => ({
+vi.mock('../utils/CharacterUtils', () => ({
   getAbilityModifier: (score) => Math.floor((score - 10) / 2),
-  getSkillModifier: jest.fn((char, skill) => 5),
-  getItemBonus: jest.fn(() => 0),
+  getSkillModifier: vi.fn((char, skill) => 5),
+  getItemBonus: vi.fn(() => 0),
   SKILL_ABILITY_MAP: {
     acrobatics: 'dexterity',
     athletics: 'strength'
   },
-  calculateClassDC: jest.fn((level) => 10 + level),
-  calculateEnhancedBulkLimit: jest.fn((char) => 10),
-  hasFeat: jest.fn(() => false),
+  calculateClassDC: vi.fn((level) => 10 + level),
+  calculateEnhancedBulkLimit: vi.fn((char) => 10),
+  hasFeat: vi.fn(() => false),
   FEAT_NAMES: {
     FAMILIAR: 'Familiar',
     ANIMAL_COMPANION: 'Animal Companion'
   }
 }));
 
-jest.mock('../utils/ActionsUtils', () => ({
+vi.mock('../utils/ActionsUtils', () => ({
   getStrikes: () => [],
   getActions: () => [],
   getReactions: () => [],
   getFreeActions: () => [],
 }));
 
-jest.mock('../utils/SpellUtils', () => ({
+vi.mock('../utils/SpellUtils', () => ({
   calculateSpellStats: () => ({ spellAttackMod: 5, spellDC: 15 }),
   findScrollItems: () => [],
   extractScrollSpells: () => [],
@@ -37,7 +37,7 @@ jest.mock('../utils/SpellUtils', () => ({
   extractInnateSpells: () => [],
 }));
 
-jest.mock('../utils/InventoryUtils', () => ({
+vi.mock('../utils/InventoryUtils', () => ({
   calculateItemsBulk: () => 5,
   formatBulk: (bulk) => bulk.toString(),
 }));

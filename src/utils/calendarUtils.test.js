@@ -45,8 +45,8 @@ const mockTimelineData = [
 ];
 
 // Mock functions
-const mockGetDayOfWeek = jest.fn();
-const mockGetMoonPhaseInfo = jest.fn();
+const mockGetDayOfWeek = vi.fn();
+const mockGetMoonPhaseInfo = vi.fn();
 
 describe('calendarUtils', () => {
   describe('getEventTypeClass', () => {
@@ -269,7 +269,7 @@ describe('calendarUtils', () => {
         mockGetDayOfWeek.mockReturnValue(0); // Monday
         const rule = { type: 'nth_weekday', weekday: 0, occurrence: 1 };
         // Mock getNthWeekdayOfMonth to return 1 for this case
-        helpers.getNthWeekdayOfMonth = jest.fn().mockReturnValue(1);
+        helpers.getNthWeekdayOfMonth = vi.fn().mockReturnValue(1);
         expect(helpers.doesEventOccurOnDate(rule, { day: 1, month: 0, year: 4725 })).toBe(true);
       });
 

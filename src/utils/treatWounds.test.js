@@ -133,7 +133,7 @@ describe('applyTreatWounds — failure', () => {
 describe('applyTreatWounds — success', () => {
   it('heals target and adds immunity effect', () => {
     const hp = { current: 20, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 };
-    const { store, updates, logs, getState, sendUpdate, appendLog } = makeStubs(hp);
+    const { updates, logs, getState, sendUpdate, appendLog } = makeStubs(hp);
     applyTreatWounds({ healer, target, dc: 15, degree: 'success', amount: 12, actionName: 'Treat Wounds', getState, sendUpdate, appendLog });
 
     const hpUpdate = updates.find((u) => u.key === 'hp');
@@ -150,7 +150,7 @@ describe('applyTreatWounds — success', () => {
 
   it('caps healing at max HP', () => {
     const hp = { current: 38, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 };
-    const { store, updates, getState, sendUpdate, appendLog } = makeStubs(hp);
+    const { updates, getState, sendUpdate, appendLog } = makeStubs(hp);
     applyTreatWounds({ healer, target, dc: 15, degree: 'success', amount: 10, actionName: 'Treat Wounds', getState, sendUpdate, appendLog });
 
     const hpUpdate = updates.find((u) => u.key === 'hp');

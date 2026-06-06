@@ -4,7 +4,7 @@ import { renderHook, act } from '@testing-library/react';
 // To seed state we wrap the hook inside a helper that provides initial values
 // via the mock's init parameter override.
 const initialStates = {};
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const ReactLib = require('react');
   return {
     __esModule: true,

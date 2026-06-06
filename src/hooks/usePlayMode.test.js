@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const ReactLib = require('react');
   return {
     __esModule: true,
@@ -10,7 +10,7 @@ jest.mock('./useSyncedState', () => {
 });
 
 let mockEncounter = { active: false };
-jest.mock('./useEncounter', () => ({
+vi.mock('./useEncounter', () => ({
   useEncounter: () => ({ encounter: mockEncounter }),
 }));
 

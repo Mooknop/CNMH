@@ -14,7 +14,7 @@ const order = [
 ];
 
 function makeArgs(abilityOverrides = {}, opts = {}) {
-  const sendUpdate = jest.fn();
+  const sendUpdate = vi.fn();
   return {
     args: {
       ability: {
@@ -32,7 +32,7 @@ function makeArgs(abilityOverrides = {}, opts = {}) {
       characters: [caster, izzy],
       getState: () => [],
       sendUpdate,
-      appendLog: jest.fn(),
+      appendLog: vi.fn(),
       verb: 'cast',
     },
     sendUpdate,

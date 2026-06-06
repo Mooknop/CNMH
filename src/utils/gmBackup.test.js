@@ -1,23 +1,23 @@
 import { downloadBackup, restoreBackup } from './gmBackup';
 
-jest.mock('./gmApi', () => ({ seedFromBackup: jest.fn() }));
-const { seedFromBackup } = require('./gmApi');
+vi.mock('./gmApi', () => ({ seedFromBackup: vi.fn() }));
+import { seedFromBackup } from './gmApi';
 
 const fileOf = (obj) => ({ text: () => Promise.resolve(JSON.stringify(obj)) });
 
-afterEach(() => jest.restoreAllMocks());
+afterEach(() => vi.restoreAllMocks());
 
 describe('gmBackup.downloadBackup', () => {
   beforeEach(() => {
-    global.URL.createObjectURL = jest.fn(() => 'blob:x');
-    global.URL.revokeObjectURL = jest.fn();
+    global.URL.createObjectURL = vi.fn(() => 'blob:x');
+    global.URL.revokeObjectURL = vi.fn();
   });
 
   it('unwraps the /api/content envelope and triggers a download', async () => {
-    global.fetch = jest.fn(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({ ok: true, json: () => Promise.resolve({ payload: { quest: [{ id: 'q' }] } }) })
     );
-    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     const snapshot = await downloadBackup();
     expect(snapshot).toEqual({ quest: [{ id: 'q' }] });
     expect(click).toHaveBeenCalled();
@@ -25,7 +25,7 @@ describe('gmBackup.downloadBackup', () => {
   });
 
   it('throws on a non-ok response', async () => {
-    global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 500 }));
+    global.fetch = vi.fn(() => Promise.resolve({ ok: false, status: 500 }));
     await expect(downloadBackup()).rejects.toThrow('HTTP 500');
   });
 });
