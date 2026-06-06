@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
-// downtime days (`cnmh_downtimeblock_global`) that players allocate to
-// activities; the advance-time controls move the shared clock once the block is
-// resolved. Quick buttons cover the common increments; the custom field handles
-// unusual durations.
+// downtime days (`cnmh_downtimeblock_global`) that players allocate to activities.
+// When the last PC commits their final day the clock auto-advances by the full
+// block and the block closes — no GM button needed. The GM can also Close the
+// block early without advancing time. Quick buttons / custom field handle ad-hoc
+// time nudges independent of the downtime block.
 const DowntimeControl = () => {
   const { advanceHours, advanceDays, formatGameDate, formatClockTime, gameDate } = useGameDate();
   const [block, setBlock] = useSyncedState('cnmh_downtimeblock_global', null);
@@ -40,12 +41,26 @@ const DowntimeControl = () => {
 
   const periodInvalid = !periodValue || parseInt(periodValue, 10) <= 0;
 
-  const { readyCount, total } = useDowntimePartyReady(block?.active ? block?.days : 0);
+  // Primitive deps to avoid spurious effect re-runs when block reference changes.
+  const blockActive = block?.active ?? false;
+  const blockDays = block?.days ?? 0;
 
-  const advanceBlock = () => {
-    if (!block?.active) return;
-    advanceDays(block.days);
-  };
+  const { readyCount, total, allReady } = useDowntimePartyReady(blockActive ? blockDays : 0);
+
+  // Auto-advance: when every PC commits their last day, move the clock forward
+  // by the full block and mark the block inactive. A ref prevents double-fire
+  // if the component re-renders while allReady is still true.
+  const autoAdvancedRef = useRef(false);
+  useEffect(() => {
+    if (!blockActive) {
+      autoAdvancedRef.current = false; // reset so a new block can fire again
+      return;
+    }
+    if (!allReady || autoAdvancedRef.current) return;
+    autoAdvancedRef.current = true;
+    advanceDays(blockDays);
+    setBlock((prev) => (prev ? { ...prev, active: false } : prev));
+  }, [allReady, blockActive, blockDays, advanceDays, setBlock]);
 
   const closeBlock = () => {
     if (!block) return;
@@ -85,12 +100,9 @@ const DowntimeControl = () => {
         <>
           <span className="pmc-label">Block Actions</span>
           <div className="pmc-downtime-block">
-            <span className="pmc-downtime-ready">
-              {readyCount}/{total} ready
+            <span className={`pmc-downtime-ready${allReady ? ' pmc-downtime-ready--done' : ''}`}>
+              {readyCount}/{total} ready{allReady ? ' — advancing…' : ''}
             </span>
-            <button className="pmc-pill" onClick={advanceBlock}>
-              Advance {block.days} day{block.days === 1 ? '' : 's'}
-            </button>
             <button className="pmc-pill pmc-pill--danger" onClick={closeBlock}>
               Close block
             </button>

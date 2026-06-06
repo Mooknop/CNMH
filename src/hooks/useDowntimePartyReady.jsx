@@ -24,14 +24,16 @@ export function useDowntimePartyReady(blockDays) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, subscribe]);
 
-  const days = blockDays || 0;
+  // Guard: a zero/null blockDays means no active block — nobody is "ready".
+  // Without this, getDaysCommitted(ledger) >= 0 is trivially true for everyone.
+  const days = blockDays != null && blockDays > 0 ? blockDays : null;
   const total = ids.length;
-  const readyCount = ids.filter((id) => {
+  const readyCount = days == null ? 0 : ids.filter((id) => {
     const dt = getState(id, 'downtime');
     return getDaysCommitted(dt?.ledger) >= days;
   }).length;
 
-  return { readyCount, total, allReady: total > 0 && readyCount === total };
+  return { readyCount, total, allReady: days != null && total > 0 && readyCount === total };
 }
 
 export default useDowntimePartyReady;
