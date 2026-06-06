@@ -27,6 +27,17 @@ jest.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate }),
 }));
 
+const mockAdvanceHours = jest.fn();
+const mockAdvanceDays = jest.fn();
+jest.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    advanceHours: mockAdvanceHours,
+    advanceDays: mockAdvanceDays,
+    formatGameDate: () => '5 Pharast, 4725 AR',
+    formatClockTime: () => '08:00',
+  }),
+}));
+
 const renderWith = (characters = []) =>
   render(
     <CharacterContext.Provider value={{ characters }}>
@@ -41,6 +52,15 @@ beforeEach(() => {
   mockState.moveEnabled = false;
   mockAllChosen = true;
 });
+
+const renderDowntime = () => {
+  mockState.gmMode = 'downtime';
+  return render(
+    <CharacterContext.Provider value={{ characters: [] }}>
+      <PlayModeControl />
+    </CharacterContext.Provider>
+  );
+};
 
 describe('PlayModeControl', () => {
   it('shows Exploration and Downtime buttons when not in encounter', () => {
@@ -146,6 +166,45 @@ describe('PlayModeControl', () => {
       renderWith();
       fireEvent.click(screen.getByRole('button', { name: 'Start movement' }));
       expect(mockState.setMoveOverride).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('Downtime time-advance controls', () => {
+    it('shows downtime controls when gmMode is downtime', () => {
+      renderDowntime();
+      expect(screen.getByRole('button', { name: '+1 hr' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '+8 hr' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: '+1 day' })).toBeInTheDocument();
+    });
+
+    it('does not show downtime controls in exploration mode', () => {
+      renderWith();
+      expect(screen.queryByRole('button', { name: '+1 hr' })).not.toBeInTheDocument();
+    });
+
+    it('does not show downtime controls during encounter', () => {
+      mockState.mode = 'encounter';
+      mockState.gmMode = 'downtime';
+      renderWith();
+      expect(screen.queryByRole('button', { name: '+1 hr' })).not.toBeInTheDocument();
+    });
+
+    it('+1 hr calls advanceHours(1)', () => {
+      renderDowntime();
+      fireEvent.click(screen.getByRole('button', { name: '+1 hr' }));
+      expect(mockAdvanceHours).toHaveBeenCalledWith(1);
+    });
+
+    it('+8 hr calls advanceHours(8)', () => {
+      renderDowntime();
+      fireEvent.click(screen.getByRole('button', { name: '+8 hr' }));
+      expect(mockAdvanceHours).toHaveBeenCalledWith(8);
+    });
+
+    it('+1 day calls advanceDays(1)', () => {
+      renderDowntime();
+      fireEvent.click(screen.getByRole('button', { name: '+1 day' }));
+      expect(mockAdvanceDays).toHaveBeenCalledWith(1);
     });
   });
 

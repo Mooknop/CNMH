@@ -37,6 +37,14 @@ jest.mock('./ExplorationDoors', () =>
   }
 );
 
+jest.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    formatGameDate: () => '5 Pharast, 4725 AR',
+    formatClockTime: () => '08:00',
+    getCurrentWeekday: () => 'Oathday',
+  }),
+}));
+
 const character = { id: 'char-1', name: 'Pellias' };
 
 beforeEach(() => {
@@ -47,11 +55,24 @@ beforeEach(() => {
 });
 
 describe('ExplorationTab', () => {
-  it('shows downtime placeholder when mode is downtime', () => {
+  it('shows downtime label when mode is downtime', () => {
     mockMode = 'downtime';
     render(<ExplorationTab character={character} />);
     expect(screen.getByText('Downtime')).toBeInTheDocument();
-    expect(screen.getByText(/coming in a future update/i)).toBeInTheDocument();
+  });
+
+  it('shows current date and time in downtime mode', () => {
+    mockMode = 'downtime';
+    render(<ExplorationTab character={character} />);
+    expect(screen.getByText(/Oathday.*Pharast/)).toBeInTheDocument();
+    expect(screen.getByText('08:00')).toBeInTheDocument();
+  });
+
+  it('does not show exploration controls in downtime mode', () => {
+    mockMode = 'downtime';
+    render(<ExplorationTab character={character} />);
+    expect(screen.queryByTestId('exploration-list')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('exploration-move')).not.toBeInTheDocument();
   });
 
   describe('Activity state (party not ready)', () => {

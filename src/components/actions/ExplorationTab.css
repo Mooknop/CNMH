@@ -57,10 +57,19 @@
   color: var(--arcane-mid, var(--theme-arcane));
 }
 
-.et-downtime-sub {
+.et-downtime-date {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: 0;
+}
+
+.et-downtime-time {
+  font-family: var(--font-ui);
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--arcane-mid, var(--theme-arcane));
   margin: 0;
 }
 
