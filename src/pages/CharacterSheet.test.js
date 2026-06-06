@@ -90,6 +90,22 @@ jest.mock('../components/inventory/InventoryTab', () => {
   };
 });
 
+jest.mock('../components/actions/ExplorationTab', () => {
+  return function DummyExplorationTab() {
+    return <div data-testid="exploration-tab">Exploration Tab</div>;
+  };
+});
+
+// The mode-aware second rail tab follows usePlayMode(). Default to exploration;
+// individual tests override the mock to exercise encounter mode.
+let mockPlayMode = 'exploration';
+jest.mock('../hooks/usePlayMode', () => ({
+  usePlayMode: () => ({ mode: mockPlayMode }),
+}));
+jest.mock('../hooks/useEncounter', () => ({
+  useEncounter: () => ({ encounter: { active: mockPlayMode === 'encounter' } }),
+}));
+
 const mockCharacter = {
   id: '1',
   name: 'Test Character',
@@ -127,6 +143,10 @@ const renderWithRouter = (character, characterId = '1') => {
 };
 
 describe('CharacterSheet', () => {
+  beforeEach(() => {
+    mockPlayMode = 'exploration';
+  });
+
   it('should render without crashing', () => {
     expect(() => renderWithRouter(mockCharacter)).not.toThrow();
   });
@@ -211,10 +231,18 @@ describe('CharacterSheet', () => {
     expect(screen.getByTestId('stats-block')).toBeInTheDocument();
   });
 
-  it('should display actions list when Encounter tab is active', () => {
+  it('shows the Explore mode tab with exploration content by default', () => {
     renderWithRouter(mockCharacter);
-    const encounterBtn = screen.getByRole('button', { name: /encounter/i });
-    fireEvent.click(encounterBtn);
+    const modeBtn = screen.getByRole('button', { name: /exploration/i });
+    fireEvent.click(modeBtn);
+    expect(screen.getByTestId('exploration-tab')).toBeInTheDocument();
+  });
+
+  it('shows the Encounter mode tab with combat content during encounter', () => {
+    mockPlayMode = 'encounter';
+    renderWithRouter(mockCharacter);
+    const modeBtn = screen.getByRole('button', { name: /encounter/i });
+    fireEvent.click(modeBtn);
     expect(screen.getByTestId('actions-list')).toBeInTheDocument();
   });
 
