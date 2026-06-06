@@ -29,6 +29,9 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:ci
 
+      - name: Run Foundry bridge tests with coverage
+        run: npm run test:bridge:ci
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         if: always()

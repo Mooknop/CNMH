@@ -24,6 +24,17 @@ module.exports = {
     '!<rootDir>/config.js',
     '!<rootDir>/bridge.js',
   ],
+  // Gate against regression. Floors sit just under current coverage
+  // (branches ~80%, the rest 95%+) so unrelated PRs aren't blocked but a
+  // meaningful drop fails CI. Raise these as coverage improves.
+  coverageThreshold: {
+    global: {
+      branches: 78,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+  },
   transform: {
     '^.+\\.js$': ['babel-jest', {
       babelrc: false,
