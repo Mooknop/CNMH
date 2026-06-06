@@ -118,3 +118,56 @@
 .pmc-override-btn:hover {
   opacity: 0.85;
 }
+
+/* Downtime time-advance controls */
+.pmc-downtime {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pmc-downtime-quick {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.pmc-downtime-custom {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.pmc-downtime-input {
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-sm);
+  color: var(--theme-text, var(--shell-text));
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  width: 72px;
+}
+
+.pmc-downtime-input:focus {
+  outline: none;
+  border-color: var(--theme-accent, var(--accent-bg));
+}
+
+.pmc-downtime-unit {
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-sm);
+  color: var(--theme-text, var(--shell-text));
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-1);
+  cursor: pointer;
+}
+
+.pmc-downtime-clock {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-variant-numeric: tabular-nums;
+}

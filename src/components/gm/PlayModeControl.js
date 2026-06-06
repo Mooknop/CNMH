@@ -3,6 +3,7 @@ import { usePlayMode } from '../../hooks/usePlayMode';
 import { useExplorationReady } from '../../hooks/useExplorationReady';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
+import DowntimeControl from './DowntimeControl';
 import './PlayModeControl.css';
 
 // GM control for the non-combat play mode (Exploration / Downtime) and the
@@ -61,6 +62,8 @@ const PlayModeControl = () => {
           )}
         </div>
       </div>
+
+      {!isEncounter && gmMode === 'downtime' && <DowntimeControl />}
 
       {!isEncounter && gmMode === 'exploration' && (
         <div className="pmc-row pmc-row--toggle">
