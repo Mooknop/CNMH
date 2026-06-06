@@ -1,28 +1,26 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './InventoryTab.css';
 import './ItemCard.css';
 import ItemCard from './ItemCard';
 import ContainersList from './ContainersList';
 import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
-import CraftingModal from './CraftingModal';
 import { useCharacter } from '../../hooks/useCharacter';
 
 /**
  * Component for displaying character inventory as item cards.
  * Loadout actions (drop/stow/etc.) live in the ItemModal opened on tap.
+ * Crafting (the recipe browser) now lives in the Downtime tab.
  * @param {Object} props
  * @param {Object} props.character - Character data
  * @param {string} props.characterColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
-  const [isCraftingOpen, setIsCraftingOpen] = useState(false);
-
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
   if (!charData) return null;
 
-  const { bulkStats, totalBulk: bulkUsed, inventory, skillProficiencies } = charData;
+  const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
   const { bulkLimit, encumberedThreshold } = bulkStats;
 
   const { percentage: bulkPercentage, isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
@@ -40,21 +38,10 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
 
-  const hasCrafting = skillProficiencies.crafting > 0;
-
   return (
     <div className="inventory-tab">
       <div className="inventory-header">
         <h2>Inventory</h2>
-        {hasCrafting && (
-          <button
-            className="btn-primary btn-small crafting-button"
-            onClick={() => setIsCraftingOpen(true)}
-          >
-            <span className="familiar-icon" role="img" aria-label="Crafting">🔨</span>
-            Crafting
-          </button>
-        )}
       </div>
       <div className="bulk-management">
         <div className="bulk-status">
@@ -107,14 +94,6 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         inventory={sortedInventory}
         themeColor={characterColor}
         onItemClick={onItemClick}
-      />
-
-      {/* Crafting Modal */}
-      <CraftingModal
-        isOpen={isCraftingOpen}
-        onClose={() => setIsCraftingOpen(false)}
-        character={character}
-        characterColor={characterColor}
       />
     </div>
   );

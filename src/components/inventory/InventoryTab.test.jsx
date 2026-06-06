@@ -71,12 +71,6 @@ vi.mock('./ContainersList', () => ({
   }
 }));
 
-vi.mock('./CraftingModal', () => ({
-  default: function DummyCraftingModal({ isOpen }) {
-    return isOpen ? <div data-testid="crafting-modal">Crafting Modal</div> : null;
-  }
-}));
-
 const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
 
 describe('InventoryTab', () => {
@@ -122,15 +116,9 @@ describe('InventoryTab', () => {
     expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'u3', name: 'Worn Cloak' }));
   });
 
-  it('shows the crafting button when the character has crafting proficiency', () => {
+  it('no longer renders a Crafting button (moved to the Downtime tab)', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText('Crafting').closest('button')).toHaveClass('btn-primary');
-  });
-
-  it('opens the crafting modal when the button is clicked', () => {
-    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    fireEvent.click(screen.getByText('Crafting'));
-    expect(screen.getByTestId('crafting-modal')).toBeInTheDocument();
+    expect(screen.queryByText('Crafting')).not.toBeInTheDocument();
   });
 
   it('renders the bulk progress bar at the correct width', () => {

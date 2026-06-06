@@ -40,39 +40,6 @@
   padding: var(--space-2) var(--space-4) 0;
 }
 
-/* Downtime placeholder */
-.et-downtime {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-}
-
-.et-downtime-label {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  color: var(--arcane-mid, var(--theme-arcane));
-}
-
-.et-downtime-date {
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  color: var(--theme-text-secondary, var(--shell-text-secondary));
-  margin: 0;
-}
-
-.et-downtime-time {
-  font-family: var(--font-ui);
-  font-size: var(--text-lg);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
-  color: var(--arcane-mid, var(--theme-arcane));
-  margin: 0;
-}
-
 /* Movement-disabled placeholder (GM toggle off or door auto-off) */
 .et-move-disabled {
   display: flex;

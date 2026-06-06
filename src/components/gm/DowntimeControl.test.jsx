@@ -1,9 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import DowntimeControl from './DowntimeControl';
+import { useSyncedState } from '../../hooks/useSyncedState';
 
 const mockAdvanceHours = vi.fn();
 const mockAdvanceDays = vi.fn();
+const mockGameDate = { day: 5, month: 2, year: 4725 };
 
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({
@@ -11,11 +13,18 @@ vi.mock('../../contexts/GameDateContext', () => ({
     advanceDays: mockAdvanceDays,
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
+    gameDate: mockGameDate,
   }),
+}));
+
+const mockSetBlock = vi.fn();
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: vi.fn(() => [null, mockSetBlock]),
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  useSyncedState.mockReturnValue([null, mockSetBlock]);
 });
 
 describe('DowntimeControl', () => {
@@ -83,5 +92,50 @@ describe('DowntimeControl', () => {
   it('shows the current date and time', () => {
     render(<DowntimeControl />);
     expect(screen.getByText(/5 Pharast.*08:00/)).toBeInTheDocument();
+  });
+
+  describe('downtime period setter', () => {
+    it('Start button is disabled when the period input is empty', () => {
+      render(<DowntimeControl />);
+      expect(screen.getByRole('button', { name: 'Start' })).toBeDisabled();
+    });
+
+    it('Start writes the block with days, active and the current date', () => {
+      render(<DowntimeControl />);
+      fireEvent.change(screen.getByLabelText('Downtime period in days'), { target: { value: '7' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      expect(mockSetBlock).toHaveBeenCalledWith({ days: 7, active: true, startedAt: mockGameDate });
+    });
+
+    it('pressing Enter in the period input starts the block', () => {
+      render(<DowntimeControl />);
+      const input = screen.getByLabelText('Downtime period in days');
+      fireEvent.change(input, { target: { value: '3' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+      expect(mockSetBlock).toHaveBeenCalledWith({ days: 3, active: true, startedAt: mockGameDate });
+    });
+
+    it('does not write a block for a non-positive period', () => {
+      render(<DowntimeControl />);
+      const input = screen.getByLabelText('Downtime period in days');
+      fireEvent.change(input, { target: { value: '0' } });
+      fireEvent.keyDown(input, { key: 'Enter' });
+      expect(mockSetBlock).not.toHaveBeenCalled();
+    });
+
+    it('clears the period input after starting', () => {
+      render(<DowntimeControl />);
+      const input = screen.getByLabelText('Downtime period in days');
+      fireEvent.change(input, { target: { value: '5' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+      expect(input.value).toBe('');
+    });
+
+    it('shows Update and the granted days when a block is already active', () => {
+      useSyncedState.mockReturnValue([{ days: 4, active: true }, mockSetBlock]);
+      render(<DowntimeControl />);
+      expect(screen.getByRole('button', { name: 'Update' })).toBeInTheDocument();
+      expect(screen.getByText('4 days granted')).toBeInTheDocument();
+    });
   });
 });

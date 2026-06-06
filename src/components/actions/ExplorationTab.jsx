@@ -2,12 +2,12 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useExplorationReady } from '../../hooks/useExplorationReady';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { useGameDate } from '../../contexts/GameDateContext';
 import { useExplorationEffect } from '../../hooks/useExplorationEffect';
 import { EXPLORATION_ACTIVITIES } from '../../data/explorationActivities';
 import ExplorationList from './ExplorationList';
 import ExplorationMove from './ExplorationMove';
 import ExplorationDoors from './ExplorationDoors';
+import DowntimeTab from './DowntimeTab';
 import './ExplorationTab.css';
 
 // The Explore tab is a two-state, no-tabs flow gated by a party readiness
@@ -19,7 +19,6 @@ import './ExplorationTab.css';
 
 const ExplorationTab = ({ character, characterColor }) => {
   const { mode, moveEnabled } = usePlayMode();
-  const { formatGameDate, formatClockTime, getCurrentWeekday } = useGameDate();
   const { ready } = useExplorationReady();
   const [peekActivity, setPeekActivity] = useState(false);
   const [moveDoneTs, setMoveDoneTs] = useState(null);
@@ -61,13 +60,7 @@ const ExplorationTab = ({ character, characterColor }) => {
   }, [mode, setOwnActivity]);
 
   if (mode === 'downtime') {
-    return (
-      <div className="et-downtime">
-        <span className="et-downtime-label">Downtime</span>
-        <p className="et-downtime-date">{getCurrentWeekday()}, {formatGameDate()}</p>
-        <p className="et-downtime-time">{formatClockTime()}</p>
-      </div>
-    );
+    return <DowntimeTab character={character} characterColor={characterColor} />;
   }
 
   const showActivity = !ready || peekActivity;

@@ -37,12 +37,10 @@ vi.mock('./ExplorationDoors', () => ({
   }
 }));
 
-vi.mock('../../contexts/GameDateContext', () => ({
-  useGameDate: () => ({
-    formatGameDate: () => '5 Pharast, 4725 AR',
-    formatClockTime: () => '08:00',
-    getCurrentWeekday: () => 'Oathday',
-  }),
+vi.mock('./DowntimeTab', () => ({
+  default: function DummyDowntimeTab({ character: c }) {
+    return <div data-testid="downtime-tab" data-charid={c?.id} />;
+  }
 }));
 
 const character = { id: 'char-1', name: 'Pellias' };
@@ -55,17 +53,11 @@ beforeEach(() => {
 });
 
 describe('ExplorationTab', () => {
-  it('shows downtime label when mode is downtime', () => {
+  it('renders the DowntimeTab when mode is downtime', () => {
     mockMode = 'downtime';
     render(<ExplorationTab character={character} />);
-    expect(screen.getByText('Downtime')).toBeInTheDocument();
-  });
-
-  it('shows current date and time in downtime mode', () => {
-    mockMode = 'downtime';
-    render(<ExplorationTab character={character} />);
-    expect(screen.getByText(/Oathday.*Pharast/)).toBeInTheDocument();
-    expect(screen.getByText('08:00')).toBeInTheDocument();
+    expect(screen.getByTestId('downtime-tab')).toBeInTheDocument();
+    expect(screen.getByTestId('downtime-tab')).toHaveAttribute('data-charid', 'char-1');
   });
 
   it('does not show exploration controls in downtime mode', () => {
