@@ -24,6 +24,12 @@ vi.mock('./DowntimeList', () => ({
   }
 }));
 
+vi.mock('./DowntimeCommitBar', () => ({
+  default: function DummyDowntimeCommitBar({ block }) {
+    return <div data-testid="downtime-commit-bar" data-days={block?.days} />;
+  }
+}));
+
 vi.mock('../inventory/CraftingModal', () => ({
   default: function DummyCraftingModal({ isOpen }) {
     return isOpen ? <div data-testid="crafting-modal">Crafting Modal</div> : null;
@@ -31,6 +37,14 @@ vi.mock('../inventory/CraftingModal', () => ({
 }));
 
 const character = { id: 'char-1', name: 'Pellias' };
+
+// DowntimeTab calls useSyncedState twice: first for the block, then for the
+// per-PC downtime state. Helpers set both in order.
+const withBlock = (block, downtime = null) => {
+  useSyncedState
+    .mockReturnValueOnce([block, vi.fn()])    // cnmh_downtimeblock_global
+    .mockReturnValueOnce([downtime, vi.fn()]); // cnmh_downtime_<charId>
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -53,20 +67,20 @@ describe('DowntimeTab', () => {
   });
 
   it('shows the granted day budget when a block is active', () => {
-    useSyncedState.mockReturnValue([{ days: 7, active: true }, vi.fn()]);
+    withBlock({ days: 7, active: true });
     render(<DowntimeTab character={character} />);
     expect(screen.getByText('7 days available')).toBeInTheDocument();
     expect(screen.queryByText(/hasn.t started a downtime period/i)).not.toBeInTheDocument();
   });
 
   it('singularises a one-day budget', () => {
-    useSyncedState.mockReturnValue([{ days: 1, active: true }, vi.fn()]);
+    withBlock({ days: 1, active: true });
     render(<DowntimeTab character={character} />);
     expect(screen.getByText('1 day available')).toBeInTheDocument();
   });
 
   it('treats an inactive block as not started', () => {
-    useSyncedState.mockReturnValue([{ days: 7, active: false }, vi.fn()]);
+    withBlock({ days: 7, active: false });
     render(<DowntimeTab character={character} />);
     expect(screen.getByText('Not started')).toBeInTheDocument();
   });
@@ -74,6 +88,83 @@ describe('DowntimeTab', () => {
   it('renders the DowntimeList for the character', () => {
     render(<DowntimeTab character={character} />);
     expect(screen.getByTestId('downtime-list')).toHaveAttribute('data-charid', 'char-1');
+  });
+
+  it('renders the DowntimeCommitBar when the block is active', () => {
+    withBlock({ days: 7, active: true });
+    render(<DowntimeTab character={character} />);
+    expect(screen.getByTestId('downtime-commit-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('downtime-commit-bar')).toHaveAttribute('data-days', '7');
+  });
+
+  it('hides the DowntimeCommitBar when no block is active', () => {
+    render(<DowntimeTab character={character} />);
+    expect(screen.queryByTestId('downtime-commit-bar')).not.toBeInTheDocument();
+  });
+
+  it('shows days-used sub-header once days have been committed', () => {
+    withBlock(
+      { days: 7, active: true },
+      { selected: ['Research'], ledger: [{ day: 'Research', night: null }] }
+    );
+    render(<DowntimeTab character={character} />);
+    expect(screen.getByText('1 of 7 days used')).toBeInTheDocument();
+  });
+
+  it('hides the days-used sub-header when ledger is empty', () => {
+    withBlock({ days: 7, active: true }, { selected: ['Research'], ledger: [] });
+    render(<DowntimeTab character={character} />);
+    expect(screen.queryByText(/days used/i)).not.toBeInTheDocument();
+  });
+
+  describe('progress readout', () => {
+    it('is hidden before any days are committed', () => {
+      withBlock({ days: 7, active: true }, { selected: ['Research'], ledger: [] });
+      render(<DowntimeTab character={character} />);
+      expect(screen.queryByText('Progress')).not.toBeInTheDocument();
+    });
+
+    it('shows accumulate hours / benchmark for an accumulate activity', () => {
+      withBlock(
+        { days: 7, active: true },
+        {
+          selected: ['Research'],
+          ledger: [{ day: 'Research', night: 'Research' }],
+        }
+      );
+      render(<DowntimeTab character={character} />);
+      expect(screen.getByText('Progress')).toBeInTheDocument();
+      expect(screen.getByText('Research')).toBeInTheDocument();
+      expect(screen.getByText('16h / 8h')).toBeInTheDocument();
+    });
+
+    it('shows roll count for an instant activity', () => {
+      withBlock(
+        { days: 7, active: true },
+        {
+          selected: ['Earn Income'],
+          ledger: [
+            { day: 'Earn Income', night: null },
+            { day: 'Earn Income', night: 'Earn Income' },
+          ],
+        }
+      );
+      render(<DowntimeTab character={character} />);
+      expect(screen.getByText('3 rolls')).toBeInTheDocument();
+    });
+
+    it('shows multiple activities in parallel', () => {
+      withBlock(
+        { days: 7, active: true },
+        {
+          selected: ['Research', 'Crafting'],
+          ledger: [{ day: 'Research', night: 'Crafting' }],
+        }
+      );
+      render(<DowntimeTab character={character} />);
+      expect(screen.getByText('Research')).toBeInTheDocument();
+      expect(screen.getByText('Crafting')).toBeInTheDocument();
+    });
   });
 
   it('hides the Crafting button when the character is untrained in Crafting', () => {
