@@ -1,5 +1,6 @@
 // src/contexts/GameDateContext.js
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
+import { useSyncedState } from '../hooks/useSyncedState';
 
 // Golarion calendar data following Pathfinder 2E lore
 export const GOLARION_MONTHS = [
@@ -76,6 +77,52 @@ export const MOON_PHASE_SYMBOLS = [
 // Lunar cycle length in days (standard fantasy moon cycle)
 const LUNAR_CYCLE_DAYS = 32;
 
+// Default clock seed: the campaign start date + an 8:00 morning start.
+const DEFAULT_CLOCK = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second: 0 };
+
+/**
+ * Advance a { day, month, year } date forward by a whole number of days,
+ * carrying through Golarion month lengths and year boundaries. Pure helper so
+ * both day- and time-based advancement share one carry implementation.
+ * @param {Object} date - { day, month, year } (month is 0-11)
+ * @param {number} days - whole days to add (>= 0)
+ * @returns {Object} new { day, month, year }
+ */
+const addDays = (date, days) => {
+  let { day, month, year } = date;
+  for (let i = 0; i < days; i++) {
+    day++;
+    if (day > GOLARION_MONTHS[month].days) {
+      day = 1;
+      month++;
+      if (month > 11) {
+        month = 0;
+        year++;
+      }
+    }
+  }
+  return { day, month, year };
+};
+
+/**
+ * Advance a full { day, month, year, hour, minute, second } clock by a mix of
+ * units, cascading second -> minute -> hour -> day. Forward-only.
+ * @param {Object} clock - current clock
+ * @param {Object} delta - { days, hours, minutes, seconds } (any subset)
+ * @returns {Object} new clock
+ */
+const addToClock = (clock, { days = 0, hours = 0, minutes = 0, seconds = 0 }) => {
+  let second = clock.second + seconds;
+  let minute = clock.minute + minutes + Math.floor(second / 60);
+  second = ((second % 60) + 60) % 60;
+  let hour = clock.hour + hours + Math.floor(minute / 60);
+  minute = ((minute % 60) + 60) % 60;
+  const dayCarry = days + Math.floor(hour / 24);
+  hour = ((hour % 24) + 24) % 24;
+  const { day, month, year } = addDays(clock, dayCarry);
+  return { day, month, year, hour, minute, second };
+};
+
 // Create the context
 export const GameDateContext = createContext();
 
@@ -86,11 +133,15 @@ export const GameDateContext = createContext();
  * @param {React.ReactNode} props.children - Child components
  */
 export const GameDateProvider = ({ children }) => {
-  const [gameDate, setGameDate] = useState({
-    day: 5,
-    month: 2, // Pharast
-    year: 4725
-  });
+  // Single synced source of truth for date + time. Shared across every client
+  // (GM and players) via the campaign session; degrades to localStorage when
+  // no SessionProvider is present.
+  const [clock, setClock] = useSyncedState('cnmh_clock_global', DEFAULT_CLOCK);
+
+  // Date and time views derived from the clock. Existing helpers default their
+  // `date` argument to `gameDate`, so keeping this shape preserves their API.
+  const gameDate = { day: clock.day, month: clock.month, year: clock.year };
+  const time = { hour: clock.hour, minute: clock.minute, second: clock.second };
 
   /**
    * Calculate total days since a reference point for moon phase calculations
@@ -254,52 +305,91 @@ export const GameDateProvider = ({ children }) => {
   };
 
   /**
-   * Advance the game date by specified number of days
-   * Handles month and year transitions according to Golarion calendar
+   * Advance the clock by specified number of days (time of day unchanged).
+   * Handles month and year transitions according to the Golarion calendar.
    * @param {number} days - Number of days to advance
    */
-  const advanceDays = (days) => {
-    let newDate = { ...gameDate };
-    
-    for (let i = 0; i < days; i++) {
-      newDate.day++;
-      
-      // Check if we need to advance to next month
-      if (newDate.day > GOLARION_MONTHS[newDate.month].days) {
-        newDate.day = 1;
-        newDate.month++;
-        
-        // Check if we need to advance to next year
-        if (newDate.month > 11) {
-          newDate.month = 0;
-          newDate.year++;
-        }
-      }
-    }
-    
-    setGameDate(newDate);
-  };
+  const advanceDays = useCallback((days) => {
+    setClock((prev) => addToClock(prev, { days }));
+  }, [setClock]);
 
   /**
-   * Set a specific game date
+   * Advance the clock by a number of hours, cascading into the date on rollover.
+   * @param {number} hours - Hours to advance
+   */
+  const advanceHours = useCallback((hours) => {
+    setClock((prev) => addToClock(prev, { hours }));
+  }, [setClock]);
+
+  /**
+   * Advance the clock by a number of minutes, cascading up into hours/date.
+   * @param {number} minutes - Minutes to advance
+   */
+  const advanceMinutes = useCallback((minutes) => {
+    setClock((prev) => addToClock(prev, { minutes }));
+  }, [setClock]);
+
+  /**
+   * Advance the clock by a number of seconds, cascading up into minutes/hours/date.
+   * Used by encounter time accrual (6 s per round).
+   * @param {number} seconds - Seconds to advance
+   */
+  const advanceSeconds = useCallback((seconds) => {
+    setClock((prev) => addToClock(prev, { seconds }));
+  }, [setClock]);
+
+  /**
+   * Set a specific game date, optionally also setting the time of day.
    * @param {number} day - Day of the month (1-31)
    * @param {number} month - Month index (0-11)
    * @param {number} year - Year in AR
+   * @param {number} [hour] - Hour (0-23); preserves current hour if omitted
+   * @param {number} [minute] - Minute (0-59); preserves current minute if omitted
    */
-  const setSpecificDate = (day, month, year) => {
+  const setSpecificDate = (day, month, year, hour, minute) => {
     // Validate the date
     if (month < 0 || month > 11) {
       console.error('Invalid month. Must be between 0-11');
       return;
     }
-    
+
     const monthData = GOLARION_MONTHS[month];
     if (day < 1 || day > monthData.days) {
       console.error(`Invalid day for ${monthData.name}. Must be between 1-${monthData.days}`);
       return;
     }
-    
-    setGameDate({ day, month, year });
+
+    setClock((prev) => ({
+      day,
+      month,
+      year,
+      hour: hour ?? prev.hour,
+      minute: minute ?? prev.minute,
+      second: prev.second,
+    }));
+  };
+
+  /**
+   * Set the time of day without changing the date.
+   * @param {number} hour - Hour (0-23)
+   * @param {number} minute - Minute (0-59)
+   */
+  const setSpecificTime = (hour, minute) => {
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      console.error('Invalid time. Hour must be 0-23 and minute 0-59');
+      return;
+    }
+    setClock((prev) => ({ ...prev, hour, minute, second: 0 }));
+  };
+
+  /**
+   * Format the current time of day as a 24-hour "HH:MM" string.
+   * @returns {string} e.g. "08:05"
+   */
+  const formatClockTime = () => {
+    const hh = String(time.hour).padStart(2, '0');
+    const mm = String(time.minute).padStart(2, '0');
+    return `${hh}:${mm}`;
   };
 
   /**
@@ -335,7 +425,9 @@ export const GameDateProvider = ({ children }) => {
       weekday: getCurrentWeekday(),
       formatted: formatGameDate(),
       monthData: getCurrentMonth(),
-      moon: moonInfo
+      moon: moonInfo,
+      time,
+      formattedTime: formatClockTime()
     };
   };
 
@@ -343,7 +435,9 @@ export const GameDateProvider = ({ children }) => {
     <GameDateContext.Provider
       value={{
         gameDate,
+        time,
         formatGameDate,
+        formatClockTime,
         getCurrentMonth,
         getCurrentYear,
         getCurrentSeason,
@@ -351,7 +445,11 @@ export const GameDateProvider = ({ children }) => {
         getDetailedDate,
         getDayOfWeek,
         advanceDays,
+        advanceHours,
+        advanceMinutes,
+        advanceSeconds,
         setSpecificDate,
+        setSpecificTime,
         // Moon-related functions
         getMoonPhase,
         getMoonPhaseInfo,

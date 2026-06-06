@@ -1,0 +1,26 @@
+.game-clock {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--shell-text-secondary);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.game-clock-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.game-clock-date {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+  .game-clock-date {
+    display: none;
+  }
+}

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Navbar from './Navbar';
+import { GameDateProvider } from '../../contexts/GameDateContext';
 
 jest.mock('../../contexts/CharacterContext', () => {
   const React = require('react');
@@ -16,9 +17,11 @@ const renderNavbar = (contextValue = { characters: [], activeCharacter: null }) 
   const { CharacterContext } = require('../../contexts/CharacterContext');
   return render(
     <CharacterContext.Provider value={contextValue}>
-      <MemoryRouter>
-        <Navbar />
-      </MemoryRouter>
+      <GameDateProvider>
+        <MemoryRouter>
+          <Navbar />
+        </MemoryRouter>
+      </GameDateProvider>
     </CharacterContext.Provider>
   );
 };
