@@ -4,6 +4,7 @@ import { useExplorationReady } from '../../hooks/useExplorationReady';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import DowntimeControl from './DowntimeControl';
+import ExplorationTimeControl from './ExplorationTimeControl';
 import './PlayModeControl.css';
 
 // GM control for the non-combat play mode (Exploration / Downtime) and the
@@ -80,6 +81,8 @@ const PlayModeControl = () => {
           </button>
         </div>
       )}
+
+      {!isEncounter && gmMode === 'exploration' && <ExplorationTimeControl />}
 
       {!isEncounter && gmMode === 'exploration' && !allChosen && (
         <div className="pmc-row pmc-row--override">

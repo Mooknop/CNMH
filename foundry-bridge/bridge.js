@@ -16,7 +16,7 @@ import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
-import { getPlayerActors, getActorId } from './pf2eAdapter.js';
+import { getPlayerActors, getActorId, getSpeed } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
 const RECONNECT_MS = 3000;
@@ -68,7 +68,7 @@ Hooks.once('ready', () => {
 // even before a combat has run (exploration movement depends on actorMap).
 function pushRoster() {
   const actors = getPlayerActors();
-  const roster = actors.map((a) => ({ actorId: getActorId(a), name: a.name }));
+  const roster = actors.map((a) => ({ actorId: getActorId(a), name: a.name, speed: getSpeed(a) }));
   sendUpdate('global', 'roster', roster);
 }
 
