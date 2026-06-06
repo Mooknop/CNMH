@@ -22,6 +22,12 @@ const renderWithProvider = (fn, testId) =>
   );
 
 describe('GameDateContext', () => {
+  // The clock is now synced (cnmh_clock_global) and falls back to localStorage
+  // when no SessionProvider is present — clear it so tests stay isolated.
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('provides gameDate default values', () => {
     renderWithProvider(ctx => `${ctx.gameDate.day}/${ctx.gameDate.month}/${ctx.gameDate.year}`);
     expect(screen.getByTestId('result').textContent).toBe('5/2/4725');
@@ -284,5 +290,104 @@ describe('GameDateContext', () => {
       return `${typeof full},${typeof newMoon}`;
     });
     expect(screen.getByTestId('result').textContent).toBe('boolean,boolean');
+  });
+
+  // --- Time of day ---
+
+  // Captures the live context on every render so tests can drive it directly
+  // via the returned getter (api()), and renders date/time for assertions.
+  const ClockProbe = ({ capture }) => {
+    const ctx = useGameDate();
+    capture(ctx);
+    return (
+      <div>
+        <span data-testid="time">{ctx.formatClockTime()}</span>
+        <span data-testid="date">{`${ctx.gameDate.day}-${ctx.gameDate.month}-${ctx.gameDate.year}`}</span>
+      </div>
+    );
+  };
+
+  const renderClock = () => {
+    let latest;
+    render(<GameDateProvider><ClockProbe capture={(ctx) => { latest = ctx; }} /></GameDateProvider>);
+    return () => latest;
+  };
+
+  it('defaults time of day to 08:00', () => {
+    renderWithProvider(ctx => ctx.formatClockTime());
+    expect(screen.getByTestId('result').textContent).toBe('08:00');
+  });
+
+  it('formatClockTime zero-pads hours and minutes', () => {
+    const api = renderClock();
+    act(() => { api().setSpecificTime(9, 5); });
+    expect(screen.getByTestId('time').textContent).toBe('09:05');
+  });
+
+  it('advanceMinutes rolls into the next hour', () => {
+    const api = renderClock();
+    act(() => { api().advanceMinutes(75); }); // 08:00 + 75 min = 09:15
+    expect(screen.getByTestId('time').textContent).toBe('09:15');
+  });
+
+  it('advanceHours rolls past midnight into the next day', () => {
+    const api = renderClock();
+    act(() => { api().advanceHours(20); }); // 08:00 + 20h = 04:00 next day
+    expect(screen.getByTestId('time').textContent).toBe('04:00');
+    expect(screen.getByTestId('date').textContent).toBe('6-2-4725'); // day 5 -> 6
+  });
+
+  it('advanceSeconds accrues and carries into minutes', () => {
+    const api = renderClock();
+    act(() => { api().advanceSeconds(150); }); // 08:00:00 + 150s = 08:02
+    expect(screen.getByTestId('time').textContent).toBe('08:02');
+  });
+
+  it('advanceSeconds across a full day carries the date', () => {
+    const api = renderClock();
+    act(() => { api().advanceSeconds(86400 + 3600); }); // +25h -> 09:00 next day
+    expect(screen.getByTestId('time').textContent).toBe('09:00');
+    expect(screen.getByTestId('date').textContent).toBe('6-2-4725');
+  });
+
+  it('hour rollover at a month boundary advances the month', () => {
+    const api = renderClock();
+    act(() => { api().setSpecificDate(31, 2, 4725, 23, 0); }); // last day of Pharast, 23:00
+    act(() => { api().advanceHours(2); }); // -> 01:00 of 1 Gozran (month 3)
+    expect(screen.getByTestId('time').textContent).toBe('01:00');
+    expect(screen.getByTestId('date').textContent).toBe('1-3-4725');
+  });
+
+  it('advanceHours wrapping the year increments the year', () => {
+    const api = renderClock();
+    act(() => { api().setSpecificDate(31, 11, 4725, 23, 0); }); // last day of Kuthona
+    act(() => { api().advanceHours(2); }); // -> 01:00 of 1 Abadius next year
+    expect(screen.getByTestId('time').textContent).toBe('01:00');
+    expect(screen.getByTestId('date').textContent).toBe('1-0-4726');
+  });
+
+  it('setSpecificDate preserves time of day when hour/minute omitted', () => {
+    const api = renderClock();
+    act(() => { api().advanceMinutes(30); }); // 08:30
+    act(() => { api().setSpecificDate(10, 4, 4726); });
+    expect(screen.getByTestId('time').textContent).toBe('08:30');
+    expect(screen.getByTestId('date').textContent).toBe('10-4-4726');
+  });
+
+  it('setSpecificTime rejects out-of-range values', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const api = renderClock();
+    act(() => { api().setSpecificTime(25, 0); });
+    expect(screen.getByTestId('time').textContent).toBe('08:00'); // unchanged
+    consoleSpy.mockRestore();
+  });
+
+  it('moon and weekday helpers are unaffected by time advancement', () => {
+    const api = renderClock();
+    const weekdayBefore = api().getCurrentWeekday();
+    const phaseBefore = api().getMoonPhase();
+    act(() => { api().advanceHours(10); }); // same calendar day
+    expect(api().getCurrentWeekday()).toBe(weekdayBefore);
+    expect(api().getMoonPhase()).toBe(phaseBefore);
   });
 });

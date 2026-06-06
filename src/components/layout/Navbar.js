@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import SyncStatus from '../shared/SyncStatus';
+import GameClock from './GameClock';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -40,7 +41,10 @@ const Navbar = () => {
         <Link to="/">Chaotic Neutral Milk Hotel</Link>
       </div>
       
-      <ul className="navbar-nav">        
+      <ul className="navbar-nav">
+        <li className="nav-item nav-clock">
+          <GameClock />
+        </li>
         <li className="nav-item nav-sync">
           <SyncStatus />
         </li>
