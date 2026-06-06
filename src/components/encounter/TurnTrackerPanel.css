@@ -33,6 +33,14 @@
   font-size: var(--text-md);
 }
 
+.ttp-elapsed {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-secondary);
+}
+
 .ttp-current-actor {
   font-size: var(--text-sm);
   font-weight: 600;

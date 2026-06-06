@@ -10,6 +10,12 @@ import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
 import './TurnTrackerPanel.css';
 
+const formatCombatTime = (secs) => {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+};
+
 // PF2e movement actions the player can pick before requesting reachable squares.
 const MOVE_ACTIONS = [
   { type: 'step',   label: 'Step',   cost: 1 },
@@ -69,6 +75,11 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   // Bridge pushes { [enemyEntryId]: { byCharIds:[...] } } whenever tokens move or
   // turns advance. We read it here so the order strip can show the flanked badge.
   const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
+
+  // ── Combat clock ─────────────────────────────────────────────────────────
+  // Elapsed seconds accrued by useEncounterClock (running in EncounterClockSync).
+  // Read-only here — writing is gated to the GM in the hook.
+  const [combatSecs] = useSyncedState('cnmh_combatsecs_global', 0);
 
   // ── Movement (Feature 3) — 8-direction stepper ─────────────────────────────
   // isChoosingMove: local-only Step/Stride selection UI.
@@ -282,10 +293,17 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
         })}
       </div>
 
-      {/* Round + current actor */}
+      {/* Round + current actor + elapsed time */}
       {isInProgress && (
         <div className="ttp-status">
-          <span className="ttp-round">Round {encounter.round}</span>
+          <span className="ttp-round">
+            Round {encounter.round}
+            {combatSecs > 0 && (
+              <span className="ttp-elapsed" aria-label={`${combatSecs} seconds elapsed`}>
+                {' · '}{formatCombatTime(combatSecs)}
+              </span>
+            )}
+          </span>
           {currentEntry && (
             <span className="ttp-current-actor">
               {currentEntry.kind === 'enemy'
