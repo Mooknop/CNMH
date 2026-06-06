@@ -16,7 +16,7 @@ const PlayModeControl = () => {
   const { mode, gmMode, setGmMode, moveEnabled, setMoveEnabled, setMoveOverride } = usePlayMode();
   const { allChosen } = useExplorationReady();
   const { characters } = useContext(CharacterContext) || {};
-  const { sendUpdate } = useSession();
+  const { sendUpdate, getState } = useSession();
   const isEncounter = mode === 'encounter';
 
   // Authoritative reset: whenever exploration is (re)entered, clear every
@@ -33,6 +33,20 @@ const PlayModeControl = () => {
       (characters || []).forEach((c) => sendUpdate(c.id, 'exploration', null));
     }
   }, [mode, characters, sendUpdate, setMoveOverride]);
+
+  // Clear selected activities when entering Downtime so each period starts
+  // with a clean slate. Ledger (accumulated progress) is preserved.
+  const prevGmMode = useRef(gmMode);
+  useEffect(() => {
+    const was = prevGmMode.current;
+    prevGmMode.current = gmMode;
+    if (gmMode === 'downtime' && was !== 'downtime') {
+      (characters || []).forEach((c) => {
+        const dt = getState(c.id, 'downtime') || {};
+        sendUpdate(c.id, 'downtime', { ...dt, selected: [] });
+      });
+    }
+  }, [gmMode, characters, getState, sendUpdate]);
 
   return (
     <div className="pmc">

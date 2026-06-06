@@ -10,6 +10,7 @@ import ExplorationTab from '../components/actions/ExplorationTab';
 import PlayModeBadge from '../components/playmode/PlayModeBadge';
 import { usePlayMode } from '../hooks/usePlayMode';
 import { PLAY_MODES } from '../data/playModes';
+import DowntimeSummaryModal from '../components/actions/DowntimeSummaryModal';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
@@ -347,7 +348,10 @@ const CharacterSheet = () => {
 
       </div>
 
-      {/* ── Modals (unchanged) ──────────────────────────────────── */}
+      {/* ── Global overlays ─────────────────────────────────────── */}
+      <DowntimeSummaryModal />
+
+      {/* ── Modals ───────────────────────────────────────────────── */}
       <FamiliarModal
         isOpen={isFamiliarModalOpen}
         onClose={() => setIsFamiliarModalOpen(false)}
