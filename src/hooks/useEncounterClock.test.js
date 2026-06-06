@@ -3,22 +3,22 @@ import { renderHook, act } from '@testing-library/react';
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
 let mockEncounter = { active: false, phase: 'idle', round: 0 };
-jest.mock('./useEncounter', () => ({
+vi.mock('./useEncounter', () => ({
   useEncounter: () => ({ encounter: mockEncounter }),
 }));
 
 let mockIsGm = true;
-jest.mock('./useGmAuth', () => ({
+vi.mock('./useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
 }));
 
-const mockAdvanceSeconds = jest.fn();
-jest.mock('../contexts/GameDateContext', () => ({
+const mockAdvanceSeconds = vi.fn();
+vi.mock('../contexts/GameDateContext', () => ({
   useGameDate: () => ({ advanceSeconds: mockAdvanceSeconds }),
 }));
 
 // useSyncedState: behave like plain useState so we can track write calls too.
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const React = require('react');
   return {
     __esModule: true,
@@ -31,7 +31,7 @@ import { useEncounterClock } from './useEncounterClock';
 const setup = () => renderHook(() => useEncounterClock());
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockIsGm = true;
   mockEncounter = { active: false, phase: 'idle', round: 0 };
   localStorage.clear();

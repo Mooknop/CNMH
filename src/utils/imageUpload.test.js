@@ -5,8 +5,8 @@ const mockBlob = new Blob(['jpeg'], { type: 'image/jpeg' });
 
 beforeEach(() => {
   // Mock Image
-  global.URL.createObjectURL = jest.fn(() => 'blob:fake');
-  global.URL.revokeObjectURL = jest.fn();
+  global.URL.createObjectURL = vi.fn(() => 'blob:fake');
+  global.URL.revokeObjectURL = vi.fn();
 
   global.Image = class {
     constructor() {
@@ -25,10 +25,10 @@ beforeEach(() => {
   const canvas = {
     width: 0,
     height: 0,
-    getContext: jest.fn(() => ({ drawImage: jest.fn() })),
-    toBlob: jest.fn((cb) => cb(mockBlob)),
+    getContext: vi.fn(() => ({ drawImage: vi.fn() })),
+    toBlob: vi.fn((cb) => cb(mockBlob)),
   };
-  jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+  vi.spyOn(document, 'createElement').mockImplementation((tag) => {
     if (tag === 'canvas') return canvas;
     return document.createElement.wrappedMethod
       ? document.createElement.wrappedMethod(tag)
@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe('resizeImageToBlob', () => {
@@ -59,9 +59,9 @@ describe('resizeImageToBlob', () => {
       }
     };
     let capturedCanvas;
-    jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
       if (tag === 'canvas') {
-        capturedCanvas = { width: 0, height: 0, getContext: jest.fn(() => ({ drawImage: jest.fn() })), toBlob: jest.fn((cb) => cb(mockBlob)) };
+        capturedCanvas = { width: 0, height: 0, getContext: vi.fn(() => ({ drawImage: vi.fn() })), toBlob: vi.fn((cb) => cb(mockBlob)) };
         return capturedCanvas;
       }
       return {};
@@ -84,9 +84,9 @@ describe('resizeImageToBlob', () => {
       }
     };
     let capturedCanvas;
-    jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
       if (tag === 'canvas') {
-        capturedCanvas = { width: 0, height: 0, getContext: jest.fn(() => ({ drawImage: jest.fn() })), toBlob: jest.fn((cb) => cb(mockBlob)) };
+        capturedCanvas = { width: 0, height: 0, getContext: vi.fn(() => ({ drawImage: vi.fn() })), toBlob: vi.fn((cb) => cb(mockBlob)) };
         return capturedCanvas;
       }
       return {};
@@ -98,9 +98,9 @@ describe('resizeImageToBlob', () => {
   });
 
   it('rejects when canvas.toBlob returns null', async () => {
-    jest.spyOn(document, 'createElement').mockImplementation((tag) => {
+    vi.spyOn(document, 'createElement').mockImplementation((tag) => {
       if (tag === 'canvas') {
-        return { width: 0, height: 0, getContext: jest.fn(() => ({ drawImage: jest.fn() })), toBlob: jest.fn((cb) => cb(null)) };
+        return { width: 0, height: 0, getContext: vi.fn(() => ({ drawImage: vi.fn() })), toBlob: vi.fn((cb) => cb(null)) };
       }
       return {};
     });

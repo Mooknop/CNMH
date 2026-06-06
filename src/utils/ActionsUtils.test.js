@@ -12,7 +12,7 @@ import {
 } from './ActionsUtils';
 
 // Mock CharacterUtils to avoid dependencies
-jest.mock('./CharacterUtils', () => ({
+vi.mock('./CharacterUtils', () => ({
   getAbilityModifier: (score) => Math.floor((score - 10) / 2),
   getAttackBonusValue: (abilityMod, proficiency, level) => abilityMod + proficiency * 2 + level,
   getAttackBonus: (abilityMod, proficiency, level) => {

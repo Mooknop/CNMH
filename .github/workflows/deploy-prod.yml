@@ -18,11 +18,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Build React app
+      - name: Build app
         run: npm run build:app
         env:
-          REACT_APP_ENVIRONMENT: production
-          REACT_APP_GIT_SHA: ${{ github.sha }}
+          VITE_ENVIRONMENT: production
+          VITE_GIT_SHA: ${{ github.sha }}
 
       - name: Deploy Worker + Pages
         uses: cloudflare/wrangler-action@v3

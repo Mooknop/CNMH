@@ -6,7 +6,7 @@ let mockRoster = [];
 let mockOrder = [];
 let mockFoundryCombatId = null;
 
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const ReactLib = require('react');
   return {
     __esModule: true,
@@ -19,11 +19,11 @@ jest.mock('./useSyncedState', () => {
   };
 });
 
-const mockSetActorMap = jest.fn();
+const mockSetActorMap = vi.fn();
 let mockActorMap = {};
 let mockCharacters = [];
 
-jest.mock('./useEncounter', () => ({
+vi.mock('./useEncounter', () => ({
   useEncounter: () => ({
     encounter: { active: true, foundryCombatId: mockFoundryCombatId, order: mockOrder },
     actorMap: mockActorMap,
@@ -31,14 +31,14 @@ jest.mock('./useEncounter', () => ({
   }),
 }));
 
-jest.mock('../contexts/ContentContext', () => ({
+vi.mock('../contexts/ContentContext', () => ({
   useContent: () => ({ characters: mockCharacters }),
 }));
 
 import { useActorMapAutoMatch } from './useActorMapAutoMatch';
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockActorMap = {};
   mockCharacters = [];
   mockRoster = [];

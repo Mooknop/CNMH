@@ -1,12 +1,13 @@
 import { renderHook } from '@testing-library/react';
 import { useFocusReset } from './useFocusReset';
+import { useSyncedState } from './useSyncedState';
 
 let mockMode;
 let mockSpent;
-const mockSetSpent = jest.fn();
+const mockSetSpent = vi.fn();
 
-jest.mock('./usePlayMode', () => ({ usePlayMode: () => ({ mode: mockMode }) }));
-jest.mock('./useSyncedState', () => ({ useSyncedState: jest.fn() }));
+vi.mock('./usePlayMode', () => ({ usePlayMode: () => ({ mode: mockMode }) }));
+vi.mock('./useSyncedState', () => ({ useSyncedState: vi.fn() }));
 
 describe('useFocusReset', () => {
   beforeEach(() => {
@@ -14,7 +15,7 @@ describe('useFocusReset', () => {
     mockSpent = 2;
     // resetMocks wipes the implementation before each test, so re-install one
     // that reads the live module-level values.
-    require('./useSyncedState').useSyncedState.mockImplementation(() => [mockSpent, mockSetSpent]);
+    useSyncedState.mockImplementation(() => [mockSpent, mockSetSpent]);
   });
 
   it('resets spent focus to 0 outside encounter mode', () => {

@@ -558,13 +558,11 @@ describe('chainToForm / chainFromForm', () => {
   });
 
   it('round-trips through an action — set', () => {
-    const { actionToForm, actionFromForm } = require('./AbilitySubforms');
     const src = { name: 'Inner Upheaval', actionCount: 1, chain: { into: 'strike', cost: 'included', modes: ['strike'], attackBonus: 1 } };
     expect(actionFromForm(actionToForm(src))).toEqual(src);
   });
 
   it('round-trips through an action — unset (no chain key emitted)', () => {
-    const { actionToForm, actionFromForm } = require('./AbilitySubforms');
     const src = { name: 'Stride', actionCount: 1 };
     const out = actionFromForm(actionToForm(src));
     expect(out).toEqual(src);
@@ -572,7 +570,6 @@ describe('chainToForm / chainFromForm', () => {
   });
 
   it('does not double-write chain through the rest blob', () => {
-    const { actionToForm } = require('./AbilitySubforms');
     const src = { name: 'Reach Spell', actionCount: 1, chain: { into: 'spell', cost: 'added' } };
     const form = actionToForm(src);
     expect(form.rest.chain).toBeUndefined();

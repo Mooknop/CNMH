@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 
 // useSyncedState → plain useState (single consumer in this unit test).
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const ReactLib = require('react');
   return {
     __esModule: true,

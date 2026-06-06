@@ -1,0 +1,42 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import FreeActionsList from './FreeActionsList';
+
+vi.mock('./ActionCardList', () => ({ default: ({ items, type, emptyMessage }) => (
+  <div data-testid="action-card-list" data-type={type}>{emptyMessage}</div>
+) }));
+
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: (char) => char ? { freeActions: [] } : null,
+}));
+
+describe('FreeActionsList', () => {
+  const mockCharacter = { id: '1', name: 'Test' };
+
+  it('renders without crashing', () => {
+    expect(() => render(<FreeActionsList character={mockCharacter} />)).not.toThrow();
+  });
+
+  it('renders two ActionCardList components (character + basic)', () => {
+    render(<FreeActionsList character={mockCharacter} />);
+    expect(screen.getAllByTestId('action-card-list')).toHaveLength(2);
+  });
+
+  it('renders ActionCardList with free-action type', () => {
+    render(<FreeActionsList character={mockCharacter} />);
+    const lists = screen.getAllByTestId('action-card-list');
+    lists.forEach((list) => expect(list.dataset.type).toBe('free-action'));
+  });
+
+  it('passes unique empty message to character ActionCardList', () => {
+    render(<FreeActionsList character={mockCharacter} />);
+    expect(
+      screen.getByText('No unique free actions available for this character.')
+    ).toBeInTheDocument();
+  });
+
+  it('renders Basic section divider', () => {
+    render(<FreeActionsList character={mockCharacter} />);
+    expect(screen.getByText('Basic')).toBeInTheDocument();
+  });
+});

@@ -4,7 +4,7 @@ import { renderHook, act } from '@testing-library/react';
 // what we want for unit tests of the hook's reducer-like API. Cross-client
 // integration is covered by useSyncedState's own tests + the shared-store
 // pattern used by HandsPanel.test.js, not here.
-jest.mock('./useSyncedState', () => {
+vi.mock('./useSyncedState', () => {
   const ReactLib = require('react');
   return {
     __esModule: true,
@@ -14,26 +14,27 @@ jest.mock('./useSyncedState', () => {
 });
 
 // Session context — expiry sweep uses sendUpdate; not exercised in these unit tests.
-jest.mock('../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: jest.fn(), getState: jest.fn(() => []) }),
+vi.mock('../contexts/SessionContext', () => ({
+  useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => []) }),
 }));
 
 // pf2eEffects — sweep looks up effect names; no effects in these tests.
-jest.mock('../data/pf2eEffects', () => {
+vi.mock('../data/pf2eEffects', () => {
   const list = [];
   return { __esModule: true, default: list, getEffect: () => null };
 });
 
 // expiry utilities — keep the sweep a no-op in unit tests so they only
 // test the encounter state machine, not side-effect wiring.
-jest.mock('../utils/expiry', () => ({
-  boundariesCrossedBy: jest.fn(() => []),
-  isExpired: jest.fn(() => false),
-  resolveExpireAt: jest.fn(() => null),
-  expiryLabel: jest.fn(() => null),
+vi.mock('../utils/expiry', () => ({
+  boundariesCrossedBy: vi.fn(() => []),
+  isExpired: vi.fn(() => false),
+  resolveExpireAt: vi.fn(() => null),
+  expiryLabel: vi.fn(() => null),
 }));
 
 import { useEncounter } from './useEncounter';
+import { isExpired } from '../utils/expiry';
 
 const setup = () => renderHook(() => useEncounter());
 
@@ -199,8 +200,7 @@ describe('useEncounter', () => {
 
     beforeEach(() => {
       localStorage.clear();
-      const expiry = require('../utils/expiry');
-      isExpiredMock = expiry.isExpired;
+      isExpiredMock = isExpired;
       isExpiredMock.mockReturnValue(false);
     });
 

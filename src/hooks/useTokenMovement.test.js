@@ -1,13 +1,13 @@
 import { renderHook, act } from '@testing-library/react';
 
-const mockSendUpdate = jest.fn();
-jest.mock('../contexts/SessionContext', () => ({
+const mockSendUpdate = vi.fn();
+vi.mock('../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate }),
 }));
 
 // Controllable synced state per key.
 const syncedStates = {};
-jest.mock('./useSyncedState', () => ({
+vi.mock('./useSyncedState', () => ({
   useSyncedState: (key, init) => {
     const ReactLib = require('react');
     const [val, setVal] = ReactLib.useState(syncedStates[key] ?? init);
@@ -33,7 +33,7 @@ function pushMoveDone(payload) {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   delete syncedStates['cnmh_moveopts_char-1'];
   delete syncedStates['cnmh_movedone_char-1'];
   delete syncedStates['__setter_cnmh_moveopts_char-1'];
@@ -83,7 +83,7 @@ describe('useTokenMovement', () => {
   });
 
   it('movedone resets to null and calls onMoveDone', () => {
-    const onMoveDone = jest.fn();
+    const onMoveDone = vi.fn();
     const { result } = setup({ onMoveDone });
     act(() => result.current.requestMove('stride'));
     const reqTs = mockSendUpdate.mock.calls[0][2].ts;
@@ -107,7 +107,7 @@ describe('useTokenMovement', () => {
     // subsequent requestMoveRefresh (T2) so the stale-reqTs guard fires correctly
     // — on fast CI machines both can land in the same millisecond otherwise.
     let tsCounter = 1000;
-    jest.spyOn(Date, 'now').mockImplementation(() => tsCounter++);
+    vi.spyOn(Date, 'now').mockImplementation(() => tsCounter++);
 
     let refreshFn;
     const { result } = setup({

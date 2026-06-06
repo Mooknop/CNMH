@@ -9,8 +9,9 @@
 /coverage
 foundry-bridge/coverage
 
-# production
+# production build output
 /build
+/dist
 
 # wrangler local secrets / dev vars (never commit — may hold the GM bypass)
 .dev.vars
