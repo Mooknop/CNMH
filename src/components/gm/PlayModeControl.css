@@ -132,6 +132,20 @@
   flex-wrap: wrap;
 }
 
+.pmc-downtime-period {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pmc-downtime-period-active {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
 .pmc-downtime-custom {
   display: flex;
   gap: var(--space-1);

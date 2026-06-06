@@ -37,7 +37,12 @@ vi.mock('../../contexts/GameDateContext', () => ({
     advanceDays: mockAdvanceDays,
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
+    gameDate: { day: 5, month: 2, year: 4725 },
   }),
+}));
+
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: vi.fn(() => [null, vi.fn()]),
 }));
 
 const renderWith = (characters = []) =>

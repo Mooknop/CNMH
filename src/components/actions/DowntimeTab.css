@@ -1,0 +1,94 @@
+.dt-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Block header: granted day budget + current game date/time readout. */
+.dt-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  text-align: center;
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-surface, var(--shell-surface));
+}
+
+.dt-header-top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.dt-label {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--arcane-mid, var(--theme-arcane));
+}
+
+.dt-budget {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.dt-budget--unset {
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-weight: 600;
+  font-style: italic;
+}
+
+.dt-date {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: 0;
+}
+
+.dt-time {
+  font-family: var(--font-ui);
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--arcane-mid, var(--theme-arcane));
+  margin: 0;
+}
+
+.dt-hint {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  margin: var(--space-1) 0 0;
+}
+
+/* Crafting recipe browser launcher (moved here from Inventory). */
+.dt-crafting-row {
+  display: flex;
+  justify-content: center;
+}
+
+.dt-crafting-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-sm);
+  color: var(--theme-text, var(--shell-text));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dt-crafting-btn:hover {
+  border-color: var(--theme-accent, var(--accent-bg));
+  background: var(--theme-surface-inset-hover, var(--shell-surface-hover));
+}
