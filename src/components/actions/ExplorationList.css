@@ -111,6 +111,11 @@
   color: var(--shell-text-secondary);
 }
 
+.el-banner-note--accent {
+  font-weight: 700;
+  color: var(--el-theme-color, var(--accent-text));
+}
+
 .el-banner-buttons {
   display: flex;
   flex-shrink: 0;

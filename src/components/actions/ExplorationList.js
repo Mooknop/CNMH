@@ -4,16 +4,19 @@ import ActionRow from '../shared/ActionRow';
 import ActionDetailModal from '../encounter/ActionDetailModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import RollActivityModal from './RollActivityModal';
+import FollowExpertModal from './FollowExpertModal';
 import { useCharacter } from '../../hooks/useCharacter';
-import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
+import { activityHighlightLabel } from '../../utils/explorationUtils';
 import './ExplorationList.css';
 
-const profLabel = (rank) => {
-  if (rank >= 4) return 'Legendary';
-  if (rank >= 3) return 'Master';
-  if (rank >= 2) return 'Expert';
-  return null;
+const SKILL_DISPLAY = {
+  arcana: 'Arcana', nature: 'Nature', occultism: 'Occultism', religion: 'Religion',
+  society: 'Society', crafting: 'Crafting', survival: 'Survival', stealth: 'Stealth',
+  deception: 'Deception', diplomacy: 'Diplomacy', intimidation: 'Intimidation',
+  medicine: 'Medicine', perception: 'Perception', thievery: 'Thievery',
+  acrobatics: 'Acrobatics', athletics: 'Athletics', performance: 'Performance',
 };
 
 const PACE_LABEL = {
@@ -27,13 +30,16 @@ const ExplorationList = ({ character, characterColor }) => {
   const characterModel = useCharacter(character);
   const characterKey = character?.id || 'unknown';
 
-  const [activeActivityName, setActiveActivityName] = useLocalStorage(
+  const [activeActivityName, setActiveActivityName] = useSyncedState(
     `cnmh_exploration_${characterKey}`,
     null
   );
-  const [openActivity, setOpenActivity]   = useState(null);
-  const [rollActivity, setRollActivity]   = useState(null);
-  const [treatWoundsOpen, setTreatWoundsOpen] = useState(false);
+  const [followExpertLink] = useSyncedState(`cnmh_followexpert_${characterKey}`, null);
+
+  const [openActivity, setOpenActivity]     = useState(null);
+  const [rollActivity, setRollActivity]     = useState(null);
+  const [followExpertOpen, setFollowExpertOpen] = useState(false);
+  const [treatWoundsOpen, setTreatWoundsOpen]   = useState(false);
 
   if (!characterModel) return null;
 
@@ -42,9 +48,7 @@ const ExplorationList = ({ character, characterColor }) => {
   const isTrained = (skillId) => (skillProficiencies[skillId] || 0) >= 1;
 
   const withHighlight = (activity) => {
-    if (!activity.highlightSkills) return activity;
-    const bestRank = Math.max(...activity.highlightSkills.map((s) => skillProficiencies[s] || 0));
-    const label = profLabel(bestRank);
+    const label = activityHighlightLabel(activity, skillProficiencies);
     return label ? { ...activity, highlight: label } : activity;
   };
 
@@ -99,6 +103,11 @@ const ExplorationList = ({ character, characterColor }) => {
           {activeActivity.mechanics?.note && (
             <div className="el-banner-note">{activeActivity.mechanics.note}</div>
           )}
+          {activeActivity.name === 'Follow the Expert' && followExpertLink?.skillId && (
+            <div className="el-banner-note el-banner-note--accent">
+              +2 circumstance to {SKILL_DISPLAY[followExpertLink.skillId] || followExpertLink.skillId}
+            </div>
+          )}
         </div>
       )}
 
@@ -120,7 +129,8 @@ const ExplorationList = ({ character, characterColor }) => {
                   ? `✦ ${activity.highlight}`
                   : activity.skill || null;
 
-                const isTreatWounds = activity.name === 'Treat Wounds';
+                const isTreatWounds   = activity.name === 'Treat Wounds';
+                const isFollowExpert  = activity.name === 'Follow the Expert';
 
                 return (
                   <ActionRow
@@ -132,6 +142,8 @@ const ExplorationList = ({ character, characterColor }) => {
                     onClick={() => {
                       if (isTreatWounds) {
                         setTreatWoundsOpen(true);
+                      } else if (isFollowExpert) {
+                        setFollowExpertOpen(true);
                       } else {
                         setOpenActivity(activity);
                       }
@@ -168,6 +180,14 @@ const ExplorationList = ({ character, characterColor }) => {
           themeColor={themeColor}
         />
       )}
+
+      {/* Follow the Expert picker */}
+      <FollowExpertModal
+        isOpen={followExpertOpen}
+        onClose={() => setFollowExpertOpen(false)}
+        follower={character}
+        themeColor={themeColor}
+      />
 
       {/* Treat Wounds shortcut */}
       {treatWoundsOpen && (

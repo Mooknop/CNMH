@@ -86,6 +86,61 @@ describe('InitiativeEntry', () => {
     expect(drv.encounter.order[0].initiative).toBe(17);
   });
 
+  it('shows Scout bonus reminder when scout bonus key is set and character is not the scout', () => {
+    // Use a Driver-style component to seed the scout bonus key inside React.
+    const { useSyncedState } = require('../../hooks/useSyncedState');
+    const ScoutSetter = ({ value }) => {
+      const [, set] = useSyncedState('cnmh_scoutbonus_global', null);
+      React.useEffect(() => { set(value); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      return null;
+    };
+
+    let drv;
+    const { rerender } = render(
+      <>
+        <ScoutSetter value="scout-char-99" />
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="Pellias" />
+      </>
+    );
+    startWith(drv, [{ id: 'Pellias', name: 'Pellias' }]);
+    rerender(
+      <>
+        <ScoutSetter value="scout-char-99" />
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="Pellias" />
+      </>
+    );
+    expect(screen.getByText(/\+1 circumstance bonus to initiative/)).toBeInTheDocument();
+  });
+
+  it('does not show Scout reminder when the character is the scout', () => {
+    const { useSyncedState } = require('../../hooks/useSyncedState');
+    const ScoutSetter = ({ value }) => {
+      const [, set] = useSyncedState('cnmh_scoutbonus_global', null);
+      React.useEffect(() => { set(value); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      return null;
+    };
+
+    let drv;
+    const { rerender } = render(
+      <>
+        <ScoutSetter value="Pellias" />
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="Pellias" />
+      </>
+    );
+    startWith(drv, [{ id: 'Pellias', name: 'Pellias' }]);
+    rerender(
+      <>
+        <ScoutSetter value="Pellias" />
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="Pellias" />
+      </>
+    );
+    expect(screen.queryByText(/\+1 circumstance bonus to initiative/)).not.toBeInTheDocument();
+  });
+
   it('does NOT render once the encounter has moved to in-progress', () => {
     let drv;
     const { rerender } = render(

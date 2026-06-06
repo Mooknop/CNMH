@@ -89,8 +89,15 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
     });
   }, [skillId, character, characterModel, activeConditions, effects]);
 
-  const circumstanceBonus = roll?.circumstanceBonus || 0;
-  const circumstanceLabel = roll?.circumstanceLabel || '';
+  // Follow the Expert: check if a +2 circumstance applies for the current skill
+  const followExpert = getState(character?.id, 'followexpert');
+  const followExpertBonus = (followExpert?.skillId && followExpert.skillId === skillId) ? 2 : 0;
+  const followExpertLabel = followExpertBonus ? 'Follow the Expert' : '';
+
+  const baseCircumstanceBonus = roll?.circumstanceBonus || 0;
+  const baseCircumstanceLabel = roll?.circumstanceLabel || '';
+  const circumstanceBonus = baseCircumstanceBonus + followExpertBonus;
+  const circumstanceLabel = [baseCircumstanceLabel, followExpertLabel].filter(Boolean).join(' + ');
   const netBonus = rollProfile ? rollProfile.bonus + circumstanceBonus : null;
 
   const d20Val = parseInt(d20, 10);

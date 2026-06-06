@@ -58,6 +58,7 @@ export const EXPLORATION_ACTIVITIES = [
     highlightSkills: ['perception'],
     mechanics: {
       speed: 'half',
+      scoutBonus: true,
       note: 'The party gains a +1 circumstance bonus to initiative unless you are surprised.',
     },
     description: 'You move ahead of the rest of the group at half speed and report back on potential threats. When your group encounters a hazard or enemy, the entire group gains a +1 circumstance bonus to initiative rolls, as long as you aren\'t surprised.',

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import './InitiativeEntry.css';
 
 // Setup-phase banner shown above HandsPanel in the Encounter tab. Each player
@@ -9,6 +10,8 @@ import './InitiativeEntry.css';
 // (so e.g. a viewing-only screen stays empty).
 const InitiativeEntry = ({ charId }) => {
   const { encounter, setInitiative } = useEncounter();
+  const [scoutBonusCharId] = useSyncedState('cnmh_scoutbonus_global', null);
+
   if (!encounter || encounter.phase !== 'setup') return null;
   const entry = (encounter.order || []).find(
     (e) => e && e.kind === 'pc' && e.charId === charId
@@ -17,19 +20,26 @@ const InitiativeEntry = ({ charId }) => {
 
   return (
     <div className="initiative-entry" role="region" aria-label="Initiative entry">
-      <div className="initiative-entry-prompt">
-        <strong>Roll for initiative.</strong> Enter your roll below — the GM
-        will start Round 1 once everyone has theirs in.
+      {scoutBonusCharId && scoutBonusCharId !== charId && (
+        <div className="initiative-entry-scout">
+          +1 circumstance bonus to initiative — Scout active
+        </div>
+      )}
+      <div className="initiative-entry-inner">
+        <div className="initiative-entry-prompt">
+          <strong>Roll for initiative.</strong> Enter your roll below — the GM
+          will start Round 1 once everyone has theirs in.
+        </div>
+        <label className="initiative-entry-field">
+          <span>Your initiative</span>
+          <input
+            aria-label="initiative-input"
+            type="number"
+            value={entry.initiative ?? ''}
+            onChange={(e) => setInitiative(entry.entryId, e.target.value)}
+          />
+        </label>
       </div>
-      <label className="initiative-entry-field">
-        <span>Your initiative</span>
-        <input
-          aria-label="initiative-input"
-          type="number"
-          value={entry.initiative ?? ''}
-          onChange={(e) => setInitiative(entry.entryId, e.target.value)}
-        />
-      </label>
     </div>
   );
 };
