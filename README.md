@@ -1,111 +1,163 @@
-# Pathfinder Second Edition Character Manager
+# Chaotic Neutral Milk Hotel (CNMH)
 
-A React-based web application for managing Pathfinder 2E character sheets, inventory, session notes, and campaign lore.
+A real-time **Pathfinder 2e** companion app for a home game (5 players + 1 GM). What
+started as a localStorage character sheet has grown into a three-tier system: a React
+SPA, a Cloudflare Worker + Durable Objects backend, and a Foundry VTT bridge module
+that keeps the app and the virtual tabletop in sync over the same WebSocket.
+
+## Architecture
+
+CNMH is three cooperating tiers:
+
+### 1. React frontend (`src/`)
+
+- **React 19** SPA built with `react-scripts` (Create React App).
+- **React Router 7** — routes are declared in `src/App.js`; GM pages live under
+  `src/pages/gm/`.
+- **Real-time state** via `useSyncedState(key, initialValue)` — a drop-in `useState`
+  replacement that syncs keys to the server over WebSocket and falls back to
+  `localStorage` when offline.
+
+Synced keys follow the format `cnmh_<type>_<id>`, where `type` is a single token with
+no underscores and `id` is a character id or `global` (e.g. `cnmh_playmode_global`,
+`cnmh_moveopts_<charId>`).
+
+**Context providers** (`src/contexts/`, composed in `App.js`):
+
+- `SessionContext` — WebSocket lifecycle, `getState`, `sendUpdate`, `sendMessage`
+- `ContentContext` — campaign content from the `CampaignContent` DO; resolves raw
+  characters + catalog refs into full objects
+- `CharacterContext`, `TraitContext`, `GameDateContext`, `LoreContext`
+
+**Custom hooks** (`src/hooks/`) carry most of the logic — `useSyncedState` (the sync
+primitive), `usePlayMode` (exploration / downtime / encounter), `useTokenMovement`,
+`useEncounter`, `useGmAuth`, plus combat and exploration helpers (`useTargeting`,
+`useShield`, `useEffects`, `useExploitVulnerability`, `useRecallKnowledge`,
+`useExplorationEffect`, and more).
+
+### 2. Cloudflare Worker + Durable Objects (`worker/`)
+
+- **`worker/index.js`** — request router: serves the SPA and routes `/session/*`,
+  `/content/*`, `/gm/*`, and `/images/*`.
+- **`CampaignSession` DO** — real-time state store and WebSocket fanout relay. Every
+  client (app tabs and the Foundry bridge) connects here. Handles `UPDATE`,
+  `GM_UPDATE`, and `GM_BATCH` messages.
+- **`CampaignContent` DO** — persistent campaign content (quests, lore, items, spells,
+  characters, effects, calendar, reputation, traits). Its GM API is gated by
+  Cloudflare Access.
+- **`worker/access.js`** — Cloudflare Access (Zero Trust) JWT verification for GM
+  endpoints.
+
+Deployed with `wrangler`; configuration lives in `wrangler.toml`.
+
+### 3. Foundry VTT bridge (`foundry-bridge/`)
+
+A Foundry v13 / PF2e v6.x module (plain ES modules, no build step) that joins the game
+as a normal session peer — same WebSocket as the player devices, same `cnmh_*` keys.
+
+Every Foundry / canvas / actor / combat / PF2e API call goes through a single seam,
+**`pf2eAdapter.js`**, so feature modules never touch `canvas.*`, `game.*`, or
+`CONFIG.PF2E.*` directly (v14 migration markers are already in place). Feature modules:
+`bridge.js` (lifecycle), `encounter.js`, `characterSync.js`, `movement.js`,
+`targeting.js`, `flanking.js`, `flankingPush.js`, `doors.js`, `effects.js`, `saves.js`.
+
+The full app ↔ bridge relay key table is documented in
+[`foundry-bridge/README.md`](foundry-bridge/README.md).
 
 ## Features
 
-- Create and manage multiple Pathfinder 2E characters
-- Track character stats, skills, and abilities
-- Manage character inventory
-- Record session notes for each character
-- Organize campaign lore entries by category
-- Data stored in browser's localStorage
+**Player-facing**
 
-## Getting Started
+- Full PF2e character sheets — stats, skills, proficiencies, feats, actions, strikes,
+  reactions, and spell repertoires
+- Inventory and containers, hands / loadout tracking, and party wealth
+- Spellcasting with a spell browser, filters, and cast-spell flow
+- Party dashboard and party summary views
+- Golarion calendar with moon phases, plus a campaign history timeline
+- Campaign lore drawer with discovery tracking
+- Reputation tracking with radar-chart visualization
+
+**Encounter & combat (synced with Foundry)**
+
+- Live encounter state (round / turn / phase), token movement, and reachable-square
+  grids during exploration
+- Targeting, flanking detection, shield handling, and save prompts driven from the
+  tabletop
+- Chained strikes and spells, ability usage, and a combat log panel
+
+**GM tools** (`/gm`, Cloudflare Access–gated)
+
+- Editors for quests, lore, characters, items, spells, effects, reputation, calendar,
+  and theme
+- Encounter control panel and save requests
+- Image management for campaign assets
+
+## Getting started
 
 ### Prerequisites
 
-- Node.js (v14 or later)
-- npm or yarn
+- Node.js 18+ and npm
+- (For backend/bridge work) a Cloudflare account and `wrangler`
 
-### Installation
+### Install & run the frontend
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/pathfinder-2e-manager.git
-   cd pathfinder-2e-manager
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Start the development server:
-   ```
-   npm start
-   ```
-
-4. Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.
-
-## Project Structure
-
-- `src/components`: Reusable UI components
-- `src/pages`: Main application pages
-- `src/contexts`: React context providers for state management
-- `src/App.js`: Main application component with routing
-
-## Deployment
-
-This app can be deployed to any static hosting service:
-
-### Build for production
-
-```
-npm run build
+```bash
+npm install
+npm start        # dev server at http://localhost:3000
 ```
 
-Then upload the contents of the `build` folder to your hosting provider.
+> The frontend talks to the deployed Worker for sync; for full local backend
+> development run the Worker with `wrangler dev` (see `wrangler.toml`).
 
-## Hosting Options
+## Commands
 
-- GitHub Pages
-- Netlify
-- Vercel
-- AWS Amplify
-- Firebase Hosting
+```bash
+npm start                    # Dev server (localhost:3000)
+npm run lint                 # ESLint — zero-warnings policy (--max-warnings 0)
+npm test                     # Jest watch mode (app only)
+npm run test:ci              # Lint → test --watchAll=false --coverage (80% gate)
+npm run test:bridge          # Bridge-only Jest (foundry-bridge/)
+npm run test:e2e             # Playwright E2E against staging (serial)
+npm run build                # Lint → build → test:ci (full quality gate)
+```
 
-## License
+Run a single app test file (CRA needs the pattern via env in CI mode):
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```bash
+CI=true react-scripts test --watchAll=false src/hooks/usePlayMode.test.js
+```
 
-// File: package.json
-{
-  "name": "pathfinder-2e-manager",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.10.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  }
-}
+Run a single bridge test file:
+
+```bash
+npm run test:bridge -- --testPathPattern=movement
+```
+
+## Quality gates
+
+- **Lint is zero-warnings** — `npm run lint` must be clean before handoff.
+- **Coverage** thresholds are ≥ 80% across branches, statements, functions, and lines.
+- **E2E tests run serially** against a shared staging Worker + Durable Objects. Parallel
+  runs burn Cloudflare DO read/write tokens quickly, so the PR trigger is disabled — run
+  them via `workflow_dispatch` only. Config is in `playwright.config.ts`.
+
+## Styling
+
+Avoid inline `style={{}}`. Use CSS custom properties; design tokens live in
+`src/pf2e-tokens.css`. For dynamic per-character accents, pass
+`style={{ '--x-theme': color }}` on the container and reference `var(--x-theme)` in CSS.
+
+## Project structure
+
+```
+src/
+  components/   Reusable UI (actions, encounter, spells, character-sheet, gm, shared, …)
+  pages/        Top-level pages; GM pages under pages/gm/
+  contexts/     React context providers (Session, Content, Character, …)
+  hooks/        Sync primitive and feature logic
+worker/         Cloudflare Worker + Durable Objects (CampaignSession, CampaignContent)
+foundry-bridge/ Foundry VTT module (pf2eAdapter seam + feature modules)
+scripts/        Tooling (e.g. content snapshot)
+```
+
+See [`CLAUDE.md`](CLAUDE.md) for deeper architecture notes and conventions.
