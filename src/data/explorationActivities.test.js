@@ -168,6 +168,11 @@ describe('explorationActivities data', () => {
       expect(s.mechanics.roll.secret).toBe(true);
     });
 
+    it('Scout has the scoutBonus flag', () => {
+      const scout = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Scout');
+      expect(scout.mechanics.scoutBonus).toBe(true);
+    });
+
     it('Avoid Notice is in Scouting and highlights stealth', () => {
       const an = EXPLORATION_ACTIVITIES.find((a) => a.name === 'Avoid Notice');
       expect(an.category).toBe('Scouting');

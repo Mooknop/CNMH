@@ -37,6 +37,14 @@ const ExplorationTab = ({ character, characterColor }) => {
   const desiredEffectId = mode === 'exploration' ? (activeDef?.mechanics?.effect || null) : null;
   useExplorationEffect(character?.id, desiredEffectId);
 
+  // Scout: write this character's id to the global scout bonus key while active,
+  // so InitiativeEntry can show the +1 reminder to the whole party.
+  const [, setScoutBonus] = useSyncedState('cnmh_scoutbonus_global', null);
+  const isScoutActive = mode === 'exploration' && ownActivity === 'Scout';
+  useEffect(() => {
+    setScoutBonus(isScoutActive ? (character?.id || null) : null);
+  }, [isScoutActive, character?.id, setScoutBonus]);
+
   // Reset to the Activity state whenever exploration is (re)entered, so each
   // beat starts fresh. Seed prevMode with the current mode so a mid-beat mount
   // doesn't wipe an existing pick.
