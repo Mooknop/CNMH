@@ -804,7 +804,7 @@
 .gm-encounter-name {
   flex: 1;
   font-weight: 500;
-  color: var(--shell-text);
+  color: var(--shell-text-primary);
 }
 
 .gm-encounter-init {
@@ -859,4 +859,30 @@
 .gm-dash-maintenance-body {
   padding: var(--space-4);
   border-top: 1px solid var(--shell-border);
+}
+
+/* ── Button overrides for dark panel surfaces ─────────────── */
+/* Global .btn-* rules use light-mode tokens (--color-text: #1a1612,
+   --color-border-medium: rgba(0,0,0,0.18)). Re-scope them inside the
+   dashboard where panels sit on dark --surface-card backgrounds. */
+
+.gm-dashboard .btn-secondary {
+  color: var(--shell-text-primary);
+  border-color: var(--shell-border-strong);
+}
+
+.gm-dashboard .btn-secondary:hover {
+  background-color: var(--surface-inset);
+  border-color: var(--shell-text-tertiary);
+}
+
+.gm-dashboard .btn-danger {
+  color: var(--peril-light);
+  border-color: var(--peril-light);
+}
+
+.gm-dashboard .btn-danger:hover {
+  background-color: var(--peril-base);
+  border-color: var(--peril-base);
+  color: var(--shell-text-primary);
 }
