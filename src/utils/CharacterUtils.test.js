@@ -310,7 +310,7 @@ describe('CharacterUtils', () => {
       expect(result.bulkLimit).toBe(0);
     });
 
-    it('calculates enhanced bulk limit with containers', () => {
+    it('calculates bulk limit — containers do not affect the limit', () => {
       const char = {
         abilities: { strength: 10 },
         feats: [],
@@ -319,8 +319,10 @@ describe('CharacterUtils', () => {
         ],
       };
       const result = calculateEnhancedBulkLimit(char);
-      expect(result.bulkLimit).toBe(12); // 10 base + 2 container
-      expect(result.containerBonus).toBe(2);
+      // Container ignored bulk reduces counted contents bulk (via calculateItemsBulk),
+      // not the character's carrying capacity.
+      expect(result.bulkLimit).toBe(10);
+      expect(result.encumberedThreshold).toBe(5);
     });
   });
 });
