@@ -1,12 +1,132 @@
-.pmc {
+/* ── Marquee: pills + clock + campaign meta ─────────────────── */
+.pmc-marquee {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding: var(--space-5);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  overflow: visible; /* let the corner brackets show */
+}
+
+.pmc-marquee-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--shell-border);
+}
+
+.pmc-marquee-spacer {
+  flex: 1;
+}
+
+.pmc-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+}
+
+.pmc-clock-time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--shell-text-primary);
+}
+
+.pmc-clock-date {
+  font-size: 0.8rem;
+  color: var(--shell-text-secondary);
+}
+
+.pmc-clock-weekday {
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.pmc-marquee-meta {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.pmc-meta-stat {
+  text-align: right;
+}
+
+.pmc-meta-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--shell-text-primary);
+}
+
+.pmc-meta-key {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-top: 4px;
+}
+
+.pmc-meta-gold,
+.pmc-meta-gold .pmc-meta-input {
+  color: var(--gold-light);
+}
+
+.pmc-meta-gp {
+  font-size: 0.9rem;
+  margin-left: 2px;
+}
+
+/* Inline-editable meta values styled to read like display text */
+.pmc-meta-input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+  text-align: right;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  padding: 1px 4px;
+  width: 7ch;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pmc-meta-input--num {
+  width: 5ch;
+}
+
+.pmc-meta-input::placeholder {
+  color: var(--shell-text-tertiary);
+}
+
+.pmc-meta-input:hover {
+  border-color: var(--shell-border-strong);
+}
+
+.pmc-meta-input:focus {
+  outline: none;
+  background: var(--surface-inset);
+  border-color: var(--accent-outline);
+}
+
+/* ── Context strip: mode-specific controls ──────────────────── */
+.pmc-context {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--theme-surface, var(--shell-surface));
-  border: 1px solid var(--theme-border, var(--shell-border));
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
 }
 
 .pmc-row {
@@ -79,6 +199,24 @@
 
 .pmc-pill--locked {
   cursor: default;
+}
+
+/* Exploration/Downtime are disabled while an encounter is live (mode is
+   Foundry-driven). Dim them but keep them visible. */
+.pmc-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pmc-pill:disabled:hover {
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  border-color: var(--shell-border-strong);
+}
+
+/* The Encounter status pill: visible but muted until it's the active mode. */
+.pmc-pill--locked:not(.pmc-pill--active) {
+  opacity: 0.55;
 }
 
 

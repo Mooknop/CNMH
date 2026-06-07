@@ -38,6 +38,7 @@ vi.mock('../../contexts/GameDateContext', () => ({
     advanceDays: mockAdvanceDays,
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
+    getCurrentWeekday: () => 'Moonday',
     gameDate: { day: 5, month: 2, year: 4725 },
   }),
 }));
@@ -71,17 +72,21 @@ const renderDowntime = () => {
 };
 
 describe('PlayModeControl', () => {
-  it('shows Exploration and Downtime buttons when not in encounter', () => {
+  it('always shows all three mode pills; only Encounter is non-interactive', () => {
     renderWith();
     expect(screen.getByRole('button', { name: 'Exploration' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Downtime' })).toBeInTheDocument();
+    // Encounter is a status pill (span), never a button.
+    expect(screen.getByText('Encounter')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Encounter' })).not.toBeInTheDocument();
   });
 
-  it('shows locked Encounter chip during encounter', () => {
+  it('disables Exploration/Downtime and marks Encounter active during an encounter', () => {
     mockState.mode = 'encounter';
     renderWith();
     expect(screen.getByText('Encounter')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Exploration' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Exploration' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Downtime' })).toBeDisabled();
   });
 
   it('calls setGmMode with downtime when Downtime button clicked', () => {

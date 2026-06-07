@@ -291,10 +291,8 @@ const GmDashboard = () => {
       <div className="gm-dash-main">
         {/* Left column: mode marquee + initiative (encounter) */}
         <div className="gm-dash-left">
-          {/* Corner-bracketed mode marquee */}
-          <div className="gm-dash-marquee gm-bracketed">
-            <PlayModeControl />
-          </div>
+          {/* PlayModeControl owns its own marquee (bracketed) + context strip */}
+          <PlayModeControl />
 
           {/* Initiative panel — encounter mode only */}
           {isEncounter && (
