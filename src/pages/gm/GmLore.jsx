@@ -5,6 +5,7 @@ import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import ImageField from '../../components/gm/ImageField';
+import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
 const toList = (csv) =>
@@ -185,7 +186,7 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
         title="Delete lore entry"
-        message={`Permanently delete the lore entry “${e.title}”. This cannot be undone — restore it from History if you have it.`}
+        message={`Permanently delete the lore entry "${e.title}". This cannot be undone — restore it from History if you have it.`}
         confirmLabel="Delete forever"
         requireType={e.title}
         onConfirm={doRemove}
@@ -194,7 +195,7 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'collision'}
         title="Overwrite existing entry?"
-        message={`A lore entry with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        message={`A lore entry with id "${confirm?.id}" already exists. Saving will overwrite it.`}
         confirmLabel="Overwrite"
         onConfirm={() => submit(confirm.id, confirm.payload)}
         onCancel={() => setConfirm(null)}
@@ -213,9 +214,6 @@ const GmLore = () => {
     [loreEntries]
   );
   const existingIds = useMemo(() => existingIdSet(entries), [entries]);
-  const [adding, setAdding] = useState(false);
-  const [flash, setFlash] = useState(null);
-  const [query, setQuery] = useState('');
   const [tab, setTab] = useState('All');
 
   const tabs = useMemo(
@@ -230,24 +228,6 @@ const GmLore = () => {
     [entries, activeTab]
   );
 
-  const onSaved = (wasNew) => {
-    if (wasNew) setAdding(false);
-    setFlash('Saved. Changes are live for every connected player.');
-  };
-  const onRestored = () =>
-    setFlash('Restored. Changes are live for every connected player.');
-
-  // Text filter applies within the active category tab.
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return inTab;
-    return inTab.filter((e) =>
-      [e.title, e.category, e.id, ...(e.tags || [])]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
-    );
-  }, [inTab, query]);
-
   // Prefill the category of a new entry from the active tab (All → blank, so
   // the GM still must pick one — category is required on save).
   const newInitial = () => ({
@@ -255,63 +235,43 @@ const GmLore = () => {
     category: activeTab === 'All' ? '' : activeTab,
   });
 
+  const categoryTabs = (
+    <nav className="gm-nav" aria-label="lore categories">
+      {tabs.map((t) => (
+        <button
+          key={t}
+          className={`gm-nav-link ${t === activeTab ? 'active' : ''}`}
+          aria-pressed={t === activeTab}
+          onClick={() => setTab(t)}
+        >
+          {t}
+        </button>
+      ))}
+    </nav>
+  );
+
   return (
     <div className="gm-lore">
-      {flash && <p className="gm-ok" role="status">{flash}</p>}
-
-      <nav className="gm-nav" aria-label="lore categories">
-        {tabs.map((t) => (
-          <button
-            key={t}
-            className={`gm-nav-link ${t === activeTab ? 'active' : ''}`}
-            aria-pressed={t === activeTab}
-            onClick={() => setTab(t)}
-          >
-            {t}
-          </button>
-        ))}
-      </nav>
-
-      <div className="form-group">
-        <input
-          aria-label="filter"
-          placeholder={`Filter ${inTab.length} ${
-            activeTab === 'All' ? 'entries' : `${activeTab} entries`
-          } by title, tag or id…`}
-          value={query}
-          onChange={(ev) => setQuery(ev.target.value)}
-        />
-      </div>
-
-      {adding ? (
-        <LoreForm
-          initial={newInitial()}
-          isNew
-          existingIds={existingIds}
-          onSaved={onSaved}
-          onRestored={onRestored}
-        />
-      ) : (
-        <button className="btn-primary" onClick={() => setAdding(true)}>
-          + New entry
-        </button>
-      )}
-
-      <p className="gm-count">
-        Showing {filtered.length} of {inTab.length}
-      </p>
-      <div className="gm-lore-list">
-        {filtered.map((entry) => (
+      <PageEditorShell
+        entries={inTab}
+        nameOf={(e) => e.title}
+        noun="entry"
+        addLabel="+ New entry"
+        header={categoryTabs}
+        filterEntry={(e, q) =>
+          [e.title, e.category, e.id, ...(e.tags || [])]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q))
+        }
+        renderDetail={(entry, isNew, callbacks) => (
           <LoreForm
-            key={entry.id}
-            initial={toForm(entry)}
-            isNew={false}
+            initial={isNew ? newInitial() : toForm(entry)}
+            isNew={isNew}
             existingIds={existingIds}
-            onSaved={onSaved}
-            onRestored={onRestored}
+            {...callbacks}
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 };

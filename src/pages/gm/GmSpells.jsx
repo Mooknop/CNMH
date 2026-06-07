@@ -10,6 +10,7 @@ import {
   foundryEffectToForm, foundryEffectFromForm, FoundryEffectControl,
   chainToForm, chainFromForm, ChainControl,
 } from '../../components/gm/AbilitySubforms';
+import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
 // Spell catalog editor. Shape mirrors `src/data/spells.json` and the nested
@@ -66,10 +67,10 @@ const fromForm = (f) => {
   try {
     rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
   } catch {
-    throw new Error(`Spell “${f.str.name}” has invalid JSON in its extra fields.`);
+    throw new Error(`Spell "${f.str.name}" has invalid JSON in its extra fields.`);
   }
   if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
-    throw new Error(`Spell “${f.str.name}” extra fields must be a JSON object.`);
+    throw new Error(`Spell "${f.str.name}" extra fields must be a JSON object.`);
   }
   const out = { ...rest };
   SPELL_STR.forEach((k) => {
@@ -310,7 +311,7 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
         title="Delete spell"
-        message={`Permanently delete the spell “${e.str.name}”. Scrolls, wands, and staves that reference it will show “(unknown spell)” until repointed. This cannot be undone — restore it from History if you have it.`}
+        message={`Permanently delete the spell "${e.str.name}". Scrolls, wands, and staves that reference it will show "(unknown spell)" until repointed. This cannot be undone — restore it from History if you have it.`}
         confirmLabel="Delete forever"
         requireType={e.str.name}
         onConfirm={doRemove}
@@ -319,7 +320,7 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'collision'}
         title="Overwrite existing spell?"
-        message={`A spell with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        message={`A spell with id "${confirm?.id}" already exists. Saving will overwrite it.`}
         confirmLabel="Overwrite"
         onConfirm={() => submit(confirm.id, confirm.payload)}
         onCancel={() => setConfirm(null)}
@@ -332,15 +333,6 @@ const GmSpells = () => {
   const { spells } = useContent();
   const catalog = useMemo(() => (Array.isArray(spells) ? spells : []), [spells]);
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);
-  const [adding, setAdding] = useState(false);
-  const [flash, setFlash] = useState(null);
-  const [query, setQuery] = useState('');
-
-  const onSaved = (wasNew) => {
-    if (wasNew) setAdding(false);
-    setFlash('Saved. Changes are live for every connected player.');
-  };
-  const onRestored = () => setFlash('Restored. Changes are live for every connected player.');
 
   const sorted = useMemo(
     () =>
@@ -353,62 +345,27 @@ const GmSpells = () => {
     [catalog]
   );
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return sorted;
-    return sorted.filter((s) =>
-      [s.name, s.id, ...(s.traits || [])]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
-    );
-  }, [sorted, query]);
-
   return (
     <div className="gm-spells">
-      {flash && (
-        <p className="gm-ok" role="status">
-          {flash}
-        </p>
-      )}
-
-      <div className="form-group">
-        <input
-          aria-label="filter"
-          placeholder={`Filter ${catalog.length} spells by name, trait or id…`}
-          value={query}
-          onChange={(ev) => setQuery(ev.target.value)}
-        />
-      </div>
-
-      {adding ? (
-        <SpellForm
-          initial={blankSpell()}
-          isNew
-          existingIds={existingIds}
-          onSaved={onSaved}
-          onRestored={onRestored}
-        />
-      ) : (
-        <button className="btn-primary" onClick={() => setAdding(true)}>
-          + New spell
-        </button>
-      )}
-
-      <p className="gm-count">
-        Showing {filtered.length} of {catalog.length}
-      </p>
-      <div className="gm-spells-list">
-        {filtered.map((s) => (
+      <PageEditorShell
+        entries={sorted}
+        nameOf={(s) => s.name}
+        noun="spell"
+        addLabel="+ New spell"
+        filterEntry={(s, q) =>
+          [s.name, s.id, ...(s.traits || [])]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q))
+        }
+        renderDetail={(entry, isNew, callbacks) => (
           <SpellForm
-            key={s.id}
-            initial={toForm(s)}
-            isNew={false}
+            initial={isNew ? blankSpell() : toForm(entry)}
+            isNew={isNew}
             existingIds={existingIds}
-            onSaved={onSaved}
-            onRestored={onRestored}
+            {...callbacks}
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 };

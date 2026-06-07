@@ -4,6 +4,7 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
+import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
 const STATUSES = ['pending', 'active', 'completed'];
@@ -186,7 +187,7 @@ const QuestForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
         title="Delete quest"
-        message={`Permanently delete the quest “${q.title}”. This cannot be undone — restore it from History if you have it.`}
+        message={`Permanently delete the quest "${q.title}". This cannot be undone — restore it from History if you have it.`}
         confirmLabel="Delete forever"
         requireType={q.title}
         onConfirm={doRemove}
@@ -195,7 +196,7 @@ const QuestForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'collision'}
         title="Overwrite existing entry?"
-        message={`A quest with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        message={`A quest with id "${confirm?.id}" already exists. Saving will overwrite it.`}
         confirmLabel="Overwrite"
         onConfirm={() => submit(confirm.id, confirm.payload)}
         onCancel={() => setConfirm(null)}
@@ -207,52 +208,29 @@ const QuestForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 const GmQuests = () => {
   const { quests, source } = useContent();
   const existingIds = existingIdSet(quests);
-  const [adding, setAdding] = useState(false);
-  const [flash, setFlash] = useState(null);
-
-  const onSaved = (wasNew) => {
-    if (wasNew) setAdding(false);
-    setFlash('Saved. Changes are live for every connected player.');
-  };
-  const onRestored = () =>
-    setFlash('Restored. Changes are live for every connected player.');
 
   return (
     <div className="gm-quests">
       {source === 'fallback' && (
         <div className="gm-banner">
           Showing bundled defaults — saving a quest writes it to the store. Use
-          “Import defaults” on the Dashboard first so all quests persist together.
+          &quot;Import defaults&quot; on the Dashboard first so all quests persist together.
         </div>
       )}
-      {flash && <p className="gm-ok" role="status">{flash}</p>}
-
-      {adding ? (
-        <QuestForm
-          initial={blankQuest()}
-          isNew
-          existingIds={existingIds}
-          onSaved={onSaved}
-          onRestored={onRestored}
-        />
-      ) : (
-        <button className="btn-primary" onClick={() => setAdding(true)}>
-          + New quest
-        </button>
-      )}
-
-      <div className="gm-quest-list">
-        {quests.map((q) => (
+      <PageEditorShell
+        entries={quests}
+        nameOf={(q) => q.title}
+        noun="quest"
+        addLabel="+ New quest"
+        renderDetail={(entry, isNew, callbacks) => (
           <QuestForm
-            key={q.id}
-            initial={q}
-            isNew={false}
+            initial={isNew ? blankQuest() : entry}
+            isNew={isNew}
             existingIds={existingIds}
-            onSaved={onSaved}
-            onRestored={onRestored}
+            {...callbacks}
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 };

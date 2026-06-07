@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import GmItems from './GmItems';
 
@@ -52,7 +52,7 @@ const hammerItem = {
   name: "Xanderghul's Flawless Hammer",
   weight: 2,
   traits: ['Artifact', 'Staff', 'Magical'],
-  description: 'An Alara’quin of the Runelord of Pride.',
+  description: 'An Alara\'quin of the Runelord of Pride.',
   strikes: { proficiency: 'simple', type: 'melee', action: 1, damage: '1d12' },
   staff: {
     name: "Xanderghul's Flawless Hammer",
@@ -72,13 +72,18 @@ const setContent = () => useContent.mockReturnValue({ items, spells, images: [] 
 
 afterEach(() => vi.restoreAllMocks());
 
+// Helper: select an item list button to open its form in the detail pane.
+const selectItem = (name) =>
+  fireEvent.click(screen.getByRole('button', { name }));
+
 describe('GmItems', () => {
-  it('lists all catalog items and a count', () => {
+  it('lists all catalog items as master-list buttons and a count', () => {
     setContent();
     render(<GmItems />);
-    expect(screen.getByTestId('item-form-minor-elixir-of-life')).toBeInTheDocument();
-    expect(screen.getByTestId('item-form-backpack')).toBeInTheDocument();
-    expect(screen.getByTestId('item-form-scroll-friendfetch')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Minor Elixir of Life' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Backpack' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Scroll of Friendfetch' })).toBeInTheDocument();
+    expect(screen.queryByTestId('item-form-minor-elixir-of-life')).not.toBeInTheDocument();
     expect(screen.getByText(/Showing 3 of 3/)).toBeInTheDocument();
   });
 
@@ -86,8 +91,8 @@ describe('GmItems', () => {
     setContent();
     render(<GmItems />);
     fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'healing' } });
-    expect(screen.getByTestId('item-form-minor-elixir-of-life')).toBeInTheDocument();
-    expect(screen.queryByTestId('item-form-backpack')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Minor Elixir of Life' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Backpack' })).not.toBeInTheDocument();
     expect(screen.getByText(/Showing 1 of 3/)).toBeInTheDocument();
   });
 
@@ -95,6 +100,7 @@ describe('GmItems', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('Minor Elixir of Life');
     const form = screen.getByTestId('item-form-minor-elixir-of-life');
     fireEvent.change(within(form).getByLabelText('price'), { target: { value: '5.5' } });
     fireEvent.change(within(form).getByLabelText('traits'), {
@@ -113,6 +119,7 @@ describe('GmItems', () => {
   it('requires a name', async () => {
     setContent();
     render(<GmItems />);
+    selectItem('Backpack');
     const form = screen.getByTestId('item-form-backpack');
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: '' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -140,6 +147,7 @@ describe('GmItems', () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('Backpack');
     const form = screen.getByTestId('item-form-backpack');
     fireEvent.click(within(form).getByText('Delete'));
     expect(within(form).getByText('Delete forever')).toBeDisabled();
@@ -171,6 +179,7 @@ describe('GmItems', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('Backpack');
     const form = screen.getByTestId('item-form-backpack');
     // Pre-filled from the existing container.
     expect(within(form).getByLabelText('container-capacity')).toHaveValue(4);
@@ -187,6 +196,7 @@ describe('GmItems', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('Minor Elixir of Life');
     const form = screen.getByTestId('item-form-minor-elixir-of-life');
     expect(within(form).queryByLabelText('container-capacity')).not.toBeInTheDocument();
     fireEvent.click(within(form).getByLabelText('is-container'));
@@ -200,6 +210,7 @@ describe('GmItems', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('Scroll of Friendfetch');
     const form = screen.getByTestId('item-form-scroll-friendfetch');
     // Existing scroll prefilled the sub-form.
     expect(within(form).getByLabelText('spell-kind')).toHaveValue('scroll');
@@ -301,6 +312,7 @@ describe('GmItems', () => {
     });
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('S');
     const form = screen.getByTestId('item-form-s');
     expect(within(form).getByLabelText('spell-kind')).toHaveValue('scroll');
     expect(within(form).getByLabelText('spell-ref')).toHaveValue('ghost-spell');
@@ -314,6 +326,7 @@ describe('GmItems', () => {
     useContent.mockReturnValue({ items: [hammerItem], spells });
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem("Xanderghul's Flawless Hammer");
     const form = screen.getByTestId('item-form-xanderghuls-flawless-hammer');
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -327,6 +340,7 @@ describe('GmItems', () => {
   it('rejects per-character / managed keys in the raw-JSON box', async () => {
     setContent();
     render(<GmItems />);
+    selectItem('Minor Elixir of Life');
     const form = screen.getByTestId('item-form-minor-elixir-of-life');
     fireEvent.change(within(form).getByLabelText('rest-json'), {
       target: { value: '{"quantity": 2, "contents": []}' },
@@ -342,6 +356,7 @@ describe('GmItems', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
+    selectItem('Minor Elixir of Life');
     const form = screen.getByTestId('item-form-minor-elixir-of-life');
     fireEvent.change(within(form).getByLabelText('rest-json'), {
       target: { value: '{"potency": 1, "invested": false}' },
@@ -363,6 +378,7 @@ describe('GmItems', () => {
   it('reports invalid JSON in the raw-JSON box', async () => {
     setContent();
     render(<GmItems />);
+    selectItem('Backpack');
     const form = screen.getByTestId('item-form-backpack');
     fireEvent.change(within(form).getByLabelText('rest-json'), { target: { value: '{ not json' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -372,14 +388,15 @@ describe('GmItems', () => {
     expect(saveDocument).not.toHaveBeenCalled();
   });
 
-  it('hides the strikes editor on a scroll', () => {
+  it('hides the strikes editor on a scroll; shows it on a non-scroll', () => {
     setContent();
     render(<GmItems />);
-    const scrollForm = screen.getByTestId('item-form-scroll-friendfetch');
-    expect(within(scrollForm).queryByTestId('item-strikes')).not.toBeInTheDocument();
-    // A non-scroll keeps the strikes editor visible.
-    const backpackForm = screen.getByTestId('item-form-backpack');
-    expect(within(backpackForm).getByTestId('item-strikes')).toBeInTheDocument();
+    // Scroll: no strikes editor.
+    selectItem('Scroll of Friendfetch');
+    expect(within(screen.getByTestId('item-form-scroll-friendfetch')).queryByTestId('item-strikes')).not.toBeInTheDocument();
+    // Non-scroll: strikes editor visible (select Backpack, which replaces the detail pane).
+    selectItem('Backpack');
+    expect(within(screen.getByTestId('item-form-backpack')).getByTestId('item-strikes')).toBeInTheDocument();
   });
 
   it('hides strikes and auto-renames a wand once a catalog spell is picked', async () => {
@@ -408,6 +425,7 @@ describe('GmItems', () => {
   it('collapses the inline spell fields by default on a scroll', () => {
     setContent();
     render(<GmItems />);
+    selectItem('Scroll of Friendfetch');
     const form = screen.getByTestId('item-form-scroll-friendfetch');
     const details = within(form).getByTestId('spell-inline-details');
     expect(details).not.toHaveAttribute('open');
@@ -418,6 +436,7 @@ describe('GmItems', () => {
   it('auto-renames a scroll when the picked catalog spell changes', () => {
     setContent();
     render(<GmItems />);
+    selectItem('Scroll of Friendfetch');
     const form = screen.getByTestId('item-form-scroll-friendfetch');
     const nameInput = within(form).getByLabelText('name');
     // No ref initially; the fixture authored an inline spell name "Friendfetch".
@@ -459,6 +478,7 @@ describe('GmItems', () => {
       mock();
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmItems />);
+      selectItem('Light Hammer');
       const form = screen.getByTestId('item-form-hammer');
       expect(within(form).getByLabelText('item-strike-0-name')).toHaveValue('Hammer Strike');
       // strikes no longer round-trip through the raw-JSON box.
@@ -474,6 +494,7 @@ describe('GmItems', () => {
       mock();
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmItems />);
+      selectItem('+1 Striking Pick');
       const form = screen.getByTestId('item-form-striking-pick');
       expect(within(form).getByLabelText('item-strike-0-name')).toHaveValue('');
       fireEvent.click(within(form).getByText('Save'));
@@ -490,6 +511,7 @@ describe('GmItems', () => {
       mock();
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmItems />);
+      selectItem('Light Hammer');
       const form = screen.getByTestId('item-form-hammer');
       fireEvent.click(within(form).getByText('Add strike'));
       fireEvent.change(within(form).getByLabelText('item-strike-1-name'), {
@@ -516,6 +538,7 @@ describe('GmItems', () => {
       useContent.mockReturnValue({ items: [withImage], spells: [], images: [] });
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmItems />);
+      selectItem('Minor Elixir of Life');
       const form = screen.getByTestId('item-form-minor-elixir-of-life');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -526,6 +549,7 @@ describe('GmItems', () => {
       setContent();
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmItems />);
+      selectItem('Minor Elixir of Life');
       const form = screen.getByTestId('item-form-minor-elixir-of-life');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());

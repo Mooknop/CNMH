@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import GmReputation from './GmReputation';
 
@@ -22,11 +22,16 @@ const setContent = () => useContent.mockReturnValue({ reputation });
 
 afterEach(() => vi.restoreAllMocks());
 
+// Helper: select a faction list item to open its form in the detail pane.
+const selectFaction = (name) =>
+  fireEvent.click(screen.getByRole('button', { name }));
+
 describe('GmReputation', () => {
-  it('renders a form per faction', () => {
+  it('lists factions as master-list buttons', () => {
     setContent();
     render(<GmReputation />);
-    expect(screen.getByTestId('faction-form-bunyip-club')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'The Bunyip Club' })).toBeInTheDocument();
+    expect(screen.queryByTestId('faction-form-bunyip-club')).not.toBeInTheDocument();
     expect(screen.getByText('+ New faction')).toBeInTheDocument();
   });
 
@@ -34,6 +39,7 @@ describe('GmReputation', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmReputation />);
+    selectFaction('The Bunyip Club');
     const form = screen.getByTestId('faction-form-bunyip-club');
     fireEvent.change(within(form).getByLabelText('reputation'), { target: { value: '12' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -48,6 +54,7 @@ describe('GmReputation', () => {
   it('blocks saving with an empty name', async () => {
     setContent();
     render(<GmReputation />);
+    selectFaction('The Bunyip Club');
     const form = screen.getByTestId('faction-form-bunyip-club');
     fireEvent.change(within(form).getByLabelText('faction-name'), { target: { value: '  ' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -58,6 +65,7 @@ describe('GmReputation', () => {
   it('adds and removes rank tiers', () => {
     setContent();
     render(<GmReputation />);
+    selectFaction('The Bunyip Club');
     const form = screen.getByTestId('faction-form-bunyip-club');
     expect(within(form).getByLabelText('rank-0-name')).toBeInTheDocument();
     fireEvent.click(within(form).getByText('Add tier'));
@@ -87,6 +95,7 @@ describe('GmReputation', () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
     render(<GmReputation />);
+    selectFaction('The Bunyip Club');
     const form = screen.getByTestId('faction-form-bunyip-club');
     fireEvent.click(within(form).getByText('Delete'));
     expect(within(form).getByText('Delete forever')).toBeDisabled();
