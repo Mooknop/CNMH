@@ -1,92 +1,86 @@
-.gm-area {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 16px;
-}
+/* ============================================================
+   GM TOOLS — inner editor styles.
+   Everything here sits inside .gm-shell (dark theme tokens).
+   The layout chrome (top bar, subrail, shell background) lives
+   in gm-shell.css. Global buttons (.btn-*) and form scaffolding
+   (.form-group, .form-row) live in App.css.
+   ============================================================ */
 
-.gm-message {
-  text-align: center;
-  padding: 48px 16px;
-  color: var(--color-text);
-}
-
-.gm-header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  border-bottom: 2px solid var(--color-primary);
-  padding-bottom: 8px;
-}
-
-.gm-header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.gm-identity {
-  font-size: 0.85rem;
-  color: #666;
-}
-
+/* ── Usage chip ──────────────────────────────────────────── */
 .gm-usage-chip {
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
   padding: 2px 8px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  background: #f5f5f5;
-  color: #555;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-tertiary);
   white-space: nowrap;
 }
 
 .gm-usage-chip.warning {
-  background: #fff8e1;
-  border-color: #f9a825;
-  color: #7a5100;
+  background: rgba(245, 124, 0, 0.12);
+  border-color: rgba(245, 124, 0, 0.5);
+  color: var(--gold-light);
 }
 
 .gm-usage-chip.danger {
-  background: #fce4ec;
-  border-color: #c62828;
-  color: #b71c1c;
+  background: rgba(183, 28, 28, 0.14);
+  border-color: rgba(183, 28, 28, 0.5);
+  color: var(--peril-light);
 }
 
+/* ── Inline filter tabs (used inside Calendar, Characters,
+      Images, Lore, ImageField — NOT the top-area nav) ────── */
 .gm-nav {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   margin: 12px 0 20px;
+  flex-wrap: wrap;
 }
 
 .gm-nav-link {
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
   padding: 6px 12px;
   border-radius: var(--radius-sm);
-  color: var(--color-primary);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--shell-border-strong);
+  background: none;
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-/* Filter tabs reuse the nav-link look but are buttons, not links. */
 .gm-nav button.gm-nav-link {
-  background: none;
   font: inherit;
-  cursor: pointer;
+}
+
+.gm-nav-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--shell-text-primary);
 }
 
 .gm-nav-link.active {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
 }
 
+/* ── Card — the editor form container ───────────────────── */
 .gm-card {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--shell-border);
   border-radius: var(--radius-md);
   padding: 16px;
   margin: 12px 0;
-  background: var(--color-bg-light);
+  background: var(--surface-card);
+  backdrop-filter: blur(5px);
 }
 
+/* ── Row helpers ─────────────────────────────────────────── */
 .gm-row {
   display: flex;
   gap: 16px;
@@ -113,96 +107,157 @@
   display: flex;
   gap: 8px;
   margin-top: 12px;
+  flex-wrap: wrap;
 }
 
+/* ── Status / messaging ──────────────────────────────────── */
 .gm-banner {
-  background: #fff4e5;
-  border: 1px solid var(--color-warning, #c47f17);
+  background: rgba(245, 124, 0, 0.1);
+  border: 1px solid rgba(245, 124, 0, 0.4);
   border-radius: var(--radius-sm);
+  color: var(--gold-light);
   padding: 10px 12px;
   margin-bottom: 12px;
+  font-size: 0.85rem;
 }
 
 .gm-result {
-  background: #f0f0f0;
-  padding: 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
   border-radius: var(--radius-sm);
+  padding: 8px 12px;
   white-space: pre-wrap;
   word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--shell-text-secondary);
 }
 
-.gm-ok { color: var(--color-success, #2e7d32); font-weight: 600; }
-.gm-warn { color: var(--color-danger, #b3261e); font-weight: 600; }
+.gm-ok   { color: var(--d-crit-fg); font-weight: 600; }
+.gm-warn { color: var(--peril-light); font-weight: 600; }
+.gm-help { color: var(--shell-text-tertiary); font-size: 0.85rem; margin: 4px 0; }
 
+.gm-count {
+  color: var(--shell-text-tertiary);
+  font-size: 0.85rem;
+  margin: 8px 0;
+}
+
+/* ── Form-field overrides inside the dark shell ──────────── */
+/* .form-group in App.css is light-agnostic; re-point colors here */
+.gm-shell .form-group label {
+  color: var(--shell-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.gm-shell .form-group input,
+.gm-shell .form-group textarea,
+.gm-shell .form-group select {
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+}
+
+.gm-shell .form-group input::placeholder,
+.gm-shell .form-group textarea::placeholder {
+  color: var(--shell-text-tertiary);
+}
+
+.gm-shell .form-group input:focus,
+.gm-shell .form-group textarea:focus,
+.gm-shell .form-group select:focus {
+  outline: none;
+  border-color: var(--accent-outline);
+  box-shadow: 0 0 0 2px var(--accent-tint);
+}
+
+.gm-shell .form-group select option {
+  background: var(--shell-surface);
+  color: var(--shell-text-primary);
+}
+
+/* ── Special form rows ───────────────────────────────────── */
 .gm-date-row .form-group { min-width: 110px; }
-
 .gm-rank-row { align-items: center; }
 .gm-rank-row input { flex: 1; min-width: 90px; }
 .gm-rank-row input[aria-label$="-effect"] { flex: 2; }
 
+/* ── Monospaced display ──────────────────────────────────── */
 .gm-json {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   white-space: pre;
+  color: var(--shell-text-secondary);
 }
 
+/* ── Character-editor skill grid ─────────────────────────── */
 .gm-skill-grid .form-group { min-width: 150px; flex: 0 1 150px; }
 
-.gm-count { color: #666; font-size: 0.85rem; margin: 8px 0; }
-
+/* ── Editor list (links on admin dashboard) ──────────────── */
 .gm-editor-list { list-style: none; padding: 0; }
 .gm-editor-list li { margin: 6px 0; }
+.gm-editor-list a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
-/* Destructive-action confirm dialog (in-app replacement for window.confirm) */
+/* ── Confirm dialog ──────────────────────────────────────── */
 .confirm-message { margin: 0 0 12px; line-height: 1.4; }
 .confirm-actions { justify-content: flex-end; }
 .confirm-actions .btn-danger,
 .confirm-actions .btn-primary { min-width: 120px; }
 
-/* Character-editor subtabs (Stats / Proficiencies / … / Advanced) */
+/* ── Character-editor subtabs ────────────────────────────── */
 .gm-subtabs {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   margin: 12px 0;
-  border-bottom: 2px solid var(--color-primary);
+  border-bottom: 1px solid var(--shell-border);
   padding-bottom: 6px;
 }
 
 .gm-subtab {
   background: none;
-  border: 1px solid var(--color-border-medium);
+  border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-sm);
   padding: 6px 12px;
   font: inherit;
   cursor: pointer;
-  color: var(--color-primary);
+  color: var(--shell-text-secondary);
+  font-size: 0.82rem;
+  transition: background 0.15s, color 0.15s;
 }
 
 .gm-subtab:hover {
-  background: var(--color-bg-lighter);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--shell-text-primary);
 }
 
 .gm-subtab.active {
-  background: var(--color-primary);
-  color: #fff;
-  border-color: var(--color-primary);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
 }
 
 .gm-subtab-content {
   margin-top: 12px;
 }
 
-/* One-line inventory rows */
+/* ── Inventory rows ──────────────────────────────────────── */
 .gm-inv-row {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--shell-border);
   border-radius: var(--radius-sm);
   margin: 6px 0;
-  background: var(--color-bg-lighter);
+  background: var(--surface-inset);
 }
 
 .gm-inv-main {
@@ -217,7 +272,7 @@
   text-align: left;
   cursor: pointer;
   padding: 2px 0;
-  color: var(--color-text);
+  color: var(--shell-text-primary);
   overflow: hidden;
 }
 
@@ -229,7 +284,7 @@
 }
 
 .gm-inv-meta {
-  color: var(--color-text-muted);
+  color: var(--shell-text-tertiary);
   font-size: 0.85rem;
   white-space: nowrap;
 }
@@ -239,7 +294,7 @@
   margin-left: auto;
   background: none;
   border: none;
-  color: var(--color-danger);
+  color: var(--peril-light);
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
@@ -248,53 +303,48 @@
 }
 
 .gm-inv-x:hover {
-  background: rgba(183, 28, 28, 0.1);
+  background: rgba(183, 28, 28, 0.15);
 }
 
-/* Compact container-content rows inside the item edit modal */
-.gm-inv-content .gm-inv-label {
-  flex: 1;
-}
+.gm-inv-content .gm-inv-label { flex: 1; }
+.gm-inv-qty { width: 64px; flex: none; }
+.gm-inv-inv { flex: none; font-size: 0.85rem; white-space: nowrap; }
 
-.gm-inv-qty {
-  width: 64px;
-  flex: none;
-}
-
-.gm-inv-inv {
-  flex: none;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
-/* Per-entity version history modal */
+/* ── History modal ───────────────────────────────────────── */
 .gm-history-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
 }
+
 .gm-history-preview {
   max-height: 140px;
   overflow: auto;
   margin: 8px 0 0;
   font-size: 0.75rem;
+  color: var(--shell-text-secondary);
 }
 
-/* GM encounter panel — initiative + turn controls. */
+/* ── Encounter tracker ───────────────────────────────────── */
 .gm-encounter-header h2 {
   margin: 0 0 4px;
 }
+
 .gm-encounter-status {
-  background: #f3f4f6;
-  border-left: 3px solid #6b7280;
+  background: var(--surface-inset);
+  border-left: 3px solid var(--shell-border-strong);
   padding: 6px 12px;
   margin: 8px 0;
   font-size: 0.9rem;
+  color: var(--shell-text-secondary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
+
 .gm-encounter-order {
   margin-top: 12px;
 }
+
 .gm-encounter-list {
   list-style: none;
   padding: 0;
@@ -303,57 +353,72 @@
   flex-direction: column;
   gap: 4px;
 }
+
 .gm-encounter-row {
   display: grid;
   grid-template-columns: 1fr auto auto auto;
   gap: 12px;
   align-items: center;
-  padding: 6px 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  background: #fff;
+  padding: 8px 12px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
 }
+
 .gm-encounter-row.is-current {
-  border-color: #2563eb;
-  background: #eff6ff;
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  box-shadow: inset 3px 0 0 var(--accent-outline);
 }
+
 .gm-encounter-row.is-enemy {
-  background: #fff7ed;
-  border-color: #fdba74;
+  background: rgba(217, 122, 43, 0.06);
+  border-color: rgba(217, 122, 43, 0.3);
 }
+
 .gm-encounter-row.is-enemy.is-current {
-  background: #ffedd5;
-  border-color: #ea580c;
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
 }
+
 .gm-encounter-name {
   font-weight: 600;
 }
+
 .gm-encounter-kind {
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: 0.72rem;
+  color: var(--shell-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .gm-encounter-init {
   font-variant-numeric: tabular-nums;
-  color: #374151;
+  color: var(--shell-text-secondary);
+  font-family: var(--font-mono);
 }
+
 .gm-encounter-add-enemy {
   margin-top: 12px;
 }
 
-/* GM save request panel */
+/* ── Save request panel ──────────────────────────────────── */
 .gm-save-request {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   margin-bottom: 16px;
+  background: var(--surface-card);
 }
 
 .gm-save-request h3 {
   margin: 0 0 10px;
   font-size: 0.95rem;
   font-weight: 700;
+  color: var(--shell-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .gm-save-row {
@@ -370,6 +435,9 @@
   gap: 4px;
   font-size: 0.8rem;
   font-weight: 600;
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .gm-save-dc { width: 70px; }
@@ -379,4 +447,159 @@
   flex-direction: row !important;
   align-items: center;
   gap: 6px !important;
+}
+
+/* ── Shared panel primitive (used by Dashboard + editors) ─── */
+/* Slice 3+ will use these; defining them here so they're available. */
+.gm-panel {
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(5px);
+}
+
+.gm-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--shell-border);
+}
+
+.gm-panel-head h3 {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-secondary);
+}
+
+.gm-panel-body {
+  padding: 16px;
+}
+
+/* Corner-bracket framing (Dashboard marquee, etc.) */
+.gm-bracketed { position: relative; }
+.gm-bracketed::before,
+.gm-bracketed::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+.gm-bracketed::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--bracket-color);
+  border-left: 2px solid var(--bracket-color);
+  border-top-left-radius: var(--radius-lg);
+}
+.gm-bracketed::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--bracket-color);
+  border-right: 2px solid var(--bracket-color);
+  border-bottom-right-radius: var(--radius-lg);
+}
+
+/* ── Pill / badge ────────────────────────────────────────── */
+.gm-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+}
+.gm-pill--good   { background: var(--d-crit-bg);  color: var(--d-crit-fg);  border-color: transparent; }
+.gm-pill--bad    { background: var(--d-cf-bg);    color: var(--d-cf-fg);    border-color: transparent; }
+.gm-pill--warn   { background: rgba(245,124,0,.14); color: var(--gold-light); border-color: rgba(245,124,0,.35); }
+.gm-pill--gold   { background: rgba(196,154,46,.14); color: var(--gold-light); border-color: rgba(196,154,46,.35); }
+.gm-pill--accent { background: var(--accent-tint); color: var(--accent-text); border-color: var(--accent-outline); }
+
+/* ── Field group (column label + input) ──────────────────── */
+/* Slice 3 master/detail forms use this instead of .form-group */
+.gm-fg {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--space-4);
+  flex: 1;
+  min-width: 150px;
+}
+.gm-fg label {
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  font-weight: 600;
+}
+.gm-fg input,
+.gm-fg select,
+.gm-fg textarea {
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  width: 100%;
+}
+.gm-fg textarea {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+.gm-fg input:focus,
+.gm-fg select:focus,
+.gm-fg textarea:focus {
+  outline: none;
+  border-color: var(--accent-outline);
+  box-shadow: 0 0 0 2px var(--accent-tint);
+}
+.gm-fg input::placeholder,
+.gm-fg textarea::placeholder {
+  color: var(--shell-text-tertiary);
+}
+.gm-fg select option {
+  background: var(--shell-surface);
+  color: var(--shell-text-primary);
+}
+
+/* ── Detail-pane action bar (Save / History / Delete row) ─── */
+.gm-detail-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+  margin-top: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.gm-detail-actions .spacer { flex: 1; }
+
+/* ── "Saves are live" affordance ─────────────────────────── */
+.gm-live-note {
+  font-size: 0.72rem;
+  color: var(--d-crit-fg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.gm-live-note .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--d-crit-fg);
+  box-shadow: 0 0 8px var(--d-crit-fg);
+  flex: none;
 }
