@@ -103,7 +103,7 @@ const pickCatalog = (form, ...names) => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('GmCharacters', () => {
-  it('renders a tab per character (+ New) and mounts only the active form', () => {
+  it('renders a card per character (+ New) and mounts only the active form', () => {
     setContent();
     render(<GmCharacters />);
     const nav = screen.getByLabelText('characters');

@@ -1262,19 +1262,24 @@ const GmCharacters = () => {
     <div className="gm-characters">
       {flash && <p className="gm-ok" role="status">{flash}</p>}
 
-      <nav className="gm-nav" aria-label="characters">
+      <nav className="gm-char-grid" aria-label="characters">
         {list.map((c) => (
           <button
             key={c.id}
-            className={`gm-nav-link ${c.id === current ? 'active' : ''}`}
+            className={`gm-char-card${c.id === current ? ' active' : ''}`}
             aria-pressed={c.id === current}
             onClick={() => setActiveId(c.id)}
           >
-            {c.name || c.id}
+            <span className="gm-char-card-name">{c.name || c.id}</span>
+            {(c.class || c.level) && (
+              <span className="gm-char-card-meta">
+                {[c.class, c.level ? `Lvl ${c.level}` : null].filter(Boolean).join(' · ')}
+              </span>
+            )}
           </button>
         ))}
         <button
-          className={`gm-nav-link ${current === 'new' ? 'active' : ''}`}
+          className={`gm-char-card gm-char-card--add${current === 'new' ? ' active' : ''}`}
           aria-pressed={current === 'new'}
           onClick={() => setActiveId('new')}
         >

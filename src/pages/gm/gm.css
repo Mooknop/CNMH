@@ -988,3 +988,74 @@
   border: 1px solid rgba(245, 124, 0, 0.5);
   color: var(--gold-light, #f9a825);
 }
+
+/* ── Characters card grid ─────────────────────────────────── */
+.gm-char-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 12px 0 24px;
+}
+
+.gm-char-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.gm-char-card:hover {
+  background: var(--surface-inset);
+  border-color: var(--shell-text-tertiary);
+  color: var(--shell-text-primary);
+}
+
+.gm-char-card.active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.gm-char-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.gm-char-card-meta {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.gm-char-card--add {
+  border-style: dashed;
+  color: var(--shell-text-tertiary);
+  justify-content: center;
+  align-items: center;
+}
+
+.gm-char-card--add:hover {
+  color: var(--shell-text-primary);
+}
+
+/* ── Button overrides for GmTheme dark panels ──────────────── */
+/* Same issue as .gm-dashboard: global .btn-* uses light-mode tokens
+   that are invisible on --surface-card backgrounds. */
+.gm-theme .btn-secondary {
+  color: var(--shell-text-primary);
+  border-color: var(--shell-border-strong);
+}
+
+.gm-theme .btn-secondary:hover {
+  background-color: var(--surface-inset);
+  border-color: var(--shell-text-tertiary);
+}
