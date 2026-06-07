@@ -365,20 +365,27 @@ export const resolveInventory = (list, catalogMap, spellMap, ownerLevel) =>
     resolveInventoryItem(e, catalogMap, spellMap, ownerLevel)
   );
 
-// Resolve a character's inventory against the item catalog. Characters with
-// no inventory array are returned untouched (shape preserved).
+// Resolve a character's crafting recipes against the item catalog. Each
+// entry with a `ref` is resolved like an inventory item (variant fields
+// merged in by level). Inline legacy entries (no `ref`) pass through
+// unchanged for back-compat.
+export const resolveCraftingRecipes = (crafting, catalogMap, spellMap, ownerLevel) =>
+  resolveInventory(crafting, catalogMap, spellMap, ownerLevel);
+
+// Resolve a character's inventory (and crafting recipes) against the item
+// catalog. Characters with neither are returned untouched (shape preserved).
 export const resolveCharacterItems = (character, items, spells) => {
   if (!character || typeof character !== 'object') return character;
-  if (!Array.isArray(character.inventory)) return character;
-  return {
-    ...character,
-    inventory: resolveInventory(
-      character.inventory,
-      itemCatalogMap(items),
-      spellCatalogMap(spells),
-      character.level
-    ),
-  };
+  const catalogMap = itemCatalogMap(items);
+  const spMap = spellCatalogMap(spells);
+  let out = character;
+  if (Array.isArray(character.inventory)) {
+    out = { ...out, inventory: resolveInventory(out.inventory, catalogMap, spMap, character.level) };
+  }
+  if (Array.isArray(character.crafting)) {
+    out = { ...out, crafting: resolveCraftingRecipes(out.crafting, catalogMap, spMap, character.level) };
+  }
+  return out;
 };
 
 // Image catalog: each entry is { id, name, folder, mimeType, createdAt }. The
