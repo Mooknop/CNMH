@@ -145,22 +145,22 @@ const GmDashboard = () => {
       <h2>Editors</h2>
       <ul className="gm-editor-list">
         <li>
-          <Link to="/gm/quests">Quests</Link>
+          <Link to="/gm/world/quests">Quests</Link>
         </li>
         <li>
-          <Link to="/gm/reputation">Reputation</Link>
+          <Link to="/gm/world/reputation">Reputation</Link>
         </li>
         <li>
-          <Link to="/gm/calendar">Calendar</Link>
+          <Link to="/gm/world/calendar">Calendar</Link>
         </li>
         <li>
-          <Link to="/gm/lore">Lore</Link>
+          <Link to="/gm/world/lore">Lore</Link>
         </li>
         <li>
           <Link to="/gm/characters">Characters</Link>
         </li>
         <li>
-          <Link to="/gm/images">Images</Link>
+          <Link to="/gm/catalog/images">Images</Link>
         </li>
       </ul>
 
