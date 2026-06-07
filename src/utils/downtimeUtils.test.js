@@ -4,6 +4,9 @@ import {
   getDaysCommitted,
   getRemainingDays,
   isFatigued,
+  isCurrentPeriod,
+  periodState,
+  stampPeriod,
 } from './downtimeUtils';
 
 describe('downtimeUtils', () => {
@@ -139,6 +142,91 @@ describe('downtimeUtils', () => {
     it('returns 0 when the activity has no blocks', () => {
       const ledger = [{ day: 'Research', night: null }];
       expect(getRollsForActivity(ledger, 'Earn Income')).toBe(0);
+    });
+  });
+
+  describe('period scoping', () => {
+    const dt = {
+      periodStartedAt: 'P1',
+      selected: ['Research'],
+      ledger: [{ day: 'Research', night: null }],
+    };
+
+    describe('isCurrentPeriod', () => {
+      it('is true when the stamp matches the active block', () => {
+        expect(isCurrentPeriod(dt, 'P1')).toBe(true);
+      });
+
+      it('is false when the stamp is from a prior period', () => {
+        expect(isCurrentPeriod(dt, 'P2')).toBe(false);
+      });
+
+      it('is false for null state or null startedAt', () => {
+        expect(isCurrentPeriod(null, 'P1')).toBe(false);
+        expect(isCurrentPeriod(dt, null)).toBe(false);
+        expect(isCurrentPeriod(dt, undefined)).toBe(false);
+      });
+
+      it('does not treat an unstamped state as the current period', () => {
+        expect(isCurrentPeriod({ selected: ['X'], ledger: [] }, 'P1')).toBe(false);
+      });
+
+      it('compares startedAt by value (gameDate objects round-trip through JSON)', () => {
+        // Distinct object references with equal contents — what you get after a
+        // value round-trips through the synced-state serializer.
+        const stored = { periodStartedAt: { day: 5, month: 2, year: 4725 } };
+        const fresh = { day: 5, month: 2, year: 4725 };
+        expect(stored.periodStartedAt).not.toBe(fresh); // different references
+        expect(isCurrentPeriod(stored, fresh)).toBe(true);
+        expect(isCurrentPeriod(stored, { day: 6, month: 2, year: 4725 })).toBe(false);
+      });
+    });
+
+    describe('periodState', () => {
+      it('returns the stored selected/ledger for the current period', () => {
+        expect(periodState(dt, 'P1')).toEqual({
+          selected: ['Research'],
+          ledger: [{ day: 'Research', night: null }],
+        });
+      });
+
+      it('returns empty for a stale (prior-period) state', () => {
+        expect(periodState(dt, 'P2')).toEqual({ selected: [], ledger: [] });
+      });
+
+      it('returns empty for null/unstamped state', () => {
+        expect(periodState(null, 'P1')).toEqual({ selected: [], ledger: [] });
+        expect(periodState({ selected: ['X'], ledger: [{ day: 'X', night: null }] }, 'P1'))
+          .toEqual({ selected: [], ledger: [] });
+      });
+    });
+
+    describe('stampPeriod', () => {
+      it('merges the patch onto the current-period base and stamps startedAt', () => {
+        const next = stampPeriod(dt, 'P1', { selected: ['Research', 'Crafting'] });
+        expect(next).toEqual({
+          periodStartedAt: 'P1',
+          selected: ['Research', 'Crafting'],
+          ledger: [{ day: 'Research', night: null }],
+        });
+      });
+
+      it('starts from a fresh base when the prior state is from another period', () => {
+        const next = stampPeriod(dt, 'P2', { ledger: [{ day: 'Crafting', night: null }] });
+        expect(next).toEqual({
+          periodStartedAt: 'P2',
+          selected: [],
+          ledger: [{ day: 'Crafting', night: null }],
+        });
+      });
+
+      it('stamps null when there is no active period', () => {
+        expect(stampPeriod(null, null, { selected: ['X'] })).toEqual({
+          periodStartedAt: null,
+          selected: ['X'],
+          ledger: [],
+        });
+      });
     });
   });
 });

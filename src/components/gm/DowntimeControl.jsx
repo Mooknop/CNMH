@@ -5,6 +5,7 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
+import { periodState } from '../../utils/downtimeUtils';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
 // downtime days (`cnmh_downtimeblock_global`) that players allocate to activities.
@@ -53,7 +54,7 @@ const DowntimeControl = () => {
   const blockDays = block?.days ?? 0;
   const blockStartedAt = block?.startedAt ?? null;
 
-  const { readyCount, total, allReady } = useDowntimePartyReady(blockActive ? blockDays : 0);
+  const { readyCount, total, allReady } = useDowntimePartyReady(blockActive ? blockDays : 0, blockStartedAt);
 
   // Capture latest characters without adding the array to effect deps.
   const charactersRef = useRef(characters);
@@ -73,8 +74,9 @@ const DowntimeControl = () => {
     autoAdvancedRef.current = true;
 
     const summaryChars = (charactersRef.current || []).map((c) => {
-      const dt = getState(c.id, 'downtime') || {};
-      return { id: c.id, name: c.name, selected: dt.selected || [], ledger: dt.ledger || [] };
+      const dt = getState(c.id, 'downtime');
+      const { selected, ledger } = periodState(dt, blockStartedAt);
+      return { id: c.id, name: c.name, selected, ledger };
     });
     setSummary({ period: { days: blockDays, startedAt: blockStartedAt }, chars: summaryChars });
     advanceDays(blockDays);

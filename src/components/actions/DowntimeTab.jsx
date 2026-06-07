@@ -3,7 +3,7 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
-import { getHoursForActivity, getRollsForActivity, getDaysCommitted } from '../../utils/downtimeUtils';
+import { getHoursForActivity, getRollsForActivity, getDaysCommitted, periodState } from '../../utils/downtimeUtils';
 import CraftingModal from '../inventory/CraftingModal';
 import DowntimeList from './DowntimeList';
 import DowntimeCommitBar from './DowntimeCommitBar';
@@ -22,8 +22,7 @@ const DowntimeTab = ({ character, characterColor }) => {
 
   const hasCrafting = (charData?.skillProficiencies?.crafting || 0) > 0;
   const days = block?.active ? block?.days : null;
-  const selected = downtime?.selected || [];
-  const ledger = downtime?.ledger || [];
+  const { selected, ledger } = periodState(downtime, block?.startedAt);
   const daysCommitted = getDaysCommitted(ledger);
 
   // Per-activity progress derived from the committed ledger.

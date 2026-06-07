@@ -250,8 +250,10 @@ describe('PlayModeControl', () => {
     });
   });
 
-  describe('Clear selected activities on entering Downtime', () => {
-    it('clears selected for all characters when entering Downtime', () => {
+  describe('Entering Downtime', () => {
+    // Per-period reset is now declarative (periodStartedAt + periodState in
+    // downtimeUtils), so entering Downtime no longer fans out a clear write.
+    it('does not write any downtime state when entering Downtime', () => {
       mockGetState.mockImplementation((charId, type) =>
         type === 'downtime'
           ? { selected: ['Research'], ledger: [{ day: 'Research', night: null }] }
@@ -268,39 +270,9 @@ describe('PlayModeControl', () => {
         </CharacterContext.Provider>
       );
 
-      expect(mockSendUpdate).toHaveBeenCalledWith('a', 'downtime', {
-        selected: [],
-        ledger: [{ day: 'Research', night: null }],
-      });
-      expect(mockSendUpdate).toHaveBeenCalledWith('b', 'downtime', {
-        selected: [],
-        ledger: [{ day: 'Research', night: null }],
-      });
-    });
-
-    it('preserves ledger (accumulated progress) when clearing selected', () => {
-      const ledger = [
-        { day: 'Crafting', night: 'Crafting' },
-        { day: 'Crafting', night: null },
-      ];
-      mockGetState.mockImplementation(() => ({ selected: ['Crafting'], ledger }));
-      mockState.gmMode = 'exploration';
-      const { rerender } = renderWith([{ id: 'a' }]);
-
-      mockState.gmMode = 'downtime';
-      rerender(
-        <CharacterContext.Provider value={{ characters: [{ id: 'a' }] }}>
-          <PlayModeControl />
-        </CharacterContext.Provider>
+      expect(mockSendUpdate).not.toHaveBeenCalledWith(
+        expect.anything(), 'downtime', expect.anything()
       );
-
-      expect(mockSendUpdate).toHaveBeenCalledWith('a', 'downtime', { selected: [], ledger });
-    });
-
-    it('does not clear selected when already in Downtime on mount', () => {
-      mockState.gmMode = 'downtime';
-      renderWith([{ id: 'a' }]);
-      expect(mockSendUpdate).not.toHaveBeenCalledWith(expect.anything(), 'downtime', expect.anything());
     });
   });
 });

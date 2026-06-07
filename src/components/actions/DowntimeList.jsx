@@ -5,6 +5,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { activityHighlightLabel } from '../../utils/explorationUtils';
+import { periodState, stampPeriod } from '../../utils/downtimeUtils';
 import './DowntimeList.css';
 
 // Multi-select downtime activity picker. Unlike exploration (one active pick),
@@ -19,8 +20,10 @@ const DowntimeList = ({ character, characterColor }) => {
   const characterModel = useCharacter(character);
   const characterKey = character?.id || 'unknown';
 
+  const [block] = useSyncedState('cnmh_downtimeblock_global', null);
   const [downtime, setDowntime] = useSyncedState(`cnmh_downtime_${characterKey}`, null);
-  const selected = downtime?.selected || [];
+  const startedAt = block?.startedAt;
+  const selected = periodState(downtime, startedAt).selected;
 
   const [openActivity, setOpenActivity] = useState(null);
 
@@ -47,11 +50,11 @@ const DowntimeList = ({ character, characterColor }) => {
 
   const toggleSelected = (name) =>
     setDowntime((prev) => {
-      const prevSel = prev?.selected || [];
+      const prevSel = periodState(prev, startedAt).selected;
       const nextSel = prevSel.includes(name)
         ? prevSel.filter((n) => n !== name)
         : [...prevSel, name];
-      return { ...(prev || {}), selected: nextSel };
+      return stampPeriod(prev, startedAt, { selected: nextSel });
     });
 
   return (
