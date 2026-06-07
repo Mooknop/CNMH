@@ -1,14 +1,16 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import GmLayout from './GmLayout';
 
 vi.mock('../../hooks/useGmAuth', () => ({ useGmAuth: vi.fn() }));
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
+vi.mock('../../hooks/usePlayMode', () => ({ usePlayMode: vi.fn() }));
 vi.mock('../../utils/gmApi', () => ({ seedDefaults: vi.fn() }));
 vi.mock('../../components/gm/UsageChip', () => ({ default: () => null }));
 import { useGmAuth } from '../../hooks/useGmAuth';
 import { useContent } from '../../contexts/ContentContext';
+import { usePlayMode } from '../../hooks/usePlayMode';
 import { seedDefaults } from '../../utils/gmApi';
 
 const renderAt = (path = '/gm') =>
@@ -17,8 +19,11 @@ const renderAt = (path = '/gm') =>
       <Routes>
         <Route path="/gm" element={<GmLayout />}>
           <Route index element={<div data-testid="outlet">DASH</div>} />
-          <Route path="quests" element={<div data-testid="outlet">QUESTS</div>} />
-          <Route path="reputation" element={<div data-testid="outlet">REP</div>} />
+          <Route path="world/quests" element={<div data-testid="outlet">QUESTS</div>} />
+          <Route path="world/reputation" element={<div data-testid="outlet">REP</div>} />
+          <Route path="catalog/items" element={<div data-testid="outlet">ITEMS</div>} />
+          <Route path="characters" element={<div data-testid="outlet">CHARS</div>} />
+          <Route path="quests" element={<Navigate to="/gm/world/quests" replace />} />
         </Route>
       </Routes>
     </MemoryRouter>
@@ -30,6 +35,7 @@ beforeEach(() => {
   refresh.mockClear();
   seedDefaults.mockReset();
   useContent.mockReturnValue({ refresh });
+  usePlayMode.mockReturnValue({ mode: 'exploration' });
 });
 
 describe('GmLayout', () => {
@@ -47,17 +53,64 @@ describe('GmLayout', () => {
     expect(seedDefaults).not.toHaveBeenCalled();
   });
 
-  it('always idempotently seeds on entry, then exposes nav + outlet', async () => {
+  it('always idempotently seeds on entry, then exposes the top nav + outlet', async () => {
     useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
     seedDefaults.mockResolvedValue({ ok: true });
-    renderAt('/gm/reputation');
+    renderAt('/gm');
     expect(screen.getByText(/Initializing campaign store/i)).toBeInTheDocument();
-    expect(await screen.findByTestId('outlet')).toHaveTextContent('REP');
+    expect(await screen.findByTestId('outlet')).toHaveTextContent('DASH');
     expect(seedDefaults).toHaveBeenCalledWith(false);
     expect(refresh).toHaveBeenCalled();
     expect(screen.getByText('gm@x.com')).toBeInTheDocument();
+    // Dashboard is the active area on /gm.
+    expect(screen.getByText('Dashboard').closest('a')).toHaveClass('active');
+    expect(screen.getByText('World').closest('a')).not.toHaveClass('active');
+  });
+
+  it('opens the World subrail and marks the active section', async () => {
+    useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
+    seedDefaults.mockResolvedValue({ ok: true });
+    useContent.mockReturnValue({
+      refresh,
+      quests: [{ id: 'a' }, { id: 'b' }],
+      reputation: { Factions: [{ id: 'f' }] },
+      loreEntries: [],
+    });
+    renderAt('/gm/world/reputation');
+    expect(await screen.findByTestId('outlet')).toHaveTextContent('REP');
+    // Top-nav World is active; subrail Reputation is active.
+    expect(screen.getByText('World').closest('a')).toHaveClass('active');
     expect(screen.getByText('Reputation').closest('a')).toHaveClass('active');
-    expect(screen.getByText('Quests')).toBeInTheDocument();
+    expect(screen.getByText('Quests').closest('a')).not.toHaveClass('active');
+    // Count chips reflect real collection sizes (quests=2, reputation=1).
+    expect(screen.getByText('Quests').closest('a')).toHaveTextContent('2');
+    expect(screen.getByText('Reputation').closest('a')).toHaveTextContent('1');
+  });
+
+  it('does not render a subrail on top-level areas', async () => {
+    useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
+    seedDefaults.mockResolvedValue({ ok: true });
+    renderAt('/gm/characters');
+    expect(await screen.findByTestId('outlet')).toHaveTextContent('CHARS');
+    expect(screen.getByText('Characters').closest('a')).toHaveClass('active');
+    expect(screen.queryByText('Quests')).not.toBeInTheDocument();
+  });
+
+  it('redirects an old flat path to its new home', async () => {
+    useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
+    seedDefaults.mockResolvedValue({ ok: true });
+    renderAt('/gm/quests');
+    expect(await screen.findByTestId('outlet')).toHaveTextContent('QUESTS');
+    expect(screen.getByText('World').closest('a')).toHaveClass('active');
+  });
+
+  it('reflects the live play mode in the top-bar flag', async () => {
+    useGmAuth.mockReturnValue({ loading: false, isGm: true, email: 'gm@x.com' });
+    seedDefaults.mockResolvedValue({ ok: true });
+    usePlayMode.mockReturnValue({ mode: 'encounter' });
+    renderAt('/gm');
+    await screen.findByTestId('outlet');
+    expect(screen.getByText('Encounter')).toBeInTheDocument();
   });
 
   it('blocks the editors and offers retry when seeding fails', async () => {

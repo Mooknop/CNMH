@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { SessionProvider } from './contexts/SessionContext';
 import { ContentProvider } from './contexts/ContentContext';
 import { CharacterProvider } from './contexts/CharacterContext';
@@ -84,17 +84,37 @@ function App() {
                         <Route path="/party-summary" element={<PartySummary />} />
                         <Route path="/gm" element={<GmLayout />}>
                           <Route index element={<GmDashboard />} />
-                          <Route path="quests" element={<GmQuests />} />
-                          <Route path="reputation" element={<GmReputation />} />
-                          <Route path="calendar" element={<GmCalendar />} />
-                          <Route path="lore" element={<GmLore />} />
+
+                          {/* World area */}
+                          <Route path="world" element={<Navigate to="/gm/world/quests" replace />} />
+                          <Route path="world/quests" element={<GmQuests />} />
+                          <Route path="world/reputation" element={<GmReputation />} />
+                          <Route path="world/calendar" element={<GmCalendar />} />
+                          <Route path="world/lore" element={<GmLore />} />
+
+                          {/* Catalog area */}
+                          <Route path="catalog" element={<Navigate to="/gm/catalog/items" replace />} />
+                          <Route path="catalog/items" element={<GmItems />} />
+                          <Route path="catalog/spells" element={<GmSpells />} />
+                          <Route path="catalog/effects" element={<GmEffects />} />
+                          <Route path="catalog/images" element={<GmImages />} />
+
+                          {/* Top-level areas */}
                           <Route path="characters" element={<GmCharacters />} />
-                          <Route path="items" element={<GmItems />} />
-                          <Route path="spells" element={<GmSpells />} />
-                          <Route path="effects" element={<GmEffects />} />
-                          <Route path="encounter" element={<GmEncounter />} />
-                          <Route path="images" element={<GmImages />} />
                           <Route path="theme" element={<GmTheme />} />
+
+                          {/* Encounter stays reachable until Slice 4 folds it into the Dashboard */}
+                          <Route path="encounter" element={<GmEncounter />} />
+
+                          {/* Redirects from the old flat paths (bookmarks / player deep links) */}
+                          <Route path="quests" element={<Navigate to="/gm/world/quests" replace />} />
+                          <Route path="reputation" element={<Navigate to="/gm/world/reputation" replace />} />
+                          <Route path="calendar" element={<Navigate to="/gm/world/calendar" replace />} />
+                          <Route path="lore" element={<Navigate to="/gm/world/lore" replace />} />
+                          <Route path="items" element={<Navigate to="/gm/catalog/items" replace />} />
+                          <Route path="spells" element={<Navigate to="/gm/catalog/spells" replace />} />
+                          <Route path="effects" element={<Navigate to="/gm/catalog/effects" replace />} />
+                          <Route path="images" element={<Navigate to="/gm/catalog/images" replace />} />
                         </Route>
                       </Routes>
                     </main>

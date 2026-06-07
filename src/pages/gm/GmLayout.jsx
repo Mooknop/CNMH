@@ -2,9 +2,62 @@ import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import { useContent } from '../../contexts/ContentContext';
+import { usePlayMode } from '../../hooks/usePlayMode';
 import { seedDefaults } from '../../utils/gmApi';
 import UsageChip from '../../components/gm/UsageChip';
+import GmIcon from './GmIcon';
 import './gm.css';
+import './gm-shell.css';
+
+// Five primary areas. World & Catalog open onto a second-level subrail; the
+// rest go straight to content. Each link points at the area's default route.
+const NAV = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', to: '/gm' },
+  { id: 'world', label: 'World', icon: 'world', to: '/gm/world/quests' },
+  { id: 'catalog', label: 'Catalog', icon: 'catalog', to: '/gm/catalog/items' },
+  { id: 'characters', label: 'Characters', icon: 'users', to: '/gm/characters' },
+  { id: 'theme', label: 'Theme', icon: 'palette', to: '/gm/theme' },
+];
+
+const SUBNAV = {
+  world: [
+    { id: 'quests', label: 'Quests', icon: 'scroll', countKey: 'quests' },
+    { id: 'reputation', label: 'Reputation', icon: 'flag', countKey: 'reputation' },
+    { id: 'calendar', label: 'Calendar', icon: 'calendar' },
+    { id: 'lore', label: 'Lore', icon: 'book', countKey: 'loreEntries' },
+  ],
+  catalog: [
+    { id: 'items', label: 'Items', icon: 'bag', countKey: 'items' },
+    { id: 'spells', label: 'Spells', icon: 'wand', countKey: 'spells' },
+    { id: 'effects', label: 'Effects', icon: 'spark', countKey: 'effects' },
+    { id: 'images', label: 'Images', icon: 'image', countKey: 'images' },
+  ],
+};
+
+const MODE_META = {
+  encounter: { label: 'Encounter', icon: 'sword' },
+  exploration: { label: 'Exploration', icon: 'map' },
+  downtime: { label: 'Downtime', icon: 'home' },
+};
+
+// Collections are arrays, except reputation which is grouped { Group: [...] }.
+const collectionCount = (content, key) => {
+  const v = content && content[key];
+  if (Array.isArray(v)) return v.length;
+  if (v && typeof v === 'object') {
+    return Object.values(v).reduce((n, arr) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+  }
+  return 0;
+};
+
+// Derive the active area + (for World/Catalog) active section from the URL.
+const deriveArea = (pathname) => {
+  if (pathname.startsWith('/gm/world')) return { area: 'world', section: pathname.split('/')[3] || 'quests' };
+  if (pathname.startsWith('/gm/catalog')) return { area: 'catalog', section: pathname.split('/')[3] || 'items' };
+  if (pathname.startsWith('/gm/characters')) return { area: 'characters', section: null };
+  if (pathname.startsWith('/gm/theme')) return { area: 'theme', section: null };
+  return { area: 'dashboard', section: null };
+};
 
 // Shell for the GM area. Real enforcement is server-side (Cloudflare Access in
 // front of /gm* and the Worker re-verifying /api/gm/*); this guard is UX only.
@@ -19,7 +72,9 @@ import './gm.css';
 // later slice) on the next GM visit, with no manual step.
 const GmLayout = () => {
   const { loading, isGm, email } = useGmAuth();
-  const { refresh } = useContent();
+  const content = useContent();
+  const { refresh } = content;
+  const { mode } = usePlayMode();
   const location = useLocation();
   const [seedState, setSeedState] = useState('idle'); // idle|seeding|done|error
 
@@ -34,12 +89,12 @@ const GmLayout = () => {
   }, [isGm, seedState, refresh]);
 
   if (loading) {
-    return <div className="gm-area gm-message">Checking GM access…</div>;
+    return <div className="gm-shell-message">Checking GM access…</div>;
   }
 
   if (!isGm) {
     return (
-      <div className="gm-area gm-message">
+      <div className="gm-shell-message">
         <h1>GM area</h1>
         <p>
           This area is restricted. Sign in through the Cloudflare Access prompt
@@ -49,11 +104,9 @@ const GmLayout = () => {
     );
   }
 
-  const ready = seedState === 'done';
-
   if (seedState === 'error') {
     return (
-      <div className="gm-area gm-message">
+      <div className="gm-shell-message">
         <h1>GM Tools</h1>
         <p className="gm-warn" role="alert">
           Couldn't initialize the campaign store. Editing is disabled until this
@@ -66,46 +119,68 @@ const GmLayout = () => {
     );
   }
 
-  if (!ready) {
-    return <div className="gm-area gm-message">Initializing campaign store…</div>;
+  if (seedState !== 'done') {
+    return <div className="gm-shell-message">Initializing campaign store…</div>;
   }
 
-  const links = [
-    { to: '/gm', label: 'Dashboard', end: true },
-    { to: '/gm/quests', label: 'Quests' },
-    { to: '/gm/reputation', label: 'Reputation' },
-    { to: '/gm/calendar', label: 'Calendar' },
-    { to: '/gm/lore', label: 'Lore' },
-    { to: '/gm/characters', label: 'Characters' },
-    { to: '/gm/items', label: 'Items' },
-    { to: '/gm/spells', label: 'Spells' },
-    { to: '/gm/effects', label: 'Effects' },
-    { to: '/gm/encounter', label: 'Encounter' },
-    { to: '/gm/images', label: 'Images' },
-    { to: '/gm/theme', label: 'Theme' },
-  ];
+  const { area, section } = deriveArea(location.pathname);
+  const subItems = SUBNAV[area] || [];
+  const hasSub = subItems.length > 0;
+  const modeMeta = MODE_META[mode] || MODE_META.exploration;
 
   return (
-    <div className="gm-area">
-      <header className="gm-header">
-        <h1>GM Tools</h1>
-        <div className="gm-header-right">
+    <div className="gm-shell">
+      <header className="gm-topbar">
+        <div className="gm-brand">
+          <span className="gm-brand-1">GM Tools</span>
+          <span className="gm-brand-2">Campaign control</span>
+        </div>
+        <nav className="gm-topnav" aria-label="GM areas">
+          {NAV.map((n) => (
+            <Link
+              key={n.id}
+              to={n.to}
+              className={`gm-topnav-link ${area === n.id ? 'active' : ''}`}
+              aria-current={area === n.id ? 'page' : undefined}
+            >
+              <GmIcon name={n.icon} /> {n.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="gm-topbar-right">
+          <span className="gm-mode-flag">
+            <span className="gm-mode-dot" />
+            <GmIcon name={modeMeta.icon} /> {modeMeta.label}
+          </span>
           <UsageChip />
           <span className="gm-identity">{email}</span>
+          <span className="gm-avatar" aria-hidden="true">GM</span>
         </div>
       </header>
-      <nav className="gm-nav">
-        {links.map((l) => {
-          const active = l.end ? location.pathname === l.to : location.pathname.startsWith(l.to);
-          return (
-            <Link key={l.to} to={l.to} className={`gm-nav-link ${active ? 'active' : ''}`}>
-              {l.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="gm-content">
-        <Outlet />
+
+      <div className="gm-body">
+        {hasSub && (
+          <aside className="gm-subrail" aria-label={`${area} sections`}>
+            <div className="gm-subrail-label">{area}</div>
+            {subItems.map((s) => {
+              const count = s.countKey ? collectionCount(content, s.countKey) : 0;
+              return (
+                <Link
+                  key={s.id}
+                  to={`/gm/${area}/${s.id}`}
+                  className={`gm-subrail-link ${section === s.id ? 'active' : ''}`}
+                  aria-current={section === s.id ? 'page' : undefined}
+                >
+                  <GmIcon name={s.icon} /> {s.label}
+                  {count > 0 && <span className="gm-ct">{count}</span>}
+                </Link>
+              );
+            })}
+          </aside>
+        )}
+        <main className="gm-main">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
