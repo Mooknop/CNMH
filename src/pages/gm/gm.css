@@ -750,6 +750,55 @@
      already has its own background/border, so we just add the bracket layer */
 }
 
+/* ── Quick Action cards (icon + title + description) ──────── */
+.gm-qa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.gm-qa {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.gm-qa:hover {
+  background: var(--surface-inset-hover);
+  border-color: var(--accent-outline);
+}
+
+.gm-qa:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}
+
+.gm-qa-ico {
+  width: 18px;
+  height: 18px;
+  color: var(--ember-light);
+}
+
+.gm-qa-title {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--shell-text-primary);
+}
+
+.gm-qa-desc {
+  font-size: 0.68rem;
+  color: var(--shell-text-tertiary);
+  line-height: 1.35;
+}
+
 /* Generic panel card (Initiative, Quick Actions) */
 .gm-dash-panel {
   padding: var(--space-4);

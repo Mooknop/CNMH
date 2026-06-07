@@ -5,6 +5,7 @@ import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import DowntimeControl from './DowntimeControl';
 import ExplorationTimeControl from './ExplorationTimeControl';
+import GmIcon from '../../pages/gm/GmIcon';
 import './PlayModeControl.css';
 
 // GM control for the non-combat play mode (Exploration / Downtime) and the
@@ -55,6 +56,7 @@ const PlayModeControl = () => {
         <div className="pmc-pills" role="group" aria-label="Play mode">
           {isEncounter ? (
             <span className="pmc-pill pmc-pill--active pmc-pill--locked" aria-current="true">
+              <GmIcon name="sword" className="pmc-pill-ico" />
               Encounter
             </span>
           ) : (
@@ -64,6 +66,7 @@ const PlayModeControl = () => {
                 onClick={() => setGmMode('exploration')}
                 aria-pressed={gmMode === 'exploration'}
               >
+                <GmIcon name="map" className="pmc-pill-ico" />
                 Exploration
               </button>
               <button
@@ -71,6 +74,7 @@ const PlayModeControl = () => {
                 onClick={() => setGmMode('downtime')}
                 aria-pressed={gmMode === 'downtime'}
               >
+                <GmIcon name="home" className="pmc-pill-ico" />
                 Downtime
               </button>
             </>

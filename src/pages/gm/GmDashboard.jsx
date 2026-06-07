@@ -10,6 +10,7 @@ import PartyPanel from '../../components/gm/PartyPanel';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
+import GmIcon from './GmIcon';
 import './gm.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -312,13 +313,16 @@ const GmDashboard = () => {
 
           <section className="gm-dash-panel gm-dash-quick-actions" aria-label="Quick Actions">
             <h2>Quick Actions</h2>
-            <div className="gm-actions">
+            <div className="gm-qa-grid">
               <button
-                className="btn-secondary"
+                type="button"
+                className="gm-qa"
                 aria-label="Apply Effect to character"
                 onClick={() => setIsEffectsModalOpen(true)}
               >
-                Apply Effect
+                <GmIcon name="spark" className="gm-qa-ico" />
+                <span className="gm-qa-title">Apply Effect</span>
+                <span className="gm-qa-desc">Push a condition or effect to any character</span>
               </button>
             </div>
           </section>
