@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import GmEffects from './GmEffects';
 
@@ -31,12 +31,17 @@ const setContent = (overrides = {}) =>
 
 afterEach(() => vi.restoreAllMocks());
 
+// Helper: select an effect list item to open its form in the detail pane.
+const selectEffect = (name) =>
+  fireEvent.click(screen.getByRole('button', { name }));
+
 describe('GmEffects', () => {
-  it('lists effects sorted alphabetically', () => {
+  it('lists effects sorted alphabetically as master-list buttons', () => {
     setContent();
     render(<GmEffects />);
-    expect(screen.getByTestId('effect-form-bless')).toBeInTheDocument();
-    expect(screen.getByTestId('effect-form-inspire-courage')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bless' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Inspire Courage' })).toBeInTheDocument();
+    expect(screen.queryByTestId('effect-form-bless')).not.toBeInTheDocument();
     expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
   });
 
@@ -44,8 +49,8 @@ describe('GmEffects', () => {
     setContent();
     render(<GmEffects />);
     fireEvent.change(screen.getByLabelText(/filter/i), { target: { value: 'bless' } });
-    expect(screen.getByTestId('effect-form-bless')).toBeInTheDocument();
-    expect(screen.queryByTestId('effect-form-inspire-courage')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bless' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Inspire Courage' })).not.toBeInTheDocument();
     expect(screen.getByText('Showing 1 of 2')).toBeInTheDocument();
   });
 
@@ -78,6 +83,7 @@ describe('GmEffects', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmEffects />);
+    selectEffect('Bless');
     const form = screen.getByTestId('effect-form-bless');
     fireEvent.change(within(form).getByLabelText('description'), {
       target: { value: 'Updated description.' },
@@ -91,6 +97,7 @@ describe('GmEffects', () => {
   it('adds and removes a modifier row', () => {
     setContent();
     render(<GmEffects />);
+    selectEffect('Bless');
     const form = screen.getByTestId('effect-form-bless');
     const before = within(form).getAllByLabelText(/^modifier-\d+-stat$/).length;
     fireEvent.click(within(form).getByRole('button', { name: 'Add modifier' }));
@@ -113,6 +120,7 @@ describe('GmEffects', () => {
   it('opens delete confirm dialog on Delete click', () => {
     setContent();
     render(<GmEffects />);
+    selectEffect('Bless');
     const form = screen.getByTestId('effect-form-bless');
     fireEvent.click(within(form).getByRole('button', { name: 'Delete' }));
     expect(screen.getByText(/Permanently delete the effect/i)).toBeInTheDocument();

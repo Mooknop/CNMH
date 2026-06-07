@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import GmLore from './GmLore';
 
@@ -41,12 +41,17 @@ const setMulti = () => useContent.mockReturnValue({ loreEntries: multiCategory, 
 
 afterEach(() => vi.restoreAllMocks());
 
+// Helper: select a lore entry list item to open its form in the detail pane.
+const selectEntry = (name) =>
+  fireEvent.click(screen.getByRole('button', { name }));
+
 describe('GmLore', () => {
-  it('lists all entries and a count', () => {
+  it('lists all entries as master-list buttons and shows a count', () => {
     setContent();
     render(<GmLore />);
-    expect(screen.getByTestId('lore-form-sandpoint')).toBeInTheDocument();
-    expect(screen.getByTestId('lore-form-aroden')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sandpoint' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Aroden' })).toBeInTheDocument();
+    expect(screen.queryByTestId('lore-form-sandpoint')).not.toBeInTheDocument();
     expect(screen.getByText(/Showing 2 of 2/)).toBeInTheDocument();
   });
 
@@ -54,8 +59,8 @@ describe('GmLore', () => {
     setContent();
     render(<GmLore />);
     fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'history' } });
-    expect(screen.getByTestId('lore-form-aroden')).toBeInTheDocument();
-    expect(screen.queryByTestId('lore-form-sandpoint')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Aroden' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sandpoint' })).not.toBeInTheDocument();
     expect(screen.getByText(/Showing 1 of 2/)).toBeInTheDocument();
   });
 
@@ -63,6 +68,7 @@ describe('GmLore', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmLore />);
+    selectEntry('Sandpoint');
     const form = screen.getByTestId('lore-form-sandpoint');
     fireEvent.change(within(form).getByLabelText('tags'), { target: { value: 'town, hub, port' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -78,6 +84,7 @@ describe('GmLore', () => {
   it('requires a title and a category', async () => {
     setContent();
     render(<GmLore />);
+    selectEntry('Aroden');
     const form = screen.getByTestId('lore-form-aroden');
     fireEvent.change(within(form).getByLabelText('title'), { target: { value: '' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -104,6 +111,7 @@ describe('GmLore', () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
     render(<GmLore />);
+    selectEntry('Aroden');
     const form = screen.getByTestId('lore-form-aroden');
     fireEvent.click(within(form).getByText('Delete'));
     expect(within(form).getByText('Delete forever')).toBeDisabled();
@@ -142,9 +150,9 @@ describe('GmLore', () => {
     setMulti();
     render(<GmLore />);
     fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
-    expect(screen.getByTestId('lore-form-sandpoint')).toBeInTheDocument();
-    expect(screen.getByTestId('lore-form-magnimar')).toBeInTheDocument();
-    expect(screen.queryByTestId('lore-form-aroden')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sandpoint' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Magnimar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aroden' })).not.toBeInTheDocument();
     expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
   });
 
@@ -153,8 +161,8 @@ describe('GmLore', () => {
     render(<GmLore />);
     fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
     fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'magni' } });
-    expect(screen.getByTestId('lore-form-magnimar')).toBeInTheDocument();
-    expect(screen.queryByTestId('lore-form-sandpoint')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Magnimar' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Sandpoint' })).not.toBeInTheDocument();
     expect(screen.getByText('Showing 1 of 2')).toBeInTheDocument();
     // 'aroden' is in History, not Location — never shown even though it would
     // match a broader search.
@@ -187,6 +195,7 @@ describe('GmLore', () => {
       useContent.mockReturnValue({ loreEntries: [withImage], images: [] });
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmLore />);
+      selectEntry('Sandpoint');
       const form = screen.getByTestId('lore-form-sandpoint');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -197,6 +206,7 @@ describe('GmLore', () => {
       setContent();
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmLore />);
+      selectEntry('Sandpoint');
       const form = screen.getByTestId('lore-form-sandpoint');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());

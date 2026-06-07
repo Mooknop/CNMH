@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import GmQuests from './GmQuests';
 
@@ -29,11 +29,16 @@ const setContent = (source = 'server') => useContent.mockReturnValue({ quests, s
 
 afterEach(() => vi.restoreAllMocks());
 
+// Helper: select the quest list item to open its form in the detail pane.
+const selectQuest = (name) =>
+  fireEvent.click(screen.getByRole('button', { name }));
+
 describe('GmQuests', () => {
-  it('lists a form per quest and a fallback banner when not seeded', () => {
+  it('lists quests as master-list buttons and shows a fallback banner when not seeded', () => {
     setContent('fallback');
     render(<GmQuests />);
-    expect(screen.getByTestId('quest-form-find-orb')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Find the Orb' })).toBeInTheDocument();
+    expect(screen.queryByTestId('quest-form-find-orb')).not.toBeInTheDocument();
     expect(screen.getByText(/Showing bundled defaults/i)).toBeInTheDocument();
   });
 
@@ -41,6 +46,7 @@ describe('GmQuests', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmQuests />);
+    selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Find the Orb!' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -54,6 +60,7 @@ describe('GmQuests', () => {
   it('blocks saving with an empty title', async () => {
     setContent();
     render(<GmQuests />);
+    selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.change(within(form).getByLabelText('title'), { target: { value: '   ' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -64,6 +71,7 @@ describe('GmQuests', () => {
   it('adds and removes notes', () => {
     setContent();
     render(<GmQuests />);
+    selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     expect(within(form).getByLabelText('note-0')).toBeInTheDocument();
     fireEvent.click(within(form).getByText('Add note'));
@@ -87,6 +95,7 @@ describe('GmQuests', () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
     render(<GmQuests />);
+    selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.click(within(form).getByText('Delete'));
     const confirmBtn = within(form).getByText('Delete forever');
@@ -101,6 +110,7 @@ describe('GmQuests', () => {
   it('cancels a delete without calling the API', () => {
     setContent();
     render(<GmQuests />);
+    selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.click(within(form).getByText('Delete'));
     fireEvent.click(within(form).getByText('Cancel'));
@@ -139,6 +149,7 @@ describe('GmQuests', () => {
     fetchHistory.mockResolvedValue({ history: [{ archived_at: 1717000000000, data: restoredDoc }] });
     restoreVersion.mockResolvedValue({ ok: true });
     render(<GmQuests />);
+    selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     expect(within(form).getByLabelText('title')).toHaveValue('Find the Orb');
 

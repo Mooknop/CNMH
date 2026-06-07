@@ -4,6 +4,7 @@ import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
+import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
 const toInt = (v) => {
@@ -181,7 +182,7 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
         title="Delete faction"
-        message={`Permanently delete the faction “${f.name}”. This cannot be undone — restore it from History if you have it.`}
+        message={`Permanently delete the faction "${f.name}". This cannot be undone — restore it from History if you have it.`}
         confirmLabel="Delete forever"
         requireType={f.name}
         onConfirm={doRemove}
@@ -190,7 +191,7 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'collision'}
         title="Overwrite existing entry?"
-        message={`A faction with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        message={`A faction with id "${confirm?.id}" already exists. Saving will overwrite it.`}
         confirmLabel="Overwrite"
         onConfirm={() => submit(confirm.id, confirm.payload)}
         onCancel={() => setConfirm(null)}
@@ -203,46 +204,23 @@ const GmReputation = () => {
   const { reputation } = useContent();
   const factions = Array.isArray(reputation?.Factions) ? reputation.Factions : [];
   const existingIds = existingIdSet(factions);
-  const [adding, setAdding] = useState(false);
-  const [flash, setFlash] = useState(null);
-
-  const onSaved = (wasNew) => {
-    if (wasNew) setAdding(false);
-    setFlash('Saved. Changes are live for every connected player.');
-  };
-  const onRestored = () =>
-    setFlash('Restored. Changes are live for every connected player.');
 
   return (
     <div className="gm-reputation">
-      {flash && <p className="gm-ok" role="status">{flash}</p>}
-
-      {adding ? (
-        <FactionForm
-          initial={blankFaction()}
-          isNew
-          existingIds={existingIds}
-          onSaved={onSaved}
-          onRestored={onRestored}
-        />
-      ) : (
-        <button className="btn-primary" onClick={() => setAdding(true)}>
-          + New faction
-        </button>
-      )}
-
-      <div className="gm-faction-list">
-        {factions.map((f) => (
+      <PageEditorShell
+        entries={factions}
+        nameOf={(f) => f.name}
+        noun="faction"
+        addLabel="+ New faction"
+        renderDetail={(entry, isNew, callbacks) => (
           <FactionForm
-            key={f.id}
-            initial={f}
-            isNew={false}
+            initial={isNew ? blankFaction() : entry}
+            isNew={isNew}
             existingIds={existingIds}
-            onSaved={onSaved}
-            onRestored={onRestored}
+            {...callbacks}
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 };

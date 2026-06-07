@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import GmSpells from './GmSpells';
 
@@ -43,13 +43,18 @@ const setContent = () => useContent.mockReturnValue({ spells });
 
 afterEach(() => vi.restoreAllMocks());
 
+// Helper: select a spell list item to open its form in the detail pane.
+const selectSpell = (name) =>
+  fireEvent.click(screen.getByRole('button', { name }));
+
 describe('GmSpells', () => {
-  it('lists spells sorted by level then name with a count', () => {
+  it('lists spells sorted by level then name as master-list buttons with a count', () => {
     setContent();
     render(<GmSpells />);
-    expect(screen.getByTestId('spell-form-guidance')).toBeInTheDocument();
-    expect(screen.getByTestId('spell-form-cleanse-affliction')).toBeInTheDocument();
-    expect(screen.getByTestId('spell-form-dispel-magic')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guidance' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cleanse Affliction' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dispel Magic' })).toBeInTheDocument();
+    expect(screen.queryByTestId('spell-form-guidance')).not.toBeInTheDocument();
     expect(screen.getByText('Showing 3 of 3')).toBeInTheDocument();
   });
 
@@ -57,8 +62,8 @@ describe('GmSpells', () => {
     setContent();
     render(<GmSpells />);
     fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'heal' } });
-    expect(screen.getByTestId('spell-form-cleanse-affliction')).toBeInTheDocument();
-    expect(screen.queryByTestId('spell-form-dispel-magic')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cleanse Affliction' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Dispel Magic' })).not.toBeInTheDocument();
     expect(screen.getByText('Showing 1 of 3')).toBeInTheDocument();
   });
 
@@ -66,6 +71,7 @@ describe('GmSpells', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmSpells />);
+    selectSpell('Dispel Magic');
     const form = screen.getByTestId('spell-form-dispel-magic');
     fireEvent.change(within(form).getByLabelText('traits'), {
       target: { value: 'Concentrate, Manipulate' },
@@ -89,6 +95,7 @@ describe('GmSpells', () => {
   it('requires a spell name', async () => {
     setContent();
     render(<GmSpells />);
+    selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: '' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -137,6 +144,7 @@ describe('GmSpells', () => {
     setContent();
     deleteDocument.mockResolvedValue({ ok: true });
     render(<GmSpells />);
+    selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     fireEvent.click(within(form).getByText('Delete'));
     expect(within(form).getByText('Delete forever')).toBeDisabled();
@@ -148,6 +156,7 @@ describe('GmSpells', () => {
   it('rejects invalid JSON / non-object in the raw-JSON box', async () => {
     setContent();
     render(<GmSpells />);
+    selectSpell('Cleanse Affliction');
     const form = screen.getByTestId('spell-form-cleanse-affliction');
     fireEvent.change(within(form).getByLabelText('rest-json'), { target: { value: '{ broken' } });
     fireEvent.click(within(form).getByText('Save'));
@@ -173,6 +182,7 @@ describe('GmSpells', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmSpells />);
+    selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     fireEvent.change(within(form).getByLabelText('spell-foundry-effect-ref'), {
       target: { value: 'Compendium.pf2e.spell-effects.Item.testUUID' },
@@ -193,6 +203,7 @@ describe('GmSpells', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmSpells />);
+    selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -209,6 +220,7 @@ describe('GmSpells', () => {
     ];
     useContent.mockReturnValue({ spells: spellsWithEffect });
     render(<GmSpells />);
+    selectSpell('Cleanse Affliction');
     const box = screen.getByLabelText('rest-json');
     const parsed = JSON.parse(box.value);
     expect(parsed.foundryEffect).toBeUndefined();
@@ -218,6 +230,7 @@ describe('GmSpells', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmSpells />);
+    selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     // Select "Strike / Flurry of Blows"
     fireEvent.change(within(form).getByLabelText('spell-chain-into'), {
@@ -239,6 +252,7 @@ describe('GmSpells', () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmSpells />);
+    selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -252,6 +266,7 @@ describe('GmSpells', () => {
     ];
     useContent.mockReturnValue({ spells: spellsWithChain });
     render(<GmSpells />);
+    selectSpell('Cleanse Affliction');
     const box = screen.getByLabelText('rest-json');
     const parsed = JSON.parse(box.value);
     expect(parsed.chain).toBeUndefined();

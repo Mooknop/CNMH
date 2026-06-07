@@ -11,6 +11,7 @@ import {
   StrikeSubform,
 } from '../../components/gm/AbilitySubforms';
 import ImageField from '../../components/gm/ImageField';
+import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
 // Slice 2: the shared item catalog editor. Catalog items hold ONLY the shared
@@ -139,10 +140,10 @@ const itemFromForm = (f) => {
   try {
     rest = f.restJson.trim() ? JSON.parse(f.restJson) : {};
   } catch {
-    throw new Error(`Item “${f.name}” has invalid JSON in its extra fields.`);
+    throw new Error(`Item "${f.name}" has invalid JSON in its extra fields.`);
   }
   if (rest === null || typeof rest !== 'object' || Array.isArray(rest)) {
-    throw new Error(`Item “${f.name}” extra fields must be a JSON object.`);
+    throw new Error(`Item "${f.name}" extra fields must be a JSON object.`);
   }
   const bad = FORBIDDEN_REST.filter((k) => k in rest);
   if (bad.length) {
@@ -181,7 +182,7 @@ const itemFromForm = (f) => {
     const hasRef = !!(f.spell.spellRef && f.spell.spellRef.trim());
     if (!hasRef && !f.spell.str.name.trim()) {
       throw new Error(
-        `The ${f.spellKind} spell on “${f.name}” needs a spell reference or a name.`
+        `The ${f.spellKind} spell on "${f.name}" needs a spell reference or a name.`
       );
     }
     out[f.spellKind] = spellFromForm(f.spell);
@@ -604,7 +605,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
         title="Delete catalog item"
-        message={`Permanently delete the catalog item “${e.name}”. Characters that reference it will show “(unknown item)” until repointed. This cannot be undone — restore it from History if you have it.`}
+        message={`Permanently delete the catalog item "${e.name}". Characters that reference it will show "(unknown item)" until repointed. This cannot be undone — restore it from History if you have it.`}
         confirmLabel="Delete forever"
         requireType={e.name}
         onConfirm={doRemove}
@@ -613,7 +614,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       <ConfirmDialog
         isOpen={confirm?.kind === 'collision'}
         title="Overwrite existing item?"
-        message={`A catalog item with id “${confirm?.id}” already exists. Saving will overwrite it.`}
+        message={`A catalog item with id "${confirm?.id}" already exists. Saving will overwrite it.`}
         confirmLabel="Overwrite"
         onConfirm={() => submit(confirm.id, confirm.payload)}
         onCancel={() => setConfirm(null)}
@@ -626,72 +627,28 @@ const GmItems = () => {
   const { items } = useContent();
   const catalog = useMemo(() => (Array.isArray(items) ? items : []), [items]);
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);
-  const [adding, setAdding] = useState(false);
-  const [flash, setFlash] = useState(null);
-  const [query, setQuery] = useState('');
-
-  const onSaved = (wasNew) => {
-    if (wasNew) setAdding(false);
-    setFlash('Saved. Changes are live for every connected player.');
-  };
-  const onRestored = () => setFlash('Restored. Changes are live for every connected player.');
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter((it) =>
-      [it.name, it.id, ...(it.traits || [])]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q))
-    );
-  }, [catalog, query]);
 
   return (
     <div className="gm-items">
-      {flash && (
-        <p className="gm-ok" role="status">
-          {flash}
-        </p>
-      )}
-
-      <div className="form-group">
-        <input
-          aria-label="filter"
-          placeholder={`Filter ${catalog.length} catalog items by name, trait or id…`}
-          value={query}
-          onChange={(ev) => setQuery(ev.target.value)}
-        />
-      </div>
-
-      {adding ? (
-        <ItemForm
-          initial={blankItem()}
-          isNew
-          existingIds={existingIds}
-          onSaved={onSaved}
-          onRestored={onRestored}
-        />
-      ) : (
-        <button className="btn-primary" onClick={() => setAdding(true)}>
-          + New item
-        </button>
-      )}
-
-      <p className="gm-count">
-        Showing {filtered.length} of {catalog.length}
-      </p>
-      <div className="gm-items-list">
-        {filtered.map((it) => (
+      <PageEditorShell
+        entries={catalog}
+        nameOf={(it) => it.name}
+        noun="item"
+        addLabel="+ New item"
+        filterEntry={(it, q) =>
+          [it.name, it.id, ...(it.traits || [])]
+            .filter(Boolean)
+            .some((v) => String(v).toLowerCase().includes(q))
+        }
+        renderDetail={(entry, isNew, callbacks) => (
           <ItemForm
-            key={it.id}
-            initial={toForm(it)}
-            isNew={false}
+            initial={isNew ? blankItem() : toForm(entry)}
+            isNew={isNew}
             existingIds={existingIds}
-            onSaved={onSaved}
-            onRestored={onRestored}
+            {...callbacks}
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 };
