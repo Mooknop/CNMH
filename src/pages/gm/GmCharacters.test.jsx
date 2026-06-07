@@ -23,7 +23,7 @@ const pellias = {
   actions: [{ name: 'Exploit Vulnerability', actionCount: 1, traits: ['Thaumaturge'] }],
   reactions: [],
   familiar: { name: 'Lazarus', type: 'Squox', ac: 20, hp: 20 },
-  crafting: [{ name: 'Repair Kit' }],
+  crafting: [{ ref: 'minor-elixir-of-life' }, { ref: 'antidote', level: 1 }],
 };
 
 const izzy = {
@@ -48,6 +48,15 @@ const catalog = [
   { id: 'backpack', name: 'Backpack', weight: 0.1, container: { capacity: 4, ignored: 2 } },
   { id: 'torch', name: 'Torch', weight: 0.1 },
   { id: 'rope-50ft', name: 'Rope (50 ft.)', weight: 1 },
+  {
+    id: 'antidote',
+    name: 'Antidote',
+    weight: 0.1,
+    variants: [
+      { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+      { level: 6, label: 'Moderate', price: 35, effect: '+3 bonus' },
+    ],
+  },
 ];
 
 // GmCharacters edits the AUTHORED docs (rawCharacters) and reads the catalog
@@ -115,7 +124,7 @@ describe('GmCharacters', () => {
     expect(screen.queryByTestId('character-form-izzy')).not.toBeInTheDocument();
   });
 
-  it('pulls feats/strikes/actions/familiar out of Advanced; only class blocks/crafting remain', () => {
+  it('pulls feats/strikes/actions/familiar/crafting out of Advanced; only class blocks remain', () => {
     setContent([pellias]);
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
@@ -133,7 +142,7 @@ describe('GmCharacters', () => {
     expect(within(form).getByLabelText('familiar-name')).toHaveValue('Lazarus');
     gotoTab(form, 'Advanced');
     const adv = within(form).getByLabelText('advanced-json').value;
-    expect(adv).toContain('crafting');
+    expect(adv).not.toContain('crafting');
     expect(adv).not.toContain('feats');
     expect(adv).not.toContain('familiar');
   });
@@ -155,7 +164,7 @@ describe('GmCharacters', () => {
     expect(data.strikes[0]).toEqual({ name: 'Pick', proficiency: 'martial', damage: '1d6' });
     expect(data.reactions).toEqual([]);
     expect(data.familiar).toEqual({ name: 'Lazarus', type: 'Squox', ac: 20, hp: 20 });
-    expect(data.crafting).toEqual([{ name: 'Repair Kit' }]); // still via Advanced
+    expect(data.crafting).toEqual([{ ref: 'minor-elixir-of-life' }, { ref: 'antidote', level: 1 }]);
   });
 
   it('adds and removes array entries', async () => {
@@ -818,6 +827,79 @@ describe('GmCharacters', () => {
       const uids = allUids(saveDocument.mock.calls[0][2].inventory);
       expect(uids.length).toBe(4);
       expect(new Set(uids).size).toBe(4);
+    });
+  });
+
+  describe('Recipes tab', () => {
+    it('shows existing ref recipes with item name and grade', () => {
+      setContent([pellias]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Recipes');
+      // Minor Elixir of Life: no variants → just the name
+      expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Minor Elixir of Life');
+      // Antidote level 1: has variants → shows grade label
+      expect(within(form).getByTestId('recipe-row-1')).toHaveTextContent('Antidote (Lesser, L1)');
+    });
+
+    it('shows "No known recipes" when the array is empty', () => {
+      setContent([{ ...pellias, crafting: [] }]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Recipes');
+      expect(within(form).getByText('No known recipes.')).toBeInTheDocument();
+    });
+
+    it('removes a recipe when Remove is clicked', () => {
+      setContent([pellias]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Recipes');
+      expect(within(form).queryByTestId('recipe-row-1')).toBeInTheDocument();
+      fireEvent.click(within(screen.getByTestId('recipe-row-0')).getByText('Remove'));
+      expect(within(form).queryByTestId('recipe-row-1')).not.toBeInTheDocument();
+      expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Antidote');
+    });
+
+    it('adds a flat (no-variant) recipe', async () => {
+      setContent([{ ...pellias, crafting: [] }]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Recipes');
+      fireEvent.change(within(form).getByLabelText('new-recipe-ref'), { target: { value: 'minor-elixir-of-life' } });
+      expect(within(form).queryByLabelText('new-recipe-level')).not.toBeInTheDocument();
+      fireEvent.click(within(form).getByLabelText('add-recipe'));
+      expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Minor Elixir of Life');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].crafting).toEqual([{ ref: 'minor-elixir-of-life' }]);
+    });
+
+    it('adds a multi-level recipe with grade selection', async () => {
+      setContent([{ ...pellias, crafting: [] }]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Recipes');
+      fireEvent.change(within(form).getByLabelText('new-recipe-ref'), { target: { value: 'antidote' } });
+      expect(within(form).getByLabelText('new-recipe-level')).toBeInTheDocument();
+      expect(within(form).getByLabelText('add-recipe')).toBeDisabled();
+      fireEvent.change(within(form).getByLabelText('new-recipe-level'), { target: { value: '6' } });
+      expect(within(form).getByLabelText('add-recipe')).not.toBeDisabled();
+      fireEvent.click(within(form).getByLabelText('add-recipe'));
+      expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Antidote (Moderate, L6)');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].crafting).toEqual([{ ref: 'antidote', level: 6 }]);
+    });
+
+    it('does not include crafting in Advanced JSON', () => {
+      setContent([pellias]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-pellias');
+      gotoTab(form, 'Advanced');
+      expect(within(form).getByLabelText('advanced-json').value).not.toContain('crafting');
     });
   });
 

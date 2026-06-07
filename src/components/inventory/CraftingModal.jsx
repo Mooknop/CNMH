@@ -185,37 +185,62 @@ const CraftingModal = ({ isOpen, onClose, character, characterColor }) => {
           <div className="known-recipes">
             {knownRecipes.length > 0 ? (
               <div className="recipes-list">
-                {knownRecipes.map((recipe, index) => (
-                  <div key={index} className="recipe-card">
-                    <div className="recipe-header">
-                      <h3>{recipe.name}</h3>
-                      <span className="recipe-weight">Bulk: {formatBulk(recipe.weight)}</span>
-                    </div>
-
-                    <div className="recipe-description">
-                      <p>{recipe.description}</p>
-                    </div>
-
-                    {recipe.types && recipe.types.length > 0 && (
-                      <div className="recipe-types">
-                        <h4>Variants</h4>
-                        <div className="types-list">
-                          {recipe.types.map((type, typeIndex) => (
-                            <div key={typeIndex} className="type-entry">
-                              <div className="type-header">
-                                <span className="type-name">{type.type}</span>
-                                <span className="type-level">Level {type.level}</span>
-                                <span className="type-price">{type.price} gp</span>
-                                <span className="type-dc">DC {getLevelBasedDc(type.level)}</span>
-                              </div>
-                              <div className="type-effect">{type.effect}</div>
-                            </div>
-                          ))}
+                {knownRecipes.map((recipe, index) => {
+                  // Resolved recipes carry level/label/price/effect from the
+                  // variant; legacy inline recipes carry types:[...] (back-compat).
+                  const hasVariant = recipe.label != null || recipe.level != null;
+                  return (
+                    <div key={index} className="recipe-card">
+                      <div className="recipe-header">
+                        <h3>
+                          {recipe.name}
+                          {recipe.label ? ` (${recipe.label})` : ''}
+                        </h3>
+                        <div className="recipe-meta">
+                          {recipe.level != null && (
+                            <span className="recipe-level">Level {recipe.level}</span>
+                          )}
+                          {recipe.price != null && (
+                            <span className="recipe-price">{recipe.price} gp</span>
+                          )}
+                          {recipe.level != null && (
+                            <span className="recipe-dc">DC {getLevelBasedDc(recipe.level)}</span>
+                          )}
+                          {recipe.weight != null && !hasVariant && (
+                            <span className="recipe-weight">Bulk: {formatBulk(recipe.weight)}</span>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {recipe.description && (
+                        <div className="recipe-description">
+                          <p>{recipe.description}</p>
+                        </div>
+                      )}
+                      {recipe.effect && (
+                        <div className="recipe-effect">{recipe.effect}</div>
+                      )}
+                      {/* Legacy back-compat: inline recipes with types array */}
+                      {recipe.types && recipe.types.length > 0 && (
+                        <div className="recipe-types">
+                          <h4>Variants</h4>
+                          <div className="types-list">
+                            {recipe.types.map((type, typeIndex) => (
+                              <div key={typeIndex} className="type-entry">
+                                <div className="type-header">
+                                  <span className="type-name">{type.type}</span>
+                                  <span className="type-level">Level {type.level}</span>
+                                  <span className="type-price">{type.price} gp</span>
+                                  <span className="type-dc">DC {getLevelBasedDc(type.level)}</span>
+                                </div>
+                                <div className="type-effect">{type.effect}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="empty-recipes">

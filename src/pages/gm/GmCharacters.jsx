@@ -348,6 +348,7 @@ const toForm = (c) => {
   delete rest.proficiencies;
   delete rest.spellcasting;
   delete rest.inventory;
+  delete rest.crafting;
   ARR_SECTIONS.forEach((s) => delete rest[s.key]);
   OBJ_SECTIONS.forEach((s) => delete rest[s.key]);
 
@@ -399,6 +400,11 @@ const toForm = (c) => {
     hasSpellcasting: !!(c.spellcasting && typeof c.spellcasting === 'object'),
     spellcasting: scToForm(c.spellcasting),
     inventory: Array.isArray(c.inventory) ? c.inventory.map(itemToForm) : [],
+    crafting: Array.isArray(c.crafting)
+      ? c.crafting
+          .filter((e) => e && typeof e === 'object' && e.ref != null)
+          .map((e) => ({ ref: String(e.ref), level: e.level != null ? String(e.level) : '' }))
+      : [],
     arrays: ARR_SECTIONS.reduce((acc, s) => {
       const codec = SECTION_CODEC[s.key];
       const to = codec ? codec.to : entryToForm;
@@ -549,6 +555,8 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
   const [editing, setEditing] = useState(null); // { path:[i] } | null — open item editor
   const [picker, setPicker] = useState(null); // { kind:'top' } | { kind:'container', path } | { kind:'change', path } | null
   const [arrSel, setArrSel] = useState({}); // { [arraySectionKey]: openEntryIndex }
+  const [newRecipeRef, setNewRecipeRef] = useState('');
+  const [newRecipeLevel, setNewRecipeLevel] = useState('');
 
   const setStr = (k, v) => setF((c) => ({ ...c, strings: { ...c.strings, [k]: v } }));
   const setNum = (k, v) => setF((c) => ({ ...c, nums: { ...c.nums, [k]: v } }));
@@ -748,6 +756,15 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
       setError(e.message);
       return;
     }
+    const crafting = f.crafting
+      .filter((e) => e.ref.trim())
+      .map((e) => {
+        const out = { ref: e.ref.trim() };
+        const lvl = parseInt(e.level, 10);
+        if (!Number.isNaN(lvl)) out.level = lvl;
+        return out;
+      });
+    if (crafting.length) payload.crafting = crafting;
     for (const s of OBJ_SECTIONS) {
       const o = f.objects[s.key];
       if (!o.has) continue;
@@ -821,6 +838,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     { key: 'actions', label: 'Actions' },
     { key: 'familiar', label: 'Familiar' },
     { key: 'animalCompanion', label: 'Animal Companion' },
+    { key: 'crafting', label: 'Recipes' },
     { key: 'advanced', label: 'Advanced' },
   ];
 
@@ -1133,9 +1151,91 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
           </div>
         )}
 
+        {tab === 'crafting' && (
+          <div className="form-group" data-testid="crafting-recipes">
+            <label>Known Recipes</label>
+            {f.crafting.length === 0 && (
+              <p className="gm-count">No known recipes.</p>
+            )}
+            {f.crafting.map((recipe, i) => {
+              const item = catalogList.find((it) => String(it.id) === recipe.ref);
+              const variant = item?.variants?.find((v) => String(v.level) === recipe.level);
+              const label = item
+                ? `${item.name}${variant ? ` (${variant.label}, L${variant.level})` : recipe.level ? ` (L${recipe.level})` : ''}`
+                : recipe.ref ? `(unknown: ${recipe.ref})` : '—';
+              return (
+                <div key={i} className="gm-row" data-testid={`recipe-row-${i}`}>
+                  <span>{label}</span>
+                  <button
+                    className="btn-small btn-danger"
+                    onClick={() => setF((c) => ({ ...c, crafting: c.crafting.filter((_, idx) => idx !== i) }))}
+                  >
+                    Remove
+                  </button>
+                </div>
+              );
+            })}
+            <div className="gm-row" data-testid="add-recipe-row">
+              <div className="form-group">
+                <label>item</label>
+                <select
+                  aria-label="new-recipe-ref"
+                  value={newRecipeRef}
+                  onChange={(e) => { setNewRecipeRef(e.target.value); setNewRecipeLevel(''); }}
+                >
+                  <option value="">— choose item —</option>
+                  {catalogList
+                    .slice()
+                    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+                    .map((it) => (
+                      <option key={it.id} value={it.id}>{it.name}</option>
+                    ))}
+                </select>
+              </div>
+              {catalogList.find((it) => String(it.id) === newRecipeRef)?.variants?.length > 0 && (
+                <div className="form-group">
+                  <label>grade</label>
+                  <select
+                    aria-label="new-recipe-level"
+                    value={newRecipeLevel}
+                    onChange={(e) => setNewRecipeLevel(e.target.value)}
+                  >
+                    <option value="">— choose grade —</option>
+                    {catalogList
+                      .find((it) => String(it.id) === newRecipeRef)
+                      .variants.map((v) => (
+                        <option key={v.level} value={String(v.level)}>
+                          {v.label} (L{v.level})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+              <button
+                className="btn-small btn-secondary"
+                aria-label="add-recipe"
+                disabled={
+                  !newRecipeRef ||
+                  (catalogList.find((it) => String(it.id) === newRecipeRef)?.variants?.length > 0 &&
+                    !newRecipeLevel)
+                }
+                onClick={() => {
+                  if (!newRecipeRef) return;
+                  const entry = { ref: newRecipeRef, level: newRecipeLevel };
+                  setF((c) => ({ ...c, crafting: [...c.crafting, entry] }));
+                  setNewRecipeRef('');
+                  setNewRecipeLevel('');
+                }}
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+
         {tab === 'advanced' && (
           <div className="form-group">
-            <label>Advanced — class blocks (thaumaturge/monk), crafting, staff/wand spells, metadata… (raw JSON)</label>
+            <label>Advanced — class blocks (thaumaturge/monk), staff/wand spells, metadata… (raw JSON)</label>
             <textarea
               aria-label="advanced-json"
               className="gm-json"

@@ -22,6 +22,7 @@ import {
   repointFocusSpells,
   resolveInventoryItem,
   resolveInventory,
+  resolveCraftingRecipes,
   resolveCharacterItems,
   existingIdSet,
   defaultContent,
@@ -570,6 +571,51 @@ describe('contentUtils', () => {
         [...catalog.values()]
       );
       expect(r2.inventory[0].scroll).toEqual({ name: '(unknown spell: sleep)', level: 0 });
+    });
+
+    describe('resolveCraftingRecipes / resolveCharacterItems crafting', () => {
+      const recipeCatalog = itemCatalogMap([
+        {
+          id: 'antidote',
+          name: 'Antidote',
+          weight: 0.1,
+          traits: ['Alchemical', 'Consumable', 'Elixir'],
+          variants: [
+            { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+            { level: 6, label: 'Moderate', price: 35, effect: '+3 bonus' },
+          ],
+        },
+      ]);
+
+      it('resolves ref+level crafting entries to full variant items', () => {
+        const entries = [{ ref: 'antidote', level: 1 }, { ref: 'antidote', level: 6 }];
+        const resolved = resolveCraftingRecipes(entries, recipeCatalog);
+        expect(resolved[0]).toMatchObject({ name: 'Antidote', level: 1, label: 'Lesser', price: 3 });
+        expect(resolved[1]).toMatchObject({ name: 'Antidote', level: 6, label: 'Moderate', price: 35 });
+      });
+
+      it('passes through inline legacy recipes unchanged (back-compat)', () => {
+        const inline = [{ name: 'Old Recipe', types: [{ level: 1, type: 'Lesser' }] }];
+        const resolved = resolveCraftingRecipes(inline, recipeCatalog);
+        expect(resolved[0]).toEqual(inline[0]);
+      });
+
+      it('resolveCharacterItems resolves both inventory and crafting', () => {
+        const itemList = [...recipeCatalog.values()];
+        const sheet = {
+          level: 3,
+          inventory: [{ ref: 'antidote', level: 1, uid: 'inv1' }],
+          crafting: [{ ref: 'antidote', level: 6 }],
+        };
+        const out = resolveCharacterItems(sheet, itemList, []);
+        expect(out.inventory[0]).toMatchObject({ name: 'Antidote', level: 1, label: 'Lesser' });
+        expect(out.crafting[0]).toMatchObject({ name: 'Antidote', level: 6, label: 'Moderate' });
+      });
+
+      it('resolveCharacterItems returns character unchanged when no inventory or crafting', () => {
+        const sheet = { level: 3, name: 'Bob' };
+        expect(resolveCharacterItems(sheet, [], [])).toEqual(sheet);
+      });
     });
   });
 });

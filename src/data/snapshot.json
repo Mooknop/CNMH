@@ -5658,83 +5658,43 @@
       },
       "crafting": [
         {
-          "name": "Antidote",
-          "weight": 0.1,
-          "description": "An antidote protects you against toxins. Upon drinking an antidote, you gain an item bonus to Fortitude saving throws against poisons for 6 hours.",
-          "types": [
-            {
-              "level": 1,
-              "type": "Lesser",
-              "price": 3,
-              "effect": "You gain a +2 item bonus"
-            },
-            {
-              "level": 6,
-              "type": "Moderate",
-              "price": 35,
-              "effect": "You gain a +3 item bonus"
-            }
-          ]
+          "ref": "antidote",
+          "level": 1
         },
         {
-          "name": "Antiplague",
-          "weight": 0.1,
-          "description": "Antiplague can fortify the body's defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease's progression.",
-          "types": [
-            {
-              "level": 1,
-              "type": "Lesser",
-              "price": 3,
-              "effect": "You gain a +2 item bonus"
-            },
-            {
-              "level": 6,
-              "type": "Moderate",
-              "price": 35,
-              "effect": "You gain a +3 item bonus"
-            }
-          ]
+          "ref": "antidote",
+          "level": 6
         },
         {
-          "name": "Eagle-eye Elixir",
-          "weight": 0.1,
-          "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that's greater when attempting to find secret doors and traps.",
-          "types": [
-            {
-              "level": 1,
-              "type": "Lesser",
-              "price": 4,
-              "effect": "The bonus is +1, or +2 to find secret doors and traps."
-            },
-            {
-              "level": 6,
-              "type": "Moderate",
-              "price": 27,
-              "effect": "The bonus is +2, or +3 to find secret doors and traps."
-            }
-          ]
+          "ref": "antiplague",
+          "level": 1
         },
         {
-          "name": "Elixir of Life",
-          "weight": 0.1,
-          "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
-          "types": [
-            {
-              "level": 1,
-              "type": "Minor",
-              "price": 3,
-              "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
-            },
-            {
-              "level": 5,
-              "type": "Lesser",
-              "price": 30,
-              "effect": "The elixir restores 3d6 + 6 Hit Points, and the bonus is +1."
-            }
-          ]
+          "ref": "antiplague",
+          "level": 6
+        },
+        {
+          "ref": "eagle-eye-elixir",
+          "level": 1
+        },
+        {
+          "ref": "eagle-eye-elixir",
+          "level": 6
+        },
+        {
+          "ref": "elixir-of-life",
+          "level": 1
+        },
+        {
+          "ref": "elixir-of-life",
+          "level": 5
         }
       ],
       "image": "img_0f2cd2ea-d783-46dc-9cea-364591eb2de3.jpg",
+      "imagePosition": {
+        "x": 38,
+        "y": 11
+      },
       "id": "JadeInferno",
       "name": "Jade Inferno",
       "ancestry": "Half-Elf",
@@ -5807,6 +5767,10 @@
           {
             "name": "Fortune-Telling",
             "proficiency": 1
+          },
+          {
+            "name": "Thassilonian",
+            "proficiency": 1
           }
         ]
       },
@@ -5848,10 +5812,6 @@
             "name": "Untrained"
           }
         }
-      },
-      "imagePosition": {
-        "x": 38,
-        "y": 11
       },
       "spellcasting": {
         "bloodline": {
@@ -6296,35 +6256,35 @@
               "description": "Treat the failure as a success or a critical failure as a failure. You no longer have an active harrow omen."
             }
           ],
+          "actions": [],
           "name": "Harrower Dedication",
           "source": "Archetype",
           "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw.",
-          "level": 2,
-          "actions": []
+          "level": 2
         },
         {
           "id": "feat-2",
+          "actions": [],
           "name": "Otherworldly Magic",
           "source": "Ancestry",
           "description": "Your elven blood runs strong enough to grant you magical abilities. You gain an extra Arcane cantrip.",
-          "level": 1,
-          "actions": []
+          "level": 1
         },
         {
           "id": "feat-3",
+          "actions": [],
           "name": "Alchemical Crafting",
           "source": "Skill",
           "description": "You can use the Craft activity to create alchemical items. When you select this feat, you immediately add the formulas for four common 1st-level alchemical items to your formula book.",
-          "level": 2,
-          "actions": []
+          "level": 2
         },
         {
           "id": "feat-4",
+          "actions": [],
           "name": "Hobnobber",
           "source": "Skill",
           "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2).",
-          "level": 1,
-          "actions": []
+          "level": 1
         },
         {
           "id": "feat-5",
@@ -6353,19 +6313,19 @@
         },
         {
           "id": "feat-6",
+          "actions": [],
           "name": "Tell Fortune",
           "source": "Skill",
           "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week.",
-          "level": 3,
-          "actions": []
+          "level": 3
         },
         {
           "id": "feat-7",
+          "actions": [],
           "name": "Split Shot",
           "source": "Sorcerer",
           "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals hafl the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
-          "level": 4,
-          "actions": []
+          "level": 4
         },
         {
           "id": "feat-8",
@@ -6394,11 +6354,11 @@
         },
         {
           "id": "feat-9",
+          "actions": [],
           "name": "Glad-Hand",
           "source": "Skill",
           "description": "First impressions are your strong suit. When you meet someone in a casual or social situation, you can immediately attempt a Diplomacy check to Make an Impression on that creature rather than needing to converse for 1 minute. If you fail, you can engage in 1 minute of conversation and attempt a new check at the end of the time rather than accepting the failure.",
-          "level": 4,
-          "actions": []
+          "level": 4
         }
       ],
       "strikes": [
@@ -7883,7 +7843,7 @@
         "Consumable",
         "Elixir"
       ],
-      "description": "Antiplague can fortify the body’s defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease’s progression.",
+      "description": "Antiplague can fortify the body defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease progression.",
       "variants": [
         {
           "level": 1,
@@ -7908,7 +7868,7 @@
         "Consumable",
         "Elixir"
       ],
-      "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that’s greater when attempting to find secret doors and traps.",
+      "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that is greater when attempting to find secret doors and traps.",
       "variants": [
         {
           "level": 1,
@@ -7934,7 +7894,7 @@
         "Elixir",
         "Healing"
       ],
-      "description": "Elixirs of life accelerate a living creature’s natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
+      "description": "Elixirs of life accelerate a living creature natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
       "variants": [
         {
           "level": 1,
@@ -8485,14 +8445,14 @@
   "theme": [
     {
       "id": "campaign",
-      "preset": "custom",
+      "preset": "ember",
       "palette": {
-        "accent": "#00a2ff",
-        "accentMid": "#2e90cf",
-        "gold": "#e69f00",
-        "arcane": "#b388ff",
-        "verdant": "#cc79a7",
-        "peril": "#d55e00",
+        "accent": "#c0440e",
+        "accentMid": "#e85d1a",
+        "gold": "#c49a2e",
+        "arcane": "#7a54ba",
+        "verdant": "#3d9458",
+        "peril": "#ef5350",
         "bg": "#12100e",
         "surface": "#1a1612",
         "surfaceCard": "rgba(28, 24, 18, 0.82)",
