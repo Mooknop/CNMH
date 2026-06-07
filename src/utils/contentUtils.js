@@ -337,6 +337,13 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel) =>
   // live-loadout layer can target this specific entry. Inert when absent.
   if (entry.uid != null) resolved.uid = entry.uid;
   if (entry.invested != null) resolved.invested = entry.invested;
+  // Multi-level items: when the entry carries a `level`, select the matching
+  // variant and merge its fields (price, label, effect, …) onto the resolved
+  // item. A dangling level (no variant matches) leaves the base item intact.
+  if (entry.level != null && Array.isArray(cat.variants) && cat.variants.length > 0) {
+    const variant = cat.variants.find((v) => v.level === entry.level);
+    if (variant) Object.assign(resolved, variant);
+  }
   if (cat.container) {
     resolved.container = {
       ...cat.container,

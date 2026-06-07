@@ -92,12 +92,33 @@ const spellFromForm = (sf) => {
 };
 
 // Keys that must never appear in the raw-JSON box: per-character data belongs
-// on the inventory reference, and containers / scroll / wand have dedicated UI.
-const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand'];
+// on the inventory reference, and containers / scroll / wand / variants have
+// dedicated UI.
+const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand', 'variants'];
+
+const variantToForm = (v) => ({
+  level: v.level != null ? String(v.level) : '',
+  label: v.label != null ? String(v.label) : '',
+  price: v.price != null ? String(v.price) : '',
+  effect: v.effect != null ? String(v.effect) : '',
+});
+
+const blankVariant = () => ({ level: '', label: '', price: '', effect: '' });
+
+const variantFromForm = (vf) => {
+  const out = {};
+  const lvl = parseInt(vf.level, 10);
+  if (!Number.isNaN(lvl)) out.level = lvl;
+  if (vf.label.trim()) out.label = vf.label.trim();
+  const p = parseFloat(vf.price);
+  if (!Number.isNaN(p)) out.price = p;
+  if (vf.effect.trim()) out.effect = vf.effect.trim();
+  return out;
+};
 
 const toForm = (it) => {
   const rest = { ...it };
-  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes'].forEach(
+  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants'].forEach(
     (k) => delete rest[k]
   );
   // A weapon's `strikes` is usually an array, but a single-strike weapon
@@ -112,6 +133,7 @@ const toForm = (it) => {
   return {
     strikes: strikesSrc.map(strikeToForm),
     strikesWasObject,
+    variants: (Array.isArray(it.variants) ? it.variants : []).map(variantToForm),
     id: it.id,
     name: it.name != null ? String(it.name) : '',
     price: it.price != null ? String(it.price) : '',
@@ -164,6 +186,9 @@ const itemFromForm = (f) => {
   if (strikes.length) {
     out.strikes = f.strikesWasObject && strikes.length === 1 ? strikes[0] : strikes;
   }
+  delete out.variants;
+  const variants = (f.variants || []).map(variantFromForm);
+  if (variants.length) out.variants = variants;
   if (f.description.trim()) out.description = f.description.trim();
   if (f.image) { out.image = f.image; out.imagePosition = f.imagePosition; }
   const traits = toList(f.traits);
@@ -347,6 +372,45 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
   );
 };
 
+const VariantSubform = ({ variant, idPrefix, onChange }) => (
+  <div className="gm-row">
+    <div className="form-group">
+      <label>level</label>
+      <input
+        aria-label={`${idPrefix}-level`}
+        type="number"
+        value={variant.level}
+        onChange={(e) => onChange({ ...variant, level: e.target.value })}
+      />
+    </div>
+    <div className="form-group">
+      <label>label</label>
+      <input
+        aria-label={`${idPrefix}-label`}
+        value={variant.label}
+        onChange={(e) => onChange({ ...variant, label: e.target.value })}
+      />
+    </div>
+    <div className="form-group">
+      <label>price</label>
+      <input
+        aria-label={`${idPrefix}-price`}
+        type="number"
+        value={variant.price}
+        onChange={(e) => onChange({ ...variant, price: e.target.value })}
+      />
+    </div>
+    <div className="form-group">
+      <label>effect</label>
+      <input
+        aria-label={`${idPrefix}-effect`}
+        value={variant.effect}
+        onChange={(e) => onChange({ ...variant, effect: e.target.value })}
+      />
+    </div>
+  </div>
+);
+
 const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const { spells } = useContent();
   const [e, setE] = useState(initial);
@@ -361,6 +425,12 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const addStrike = () => setE((cur) => ({ ...cur, strikes: [...cur.strikes, blankStrike()] }));
   const rmStrike = (i) =>
     setE((cur) => ({ ...cur, strikes: cur.strikes.filter((_, idx) => idx !== i) }));
+
+  const setVariant = (i, next) =>
+    setE((cur) => ({ ...cur, variants: cur.variants.map((v, idx) => (idx === i ? next : v)) }));
+  const addVariant = () => setE((cur) => ({ ...cur, variants: [...cur.variants, blankVariant()] }));
+  const rmVariant = (i) =>
+    setE((cur) => ({ ...cur, variants: cur.variants.filter((_, idx) => idx !== i) }));
 
   const submit = async (id, payload) => {
     setConfirm(null);
@@ -549,6 +619,25 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           </button>
         </div>
       )}
+
+      <div className="form-group" data-testid="item-variants">
+        <label>Variants (multi-level: level, grade label, price, effect)</label>
+        {e.variants.map((v, i) => (
+          <div className="gm-card" data-testid={`item-variant-${i}`} key={i}>
+            <VariantSubform
+              variant={v}
+              idPrefix={`item-variant-${i}`}
+              onChange={(next) => setVariant(i, next)}
+            />
+            <button className="btn-small btn-danger" onClick={() => rmVariant(i)}>
+              Remove variant
+            </button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addVariant}>
+          Add variant
+        </button>
+      </div>
 
       <div className="form-group">
         <label>extra fields — potency, shield, actions… (raw JSON)</label>

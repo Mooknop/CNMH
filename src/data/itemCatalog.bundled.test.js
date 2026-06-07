@@ -103,6 +103,21 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(lowHammer.strikes).toBeTruthy();
   });
 
+  it('multi-level items have variants with numeric level and string label', () => {
+    const multiLevel = items.filter((i) => Array.isArray(i.variants) && i.variants.length > 0);
+    expect(multiLevel.length).toBeGreaterThan(0);
+    multiLevel.forEach((item) => {
+      item.variants.forEach((v) => {
+        expect(typeof v.level).toBe('number');
+        expect(typeof v.label).toBe('string');
+        expect(v.label.length).toBeGreaterThan(0);
+      });
+    });
+    // Spot-check the four recipe items added in the crafting initiative.
+    const ids = multiLevel.map((i) => i.id);
+    expect(ids).toEqual(expect.arrayContaining(['antidote', 'antiplague', 'eagle-eye-elixir', 'elixir-of-life']));
+  });
+
   it('Blu\'s orb is tagged Artifact but mechanically inert', () => {
     const orb = items.find((i) => i.id === 'mysterious-blue-orb');
     expect(orb.traits).toContain('Artifact');
