@@ -6,6 +6,7 @@ import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import PlayModeControl from '../../components/gm/PlayModeControl';
+import PartyPanel from '../../components/gm/PartyPanel';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
@@ -300,7 +301,10 @@ const GmDashboard = () => {
         />
       )}
 
-      {/* 3. Quick actions — available in every mode */}
+      {/* 3. Party HP roster — always visible */}
+      <PartyPanel />
+
+      {/* 5. Quick actions — available in every mode */}
       <section className="gm-dash-panel gm-dash-quick-actions" aria-label="Quick Actions">
         <h2>Quick Actions</h2>
         <div className="gm-actions">
@@ -314,7 +318,7 @@ const GmDashboard = () => {
         </div>
       </section>
 
-      {/* 4. Maintenance — collapsed by default */}
+      {/* 6. Maintenance — collapsed by default */}
       <MaintenancePanel />
 
       <EffectsModal
