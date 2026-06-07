@@ -453,6 +453,95 @@ describe('GmItems', () => {
     expect(screen.getByText('+ New item')).toBeInTheDocument();
   });
 
+  describe('item variants', () => {
+    const antidoteItem = {
+      id: 'antidote',
+      name: 'Antidote',
+      weight: 0.1,
+      traits: ['Alchemical', 'Consumable', 'Elixir'],
+      description: 'Protects against toxins.',
+      variants: [
+        { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+        { level: 6, label: 'Moderate', price: 35, effect: '+3 bonus' },
+      ],
+    };
+
+    it('pre-fills variant rows for an item that has variants', () => {
+      useContent.mockReturnValue({ items: [antidoteItem], spells: [] });
+      render(<GmItems />);
+      selectItem('Antidote');
+      const form = screen.getByTestId('item-form-antidote');
+      expect(within(form).getByLabelText('item-variant-0-level')).toHaveValue(1);
+      expect(within(form).getByLabelText('item-variant-0-label')).toHaveValue('Lesser');
+      expect(within(form).getByLabelText('item-variant-1-label')).toHaveValue('Moderate');
+    });
+
+    it('round-trips variants on Save', async () => {
+      useContent.mockReturnValue({ items: [antidoteItem], spells: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Antidote');
+      const form = screen.getByTestId('item-form-antidote');
+      fireEvent.change(within(form).getByLabelText('item-variant-1-price'), { target: { value: '40' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const [, , data] = saveDocument.mock.calls[0];
+      expect(data.variants).toEqual([
+        { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+        { level: 6, label: 'Moderate', price: 40, effect: '+3 bonus' },
+      ]);
+    });
+
+    it('adds and removes variants', async () => {
+      useContent.mockReturnValue({ items: [antidoteItem], spells: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Antidote');
+      const form = screen.getByTestId('item-form-antidote');
+      // Remove first variant.
+      fireEvent.click(within(screen.getByTestId('item-variant-0')).getByText('Remove variant'));
+      // Now only Moderate remains.
+      expect(within(form).queryByLabelText('item-variant-1-level')).not.toBeInTheDocument();
+      // Add a new blank variant.
+      fireEvent.click(within(form).getByText('Add variant'));
+      expect(within(form).getByLabelText('item-variant-1-level')).toBeInTheDocument();
+    });
+
+    it('creates a new item with variants via Add variant', async () => {
+      useContent.mockReturnValue({ items: [], spells: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      fireEvent.click(screen.getByText('+ New item'));
+      const form = screen.getByTestId('item-form-new');
+      fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Elixir of Life' } });
+      fireEvent.click(within(form).getByText('Add variant'));
+      fireEvent.change(within(form).getByLabelText('item-variant-0-level'), { target: { value: '1' } });
+      fireEvent.change(within(form).getByLabelText('item-variant-0-label'), { target: { value: 'Minor' } });
+      fireEvent.change(within(form).getByLabelText('item-variant-0-price'), { target: { value: '3' } });
+      fireEvent.change(within(form).getByLabelText('item-variant-0-effect'), { target: { value: 'Restores 1d6 HP' } });
+      fireEvent.click(within(form).getByText('Create item'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const [, id, data] = saveDocument.mock.calls[0];
+      expect(id).toBe('elixir-of-life');
+      expect(data.variants).toEqual([{ level: 1, label: 'Minor', price: 3, effect: 'Restores 1d6 HP' }]);
+    });
+
+    it('rejects variants in the raw-JSON extra fields box', async () => {
+      useContent.mockReturnValue({ items: [antidoteItem], spells: [] });
+      render(<GmItems />);
+      selectItem('Antidote');
+      const form = screen.getByTestId('item-form-antidote');
+      fireEvent.change(within(form).getByLabelText('rest-json'), {
+        target: { value: '{"variants": []}' },
+      });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/must not include .*variants/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+  });
+
   describe('structured strikes', () => {
     const strikeItems = [
       {

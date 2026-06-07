@@ -7848,6 +7848,107 @@
           }
         ]
       }
+    },
+    {
+      "id": "antidote",
+      "name": "Antidote",
+      "weight": 0.1,
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir"
+      ],
+      "description": "An antidote protects you against toxins. Upon drinking an antidote, you gain an item bonus to Fortitude saving throws against poisons for 6 hours.",
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "price": 3,
+          "effect": "You gain a +2 item bonus to Fortitude saving throws against poisons."
+        },
+        {
+          "level": 6,
+          "label": "Moderate",
+          "price": 35,
+          "effect": "You gain a +3 item bonus to Fortitude saving throws against poisons."
+        }
+      ]
+    },
+    {
+      "id": "antiplague",
+      "name": "Antiplague",
+      "weight": 0.1,
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir"
+      ],
+      "description": "Antiplague can fortify the body’s defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease’s progression.",
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "price": 3,
+          "effect": "You gain a +2 item bonus to Fortitude saving throws against diseases."
+        },
+        {
+          "level": 6,
+          "label": "Moderate",
+          "price": 35,
+          "effect": "You gain a +3 item bonus to Fortitude saving throws against diseases."
+        }
+      ]
+    },
+    {
+      "id": "eagle-eye-elixir",
+      "name": "Eagle-eye Elixir",
+      "weight": 0.1,
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir"
+      ],
+      "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that’s greater when attempting to find secret doors and traps.",
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "price": 4,
+          "effect": "The bonus is +1, or +2 to find secret doors and traps."
+        },
+        {
+          "level": 6,
+          "label": "Moderate",
+          "price": 27,
+          "effect": "The bonus is +2, or +3 to find secret doors and traps."
+        }
+      ]
+    },
+    {
+      "id": "elixir-of-life",
+      "name": "Elixir of Life",
+      "weight": 0.1,
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Healing"
+      ],
+      "description": "Elixirs of life accelerate a living creature’s natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
+      "variants": [
+        {
+          "level": 1,
+          "label": "Minor",
+          "price": 3,
+          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
+        },
+        {
+          "level": 5,
+          "label": "Lesser",
+          "price": 30,
+          "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1."
+        }
+      ]
     }
   ],
   "spell": [

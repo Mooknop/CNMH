@@ -512,6 +512,53 @@ describe('contentUtils', () => {
       expect(lvl0.staff).toBeUndefined();
     });
 
+    describe('variant selection', () => {
+      const antidoteCat = itemCatalogMap([{
+        id: 'antidote',
+        name: 'Antidote',
+        weight: 0.1,
+        traits: ['Alchemical', 'Consumable', 'Elixir'],
+        variants: [
+          { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+          { level: 6, label: 'Moderate', price: 35, effect: '+3 bonus' },
+        ],
+      }]);
+
+      it('merges the matching variant fields onto the resolved item', () => {
+        const out = resolveInventoryItem({ ref: 'antidote', level: 6, uid: 'u1', quantity: 2 }, antidoteCat);
+        expect(out.level).toBe(6);
+        expect(out.label).toBe('Moderate');
+        expect(out.price).toBe(35);
+        expect(out.effect).toBe('+3 bonus');
+        expect(out.name).toBe('Antidote');
+        expect(out.weight).toBe(0.1);
+        expect(out.quantity).toBe(2);
+        expect(out.uid).toBe('u1');
+      });
+
+      it('resolves the base item unchanged when no level is specified on the entry', () => {
+        const out = resolveInventoryItem({ ref: 'antidote', quantity: 1 }, antidoteCat);
+        expect(out.level).toBeUndefined();
+        expect(out.label).toBeUndefined();
+        expect(out.name).toBe('Antidote');
+        expect(out.variants).toBeDefined();
+      });
+
+      it('ignores an unmatched level (no variant applied)', () => {
+        const out = resolveInventoryItem({ ref: 'antidote', level: 99 }, antidoteCat);
+        expect(out.name).toBe('Antidote');
+        expect(out.label).toBeUndefined();
+        expect(out.level).toBeUndefined();
+      });
+
+      it('works for an item with no variants array (flat item, level on entry ignored)', () => {
+        const flatCat = itemCatalogMap([{ id: 'sword', name: 'Sword', weight: 1 }]);
+        const out = resolveInventoryItem({ ref: 'sword', level: 2 }, flatCat);
+        expect(out.name).toBe('Sword');
+        expect(out.level).toBeUndefined();
+      });
+    });
+
     it('resolveCharacterItems threads spells + level (3-arg) and stays back-compat (2-arg)', () => {
       const sheet = { level: 5, inventory: [{ uid: 'u1', ref: 'arti' }] };
       const r3 = resolveCharacterItems(sheet, [...catalog.values()], [...spellMap.values()]);
