@@ -51,7 +51,8 @@ const PageEditorShell = ({
   return (
     <div className="gm-ped">
       {flash && (
-        <p className="gm-ok" role="status">
+        <p className="gm-live-note" role="status">
+          <span className="dot" aria-hidden="true" />
           {flash}
         </p>
       )}

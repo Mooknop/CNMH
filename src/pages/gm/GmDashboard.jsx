@@ -287,38 +287,45 @@ const GmDashboard = () => {
 
   return (
     <div className="gm-dashboard">
-      {/* 1. Play-mode control (Exploration ↔ Downtime pills, movement toggle,
-             time chips — PlayModeControl manages its own sub-panels). */}
-      <PlayModeControl />
+      <div className="gm-dash-main">
+        {/* Left column: mode marquee + initiative (encounter) */}
+        <div className="gm-dash-left">
+          {/* Corner-bracketed mode marquee */}
+          <div className="gm-dash-marquee gm-bracketed">
+            <PlayModeControl />
+          </div>
 
-      {/* 2. Initiative panel — encounter mode only */}
-      {isEncounter && (
-        <InitiativePanel
-          encounter={encounter}
-          actorMap={actorMap}
-          setActorMap={setActorMap}
-          characters={characters}
-        />
-      )}
-
-      {/* 3. Party HP roster — always visible */}
-      <PartyPanel />
-
-      {/* 5. Quick actions — available in every mode */}
-      <section className="gm-dash-panel gm-dash-quick-actions" aria-label="Quick Actions">
-        <h2>Quick Actions</h2>
-        <div className="gm-actions">
-          <button
-            className="btn-secondary"
-            aria-label="Apply Effect to character"
-            onClick={() => setIsEffectsModalOpen(true)}
-          >
-            Apply Effect
-          </button>
+          {/* Initiative panel — encounter mode only */}
+          {isEncounter && (
+            <InitiativePanel
+              encounter={encounter}
+              actorMap={actorMap}
+              setActorMap={setActorMap}
+              characters={characters}
+            />
+          )}
         </div>
-      </section>
 
-      {/* 6. Maintenance — collapsed by default */}
+        {/* Right column: party HP roster + quick actions */}
+        <div className="gm-dash-right">
+          <PartyPanel />
+
+          <section className="gm-dash-panel gm-dash-quick-actions" aria-label="Quick Actions">
+            <h2>Quick Actions</h2>
+            <div className="gm-actions">
+              <button
+                className="btn-secondary"
+                aria-label="Apply Effect to character"
+                onClick={() => setIsEffectsModalOpen(true)}
+              >
+                Apply Effect
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/* Maintenance — full-width, collapsed by default */}
       <MaintenancePanel />
 
       <EffectsModal
