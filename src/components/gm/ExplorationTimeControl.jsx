@@ -58,9 +58,9 @@ const ExplorationTimeControl = () => {
   return (
     <div className="pmc-explore-time">
       <div className="pmc-downtime-quick">
-        <button className="pmc-pill" onClick={() => advanceMinutes(10)}>+10 min</button>
-        <button className="pmc-pill" onClick={() => advanceMinutes(30)}>+30 min</button>
-        <button className="pmc-pill" onClick={() => advanceMinutes(60)}>+1 hr</button>
+        <button className="pmc-tchip" onClick={() => advanceMinutes(10)}>+10 min</button>
+        <button className="pmc-tchip" onClick={() => advanceMinutes(30)}>+30 min</button>
+        <button className="pmc-tchip" onClick={() => advanceMinutes(60)}>+1 hr</button>
       </div>
 
       <div className="pmc-downtime-custom">
@@ -83,7 +83,7 @@ const ExplorationTimeControl = () => {
           <option value="min">min</option>
           <option value="hours">hr</option>
         </select>
-        <button className="pmc-pill" onClick={applyCustom} disabled={!canApply}>
+        <button className="pmc-btn pmc-btn--sm" onClick={applyCustom} disabled={!canApply}>
           Apply
         </button>
       </div>
@@ -93,7 +93,7 @@ const ExplorationTimeControl = () => {
           <span className="pmc-explore-suggestion-label">
             Party moved {exploreDist} ft → ~{suggestedMinutes} min
           </span>
-          <button className="pmc-pill pmc-pill--accent" onClick={applyDistanceSuggestion}>
+          <button className="pmc-btn pmc-btn--primary pmc-btn--sm" onClick={applyDistanceSuggestion}>
             Apply
           </button>
         </div>

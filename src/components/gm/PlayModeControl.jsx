@@ -51,7 +51,7 @@ const PlayModeControl = () => {
 
   return (
     <div className="pmc">
-      <div className="pmc-row">
+      <div className="pmc-modes">
         <span className="pmc-label">Play Mode</span>
         <div className="pmc-pills" role="group" aria-label="Play mode">
           {isEncounter ? (
@@ -91,11 +91,13 @@ const PlayModeControl = () => {
           </label>
           <button
             id="pmc-move-toggle"
-            className={`pmc-toggle${moveEnabled ? ' pmc-toggle--on' : ''}`}
+            type="button"
+            role="switch"
+            className={`pmc-switch${moveEnabled ? ' pmc-switch--on' : ''}`}
             onClick={() => setMoveEnabled(!moveEnabled)}
-            aria-pressed={moveEnabled}
+            aria-checked={moveEnabled}
           >
-            {moveEnabled ? 'On' : 'Off'}
+            <span className="pmc-switch-knob" aria-hidden="true" />
           </button>
         </div>
       )}

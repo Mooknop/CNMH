@@ -127,10 +127,12 @@ describe('PlayModeControl', () => {
     expect(mockState.setMoveEnabled).toHaveBeenCalledWith(false);
   });
 
-  it('shows On/Off label on toggle based on moveEnabled', () => {
+  it('reflects moveEnabled state on the switch', () => {
     mockState.moveEnabled = true;
     const { rerender } = renderWith();
-    expect(screen.getByLabelText('Allow token movement')).toHaveTextContent('On');
+    const onSwitch = screen.getByLabelText('Allow token movement');
+    expect(onSwitch).toHaveClass('pmc-switch--on');
+    expect(onSwitch).toHaveAttribute('aria-checked', 'true');
 
     mockState.moveEnabled = false;
     rerender(
@@ -138,7 +140,9 @@ describe('PlayModeControl', () => {
         <PlayModeControl />
       </CharacterContext.Provider>
     );
-    expect(screen.getByLabelText('Allow token movement')).toHaveTextContent('Off');
+    const offSwitch = screen.getByLabelText('Allow token movement');
+    expect(offSwitch).not.toHaveClass('pmc-switch--on');
+    expect(offSwitch).toHaveAttribute('aria-checked', 'false');
   });
 
   describe('Start movement override', () => {
