@@ -103,7 +103,7 @@ const DowntimeControl = () => {
           aria-label="Downtime period in days"
         />
         <button
-          className="pmc-pill"
+          className="pmc-btn pmc-btn--primary pmc-btn--sm"
           onClick={startPeriod}
           disabled={periodInvalid}
         >
@@ -123,7 +123,7 @@ const DowntimeControl = () => {
             <span className={`pmc-downtime-ready${allReady ? ' pmc-downtime-ready--done' : ''}`}>
               {readyCount}/{total} ready{allReady ? ' — advancing…' : ''}
             </span>
-            <button className="pmc-pill pmc-pill--danger" onClick={closeBlock}>
+            <button className="pmc-btn pmc-btn--danger pmc-btn--sm" onClick={closeBlock}>
               Close block
             </button>
           </div>
@@ -133,9 +133,9 @@ const DowntimeControl = () => {
       <span className="pmc-label">Advance Time</span>
 
       <div className="pmc-downtime-quick">
-        <button className="pmc-pill" onClick={() => advanceHours(1)}>+1 hr</button>
-        <button className="pmc-pill" onClick={() => advanceHours(8)}>+8 hr</button>
-        <button className="pmc-pill" onClick={() => advanceDays(1)}>+1 day</button>
+        <button className="pmc-tchip" onClick={() => advanceHours(1)}>+1 hr</button>
+        <button className="pmc-tchip" onClick={() => advanceHours(8)}>+8 hr</button>
+        <button className="pmc-tchip" onClick={() => advanceDays(1)}>+1 day</button>
       </div>
 
       <div className="pmc-downtime-custom">
@@ -159,7 +159,7 @@ const DowntimeControl = () => {
           <option value="days">days</option>
         </select>
         <button
-          className="pmc-pill"
+          className="pmc-btn pmc-btn--sm"
           onClick={applyCustom}
           disabled={!customValue || parseInt(customValue, 10) <= 0}
         >

@@ -1,12 +1,132 @@
-.pmc {
+/* ── Marquee: pills + clock + campaign meta ─────────────────── */
+.pmc-marquee {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding: var(--space-5);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
+  overflow: visible; /* let the corner brackets show */
+}
+
+.pmc-marquee-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--shell-border);
+}
+
+.pmc-marquee-spacer {
+  flex: 1;
+}
+
+.pmc-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+}
+
+.pmc-clock-time {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 2rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--shell-text-primary);
+}
+
+.pmc-clock-date {
+  font-size: 0.8rem;
+  color: var(--shell-text-secondary);
+}
+
+.pmc-clock-weekday {
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.pmc-marquee-meta {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.pmc-meta-stat {
+  text-align: right;
+}
+
+.pmc-meta-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--shell-text-primary);
+}
+
+.pmc-meta-key {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-top: 4px;
+}
+
+.pmc-meta-gold,
+.pmc-meta-gold .pmc-meta-input {
+  color: var(--gold-light);
+}
+
+.pmc-meta-gp {
+  font-size: 0.9rem;
+  margin-left: 2px;
+}
+
+/* Inline-editable meta values styled to read like display text */
+.pmc-meta-input {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+  text-align: right;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-primary);
+  padding: 1px 4px;
+  width: 7ch;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pmc-meta-input--num {
+  width: 5ch;
+}
+
+.pmc-meta-input::placeholder {
+  color: var(--shell-text-tertiary);
+}
+
+.pmc-meta-input:hover {
+  border-color: var(--shell-border-strong);
+}
+
+.pmc-meta-input:focus {
+  outline: none;
+  background: var(--surface-inset);
+  border-color: var(--accent-outline);
+}
+
+/* ── Context strip: mode-specific controls ──────────────────── */
+.pmc-context {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--theme-surface, var(--shell-surface));
-  border: 1px solid var(--theme-border, var(--shell-border));
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-4);
+  padding: var(--space-4);
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-lg);
 }
 
 .pmc-row {
@@ -29,64 +149,199 @@
   white-space: nowrap;
 }
 
+/* Mode group: label stacked ABOVE the pills (per spec marquee-modes) */
+.pmc-modes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .pmc-pills {
   display: flex;
-  gap: var(--space-1);
+  gap: 8px;
 }
 
 .pmc-pill {
-  background: none;
-  border: 1px solid var(--theme-border, var(--shell-border));
-  border-radius: var(--radius-sm);
-  color: var(--theme-text, var(--shell-text));
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--shell-text-secondary);
   cursor: pointer;
   font-family: var(--font-ui);
-  font-size: var(--text-xs);
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: var(--space-1) var(--space-3);
-  transition: background 0.15s, color 0.15s;
+  padding: 10px 16px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.pmc-pill-ico {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
 }
 
 .pmc-pill:hover:not(.pmc-pill--locked) {
-  background: var(--theme-surface-inset-hover, var(--shell-surface-hover));
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+  border-color: var(--shell-text-tertiary);
 }
 
 .pmc-pill--active {
-  background: var(--theme-accent, var(--accent-bg));
-  border-color: var(--theme-accent, var(--accent-bg));
-  color: var(--theme-bg, #fff);
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+  box-shadow: var(--accent-glow);
 }
 
 .pmc-pill--locked {
   cursor: default;
-  opacity: 0.7;
 }
 
-/* Movement toggle */
+/* Exploration/Downtime are disabled while an encounter is live (mode is
+   Foundry-driven). Dim them but keep them visible. */
+.pmc-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pmc-pill:disabled:hover {
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  border-color: var(--shell-border-strong);
+}
+
+/* The Encounter status pill: visible but muted until it's the active mode. */
+.pmc-pill--locked:not(.pmc-pill--active) {
+  opacity: 0.55;
+}
+
+
+/* Movement toggle — sliding switch (per spec .toggle/.switch) */
 .pmc-toggle-label {
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  color: var(--theme-text, var(--shell-text));
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
 }
 
-.pmc-toggle {
-  background: var(--theme-surface-inset, var(--shell-surface-inset));
-  border: 1px solid var(--theme-border, var(--shell-border));
-  border-radius: var(--radius-sm);
-  color: var(--theme-text-secondary, var(--shell-text-secondary));
+.pmc-switch {
+  position: relative;
+  width: 38px;
+  height: 21px;
+  flex: none;
+  padding: 0;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--shell-border-strong);
   cursor: pointer;
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  min-width: 44px;
-  padding: var(--space-1) var(--space-2);
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.pmc-toggle--on {
-  background: var(--verdant-mid, var(--theme-verdant));
-  border-color: var(--verdant-mid, var(--theme-verdant));
+.pmc-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #cfc7bd;
+  transition: left 0.15s, background 0.15s;
+}
+
+.pmc-switch--on {
+  background: var(--verdant-mid);
+  border-color: var(--verdant-mid);
+}
+
+.pmc-switch--on .pmc-switch-knob {
+  left: 19px;
+  background: #fff;
+}
+
+.pmc-switch:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}
+
+/* Time chips — quick advance buttons (per spec .tchip) */
+.pmc-tchip {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.pmc-tchip:hover {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.pmc-tchip:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}
+
+/* Action buttons — Apply / Start / Close (per spec .ui-btn) */
+.pmc-btn {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pmc-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+}
+
+.pmc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pmc-btn--sm {
+  padding: 5px 10px;
+  font-size: 0.72rem;
+}
+
+.pmc-btn--primary {
+  background: var(--theme-accent);
+  border-color: var(--theme-accent);
   color: #fff;
+}
+
+.pmc-btn--primary:hover:not(:disabled) {
+  background: var(--ember-mid);
+}
+
+.pmc-btn--danger {
+  background: none;
+  color: var(--peril-light);
+  border-color: rgba(183, 28, 28, 0.5);
+}
+
+.pmc-btn--danger:hover:not(:disabled) {
+  background: rgba(183, 28, 28, 0.15);
+}
+
+.pmc-btn:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
 }
 
 /* Activity-ready override */
@@ -206,16 +461,6 @@
   font-weight: 700;
 }
 
-.pmc-pill--danger {
-  border-color: var(--crimson-mid, #c0392b);
-  color: var(--crimson-mid, #c0392b);
-}
-
-.pmc-pill--danger:hover {
-  background: var(--crimson-mid, #c0392b);
-  color: #fff;
-}
-
 /* Exploration time-advance controls */
 .pmc-explore-time {
   display: flex;
@@ -235,10 +480,4 @@
   font-size: var(--text-xs);
   color: var(--theme-text-secondary, var(--shell-text-secondary));
   font-variant-numeric: tabular-nums;
-}
-
-.pmc-pill--accent {
-  background: var(--theme-accent, var(--accent-bg));
-  border-color: var(--theme-accent, var(--accent-bg));
-  color: var(--theme-bg, #fff);
 }

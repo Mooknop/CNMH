@@ -38,6 +38,7 @@ vi.mock('../../contexts/GameDateContext', () => ({
     advanceDays: mockAdvanceDays,
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
+    getCurrentWeekday: () => 'Moonday',
     gameDate: { day: 5, month: 2, year: 4725 },
   }),
 }));
@@ -71,17 +72,21 @@ const renderDowntime = () => {
 };
 
 describe('PlayModeControl', () => {
-  it('shows Exploration and Downtime buttons when not in encounter', () => {
+  it('always shows all three mode pills; only Encounter is non-interactive', () => {
     renderWith();
     expect(screen.getByRole('button', { name: 'Exploration' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Downtime' })).toBeInTheDocument();
+    // Encounter is a status pill (span), never a button.
+    expect(screen.getByText('Encounter')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Encounter' })).not.toBeInTheDocument();
   });
 
-  it('shows locked Encounter chip during encounter', () => {
+  it('disables Exploration/Downtime and marks Encounter active during an encounter', () => {
     mockState.mode = 'encounter';
     renderWith();
     expect(screen.getByText('Encounter')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Exploration' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Exploration' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Downtime' })).toBeDisabled();
   });
 
   it('calls setGmMode with downtime when Downtime button clicked', () => {
@@ -127,10 +132,12 @@ describe('PlayModeControl', () => {
     expect(mockState.setMoveEnabled).toHaveBeenCalledWith(false);
   });
 
-  it('shows On/Off label on toggle based on moveEnabled', () => {
+  it('reflects moveEnabled state on the switch', () => {
     mockState.moveEnabled = true;
     const { rerender } = renderWith();
-    expect(screen.getByLabelText('Allow token movement')).toHaveTextContent('On');
+    const onSwitch = screen.getByLabelText('Allow token movement');
+    expect(onSwitch).toHaveClass('pmc-switch--on');
+    expect(onSwitch).toHaveAttribute('aria-checked', 'true');
 
     mockState.moveEnabled = false;
     rerender(
@@ -138,7 +145,9 @@ describe('PlayModeControl', () => {
         <PlayModeControl />
       </CharacterContext.Provider>
     );
-    expect(screen.getByLabelText('Allow token movement')).toHaveTextContent('Off');
+    const offSwitch = screen.getByLabelText('Allow token movement');
+    expect(offSwitch).not.toHaveClass('pmc-switch--on');
+    expect(offSwitch).toHaveAttribute('aria-checked', 'false');
   });
 
   describe('Start movement override', () => {

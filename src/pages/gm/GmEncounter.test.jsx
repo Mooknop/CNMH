@@ -32,6 +32,9 @@ vi.mock('../../hooks/useSyncedState', () => {
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../components/gm/ExplorationTimeControl', () => ({ default: () => null }));
+// These tests cover the read-only Foundry actor-mirror, not the play-mode
+// marquee; stub PlayModeControl so its context deps (clock, etc.) aren't needed.
+vi.mock('../../components/gm/PlayModeControl', () => ({ default: () => null }));
 
 import { __reset, __set, __get } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
