@@ -886,3 +886,105 @@
   border-color: var(--peril-base);
   color: var(--shell-text-primary);
 }
+
+/* ── Party Panel ──────────────────────────────────────────── */
+.gm-party-panel {
+  /* inherits .gm-dash-panel padding/background/border */
+}
+
+.gm-party-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.gm-party-row {
+  display: grid;
+  grid-template-columns: 9rem 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: 3px;
+  padding: var(--space-2) 0;
+}
+
+.gm-party-row + .gm-party-row {
+  border-top: 1px solid var(--shell-border);
+}
+
+.gm-party-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--x-theme, var(--shell-text-primary));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* HP bar track */
+.gm-party-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-inset);
+  overflow: hidden;
+  align-self: center;
+}
+
+/* HP fill — width driven by --hp-pct; colour from status + --x-theme */
+.gm-party-fill {
+  height: 100%;
+  width: var(--hp-pct, 100%);
+  border-radius: 3px;
+  background: var(--x-theme, var(--accent-outline));
+  transition: width 0.3s ease;
+}
+
+.gm-party-row[data-status="low"] .gm-party-fill {
+  background: var(--gold-light, #f9a825);
+}
+
+.gm-party-row[data-status="critical"] .gm-party-fill,
+.gm-party-row[data-status="dead"] .gm-party-fill {
+  background: var(--peril-light);
+}
+
+/* HP fraction text */
+.gm-party-hp {
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.gm-party-temp-label {
+  margin-left: 3px;
+  color: var(--shell-text-tertiary);
+  font-size: 0.72rem;
+}
+
+/* Condition badges — span the full second row */
+.gm-party-badge {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+
+.gm-party-dying {
+  background: rgba(183, 28, 28, 0.2);
+  border: 1px solid var(--peril-light);
+  color: var(--peril-light);
+}
+
+.gm-party-wounded {
+  background: rgba(245, 124, 0, 0.12);
+  border: 1px solid rgba(245, 124, 0, 0.5);
+  color: var(--gold-light, #f9a825);
+}

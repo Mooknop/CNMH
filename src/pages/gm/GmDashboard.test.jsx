@@ -19,6 +19,9 @@ vi.mock('../../utils/gmBackup', () => ({ downloadBackup: vi.fn(), restoreBackup:
 vi.mock('../../components/gm/PlayModeControl', () => ({
   default: () => <div data-testid="play-mode-control" />,
 }));
+vi.mock('../../components/gm/PartyPanel', () => ({
+  default: () => <div data-testid="party-panel" />,
+}));
 vi.mock('../../components/gm/GmSaveRequest', () => ({
   default: () => <div data-testid="save-request" />,
 }));
@@ -179,6 +182,11 @@ describe('GmDashboard — Control Center', () => {
     // invoke the updater function to verify the next map
     const [updater] = setActorMap.mock.calls[0];
     expect(updater({})).toEqual({ 'f-actor-1': 'pellias-id' });
+  });
+
+  it('always renders PartyPanel', () => {
+    renderDash();
+    expect(screen.getByTestId('party-panel')).toBeInTheDocument();
   });
 
   it('renders the Quick Actions section in all play modes', () => {
