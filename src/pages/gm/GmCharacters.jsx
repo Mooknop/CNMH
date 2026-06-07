@@ -1260,7 +1260,12 @@ const GmCharacters = () => {
 
   return (
     <div className="gm-characters">
-      {flash && <p className="gm-ok" role="status">{flash}</p>}
+      {flash && (
+        <p className="gm-live-note" role="status">
+          <span className="dot" aria-hidden="true" />
+          {flash}
+        </p>
+      )}
 
       <nav className="gm-char-grid" aria-label="characters">
         {list.map((c) => (

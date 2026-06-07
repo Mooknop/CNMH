@@ -722,6 +722,34 @@
   gap: var(--space-5);
 }
 
+/* Two-column layout: left = mode marquee + initiative,
+   right = party HP + quick actions. Maintenance full-width below. */
+.gm-dash-main {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .gm-dash-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gm-dash-left,
+.gm-dash-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Corner-bracket wrapper around PlayModeControl marquee */
+.gm-dash-marquee {
+  /* gm-bracketed pseudo-elements need position:relative; the .pmc inside
+     already has its own background/border, so we just add the bracket layer */
+}
+
 /* Generic panel card (Initiative, Quick Actions) */
 .gm-dash-panel {
   padding: var(--space-4);
@@ -795,6 +823,7 @@
 .gm-encounter-row.is-current {
   background: color-mix(in srgb, var(--accent-tint) 60%, transparent);
   border-left: 3px solid var(--accent-outline);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent-outline) 30%, transparent);
 }
 
 .gm-encounter-row.is-enemy {
@@ -1058,4 +1087,26 @@
 .gm-theme .btn-secondary:hover {
   background-color: var(--surface-inset);
   border-color: var(--shell-text-tertiary);
+}
+
+/* ── Focus rings (keyboard navigation) ────────────────────── */
+/* Use :focus-visible so mouse clicks don't show a ring. */
+
+.gm-char-card:focus-visible,
+.gm-nav-link:focus-visible,
+.pmc-pill:focus-visible,
+.pmc-toggle:focus-visible,
+.gm-ped-item:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}
+
+.gm-char-card--add:focus-visible {
+  outline-color: var(--shell-text-tertiary);
+}
+
+/* "Saves are live" note — block-level override so it lays out
+   correctly when used as a <p> (inline-flex → flex) */
+p.gm-live-note {
+  display: flex;
 }
