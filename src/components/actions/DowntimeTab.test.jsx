@@ -39,11 +39,16 @@ vi.mock('../inventory/CraftingModal', () => ({
 const character = { id: 'char-1', name: 'Pellias' };
 
 // DowntimeTab calls useSyncedState twice: first for the block, then for the
-// per-PC downtime state. Helpers set both in order.
+// per-PC downtime state. Helpers set both in order, stamping the block with a
+// period id and the downtime state with the matching periodStartedAt so the
+// period-scoped reads see live (current-period) data.
+const PERIOD = 'P1';
 const withBlock = (block, downtime = null) => {
+  const stampedBlock = block ? { startedAt: PERIOD, ...block } : block;
+  const stampedDowntime = downtime ? { periodStartedAt: PERIOD, ...downtime } : downtime;
   useSyncedState
-    .mockReturnValueOnce([block, vi.fn()])    // cnmh_downtimeblock_global
-    .mockReturnValueOnce([downtime, vi.fn()]); // cnmh_downtime_<charId>
+    .mockReturnValueOnce([stampedBlock, vi.fn()])    // cnmh_downtimeblock_global
+    .mockReturnValueOnce([stampedDowntime, vi.fn()]); // cnmh_downtime_<charId>
 };
 
 beforeEach(() => {

@@ -26,7 +26,7 @@ const PlayModeControl = () => {
   const { mode, gmMode, setGmMode, moveEnabled, setMoveEnabled, setMoveOverride } = usePlayMode();
   const { allChosen } = useExplorationReady();
   const { characters } = useContext(CharacterContext) || {};
-  const { sendUpdate, getState } = useSession();
+  const { sendUpdate } = useSession();
   const { formatClockTime, formatGameDate, getCurrentWeekday } = useGameDate();
 
   // Campaign meta has no home in the content model, so the GM edits it inline
@@ -54,19 +54,11 @@ const PlayModeControl = () => {
     }
   }, [mode, characters, sendUpdate, setMoveOverride]);
 
-  // Clear selected activities when entering Downtime so each period starts
-  // with a clean slate. Ledger (accumulated progress) is preserved.
-  const prevGmMode = useRef(gmMode);
-  useEffect(() => {
-    const was = prevGmMode.current;
-    prevGmMode.current = gmMode;
-    if (gmMode === 'downtime' && was !== 'downtime') {
-      (characters || []).forEach((c) => {
-        const dt = getState(c.id, 'downtime') || {};
-        sendUpdate(c.id, 'downtime', { ...dt, selected: [] });
-      });
-    }
-  }, [gmMode, characters, getState, sendUpdate]);
+  // Each downtime period starts with a clean slate of selected activities and
+  // committed days. This is now handled declaratively: per-character downtime
+  // state is stamped with the active block's startedAt and read through
+  // periodState (see downtimeUtils), so state from a prior period reads as
+  // empty without any GM-side fan-out write.
 
   return (
     <>

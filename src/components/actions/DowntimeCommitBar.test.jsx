@@ -19,11 +19,20 @@ vi.mock('../../hooks/useDowntimeFatigue', () => ({
   })),
 }));
 
+const PERIOD = 'P1';
 const character = { id: 'char-1' };
-const activeBlock = { days: 7, active: true };
+const activeBlock = { days: 7, active: true, startedAt: PERIOD };
 
+// State always belongs to the active period unless a test overrides
+// periodStartedAt to simulate stale (prior-period) state.
 const withDowntime = (state) =>
-  useSyncedState.mockReturnValue([state, mockSetDowntime]);
+  useSyncedState.mockReturnValue([
+    state ? { periodStartedAt: PERIOD, ...state } : state,
+    mockSetDowntime,
+  ]);
+
+// Stamped state matching the active period, for feeding the setState updater.
+const scoped = (state) => ({ periodStartedAt: PERIOD, ...state });
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -44,7 +53,7 @@ describe('DowntimeCommitBar', () => {
         { day: 'Research', night: null },
       ],
     });
-    render(<DowntimeCommitBar character={character} block={{ days: 2, active: true }} />);
+    render(<DowntimeCommitBar character={character} block={{ days: 2, active: true, startedAt: PERIOD }} />);
     expect(screen.getByText(/all 2 days committed/i)).toBeInTheDocument();
   });
 
@@ -102,8 +111,9 @@ describe('DowntimeCommitBar', () => {
 
     expect(mockSetDowntime).toHaveBeenCalled();
     const updater = mockSetDowntime.mock.calls[0][0];
-    const result = updater({ selected: ['Research'], ledger: [] });
+    const result = updater(scoped({ selected: ['Research'], ledger: [] }));
     expect(result.ledger).toEqual([{ day: 'Research', night: null }]);
+    expect(result.periodStartedAt).toBe(PERIOD);
 
     expect(mockClearFatigue).toHaveBeenCalled();
     expect(mockApplyFatigue).not.toHaveBeenCalled();
@@ -117,7 +127,7 @@ describe('DowntimeCommitBar', () => {
 
     expect(mockSetDowntime).toHaveBeenCalled();
     const updater = mockSetDowntime.mock.calls[0][0];
-    const result = updater({ selected: ['Research'], ledger: [] });
+    const result = updater(scoped({ selected: ['Research'], ledger: [] }));
     expect(result.ledger).toEqual([{ day: 'Research', night: 'Research' }]);
 
     expect(mockApplyFatigue).toHaveBeenCalled();
@@ -136,7 +146,7 @@ describe('DowntimeCommitBar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit 16h day' }));
 
     const updater = mockSetDowntime.mock.calls[0][0];
-    const result = updater({ selected: ['Research', 'Earn Income'], ledger: [] });
+    const result = updater(scoped({ selected: ['Research', 'Earn Income'], ledger: [] }));
     expect(result.ledger[0]).toEqual({ day: 'Research', night: 'Earn Income' });
   });
 
@@ -156,7 +166,7 @@ describe('DowntimeCommitBar', () => {
       selected: ['Research'],
       ledger: [{ day: 'Research', night: null }],
     });
-    render(<DowntimeCommitBar character={character} block={{ days: 2, active: true }} />);
+    render(<DowntimeCommitBar character={character} block={{ days: 2, active: true, startedAt: PERIOD }} />);
     expect(screen.getByText('Day 2 of 2 (last day)')).toBeInTheDocument();
   });
 
@@ -169,12 +179,50 @@ describe('DowntimeCommitBar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Commit 8h day' }));
 
     const updater = mockSetDowntime.mock.calls[0][0];
-    const result = updater({
+    const result = updater(scoped({
       selected: ['Research'],
       ledger: [{ day: 'Research', night: null }],
-    });
+    }));
     expect(result.ledger).toHaveLength(2);
     expect(result.ledger[0]).toEqual({ day: 'Research', night: null });
     expect(result.ledger[1]).toEqual({ day: 'Research', night: null });
+  });
+
+  describe('period scoping', () => {
+    it('ignores a ledger stamped for a prior period (reads as fresh)', () => {
+      // Two days already committed, but under a DIFFERENT period stamp.
+      useSyncedState.mockReturnValue([
+        {
+          periodStartedAt: 'OLD',
+          selected: ['Research'],
+          ledger: [
+            { day: 'Research', night: null },
+            { day: 'Research', night: null },
+          ],
+        },
+        mockSetDowntime,
+      ]);
+      render(<DowntimeCommitBar character={character} block={{ days: 2, active: true, startedAt: PERIOD }} />);
+      // Not exhausted: the prior period's ledger does not count.
+      expect(screen.queryByText(/all 2 days committed/i)).not.toBeInTheDocument();
+      // But selected is also prior-period, so it reads as empty → activity hint.
+      expect(screen.getByText(/select activities above/i)).toBeInTheDocument();
+    });
+
+    it('committing over stale state starts a fresh ledger stamped to the new period', () => {
+      withDowntime({ selected: ['Research'], ledger: [] });
+      render(<DowntimeCommitBar character={character} block={activeBlock} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Commit 8h day' }));
+
+      const updater = mockSetDowntime.mock.calls[0][0];
+      const result = updater({
+        periodStartedAt: 'OLD',
+        selected: ['Research', 'Crafting'],
+        ledger: [{ day: 'Research', night: null }],
+      });
+      // Prior-period ledger discarded; only the new commit remains.
+      expect(result.ledger).toEqual([{ day: 'Research', night: null }]);
+      expect(result.periodStartedAt).toBe(PERIOD);
+    });
   });
 });

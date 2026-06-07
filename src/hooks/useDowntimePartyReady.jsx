@@ -1,14 +1,15 @@
 import { useContext, useEffect, useState } from 'react';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useSession } from '../contexts/SessionContext';
-import { getDaysCommitted } from '../utils/downtimeUtils';
+import { getDaysCommitted, periodState } from '../utils/downtimeUtils';
 
 // Derives how many party PCs have committed all their granted downtime days.
 // Mirrors useExplorationReady: subscribes to each PC's cnmh_downtime_<id> key
-// so callers rerender on any commit.
+// so callers rerender on any commit. Only days committed in the active period
+// (matching startedAt) count — a prior period's ledger reads as empty.
 //
 // Returns { readyCount, total, allReady }.
-export function useDowntimePartyReady(blockDays) {
+export function useDowntimePartyReady(blockDays, startedAt) {
   const { characters } = useContext(CharacterContext) || {};
   const { getState, subscribe } = useSession();
 
@@ -30,7 +31,7 @@ export function useDowntimePartyReady(blockDays) {
   const total = ids.length;
   const readyCount = days == null ? 0 : ids.filter((id) => {
     const dt = getState(id, 'downtime');
-    return getDaysCommitted(dt?.ledger) >= days;
+    return getDaysCommitted(periodState(dt, startedAt).ledger) >= days;
   }).length;
 
   return { readyCount, total, allReady: days != null && total > 0 && readyCount === total };

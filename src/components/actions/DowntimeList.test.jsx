@@ -46,6 +46,17 @@ const makeCharacterModel = (overrides = {}) => ({
 
 const mockCharacter = { id: 'char-1', name: 'Tester' };
 
+// DowntimeList reads two synced keys in order: the global block, then the
+// per-PC downtime state. This helper stamps both to the same active period so
+// the period-scoped `selected` read sees live data.
+const PERIOD = 'P1';
+const activeBlock = { days: 7, active: true, startedAt: PERIOD };
+// Key-based so it survives re-renders (a row click re-renders the list).
+const withState = (downtime = null, block = activeBlock) =>
+  useSyncedState.mockImplementation((key) =>
+    key === 'cnmh_downtimeblock_global' ? [block, mockSetter] : [downtime, mockSetter]
+  );
+
 describe('DowntimeList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -104,30 +115,39 @@ describe('DowntimeList', () => {
   });
 
   it('toggles the activity into selected when Set as active is clicked', () => {
+    withState(null);
     render(<DowntimeList character={mockCharacter} />);
     fireEvent.click(screen.getAllByTestId('action-row')[0]);
     fireEvent.click(screen.getByRole('button', { name: 'Set as active' }));
     expect(mockSetter).toHaveBeenCalled();
-    // The updater should add the tapped activity name to selected.
+    // The updater should add the tapped activity name to selected, stamped to
+    // the active period.
     const updater = mockSetter.mock.calls[0][0];
-    expect(updater(null)).toEqual({ selected: ['Earn Income'] });
+    expect(updater(null)).toEqual({ periodStartedAt: PERIOD, selected: ['Earn Income'], ledger: [] });
   });
 
   it('removes an already-selected activity when toggled again', () => {
-    useSyncedState.mockReturnValue([{ selected: ['Earn Income'] }, mockSetter]);
+    withState({ periodStartedAt: PERIOD, selected: ['Earn Income'] });
     render(<DowntimeList character={mockCharacter} />);
     fireEvent.click(screen.getAllByTestId('action-row')[0]);
     fireEvent.click(screen.getByRole('button', { name: '✓ Active — Clear' }));
     const updater = mockSetter.mock.calls[0][0];
-    expect(updater({ selected: ['Earn Income'] })).toEqual({ selected: [] });
+    expect(updater({ periodStartedAt: PERIOD, selected: ['Earn Income'] }))
+      .toEqual({ periodStartedAt: PERIOD, selected: [], ledger: [] });
   });
 
   it('renders the selected-activities banner with chips', () => {
-    useSyncedState.mockReturnValue([{ selected: ['Research', 'Retrain'] }, mockSetter]);
+    withState({ periodStartedAt: PERIOD, selected: ['Research', 'Retrain'] });
     render(<DowntimeList character={mockCharacter} />);
     expect(screen.getByText('Pursuing this downtime')).toBeInTheDocument();
     const chips = screen.getAllByText(/Research|Retrain/);
     expect(chips.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('ignores selected from a prior period (stale stamp reads as empty)', () => {
+    withState({ periodStartedAt: 'OLD', selected: ['Research', 'Retrain'] });
+    render(<DowntimeList character={mockCharacter} />);
+    expect(screen.queryByText('Pursuing this downtime')).not.toBeInTheDocument();
   });
 
   it('does not render the selected banner when nothing is chosen', () => {

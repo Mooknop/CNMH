@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimeFatigue } from '../../hooks/useDowntimeFatigue';
-import { getDaysCommitted } from '../../utils/downtimeUtils';
+import { getDaysCommitted, periodState, stampPeriod } from '../../utils/downtimeUtils';
 import './DowntimeCommitBar.css';
 
 // Lets a player commit one day of downtime (8h) or work through the night (16h).
@@ -19,8 +19,8 @@ const DowntimeCommitBar = ({ character, block }) => {
   const [nightChoice, setNightChoice] = useState('');
   const [workNight, setWorkNight] = useState(false);
 
-  const selected = downtime?.selected || [];
-  const ledger = downtime?.ledger || [];
+  const startedAt = block?.startedAt;
+  const { selected, ledger } = periodState(downtime, startedAt);
   const daysCommitted = getDaysCommitted(ledger);
   const blockDays = block?.days ?? 0;
   const budgetExhausted = daysCommitted >= blockDays;
@@ -46,11 +46,12 @@ const DowntimeCommitBar = ({ character, block }) => {
 
   const commit = () => {
     const night = workNight ? nightActivity : null;
-    setDowntime((prev) => ({
-      ...(prev || {}),
-      selected: prev?.selected || [],
-      ledger: [...((prev?.ledger) || []), { day: dayActivity, night }],
-    }));
+    setDowntime((prev) => {
+      const scoped = periodState(prev, startedAt);
+      return stampPeriod(prev, startedAt, {
+        ledger: [...scoped.ledger, { day: dayActivity, night }],
+      });
+    });
     if (workNight) {
       applyFatigue();
     } else {

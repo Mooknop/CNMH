@@ -28,10 +28,15 @@ const makeWrapper = (characters, stateMap) => {
 
 const chars = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
 
+// Only days committed in the active period count; downtime state carries a
+// periodStartedAt stamp that must match the startedAt passed to the hook.
+const PERIOD = 'P1';
+const dt = (ledger, extra = {}) => ({ periodStartedAt: PERIOD, ledger, ...extra });
+
 describe('useDowntimePartyReady', () => {
   it('returns 0/N ready when no one has committed any days', () => {
     const { Wrapper } = makeWrapper(chars, {});
-    const { result } = renderHook(() => useDowntimePartyReady(7), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(7, PERIOD), { wrapper: Wrapper });
     expect(result.current.readyCount).toBe(0);
     expect(result.current.total).toBe(3);
     expect(result.current.allReady).toBe(false);
@@ -39,9 +44,9 @@ describe('useDowntimePartyReady', () => {
 
   it('counts a PC as ready when their committed days equal the block', () => {
     const { Wrapper } = makeWrapper(chars, {
-      a_downtime: { ledger: [{ day: 'Research', night: null }, { day: 'Research', night: null }] },
+      a_downtime: dt([{ day: 'Research', night: null }, { day: 'Research', night: null }]),
     });
-    const { result } = renderHook(() => useDowntimePartyReady(2), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(2, PERIOD), { wrapper: Wrapper });
     expect(result.current.readyCount).toBe(1);
     expect(result.current.allReady).toBe(false);
   });
@@ -49,11 +54,11 @@ describe('useDowntimePartyReady', () => {
   it('allReady is true when every PC has committed all days', () => {
     const entry = { day: 'Research', night: null };
     const { Wrapper } = makeWrapper(chars, {
-      a_downtime: { ledger: [entry] },
-      b_downtime: { ledger: [entry] },
-      c_downtime: { ledger: [entry] },
+      a_downtime: dt([entry]),
+      b_downtime: dt([entry]),
+      c_downtime: dt([entry]),
     });
-    const { result } = renderHook(() => useDowntimePartyReady(1), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(1, PERIOD), { wrapper: Wrapper });
     expect(result.current.allReady).toBe(true);
     expect(result.current.readyCount).toBe(3);
   });
@@ -61,25 +66,34 @@ describe('useDowntimePartyReady', () => {
   it('re-derives when a subscription fires', () => {
     const stateMap = { a_downtime: null };
     const { Wrapper, notify } = makeWrapper(chars, stateMap);
-    const { result } = renderHook(() => useDowntimePartyReady(1), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(1, PERIOD), { wrapper: Wrapper });
     expect(result.current.readyCount).toBe(0);
 
-    stateMap.a_downtime = { ledger: [{ day: 'Research', night: null }] };
+    stateMap.a_downtime = dt([{ day: 'Research', night: null }]);
     act(() => notify('a', 'downtime'));
     expect(result.current.readyCount).toBe(1);
   });
 
+  it('does not count days committed under a prior period stamp', () => {
+    const entries = Array(3).fill({ day: 'Research', night: null });
+    const { Wrapper } = makeWrapper(chars, {
+      a_downtime: { periodStartedAt: 'OLD', ledger: entries },
+    });
+    const { result } = renderHook(() => useDowntimePartyReady(3, PERIOD), { wrapper: Wrapper });
+    expect(result.current.readyCount).toBe(0);
+  });
+
   it('handles null ledger gracefully', () => {
     const { Wrapper } = makeWrapper(chars, {
-      a_downtime: { selected: ['Research'] },
+      a_downtime: dt(undefined, { selected: ['Research'] }),
     });
-    const { result } = renderHook(() => useDowntimePartyReady(3), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(3, PERIOD), { wrapper: Wrapper });
     expect(result.current.readyCount).toBe(0);
   });
 
   it('returns total 0 and allReady false for an empty party', () => {
     const { Wrapper } = makeWrapper([], {});
-    const { result } = renderHook(() => useDowntimePartyReady(7), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(7, PERIOD), { wrapper: Wrapper });
     expect(result.current.total).toBe(0);
     expect(result.current.allReady).toBe(false);
   });
@@ -87,9 +101,9 @@ describe('useDowntimePartyReady', () => {
   it('does not count over-committed days as not-ready', () => {
     const entries = Array(5).fill({ day: 'Research', night: null });
     const { Wrapper } = makeWrapper([{ id: 'a' }], {
-      a_downtime: { ledger: entries },
+      a_downtime: dt(entries),
     });
-    const { result } = renderHook(() => useDowntimePartyReady(3), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(3, PERIOD), { wrapper: Wrapper });
     expect(result.current.readyCount).toBe(1);
   });
 
@@ -97,11 +111,11 @@ describe('useDowntimePartyReady', () => {
     // getDaysCommitted(ledger) >= 0 is trivially true without this guard
     const entries = Array(3).fill({ day: 'Research', night: null });
     const { Wrapper } = makeWrapper(chars, {
-      a_downtime: { ledger: entries },
-      b_downtime: { ledger: entries },
-      c_downtime: { ledger: entries },
+      a_downtime: dt(entries),
+      b_downtime: dt(entries),
+      c_downtime: dt(entries),
     });
-    const { result } = renderHook(() => useDowntimePartyReady(0), { wrapper: Wrapper });
+    const { result } = renderHook(() => useDowntimePartyReady(0, PERIOD), { wrapper: Wrapper });
     expect(result.current.allReady).toBe(false);
     expect(result.current.readyCount).toBe(0);
   });
