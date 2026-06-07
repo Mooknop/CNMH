@@ -270,21 +270,8 @@ export const calculateEnhancedBulkLimit = (character) => {
     bulkLimit += 2;
     encumberedThreshold += 2;
   }
-  
-  // Calculate container ignored bulk bonus
-  const containerBonus = calculateTotalContainerIgnoredBulk(character.inventory);
-  
-  // Add container bonus to bulk limits
-  const finalBulkLimit = bulkLimit + containerBonus;
-  const finalEncumberedThreshold = encumberedThreshold + containerBonus;
-  
-  return { 
-    bulkLimit: finalBulkLimit, 
-    encumberedThreshold: finalEncumberedThreshold,
-    containerBonus: containerBonus,
-    baseBulkLimit: bulkLimit,
-    baseEncumberedThreshold: encumberedThreshold
-  };
+
+  return { bulkLimit, encumberedThreshold };
 };
 
 /**
