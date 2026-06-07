@@ -1,9 +1,12 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import GmDashboard from './GmDashboard';
 
+// ─── module-level mocks ───────────────────────────────────────────────────────
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
+vi.mock('../../hooks/usePlayMode', () => ({ usePlayMode: vi.fn() }));
+vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
 vi.mock('../../utils/gmApi', () => ({
   seedDefaults: vi.fn(),
   seedMissing: vi.fn(),
@@ -11,15 +14,190 @@ vi.mock('../../utils/gmApi', () => ({
   syncChainConfig: vi.fn(),
 }));
 vi.mock('../../utils/gmBackup', () => ({ downloadBackup: vi.fn(), restoreBackup: vi.fn() }));
+
+// lightweight stubs so dashboard never needs provider trees
+vi.mock('../../components/gm/PlayModeControl', () => ({
+  default: () => <div data-testid="play-mode-control" />,
+}));
+vi.mock('../../components/gm/GmSaveRequest', () => ({
+  default: () => <div data-testid="save-request" />,
+}));
+vi.mock('../../components/encounter/RequestedSaves', () => ({
+  default: () => <div data-testid="requested-saves" />,
+}));
+vi.mock('../../components/character-sheet/EffectsModal', () => ({
+  default: ({ isOpen }) => (isOpen ? <div data-testid="effects-modal" /> : null),
+}));
+
+// ─── imports after mocks ──────────────────────────────────────────────────────
 import { useContent } from '../../contexts/ContentContext';
-import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig } from '../../utils/gmApi';
+import { usePlayMode } from '../../hooks/usePlayMode';
+import { useEncounter } from '../../hooks/useEncounter';
+import {
+  seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig,
+} from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 
+// ─── helpers ──────────────────────────────────────────────────────────────────
 const renderDash = () => render(<MemoryRouter><GmDashboard /></MemoryRouter>);
+
+const EXPLORATION_MODE = {
+  mode: 'exploration',
+  gmMode: 'exploration',
+  setGmMode: vi.fn(),
+  moveEnabled: false,
+  setMoveEnabled: vi.fn(),
+  moveOverride: null,
+  setMoveOverride: vi.fn(),
+};
+const ENCOUNTER_MODE = { ...EXPLORATION_MODE, mode: 'encounter' };
+
+const IDLE_ENCOUNTER = {
+  encounter: { phase: 'idle', order: [], round: 0, currentTurnIndex: 0, foundryCombatId: null },
+  actorMap: {},
+  setActorMap: vi.fn(),
+};
+
+const CHARACTERS = [
+  { id: 'thorn-id', name: 'Thorn' },
+  { id: 'pellias-id', name: 'Pellias' },
+];
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('GmDashboard', () => {
+// ─── safe defaults before every test ─────────────────────────────────────────
+beforeEach(() => {
+  useContent.mockReturnValue({ source: 'server', rawCharacters: [], spells: [], characters: [] });
+  usePlayMode.mockReturnValue(EXPLORATION_MODE);
+  useEncounter.mockReturnValue({ encounter: null, actorMap: {}, setActorMap: vi.fn() });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Control Center — mode composition
+// ─────────────────────────────────────────────────────────────────────────────
+describe('GmDashboard — Control Center', () => {
+  it('always renders PlayModeControl', () => {
+    renderDash();
+    expect(screen.getByTestId('play-mode-control')).toBeInTheDocument();
+  });
+
+  it('does not show the initiative panel in exploration mode', () => {
+    renderDash();
+    expect(screen.queryByRole('region', { name: 'Initiative' })).not.toBeInTheDocument();
+  });
+
+  it('shows the initiative panel in encounter mode', () => {
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useEncounter.mockReturnValue(IDLE_ENCOUNTER);
+    renderDash();
+    expect(screen.getByRole('region', { name: 'Initiative' })).toBeInTheDocument();
+  });
+
+  it('shows a "Waiting for Foundry" message when no combat is linked', () => {
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useEncounter.mockReturnValue(IDLE_ENCOUNTER);
+    renderDash();
+    expect(screen.getByText(/Waiting for combat to start in Foundry/i)).toBeInTheDocument();
+  });
+
+  it('shows a "Live" message when Foundry combat is linked', () => {
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useEncounter.mockReturnValue({
+      ...IDLE_ENCOUNTER,
+      encounter: { ...IDLE_ENCOUNTER.encounter, foundryCombatId: 'combat-abc' },
+    });
+    renderDash();
+    expect(screen.getByText(/Live.*Foundry/i)).toBeInTheDocument();
+  });
+
+  it('renders round number and current actor name in an in-progress encounter', () => {
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useEncounter.mockReturnValue({
+      encounter: {
+        phase: 'in-progress',
+        round: 3,
+        currentTurnIndex: 0,
+        foundryCombatId: 'combat-xyz',
+        order: [
+          { entryId: 'e1', name: 'Thorn', kind: 'pc', charId: 'thorn-id', foundryActorId: 'f1', initiative: 22 },
+          { entryId: 'e2', name: 'Goblin', kind: 'enemy', initiative: 18 },
+        ],
+      },
+      actorMap: {},
+      setActorMap: vi.fn(),
+    });
+    renderDash();
+    // "Round 3" and "current: Thorn" span multiple elements — check section textContent
+    const panel = screen.getByRole('region', { name: 'Initiative' });
+    expect(panel.textContent).toMatch(/Round 3/);
+    expect(panel.textContent).toMatch(/current:.*Thorn/i);
+  });
+
+  it('renders initiative order rows with testids', () => {
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useEncounter.mockReturnValue({
+      encounter: {
+        phase: 'in-progress',
+        round: 1,
+        currentTurnIndex: 0,
+        foundryCombatId: 'combat-xyz',
+        order: [
+          { entryId: 'e1', name: 'Thorn', kind: 'pc', charId: 'thorn-id', foundryActorId: 'f1', initiative: 20 },
+          { entryId: 'e2', name: 'Goblin', kind: 'enemy', initiative: 14 },
+        ],
+      },
+      actorMap: {},
+      setActorMap: vi.fn(),
+    });
+    renderDash();
+    expect(screen.getByTestId('order-row-e1')).toBeInTheDocument();
+    expect(screen.getByTestId('order-row-e2')).toBeInTheDocument();
+  });
+
+  it('actor assignment fires setActorMap with the correct next map', () => {
+    const setActorMap = vi.fn();
+    usePlayMode.mockReturnValue(ENCOUNTER_MODE);
+    useContent.mockReturnValue({ source: 'server', rawCharacters: [], spells: [], characters: CHARACTERS });
+    useEncounter.mockReturnValue({
+      encounter: {
+        phase: 'in-progress',
+        round: 1,
+        currentTurnIndex: 0,
+        foundryCombatId: 'combat-xyz',
+        order: [
+          { entryId: 'e1', name: 'Thorn', kind: 'pc', charId: null, foundryActorId: 'f-actor-1', initiative: 20 },
+        ],
+      },
+      actorMap: {},
+      setActorMap,
+    });
+    renderDash();
+    fireEvent.change(screen.getByRole('combobox', { name: 'assign-e1' }), {
+      target: { value: 'pellias-id' },
+    });
+    expect(setActorMap).toHaveBeenCalledTimes(1);
+    // invoke the updater function to verify the next map
+    const [updater] = setActorMap.mock.calls[0];
+    expect(updater({})).toEqual({ 'f-actor-1': 'pellias-id' });
+  });
+
+  it('renders the Quick Actions section in all play modes', () => {
+    renderDash();
+    expect(screen.getByRole('region', { name: 'Quick Actions' })).toBeInTheDocument();
+  });
+
+  it('clicking Apply Effect opens the effects modal', () => {
+    renderDash();
+    expect(screen.queryByTestId('effects-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Effect to character' }));
+    expect(screen.getByTestId('effects-modal')).toBeInTheDocument();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Maintenance panel (preserved from pre-refresh suite)
+// ─────────────────────────────────────────────────────────────────────────────
+describe('GmDashboard — Maintenance', () => {
   it('warns and offers import when content is on the bundled fallback', () => {
     useContent.mockReturnValue({ source: 'fallback' });
     renderDash();

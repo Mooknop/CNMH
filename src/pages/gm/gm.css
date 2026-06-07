@@ -714,3 +714,149 @@
     padding-top: var(--space-4);
   }
 }
+
+/* ── Dashboard ────────────────────────────────────────────── */
+.gm-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Generic panel card (Initiative, Quick Actions) */
+.gm-dash-panel {
+  padding: var(--space-4);
+  background: var(--surface-card);
+  border-radius: 6px;
+  border: 1px solid var(--shell-border);
+}
+
+.gm-dash-panel > h2 {
+  margin: 0 0 var(--space-3);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* Encounter sub-elements inside the initiative panel */
+.gm-encounter-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.gm-encounter-header > h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.gm-encounter-status {
+  font-size: 0.875rem;
+  color: var(--shell-text-secondary);
+  margin-bottom: var(--space-3);
+}
+
+.gm-encounter-order {
+  margin-top: var(--space-4);
+}
+
+.gm-encounter-order > h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.gm-encounter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gm-encounter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 4px;
+  background: var(--surface-inset);
+  font-size: 0.85rem;
+}
+
+.gm-encounter-row.is-current {
+  background: color-mix(in srgb, var(--accent-tint) 60%, transparent);
+  border-left: 3px solid var(--accent-outline);
+}
+
+.gm-encounter-row.is-enemy {
+  opacity: 0.85;
+}
+
+.gm-encounter-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--shell-text);
+}
+
+.gm-encounter-init {
+  font-size: 0.78rem;
+  color: var(--shell-text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.gm-encounter-assign {
+  font-size: 0.78rem;
+  background: var(--surface-card);
+  border: 1px solid var(--shell-border);
+  border-radius: 4px;
+  color: var(--shell-text-secondary);
+  padding: 2px 6px;
+}
+
+/* Maintenance — collapsible details panel */
+.gm-dash-maintenance {
+  border: 1px solid var(--shell-border);
+  border-radius: 6px;
+  background: var(--surface-card);
+}
+
+.gm-dash-maintenance > summary {
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  list-style: none;
+  user-select: none;
+}
+
+.gm-dash-maintenance > summary::marker,
+.gm-dash-maintenance > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gm-dash-maintenance > summary::before {
+  content: '▶\00a0';
+  font-size: 0.65rem;
+  opacity: 0.55;
+}
+
+.gm-dash-maintenance[open] > summary::before {
+  content: '▼\00a0';
+}
+
+.gm-dash-maintenance-body {
+  padding: var(--space-4);
+  border-top: 1px solid var(--shell-border);
+}
