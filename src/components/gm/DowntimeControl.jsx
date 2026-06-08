@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import SetDateTimeModal from './SetDateTimeModal';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
@@ -23,6 +24,7 @@ const DowntimeControl = () => {
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('hours');
   const [periodValue, setPeriodValue] = useState('');
+  const [showSetClock, setShowSetClock] = useState(false);
 
   const applyCustom = () => {
     const n = parseInt(customValue, 10);
@@ -135,6 +137,8 @@ const DowntimeControl = () => {
       <span className="pmc-label">Advance Time</span>
 
       <div className="pmc-downtime-quick">
+        <button className="pmc-tchip" onClick={() => advanceDays(-1)}>-1 day</button>
+        <button className="pmc-tchip" onClick={() => advanceHours(-1)}>-1 hr</button>
         <button className="pmc-tchip" onClick={() => advanceHours(1)}>+1 hr</button>
         <button className="pmc-tchip" onClick={() => advanceHours(8)}>+8 hr</button>
         <button className="pmc-tchip" onClick={() => advanceDays(1)}>+1 day</button>
@@ -171,7 +175,16 @@ const DowntimeControl = () => {
 
       <div className="pmc-downtime-clock">
         {formatGameDate()} · {formatClockTime()}
+        <button
+          className="pmc-btn pmc-btn--sm pmc-downtime-set-clock"
+          onClick={() => setShowSetClock(true)}
+          aria-label="Set date and time"
+        >
+          Set…
+        </button>
       </div>
+
+      <SetDateTimeModal isOpen={showSetClock} onClose={() => setShowSetClock(false)} />
     </div>
   );
 };

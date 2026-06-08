@@ -90,15 +90,17 @@ const DEFAULT_CLOCK = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second
  */
 const addDays = (date, days) => {
   let { day, month, year } = date;
-  for (let i = 0; i < days; i++) {
-    day++;
+  const step = days >= 0 ? 1 : -1;
+  for (let i = 0; i < Math.abs(days); i++) {
+    day += step;
     if (day > GOLARION_MONTHS[month].days) {
       day = 1;
       month++;
-      if (month > 11) {
-        month = 0;
-        year++;
-      }
+      if (month > 11) { month = 0; year++; }
+    } else if (day < 1) {
+      month--;
+      if (month < 0) { month = 11; year--; }
+      day = GOLARION_MONTHS[month].days;
     }
   }
   return { day, month, year };

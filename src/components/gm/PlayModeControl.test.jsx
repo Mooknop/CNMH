@@ -36,10 +36,26 @@ vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({
     advanceHours: mockAdvanceHours,
     advanceDays: mockAdvanceDays,
+    setSpecificDate: vi.fn(),
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
     getCurrentWeekday: () => 'Moonday',
     gameDate: { day: 5, month: 2, year: 4725 },
+    time: { hour: 8, minute: 0, second: 0 },
+    GOLARION_MONTHS: [
+      { name: 'Abadius', days: 31, index: 0 },
+      { name: 'Calistril', days: 28, index: 1 },
+      { name: 'Pharast', days: 31, index: 2 },
+      { name: 'Gozran', days: 30, index: 3 },
+      { name: 'Desnus', days: 31, index: 4 },
+      { name: 'Sarenith', days: 30, index: 5 },
+      { name: 'Erastus', days: 31, index: 6 },
+      { name: 'Arodus', days: 31, index: 7 },
+      { name: 'Rova', days: 30, index: 8 },
+      { name: 'Lamashan', days: 31, index: 9 },
+      { name: 'Neth', days: 30, index: 10 },
+      { name: 'Kuthona', days: 31, index: 11 },
+    ],
   }),
 }));
 
