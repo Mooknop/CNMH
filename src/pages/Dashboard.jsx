@@ -3,13 +3,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameDate } from '../contexts/GameDateContext';
 import { useLore } from '../contexts/LoreContext';
-import { PARTY_GOLD, PARTY_NAME, CURRENT_LOCATION, CURRENT_LOCATION_LORE_ID } from '../data/campaign';
+import { useSyncedState } from '../hooks/useSyncedState';
+import { PARTY_GOLD, PARTY_NAME } from '../data/campaign';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { formatGameDate } = useGameDate();
   const navigate = useNavigate();
   const { openLore } = useLore();
+  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '', locationLoreId: '' });
+  const currentLocation = campaign?.location || '';
+  const locationLoreId = campaign?.locationLoreId || '';
 
   const navigateTo = (path) => {
     navigate(path);
@@ -35,13 +39,14 @@ const Dashboard = () => {
           </button>
 
             <button
-              className="stat-card clickable-stat-card"
-              onClick={() => openLore(CURRENT_LOCATION_LORE_ID)}
-              title="Click to view lore about this location">
+              className={`stat-card${locationLoreId ? ' clickable-stat-card' : ''}`}
+              onClick={locationLoreId ? () => openLore(locationLoreId) : undefined}
+              title={locationLoreId ? 'Click to view lore about this location' : undefined}
+            >
               <div className="stat-icon">🗺️</div>
               <div className="stat-content">
                 <div className="stat-label">Current Location</div>
-                <div className="stat-number">{CURRENT_LOCATION}</div>
+                <div className="stat-number">{currentLocation || '—'}</div>
               </div>
             </button>
 
