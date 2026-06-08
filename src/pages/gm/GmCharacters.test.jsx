@@ -23,7 +23,7 @@ const pellias = {
   actions: [{ name: 'Exploit Vulnerability', actionCount: 1, traits: ['Thaumaturge'] }],
   reactions: [],
   familiar: { name: 'Lazarus', type: 'Squox', ac: 20, hp: 20 },
-  crafting: [{ ref: 'minor-elixir-of-life' }, { ref: 'antidote', level: 1 }],
+  crafting: [{ ref: 'minor-elixir-of-life' }, { ref: 'antidote' }],
 };
 
 const izzy = {
@@ -164,7 +164,7 @@ describe('GmCharacters', () => {
     expect(data.strikes[0]).toEqual({ name: 'Pick', proficiency: 'martial', damage: '1d6' });
     expect(data.reactions).toEqual([]);
     expect(data.familiar).toEqual({ name: 'Lazarus', type: 'Squox', ac: 20, hp: 20 });
-    expect(data.crafting).toEqual([{ ref: 'minor-elixir-of-life' }, { ref: 'antidote', level: 1 }]);
+    expect(data.crafting).toEqual([{ ref: 'minor-elixir-of-life' }, { ref: 'antidote' }]);
   });
 
   it('adds and removes array entries', async () => {
@@ -831,15 +831,15 @@ describe('GmCharacters', () => {
   });
 
   describe('Recipes tab', () => {
-    it('shows existing ref recipes with item name and grade', () => {
+    it('shows existing ref recipes with item name only (no grade label)', () => {
       setContent([pellias]);
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-pellias');
       gotoTab(form, 'Recipes');
-      // Minor Elixir of Life: no variants → just the name
       expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Minor Elixir of Life');
-      // Antidote level 1: has variants → shows grade label
-      expect(within(form).getByTestId('recipe-row-1')).toHaveTextContent('Antidote (Lesser, L1)');
+      expect(within(form).getByTestId('recipe-row-1')).toHaveTextContent('Antidote');
+      // No grade label appended
+      expect(within(form).getByTestId('recipe-row-1')).not.toHaveTextContent('Lesser');
     });
 
     it('shows "No known recipes" when the array is empty', () => {
@@ -868,7 +868,6 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-pellias');
       gotoTab(form, 'Recipes');
       fireEvent.change(within(form).getByLabelText('new-recipe-ref'), { target: { value: 'minor-elixir-of-life' } });
-      expect(within(form).queryByLabelText('new-recipe-level')).not.toBeInTheDocument();
       fireEvent.click(within(form).getByLabelText('add-recipe'));
       expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Minor Elixir of Life');
       fireEvent.click(within(form).getByText('Save'));
@@ -876,22 +875,22 @@ describe('GmCharacters', () => {
       expect(saveDocument.mock.calls[0][2].crafting).toEqual([{ ref: 'minor-elixir-of-life' }]);
     });
 
-    it('adds a multi-level recipe with grade selection', async () => {
+    it('adds a multi-variant recipe without grade picker (saves ref only)', async () => {
       setContent([{ ...pellias, crafting: [] }]);
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmCharacters />);
       const form = screen.getByTestId('character-form-pellias');
       gotoTab(form, 'Recipes');
+      // No grade picker in the add panel — just pick the item
+      expect(within(form).queryByLabelText('new-recipe-level')).not.toBeInTheDocument();
       fireEvent.change(within(form).getByLabelText('new-recipe-ref'), { target: { value: 'antidote' } });
-      expect(within(form).getByLabelText('new-recipe-level')).toBeInTheDocument();
-      expect(within(form).getByLabelText('add-recipe')).toBeDisabled();
-      fireEvent.change(within(form).getByLabelText('new-recipe-level'), { target: { value: '6' } });
+      expect(within(form).queryByLabelText('new-recipe-level')).not.toBeInTheDocument();
       expect(within(form).getByLabelText('add-recipe')).not.toBeDisabled();
       fireEvent.click(within(form).getByLabelText('add-recipe'));
-      expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Antidote (Moderate, L6)');
+      expect(within(form).getByTestId('recipe-row-0')).toHaveTextContent('Antidote');
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-      expect(saveDocument.mock.calls[0][2].crafting).toEqual([{ ref: 'antidote', level: 6 }]);
+      expect(saveDocument.mock.calls[0][2].crafting).toEqual([{ ref: 'antidote' }]);
     });
 
     it('does not include crafting in Advanced JSON', () => {

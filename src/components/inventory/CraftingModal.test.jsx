@@ -138,6 +138,30 @@ describe('CraftingModal', () => {
     expect(screen.queryByText('Variants')).toBeNull();
   });
 
+  it('renders catalog variants list when recipe.variants is non-empty', () => {
+    const char = {
+      ...baseCharacter,
+      crafting: [
+        {
+          name: 'Antidote',
+          weight: 0.1,
+          variants: [
+            { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+            { level: 6, label: 'Moderate', price: 35, effect: '+3 bonus' },
+          ],
+        },
+      ],
+    };
+    render(<CraftingModal isOpen={true} onClose={vi.fn()} character={char} />);
+    fireEvent.click(screen.getByText(/Known Recipes/));
+    expect(screen.getByText('Antidote')).toBeInTheDocument();
+    expect(screen.getByText('Variants')).toBeInTheDocument();
+    expect(screen.getByText('Lesser')).toBeInTheDocument();
+    expect(screen.getByText('Moderate')).toBeInTheDocument();
+    expect(screen.getByText('DC 16')).toBeInTheDocument(); // 15 + 1
+    expect(screen.getByText('DC 21')).toBeInTheDocument(); // 15 + 6
+  });
+
   it('calls onClose when overlay is clicked', () => {
     const onClose = vi.fn();
     const { container } = render(

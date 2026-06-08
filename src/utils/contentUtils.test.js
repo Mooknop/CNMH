@@ -587,11 +587,21 @@ describe('contentUtils', () => {
         },
       ]);
 
-      it('resolves ref+level crafting entries to full variant items', () => {
+      it('resolves ref entries to base item with full variants (ignores stored level)', () => {
         const entries = [{ ref: 'antidote', level: 1 }, { ref: 'antidote', level: 6 }];
         const resolved = resolveCraftingRecipes(entries, recipeCatalog);
-        expect(resolved[0]).toMatchObject({ name: 'Antidote', level: 1, label: 'Lesser', price: 3 });
-        expect(resolved[1]).toMatchObject({ name: 'Antidote', level: 6, label: 'Moderate', price: 35 });
+        // Deduped to one entry; no variant fields merged in
+        expect(resolved).toHaveLength(1);
+        expect(resolved[0]).toMatchObject({ name: 'Antidote', weight: 0.1 });
+        expect(resolved[0].label).toBeUndefined();
+        expect(resolved[0].variants).toHaveLength(2);
+      });
+
+      it('deduplicates repeated refs to the first occurrence', () => {
+        const entries = [{ ref: 'antidote' }, { ref: 'antidote' }];
+        const resolved = resolveCraftingRecipes(entries, recipeCatalog);
+        expect(resolved).toHaveLength(1);
+        expect(resolved[0].name).toBe('Antidote');
       });
 
       it('passes through inline legacy recipes unchanged (back-compat)', () => {
@@ -600,16 +610,20 @@ describe('contentUtils', () => {
         expect(resolved[0]).toEqual(inline[0]);
       });
 
-      it('resolveCharacterItems resolves both inventory and crafting', () => {
+      it('resolveCharacterItems resolves crafting to base item + variants', () => {
         const itemList = [...recipeCatalog.values()];
         const sheet = {
           level: 3,
           inventory: [{ ref: 'antidote', level: 1, uid: 'inv1' }],
-          crafting: [{ ref: 'antidote', level: 6 }],
+          crafting: [{ ref: 'antidote' }],
         };
         const out = resolveCharacterItems(sheet, itemList, []);
+        // Inventory still resolves variant by level
         expect(out.inventory[0]).toMatchObject({ name: 'Antidote', level: 1, label: 'Lesser' });
-        expect(out.crafting[0]).toMatchObject({ name: 'Antidote', level: 6, label: 'Moderate' });
+        // Crafting gets base item with variants array
+        expect(out.crafting[0]).toMatchObject({ name: 'Antidote' });
+        expect(out.crafting[0].label).toBeUndefined();
+        expect(out.crafting[0].variants).toHaveLength(2);
       });
 
       it('resolveCharacterItems returns character unchanged when no inventory or crafting', () => {

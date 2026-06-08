@@ -365,12 +365,27 @@ export const resolveInventory = (list, catalogMap, spellMap, ownerLevel) =>
     resolveInventoryItem(e, catalogMap, spellMap, ownerLevel)
   );
 
-// Resolve a character's crafting recipes against the item catalog. Each
-// entry with a `ref` is resolved like an inventory item (variant fields
-// merged in by level). Inline legacy entries (no `ref`) pass through
-// unchanged for back-compat.
-export const resolveCraftingRecipes = (crafting, catalogMap, spellMap, ownerLevel) =>
-  resolveInventory(crafting, catalogMap, spellMap, ownerLevel);
+// Resolve a character's crafting recipes against the item catalog.
+// Recipes are per-item (not per-variant): level is stripped before resolution
+// so the resolved entry carries the base item + full variants array.
+// Duplicates (same ref) are collapsed to the first occurrence, making legacy
+// per-variant data render correctly without a migration. Inline entries (no
+// ref) pass through for back-compat.
+export const resolveCraftingRecipes = (crafting, catalogMap, spellMap, ownerLevel) => {
+  const seen = new Set();
+  const deduped = (Array.isArray(crafting) ? crafting : []).filter((e) => {
+    if (!e || typeof e !== 'object' || e.ref == null) return true;
+    if (seen.has(e.ref)) return false;
+    seen.add(e.ref);
+    return true;
+  });
+  return resolveInventory(
+    deduped.map((e) => (e && e.ref != null ? { ...e, level: undefined } : e)),
+    catalogMap,
+    spellMap,
+    ownerLevel,
+  );
+};
 
 // Resolve a character's inventory (and crafting recipes) against the item
 // catalog. Characters with neither are returned untouched (shape preserved).

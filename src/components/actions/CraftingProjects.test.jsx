@@ -17,8 +17,15 @@ const mockSetProjects = vi.fn();
 const character = {
   id: 'char-1',
   crafting: [
-    { ref: 'minor-elixir-of-life', name: 'Minor Elixir of Life', level: 1, label: 'Minor' },
-    { ref: 'antidote', name: 'Antidote', level: 6, label: 'Moderate' },
+    { ref: 'minor-elixir-of-life', name: 'Minor Elixir of Life' },
+    {
+      ref: 'antidote',
+      name: 'Antidote',
+      variants: [
+        { level: 1, label: 'Lesser', price: 3, effect: '+2 bonus' },
+        { level: 6, label: 'Moderate', price: 35, effect: '+3 bonus' },
+      ],
+    },
   ],
 };
 
@@ -94,8 +101,8 @@ describe('CraftingProjects', () => {
     fireEvent.click(screen.getByRole('button', { name: '+ New' }));
     expect(screen.getByTestId('cp-recipe-0')).toBeInTheDocument();
     expect(screen.getByTestId('cp-recipe-1')).toBeInTheDocument();
-    expect(screen.getByText('Minor Elixir of Life (Minor)')).toBeInTheDocument();
-    expect(screen.getByText('Antidote (Moderate)')).toBeInTheDocument();
+    expect(screen.getByText('Minor Elixir of Life')).toBeInTheDocument();
+    expect(screen.getByText('Antidote')).toBeInTheDocument();
   });
 
   it('Start project button is disabled until a recipe is selected', () => {
@@ -104,10 +111,11 @@ describe('CraftingProjects', () => {
     expect(screen.getByRole('button', { name: 'Start project' })).toBeDisabled();
   });
 
-  it('enables Start project and creates a recipe project on confirm', () => {
+  it('enables Start project and creates a flat recipe project on confirm', () => {
     render(<CraftingProjects character={character} />);
     fireEvent.click(screen.getByRole('button', { name: '+ New' }));
-    fireEvent.click(screen.getByTestId('cp-recipe-0')); // select first recipe
+    fireEvent.click(screen.getByTestId('cp-recipe-0')); // flat recipe — no variants
+    expect(screen.queryByLabelText('Recipe grade')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start project' })).not.toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Start project' }));
     expect(mockSetProjects).toHaveBeenCalled();
@@ -118,7 +126,39 @@ describe('CraftingProjects', () => {
       source: 'recipe',
       threshold: 8,
       hours: 0,
-      name: 'Minor Elixir of Life (Minor)',
+      name: 'Minor Elixir of Life',
+    });
+  });
+
+  it('shows grade select for recipe with variants', () => {
+    render(<CraftingProjects character={character} />);
+    fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+    fireEvent.click(screen.getByTestId('cp-recipe-1')); // Antidote — has variants
+    expect(screen.getByLabelText('Recipe grade')).toBeInTheDocument();
+  });
+
+  it('Start project disabled until grade chosen for multi-variant recipe', () => {
+    render(<CraftingProjects character={character} />);
+    fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+    fireEvent.click(screen.getByTestId('cp-recipe-1'));
+    expect(screen.getByRole('button', { name: 'Start project' })).toBeDisabled();
+  });
+
+  it('creates a recipe project with chosen variant level and name', () => {
+    render(<CraftingProjects character={character} />);
+    fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+    fireEvent.click(screen.getByTestId('cp-recipe-1')); // Antidote
+    fireEvent.change(screen.getByLabelText('Recipe grade'), { target: { value: '6' } });
+    expect(screen.getByRole('button', { name: 'Start project' })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Start project' }));
+    const updater = mockSetProjects.mock.calls[0][0];
+    const result = updater(null);
+    expect(result.projects[0]).toMatchObject({
+      ref: 'antidote',
+      level: 6,
+      source: 'recipe',
+      threshold: 8,
+      name: 'Antidote (Moderate)',
     });
   });
 
