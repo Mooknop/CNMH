@@ -5,6 +5,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { getHoursForActivity, getRollsForActivity, getDaysCommitted, periodState } from '../../utils/downtimeUtils';
 import CraftingModal from '../inventory/CraftingModal';
+import CraftingProjects from './CraftingProjects';
 import DowntimeList from './DowntimeList';
 import DowntimeCommitBar from './DowntimeCommitBar';
 import './DowntimeTab.css';
@@ -87,6 +88,10 @@ const DowntimeTab = ({ character, characterColor }) => {
 
       {block?.active && (
         <DowntimeCommitBar character={character} block={block} />
+      )}
+
+      {hasCrafting && (
+        <CraftingProjects character={character} />
       )}
 
       {hasCrafting && (
