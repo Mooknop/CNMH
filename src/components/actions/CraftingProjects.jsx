@@ -13,6 +13,7 @@ const CraftingProjects = ({ character }) => {
 
   const [adding, setAdding] = useState(false); // false | 'recipe' | 'catalog'
   const [recipeIdx, setRecipeIdx] = useState(null);
+  const [recipeLevel, setRecipeLevel] = useState('');
   const [catalogRef, setCatalogRef] = useState('');
   const [catalogLevel, setCatalogLevel] = useState('');
   const [rollInputs, setRollInputs] = useState({}); // { [projectId]: string }
@@ -27,6 +28,7 @@ const CraftingProjects = ({ character }) => {
   const cancelAdding = () => {
     setAdding(false);
     setRecipeIdx(null);
+    setRecipeLevel('');
     setCatalogRef('');
     setCatalogLevel('');
   };
@@ -63,7 +65,9 @@ const CraftingProjects = ({ character }) => {
     }, 3000);
   };
 
-  const canStartFromRecipe = recipeIdx !== null;
+  const selectedRecipe = recipeIdx !== null ? knownRecipes[recipeIdx] : null;
+  const recipeVariants = selectedRecipe?.variants || [];
+  const canStartFromRecipe = recipeIdx !== null && (recipeVariants.length === 0 || !!recipeLevel);
   const canStartFromCatalog = !!catalogRef && (variants.length === 0 || !!catalogLevel);
 
   return (
@@ -184,19 +188,32 @@ const CraftingProjects = ({ character }) => {
                     <li key={i}>
                       <button
                         className={`cp-recipe-btn${recipeIdx === i ? ' cp-recipe-btn--selected' : ''}`}
-                        onClick={() => setRecipeIdx(recipeIdx === i ? null : i)}
+                        onClick={() => { setRecipeIdx(recipeIdx === i ? null : i); setRecipeLevel(''); }}
                         data-testid={`cp-recipe-${i}`}
                       >
-                        <span className="cp-recipe-name">
-                          {r.name}{r.label ? ` (${r.label})` : ''}
-                        </span>
-                        {r.level != null && (
-                          <span className="cp-recipe-level">Lv {r.level} · DC {getLevelBasedDc(r.level)}</span>
-                        )}
+                        <span className="cp-recipe-name">{r.name}</span>
                       </button>
                     </li>
                   ))}
                 </ul>
+              )}
+              {recipeVariants.length > 0 && (
+                <label className="cp-form-label">
+                  Grade
+                  <select
+                    className="cp-form-select"
+                    value={recipeLevel}
+                    onChange={e => setRecipeLevel(e.target.value)}
+                    aria-label="Recipe grade"
+                  >
+                    <option value="">— select grade —</option>
+                    {recipeVariants.map(v => (
+                      <option key={v.level} value={String(v.level)}>
+                        {v.label} (Level {v.level})
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
               <div className="cp-add-footer">
                 <button
@@ -204,12 +221,10 @@ const CraftingProjects = ({ character }) => {
                   disabled={!canStartFromRecipe}
                   onClick={() => {
                     const r = knownRecipes[recipeIdx];
-                    startProject(
-                      r.ref || r.id,
-                      r.level ?? null,
-                      r.label ? `${r.name} (${r.label})` : r.name,
-                      'recipe',
-                    );
+                    const lvl = recipeLevel ? parseInt(recipeLevel, 10) : null;
+                    const v = lvl != null ? recipeVariants.find(x => x.level === lvl) : null;
+                    const name = v ? `${r.name} (${v.label})` : r.name;
+                    startProject(r.ref || r.id, lvl, name, 'recipe');
                   }}
                 >
                   Start project

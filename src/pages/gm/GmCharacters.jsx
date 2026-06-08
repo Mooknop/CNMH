@@ -403,7 +403,7 @@ const toForm = (c) => {
     crafting: Array.isArray(c.crafting)
       ? c.crafting
           .filter((e) => e && typeof e === 'object' && e.ref != null)
-          .map((e) => ({ ref: String(e.ref), level: e.level != null ? String(e.level) : '' }))
+          .map((e) => ({ ref: String(e.ref) }))
       : [],
     arrays: ARR_SECTIONS.reduce((acc, s) => {
       const codec = SECTION_CODEC[s.key];
@@ -556,7 +556,6 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
   const [picker, setPicker] = useState(null); // { kind:'top' } | { kind:'container', path } | { kind:'change', path } | null
   const [arrSel, setArrSel] = useState({}); // { [arraySectionKey]: openEntryIndex }
   const [newRecipeRef, setNewRecipeRef] = useState('');
-  const [newRecipeLevel, setNewRecipeLevel] = useState('');
 
   const setStr = (k, v) => setF((c) => ({ ...c, strings: { ...c.strings, [k]: v } }));
   const setNum = (k, v) => setF((c) => ({ ...c, nums: { ...c.nums, [k]: v } }));
@@ -758,12 +757,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
     }
     const crafting = f.crafting
       .filter((e) => e.ref.trim())
-      .map((e) => {
-        const out = { ref: e.ref.trim() };
-        const lvl = parseInt(e.level, 10);
-        if (!Number.isNaN(lvl)) out.level = lvl;
-        return out;
-      });
+      .map((e) => ({ ref: e.ref.trim() }));
     if (crafting.length) payload.crafting = crafting;
     for (const s of OBJ_SECTIONS) {
       const o = f.objects[s.key];
@@ -1159,10 +1153,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
             )}
             {f.crafting.map((recipe, i) => {
               const item = catalogList.find((it) => String(it.id) === recipe.ref);
-              const variant = item?.variants?.find((v) => String(v.level) === recipe.level);
-              const label = item
-                ? `${item.name}${variant ? ` (${variant.label}, L${variant.level})` : recipe.level ? ` (L${recipe.level})` : ''}`
-                : recipe.ref ? `(unknown: ${recipe.ref})` : '—';
+              const label = item ? item.name : recipe.ref ? `(unknown: ${recipe.ref})` : '—';
               return (
                 <div key={i} className="gm-row" data-testid={`recipe-row-${i}`}>
                   <span>{label}</span>
@@ -1181,7 +1172,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
                 <select
                   aria-label="new-recipe-ref"
                   value={newRecipeRef}
-                  onChange={(e) => { setNewRecipeRef(e.target.value); setNewRecipeLevel(''); }}
+                  onChange={(e) => setNewRecipeRef(e.target.value)}
                 >
                   <option value="">— choose item —</option>
                   {catalogList
@@ -1192,39 +1183,14 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
                     ))}
                 </select>
               </div>
-              {catalogList.find((it) => String(it.id) === newRecipeRef)?.variants?.length > 0 && (
-                <div className="form-group">
-                  <label>grade</label>
-                  <select
-                    aria-label="new-recipe-level"
-                    value={newRecipeLevel}
-                    onChange={(e) => setNewRecipeLevel(e.target.value)}
-                  >
-                    <option value="">— choose grade —</option>
-                    {catalogList
-                      .find((it) => String(it.id) === newRecipeRef)
-                      .variants.map((v) => (
-                        <option key={v.level} value={String(v.level)}>
-                          {v.label} (L{v.level})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
               <button
                 className="btn-small btn-secondary"
                 aria-label="add-recipe"
-                disabled={
-                  !newRecipeRef ||
-                  (catalogList.find((it) => String(it.id) === newRecipeRef)?.variants?.length > 0 &&
-                    !newRecipeLevel)
-                }
+                disabled={!newRecipeRef}
                 onClick={() => {
                   if (!newRecipeRef) return;
-                  const entry = { ref: newRecipeRef, level: newRecipeLevel };
-                  setF((c) => ({ ...c, crafting: [...c.crafting, entry] }));
+                  setF((c) => ({ ...c, crafting: [...c.crafting, { ref: newRecipeRef }] }));
                   setNewRecipeRef('');
-                  setNewRecipeLevel('');
                 }}
               >
                 Add
