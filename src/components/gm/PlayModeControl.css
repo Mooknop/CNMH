@@ -118,6 +118,42 @@
   border-color: var(--accent-outline);
 }
 
+/* Location input row: input + optional lore-link icon */
+.pmc-meta-location-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pmc-lore-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--ember-light);
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  line-height: 1;
+}
+
+.pmc-lore-link:hover {
+  opacity: 1;
+}
+
+.pmc-lore-link:focus-visible {
+  outline: 2px solid var(--accent-outline);
+  outline-offset: 2px;
+}
+
+.pmc-lore-link svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ── Context strip: mode-specific controls ──────────────────── */
 .pmc-context {
   display: flex;

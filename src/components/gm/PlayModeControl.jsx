@@ -5,6 +5,7 @@ import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useLore } from '../../contexts/LoreContext';
 import DowntimeControl from './DowntimeControl';
 import ExplorationTimeControl from './ExplorationTimeControl';
 import GmIcon from '../../pages/gm/GmIcon';
@@ -24,6 +25,7 @@ import './PlayModeControl.css';
 
 const PlayModeControl = () => {
   const { mode, gmMode, setGmMode, moveEnabled, setMoveEnabled, setMoveOverride } = usePlayMode();
+  const { openLore } = useLore();
   const { allChosen } = useExplorationReady();
   const { characters } = useContext(CharacterContext) || {};
   const { sendUpdate } = useSession();
@@ -34,6 +36,7 @@ const PlayModeControl = () => {
   const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '', locationLoreId: '' });
   const location = campaign?.location ?? '';
   const treasure = campaign?.treasure ?? '';
+  const locationLoreId = campaign?.locationLoreId ?? '';
   const partyLevel = Array.isArray(characters) && characters.length
     ? Math.max(...characters.map((c) => c.level || 0))
     : null;
@@ -111,13 +114,26 @@ const PlayModeControl = () => {
 
         <div className="pmc-marquee-meta">
           <div className="pmc-meta-stat">
-            <input
-              className="pmc-meta-value pmc-meta-input"
-              value={location}
-              onChange={(e) => setCampaign({ ...(campaign || {}), location: e.target.value, locationLoreId: '' })}
-              placeholder="—"
-              aria-label="Campaign location"
-            />
+            <div className="pmc-meta-location-row">
+              <input
+                className="pmc-meta-value pmc-meta-input"
+                value={location}
+                onChange={(e) => setCampaign({ ...(campaign || {}), location: e.target.value, locationLoreId: '' })}
+                placeholder="—"
+                aria-label="Campaign location"
+              />
+              {locationLoreId && (
+                <button
+                  type="button"
+                  className="pmc-lore-link"
+                  onClick={() => openLore(locationLoreId)}
+                  aria-label="View location lore"
+                  title="View location lore"
+                >
+                  <GmIcon name="book" />
+                </button>
+              )}
+            </div>
             <div className="pmc-meta-key">Location</div>
           </div>
           <div className="pmc-meta-stat">

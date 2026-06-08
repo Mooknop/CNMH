@@ -29,6 +29,13 @@ vi.mock('../contexts/LoreContext', () => ({
   useLore: () => ({ openLore: vi.fn() }),
 }));
 
+vi.mock('../hooks/useSyncedState', () => ({
+  useSyncedState: vi.fn(() => [
+    { location: 'Absalom', treasure: '0', locationLoreId: 'absalom' },
+    vi.fn(),
+  ]),
+}));
+
 // Mock components
 vi.mock('../components/party/PartySummary', () => ({
   default: function DummyPartySummary() {
@@ -40,7 +47,6 @@ vi.mock('../components/party/PartySummary', () => ({
 vi.mock('../data/campaign', () => ({
   PARTY_GOLD: 1000,
   PARTY_NAME: 'The Chaotic Neutral Milk Hotel',
-  CURRENT_LOCATION: 'Absalom'
 }));
 
 const renderWithRouter = (component) => {
