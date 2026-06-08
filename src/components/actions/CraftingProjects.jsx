@@ -15,6 +15,8 @@ const CraftingProjects = ({ character }) => {
   const [recipeIdx, setRecipeIdx] = useState(null);
   const [catalogRef, setCatalogRef] = useState('');
   const [catalogLevel, setCatalogLevel] = useState('');
+  const [rollInputs, setRollInputs] = useState({}); // { [projectId]: string }
+  const [banners, setBanners] = useState({});        // { [projectId]: { roll, name } }
 
   const projects = craftProjects?.projects || [];
   const knownRecipes = (character?.crafting || []).filter(r => r.name);
@@ -50,6 +52,17 @@ const CraftingProjects = ({ character }) => {
     }));
   };
 
+  const completeProject = (p) => {
+    const roll = parseInt(rollInputs[p.id] || '0', 10);
+    setBanners(prev => ({ ...prev, [p.id]: { roll, name: p.name } }));
+    setCraftProjects(prev => ({
+      projects: (prev?.projects || []).filter(x => x.id !== p.id),
+    }));
+    setTimeout(() => {
+      setBanners(prev => { const next = { ...prev }; delete next[p.id]; return next; });
+    }, 3000);
+  };
+
   const canStartFromRecipe = recipeIdx !== null;
   const canStartFromCatalog = !!catalogRef && (variants.length === 0 || !!catalogLevel);
 
@@ -62,12 +75,23 @@ const CraftingProjects = ({ character }) => {
         )}
       </div>
 
+      {Object.entries(banners).map(([id, { roll, name }]) => (
+        <div key={id} className="cp-completed-banner" role="status" data-testid={`cp-banner-${id}`}>
+          Item Completed! <strong>{name}</strong> — rolled {roll}
+        </div>
+      ))}
+
       {projects.length > 0 && (
         <ul className="cp-list" aria-label="Crafting projects">
           {projects.map(p => {
+            const isReady = p.hours >= p.threshold;
             const pct = Math.min(100, (p.hours / p.threshold) * 100);
             return (
-              <li key={p.id} className="cp-project" data-testid={`cp-project-${p.id}`}>
+              <li
+                key={p.id}
+                className={`cp-project${isReady ? ' cp-project--ready' : ''}`}
+                data-testid={`cp-project-${p.id}`}
+              >
                 <div className="cp-project-header">
                   <span className="cp-project-name">{p.name}</span>
                   <button
@@ -78,19 +102,50 @@ const CraftingProjects = ({ character }) => {
                     Abandon
                   </button>
                 </div>
-                <div className="cp-progress-row">
-                  <div className="cp-progress-track">
-                    <div
-                      className="cp-progress-fill"
-                      style={{ '--cp-fill': `${pct}%` }}
-                    />
+
+                {isReady ? (
+                  <div className="cp-ready">
+                    <span className="cp-ready-badge">Ready to complete!</span>
+                    <div className="cp-ready-row">
+                      <label className="cp-ready-label">
+                        d20 total
+                        <input
+                          type="number"
+                          className="cp-ready-input"
+                          min={1}
+                          value={rollInputs[p.id] ?? ''}
+                          onChange={e => setRollInputs(prev => ({ ...prev, [p.id]: e.target.value }))}
+                          aria-label={`d20 roll for ${p.name}`}
+                          placeholder="—"
+                        />
+                      </label>
+                      <button
+                        className="cp-complete-btn"
+                        disabled={!rollInputs[p.id]}
+                        onClick={() => completeProject(p)}
+                        aria-label={`Complete ${p.name}`}
+                      >
+                        Complete item
+                      </button>
+                    </div>
                   </div>
-                  <span className="cp-progress-label">{p.hours}h / {p.threshold}h</span>
-                </div>
-                {p.level != null && (
-                  <span className="cp-project-meta">
-                    Level {p.level} · DC {getLevelBasedDc(p.level)} · {p.source === 'recipe' ? '8h (recipe)' : '16h (item)'}
-                  </span>
+                ) : (
+                  <>
+                    <div className="cp-progress-row">
+                      <div className="cp-progress-track">
+                        <div
+                          className="cp-progress-fill"
+                          style={{ '--cp-fill': `${pct}%` }}
+                        />
+                      </div>
+                      <span className="cp-progress-label">{p.hours}h / {p.threshold}h</span>
+                    </div>
+                    {p.level != null && (
+                      <span className="cp-project-meta">
+                        Level {p.level} · DC {getLevelBasedDc(p.level)} · {p.source === 'recipe' ? '8h (recipe)' : '16h (item)'}
+                      </span>
+                    )}
+                  </>
                 )}
               </li>
             );
@@ -98,7 +153,7 @@ const CraftingProjects = ({ character }) => {
         </ul>
       )}
 
-      {!adding && projects.length === 0 && (
+      {!adding && projects.length === 0 && Object.keys(banners).length === 0 && (
         <p className="cp-empty">No active projects.</p>
       )}
 

@@ -209,4 +209,88 @@ describe('CraftingProjects', () => {
     fireEvent.click(screen.getByRole('button', { name: '+ New' }));
     expect(screen.getByText(/no known recipes/i)).toBeInTheDocument();
   });
+
+  describe('Item Completed flow', () => {
+    const readyProject = {
+      id: 'p-ready',
+      ref: 'antidote',
+      level: 1,
+      name: 'Antidote (Lesser)',
+      source: 'recipe',
+      threshold: 8,
+      hours: 8,
+    };
+
+    it('shows Ready badge and d20 input when hours meet the threshold', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByText(/ready to complete/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(`d20 roll for ${readyProject.name}`)).toBeInTheDocument();
+    });
+
+    it('does not show progress bar for a ready project', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.queryByText('8h / 8h')).not.toBeInTheDocument();
+    });
+
+    it('Complete button is disabled until a roll value is entered', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByRole('button', { name: `Complete ${readyProject.name}` })).toBeDisabled();
+    });
+
+    it('Complete button enables after entering a roll', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.change(screen.getByLabelText(`d20 roll for ${readyProject.name}`), {
+        target: { value: '18' },
+      });
+      expect(screen.getByRole('button', { name: `Complete ${readyProject.name}` })).not.toBeDisabled();
+    });
+
+    it('clicking Complete removes the project from state', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.change(screen.getByLabelText(`d20 roll for ${readyProject.name}`), {
+        target: { value: '15' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: `Complete ${readyProject.name}` }));
+      expect(mockSetProjects).toHaveBeenCalled();
+      const updater = mockSetProjects.mock.calls[0][0];
+      const result = updater({ projects: [readyProject] });
+      expect(result.projects).toHaveLength(0);
+    });
+
+    it('shows an Item Completed banner with the rolled number after completing', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.change(screen.getByLabelText(`d20 roll for ${readyProject.name}`), {
+        target: { value: '20' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: `Complete ${readyProject.name}` }));
+      expect(screen.getByRole('status')).toHaveTextContent(/Item Completed/i);
+      expect(screen.getByRole('status')).toHaveTextContent('20');
+      expect(screen.getByRole('status')).toHaveTextContent(readyProject.name);
+    });
+
+    it('Abandon still works on a ready project', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: `Abandon ${readyProject.name}` }));
+      expect(mockSetProjects).toHaveBeenCalled();
+      const updater = mockSetProjects.mock.calls[0][0];
+      const result = updater({ projects: [readyProject] });
+      expect(result.projects).toHaveLength(0);
+    });
+
+    it('an in-progress project still shows a progress bar when threshold not yet met', () => {
+      withProjects([
+        { ...readyProject, hours: 4 },
+      ]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByText('4h / 8h')).toBeInTheDocument();
+      expect(screen.queryByText(/ready to complete/i)).not.toBeInTheDocument();
+    });
+  });
 });
