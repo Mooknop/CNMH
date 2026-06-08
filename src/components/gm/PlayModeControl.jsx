@@ -31,7 +31,7 @@ const PlayModeControl = () => {
 
   // Campaign meta has no home in the content model, so the GM edits it inline
   // here, synced for every client. Party level is derived from the roster.
-  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '' });
+  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '', locationLoreId: '' });
   const location = campaign?.location ?? '';
   const treasure = campaign?.treasure ?? '';
   const partyLevel = Array.isArray(characters) && characters.length
@@ -114,7 +114,7 @@ const PlayModeControl = () => {
             <input
               className="pmc-meta-value pmc-meta-input"
               value={location}
-              onChange={(e) => setCampaign({ ...(campaign || {}), location: e.target.value })}
+              onChange={(e) => setCampaign({ ...(campaign || {}), location: e.target.value, locationLoreId: '' })}
               placeholder="—"
               aria-label="Campaign location"
             />

@@ -10,6 +10,7 @@ import PartyPanel from '../../components/gm/PartyPanel';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
+import SetLocationModal from '../../components/gm/SetLocationModal';
 import GmIcon from './GmIcon';
 import './gm.css';
 
@@ -283,6 +284,7 @@ const GmDashboard = () => {
   const { mode } = usePlayMode();
   const { encounter, actorMap, setActorMap } = useEncounter();
   const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   const isEncounter = mode === 'encounter';
 
@@ -322,6 +324,16 @@ const GmDashboard = () => {
                 <span className="gm-qa-title">Apply Effect</span>
                 <span className="gm-qa-desc">Push a condition or effect to any character</span>
               </button>
+              <button
+                type="button"
+                className="gm-qa"
+                aria-label="Set party location"
+                onClick={() => setIsLocationModalOpen(true)}
+              >
+                <GmIcon name="map" className="gm-qa-ico" />
+                <span className="gm-qa-title">Set Location</span>
+                <span className="gm-qa-desc">Set the party&apos;s current location from Location Lore</span>
+              </button>
             </div>
           </section>
         </div>
@@ -335,6 +347,11 @@ const GmDashboard = () => {
         onClose={() => setIsEffectsModalOpen(false)}
         selfCharId="gm"
         selfName="GM"
+      />
+
+      <SetLocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
       />
     </div>
   );
