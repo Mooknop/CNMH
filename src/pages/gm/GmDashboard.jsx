@@ -11,6 +11,7 @@ import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
+import AdjustHpModal from '../../components/gm/AdjustHpModal';
 import GmIcon from './GmIcon';
 import './gm.css';
 
@@ -285,6 +286,7 @@ const GmDashboard = () => {
   const { encounter, actorMap, setActorMap } = useEncounter();
   const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isAdjustHpModalOpen, setIsAdjustHpModalOpen] = useState(false);
 
   const isEncounter = mode === 'encounter';
 
@@ -334,6 +336,16 @@ const GmDashboard = () => {
                 <span className="gm-qa-title">Set Location</span>
                 <span className="gm-qa-desc">Set the party&apos;s current location from Location Lore</span>
               </button>
+              <button
+                type="button"
+                className="gm-qa"
+                aria-label="Adjust character HP"
+                onClick={() => setIsAdjustHpModalOpen(true)}
+              >
+                <GmIcon name="health" className="gm-qa-ico" />
+                <span className="gm-qa-title">Adjust HP</span>
+                <span className="gm-qa-desc">Heal or damage any character</span>
+              </button>
             </div>
           </section>
         </div>
@@ -352,6 +364,11 @@ const GmDashboard = () => {
       <SetLocationModal
         isOpen={isLocationModalOpen}
         onClose={() => setIsLocationModalOpen(false)}
+      />
+
+      <AdjustHpModal
+        isOpen={isAdjustHpModalOpen}
+        onClose={() => setIsAdjustHpModalOpen(false)}
       />
     </div>
   );
