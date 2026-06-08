@@ -63,6 +63,13 @@ vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: vi.fn(() => [null, vi.fn()]),
 }));
 
+import { useSyncedState } from '../../hooks/useSyncedState';
+
+const mockOpenLore = vi.fn();
+vi.mock('../../contexts/LoreContext', () => ({
+  useLore: () => ({ openLore: mockOpenLore }),
+}));
+
 const renderWith = (characters = []) =>
   render(
     <CharacterContext.Provider value={{ characters }}>
@@ -263,6 +270,36 @@ describe('PlayModeControl', () => {
     it('does not clear when already in exploration on mount', () => {
       renderWith([{ id: 'a' }]);
       expect(mockSendUpdate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Location lore link', () => {
+    it('shows a lore-link button when locationLoreId is set', () => {
+      useSyncedState.mockReturnValue([
+        { location: 'Sandpoint', treasure: '10', locationLoreId: 'sandpoint' },
+        vi.fn(),
+      ]);
+      renderWith();
+      expect(screen.getByRole('button', { name: 'View location lore' })).toBeInTheDocument();
+    });
+
+    it('calls openLore with the locationLoreId when the button is clicked', () => {
+      useSyncedState.mockReturnValue([
+        { location: 'Sandpoint', treasure: '10', locationLoreId: 'sandpoint' },
+        vi.fn(),
+      ]);
+      renderWith();
+      fireEvent.click(screen.getByRole('button', { name: 'View location lore' }));
+      expect(mockOpenLore).toHaveBeenCalledWith('sandpoint');
+    });
+
+    it('does not show the lore-link button when locationLoreId is empty', () => {
+      useSyncedState.mockReturnValue([
+        { location: 'Somewhere', treasure: '0', locationLoreId: '' },
+        vi.fn(),
+      ]);
+      renderWith();
+      expect(screen.queryByRole('button', { name: 'View location lore' })).not.toBeInTheDocument();
     });
   });
 
