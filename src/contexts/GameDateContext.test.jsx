@@ -366,6 +366,28 @@ describe('GameDateContext', () => {
     expect(screen.getByTestId('date').textContent).toBe('1-0-4726');
   });
 
+  it('advanceHours(-1) crossing midnight backward decrements the date', () => {
+    const api = renderClock();
+    act(() => { api().setSpecificDate(1, 3, 4725, 0, 30); }); // 1 Gozran 00:30
+    act(() => { api().advanceHours(-1); }); // -> 31 Pharast 23:30
+    expect(screen.getByTestId('time').textContent).toBe('23:30');
+    expect(screen.getByTestId('date').textContent).toBe('31-2-4725');
+  });
+
+  it('advanceDays(-1) at a month boundary rolls back into the previous month', () => {
+    const api = renderClock();
+    act(() => { api().setSpecificDate(1, 3, 4725, 8, 0); }); // 1 Gozran
+    act(() => { api().advanceDays(-1); }); // -> 31 Pharast
+    expect(screen.getByTestId('date').textContent).toBe('31-2-4725');
+  });
+
+  it('advanceDays(-1) at the year boundary rolls back into the previous year', () => {
+    const api = renderClock();
+    act(() => { api().setSpecificDate(1, 0, 4726, 8, 0); }); // 1 Abadius 4726
+    act(() => { api().advanceDays(-1); }); // -> 31 Kuthona 4725
+    expect(screen.getByTestId('date').textContent).toBe('31-11-4725');
+  });
+
   it('setSpecificDate preserves time of day when hour/minute omitted', () => {
     const api = renderClock();
     act(() => { api().advanceMinutes(30); }); // 08:30

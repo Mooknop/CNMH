@@ -16,15 +16,25 @@ vi.mock('../../contexts/SessionContext', () => ({
 
 const mockAdvanceHours = vi.fn();
 const mockAdvanceDays = vi.fn();
+const mockSetSpecificDate = vi.fn();
 const mockGameDate = { day: 5, month: 2, year: 4725 };
+const mockTime = { hour: 8, minute: 0, second: 0 };
+const mockGolarionMonths = [
+  { name: 'Abadius', days: 31, index: 0 },
+  { name: 'Calistril', days: 28, index: 1 },
+  { name: 'Pharast', days: 31, index: 2 },
+];
 
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({
     advanceHours: mockAdvanceHours,
     advanceDays: mockAdvanceDays,
+    setSpecificDate: mockSetSpecificDate,
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
     gameDate: mockGameDate,
+    time: mockTime,
+    GOLARION_MONTHS: mockGolarionMonths,
   }),
 }));
 
@@ -50,11 +60,26 @@ beforeEach(() => {
 });
 
 describe('DowntimeControl', () => {
-  it('renders the three quick-advance buttons', () => {
+  it('renders the five quick-advance buttons and set clock button', () => {
     render(<DowntimeControl />);
+    expect(screen.getByRole('button', { name: '-1 day' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '-1 hr' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '+1 hr' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '+8 hr' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '+1 day' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Set date and time' })).toBeInTheDocument();
+  });
+
+  it('-1 hr calls advanceHours(-1)', () => {
+    render(<DowntimeControl />);
+    fireEvent.click(screen.getByRole('button', { name: '-1 hr' }));
+    expect(mockAdvanceHours).toHaveBeenCalledWith(-1);
+  });
+
+  it('-1 day calls advanceDays(-1)', () => {
+    render(<DowntimeControl />);
+    fireEvent.click(screen.getByRole('button', { name: '-1 day' }));
+    expect(mockAdvanceDays).toHaveBeenCalledWith(-1);
   });
 
   it('+1 hr calls advanceHours(1)', () => {
@@ -73,6 +98,13 @@ describe('DowntimeControl', () => {
     render(<DowntimeControl />);
     fireEvent.click(screen.getByRole('button', { name: '+1 day' }));
     expect(mockAdvanceDays).toHaveBeenCalledWith(1);
+  });
+
+  it('clicking Set… opens the Set date & time modal', () => {
+    render(<DowntimeControl />);
+    expect(screen.queryByRole('heading', { name: 'Set date & time' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Set date and time' }));
+    expect(screen.getByRole('heading', { name: 'Set date & time' })).toBeInTheDocument();
   });
 
   it('Apply button is disabled when input is empty', () => {

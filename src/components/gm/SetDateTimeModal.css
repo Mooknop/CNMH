@@ -1,0 +1,46 @@
+.sdtm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sdtm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sdtm-label {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.sdtm-input {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.sdtm-input--narrow {
+  width: 5rem;
+}
+
+.sdtm-select {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.sdtm-divider {
+  border-top: 1px solid var(--shell-border, rgba(255, 255, 255, 0.07));
+  margin: 0.25rem 0;
+}
+
+.sdtm-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
