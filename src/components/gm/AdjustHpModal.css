@@ -1,0 +1,112 @@
+.adj-hp-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.adj-hp-char-row label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+  margin-bottom: var(--space-2);
+}
+
+.adj-hp-char-row select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.adj-hp-status {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  justify-content: center;
+  padding: var(--space-2) 0;
+}
+
+.adj-hp-current {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.adj-hp-sep {
+  font-size: 1.4rem;
+  color: var(--shell-text-tertiary);
+}
+
+.adj-hp-max {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.adj-hp-temp {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-temp-hp);
+  margin-left: var(--space-2);
+}
+
+.adj-hp-mode {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.adj-hp-mode-btn {
+  flex: 1;
+  padding: 0.45rem 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-secondary);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.adj-hp-mode-btn:hover {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.adj-hp-mode-btn.is-active[data-mode="damage"] {
+  background: rgba(183, 28, 28, 0.18);
+  border-color: rgba(239, 83, 80, 0.5);
+  color: var(--peril-light);
+}
+
+.adj-hp-mode-btn.is-active[data-mode="heal"] {
+  background: rgba(42, 102, 64, 0.25);
+  border-color: rgba(61, 148, 88, 0.5);
+  color: var(--verdant-light);
+}
+
+.adj-hp-entry {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.adj-hp-input {
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  text-align: center;
+  border-radius: var(--radius-sm);
+}
+
+.adj-hp-apply--damage {
+  background: var(--peril-base);
+}
+
+.adj-hp-apply--damage:hover:not(:disabled) {
+  background: var(--peril-light);
+}
