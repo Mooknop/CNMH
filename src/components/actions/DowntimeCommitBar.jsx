@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimeFatigue } from '../../hooks/useDowntimeFatigue';
 import { getDaysCommitted, periodState, stampPeriod } from '../../utils/downtimeUtils';
@@ -9,15 +9,21 @@ import './DowntimeCommitBar.css';
 // Working through the night adds a second block and applies Fatigued; a day-only
 // commit clears Fatigued (counts as a rest).
 //
+// When Crafting hours are committed and in-progress craft projects exist, an
+// allocation panel appears — the player must distribute the crafting hours
+// across projects before the commit button enables.
+//
 // Does NOT advance the shared clock — that's the GM's job via DowntimeControl.
 const DowntimeCommitBar = ({ character, block }) => {
   const charId = character?.id || 'unknown';
   const [downtime, setDowntime] = useSyncedState(`cnmh_downtime_${charId}`, null);
+  const [craftProjects, setCraftProjects] = useSyncedState(`cnmh_craftprojects_${charId}`, null);
   const { applyFatigue, clearFatigue } = useDowntimeFatigue(charId);
 
   const [dayChoice, setDayChoice] = useState('');
   const [nightChoice, setNightChoice] = useState('');
   const [workNight, setWorkNight] = useState(false);
+  const [projectAllocations, setProjectAllocations] = useState({});
 
   const startedAt = block?.startedAt;
   const { selected, ledger } = periodState(downtime, startedAt);
@@ -25,10 +31,33 @@ const DowntimeCommitBar = ({ character, block }) => {
   const blockDays = block?.days ?? 0;
   const budgetExhausted = daysCommitted >= blockDays;
 
-  // Derive effective activity choices, falling back to the first selected
-  // activity whenever the stored choice is no longer in the selection.
   const dayActivity = selected.includes(dayChoice) ? dayChoice : (selected[0] ?? '');
   const nightActivity = selected.includes(nightChoice) ? nightChoice : (selected[0] ?? '');
+
+  const projects = craftProjects?.projects || [];
+
+  const craftingHours =
+    (dayActivity === 'Crafting' ? 8 : 0) +
+    (workNight && nightActivity === 'Crafting' ? 8 : 0);
+
+  // When craftingHours or the project set changes, reset allocations to defaults:
+  // put all crafting hours on the furthest-along project.
+  const projectSig = projects.map(p => `${p.id}:${p.hours}`).join(',');
+  useEffect(() => {
+    if (craftingHours === 0 || projects.length === 0) {
+      setProjectAllocations({});
+      return;
+    }
+    const furthest = projects.reduce((a, b) => (a.hours >= b.hours ? a : b));
+    const alloc = Object.fromEntries(projects.map(p => [p.id, 0]));
+    alloc[furthest.id] = craftingHours;
+    setProjectAllocations(alloc);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [craftingHours, projectSig]);
+
+  const totalAllocated = projects.reduce((sum, p) => sum + (projectAllocations[p.id] ?? 0), 0);
+  const allocationValid =
+    craftingHours === 0 || projects.length === 0 || totalAllocated === craftingHours;
 
   if (selected.length === 0) {
     return (
@@ -52,6 +81,15 @@ const DowntimeCommitBar = ({ character, block }) => {
         ledger: [...scoped.ledger, { day: dayActivity, night }],
       });
     });
+    if (craftingHours > 0 && projects.length > 0) {
+      setCraftProjects(prev => ({
+        projects: (prev?.projects || []).map(p =>
+          (projectAllocations[p.id] ?? 0) > 0
+            ? { ...p, hours: p.hours + (projectAllocations[p.id] ?? 0) }
+            : p
+        ),
+      }));
+    }
     if (workNight) {
       applyFatigue();
     } else {
@@ -111,8 +149,38 @@ const DowntimeCommitBar = ({ character, block }) => {
         </div>
       )}
 
+      {craftingHours > 0 && projects.length > 0 && (
+        <div className="dtcb-alloc">
+          <span className="dtcb-alloc-label">Allocate crafting hours</span>
+          {projects.map(p => (
+            <div key={p.id} className="dtcb-alloc-row">
+              <div className="dtcb-alloc-info">
+                <span className="dtcb-alloc-name">{p.name}</span>
+                <span className="dtcb-alloc-progress">{p.hours}h / {p.threshold}h</span>
+              </div>
+              <input
+                type="number"
+                className="dtcb-alloc-input"
+                min={0}
+                max={craftingHours}
+                step={8}
+                value={projectAllocations[p.id] ?? 0}
+                onChange={e => setProjectAllocations(prev => ({
+                  ...prev,
+                  [p.id]: Math.max(0, Math.min(craftingHours, parseInt(e.target.value, 10) || 0)),
+                }))}
+                aria-label={`Hours for ${p.name}`}
+              />
+            </div>
+          ))}
+          <span className="dtcb-alloc-total" data-valid={allocationValid}>
+            {totalAllocated} / {craftingHours}h allocated
+          </span>
+        </div>
+      )}
+
       <div className="dtcb-footer">
-        <button className="dtcb-commit-btn" onClick={commit}>
+        <button className="dtcb-commit-btn" onClick={commit} disabled={!allocationValid}>
           Commit {workNight ? '16h' : '8h'} day
         </button>
         <span className="dtcb-budget">

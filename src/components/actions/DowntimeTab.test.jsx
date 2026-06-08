@@ -36,6 +36,12 @@ vi.mock('../inventory/CraftingModal', () => ({
   }
 }));
 
+vi.mock('./CraftingProjects', () => ({
+  default: function DummyCraftingProjects({ character: c }) {
+    return <div data-testid="crafting-projects" data-charid={c?.id} />;
+  }
+}));
+
 const character = { id: 'char-1', name: 'Pellias' };
 
 // DowntimeTab calls useSyncedState twice: first for the block, then for the
@@ -172,14 +178,16 @@ describe('DowntimeTab', () => {
     });
   });
 
-  it('hides the Crafting button when the character is untrained in Crafting', () => {
+  it('hides the Crafting button and projects panel when untrained in Crafting', () => {
     render(<DowntimeTab character={character} />);
     expect(screen.queryByText('Crafting Recipes')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('crafting-projects')).not.toBeInTheDocument();
   });
 
-  it('shows the Crafting button and opens the modal when trained in Crafting', () => {
+  it('shows the Crafting button, projects panel, and opens the modal when trained in Crafting', () => {
     useCharacter.mockReturnValue({ skillProficiencies: { crafting: 1 } });
     render(<DowntimeTab character={character} />);
+    expect(screen.getByTestId('crafting-projects')).toBeInTheDocument();
     const btn = screen.getByText('Crafting Recipes');
     expect(btn).toBeInTheDocument();
     fireEvent.click(btn);
