@@ -5,6 +5,7 @@ import ItemCard from './ItemCard';
 import ContainersList from './ContainersList';
 import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useSyncedState } from '../../hooks/useSyncedState';
 
 /**
  * Component for displaying character inventory as item cards.
@@ -18,6 +19,8 @@ import { useCharacter } from '../../hooks/useCharacter';
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
+  // Personal gold is GM-set and live-synced; shown here read-only.
+  const [gold] = useSyncedState(`cnmh_gold_${character?.id}`, 0);
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
@@ -42,6 +45,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     <div className="inventory-tab">
       <div className="inventory-header">
         <h2>Inventory</h2>
+        <span className="inventory-gold">💰 {gold} gp</span>
       </div>
       <div className="bulk-management">
         <div className="bulk-status">

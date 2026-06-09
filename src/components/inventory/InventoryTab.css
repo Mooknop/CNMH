@@ -18,6 +18,13 @@
   margin: 0;
 }
 
+.inventory-gold {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--theme-gold);
+  white-space: nowrap;
+}
+
 /* ── Sticky Bulk Slab ──────────────────────────────────── */
 .bulk-management {
   position: sticky;

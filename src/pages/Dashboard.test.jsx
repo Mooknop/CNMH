@@ -31,9 +31,13 @@ vi.mock('../contexts/LoreContext', () => ({
 
 vi.mock('../hooks/useSyncedState', () => ({
   useSyncedState: vi.fn(() => [
-    { location: 'Absalom', treasure: '0', locationLoreId: 'absalom' },
+    { location: 'Absalom', locationLoreId: 'absalom' },
     vi.fn(),
   ]),
+}));
+
+vi.mock('../hooks/usePartyGold', () => ({
+  usePartyGold: vi.fn(() => ({ goldById: {}, total: 1000 })),
 }));
 
 // Mock components
@@ -45,7 +49,6 @@ vi.mock('../components/party/PartySummary', () => ({
 
 // Mock data
 vi.mock('../data/campaign', () => ({
-  PARTY_GOLD: 1000,
   PARTY_NAME: 'The Chaotic Neutral Milk Hotel',
 }));
 

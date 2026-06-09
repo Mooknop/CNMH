@@ -52,8 +52,8 @@ vi.mock('../utils/InventoryUtils', () => ({
   formatBulk: vi.fn((b) => (b === 0 ? '—' : String(b))),
 }));
 
-vi.mock('../data/campaign', () => ({
-  PARTY_GOLD: 1500,
+vi.mock('../hooks/usePartyGold', () => ({
+  usePartyGold: vi.fn(() => ({ goldById: {}, total: 1500 })),
 }));
 
 const makeCharacter = (id, name, inventory = []) => ({
@@ -76,7 +76,7 @@ describe('PartyWealth', () => {
     expect(screen.getByText('Party Wealth & Inventory')).toBeInTheDocument();
   });
 
-  it('renders PARTY_GOLD value', () => {
+  it('renders the party gold total', () => {
     renderWithContext([]);
     expect(screen.getByText(/1500 gp/)).toBeInTheDocument();
   });

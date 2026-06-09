@@ -5,6 +5,7 @@ import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { usePartyGold } from '../../hooks/usePartyGold';
 import { useLore } from '../../contexts/LoreContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import DowntimeControl from './DowntimeControl';
@@ -35,10 +36,10 @@ const PlayModeControl = () => {
 
   // Campaign meta has no home in the content model, so the GM edits it inline
   // here, synced for every client. Party level is derived from the roster.
-  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '', locationLoreId: '' });
+  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
   const location = campaign?.location ?? '';
-  const treasure = campaign?.treasure ?? '';
   const locationLoreId = campaign?.locationLoreId ?? '';
+  const { total: partyGold } = usePartyGold(characters);
   const partyLevel = Array.isArray(characters) && characters.length
     ? Math.max(...characters.map((c) => c.level || 0))
     : null;
@@ -144,15 +145,7 @@ const PlayModeControl = () => {
           </div>
           <div className="pmc-meta-stat">
             <div className="pmc-meta-value pmc-meta-gold">
-              <input
-                className="pmc-meta-input pmc-meta-input--num"
-                type="number"
-                min="0"
-                value={treasure}
-                onChange={(e) => setCampaign({ ...(campaign || {}), treasure: e.target.value })}
-                placeholder="0"
-                aria-label="Party treasure in gold"
-              />
+              {partyGold}
               <span className="pmc-meta-gp">gp</span>
             </div>
             <div className="pmc-meta-key">Treasure</div>

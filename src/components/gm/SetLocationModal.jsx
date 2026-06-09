@@ -11,7 +11,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 const SetLocationModal = ({ isOpen, onClose }) => {
   const { loreEntries } = useContent();
   // Same key as PlayModeControl — writes sync to every client + that marquee.
-  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '' });
+  const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
   const [query, setQuery] = useState('');
 
   const locations = useMemo(() => {

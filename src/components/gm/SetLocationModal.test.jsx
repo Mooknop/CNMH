@@ -23,7 +23,7 @@ afterEach(() => vi.restoreAllMocks());
 beforeEach(() => {
   setCampaign = vi.fn();
   useContent.mockReturnValue({ loreEntries: LORE });
-  useSyncedState.mockReturnValue([{ location: '', treasure: '', locationLoreId: '' }, setCampaign]);
+  useSyncedState.mockReturnValue([{ location: '', locationLoreId: '' }, setCampaign]);
 });
 
 // ─── tests ───────────────────────────────────────────────────
