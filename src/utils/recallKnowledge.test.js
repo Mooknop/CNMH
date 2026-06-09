@@ -7,8 +7,24 @@ import {
   personalAntithesisValue,
   highestWeakness,
   revealFromExploit,
+  rkKeyFor,
   KNOWLEDGE_SKILLS,
 } from './recallKnowledge';
+
+describe('rkKeyFor', () => {
+  test('prefers creatureKey when present', () => {
+    expect(rkKeyFor({ creatureKey: 'gob', entryId: 'e1' })).toBe('gob');
+  });
+
+  test('falls back to entryId when no creatureKey', () => {
+    expect(rkKeyFor({ entryId: 'e1' })).toBe('e1');
+  });
+
+  test('returns null when neither is present', () => {
+    expect(rkKeyFor({})).toBeNull();
+    expect(rkKeyFor(null)).toBeNull();
+  });
+});
 
 describe('recallKnowledgeDC', () => {
   test.each([

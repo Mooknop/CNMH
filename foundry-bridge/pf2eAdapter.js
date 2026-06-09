@@ -51,8 +51,24 @@ export function getConditions(actor) {
   }));
 }
 
+// Returns a stable creature-type key for an actor: same underlying creature type
+// yields the same key within a campaign. Prefers the compendium source UUID; falls
+// back to a normalized slug from the base name + level. Foundry appends disambiguators
+// like `Goblin Warrior 2` / `Goblin Warrior (3)`; those trailing suffixes are stripped
+// so identical creatures collapse to one key.
+function creatureKeyFor(actor) {
+  const source = actor?._stats?.compendiumSource ?? actor?.flags?.core?.sourceId ?? null;
+  if (source) return source;
+  const name = actor?.name ?? '';
+  const base = name.replace(/\s*\(\d+\)$/, '').replace(/\s+\d+$/, '').trim();
+  const level = actor?.system?.details?.level?.value ?? null;
+  const slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return `${slug || 'creature'}-l${level ?? 0}`;
+}
+
 // Returns bestiary data for an NPC/enemy actor: level, rarity, traits, image,
-// perception, speed, HP, and a plain-text description (HTML stripped).
+// perception, speed, HP, a plain-text description (HTML stripped), and a stable
+// creatureKey for same-type identity.
 // Returns null when actor is absent. All fields have safe fallbacks so partial
 // actor data never throws.
 export function getBestiaryInfo(actor) {
@@ -72,7 +88,8 @@ export function getBestiaryInfo(actor) {
   const hp = getHp(actor);
   const rawDescription = actor.system?.details?.publicNotes ?? '';
   const description = rawDescription.replace(/<[^>]+>/g, '').trim();
-  return { img, level, rarity, traits, perception, speed, hp, description };
+  const creatureKey = creatureKeyFor(actor);
+  return { img, level, rarity, traits, perception, speed, hp, description, creatureKey };
 }
 
 // Returns defensive stats for an actor: AC, save modifiers, and IWR.

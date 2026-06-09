@@ -70,6 +70,17 @@
   flex-shrink: 0;
 }
 
+/* Count badge for collapsed same-type enemies (e.g. ×3). */
+.bm-list-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--accent-tint, rgba(192, 68, 14, 0.18));
+  color: var(--accent-text, #e85d1a);
+}
+
 /* ---------- Right detail pane ---------- */
 .bm-detail-pane {
   flex: 1;
@@ -185,6 +196,40 @@
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--shell-text-primary, #f5ede4);
+}
+
+/* Per-token HP list when same-type enemies are collapsed into one row. */
+.bm-hp-list {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--shell-border, rgba(255, 255, 255, 0.05));
+}
+
+.bm-hp-tokens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bm-hp-token {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.bm-hp-token-name {
+  font-size: 0.85rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.6));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ---------- Saves ---------- */

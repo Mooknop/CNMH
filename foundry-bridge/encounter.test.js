@@ -117,7 +117,23 @@ describe('encounter payload push', () => {
     expect(goblin.bestiary.description).toBe('A goblin.');
   });
 
-  test('PC entry does not include bestiary even when an actor is present', () => {
+  test('enemy entry includes a top-level creatureKey', () => {
+    const goblinActor = makeActor({
+      id: 'actor-goblin',
+      name: 'Goblin',
+      level: 1,
+      compendiumSource: 'Compendium.pf2e.bestiary.Actor.gob',
+    });
+    global.game.actors.set('actor-goblin', goblinActor);
+
+    global.Hooks.fire('createCombat', combatWithGoblinAndPellias());
+
+    const { order } = send.mock.calls[0][2];
+    const goblin = order.find((e) => e.name === 'Goblin');
+    expect(goblin.creatureKey).toBe('Compendium.pf2e.bestiary.Actor.gob');
+  });
+
+  test('PC entry does not include bestiary or creatureKey even when an actor is present', () => {
     updateActorMap({ 'actor-pellias': 'Pellias' });
     const pelliasActor = makeActor({ id: 'actor-pellias', level: 5 });
     global.game.actors.set('actor-pellias', pelliasActor);
@@ -128,6 +144,7 @@ describe('encounter payload push', () => {
     const pellias = order.find((e) => e.name === 'Pellias');
     expect(pellias.kind).toBe('pc');
     expect(pellias.bestiary).toBeUndefined();
+    expect(pellias.creatureKey).toBeUndefined();
   });
 
   test('enemy entry without an actor omits bestiary', () => {
