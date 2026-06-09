@@ -12,6 +12,7 @@ import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
 import AdjustHpModal from '../../components/gm/AdjustHpModal';
+import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
 import GmIcon from './GmIcon';
 import './gm.css';
 
@@ -287,6 +288,7 @@ const GmDashboard = () => {
   const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isAdjustHpModalOpen, setIsAdjustHpModalOpen] = useState(false);
+  const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
 
   const isEncounter = mode === 'encounter';
 
@@ -346,6 +348,16 @@ const GmDashboard = () => {
                 <span className="gm-qa-title">Adjust HP</span>
                 <span className="gm-qa-desc">Heal or damage any character</span>
               </button>
+              <button
+                type="button"
+                className="gm-qa"
+                aria-label="Send Recall Knowledge prompt"
+                onClick={() => setIsRecallKnowledgeModalOpen(true)}
+              >
+                <GmIcon name="book" className="gm-qa-ico" />
+                <span className="gm-qa-title">Recall Knowledge</span>
+                <span className="gm-qa-desc">Send a skill-check prompt to players</span>
+              </button>
             </div>
           </section>
         </div>
@@ -369,6 +381,11 @@ const GmDashboard = () => {
       <AdjustHpModal
         isOpen={isAdjustHpModalOpen}
         onClose={() => setIsAdjustHpModalOpen(false)}
+      />
+
+      <RecallKnowledgeModal
+        isOpen={isRecallKnowledgeModalOpen}
+        onClose={() => setIsRecallKnowledgeModalOpen(false)}
       />
     </div>
   );

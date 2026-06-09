@@ -1,0 +1,85 @@
+.rk-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rk-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.rk-row label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.rk-row input,
+.rk-row select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Level + rarity as a two-column inline row */
+.rk-dc-inputs {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.rk-row--inline {
+  flex: 1;
+}
+
+/* Suggested DC callout */
+.rk-dc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+}
+
+.rk-dc-suggest {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.85rem;
+}
+
+.rk-dc-suggest-label {
+  color: var(--shell-text-tertiary);
+}
+
+.rk-dc-suggest-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ember-light);
+  font-size: 1rem;
+}
+
+.rk-dc-use-btn {
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-outline);
+  color: var(--accent-text);
+  transition: background 0.15s;
+}
+
+.rk-dc-use-btn:hover {
+  background: var(--accent-tint-hover);
+}
+
+.rk-send-btn {
+  margin-top: var(--space-1);
+  width: 100%;
+}
