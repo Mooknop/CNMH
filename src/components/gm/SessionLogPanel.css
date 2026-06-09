@@ -1,0 +1,73 @@
+.gm-session-log {
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.gm-slog-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gm-slog-entry {
+  display: grid;
+  grid-template-columns: 2.8rem 3rem 1fr;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--shell-border);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.gm-slog-entry:last-child {
+  border-bottom: none;
+}
+
+.gm-slog-time {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+}
+
+.gm-slog-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.gm-slog-text {
+  color: var(--shell-text-secondary);
+}
+
+/* Badge colors per event type */
+.gm-slog-entry--mode .gm-slog-badge {
+  color: var(--ember-light);
+  border-color: rgba(245, 128, 62, 0.4);
+  background: rgba(245, 128, 62, 0.08);
+}
+
+.gm-slog-entry--save .gm-slog-badge {
+  color: var(--verdant-light);
+  border-color: rgba(98, 194, 120, 0.4);
+  background: rgba(98, 194, 120, 0.08);
+}
+
+.gm-slog-entry--recall .gm-slog-badge {
+  color: var(--shell-text-secondary);
+  border-color: var(--shell-border-strong);
+  background: var(--surface-inset);
+}

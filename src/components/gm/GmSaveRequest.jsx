@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSession } from '../../contexts/SessionContext';
+import { useSessionLog } from '../../hooks/useSessionLog';
 
 const SAVE_OPTIONS = ['fortitude', 'reflex', 'will'];
 const SAVE_LABELS  = { fortitude: 'Fortitude', reflex: 'Reflex', will: 'Will' };
@@ -13,6 +14,7 @@ let _reqCounter = 0;
  */
 const GmSaveRequest = ({ pcEntries = [] }) => {
   const { sendUpdate } = useSession();
+  const { appendEvent } = useSessionLog();
   const [save,       setSave]       = useState('reflex');
   const [dc,         setDc]         = useState('');
   const [effectName, setEffectName] = useState('');
@@ -38,6 +40,10 @@ const GmSaveRequest = ({ pcEntries = [] }) => {
         basic,
       });
     }
+    const saveLabel = SAVE_LABELS[save] || save;
+    const targetLabel = target === 'all' ? 'all PCs' : (targets[0]?.name ?? target);
+    const nameStr = effectName.trim() ? ` — ${effectName.trim()}` : '';
+    appendEvent({ type: 'save', text: `${saveLabel} DC ${dcNum}${nameStr} → ${targetLabel}` });
     setEffectName('');
   };
 

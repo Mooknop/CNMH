@@ -3,6 +3,7 @@ import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { KNOWLEDGE_SKILLS, recallKnowledgeDC } from '../../utils/recallKnowledge';
+import { useSessionLog } from '../../hooks/useSessionLog';
 import './RecallKnowledgeModal.css';
 
 const SKILL_LABELS = {
@@ -25,6 +26,7 @@ let _reqCounter = 0;
 const RecallKnowledgeModal = ({ isOpen, onClose }) => {
   const { characters } = useContent();
   const { sendUpdate } = useSession();
+  const { appendEvent } = useSessionLog();
 
   const [label,  setLabel]  = useState('');
   const [skill,  setSkill]  = useState('arcana');
@@ -55,6 +57,10 @@ const RecallKnowledgeModal = ({ isOpen, onClose }) => {
         label:  label.trim() || undefined,
       });
     }
+    const skillLabel = SKILL_LABELS[skill] || skill;
+    const targetLabel = target === 'all' ? 'all characters' : (targets[0]?.name ?? target);
+    const subjectStr = label.trim() ? ` — ${label.trim()}` : '';
+    appendEvent({ type: 'recall', text: `${skillLabel} DC ${dcNum}${subjectStr} → ${targetLabel}` });
     handleClose();
   };
 

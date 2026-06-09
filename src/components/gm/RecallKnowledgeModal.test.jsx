@@ -4,6 +4,9 @@ import { render, screen, fireEvent } from '@testing-library/react';
 // ─── mocks ───────────────────────────────────────────────────
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../contexts/SessionContext',  () => ({ useSession:  vi.fn() }));
+vi.mock('../../hooks/useSessionLog', () => ({
+  useSessionLog: () => ({ appendEvent: vi.fn(), log: [] }),
+}));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useSession }  from '../../contexts/SessionContext';

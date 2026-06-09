@@ -6,6 +6,7 @@ import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useLore } from '../../contexts/LoreContext';
+import { useSessionLog } from '../../hooks/useSessionLog';
 import DowntimeControl from './DowntimeControl';
 import ExplorationTimeControl from './ExplorationTimeControl';
 import GmIcon from '../../pages/gm/GmIcon';
@@ -25,6 +26,7 @@ import './PlayModeControl.css';
 
 const PlayModeControl = () => {
   const { mode, gmMode, setGmMode, moveEnabled, setMoveEnabled, setMoveOverride } = usePlayMode();
+  const { appendEvent } = useSessionLog();
   const { openLore } = useLore();
   const { allChosen } = useExplorationReady();
   const { characters } = useContext(CharacterContext) || {};
@@ -73,7 +75,7 @@ const PlayModeControl = () => {
             <button
               type="button"
               className={`pmc-pill${!isEncounter && gmMode === 'exploration' ? ' pmc-pill--active' : ''}`}
-              onClick={() => setGmMode('exploration')}
+              onClick={() => { setGmMode('exploration'); appendEvent({ type: 'mode', text: 'Mode → Exploration' }); }}
               aria-pressed={!isEncounter && gmMode === 'exploration'}
               disabled={isEncounter}
             >
@@ -83,7 +85,7 @@ const PlayModeControl = () => {
             <button
               type="button"
               className={`pmc-pill${!isEncounter && gmMode === 'downtime' ? ' pmc-pill--active' : ''}`}
-              onClick={() => setGmMode('downtime')}
+              onClick={() => { setGmMode('downtime'); appendEvent({ type: 'mode', text: 'Mode → Downtime' }); }}
               aria-pressed={!isEncounter && gmMode === 'downtime'}
               disabled={isEncounter}
             >
