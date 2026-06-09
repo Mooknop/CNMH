@@ -276,7 +276,7 @@ describe('PlayModeControl', () => {
   describe('Location lore link', () => {
     it('shows a lore-link button when locationLoreId is set', () => {
       useSyncedState.mockReturnValue([
-        { location: 'Sandpoint', treasure: '10', locationLoreId: 'sandpoint' },
+        { location: 'Sandpoint', locationLoreId: 'sandpoint' },
         vi.fn(),
       ]);
       renderWith();
@@ -285,7 +285,7 @@ describe('PlayModeControl', () => {
 
     it('calls openLore with the locationLoreId when the button is clicked', () => {
       useSyncedState.mockReturnValue([
-        { location: 'Sandpoint', treasure: '10', locationLoreId: 'sandpoint' },
+        { location: 'Sandpoint', locationLoreId: 'sandpoint' },
         vi.fn(),
       ]);
       renderWith();
@@ -295,11 +295,27 @@ describe('PlayModeControl', () => {
 
     it('does not show the lore-link button when locationLoreId is empty', () => {
       useSyncedState.mockReturnValue([
-        { location: 'Somewhere', treasure: '0', locationLoreId: '' },
+        { location: 'Somewhere', locationLoreId: '' },
         vi.fn(),
       ]);
       renderWith();
       expect(screen.queryByRole('button', { name: 'View location lore' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Treasure stat', () => {
+    it('renders the summed party gold read-only (no editable input)', () => {
+      mockGetState.mockImplementation((id, type) =>
+        type === 'gold' ? ({ a: 30, b: 12 }[id] ?? 0) : null
+      );
+      renderWith([{ id: 'a' }, { id: 'b' }]);
+      expect(screen.getByText('Treasure')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          (_, el) => el?.classList?.contains('pmc-meta-gold') && el.textContent === '42gp'
+        )
+      ).toBeInTheDocument();
+      expect(screen.queryByLabelText('Party treasure in gold')).not.toBeInTheDocument();
     });
   });
 

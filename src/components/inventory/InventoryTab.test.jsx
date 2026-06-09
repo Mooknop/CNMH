@@ -87,6 +87,11 @@ describe('InventoryTab', () => {
     expect(screen.getByText('Inventory')).toBeInTheDocument();
   });
 
+  it('displays the character personal gold', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText(/💰\s*0 gp/)).toBeInTheDocument();
+  });
+
   it('displays bulk information', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
     expect(screen.getByText(/Bulk Used:/)).toBeInTheDocument();

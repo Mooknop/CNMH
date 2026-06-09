@@ -1,17 +1,21 @@
 // src/pages/Dashboard.js
-import React from 'react';
+import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameDate } from '../contexts/GameDateContext';
 import { useLore } from '../contexts/LoreContext';
+import { CharacterContext } from '../contexts/CharacterContext';
 import { useSyncedState } from '../hooks/useSyncedState';
-import { PARTY_GOLD, PARTY_NAME } from '../data/campaign';
+import { usePartyGold } from '../hooks/usePartyGold';
+import { PARTY_NAME } from '../data/campaign';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { formatGameDate } = useGameDate();
   const navigate = useNavigate();
   const { openLore } = useLore();
-  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', treasure: '', locationLoreId: '' });
+  const { characters } = useContext(CharacterContext) || {};
+  const { total: partyGold } = usePartyGold(characters);
+  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
   const currentLocation = campaign?.location || '';
   const locationLoreId = campaign?.locationLoreId || '';
 
@@ -57,7 +61,7 @@ const Dashboard = () => {
               <div className="stat-icon">💰</div>
               <div className="stat-content">
                 <div className="stat-label">Party Gold</div>
-                <div className="stat-number">{PARTY_GOLD} gp</div>
+                <div className="stat-number">{partyGold} gp</div>
               </div>
             </button>
 

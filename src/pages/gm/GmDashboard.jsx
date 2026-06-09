@@ -13,6 +13,7 @@ import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
 import AdjustHpModal from '../../components/gm/AdjustHpModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
+import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
 import GmIcon from './GmIcon';
 import './gm.css';
@@ -290,6 +291,7 @@ const GmDashboard = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isAdjustHpModalOpen, setIsAdjustHpModalOpen] = useState(false);
   const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
+  const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
 
   const isEncounter = mode === 'encounter';
 
@@ -359,6 +361,16 @@ const GmDashboard = () => {
                 <span className="gm-qa-title">Recall Knowledge</span>
                 <span className="gm-qa-desc">Send a skill-check prompt to players</span>
               </button>
+              <button
+                type="button"
+                className="gm-qa"
+                aria-label="Set party gold"
+                onClick={() => setIsPartyGoldModalOpen(true)}
+              >
+                <GmIcon name="bag" className="gm-qa-ico" />
+                <span className="gm-qa-title">Party Gold</span>
+                <span className="gm-qa-desc">Set how much gold each character carries</span>
+              </button>
             </div>
           </section>
         </div>
@@ -390,6 +402,11 @@ const GmDashboard = () => {
       <RecallKnowledgeModal
         isOpen={isRecallKnowledgeModalOpen}
         onClose={() => setIsRecallKnowledgeModalOpen(false)}
+      />
+
+      <PartyGoldModal
+        isOpen={isPartyGoldModalOpen}
+        onClose={() => setIsPartyGoldModalOpen(false)}
       />
     </div>
   );
