@@ -13,6 +13,7 @@ import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
 import AdjustHpModal from '../../components/gm/AdjustHpModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
+import SessionLogPanel from '../../components/gm/SessionLogPanel';
 import GmIcon from './GmIcon';
 import './gm.css';
 
@@ -362,6 +363,9 @@ const GmDashboard = () => {
           </section>
         </div>
       </div>
+
+      {/* Session Log — full-width, above maintenance */}
+      <SessionLogPanel />
 
       {/* Maintenance — full-width, collapsed by default */}
       <MaintenancePanel />

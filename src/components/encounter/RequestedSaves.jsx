@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { useSessionLog } from '../../hooks/useSessionLog';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -27,6 +28,7 @@ const DEGREE_CLASSES = {
  */
 const RequestedSaves = () => {
   const { encounter, appendLog, removeSaveRequest } = useEncounter();
+  const { appendEvent } = useSessionLog();
   const [d20Inputs, setD20Inputs] = useState({});
 
   const requests = (encounter?.saveRequests || []).filter((r) => r.status === 'pending');
@@ -64,6 +66,8 @@ const RequestedSaves = () => {
       });
     });
 
+    const names = results.map((r) => r.name).join(', ');
+    appendEvent({ type: 'save', text: `${saveLabel} DC ${req.dc} (${req.abilityName}) resolved — ${names}` });
     removeSaveRequest(req.id);
     // Clean up local input state.
     setD20Inputs((prev) => {

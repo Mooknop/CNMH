@@ -5,6 +5,9 @@ const mockSendUpdate = vi.fn();
 vi.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate }),
 }));
+vi.mock('../../hooks/useSessionLog', () => ({
+  useSessionLog: () => ({ appendEvent: vi.fn(), log: [] }),
+}));
 
 import GmSaveRequest from './GmSaveRequest';
 
