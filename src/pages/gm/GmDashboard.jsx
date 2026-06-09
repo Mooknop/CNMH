@@ -15,6 +15,8 @@ import AdjustHpModal from '../../components/gm/AdjustHpModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
 import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
+import BestiaryEditor from '../../components/gm/BestiaryEditor';
+import Modal from '../../components/shared/Modal';
 import GmIcon from './GmIcon';
 import './gm.css';
 
@@ -292,6 +294,7 @@ const GmDashboard = () => {
   const [isAdjustHpModalOpen, setIsAdjustHpModalOpen] = useState(false);
   const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
   const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
+  const [isBestiaryEditorOpen, setIsBestiaryEditorOpen] = useState(false);
 
   const isEncounter = mode === 'encounter';
 
@@ -371,6 +374,18 @@ const GmDashboard = () => {
                 <span className="gm-qa-title">Party Gold</span>
                 <span className="gm-qa-desc">Set how much gold each character carries</span>
               </button>
+              {isEncounter && (
+                <button
+                  type="button"
+                  className="gm-qa"
+                  aria-label="Edit monster descriptions"
+                  onClick={() => setIsBestiaryEditorOpen(true)}
+                >
+                  <GmIcon name="sword" className="gm-qa-ico" />
+                  <span className="gm-qa-title">Bestiary</span>
+                  <span className="gm-qa-desc">Redact or override monster descriptions</span>
+                </button>
+              )}
             </div>
           </section>
         </div>
@@ -408,6 +423,15 @@ const GmDashboard = () => {
         isOpen={isPartyGoldModalOpen}
         onClose={() => setIsPartyGoldModalOpen(false)}
       />
+
+      <Modal
+        isOpen={isBestiaryEditorOpen}
+        onClose={() => setIsBestiaryEditorOpen(false)}
+        title="Bestiary — Description Overrides"
+        maxWidth="820px"
+      >
+        <BestiaryEditor />
+      </Modal>
     </div>
   );
 };

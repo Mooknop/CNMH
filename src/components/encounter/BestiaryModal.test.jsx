@@ -69,8 +69,9 @@ vi.mock('../../hooks/useGmAuth', () => ({
 
 // Acting character — non-Thaumaturge by default.
 let mockCharFlags = { isThaumaturge: false };
+let mockMonsters = [];
 vi.mock('../../contexts/ContentContext', () => ({
-  useContent: () => ({ characters: [] }),
+  useContent: () => ({ characters: [], monsters: mockMonsters }),
 }));
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: () => ({ flags: mockCharFlags }),
@@ -78,6 +79,7 @@ vi.mock('../../hooks/useCharacter', () => ({
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
+const GOBLIN_KEY = 'Compendium.pf2e.bestiary.Actor.gob-keyed';
 const goblin = {
   entryId: 'e1',
   kind: 'enemy',
@@ -149,6 +151,7 @@ beforeEach(() => {
   mockExploit = {};
   mockIsGm   = false;
   mockCharFlags = { isThaumaturge: false };
+  mockMonsters = [];
   mockClearLock.mockClear();
 });
 
@@ -687,5 +690,79 @@ describe('BestiaryModal — resolver flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /Recall Knowledge/i }));
     fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
     expect(screen.queryByTestId('rkr-stub')).not.toBeInTheDocument();
+  });
+});
+
+// ── Monster description overrides (issue #194) ───────────────────────────────
+
+describe('BestiaryModal — description override merge', () => {
+  // Goblin with a stable creatureKey.
+  const goblinKeyed = {
+    ...goblin,
+    creatureKey: GOBLIN_KEY,
+  };
+
+  const revealedRecord = {
+    [GOBLIN_KEY]: {
+      identity: true, description: true, hp: true,
+      ac: false, perception: false, speed: false,
+      saves: { fortitude: false, reflex: false, will: false },
+      iwr: { immunities: false, resistances: false, weaknesses: false },
+      weaknessesRevealed: {}, lockedOut: {}, history: [],
+    },
+  };
+
+  beforeEach(() => {
+    mockRecord = revealedRecord;
+  });
+
+  test('without override, shows imported description after reveal', () => {
+    renderModal({ enemies: [goblinKeyed] });
+    expect(screen.getByText('A sneaky goblin warrior.')).toBeInTheDocument();
+  });
+
+  test('with override, shows overridden text instead of imported', () => {
+    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'A small creature lurking in the dark.' }];
+    renderModal({ enemies: [goblinKeyed] });
+    expect(screen.queryByText('A sneaky goblin warrior.')).not.toBeInTheDocument();
+    expect(screen.getByText('A small creature lurking in the dark.')).toBeInTheDocument();
+  });
+
+  test('empty-string override redacts — no description shown', () => {
+    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: '' }];
+    renderModal({ enemies: [goblinKeyed] });
+    expect(screen.queryByText('A sneaky goblin warrior.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('paragraph', { name: /bm-description/ })).not.toBeInTheDocument();
+  });
+
+  test('override does not affect a creature with a different creatureKey', () => {
+    mockMonsters = [{ id: 'some-other-key', name: 'Other', descriptionOverride: 'Overridden other.' }];
+    renderModal({ enemies: [goblinKeyed] });
+    expect(screen.getByText('A sneaky goblin warrior.')).toBeInTheDocument();
+  });
+
+  test('override is still gated behind RK description reveal', () => {
+    mockRecord = {};  // no reveals
+    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Override text.' }];
+    renderModal({ enemies: [goblinKeyed] });
+    // Description not revealed — neither override nor imported shows as text.
+    expect(screen.queryByText('Override text.')).not.toBeInTheDocument();
+  });
+
+  test('no-creatureKey creature ignores monster overrides', () => {
+    mockMonsters = [{ id: 'e1', name: 'Goblin Warrior', descriptionOverride: 'Should not show.' }];
+    // goblin (no creatureKey) — record keyed by entryId 'e1'
+    mockRecord = {
+      e1: {
+        identity: true, description: true, hp: true,
+        ac: false, perception: false, speed: false,
+        saves: { fortitude: false, reflex: false, will: false },
+        iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {}, lockedOut: {}, history: [],
+      },
+    };
+    renderModal({ enemies: [goblin] });
+    expect(screen.getByText('A sneaky goblin warrior.')).toBeInTheDocument();
+    expect(screen.queryByText('Should not show.')).not.toBeInTheDocument();
   });
 });
