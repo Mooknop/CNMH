@@ -601,6 +601,78 @@ describe('BestiaryModal — navigation', () => {
   });
 });
 
+// ── Same-type dedupe + shared reveal (creatureKey) ───────────────────────────
+
+describe('BestiaryModal — same-type dedupe', () => {
+  // Three goblins sharing a creatureKey but distinct per-token entryId/HP.
+  const goblinKey = 'Compendium.pf2e.bestiary.Actor.gob';
+  const mkGoblin = (entryId, name, hp) => ({
+    ...goblin,
+    entryId,
+    name,
+    creatureKey: goblinKey,
+    bestiary: { ...goblin.bestiary, hp },
+  });
+  const g1 = mkGoblin('e1', 'Goblin Warrior 1', { current: 16, max: 20 });
+  const g2 = mkGoblin('e2', 'Goblin Warrior 2', { current: 8, max: 20 });
+  const g3 = mkGoblin('e3', 'Goblin Warrior 3', { current: 20, max: 20 });
+
+  test('three same-key goblins collapse to one row with a ×3 badge', () => {
+    renderModal({ enemies: [g1, g2, g3] });
+    expect(screen.getAllByRole('option')).toHaveLength(1);
+    expect(screen.getByText('×3')).toBeInTheDocument();
+  });
+
+  test('one shared record reveals identity for the whole group', () => {
+    mockRecord = {
+      [goblinKey]: {
+        identity: true, description: true, hp: false,
+        ac: false, perception: false, speed: false,
+        saves: { fortitude: false, reflex: false, will: false },
+        iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {}, lockedOut: {}, history: [],
+      },
+    };
+    renderModal({ enemies: [g1, g2, g3] });
+    expect(screen.getAllByRole('option')[0]).toHaveTextContent('Goblin Warrior 1');
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('A sneaky goblin warrior.');
+  });
+
+  test('per-token HP is listed individually once HP revealed', () => {
+    mockRecord = {
+      [goblinKey]: {
+        identity: true, description: true, hp: true,
+        ac: false, perception: false, speed: false,
+        saves: { fortitude: false, reflex: false, will: false },
+        iwr: { immunities: false, resistances: false, weaknesses: false },
+        weaknessesRevealed: {}, lockedOut: {}, history: [],
+      },
+    };
+    renderModal({ enemies: [g1, g2, g3] });
+    const hpList = screen.getByTestId('bm-hp-list');
+    expect(hpList).toHaveTextContent('16 / 20');
+    expect(hpList).toHaveTextContent('8 / 20');
+    expect(hpList).toHaveTextContent('20 / 20');
+  });
+
+  test('per-token HP is redacted until HP revealed', () => {
+    renderModal({ enemies: [g1, g2, g3] });
+    const hpList = screen.getByTestId('bm-hp-list');
+    expect(hpList).not.toHaveTextContent('16 / 20');
+  });
+
+  test('distinct creatures remain distinct rows', () => {
+    renderModal({ enemies: [g1, troll] });
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+
+  test('null-key creatures stay separate (fall back to entryId)', () => {
+    // goblin/troll fixtures have no creatureKey → keyed by entryId, no collapse.
+    renderModal({ enemies: [goblin, troll] });
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+});
+
 // ── Resolver opens inline ─────────────────────────────────────────────────────
 
 describe('BestiaryModal — resolver flow', () => {

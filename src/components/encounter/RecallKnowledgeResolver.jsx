@@ -3,7 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { computeSaveDegree } from '../../utils/saveDegree';
-import { recallKnowledgeDC, recallKnowledgeSkills, KNOWLEDGE_SKILLS } from '../../utils/recallKnowledge';
+import { recallKnowledgeDC, recallKnowledgeSkills, KNOWLEDGE_SKILLS, rkKeyFor } from '../../utils/recallKnowledge';
 import { formatModifier } from '../../utils/CharacterUtils';
 import './RecallKnowledgeResolver.css';
 
@@ -83,7 +83,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }
 
   const handleConfirm = () => {
     if (!confirmEnabled) return;
-    resolve(enemy.entryId, {
+    resolve(rkKeyFor(enemy), {
       degree,
       defenses,
       choices: needsChoice ? choices : [],

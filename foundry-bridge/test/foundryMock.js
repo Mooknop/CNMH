@@ -62,6 +62,8 @@ export function makeActor(opts = {}) {
     size = null,
     perception = null,
     publicNotes = '',
+    compendiumSource = null,
+    sourceId = null,
   } = opts;
 
   const conditionItems = conditions.map((c) =>
@@ -72,6 +74,8 @@ export function makeActor(opts = {}) {
     name,
     img,
     documentName: 'Actor',
+    ...(compendiumSource !== null ? { _stats: { compendiumSource } } : {}),
+    ...(sourceId !== null ? { flags: { core: { sourceId } } } : {}),
     system: {
       attributes: {
         hp: { value: hp.value ?? 0, max: hp.max ?? 0, temp: hp.temp ?? 0 },

@@ -418,6 +418,7 @@ describe('getBestiaryInfo', () => {
       speed: 30,
       hp: expect.objectContaining({ current: 30, max: 36 }),
       description: 'A sneaky goblin.',
+      creatureKey: 'test-actor-l3',
     });
   });
 
@@ -442,5 +443,54 @@ describe('getBestiaryInfo', () => {
 
   test('returns null for undefined actor', () => {
     expect(getBestiaryInfo(undefined)).toBeNull();
+  });
+
+  describe('creatureKey', () => {
+    test('uses the compendium source UUID when present', () => {
+      const actor = makeActor({
+        name: 'Goblin Warrior',
+        level: 1,
+        compendiumSource: 'Compendium.pf2e.pathfinder-bestiary.Actor.abc123',
+      });
+      expect(getBestiaryInfo(actor).creatureKey)
+        .toBe('Compendium.pf2e.pathfinder-bestiary.Actor.abc123');
+    });
+
+    test('falls back to flags.core.sourceId when no _stats source', () => {
+      const actor = makeActor({
+        name: 'Goblin Warrior',
+        level: 1,
+        sourceId: 'Compendium.pf2e.pathfinder-bestiary.Actor.legacy',
+      });
+      expect(getBestiaryInfo(actor).creatureKey)
+        .toBe('Compendium.pf2e.pathfinder-bestiary.Actor.legacy');
+    });
+
+    test('two of the same compendium creature share a key', () => {
+      const a = makeActor({ name: 'Goblin 1', level: 1, compendiumSource: 'Compendium.pf2e.x.Actor.gob' });
+      const b = makeActor({ name: 'Goblin 2', level: 1, compendiumSource: 'Compendium.pf2e.x.Actor.gob' });
+      expect(getBestiaryInfo(a).creatureKey).toBe(getBestiaryInfo(b).creatureKey);
+    });
+
+    test('name-suffix fallback collapses Goblin Warrior 1/2/3', () => {
+      const k1 = getBestiaryInfo(makeActor({ name: 'Goblin Warrior 1', level: 2 })).creatureKey;
+      const k2 = getBestiaryInfo(makeActor({ name: 'Goblin Warrior 2', level: 2 })).creatureKey;
+      const k3 = getBestiaryInfo(makeActor({ name: 'Goblin Warrior (3)', level: 2 })).creatureKey;
+      expect(k1).toBe('goblin-warrior-l2');
+      expect(k2).toBe(k1);
+      expect(k3).toBe(k1);
+    });
+
+    test('different creatures get different fallback keys', () => {
+      const goblin = getBestiaryInfo(makeActor({ name: 'Goblin Warrior', level: 1 })).creatureKey;
+      const orc    = getBestiaryInfo(makeActor({ name: 'Orc Brute', level: 1 })).creatureKey;
+      expect(goblin).not.toBe(orc);
+    });
+
+    test('same name at a different level differs', () => {
+      const l1 = getBestiaryInfo(makeActor({ name: 'Goblin Warrior', level: 1 })).creatureKey;
+      const l2 = getBestiaryInfo(makeActor({ name: 'Goblin Warrior', level: 2 })).creatureKey;
+      expect(l1).not.toBe(l2);
+    });
   });
 });

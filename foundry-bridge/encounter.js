@@ -101,6 +101,7 @@ function buildEncounterPayload(combat) {
       ...(charId    ? { charId }    : {}),
       ...(defenses  ? { defenses }  : {}),
       ...(bestiary  ? { bestiary }  : {}),
+      ...(bestiary?.creatureKey ? { creatureKey: bestiary.creatureKey } : {}),
     };
   });
 

@@ -75,6 +75,14 @@ export function recallKnowledgeSkills(traits = []) {
 
 // ── Shared reveal state helpers ─────────────────────────────────────────────
 
+// Key used to store a creature's Recall Knowledge record. Same-type enemies share
+// a record via their stable `creatureKey` (emitted by the bridge). Falls back to the
+// per-combatant `entryId` when no creatureKey is present (unlinked/homebrew actors),
+// so those behave as before — no dedupe, no shared reveal.
+export function rkKeyFor(enemy) {
+  return enemy?.creatureKey || enemy?.entryId || null;
+}
+
 export function defaultRecord() {
   return {
     identity: false,        // name + level + traits — auto-revealed on any success

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import { recallKnowledgeDC } from '../../utils/recallKnowledge';
+import { recallKnowledgeDC, rkKeyFor } from '../../utils/recallKnowledge';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useGmAuth } from '../../hooks/useGmAuth';
@@ -44,8 +44,9 @@ const SignedMod = ({ value, revealed }) => {
   return <span className="bm-stat-value">{value >= 0 ? `+${value}` : value}</span>;
 };
 
-const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
-  const { bestiary, defenses, name, entryId } = enemy;
+const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, themeColor }) => {
+  const { bestiary, defenses, name } = enemy;
+  const rkKey = rkKeyFor(enemy);
   const { recordFor, clearLock } = useRecallKnowledge();
   const { exploitFor } = useExploitVulnerability();
   const { isGm } = useGmAuth();
@@ -57,9 +58,9 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
   // 'none' | 'rk' | 'ev'
   const [resolverOpen, setResolverOpen] = useState('none');
 
-  const record = recordFor(entryId);
+  const record = recordFor(rkKey);
   const exploit = exploitFor(actingCharId);
-  const activeExploit = exploit?.targetEntryId === entryId ? exploit : null;
+  const activeExploit = exploit?.targetEntryId === rkKey ? exploit : null;
 
   const lockedForMe = !!(record.lockedOut?.[actingCharId]);
 
@@ -150,12 +151,34 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
 
       <div className="bm-stats-grid">
         <StatRow label="AC"   value={defenses?.ac ?? null} revealed={acRevealed} redactWidth="3ch" />
-        {bestiary?.hp != null && (
+        {bestiary?.hp != null && members.length === 1 && (
           <StatRow
             label="HP"
             value={`${bestiary.hp.current} / ${bestiary.hp.max}`}
             revealed={hpRevealed}
           />
+        )}
+        {/* Multiple same-type tokens: HP is per-token, so list each one. */}
+        {members.length > 1 && (
+          <div className="bm-hp-list" data-testid="bm-hp-list">
+            <span className="bm-stat-label">HP</span>
+            {hpRevealed ? (
+              <ul className="bm-hp-tokens">
+                {members.map((m) => (
+                  <li key={m.entryId} className="bm-hp-token">
+                    <span className="bm-hp-token-name">{m.name}</span>
+                    <span className="bm-stat-value">
+                      {m.bestiary?.hp != null
+                        ? `${m.bestiary.hp.current} / ${m.bestiary.hp.max}`
+                        : '—'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Redacted width="6ch" />
+            )}
+          </div>
         )}
         {bestiary?.perception != null && (
           <div className="bm-stat-row">
@@ -301,7 +324,7 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
                     type="button"
                     className="bm-rk-unlock-btn"
                     aria-label={`Clear lockout for ${charId}`}
-                    onClick={() => clearLock(entryId, charId)}
+                    onClick={() => clearLock(rkKey, charId)}
                   >
                     {charId} ×
                   </button>
@@ -316,15 +339,30 @@ const EnemyDetail = ({ enemy, actingCharId, actingCharName, themeColor }) => {
 };
 
 const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, actingCharName }) => {
-  const [focusId, setFocusId] = useState(null);
+  const [focusKey, setFocusKey] = useState(null);
+
+  // Collapse same-type enemies into one row per creatureKey, preserving order.
+  // Each group: { key, rep (representative type-level block), members (per-token) }.
+  const groups = useMemo(() => {
+    const byKey = new Map();
+    (enemies || []).forEach((enemy) => {
+      const key = rkKeyFor(enemy) ?? enemy.entryId;
+      if (byKey.has(key)) {
+        byKey.get(key).members.push(enemy);
+      } else {
+        byKey.set(key, { key, rep: enemy, members: [enemy] });
+      }
+    });
+    return [...byKey.values()];
+  }, [enemies]);
 
   useEffect(() => {
     if (isOpen) {
-      setFocusId(enemies?.[0]?.entryId ?? null);
+      setFocusKey(groups[0]?.key ?? null);
     }
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const focused = (enemies || []).find((e) => e.entryId === focusId) || enemies?.[0] || null;
+  const focusedGroup = groups.find((g) => g.key === focusKey) || groups[0] || null;
 
   const { recordFor } = useRecallKnowledge();
 
@@ -338,23 +376,24 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
     >
       <div className="bm-layout">
         <div className="bm-list" role="listbox" aria-label="Enemy list">
-          {(enemies || []).map((enemy) => {
-            const isFocused = enemy.entryId === (focused?.entryId ?? null);
-            const record    = recordFor(enemy.entryId);
+          {groups.map((group) => {
+            const { rep, members } = group;
+            const isFocused = group.key === (focusedGroup?.key ?? null);
+            const record    = recordFor(group.key);
             const identityRevealed = record.identity;
             return (
               <button
-                key={enemy.entryId}
+                key={group.key}
                 type="button"
                 role="option"
                 aria-selected={isFocused}
                 className={`bm-list-item${isFocused ? ' bm-list-item--active' : ''}`}
-                onClick={() => setFocusId(enemy.entryId)}
+                onClick={() => setFocusKey(group.key)}
               >
-                {enemy.bestiary?.img && (
+                {rep.bestiary?.img && (
                   <img
                     className="bm-thumb"
-                    src={enemy.bestiary.img}
+                    src={rep.bestiary.img}
                     alt=""
                     aria-hidden="true"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -362,11 +401,16 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
                 )}
                 <span className="bm-list-name">
                   {identityRevealed
-                    ? enemy.name
+                    ? rep.name
                     : <span className="bm-redacted bm-redacted--inline" style={{ width: '7ch' }} aria-label="name redacted" aria-hidden="true" />}
                 </span>
-                {enemy.bestiary?.level != null && identityRevealed && (
-                  <span className="bm-list-level">CR {enemy.bestiary.level}</span>
+                {members.length > 1 && (
+                  <span className="bm-list-count" aria-label={`${members.length} of this type`}>
+                    ×{members.length}
+                  </span>
+                )}
+                {rep.bestiary?.level != null && identityRevealed && (
+                  <span className="bm-list-level">CR {rep.bestiary.level}</span>
                 )}
               </button>
             );
@@ -374,10 +418,11 @@ const BestiaryModal = ({ isOpen, onClose, enemies, themeColor, actingCharId, act
         </div>
 
         <div className="bm-detail-pane">
-          {focused
+          {focusedGroup
             ? (
               <EnemyDetail
-                enemy={focused}
+                enemy={focusedGroup.rep}
+                members={focusedGroup.members}
                 actingCharId={actingCharId}
                 actingCharName={actingCharName}
                 themeColor={themeColor}
