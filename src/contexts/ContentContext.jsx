@@ -153,6 +153,7 @@ export const ContentProvider = ({ children }) => {
   const serverEffects = serverList('effect');
   const serverImages = serverList('image');
   const serverTheme = serverList('theme');
+  const serverMonsters = serverList('monster');
 
   // The shared item catalog, then resolve every character's inventory refs
   // against it (legacy inline items pass through unchanged). Resolving here —
@@ -221,6 +222,7 @@ export const ContentProvider = ({ children }) => {
     effects,
     images,
     theme,
+    monsters: serverMonsters,
     refresh: loadSnapshot,
   };
 
@@ -244,6 +246,7 @@ const NOOP_CONTENT = {
   effects: FALLBACK.effect,
   images: FALLBACK.image,
   theme: FALLBACK.theme ? FALLBACK.theme[0] : undefined,
+  monsters: [],
   refresh: () => Promise.resolve(),
 };
 

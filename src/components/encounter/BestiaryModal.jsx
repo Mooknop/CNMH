@@ -50,10 +50,20 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
   const { recordFor, clearLock } = useRecallKnowledge();
   const { exploitFor } = useExploitVulnerability();
   const { isGm } = useGmAuth();
-  const { characters } = useContent();
+  const { characters, monsters } = useContent();
   const rawActingChar = characters.find((c) => c.id === actingCharId) || null;
   const actingCharModel = useCharacter(rawActingChar);
   const isThaumaturge = actingCharModel?.flags?.isThaumaturge ?? false;
+
+  // Override controls content; RK controls visibility.
+  // override present → use descriptionOverride (empty = GM redacted);
+  // no override → fall back to imported bestiary.description.
+  const monsterOverride = enemy.creatureKey
+    ? (monsters || []).find((m) => String(m.id) === String(enemy.creatureKey))
+    : null;
+  const effectiveDescription = monsterOverride
+    ? monsterOverride.descriptionOverride
+    : bestiary?.description;
 
   // 'none' | 'rk' | 'ev'
   const [resolverOpen, setResolverOpen] = useState('none');
@@ -257,10 +267,10 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
         </div>
       )}
 
-      {/* Description */}
+      {/* Description — content from override if present, else imported; visibility gated by RK */}
       {descriptionRevealed
-        ? bestiary?.description && (
-            <p className="bm-description">{bestiary.description}</p>
+        ? effectiveDescription && (
+            <p className="bm-description">{effectiveDescription}</p>
           )
         : <Redacted width="100%" label="description redacted" />
       }

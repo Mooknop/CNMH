@@ -30,6 +30,7 @@ import GmEffects from './pages/gm/GmEffects';
 import GmEncounter from './pages/gm/GmEncounter';
 import GmImages from './pages/gm/GmImages';
 import GmTheme from './pages/gm/GmTheme';
+import GmMonsters from './pages/gm/GmMonsters';
 import './App.css';
 
 const IS_STAGING = import.meta.env.VITE_ENVIRONMENT === 'staging';
@@ -98,6 +99,7 @@ function App() {
                           <Route path="catalog/spells" element={<GmSpells />} />
                           <Route path="catalog/effects" element={<GmEffects />} />
                           <Route path="catalog/images" element={<GmImages />} />
+                          <Route path="catalog/monsters" element={<GmMonsters />} />
 
                           {/* Top-level areas */}
                           <Route path="characters" element={<GmCharacters />} />

@@ -470,6 +470,7 @@ export const defaultContent = () => ({
   effect: normalizeEffects(defaultEffects),
   image: normalizeImages(defaultImages || []),
   theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
+  monster: [],
 });
 
 // Body for POST /api/gm/seed.
