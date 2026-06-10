@@ -255,6 +255,73 @@ describe('GmLore', () => {
     });
   });
 
+  describe('list navigation', () => {
+    it('groups the All tab by category with heading rows', () => {
+      setMulti();
+      render(<GmLore />);
+      const list = screen.getByLabelText('entry list');
+      ['History', 'Location', 'Religion'].forEach((g) =>
+        expect(within(list).getByText(g)).toBeInTheDocument()
+      );
+      // Entries are sorted so each category's rows sit under its heading.
+      const rows = within(list).getAllByRole('button').map((b) => b.textContent);
+      expect(rows.findIndex((t) => t.includes('Aroden'))).toBeLessThan(
+        rows.findIndex((t) => t.includes('Sandpoint'))
+      );
+    });
+
+    it('omits group headings inside a single-category tab', () => {
+      setMulti();
+      render(<GmLore />);
+      fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
+      const list = screen.getByLabelText('entry list');
+      expect(within(list).queryByText('Location')).not.toBeInTheDocument();
+    });
+
+    it('shows a reveal dot and a compact tag line on each row', () => {
+      const tagged = {
+        ...multiCategory[0],
+        tags: ['town', 'coast', 'varisia', 'hub'],
+        visibility: 'revealed',
+      };
+      useContent.mockReturnValue({ allLoreEntries: [tagged, multiCategory[2]], images: [] });
+      render(<GmLore />);
+      const row = screen.getByRole('button', { name: /Sandpoint/ });
+      expect(within(row).getByTitle('Revealed to players')).toBeInTheDocument();
+      expect(within(row).getByText('town, coast, varisia +1')).toBeInTheDocument();
+      const gmRow = screen.getByRole('button', { name: 'Aroden' });
+      expect(within(gmRow).getByTitle('GM only')).toBeInTheDocument();
+    });
+
+    it('filters by tag chips with AND semantics and a clear affordance', () => {
+      setMulti();
+      render(<GmLore />);
+      const tagbar = () => screen.getByLabelText('tag filters');
+      fireEvent.click(within(tagbar()).getByText('deity'));
+      expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Aroden' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Sandpoint' })).not.toBeInTheDocument();
+      // Second active tag narrows further (entry must carry every tag).
+      fireEvent.click(within(tagbar()).getByText('city'));
+      expect(screen.getByText('Showing 0 of 0')).toBeInTheDocument();
+      fireEvent.click(within(tagbar()).getByText('× clear'));
+      expect(screen.getByText('Showing 4 of 4')).toBeInTheDocument();
+    });
+
+    it('scopes tag chips to the active category tab and composes with search', () => {
+      setMulti();
+      render(<GmLore />);
+      fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
+      const tagbar = screen.getByLabelText('tag filters');
+      expect(within(tagbar).queryByText('deity')).not.toBeInTheDocument();
+      fireEvent.click(within(tagbar).getByText('town'));
+      fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'magni' } });
+      expect(screen.getByText('Showing 0 of 1')).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'sand' } });
+      expect(screen.getByRole('button', { name: 'Sandpoint' })).toBeInTheDocument();
+    });
+  });
+
   describe('image round-trip', () => {
     it('saves image id when lore entry has an image', async () => {
       const withImage = { ...loreEntries[0], image: 'img_sandpoint.jpg' };

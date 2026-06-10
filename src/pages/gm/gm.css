@@ -525,11 +525,98 @@
 .gm-pill--gold   { background: rgba(196,154,46,.14); color: var(--gold-light); border-color: rgba(196,154,46,.35); }
 .gm-pill--accent { background: var(--accent-tint); color: var(--accent-text); border-color: var(--accent-outline); }
 
-/* Lore master-list visibility badge — sits inline after the entry title */
-.gm-lore-pill {
-  margin-left: var(--space-2);
-  padding: 1px 6px;
-  font-size: 0.6rem;
+/* Screen-reader-only text (e.g. the lore row "Revealed" flag, shown
+   visually as a dot). */
+.gm-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Lore master-list rows ───────────────────────────────── */
+/* Two-line row: reveal-state dot + title, compact tag line below. */
+.gm-lore .gm-ped-item {
+  white-space: normal;
+}
+
+.gm-lore-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gm-lore-row-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gm-lore-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--shell-text-tertiary);
+  flex: none;
+}
+
+.gm-lore-dot.revealed {
+  background: var(--d-crit-fg);
+  border-color: transparent;
+  box-shadow: 0 0 6px var(--d-crit-fg);
+}
+
+.gm-lore-row-tags {
+  font-size: 0.7rem;
+  color: var(--shell-text-tertiary);
+  padding-left: 14px; /* aligns under the title, past the dot */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tag filter chips under the category tabs */
+.gm-lore-tagbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gm-lore-tag {
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.gm-lore-tag:hover {
+  color: var(--shell-text-primary);
+  border-color: var(--accent-outline);
+}
+
+.gm-lore-tag.active {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
+  font-weight: 600;
+}
+
+.gm-lore-tag-clear {
+  border-style: dashed;
 }
 
 /* ── Field group (column label + input) ──────────────────── */
@@ -613,20 +700,32 @@
 }
 
 /* ── Page-level master/detail editor shell (PageEditorShell) ── */
+/* The shell fills the viewport below the top bar (56px) minus .gm-main's
+   padding; master list and detail form then scroll independently so the
+   form stays visible no matter how long the list grows. */
+.gm-ped {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px - 2 * var(--space-6));
+}
+
 .gm-ped-body {
   display: flex;
   gap: 0;
-  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
 }
 
 .gm-ped-master {
-  width: 260px;
+  width: 300px;
   flex: none;
   border-right: 1px solid var(--shell-border);
   padding-right: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .gm-ped-add {
@@ -668,6 +767,20 @@
   margin: 0;
 }
 
+/* Group heading row (e.g. lore categories in the All tab) */
+.gm-ped-group {
+  padding: 10px 10px 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.gm-ped-group:first-child {
+  padding-top: 2px;
+}
+
 .gm-ped-item {
   display: block;
   width: 100%;
@@ -702,10 +815,16 @@
 .gm-ped-detail {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   padding-left: var(--space-4);
+  overflow-y: auto;
 }
 
 @media (max-width: 700px) {
+  /* Stacked layout: back to natural document flow, page scrolls as one. */
+  .gm-ped {
+    height: auto;
+  }
   .gm-ped-body {
     flex-direction: column;
   }
@@ -715,10 +834,12 @@
     border-bottom: 1px solid var(--shell-border);
     padding-right: 0;
     padding-bottom: var(--space-4);
+    overflow-y: visible;
   }
   .gm-ped-detail {
     padding-left: 0;
     padding-top: var(--space-4);
+    overflow-y: visible;
   }
 }
 

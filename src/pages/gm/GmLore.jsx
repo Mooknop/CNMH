@@ -239,15 +239,52 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 // Category is required on save, but be defensive about legacy/blank rows.
 const categoryOf = (e) => (e.category && String(e.category).trim()) || 'Uncategorized';
 
+const MAX_ROW_TAGS = 3;
+
+// Two-line list row: reveal-state dot + title, then a compact tag line.
+// The dot and tags are decorative metadata — aria-hidden keeps the button's
+// accessible name as just the title (+ a screen-reader "Revealed" flag).
+const LoreRow = ({ entry }) => {
+  const tags = Array.isArray(entry.tags) ? entry.tags : [];
+  const shown = tags.slice(0, MAX_ROW_TAGS);
+  const more = tags.length - shown.length;
+  const revealed = entry.visibility === 'revealed';
+  return (
+    <span className="gm-lore-row">
+      <span className="gm-lore-row-title">
+        <span
+          className={`gm-lore-dot${revealed ? ' revealed' : ''}`}
+          title={revealed ? 'Revealed to players' : 'GM only'}
+          aria-hidden="true"
+        />
+        {entry.title}
+        {revealed && <span className="gm-visually-hidden">Revealed</span>}
+      </span>
+      {shown.length > 0 && (
+        <span className="gm-lore-row-tags" aria-hidden="true">
+          {shown.join(', ')}
+          {more > 0 && ` +${more}`}
+        </span>
+      )}
+    </span>
+  );
+};
+
 const GmLore = () => {
   // The GM editor sees everything; `loreEntries` is the player-visible subset.
   const { allLoreEntries } = useContent();
-  const entries = useMemo(
-    () => (Array.isArray(allLoreEntries) ? allLoreEntries : []),
-    [allLoreEntries]
-  );
+  const entries = useMemo(() => {
+    const list = Array.isArray(allLoreEntries) ? [...allLoreEntries] : [];
+    // Sorted by category then title so the All tab's group headers are contiguous.
+    return list.sort(
+      (a, b) =>
+        categoryOf(a).localeCompare(categoryOf(b)) ||
+        String(a.title || '').localeCompare(String(b.title || ''))
+    );
+  }, [allLoreEntries]);
   const existingIds = useMemo(() => existingIdSet(entries), [entries]);
   const [tab, setTab] = useState('All');
+  const [activeTags, setActiveTags] = useState([]);
 
   const tabs = useMemo(
     () => ['All', ...Array.from(new Set(entries.map(categoryOf))).sort()],
@@ -261,6 +298,24 @@ const GmLore = () => {
     [entries, activeTab]
   );
 
+  // Tag chips reflect the active category tab; toggled chips narrow with AND
+  // semantics (an entry must carry every active tag).
+  const allTags = useMemo(
+    () =>
+      Array.from(new Set(inTab.flatMap((e) => (Array.isArray(e.tags) ? e.tags : [])))).sort(),
+    [inTab]
+  );
+  const toggleTag = (t) =>
+    setActiveTags((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
+
+  const filtered = useMemo(() => {
+    // Tags from another tab (or deleted entries) could leave dead filters behind.
+    const active = activeTags.filter((t) => allTags.includes(t));
+    return active.length === 0
+      ? inTab
+      : inTab.filter((e) => active.every((t) => (e.tags || []).includes(t)));
+  }, [inTab, activeTags, allTags]);
+
   // Prefill the category of a new entry from the active tab (All → blank, so
   // the GM still must pick one — category is required on save).
   const newInitial = () => ({
@@ -268,36 +323,56 @@ const GmLore = () => {
     category: activeTab === 'All' ? '' : activeTab,
   });
 
-  const categoryTabs = (
-    <nav className="gm-nav" aria-label="lore categories">
-      {tabs.map((t) => (
-        <button
-          key={t}
-          className={`gm-nav-link ${t === activeTab ? 'active' : ''}`}
-          aria-pressed={t === activeTab}
-          onClick={() => setTab(t)}
-        >
-          {t}
-        </button>
-      ))}
-    </nav>
+  const header = (
+    <>
+      <nav className="gm-nav" aria-label="lore categories">
+        {tabs.map((t) => (
+          <button
+            key={t}
+            className={`gm-nav-link ${t === activeTab ? 'active' : ''}`}
+            aria-pressed={t === activeTab}
+            onClick={() => setTab(t)}
+          >
+            {t}
+          </button>
+        ))}
+      </nav>
+      {allTags.length > 0 && (
+        <div className="gm-lore-tagbar" aria-label="tag filters">
+          {allTags.map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={`gm-lore-tag${activeTags.includes(t) ? ' active' : ''}`}
+              aria-pressed={activeTags.includes(t)}
+              onClick={() => toggleTag(t)}
+            >
+              {t}
+            </button>
+          ))}
+          {activeTags.length > 0 && (
+            <button
+              type="button"
+              className="gm-lore-tag gm-lore-tag-clear"
+              onClick={() => setActiveTags([])}
+            >
+              × clear
+            </button>
+          )}
+        </div>
+      )}
+    </>
   );
 
   return (
     <div className="gm-lore">
       <PageEditorShell
-        entries={inTab}
-        nameOf={(e) => (
-          <>
-            {e.title}
-            {e.visibility === 'revealed' && (
-              <span className="gm-pill gm-pill--good gm-lore-pill">Revealed</span>
-            )}
-          </>
-        )}
+        entries={filtered}
+        nameOf={(e) => <LoreRow entry={e} />}
         noun="entry"
         addLabel="+ New entry"
-        header={categoryTabs}
+        header={header}
+        groupOf={activeTab === 'All' ? categoryOf : undefined}
         filterEntry={(e, q) =>
           [e.title, e.category, e.id, ...(e.tags || [])]
             .filter(Boolean)
