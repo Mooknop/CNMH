@@ -322,6 +322,133 @@ describe('GmLore', () => {
     });
   });
 
+  describe('bulk editing', () => {
+    const enterSelect = () => fireEvent.click(screen.getByRole('button', { name: 'Select' }));
+    const check = (id) => fireEvent.click(screen.getByLabelText(`select ${id}`));
+
+    it('toggles selection mode: checkboxes in, bulk panel on first check, cleared on Done', () => {
+      setMulti();
+      render(<GmLore />);
+      enterSelect();
+      expect(screen.getByText('+ New entry')).toBeDisabled();
+      expect(screen.getByText('0 selected')).toBeInTheDocument();
+      expect(screen.queryByTestId('lore-bulk-panel')).not.toBeInTheDocument();
+      check('aroden');
+      expect(screen.getByTestId('lore-bulk-panel')).toBeInTheDocument();
+      expect(screen.getByText('1 selected')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+      expect(screen.queryByTestId('lore-bulk-panel')).not.toBeInTheDocument();
+      // Re-entering starts from an empty selection.
+      enterSelect();
+      expect(screen.getByText('0 selected')).toBeInTheDocument();
+    });
+
+    it('select-all only checks the currently filtered entries', () => {
+      setMulti();
+      render(<GmLore />);
+      fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
+      enterSelect();
+      fireEvent.click(screen.getByRole('button', { name: 'Select all' }));
+      expect(screen.getByText('2 selected')).toBeInTheDocument();
+      expect(screen.getByText(/Bulk edit — 2 entries selected/)).toBeInTheDocument();
+    });
+
+    it('bulk-reveals the selection, one PUT per entry', async () => {
+      setMulti();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      enterSelect();
+      check('aroden');
+      check('desna');
+      fireEvent.change(screen.getByLabelText('bulk-visibility'), {
+        target: { value: 'revealed' },
+      });
+      fireEvent.click(screen.getByText('Apply to selection'));
+      await screen.findByText(/Updated 2, unchanged 0/);
+      expect(saveDocument).toHaveBeenCalledTimes(2);
+      const byId = Object.fromEntries(saveDocument.mock.calls.map(([, id, doc]) => [id, doc]));
+      expect(byId.aroden.visibility).toBe('revealed');
+      expect(byId.desna.visibility).toBe('revealed');
+      // Untouched fields ride along from the live doc.
+      expect(byId.aroden.title).toBe('Aroden');
+    });
+
+    it('skips no-op writes entirely', async () => {
+      setMulti();
+      render(<GmLore />);
+      enterSelect();
+      check('aroden');
+      check('desna');
+      fireEvent.click(screen.getByText('Apply to selection'));
+      await screen.findByText(/Updated 0, unchanged 2/);
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+
+    it('adds and removes tags across the selection', async () => {
+      setMulti();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      enterSelect();
+      check('aroden');
+      check('sandpoint');
+      // Union chips show counts; queue 'deity' (only on aroden) for removal.
+      const tagbar = screen.getByLabelText('bulk tags');
+      fireEvent.click(within(tagbar).getByText('deity ×1'));
+      fireEvent.change(screen.getByLabelText('bulk-add-tags'), {
+        target: { value: 'doom, town' },
+      });
+      fireEvent.click(screen.getByText('Apply to selection'));
+      await screen.findByText(/Updated 2, unchanged 0/);
+      const byId = Object.fromEntries(saveDocument.mock.calls.map(([, id, doc]) => [id, doc]));
+      expect(byId.aroden.tags).toEqual(['doom', 'town']);
+      // 'town' already on sandpoint — not duplicated.
+      expect(byId.sandpoint.tags).toEqual(['town', 'doom']);
+    });
+
+    it('adds related ids by title and removes via chips', async () => {
+      const withRelated = [
+        { id: 'sandpoint', title: 'Sandpoint', category: 'Location', related: ['old-light'] },
+        { id: 'magnimar', title: 'Magnimar', category: 'Location', related: [] },
+        { id: 'old-light', title: 'The Old Light', category: 'Location' },
+      ];
+      useContent.mockReturnValue({ allLoreEntries: withRelated, images: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      enterSelect();
+      check('sandpoint');
+      check('magnimar');
+      // Existing related ids surface as title-labelled chips; queue removal.
+      fireEvent.click(within(screen.getByLabelText('bulk related')).getByText('The Old Light ×1'));
+      // Adding by title resolves to the slug id.
+      fireEvent.change(screen.getByLabelText('bulk-add-related'), {
+        target: { value: 'Magnimar' },
+      });
+      fireEvent.click(screen.getByText('Apply to selection'));
+      await screen.findByText(/Updated 2, unchanged 0/);
+      const byId = Object.fromEntries(saveDocument.mock.calls.map(([, id, doc]) => [id, doc]));
+      expect(byId.sandpoint.related).toEqual(['magnimar']);
+      expect(byId.magnimar.related).toEqual(['magnimar']);
+    });
+
+    it('reports per-entry failures and keeps going', async () => {
+      setMulti();
+      saveDocument.mockImplementation((c, id) =>
+        id === 'aroden' ? Promise.reject(new Error('boom')) : Promise.resolve({ ok: true })
+      );
+      render(<GmLore />);
+      enterSelect();
+      check('aroden');
+      check('desna');
+      fireEvent.change(screen.getByLabelText('bulk-visibility'), {
+        target: { value: 'revealed' },
+      });
+      fireEvent.click(screen.getByText('Apply to selection'));
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent('Updated 1, unchanged 0 — failed: aroden');
+      expect(saveDocument).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('image round-trip', () => {
     it('saves image id when lore entry has an image', async () => {
       const withImage = { ...loreEntries[0], image: 'img_sandpoint.jpg' };

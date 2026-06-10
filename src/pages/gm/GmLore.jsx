@@ -6,6 +6,7 @@ import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import ImageField from '../../components/gm/ImageField';
 import PageEditorShell from '../../components/gm/PageEditorShell';
+import LoreBulkPanel from './LoreBulkPanel';
 import './gm.css';
 
 const toList = (csv) =>
@@ -385,6 +386,9 @@ const GmLore = () => {
             existingIds={existingIds}
             {...callbacks}
           />
+        )}
+        renderBulkPanel={(selected, { onSaved }) => (
+          <LoreBulkPanel entries={selected} allEntries={entries} onSaved={onSaved} />
         )}
       />
     </div>

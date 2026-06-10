@@ -18,6 +18,10 @@ import React, { useState } from 'react';
 //   groupOf(e)    – optional group label; renders a heading row whenever the
 //                   group of consecutive displayed entries changes (callers
 //                   should pre-sort entries by group)
+//   renderBulkPanel(selectedEntries, { clearSelection, onSaved }) – optional;
+//                   enables a "Select" mode with row checkboxes. While ≥1 row
+//                   is checked the detail pane shows this panel instead of the
+//                   entry form. Select-all acts on the filtered list.
 const PageEditorShell = ({
   entries = [],
   nameOf = (e) => e.name || e.title || e.id,
@@ -29,10 +33,13 @@ const PageEditorShell = ({
   header,
   filterEntry,
   groupOf,
+  renderBulkPanel,
 }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState('');
   const [flash, setFlash] = useState(null);
+  const [selecting, setSelecting] = useState(false);
+  const [checked, setChecked] = useState(() => new Set());
 
   const isNew = selectedId === '__new__';
   const selectedEntry = isNew ? null : entries.find((e) => idOf(e) === selectedId) ?? null;
@@ -44,6 +51,23 @@ const PageEditorShell = ({
   };
   const onRestored = () =>
     setFlash('Restored. Changes are live for every connected player.');
+
+  const clearSelection = () => setChecked(new Set());
+  const toggleSelecting = () => {
+    setSelecting((cur) => !cur);
+    clearSelection();
+  };
+  const toggleChecked = (id) =>
+    setChecked((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  // Filter (not map) so ids checked under a stale filter/tab can't resurrect
+  // entries that are no longer in the list.
+  const checkedEntries = entries.filter((e) => checked.has(idOf(e)));
+  const bulkActive = selecting && checkedEntries.length > 0;
 
   const q = query.trim().toLowerCase();
   const displayed = !q
@@ -63,13 +87,48 @@ const PageEditorShell = ({
       <div className="gm-ped-body">
         <div className="gm-ped-master">
           {header}
-          <button
-            type="button"
-            className="btn-primary btn-small gm-ped-add"
-            onClick={() => setSelectedId('__new__')}
-          >
-            {addLabel ?? `+ New ${noun}`}
-          </button>
+          <div className="gm-ped-toolbar">
+            <button
+              type="button"
+              className="btn-primary btn-small gm-ped-add"
+              disabled={selecting}
+              onClick={() => setSelectedId('__new__')}
+            >
+              {addLabel ?? `+ New ${noun}`}
+            </button>
+            {renderBulkPanel && (
+              <button
+                type="button"
+                className={`btn-secondary btn-small gm-ped-select-toggle${selecting ? ' active' : ''}`}
+                aria-pressed={selecting}
+                onClick={toggleSelecting}
+              >
+                {selecting ? 'Done' : 'Select'}
+              </button>
+            )}
+          </div>
+          {selecting && (
+            <div className="gm-ped-selectbar">
+              <span className="gm-count">{checked.size} selected</span>
+              <button
+                type="button"
+                className="btn-secondary btn-small"
+                onClick={() =>
+                  setChecked(new Set(displayed.map((e) => idOf(e))))
+                }
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                className="btn-secondary btn-small"
+                disabled={checked.size === 0}
+                onClick={clearSelection}
+              >
+                None
+              </button>
+            </div>
+          )}
           <input
             type="text"
             className="gm-ped-search"
@@ -98,14 +157,26 @@ const PageEditorShell = ({
                     </li>
                   )}
                   <li className="gm-ped-row">
-                    <button
-                      type="button"
-                      className={`gm-ped-item${id === selectedId ? ' active' : ''}`}
-                      aria-pressed={id === selectedId}
-                      onClick={() => setSelectedId(id)}
-                    >
-                      {nameOf(e)}
-                    </button>
+                    {selecting ? (
+                      <label className={`gm-ped-item gm-ped-checkrow${checked.has(id) ? ' active' : ''}`}>
+                        <input
+                          type="checkbox"
+                          aria-label={`select ${id}`}
+                          checked={checked.has(id)}
+                          onChange={() => toggleChecked(id)}
+                        />
+                        <span className="gm-ped-checkrow-name">{nameOf(e)}</span>
+                      </label>
+                    ) : (
+                      <button
+                        type="button"
+                        className={`gm-ped-item${id === selectedId ? ' active' : ''}`}
+                        aria-pressed={id === selectedId}
+                        onClick={() => setSelectedId(id)}
+                      >
+                        {nameOf(e)}
+                      </button>
+                    )}
                   </li>
                 </React.Fragment>
               );
@@ -116,7 +187,13 @@ const PageEditorShell = ({
           </p>
         </div>
         <div className="gm-ped-detail">
-          {showDetail ? (
+          {bulkActive ? (
+            renderBulkPanel(checkedEntries, { clearSelection, onSaved })
+          ) : selecting ? (
+            <p className="gm-count gm-ped-hint">
+              Check {noun}s in the list to bulk-edit them.
+            </p>
+          ) : showDetail ? (
             <React.Fragment key={selectedId}>
               {renderDetail(selectedEntry, isNew, { onSaved, onRestored })}
             </React.Fragment>
