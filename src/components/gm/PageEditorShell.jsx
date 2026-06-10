@@ -15,6 +15,9 @@ import React, { useState } from 'react';
 //   emptyHint     – right-pane text when nothing is selected
 //   header        – optional ReactNode above the list (e.g. GmLore category tabs)
 //   filterEntry(e, query) – optional custom filter; default checks nameOf only
+//   groupOf(e)    – optional group label; renders a heading row whenever the
+//                   group of consecutive displayed entries changes (callers
+//                   should pre-sort entries by group)
 const PageEditorShell = ({
   entries = [],
   nameOf = (e) => e.name || e.title || e.id,
@@ -25,6 +28,7 @@ const PageEditorShell = ({
   emptyHint,
   header,
   filterEntry,
+  groupOf,
 }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState('');
@@ -81,19 +85,29 @@ const PageEditorShell = ({
             {entries.length > 0 && displayed.length === 0 && (
               <li className="gm-count gm-ped-hint">No matches.</li>
             )}
-            {displayed.map((e) => {
+            {displayed.map((e, i) => {
               const id = idOf(e);
+              const group = groupOf ? groupOf(e) : null;
+              const newGroup =
+                groupOf && (i === 0 || groupOf(displayed[i - 1]) !== group);
               return (
-                <li key={id} className="gm-ped-row">
-                  <button
-                    type="button"
-                    className={`gm-ped-item${id === selectedId ? ' active' : ''}`}
-                    aria-pressed={id === selectedId}
-                    onClick={() => setSelectedId(id)}
-                  >
-                    {nameOf(e)}
-                  </button>
-                </li>
+                <React.Fragment key={id}>
+                  {newGroup && (
+                    <li className="gm-ped-group" role="presentation">
+                      {group}
+                    </li>
+                  )}
+                  <li className="gm-ped-row">
+                    <button
+                      type="button"
+                      className={`gm-ped-item${id === selectedId ? ' active' : ''}`}
+                      aria-pressed={id === selectedId}
+                      onClick={() => setSelectedId(id)}
+                    >
+                      {nameOf(e)}
+                    </button>
+                  </li>
+                </React.Fragment>
               );
             })}
           </ul>
