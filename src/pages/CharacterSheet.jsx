@@ -119,7 +119,8 @@ const CharacterSheet = () => {
       case 'play':
         // Mode-aware slot: encounter content during combat, otherwise the
         // exploration flow (ExplorationTab also renders the downtime placeholder
-        // internally when mode === 'downtime').
+        // internally when mode === 'downtime'). SkillPrompt renders in every
+        // mode — VP skill challenges run in exploration/downtime too.
         if (mode === 'encounter') {
           return (
             <>
@@ -143,7 +144,12 @@ const CharacterSheet = () => {
             </>
           );
         }
-        return <ExplorationTab character={character} characterColor={characterColor} />;
+        return (
+          <>
+            <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
+            <ExplorationTab character={character} characterColor={characterColor} />
+          </>
+        );
       case 'inventory':
         return (
           <InventoryTab
