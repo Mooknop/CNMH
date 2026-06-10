@@ -852,7 +852,28 @@
         "cities",
         "sandpoint"
       ],
+      "visibility": "gm",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "abraxas",
+      "title": "Abraxas",
+      "category": "Religion",
+      "summary": "The Master of the Final Incantation — demon lord of forbidden lore, magic, and secrets best left buried.",
+      "content": "Abraxas is the demon lord of forbidden magic and dangerous secrets, patron of those who believe no knowledge should stay hidden no matter the cost of knowing it. His cults have always been small, scholarly, and catastrophic.\n\nIn the age of Thassilon, a sect in his service kept the catacombs that lie beneath what is now Sandpoint's cathedral. A small marble shrine to the demon lord still burns there, deep below the town, tended longer than anyone would credit.",
+      "related": [
+        "hellstorm-catacombs",
+        "hellstorm-focus"
+      ],
+      "tags": [
+        "abraxas",
+        "religion",
+        "demon lord",
+        "forbidden lore",
+        "thassilon"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "abstalar-zantus",
@@ -873,6 +894,7 @@
         "npc",
         "priest"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -895,6 +917,7 @@
         "tickwood",
         "npc"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -918,6 +941,7 @@
         "location",
         "hinterlands"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -941,7 +965,27 @@
         "midnight dawn",
         "poison"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "alma-avertin",
+      "title": "Alma Avertin",
+      "category": "NPC",
+      "summary": "Sandpoint Savories' master baker — twin sister of the slain sheriff Casp Avertin, and a mother worried sick for her adventuring daughter.",
+      "content": "Alma Avertin has run Sandpoint Savories for decades, and her pastries are as close to a civic institution as bread gets. She is the twin sister of Casp Avertin, the sheriff slain by Chopper — a grief she carries quietly under the warmth she shows every customer.\n\nThese days a fresher worry sits on top of the old one: her daughter Arika took up the adventuring life against Alma's wishes, and their last argument ended badly. Arika hasn't been home since.",
+      "related": [
+        "sandpoint-savories",
+        "casp-avertin",
+        "arika-avertin"
+      ],
+      "tags": [
+        "avertin",
+        "baker",
+        "sandpoint savories"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "ameiko-kaijitsu",
@@ -962,7 +1006,8 @@
         "minkai",
         "empress"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "apsu",
@@ -982,7 +1027,48 @@
         "metallic dragons",
         "good"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "arika-avertin",
+      "title": "Arika Avertin",
+      "category": "NPC",
+      "summary": "Alma's daughter — the sole survivor of the last adventuring company to brave the Pit.",
+      "content": "Arika Avertin grew up over the ovens at Sandpoint Savories and chose a sword over a rolling pin. Her first adventuring company plumbed the Pit and met a grisly end there — Arika claims they ran afoul of the Sandpoint Devil, and she alone came back.\n\nRather than give it up, she joined a new company and headed south toward Magnimar. The Runewatchers, who keep track of local adventuring groups, can confirm that much but little more. Her mother wants one message carried to her if anyone finds her: 'Mother is worried about you and wants you to come home.'",
+      "related": [
+        "alma-avertin",
+        "the-pit",
+        "sandpoint-savories"
+      ],
+      "tags": [
+        "avertin",
+        "adventurer",
+        "the pit"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
+      "id": "ashava",
+      "title": "Ashava, the True Spark",
+      "category": "Religion",
+      "summary": "Empyreal lord of dancers, lonely spirits, and moonlight — she who guides the restless dead home by the light of the moon.",
+      "content": "Ashava is an empyreal lord — a celestial demigoddess — whose care is for spirits that have lost their way: the unmourned dead, souls too burdened or too bitter to pass on. Her faithful dance under the open night sky, and her rites are worked in moonlight, which her doctrine holds is the kindest light to call a spirit into.\n\nHer worshippers are few but devoted healers and guides, and her faith holds that no spirit is beyond reaching — only beyond the patience of those who stopped trying.",
+      "related": [
+        "audrahni",
+        "pharasma",
+        "nualia"
+      ],
+      "tags": [
+        "ashava",
+        "religion",
+        "empyreal lord",
+        "moonlight",
+        "spirits"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "ashka-bgosh",
@@ -1014,7 +1100,30 @@
         "cheliax",
         "deity"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "audrahni",
+      "title": "Audrahni",
+      "category": "NPC",
+      "summary": "An elven cleric of Ashava and old friend of Abstalar — a healer of lonely spirits, come to Sandpoint to lead the calling of Nualia.",
+      "content": "Audrahni is a pale-skinned, dark-haired elf who dresses in somber colors and moves with an awkward gait and slumped posture rare among her kind. The awkwardness once extended to her personality, but her adventures alongside the heroes who faced Runelord Alaznist a few years ago restored her faith and left her confident and warm.\n\nAs a worshipper of Ashava — empyreal lord of dancers, lonely spirits, and moonlight — she is a gifted healer and offers her aid freely. She has come to Sandpoint at Abstalar's request to serve as primary caster of the Call Spirit ritual, for if any soul fits Ashava's definition of a lonely spirit in need of guidance, it is Nualia's.",
+      "related": [
+        "abstalar-zantus",
+        "ashava",
+        "nualia",
+        "sandpoint-cathedral"
+      ],
+      "tags": [
+        "audrahni",
+        "elf",
+        "cleric",
+        "ashava",
+        "healer"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "belor-hemlock",
@@ -1037,7 +1146,8 @@
         "npc",
         "town watch"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "bethana-corwin",
@@ -1056,7 +1166,8 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "blu-kakke",
@@ -1067,6 +1178,25 @@
       "related": [],
       "tags": [],
       "visibility": "revealed"
+    },
+    {
+      "id": "bottled-solutions",
+      "title": "Bottled Solutions",
+      "category": "Location",
+      "summary": "A cluttered alchemist's shop on Raven Street — plentiful and varied stock, with quality that doesn't always match the label.",
+      "content": "Nisk Tander's shop sells alchemical items and potions in impressive variety, piled on shelves in a system only Nisk understands. His prices are fair and his enthusiasm genuine; his quality control is another matter, and locals know that the occasional bottle from his shelves simply doesn't work. Those who want surer goods pay more at Pillbug's Pantry — and weigh that against the rumors about its owner.",
+      "related": [
+        "pillbugs-pantry",
+        "sandpoint"
+      ],
+      "tags": [
+        "alchemy",
+        "shop",
+        "sandpoint",
+        "location"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "brodert-quink",
@@ -1089,7 +1219,30 @@
         "npc",
         "runewatchers"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "broderts-house",
+      "title": "Brodert's House",
+      "category": "Location",
+      "summary": "The comfy, book-crammed Tower Street home of Sandpoint's most respected sage.",
+      "content": "Brodert Quink's house is less a residence than a library with a bed in it. Sandpoint's foremost expert on Thassilonian lore — and self-appointed scholar of the Old Light — keeps decades of tomes, monographs, and half-finished theories here, and is always delighted by visitors who ask the right questions. Whether his advice is free depends on how much he likes you.",
+      "related": [
+        "brodert-quink",
+        "sandpoint",
+        "old-light"
+      ],
+      "tags": [
+        "brodert quink",
+        "sage",
+        "library",
+        "sandpoint",
+        "location",
+        "thassilon"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "brotherhood-of-the-platinum-band",
@@ -1108,6 +1261,7 @@
         "monastic",
         "dragons"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1125,7 +1279,8 @@
         "placeholder",
         "sandpoint"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "calistria",
@@ -1141,7 +1296,49 @@
         "deity",
         "calistria"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "carpenters-guild",
+      "title": "Carpenter's Guild",
+      "category": "Location",
+      "summary": "Festival Street's guildhall for builders — the place to go for a new home or honest repairs.",
+      "content": "The Carpenter's Guild handles Sandpoint's building and repair work, from storm-damaged roofs to whole new houses. The dwarf Aesrick Battlehorn leads it, and his standards are why Sandpoint's buildings outlast its weather.",
+      "related": [
+        "sandpoint",
+        "sandpoint-lumber-mill"
+      ],
+      "tags": [
+        "carpenter",
+        "guild",
+        "sandpoint",
+        "location"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
+      "id": "casp-avertin",
+      "title": "Casp Avertin",
+      "category": "NPC",
+      "summary": "Sandpoint's beloved former sheriff — Chopper's final victim, and Alma Avertin's twin brother.",
+      "content": "Casp Avertin was sheriff of Sandpoint during the Late Unpleasantness, and died as he lived: standing between the town and its dangers. He caught the killer called Chopper in the act and was murdered stopping him, becoming the spree's twenty-fifth and final victim. Belor Hemlock, then his deputy, avenged him and succeeded him as sheriff.\n\nHis twin sister Alma still bakes at Sandpoint Savories, and the Town Watch still tells his story to new recruits.",
+      "related": [
+        "jervis-stoot",
+        "alma-avertin",
+        "belor-hemlock",
+        "sandpoint-savories",
+        "late-unpleasantness"
+      ],
+      "tags": [
+        "avertin",
+        "sheriff",
+        "late unpleasantness",
+        "town watch"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "cayden-cailean",
@@ -1163,7 +1360,30 @@
         "adventure",
         "osprey cove"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "charn-scarnetti",
+      "title": "Charn Scarnetti",
+      "category": "NPC",
+      "summary": "Titus Scarnetti's frustrated heir — an agitator against the cathedral's ritual, and an unwitting vessel for something far worse.",
+      "content": "Charn has spent seventeen years watching the inheritance he considers his by right erode: the mill murder, the manor's ruin in the giant attack, the collusion scandal with the Bunyip Club. He blames his father's mismanagement and, above all, the meddling of adventurers. His campaign of fear against Abstalar's plan to call Nualia's spirit is equal parts insecurity and ambition — he means to build a name as a 'protector of the people,' and once adventurers start delving the Pit, his rumor-mongering finds a new target.\n\nWhat Charn does not know is that the clockwork songbird's head he carries is a tether for the ghost of Jervis Stoot. Most days Stoot is only a voice at the back of his mind. But there are nights Charn cannot account for — nights he wakes exhausted, in clothes that are not the ones he went out in.",
+      "related": [
+        "titus-scarnetti",
+        "the-scarnettis",
+        "scarnetti-consortium",
+        "scarnetti-manor",
+        "jervis-stoot"
+      ],
+      "tags": [
+        "scarnetti",
+        "charn",
+        "possession",
+        "stoot"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "chask-haladan",
@@ -1182,7 +1402,8 @@
         "npc",
         "scholar"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "cheliax",
@@ -1207,6 +1428,7 @@
         "asmodeus",
         "devils"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1225,8 +1447,8 @@
         "dark history",
         "chopper"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
-      "visibility": "revealed"
+      "visibility": "gm",
+      "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
       "id": "cracktooths-tavern",
@@ -1266,7 +1488,8 @@
         "npc",
         "bard"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "dahak",
@@ -1287,6 +1510,7 @@
         "evil",
         "destruction"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1306,7 +1530,8 @@
         "npc",
         "smith"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "daviren-hosk",
@@ -1327,7 +1552,8 @@
         "npc",
         "goblins"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "desna",
@@ -1348,6 +1574,7 @@
         "travelers",
         "varisian"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1372,6 +1599,25 @@
       "visibility": "revealed"
     },
     {
+      "id": "devils-disciples",
+      "title": "The Devil's Disciples",
+      "category": "Organization",
+      "summary": "A cult in the Pit's depths that venerates the Sandpoint Devil — their coming broke the Whistlefangs' hold on the upper caves.",
+      "content": "Little is known of the Devil's Disciples in town, which suits them. They venerate the Sandpoint Devil and have established themselves in the Pit, and their arrival was catastrophic for the goblin clans that previously held its upper levels.\n\nThey are not merely hermits in a hole: the cult's agents are bold enough to operate inside Sandpoint itself when their interests demand it.",
+      "related": [
+        "the-pit",
+        "whistlefangs"
+      ],
+      "tags": [
+        "devils disciples",
+        "cult",
+        "sandpoint devil",
+        "the pit"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
       "id": "dis",
       "title": "Dis",
       "category": "Location",
@@ -1391,6 +1637,7 @@
         "plane",
         "dispater"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1398,7 +1645,7 @@
       "title": "Dispater",
       "category": "Religion",
       "summary": "The Iron Lord — archdevil, greatest jailer and politician of Hell, ruler of Dis, and one of Asmodeus's oldest and most trusted allies. Calculating, patient, and absolutely merciless when provoked.",
-      "content": "Dispater is Hell's greatest jailer and politician, ruling its second layer, Dis. Known as the Iron Lord, Father of Dis, and First King, he is one of the most active rulers of Hell and one of Asmodeus's closest and longest-standing allies. He appears as a majestic, towering figure with rust-red skin, four horns, and a burning crown that hovers above his head — a fallen angel whose black wings he keeps retracted within his body at almost all times.\n\nDispater is a master strategist and expert in intrigue. He prefers to use his commanding presence, charm, and political leverage to achieve his ends rather than direct violence — but when violence becomes necessary, he reminds everyone precisely why he is feared. His symbol of office is an artifact known as the Eclipsing Eye. His religious symbol is an iron spike driven into a golden ring with a red and purple crown.\n\nAlone among the lords of Hell, Dispater believes in the virtues of courtly love. He has taken three wives over his eons-long existence: the first is forgotten even by himself, her only memorial a shattered statue in his throne room. His second was Feronia, an elemental demigoddess, with whom he had a brief tempestuous relationship that produced the empyreal lord Ragathiel. His third and current wife is Erecura, a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life from Pharasma — and whom Dispater sincerely loves.\n\nDispater's armies were responsible for the destruction of the demon lord Xar-Azmak, whose Abyssal realm Vlorus now lies unclaimed — a fact that makes Meitremar's plan to resurrect Xar-Azmak a matter that would draw Hell's attention if it came to light.",
+      "content": "Dispater is Hell's greatest jailer and politician, ruling its second layer, Dis. Known as the Iron Lord, Father of Dis, and First King, he is one of the most active rulers of Hell and one of Asmodeus's closest and longest-standing allies. He appears as a majestic, towering figure with rust-red skin, four horns, and a burning crown that hovers above his head — a fallen angel whose black wings he keeps retracted within his body at almost all times.\n\nDispater is a master strategist and expert in intrigue. He prefers to use his commanding presence, charm, and political leverage to achieve his ends rather than direct violence — but when violence becomes necessary, he reminds everyone precisely why he is feared. His symbol of office is an artifact known as the Eclipsing Eye. His religious symbol is an iron spike driven into a golden ring with a red and purple crown.\n\nAlone among the lords of Hell, Dispater believes in the virtues of courtly love. He has taken three wives over his eons-long existence: the first is forgotten even by himself, her only memorial a shattered statue in his throne room. His second was Feronia, an elemental demigoddess, with whom he had a brief tempestuous relationship that produced the empyreal lord Ragathiel. His third and current wife is Erecura, a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life from Pharasma — and whom Dispater sincerely loves.\n\nDispater's armies were responsible for the destruction of the demon lord Xar-Azmak, whose Abyssal realm Vlorus now lies unclaimed.",
       "related": [
         "hell",
         "dis",
@@ -1415,6 +1662,7 @@
         "npc",
         "iron lord"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1434,6 +1682,7 @@
         "cayden cailean",
         "cleric"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1455,6 +1704,7 @@
         "community",
         "sandpoint"
       ],
+      "visibility": "gm",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1478,7 +1728,30 @@
         "dispater",
         "subtlety"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "ezakien-tobyn",
+      "title": "Father Ezakien Tobyn",
+      "category": "NPC",
+      "summary": "Sandpoint's previous high priest — a stern man of Desna who perished with the original chapel in the fire of 4702.",
+      "content": "Father Ezakien Tobyn led Sandpoint's faithful before Abstalar Zantus, and died in the fire that consumed the town's original wooden chapel during the Late Unpleasantness. He raised the foundling Nualia as his foster daughter, and his public reputation was one of piety and discipline.\n\nThose who remember him well speak more carefully. His strictness toward Nualia, some whisper, went beyond a guardian's firmness — and whatever the truth of it, the girl who grew up under his roof did not remember Sandpoint kindly.",
+      "related": [
+        "nualia",
+        "abstalar-zantus",
+        "desna",
+        "sandpoint-cathedral",
+        "late-unpleasantness"
+      ],
+      "tags": [
+        "tobyn",
+        "priest",
+        "desna",
+        "late unpleasantness"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "fatmans-feedbag",
@@ -1520,13 +1793,13 @@
         "decay",
         "champion"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
       "id": "founding-families",
       "title": "Sandpoint's Founding Families",
       "category": "History",
-      "dateArStart": 4666,
       "summary": "Four powerful families from Magnimar — the Deverins, Scarnettis, Kaijitsus, and Valdemars — founded Sandpoint in 4666 AR, and their descendants continue to shape the town's politics today.",
       "content": "In 4666 AR, four powerful families from Magnimar consolidated their resources and sailed north to found Sandpoint. Each family brought a different industry: the Kaijitsus were glassmakers and jewelers, the Valdemars shipbuilders and carpenters, the Scarnettis loggers and millers, and the Deverins farmers and brewers.\n\nTheir founding was marred almost immediately. They arrived to find the land already inhabited by a large Varisian tribe. After some failed negotiations, a scandal leaving dozens of Varisians and Scarnettis dead rocked the negotiations. The resulting crisis threatened the establishement of the town all together until a compromise was reached: the Varisians received a sixty-year share of Sandpoint profits (later extended to 4726 AR) and the promise of a Desnan temple in the cathedral.\n\nToday, the Deverins and Scarnettis remain Sandpoint's most influential founding families. The Kaijitsus departed when Ameiko Kaijitsu ascended to become Empress of Minkai. The Valdemars have effectively withdrawn from town politics following financial setbacks and the death of their Sandpoint patriarch.",
       "related": [
@@ -1544,6 +1817,7 @@
         "magnimar",
         "4666"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1564,7 +1838,8 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "goblin-squash-stables",
@@ -1604,6 +1879,7 @@
         "strength",
         "iron harbor"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1622,7 +1898,28 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "gorvis-shack",
+      "title": "Gorvi's Shack",
+      "category": "Location",
+      "summary": "A dilapidated shack on Tower Street — home of Sandpoint's dungsweeper boss and his crew of useful troublemakers.",
+      "content": "Gorvi's shack looks one storm away from joining the refuse its owner manages. From it, the half-orc Gorvi runs Sandpoint's garbage collection with a crew of ruffians whose services — official and otherwise — are more valuable to the town than anyone likes to admit.",
+      "related": [
+        "gorvi",
+        "sandpoint",
+        "junkers-edge"
+      ],
+      "tags": [
+        "gorvi",
+        "dungsweepers",
+        "sandpoint",
+        "location"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "gozreh",
@@ -1643,6 +1940,7 @@
         "sea",
         "sandpoint"
       ],
+      "visibility": "gm",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1664,7 +1962,30 @@
         "antagonist",
         "grustmier"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "grocers-hall",
+      "title": "Grocer's Hall",
+      "category": "Location",
+      "summary": "An open-fronted hall on Festival Street — market stalls out front, farming supplies in the back.",
+      "content": "Grocer's Hall is where Sandpoint's food trade lives: an open facade hosting produce markets, with farming supplies sold in the back. The halfling grocer Olmur Danavakus runs it with unflappable good cheer and serves as the de facto link between the town and the hinterland farms.",
+      "related": [
+        "sandpoint",
+        "sandpoint-market",
+        "sandpoint-hinterlands"
+      ],
+      "tags": [
+        "grocer",
+        "market",
+        "shop",
+        "sandpoint",
+        "location",
+        "food"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "hannah-velerin",
@@ -1686,7 +2007,8 @@
         "npc",
         "town council"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "hannahs",
@@ -1728,7 +2050,8 @@
         "npc",
         "abadar"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "hell",
@@ -1750,7 +2073,53 @@
         "asmodeus",
         "infernal"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "hellstorm-catacombs",
+      "title": "Sandpoint Catacombs",
+      "category": "Location",
+      "summary": "Ancient Thassilonian chambers beneath the cathedral and Boneyard — broken into by the goblin ghouls who stole Nualia's remains.",
+      "content": "When Nualia's grave was found torn open, the tunnel beneath it led somewhere no one expected: a complex of worked-stone chambers far older than Sandpoint, dating to the age of ancient Thassilon. Goblin ghouls had nested in the upper halls, raising a bloody shrine to Kabriri on which they bundled Nualia's stolen skeleton.\n\nThe deeper chambers hold older mysteries — fire-blasted rooms, a shrine where an ancient flame still burns, and great slabs of rune-carved stone whose purpose not even the town's sages can yet name.",
+      "related": [
+        "sandpoint-cathedral",
+        "sandpoint-boneyard",
+        "kabriri",
+        "abraxas",
+        "nualia",
+        "hellstorm-focus",
+        "abstalar-zantus"
+      ],
+      "tags": [
+        "catacombs",
+        "thassilon",
+        "sandpoint",
+        "location",
+        "dungeon"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
+      "id": "hellstorm-focus",
+      "title": "The Hellstorm Focus",
+      "category": "Artifact",
+      "summary": "Great rune-carved slabs beneath the cathedral — a surviving piece of Thassilonian engineering whose purpose the town's sages can only guess at.",
+      "content": "Deep in the catacombs beneath Sandpoint's cathedral stand slabs of ancient stone dense with Thassilonian runes, infused with magic that has outlasted empires. The device — if device it is — is connected to something the catacombs' ancient keepers called the Hellstorm Flume; a demon bound to the deep shrine has prayed for its reactivation since before Sandpoint existed.\n\nNeither on-site study nor Brodert Quink's library can unravel it completely. The fullest surviving notes on the Focus lie elsewhere, in hands that have been studying it far more recently.",
+      "related": [
+        "hellstorm-catacombs",
+        "brodert-quink",
+        "abraxas"
+      ],
+      "tags": [
+        "hellstorm focus",
+        "artifact",
+        "thassilon",
+        "runes"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "horn-of-rust",
@@ -1760,21 +2129,11 @@
       "content": "This rusted, coiled iron horn is sizable, appearing similar in shape to a ram's horn but measuring nearly two feet in diameter. Flakes of rust constantly fall from it, and it leaves hands with a rusty red stain that lingers.\n\nThe Horn of Rust was an instrument of Xar-Azmak, the demon lord of rust and corruption whose Abyssal realm of Vlorus borders the Plane of Metal. Though Xar-Azmak was destroyed by Dispater's armies long ago, his power persists in the Horn. Meitremar's cult made use of it in their rituals at Rusthenge, attempting to channel its remaining charge toward Xar-Azmak's resurrection.\n\nThe Horn cannot be destroyed by conventional means — as an artifact, it must be unmade through some other method. Ferrumnestra has personally asked the party to find a way to destroy it, viewing its continued existence as an open wound in her domain.\n\nWhile the Horn's power has diminished over the ages since Xar-Azmak's death, those who carry it are still subject to its palpable chaotic influence. Creatures not sanctified Unholy are Enfeebled 1 while carrying or using it; those sanctified Holy are Enfeebled 2 and Stupefied 1. Worshippers of Xar-Azmak are immune to these penalties.",
       "related": [
         "ferrumnestra",
-        "xar-azmak",
         "vlorus",
         "rusthenge",
-        "meitremar",
-        "plane-of-metal"
+        "meitremar"
       ],
-      "tags": [
-        "horn of rust",
-        "artifact",
-        "xar-azmak",
-        "rust",
-        "ferrumnestra",
-        "vlorus",
-        "unholy"
-      ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -1812,7 +2171,8 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "ilsoari-gandethus",
@@ -1833,7 +2193,8 @@
         "wizard",
         "adventurer"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "iron-harbor",
@@ -1900,7 +2261,8 @@
         "npc",
         "tavern owner"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "jasper-korvaski",
@@ -1924,7 +2286,29 @@
         "npc",
         "paladin"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "jervis-stoot",
+      "title": "Jervis Stoot",
+      "category": "NPC",
+      "summary": "'Chopper' — the reclusive woodcarver whose murder spree took twenty-five lives and gave Sandpoint its darkest memory.",
+      "content": "For years Jervis Stoot was simply Sandpoint's eccentric woodcarver, famed for the wooden birds he carved into posts, eaves, and doorframes — having a 'Stoot bird' on your home was a point of pride. He lived alone on the small isle off the northern cliffs, and no one thought twice about him.\n\nThen the killings began. Over the course of a single terrible month, twenty-five townsfolk died to his hatchet, each found with eyes and tongue cut away. Sheriff Casp Avertin caught Stoot in the act and became his final victim before the killer was subdued and slain. Beneath Stoot's home, the town found a blood-soaked shrine to some winged demon; they burned the cottage, tore down the stairs carved into the cliff, and have shunned Chopper's Isle ever since.",
+      "related": [
+        "casp-avertin",
+        "choppers-isle",
+        "belor-hemlock",
+        "late-unpleasantness"
+      ],
+      "tags": [
+        "chopper",
+        "stoot",
+        "killer",
+        "late unpleasantness"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "jesk-cracktooth-berinni",
@@ -1943,7 +2327,8 @@
         "npc",
         "tavern owner"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "jubrayl-vhiski",
@@ -1965,7 +2350,8 @@
         "npc",
         "criminal"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "junkers-edge",
@@ -1986,6 +2372,27 @@
       ],
       "createdAt": "2025-01-01T00:00:00.000Z",
       "visibility": "revealed"
+    },
+    {
+      "id": "kabriri",
+      "title": "Kabriri",
+      "category": "Religion",
+      "summary": "Him Who Gnaws — demon lord of ghouls, graves, and the hunger that outlives death.",
+      "content": "Kabriri is the demon lord of ghouls and graveyards, worshipped by those who feed on the dead — and by the dead who feed. His faithful haunt tombs and warrens beneath the earth, and his rites are scrawled in blood over stolen bones.\n\nThe goblin ghouls who tunneled into the catacombs beneath Sandpoint's Boneyard raised just such a shrine: a flat-topped boulder smeared with his runes, on which they laid Nualia's stolen skeleton as an offering to prove their worth.",
+      "related": [
+        "hellstorm-catacombs",
+        "sandpoint-boneyard",
+        "nualia"
+      ],
+      "tags": [
+        "kabriri",
+        "religion",
+        "demon lord",
+        "ghouls",
+        "undead"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "kaijitsu-manor",
@@ -2010,6 +2417,26 @@
       "visibility": "revealed"
     },
     {
+      "id": "kaleb-valdemar",
+      "title": "Kaleb Valdemar",
+      "category": "NPC",
+      "summary": "A scion of the Valdemar family whose courtesies conceal ties to the Midnight Dawn — and an agenda in the Pit.",
+      "content": "Kaleb Valdemar wears the family name well in public, but his dealings run darker: his name appears among Aliver Podiker's incriminating ledgers, tying him to the organization called the Midnight Dawn.\n\nBy the time anyone thinks to look closely, Kaleb is gone — he scrubs his manor of evidence, hires mercenaries, and heads for the Pit. Asking around town only confirms that nobody has seen him since.",
+      "related": [
+        "the-valdemars",
+        "valdemar-manor",
+        "aliver-pillbug-podiker",
+        "the-pit"
+      ],
+      "tags": [
+        "valdemar",
+        "midnight dawn",
+        "conspiracy"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
       "id": "kaye-tresarani",
       "title": "Kaye Tresarani",
       "category": "NPC",
@@ -2028,7 +2455,8 @@
         "npc",
         "town council"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "kendra-deverin",
@@ -2050,7 +2478,8 @@
         "npc",
         "government"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "kindred-coast",
@@ -2072,7 +2501,8 @@
         "location",
         "new thassilon"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "korvosa",
@@ -2092,7 +2522,29 @@
         "varisia",
         "cheliax"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "lamashtu",
+      "title": "Lamashtu",
+      "category": "Religion",
+      "summary": "The Mother of Monsters — demon goddess of madness, nightmares, and monstrous births, and the favored deity of goblinkind.",
+      "content": "Lamashtu is the demon queen who clawed her way to true godhood, worshipped as the mother and maker of monsters. Her faith celebrates deformity, madness, and the fecund horror of the wild places; goblins, gnolls, and worse creatures across Varisia raise crude idols in her name.\n\nSandpoint knows her mark too well. It was Lamashtu to whom Nualia turned in her despair, and Lamashtu's blessing that twisted the woman's arm into a demonic talon before the heroes of seventeen years ago cut her down.",
+      "related": [
+        "nualia",
+        "ripnugget"
+      ],
+      "tags": [
+        "lamashtu",
+        "religion",
+        "deity",
+        "demon",
+        "monsters",
+        "goblins"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "larz-rovanky",
@@ -2110,7 +2562,8 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "late-unpleasantness",
@@ -2132,7 +2585,8 @@
         "late unpleasantness",
         "4702"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "magnimar",
@@ -2153,7 +2607,8 @@
         "varisia",
         "politics"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "meitremar",
@@ -2178,6 +2633,7 @@
         "xar-azmak",
         "resurrection"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -2201,7 +2657,8 @@
         "dreams",
         "mystery"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "mvashti",
@@ -2243,7 +2700,8 @@
         "npc",
         "sarenrae"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "new-thassilon",
@@ -2265,7 +2723,33 @@
         "history",
         "current events"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "nualia",
+      "title": "Nualia",
+      "category": "NPC",
+      "summary": "The cathedral's tragic daughter — an aasimar foundling tormented by the town that should have loved her, lost to dark powers, and slain seventeen years ago. Her spirit has never found rest.",
+      "content": "Nualia was a foundling raised by Father Ezakien Tobyn at Sandpoint's old chapel. Her celestial heritage made her an object of fascination to the townsfolk — treated as a living icon by some and a curiosity by others, and shown precious little simple kindness by anyone. She was presumed dead in the fire of 4702 that destroyed the original chapel and killed Father Tobyn.\n\nYears later she returned transformed: sworn to Lamashtu, her left arm twisted into a demonic talon, at the head of the plot that brought goblins down on Sandpoint. She was slain by the heroes of that era seventeen years ago and buried in a lonely corner of the Boneyard, set apart from the 'respectable' graves. Father Abstalar Zantus has long believed the town owes her an apology it never gave — and now that her stolen remains have been recovered from the catacombs, he means to deliver it by calling her spirit home.",
+      "related": [
+        "ezakien-tobyn",
+        "abstalar-zantus",
+        "lamashtu",
+        "sandpoint-boneyard",
+        "sandpoint-cathedral",
+        "hellstorm-catacombs",
+        "late-unpleasantness"
+      ],
+      "tags": [
+        "nualia",
+        "aasimar",
+        "lamashtu",
+        "late unpleasantness",
+        "call spirit"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "old-light",
@@ -2311,7 +2795,8 @@
         "mystery",
         "thassilon"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "osprey-cove",
@@ -2356,7 +2841,30 @@
         "magnimar",
         "explorers"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "pazuzu",
+      "title": "Pazuzu",
+      "category": "Religion",
+      "summary": "King of the avian demons — demon lord of the sky, whose whispered bargains have damned more mortals than any army.",
+      "content": "Pazuzu is the demon lord of the sky and of temptation, lord of the Abyssal realm of High M'vania and ancient, bitter enemy of Lamashtu. Where other demon lords conquer, Pazuzu corrupts: his favorite work is the slow ruin of a mortal soul, begun with something as small as speaking his name aloud.\n\nHis influence over the Lost Coast is older than Sandpoint itself — an ancient shrine to the winged king lies hidden in the rock of Chopper's Isle, and his servants have shaped more of the town's tragedies than anyone living suspects.",
+      "related": [
+        "the-red-bishop",
+        "choppers-isle",
+        "jervis-stoot",
+        "lamashtu"
+      ],
+      "tags": [
+        "pazuzu",
+        "religion",
+        "demon lord",
+        "sky",
+        "temptation"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "pellias-scarnetti",
@@ -2367,6 +2875,27 @@
       "related": [],
       "tags": [],
       "visibility": "revealed"
+    },
+    {
+      "id": "pharasma",
+      "title": "Pharasma",
+      "category": "Religion",
+      "summary": "The Lady of Graves — goddess of birth, death, and fate, who judges every departed soul in her Boneyard at the heart of the Outer Planes.",
+      "content": "Pharasma is the goddess of birth, death, fate, and prophecy. Every mortal soul passes after death to her Boneyard — the vast plane of judgment from which Sandpoint's own cemetery takes its name — where it awaits her verdict and passage to its eternal reward or punishment. Her faith abhors undeath as a perversion of the natural cycle.\n\nHer clergy preside over funerals and tend graveyards across Golarion, and her rites are woven into the Sandpoint Cathedral's care for the town's dead. A soul that dies with its affairs unsettled may wait long in the Boneyard's queue — and some, it is said, are too burdened by what they left behind to face judgment at all.",
+      "related": [
+        "sandpoint-boneyard",
+        "sandpoint-cathedral",
+        "nualia"
+      ],
+      "tags": [
+        "pharasma",
+        "religion",
+        "deity",
+        "death",
+        "boneyard"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "pillbugs-pantry",
@@ -2424,7 +2953,29 @@
         "4718",
         "runelords"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "rings-and-things",
+      "title": "Rings and Things",
+      "category": "Location",
+      "summary": "A squat stone shop on Church Street dealing in jewelry, art, and quiet loans.",
+      "content": "Maver Kesk's shop trades in jewelry and art objects, and provides Sandpoint's closest thing to formal moneylending. Every couple of months Maver organizes a guarded caravan south to Magnimar to make deposits at the Bank of Abadar — a regular bit of work for trustworthy blades.",
+      "related": [
+        "sandpoint",
+        "abadar",
+        "magnimar"
+      ],
+      "tags": [
+        "jewelry",
+        "moneylending",
+        "shop",
+        "sandpoint",
+        "location"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "ripnugget",
@@ -2440,7 +2991,8 @@
         "goblin",
         "thistletop"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "risa-magravi",
@@ -2465,7 +3017,8 @@
         "npc",
         "dreamlands"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "risas-place",
@@ -2505,7 +3058,8 @@
         "4702",
         "runelords"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "rovanky-tannery",
@@ -2549,7 +3103,8 @@
         "new thassilon",
         "belimarius"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "runelord-sorshen",
@@ -2569,7 +3124,8 @@
         "lust",
         "powerful"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "runelord-xanderghul",
@@ -2590,7 +3146,8 @@
         "xanderghul",
         "peacock spirit"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "rusthenge",
@@ -2694,6 +3251,27 @@
       ],
       "createdAt": "2025-01-01T00:00:00.000Z",
       "visibility": "revealed"
+    },
+    {
+      "id": "sandpoint-boutique",
+      "title": "Sandpoint Boutique",
+      "category": "Location",
+      "summary": "Market Street's everything-shop — art, books, toys, tools, and the odd salvaged treasure, under Hayliss Korvaski's exacting eye.",
+      "content": "The Sandpoint Boutique stocks a little of everything: equipment, clothing, weapons, tools, books, toys, and art objects, much of it sold on consignment or salvaged from abandoned places. Hayliss Korvaski runs it with brisk Abadaran rectitude and also sells divine spellcasting services — healing chief among them.",
+      "related": [
+        "hayliss-korvaski",
+        "sandpoint",
+        "abadar"
+      ],
+      "tags": [
+        "shop",
+        "general goods",
+        "sandpoint",
+        "location",
+        "spellcasting"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "sandpoint-cathedral",
@@ -2808,7 +3386,26 @@
         "geography",
         "location"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "sandpoint-locksmith",
+      "title": "Sandpoint Locksmith",
+      "category": "Location",
+      "summary": "Volioker Briskalberd's workshop on Tower Street — the source of nearly every lock in town.",
+      "content": "Almost every lock in Sandpoint passed through the hands of Volioker Briskalberd, a dwarf locksmith of meticulous craft and long memory. He sells locks, fits them, and — for customers he trusts — discusses their weaknesses with professional candor.",
+      "related": [
+        "sandpoint"
+      ],
+      "tags": [
+        "locksmith",
+        "shop",
+        "sandpoint",
+        "location"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "sandpoint-lumber-mill",
@@ -2831,6 +3428,66 @@
       ],
       "createdAt": "2025-01-01T00:00:00.000Z",
       "visibility": "revealed"
+    },
+    {
+      "id": "sandpoint-market",
+      "title": "Sandpoint Market",
+      "category": "Location",
+      "summary": "The open square where Festival, Market, and Water Streets meet — children's playground most days, twice a week the town's beating commercial heart.",
+      "content": "Most days the open marketplace belongs to children's games. On Moonday it fills with local farmers' stalls, and on Fireday it opens to traveling merchants from Magnimar, Galduria, and beyond — the one day a week Sandpoint can buy wares the town itself doesn't stock.",
+      "related": [
+        "sandpoint",
+        "grocers-hall",
+        "magnimar"
+      ],
+      "tags": [
+        "market",
+        "sandpoint",
+        "location",
+        "trade"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
+      "id": "sandpoint-meat-market",
+      "title": "Sandpoint Meat Market",
+      "category": "Location",
+      "summary": "Market Street's butchery — slaughterhouse in one half, the day's cuts on display in the other.",
+      "content": "Chod Bevuk's establishment is half slaughterhouse, half shopfront, with the day's meat displayed for sale a wall away from where it was dressed. Chod is friendly, loud, and generous with soup bones for regulars.",
+      "related": [
+        "sandpoint"
+      ],
+      "tags": [
+        "butcher",
+        "meat",
+        "shop",
+        "sandpoint",
+        "location",
+        "food"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
+      "id": "sandpoint-savories",
+      "title": "Sandpoint Savories",
+      "category": "Location",
+      "summary": "The town's most beloved bakery — Alma Avertin's pastries are a civic institution on Main Street.",
+      "content": "Sandpoint Savories is the town's most popular bakery, and mornings here smell like the best argument for living in Sandpoint. Alma Avertin has run it for decades, and her pastries and cookies are fixtures of every festival and most breakfasts.\n\nAlma herself carries more grief than her warm counter manner shows — she is the twin sister of the sheriff Chopper slew, and her daughter Arika left town for the adventuring life.",
+      "related": [
+        "alma-avertin",
+        "arika-avertin",
+        "sandpoint"
+      ],
+      "tags": [
+        "bakery",
+        "sandpoint",
+        "location",
+        "food"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "sandpoint-shipyard",
@@ -2874,6 +3531,27 @@
       "visibility": "revealed"
     },
     {
+      "id": "sandpoint-town-hall",
+      "title": "Sandpoint Town Hall",
+      "category": "Location",
+      "summary": "The two-story seat of Sandpoint's government on Main Street — meeting hall above, the town's vault below, and Shayliss Vinder keeping the whole thing running.",
+      "content": "Sandpoint Town Hall hosts the town's public meetings and houses offices for its councilors, with a secure vault belowground that doubles as the town's bank. The councilors all have businesses and duties of their own, so in practice the building belongs to its clerk: Shayliss Vinder, who knows where every record, key, and favor in Sandpoint's government is kept.",
+      "related": [
+        "shayliss-vinder",
+        "kendra-deverin",
+        "sandpoint"
+      ],
+      "tags": [
+        "town hall",
+        "government",
+        "sandpoint",
+        "location",
+        "bank"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
       "id": "sarenrae",
       "title": "Sarenrae",
       "category": "Religion",
@@ -2893,7 +3571,8 @@
         "redemption",
         "sandpoint"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "savah-armory",
@@ -2933,7 +3612,8 @@
         "npc",
         "merchant"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "scarnetti-consortium",
@@ -2956,6 +3636,7 @@
         "lumber",
         "scarnetti"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -3022,7 +3703,8 @@
         "shroud",
         "vigilante"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "shelyn",
@@ -3044,7 +3726,8 @@
         "love",
         "sandpoint"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "solsta-vinder",
@@ -3064,7 +3747,8 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "the-curious-goblin",
@@ -3104,7 +3788,8 @@
         "founding families",
         "faction"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "the-feathered-serpent",
@@ -3166,7 +3851,30 @@
         "founding families",
         "faction"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "the-pit",
+      "title": "The Pit",
+      "category": "Location",
+      "summary": "A fog-choked shaft sunk into Devil's Platter southeast of town — a byword for danger, and the grave of more than one adventuring company.",
+      "content": "Every local has a story about the Pit, and most of them end badly. It is an open shaft in the heart of Devil's Platter, the rocky escarpment a couple of miles southeast of Sandpoint — perpetually fogged below its rim, ringed by jagged stone, and home (the stories insist) to the Sandpoint Devil itself.\n\nAdventurers used to try their luck in its caves semi-regularly. Few came back, and these days most seek their fortunes elsewhere; the most recent company to descend was wiped out, leaving a single survivor. Those who want more than tavern tales are usually pointed at the sage Brodert Quink and his shelves of old books.",
+      "related": [
+        "sandpoint-hinterlands",
+        "brodert-quink",
+        "arika-avertin",
+        "sandpoint"
+      ],
+      "tags": [
+        "the pit",
+        "devils platter",
+        "location",
+        "danger",
+        "sandpoint devil"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "the-pixies-kitten",
@@ -3187,6 +3895,30 @@
       ],
       "createdAt": "2025-01-01T00:00:00.000Z",
       "visibility": "revealed"
+    },
+    {
+      "id": "the-red-bishop",
+      "title": "The Red Bishop",
+      "category": "NPC",
+      "summary": "A nameless mothman priest of Pazuzu — the patient architect of two decades of Sandpoint's sorrows.",
+      "content": "The Red Bishop shares his true name with no one; it cannot be spoken aloud, only conveyed in an unsettling telepathic sending. He came to the Lost Coast in 4700 AR, drawn by his patron's influence over the region, and found two prizes: an ancient shrine to Pazuzu hidden in the rock of Chopper's Isle, and something far older in the depths of the Pit — a thin place between the Material Plane and Pazuzu's Abyssal realm of High M'vania, held shut by an ancient ward he cannot directly undo.\n\nPreferring slow corruption to swift ruin, he has spent more than twenty years arranging Sandpoint's tragedies: it was the Red Bishop who steered Jervis Stoot to the statuette that made him Chopper, and the Red Bishop whose nightmare-whispers turned the town's heart against Nualia. Every doom Sandpoint has suffered has fed his design — and the seven worst are still to come.",
+      "related": [
+        "pazuzu",
+        "jervis-stoot",
+        "nualia",
+        "the-pit",
+        "choppers-isle",
+        "devils-disciples"
+      ],
+      "tags": [
+        "red bishop",
+        "mothman",
+        "pazuzu",
+        "villain",
+        "seven dooms"
+      ],
+      "visibility": "gm",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "the-rusty-dragon",
@@ -3231,7 +3963,8 @@
         "founding families",
         "faction"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "the-sczarni",
@@ -3248,7 +3981,8 @@
         "varisia",
         "crime"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "the-valdemars",
@@ -3267,7 +4001,28 @@
         "founding families",
         "faction"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "the-way-north",
+      "title": "The Way North",
+      "category": "Location",
+      "summary": "A cozy map shop on Cliff Street — charts, cartography supplies, and a gnome who will talk routes as long as you let him.",
+      "content": "The Way North sells local and regional maps, novelty treasure maps, and the supplies to make your own, all under the proprietorship of Veznutt Parooh — a gnome cartographer and wizard of modest but practical talent who also sells arcane spellcasting services. Veznutt is forever hungry for new maps of anywhere, and pays for good ones.",
+      "related": [
+        "sandpoint"
+      ],
+      "tags": [
+        "maps",
+        "cartography",
+        "shop",
+        "sandpoint",
+        "location",
+        "spellcasting"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "the-white-deer",
@@ -3311,7 +4066,8 @@
         "fey",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "titus-scarnetti",
@@ -3334,7 +4090,8 @@
         "npc",
         "lumber"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "turandarok-academy",
@@ -3379,6 +4136,28 @@
       "visibility": "revealed"
     },
     {
+      "id": "valdemar-fish-market",
+      "title": "Valdemar Fish Market",
+      "category": "Location",
+      "summary": "The open-air fish market on Water Street, where the morning catch lands almost straight off the boats.",
+      "content": "The Valdemar Fish Market sells the local fleet's catch within sight of the water it came from. Turch Sterglus runs it for the Valdemar family with a fisherman's bluntness and a fair scale, and the market sets the rhythm of the waterfront's mornings.",
+      "related": [
+        "sandpoint",
+        "the-valdemars",
+        "sandpoint-shipyard"
+      ],
+      "tags": [
+        "fish",
+        "market",
+        "sandpoint",
+        "location",
+        "food",
+        "waterfront"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
+    },
+    {
       "id": "valdemar-manor",
       "title": "Valdemar Manor",
       "category": "Location",
@@ -3418,6 +4197,7 @@
         "cult",
         "xar-azmak"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -3441,6 +4221,7 @@
         "frontier",
         "avistan"
       ],
+      "visibility": "revealed",
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
@@ -3461,7 +4242,27 @@
         "sandpoint",
         "npc"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
+    },
+    {
+      "id": "vernahs-fine-clothing",
+      "title": "Vernah's Fine Clothing",
+      "category": "Location",
+      "summary": "Sandpoint's tailor on Prickleback Lane — clothing of all styles, from festival finery to traveling leathers.",
+      "content": "Rynshinn Povalli's shop caters to every style Sandpoint wears, and a few it doesn't know it wants yet. Alongside everyday and formal clothing, she fits non-metallic light armor for those whose work runs rougher than most.",
+      "related": [
+        "sandpoint"
+      ],
+      "tags": [
+        "tailor",
+        "clothing",
+        "shop",
+        "sandpoint",
+        "location"
+      ],
+      "visibility": "revealed",
+      "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
       "id": "vlorus",
@@ -3484,7 +4285,8 @@
         "rust",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "vorvashali-voon",
@@ -3504,522 +4306,8 @@
         "merchant",
         "occult"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "xanderghuls-flawless-hammer",
-      "title": "Xanderghul's Flawless Hammer",
-      "category": "Artifact",
-      "summary": "One of the seven Alara'quin forged by Emperor Xin — the symbol of office of Xanderghul, Runelord of Pride, now carried by Jade Inferno.",
-      "content": "At the height of the Ancient Thassilonian Empire, Emperor Xin crafted seven Alara'quin: magical weapons of extraordinary power, each bound to one of his seven Runelords. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the sole and eternal Runelord of Pride.\n\nXanderghul's domain was illusion magic, and the Hammer reflects this — it is not merely a weapon but a psychic instrument, attuned to pride and the manipulation of emotion. Its most notable property is its reaction to emotional effects: when the wielder would be adversely affected by an emotion, the Hammer attempts to counteract it with a surge of intense pride.\n\nThe weapon is currently carried by Jade Inferno, who recovered it and has integrated it into both their spellcasting and their ongoing investigation into New Thassilon's ambitions. Given that Xanderghul himself may have survived Earthfall — no body was ever confirmed — the Hammer's provenance is a subject Jade keeps in mind.\n\nAs an Alara'quin, it is an artifact-class item. It cannot be destroyed by conventional means.",
-      "related": [
-        "jade-inferno",
-        "xanderghul",
-        "ancient-thassilon",
-        "new-thassilon",
-        "runelord-of-pride",
-        "peacock-spirit"
-      ],
-      "tags": [
-        "xanderghul's flawless hammer",
-        "artifact",
-        "alara'quin",
-        "thassilon",
-        "pride",
-        "illusion",
-        "jade inferno"
-      ],
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    },
-    {
-      "id": "nualia",
-      "title": "Nualia",
-      "category": "NPC",
-      "summary": "The cathedral's tragic daughter — an aasimar foundling tormented by the town that should have loved her, lost to dark powers, and slain seventeen years ago. Her spirit has never found rest.",
-      "content": "Nualia was a foundling raised by Father Ezakien Tobyn at Sandpoint's old chapel. Her celestial heritage made her an object of fascination to the townsfolk — treated as a living icon by some and a curiosity by others, and shown precious little simple kindness by anyone. She was presumed dead in the fire of 4702 that destroyed the original chapel and killed Father Tobyn.\n\nYears later she returned transformed: sworn to Lamashtu, her left arm twisted into a demonic talon, at the head of the plot that brought goblins down on Sandpoint. She was slain by the heroes of that era seventeen years ago and buried in a lonely corner of the Boneyard, set apart from the 'respectable' graves. Father Abstalar Zantus has long believed the town owes her an apology it never gave — and now that her stolen remains have been recovered from the catacombs, he means to deliver it by calling her spirit home.",
-      "related": [
-        "ezakien-tobyn",
-        "abstalar-zantus",
-        "lamashtu",
-        "sandpoint-boneyard",
-        "sandpoint-cathedral",
-        "hellstorm-catacombs",
-        "late-unpleasantness"
-      ],
-      "tags": [
-        "nualia",
-        "aasimar",
-        "lamashtu",
-        "late unpleasantness",
-        "call spirit"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "ezakien-tobyn",
-      "title": "Father Ezakien Tobyn",
-      "category": "NPC",
-      "summary": "Sandpoint's previous high priest — a stern man of Desna who perished with the original chapel in the fire of 4702.",
-      "content": "Father Ezakien Tobyn led Sandpoint's faithful before Abstalar Zantus, and died in the fire that consumed the town's original wooden chapel during the Late Unpleasantness. He raised the foundling Nualia as his foster daughter, and his public reputation was one of piety and discipline.\n\nThose who remember him well speak more carefully. His strictness toward Nualia, some whisper, went beyond a guardian's firmness — and whatever the truth of it, the girl who grew up under his roof did not remember Sandpoint kindly.",
-      "related": [
-        "nualia",
-        "abstalar-zantus",
-        "desna",
-        "sandpoint-cathedral",
-        "late-unpleasantness"
-      ],
-      "tags": [
-        "tobyn",
-        "priest",
-        "desna",
-        "late unpleasantness"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "jervis-stoot",
-      "title": "Jervis Stoot",
-      "category": "NPC",
-      "summary": "'Chopper' — the reclusive woodcarver whose murder spree took twenty-five lives and gave Sandpoint its darkest memory.",
-      "content": "For years Jervis Stoot was simply Sandpoint's eccentric woodcarver, famed for the wooden birds he carved into posts, eaves, and doorframes — having a 'Stoot bird' on your home was a point of pride. He lived alone on the small isle off the northern cliffs, and no one thought twice about him.\n\nThen the killings began. Over the course of a single terrible month, twenty-five townsfolk died to his hatchet, each found with eyes and tongue cut away. Sheriff Casp Avertin caught Stoot in the act and became his final victim before the killer was subdued and slain. Beneath Stoot's home, the town found a blood-soaked shrine to some winged demon; they burned the cottage, tore down the stairs carved into the cliff, and have shunned Chopper's Isle ever since.",
-      "related": [
-        "casp-avertin",
-        "choppers-isle",
-        "belor-hemlock",
-        "late-unpleasantness"
-      ],
-      "tags": [
-        "chopper",
-        "stoot",
-        "killer",
-        "late unpleasantness"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "casp-avertin",
-      "title": "Casp Avertin",
-      "category": "NPC",
-      "summary": "Sandpoint's beloved former sheriff — Chopper's final victim, and Alma Avertin's twin brother.",
-      "content": "Casp Avertin was sheriff of Sandpoint during the Late Unpleasantness, and died as he lived: standing between the town and its dangers. He caught the killer called Chopper in the act and was murdered stopping him, becoming the spree's twenty-fifth and final victim. Belor Hemlock, then his deputy, avenged him and succeeded him as sheriff.\n\nHis twin sister Alma still bakes at Sandpoint Savories, and the Town Watch still tells his story to new recruits.",
-      "related": [
-        "jervis-stoot",
-        "alma-avertin",
-        "belor-hemlock",
-        "sandpoint-savories",
-        "late-unpleasantness"
-      ],
-      "tags": [
-        "avertin",
-        "sheriff",
-        "late unpleasantness",
-        "town watch"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "alma-avertin",
-      "title": "Alma Avertin",
-      "category": "NPC",
-      "summary": "Sandpoint Savories' master baker — twin sister of the slain sheriff Casp Avertin, and a mother worried sick for her adventuring daughter.",
-      "content": "Alma Avertin has run Sandpoint Savories for decades, and her pastries are as close to a civic institution as bread gets. She is the twin sister of Casp Avertin, the sheriff slain by Chopper — a grief she carries quietly under the warmth she shows every customer.\n\nThese days a fresher worry sits on top of the old one: her daughter Arika took up the adventuring life against Alma's wishes, and their last argument ended badly. Arika hasn't been home since.",
-      "related": [
-        "sandpoint-savories",
-        "casp-avertin",
-        "arika-avertin"
-      ],
-      "tags": [
-        "avertin",
-        "baker",
-        "sandpoint savories"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "audrahni",
-      "title": "Audrahni",
-      "category": "NPC",
-      "summary": "An elven cleric of Ashava and old friend of Abstalar — a healer of lonely spirits, come to Sandpoint to lead the calling of Nualia.",
-      "content": "Audrahni is a pale-skinned, dark-haired elf who dresses in somber colors and moves with an awkward gait and slumped posture rare among her kind. The awkwardness once extended to her personality, but her adventures alongside the heroes who faced Runelord Alaznist a few years ago restored her faith and left her confident and warm.\n\nAs a worshipper of Ashava — empyreal lord of dancers, lonely spirits, and moonlight — she is a gifted healer and offers her aid freely. She has come to Sandpoint at Abstalar's request to serve as primary caster of the Call Spirit ritual, for if any soul fits Ashava's definition of a lonely spirit in need of guidance, it is Nualia's.",
-      "related": [
-        "abstalar-zantus",
-        "ashava",
-        "nualia",
-        "sandpoint-cathedral"
-      ],
-      "tags": [
-        "audrahni",
-        "elf",
-        "cleric",
-        "ashava",
-        "healer"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "arika-avertin",
-      "title": "Arika Avertin",
-      "category": "NPC",
-      "summary": "Alma's daughter — the sole survivor of the last adventuring company to brave the Pit.",
-      "content": "Arika Avertin grew up over the ovens at Sandpoint Savories and chose a sword over a rolling pin. Her first adventuring company plumbed the Pit and met a grisly end there — Arika claims they ran afoul of the Sandpoint Devil, and she alone came back.\n\nRather than give it up, she joined a new company and headed south toward Magnimar. The Runewatchers, who keep track of local adventuring groups, can confirm that much but little more. Her mother wants one message carried to her if anyone finds her: 'Mother is worried about you and wants you to come home.'",
-      "related": [
-        "alma-avertin",
-        "the-pit",
-        "sandpoint-savories"
-      ],
-      "tags": [
-        "avertin",
-        "adventurer",
-        "the pit"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "kaleb-valdemar",
-      "title": "Kaleb Valdemar",
-      "category": "NPC",
-      "summary": "A scion of the Valdemar family whose courtesies conceal ties to the Midnight Dawn — and an agenda in the Pit.",
-      "content": "Kaleb Valdemar wears the family name well in public, but his dealings run darker: his name appears among Aliver Podiker's incriminating ledgers, tying him to the organization called the Midnight Dawn.\n\nBy the time anyone thinks to look closely, Kaleb is gone — he scrubs his manor of evidence, hires mercenaries, and heads for the Pit. Asking around town only confirms that nobody has seen him since.",
-      "related": [
-        "the-valdemars",
-        "valdemar-manor",
-        "aliver-pillbug-podiker",
-        "the-pit"
-      ],
-      "tags": [
-        "valdemar",
-        "midnight dawn",
-        "conspiracy"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "charn-scarnetti",
-      "title": "Charn Scarnetti",
-      "category": "NPC",
-      "summary": "Titus Scarnetti's frustrated heir — an agitator against the cathedral's ritual, and an unwitting vessel for something far worse.",
-      "content": "Charn has spent seventeen years watching the inheritance he considers his by right erode: the mill murder, the manor's ruin in the giant attack, the collusion scandal with the Bunyip Club. He blames his father's mismanagement and, above all, the meddling of adventurers. His campaign of fear against Abstalar's plan to call Nualia's spirit is equal parts insecurity and ambition — he means to build a name as a 'protector of the people,' and once adventurers start delving the Pit, his rumor-mongering finds a new target.\n\nWhat Charn does not know is that the clockwork songbird's head he carries is a tether for the ghost of Jervis Stoot. Most days Stoot is only a voice at the back of his mind. But there are nights Charn cannot account for — nights he wakes exhausted, in clothes that are not the ones he went out in.",
-      "related": [
-        "titus-scarnetti",
-        "the-scarnettis",
-        "scarnetti-consortium",
-        "scarnetti-manor",
-        "jervis-stoot"
-      ],
-      "tags": [
-        "scarnetti",
-        "charn",
-        "possession",
-        "stoot"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "the-red-bishop",
-      "title": "The Red Bishop",
-      "category": "NPC",
-      "summary": "A nameless mothman priest of Pazuzu — the patient architect of two decades of Sandpoint's sorrows.",
-      "content": "The Red Bishop shares his true name with no one; it cannot be spoken aloud, only conveyed in an unsettling telepathic sending. He came to the Lost Coast in 4700 AR, drawn by his patron's influence over the region, and found two prizes: an ancient shrine to Pazuzu hidden in the rock of Chopper's Isle, and something far older in the depths of the Pit — a thin place between the Material Plane and Pazuzu's Abyssal realm of High M'vania, held shut by an ancient ward he cannot directly undo.\n\nPreferring slow corruption to swift ruin, he has spent more than twenty years arranging Sandpoint's tragedies: it was the Red Bishop who steered Jervis Stoot to the statuette that made him Chopper, and the Red Bishop whose nightmare-whispers turned the town's heart against Nualia. Every doom Sandpoint has suffered has fed his design — and the seven worst are still to come.",
-      "related": [
-        "pazuzu",
-        "jervis-stoot",
-        "nualia",
-        "the-pit",
-        "choppers-isle",
-        "devils-disciples"
-      ],
-      "tags": [
-        "red bishop",
-        "mothman",
-        "pazuzu",
-        "villain",
-        "seven dooms"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "pharasma",
-      "title": "Pharasma",
-      "category": "Religion",
-      "summary": "The Lady of Graves — goddess of birth, death, and fate, who judges every departed soul in her Boneyard at the heart of the Outer Planes.",
-      "content": "Pharasma is the goddess of birth, death, fate, and prophecy. Every mortal soul passes after death to her Boneyard — the vast plane of judgment from which Sandpoint's own cemetery takes its name — where it awaits her verdict and passage to its eternal reward or punishment. Her faith abhors undeath as a perversion of the natural cycle.\n\nHer clergy preside over funerals and tend graveyards across Golarion, and her rites are woven into the Sandpoint Cathedral's care for the town's dead. A soul that dies with its affairs unsettled may wait long in the Boneyard's queue — and some, it is said, are too burdened by what they left behind to face judgment at all.",
-      "related": [
-        "sandpoint-boneyard",
-        "sandpoint-cathedral",
-        "nualia"
-      ],
-      "tags": [
-        "pharasma",
-        "religion",
-        "deity",
-        "death",
-        "boneyard"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "lamashtu",
-      "title": "Lamashtu",
-      "category": "Religion",
-      "summary": "The Mother of Monsters — demon goddess of madness, nightmares, and monstrous births, and the favored deity of goblinkind.",
-      "content": "Lamashtu is the demon queen who clawed her way to true godhood, worshipped as the mother and maker of monsters. Her faith celebrates deformity, madness, and the fecund horror of the wild places; goblins, gnolls, and worse creatures across Varisia raise crude idols in her name.\n\nSandpoint knows her mark too well. It was Lamashtu to whom Nualia turned in her despair, and Lamashtu's blessing that twisted the woman's arm into a demonic talon before the heroes of seventeen years ago cut her down.",
-      "related": [
-        "nualia",
-        "ripnugget"
-      ],
-      "tags": [
-        "lamashtu",
-        "religion",
-        "deity",
-        "demon",
-        "monsters",
-        "goblins"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "kabriri",
-      "title": "Kabriri",
-      "category": "Religion",
-      "summary": "Him Who Gnaws — demon lord of ghouls, graves, and the hunger that outlives death.",
-      "content": "Kabriri is the demon lord of ghouls and graveyards, worshipped by those who feed on the dead — and by the dead who feed. His faithful haunt tombs and warrens beneath the earth, and his rites are scrawled in blood over stolen bones.\n\nThe goblin ghouls who tunneled into the catacombs beneath Sandpoint's Boneyard raised just such a shrine: a flat-topped boulder smeared with his runes, on which they laid Nualia's stolen skeleton as an offering to prove their worth.",
-      "related": [
-        "hellstorm-catacombs",
-        "sandpoint-boneyard",
-        "nualia"
-      ],
-      "tags": [
-        "kabriri",
-        "religion",
-        "demon lord",
-        "ghouls",
-        "undead"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "abraxas",
-      "title": "Abraxas",
-      "category": "Religion",
-      "summary": "The Master of the Final Incantation — demon lord of forbidden lore, magic, and secrets best left buried.",
-      "content": "Abraxas is the demon lord of forbidden magic and dangerous secrets, patron of those who believe no knowledge should stay hidden no matter the cost of knowing it. His cults have always been small, scholarly, and catastrophic.\n\nIn the age of Thassilon, a sect in his service kept the catacombs that lie beneath what is now Sandpoint's cathedral. A small marble shrine to the demon lord still burns there, deep below the town, tended longer than anyone would credit.",
-      "related": [
-        "hellstorm-catacombs",
-        "hellstorm-focus"
-      ],
-      "tags": [
-        "abraxas",
-        "religion",
-        "demon lord",
-        "forbidden lore",
-        "thassilon"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "ashava",
-      "title": "Ashava, the True Spark",
-      "category": "Religion",
-      "summary": "Empyreal lord of dancers, lonely spirits, and moonlight — she who guides the restless dead home by the light of the moon.",
-      "content": "Ashava is an empyreal lord — a celestial demigoddess — whose care is for spirits that have lost their way: the unmourned dead, souls too burdened or too bitter to pass on. Her faithful dance under the open night sky, and her rites are worked in moonlight, which her doctrine holds is the kindest light to call a spirit into.\n\nHer worshippers are few but devoted healers and guides, and her faith holds that no spirit is beyond reaching — only beyond the patience of those who stopped trying.",
-      "related": [
-        "audrahni",
-        "pharasma",
-        "nualia"
-      ],
-      "tags": [
-        "ashava",
-        "religion",
-        "empyreal lord",
-        "moonlight",
-        "spirits"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "pazuzu",
-      "title": "Pazuzu",
-      "category": "Religion",
-      "summary": "King of the avian demons — demon lord of the sky, whose whispered bargains have damned more mortals than any army.",
-      "content": "Pazuzu is the demon lord of the sky and of temptation, lord of the Abyssal realm of High M'vania and ancient, bitter enemy of Lamashtu. Where other demon lords conquer, Pazuzu corrupts: his favorite work is the slow ruin of a mortal soul, begun with something as small as speaking his name aloud.\n\nHis influence over the Lost Coast is older than Sandpoint itself — an ancient shrine to the winged king lies hidden in the rock of Chopper's Isle, and his servants have shaped more of the town's tragedies than anyone living suspects.",
-      "related": [
-        "the-red-bishop",
-        "choppers-isle",
-        "jervis-stoot",
-        "lamashtu"
-      ],
-      "tags": [
-        "pazuzu",
-        "religion",
-        "demon lord",
-        "sky",
-        "temptation"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "hellstorm-catacombs",
-      "title": "The Hellstorm Catacombs",
-      "category": "Location",
-      "summary": "Ancient Thassilonian chambers beneath the cathedral and Boneyard — broken into by the goblin ghouls who stole Nualia's remains.",
-      "content": "When Nualia's grave was found torn open, the tunnel beneath it led somewhere no one expected: a complex of worked-stone chambers far older than Sandpoint, dating to the age of ancient Thassilon. Goblin ghouls had nested in the upper halls, raising a bloody shrine to Kabriri on which they bundled Nualia's stolen skeleton.\n\nThe deeper chambers hold older mysteries — fire-blasted rooms, a shrine where an ancient flame still burns, and great slabs of rune-carved stone whose purpose not even the town's sages can yet name.",
-      "related": [
-        "sandpoint-cathedral",
-        "sandpoint-boneyard",
-        "kabriri",
-        "abraxas",
-        "nualia",
-        "hellstorm-focus",
-        "abstalar-zantus"
-      ],
-      "tags": [
-        "catacombs",
-        "thassilon",
-        "sandpoint",
-        "location",
-        "dungeon"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "the-pit",
-      "title": "The Pit",
-      "category": "Location",
-      "summary": "A fog-choked shaft sunk into Devil's Platter southeast of town — a byword for danger, and the grave of more than one adventuring company.",
-      "content": "Every local has a story about the Pit, and most of them end badly. It is an open shaft in the heart of Devil's Platter, the rocky escarpment a couple of miles southeast of Sandpoint — perpetually fogged below its rim, ringed by jagged stone, and home (the stories insist) to the Sandpoint Devil itself.\n\nAdventurers used to try their luck in its caves semi-regularly. Few came back, and these days most seek their fortunes elsewhere; the most recent company to descend was wiped out, leaving a single survivor. Those who want more than tavern tales are usually pointed at the sage Brodert Quink and his shelves of old books.",
-      "related": [
-        "sandpoint-hinterlands",
-        "brodert-quink",
-        "arika-avertin",
-        "sandpoint"
-      ],
-      "tags": [
-        "the pit",
-        "devils platter",
-        "location",
-        "danger",
-        "sandpoint devil"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "sandpoint-town-hall",
-      "title": "Sandpoint Town Hall",
-      "category": "Location",
-      "summary": "The two-story seat of Sandpoint's government on Main Street — meeting hall above, the town's vault below, and Shayliss Vinder keeping the whole thing running.",
-      "content": "Sandpoint Town Hall hosts the town's public meetings and houses offices for its councilors, with a secure vault belowground that doubles as the town's bank. The councilors all have businesses and duties of their own, so in practice the building belongs to its clerk: Shayliss Vinder, who knows where every record, key, and favor in Sandpoint's government is kept.",
-      "related": [
-        "shayliss-vinder",
-        "kendra-deverin",
-        "sandpoint"
-      ],
-      "tags": [
-        "town hall",
-        "government",
-        "sandpoint",
-        "location",
-        "bank"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "sandpoint-savories",
-      "title": "Sandpoint Savories",
-      "category": "Location",
-      "summary": "The town's most beloved bakery — Alma Avertin's pastries are a civic institution on Main Street.",
-      "content": "Sandpoint Savories is the town's most popular bakery, and mornings here smell like the best argument for living in Sandpoint. Alma Avertin has run it for decades, and her pastries and cookies are fixtures of every festival and most breakfasts.\n\nAlma herself carries more grief than her warm counter manner shows — she is the twin sister of the sheriff Chopper slew, and her daughter Arika left town for the adventuring life.",
-      "related": [
-        "alma-avertin",
-        "arika-avertin",
-        "sandpoint"
-      ],
-      "tags": [
-        "bakery",
-        "sandpoint",
-        "location",
-        "food"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "bottled-solutions",
-      "title": "Bottled Solutions",
-      "category": "Location",
-      "summary": "A cluttered alchemist's shop on Raven Street — plentiful and varied stock, with quality that doesn't always match the label.",
-      "content": "Nisk Tander's shop sells alchemical items and potions in impressive variety, piled on shelves in a system only Nisk understands. His prices are fair and his enthusiasm genuine; his quality control is another matter, and locals know that the occasional bottle from his shelves simply doesn't work. Those who want surer goods pay more at Pillbug's Pantry — and weigh that against the rumors about its owner.",
-      "related": [
-        "pillbugs-pantry",
-        "sandpoint"
-      ],
-      "tags": [
-        "alchemy",
-        "shop",
-        "sandpoint",
-        "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "rings-and-things",
-      "title": "Rings and Things",
-      "category": "Location",
-      "summary": "A squat stone shop on Church Street dealing in jewelry, art, and quiet loans.",
-      "content": "Maver Kesk's shop trades in jewelry and art objects, and provides Sandpoint's closest thing to formal moneylending. Every couple of months Maver organizes a guarded caravan south to Magnimar to make deposits at the Bank of Abadar — a regular bit of work for trustworthy blades.",
-      "related": [
-        "sandpoint",
-        "abadar",
-        "magnimar"
-      ],
-      "tags": [
-        "jewelry",
-        "moneylending",
-        "shop",
-        "sandpoint",
-        "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "the-way-north",
-      "title": "The Way North",
-      "category": "Location",
-      "summary": "A cozy map shop on Cliff Street — charts, cartography supplies, and a gnome who will talk routes as long as you let him.",
-      "content": "The Way North sells local and regional maps, novelty treasure maps, and the supplies to make your own, all under the proprietorship of Veznutt Parooh — a gnome cartographer and wizard of modest but practical talent who also sells arcane spellcasting services. Veznutt is forever hungry for new maps of anywhere, and pays for good ones.",
-      "related": [
-        "sandpoint"
-      ],
-      "tags": [
-        "maps",
-        "cartography",
-        "shop",
-        "sandpoint",
-        "location",
-        "spellcasting"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     },
     {
       "id": "wheens-wagons",
@@ -4036,209 +4324,6 @@
         "shop",
         "sandpoint",
         "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "vernahs-fine-clothing",
-      "title": "Vernah's Fine Clothing",
-      "category": "Location",
-      "summary": "Sandpoint's tailor on Prickleback Lane — clothing of all styles, from festival finery to traveling leathers.",
-      "content": "Rynshinn Povalli's shop caters to every style Sandpoint wears, and a few it doesn't know it wants yet. Alongside everyday and formal clothing, she fits non-metallic light armor for those whose work runs rougher than most.",
-      "related": [
-        "sandpoint"
-      ],
-      "tags": [
-        "tailor",
-        "clothing",
-        "shop",
-        "sandpoint",
-        "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "grocers-hall",
-      "title": "Grocer's Hall",
-      "category": "Location",
-      "summary": "An open-fronted hall on Festival Street — market stalls out front, farming supplies in the back.",
-      "content": "Grocer's Hall is where Sandpoint's food trade lives: an open facade hosting produce markets, with farming supplies sold in the back. The halfling grocer Olmur Danavakus runs it with unflappable good cheer and serves as the de facto link between the town and the hinterland farms.",
-      "related": [
-        "sandpoint",
-        "sandpoint-market",
-        "sandpoint-hinterlands"
-      ],
-      "tags": [
-        "grocer",
-        "market",
-        "shop",
-        "sandpoint",
-        "location",
-        "food"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "carpenters-guild",
-      "title": "Carpenter's Guild",
-      "category": "Location",
-      "summary": "Festival Street's guildhall for builders — the place to go for a new home or honest repairs.",
-      "content": "The Carpenter's Guild handles Sandpoint's building and repair work, from storm-damaged roofs to whole new houses. The dwarf Aesrick Battlehorn leads it, and his standards are why Sandpoint's buildings outlast its weather.",
-      "related": [
-        "sandpoint",
-        "sandpoint-lumber-mill"
-      ],
-      "tags": [
-        "carpenter",
-        "guild",
-        "sandpoint",
-        "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "sandpoint-locksmith",
-      "title": "Sandpoint Locksmith",
-      "category": "Location",
-      "summary": "Volioker Briskalberd's workshop on Tower Street — the source of nearly every lock in town.",
-      "content": "Almost every lock in Sandpoint passed through the hands of Volioker Briskalberd, a dwarf locksmith of meticulous craft and long memory. He sells locks, fits them, and — for customers he trusts — discusses their weaknesses with professional candor.",
-      "related": [
-        "sandpoint"
-      ],
-      "tags": [
-        "locksmith",
-        "shop",
-        "sandpoint",
-        "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "sandpoint-market",
-      "title": "Sandpoint Market",
-      "category": "Location",
-      "summary": "The open square where Festival, Market, and Water Streets meet — children's playground most days, twice a week the town's beating commercial heart.",
-      "content": "Most days the open marketplace belongs to children's games. On Moonday it fills with local farmers' stalls, and on Fireday it opens to traveling merchants from Magnimar, Galduria, and beyond — the one day a week Sandpoint can buy wares the town itself doesn't stock.",
-      "related": [
-        "sandpoint",
-        "grocers-hall",
-        "magnimar"
-      ],
-      "tags": [
-        "market",
-        "sandpoint",
-        "location",
-        "trade"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "sandpoint-meat-market",
-      "title": "Sandpoint Meat Market",
-      "category": "Location",
-      "summary": "Market Street's butchery — slaughterhouse in one half, the day's cuts on display in the other.",
-      "content": "Chod Bevuk's establishment is half slaughterhouse, half shopfront, with the day's meat displayed for sale a wall away from where it was dressed. Chod is friendly, loud, and generous with soup bones for regulars.",
-      "related": [
-        "sandpoint"
-      ],
-      "tags": [
-        "butcher",
-        "meat",
-        "shop",
-        "sandpoint",
-        "location",
-        "food"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "valdemar-fish-market",
-      "title": "Valdemar Fish Market",
-      "category": "Location",
-      "summary": "The open-air fish market on Water Street, where the morning catch lands almost straight off the boats.",
-      "content": "The Valdemar Fish Market sells the local fleet's catch within sight of the water it came from. Turch Sterglus runs it for the Valdemar family with a fisherman's bluntness and a fair scale, and the market sets the rhythm of the waterfront's mornings.",
-      "related": [
-        "sandpoint",
-        "the-valdemars",
-        "sandpoint-shipyard"
-      ],
-      "tags": [
-        "fish",
-        "market",
-        "sandpoint",
-        "location",
-        "food",
-        "waterfront"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "sandpoint-boutique",
-      "title": "Sandpoint Boutique",
-      "category": "Location",
-      "summary": "Market Street's everything-shop — art, books, toys, tools, and the odd salvaged treasure, under Hayliss Korvaski's exacting eye.",
-      "content": "The Sandpoint Boutique stocks a little of everything: equipment, clothing, weapons, tools, books, toys, and art objects, much of it sold on consignment or salvaged from abandoned places. Hayliss Korvaski runs it with brisk Abadaran rectitude and also sells divine spellcasting services — healing chief among them.",
-      "related": [
-        "hayliss-korvaski",
-        "sandpoint",
-        "abadar"
-      ],
-      "tags": [
-        "shop",
-        "general goods",
-        "sandpoint",
-        "location",
-        "spellcasting"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "gorvis-shack",
-      "title": "Gorvi's Shack",
-      "category": "Location",
-      "summary": "A dilapidated shack on Tower Street — home of Sandpoint's dungsweeper boss and his crew of useful troublemakers.",
-      "content": "Gorvi's shack looks one storm away from joining the refuse its owner manages. From it, the half-orc Gorvi runs Sandpoint's garbage collection with a crew of ruffians whose services — official and otherwise — are more valuable to the town than anyone likes to admit.",
-      "related": [
-        "gorvi",
-        "sandpoint",
-        "junkers-edge"
-      ],
-      "tags": [
-        "gorvi",
-        "dungsweepers",
-        "sandpoint",
-        "location"
-      ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "broderts-house",
-      "title": "Brodert's House",
-      "category": "Location",
-      "summary": "The comfy, book-crammed Tower Street home of Sandpoint's most respected sage.",
-      "content": "Brodert Quink's house is less a residence than a library with a bed in it. Sandpoint's foremost expert on Thassilonian lore — and self-appointed scholar of the Old Light — keeps decades of tomes, monographs, and half-finished theories here, and is always delighted by visitors who ask the right questions. Whether his advice is free depends on how much he likes you.",
-      "related": [
-        "brodert-quink",
-        "sandpoint",
-        "old-light"
-      ],
-      "tags": [
-        "brodert quink",
-        "sage",
-        "library",
-        "sandpoint",
-        "location",
-        "thassilon"
       ],
       "visibility": "revealed",
       "createdAt": "2026-06-09T00:00:00.000Z"
@@ -4264,43 +4349,30 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "devils-disciples",
-      "title": "The Devil's Disciples",
-      "category": "Organization",
-      "summary": "A cult in the Pit's depths that venerates the Sandpoint Devil — their coming broke the Whistlefangs' hold on the upper caves.",
-      "content": "Little is known of the Devil's Disciples in town, which suits them. They venerate the Sandpoint Devil and have established themselves in the Pit, and their arrival was catastrophic for the goblin clans that previously held its upper levels.\n\nThey are not merely hermits in a hole: the cult's agents are bold enough to operate inside Sandpoint itself when their interests demand it.",
-      "related": [
-        "the-pit",
-        "whistlefangs"
-      ],
-      "tags": [
-        "devils disciples",
-        "cult",
-        "sandpoint devil",
-        "the pit"
-      ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
-    },
-    {
-      "id": "hellstorm-focus",
-      "title": "The Hellstorm Focus",
+      "id": "xanderghuls-flawless-hammer",
+      "title": "Xanderghul's Flawless Hammer",
       "category": "Artifact",
-      "summary": "Great rune-carved slabs beneath the cathedral — a surviving piece of Thassilonian engineering whose purpose the town's sages can only guess at.",
-      "content": "Deep in the catacombs beneath Sandpoint's cathedral stand slabs of ancient stone dense with Thassilonian runes, infused with magic that has outlasted empires. The device — if device it is — is connected to something the catacombs' ancient keepers called the Hellstorm Flume; a demon bound to the deep shrine has prayed for its reactivation since before Sandpoint existed.\n\nNeither on-site study nor Brodert Quink's library can unravel it completely. The fullest surviving notes on the Focus lie elsewhere, in hands that have been studying it far more recently.",
+      "summary": "One of the seven Alara'quin forged by Emperor Xin — the symbol of office of Xanderghul, Runelord of Pride, now carried by Jade Inferno.",
+      "content": "At the height of the Ancient Thassilonian Empire, Emperor Xin crafted seven Alara'quin: magical weapons of extraordinary power, each bound to one of his seven Runelords. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the sole and eternal Runelord of Pride.\n\nXanderghul's domain was illusion magic, and the Hammer reflects this — it is not merely a weapon but a psychic instrument, attuned to pride and the manipulation of emotion. Its most notable property is its reaction to emotional effects: when the wielder would be adversely affected by an emotion, the Hammer attempts to counteract it with a surge of intense pride.\n\nThe weapon is currently carried by Jade Inferno, who recovered it and has integrated it into both their spellcasting and their ongoing investigation into New Thassilon's ambitions. Given that Xanderghul himself may have survived Earthfall — no body was ever confirmed — the Hammer's provenance is a subject Jade keeps in mind.\n\nAs an Alara'quin, it is an artifact-class item. It cannot be destroyed by conventional means.",
       "related": [
-        "hellstorm-catacombs",
-        "brodert-quink",
-        "abraxas"
+        "jade-inferno",
+        "xanderghul",
+        "ancient-thassilon",
+        "new-thassilon",
+        "runelord-of-pride",
+        "peacock-spirit"
       ],
       "tags": [
-        "hellstorm focus",
+        "xanderghul's flawless hammer",
         "artifact",
+        "alara'quin",
         "thassilon",
-        "runes"
+        "pride",
+        "illusion",
+        "jade inferno"
       ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "visibility": "gm"
     }
   ],
   "trait": [
