@@ -28,7 +28,7 @@ const SetLocationModal = ({ isOpen, onClose }) => {
     const q = query.trim().toLowerCase();
     if (!q) return locations;
     return locations.filter((e) => {
-      const haystack = [e.title, e.summary, ...(e.tags || [])]
+      const haystack = [e.title, e.summary]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();

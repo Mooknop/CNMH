@@ -63,14 +63,6 @@ const LoreDrawer = () => {
               <img src={`/api/images/${entry.image}`} alt="" className="entity-image" style={entry.imagePosition ? { objectPosition: `${entry.imagePosition.x}% ${entry.imagePosition.y}%` } : undefined} />
             )}
 
-            {(entry.tags || []).length > 0 && (
-              <div className="lore-drawer-tags">
-                {entry.tags.map(tag => (
-                  <span key={tag} className="lore-drawer-tag">{tag}</span>
-                ))}
-              </div>
-            )}
-
             <div className="lore-drawer-content">
               {(entry.content || entry.summary || '').split('\n').filter(Boolean).map((para, i) => (
                 <p key={i}>{para}</p>

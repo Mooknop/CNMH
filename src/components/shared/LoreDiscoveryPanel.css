@@ -66,22 +66,6 @@
   line-height: 1.5;
 }
 
-.discovery-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-bottom: 0.75rem;
-}
-
-.discovery-tag {
-  background: var(--surface-inset);
-  color: var(--shell-text-secondary);
-  border: 1px solid var(--shell-border);
-  padding: 0.15rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.72rem;
-}
-
 .discovery-full-link {
   display: inline-block;
   font-size: 0.82rem;

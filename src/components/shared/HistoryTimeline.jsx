@@ -42,13 +42,6 @@ const HistoryTimeline = ({ loreEntries }) => {
     );
   };
 
-  const renderEraMarker = (era) => (
-    <div key={`era-${era.id}`} className="timeline-era-marker">
-      <div className="era-marker-label">{era.title}</div>
-      <div className="era-marker-date">{getDateLabel(era)}</div>
-    </div>
-  );
-
   const renderEntry = (entry) => {
     const isExpanded = expandedEntryId === entry.id;
     const relatedEntries = getRelatedEntries(entry, loreEntries);
@@ -108,24 +101,12 @@ const HistoryTimeline = ({ loreEntries }) => {
 
             {/* Timeline content for this period */}
             <div className="period-content">
-              {/* Era markers */}
-              {period.eras && period.eras.length > 0 && (
-                <div className="era-markers">
-                  {period.eras.map((era) => renderEraMarker(era))}
-                </div>
-              )}
-
-              {/* History entries */}
               {period.entries && period.entries.length > 0 ? (
                 <div className="entries-list">
                   {period.entries.map((entry) => renderEntry(entry))}
                 </div>
               ) : (
-                <div className="no-entries">
-                  {period.eras && period.eras.length > 0
-                    ? 'No recorded events in this period'
-                    : 'No recorded history in this period'}
-                </div>
+                <div className="no-entries">No recorded history in this period</div>
               )}
             </div>
           </div>

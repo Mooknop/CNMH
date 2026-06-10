@@ -132,10 +132,10 @@ describe('contentUtils', () => {
 
   describe('withLoreId / normalizeLore', () => {
     it('keeps an existing id and preserves all fields', () => {
-      const e = withLoreId({ id: 'sandpoint', title: 'Sandpoint', category: 'Location', tags: ['town'] });
+      const e = withLoreId({ id: 'sandpoint', title: 'Sandpoint', category: 'Location', related: ['magnimar'] });
       expect(e.id).toBe('sandpoint');
       expect(e.category).toBe('Location');
-      expect(e.tags).toEqual(['town']);
+      expect(e.related).toEqual(['magnimar']);
     });
     it('derives an id from the title when missing and tolerates non-arrays', () => {
       expect(withLoreId({ title: 'The Lost Coast' }).id).toBe('the-lost-coast');

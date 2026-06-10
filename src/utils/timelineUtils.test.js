@@ -1,8 +1,6 @@
 import {
   getAgePeriod,
   getHistoryEntries,
-  getEraEntries,
-  getNonEraEntries,
   groupByAgePeriod,
   sortByDateNewestFirst,
   getDateLabel,
@@ -17,7 +15,6 @@ const entry = (overrides = {}) => ({
   summary: 'A summary',
   content: 'Content',
   dateArStart: 4700,
-  tags: [],
   related: [],
   ...overrides,
 });
@@ -69,52 +66,6 @@ describe('getHistoryEntries', () => {
 
   it('returns empty array for empty input', () => {
     expect(getHistoryEntries([])).toEqual([]);
-  });
-});
-
-describe('getEraEntries', () => {
-  it('returns entries tagged with era', () => {
-    const entries = [
-      entry({ id: '1', tags: ['era', 'important'] }),
-      entry({ id: '2', tags: ['battle'] }),
-    ];
-    expect(getEraEntries(entries)).toHaveLength(1);
-    expect(getEraEntries(entries)[0].id).toBe('1');
-  });
-
-  it('returns entries tagged with age', () => {
-    const entries = [
-      entry({ id: '1', tags: ['age'] }),
-      entry({ id: '2', tags: ['war'] }),
-    ];
-    expect(getEraEntries(entries)).toHaveLength(1);
-  });
-
-  it('returns empty for entries without era or age tags', () => {
-    expect(getEraEntries([entry({ tags: ['battle', 'war'] })])).toHaveLength(0);
-  });
-
-  it('handles entries with no tags property', () => {
-    expect(getEraEntries([entry({ tags: undefined })])).toHaveLength(0);
-  });
-});
-
-describe('getNonEraEntries', () => {
-  it('excludes era-tagged entries', () => {
-    const entries = [
-      entry({ id: '1', tags: ['era'] }),
-      entry({ id: '2', tags: ['battle'] }),
-      entry({ id: '3', tags: ['age'] }),
-      entry({ id: '4', tags: undefined }),
-    ];
-    const result = getNonEraEntries(entries);
-    expect(result).toHaveLength(2);
-    expect(result.map(e => e.id)).toEqual(['2', '4']);
-  });
-
-  it('returns all entries when none are eras', () => {
-    const entries = [entry({ id: '1' }), entry({ id: '2', tags: ['war'] })];
-    expect(getNonEraEntries(entries)).toHaveLength(2);
   });
 });
 
@@ -242,7 +193,6 @@ describe('buildTimelineData', () => {
     const result = buildTimelineData([]);
     expect(result.periods).toHaveLength(6);
     expect(result.totalEntries).toBe(0);
-    expect(result.allEras).toHaveLength(0);
   });
 
   it('counts only History entries in totalEntries', () => {
@@ -253,29 +203,10 @@ describe('buildTimelineData', () => {
     expect(buildTimelineData(entries).totalEntries).toBe(1);
   });
 
-  it('separates era-tagged entries into allEras', () => {
-    const entries = [
-      entry({ id: '1', category: 'History', tags: ['era'], dateArStart: 4606 }),
-      entry({ id: '2', category: 'History', tags: ['battle'], dateArStart: 4700 }),
-    ];
-    const result = buildTimelineData(entries);
-    expect(result.allEras).toHaveLength(1);
-    expect(result.allEras[0].id).toBe('1');
-  });
-
-  it('places non-era entries in the correct period bucket', () => {
+  it('places entries in the correct period bucket', () => {
     const entries = [entry({ id: '1', category: 'History', dateArStart: 4700 })];
     const result = buildTimelineData(entries);
     const lost = result.periods.find(p => p.periodKey === 'age-of-lost-omens');
     expect(lost.entries).toHaveLength(1);
-  });
-
-  it('assigns eras to the correct period', () => {
-    const entries = [
-      entry({ id: 'era1', category: 'History', tags: ['era'], dateArStart: 4606 }),
-    ];
-    const result = buildTimelineData(entries);
-    const lost = result.periods.find(p => p.periodKey === 'age-of-lost-omens');
-    expect(lost.eras).toHaveLength(1);
   });
 });

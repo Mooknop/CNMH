@@ -540,16 +540,9 @@
 }
 
 /* ── Lore master-list rows ───────────────────────────────── */
-/* Two-line row: reveal-state dot + title, compact tag line below. */
+/* Reveal-state dot + title. */
 .gm-lore .gm-ped-item {
   white-space: normal;
-}
-
-.gm-lore-row {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
 }
 
 .gm-lore-row-title {
@@ -575,23 +568,14 @@
   box-shadow: 0 0 6px var(--d-crit-fg);
 }
 
-.gm-lore-row-tags {
-  font-size: 0.7rem;
-  color: var(--shell-text-tertiary);
-  padding-left: 14px; /* aligns under the title, past the dot */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Tag filter chips under the category tabs */
-.gm-lore-tagbar {
+/* Related-entry chips (lore form + bulk panel) */
+.gm-lore-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.gm-lore-tag {
+.gm-lore-chip {
   padding: 2px 8px;
   border-radius: var(--radius-full);
   border: 1px solid var(--shell-border-strong);
@@ -603,28 +587,28 @@
   transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
-.gm-lore-tag:hover {
+.gm-lore-chip:hover {
   color: var(--shell-text-primary);
   border-color: var(--accent-outline);
 }
 
-.gm-lore-tag.active {
-  background: var(--accent-tint);
-  color: var(--accent-text);
-  border-color: var(--accent-outline);
-  font-weight: 600;
-}
-
-.gm-lore-tag-clear {
-  border-style: dashed;
-}
-
 /* Bulk panel: chips queued for removal */
-.gm-lore-tag.removing {
+.gm-lore-chip.removing {
   background: var(--d-cf-bg);
   color: var(--d-cf-fg);
   border-color: transparent;
   text-decoration: line-through;
+}
+
+/* Lore form: picker input + Add button on one line */
+.gm-lore-related-add {
+  display: flex;
+  gap: 6px;
+}
+
+.gm-lore-related-add input {
+  flex: 1;
+  min-width: 0;
 }
 
 .gm-lore-bulk-title {

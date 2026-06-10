@@ -11,9 +11,9 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 
 // ─── fixtures ────────────────────────────────────────────────
 const LORE = [
-  { id: 'sandpoint', title: 'Sandpoint', category: 'Location', summary: 'A small coastal town.', tags: ['varisia'] },
-  { id: 'magnimar', title: 'Magnimar', category: 'Location', summary: 'The City of Monuments.', tags: ['city'] },
-  { id: 'akoni', title: 'Akoni', category: 'NPC', summary: 'A dryad.', tags: [] },
+  { id: 'sandpoint', title: 'Sandpoint', category: 'Location', summary: 'A small coastal town.' },
+  { id: 'magnimar', title: 'Magnimar', category: 'Location', summary: 'The City of Monuments.' },
+  { id: 'akoni', title: 'Akoni', category: 'NPC', summary: 'A dryad.' },
 ];
 
 let setCampaign;

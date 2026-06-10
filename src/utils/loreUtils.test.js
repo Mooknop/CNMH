@@ -5,7 +5,6 @@ import {
   buildBacklinkMap,
   getConnectionData,
   filterBySearchTerm,
-  getSubgroupsForCategory,
 } from './loreUtils';
 
 const entry = (overrides = {}) => ({
@@ -13,7 +12,6 @@ const entry = (overrides = {}) => ({
   category: 'History',
   title: 'Test Entry',
   summary: 'A summary',
-  tags: [],
   related: [],
   ...overrides,
 });
@@ -182,54 +180,5 @@ describe('filterBySearchTerm', () => {
 
   it('trims whitespace from search term', () => {
     expect(filterBySearchTerm(entries, '  aroden  ')).toHaveLength(1);
-  });
-});
-
-describe('getSubgroupsForCategory', () => {
-  it('returns empty array for fewer than 2 entries', () => {
-    expect(getSubgroupsForCategory([])).toEqual([]);
-    expect(getSubgroupsForCategory([entry()])).toEqual([]);
-  });
-
-  it('returns subgroups for tags shared by multiple entries', () => {
-    const entries = [
-      entry({ id: '1', tags: ['war', 'arcane'] }),
-      entry({ id: '2', tags: ['war', 'divine'] }),
-      entry({ id: '3', tags: ['arcane'] }),
-    ];
-    const subgroups = getSubgroupsForCategory(entries);
-    const warGroup = subgroups.find(s => s.tag === 'war');
-    expect(warGroup).toBeDefined();
-    expect(warGroup.entries).toHaveLength(2);
-  });
-
-  it('excludes tags that appear only once', () => {
-    const entries = [
-      entry({ id: '1', tags: ['unique'] }),
-      entry({ id: '2', tags: ['other'] }),
-    ];
-    expect(getSubgroupsForCategory(entries)).toHaveLength(0);
-  });
-
-  it('excludes tags that appear in more than 70% of entries', () => {
-    const entries = [
-      entry({ id: '1', tags: ['common'] }),
-      entry({ id: '2', tags: ['common'] }),
-      entry({ id: '3', tags: ['common'] }),
-    ];
-    const subgroups = getSubgroupsForCategory(entries);
-    expect(subgroups.find(s => s.tag === 'common')).toBeUndefined();
-  });
-
-  it('returns entries without tags as empty tag list', () => {
-    const entries = [
-      entry({ id: '1', tags: ['shared'] }),
-      entry({ id: '2', tags: ['shared'] }),
-      entry({ id: '3', tags: undefined }),
-    ];
-    const subgroups = getSubgroupsForCategory(entries);
-    const sharedGroup = subgroups.find(s => s.tag === 'shared');
-    expect(sharedGroup).toBeDefined();
-    expect(sharedGroup.entries).toHaveLength(2);
   });
 });

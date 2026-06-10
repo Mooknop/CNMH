@@ -8,11 +8,11 @@ const toList = (csv) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-// Tally how many of the selected entries carry each value of `field`.
-const countValues = (entries, field) => {
+// Tally how many of the selected entries reference each related id.
+const countRelated = (entries) => {
   const counts = new Map();
   for (const e of entries) {
-    for (const v of Array.isArray(e[field]) ? e[field] : []) {
+    for (const v of Array.isArray(e.related) ? e.related : []) {
       counts.set(v, (counts.get(v) || 0) + 1);
     }
   }
@@ -20,21 +20,18 @@ const countValues = (entries, field) => {
 };
 
 // Staged bulk edit over the checked lore entries: reveal state plus add/remove
-// for tags and related ids. Apply is a sequential read-modify-write of each
-// full live doc via the single-entity PUT — unchanged docs are skipped so a
-// no-op apply costs no DO writes and floods no history.
+// for related ids. Apply is a sequential read-modify-write of each full live
+// doc via the single-entity PUT — unchanged docs are skipped so a no-op apply
+// costs no DO writes and floods no history.
 const LoreBulkPanel = ({ entries, allEntries, onSaved }) => {
   const [reveal, setReveal] = useState('keep');
-  const [addTags, setAddTags] = useState('');
-  const [removeTags, setRemoveTags] = useState(() => new Set());
   const [addRelated, setAddRelated] = useState('');
   const [removeRelated, setRemoveRelated] = useState(() => new Set());
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(null);
   const [result, setResult] = useState(null); // { updated, skipped, failed: [id] }
 
-  const tagCounts = useMemo(() => countValues(entries, 'tags'), [entries]);
-  const relatedCounts = useMemo(() => countValues(entries, 'related'), [entries]);
+  const relatedCounts = useMemo(() => countRelated(entries), [entries]);
   const titleById = useMemo(
     () => new Map((allEntries || []).map((e) => [e.id, e.title])),
     [allEntries]
@@ -50,31 +47,30 @@ const LoreBulkPanel = ({ entries, allEntries, onSaved }) => {
     [allEntries]
   );
 
-  const toggleIn = (setter) => (v) =>
-    setter((cur) => {
+  const toggleRemoveRelated = (v) =>
+    setRemoveRelated((cur) => {
       const next = new Set(cur);
       if (next.has(v)) next.delete(v);
       else next.add(v);
       return next;
     });
-  const toggleRemoveTag = toggleIn(setRemoveTags);
-  const toggleRemoveRelated = toggleIn(setRemoveRelated);
 
-  // Only touch a field when it actually changes, so the JSON-equal no-op
+  // Related entries can only point at lore that exists — resolve each typed
+  // value as an id or a title and drop anything that matches neither.
+  const resolvedAdds = () =>
+    toList(addRelated)
+      .map((r) => (titleById.has(r) ? r : idByTitle.get(r.toLowerCase())))
+      .filter(Boolean);
+
+  // Only touch the field when it actually changes, so the JSON-equal no-op
   // check in apply() can skip untouched docs (and absent keys stay absent).
   const nextDoc = (e) => {
     const next = { ...e };
     if (reveal !== 'keep') next.visibility = reveal;
 
-    const origTags = Array.isArray(e.tags) ? e.tags : [];
-    const keptTags = origTags.filter((t) => !removeTags.has(t));
-    const newTags = [...keptTags, ...toList(addTags).filter((t) => !keptTags.includes(t))];
-    if (JSON.stringify(newTags) !== JSON.stringify(origTags)) next.tags = newTags;
-
     const origRelated = Array.isArray(e.related) ? e.related : [];
     const keptRelated = origRelated.filter((r) => !removeRelated.has(r));
-    const addR = toList(addRelated).map((r) => idByTitle.get(r.toLowerCase()) || r);
-    const newRelated = [...keptRelated, ...addR.filter((r) => !keptRelated.includes(r))];
+    const newRelated = [...keptRelated, ...resolvedAdds().filter((r) => !keptRelated.includes(r))];
     if (JSON.stringify(newRelated) !== JSON.stringify(origRelated)) next.related = newRelated;
 
     return next;
@@ -105,8 +101,6 @@ const LoreBulkPanel = ({ entries, allEntries, onSaved }) => {
       // Applied edits are now live; reset the staged inputs so a follow-up
       // bulk op starts clean against the refreshed selection.
       setReveal('keep');
-      setAddTags('');
-      setRemoveTags(new Set());
       setAddRelated('');
       setRemoveRelated(new Set());
     }
@@ -132,33 +126,6 @@ const LoreBulkPanel = ({ entries, allEntries, onSaved }) => {
       </div>
 
       <div className="form-group">
-        <label>Add tags (comma-separated)</label>
-        <input
-          aria-label="bulk-add-tags"
-          value={addTags}
-          onChange={(ev) => setAddTags(ev.target.value)}
-        />
-      </div>
-      {tagCounts.length > 0 && (
-        <div className="form-group">
-          <label>Tags in selection — click to remove</label>
-          <div className="gm-lore-tagbar" aria-label="bulk tags">
-            {tagCounts.map(([t, c]) => (
-              <button
-                key={t}
-                type="button"
-                className={`gm-lore-tag${removeTags.has(t) ? ' removing' : ''}`}
-                aria-pressed={removeTags.has(t)}
-                onClick={() => toggleRemoveTag(t)}
-              >
-                {t} ×{c}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="form-group">
         <label>Add related entries (comma-separated id or title)</label>
         <input
           aria-label="bulk-add-related"
@@ -177,12 +144,12 @@ const LoreBulkPanel = ({ entries, allEntries, onSaved }) => {
       {relatedCounts.length > 0 && (
         <div className="form-group">
           <label>Related in selection — click to remove</label>
-          <div className="gm-lore-tagbar" aria-label="bulk related">
+          <div className="gm-lore-chips" aria-label="bulk related">
             {relatedCounts.map(([r, c]) => (
               <button
                 key={r}
                 type="button"
-                className={`gm-lore-tag${removeRelated.has(r) ? ' removing' : ''}`}
+                className={`gm-lore-chip${removeRelated.has(r) ? ' removing' : ''}`}
                 aria-pressed={removeRelated.has(r)}
                 onClick={() => toggleRemoveRelated(r)}
               >

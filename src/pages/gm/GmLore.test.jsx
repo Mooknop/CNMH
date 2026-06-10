@@ -15,7 +15,6 @@ const loreEntries = [
     summary: 'A town.',
     content: 'Sandpoint sits in a cove.',
     related: ['varisia'],
-    tags: ['town', 'hub'],
     createdAt: '2025-01-01T00:00:00.000Z',
   },
   {
@@ -25,17 +24,16 @@ const loreEntries = [
     summary: 'A dead god.',
     content: 'He died.',
     related: [],
-    tags: ['deity'],
   },
 ];
 
 const setContent = () => useContent.mockReturnValue({ allLoreEntries: loreEntries, images: [] });
 
 const multiCategory = [
-  { id: 'sandpoint', title: 'Sandpoint', category: 'Location', tags: ['town'] },
-  { id: 'magnimar', title: 'Magnimar', category: 'Location', tags: ['city'] },
-  { id: 'aroden', title: 'Aroden', category: 'History', tags: ['deity'] },
-  { id: 'desna', title: 'Desna', category: 'Religion', tags: ['deity'] },
+  { id: 'sandpoint', title: 'Sandpoint', category: 'Location' },
+  { id: 'magnimar', title: 'Magnimar', category: 'Location' },
+  { id: 'aroden', title: 'Aroden', category: 'History' },
+  { id: 'desna', title: 'Desna', category: 'Religion' },
 ];
 const setMulti = () => useContent.mockReturnValue({ allLoreEntries: multiCategory, images: [] });
 
@@ -55,7 +53,7 @@ describe('GmLore', () => {
     expect(screen.getByText(/Showing 2 of 2/)).toBeInTheDocument();
   });
 
-  it('filters the list by title, category, tag or id', () => {
+  it('filters the list by title, category or id', () => {
     setContent();
     render(<GmLore />);
     fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'history' } });
@@ -64,21 +62,62 @@ describe('GmLore', () => {
     expect(screen.getByText(/Showing 1 of 2/)).toBeInTheDocument();
   });
 
-  it('edits an entry and saves arrays parsed from CSV, preserving createdAt', async () => {
-    setContent();
-    saveDocument.mockResolvedValue({ ok: true });
-    render(<GmLore />);
-    selectEntry('Sandpoint');
-    const form = screen.getByTestId('lore-form-sandpoint');
-    fireEvent.change(within(form).getByLabelText('tags'), { target: { value: 'town, hub, port' } });
-    fireEvent.click(within(form).getByText('Save'));
-    expect(await screen.findByRole('status')).toHaveTextContent(/live for every connected player/i);
-    const [collection, id, data] = saveDocument.mock.calls[0];
-    expect(collection).toBe('lore');
-    expect(id).toBe('sandpoint');
-    expect(data.tags).toEqual(['town', 'hub', 'port']);
-    expect(data.related).toEqual(['varisia']);
-    expect(data.createdAt).toBe('2025-01-01T00:00:00.000Z');
+  describe('related picker', () => {
+    it('adds an existing entry by title and saves only ids that exist', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      selectEntry('Sandpoint');
+      const form = screen.getByTestId('lore-form-sandpoint');
+      // The legacy related id 'varisia' has no matching entry — it renders as
+      // a removable chip but is dropped from the saved payload.
+      fireEvent.change(within(form).getByLabelText('add-related'), { target: { value: 'Aroden' } });
+      fireEvent.click(within(form).getByText('Add'));
+      expect(within(form).getByText(/^Aroden ×$/)).toBeInTheDocument();
+      fireEvent.click(within(form).getByText('Save'));
+      expect(await screen.findByRole('status')).toHaveTextContent(/live for every connected player/i);
+      const [collection, id, data] = saveDocument.mock.calls[0];
+      expect(collection).toBe('lore');
+      expect(id).toBe('sandpoint');
+      expect(data.related).toEqual(['aroden']);
+      expect(data.tags).toBeUndefined();
+      expect(data.createdAt).toBe('2025-01-01T00:00:00.000Z');
+    });
+
+    it('rejects values that match no existing entry', () => {
+      setContent();
+      render(<GmLore />);
+      selectEntry('Sandpoint');
+      const form = screen.getByTestId('lore-form-sandpoint');
+      fireEvent.change(within(form).getByLabelText('add-related'), { target: { value: 'Nope' } });
+      fireEvent.click(within(form).getByText('Add'));
+      expect(within(form).getByRole('alert')).toHaveTextContent(/No lore entry matches "Nope"/);
+      expect(within(form).queryByText(/^Nope ×$/)).not.toBeInTheDocument();
+    });
+
+    it('refuses a self-relation', () => {
+      setContent();
+      render(<GmLore />);
+      selectEntry('Sandpoint');
+      const form = screen.getByTestId('lore-form-sandpoint');
+      fireEvent.change(within(form).getByLabelText('add-related'), { target: { value: 'sandpoint' } });
+      fireEvent.click(within(form).getByText('Add'));
+      expect(within(form).getByRole('alert')).toHaveTextContent(/cannot relate to itself/);
+    });
+
+    it('removes a related id when its chip is clicked', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      selectEntry('Aroden');
+      const form = screen.getByTestId('lore-form-aroden');
+      fireEvent.change(within(form).getByLabelText('add-related'), { target: { value: 'Sandpoint' } });
+      fireEvent.click(within(form).getByText('Add'));
+      fireEvent.click(within(form).getByText(/^Sandpoint ×$/));
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].related).toEqual([]);
+    });
   });
 
   it('requires a title and a category', async () => {
@@ -278,47 +317,14 @@ describe('GmLore', () => {
       expect(within(list).queryByText('Location')).not.toBeInTheDocument();
     });
 
-    it('shows a reveal dot and a compact tag line on each row', () => {
-      const tagged = {
-        ...multiCategory[0],
-        tags: ['town', 'coast', 'varisia', 'hub'],
-        visibility: 'revealed',
-      };
-      useContent.mockReturnValue({ allLoreEntries: [tagged, multiCategory[2]], images: [] });
+    it('shows a reveal-state dot on each row', () => {
+      const revealed = { ...multiCategory[0], visibility: 'revealed' };
+      useContent.mockReturnValue({ allLoreEntries: [revealed, multiCategory[2]], images: [] });
       render(<GmLore />);
       const row = screen.getByRole('button', { name: /Sandpoint/ });
       expect(within(row).getByTitle('Revealed to players')).toBeInTheDocument();
-      expect(within(row).getByText('town, coast, varisia +1')).toBeInTheDocument();
       const gmRow = screen.getByRole('button', { name: 'Aroden' });
       expect(within(gmRow).getByTitle('GM only')).toBeInTheDocument();
-    });
-
-    it('filters by tag chips with AND semantics and a clear affordance', () => {
-      setMulti();
-      render(<GmLore />);
-      const tagbar = () => screen.getByLabelText('tag filters');
-      fireEvent.click(within(tagbar()).getByText('deity'));
-      expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Aroden' })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Sandpoint' })).not.toBeInTheDocument();
-      // Second active tag narrows further (entry must carry every tag).
-      fireEvent.click(within(tagbar()).getByText('city'));
-      expect(screen.getByText('Showing 0 of 0')).toBeInTheDocument();
-      fireEvent.click(within(tagbar()).getByText('× clear'));
-      expect(screen.getByText('Showing 4 of 4')).toBeInTheDocument();
-    });
-
-    it('scopes tag chips to the active category tab and composes with search', () => {
-      setMulti();
-      render(<GmLore />);
-      fireEvent.click(within(screen.getByLabelText('lore categories')).getByText('Location'));
-      const tagbar = screen.getByLabelText('tag filters');
-      expect(within(tagbar).queryByText('deity')).not.toBeInTheDocument();
-      fireEvent.click(within(tagbar).getByText('town'));
-      fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'magni' } });
-      expect(screen.getByText('Showing 0 of 1')).toBeInTheDocument();
-      fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'sand' } });
-      expect(screen.getByRole('button', { name: 'Sandpoint' })).toBeInTheDocument();
     });
   });
 
@@ -384,27 +390,6 @@ describe('GmLore', () => {
       expect(saveDocument).not.toHaveBeenCalled();
     });
 
-    it('adds and removes tags across the selection', async () => {
-      setMulti();
-      saveDocument.mockResolvedValue({ ok: true });
-      render(<GmLore />);
-      enterSelect();
-      check('aroden');
-      check('sandpoint');
-      // Union chips show counts; queue 'deity' (only on aroden) for removal.
-      const tagbar = screen.getByLabelText('bulk tags');
-      fireEvent.click(within(tagbar).getByText('deity ×1'));
-      fireEvent.change(screen.getByLabelText('bulk-add-tags'), {
-        target: { value: 'doom, town' },
-      });
-      fireEvent.click(screen.getByText('Apply to selection'));
-      await screen.findByText(/Updated 2, unchanged 0/);
-      const byId = Object.fromEntries(saveDocument.mock.calls.map(([, id, doc]) => [id, doc]));
-      expect(byId.aroden.tags).toEqual(['doom', 'town']);
-      // 'town' already on sandpoint — not duplicated.
-      expect(byId.sandpoint.tags).toEqual(['town', 'doom']);
-    });
-
     it('adds related ids by title and removes via chips', async () => {
       const withRelated = [
         { id: 'sandpoint', title: 'Sandpoint', category: 'Location', related: ['old-light'] },
@@ -419,9 +404,10 @@ describe('GmLore', () => {
       check('magnimar');
       // Existing related ids surface as title-labelled chips; queue removal.
       fireEvent.click(within(screen.getByLabelText('bulk related')).getByText('The Old Light ×1'));
-      // Adding by title resolves to the slug id.
+      // Adding by title resolves to the slug id; values matching no existing
+      // entry ('nope') are dropped — related can only point at real lore.
       fireEvent.change(screen.getByLabelText('bulk-add-related'), {
-        target: { value: 'Magnimar' },
+        target: { value: 'Magnimar, nope' },
       });
       fireEvent.click(screen.getByText('Apply to selection'));
       await screen.findByText(/Updated 2, unchanged 0/);
