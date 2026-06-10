@@ -141,6 +141,11 @@ describe('contentUtils', () => {
       expect(withLoreId({ title: 'The Lost Coast' }).id).toBe('the-lost-coast');
       expect(normalizeLore(null)).toEqual([]);
     });
+    it('defaults visibility to gm; only an explicit revealed passes through', () => {
+      expect(withLoreId({ id: 'a', title: 'A' }).visibility).toBe('gm');
+      expect(withLoreId({ id: 'b', title: 'B', visibility: 'revealed' }).visibility).toBe('revealed');
+      expect(withLoreId({ id: 'c', title: 'C', visibility: 'public' }).visibility).toBe('gm');
+    });
   });
 
   describe('withTraitId / normalizeTraits', () => {

@@ -205,7 +205,10 @@ describe('ContentContext', () => {
         json: () =>
           Promise.resolve({
             payload: {
-              lore: [{ id: 'l1', title: 'Server Lore', category: 'Location' }],
+              lore: [
+                { id: 'l1', title: 'Server Lore', category: 'Location' },
+                { id: 'l2', title: 'Known Lore', category: 'Location', visibility: 'revealed' },
+              ],
               trait: [{ id: 'agile', name: 'Agile', description: 'd' }],
             },
           }),
@@ -213,7 +216,15 @@ describe('ContentContext', () => {
     );
     render(<ContentProvider><Cap /></ContentProvider>);
     await waitFor(() => expect(val.source).toBe('server'));
-    expect(val.loreEntries).toEqual([{ id: 'l1', title: 'Server Lore', category: 'Location' }]);
+    // Entries without an explicit 'revealed' flag are GM-only: present in the
+    // full list (stamped visibility 'gm'), absent from the player-facing one.
+    expect(val.allLoreEntries).toEqual([
+      { id: 'l1', title: 'Server Lore', category: 'Location', visibility: 'gm' },
+      { id: 'l2', title: 'Known Lore', category: 'Location', visibility: 'revealed' },
+    ]);
+    expect(val.loreEntries).toEqual([
+      { id: 'l2', title: 'Known Lore', category: 'Location', visibility: 'revealed' },
+    ]);
     expect(val.traits).toEqual([{ id: 'agile', name: 'Agile', description: 'd' }]);
   });
 
@@ -221,8 +232,12 @@ describe('ContentContext', () => {
     let val;
     const C = () => { val = useContent(); return null; };
     render(<C />);
+    // Bundled lore predates the visibility flag, so every entry defaults to
+    // GM-only: the full list is populated, the player view starts empty.
+    expect(Array.isArray(val.allLoreEntries)).toBe(true);
+    expect(val.allLoreEntries.length).toBeGreaterThan(0);
     expect(Array.isArray(val.loreEntries)).toBe(true);
-    expect(val.loreEntries.length).toBeGreaterThan(0);
+    expect(val.loreEntries.length).toBe(0);
     expect(Array.isArray(val.traits)).toBe(true);
     expect(val.traits.length).toBeGreaterThan(0);
   });

@@ -74,7 +74,7 @@ describe('GmLayout', () => {
       refresh,
       quests: [{ id: 'a' }, { id: 'b' }],
       reputation: { Factions: [{ id: 'f' }] },
-      loreEntries: [],
+      allLoreEntries: [],
     });
     renderAt('/gm/world/reputation');
     expect(await screen.findByTestId('outlet')).toHaveTextContent('REP');

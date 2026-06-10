@@ -177,6 +177,13 @@ export const ContentProvider = ({ children }) => {
     resolveCharacterItems(c, items, spells)
   );
 
+  // Lore is split into two views: `allLoreEntries` (GM editors, the location
+  // picker) and `loreEntries` (every player-facing surface), which only holds
+  // entries the GM has revealed. Filtering here means no player consumer needs
+  // to know the flag exists.
+  const allLoreEntries = serverLore.length ? normalizeLore(serverLore) : FALLBACK.lore;
+  const visibleLoreEntries = allLoreEntries.filter((e) => e.visibility === 'revealed');
+
   const theme = useMemo(
     () => normalizeTheme(serverTheme.length ? serverTheme : FALLBACK.theme),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -213,7 +220,8 @@ export const ContentProvider = ({ children }) => {
     calendarEvents: serverCalendar.length
       ? normalizeCalendar(serverCalendar)
       : FALLBACK.calendar,
-    loreEntries: serverLore.length ? normalizeLore(serverLore) : FALLBACK.lore,
+    loreEntries: visibleLoreEntries,
+    allLoreEntries,
     traits: serverTraits.length ? normalizeTraits(serverTraits) : FALLBACK.trait,
     characters,
     rawCharacters,
@@ -235,7 +243,8 @@ const NOOP_CONTENT = {
   quests: FALLBACK.quest,
   reputation: defaultReputation,
   calendarEvents: FALLBACK.calendar,
-  loreEntries: FALLBACK.lore,
+  loreEntries: FALLBACK.lore.filter((e) => e.visibility === 'revealed'),
+  allLoreEntries: FALLBACK.lore,
   traits: FALLBACK.trait,
   characters: FALLBACK.character.map((c) =>
     resolveCharacterItems(c, FALLBACK.item, FALLBACK.spell)
