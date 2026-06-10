@@ -232,12 +232,12 @@ describe('ContentContext', () => {
     let val;
     const C = () => { val = useContent(); return null; };
     render(<C />);
-    // Bundled lore predates the visibility flag, so every entry defaults to
-    // GM-only: the full list is populated, the player view starts empty.
+    // The bundled snapshot mixes revealed and GM-only entries: the player view
+    // is a non-empty strict subset of the full list.
     expect(Array.isArray(val.allLoreEntries)).toBe(true);
-    expect(val.allLoreEntries.length).toBeGreaterThan(0);
     expect(Array.isArray(val.loreEntries)).toBe(true);
-    expect(val.loreEntries.length).toBe(0);
+    expect(val.loreEntries.length).toBeGreaterThan(0);
+    expect(val.loreEntries.length).toBeLessThan(val.allLoreEntries.length);
     expect(Array.isArray(val.traits)).toBe(true);
     expect(val.traits.length).toBeGreaterThan(0);
   });
