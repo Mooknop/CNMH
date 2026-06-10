@@ -29,7 +29,7 @@ const loreEntries = [
   },
 ];
 
-const setContent = () => useContent.mockReturnValue({ loreEntries, images: [] });
+const setContent = () => useContent.mockReturnValue({ allLoreEntries: loreEntries, images: [] });
 
 const multiCategory = [
   { id: 'sandpoint', title: 'Sandpoint', category: 'Location', tags: ['town'] },
@@ -37,7 +37,7 @@ const multiCategory = [
   { id: 'aroden', title: 'Aroden', category: 'History', tags: ['deity'] },
   { id: 'desna', title: 'Desna', category: 'Religion', tags: ['deity'] },
 ];
-const setMulti = () => useContent.mockReturnValue({ loreEntries: multiCategory, images: [] });
+const setMulti = () => useContent.mockReturnValue({ allLoreEntries: multiCategory, images: [] });
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -189,10 +189,76 @@ describe('GmLore', () => {
     );
   });
 
+  describe('visibility', () => {
+    it('defaults the form to GM only for legacy entries and saves the flag', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      selectEntry('Sandpoint');
+      const form = screen.getByTestId('lore-form-sandpoint');
+      expect(within(form).getByLabelText('visibility')).toHaveValue('gm');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].visibility).toBe('gm');
+    });
+
+    it('creates new entries as GM only by default', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      fireEvent.click(screen.getByText('+ New entry'));
+      const form = screen.getByTestId('lore-form-new');
+      fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'The Pit' } });
+      fireEvent.change(within(form).getByLabelText('category'), { target: { value: 'Location' } });
+      fireEvent.click(within(form).getByText('Create entry'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].visibility).toBe('gm');
+    });
+
+    it('saves a revealed visibility chosen in the form select', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      selectEntry('Sandpoint');
+      const form = screen.getByTestId('lore-form-sandpoint');
+      fireEvent.change(within(form).getByLabelText('visibility'), { target: { value: 'revealed' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].visibility).toBe('revealed');
+    });
+
+    it('reveals an entry in one tap, persisting immediately', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmLore />);
+      selectEntry('Sandpoint');
+      const form = screen.getByTestId('lore-form-sandpoint');
+      fireEvent.click(within(form).getByText('Reveal to players'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const [collection, id, data] = saveDocument.mock.calls[0];
+      expect(collection).toBe('lore');
+      expect(id).toBe('sandpoint');
+      expect(data.visibility).toBe('revealed');
+      // Button flips so the same tap hides it again.
+      expect(within(form).getByText('Hide from players')).toBeInTheDocument();
+    });
+
+    it('badges revealed entries in the master list and offers to hide them', () => {
+      const revealed = { ...loreEntries[0], visibility: 'revealed' };
+      useContent.mockReturnValue({ allLoreEntries: [revealed, loreEntries[1]], images: [] });
+      render(<GmLore />);
+      expect(screen.getByText('Revealed')).toBeInTheDocument();
+      selectEntry(/Sandpoint/);
+      const form = screen.getByTestId('lore-form-sandpoint');
+      expect(within(form).getByLabelText('visibility')).toHaveValue('revealed');
+      expect(within(form).getByText('Hide from players')).toBeInTheDocument();
+    });
+  });
+
   describe('image round-trip', () => {
     it('saves image id when lore entry has an image', async () => {
       const withImage = { ...loreEntries[0], image: 'img_sandpoint.jpg' };
-      useContent.mockReturnValue({ loreEntries: [withImage], images: [] });
+      useContent.mockReturnValue({ allLoreEntries: [withImage], images: [] });
       saveDocument.mockResolvedValue({ ok: true });
       render(<GmLore />);
       selectEntry('Sandpoint');

@@ -525,6 +525,13 @@
 .gm-pill--gold   { background: rgba(196,154,46,.14); color: var(--gold-light); border-color: rgba(196,154,46,.35); }
 .gm-pill--accent { background: var(--accent-tint); color: var(--accent-text); border-color: var(--accent-outline); }
 
+/* Lore master-list visibility badge — sits inline after the entry title */
+.gm-lore-pill {
+  margin-left: var(--space-2);
+  padding: 1px 6px;
+  font-size: 0.6rem;
+}
+
 /* ── Field group (column label + input) ──────────────────── */
 /* Slice 3 master/detail forms use this instead of .form-group */
 .gm-fg {

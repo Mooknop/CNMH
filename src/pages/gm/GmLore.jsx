@@ -24,6 +24,7 @@ const toForm = (e) => ({
   content: e.content || '',
   related: Array.isArray(e.related) ? e.related.join(', ') : '',
   tags: Array.isArray(e.tags) ? e.tags.join(', ') : '',
+  visibility: e.visibility === 'revealed' ? 'revealed' : 'gm',
   createdAt: e.createdAt,
 });
 
@@ -52,15 +53,7 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     }
   };
 
-  const save = async () => {
-    if (!e.title.trim()) {
-      setError('Title is required.');
-      return;
-    }
-    if (!e.category.trim()) {
-      setError('Category is required.');
-      return;
-    }
+  const buildPayload = (visibility) => {
     const id = e.id || slugify(e.title);
     const payload = {
       id,
@@ -70,14 +63,36 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       content: e.content,
       related: toList(e.related),
       tags: toList(e.tags),
+      visibility: visibility === 'revealed' ? 'revealed' : 'gm',
       createdAt: e.createdAt || new Date().toISOString(),
     };
     if (e.image) { payload.image = e.image; payload.imagePosition = e.imagePosition; }
-    if (isNew && existingIds && existingIds.has(id)) {
-      setConfirm({ kind: 'collision', id, payload });
+    return payload;
+  };
+
+  const save = async () => {
+    if (!e.title.trim()) {
+      setError('Title is required.');
       return;
     }
-    await submit(id, payload);
+    if (!e.category.trim()) {
+      setError('Category is required.');
+      return;
+    }
+    const payload = buildPayload(e.visibility);
+    if (isNew && existingIds && existingIds.has(payload.id)) {
+      setConfirm({ kind: 'collision', id: payload.id, payload });
+      return;
+    }
+    await submit(payload.id, payload);
+  };
+
+  // One-tap reveal/hide for an existing entry — persists immediately so the
+  // GM can flip lore live at the table without a separate Save.
+  const toggleVisibility = async () => {
+    const next = e.visibility === 'revealed' ? 'gm' : 'revealed';
+    set({ visibility: next });
+    await submit(e.id, buildPayload(next));
   };
 
   const doRemove = async () => {
@@ -109,6 +124,20 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
             value={e.category}
             onChange={(ev) => set({ category: ev.target.value })}
           />
+        </div>
+      </div>
+
+      <div className="gm-row">
+        <div className="form-group">
+          <label>Visibility</label>
+          <select
+            aria-label="visibility"
+            value={e.visibility}
+            onChange={(ev) => set({ visibility: ev.target.value })}
+          >
+            <option value="gm">GM only</option>
+            <option value="revealed">Revealed to players</option>
+          </select>
         </div>
       </div>
 
@@ -157,6 +186,9 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </button>
         {!isNew && (
           <>
+            <button className="btn-secondary" disabled={busy} onClick={toggleVisibility}>
+              {e.visibility === 'revealed' ? 'Hide from players' : 'Reveal to players'}
+            </button>
             <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>
               History
             </button>
@@ -208,10 +240,11 @@ const LoreForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 const categoryOf = (e) => (e.category && String(e.category).trim()) || 'Uncategorized';
 
 const GmLore = () => {
-  const { loreEntries } = useContent();
+  // The GM editor sees everything; `loreEntries` is the player-visible subset.
+  const { allLoreEntries } = useContent();
   const entries = useMemo(
-    () => (Array.isArray(loreEntries) ? loreEntries : []),
-    [loreEntries]
+    () => (Array.isArray(allLoreEntries) ? allLoreEntries : []),
+    [allLoreEntries]
   );
   const existingIds = useMemo(() => existingIdSet(entries), [entries]);
   const [tab, setTab] = useState('All');
@@ -254,7 +287,14 @@ const GmLore = () => {
     <div className="gm-lore">
       <PageEditorShell
         entries={inTab}
-        nameOf={(e) => e.title}
+        nameOf={(e) => (
+          <>
+            {e.title}
+            {e.visibility === 'revealed' && (
+              <span className="gm-pill gm-pill--good gm-lore-pill">Revealed</span>
+            )}
+          </>
+        )}
         noun="entry"
         addLabel="+ New entry"
         header={categoryTabs}

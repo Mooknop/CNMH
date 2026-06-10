@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLore } from '../../contexts/LoreContext';
 import { useContent } from '../../contexts/ContentContext';
 import { buildBacklinkMap, getConnectionData } from '../../utils/loreUtils';
@@ -6,7 +7,12 @@ import './LoreDrawer.css';
 
 const LoreDrawer = () => {
   const { isOpen, currentEntryId, closeLore, navigateTo, goBack, canGoBack } = useLore();
-  const { loreEntries } = useContent();
+  const { loreEntries: visibleEntries, allLoreEntries } = useContent();
+  // On GM pages (Access-gated at the edge) the drawer resolves unrevealed
+  // entries too — e.g. the marquee's location link. Player routes only ever
+  // see revealed lore; an unrevealed id falls through to "Entry not found".
+  const { pathname } = useLocation();
+  const loreEntries = pathname.startsWith('/gm') ? allLoreEntries : visibleEntries;
 
   const backlinkMap = useMemo(() => buildBacklinkMap(loreEntries), [loreEntries]);
 

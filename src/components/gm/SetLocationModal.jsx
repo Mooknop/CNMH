@@ -9,17 +9,20 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 // back to the lore entry.
 
 const SetLocationModal = ({ isOpen, onClose }) => {
-  const { loreEntries } = useContent();
+  // GM-only surface: pick from ALL Location lore, including entries not yet
+  // revealed to players (the party can be somewhere before they can read
+  // about it — the marquee only shows the title).
+  const { allLoreEntries } = useContent();
   // Same key as PlayModeControl — writes sync to every client + that marquee.
   const [campaign, setCampaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
   const [query, setQuery] = useState('');
 
   const locations = useMemo(() => {
-    const list = (loreEntries || []).filter(
+    const list = (allLoreEntries || []).filter(
       (e) => (e.category || '').trim() === 'Location'
     );
     return list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  }, [loreEntries]);
+  }, [allLoreEntries]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
