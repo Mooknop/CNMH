@@ -59,6 +59,9 @@ const writeLocal = (key, value) => {
  * @param {string}   degree     - computeSaveDegree result
  * @param {number}   amount     - HP to heal or damage (entered by player); ignored on failure
  * @param {string}   actionName - 'Treat Wounds' | 'Battle Medicine'
+ * @param {number}   [nowSecs]  - current absolute game seconds; stamps a clock-
+ *                                based immunity expiry (Battle Medicine 1 day,
+ *                                Treat Wounds 1 hour) the expiry sweep can clear
  * @param {Function} getState   - (charId, key) => value  (from SessionContext)
  * @param {Function} sendUpdate - (charId, key, value) => void
  * @param {Function} appendLog  - ({ type, charId, text }) => void
@@ -70,6 +73,7 @@ export function applyTreatWounds({
   degree,
   amount,
   actionName,
+  nowSecs,
   getState,
   sendUpdate,
   appendLog,
@@ -116,11 +120,16 @@ export function applyTreatWounds({
   // Immunity is applied only when healing is delivered (success/crit success).
   if (degree === 'success' || degree === 'criticalSuccess') {
     const currentEffects = getState(target.id, 'effects') || [];
+    // Battle Medicine immunity lasts 1 day, Treat Wounds 1 hour. The absolute
+    // game-seconds expiry lets the clock sweep clear it automatically; the
+    // entry stays GM-removable too (× in EffectsPanel).
+    const immunitySecs = actionName === 'Battle Medicine' ? 86400 : 3600;
     const immunityEntry = {
       id:        newEntryUid(),
       effectId:  IMMUNITY_EFFECT_ID,
       appliedBy: healer.id,
       source:    actionName,
+      ...(typeof nowSecs === 'number' ? { expireAtSecs: nowSecs + immunitySecs } : {}),
       ts:        Date.now(),
     };
     const nextEffects = [...currentEffects, immunityEntry];

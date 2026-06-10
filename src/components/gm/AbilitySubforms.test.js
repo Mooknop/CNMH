@@ -230,6 +230,31 @@ describe('action frequencyRule round-trip', () => {
   });
 });
 
+describe('action immunity round-trip', () => {
+  it('round-trips a target immunity through the form', () => {
+    const src = {
+      name: 'Guidance',
+      actionCount: 1,
+      immunity: { duration: { value: 1, unit: 'hour' } },
+    };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips a per-caster scope (Battle Medicine, 1 day)', () => {
+    const src = {
+      name: 'Battle Medicine',
+      immunity: { duration: { value: 1, unit: 'day' }, scope: 'per-caster' },
+    };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('omits immunity when unset and does not double-write through rest', () => {
+    const f = actionToForm({ name: 'Plain', actionCount: 1 });
+    expect(f.rest.immunity).toBeUndefined();
+    expect(actionFromForm(f).immunity).toBeUndefined();
+  });
+});
+
 describe('action targetDefense round-trip', () => {
   it('round-trips targetDefense: ac through the form', () => {
     const src = { name: 'Strike', actionCount: 1, targetDefense: 'ac' };

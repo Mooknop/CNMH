@@ -196,6 +196,14 @@ const PF2E_EFFECTS = [
     description: 'Cannot be healed by Treat Wounds or Battle Medicine from the specific healer who applied this effect. Applied automatically on a successful Treat Wounds or Battle Medicine check. Remove to allow re-treatment.',
     modifiers: [],
   },
+
+  // ── Generic ability immunity (clock-expiring; carries source ability name) ──
+  {
+    id: 'ability-immunity',
+    name: 'Immune',
+    description: 'Temporarily immune to a specific ability (e.g. Guidance, Battle Medicine, Tell Fortune). Applied automatically on use and cleared when the game clock passes its expiry.',
+    modifiers: [],
+  },
 ];
 
 export default PF2E_EFFECTS;

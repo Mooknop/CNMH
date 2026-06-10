@@ -17,6 +17,7 @@ import PartySummary from './components/party/PartySummary';
 import LoreDrawer from './components/shared/LoreDrawer';
 import ActorMapSync from './components/encounter/ActorMapSync';
 import EncounterClockSync from './components/encounter/EncounterClockSync';
+import EffectExpirySync from './components/encounter/EffectExpirySync';
 import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
@@ -67,6 +68,7 @@ function App() {
         <ActorMapSync />
         <GameDateProvider>
           <EncounterClockSync />
+          <EffectExpirySync />
           <CharacterProvider>
             <TraitProvider>
               <LoreProvider>

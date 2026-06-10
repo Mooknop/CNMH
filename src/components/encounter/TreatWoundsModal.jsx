@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
+import { useGameDate } from '../../contexts/GameDateContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { toGameSeconds } from '../../utils/gameTime';
 import {
   availableDcs,
   healHint,
@@ -35,6 +37,7 @@ const DEGREE_INFO = {
 const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCost }) => {
   const { getState, sendUpdate } = useSession();
   const { characters } = useContent();
+  const { gameDate, time } = useGameDate();
   const { encounter, appendLog } = useEncounter();
   const healerModel = useCharacter(healer);
   const { spendActions } = useTurnState(healer?.id || 'nobody');
@@ -103,6 +106,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
       degree,
       amount:     needsAmount ? amount : 0,
       actionName,
+      nowSecs:    toGameSeconds({ ...gameDate, ...time }),
       getState,
       sendUpdate,
       appendLog,

@@ -1,5 +1,7 @@
 import { resolveExpireAt } from './expiry';
 import { newEntryUid } from './uid';
+import { freqKeyFor } from './frequency';
+import { immunityConfigFor, makeImmunityEntry, hasAbilityImmunity } from './immunity';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -136,6 +138,36 @@ export function applyAbility({
         text:   `${caster.name} granted ${grant.action?.name || name} to ${charName(targetCharId)}`,
       });
     });
+  });
+}
+
+/**
+ * Stamp a clock-expiring immunity on the picked PC targets for abilities with
+ * an `immunity` config (Guidance, Tell Fortune, …). Idempotent: targets already
+ * immune are skipped. React-free; the modal calls this alongside applyAbility.
+ * Enemy targets have no PC effect store, so only PC targets are tracked.
+ *
+ * @param {Object}   ability       - ability with optional `immunity` config
+ * @param {Object}   caster        - { id }
+ * @param {string[]} targetCharIds - picked PC target charIds
+ * @param {number}   nowSecs       - current absolute game seconds
+ * @param {Function} getState      - (charId, key) => value
+ * @param {Function} sendUpdate    - (charId, key, value) => void
+ */
+export function applyAbilityImmunity({ ability, caster, targetCharIds, nowSecs, getState, sendUpdate }) {
+  const config = immunityConfigFor(ability);
+  if (!config) return;
+  const abilityKey  = freqKeyFor(ability);
+  const abilityName = ability.name || '';
+  (targetCharIds || []).forEach((targetCharId) => {
+    const current = getState(targetCharId, 'effects') || [];
+    if (hasAbilityImmunity(current, { abilityKey, casterId: caster.id, scope: config.scope, nowSecs })) return;
+    const entry = makeImmunityEntry({
+      abilityKey, abilityName, casterId: caster.id, nowSecs, durationSecs: config.durationSecs,
+    });
+    const next = [...current, entry];
+    writeLocal(`cnmh_effects_${targetCharId}`, next);
+    sendUpdate(targetCharId, 'effects', next);
   });
 }
 

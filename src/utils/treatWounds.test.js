@@ -148,6 +148,23 @@ describe('applyTreatWounds — success', () => {
     expect(logs[0].text).toMatch(/12/);
   });
 
+  it('stamps a 1-hour expiry for Treat Wounds and 1-day for Battle Medicine', () => {
+    const NOW = 1_000_000;
+    const tw = makeStubs({ current: 20, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 });
+    applyTreatWounds({ healer, target, dc: 15, degree: 'success', amount: 5, actionName: 'Treat Wounds', nowSecs: NOW, getState: tw.getState, sendUpdate: tw.sendUpdate, appendLog: tw.appendLog });
+    expect(tw.updates.find((u) => u.key === 'effects').value[0].expireAtSecs).toBe(NOW + 3600);
+
+    const bm = makeStubs({ current: 20, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 });
+    applyTreatWounds({ healer, target, dc: 15, degree: 'success', amount: 5, actionName: 'Battle Medicine', nowSecs: NOW, getState: bm.getState, sendUpdate: bm.sendUpdate, appendLog: bm.appendLog });
+    expect(bm.updates.find((u) => u.key === 'effects').value[0].expireAtSecs).toBe(NOW + 86400);
+  });
+
+  it('omits expireAtSecs when nowSecs is not supplied (backward compatible)', () => {
+    const { updates, getState, sendUpdate, appendLog } = makeStubs({ current: 20, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 });
+    applyTreatWounds({ healer, target, dc: 15, degree: 'success', amount: 5, actionName: 'Treat Wounds', getState, sendUpdate, appendLog });
+    expect(updates.find((u) => u.key === 'effects').value[0]).not.toHaveProperty('expireAtSecs');
+  });
+
   it('caps healing at max HP', () => {
     const hp = { current: 38, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 };
     const { updates, getState, sendUpdate, appendLog } = makeStubs(hp);

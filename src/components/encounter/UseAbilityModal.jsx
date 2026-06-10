@@ -15,7 +15,9 @@ import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
+import { applyAbility, applyAbilityImmunity, abilityNeedsPicker } from '../../utils/applyAbility';
+import { immunityConfigFor } from '../../utils/immunity';
+import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
@@ -101,6 +103,9 @@ const UseAbilityModal = ({
   // Frequency gate (#218) — declarative cooldown override for table rulings.
   const [freqOverride, setFreqOverride] = useState(false);
 
+  // Target-immunity gate (#218) — override when all picked targets are immune.
+  const [immunityOverride, setImmunityOverride] = useState(false);
+
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
   const { effects: activeEffects } = useEffects(character?.id || '');
@@ -175,6 +180,34 @@ const UseAbilityModal = ({
   const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
 
+  // Target immunity (#218): for abilities that confer immunity (Guidance,
+  // Battle Medicine, …), flag picked PC targets already immune. The use is
+  // blocked only when every picked target is immune (override available).
+  const immunityConfig = immunityConfigFor(ability);
+  const immuneTargets = immunityConfig
+    ? targetCharIds
+        .map((cid) => {
+          const tEffects = getState(cid, 'effects') || [];
+          const immune = tEffects.find(
+            (e) => e.effectId === 'ability-immunity'
+              && e.abilityKey === freqKeyFor(ability)
+              && (immunityConfig.scope !== 'per-caster' || e.appliedBy === character.id)
+              && !(typeof e.expireAtSecs === 'number' && e.expireAtSecs <= nowSecs)
+          );
+          return immune
+            ? {
+                charId: cid,
+                name: characters.find((c) => c.id === cid)?.name || cid,
+                expireAtSecs: immune.expireAtSecs,
+              }
+            : null;
+        })
+        .filter(Boolean)
+    : [];
+  const allTargetsImmune =
+    !!immunityConfig && targetCharIds.length > 0 && immuneTargets.length === targetCharIds.length;
+  const immunityGateOk = !allTargetsImmune || immunityOverride;
+
   // Enemy targets with defense data — used by both the regular resolver and the chain section.
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
 
@@ -209,7 +242,8 @@ const UseAbilityModal = ({
   const castGateOk =
     castOptions.length === 0 || selectedCastOption?.enabled || castOverride;
 
-  const confirmEnabled = (!needsPicker || targets.length > 0) && castGateOk && freqGateOk;
+  const confirmEnabled =
+    (!needsPicker || targets.length > 0) && castGateOk && freqGateOk && immunityGateOk;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -253,6 +287,19 @@ const UseAbilityModal = ({
     const coveredByRoll = new Set(
       rayGroups.flatMap((g) => g.results.filter((r) => r.degree != null).map((r) => r.entryId))
     );
+
+    // Stamp clock-expiring immunity on picked PC targets (Guidance, Tell
+    // Fortune, …). Independent of effects[]; idempotent on already-immune.
+    if (immunityConfig) {
+      applyAbilityImmunity({
+        ability,
+        caster: character,
+        targetCharIds,
+        nowSecs,
+        getState,
+        sendUpdate,
+      });
+    }
 
     if (hasEffects) {
       applyAbility({
@@ -561,6 +608,34 @@ const UseAbilityModal = ({
             >
               Clear lock (GM ruling)
             </button>
+          </section>
+        </>
+      )}
+
+      {/* Target immunity — picked PC targets already immune to this ability */}
+      {immuneTargets.length > 0 && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Immunity</h3>
+            {immuneTargets.map((t) => (
+              <div key={t.charId} className="uam-cost-empty">
+                {t.name} is immune
+                {typeof t.expireAtSecs === 'number'
+                  ? ` — expires at ${expiryLabelSecs(t.expireAtSecs, nowSecs)}`
+                  : ''}
+              </div>
+            ))}
+            {allTargetsImmune && (
+              <label className="uam-cost-override">
+                <input
+                  type="checkbox"
+                  checked={immunityOverride}
+                  onChange={(e) => setImmunityOverride(e.target.checked)}
+                />
+                Override (GM ruling) — use anyway
+              </label>
+            )}
           </section>
         </>
       )}

@@ -20,6 +20,12 @@ const mockCharacters = [
 vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: mockCharacters }),
 }));
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    gameDate: { day: 5, month: 2, year: 4725 },
+    time: { hour: 8, minute: 0, second: 0 },
+  }),
+}));
 
 const mockAppendLog = vi.fn();
 vi.mock('../../hooks/useEncounter', () => ({
