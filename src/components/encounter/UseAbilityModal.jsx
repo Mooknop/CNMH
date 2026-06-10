@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import TargetRollResolver from './TargetRollResolver';
+import MultiRayResolver from './MultiRayResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
 import ChainedSpellSection from './ChainedSpellSection';
 import { useSession } from '../../contexts/SessionContext';
@@ -16,6 +17,7 @@ import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
+import { extractVariableActionCount } from '../../utils/ActionsUtils';
 import './UseAbilityModal.css';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
@@ -79,6 +81,10 @@ const UseAbilityModal = ({
   // with a manual override for table corrections. null = follow the auto step.
   const [mapOverride, setMapOverride] = useState(null);
 
+  // Multi-ray attack spells (Blazing Bolt): chosen ray count. null = default to the
+  // minimum (e.g. 1 ray / 1 action for a per-action spell).
+  const [rayCountOverride, setRayCountOverride] = useState(null);
+
   // Casting resources — which pool pays for the cast, and the empty-pool
   // override for table rulings. null index = default to first enabled option.
   const resources = useCastingResources(character);
@@ -107,6 +113,21 @@ const UseAbilityModal = ({
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
   const effectiveVerb = verb.toLowerCase();
 
+  // Multi-ray attack spells fire one attack roll per ray. `rolls: 'per-action'` makes
+  // the ray count = chosen action count (variable, e.g. Blazing Bolt 1–3); `rollCount: N`
+  // is a fixed multi-ray count. The count drives the number of resolver rows and, for
+  // per-action spells, the action cost of the cast.
+  const perActionRange = ability.rolls === 'per-action' ? extractVariableActionCount(ability.actions) : null;
+  const fixedRayCount  = (typeof ability.rollCount === 'number' && ability.rollCount > 1) ? ability.rollCount : null;
+  const isMultiRay     = perActionRange != null || fixedRayCount != null;
+  const rayMin = perActionRange?.min ?? fixedRayCount ?? 1;
+  const rayMax = perActionRange?.max ?? fixedRayCount ?? 1;
+  const rayCount = Math.min(Math.max(rayCountOverride ?? rayMin, rayMin), rayMax);
+  // Per-action ray spells: the chosen ray count IS the action cost (unless the caller
+  // passed an explicit cost). Other spells keep their parsed cost.
+  const perActionCost = (perActionRange && explicitCost === undefined) ? rayCount : null;
+  const castCost = perActionCost ?? effectiveCost;
+
   // Casting-cost options (slot rank / focus / staff charges / wand / scroll).
   // Only casts pay a resource; plain actions get an empty list and no section.
   const castOptions = effectiveVerb === 'cast' ? resources.optionsFor(ability, castSource) : [];
@@ -118,10 +139,13 @@ const UseAbilityModal = ({
     && (castOptions[0].type === 'cantrip' || castOptions[0].type === 'innate');
   // For spell chains the total cost = parent + chosen spell; use it in the button once known.
   const confirmCost   = (hasChainSpell && spellChainTotalCost != null) ? spellChainTotalCost : effectiveCost;
-  // Spell-chain total is numeric — bypass costToDisplay which would show ability.actions instead.
-  const costDisplay   = (hasChainSpell && typeof confirmCost === 'number')
-    ? String(confirmCost)
-    : costToDisplay(ability, confirmCost);
+  // Per-action ray spells show the chosen numeric count; spell-chain total is numeric
+  // too (bypass costToDisplay, which would show ability.actions instead).
+  const costDisplay   = perActionCost != null
+    ? String(perActionCost)
+    : (hasChainSpell && typeof confirmCost === 'number')
+      ? String(confirmCost)
+      : costToDisplay(ability, confirmCost);
 
   const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character.id);
   const casterEntryId  = casterEntry?.entryId || null;
@@ -169,8 +193,18 @@ const UseAbilityModal = ({
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
-    const rollResults  = resolverRef.current?.getResults() ?? null;
+    const rawResults   = resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
+
+    // Normalise resolver output into ray groups so single-roll and multi-ray casts
+    // share one logging path. Single-roll returns a flat result array → one group
+    // with rayIndex null (no "ray N" prefix). Multi-ray returns [{ rayIndex, results }].
+    const isMultiRayResult = isMultiRay && rollProfile.mode === 'actor-roll';
+    const rayGroups = !rawResults
+      ? []
+      : isMultiRayResult
+        ? rawResults
+        : (rawResults.length ? [{ rayIndex: null, results: rawResults }] : []);
 
     // Spend the casting resource (slot/focus/staff/wand/scroll). The empty-pool
     // override casts without decrementing — the manual pips stay the
@@ -188,7 +222,7 @@ const UseAbilityModal = ({
 
     // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
     const coveredByRoll = new Set(
-      rollResults ? rollResults.filter((r) => r.degree != null).map((r) => r.entryId) : []
+      rayGroups.flatMap((g) => g.results.filter((r) => r.degree != null).map((r) => r.entryId))
     );
 
     if (hasEffects) {
@@ -226,18 +260,21 @@ const UseAbilityModal = ({
       }
     }
 
-    if (rollResults) {
+    if (rayGroups.length) {
       const defLabel = DEFENSE_LABELS[effectiveDefense] || effectiveDefense;
       const degreeMap = effectiveDefense === 'ac'
         ? { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }
         : { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' };
-      rollResults.forEach((r) => {
-        if (!r.degree) return;
-        const degreeLabel = degreeMap[r.degree] || r.degree;
-        appendLog({
-          type:   'action',
-          charId: character.id,
-          text:   `${character.name} ${effectiveVerb} ${ability.name} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}`,
+      rayGroups.forEach((g) => {
+        const rayPrefix = g.rayIndex != null ? ` — ray ${g.rayIndex + 1}` : '';
+        g.results.forEach((r) => {
+          if (!r.degree) return;
+          const degreeLabel = degreeMap[r.degree] || r.degree;
+          appendLog({
+            type:   'action',
+            charId: character.id,
+            text:   `${character.name} ${effectiveVerb} ${ability.name}${rayPrefix} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}`,
+          });
         });
       });
     }
@@ -346,7 +383,7 @@ const UseAbilityModal = ({
 
     const costToSpend = hasChainSpell && chainResults?.totalCost != null
       ? chainResults.totalCost
-      : effectiveCost;
+      : castCost;
     if (costToSpend === 'reaction') {
       spendReaction(`${verb} ${ability.name}`);
     } else if (costToSpend > 0) {
@@ -354,11 +391,14 @@ const UseAbilityModal = ({
     }
 
     // Count attacks for MAP. Multi-roll casts (flurry, multi-ray) increment once
-    // per attack but only after the whole activity — i.e. here, on confirm.
+    // per attack but only after the whole activity — i.e. here, on confirm. Each
+    // Blazing Bolt ray is its own attack, so a 3-ray cast raises MAP by 3.
     if (hasChainStrike && chainResults) {
       recordAttack(chainResults.mode === 'flurry' ? 2 : 1);
     } else if (hasChainSpell && chainResults?.isAttackSpell) {
       recordAttack(1);
+    } else if (isMultiRay && isAttack) {
+      recordAttack(rayCount);
     } else if (isAttack) {
       recordAttack(1);
     }
@@ -392,10 +432,40 @@ const UseAbilityModal = ({
     </div>
   ) : null;
 
+  // Ray-count picker for variable per-action multi-ray spells (Blazing Bolt 1–3).
+  const raySelector = (perActionRange && rayMax > rayMin) ? (
+    <div className="uam-ray-row" role="radiogroup" aria-label="Number of rays">
+      <span className="uam-ray-label">Rays</span>
+      {Array.from({ length: rayMax - rayMin + 1 }, (_, k) => rayMin + k).map((n) => (
+        <button
+          key={n}
+          type="button"
+          className={`uam-ray-btn${rayCount === n ? ' uam-ray-btn--active' : ''}`}
+          aria-pressed={rayCount === n}
+          onClick={() => setRayCountOverride(n)}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
   // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
+  // Multi-ray attack spells render one resolver row per ray instead of a single roll.
   let rollSection = null;
   if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
-    rollSection = (
+    rollSection = isMultiRay ? (
+      <>
+        {raySelector}
+        <MultiRayResolver
+          ref={resolverRef}
+          rayCount={rayCount}
+          enemyTargets={resolverTargets}
+          targetDefense={effectiveDefense}
+          rollBonus={rollProfile.bonus}
+        />
+      </>
+    ) : (
       <TargetRollResolver
         ref={resolverRef}
         enemyTargets={resolverTargets}
