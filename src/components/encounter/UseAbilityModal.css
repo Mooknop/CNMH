@@ -33,6 +33,41 @@
   font-weight: 700;
 }
 
+/* Ray-count picker (multi-ray attack spells, e.g. Blazing Bolt) */
+
+.uam-ray-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0.5rem 0;
+}
+
+.uam-ray-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.uam-ray-btn {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  padding: 2px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--shell-border-strong, var(--color-text-muted));
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.uam-ray-btn--active {
+  background: var(--accent-tint, rgba(255, 255, 255, 0.12));
+  border-color: var(--accent-outline, currentColor);
+  color: var(--accent-text, inherit);
+  font-weight: 700;
+}
+
 /* Casting cost (resource) section */
 
 .uam-cost-options {
