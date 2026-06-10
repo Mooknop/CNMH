@@ -10,7 +10,9 @@ import WandSpells from './WandSpells';
 import EldPowers from './EldPowers';
 import Harrowing from './Harrowing';
 import SpellsHeader from './SpellsHeader';
+import CastSpellModal from '../encounter/CastSpellModal';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useSpellCastFlow } from '../../hooks/useSpellCastFlow';
 import './MagicModal.css';
 
 const CATEGORY_LABELS = {
@@ -31,6 +33,10 @@ const CATEGORY_LABELS = {
  */
 const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
   const [activeCategory, setActiveCategory] = useState(null);
+
+  // Cast buttons appear on the character's turn; the source tag tells the
+  // cast modal which pool (slot/focus/staff/wand/scroll) pays for the spell.
+  const { makeOnCast, castRequest, clearCast } = useSpellCastFlow(character);
 
   const {
     spellcasting,
@@ -92,6 +98,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
               characterLevel={level}
               defenseFilter="all"
               character={character}
+              onCast={makeOnCast('slot')}
             />
           </>
         );
@@ -103,11 +110,16 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
             characterLevel={level}
             defenseFilter="all"
             character={character}
+            onCast={makeOnCast('innate')}
           />
         );
       case 'focus':
         return (
-          <FocusSpellsList character={character} characterColor={themeColor} />
+          <FocusSpellsList
+            character={character}
+            characterColor={themeColor}
+            onCast={makeOnCast('focus')}
+          />
         );
       case 'staff':
         return (
@@ -119,6 +131,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
             defenseFilter="all"
             activeSpellRank="all"
             character={character}
+            onCast={makeOnCast('staff')}
           />
         );
       case 'scrolls':
@@ -130,6 +143,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
             defenseFilter="all"
             activeSpellRank="all"
             character={character}
+            onCast={makeOnCast('scroll')}
           />
         );
       case 'wands':
@@ -141,6 +155,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
             defenseFilter="all"
             activeSpellRank="all"
             character={character}
+            onCast={makeOnCast('wand')}
           />
         );
       case 'eld':
@@ -195,6 +210,19 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
       >
         {activeCategory && renderCategoryContent(activeCategory)}
       </Modal>
+
+      {/* Cast spell modal — opened from SpellCard Cast buttons in encounter mode */}
+      {castRequest && (
+        <CastSpellModal
+          isOpen={!!castRequest}
+          onClose={clearCast}
+          spell={castRequest.spell}
+          cost={castRequest.cost}
+          castSource={castRequest.source}
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
     </>
   );
 };

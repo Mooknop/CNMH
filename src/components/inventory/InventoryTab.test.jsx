@@ -13,6 +13,12 @@ vi.mock('../../utils/InventoryUtils', () => ({
     isEncumbered: used > threshold && used <= limit,
     isOverencumbered: used > limit
   }),
+  isConsumable: (item) => !!(item && item.scroll),
+  remainingQuantity: (item, consumedMap = {}) => {
+    const qty = item?.quantity ?? 1;
+    if (!(item && item.scroll)) return qty;
+    return Math.max(0, qty - ((consumedMap || {})[item.name] || 0));
+  },
 }));
 
 vi.mock('../../hooks/useCharacter', () => ({

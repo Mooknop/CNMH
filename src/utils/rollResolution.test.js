@@ -167,6 +167,63 @@ describe('resolveActionRoll — spell inference', () => {
   });
 });
 
+// ─── Multiple Attack Penalty (mapStep) ───────────────────────────────────────
+describe('resolveActionRoll — mapStep', () => {
+  const strike      = { name: 'Longsword', type: 'melee', attackMod: 9, traits: ['Attack'] };
+  const agileStrike = { name: 'Claw', type: 'melee', attackMod: 9, traits: ['Attack', 'Agile'] };
+
+  it('applies −5/−10 to a strike at steps 1 and 2', () => {
+    expect(resolveActionRoll(strike, baseCharacter, { ...noEffects, mapStep: 1 }).bonus).toBe(4);
+    expect(resolveActionRoll(strike, baseCharacter, { ...noEffects, mapStep: 2 }).bonus).toBe(-1);
+  });
+
+  it('applies −4/−8 to an agile strike', () => {
+    expect(resolveActionRoll(agileStrike, baseCharacter, { ...noEffects, mapStep: 1 }).bonus).toBe(5);
+    expect(resolveActionRoll(agileStrike, baseCharacter, { ...noEffects, mapStep: 2 }).bonus).toBe(1);
+  });
+
+  it('appends a Multiple attack penalty source to the breakdown', () => {
+    const result = resolveActionRoll(strike, baseCharacter, { ...noEffects, mapStep: 1 });
+    expect(result.breakdown.total).toBe(4);
+    expect(result.breakdown.sources).toContainEqual(
+      expect.objectContaining({ label: 'Multiple attack penalty', penalty: -5 })
+    );
+  });
+
+  it('applies to spell attacks with the Attack trait', () => {
+    const cantrip = { name: 'Electric Arc', traits: ['Attack', 'Electricity'] };
+    const at0 = resolveActionRoll(cantrip, baseCharacter, noEffects).bonus;
+    const at1 = resolveActionRoll(cantrip, baseCharacter, { ...noEffects, mapStep: 1 }).bonus;
+    expect(at1).toBe(at0 - 5);
+  });
+
+  it('applies to Attack-trait skill maneuvers (Grapple)', () => {
+    const grapple = { name: 'Grapple', highlightSkill: 'athletics', targetDefense: 'fortitude', traits: ['Attack'] };
+    const at0 = resolveActionRoll(grapple, baseCharacter, noEffects).bonus;
+    const at1 = resolveActionRoll(grapple, baseCharacter, { ...noEffects, mapStep: 1 }).bonus;
+    expect(at1).toBe(at0 - 5);
+  });
+
+  it('does not apply to target-save spells', () => {
+    const fireball = { name: 'Fireball', defense: 'Reflex', traits: ['Fire'] };
+    const at0 = resolveActionRoll(fireball, baseCharacter, noEffects).dc;
+    const at1 = resolveActionRoll(fireball, baseCharacter, { ...noEffects, mapStep: 2 }).dc;
+    expect(at1).toBe(at0);
+  });
+
+  it('does not apply to non-attack abilities', () => {
+    const ability = { name: 'Special', roll: { type: 'flat', bonus: 7 }, targetDefense: 'ac' };
+    expect(resolveActionRoll(ability, baseCharacter, { ...noEffects, mapStep: 2 }).bonus).toBe(7);
+  });
+
+  it('leaves the manual-total (null bonus) path untouched', () => {
+    const action = { name: 'Strike', traits: ['Attack'], targetDefense: 'ac' };
+    const charNoSpellcasting = { ...baseCharacter, spellcasting: null };
+    const result = resolveActionRoll(action, charNoSpellcasting, { ...noEffects, mapStep: 2 });
+    expect(result.bonus).toBeNull();
+  });
+});
+
 // ─── condition / effect netting ───────────────────────────────────────────────
 describe('resolveActionRoll — condition/effect netting', () => {
   const frightened2 = [{ id: 'frightened', value: 2 }];

@@ -8,6 +8,7 @@ const mockSendUpdate = vi.fn();
 const mockAppendLog = vi.fn();
 const mockSpendActions = vi.fn();
 const mockSpendReaction = vi.fn();
+const mockRecordAttack = vi.fn();
 const mockAddSaveRequest = vi.fn();
 // resolveExpireAt mock is retrieved after the vi.mock factory runs
 let mockResolveExpireAt;
@@ -51,9 +52,10 @@ vi.mock('../../hooks/useEncounter', () => ({
 
 vi.mock('../../hooks/useTurnState', () => ({
   useTurnState: () => ({
-    turnState: { actionsSpent: 0, reactionAvailable: true },
+    turnState: { actionsSpent: 0, attacksMade: 0, reactionAvailable: true },
     spendActions: mockSpendActions,
     spendReaction: mockSpendReaction,
+    recordAttack: mockRecordAttack,
   }),
 }));
 
@@ -84,7 +86,7 @@ vi.mock('./ChainedStrikeSection', () => {
   return { default: forwardRef(({ chain }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => ({
-        mode: 'strike',
+        mode: chain.modes?.[0] === 'flurry' ? 'flurry' : 'strike',
         strikeName: 'Unarmed Strike',
         attackBonus: 9,
         damage: '1d6+4 + 1d6',
@@ -419,6 +421,114 @@ describe('CastSpellModal', () => {
       fireEvent.click(screen.getByLabelText('confirm-cast'));
       const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
       expect(logCalls.some((t) => t.includes('Reach Spell') && t.includes('Light'))).toBe(true);
+    });
+  });
+
+  describe('Multiple Attack Penalty tracking', () => {
+    const attackSpell = {
+      id: 'scorching-ray',
+      name: 'Scorching Ray',
+      actions: 'Two Actions',
+      traits: ['Attack', 'Fire'],
+    };
+
+    it('records one attack on confirming an Attack-trait cast', () => {
+      render(<CastSpellModal {...defaultProps} spell={attackSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockRecordAttack).toHaveBeenCalledWith(1);
+    });
+
+    it('does not record an attack for a non-attack spell', () => {
+      render(<CastSpellModal {...defaultProps} spell={spellNoEffects} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockRecordAttack).not.toHaveBeenCalled();
+    });
+
+    it('records one attack for a single chained strike', () => {
+      const chainAbility = {
+        name: 'Inner Upheaval',
+        actions: 'One Action',
+        chain: { into: 'strike', modes: ['strike'], strikeTrait: 'Unarmed' },
+      };
+      render(<CastSpellModal {...defaultProps} spell={chainAbility} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockRecordAttack).toHaveBeenCalledWith(1);
+    });
+
+    it('records two attacks for a flurry chain', () => {
+      const flurry = {
+        name: 'Flurry of Blows',
+        actionCount: 1,
+        chain: { into: 'strike', modes: ['flurry'] },
+      };
+      render(<CastSpellModal {...defaultProps} spell={flurry} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockRecordAttack).toHaveBeenCalledWith(2);
+    });
+  });
+
+  describe('casting resources (slots / cost picker)', () => {
+    const casterChar = {
+      id: 'char-a',
+      name: 'Pellias',
+      level: 5,
+      spellcasting: { ability: 'charisma', proficiency: 1, spell_slots: { 2: 2 } },
+      abilities: { charisma: 18 },
+    };
+    const healSpell = { id: 'heal', name: 'Heal', level: 2, actions: 'Two Actions' };
+
+    it('shows the rank slot cost for a leveled repertoire cast', () => {
+      render(<CastSpellModal {...defaultProps} character={casterChar} spell={healSpell} castSource="slot" />);
+      expect(screen.getByText('Rank 2 slot (2 left)')).toBeInTheDocument();
+    });
+
+    it('spends the slot and logs the source on confirm', () => {
+      render(<CastSpellModal {...defaultProps} character={casterChar} spell={healSpell} castSource="slot" />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 2: 1 }));
+      expect(mockAppendLog).toHaveBeenCalledWith(
+        expect.objectContaining({ text: 'Pellias cast Heal (rank 2 slot)' })
+      );
+    });
+
+    it('cantrips show a no-cost line and spend nothing', () => {
+      const cantrip = { id: 'arc', name: 'Electric Arc', level: 0, actions: 'Two Actions' };
+      render(<CastSpellModal {...defaultProps} character={casterChar} spell={cantrip} castSource="slot" />);
+      expect(screen.getByText('Cantrip — no cost')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const slotWrites = mockSendUpdate.mock.calls.filter(([, type]) => type === 'slots');
+      expect(slotWrites).toHaveLength(0);
+    });
+
+    it('signature spells offer a rank picker', () => {
+      const sigChar = {
+        ...casterChar,
+        spellcasting: { ...casterChar.spellcasting, spell_slots: { 1: 3, 2: 2 } },
+      };
+      const sigSpell = { id: 'heal', name: 'Heal', level: 1, signature: true, actions: 'Two Actions' };
+      render(<CastSpellModal {...defaultProps} character={sigChar} spell={sigSpell} castSource="slot" />);
+      expect(screen.getByRole('radiogroup', { name: 'Casting source' })).toBeInTheDocument();
+      expect(screen.getByText('Rank 1 slot (3 left)')).toBeInTheDocument();
+      expect(screen.getByText('Rank 2 slot (2 left)')).toBeInTheDocument();
+    });
+
+    it('blocks confirm when the pool is empty; override unblocks without spending', () => {
+      const tappedChar = {
+        ...casterChar,
+        spellcasting: { ...casterChar.spellcasting, spell_slots: { 2: 0 } },
+      };
+      render(<CastSpellModal {...defaultProps} character={tappedChar} spell={healSpell} castSource="slot" />);
+      expect(screen.getByLabelText('confirm-cast')).toBeDisabled();
+
+      fireEvent.click(screen.getByRole('checkbox'));
+      expect(screen.getByLabelText('confirm-cast')).toBeEnabled();
+
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const slotWrites = mockSendUpdate.mock.calls.filter(([, type]) => type === 'slots');
+      expect(slotWrites).toHaveLength(0);
+      expect(mockAppendLog).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('override — no resource spent') })
+      );
     });
   });
 

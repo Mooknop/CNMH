@@ -82,4 +82,32 @@ describe('useTurnState', () => {
     act(() => result.current.spendReaction());
     expect(result.current.turnState.actionsLog[0].name).toBe('Reaction');
   });
+
+  describe('recordAttack (MAP tracking)', () => {
+    it('increments attacksMade by 1 by default', () => {
+      const { result } = setup();
+      act(() => result.current.recordAttack());
+      expect(result.current.turnState.attacksMade).toBe(1);
+    });
+
+    it('accumulates and supports multi-attack counts (flurry = 2)', () => {
+      const { result } = setup();
+      act(() => result.current.recordAttack(2));
+      act(() => result.current.recordAttack());
+      expect(result.current.turnState.attacksMade).toBe(3);
+    });
+
+    it('does not touch actionsSpent', () => {
+      const { result } = setup();
+      act(() => result.current.recordAttack());
+      expect(result.current.turnState.actionsSpent).toBe(0);
+    });
+
+    it('resetForNewTurn zeroes attacksMade', () => {
+      const { result } = setup();
+      act(() => result.current.recordAttack(2));
+      act(() => result.current.resetForNewTurn());
+      expect(result.current.turnState.attacksMade).toBe(0);
+    });
+  });
 });

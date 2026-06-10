@@ -1,6 +1,22 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import ScrollSpells from './ScrollSpells';
+
+const mockSpend = vi.fn();
+const mockRestore = vi.fn();
+let mockRemaining;
+let mockConsumedMap;
+
+vi.mock('../../hooks/useCastingResources', () => ({
+  useCastingResources: () => ({
+    consumables: {
+      map: mockConsumedMap,
+      remainingFor: (name) => mockRemaining[name] ?? 1,
+      spend: mockSpend,
+      restore: mockRestore,
+    },
+  }),
+}));
 
 vi.mock('../../utils/SpellUtils', () => ({
   filterSpellsByDefense: (spells, filter) =>
@@ -24,8 +40,8 @@ vi.mock('../../utils/SpellUtils', () => ({
 }));
 
 const baseSpells = [
-  { id: 's1', name: 'Pocket Library', level: 1 },
-  { id: 's2', name: 'Fireball', level: 3, defense: 'Reflex' },
+  { id: 's1', name: 'Pocket Library', level: 1, scrollName: 'Scroll of Pocket Library' },
+  { id: 's2', name: 'Fireball', level: 3, defense: 'Reflex', scrollName: 'Scroll of Fireball' },
 ];
 
 const baseProps = {
@@ -38,6 +54,12 @@ const baseProps = {
 };
 
 describe('ScrollSpells', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRemaining = {};
+    mockConsumedMap = {};
+  });
+
   it('renders spell names as cards', () => {
     render(<ScrollSpells {...baseProps} />);
     expect(screen.getByText('Pocket Library')).toBeInTheDocument();
@@ -72,8 +94,32 @@ describe('ScrollSpells', () => {
     expect(screen.getByText('No scrolls in inventory.')).toBeInTheDocument();
   });
 
-  it('renders no interactive charge bubbles', () => {
+  it('shows a remaining-count pip and label per scroll', () => {
     render(<ScrollSpells {...baseProps} />);
-    expect(screen.queryAllByLabelText(/charge/i)).toHaveLength(0);
+    expect(screen.getAllByLabelText('Unused scroll — tap to consume')).toHaveLength(2);
+    expect(screen.getAllByText('1 left')).toHaveLength(2);
+  });
+
+  it('tapping an unused pip consumes the scroll', () => {
+    render(<ScrollSpells {...baseProps} />);
+    // Rank 1 section renders first → Pocket Library's pip is first.
+    fireEvent.click(screen.getAllByLabelText('Unused scroll — tap to consume')[0]);
+    expect(mockSpend).toHaveBeenCalledWith('Scroll of Pocket Library');
+  });
+
+  it('tapping a consumed pip restores the scroll', () => {
+    mockRemaining = { 'Scroll of Pocket Library': 0 };
+    mockConsumedMap = { 'Scroll of Pocket Library': 1 };
+    render(<ScrollSpells {...baseProps} />);
+    fireEvent.click(screen.getByLabelText('Consumed scroll — tap to restore'));
+    expect(mockRestore).toHaveBeenCalledWith('Scroll of Pocket Library');
+  });
+
+  it('marks fully-consumed scrolls as used up', () => {
+    mockRemaining = { 'Scroll of Fireball': 0 };
+    mockConsumedMap = { 'Scroll of Fireball': 1 };
+    render(<ScrollSpells {...baseProps} />);
+    expect(screen.getByText('Used up')).toBeInTheDocument();
+    expect(screen.getByText('1 left')).toBeInTheDocument();
   });
 });

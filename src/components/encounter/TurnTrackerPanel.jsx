@@ -22,12 +22,11 @@ const MOVE_ACTIONS = [
   { type: 'stride', label: 'Stride', cost: 1 },
 ];
 
+// Derived from defaultTurnState so new fields (attacksMade, …) can't drift.
 const RESET_STATE = {
-  actionsSpent: 0,
+  ...defaultTurnState(),
   reactionAvailable: true,
-  reactionSpent: false,
   hasStartedFirstTurn: true,
-  actionsLog: [],
 };
 
 const writeLocal = (key, value) => {
@@ -183,6 +182,8 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
 
   const { actionsSpent, reactionAvailable, reactionSpent, hasStartedFirstTurn } =
     turnState || defaultTurnState();
+  const attacksMade = turnState?.attacksMade ?? 0;
+  const mapPenalty = Math.min(attacksMade, 2) * 5;
 
   const canSubmit = isMyTurn && actionsSpent <= 3;
 
@@ -335,6 +336,16 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           </div>
 
           <ReactionIcon state={reactionState} />
+
+          {attacksMade > 0 && (
+            <span
+              className="ttp-map-chip"
+              title="Multiple Attack Penalty (−4/−8 with agile weapons)"
+              aria-label={`Multiple Attack Penalty −${mapPenalty}`}
+            >
+              MAP −{mapPenalty}
+            </span>
+          )}
 
           {moveStage !== null && pendingMoveType === 'stride' && (
             <span className="ttp-move-dist" aria-label="Stride distance">

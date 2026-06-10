@@ -117,6 +117,49 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText('Actions spent')).toBeInTheDocument();
   });
 
+  it('shows the MAP chip after recorded attacks and clamps at −10', () => {
+    let drv, tsDriver;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias]));
+    const [p] = drv.encounter.order;
+    act(() => drv.setInitiative(p.entryId, 15));
+    act(() => drv.beginRound1());
+
+    expect(screen.queryByText(/^MAP/)).toBeNull();
+    act(() => tsDriver.recordAttack());
+    expect(screen.getByText('MAP −5')).toBeInTheDocument();
+    act(() => tsDriver.recordAttack());
+    expect(screen.getByText('MAP −10')).toBeInTheDocument();
+    act(() => tsDriver.recordAttack());
+    expect(screen.getByText('MAP −10')).toBeInTheDocument();
+  });
+
+  it('MAP chip resets on a new turn', () => {
+    let drv, tsDriver;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias]));
+    const [p] = drv.encounter.order;
+    act(() => drv.setInitiative(p.entryId, 15));
+    act(() => drv.beginRound1());
+
+    act(() => tsDriver.recordAttack(2));
+    expect(screen.getByText('MAP −10')).toBeInTheDocument();
+    act(() => tsDriver.resetForNewTurn('1:0'));
+    expect(screen.queryByText(/^MAP/)).toBeNull();
+  });
+
   it('hides turn controls when it is not my turn', () => {
     let drv;
     render(

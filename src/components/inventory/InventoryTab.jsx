@@ -3,7 +3,7 @@ import './InventoryTab.css';
 import './ItemCard.css';
 import ItemCard from './ItemCard';
 import ContainersList from './ContainersList';
-import { formatBulk, getBulkStatus } from '../../utils/InventoryUtils';
+import { formatBulk, getBulkStatus, isConsumable, remainingQuantity } from '../../utils/InventoryUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 
@@ -21,6 +21,9 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const charData = useCharacter(character);
   // Personal gold is GM-set and live-synced; shown here read-only.
   const [gold] = useSyncedState(`cnmh_gold_${character?.id}`, 0);
+  // Consumed-consumables overlay — fully-used items disappear from the list
+  // (the GM cleanup tool removes them from authored content later).
+  const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
@@ -36,10 +39,16 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     return characterColor; // Use character's color theme
   };
 
-  // Sort inventory items alphabetically by name
-  const sortedInventory = [...inventory].sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-  );
+  // Hide fully-consumed consumables; show live remaining counts on the rest.
+  // Sort inventory items alphabetically by name.
+  const sortedInventory = inventory
+    .filter((item) => !isConsumable(item) || remainingQuantity(item, consumed) > 0)
+    .map((item) =>
+      isConsumable(item)
+        ? { ...item, quantity: remainingQuantity(item, consumed) }
+        : item
+    )
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   return (
     <div className="inventory-tab">

@@ -222,3 +222,23 @@ export const isItemMagical = (item) => {
   if (item.scroll || item.wand) return true;
   return ((item.traits) || []).some((t) => String(t).toLowerCase() === 'magical');
 };
+
+/**
+ * Whether an item is a tracked consumable — one whose copies are used up via
+ * the player-writable `cnmh_consumed_<charId>` overlay (inventory itself is
+ * GM-gated content). Today that's scrolls; #217 extends this to other
+ * consumables (potions, talismans, …).
+ */
+export const isConsumable = (item) => !!(item && item.scroll);
+
+/**
+ * Copies of an item still unspent: authored quantity minus the consumed-overlay
+ * count. Non-consumables always report their full quantity.
+ * @param {Object} item        - Resolved inventory item
+ * @param {Object} consumedMap - Value of `cnmh_consumed_<charId>` ({ [name]: count })
+ */
+export const remainingQuantity = (item, consumedMap = {}) => {
+  const qty = item?.quantity ?? 1;
+  if (!isConsumable(item)) return qty;
+  return Math.max(0, qty - ((consumedMap || {})[item.name] || 0));
+};

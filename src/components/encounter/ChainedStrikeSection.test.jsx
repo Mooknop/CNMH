@@ -229,4 +229,79 @@ describe('ChainedStrikeSection', () => {
     );
     expect(screen.getByText(/No qualifying strikes/i)).toBeInTheDocument();
   });
+
+  describe('Multiple Attack Penalty', () => {
+    const flurryChain = { ...strikeChain, modes: ['flurry'] };
+
+    beforeEach(() => {
+      // Mirror the real resolver: −5 per MAP step off the base bonus.
+      resolveActionRoll.mockImplementation((ability, char, opts = {}) => ({
+        mode: 'actor-roll',
+        bonus: 8 - (opts.mapStep || 0) * 5,
+      }));
+    });
+
+    it('flurry strike 2 resolver gets the next MAP step bonus', () => {
+      render(
+        <ChainedStrikeSection
+          character={character}
+          chain={flurryChain}
+          enemyTargets={enemyTargets}
+          conditions={conditions}
+          effects={effects}
+          mapStep={0}
+        />
+      );
+      // strike 1: 8 + 1 chain bonus = 9; strike 2: (8−5) + 1 = 4
+      const resolvers = screen.getAllByTestId('resolver-1');
+      expect(resolvers[0]).toHaveTextContent('bonus=9');
+      expect(resolvers[1]).toHaveTextContent('bonus=4');
+    });
+
+    it('labels strike 2 with the applied penalty (−5 non-agile)', () => {
+      render(
+        <ChainedStrikeSection
+          character={character}
+          chain={flurryChain}
+          enemyTargets={enemyTargets}
+          conditions={conditions}
+          effects={effects}
+          mapStep={0}
+        />
+      );
+      expect(screen.getByText('Strike 2 (MAP -5):')).toBeInTheDocument();
+      expect(screen.queryByText(/MAP not applied/)).not.toBeInTheDocument();
+    });
+
+    it('labels strike 2 with −4 for an agile strike', () => {
+      render(
+        <ChainedStrikeSection
+          character={character}
+          chain={flurryChain}
+          enemyTargets={enemyTargets}
+          conditions={conditions}
+          effects={effects}
+          mapStep={0}
+        />
+      );
+      fireEvent.change(screen.getByLabelText('strike picker'), { target: { value: 'Claw' } });
+      expect(screen.getByText('Strike 2 (MAP -4):')).toBeInTheDocument();
+    });
+
+    it('passes the incoming mapStep through and clamps strike 2 at step 2', () => {
+      render(
+        <ChainedStrikeSection
+          character={character}
+          chain={flurryChain}
+          enemyTargets={enemyTargets}
+          conditions={conditions}
+          effects={effects}
+          mapStep={2}
+        />
+      );
+      const calls = resolveActionRoll.mock.calls;
+      expect(calls.some(([, , opts]) => opts.mapStep === 2)).toBe(true);
+      expect(calls.every(([, , opts]) => opts.mapStep <= 2)).toBe(true);
+    });
+  });
 });

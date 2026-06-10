@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 
 export const defaultTurnState = () => ({
   actionsSpent: 0,
+  attacksMade: 0,
   reactionAvailable: false,
   reactionSpent: false,
   hasStartedFirstTurn: false,
@@ -47,17 +48,26 @@ export const useTurnState = (charId) => {
     [setTurnState]
   );
 
+  // Attacks made this turn — drives the Multiple Attack Penalty step.
+  // Older persisted states lack the field, hence the ?? 0.
+  const recordAttack = useCallback(
+    (count = 1) =>
+      setTurnState((cur) => {
+        const base = cur || defaultTurnState();
+        return { ...base, attacksMade: (base.attacksMade ?? 0) + count };
+      }),
+    [setTurnState]
+  );
+
   // turnToken identifies the turn this reset corresponds to (e.g. "round:index").
   // Persisting it lets a freshly-mounted panel tell "new turn" (reset) apart from
   // "remounted mid-turn" (don't wipe actions already spent).
   const resetForNewTurn = useCallback(
     (turnToken = null) =>
       setTurnState(() => ({
-        actionsSpent: 0,
+        ...defaultTurnState(),
         reactionAvailable: true,
-        reactionSpent: false,
         hasStartedFirstTurn: true,
-        actionsLog: [],
         turnToken,
       })),
     [setTurnState]
@@ -67,6 +77,7 @@ export const useTurnState = (charId) => {
     turnState: turnState || defaultTurnState(),
     spendActions,
     spendReaction,
+    recordAttack,
     resetForNewTurn,
   };
 };

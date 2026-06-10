@@ -1,0 +1,77 @@
+/* UseAbilityModal — MAP override toggle + casting cost section */
+
+.uam-map-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0.5rem 0;
+}
+
+.uam-map-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.uam-map-btn {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--shell-border-strong, var(--color-text-muted));
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.uam-map-btn--active {
+  background: var(--accent-tint, rgba(255, 255, 255, 0.12));
+  border-color: var(--accent-outline, currentColor);
+  color: var(--accent-text, inherit);
+  font-weight: 700;
+}
+
+/* Casting cost (resource) section */
+
+.uam-cost-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0.25rem 0;
+}
+
+.uam-cost-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm, 0.85rem);
+  cursor: pointer;
+}
+
+.uam-cost-option--disabled {
+  opacity: 0.6;
+}
+
+.uam-cost-single {
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+  margin: 0.25rem 0;
+}
+
+.uam-cost-empty {
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-danger);
+  margin: 0.25rem 0;
+}
+
+.uam-cost-override {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--color-text-muted);
+  margin: 0.25rem 0;
+  cursor: pointer;
+}

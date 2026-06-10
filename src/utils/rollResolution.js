@@ -12,6 +12,7 @@ import { getSkillModifier, SKILL_ABILITY_MAP } from './CharacterUtils';
 import { calculateSpellStats } from './SpellUtils';
 import { computeConditionEffects } from './ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from './EffectUtils';
+import { isAttackAbility, mapPenaltyFor } from './map';
 
 // Maps the capitalized spell.defense field ("Reflex") to the lowercase defense key used everywhere else.
 export function mapSpellDefense(d) {
@@ -34,6 +35,8 @@ function netForStat(stat, conditionEffects, effectBonuses) {
  * @param {Array}  [opts.conditions=[]]      - Active conditions from cnmh_conditions_{id}
  * @param {Array}  [opts.effects=[]]         - Active effects from useEffects(id).effects
  * @param {Array}  [opts.effectCatalog]      - Optional override for PF2E_EFFECTS catalog
+ * @param {number} [opts.mapStep=0]          - Multiple Attack Penalty step (0–2); applies only
+ *                                             to actor-roll results for Attack-trait abilities
  *
  * @returns {{
  *   mode:      'actor-roll'|'target-save'|'none',
@@ -45,7 +48,28 @@ function netForStat(stat, conditionEffects, effectBonuses) {
  *   breakdown: Object|null,   // { base, total, sources } for tooltip display
  * }}
  */
-export function resolveActionRoll(ability, character, { conditions = [], effects = [], effectCatalog } = {}) {
+export function resolveActionRoll(ability, character, opts = {}) {
+  const result = resolveBase(ability, character, opts);
+
+  // Apply MAP post-hoc so every attack path (strike, spell attack, Attack-trait
+  // maneuver) gets it without touching each branch. Target-save spells, non-attack
+  // abilities and the manual-total (bonus: null) path are untouched.
+  const penalty = mapPenaltyFor(ability, opts.mapStep ?? 0);
+  if (penalty !== 0 && result.mode === 'actor-roll' && result.bonus != null && isAttackAbility(ability)) {
+    return {
+      ...result,
+      bonus: result.bonus + penalty,
+      breakdown: result.breakdown && {
+        ...result.breakdown,
+        total: result.breakdown.total + penalty,
+        sources: [...result.breakdown.sources, { label: 'Multiple attack penalty', penalty, isBuff: false }],
+      },
+    };
+  }
+  return result;
+}
+
+function resolveBase(ability, character, { conditions = [], effects = [], effectCatalog } = {}) {
   const none = { mode: 'none', bonus: null, dc: null, defense: null, skill: null, source: 'none', breakdown: null };
 
   if (!ability || !character) return none;

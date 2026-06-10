@@ -27,7 +27,7 @@ const WandInfoBox = ({ themeColor }) => (
 const wandKey = (spell) => spell.wandName || spell.id;
 
 // State cycle per wand: 'available' → 'used' → 'overcharged' → 'available'
-const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, character }) => {
+const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, character, onCast }) => {
   const characterKey = character?.id || 'unknown';
   const [wandStates, setWandStates] = useLocalStorage(
     `cnmh_wands_${characterKey}`,
@@ -78,6 +78,8 @@ const WandSpells = ({ spells, themeColor, defenseFilter, activeSpellRank, charac
                     spell={spell}
                     themeColor={themeColor}
                     character={character}
+                    encounterMode={!!onCast}
+                    onCast={onCast}
                   />
                   <div className="wand-control">
                     {state !== 'overcharged' ? (

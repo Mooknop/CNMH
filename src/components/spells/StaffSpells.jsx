@@ -21,7 +21,7 @@ const StaffInfoBox = ({ themeColor }) => (
   </div>
 );
 
-const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character }) => {
+const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character, onCast }) => {
   const chargesMax = staff.charges?.max ?? 0;
   const [chargesSpent, setChargesSpent] = useLocalStorage(
     `cnmh_staff_${character?.id || 'unknown'}`,
@@ -95,6 +95,8 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
                 spell={spell}
                 themeColor={themeColor}
                 character={character}
+                encounterMode={!!onCast}
+                onCast={onCast}
               />
             ))}
           </div>

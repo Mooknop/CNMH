@@ -67,6 +67,7 @@ const InnateCastingList = ({ spells, themeColor, characterLevel, defenseFilter, 
                       themeColor={themeColor}
                       characterLevel={characterLevel}
                       character={character}
+                      encounterMode={!!onCast}
                       onCast={onCast}
                     />
                   ))}
