@@ -1,0 +1,115 @@
+.sc-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sc-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sc-row label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.sc-row input,
+.sc-row select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+}
+
+.sc-inline {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.sc-row--inline {
+  flex: 1;
+}
+
+/* Allowed-skill rows */
+.sc-skills-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+}
+
+.sc-skills-heading {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.sc-skill-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.sc-skill-row select {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+}
+
+.sc-skill-row input {
+  width: 72px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+}
+
+.sc-remove-btn {
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-tertiary);
+}
+
+.sc-remove-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sc-add-btn {
+  align-self: flex-start;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  background: var(--accent-tint);
+  border: 1px solid var(--accent-outline);
+  color: var(--accent-text);
+  transition: background 0.15s;
+}
+
+.sc-add-btn:hover {
+  background: var(--accent-tint-hover);
+}
+
+.sc-active-warning {
+  margin: 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+.sc-send-btn {
+  margin-top: var(--space-1);
+  width: 100%;
+}
