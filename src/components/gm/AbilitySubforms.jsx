@@ -48,6 +48,26 @@ export const rollFromForm = (f) => {
   return out;
 };
 
+// Codec for the optional ability.frequencyRule object ({ per, uses }) — the
+// structured cooldown the frequency engine enforces (#218). Kept separate from
+// the free-text `frequency` string, which stays display-only. Same round-trip
+// contract as roll: delete from `rest` on toForm, emit only when `per` is set.
+
+export const FREQUENCY_PER_OPTIONS = ['turn', 'round', 'hour', 'day', 'week'];
+
+export const frequencyRuleToForm = (r) => ({
+  per:  FREQUENCY_PER_OPTIONS.includes(r?.per) ? r.per : '',
+  uses: r?.uses != null ? String(r.uses) : '1',
+});
+
+export const frequencyRuleFromForm = (f) => {
+  if (!f || !f.per) return null;
+  const out = { per: f.per, uses: 1 };
+  const n = parseInt(f.uses, 10);
+  if (!isNaN(n) && n >= 1) out.uses = n;
+  return out;
+};
+
 export const RollSourceControl = ({ value, onChange, idPrefix }) => {
   const set = (patch) => onChange({ ...value, ...patch });
   return (
@@ -458,6 +478,7 @@ const abilityToForm = (s) => {
   delete rest.roll;
   delete rest.foundryEffect;
   delete rest.chain;
+  delete rest.frequencyRule;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -478,6 +499,7 @@ const abilityToForm = (s) => {
     roll: rollToForm(src.roll),
     foundryEffect: foundryEffectToForm(src.foundryEffect),
     chain: chainToForm(src.chain),
+    frequencyRule: frequencyRuleToForm(src.frequencyRule),
     rest,
   };
 };
@@ -501,6 +523,8 @@ const abilityFromForm = (f) => {
   if (foundryEffect) out.foundryEffect = foundryEffect;
   const chain = chainFromForm(f.chain);
   if (chain) out.chain = chain;
+  const frequencyRule = frequencyRuleFromForm(f.frequencyRule);
+  if (frequencyRule) out.frequencyRule = frequencyRule;
   return out;
 };
 
@@ -599,6 +623,49 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
             onChange={(e) => setStr('frequency', e.target.value)}
           />
         </div>
+      </div>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>frequency rule (enforced)</label>
+          <select
+            aria-label={`${idPrefix}-frequency-per`}
+            value={(value.frequencyRule || frequencyRuleToForm(null)).per}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                frequencyRule: {
+                  ...(value.frequencyRule || frequencyRuleToForm(null)),
+                  per: e.target.value,
+                },
+              })
+            }
+          >
+            <option value="">— (untracked)</option>
+            {FREQUENCY_PER_OPTIONS.map((per) => (
+              <option key={per} value={per}>per {per}</option>
+            ))}
+          </select>
+        </div>
+        {(value.frequencyRule || frequencyRuleToForm(null)).per && (
+          <div className="form-group">
+            <label>uses</label>
+            <input
+              type="number"
+              min="1"
+              aria-label={`${idPrefix}-frequency-uses`}
+              value={(value.frequencyRule || frequencyRuleToForm(null)).uses}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  frequencyRule: {
+                    ...(value.frequencyRule || frequencyRuleToForm(null)),
+                    uses: e.target.value,
+                  },
+                })
+              }
+            />
+          </div>
+        )}
       </div>
       <div className="form-group">
         <label>description</label>

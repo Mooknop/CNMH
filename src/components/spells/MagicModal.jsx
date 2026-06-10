@@ -160,7 +160,12 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
         );
       case 'eld':
         return (
-          <EldPowers eldPowers={eldPowers} themeColor={themeColor} characterLevel={level} />
+          <EldPowers
+            eldPowers={eldPowers}
+            themeColor={themeColor}
+            characterLevel={level}
+            character={character}
+          />
         );
       case 'harrow':
         return <Harrowing character={character} themeColor={themeColor} />;

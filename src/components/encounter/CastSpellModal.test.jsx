@@ -22,6 +22,13 @@ vi.mock('../../hooks/useEffects', () => ({
   useEffects: () => ({ effects: [], removeEffect: vi.fn() }),
 }));
 
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    gameDate: { day: 5, month: 2, year: 4725 },
+    time: { hour: 8, minute: 0, second: 0 },
+  }),
+}));
+
 vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({
     characters: [
