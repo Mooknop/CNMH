@@ -619,6 +619,20 @@
   border-style: dashed;
 }
 
+/* Bulk panel: chips queued for removal */
+.gm-lore-tag.removing {
+  background: var(--d-cf-bg);
+  color: var(--d-cf-fg);
+  border-color: transparent;
+  text-decoration: line-through;
+}
+
+.gm-lore-bulk-title {
+  margin: 0 0 var(--space-3);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
 /* ── Field group (column label + input) ──────────────────── */
 /* Slice 3 master/detail forms use this instead of .form-group */
 .gm-fg {
@@ -728,8 +742,53 @@
   overflow-y: auto;
 }
 
+.gm-ped-toolbar {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .gm-ped-add {
-  width: 100%;
+  flex: 1;
+}
+
+.gm-ped-select-toggle {
+  flex: none;
+}
+
+.gm-ped-select-toggle.active {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
+}
+
+/* Selection-mode bar: count + select-all / none */
+.gm-ped-selectbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.gm-ped-selectbar .gm-count {
+  flex: 1;
+  margin: 0;
+}
+
+/* Checkbox row variant of .gm-ped-item (selection mode) */
+.gm-ped-checkrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.gm-ped-checkrow input[type='checkbox'] {
+  flex: none;
+  margin-top: 3px;
+  accent-color: var(--accent-outline);
+}
+
+.gm-ped-checkrow-name {
+  min-width: 0;
 }
 
 .gm-ped-search {
