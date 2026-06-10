@@ -183,6 +183,8 @@ export const useCharacter = (character) => {
     const staffActive = staff ? itemAbilitiesActive(staffEntry) : false;
     const staffSpells = (staff?.spells || []).map((s) => ({
       ...s,
+      fromStaff: true,
+      staffName: staff?.name || staffItem?.name || 'Staff',
       active: staffActive,
     }));
 

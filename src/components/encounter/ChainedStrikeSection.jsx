@@ -9,6 +9,7 @@ import TargetRollResolver from './TargetRollResolver';
 import { useCharacter } from '../../hooks/useCharacter';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { mapPenaltyFor } from '../../utils/map';
 
 const ChainedStrikeSection = forwardRef(({
   character,
@@ -16,6 +17,7 @@ const ChainedStrikeSection = forwardRef(({
   enemyTargets,
   conditions,
   effects,
+  mapStep = 0,
 }, ref) => {
   const { strikes } = useCharacter(character);
 
@@ -35,12 +37,22 @@ const ChainedStrikeSection = forwardRef(({
   const selectedStrike = filteredStrikes.find((s) => s.name === selectedStrikeName) ?? filteredStrikes[0] ?? null;
 
   const baseRoll = selectedStrike
-    ? resolveActionRoll(selectedStrike, character, { conditions, effects })
+    ? resolveActionRoll(selectedStrike, character, { conditions, effects, mapStep })
     : { mode: 'none', bonus: null };
 
   const augmentedBonus = baseRoll.bonus != null
     ? baseRoll.bonus + (chain.attackBonus || 0)
     : null;
+
+  // Flurry strike 2 is one MAP step deeper (agile-aware via the strike's traits).
+  const strike2Step = Math.min(mapStep + 1, 2);
+  const strike2Roll = selectedStrike
+    ? resolveActionRoll(selectedStrike, character, { conditions, effects, mapStep: strike2Step })
+    : { mode: 'none', bonus: null };
+  const strike2Bonus = strike2Roll.bonus != null
+    ? strike2Roll.bonus + (chain.attackBonus || 0)
+    : null;
+  const strike2Penalty = selectedStrike ? mapPenaltyFor(selectedStrike, strike2Step) : 0;
 
   const augmentedDamage = selectedStrike
     ? (chain.damageBonus ? `${selectedStrike.damage} + ${chain.damageBonus}` : selectedStrike.damage)
@@ -127,13 +139,13 @@ const ChainedStrikeSection = forwardRef(({
       {selectedMode === 'flurry' && (
         <div style={{ marginTop: '0.75rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>
-            Strike 2 (MAP not applied this version):
+            Strike 2 (MAP {formatModifier(strike2Penalty)}):
           </div>
           <TargetRollResolver
             ref={resolver2Ref}
             enemyTargets={enemyTargets}
             targetDefense="ac"
-            rollBonus={augmentedBonus}
+            rollBonus={strike2Bonus}
           />
         </div>
       )}

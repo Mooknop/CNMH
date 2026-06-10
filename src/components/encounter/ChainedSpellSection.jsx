@@ -10,6 +10,7 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, us
 import TargetRollResolver from './TargetRollResolver';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { isAttackAbility } from '../../utils/map';
 
 // Same parser as UseAbilityModal — avoids a circular import.
 const parseSpellCost = (actionsText) => {
@@ -38,6 +39,7 @@ const ChainedSpellSection = forwardRef(({
   conditions,
   effects,
   onTotalCostChange,
+  mapStep = 0,
 }, ref) => {
   const filteredSpells = useMemo(() => {
     const spells = character?.spellcasting?.spells || [];
@@ -62,9 +64,9 @@ const ChainedSpellSection = forwardRef(({
   const totalCost = typeof spellCost === 'number' ? parentNum + spellCost : parentCost;
 
   const rollProfile = useMemo(() => selectedSpell
-    ? resolveActionRoll(selectedSpell, character, { conditions, effects })
+    ? resolveActionRoll(selectedSpell, character, { conditions, effects, mapStep })
     : { mode: 'none', bonus: null, dc: null, defense: null },
-  [selectedSpell, character, conditions, effects]);
+  [selectedSpell, character, conditions, effects, mapStep]);
 
   const resolverTargets = rollProfile.mode === 'actor-roll'
     ? enemyTargets.filter((e) => e.defenses)
@@ -85,6 +87,8 @@ const ChainedSpellSection = forwardRef(({
         spellName:   selectedSpell.name,
         spellCost,
         totalCost,
+        spellRank:     selectedSpell.level ?? 0,
+        isAttackSpell: isAttackAbility(selectedSpell),
         rollResults: resolverRef.current?.getResults() ?? null,
         saveTargets: saveTargets.length > 0 ? saveTargets : null,
         rollProfile,

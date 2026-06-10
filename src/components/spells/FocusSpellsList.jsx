@@ -5,7 +5,7 @@ import SpellCard from './SpellCard';
 import { useContent } from '../../contexts/ContentContext';
 import { spellCatalogMap, resolveFocusSpells } from '../../utils/contentUtils';
 
-const FocusSpellsList = ({ character, characterColor }) => {
+const FocusSpellsList = ({ character, characterColor, onCast }) => {
   const themeColor = characterColor || 'var(--color-primary)';
   const { spells: catalogSpells } = useContent();
   const spellMap = useMemo(() => spellCatalogMap(catalogSpells), [catalogSpells]);
@@ -111,6 +111,8 @@ const FocusSpellsList = ({ character, characterColor }) => {
                 themeColor={themeColor}
                 characterLevel={character.level}
                 character={character}
+                encounterMode={!!onCast}
+                onCast={onCast}
               />
             ))}
           </div>

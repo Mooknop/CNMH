@@ -171,6 +171,19 @@
   font-weight: 700;
 }
 
+/* Multiple Attack Penalty chip — appears after the first attack each turn */
+.ttp-map-chip {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-danger);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 1px 8px;
+  white-space: nowrap;
+}
+
 /* Reaction icon — gold to distinguish from action pips */
 .ttp-reaction {
   font-size: var(--text-xl);

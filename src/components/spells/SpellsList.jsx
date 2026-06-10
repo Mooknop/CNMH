@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import './SpellsList.css';
 
 import SpellsHeader from './SpellsHeader';
@@ -21,7 +21,7 @@ import {
 import Harrowing from './Harrowing';
 import CastSpellModal from '../encounter/CastSpellModal';
 import { useCharacter } from '../../hooks/useCharacter';
-import { useEncounter } from '../../hooks/useEncounter';
+import { useSpellCastFlow } from '../../hooks/useSpellCastFlow';
 
 /**
  * Main component for displaying spells in different categories
@@ -34,17 +34,11 @@ const SpellsList = ({ character, characterColor }) => {
   const [activeSpellRank, setActiveSpellRank] = useState('all');
   const [defenseFilter, setDefenseFilter] = useState('all');
   const [viewMode, setViewMode] = useState(null); // Initialize to null, will be set after determining available modes
-  const [castingSpell, setCastingSpell] = useState(null);
 
-  // Encounter mode: show Cast buttons when it's this character's turn
-  const { encounter } = useEncounter();
-  const currentEntry = encounter?.order?.[encounter?.currentTurnIndex];
-  const isMyTurn =
-    !!(encounter?.active &&
-      encounter.phase === 'in-progress' &&
-      currentEntry?.kind === 'pc' &&
-      currentEntry?.charId === character?.id);
-  const onCast = useCallback((spell) => setCastingSpell(spell), []);
+  // Encounter mode: show Cast buttons when it's this character's turn.
+  // makeOnCast(source) tags the request with its casting source (slot/focus/…)
+  // so the cast modal knows which pool pays for it.
+  const { makeOnCast, castRequest, clearCast } = useSpellCastFlow(character);
 
   // Data layer — all character reads go through this hook
   const {
@@ -272,9 +266,10 @@ const SpellsList = ({ character, characterColor }) => {
           characterLevel={level}
           defenseFilter={defenseFilter}
           character={character}
+          onCast={makeOnCast('slot')}
         />
       )}
-      
+
       {viewMode === 'innate' && hasInnate && (
         <InnateCastingList
           spells={spellsToDisplay}
@@ -282,17 +277,18 @@ const SpellsList = ({ character, characterColor }) => {
           characterLevel={level}
           defenseFilter={defenseFilter}
           character={character}
-          onCast={isMyTurn ? onCast : undefined}
+          onCast={makeOnCast('innate')}
         />
       )}
-      
+
       {viewMode === 'focus' && hasFocus && (
-        <FocusSpellsList 
-          character={character} 
-          characterColor={themeColor} 
+        <FocusSpellsList
+          character={character}
+          characterColor={themeColor}
+          onCast={makeOnCast('focus')}
         />
       )}
-      
+
       {viewMode === 'staff' && hasStaff && (
         <StaffSpells
           staff={staff}
@@ -302,9 +298,10 @@ const SpellsList = ({ character, characterColor }) => {
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
+          onCast={makeOnCast('staff')}
         />
       )}
-      
+
       {viewMode === 'scrolls' && hasScrolls && (
         <ScrollSpells
           spells={scrollSpells}
@@ -313,6 +310,7 @@ const SpellsList = ({ character, characterColor }) => {
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
+          onCast={makeOnCast('scroll')}
         />
       )}
 
@@ -324,6 +322,7 @@ const SpellsList = ({ character, characterColor }) => {
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
+          onCast={makeOnCast('wand')}
         />
       )}
 
@@ -353,11 +352,13 @@ const SpellsList = ({ character, characterColor }) => {
       )}
 
       {/* Cast spell modal — opened from SpellCard Cast buttons in encounter mode */}
-      {castingSpell && (
+      {castRequest && (
         <CastSpellModal
-          isOpen={!!castingSpell}
-          onClose={() => setCastingSpell(null)}
-          spell={castingSpell}
+          isOpen={!!castRequest}
+          onClose={clearCast}
+          spell={castRequest.spell}
+          cost={castRequest.cost}
+          castSource={castRequest.source}
           character={character}
           themeColor={themeColor}
         />

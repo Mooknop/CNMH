@@ -11,6 +11,7 @@ import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
 import ItemEditModal from '../../components/gm/ItemEditModal';
 import EntryListEditor from '../../components/gm/EntryListEditor';
 import ImageField from '../../components/gm/ImageField';
+import ConsumablesCleanup from '../../components/gm/ConsumablesCleanup';
 import {
   strikeToForm,
   strikeFromForm,
@@ -1380,6 +1381,9 @@ const GmCharacters = () => {
           onRestored={onRestored}
         />
       ) : null}
+
+      {/* Live consumable usage + cleanup of fully-used items */}
+      <ConsumablesCleanup />
     </div>
   );
 };

@@ -10,10 +10,13 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useEffects } from '../../hooks/useEffects';
+import { useCastingResources } from '../../hooks/useCastingResources';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
+import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
+import './UseAbilityModal.css';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
 const parseActionCost = (actionsText) => {
@@ -42,11 +45,12 @@ const costToDisplay = (ability, explicitCost) => {
  * If the ability has structured effects[] or grants[], shows a shared TargetPicker
  * and applies them to the chosen targets on confirm. Otherwise just logs the use.
  *
- * @param {Object}        ability    - The action / spell object
- * @param {number|string} [cost]     - Explicit action cost (optional; parsed from ability.actions if omitted)
- * @param {string}        verb       - 'Cast' | 'Use' — shown in title and confirm button
- * @param {Object}        character  - The acting character
- * @param {string}        themeColor - Theme colour
+ * @param {Object}        ability      - The action / spell object
+ * @param {number|string} [cost]       - Explicit action cost (optional; parsed from ability.actions if omitted)
+ * @param {string}        verb         - 'Cast' | 'Use' — shown in title and confirm button
+ * @param {string}        [castSource] - Which list the cast started from ('slot'|'focus'|'staff'|'wand'|'scroll'|'innate')
+ * @param {Object}        character    - The acting character
+ * @param {string}        themeColor   - Theme colour
  */
 const UseAbilityModal = ({
   isOpen,
@@ -54,13 +58,15 @@ const UseAbilityModal = ({
   ability,
   cost: explicitCost,
   verb = 'Use',
+  castSource,
   character,
   themeColor,
 }) => {
   const { getState, sendUpdate } = useSession();
   const { characters } = useContent();
   const { encounter, appendLog, addSaveRequest } = useEncounter();
-  const { spendActions, spendReaction } = useTurnState(character?.id || 'nobody');
+  const { turnState, spendActions, spendReaction, recordAttack } =
+    useTurnState(character?.id || 'nobody');
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
@@ -68,6 +74,16 @@ const UseAbilityModal = ({
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
   const onSpellChainCostChange = useCallback((cost) => setSpellChainTotalCost(cost), []);
+
+  // Multiple Attack Penalty — auto step from attacks already made this turn,
+  // with a manual override for table corrections. null = follow the auto step.
+  const [mapOverride, setMapOverride] = useState(null);
+
+  // Casting resources — which pool pays for the cast, and the empty-pool
+  // override for table rulings. null index = default to first enabled option.
+  const resources = useCastingResources(character);
+  const [castOptionIdx, setCastOptionIdx] = useState(null);
+  const [castOverride, setCastOverride] = useState(false);
 
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
@@ -90,6 +106,16 @@ const UseAbilityModal = ({
 
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
   const effectiveVerb = verb.toLowerCase();
+
+  // Casting-cost options (slot rank / focus / staff charges / wand / scroll).
+  // Only casts pay a resource; plain actions get an empty list and no section.
+  const castOptions = effectiveVerb === 'cast' ? resources.optionsFor(ability, castSource) : [];
+  const defaultCastIdx = Math.max(0, castOptions.findIndex((o) => o.enabled));
+  const selectedCastIdx = castOptionIdx ?? defaultCastIdx;
+  const selectedCastOption = castOptions[selectedCastIdx] || null;
+  // Free options (cantrip/innate) need no picker UI — just a muted cost line.
+  const castIsFree = castOptions.length === 1
+    && (castOptions[0].type === 'cantrip' || castOptions[0].type === 'innate');
   // For spell chains the total cost = parent + chosen spell; use it in the button once known.
   const confirmCost   = (hasChainSpell && spellChainTotalCost != null) ? spellChainTotalCost : effectiveCost;
   // Spell-chain total is numeric — bypass costToDisplay which would show ability.actions instead.
@@ -107,10 +133,16 @@ const UseAbilityModal = ({
   // Enemy targets with defense data — used by both the regular resolver and the chain section.
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
 
+  // Multiple Attack Penalty step: attacks already made this turn, or the override.
+  const isAttack = isAttackAbility(ability);
+  const autoStep = mapStepFor(turnState?.attacksMade ?? 0);
+  const mapStep  = mapOverride ?? autoStep;
+
   // Resolve roll profile — includes condition/effect netting for the actor.
   const rollProfile = resolveActionRoll(ability, character, {
     conditions: activeConditions || [],
     effects: activeEffects || [],
+    mapStep,
   });
 
   // Which defense to show on the resolver (actor-roll only).
@@ -128,13 +160,31 @@ const UseAbilityModal = ({
     ? selectedEntries.filter((e) => e.kind === 'enemy')
     : [];
 
-  const confirmEnabled = !needsPicker || targets.length > 0;
+  // Block the cast while the chosen pool is empty, unless overridden.
+  const castGateOk =
+    castOptions.length === 0 || selectedCastOption?.enabled || castOverride;
+
+  const confirmEnabled = (!needsPicker || targets.length > 0) && castGateOk;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
     const rollResults  = resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
+
+    // Spend the casting resource (slot/focus/staff/wand/scroll). The empty-pool
+    // override casts without decrementing — the manual pips stay the
+    // remediation surface and pools never go negative.
+    let sourceSuffix = '';
+    if (selectedCastOption) {
+      if (selectedCastOption.enabled) {
+        const { label } = resources.spend(selectedCastOption);
+        if (label) sourceSuffix = ` (${label})`;
+      } else if (castOverride) {
+        sourceSuffix = ' (override — no resource spent)';
+      }
+    }
+    let suffixLogged = false;
 
     // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
     const coveredByRoll = new Set(
@@ -168,10 +218,11 @@ const UseAbilityModal = ({
         appendLog({
           type:   'action',
           charId: character.id,
-          text:   genericNames
+          text:   (genericNames
             ? `${character.name} ${effectiveVerb} ${ability.name} on ${genericNames}`
-            : `${character.name} ${effectiveVerb} ${ability.name}`,
+            : `${character.name} ${effectiveVerb} ${ability.name}`) + sourceSuffix,
         });
+        suffixLogged = !!sourceSuffix;
       }
     }
 
@@ -232,9 +283,20 @@ const UseAbilityModal = ({
 
     // Log chained spell results (Reach Spell, Harrow Casting, etc.).
     if (hasChainSpell && chainResults) {
-      const label = chainResults.modifier
+      // Chained casts pick from the repertoire, so the cost is unambiguous:
+      // a slot of the spell's rank (cantrips are free).
+      let chainSuffix = '';
+      if (chainResults.spellRank > 0) {
+        if (resources.slots.remainingFor(chainResults.spellRank) > 0) {
+          resources.slots.spend(chainResults.spellRank);
+          chainSuffix = ` (rank ${chainResults.spellRank} slot)`;
+        } else {
+          chainSuffix = ` (no rank-${chainResults.spellRank} slots left — not spent)`;
+        }
+      }
+      const label = (chainResults.modifier
         ? `${chainResults.spellName} [${chainResults.modifier}]`
-        : chainResults.spellName;
+        : chainResults.spellName) + chainSuffix;
       if (chainResults.rollResults) {
         chainResults.rollResults.forEach((r) => {
           const degreeLabel = r.degree
@@ -272,6 +334,16 @@ const UseAbilityModal = ({
       }
     }
 
+    // Resource suffix not carried by a line above (effects/roll paths) gets a
+    // dedicated entry so the log always shows what paid for the cast.
+    if (sourceSuffix && !suffixLogged) {
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name} ${effectiveVerb} ${ability.name}${sourceSuffix}`,
+      });
+    }
+
     const costToSpend = hasChainSpell && chainResults?.totalCost != null
       ? chainResults.totalCost
       : effectiveCost;
@@ -281,12 +353,44 @@ const UseAbilityModal = ({
       spendActions(costToSpend, `${verb} ${ability.name}`);
     }
 
+    // Count attacks for MAP. Multi-roll casts (flurry, multi-ray) increment once
+    // per attack but only after the whole activity — i.e. here, on confirm.
+    if (hasChainStrike && chainResults) {
+      recordAttack(chainResults.mode === 'flurry' ? 2 : 1);
+    } else if (hasChainSpell && chainResults?.isAttackSpell) {
+      recordAttack(1);
+    } else if (isAttack) {
+      recordAttack(1);
+    }
+
     onClose();
   };
 
   const staticEffects = effects.filter(
     (e) => e.applyTo === 'self' || e.applyTo === 'all-allies'
   );
+
+  // MAP toggle — shown for Attack-trait abilities with an inline resolver, and for
+  // strike chains (the child section applies the step to both strikes).
+  const showMapToggle =
+    (isAttack && rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) || hasChainStrike;
+  const mapSection = showMapToggle ? (
+    <div className="uam-map-row" role="group" aria-label="Multiple Attack Penalty">
+      <span className="uam-map-label">MAP</span>
+      {[0, 1, 2].map((step) => (
+        <button
+          key={step}
+          type="button"
+          className={`uam-map-btn${mapStep === step ? ' uam-map-btn--active' : ''}`}
+          aria-pressed={mapStep === step}
+          onClick={() => setMapOverride(step === autoStep ? null : step)}
+        >
+          {step === 0 ? '0' : `${mapPenaltyFor(ability, step)}`}
+          {step === autoStep ? ' (auto)' : ''}
+        </button>
+      ))}
+    </div>
+  ) : null;
 
   // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
   let rollSection = null;
@@ -320,6 +424,7 @@ const UseAbilityModal = ({
       title={`${verb}: ${ability.name}`}
       themeColor={themeColor}
       maxWidth="560px"
+      highZ
     >
       {/* Ability summary */}
       <section className="ct-section">
@@ -334,6 +439,51 @@ const UseAbilityModal = ({
           </p>
         )}
       </section>
+
+      {/* Casting cost — source/rank picker, empty-pool block + override */}
+      {castOptions.length > 0 && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            {!castIsFree && <h3 className="ct-section-title">Casting Cost</h3>}
+            {castOptions.length === 1 ? (
+              <div className="uam-cost-single">{castOptions[0].label}</div>
+            ) : (
+              <div className="uam-cost-options" role="radiogroup" aria-label="Casting source">
+                {castOptions.map((opt, idx) => (
+                  <label
+                    key={`${opt.type}-${opt.rank ?? opt.key ?? idx}`}
+                    className={`uam-cost-option${!opt.enabled ? ' uam-cost-option--disabled' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="cast-source"
+                      checked={selectedCastIdx === idx}
+                      onChange={() => { setCastOptionIdx(idx); setCastOverride(false); }}
+                    />
+                    {opt.label}
+                  </label>
+                ))}
+              </div>
+            )}
+            {selectedCastOption && !selectedCastOption.enabled && (
+              <>
+                <div className="uam-cost-empty">
+                  {selectedCastOption.reason || 'Resource exhausted'}
+                </div>
+                <label className="uam-cost-override">
+                  <input
+                    type="checkbox"
+                    checked={castOverride}
+                    onChange={(e) => setCastOverride(e.target.checked)}
+                  />
+                  Override (GM ruling) — cast without spending
+                </label>
+              </>
+            )}
+          </section>
+        </>
+      )}
 
       {hasEffects && (
         <>
@@ -365,6 +515,7 @@ const UseAbilityModal = ({
                 onToggle={toggleTarget}
               />
             )}
+            {mapSection}
             {rollSection}
           </section>
         </>
@@ -411,6 +562,7 @@ const UseAbilityModal = ({
                     (included in {effectiveCost})
                   </span>
                 </h3>
+                {mapSection}
                 <ChainedStrikeSection
                   ref={chainRef}
                   character={character}
@@ -418,6 +570,7 @@ const UseAbilityModal = ({
                   enemyTargets={enemyWithDefenses}
                   conditions={activeConditions || []}
                   effects={activeEffects || []}
+                  mapStep={mapStep}
                 />
               </>
             ) : hasChainSpell ? (
@@ -434,9 +587,15 @@ const UseAbilityModal = ({
                   conditions={activeConditions || []}
                   effects={activeEffects || []}
                   onTotalCostChange={onSpellChainCostChange}
+                  mapStep={mapStep}
                 />
               </>
-            ) : rollSection}
+            ) : (
+              <>
+                {mapSection}
+                {rollSection}
+              </>
+            )}
           </section>
         </>
       )}
