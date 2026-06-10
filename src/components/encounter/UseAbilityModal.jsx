@@ -7,17 +7,21 @@ import ChainedStrikeSection from './ChainedStrikeSection';
 import ChainedSpellSection from './ChainedSpellSection';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
+import { useGameDate } from '../../contexts/GameDateContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
+import { useFrequency } from '../../hooks/useFrequency';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, abilityNeedsPicker } from '../../utils/applyAbility';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { extractVariableActionCount } from '../../utils/ActionsUtils';
+import { toGameSeconds } from '../../utils/gameTime';
+import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
 import './UseAbilityModal.css';
 
 // Parse "Two Actions", "One Action", "Free Action", "Reaction", "1", "2", "3"
@@ -66,9 +70,12 @@ const UseAbilityModal = ({
 }) => {
   const { getState, sendUpdate } = useSession();
   const { characters } = useContent();
+  const { gameDate, time } = useGameDate();
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { turnState, spendActions, spendReaction, recordAttack } =
     useTurnState(character?.id || 'nobody');
+  const { gateFor, record: recordFreqUse, clear: clearFreqLock } =
+    useFrequency(character?.id || 'nobody');
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
@@ -90,6 +97,9 @@ const UseAbilityModal = ({
   const resources = useCastingResources(character);
   const [castOptionIdx, setCastOptionIdx] = useState(null);
   const [castOverride, setCastOverride] = useState(false);
+
+  // Frequency gate (#218) — declarative cooldown override for table rulings.
+  const [freqOverride, setFreqOverride] = useState(false);
 
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
@@ -150,6 +160,17 @@ const UseAbilityModal = ({
   const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character.id);
   const casterEntryId  = casterEntry?.entryId || null;
 
+  // Frequency gate — availability derived from the synced ledger vs the game
+  // clock and the live encounter round/turn (#218). Advancing either clock
+  // re-enables locked abilities; nothing is timer-driven.
+  const nowSecs  = toGameSeconds({ ...gameDate, ...time });
+  const freqRule = parseFrequency(ability);
+  const freqCtx  = { nowSecs, encounter, casterEntryId };
+  const freqGate = freqRule
+    ? gateFor(ability, freqCtx)
+    : { available: true };
+  const freqGateOk = freqGate.available || freqOverride;
+
   const selectedEntries  = order.filter((e) => targets.includes(e.entryId));
   const targetCharIds    = selectedEntries.filter((e) => e.kind === 'pc' && e.charId).map((e) => e.charId);
   const enemyTargetNames = selectedEntries.filter((e) => e.kind === 'enemy').map((e) => e.name);
@@ -188,7 +209,7 @@ const UseAbilityModal = ({
   const castGateOk =
     castOptions.length === 0 || selectedCastOption?.enabled || castOverride;
 
-  const confirmEnabled = (!needsPicker || targets.length > 0) && castGateOk;
+  const confirmEnabled = (!needsPicker || targets.length > 0) && castGateOk && freqGateOk;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -216,6 +237,14 @@ const UseAbilityModal = ({
         if (label) sourceSuffix = ` (${label})`;
       } else if (castOverride) {
         sourceSuffix = ' (override — no resource spent)';
+      }
+    }
+    // Frequency: record the use either way — under an override the use still
+    // happened, it just bypassed the lock (and the log says so).
+    if (freqRule) {
+      recordFreqUse(ability, freqCtx);
+      if (!freqGate.available && freqOverride) {
+        sourceSuffix += ' (override — frequency)';
       }
     }
     let suffixLogged = false;
@@ -509,6 +538,32 @@ const UseAbilityModal = ({
           </p>
         )}
       </section>
+
+      {/* Frequency lock — derived from the synced ledger; GM can override or clear */}
+      {freqRule && !freqGate.available && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Frequency</h3>
+            <div className="uam-cost-empty">{lockMessage(freqGate, freqRule, nowSecs)}</div>
+            <label className="uam-cost-override">
+              <input
+                type="checkbox"
+                checked={freqOverride}
+                onChange={(e) => setFreqOverride(e.target.checked)}
+              />
+              Override (GM ruling) — use anyway
+            </label>
+            <button
+              type="button"
+              className="uam-freq-clear"
+              onClick={() => clearFreqLock(freqKeyFor(ability))}
+            >
+              Clear lock (GM ruling)
+            </button>
+          </section>
+        </>
+      )}
 
       {/* Casting cost — source/rank picker, empty-pool block + override */}
       {castOptions.length > 0 && (

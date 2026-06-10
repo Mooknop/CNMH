@@ -3,7 +3,12 @@ import React, { useState } from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import UseAbilityModal from '../encounter/UseAbilityModal';
 import './EldPowers.css';
+
+// Eld Attunement: each power is usable once per hour (class feature, so the
+// rule is injected here rather than tagged on every power in content).
+const ELD_FREQUENCY_RULE = { per: 'hour', uses: 1 };
 
 /**
  * Component to display Eld Powers
@@ -11,11 +16,15 @@ import './EldPowers.css';
  * @param {Array} props.eldPowers - Array of Eld Power sources
  * @param {string} props.themeColor - Theme color from character
  * @param {number} props.characterLevel - Character's level
+ * @param {Object} [props.character] - The acting character; enables Use buttons
  */
-const EldPowers = ({ eldPowers, themeColor, characterLevel }) => {
+const EldPowers = ({ eldPowers, themeColor, characterLevel, character }) => {
   // State for selected source
   const [selectedSource, setSelectedSource] = useState(eldPowers[0]?.source || '');
-  
+
+  // Power pending confirmation in the use modal (frequency-gated).
+  const [pendingPower, setPendingPower] = useState(null);
+
   // Get the current source's data
   const currentSourceData = eldPowers.find(ep => ep.source === selectedSource) || eldPowers[0];
   
@@ -139,6 +148,17 @@ const EldPowers = ({ eldPowers, themeColor, characterLevel }) => {
                     ))}
                   </div>
                 )}
+
+                {/* Use button — opens the frequency-gated use modal */}
+                {character && (
+                  <button
+                    type="button"
+                    className="eld-power-use-btn"
+                    onClick={() => setPendingPower(power)}
+                  >
+                    Use
+                  </button>
+                )}
               </>
             );
             
@@ -156,6 +176,17 @@ const EldPowers = ({ eldPowers, themeColor, characterLevel }) => {
           })}
         </div>
       </div>
+
+      {character && pendingPower && (
+        <UseAbilityModal
+          isOpen={!!pendingPower}
+          onClose={() => setPendingPower(null)}
+          ability={{ ...pendingPower, frequencyRule: ELD_FREQUENCY_RULE }}
+          verb="Use"
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
     </div>
   );
 };

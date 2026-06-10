@@ -22,6 +22,12 @@ vi.mock('../../contexts/SessionContext', () => ({
 vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: [{ id: 'char-a', name: 'Jade' }] }),
 }));
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    gameDate: { day: 5, month: 2, year: 4725 },
+    time: { hour: 8, minute: 0, second: 0 },
+  }),
+}));
 vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: () => ({
     encounter: { active: true, order: enemyOrder, log: [] },

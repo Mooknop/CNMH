@@ -25,6 +25,16 @@ vi.mock('../shared/ActionIcon', () => ({
   }
 }));
 
+vi.mock('../encounter/UseAbilityModal', () => ({
+  default: function DummyUseAbilityModal({ isOpen, ability, verb }) {
+    return isOpen ? (
+      <div data-testid="use-ability-modal">
+        {verb}: {ability.name} ({ability.frequencyRule?.per}/{ability.frequencyRule?.uses})
+      </div>
+    ) : null;
+  }
+}));
+
 const makePower = (overrides = {}) => ({
   name: 'Power of Nature',
   description: 'Channel the wild.',
@@ -181,5 +191,37 @@ describe('EldPowers', () => {
     const sources = [makeSource('Forest', [makePower()])];
     render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} />);
     expect(screen.queryByText('Degrees of Success:')).toBeNull();
+  });
+
+  describe('Use button (frequency-gated, #218)', () => {
+    const character = { id: 'char-izzy', name: 'Izzy' };
+
+    it('renders a Use button per power when character is provided', () => {
+      const sources = [
+        makeSource('Forest', [
+          makePower({ name: 'Wind Gust' }),
+          makePower({ name: 'Stone Wall' }),
+        ]),
+      ];
+      render(
+        <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
+      );
+      expect(screen.getAllByText('Use')).toHaveLength(2);
+    });
+
+    it('hides Use buttons without a character (display-only contexts)', () => {
+      const sources = [makeSource('Forest', [makePower()])];
+      render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} />);
+      expect(screen.queryByText('Use')).toBeNull();
+    });
+
+    it('opens the use modal with the once-per-hour rule injected', () => {
+      const sources = [makeSource('Forest', [makePower({ name: 'Wind Gust' })])];
+      render(
+        <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
+      );
+      fireEvent.click(screen.getByText('Use'));
+      expect(screen.getByTestId('use-ability-modal')).toHaveTextContent('Use: Wind Gust (hour/1)');
+    });
   });
 });

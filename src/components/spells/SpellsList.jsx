@@ -327,10 +327,11 @@ const SpellsList = ({ character, characterColor }) => {
       )}
 
       {viewMode === 'eld' && hasEldPowers && (
-        <EldPowers 
+        <EldPowers
           eldPowers={eldPowers}
           themeColor={themeColor}
           characterLevel={level}
+          character={character}
         />
       )}
 

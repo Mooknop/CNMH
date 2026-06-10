@@ -198,6 +198,38 @@ describe('actionToForm / reactionToForm round-trip', () => {
   });
 });
 
+describe('action frequencyRule round-trip', () => {
+  it('round-trips a structured frequencyRule through the form', () => {
+    const src = {
+      name: 'Murmured Prayer',
+      actionCount: 1,
+      frequencyRule: { per: 'day', uses: 1 },
+    };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips multi-use rules and normalises string uses', () => {
+    const f = actionToForm({ name: 'X', frequencyRule: { per: 'hour', uses: 3 } });
+    expect(f.frequencyRule).toEqual({ per: 'hour', uses: '3' });
+    expect(actionFromForm(f).frequencyRule).toEqual({ per: 'hour', uses: 3 });
+  });
+
+  it('omits frequencyRule when unset and keeps the free-text frequency string intact', () => {
+    const src = { name: 'Old Ability', frequency: 'once per day' };
+    const out = actionFromForm(actionToForm(src));
+    expect(out).toEqual(src);
+    expect(out.frequencyRule).toBeUndefined();
+  });
+
+  it('does not double-write frequencyRule through the rest blob', () => {
+    const f = actionToForm({ name: 'X', frequencyRule: { per: 'turn', uses: 1 } });
+    expect(f.rest.frequencyRule).toBeUndefined();
+    // Clearing the select drops the rule entirely.
+    f.frequencyRule = { ...f.frequencyRule, per: '' };
+    expect(actionFromForm(f).frequencyRule).toBeUndefined();
+  });
+});
+
 describe('action targetDefense round-trip', () => {
   it('round-trips targetDefense: ac through the form', () => {
     const src = { name: 'Strike', actionCount: 1, targetDefense: 'ac' };

@@ -1,22 +1,11 @@
 // src/contexts/GameDateContext.js
 import React, { createContext, useContext, useCallback } from 'react';
 import { useSyncedState } from '../hooks/useSyncedState';
+import { GOLARION_MONTHS, totalDaysSince4700 } from '../utils/gameTime';
 
-// Golarion calendar data following Pathfinder 2E lore
-export const GOLARION_MONTHS = [
-  { name: "Abadius", days: 31, season: "Winter", index: 0 },    //jan
-  { name: "Calistril", days: 28, season: "Winter", index: 1 },  //feb
-  { name: "Pharast", days: 31, season: "Spring", index: 2 },    //mar
-  { name: "Gozran", days: 30, season: "Spring", index: 3 },     //apr
-  { name: "Desnus", days: 31, season: "Spring", index: 4 },     //may
-  { name: "Sarenith", days: 30, season: "Summer", index: 5 },   //jun
-  { name: "Erastus", days: 31, season: "Summer", index: 6 },    //jul
-  { name: "Arodus", days: 31, season: "Summer", index: 7 },     //aug
-  { name: "Rova", days: 30, season: "Autumn", index: 8 },
-  { name: "Lamashan", days: 31, season: "Autumn", index: 9 },
-  { name: "Neth", days: 30, season: "Autumn", index: 10 },
-  { name: "Kuthona", days: 31, season: "Winter", index: 11 }
-];
+// Calendar data lives in utils/gameTime.js (pure module shared with the
+// frequency engine); re-exported here so existing importers keep working.
+export { GOLARION_MONTHS };
 
 export const GOLARION_WEEKDAYS = [
   "Moonday", "Toilday", "Wealday", "Oathday", "Fireday", "Starday", "Sunday"
@@ -150,21 +139,7 @@ export const GameDateProvider = ({ children }) => {
    * @param {Object} date - Date object with day, month, year
    * @returns {number} Total days since reference point
    */
-  const getTotalDays = (date = gameDate) => {
-    const baseYear = 4700; // Reference year
-    const yearDiff = date.year - baseYear;
-    let totalDays = yearDiff * 365 + Math.floor(yearDiff / 8); // Golarion leap years every 8 years
-    
-    // Add days from completed months in current year
-    for (let i = 0; i < date.month; i++) {
-      totalDays += GOLARION_MONTHS[i].days;
-    }
-    
-    // Add days in current month
-    totalDays += date.day - 1;
-    
-    return totalDays;
-  };
+  const getTotalDays = (date = gameDate) => totalDaysSince4700(date);
 
   /**
    * Calculate the current moon phase based on the date
