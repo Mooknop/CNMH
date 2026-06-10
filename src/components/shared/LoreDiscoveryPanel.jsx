@@ -28,14 +28,6 @@ const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) =
         <p className="discovery-summary">{entry.summary}</p>
       )}
 
-      {(entry.tags || []).length > 0 && (
-        <div className="discovery-tags">
-          {entry.tags.map(tag => (
-            <span key={tag} className="discovery-tag">{tag}</span>
-          ))}
-        </div>
-      )}
-
       <button className="discovery-full-link" onClick={() => openLore(entry.id)}>
         Open full entry →
       </button>

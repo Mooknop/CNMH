@@ -1,5 +1,3 @@
-const MAX_SUBGROUPS = 8;
-
 export function getAllCategories(entries) {
   return [...new Set(entries.map(e => e.category))].sort();
 }
@@ -63,28 +61,4 @@ export function filterBySearchTerm(entries, searchTerm) {
     (e.title || '').toLowerCase().includes(term) ||
     (e.summary || '').toLowerCase().includes(term)
   );
-}
-
-export function getSubgroupsForCategory(categoryEntries) {
-  const len = categoryEntries.length;
-  if (len < 2) return [];
-
-  const tagCounts = {};
-  for (const entry of categoryEntries) {
-    for (const tag of (entry.tags || [])) {
-      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-    }
-  }
-
-  const ceiling = Math.floor(len * 0.7);
-  const qualifyingTags = Object.entries(tagCounts)
-    .filter(([, count]) => count >= 2 && count <= ceiling)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, MAX_SUBGROUPS)
-    .map(([tag]) => tag);
-
-  return qualifyingTags.map(tag => ({
-    tag,
-    entries: categoryEntries.filter(e => (e.tags || []).includes(tag)),
-  }));
 }

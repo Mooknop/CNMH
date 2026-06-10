@@ -99,36 +99,6 @@
   );
 }
 
-/* Era Markers */
-.era-markers {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: var(--surface-arcane);
-  border-left: 4px solid var(--theme-arcane, #7a54ba);
-  border-radius: 4px;
-}
-
-.timeline-era-marker {
-  margin-bottom: 1rem;
-}
-
-.timeline-era-marker:last-child {
-  margin-bottom: 0;
-}
-
-.era-marker-label {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--theme-arcane, #7a54ba);
-  margin-bottom: 0.25rem;
-}
-
-.era-marker-date {
-  font-size: 0.9rem;
-  color: var(--shell-text-tertiary);
-  font-style: italic;
-}
-
 /* Entries List */
 .entries-list {
   position: relative;

@@ -21,7 +21,6 @@ const LORE = [
     content: 'A great god.\nHe died mysteriously.',
     summary: 'A dead god.',
     related: ['absalom'],
-    tags: ['deity', 'dead'],
   },
   {
     id: 'absalom',
@@ -30,7 +29,6 @@ const LORE = [
     content: 'A great city.',
     summary: 'City at the center of the world.',
     related: [],
-    tags: [],
   },
 ];
 
@@ -77,12 +75,6 @@ describe('LoreDrawer', () => {
     renderDrawer();
     expect(screen.getByText('Aroden')).toBeInTheDocument();
     expect(screen.getByText('History')).toBeInTheDocument();
-  });
-
-  it('renders tags', () => {
-    renderDrawer();
-    expect(screen.getByText('deity')).toBeInTheDocument();
-    expect(screen.getByText('dead')).toBeInTheDocument();
   });
 
   it('renders multi-line content as separate paragraphs', () => {
@@ -136,7 +128,7 @@ describe('LoreDrawer', () => {
   });
 
   describe('visibility-aware resolution', () => {
-    const HIDDEN = { id: 'the-pit', title: 'The Pit', category: 'Locations', content: 'Secret.', related: [], tags: [] };
+    const HIDDEN = { id: 'the-pit', title: 'The Pit', category: 'Locations', content: 'Secret.', related: [] };
 
     beforeEach(() => {
       useContent.mockReturnValue({ loreEntries: LORE, allLoreEntries: [...LORE, HIDDEN] });

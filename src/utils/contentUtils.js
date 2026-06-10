@@ -75,7 +75,7 @@ export const normalizeCalendar = (arr) =>
 
 // Lore entries already carry an `id`; keep it (fall back to a slug of the
 // title) and preserve every other field (category/summary/content/related/
-// tags/createdAt) untouched. `visibility` gates player-facing surfaces:
+// createdAt) untouched. `visibility` gates player-facing surfaces:
 // anything other than an explicit 'revealed' (including legacy entries with
 // no field at all) stays GM-only until the GM reveals it.
 export const withLoreId = (entry, index = 0) => ({

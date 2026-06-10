@@ -12,7 +12,6 @@ const mockEntry = {
   title: 'Aroden',
   category: 'History',
   summary: 'A dead god.',
-  tags: ['deity', 'dead'],
 };
 
 const renderPanel = (props = {}) =>
@@ -47,17 +46,6 @@ describe('LoreDiscoveryPanel', () => {
   it('renders the summary', () => {
     renderPanel();
     expect(screen.getByText('A dead god.')).toBeInTheDocument();
-  });
-
-  it('renders tags', () => {
-    renderPanel();
-    expect(screen.getByText('deity')).toBeInTheDocument();
-    expect(screen.getByText('dead')).toBeInTheDocument();
-  });
-
-  it('renders without tags gracefully', () => {
-    renderPanel({ entry: { ...mockEntry, tags: undefined } });
-    expect(screen.getByText('Aroden')).toBeInTheDocument();
   });
 
   it('does not render summary section when summary is absent', () => {

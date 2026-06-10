@@ -64,32 +64,6 @@ export const getHistoryEntries = (loreEntries) => {
 };
 
 /**
- * Filters History entries to get only those marked as eras
- * @param {array} historyEntries - History entries
- * @returns {array} Era entries only (tagged with 'era' or 'age')
- */
-export const getEraEntries = (historyEntries) => {
-  return historyEntries.filter(
-    (entry) =>
-      entry.tags &&
-      (entry.tags.includes('era') || entry.tags.includes('age')),
-  );
-};
-
-/**
- * Filters History entries to get non-era entries (actual historical events)
- * @param {array} historyEntries - History entries
- * @returns {array} Non-era history entries
- */
-export const getNonEraEntries = (historyEntries) => {
-  return historyEntries.filter(
-    (entry) =>
-      !entry.tags ||
-      (!entry.tags.includes('era') && !entry.tags.includes('age')),
-  );
-};
-
-/**
  * Groups history entries by their age period
  * @param {array} entries - History entries to group
  * @returns {object} Entries grouped by period key
@@ -155,40 +129,25 @@ export const getDateLabel = (entry) => {
 /**
  * Transforms timeline data into a structured format for rendering
  * @param {array} loreEntries - All lore entries
- * @returns {object} Timeline data with eras and grouped entries
+ * @returns {object} Timeline data grouped by age period
  */
 export const buildTimelineData = (loreEntries) => {
   const historyEntries = getHistoryEntries(loreEntries);
-  const eraEntries = getEraEntries(historyEntries);
-  const regularEntries = getNonEraEntries(historyEntries);
 
-  // Sort regular entries newest-to-oldest
-  const sortedRegularEntries = sortByDateNewestFirst(regularEntries);
+  // Sort newest-to-oldest, then group by age period
+  const groupedByPeriod = groupByAgePeriod(sortByDateNewestFirst(historyEntries));
 
-  // Group sorted entries by age period
-  const groupedByPeriod = groupByAgePeriod(sortedRegularEntries);
-
-  // Sort era entries newest-to-oldest
-  const sortedEraEntries = sortByDateNewestFirst(eraEntries);
-
-  // Create final timeline structure: periods with entries and eras
   const timeline = AGE_PERIODS.map((period) => {
     const periodData = groupedByPeriod[period.key];
     return {
       periodKey: period.key,
       periodLabel: period.label,
       entries: periodData.entries || [],
-      // Eras that fall within this period
-      eras: sortedEraEntries.filter((era) => {
-        const year = era.dateArStart || 0;
-        return year >= period.minYear && year < period.maxYear;
-      }),
     };
   });
 
   return {
     periods: timeline,
-    allEras: sortedEraEntries,
     totalEntries: historyEntries.length,
   };
 };
