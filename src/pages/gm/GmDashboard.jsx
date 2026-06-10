@@ -13,6 +13,8 @@ import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
 import AdjustHpModal from '../../components/gm/AdjustHpModal';
 import RecallKnowledgeModal from '../../components/gm/RecallKnowledgeModal';
+import SkillChallengeModal from '../../components/gm/SkillChallengeModal';
+import SkillChallengePanel from '../../components/gm/SkillChallengePanel';
 import PartyGoldModal from '../../components/gm/PartyGoldModal';
 import SessionLogPanel from '../../components/gm/SessionLogPanel';
 import BestiaryEditor from '../../components/gm/BestiaryEditor';
@@ -293,6 +295,7 @@ const GmDashboard = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isAdjustHpModalOpen, setIsAdjustHpModalOpen] = useState(false);
   const [isRecallKnowledgeModalOpen, setIsRecallKnowledgeModalOpen] = useState(false);
+  const [isSkillChallengeModalOpen, setIsSkillChallengeModalOpen] = useState(false);
   const [isPartyGoldModalOpen, setIsPartyGoldModalOpen] = useState(false);
   const [isBestiaryEditorOpen, setIsBestiaryEditorOpen] = useState(false);
 
@@ -320,6 +323,9 @@ const GmDashboard = () => {
         {/* Right column: party HP roster + quick actions */}
         <div className="gm-dash-right">
           <PartyPanel />
+
+          {/* Victory Point challenge — only while one is active */}
+          <SkillChallengePanel />
 
           <section className="gm-dash-panel gm-dash-quick-actions" aria-label="Quick Actions">
             <h2>Quick Actions</h2>
@@ -363,6 +369,16 @@ const GmDashboard = () => {
                 <GmIcon name="book" className="gm-qa-ico" />
                 <span className="gm-qa-title">Recall Knowledge</span>
                 <span className="gm-qa-desc">Send a skill-check prompt to players</span>
+              </button>
+              <button
+                type="button"
+                className="gm-qa"
+                aria-label="Start a skill challenge"
+                onClick={() => setIsSkillChallengeModalOpen(true)}
+              >
+                <GmIcon name="flag" className="gm-qa-ico" />
+                <span className="gm-qa-title">Skill Challenge</span>
+                <span className="gm-qa-desc">Run a Victory Point skill challenge</span>
               </button>
               <button
                 type="button"
@@ -417,6 +433,11 @@ const GmDashboard = () => {
       <RecallKnowledgeModal
         isOpen={isRecallKnowledgeModalOpen}
         onClose={() => setIsRecallKnowledgeModalOpen(false)}
+      />
+
+      <SkillChallengeModal
+        isOpen={isSkillChallengeModalOpen}
+        onClose={() => setIsSkillChallengeModalOpen(false)}
       />
 
       <PartyGoldModal

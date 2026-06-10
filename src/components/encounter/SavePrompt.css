@@ -114,6 +114,64 @@
   cursor: pointer;
 }
 
+/* Skill chooser — VP challenge prompts with multiple allowed skills */
+.skill-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.skill-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--shell-text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  text-align: left;
+}
+
+.skill-choice:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skill-choice--selected {
+  border-color: var(--accent-outline, var(--shell-text-primary));
+  background: var(--accent-tint, rgba(255, 255, 255, 0.1));
+  color: var(--shell-text-primary);
+}
+
+.skill-choice-name {
+  font-weight: 700;
+  flex: 1;
+}
+
+.skill-choice-dc {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.skill-choice-mod {
+  min-width: 36px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
+}
+
+.save-result-vp {
+  margin-left: auto;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 /* Degree result colors — load-bearing, do not change */
 .save-crit-success {
   background: var(--d-crit-bg);
