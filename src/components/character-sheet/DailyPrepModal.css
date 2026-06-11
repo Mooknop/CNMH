@@ -1,0 +1,64 @@
+.dp-body {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.dp-intro {
+  margin: 0 0 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.dp-reset-list {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.dp-reset-item {
+  margin: 0.15rem 0;
+  text-transform: capitalize;
+}
+
+.dp-eld {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.dp-eld-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.dp-eld-select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.dp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.dp-cancel,
+.dp-confirm {
+  padding: 0.45rem 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.dp-cancel {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.dp-confirm {
+  background: var(--color-theme, var(--color-accent));
+  color: #fff;
+  border-color: transparent;
+}

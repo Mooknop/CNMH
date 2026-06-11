@@ -57,6 +57,13 @@ vi.mock('../components/character-sheet/EffectsPanel', () => ({
   }
 }));
 
+// DailyPrepModal also reads session/clock/log contexts unconditionally.
+vi.mock('../components/character-sheet/DailyPrepModal', () => ({
+  default: function DummyDailyPrepModal({ isOpen }) {
+    return isOpen ? <div data-testid="daily-prep-modal">Daily Prep</div> : null;
+  }
+}));
+
 vi.mock('../components/character-sheet/FeatsList', () => ({
   default: function DummyFeatsList() {
     return <div data-testid="feats-list">Feats List</div>;

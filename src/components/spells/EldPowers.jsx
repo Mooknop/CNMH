@@ -4,6 +4,7 @@ import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import UseAbilityModal from '../encounter/UseAbilityModal';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import './EldPowers.css';
 
 // Eld Attunement: each power is usable once per hour (class feature, so the
@@ -19,8 +20,13 @@ const ELD_FREQUENCY_RULE = { per: 'hour', uses: 1 };
  * @param {Object} [props.character] - The acting character; enables Use buttons
  */
 const EldPowers = ({ eldPowers, themeColor, characterLevel, character }) => {
-  // State for selected source
-  const [selectedSource, setSelectedSource] = useState(eldPowers[0]?.source || '');
+  // Attuned source is a daily choice — synced so it persists across devices and
+  // reloads, and so the Daily Preparations flow can set it. Falls back to plain
+  // local state (via the synced-state localStorage path) when there's no charId.
+  const [selectedSource, setSelectedSource] = useSyncedState(
+    `cnmh_eldattune_${character?.id || 'unknown'}`,
+    eldPowers[0]?.source || '',
+  );
 
   // Power pending confirmation in the use modal (frequency-gated).
   const [pendingPower, setPendingPower] = useState(null);

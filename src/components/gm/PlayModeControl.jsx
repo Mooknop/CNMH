@@ -9,6 +9,7 @@ import { usePartyGold } from '../../hooks/usePartyGold';
 import { useLore } from '../../contexts/LoreContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import DowntimeControl from './DowntimeControl';
+import PartyDailyPrepButton from './PartyDailyPrepButton';
 import ExplorationTimeControl from './ExplorationTimeControl';
 import GmIcon from '../../pages/gm/GmIcon';
 import './PlayModeControl.css';
@@ -156,7 +157,12 @@ const PlayModeControl = () => {
       {/* ── Context strip: mode-specific controls ────────────── */}
       {!isEncounter && (
         <section className="pmc-context" aria-label="Mode controls">
-          {gmMode === 'downtime' && <DowntimeControl />}
+          {gmMode === 'downtime' && (
+            <>
+              <DowntimeControl />
+              <PartyDailyPrepButton />
+            </>
+          )}
 
           {gmMode === 'exploration' && (
             <>

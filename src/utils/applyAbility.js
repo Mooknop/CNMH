@@ -77,6 +77,10 @@ export function applyAbility({
         appliedBy: caster.id,
         source:    name,
         expireAt:  expireAt || undefined,
+        // Effects that last "until daily preparations" (Mystic Armor, Light)
+        // carry a flag the daily-prep flow clears — they have no encounter
+        // boundary, so resolveExpireAt returns null for them.
+        ...(eff.duration?.until === 'daily-prep' ? { expireOnDailyPrep: true } : {}),
         ts:        Date.now(),
       };
       const next = [...current, newEntry];

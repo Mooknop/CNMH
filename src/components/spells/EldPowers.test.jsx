@@ -48,6 +48,10 @@ const makeSource = (source, powers, overrides = {}) => ({
 });
 
 describe('EldPowers', () => {
+  // Attuned source is now synced via cnmh_eldattune_<id>, which falls back to
+  // localStorage with no SessionProvider — clear it so tests don't bleed.
+  beforeEach(() => localStorage.clear());
+
   it('renders empty state when eldPowers is empty array', () => {
     render(<EldPowers eldPowers={[]} themeColor="#4a90d9" characterLevel={5} />);
     expect(screen.getByText('No Eld Powers available.')).toBeInTheDocument();
@@ -222,6 +226,31 @@ describe('EldPowers', () => {
       );
       fireEvent.click(screen.getByText('Use'));
       expect(screen.getByTestId('use-ability-modal')).toHaveTextContent('Use: Wind Gust (hour/1)');
+    });
+  });
+
+  describe('attunement sync (#219)', () => {
+    const character = { id: 'char-izzy', name: 'Izzy' };
+
+    it('persists the chosen source to cnmh_eldattune_<id>', () => {
+      const sources = [
+        makeSource('Forest', [makePower({ name: 'Forest Power' })]),
+        makeSource('River', [makePower({ name: 'River Power' })]),
+      ];
+      render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />);
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'River' } });
+      expect(JSON.parse(localStorage.getItem('cnmh_eldattune_char-izzy'))).toBe('River');
+    });
+
+    it('hydrates the selection from a stored attunement', () => {
+      localStorage.setItem('cnmh_eldattune_char-izzy', JSON.stringify('River'));
+      const sources = [
+        makeSource('Forest', [makePower({ name: 'Forest Power' })]),
+        makeSource('River', [makePower({ name: 'River Power' })]),
+      ];
+      render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />);
+      expect(screen.getByRole('combobox')).toHaveValue('River');
+      expect(screen.getByText('River Power')).toBeInTheDocument();
     });
   });
 });
