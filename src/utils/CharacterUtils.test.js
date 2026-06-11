@@ -13,6 +13,7 @@ import {
   getAttackBonus,
   calculateBulkLimit,
   calculateClassDC,
+  getClassDC,
   calculateEnhancedBulkLimit,
   calculateTotalContainerIgnoredBulk,
 } from './CharacterUtils';
@@ -281,6 +282,37 @@ describe('CharacterUtils', () => {
       };
       // 10 + 3 (ability) + 3 (trained prof) = 16
       expect(calculateClassDC(char)).toBe(16);
+    });
+  });
+
+  describe('getClassDC', () => {
+    const base = {
+      level: 1,
+      abilities: { strength: 16 },
+      keyAbility: 'strength',
+      proficiencies: { class: 1 },
+    };
+
+    it('prefers the explicit class_dc on the class-named block', () => {
+      const char = { ...base, class: 'Champion', champion: { class_dc: 19 } };
+      expect(getClassDC(char)).toBe(19);
+    });
+
+    it('matches the class block case-insensitively from character.class', () => {
+      const char = { ...base, class: 'MONK', monk: { class_dc: 21 } };
+      expect(getClassDC(char)).toBe(21);
+    });
+
+    it('falls back to the derived class DC when no block carries one', () => {
+      expect(getClassDC(base)).toBe(calculateClassDC(base));
+      const wrongBlock = { ...base, class: 'Champion', monk: { class_dc: 19 } };
+      expect(getClassDC(wrongBlock)).toBe(calculateClassDC(wrongBlock));
+    });
+
+    it('ignores a non-numeric class_dc and returns null for no character', () => {
+      const char = { ...base, class: 'Champion', champion: { class_dc: 'high' } };
+      expect(getClassDC(char)).toBe(calculateClassDC(char));
+      expect(getClassDC(null)).toBeNull();
     });
   });
 
