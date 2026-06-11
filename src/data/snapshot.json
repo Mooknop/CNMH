@@ -5646,6 +5646,10 @@
         }
       ],
       "image": "img_3f74e21b-b3c3-4323-ad07-d9b3cbadd7d8.jpg",
+      "imagePosition": {
+        "x": 48,
+        "y": 41
+      },
       "id": "IzzyUncut",
       "name": "Izzy Uncut",
       "ancestry": "Leshy",
@@ -5743,10 +5747,6 @@
             "name": "Untrained"
           }
         }
-      },
-      "imagePosition": {
-        "x": 48,
-        "y": 41
       },
       "spellcasting": {
         "eldPowers": [
@@ -5997,7 +5997,13 @@
             "traits": [
               "Cantrip",
               "Concentrate"
-            ]
+            ],
+            "immunity": {
+              "duration": {
+                "value": 1,
+                "unit": "hour"
+              }
+            }
           },
           {
             "id": "spell-6",
@@ -6335,7 +6341,13 @@
               ],
               "trigger": "A creature you can observe within 30 feet takes a skill action with the Auditory, Concentrate, or Visual traits.",
               "triggerType": "enemy-skill-check",
-              "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
+              "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute.",
+              "immunity": {
+                "duration": {
+                  "value": 1,
+                  "unit": "minute"
+                }
+              }
             }
           ],
           "name": "Disrupting Performance",
@@ -7622,7 +7634,12 @@
                 "Metal",
                 "Primal"
               ],
-              "description": "Jagged metal shards form in the air and lash out in front of you. Creatures in the area attempt a Basic Reflex Save against your Class DC. Choose Shards or Spines. Shards deal 1d6 slashing damage in a 15-foot cone, and a creature that critically fails takes 1d6 persistent bleed damage. Spines deal 1d6 piercing damage in a 30-foot line, and a creature that critically fails is Clumsy 1 until the start of your next turn."
+              "description": "Jagged metal shards form in the air and lash out in front of you. Creatures in the area attempt a Basic Reflex Save against your Class DC. Choose Shards or Spines. Shards deal 1d6 slashing damage in a 15-foot cone, and a creature that critically fails takes 1d6 persistent bleed damage. Spines deal 1d6 piercing damage in a 30-foot line, and a creature that critically fails is Clumsy 1 until the start of your next turn.",
+              "targetDefense": "reflex",
+              "basic": true,
+              "roll": {
+                "type": "class-dc"
+              }
             }
           ],
           "name": "Through the Gate",
@@ -7644,7 +7661,13 @@
               ],
               "actions": "One Action",
               "range": "30ft",
-              "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour."
+              "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour.",
+              "immunity": {
+                "duration": {
+                  "value": 1,
+                  "unit": "hour"
+                }
+              }
             }
           ],
           "name": "Murmured Prayer",
