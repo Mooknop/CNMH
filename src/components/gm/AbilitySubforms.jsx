@@ -7,6 +7,7 @@ import React from 'react';
 import ImageField from './ImageField';
 import EffectsSubform, { effectsToForm, effectsFromForm } from './EffectsSubform';
 import { SKILL_ABILITY_MAP } from '../../utils/CharacterUtils';
+import { TRIGGER_TYPES } from '../../utils/reactionTriggers';
 
 export const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -501,6 +502,7 @@ const abilityToForm = (s) => {
   delete rest.chain;
   delete rest.frequencyRule;
   delete rest.immunity;
+  delete rest.triggerType;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -523,6 +525,7 @@ const abilityToForm = (s) => {
     chain: chainToForm(src.chain),
     frequencyRule: frequencyRuleToForm(src.frequencyRule),
     immunity: immunityToForm(src.immunity),
+    triggerType: src.triggerType || '',
     rest,
   };
 };
@@ -550,6 +553,7 @@ const abilityFromForm = (f) => {
   if (frequencyRule) out.frequencyRule = frequencyRule;
   const immunity = immunityFromForm(f.immunity);
   if (immunity) out.immunity = immunity;
+  if (f.triggerType) out.triggerType = f.triggerType;
   return out;
 };
 
@@ -631,6 +635,19 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
             value={value.str.trigger}
             onChange={(e) => setStr('trigger', e.target.value)}
           />
+        </div>
+        <div className="form-group">
+          <label>trigger type (engine)</label>
+          <select
+            aria-label={`${idPrefix}-trigger-type`}
+            value={value.triggerType || ''}
+            onChange={(e) => onChange({ ...value, triggerType: e.target.value })}
+          >
+            <option value="">— (no prompt)</option>
+            {TRIGGER_TYPES.map((t) => (
+              <option key={t.id} value={t.id}>{t.label}</option>
+            ))}
+          </select>
         </div>
         <div className="form-group">
           <label>requirements</label>
