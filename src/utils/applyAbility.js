@@ -44,6 +44,7 @@ const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
  * @param {Function} sendUpdate       - (charId, key, value) => void
  * @param {Function} appendLog        - ({ type, charId, text }) => void
  * @param {string}   verb             - 'cast' | 'used' (lower-case for log lines)
+ * @param {number}   [rank]           - Cast rank when heightened above native (#235); decorates log lines
  */
 export function applyAbility({
   ability,
@@ -58,10 +59,12 @@ export function applyAbility({
   sendUpdate,
   appendLog,
   verb = 'used',
+  rank,
 }) {
   const effects = Array.isArray(ability.effects) ? ability.effects : [];
   const grants  = Array.isArray(ability.grants)  ? ability.grants  : [];
   const name    = ability.name || '';
+  const loggedName = rank ? `${name} (rank ${rank})` : name;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -89,7 +92,7 @@ export function applyAbility({
       appendLog({
         type:   'action',
         charId: caster.id,
-        text:   `${caster.name} ${verb} ${name} on ${charName(targetCharId)}`,
+        text:   `${caster.name} ${verb} ${loggedName} on ${charName(targetCharId)}`,
       });
     });
 
@@ -98,7 +101,7 @@ export function applyAbility({
       appendLog({
         type:   'action',
         charId: caster.id,
-        text:   `${caster.name} ${verb} ${name} on ${enemyTargetNames.join(', ')}`,
+        text:   `${caster.name} ${verb} ${loggedName} on ${enemyTargetNames.join(', ')}`,
       });
     }
   });

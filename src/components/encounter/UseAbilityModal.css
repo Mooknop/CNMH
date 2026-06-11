@@ -104,6 +104,24 @@
   margin: 0.25rem 0;
 }
 
+/* Heightened-effect notes for the chosen cast rank (#235) */
+
+.uam-heightened {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-muted);
+  margin: 0.25rem 0;
+}
+
+.uam-heightened-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.uam-heightened-key {
+  font-weight: 600;
+}
+
 .uam-cost-empty {
   font-size: var(--text-sm, 0.85rem);
   color: var(--color-danger);

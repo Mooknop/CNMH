@@ -15,6 +15,7 @@ const order = [
 
 function makeArgs(abilityOverrides = {}, opts = {}) {
   const sendUpdate = vi.fn();
+  const appendLog = vi.fn();
   return {
     args: {
       ability: {
@@ -32,10 +33,11 @@ function makeArgs(abilityOverrides = {}, opts = {}) {
       characters: [caster, izzy],
       getState: () => [],
       sendUpdate,
-      appendLog: vi.fn(),
+      appendLog,
       verb: 'cast',
     },
     sendUpdate,
+    appendLog,
   };
 }
 
@@ -130,5 +132,27 @@ describe('applyAbility — daily-prep effect flag', () => {
     applyAbility(args);
     const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
     expect(call[2][0].expireOnDailyPrep).toBeUndefined();
+  });
+});
+
+describe('applyAbility — heightened cast rank (#235)', () => {
+  it('decorates effect log lines with the rank when provided', () => {
+    const { args, appendLog } = makeArgs({
+      effects: [{ effectId: 'heroism-1', applyTo: 'self', duration: { until: 'round-end' } }],
+    });
+    applyAbility({ ...args, rank: 3 });
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Pellias cast Courageous Anthem (rank 3) on Pellias' })
+    );
+  });
+
+  it('leaves log lines unchanged without a rank', () => {
+    const { args, appendLog } = makeArgs({
+      effects: [{ effectId: 'heroism-1', applyTo: 'self', duration: { until: 'round-end' } }],
+    });
+    applyAbility(args);
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Pellias cast Courageous Anthem on Pellias' })
+    );
   });
 });
