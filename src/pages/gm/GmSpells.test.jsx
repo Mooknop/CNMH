@@ -271,4 +271,79 @@ describe('GmSpells', () => {
     const parsed = JSON.parse(box.value);
     expect(parsed.chain).toBeUndefined();
   });
+
+  it('round-trips frequencyRule — set persists to saved payload', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    selectSpell('Guidance');
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.change(within(form).getByLabelText('spell-frequency-per'), {
+      target: { value: 'day' },
+    });
+    fireEvent.change(within(form).getByLabelText('spell-frequency-uses'), {
+      target: { value: '2' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.frequencyRule).toEqual({ per: 'day', uses: 2 });
+  });
+
+  it('round-trips immunity — set persists to saved payload', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    selectSpell('Guidance');
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.change(within(form).getByLabelText('spell-immunity-unit'), {
+      target: { value: 'hour' },
+    });
+    fireEvent.change(within(form).getByLabelText('spell-immunity-value'), {
+      target: { value: '1' },
+    });
+    fireEvent.change(within(form).getByLabelText('spell-immunity-scope'), {
+      target: { value: 'per-caster' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.immunity).toEqual({
+      duration: { value: 1, unit: 'hour' },
+      scope: 'per-caster',
+    });
+  });
+
+  it('unset frequencyRule/immunity emit no keys on save', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    selectSpell('Guidance');
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.frequencyRule).toBeUndefined();
+    expect(data.immunity).toBeUndefined();
+  });
+
+  it('frequencyRule/immunity do not leak into the raw-JSON box on existing spells', () => {
+    const spellsWithCooldowns = [
+      {
+        ...spells[0],
+        frequencyRule: { per: 'day', uses: 1 },
+        immunity: { duration: { value: 1, unit: 'hour' } },
+      },
+    ];
+    useContent.mockReturnValue({ spells: spellsWithCooldowns });
+    render(<GmSpells />);
+    selectSpell('Cleanse Affliction');
+    const box = screen.getByLabelText('rest-json');
+    const parsed = JSON.parse(box.value);
+    expect(parsed.frequencyRule).toBeUndefined();
+    expect(parsed.immunity).toBeUndefined();
+    // …and the structured controls show the loaded values.
+    expect(screen.getByLabelText('spell-frequency-per').value).toBe('day');
+    expect(screen.getByLabelText('spell-immunity-unit').value).toBe('hour');
+  });
 });

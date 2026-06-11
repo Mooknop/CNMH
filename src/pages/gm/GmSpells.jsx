@@ -9,6 +9,8 @@ import {
   rollToForm, rollFromForm, RollSourceControl,
   foundryEffectToForm, foundryEffectFromForm, FoundryEffectControl,
   chainToForm, chainFromForm, ChainControl,
+  frequencyRuleToForm, frequencyRuleFromForm, FrequencyRuleControl,
+  immunityToForm, immunityFromForm, ImmunityControl,
 } from '../../components/gm/AbilitySubforms';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
@@ -34,7 +36,7 @@ const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'du
 const toForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
   const rest = { ...src };
-  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll', 'foundryEffect', 'chain'].forEach((k) => delete rest[k]);
+  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll', 'foundryEffect', 'chain', 'frequencyRule', 'immunity'].forEach((k) => delete rest[k]);
   const str = {};
   SPELL_STR.forEach((k) => {
     str[k] = src[k] != null ? String(src[k]) : '';
@@ -54,6 +56,8 @@ const toForm = (s) => {
     roll: rollToForm(src.roll),
     foundryEffect: foundryEffectToForm(src.foundryEffect),
     chain: chainToForm(src.chain),
+    frequencyRule: frequencyRuleToForm(src.frequencyRule),
+    immunity: immunityToForm(src.immunity),
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -93,6 +97,10 @@ const fromForm = (f) => {
   if (foundryEffect) out.foundryEffect = foundryEffect;
   const chain = chainFromForm(f.chain);
   if (chain) out.chain = chain;
+  const frequencyRule = frequencyRuleFromForm(f.frequencyRule);
+  if (frequencyRule) out.frequencyRule = frequencyRule;
+  const immunity = immunityFromForm(f.immunity);
+  if (immunity) out.immunity = immunity;
   return out;
 };
 
@@ -215,6 +223,16 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         value={e.chain || chainToForm(null)}
         idPrefix="spell"
         onChange={(c) => set({ chain: c })}
+      />
+      <FrequencyRuleControl
+        value={e.frequencyRule || frequencyRuleToForm(null)}
+        idPrefix="spell"
+        onChange={(r) => set({ frequencyRule: r })}
+      />
+      <ImmunityControl
+        value={e.immunity || immunityToForm(null)}
+        idPrefix="spell"
+        onChange={(imm) => set({ immunity: imm })}
       />
       <div className="form-group">
         <label>Description</label>

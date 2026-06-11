@@ -37,6 +37,12 @@ import {
   animalCompanionFromForm,
   blankAnimalCompanion,
   AnimalCompanionSubform,
+  frequencyRuleToForm,
+  frequencyRuleFromForm,
+  FrequencyRuleControl,
+  immunityToForm,
+  immunityFromForm,
+  ImmunityControl,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -279,6 +285,8 @@ const spellToForm = (s) => {
   SPELL_NUM.forEach((k) => delete rest[k]);
   delete rest.traits;
   delete rest.heightened;
+  delete rest.frequencyRule;
+  delete rest.immunity;
   const str = {};
   SPELL_STR.forEach((k) => { str[k] = s[k] != null ? String(s[k]) : ''; });
   const num = {};
@@ -291,6 +299,8 @@ const spellToForm = (s) => {
     num,
     traits: Array.isArray(s.traits) ? s.traits.join(', ') : '',
     heightened,
+    frequencyRule: frequencyRuleToForm(s.frequencyRule),
+    immunity: immunityToForm(s.immunity),
     rest, // id + any unmanaged keys, preserved
   };
 };
@@ -304,6 +314,10 @@ const spellFromForm = (sf) => {
   const h = {};
   sf.heightened.forEach((r) => { if (r.key.trim()) h[r.key.trim()] = r.text; });
   if (Object.keys(h).length) out.heightened = h;
+  const frequencyRule = frequencyRuleFromForm(sf.frequencyRule);
+  if (frequencyRule) out.frequencyRule = frequencyRule;
+  const immunity = immunityFromForm(sf.immunity);
+  if (immunity) out.immunity = immunity;
   return out;
 };
 
@@ -474,6 +488,16 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
         <label>traits (comma-separated)</label>
         <input aria-label={`spell-${index}-traits`} value={spell.traits} onChange={(e) => onChange({ ...spell, traits: e.target.value })} />
       </div>
+      <FrequencyRuleControl
+        value={spell.frequencyRule || frequencyRuleToForm(null)}
+        idPrefix={`spell-${index}`}
+        onChange={(r) => onChange({ ...spell, frequencyRule: r })}
+      />
+      <ImmunityControl
+        value={spell.immunity || immunityToForm(null)}
+        idPrefix={`spell-${index}`}
+        onChange={(imm) => onChange({ ...spell, immunity: imm })}
+      />
       <div className="form-group">
         <label>description</label>
         <textarea aria-label={`spell-${index}-description`} rows={3} value={spell.str.description || ''} onChange={(e) => setStr('description', e.target.value)} />
