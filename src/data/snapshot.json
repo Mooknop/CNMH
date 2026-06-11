@@ -7967,7 +7967,11 @@
           "price": 30,
           "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1."
         }
-      ]
+      ],
+      "consumable": {
+        "kind": "healing",
+        "note": "Restores 1d6 HP (Minor) / 3d6+6 (Lesser) — enter your rolled total"
+      }
     },
     {
       "id": "eye-garnets",
@@ -8102,7 +8106,11 @@
       ],
       "price": 3,
       "weight": 0.1,
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes."
+      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes.",
+      "consumable": {
+        "kind": "healing",
+        "note": "Restores 1d6 HP"
+      }
     },
     {
       "id": "minor-healing-potion",
@@ -8116,7 +8124,11 @@
         "Potion",
         "Vitality"
       ],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed"
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed",
+      "consumable": {
+        "kind": "healing",
+        "note": "Restores 1d8 HP"
+      }
     },
     {
       "id": "moderate-drakeheart-mutagen",
