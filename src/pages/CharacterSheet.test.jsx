@@ -49,6 +49,14 @@ vi.mock('../components/character-sheet/StatsBlock', () => ({
   }
 }));
 
+// EffectsPanel reads the game clock (immunity expiry labels); stub it like the
+// other Stats-tab children so this suite needs no GameDateProvider.
+vi.mock('../components/character-sheet/EffectsPanel', () => ({
+  default: function DummyEffectsPanel() {
+    return <div data-testid="effects-panel">Effects Panel</div>;
+  }
+}));
+
 vi.mock('../components/character-sheet/FeatsList', () => ({
   default: function DummyFeatsList() {
     return <div data-testid="feats-list">Feats List</div>;

@@ -68,6 +68,27 @@ export const frequencyRuleFromForm = (f) => {
   return out;
 };
 
+// Codec for the optional ability.immunity object — a target immunity timer
+// ({ duration: { value, unit }, scope }). Same round-trip contract as roll:
+// delete from `rest` on toForm, emit only when value + unit are set.
+
+export const IMMUNITY_UNIT_OPTIONS = ['minute', 'hour', 'day', 'week'];
+
+export const immunityToForm = (imm) => ({
+  value: imm?.duration?.value != null ? String(imm.duration.value) : '',
+  unit:  IMMUNITY_UNIT_OPTIONS.includes(imm?.duration?.unit) ? imm.duration.unit : '',
+  scope: imm?.scope === 'per-caster' ? 'per-caster' : 'any',
+});
+
+export const immunityFromForm = (f) => {
+  if (!f || !f.unit || f.value === '') return null;
+  const n = parseFloat(f.value);
+  if (isNaN(n) || n <= 0) return null;
+  const out = { duration: { value: n, unit: f.unit } };
+  if (f.scope === 'per-caster') out.scope = 'per-caster';
+  return out;
+};
+
 export const RollSourceControl = ({ value, onChange, idPrefix }) => {
   const set = (patch) => onChange({ ...value, ...patch });
   return (
@@ -479,6 +500,7 @@ const abilityToForm = (s) => {
   delete rest.foundryEffect;
   delete rest.chain;
   delete rest.frequencyRule;
+  delete rest.immunity;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -500,6 +522,7 @@ const abilityToForm = (s) => {
     foundryEffect: foundryEffectToForm(src.foundryEffect),
     chain: chainToForm(src.chain),
     frequencyRule: frequencyRuleToForm(src.frequencyRule),
+    immunity: immunityToForm(src.immunity),
     rest,
   };
 };
@@ -525,6 +548,8 @@ const abilityFromForm = (f) => {
   if (chain) out.chain = chain;
   const frequencyRule = frequencyRuleFromForm(f.frequencyRule);
   if (frequencyRule) out.frequencyRule = frequencyRule;
+  const immunity = immunityFromForm(f.immunity);
+  if (immunity) out.immunity = immunity;
   return out;
 };
 
@@ -665,6 +690,61 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
               }
             />
           </div>
+        )}
+      </div>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>target immunity</label>
+          <select
+            aria-label={`${idPrefix}-immunity-unit`}
+            value={(value.immunity || immunityToForm(null)).unit}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                immunity: { ...(value.immunity || immunityToForm(null)), unit: e.target.value },
+              })
+            }
+          >
+            <option value="">— (none)</option>
+            {IMMUNITY_UNIT_OPTIONS.map((unit) => (
+              <option key={unit} value={unit}>per {unit}</option>
+            ))}
+          </select>
+        </div>
+        {(value.immunity || immunityToForm(null)).unit && (
+          <>
+            <div className="form-group">
+              <label>duration</label>
+              <input
+                type="number"
+                min="1"
+                aria-label={`${idPrefix}-immunity-value`}
+                value={(value.immunity || immunityToForm(null)).value}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    immunity: { ...(value.immunity || immunityToForm(null)), value: e.target.value },
+                  })
+                }
+              />
+            </div>
+            <div className="form-group">
+              <label>scope</label>
+              <select
+                aria-label={`${idPrefix}-immunity-scope`}
+                value={(value.immunity || immunityToForm(null)).scope}
+                onChange={(e) =>
+                  onChange({
+                    ...value,
+                    immunity: { ...(value.immunity || immunityToForm(null)), scope: e.target.value },
+                  })
+                }
+              >
+                <option value="any">any caster</option>
+                <option value="per-caster">per caster</option>
+              </select>
+            </div>
+          </>
         )}
       </div>
       <div className="form-group">

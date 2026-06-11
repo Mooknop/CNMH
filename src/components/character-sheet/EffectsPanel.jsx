@@ -1,13 +1,20 @@
 import React from 'react';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
+import { useGameDate } from '../../contexts/GameDateContext';
 import './EffectsPanel.css';
-import { expiryLabel } from '../../utils/expiry';
+import { expiryLabel, expiryLabelSecs } from '../../utils/expiry';
+import { toGameSeconds } from '../../utils/gameTime';
 import { IMMUNITY_EFFECT_ID } from '../../utils/treatWounds';
+import { ABILITY_IMMUNITY_EFFECT_ID } from '../../utils/immunity';
+
+const FROM_NAME_EFFECT_IDS = [IMMUNITY_EFFECT_ID, ABILITY_IMMUNITY_EFFECT_ID];
 
 const EffectsPanel = ({ charId, themeColor }) => {
   const { effects, removeEffect } = useEffects(charId);
   const { effects: effectCatalog, characters } = useContent();
+  const { gameDate, time } = useGameDate();
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
   const getEffect = (id) => (effectCatalog || []).find((e) => e.id === id) || null;
   const getCharName = (id) => (characters || []).find((c) => c.id === id)?.name || null;
 
@@ -24,12 +31,20 @@ const EffectsPanel = ({ charId, themeColor }) => {
       <ul className="effects-panel-list">
         {effects.map((entry) => {
           const def = getEffect(entry.effectId);
-          const name = def ? def.name : entry.effectId;
-          const expLabel = expiryLabel(entry.expireAt);
-          const healerName = entry.effectId === IMMUNITY_EFFECT_ID && entry.appliedBy
+          const baseName = def ? def.name : entry.effectId;
+          // Ability immunity carries its source ability ("Immune: Guidance").
+          const name = entry.effectId === ABILITY_IMMUNITY_EFFECT_ID && entry.source
+            ? `${baseName}: ${entry.source}`
+            : baseName;
+          // Clock-based expiry (immunity timers) takes precedence over the
+          // encounter-boundary label when present.
+          const expLabel = typeof entry.expireAtSecs === 'number'
+            ? expiryLabelSecs(entry.expireAtSecs, nowSecs)
+            : expiryLabel(entry.expireAt);
+          const sourceName = FROM_NAME_EFFECT_IDS.includes(entry.effectId) && entry.appliedBy
             ? getCharName(entry.appliedBy)
             : null;
-          const displayName = healerName ? `${name} — from ${healerName}` : name;
+          const displayName = sourceName ? `${name} — from ${sourceName}` : name;
           return (
             <li key={entry.id} className="effects-panel-item">
               <span className="effects-panel-name">{displayName}</span>

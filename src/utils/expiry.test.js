@@ -3,6 +3,7 @@ import {
   resolveExpireAt,
   isExpired,
   expiryLabel,
+  expiryLabelSecs,
 } from './expiry';
 
 // Helpers
@@ -235,5 +236,25 @@ describe('expiryLabel', () => {
 
   it('turn-start label', () => {
     expect(expiryLabel({ round: 4, entryId: 'p2', boundary: 'turn-start' })).toBe('R4 turn-start');
+  });
+});
+
+// ── expiryLabelSecs (clock-based immunity timers) ─────────────────────────────
+
+describe('expiryLabelSecs', () => {
+  // 5 Pharast 4725 08:00 in absolute game seconds (see gameTime).
+  const now = (25 * 365 + 3 + 31 + 28) * 86400 + 8 * 3600;
+
+  it('returns null when no expiry given', () => {
+    expect(expiryLabelSecs(null, now)).toBeNull();
+    expect(expiryLabelSecs(undefined, now)).toBeNull();
+  });
+
+  it('labels a same-day expiry as a bare time', () => {
+    expect(expiryLabelSecs(now + 3600, now)).toBe('09:00');
+  });
+
+  it('labels a next-day expiry as tomorrow', () => {
+    expect(expiryLabelSecs(now + 86400, now)).toBe('tomorrow 08:00');
   });
 });

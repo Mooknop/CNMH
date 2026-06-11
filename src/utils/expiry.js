@@ -1,4 +1,5 @@
 // Pure utilities for effect auto-expiry in the encounter system.
+import { formatAvailableAt } from './gameTime';
 //
 // duration.until values:
 //   'caster-turn-end'   expires at the end of the caster's current turn
@@ -116,4 +117,13 @@ export function expiryLabel(expireAt) {
   if (expireAt.boundary === 'round-end') return `Round ${expireAt.round} end`;
   const b = expireAt.boundary === 'turn-end' ? 'turn-end' : 'turn-start';
   return `R${expireAt.round} ${b}`;
+}
+
+/**
+ * Human-readable label for a clock-based expiry (absolute game seconds),
+ * relative to now — e.g. "14:30", "tomorrow 08:00". Used for immunity timers.
+ */
+export function expiryLabelSecs(expireAtSecs, nowSecs) {
+  if (typeof expireAtSecs !== 'number') return null;
+  return formatAvailableAt(expireAtSecs, nowSecs ?? expireAtSecs);
 }
