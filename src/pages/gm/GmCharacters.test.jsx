@@ -444,6 +444,23 @@ describe('GmCharacters', () => {
     expect(sc.spells[0].immunity).toEqual({ duration: { value: 1, unit: 'hour' } });
   });
 
+  it('round-trips spell action variants through the spell row control (#215)', async () => {
+    setContent([izzy]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Spellcasting');
+    const spell0 = within(form).getByTestId('spell-0');
+    fireEvent.click(within(spell0).getByText('Add variant'));
+    fireEvent.change(within(spell0).getByLabelText('spell-0-variant-0-actions'), { target: { value: '2' } });
+    fireEvent.change(within(spell0).getByLabelText('spell-0-variant-0-note'), { target: { value: '2 shards' } });
+    fireEvent.change(within(spell0).getByLabelText('spell-0-variant-0-dc'), { target: { value: '-10' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const sc = saveDocument.mock.calls[0][2].spellcasting;
+    expect(sc.spells[0].variants).toEqual([{ actions: 2, note: '2 shards', dcDelta: -10 }]);
+  });
+
   it('clearing a spell frequencyRule removes the key (no resurrection via rest)', async () => {
     const izzyTagged = {
       ...izzy,

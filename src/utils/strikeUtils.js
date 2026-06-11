@@ -118,6 +118,7 @@ export const getStrikes = (character) => {
             description: strike.description || '',
             source: feat.name,
             range: strike.range,
+            ...(strike.variants ? { variants: strike.variants } : {}),
           };
         })
       );
@@ -148,6 +149,7 @@ export const getStrikes = (character) => {
             description: weaponStrike.description || item.description || '',
             source: item.name,
             range: weaponStrike.range,
+            ...(weaponStrike.variants ? { variants: weaponStrike.variants } : {}),
             // Gated: a weapon's Strike is only usable while it is wielded
             // (held), unless the catalog flags it noHandRequired.
             active: itemAbilitiesActive(item),

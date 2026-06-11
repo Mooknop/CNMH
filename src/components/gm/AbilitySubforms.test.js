@@ -22,6 +22,8 @@ import {
   foundryEffectFromForm,
   chainToForm,
   chainFromForm,
+  variantsToForm,
+  variantsFromForm,
 } from './AbilitySubforms';
 import { sampleCharacters, items } from '../../data';
 import { renderActionIcons } from '../../utils/actionIconUtils';
@@ -104,6 +106,60 @@ describe('strikeToForm / strikeFromForm', () => {
   it('keeps a variable action cost renderable', () => {
     const out = strikeFromForm(strikeToForm({ name: 'Blast', actionCount: 'One to Two' }));
     expect(out.variableActionCount).toEqual({ min: 1, max: 2 });
+  });
+
+  it('round-trips variants on a strike (#215)', () => {
+    const src = {
+      name: 'Metal Blast',
+      actionCount: 'One to Two',
+      variants: [{ actions: 2, note: '+Con status bonus to damage' }],
+    };
+    const out = strikeFromForm(strikeToForm(src));
+    expect(out.variants).toEqual([{ actions: 2, note: '+Con status bonus to damage' }]);
+  });
+});
+
+describe('variantsToForm / variantsFromForm (#215)', () => {
+  it('round-trips note + dcDelta rows', () => {
+    const src = [
+      { actions: 1, note: '1 shard' },
+      { actions: 2, note: 'DC reduced by 10', dcDelta: -10 },
+    ];
+    expect(variantsFromForm(variantsToForm(src))).toEqual(src);
+  });
+
+  it('preserves unmodelled per-row keys', () => {
+    const src = [{ actions: 2, note: 'x', custom: true }];
+    expect(variantsFromForm(variantsToForm(src))).toEqual(src);
+  });
+
+  it('drops empty and invalid rows; returns null when nothing remains', () => {
+    expect(variantsFromForm([
+      { actions: '2', note: '   ', dcDelta: '', rest: {} },   // bare count → dropped
+      { actions: '9', note: 'bad count', dcDelta: '', rest: {} }, // out of range
+    ])).toBeNull();
+    expect(variantsFromForm([])).toBeNull();
+    expect(variantsToForm(undefined)).toEqual([]);
+  });
+
+  it('ignores a zero dcDelta (no-op adjustment)', () => {
+    const out = variantsFromForm([{ actions: '2', note: 'n', dcDelta: '0', rest: {} }]);
+    expect(out).toEqual([{ actions: 2, note: 'n' }]);
+  });
+
+  it('an action without variants emits no variants key (faithful contract)', () => {
+    const out = actionFromForm(actionToForm({ name: 'Plain Strike', actionCount: 1 }));
+    expect(out).not.toHaveProperty('variants');
+  });
+
+  it('round-trips variants on an action', () => {
+    const src = {
+      name: 'Staunch Bleeding',
+      actionCount: 'One to Two',
+      variants: [{ actions: 2, note: 'DC reduced by 10', dcDelta: -10 }],
+    };
+    const out = actionFromForm(actionToForm(src));
+    expect(out.variants).toEqual(src.variants);
   });
 });
 

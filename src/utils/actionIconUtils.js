@@ -81,6 +81,51 @@ export const extractVariableActionCount = (actionText) => {
 };
 
 /**
+ * Resolve an ability's variable action-cost range from any of the encodings
+ * authored data uses: a `variableActionCount` object (strikes, GM-authored),
+ * an `actions` string ("One to Three Actions"), or an `actionCount` string
+ * ("One to Two" — feat strikes before normalization).
+ * @param {Object} ability - Action / spell / strike object
+ * @returns {Object|null} - { min, max } or null when the cost is fixed
+ */
+export const getVariableActionRange = (ability) => {
+  if (!ability || typeof ability !== 'object') return null;
+
+  const vac = ability.variableActionCount;
+  if (vac && typeof vac === 'object' && vac.min >= 1 && vac.min <= vac.max) {
+    return { min: vac.min, max: vac.max };
+  }
+
+  const fromActions = extractVariableActionCount(ability.actions);
+  if (fromActions) return fromActions;
+
+  if (typeof ability.actionCount === 'string') {
+    const m = ability.actionCount.toLowerCase().match(/(\w+)\s+to\s+(\w+)/);
+    if (m) {
+      const min = convertWordToNumber(m[1]);
+      const max = convertWordToNumber(m[2]);
+      if (min > 0 && max > 0 && min <= max) return { min, max };
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Find the declared variant for a chosen action count (#215).
+ * Variants describe the scaling consequence per action count, e.g.
+ * `[{ actions: 2, note: '+Con to damage', dcDelta: -10 }]`.
+ * @param {Object} ability - Action / spell / strike object
+ * @param {number} count - Chosen action count
+ * @returns {Object|null} - The matching variant entry, or null
+ */
+export const variantFor = (ability, count) => {
+  const variants = ability?.variants;
+  if (!Array.isArray(variants)) return null;
+  return variants.find((v) => v && v.actions === count) || null;
+};
+
+/**
  * Render action indicators as a descriptor object
  * @param {string} actionText - Text describing actions
  * @returns {Object|null} - Descriptor object for rendering action indicators

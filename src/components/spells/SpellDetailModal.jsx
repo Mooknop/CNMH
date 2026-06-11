@@ -8,7 +8,7 @@ import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import ActionSymbol from '../shared/ActionSymbol';
 import UseActionChip from '../shared/UseActionChip';
-import { parseActionCount } from '../../utils/actionIconUtils';
+import { parseActionCount, getVariableActionRange } from '../../utils/actionIconUtils';
 import './SpellDetailModal.css';
 
 const SpellDetailModal = ({
@@ -25,7 +25,10 @@ const SpellDetailModal = ({
   const inactive = spell.active === false;
   const rawCost = spell.actions ? parseActionCount(spell.actions) : null;
   const spellCost = rawCost === -1 ? 'reaction' : rawCost === -2 ? 0 : rawCost;
-  const isVariable = spell.variableActionCount != null;
+  // Variable-cost spells (#215): also recognise an actions-string range
+  // ("One to Three Actions") so the chip offers the count dropdown.
+  const variableRange = getVariableActionRange(spell);
+  const isVariable = variableRange != null;
 
   const showCast = encounterMode && !inactive && onCast && (isVariable || spellCost !== null);
 
@@ -157,7 +160,7 @@ const SpellDetailModal = ({
               cost={spellCost === 0 ? 'free' : spellCost}
               verb="Cast"
               name={spell.name}
-              variableRange={isVariable ? spell.variableActionCount : undefined}
+              variableRange={isVariable ? variableRange : undefined}
               onUse={(c) => { onCast(spell, c); onClose(); }}
             />
           </div>
