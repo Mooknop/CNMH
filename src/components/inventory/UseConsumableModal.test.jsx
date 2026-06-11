@@ -1,0 +1,221 @@
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import UseConsumableModal from './UseConsumableModal';
+import * as consumables from '../../utils/consumables';
+
+// ── Context / hook mocks ─────────────────────────────────────────────────────
+
+const mockGetState   = vi.fn(() => undefined);
+const mockSendUpdate = vi.fn();
+vi.mock('../../contexts/SessionContext', () => ({
+  useSession: () => ({ getState: mockGetState, sendUpdate: mockSendUpdate }),
+}));
+
+const mockEffectCatalog = [
+  { id: 'drakeheart-mutagen', name: 'Drakeheart Mutagen', description: '+2 item bonus to AC.' },
+];
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ effects: mockEffectCatalog }),
+}));
+
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({
+    gameDate: { day: 5, month: 2, year: 4725 },
+    time: { hour: 8, minute: 0, second: 0 },
+  }),
+}));
+
+const mockAppendLog = vi.fn();
+let mockEncounter = { active: false, phase: 'idle', order: [] };
+vi.mock('../../hooks/useEncounter', () => ({
+  useEncounter: () => ({ encounter: mockEncounter, appendLog: mockAppendLog }),
+}));
+
+const mockSpendActions = vi.fn();
+vi.mock('../../hooks/useTurnState', () => ({
+  useTurnState: () => ({ spendActions: mockSpendActions }),
+}));
+
+const mockAppendEvent = vi.fn();
+vi.mock('../../hooks/useSessionLog', () => ({
+  useSessionLog: () => ({ appendEvent: mockAppendEvent }),
+}));
+
+let consumedState = {};
+const mockSetConsumed = vi.fn((updater) => {
+  consumedState = typeof updater === 'function' ? updater(consumedState) : updater;
+});
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: () => [consumedState, mockSetConsumed],
+}));
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const character = { id: 'c1', name: 'Blu', maxHp: 30, feats: [] };
+
+const healingPotion = {
+  name: 'Minor Healing Potion',
+  quantity: 2,
+  traits: ['Consumable', 'Potion'],
+  consumable: { kind: 'healing', note: '1d8 HP' },
+};
+
+const mutagen = {
+  name: 'Drakeheart Mutagen',
+  quantity: 1,
+  traits: ['Alchemical', 'Mutagen'],
+  consumable: { kind: 'effect', effectId: 'drakeheart-mutagen', durationMinutes: 10 },
+};
+
+const defaultProps = {
+  isOpen:     true,
+  onClose:    vi.fn(),
+  item:       healingPotion,
+  character,
+  themeColor: '#aaa',
+};
+
+function renderModal(props = {}) {
+  return render(<UseConsumableModal {...defaultProps} {...props} />);
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  consumedState = {};
+  mockEncounter = { active: false, phase: 'idle', order: [] };
+  vi.spyOn(consumables, 'applyHealingConsumable').mockImplementation(() => {});
+  vi.spyOn(consumables, 'applyEffectConsumable').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+// ── Visibility / guards ──────────────────────────────────────────────────────
+
+describe('visibility', () => {
+  it('renders null when closed, item missing, or item not a consumable', () => {
+    expect(render(<UseConsumableModal {...defaultProps} isOpen={false} />).container.firstChild).toBeNull();
+    expect(render(<UseConsumableModal {...defaultProps} item={null} />).container.firstChild).toBeNull();
+    expect(render(<UseConsumableModal {...defaultProps} item={{ name: 'Sword' }} />).container.firstChild).toBeNull();
+  });
+
+  it('titles the modal with the trait-derived verb', () => {
+    renderModal();
+    expect(screen.getByRole('heading', { level: 2, name: 'Drink Minor Healing Potion' })).toBeInTheDocument();
+  });
+
+  it('shows the remaining count and the authored note', () => {
+    renderModal();
+    expect(screen.getByLabelText('remaining count')).toHaveTextContent('×2 remaining');
+    expect(screen.getByText('1d8 HP')).toBeInTheDocument();
+  });
+});
+
+// ── Healing flow ─────────────────────────────────────────────────────────────
+
+describe('healing consumable', () => {
+  it('disables confirm until an amount is entered', () => {
+    renderModal();
+    const btn = screen.getByRole('button', { name: 'Drink' });
+    expect(btn).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    expect(btn).not.toBeDisabled();
+  });
+
+  it('increments the consumed overlay, applies healing, and closes', () => {
+    const onClose = vi.fn();
+    renderModal({ onClose });
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink' }));
+
+    expect(consumedState).toEqual({ 'Minor Healing Potion': 1 });
+    expect(consumables.applyHealingConsumable).toHaveBeenCalledWith(expect.objectContaining({
+      user:     { id: 'c1', name: 'Blu', maxHp: 30 },
+      itemName: 'Minor Healing Potion',
+      amount:   6,
+    }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('does not spend actions outside an encounter and logs to the session log', () => {
+    renderModal();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink' }));
+
+    expect(mockSpendActions).not.toHaveBeenCalled();
+    const { appendLog } = consumables.applyHealingConsumable.mock.calls[0][0];
+    appendLog({ type: 'action', text: 'x' });
+    expect(mockAppendEvent).toHaveBeenCalledWith({ type: 'action', text: 'x' });
+    expect(mockAppendLog).not.toHaveBeenCalled();
+  });
+
+  it('hides the Godless Healing hint without the feat', () => {
+    renderModal();
+    expect(screen.queryByText(/Godless Healing/)).not.toBeInTheDocument();
+  });
+
+  it('shows the Godless Healing hint for a feat-holder', () => {
+    renderModal({ character: { ...character, feats: [{ name: 'Godless Healing' }] } });
+    expect(screen.getByText(/Godless Healing/)).toBeInTheDocument();
+  });
+});
+
+// ── Effect flow ──────────────────────────────────────────────────────────────
+
+describe('effect consumable', () => {
+  it('shows the catalog effect name, description, and duration', () => {
+    renderModal({ item: mutagen });
+    expect(screen.getByText(/Drakeheart Mutagen/, { selector: '.ucm-effect-name' })).toBeInTheDocument();
+    expect(screen.getByText('+2 item bonus to AC.')).toBeInTheDocument();
+    expect(screen.getByText(/10 minutes/)).toBeInTheDocument();
+  });
+
+  it('applies the effect with game-clock seconds on confirm', () => {
+    renderModal({ item: mutagen });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink' }));
+
+    expect(consumedState).toEqual({ 'Drakeheart Mutagen': 1 });
+    expect(consumables.applyEffectConsumable).toHaveBeenCalledWith(expect.objectContaining({
+      itemName: 'Drakeheart Mutagen',
+      meta:     mutagen.consumable,
+      nowSecs:  expect.any(Number),
+    }));
+  });
+});
+
+// ── Encounter integration ────────────────────────────────────────────────────
+
+describe('in an active encounter', () => {
+  beforeEach(() => {
+    mockEncounter = { active: true, phase: 'in-progress', order: [] };
+  });
+
+  it('labels confirm with the action cost and spends 1 action', () => {
+    renderModal();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    const btn = screen.getByRole('button', { name: 'Drink (1 act)' });
+    fireEvent.click(btn);
+    expect(mockSpendActions).toHaveBeenCalledWith(1, 'Drink Minor Healing Potion');
+  });
+
+  it('logs through the combat log, not the session log', () => {
+    renderModal();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink (1 act)' }));
+    const { appendLog } = consumables.applyHealingConsumable.mock.calls[0][0];
+    appendLog({ type: 'action', text: 'x' });
+    expect(mockAppendLog).toHaveBeenCalled();
+    expect(mockAppendEvent).not.toHaveBeenCalled();
+  });
+});
+
+// ── Race guard ───────────────────────────────────────────────────────────────
+
+describe('depleted item', () => {
+  it('disables confirm when no copies remain', () => {
+    renderModal({ item: { ...healingPotion, quantity: 0 } });
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    expect(screen.getByRole('button', { name: 'Drink' })).toBeDisabled();
+  });
+});

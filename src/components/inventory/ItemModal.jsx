@@ -4,11 +4,12 @@ import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import { formatBulk, normalizeShield, isContainer } from '../../utils/InventoryUtils';
 import { ITEM_STATE_LABEL, isHeldState } from '../../utils/itemState';
+import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import './ItemModal.css';
 
-const ItemModal = ({ isOpen, onClose, item, character, characterColor }) => {
+const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
   // Hooks must run unconditionally (before the early return).
   const charData = useCharacter(character);
   const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(character?.id);
@@ -93,6 +94,14 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor }) => {
   };
 
   const actions = renderActions();
+
+  // Use / Drink / Apply for consumables (#217) — only where the host page
+  // provides a use flow (the character sheet; PartyWealth passes no onUse).
+  const useButton = onUse && consumableMeta(item) && (item.quantity ?? 1) > 0 ? (
+    <button className="btn-small btn-primary" data-testid="item-action-use" onClick={() => act(() => onUse(item))}>
+      {consumableVerb(item)}
+    </button>
+  ) : null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={item.name} themeColor={themeColor} maxWidth="500px" highZ>
@@ -379,8 +388,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor }) => {
       )}
 
       {/* Loadout actions — state-appropriate (drop / stow / retrieve / …) */}
-      {actions && (
-        <div className="item-modal-actions">{actions}</div>
+      {(useButton || actions) && (
+        <div className="item-modal-actions">{useButton}{actions}</div>
       )}
     </Modal>
   );

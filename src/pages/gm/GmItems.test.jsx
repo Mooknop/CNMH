@@ -621,6 +621,101 @@ describe('GmItems', () => {
     });
   });
 
+  describe('consumable metadata (#217)', () => {
+    const effects = [
+      { id: 'drakeheart-mutagen', name: 'Drakeheart Mutagen' },
+      { id: 'heroism-1', name: 'Heroism (Rank 1–3)' },
+    ];
+    const potionItem = {
+      id: 'minor-healing-potion',
+      name: 'Minor Healing Potion',
+      traits: ['Consumable', 'Potion'],
+      consumable: { kind: 'healing', note: '1d8 HP' },
+    };
+
+    it('pre-fills the structured fields, not the raw-JSON box', () => {
+      useContent.mockReturnValue({ items: [potionItem], spells: [], effects });
+      render(<GmItems />);
+      selectItem('Minor Healing Potion');
+      const form = screen.getByTestId('item-form-minor-healing-potion');
+      expect(within(form).getByLabelText('consumable-kind')).toHaveValue('healing');
+      expect(within(form).getByLabelText('consumable-note')).toHaveValue('1d8 HP');
+      expect(within(form).getByLabelText('rest-json')).toHaveValue('{}');
+    });
+
+    it('round-trips a healing consumable on Save', async () => {
+      useContent.mockReturnValue({ items: [potionItem], spells: [], effects });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Minor Healing Potion');
+      const form = screen.getByTestId('item-form-minor-healing-potion');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].consumable).toEqual({ kind: 'healing', note: '1d8 HP' });
+    });
+
+    it('authors an effect consumable with effect picker + duration', async () => {
+      useContent.mockReturnValue({ items: [potionItem], spells: [], effects });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Minor Healing Potion');
+      const form = screen.getByTestId('item-form-minor-healing-potion');
+      fireEvent.change(within(form).getByLabelText('consumable-kind'), { target: { value: 'effect' } });
+      fireEvent.change(within(form).getByLabelText('consumable-effect'), {
+        target: { value: 'drakeheart-mutagen' },
+      });
+      fireEvent.change(within(form).getByLabelText('consumable-duration'), { target: { value: '10' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].consumable).toEqual({
+        kind: 'effect',
+        effectId: 'drakeheart-mutagen',
+        durationMinutes: 10,
+        note: '1d8 HP',
+      });
+    });
+
+    it('rejects an effect consumable without a picked effect', async () => {
+      useContent.mockReturnValue({ items: [potionItem], spells: [], effects });
+      render(<GmItems />);
+      selectItem('Minor Healing Potion');
+      const form = screen.getByTestId('item-form-minor-healing-potion');
+      fireEvent.change(within(form).getByLabelText('consumable-kind'), { target: { value: 'effect' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/needs an effect/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+
+    it('clears the block when kind is set back to none', async () => {
+      useContent.mockReturnValue({ items: [potionItem], spells: [], effects });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Minor Healing Potion');
+      const form = screen.getByTestId('item-form-minor-healing-potion');
+      fireEvent.change(within(form).getByLabelText('consumable-kind'), { target: { value: 'none' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].consumable).toBeUndefined();
+    });
+
+    it('rejects consumable in the raw-JSON extra fields box', async () => {
+      useContent.mockReturnValue({ items: [potionItem], spells: [], effects });
+      render(<GmItems />);
+      selectItem('Minor Healing Potion');
+      const form = screen.getByTestId('item-form-minor-healing-potion');
+      fireEvent.change(within(form).getByLabelText('rest-json'), {
+        target: { value: '{"consumable": {"kind": "healing"}}' },
+      });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/must not include .*consumable/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+  });
+
   describe('image round-trip', () => {
     it('saves image id when item has an image', async () => {
       const withImage = { ...items[0], image: 'img_elixir.jpg' };
