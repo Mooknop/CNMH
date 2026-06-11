@@ -5,6 +5,7 @@ import TargetRollResolver from './TargetRollResolver';
 import MultiRayResolver from './MultiRayResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
 import ChainedSpellSection from './ChainedSpellSection';
+import HeightenedNotes from './HeightenedNotes';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
@@ -271,6 +272,13 @@ const UseAbilityModal = ({
     const rawResults   = resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
 
+    // The rank this cast happens at (#235): the chosen slot option's rank, or
+    // the spell's native rank for free/focus casts. Non-spell actions: none.
+    const directCastRank = selectedCastOption?.rank
+      ?? (effectiveVerb === 'cast' && typeof ability.level === 'number' && ability.level > 0
+        ? ability.level
+        : undefined);
+
     // Normalise resolver output into ray groups so single-roll and multi-ray casts
     // share one logging path. Single-roll returns a flat result array → one group
     // with rayIndex null (no "ray N" prefix). Multi-ray returns [{ rayIndex, results }].
@@ -335,6 +343,8 @@ const UseAbilityModal = ({
         sendUpdate,
         appendLog,
         verb: effectiveVerb,
+        // Only when heightened above native — native casts keep their log text.
+        rank: directCastRank > (ability.level || 0) ? directCastRank : undefined,
       });
     } else {
       // Generic action log — omit enemies whose roll result will be logged below.
@@ -410,16 +420,25 @@ const UseAbilityModal = ({
         save: rollProfile.defense,
         dc: saveDc,
         basic: !!(ability.basic),
+        rank: directCastRank,
         targets,
       });
     }
 
     // Log chained spell results (Reach Spell, Harrow Casting, etc.).
     if (hasChainSpell && chainResults) {
-      // Chained casts pick from the repertoire, so the cost is unambiguous:
-      // a slot of the spell's rank (cantrips are free).
+      // Chained casts spend the option the section picked (#235) — signature
+      // spells can heighten, cantrips stay free. Sections rendered without the
+      // resources prop report no option; fall back to the native-rank spend.
       let chainSuffix = '';
-      if (chainResults.spellRank > 0) {
+      if (chainResults.castOption) {
+        if (chainResults.castOption.enabled) {
+          const { label } = resources.spend(chainResults.castOption);
+          if (label) chainSuffix = ` (${label})`;
+        } else {
+          chainSuffix = ` (no rank-${chainResults.castRank} slots left — not spent)`;
+        }
+      } else if (chainResults.spellRank > 0) {
         if (resources.slots.remainingFor(chainResults.spellRank) > 0) {
           resources.slots.spend(chainResults.spellRank);
           chainSuffix = ` (rank ${chainResults.spellRank} slot)`;
@@ -459,6 +478,7 @@ const UseAbilityModal = ({
           save: chainResults.rollProfile.defense,
           dc: chainResults.rollProfile.dc,
           basic: false,
+          rank: chainResults.castRank > 0 ? chainResults.castRank : undefined,
           targets: chainResults.saveTargets.map((e) => ({
             entryId: e.entryId, name: e.name,
             saveMod: e.defenses?.saves?.[chainResults.rollProfile.defense] ?? null,
@@ -693,6 +713,9 @@ const UseAbilityModal = ({
                 ))}
               </div>
             )}
+            {(selectedCastOption?.type === 'slot' || selectedCastOption?.type === 'staff-slot') && (
+              <HeightenedNotes spell={ability} castRank={selectedCastOption.rank} />
+            )}
             {selectedCastOption && !selectedCastOption.enabled && (
               <>
                 <div className="uam-cost-empty">
@@ -815,6 +838,7 @@ const UseAbilityModal = ({
                   effects={activeEffects || []}
                   onTotalCostChange={onSpellChainCostChange}
                   mapStep={mapStep}
+                  resources={resources}
                 />
               </>
             ) : (

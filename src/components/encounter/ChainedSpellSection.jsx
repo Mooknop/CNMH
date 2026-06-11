@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
 import TargetRollResolver from './TargetRollResolver';
+import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { isAttackAbility } from '../../utils/map';
@@ -40,6 +41,9 @@ const ChainedSpellSection = forwardRef(({
   effects,
   onTotalCostChange,
   mapStep = 0,
+  // The parent's useCastingResources instance (#235). Optional: without it the
+  // section has no rank picker and the parent falls back to native-rank spend.
+  resources = null,
 }, ref) => {
   const filteredSpells = useMemo(() => {
     const spells = character?.spellcasting?.spells || [];
@@ -58,6 +62,15 @@ const ChainedSpellSection = forwardRef(({
   const resolverRef = useRef(null);
 
   const selectedSpell = filteredSpells.find((s) => s.id === selectedSpellId) ?? filteredSpells[0] ?? null;
+
+  // Cast-cost options for the chained spell (#235) — signature spells offer
+  // one slot option per rank ≥ native, so a chained cast can heighten too.
+  // null = default (first enabled option), mirroring the parent's picker.
+  const [chainCastIdx, setChainCastIdx] = useState(null);
+  const castOptions = resources && selectedSpell ? resources.optionsFor(selectedSpell, 'slot') : [];
+  const defaultCastIdx = Math.max(0, castOptions.findIndex((o) => o.enabled));
+  const selectedCastOption = castOptions[chainCastIdx ?? defaultCastIdx] || null;
+  const castRank = selectedCastOption?.rank ?? (selectedSpell?.level ?? 0);
 
   const spellCost = selectedSpell ? parseSpellCost(selectedSpell.actions) : 0;
   const parentNum = typeof parentCost === 'number' ? parentCost : 1;
@@ -88,6 +101,8 @@ const ChainedSpellSection = forwardRef(({
         spellCost,
         totalCost,
         spellRank:     selectedSpell.level ?? 0,
+        castOption:    selectedCastOption,
+        castRank,
         isAttackSpell: isAttackAbility(selectedSpell),
         rollResults: resolverRef.current?.getResults() ?? null,
         saveTargets: saveTargets.length > 0 ? saveTargets : null,
@@ -110,7 +125,7 @@ const ChainedSpellSection = forwardRef(({
       <select
         aria-label="spell picker"
         value={selectedSpellId}
-        onChange={(e) => setSelectedSpellId(e.target.value)}
+        onChange={(e) => { setSelectedSpellId(e.target.value); setChainCastIdx(null); }}
         style={{ width: '100%', fontSize: '0.85rem', marginBottom: '0.4rem' }}
       >
         {filteredSpells.map((s) => (
@@ -124,6 +139,31 @@ const ChainedSpellSection = forwardRef(({
         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.4rem', fontStyle: 'italic' }}>
           {chain.modifier}
         </div>
+      )}
+
+      {castOptions.length > 1 && (
+        <div className="uam-cost-options" role="radiogroup" aria-label="Chained casting source">
+          {castOptions.map((opt, idx) => (
+            <label
+              key={`${opt.type}-${opt.rank ?? opt.key ?? idx}`}
+              className={`uam-cost-option${!opt.enabled ? ' uam-cost-option--disabled' : ''}`}
+            >
+              <input
+                type="radio"
+                name="chain-cast-source"
+                checked={(chainCastIdx ?? defaultCastIdx) === idx}
+                onChange={() => setChainCastIdx(idx)}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      )}
+      {castOptions.length === 1 && (
+        <div className="uam-cost-single">{castOptions[0].label}</div>
+      )}
+      {selectedSpell && (
+        <HeightenedNotes spell={selectedSpell} castRank={castRank} />
       )}
 
       <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>

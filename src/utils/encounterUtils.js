@@ -19,8 +19,9 @@ export const defaultEncounter = () => ({
 });
 
 // saveRequest shape:
-// { id, ts, casterId, casterName, abilityName, save, dc, basic,
+// { id, ts, casterId, casterName, abilityName, save, dc, basic, rank?,
 //   targets:[{entryId,name,saveMod}], status:'pending'|'resolved' }
+// rank: the spell's cast rank when the source was a spell (#235).
 let _saveReqCounter = 0;
 export const makeSaveRequest = (req) => ({
   ...req,

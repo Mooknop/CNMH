@@ -78,6 +78,21 @@ describe('RequestedSaves', () => {
     expect(screen.getByText(/20/)).toBeInTheDocument();
   });
 
+  test('shows the cast rank when the request carries one (#235)', () => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([{ ...baseRequest, rank: 4 }]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+    render(<RequestedSaves />);
+    expect(screen.getByText(/\(rank 4\)/)).toBeInTheDocument();
+  });
+
+  test('shows no rank label when the request has none', () => {
+    render(<RequestedSaves />);
+    expect(screen.queryByText(/\(rank/)).not.toBeInTheDocument();
+  });
+
   test('shows "(basic)" label when basic is true', () => {
     useEncounter.mockReturnValue({
       encounter: makeEncounter([{ ...baseRequest, basic: true }]),

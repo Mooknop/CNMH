@@ -92,6 +92,7 @@ const RequestedSaves = () => {
               <strong>{req.casterName}</strong>
               {' — '}
               {req.abilityName}
+              {req.rank ? ` (rank ${req.rank})` : ''}
               {': '}
               {saveLabel} DC {req.dc}
               {req.basic && <span className="gm-save-req-basic"> (basic)</span>}

@@ -215,3 +215,127 @@ describe('ChainedSpellSection', () => {
     expect(screen.getByText(/No qualifying spells/i)).toBeInTheDocument();
   });
 });
+
+// Rank picking + heightening for chained casts (#235). The resources prop is
+// the parent's useCastingResources instance; stubbed here.
+describe('ChainedSpellSection rank picker', () => {
+  const SIGNATURE = {
+    id: 'fear', name: 'Fear', actions: 'Two Actions', range: '30 feet',
+    level: 1, signature: true,
+    heightened: { '3rd': 'You can target up to five creatures.' },
+  };
+  const NATIVE_ONLY = {
+    id: 'mage-armor', name: 'Mage Armor', actions: 'Two Actions', range: '30 feet', level: 1,
+  };
+  const CANTRIP = {
+    id: 'detect-magic', name: 'Detect Magic', actions: 'Two Actions', range: '30 feet', level: 0,
+  };
+
+  const signatureOptions = [
+    { type: 'slot', rank: 1, label: 'Rank 1 slot (2 left)', enabled: true },
+    { type: 'slot', rank: 2, label: 'Rank 2 slot (1 left)', enabled: true },
+    { type: 'slot', rank: 3, label: 'Rank 3 slot (0 left)', enabled: false, reason: 'No rank-3 slots remaining' },
+  ];
+
+  const makeResources = (optionsBySpellId) => ({
+    optionsFor: vi.fn((spell) => optionsBySpellId[spell.id] || []),
+    spend: vi.fn(() => ({ ok: true, label: 'rank 1 slot' })),
+  });
+
+  const renderWithResources = (spells, resources, ref) =>
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={{ ...character, spellcasting: { spells } }}
+        chain={harrowChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+        resources={resources}
+      />
+    );
+
+  it('renders one radio per rank option for a signature spell', () => {
+    renderWithResources([SIGNATURE], makeResources({ fear: signatureOptions }));
+    const group = screen.getByRole('radiogroup', { name: /chained casting source/i });
+    expect(group).toBeInTheDocument();
+    expect(screen.getByText('Rank 1 slot (2 left)')).toBeInTheDocument();
+    expect(screen.getByText('Rank 2 slot (1 left)')).toBeInTheDocument();
+    expect(screen.getByText('Rank 3 slot (0 left)')).toBeInTheDocument();
+  });
+
+  it('getResults carries the chosen option and rank; spellRank stays native', () => {
+    const ref = createRef();
+    renderWithResources([SIGNATURE], makeResources({ fear: signatureOptions }), ref);
+    fireEvent.click(screen.getByRole('radio', { name: /rank 2 slot/i }));
+    const res = ref.current.getResults();
+    expect(res.castOption).toMatchObject({ type: 'slot', rank: 2 });
+    expect(res.castRank).toBe(2);
+    expect(res.spellRank).toBe(1);
+  });
+
+  it('shows heightened text only above native rank', () => {
+    renderWithResources([SIGNATURE], makeResources({ fear: signatureOptions }));
+    // default = rank 1 (native) → no heightened block
+    expect(screen.queryByText(/target up to five creatures/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: /rank 3 slot/i }));
+    expect(screen.getByText(/target up to five creatures/)).toBeInTheDocument();
+  });
+
+  it('non-signature spell shows a single cost line, no radio group', () => {
+    const ref = createRef();
+    const resources = makeResources({
+      'mage-armor': [{ type: 'slot', rank: 1, label: 'Rank 1 slot (2 left)', enabled: true }],
+    });
+    renderWithResources([NATIVE_ONLY], resources, ref);
+    expect(screen.queryByRole('radiogroup', { name: /chained casting source/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Rank 1 slot (2 left)')).toBeInTheDocument();
+    expect(ref.current.getResults().castRank).toBe(1);
+  });
+
+  it('cantrip shows the free label and no rank in results', () => {
+    const ref = createRef();
+    const resources = makeResources({
+      'detect-magic': [{ type: 'cantrip', label: 'Cantrip — no cost', enabled: true }],
+    });
+    renderWithResources([CANTRIP], resources, ref);
+    expect(screen.getByText('Cantrip — no cost')).toBeInTheDocument();
+    const res = ref.current.getResults();
+    expect(res.castOption).toMatchObject({ type: 'cantrip' });
+    expect(res.castRank).toBe(0);
+  });
+
+  it('without the resources prop getResults reports no cast option', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={{ ...character, spellcasting: { spells: [SIGNATURE] } }}
+        chain={harrowChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(screen.queryByRole('radiogroup', { name: /chained casting source/i })).not.toBeInTheDocument();
+    const res = ref.current.getResults();
+    expect(res.castOption).toBeNull();
+    expect(res.castRank).toBe(1);
+  });
+
+  it('switching spells resets the rank choice to the default option', () => {
+    const ref = createRef();
+    const resources = makeResources({
+      fear: signatureOptions,
+      'mage-armor': [{ type: 'slot', rank: 1, label: 'Rank 1 slot (2 left)', enabled: true }],
+    });
+    renderWithResources([SIGNATURE, NATIVE_ONLY], resources, ref);
+    fireEvent.click(screen.getByRole('radio', { name: /rank 2 slot/i }));
+    expect(ref.current.getResults().castRank).toBe(2);
+    fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'mage-armor' } });
+    fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'fear' } });
+    expect(ref.current.getResults().castRank).toBe(1); // back to first enabled
+  });
+});

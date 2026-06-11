@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CastSpellModal from './CastSpellModal';
 import { resolveExpireAt } from '../../utils/expiry';
@@ -48,6 +48,7 @@ vi.mock('../../hooks/useEncounter', () => ({
       order: [
         { entryId: 'e-caster', kind: 'pc', charId: 'char-a', name: 'Pellias', initiative: 20 },
         { entryId: 'e-target', kind: 'pc', charId: 'char-b', name: 'Ashka', initiative: 15 },
+        { entryId: 'e-goblin', kind: 'enemy', name: 'Goblin', initiative: 10 },
       ],
       log: [],
     },
@@ -104,9 +105,13 @@ vi.mock('./ChainedStrikeSection', () => {
   }) };
 });
 
+// Per-test overrides for the ChainedSpellSection mock's getResults() (#235 —
+// rank-picking happens inside the section, so tests inject its outcome here).
+const chainSpellMock = vi.hoisted(() => ({ extraResults: {} }));
+
 vi.mock('./ChainedSpellSection', () => {
   const { forwardRef, useImperativeHandle, useEffect, createElement } = require('react');
-   
+
   return { default: forwardRef(({ chain, parentCost, onTotalCostChange }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => ({
@@ -114,6 +119,9 @@ vi.mock('./ChainedSpellSection', () => {
         rollResults: null, saveTargets: null,
         rollProfile: { mode: 'none', bonus: null, dc: null, defense: null },
         modifier: chain.modifier || null,
+        castOption: null,
+        castRank: 0,
+        ...chainSpellMock.extraResults,
       }),
       getTotalCost: () => 3,
     }));
@@ -156,6 +164,7 @@ describe('CastSpellModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    chainSpellMock.extraResults = {};
     mockResolveExpireAt = resolveExpireAt;
     mockResolveExpireAt.mockReturnValue({ round: 1, entryId: 'e-caster', boundary: 'turn-end' });
   });
@@ -535,6 +544,118 @@ describe('CastSpellModal', () => {
       expect(slotWrites).toHaveLength(0);
       expect(mockAppendLog).toHaveBeenCalledWith(
         expect.objectContaining({ text: expect.stringContaining('override — no resource spent') })
+      );
+    });
+  });
+
+  describe('spell heightening (#235)', () => {
+    const casterChar = {
+      id: 'char-a',
+      name: 'Pellias',
+      level: 5,
+      spellcasting: { ability: 'charisma', proficiency: 1, spell_slots: { 1: 3, 2: 2, 3: 2 } },
+      abilities: { charisma: 18 },
+    };
+    // No rank-1 pool: the parent spellshape (no level → native rank 1) stays
+    // untracked, so only the chained spend touches the slots key. (In the app
+    // spellshapes launch with verb "Use" and never get a parent cast cost.)
+    const chainCaster = {
+      ...casterChar,
+      spellcasting: { ...casterChar.spellcasting, spell_slots: { 2: 2, 3: 2 } },
+    };
+    const reachSpell = {
+      id: 'reach-spell',
+      name: 'Reach Spell',
+      actions: 'One Action',
+      chain: { into: 'spell', cost: 'added', spellFilter: 'has-range', modifier: 'Range increased by 30 feet' },
+    };
+
+    it('chained confirm spends the rank the section picked', () => {
+      chainSpellMock.extraResults = {
+        castOption: { type: 'slot', rank: 3, enabled: true },
+        castRank: 3,
+        spellRank: 1,
+      };
+      render(<CastSpellModal {...defaultProps} character={chainCaster} spell={reachSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 3: 1 }));
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('Light') && t.includes('(rank 3 slot)'))).toBe(true);
+    });
+
+    it('chained confirm with a disabled option logs "not spent" and spends nothing', () => {
+      chainSpellMock.extraResults = {
+        castOption: { type: 'slot', rank: 3, enabled: false },
+        castRank: 3,
+        spellRank: 1,
+      };
+      render(<CastSpellModal {...defaultProps} character={chainCaster} spell={reachSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      const slotWrites = mockSendUpdate.mock.calls.filter(([, type]) => type === 'slots');
+      expect(slotWrites).toHaveLength(0);
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('no rank-3 slots left — not spent'))).toBe(true);
+    });
+
+    it('chained save request carries the cast rank', () => {
+      chainSpellMock.extraResults = {
+        castOption: { type: 'slot', rank: 3, enabled: true },
+        castRank: 3,
+        spellRank: 1,
+        rollProfile: { mode: 'target-save', bonus: null, dc: 21, defense: 'reflex' },
+        saveTargets: [{ entryId: 'e-goblin', name: 'Goblin' }],
+      };
+      render(<CastSpellModal {...defaultProps} character={chainCaster} spell={reachSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockAddSaveRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ abilityName: 'Reach Spell → Light', rank: 3 })
+      );
+    });
+
+    it('section without a cast option falls back to the native-rank spend', () => {
+      chainSpellMock.extraResults = { castOption: null, castRank: 2, spellRank: 2 };
+      render(<CastSpellModal {...defaultProps} character={chainCaster} spell={reachSpell} />);
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 2: 1 }));
+      const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
+      expect(logCalls.some((t) => t.includes('(rank 2 slot)'))).toBe(true);
+    });
+
+    it('direct cast shows the heightened text for the chosen rank only', () => {
+      const sigSpell = {
+        id: 'fear', name: 'Fear', level: 1, signature: true, actions: 'Two Actions',
+        heightened: { '3rd': 'You can target up to five creatures.' },
+      };
+      render(<CastSpellModal {...defaultProps} character={casterChar} spell={sigSpell} castSource="slot" />);
+      // default = rank 1 (native): nothing heightened
+      expect(screen.queryByText(/target up to five creatures/)).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('radio', { name: /rank 3 slot/i }));
+      expect(screen.getByText(/target up to five creatures/)).toBeInTheDocument();
+    });
+
+    it('direct save request carries the chosen cast rank', () => {
+      const sigSaveSpell = {
+        id: 'fear', name: 'Fear', level: 1, signature: true, actions: 'Two Actions',
+        defense: 'Will',
+      };
+      render(<CastSpellModal {...defaultProps} character={casterChar} spell={sigSaveSpell} castSource="slot" />);
+      fireEvent.click(screen.getByRole('radio', { name: /rank 2 slot/i }));
+      fireEvent.click(screen.getByRole('button', { name: 'Target Goblin' }));
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockAddSaveRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ abilityName: 'Fear', rank: 2 })
+      );
+    });
+
+    it('cantrip cast produces no rank on the save request', () => {
+      const cantripSave = {
+        id: 'daze', name: 'Daze', level: 0, actions: 'Two Actions', defense: 'Will',
+      };
+      render(<CastSpellModal {...defaultProps} character={casterChar} spell={cantripSave} castSource="slot" />);
+      fireEvent.click(screen.getByRole('button', { name: 'Target Goblin' }));
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockAddSaveRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ abilityName: 'Daze', rank: undefined })
       );
     });
   });
