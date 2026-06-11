@@ -61,7 +61,7 @@ const ARMOR = ['unarmored', 'light', 'medium', 'heavy'];
 const TIERS = [0, 1, 2, 3, 4];
 // Per-spell scalar fields the form manages explicitly; anything else on a spell
 // (id, etc.) is preserved verbatim.
-const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration'];
+const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration', 'description'];
 const SPELL_NUM = ['level', 'baseLevel'];
 
 const toInt = (v) => {
