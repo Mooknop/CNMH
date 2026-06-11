@@ -90,6 +90,85 @@ export const immunityFromForm = (f) => {
   return out;
 };
 
+export const FrequencyRuleControl = ({ value, onChange, idPrefix }) => {
+  const set = (patch) => onChange({ ...value, ...patch });
+  return (
+    <div className="gm-row">
+      <div className="form-group">
+        <label>frequency rule (enforced)</label>
+        <select
+          aria-label={`${idPrefix}-frequency-per`}
+          value={value.per}
+          onChange={(e) => set({ per: e.target.value })}
+        >
+          <option value="">— (untracked)</option>
+          {FREQUENCY_PER_OPTIONS.map((per) => (
+            <option key={per} value={per}>per {per}</option>
+          ))}
+        </select>
+      </div>
+      {value.per && (
+        <div className="form-group">
+          <label>uses</label>
+          <input
+            type="number"
+            min="1"
+            aria-label={`${idPrefix}-frequency-uses`}
+            value={value.uses}
+            onChange={(e) => set({ uses: e.target.value })}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const ImmunityControl = ({ value, onChange, idPrefix }) => {
+  const set = (patch) => onChange({ ...value, ...patch });
+  return (
+    <div className="gm-row">
+      <div className="form-group">
+        <label>target immunity</label>
+        <select
+          aria-label={`${idPrefix}-immunity-unit`}
+          value={value.unit}
+          onChange={(e) => set({ unit: e.target.value })}
+        >
+          <option value="">— (none)</option>
+          {IMMUNITY_UNIT_OPTIONS.map((unit) => (
+            <option key={unit} value={unit}>per {unit}</option>
+          ))}
+        </select>
+      </div>
+      {value.unit && (
+        <>
+          <div className="form-group">
+            <label>duration</label>
+            <input
+              type="number"
+              min="1"
+              aria-label={`${idPrefix}-immunity-value`}
+              value={value.value}
+              onChange={(e) => set({ value: e.target.value })}
+            />
+          </div>
+          <div className="form-group">
+            <label>scope</label>
+            <select
+              aria-label={`${idPrefix}-immunity-scope`}
+              value={value.scope}
+              onChange={(e) => set({ scope: e.target.value })}
+            >
+              <option value="any">any caster</option>
+              <option value="per-caster">per caster</option>
+            </select>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const RollSourceControl = ({ value, onChange, idPrefix }) => {
   const set = (patch) => onChange({ ...value, ...patch });
   return (
@@ -666,104 +745,16 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
           />
         </div>
       </div>
-      <div className="gm-row">
-        <div className="form-group">
-          <label>frequency rule (enforced)</label>
-          <select
-            aria-label={`${idPrefix}-frequency-per`}
-            value={(value.frequencyRule || frequencyRuleToForm(null)).per}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                frequencyRule: {
-                  ...(value.frequencyRule || frequencyRuleToForm(null)),
-                  per: e.target.value,
-                },
-              })
-            }
-          >
-            <option value="">— (untracked)</option>
-            {FREQUENCY_PER_OPTIONS.map((per) => (
-              <option key={per} value={per}>per {per}</option>
-            ))}
-          </select>
-        </div>
-        {(value.frequencyRule || frequencyRuleToForm(null)).per && (
-          <div className="form-group">
-            <label>uses</label>
-            <input
-              type="number"
-              min="1"
-              aria-label={`${idPrefix}-frequency-uses`}
-              value={(value.frequencyRule || frequencyRuleToForm(null)).uses}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  frequencyRule: {
-                    ...(value.frequencyRule || frequencyRuleToForm(null)),
-                    uses: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-        )}
-      </div>
-      <div className="gm-row">
-        <div className="form-group">
-          <label>target immunity</label>
-          <select
-            aria-label={`${idPrefix}-immunity-unit`}
-            value={(value.immunity || immunityToForm(null)).unit}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                immunity: { ...(value.immunity || immunityToForm(null)), unit: e.target.value },
-              })
-            }
-          >
-            <option value="">— (none)</option>
-            {IMMUNITY_UNIT_OPTIONS.map((unit) => (
-              <option key={unit} value={unit}>per {unit}</option>
-            ))}
-          </select>
-        </div>
-        {(value.immunity || immunityToForm(null)).unit && (
-          <>
-            <div className="form-group">
-              <label>duration</label>
-              <input
-                type="number"
-                min="1"
-                aria-label={`${idPrefix}-immunity-value`}
-                value={(value.immunity || immunityToForm(null)).value}
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    immunity: { ...(value.immunity || immunityToForm(null)), value: e.target.value },
-                  })
-                }
-              />
-            </div>
-            <div className="form-group">
-              <label>scope</label>
-              <select
-                aria-label={`${idPrefix}-immunity-scope`}
-                value={(value.immunity || immunityToForm(null)).scope}
-                onChange={(e) =>
-                  onChange({
-                    ...value,
-                    immunity: { ...(value.immunity || immunityToForm(null)), scope: e.target.value },
-                  })
-                }
-              >
-                <option value="any">any caster</option>
-                <option value="per-caster">per caster</option>
-              </select>
-            </div>
-          </>
-        )}
-      </div>
+      <FrequencyRuleControl
+        value={value.frequencyRule || frequencyRuleToForm(null)}
+        idPrefix={idPrefix}
+        onChange={(r) => onChange({ ...value, frequencyRule: r })}
+      />
+      <ImmunityControl
+        value={value.immunity || immunityToForm(null)}
+        idPrefix={idPrefix}
+        onChange={(imm) => onChange({ ...value, immunity: imm })}
+      />
       <div className="form-group">
         <label>description</label>
         <textarea

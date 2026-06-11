@@ -398,6 +398,55 @@ describe('GmCharacters', () => {
     expect(sc.spells[1]).toEqual(expect.objectContaining({ name: 'Heal', level: 1, traits: ['Healing', 'Vitality'] }));
   });
 
+  it('round-trips spell frequencyRule + immunity through the spell row controls', async () => {
+    setContent([izzy]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Spellcasting');
+    const spell0 = within(form).getByTestId('spell-0');
+    fireEvent.change(within(spell0).getByLabelText('spell-0-frequency-per'), { target: { value: 'day' } });
+    fireEvent.change(within(spell0).getByLabelText('spell-0-frequency-uses'), { target: { value: '1' } });
+    fireEvent.change(within(spell0).getByLabelText('spell-0-immunity-unit'), { target: { value: 'hour' } });
+    fireEvent.change(within(spell0).getByLabelText('spell-0-immunity-value'), { target: { value: '1' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const sc = saveDocument.mock.calls[0][2].spellcasting;
+    expect(sc.spells[0].frequencyRule).toEqual({ per: 'day', uses: 1 });
+    expect(sc.spells[0].immunity).toEqual({ duration: { value: 1, unit: 'hour' } });
+  });
+
+  it('clearing a spell frequencyRule removes the key (no resurrection via rest)', async () => {
+    const izzyTagged = {
+      ...izzy,
+      spellcasting: {
+        ...izzy.spellcasting,
+        spells: [{
+          ...izzy.spellcasting.spells[0],
+          frequencyRule: { per: 'day', uses: 1 },
+          immunity: { duration: { value: 1, unit: 'hour' } },
+        }],
+      },
+    };
+    setContent([izzyTagged]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Spellcasting');
+    const spell0 = within(form).getByTestId('spell-0');
+    // Loaded values show in the controls…
+    expect(within(spell0).getByLabelText('spell-0-frequency-per').value).toBe('day');
+    expect(within(spell0).getByLabelText('spell-0-immunity-unit').value).toBe('hour');
+    // …then clear both and save.
+    fireEvent.change(within(spell0).getByLabelText('spell-0-frequency-per'), { target: { value: '' } });
+    fireEvent.change(within(spell0).getByLabelText('spell-0-immunity-unit'), { target: { value: '' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const sc = saveDocument.mock.calls[0][2].spellcasting;
+    expect(sc.spells[0].frequencyRule).toBeUndefined();
+    expect(sc.spells[0].immunity).toBeUndefined();
+  });
+
   it('removes an object section and adds another', async () => {
     setContent([pellias]);
     saveDocument.mockResolvedValue({ ok: true });
