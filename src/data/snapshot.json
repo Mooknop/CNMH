@@ -5559,6 +5559,7 @@
                 "Monk"
               ],
               "trigger": "You are the target of a physical ranged attack, are aware of the attack, are not off-guard, and have a free hand",
+              "triggerType": "attack-ranged",
               "description": "You gain a +4 circumstance bonus to AC against the triggering attack. If the attack misses, you have deflected it. You cannot use this to deflect unusually massive ranged projectiles (such as boulders or ballista bolts)."
             }
           ],
@@ -5576,6 +5577,7 @@
                 "Draconic Ravager"
               ],
               "trigger": "You are the target of a physical attack, are aware of the attack, and are not off-guard",
+              "triggerType": "attack-any",
               "description": "You gain a +2 circumstance bonus to AC against the triggering attack."
             }
           ],
@@ -6265,6 +6267,7 @@
             {
               "name": "Upstage",
               "trigger": "An enemy attempts a skill check and doesn’t get a critical success",
+              "triggerType": "enemy-skill-check",
               "description": "After your foe has tried their best, you show everyone how it’s really done. Attempt a check using the same skill that triggered this reaction. The DC is typically the same as the check the enemy attempted, though the GM can adjust this as usual.",
               "degrees": {
                 "Critical Success": "You gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn.",
@@ -6331,6 +6334,7 @@
                 "Skill"
               ],
               "trigger": "A creature you can observe within 30 feet takes a skill action with the Auditory, Concentrate, or Visual traits.",
+              "triggerType": "enemy-skill-check",
               "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute."
             }
           ],
@@ -6484,6 +6488,7 @@
             "range": "60 feet",
             "targets": "The triggering creature",
             "trigger": "A creature damages you",
+            "triggerType": "damaged-self",
             "defense": "Will",
             "description": "You make a grand spectacle out of getting hit. Enhanced by magic, this spectacle features sprays of blood, anguished screams, or other theatrics that appear to result from your foe's attack. The triggering creature must attempt a Will saving throw.",
             "degrees": {
@@ -7107,6 +7112,7 @@
                 "Fortune"
               ],
               "trigger": "You fail or critically fail a check associated with your active Harrow Omen's suit",
+              "triggerType": "self-check-failed",
               "description": "Treat the failure as a success or a critical failure as a failure. You no longer have an active harrow omen."
             }
           ],
@@ -7666,6 +7672,11 @@
         {
           "name": "Retributive Strike",
           "trigger": "An enemy damages an ally within 15 feet of you.",
+          "triggerType": "damaged-ally",
+          "chain": {
+            "into": "strike",
+            "cost": "included"
+          },
           "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it.",
           "traits": [
             "Champion"
@@ -7674,6 +7685,7 @@
         {
           "name": "Shield Block",
           "trigger": "While you have your shield raised, you take damage from a physical attack.",
+          "triggerType": "damaged-self",
           "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield.",
           "traits": [
             "General"
@@ -8111,6 +8123,7 @@
             "Thaumaturge"
           ],
           "trigger": "The target of your Exploit Vulnerability would damage you or an ally within 15 feet of you and you are holding your implement.",
+          "triggerType": "damaged-any",
           "description": "You forcefully present your amulet to turn away harm. You or a target ally within 15 feet gain resistance to all damage against the triggering damage. The resistance is equal to 2 + your level."
         }
       ]
@@ -9154,6 +9167,7 @@
       "range": "60 feet",
       "targets": "The triggering creature",
       "trigger": "A creature damages you",
+      "triggerType": "damaged-self",
       "defense": "Will",
       "description": "You make a grand spectacle out of getting hit. Enhanced by magic, this spectacle features sprays of blood, anguished screams, or other theatrics that appear to result from your foe's attack. The triggering creature must attempt a Will saving throw.",
       "degrees": {
