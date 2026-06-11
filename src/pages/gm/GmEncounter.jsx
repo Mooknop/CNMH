@@ -3,6 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
+import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import PlayModeControl from '../../components/gm/PlayModeControl';
@@ -100,6 +101,9 @@ const GmEncounter = () => {
                   data-testid={`order-row-${e.entryId}`}
                 >
                   <span className="gm-encounter-name">{e.name}</span>
+                  {phase === 'in-progress' && e.kind === 'pc' && e.charId && (
+                    <GmReactionBadge charId={e.charId} name={e.name} />
+                  )}
                   <span className="gm-encounter-init">
                     init {e.initiative === null || e.initiative === undefined ? '—' : e.initiative}
                   </span>

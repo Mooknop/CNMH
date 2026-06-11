@@ -450,6 +450,31 @@
   gap: 6px !important;
 }
 
+/* ── Per-PC reaction availability ↩ (initiative order) ───── */
+/* State palette mirrors the player-side ReactionIcon (TurnTrackerPanel.css). */
+.gm-reaction-badge {
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: default;
+  margin-left: 6px;
+}
+
+.gm-reaction-badge--unavailable {
+  opacity: 0.25;
+  color: var(--shell-text-tertiary);
+}
+
+.gm-reaction-badge--available {
+  opacity: 1;
+  color: var(--gold-mid);
+}
+
+.gm-reaction-badge--spent {
+  opacity: 0.35;
+  text-decoration: line-through;
+  color: var(--shell-text-tertiary);
+}
+
 /* ── Shared panel primitive (used by Dashboard + editors) ─── */
 /* Slice 3+ will use these; defining them here so they're available. */
 .gm-panel {

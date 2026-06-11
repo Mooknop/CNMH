@@ -148,4 +148,34 @@ describe('GmEncounter (read-only Foundry mirror)', () => {
     render(<GmEncounter />);
     expect(screen.queryByLabelText('assign-e9')).toBeNull();
   });
+
+  it('PC rows show a reaction availability badge; enemy rows do not', () => {
+    act(() => {
+      __set('cnmh_encounter_global', {
+        ...FOUNDRY_ENCOUNTER,
+        order: [
+          { entryId: 'e1', kind: 'pc',    charId: 'Pellias', name: 'Pellias',  initiative: 20 },
+          { entryId: 'e2', kind: 'enemy', foundryActorId: 'Actor.ccc', name: 'Goblin 1', initiative: 12 },
+        ],
+      });
+      __set('cnmh_turnstate_Pellias', {
+        hasStartedFirstTurn: true,
+        reactionAvailable: true,
+        reactionSpent: false,
+      });
+    });
+    render(<GmEncounter />);
+    expect(screen.getByLabelText('Pellias reaction available')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Goblin 1 reaction/)).toBeNull();
+
+    // The badge tracks the live turn state — spending the reaction flips it.
+    act(() => {
+      __set('cnmh_turnstate_Pellias', {
+        hasStartedFirstTurn: true,
+        reactionAvailable: true,
+        reactionSpent: true,
+      });
+    });
+    expect(screen.getByLabelText('Pellias reaction spent')).toBeInTheDocument();
+  });
 });
