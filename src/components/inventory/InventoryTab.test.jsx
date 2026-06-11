@@ -2,7 +2,10 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import InventoryTab from './InventoryTab';
 
-vi.mock('../../utils/InventoryUtils', () => ({
+vi.mock('../../utils/InventoryUtils', async () => ({
+  // Real isConsumable / remainingQuantity — the consumed-overlay wiring below
+  // exercises the genuine #217 behavior (scrolls AND consumable-tagged items).
+  ...(await vi.importActual('../../utils/InventoryUtils')),
   formatBulk: (bulk) => {
     if (bulk === 0) return '—';
     if (bulk < 1) return 'L';
@@ -13,12 +16,13 @@ vi.mock('../../utils/InventoryUtils', () => ({
     isEncumbered: used > threshold && used <= limit,
     isOverencumbered: used > limit
   }),
-  isConsumable: (item) => !!(item && item.scroll),
-  remainingQuantity: (item, consumedMap = {}) => {
-    const qty = item?.quantity ?? 1;
-    if (!(item && item.scroll)) return qty;
-    return Math.max(0, qty - ((consumedMap || {})[item.name] || 0));
-  },
+}));
+
+// Consumed-consumables overlay (cnmh_consumed_<charId>); gold key gets its default.
+let mockConsumed = {};
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: (key, initialValue) =>
+    key.startsWith('cnmh_consumed_') ? [mockConsumed, vi.fn()] : [initialValue, vi.fn()],
 }));
 
 vi.mock('../../hooks/useCharacter', () => ({
@@ -30,6 +34,21 @@ vi.mock('../../hooks/useCharacter', () => ({
         bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
         totalBulk: 0,
         inventory: [],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
+    if (character.id === 'potions') {
+      return {
+        id: 'potions',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 1,
+        inventory: [
+          { uid: 's1', id: 's1', name: 'Longsword', weight: 1, state: 'held2' },
+          {
+            uid: 'p1', id: 'p1', name: 'Minor Healing Potion', weight: 0.1, quantity: 3,
+            state: 'worn', consumable: { kind: 'healing' },
+          },
+        ],
         skillProficiencies: { crafting: 0 },
       };
     }
@@ -78,6 +97,10 @@ vi.mock('./ContainersList', () => ({
 }));
 
 const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
+
+beforeEach(() => {
+  mockConsumed = {};
+});
 
 describe('InventoryTab', () => {
   it('renders without crashing', () => {
@@ -160,5 +183,29 @@ describe('InventoryTab', () => {
     expect(screen.getByText(/^Overencumbered:/)).toBeInTheDocument();
     expect(container.querySelector('.bulk-warning.severe')).toBeInTheDocument();
     expect(container.querySelector('.bulk-progress-bar')).toHaveStyle('background-color: var(--color-danger)');
+  });
+
+  // #217: consumable-tagged items honor the consumed overlay like scrolls do.
+  describe('consumed-consumables overlay', () => {
+    it('passes the reduced remaining quantity to a partially-consumed item', () => {
+      mockConsumed = { 'Minor Healing Potion': 2 };
+      const onItemClick = vi.fn();
+      render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" onItemClick={onItemClick} />);
+      fireEvent.click(screen.getByTestId('item-card-p1'));
+      expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Minor Healing Potion', quantity: 1 }));
+    });
+
+    it('hides a fully-consumed consumable but keeps other items', () => {
+      mockConsumed = { 'Minor Healing Potion': 3 };
+      render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" />);
+      expect(screen.queryByTestId('item-card-p1')).not.toBeInTheDocument();
+      expect(screen.getByTestId('item-card-s1')).toBeInTheDocument();
+    });
+
+    it('leaves non-consumables untouched by the overlay', () => {
+      mockConsumed = { Longsword: 1 };
+      render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" />);
+      expect(screen.getByTestId('item-card-s1')).toBeInTheDocument();
+    });
   });
 });

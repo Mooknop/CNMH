@@ -614,6 +614,43 @@ describe('ItemModal', () => {
   });
 });
 
+describe('ItemModal — Use button (#217)', () => {
+  const potion = {
+    uid: 'p1',
+    name: 'Minor Healing Potion',
+    quantity: 2,
+    state: 'worn',
+    traits: ['Consumable', 'Potion'],
+    consumable: { kind: 'healing' },
+  };
+
+  it('renders the trait-derived verb and wires onUse + close', () => {
+    const onUse = vi.fn();
+    const onClose = vi.fn();
+    render(<ItemModal isOpen onClose={onClose} item={potion} onUse={onUse} />);
+    const btn = screen.getByTestId('item-action-use');
+    expect(btn).toHaveTextContent('Drink');
+    fireEvent.click(btn);
+    expect(onUse).toHaveBeenCalledWith(potion);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('is absent without an onUse prop (e.g. PartyWealth)', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={potion} />);
+    expect(screen.queryByTestId('item-action-use')).not.toBeInTheDocument();
+  });
+
+  it('is absent for items without consumable metadata', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={baseItem} onUse={vi.fn()} />);
+    expect(screen.queryByTestId('item-action-use')).not.toBeInTheDocument();
+  });
+
+  it('is absent when no copies remain', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={{ ...potion, quantity: 0 }} onUse={vi.fn()} />);
+    expect(screen.queryByTestId('item-action-use')).not.toBeInTheDocument();
+  });
+});
+
 describe('ItemModal — loadout action footer', () => {
   const backpack = { uid: 'bp', name: 'Backpack', container: { capacity: 4, contents: [] } };
   const pouch = { uid: 'po', name: 'Pouch', container: { capacity: 1, contents: [] } };

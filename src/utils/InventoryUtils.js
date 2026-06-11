@@ -226,10 +226,10 @@ export const isItemMagical = (item) => {
 /**
  * Whether an item is a tracked consumable — one whose copies are used up via
  * the player-writable `cnmh_consumed_<charId>` overlay (inventory itself is
- * GM-gated content). Today that's scrolls; #217 extends this to other
- * consumables (potions, talismans, …).
+ * GM-gated content). Scrolls qualify implicitly; other consumables (potions,
+ * elixirs, oils, …) opt in via catalog `consumable` metadata (#217).
  */
-export const isConsumable = (item) => !!(item && item.scroll);
+export const isConsumable = (item) => !!(item && (item.scroll || item.consumable));
 
 /**
  * Copies of an item still unspent: authored quantity minus the consumed-overlay

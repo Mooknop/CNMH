@@ -7,6 +7,8 @@ import {
   getBulkStatus,
   normalizeShield,
   isShieldBroken,
+  isConsumable,
+  remainingQuantity,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -326,6 +328,38 @@ describe('InventoryUtils', () => {
       expect(out).not.toHaveProperty('health');
       expect(out).not.toHaveProperty('breakThreshold');
       expect(out).not.toHaveProperty('broken_threshold');
+    });
+  });
+
+  describe('isConsumable', () => {
+    it('is true for scrolls (implicit)', () => {
+      expect(isConsumable({ scroll: { name: 'Heal' } })).toBe(true);
+    });
+
+    it('is true for items with consumable metadata (#217)', () => {
+      expect(isConsumable({ consumable: { kind: 'healing' } })).toBe(true);
+      expect(isConsumable({ consumable: { kind: 'effect', effectId: 'x' } })).toBe(true);
+    });
+
+    it('is false for plain items and null', () => {
+      expect(isConsumable({ name: 'Sword' })).toBe(false);
+      expect(isConsumable(null)).toBe(false);
+    });
+  });
+
+  describe('remainingQuantity', () => {
+    const potion = { name: 'Minor Healing Potion', quantity: 3, consumable: { kind: 'healing' } };
+
+    it('subtracts the consumed-overlay count for consumables', () => {
+      expect(remainingQuantity(potion, { 'Minor Healing Potion': 2 })).toBe(1);
+    });
+
+    it('floors at zero', () => {
+      expect(remainingQuantity(potion, { 'Minor Healing Potion': 5 })).toBe(0);
+    });
+
+    it('ignores the overlay for non-consumables', () => {
+      expect(remainingQuantity({ name: 'Sword', quantity: 1 }, { Sword: 1 })).toBe(1);
     });
   });
 

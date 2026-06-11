@@ -92,9 +92,9 @@ const spellFromForm = (sf) => {
 };
 
 // Keys that must never appear in the raw-JSON box: per-character data belongs
-// on the inventory reference, and containers / scroll / wand / variants have
-// dedicated UI.
-const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand', 'variants'];
+// on the inventory reference, and containers / scroll / wand / variants /
+// consumable metadata have dedicated UI.
+const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand', 'variants', 'consumable'];
 
 const variantToForm = (v) => ({
   level: v.level != null ? String(v.level) : '',
@@ -118,7 +118,7 @@ const variantFromForm = (vf) => {
 
 const toForm = (it) => {
   const rest = { ...it };
-  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants'].forEach(
+  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable'].forEach(
     (k) => delete rest[k]
   );
   // A weapon's `strikes` is usually an array, but a single-strike weapon
@@ -149,6 +149,11 @@ const toForm = (it) => {
       it.container && it.container.ignored != null ? String(it.container.ignored) : '',
     spellKind: it.scroll ? 'scroll' : it.wand ? 'wand' : 'none',
     spell: spellToForm(it.scroll || it.wand || {}),
+    consumableKind: it.consumable?.kind || 'none',
+    consumableEffectId: it.consumable?.effectId != null ? String(it.consumable.effectId) : '',
+    consumableDuration:
+      it.consumable?.durationMinutes != null ? String(it.consumable.durationMinutes) : '',
+    consumableNote: it.consumable?.note != null ? String(it.consumable.note) : '',
     restJson: JSON.stringify(rest, null, 2),
   };
 };
@@ -211,6 +216,22 @@ const itemFromForm = (f) => {
       );
     }
     out[f.spellKind] = spellFromForm(f.spell);
+  }
+
+  if (f.consumableKind === 'healing' || f.consumableKind === 'effect') {
+    const effectId = (f.consumableEffectId || '').trim();
+    if (f.consumableKind === 'effect' && !effectId) {
+      throw new Error(`The effect consumable "${f.name}" needs an effect from the catalog.`);
+    }
+    const minutes = parseInt(f.consumableDuration, 10);
+    out.consumable = {
+      kind: f.consumableKind,
+      ...(f.consumableKind === 'effect' ? { effectId } : {}),
+      ...(f.consumableKind === 'effect' && !Number.isNaN(minutes) && minutes > 0
+        ? { durationMinutes: minutes }
+        : {}),
+      ...(f.consumableNote.trim() ? { note: f.consumableNote.trim() } : {}),
+    };
   }
 
   return out;
@@ -412,7 +433,7 @@ const VariantSubform = ({ variant, idPrefix, onChange }) => (
 );
 
 const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
-  const { spells } = useContent();
+  const { spells, effects } = useContent();
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -451,6 +472,17 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   // so a fresh spell pick updates the disabled Name input + the slug-derived id.
   const derivedName = derivedItemName(e, spells);
   const isSpellItem = e.spellKind === 'scroll' || e.spellKind === 'wand';
+
+  // Effect-consumable picker options (mirrors the scroll/wand spell-ref select,
+  // including the dangling-ref option so a stale id can be repointed).
+  const sortedEffects = (Array.isArray(effects) ? effects : [])
+    .slice()
+    .sort((a, b) =>
+      String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
+    );
+  const effectMatch = e.consumableEffectId
+    ? sortedEffects.find((fx) => String(fx.id) === e.consumableEffectId)
+    : null;
 
   const save = async () => {
     // Override the item name only when we actually derived one (a known spell
@@ -594,6 +626,62 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           spells={spells}
           onChange={(spell) => set({ spell })}
         />
+      )}
+
+      {/* Consumable metadata (#217) — drives the Use/Drink/Apply flow on the
+          character sheet. Scrolls are consumed via the cast flow instead. */}
+      <div className="form-group">
+        <label>consumable</label>
+        <select
+          aria-label="consumable-kind"
+          value={e.consumableKind}
+          onChange={(ev) => set({ consumableKind: ev.target.value })}
+        >
+          <option value="none">none</option>
+          <option value="healing">healing (player enters HP)</option>
+          <option value="effect">effect (applies a catalog effect)</option>
+        </select>
+      </div>
+      {e.consumableKind === 'effect' && (
+        <div className="gm-row">
+          <div className="form-group">
+            <label>effect</label>
+            <select
+              aria-label="consumable-effect"
+              value={e.consumableEffectId}
+              onChange={(ev) => set({ consumableEffectId: ev.target.value })}
+            >
+              <option value="">— pick an effect —</option>
+              {sortedEffects.map((fx) => (
+                <option key={fx.id} value={fx.id}>
+                  {fx.name || fx.id}
+                </option>
+              ))}
+              {e.consumableEffectId && !effectMatch && (
+                <option value={e.consumableEffectId}>(unknown: {e.consumableEffectId})</option>
+              )}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>duration (minutes, blank = until removed)</label>
+            <input
+              aria-label="consumable-duration"
+              type="number"
+              value={e.consumableDuration}
+              onChange={(ev) => set({ consumableDuration: ev.target.value })}
+            />
+          </div>
+        </div>
+      )}
+      {e.consumableKind !== 'none' && (
+        <div className="form-group">
+          <label>note (shown in the use modal, e.g. "1d8 HP")</label>
+          <input
+            aria-label="consumable-note"
+            value={e.consumableNote}
+            onChange={(ev) => set({ consumableNote: ev.target.value })}
+          />
+        </div>
       )}
 
       {/* Neither scrolls nor wands have strikes — hide the editor entirely.

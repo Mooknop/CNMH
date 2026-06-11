@@ -14,6 +14,7 @@ import DowntimeSummaryModal from '../components/actions/DowntimeSummaryModal';
 import FamiliarModal from '../components/character-sheet/FamiliarModal';
 import AnimalCompanionModal from '../components/character-sheet/AnimalCompanionModal';
 import ItemModal from '../components/inventory/ItemModal';
+import UseConsumableModal from '../components/inventory/UseConsumableModal';
 import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
@@ -51,6 +52,7 @@ const CharacterSheet = () => {
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [useItem, setUseItem] = useState(null);
   const [isDailyPrepOpen, setIsDailyPrepOpen] = useState(false);
 
   // characterColor is now derived by CharacterContext from the active character's index
@@ -82,6 +84,12 @@ const CharacterSheet = () => {
   // Handle closing the item detail modal
   const closeItemModal = () => {
     setIsItemModalOpen(false);
+  };
+
+  // Use a consumable (#217) — the detail modal closes itself via act();
+  // this opens the confirmation flow for the tapped item.
+  const handleUseConsumable = (item) => {
+    setUseItem(item);
   };
 
   // Data layer — all character reads go through this hook
@@ -395,8 +403,19 @@ const CharacterSheet = () => {
           item={selectedItem}
           character={character}
           characterColor={characterColor}
+          onUse={handleUseConsumable}
         />
       )}
+      {useItem && (
+        <UseConsumableModal
+          isOpen={!!useItem}
+          onClose={() => setUseItem(null)}
+          item={useItem}
+          character={character}
+          themeColor={characterColor}
+        />
+      )}
+
       <DailyPrepModal
         isOpen={isDailyPrepOpen}
         onClose={() => setIsDailyPrepOpen(false)}
