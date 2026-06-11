@@ -395,7 +395,35 @@ describe('GmCharacters', () => {
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const sc = saveDocument.mock.calls[0][2].spellcasting;
     expect(sc.spell_slots).toEqual({ 1: 4, 3: 2 });
-    expect(sc.spells[1]).toEqual(expect.objectContaining({ name: 'Heal', level: 1, traits: ['Healing', 'Vitality'] }));
+    expect(sc.spells[1]).toEqual(
+      expect.objectContaining({ name: 'Heal', level: 1, traits: ['Healing', 'Vitality'], description: 'Restore HP.' })
+    );
+  });
+
+  it('round-trips a spell description (shows the stored text, saves edits)', async () => {
+    const izzyDescribed = {
+      ...izzy,
+      spellcasting: {
+        ...izzy.spellcasting,
+        spells: [{ ...izzy.spellcasting.spells[0], description: 'Cloud the mind of a creature.' }],
+      },
+    };
+    setContent([izzyDescribed]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Spellcasting');
+    const spell0 = within(form).getByTestId('spell-0');
+    // The stored description must populate the textarea…
+    expect(within(spell0).getByLabelText('spell-0-description')).toHaveValue('Cloud the mind of a creature.');
+    // …and an edit to it must survive the save round-trip.
+    fireEvent.change(within(spell0).getByLabelText('spell-0-description'), {
+      target: { value: 'Dazzling lights cloud the mind.' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const sc = saveDocument.mock.calls[0][2].spellcasting;
+    expect(sc.spells[0].description).toBe('Dazzling lights cloud the mind.');
   });
 
   it('round-trips spell frequencyRule + immunity through the spell row controls', async () => {
