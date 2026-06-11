@@ -75,6 +75,14 @@ vi.mock('../components/actions/ActionsList', () => ({
   }
 }));
 
+// ReactionPrompt imports UseAbilityModal (game clock via frequency gates); stub
+// it like EffectsPanel so this suite needs no GameDateProvider.
+vi.mock('../components/encounter/ReactionPrompt', () => ({
+  default: function DummyReactionPrompt() {
+    return null;
+  }
+}));
+
 vi.mock('../components/character-sheet/FamiliarModal', () => ({
   default: function DummyFamiliarModal({ isOpen }) {
     return isOpen ? <div data-testid="familiar-modal">Familiar Modal</div> : null;

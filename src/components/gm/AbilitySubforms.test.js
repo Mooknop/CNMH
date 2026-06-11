@@ -289,6 +289,32 @@ describe('action targetDefense round-trip', () => {
   });
 });
 
+describe('reaction triggerType round-trip', () => {
+  it('round-trips a declared triggerType through the form', () => {
+    const src = {
+      name: 'Deflect Projectile',
+      actions: 'Reaction',
+      trigger: 'A physical ranged attack targets you.',
+      triggerType: 'attack-ranged',
+    };
+    expect(reactionFromForm(reactionToForm(src))).toEqual(src);
+  });
+
+  it('omits triggerType when not set and keeps the free-text trigger intact', () => {
+    const src = { name: 'Attack of Opportunity', actions: 'Reaction', trigger: 'A creature within reach uses a move action.' };
+    const out = reactionFromForm(reactionToForm(src));
+    expect(out.triggerType).toBeUndefined();
+    expect(out.trigger).toBe(src.trigger);
+  });
+
+  it('does not double-write triggerType through the rest blob', () => {
+    const src = { name: 'Wing Deflection', actions: 'Reaction', triggerType: 'attack-any' };
+    const form = reactionToForm(src);
+    expect(form.rest.triggerType).toBeUndefined();
+    expect(form.triggerType).toBe('attack-any');
+  });
+});
+
 describe('foundryEffectToForm / foundryEffectFromForm', () => {
   it('round-trips a set foundryEffect with explicit applyTo', () => {
     const src = { ref: 'Compendium.pf2e.spell-effects.Item.abc123', applyTo: 'all-allies' };

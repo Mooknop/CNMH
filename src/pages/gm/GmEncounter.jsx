@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
+import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import PlayModeControl from '../../components/gm/PlayModeControl';
@@ -73,6 +74,10 @@ const GmEncounter = () => {
 
       {phase !== 'idle' && (
         <GmSaveRequest pcEntries={order.filter((e) => e.kind === 'pc' && e.charId)} />
+      )}
+
+      {phase !== 'idle' && (
+        <GmTriggerConsole pcEntries={order.filter((e) => e.kind === 'pc' && e.charId)} round={round} />
       )}
 
       {phase !== 'idle' && <RequestedSaves />}

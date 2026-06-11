@@ -19,6 +19,7 @@ import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import SavePrompt from '../components/encounter/SavePrompt';
+import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
 import SpellsList from '../components/spells/SpellsList';
 
@@ -125,6 +126,7 @@ const CharacterSheet = () => {
           return (
             <>
               <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} />
+              <ReactionPrompt character={character} themeColor={characterColor} />
               <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
               {encounter?.active ? (
                 <>
