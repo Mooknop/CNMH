@@ -34,18 +34,33 @@ vi.mock('../../hooks/useTurnState', () => ({
 }));
 
 let mockReactions;
+let mockStaffSpells;
 vi.mock('../../hooks/useCharacter', () => ({
-  useCharacter: () => ({ reactions: mockReactions }),
+  useCharacter: () => ({
+    reactions: mockReactions,
+    staffSpells: mockStaffSpells,
+    inventory: [],
+  }),
+}));
+
+let mockShield;
+vi.mock('../../hooks/useShield', () => ({
+  useShield: () => mockShield,
 }));
 
 vi.mock('./UseAbilityModal', () => ({
   __esModule: true,
-  default: ({ ability, cost, onClose }) => (
+  default: ({ ability, cost, verb, castSource, onClose }) => (
     <div data-testid="use-ability-modal">
-      {ability.name} ({cost})
+      {verb} {ability.name} ({cost}{castSource ? ` from ${castSource}` : ''})
       <button onClick={onClose} aria-label="close modal">close</button>
     </div>
   ),
+}));
+
+vi.mock('./ShieldBlockBar', () => ({
+  __esModule: true,
+  default: ({ charId }) => <div data-testid="shield-block-bar">{charId}</div>,
 }));
 
 import { __get, __reset, useSyncedState } from '../../hooks/useSyncedState';
@@ -86,6 +101,8 @@ beforeEach(() => {
     { name: 'Deflect Projectile', triggerType: 'attack-ranged' },
     { name: 'Wing Deflection',    triggerType: 'attack-any' },
   ];
+  mockStaffSpells = [];
+  mockShield = { raised: false, broken: false };
 });
 
 describe('ReactionPrompt', () => {
@@ -151,6 +168,55 @@ describe('ReactionPrompt', () => {
     expect(screen.queryByTestId('use-ability-modal')).toBeNull();
     expect(screen.getByLabelText('Reaction trigger prompt')).toBeInTheDocument();
     expect(__get(KEY)).not.toBeNull();
+  });
+
+  it('Shield Block row renders the damage-split bar instead of a Use button — only while raised', () => {
+    mockReactions = [{ name: 'Shield Block', triggerType: 'damaged-self' }];
+    mockShield = { raised: true, broken: false };
+    setup();
+    act(() => setPrompt({ ...prompt, eventId: 'damaged', label: 'PC was damaged' }));
+    expect(screen.getByTestId('shield-block-bar')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Use Shield Block')).toBeNull();
+  });
+
+  it('Shield Block does not match while the shield is not raised', () => {
+    mockReactions = [{ name: 'Shield Block', triggerType: 'damaged-self' }];
+    mockShield = { raised: false, broken: false };
+    setup();
+    act(() => setPrompt({ ...prompt, eventId: 'damaged', label: 'PC was damaged' }));
+    expect(screen.queryByRole('region')).toBeNull();
+  });
+
+  it('reaction-cost staff spells match and Cast from the staff', () => {
+    mockReactions = [];
+    mockStaffSpells = [
+      {
+        name: 'Overselling Flourish',
+        actions: 'Reaction',
+        triggerType: 'damaged-self',
+        fromStaff: true,
+        active: true,
+      },
+      // Non-reaction staff spells never enter the matching pool.
+      { name: 'Mirror Image', actions: 'Two Actions', triggerType: 'damaged-self', fromStaff: true, active: true },
+    ];
+    setup();
+    act(() => setPrompt({ ...prompt, eventId: 'damaged', label: 'PC was damaged' }));
+    expect(screen.queryByText('Mirror Image')).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('Use Overselling Flourish'));
+    expect(screen.getByTestId('use-ability-modal'))
+      .toHaveTextContent('Cast Overselling Flourish (reaction from staff)');
+  });
+
+  it('a stowed staff cannot offer its reaction spells', () => {
+    mockReactions = [];
+    mockStaffSpells = [
+      { name: 'Overselling Flourish', actions: 'Reaction', triggerType: 'damaged-self', fromStaff: true, active: false },
+    ];
+    setup();
+    act(() => setPrompt({ ...prompt, eventId: 'damaged', label: 'PC was damaged' }));
+    expect(screen.queryByRole('region')).toBeNull();
   });
 
   it('consumes the prompt once the reaction is spent', () => {

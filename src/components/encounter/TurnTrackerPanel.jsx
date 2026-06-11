@@ -8,6 +8,7 @@ import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
+import ShieldBlockBar from './ShieldBlockBar';
 import './TurnTrackerPanel.css';
 
 const formatCombatTime = (secs) => {
@@ -58,14 +59,12 @@ const ReactionIcon = ({ state }) => {
 
 const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   const { encounter, advanceTurn, appendLog } = useEncounter();
-  const { turnState, spendActions, spendReaction, resetForNewTurn } = useTurnState(charId);
+  const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
   const { sendUpdate } = useSession();
 
-  // Raise a Shield / Shield Block (Slices 1 + 4).
-  const { heldShield, raised, broken, raiseShield, lowerShield, applyBlock } =
+  // Raise a Shield (Slice 1); the Shield Block bar is its own component now.
+  const { heldShield, raised, broken, raiseShield, lowerShield } =
     useShield(charId, inventory);
-  // Shield Block damage input — player enters the incoming hit; '' hides the bar.
-  const [blockDamage, setBlockDamage] = useState('');
 
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -231,25 +230,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
     appendLog({ type: 'action', charId, text: `${characterName} lowered their shield` });
   };
 
-  // Shield Block (Slice 4) — reaction, available on any in-progress turn while
-  // the shield is raised and the reaction hasn't been spent yet.
-  const canShieldBlock =
-    raised && !broken && hasStartedFirstTurn && reactionAvailable && !reactionSpent;
-
-  const handleShieldBlock = () => {
-    const dealt = parseInt(blockDamage, 10);
-    if (!canShieldBlock || isNaN(dealt) || dealt < 0) return;
-    const result = applyBlock(dealt);
-    if (!result) return;
-    spendReaction('Shield Block');
-    setBlockDamage('');
-    if (result.broken) lowerShield();
-    const detail = result.broken
-      ? `shield broke! (${result.prevented} prevented)`
-      : `${result.prevented} prevented, shield → ${result.shieldHpAfter} HP`;
-    appendLog({ type: 'action', charId, text: `${characterName} Shield Blocked: ${detail}` });
-  };
-
   const reactionState = !hasStartedFirstTurn
     ? 'unavailable'
     : reactionSpent
@@ -398,32 +378,9 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
         </div>
       )}
 
-      {/* Shield Block reaction (Slice 4) — visible any in-progress turn while raised */}
-      {isInProgress && heldShield && raised && (
-        <div className="ttp-shieldblock-bar">
-          <input
-            type="number"
-            min="0"
-            className="ttp-shieldblock-input"
-            placeholder="Damage taken"
-            aria-label="Shield Block damage"
-            value={blockDamage}
-            onChange={(e) => setBlockDamage(e.target.value)}
-          />
-          <button
-            className="btn-secondary ttp-shieldblock"
-            onClick={handleShieldBlock}
-            disabled={!canShieldBlock || blockDamage === '' || parseInt(blockDamage, 10) < 0}
-            aria-label="Shield Block"
-            title={
-              !canShieldBlock
-                ? (reactionSpent ? 'Reaction already spent' : 'Reaction not yet available')
-                : 'Block this damage with your shield (reaction)'
-            }
-          >
-            🛡 Block ↩
-          </button>
-        </div>
+      {/* Shield Block reaction — visible any in-progress turn while raised */}
+      {isInProgress && (
+        <ShieldBlockBar charId={charId} characterName={characterName} inventory={inventory} />
       )}
 
       {/* Movement sub-UI */}

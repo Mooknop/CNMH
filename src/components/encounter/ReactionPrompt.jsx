@@ -3,8 +3,10 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
-import { matchingReactions } from '../../utils/reactionTriggers';
+import { useShield } from '../../hooks/useShield';
+import { matchingReactions, isReactionCost } from '../../utils/reactionTriggers';
 import UseAbilityModal from './UseAbilityModal';
+import ShieldBlockBar from './ShieldBlockBar';
 import './SavePrompt.css';
 
 /**
@@ -13,22 +15,30 @@ import './SavePrompt.css';
  * component matches the event against the character's reactions' declared
  * triggerType and gates on reaction availability from turn state.
  *
- * Use → opens UseAbilityModal (cost 'reaction'), which runs targeting/effects,
- * spends the reaction, and logs; cancelling the modal keeps the prompt up.
- * Pass → just dismisses (per the issue). The synced key is cleared once the
- * reaction is spent (any path) or on Pass, and a round-stamped prompt expires
- * with its round — a stale prompt can't resurface after the reaction resets.
+ * Mechanical hooks per matched entry:
+ *  - Shield Block → the shared ShieldBlockBar (damage-split math via applyBlock);
+ *    matched only while the shield is actually raised.
+ *  - Reaction-cost staff spells (e.g. Overselling Flourish) → UseAbilityModal as
+ *    a Cast from the staff, so charge costing applies.
+ *  - Everything else → UseAbilityModal at reaction cost (targeting, effects,
+ *    chained Strikes for e.g. Retributive Strike, spend, log).
+ *
+ * Cancelling the modal keeps the prompt up; Pass just dismisses (per the
+ * issue). The synced key is cleared once the reaction is spent (any path) or
+ * on Pass, and a round-stamped prompt expires with its round — a stale prompt
+ * can't resurface after the reaction resets.
  */
 const ReactionPrompt = ({ character, themeColor }) => {
   const charId = character.id;
   const [prompt, setPrompt] = useSyncedState(`cnmh_reactprompt_${charId}`, null);
   const { encounter } = useEncounter();
   const { turnState } = useTurnState(charId);
-  const { reactions } = useCharacter(character);
-  const [usingReaction, setUsingReaction] = useState(null);
+  const { reactions, staffSpells, inventory } = useCharacter(character);
+  const { raised, broken } = useShield(charId, inventory);
+  const [usingReaction, setUsingReaction] = useState(null); // { ability, castSource? }
 
-  // The reaction was spent (via the modal or any other path) — the trigger
-  // window is consumed, so clear the synced prompt for good.
+  // The reaction was spent (via the modal, the block bar, or any other path) —
+  // the trigger window is consumed, so clear the synced prompt for good.
   const reactionSpent = !!turnState?.reactionSpent;
   useEffect(() => {
     if (prompt && reactionSpent) {
@@ -44,7 +54,12 @@ const ReactionPrompt = ({ character, themeColor }) => {
     return null;
   }
 
-  const matched = matchingReactions(reactions, prompt.eventId);
+  // Staff spells with a reaction cost ride the same trigger metadata; they
+  // carry fromStaff + the held-gated `active` flag from useCharacter.
+  const staffReactions = (staffSpells || []).filter(isReactionCost);
+  const matched = matchingReactions([...(reactions || []), ...staffReactions], prompt.eventId)
+    // Shield Block is only a live option while the shield is raised (and whole).
+    .filter((r) => r.name !== 'Shield Block' || (raised && !broken));
   const available =
     !!turnState?.hasStartedFirstTurn &&
     !!turnState?.reactionAvailable &&
@@ -73,13 +88,26 @@ const ReactionPrompt = ({ character, themeColor }) => {
       {matched.map((reaction) => (
         <div key={reaction.name} className="save-prompt-entry">
           <span className="save-prompt-type">{reaction.name}</span>
-          <button
-            className="btn-primary"
-            onClick={() => setUsingReaction(reaction)}
-            aria-label={`Use ${reaction.name}`}
-          >
-            Use ↩
-          </button>
+          {reaction.name === 'Shield Block' ? (
+            <ShieldBlockBar
+              charId={charId}
+              characterName={character.name}
+              inventory={inventory}
+            />
+          ) : (
+            <button
+              className="btn-primary"
+              onClick={() =>
+                setUsingReaction({
+                  ability: reaction,
+                  castSource: reaction.fromStaff ? 'staff' : undefined,
+                })
+              }
+              aria-label={`Use ${reaction.name}`}
+            >
+              {reaction.fromStaff ? 'Cast ↩' : 'Use ↩'}
+            </button>
+          )}
         </div>
       ))}
 
@@ -95,9 +123,10 @@ const ReactionPrompt = ({ character, themeColor }) => {
         <UseAbilityModal
           isOpen
           onClose={() => setUsingReaction(null)}
-          ability={usingReaction}
+          ability={usingReaction.ability}
           cost="reaction"
-          verb="Use"
+          verb={usingReaction.castSource ? 'Cast' : 'Use'}
+          castSource={usingReaction.castSource}
           character={character}
           themeColor={themeColor}
         />

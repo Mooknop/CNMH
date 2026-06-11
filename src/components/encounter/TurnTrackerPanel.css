@@ -343,27 +343,7 @@
   vertical-align: middle;
 }
 
-/* Shield Block reaction bar */
-.ttp-shieldblock-bar {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  margin-top: var(--space-2);
-}
-
-.ttp-shieldblock-input {
-  width: 100px;
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--shell-border-strong);
-  background: var(--surface-inset);
-  color: var(--shell-text-primary);
-  font-size: var(--text-sm);
-}
-
-.ttp-shieldblock {
-  white-space: nowrap;
-}
+/* Shield Block bar rules live in ShieldBlockBar.css (shared with ReactionPrompt). */
 
 /* ── Dark shell overrides (match base styles already — kept for specificity) */
 

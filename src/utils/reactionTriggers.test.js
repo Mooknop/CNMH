@@ -3,6 +3,7 @@ import {
   TRIGGER_EVENTS,
   eventById,
   matchingReactions,
+  isReactionCost,
 } from './reactionTriggers';
 
 const deflect    = { name: 'Deflect Projectile',  triggerType: 'attack-ranged' };
@@ -19,6 +20,14 @@ describe('reactionTriggers', () => {
       expect(e.matches.length).toBeGreaterThan(0);
       e.matches.forEach((m) => expect(typeIds).toContain(m));
     });
+  });
+
+  it('isReactionCost reads the authored actions string', () => {
+    expect(isReactionCost({ actions: 'Reaction' })).toBe(true);
+    expect(isReactionCost({ actions: 'reaction' })).toBe(true);
+    expect(isReactionCost({ actions: 'Two Actions' })).toBe(false);
+    expect(isReactionCost({ actionCount: 1 })).toBe(false);
+    expect(isReactionCost(undefined)).toBe(false);
   });
 
   it('eventById finds events and returns null for unknown ids', () => {
