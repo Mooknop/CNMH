@@ -184,6 +184,7 @@ export const RollSourceControl = ({ value, onChange, idPrefix }) => {
         <option value="spell-attack">Spell attack</option>
         <option value="skill">Skill</option>
         <option value="spell-dc">Spell DC (save)</option>
+        <option value="class-dc">Class DC (save)</option>
         <option value="flat">Flat bonus</option>
       </select>
       {value.type === 'skill' && (

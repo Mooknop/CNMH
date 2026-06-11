@@ -8,7 +8,7 @@
 // The returned bonus/dc is the *effective* value after applying any active conditions and effects on
 // the actor — the same penalty+bonus pipeline that StatsBlock uses.
 
-import { getSkillModifier, SKILL_ABILITY_MAP } from './CharacterUtils';
+import { getSkillModifier, getClassDC, SKILL_ABILITY_MAP } from './CharacterUtils';
 import { calculateSpellStats } from './SpellUtils';
 import { computeConditionEffects } from './ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from './EffectUtils';
@@ -162,6 +162,22 @@ function resolveBase(ability, character, { conditions = [], effects = [], effect
         defense,
         skill: null,
         source: 'roll-config-spell-dc',
+        breakdown: { base, total, sources: net.sources },
+      };
+    }
+
+    if (type === 'class-dc') {
+      const base = typeof roll.bonus === 'number' ? roll.bonus : getClassDC(character);
+      const net = netForStat('classDC', conditionEffects, effectBonuses);
+      const total = base + net.total;
+      const defense = mapSpellDefense(ability.defense) ?? ability.targetDefense ?? null;
+      return {
+        mode: 'target-save',
+        bonus: null,
+        dc: total,
+        defense,
+        skill: null,
+        source: 'roll-config-class-dc',
         breakdown: { base, total, sources: net.sources },
       };
     }

@@ -255,6 +255,24 @@ describe('action immunity round-trip', () => {
   });
 });
 
+describe('action roll config round-trip', () => {
+  it('round-trips a class-dc roll config (Shard Strike shape, #216)', () => {
+    const src = {
+      name: 'Shard Strike',
+      actionCount: 2,
+      traits: ['Impulse', 'Kineticist', 'Metal', 'Primal'],
+      targetDefense: 'reflex',
+      roll: { type: 'class-dc' },
+    };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+
+  it('round-trips a class-dc roll config with a bonus override', () => {
+    const src = { name: 'X', roll: { type: 'class-dc', bonus: 21 } };
+    expect(actionFromForm(actionToForm(src))).toEqual(src);
+  });
+});
+
 describe('action targetDefense round-trip', () => {
   it('round-trips targetDefense: ac through the form', () => {
     const src = { name: 'Strike', actionCount: 1, targetDefense: 'ac' };

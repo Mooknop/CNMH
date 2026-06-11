@@ -245,8 +245,20 @@ export const calculateClassDC = (character) => {
   const keyAbilityMod = getAbilityModifier(character.abilities?.[character.keyAbility]);
   const classProficiency = character.proficiencies?.class || 1; // Default to Trained
   const proficiencyBonus = getProficiencyBonus(classProficiency, level, character);
-  
+
   return 10 + keyAbilityMod + proficiencyBonus;
+};
+
+// Effective class DC: prefer the explicit `class_dc` authored on the character's
+// class block (e.g. character.champion.class_dc, character.monk.class_dc — the
+// blocks are keyed by lowercased class name), falling back to the derived value
+// when no block carries one.
+export const getClassDC = (character) => {
+  if (!character) return null;
+  const block = character[String(character.class || '').toLowerCase()];
+  const explicit = block?.class_dc;
+  if (typeof explicit === 'number' && Number.isFinite(explicit)) return explicit;
+  return calculateClassDC(character);
 };
 
 /*
