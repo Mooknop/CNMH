@@ -1,0 +1,27 @@
+.party-prep-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.party-prep-hint {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.party-prep-btn {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--shell-border);
+  border-radius: 6px;
+  background: var(--color-surface, transparent);
+  color: var(--color-text);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.party-prep-btn:hover {
+  border-color: var(--color-accent, currentColor);
+}

@@ -25,6 +25,7 @@ import SpellsList from '../components/spells/SpellsList';
 
 import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
+import DailyPrepModal from '../components/character-sheet/DailyPrepModal';
 import { useCharacter } from '../hooks/useCharacter';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { useFocusReset } from '../hooks/useFocusReset';
@@ -50,6 +51,7 @@ const CharacterSheet = () => {
   const [isAnimalCompanionOpen, setIsAnimalCompanionOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [isDailyPrepOpen, setIsDailyPrepOpen] = useState(false);
 
   // characterColor is now derived by CharacterContext from the active character's index
   const characterColor = activeCharacterColor;
@@ -163,6 +165,16 @@ const CharacterSheet = () => {
       case 'stats':
         return (
           <>
+            {mode !== 'encounter' && (
+              <div className="cs-daily-prep-bar">
+                <button
+                  className="cs-daily-prep-btn"
+                  onClick={() => setIsDailyPrepOpen(true)}
+                >
+                  <i className="ti ti-sun" /> Daily Preparations
+                </button>
+              </div>
+            )}
             <EffectsPanel charId={character.id} themeColor={characterColor} />
             <StatsBlock character={character} characterColor={characterColor} />
           </>
@@ -385,6 +397,12 @@ const CharacterSheet = () => {
           characterColor={characterColor}
         />
       )}
+      <DailyPrepModal
+        isOpen={isDailyPrepOpen}
+        onClose={() => setIsDailyPrepOpen(false)}
+        character={characterModel}
+        themeColor={characterColor}
+      />
     </div>
   );
 };

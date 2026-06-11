@@ -111,3 +111,24 @@ describe('applyAbility — foundryEffect emission', () => {
     expect(call[2].targets).toEqual([]);
   });
 });
+
+describe('applyAbility — daily-prep effect flag', () => {
+  it('flags expireOnDailyPrep on an until:daily-prep effect', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'mystic-armor', applyTo: 'self', duration: { until: 'daily-prep' } }],
+    });
+    applyAbility(args);
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[2][0]).toMatchObject({ effectId: 'mystic-armor', expireOnDailyPrep: true });
+    expect(call[2][0].expireAt).toBeUndefined();
+  });
+
+  it('does not flag a normal encounter-boundary effect', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'heroism-1', applyTo: 'self', duration: { until: 'round-end' } }],
+    });
+    applyAbility(args);
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[2][0].expireOnDailyPrep).toBeUndefined();
+  });
+});

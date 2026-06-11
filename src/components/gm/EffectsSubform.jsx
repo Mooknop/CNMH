@@ -12,6 +12,7 @@ export const DURATION_UNTIL_OPTIONS = [
   'target-turn-start',
   'round-end',
   'rounds',
+  'daily-prep',
   'manual',
 ];
 
