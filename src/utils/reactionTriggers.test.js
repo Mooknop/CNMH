@@ -43,6 +43,21 @@ describe('reactionTriggers', () => {
       expect(matchingReactions(all, 'enemy-skill-check')).toEqual([upstage]);
     });
 
+    it('damaged-any wakes for both self and ally damage events', () => {
+      // Amulet's Abeyance: "you or an ally within 15 feet" takes damage.
+      const abeyance = { name: "Amulet's Abeyance", triggerType: 'damaged-any' };
+      expect(matchingReactions([abeyance], 'damaged')).toEqual([abeyance]);
+      expect(matchingReactions([abeyance], 'ally-damaged')).toEqual([abeyance]);
+      expect(matchingReactions([abeyance], 'ranged-attack')).toEqual([]);
+    });
+
+    it('check-failed wakes self-check-failed reactions', () => {
+      // Avoid Dire Fate: you fail a check matching your harrow omen suit.
+      const direFate = { name: 'Avoid Dire Fate', triggerType: 'self-check-failed' };
+      expect(matchingReactions([direFate], 'check-failed')).toEqual([direFate]);
+      expect(matchingReactions([direFate], 'damaged')).toEqual([]);
+    });
+
     it('reactions without triggerType never match', () => {
       expect(matchingReactions([untyped], 'ranged-attack')).toEqual([]);
     });

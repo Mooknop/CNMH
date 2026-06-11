@@ -12,6 +12,8 @@ export const TRIGGER_TYPES = [
   { id: 'attack-any',        label: 'Any attack targets you' },
   { id: 'damaged-self',      label: 'A creature damages you' },
   { id: 'damaged-ally',      label: 'An ally nearby is damaged' },
+  { id: 'damaged-any',       label: 'You or an ally nearby is damaged' },
+  { id: 'self-check-failed', label: 'You fail a check' },
   { id: 'enemy-skill-check', label: 'An enemy attempts a skill check' },
 ];
 
@@ -19,8 +21,9 @@ export const TRIGGER_TYPES = [
 export const TRIGGER_EVENTS = [
   { id: 'ranged-attack',     label: 'Ranged attack incoming', matches: ['attack-ranged', 'attack-any'] },
   { id: 'melee-attack',      label: 'Melee attack incoming',  matches: ['attack-any'] },
-  { id: 'damaged',           label: 'PC was damaged',         matches: ['damaged-self'] },
-  { id: 'ally-damaged',      label: 'Ally damaged nearby',    matches: ['damaged-ally'] },
+  { id: 'damaged',           label: 'PC was damaged',         matches: ['damaged-self', 'damaged-any'] },
+  { id: 'ally-damaged',      label: 'Ally damaged nearby',    matches: ['damaged-ally', 'damaged-any'] },
+  { id: 'check-failed',      label: 'PC failed a check',      matches: ['self-check-failed'] },
   { id: 'enemy-skill-check', label: 'Enemy attempting a skill check', matches: ['enemy-skill-check'] },
 ];
 
