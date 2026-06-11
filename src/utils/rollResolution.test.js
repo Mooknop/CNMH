@@ -1,4 +1,5 @@
 import { resolveActionRoll, mapSpellDefense } from './rollResolution';
+import { calculateClassDC } from './CharacterUtils';
 import * as ConditionUtils from './ConditionUtils';
 import * as EffectUtils from './EffectUtils';
 
@@ -86,6 +87,66 @@ describe('resolveActionRoll — explicit roll config', () => {
     const ability = { name: 'Grapple', roll: { type: 'skill', skill: 'athletics', bonus: 10 }, targetDefense: 'fortitude' };
     const result = resolveActionRoll(ability, baseCharacter, noEffects);
     expect(result.bonus).toBe(10); // bonus 10, no active conditions → total 10
+  });
+});
+
+// ─── class-dc roll path (#216) ────────────────────────────────────────────────
+describe('resolveActionRoll — class-dc roll config', () => {
+  const champion = {
+    ...baseCharacter,
+    class: 'Champion',
+    champion: { class_dc: 19 },
+  };
+  const shardStrike = {
+    name: 'Shard Strike',
+    actionCount: 2,
+    traits: ['Impulse', 'Kineticist', 'Metal', 'Primal'],
+    targetDefense: 'reflex',
+    roll: { type: 'class-dc' },
+  };
+
+  it('returns target-save at the explicit class-block DC', () => {
+    const result = resolveActionRoll(shardStrike, champion, noEffects);
+    expect(result.mode).toBe('target-save');
+    expect(result.dc).toBe(19);
+    expect(result.bonus).toBeNull();
+    expect(result.defense).toBe('reflex');
+    expect(result.source).toBe('roll-config-class-dc');
+    expect(result.breakdown).toEqual({ base: 19, total: 19, sources: [] });
+  });
+
+  it('maps a capitalized spell-style defense field too', () => {
+    const ability = { name: 'Inner Upheaval', defense: 'Fortitude', roll: { type: 'class-dc' } };
+    const result = resolveActionRoll(ability, champion, noEffects);
+    expect(result.defense).toBe('fortitude');
+    expect(result.dc).toBe(19);
+  });
+
+  it('derives the class DC when no class block carries one', () => {
+    const result = resolveActionRoll(shardStrike, baseCharacter, noEffects);
+    expect(result.mode).toBe('target-save');
+    expect(result.dc).toBe(calculateClassDC(baseCharacter));
+  });
+
+  it('roll.bonus overrides the class-block DC', () => {
+    const ability = { ...shardStrike, roll: { type: 'class-dc', bonus: 25 } };
+    expect(resolveActionRoll(ability, champion, noEffects).dc).toBe(25);
+  });
+
+  it('frightened 2 lowers the class DC by 2', () => {
+    const frightened2 = [{ id: 'frightened', value: 2 }];
+    const netted = resolveActionRoll(shardStrike, champion, { conditions: frightened2 });
+    expect(netted.dc).toBe(17);
+    expect(netted.breakdown.sources.length).toBeGreaterThan(0);
+  });
+
+  it('stupefied lowers the class DC only for a mental key ability', () => {
+    const stupefied2 = [{ id: 'stupefied', value: 2 }];
+    const physical = resolveActionRoll(shardStrike, champion, { conditions: stupefied2 });
+    expect(physical.dc).toBe(19); // keyAbility strength → unaffected
+    const mentalChampion = { ...champion, keyAbility: 'charisma' };
+    const mental = resolveActionRoll(shardStrike, mentalChampion, { conditions: stupefied2 });
+    expect(mental.dc).toBe(17);
   });
 });
 
