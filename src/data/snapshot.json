@@ -5536,7 +5536,17 @@
           "actions": [
             {
               "name": "Staunch Bleeding",
-              "actionCount": 1,
+              "actions": "One to Two Actions",
+              "variants": [
+                {
+                  "actions": 1,
+                  "note": "Treat Wounds at the normal DC"
+                },
+                {
+                  "actions": 2,
+                  "note": "DC reduced by 10"
+                }
+              ],
               "traits": [
                 "Concentrate",
                 "Sorcerer",
@@ -6002,7 +6012,8 @@
               "duration": {
                 "value": 1,
                 "unit": "hour"
-              }
+              },
+              "scope": "per-caster"
             }
           },
           {
@@ -6901,6 +6912,20 @@
             "description": "You fire a shard of solidified magic toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, increase the number of shards you shoot by one, to a maximum of three shards for 3 actions. You choose the target for each shard individually. If you shoot more than one shard at the same target, combine the damage before applying bonuses or penalties to damage, resistances, weaknesses, and so forth.",
             "name": "Force Barrage",
             "actions": "One to Three Actions",
+            "variants": [
+              {
+                "actions": 1,
+                "note": "1 shard (1d4+1 force)"
+              },
+              {
+                "actions": 2,
+                "note": "2 shards"
+              },
+              {
+                "actions": 3,
+                "note": "3 shards"
+              }
+            ],
             "range": "120 feet",
             "targets": "1 or more creatures",
             "level": 1,
@@ -6939,6 +6964,20 @@
             "name": "Blazing Bolt",
             "actions": "One to Three Actions",
             "rolls": "per-action",
+            "variants": [
+              {
+                "actions": 1,
+                "note": "1 ray, 2d6 fire"
+              },
+              {
+                "actions": 2,
+                "note": "2 rays, 4d6 fire each"
+              },
+              {
+                "actions": 3,
+                "note": "3 rays, 4d6 fire each"
+              }
+            ],
             "range": "60 feet",
             "targets": "1 or more creature",
             "level": 2,
@@ -7500,6 +7539,16 @@
             {
               "name": "Melee Metal Blast",
               "actionCount": "One to Two",
+              "variants": [
+                {
+                  "actions": 1,
+                  "note": "Standard blast (Str to damage)"
+                },
+                {
+                  "actions": 2,
+                  "note": "+Con status bonus to damage"
+                }
+              ],
               "type": "melee",
               "traits": [
                 "Attack",
@@ -7514,6 +7563,16 @@
             {
               "name": "Ranged Metal Blast",
               "actionCount": "One to Two",
+              "variants": [
+                {
+                  "actions": 1,
+                  "note": "Standard blast"
+                },
+                {
+                  "actions": 2,
+                  "note": "+Con status bonus to damage"
+                }
+              ],
               "type": "ranged",
               "damage": "1d8",
               "range": "30ft",
