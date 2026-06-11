@@ -30,6 +30,12 @@ export const TRIGGER_EVENTS = [
 export const eventById = (eventId) =>
   TRIGGER_EVENTS.find((e) => e.id === eventId) || null;
 
+// Whether an ability/spell is reaction-cost, per the authored `actions` string
+// convention every cost parser shares (UseAbilityModal, actionIconUtils, the
+// editor cost codec). Used to pick reaction-cost spells out of staff data.
+export const isReactionCost = (ability) =>
+  typeof ability?.actions === 'string' && ability.actions.toLowerCase().includes('reaction');
+
 /**
  * Reactions from `getReactions(character)` that wake up for a trigger event.
  * Item-sourced reactions carry `active: false` while the item is stowed —
