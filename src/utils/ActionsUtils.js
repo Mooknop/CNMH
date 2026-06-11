@@ -13,5 +13,7 @@ export {
   parseActionCount,
   getActionType,
   extractVariableActionCount,
+  getVariableActionRange,
+  variantFor,
   renderActionIcons,
 } from './actionIconUtils';

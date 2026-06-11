@@ -21,7 +21,7 @@ import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
-import { extractVariableActionCount } from '../../utils/ActionsUtils';
+import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
 import './UseAbilityModal.css';
@@ -90,9 +90,10 @@ const UseAbilityModal = ({
   // with a manual override for table corrections. null = follow the auto step.
   const [mapOverride, setMapOverride] = useState(null);
 
-  // Multi-ray attack spells (Blazing Bolt): chosen ray count. null = default to the
-  // minimum (e.g. 1 ray / 1 action for a per-action spell).
-  const [rayCountOverride, setRayCountOverride] = useState(null);
+  // Variable action-cost abilities (#215): chosen action count. null = default
+  // to the explicit cost picked upstream (UseActionChip) or the range minimum.
+  // For per-action multi-ray spells (Blazing Bolt) this doubles as the ray count.
+  const [actionCountOverride, setActionCountOverride] = useState(null);
 
   // Casting resources — which pool pays for the cast, and the empty-pool
   // override for table rulings. null index = default to first enabled option.
@@ -128,20 +129,35 @@ const UseAbilityModal = ({
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
   const effectiveVerb = verb.toLowerCase();
 
+  // Variable action-cost abilities (#215): the in-modal picker is authoritative
+  // for the spend. Reactions/free actions and chained abilities (which own their
+  // own total-cost arithmetic) opt out.
+  const variableRange =
+    (effectiveCost === 'reaction' || effectiveCost === 'free' || hasChainSpell || hasChainStrike)
+      ? null
+      : getVariableActionRange(ability);
+  // An explicit numeric cost picked upstream (UseActionChip dropdown) seeds the
+  // picker but stays changeable here.
+  const seedCount = (variableRange
+    && typeof explicitCost === 'number'
+    && explicitCost >= variableRange.min
+    && explicitCost <= variableRange.max)
+    ? explicitCost
+    : variableRange?.min;
+  const chosenActions = variableRange
+    ? Math.min(Math.max(actionCountOverride ?? seedCount, variableRange.min), variableRange.max)
+    : null;
+  // The declared consequence of the chosen count (scaling note, DC change).
+  const variant = variableRange ? variantFor(ability, chosenActions) : null;
+
   // Multi-ray attack spells fire one attack roll per ray. `rolls: 'per-action'` makes
   // the ray count = chosen action count (variable, e.g. Blazing Bolt 1–3); `rollCount: N`
-  // is a fixed multi-ray count. The count drives the number of resolver rows and, for
-  // per-action spells, the action cost of the cast.
-  const perActionRange = ability.rolls === 'per-action' ? extractVariableActionCount(ability.actions) : null;
+  // is a fixed multi-ray count. The count drives the number of resolver rows.
+  const perActionRange = ability.rolls === 'per-action' ? variableRange : null;
   const fixedRayCount  = (typeof ability.rollCount === 'number' && ability.rollCount > 1) ? ability.rollCount : null;
   const isMultiRay     = perActionRange != null || fixedRayCount != null;
-  const rayMin = perActionRange?.min ?? fixedRayCount ?? 1;
-  const rayMax = perActionRange?.max ?? fixedRayCount ?? 1;
-  const rayCount = Math.min(Math.max(rayCountOverride ?? rayMin, rayMin), rayMax);
-  // Per-action ray spells: the chosen ray count IS the action cost (unless the caller
-  // passed an explicit cost). Other spells keep their parsed cost.
-  const perActionCost = (perActionRange && explicitCost === undefined) ? rayCount : null;
-  const castCost = perActionCost ?? effectiveCost;
+  const rayCount = perActionRange ? chosenActions : (fixedRayCount ?? 1);
+  const castCost = variableRange ? chosenActions : effectiveCost;
 
   // Casting-cost options (slot rank / focus / staff charges / wand / scroll).
   // Only casts pay a resource; plain actions get an empty list and no section.
@@ -154,10 +170,10 @@ const UseAbilityModal = ({
     && (castOptions[0].type === 'cantrip' || castOptions[0].type === 'innate');
   // For spell chains the total cost = parent + chosen spell; use it in the button once known.
   const confirmCost   = (hasChainSpell && spellChainTotalCost != null) ? spellChainTotalCost : effectiveCost;
-  // Per-action ray spells show the chosen numeric count; spell-chain total is numeric
+  // Variable-cost abilities show the chosen numeric count; spell-chain total is numeric
   // too (bypass costToDisplay, which would show ability.actions instead).
-  const costDisplay   = perActionCost != null
-    ? String(perActionCost)
+  const costDisplay   = variableRange != null
+    ? String(chosenActions)
     : (hasChainSpell && typeof confirmCost === 'number')
       ? String(confirmCost)
       : costToDisplay(ability, confirmCost);
@@ -222,6 +238,10 @@ const UseAbilityModal = ({
     effects: activeEffects || [],
     mapStep,
   });
+
+  // Save DC with the chosen variant's adjustment applied (#215) — e.g. spending
+  // 2 actions on Staunch Bleeding lowers the DC by 10.
+  const saveDc = rollProfile.dc != null ? rollProfile.dc + (variant?.dcDelta ?? 0) : rollProfile.dc;
 
   // Which defense to show on the resolver (actor-roll only).
   const effectiveDefense = rollProfile.mode === 'actor-roll'
@@ -388,7 +408,7 @@ const UseAbilityModal = ({
         casterName: character.name,
         abilityName: ability.name,
         save: rollProfile.defense,
-        dc: rollProfile.dc,
+        dc: saveDc,
         basic: !!(ability.basic),
         targets,
       });
@@ -508,22 +528,31 @@ const UseAbilityModal = ({
     </div>
   ) : null;
 
-  // Ray-count picker for variable per-action multi-ray spells (Blazing Bolt 1–3).
-  const raySelector = (perActionRange && rayMax > rayMin) ? (
-    <div className="uam-ray-row" role="radiogroup" aria-label="Number of rays">
-      <span className="uam-ray-label">Rays</span>
-      {Array.from({ length: rayMax - rayMin + 1 }, (_, k) => rayMin + k).map((n) => (
-        <button
-          key={n}
-          type="button"
-          className={`uam-ray-btn${rayCount === n ? ' uam-ray-btn--active' : ''}`}
-          aria-pressed={rayCount === n}
-          onClick={() => setRayCountOverride(n)}
-        >
-          {n}
-        </button>
-      ))}
-    </div>
+  // Action-count picker for variable-cost abilities (#215): Force Barrage 1–3,
+  // Elemental Blast 1–2, per-action multi-ray spells (Blazing Bolt). Each button
+  // carries its variant note as a tooltip; the chosen variant's note renders below.
+  const actionsSelector = (variableRange && variableRange.max > variableRange.min) ? (
+    <>
+      <div className="uam-actions-row" role="radiogroup" aria-label="Number of actions">
+        <span className="uam-actions-label">Actions</span>
+        {Array.from(
+          { length: variableRange.max - variableRange.min + 1 },
+          (_, k) => variableRange.min + k
+        ).map((n) => (
+          <button
+            key={n}
+            type="button"
+            className={`uam-actions-btn${chosenActions === n ? ' uam-actions-btn--active' : ''}`}
+            aria-pressed={chosenActions === n}
+            title={variantFor(ability, n)?.note || undefined}
+            onClick={() => setActionCountOverride(n)}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      {variant?.note && <div className="uam-variant-note">{variant.note}</div>}
+    </>
   ) : null;
 
   // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
@@ -531,16 +560,13 @@ const UseAbilityModal = ({
   let rollSection = null;
   if (rollProfile.mode === 'actor-roll' && resolverTargets.length > 0) {
     rollSection = isMultiRay ? (
-      <>
-        {raySelector}
-        <MultiRayResolver
-          ref={resolverRef}
-          rayCount={rayCount}
-          enemyTargets={resolverTargets}
-          targetDefense={effectiveDefense}
-          rollBonus={rollProfile.bonus}
-        />
-      </>
+      <MultiRayResolver
+        ref={resolverRef}
+        rayCount={rayCount}
+        enemyTargets={resolverTargets}
+        targetDefense={effectiveDefense}
+        rollBonus={rollProfile.bonus}
+      />
     ) : (
       <TargetRollResolver
         ref={resolverRef}
@@ -553,7 +579,7 @@ const UseAbilityModal = ({
     const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
     rollSection = (
       <div className="ct-save-request-preview" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-        <strong>Save request → GM:</strong> {saveLabel} DC {rollProfile.dc}
+        <strong>Save request → GM:</strong> {saveLabel} DC {saveDc}
         <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
           {saveTargets.map((e) => (
             <li key={e.entryId}>{e.name}</li>
@@ -584,6 +610,7 @@ const UseAbilityModal = ({
             {ability.description}
           </p>
         )}
+        {actionsSelector}
       </section>
 
       {/* Frequency lock — derived from the synced ledger; GM can override or clear */}

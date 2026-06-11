@@ -90,6 +90,89 @@ export const immunityFromForm = (f) => {
   return out;
 };
 
+// Codec for the optional ability.variants array (#215) — per-action-count
+// scaling notes for variable-cost abilities, consumed by UseAbilityModal's
+// action picker: [{ actions: 2, note: '+Con to damage', dcDelta: -10 }].
+// Same round-trip contract: delete from `rest` on toForm, emit only non-empty
+// rows on fromForm; unmodelled per-row keys ride along in a per-row `rest`.
+
+export const variantsToForm = (arr) =>
+  Array.isArray(arr)
+    ? arr.map((v) => {
+        const src = v && typeof v === 'object' ? v : {};
+        const rest = { ...src };
+        delete rest.actions;
+        delete rest.note;
+        delete rest.dcDelta;
+        return {
+          actions: src.actions != null ? String(src.actions) : '1',
+          note: src.note != null ? String(src.note) : '',
+          dcDelta: src.dcDelta != null ? String(src.dcDelta) : '',
+          rest,
+        };
+      })
+    : [];
+
+export const variantsFromForm = (rows) => {
+  const out = (rows || [])
+    .map((r) => {
+      const actions = parseInt(r.actions, 10);
+      if (!actions || actions < 1 || actions > 3) return null;
+      const v = { ...(r.rest || {}), actions };
+      if (r.note.trim()) v.note = r.note.trim();
+      if (r.dcDelta.trim() !== '') {
+        const n = parseInt(r.dcDelta, 10);
+        if (!isNaN(n) && n !== 0) v.dcDelta = n;
+      }
+      // A bare action count carries no information — drop the row.
+      return Object.keys(v).length > 1 ? v : null;
+    })
+    .filter(Boolean);
+  return out.length ? out : null;
+};
+
+export const VariantsControl = ({ value, onChange, idPrefix }) => {
+  const rows = value || [];
+  const setRow = (i, patch) =>
+    onChange(rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
+  const add = () => onChange([...rows, { actions: '1', note: '', dcDelta: '', rest: {} }]);
+  const rm = (i) => onChange(rows.filter((_, idx) => idx !== i));
+  return (
+    <div className="form-group">
+      <label>action variants (variable-cost scaling)</label>
+      {rows.map((r, i) => (
+        <div key={i} className="gm-row gm-rank-row">
+          <select
+            aria-label={`${idPrefix}-variant-${i}-actions`}
+            value={r.actions}
+            onChange={(e) => setRow(i, { actions: e.target.value })}
+          >
+            {[1, 2, 3].map((n) => (
+              <option key={n} value={String(n)}>{n} action{n > 1 ? 's' : ''}</option>
+            ))}
+          </select>
+          <input
+            aria-label={`${idPrefix}-variant-${i}-note`}
+            placeholder="note (e.g. +Con to damage)"
+            value={r.note}
+            onChange={(e) => setRow(i, { note: e.target.value })}
+          />
+          <input
+            type="number"
+            aria-label={`${idPrefix}-variant-${i}-dc`}
+            placeholder="DC ±"
+            value={r.dcDelta}
+            onChange={(e) => setRow(i, { dcDelta: e.target.value })}
+            style={{ width: '70px' }}
+          />
+          <button className="btn-small btn-danger" onClick={() => rm(i)}>Remove</button>
+        </div>
+      ))}
+      <button className="btn-small btn-secondary" onClick={add}>Add variant</button>
+    </div>
+  );
+};
+
 export const FrequencyRuleControl = ({ value, onChange, idPrefix }) => {
   const set = (patch) => onChange({ ...value, ...patch });
   return (
@@ -523,6 +606,7 @@ export const strikeToForm = (s) => {
   const rest = { ...src };
   STRIKE_STR.forEach((k) => delete rest[k]);
   delete rest.traits;
+  delete rest.variants;
   COST_KEYS.forEach((k) => delete rest[k]);
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
@@ -539,6 +623,7 @@ export const strikeToForm = (s) => {
     str,
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
     cost,
+    variants: variantsToForm(src.variants),
     rest,
   };
 };
@@ -553,6 +638,8 @@ export const strikeFromForm = (f) => {
   if (traits.length) out.traits = traits;
   const c = costFromForm(f.cost);
   if (c) Object.assign(out, c);
+  const variants = variantsFromForm(f.variants);
+  if (variants) out.variants = variants;
   return out;
 };
 
@@ -583,6 +670,7 @@ const abilityToForm = (s) => {
   delete rest.frequencyRule;
   delete rest.immunity;
   delete rest.triggerType;
+  delete rest.variants;
   const cost = costToForm(src);
   // Cost not recognised → put the original cost keys back so they round-trip.
   if (cost.mode === '') {
@@ -606,6 +694,7 @@ const abilityToForm = (s) => {
     frequencyRule: frequencyRuleToForm(src.frequencyRule),
     immunity: immunityToForm(src.immunity),
     triggerType: src.triggerType || '',
+    variants: variantsToForm(src.variants),
     rest,
   };
 };
@@ -634,6 +723,8 @@ const abilityFromForm = (f) => {
   const immunity = immunityFromForm(f.immunity);
   if (immunity) out.immunity = immunity;
   if (f.triggerType) out.triggerType = f.triggerType;
+  const variants = variantsFromForm(f.variants);
+  if (variants) out.variants = variants;
   return out;
 };
 
@@ -670,6 +761,11 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
           onChange={(c) => onChange({ ...value, cost: c })}
         />
       </div>
+      <VariantsControl
+        value={value.variants}
+        idPrefix={idPrefix}
+        onChange={(v) => onChange({ ...value, variants: v })}
+      />
       <div className="form-group">
         <label>traits (comma-separated)</label>
         <input
@@ -1451,6 +1547,11 @@ export const StrikeSubform = ({ value, onChange, idPrefix }) => {
           />
         </div>
       </div>
+      <VariantsControl
+        value={value.variants}
+        idPrefix={idPrefix}
+        onChange={(v) => onChange({ ...value, variants: v })}
+      />
       <div className="form-group">
         <label>traits (comma-separated)</label>
         <input

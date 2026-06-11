@@ -8,6 +8,8 @@ import {
   parseActionCount,
   getActionType,
   extractVariableActionCount,
+  getVariableActionRange,
+  variantFor,
   renderActionIcons,
 } from './ActionsUtils';
 
@@ -421,6 +423,58 @@ describe('ActionsUtils', () => {
     });
   });
 
+  describe('getVariableActionRange', () => {
+    it('reads a variableActionCount object (strikes, GM-authored)', () => {
+      expect(getVariableActionRange({ variableActionCount: { min: 1, max: 2 } }))
+        .toEqual({ min: 1, max: 2 });
+    });
+
+    it('parses an actions string range (Force Barrage)', () => {
+      expect(getVariableActionRange({ actions: 'One to Three Actions' }))
+        .toEqual({ min: 1, max: 3 });
+    });
+
+    it('parses an actionCount string range without the word "action" (Elemental Blast)', () => {
+      expect(getVariableActionRange({ actionCount: 'One to Two' }))
+        .toEqual({ min: 1, max: 2 });
+    });
+
+    it('prefers variableActionCount over the text encodings', () => {
+      expect(getVariableActionRange({
+        variableActionCount: { min: 2, max: 3 },
+        actions: 'One to Three Actions',
+      })).toEqual({ min: 2, max: 3 });
+    });
+
+    it('returns null for fixed costs, reactions, and bad input', () => {
+      expect(getVariableActionRange({ actions: 'Two Actions' })).toBeNull();
+      expect(getVariableActionRange({ actions: 'Reaction' })).toBeNull();
+      expect(getVariableActionRange({ actionCount: 2 })).toBeNull();
+      expect(getVariableActionRange({ variableActionCount: { min: 0, max: 2 } })).toBeNull();
+      expect(getVariableActionRange(null)).toBeNull();
+      expect(getVariableActionRange({})).toBeNull();
+    });
+  });
+
+  describe('variantFor', () => {
+    const ability = {
+      variants: [
+        { actions: 1, note: '1 shard' },
+        { actions: 3, note: '3 shards', dcDelta: -10 },
+      ],
+    };
+
+    it('finds the variant for a chosen count', () => {
+      expect(variantFor(ability, 3)).toEqual({ actions: 3, note: '3 shards', dcDelta: -10 });
+    });
+
+    it('returns null for counts without a variant or missing variants', () => {
+      expect(variantFor(ability, 2)).toBeNull();
+      expect(variantFor({}, 1)).toBeNull();
+      expect(variantFor(null, 1)).toBeNull();
+    });
+  });
+
   describe('renderActionIcons', () => {
     it('should return null when actionText is null', () => {
       expect(renderActionIcons(null, '#fff')).toBeNull();
@@ -606,6 +660,32 @@ describe('ActionsUtils', () => {
       const blast = result.find(s => s.name === 'Metal Blast');
       // Post-processing should set variableActionCount
       expect(blast.variableActionCount).toEqual({ min: 1, max: 2 });
+    });
+
+    it('feat strike variants survive normalization (#215)', () => {
+      const variants = [{ actions: 2, note: '+Con status bonus to damage' }];
+      const char = {
+        ...baseChar,
+        feats: [{
+          name: 'Versatile Blast',
+          strikes: [{ name: 'Versatile', type: 'melee', traits: [], damage: '1d6', actionCount: 'One to Two', variants }],
+        }],
+      };
+      const result = getStrikes(char);
+      expect(result.find(s => s.name === 'Versatile').variants).toEqual(variants);
+    });
+
+    it('inventory weapon strike variants survive normalization (#215)', () => {
+      const variants = [{ actions: 2, note: 'double dice' }];
+      const char = {
+        ...baseChar,
+        inventory: [{
+          name: 'Odd Blade',
+          strikes: [{ type: 'melee', traits: [], damage: '1d6', variants }],
+        }],
+      };
+      const result = getStrikes(char);
+      expect(result.find(s => s.source === 'Odd Blade').variants).toEqual(variants);
     });
 
     it('inventory with array of strikes creates multiple strike entries', () => {

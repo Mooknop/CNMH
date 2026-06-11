@@ -111,17 +111,17 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
     expect(screen.getByLabelText('confirm-cast')).toHaveTextContent('Cast (1)');
   });
 
-  it('shows a ray-count picker for the 1–3 range', () => {
+  it('shows an action-count picker for the 1–3 range', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
-    const group = screen.getByRole('radiogroup', { name: 'Number of rays' });
+    const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     expect(within(group).getByText('1')).toBeInTheDocument();
     expect(within(group).getByText('2')).toBeInTheDocument();
     expect(within(group).getByText('3')).toBeInTheDocument();
   });
 
-  it('choosing 3 rays renders three rows and sets the cast cost to 3', () => {
+  it('choosing 3 actions renders three ray rows and sets the cast cost to 3', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
-    const group = screen.getByRole('radiogroup', { name: 'Number of rays' });
+    const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('3'));
     expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=3');
     expect(screen.getByLabelText('confirm-cast')).toHaveTextContent('Cast (3)');
@@ -138,18 +138,31 @@ describe('UseAbilityModal — multi-ray (Blazing Bolt)', () => {
 
   it('spends the chosen action count and raises MAP by the ray count', () => {
     render(<UseAbilityModal {...props} ability={blazingBolt} />);
-    const group = screen.getByRole('radiogroup', { name: 'Number of rays' });
+    const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
     fireEvent.click(within(group).getByText('3'));
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(mockSpendActions).toHaveBeenCalledWith(3, 'Cast Blazing Bolt');
     expect(mockRecordAttack).toHaveBeenCalledWith(3);
   });
 
+  it('an explicit cost prop seeds the picker but the picker stays authoritative (#215)', () => {
+    // Regression: SpellDetailModal passes parseActionCount("One to Three") = 3
+    // as the explicit cost; the cast must still spend what the picker says.
+    render(<UseAbilityModal {...props} ability={blazingBolt} cost={3} />);
+    expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=3');
+    const group = screen.getByRole('radiogroup', { name: 'Number of actions' });
+    fireEvent.click(within(group).getByText('1'));
+    expect(screen.getByTestId('multi-ray-resolver')).toHaveTextContent('rays=1');
+    fireEvent.click(screen.getByLabelText('confirm-cast'));
+    expect(mockSpendActions).toHaveBeenCalledWith(1, 'Cast Blazing Bolt');
+    expect(mockRecordAttack).toHaveBeenCalledWith(1);
+  });
+
   it('single-roll attack spells are unaffected (one attack recorded, no ray rows)', () => {
     const scorchingRay = { id: 'sr', name: 'Scorching Ray', actions: 'Two Actions', traits: ['Attack', 'Fire'] };
     render(<UseAbilityModal {...props} ability={scorchingRay} />);
     expect(screen.queryByTestId('multi-ray-resolver')).not.toBeInTheDocument();
-    expect(screen.queryByRole('radiogroup', { name: 'Number of rays' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Number of actions' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('confirm-cast'));
     expect(mockRecordAttack).toHaveBeenCalledWith(1);
   });

@@ -43,6 +43,9 @@ import {
   immunityToForm,
   immunityFromForm,
   ImmunityControl,
+  variantsToForm,
+  variantsFromForm,
+  VariantsControl,
 } from '../../components/gm/AbilitySubforms';
 import './gm.css';
 
@@ -287,6 +290,7 @@ const spellToForm = (s) => {
   delete rest.heightened;
   delete rest.frequencyRule;
   delete rest.immunity;
+  delete rest.variants;
   const str = {};
   SPELL_STR.forEach((k) => { str[k] = s[k] != null ? String(s[k]) : ''; });
   const num = {};
@@ -301,6 +305,7 @@ const spellToForm = (s) => {
     heightened,
     frequencyRule: frequencyRuleToForm(s.frequencyRule),
     immunity: immunityToForm(s.immunity),
+    variants: variantsToForm(s.variants),
     rest, // id + any unmanaged keys, preserved
   };
 };
@@ -318,6 +323,8 @@ const spellFromForm = (sf) => {
   if (frequencyRule) out.frequencyRule = frequencyRule;
   const immunity = immunityFromForm(sf.immunity);
   if (immunity) out.immunity = immunity;
+  const variants = variantsFromForm(sf.variants);
+  if (variants) out.variants = variants;
   return out;
 };
 
@@ -497,6 +504,11 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
         value={spell.immunity || immunityToForm(null)}
         idPrefix={`spell-${index}`}
         onChange={(imm) => onChange({ ...spell, immunity: imm })}
+      />
+      <VariantsControl
+        value={spell.variants}
+        idPrefix={`spell-${index}`}
+        onChange={(v) => onChange({ ...spell, variants: v })}
       />
       <div className="form-group">
         <label>description</label>
