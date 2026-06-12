@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import Harrowing from './Harrowing';
 
 vi.mock('../shared/CollapsibleCard', () => ({
@@ -25,7 +25,9 @@ vi.mock('../shared/ActionIcon', () => ({
   }
 }));
 
-const baseCharacter = { name: 'Aria', feats: [] };
+const baseCharacter = { id: 'Aria', name: 'Aria', feats: [] };
+
+beforeEach(() => localStorage.clear());
 
 describe('Harrowing', () => {
   it('renders Harrowing header', () => {
@@ -36,8 +38,9 @@ describe('Harrowing', () => {
   it('renders Harrow Suits reference card', () => {
     render(<Harrowing character={baseCharacter} themeColor="#4a90d9" />);
     expect(screen.getByText('Harrow Suits')).toBeInTheDocument();
-    expect(screen.getByText('Hammers')).toBeInTheDocument();
-    expect(screen.getByText('Keys')).toBeInTheDocument();
+    // Suit names appear in both the omen picker and the reference card.
+    expect(screen.getAllByText('Hammers').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Keys').length).toBeGreaterThanOrEqual(2);
   });
 
   it('renders Tell Fortune card', () => {
@@ -83,5 +86,39 @@ describe('Harrowing', () => {
     };
     render(<Harrowing character={character} themeColor="#4a90d9" />);
     expect(screen.queryByText('Harrow Casting')).toBeNull();
+  });
+});
+
+describe('Harrowing — active omen picker (#227)', () => {
+  it('starts with no active omen', () => {
+    render(<Harrowing character={baseCharacter} themeColor="#4a90d9" />);
+    expect(screen.getByText(/none — draw from your deck/)).toBeInTheDocument();
+  });
+
+  it('picking a suit sets the synced omen and shows it as active', () => {
+    render(<Harrowing character={baseCharacter} themeColor="#4a90d9" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Keys' }));
+
+    expect(screen.getByText('🂠 Keys')).toBeInTheDocument();
+    expect(screen.getByText('(Reflex Saves)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Keys' })).toHaveAttribute('aria-pressed', 'true');
+    expect(JSON.parse(localStorage.getItem('cnmh_omen_Aria'))).toMatchObject({ suit: 'Keys' });
+  });
+
+  it('Clear resets the omen', () => {
+    render(<Harrowing character={baseCharacter} themeColor="#4a90d9" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Stars' }));
+    fireEvent.click(screen.getByLabelText('Clear omen'));
+
+    expect(screen.getByText(/none — draw from your deck/)).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('cnmh_omen_Aria'))).toMatchObject({ suit: null });
+  });
+
+  it('drawing a new omen replaces the previous suit', () => {
+    render(<Harrowing character={baseCharacter} themeColor="#4a90d9" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Hammers' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Books' }));
+    expect(screen.getByText('🂠 Books')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('cnmh_omen_Aria'))).toMatchObject({ suit: 'Books' });
   });
 });

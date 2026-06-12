@@ -75,6 +75,13 @@
   border-color: rgba(138, 95, 200, 0.5);
 }
 
+/* Harrow omen pill (#227) — gold, matching the order-strip chip */
+.aura-pill--omen {
+  background: rgba(196, 154, 46, 0.18);
+  color: var(--gold-mid);
+  border-color: rgba(196, 154, 46, 0.5);
+}
+
 .aura-dismiss-btn {
   font-size: var(--text-xs);
   border: 1px solid var(--shell-border-strong);
