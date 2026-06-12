@@ -353,3 +353,70 @@
     padding: 0.75rem;
   }
 }
+/* Active Harrow Omen panel (#227) */
+.harrow-omen-panel {
+  margin: 0 0 1rem;
+  padding: var(--space-3);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+
+.harrow-omen-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.harrow-omen-label {
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.harrow-omen-suit {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-theme, var(--color-primary));
+}
+
+.harrow-omen-checks,
+.harrow-omen-none {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
+
+.harrow-omen-clear {
+  font-size: var(--text-xs);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--shell-text-secondary);
+  padding: 1px 8px;
+  cursor: pointer;
+}
+
+.harrow-omen-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.harrow-omen-btn {
+  font-size: var(--text-sm);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  background: transparent;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.harrow-omen-btn--active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+  font-weight: 700;
+}
