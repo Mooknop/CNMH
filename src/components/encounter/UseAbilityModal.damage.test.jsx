@@ -324,6 +324,34 @@ describe('UseAbilityModal — damage step (#222)', () => {
     expect(loggedLines()).toContainEqual(expect.stringContaining('· dmg 1d6+4 + 1d6'));
   });
 
+  it('the chosen action-count variant overrides the dice hint (#268, Blazing Bolt)', () => {
+    mockCastOptions = [{ type: 'slot', rank: 3, enabled: true, label: 'Rank 3 slot' }];
+    const blazingBolt = {
+      name: 'Blazing Bolt',
+      level: 2,
+      actions: 'One to Three Actions',
+      rolls: 'per-action',
+      traits: ['Attack', 'Fire'],
+      targetDefense: 'ac',
+      variants: [
+        { actions: 1, note: '1 ray, 2d6 fire', damage: { base: '2d6', type: 'fire', heightened: { '+1': { base: '1d6' } } } },
+        { actions: 2, note: '2 rays, 4d6 fire each', damage: { base: '4d6', type: 'fire', heightened: { '+1': { base: '2d6' } } } },
+        { actions: 3, note: '3 rays, 4d6 fire each', damage: { base: '4d6', type: 'fire', heightened: { '+1': { base: '2d6' } } } },
+      ],
+    };
+    render(<UseAbilityModal {...props} ability={blazingBolt} verb="Cast" />);
+    // 1 action at rank 3 (native 2): 2d6 + 1d6 = 3d6 per ray.
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } }); // hit
+    expect(screen.getByText(/3d6 fire/)).toBeInTheDocument();
+    // 3 actions: 4d6 + 2d6 = 6d6 per ray.
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    const d20s = screen.getAllByLabelText(/raw d20/i);
+    expect(d20s).toHaveLength(3);
+    fireEvent.change(d20s[0], { target: { value: '10' } });
+    expect(screen.getByText(/6d6 fire/)).toBeInTheDocument();
+  });
+
   it('degree text from the ability data renders inline with the result', () => {
     const fear = {
       name: 'Fearsome Strike',

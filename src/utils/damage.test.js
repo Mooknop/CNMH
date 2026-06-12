@@ -10,6 +10,8 @@ import {
   riderAmount,
   riderEnabled,
   computeTargetDamage,
+  computeSaveDamage,
+  serializeRidersForSave,
   formatDamageBreakdown,
   buildDamageProfile,
 } from './damage';
@@ -197,7 +199,161 @@ describe('computeTargetDamage', () => {
   });
 });
 
+describe('computeSaveDamage', () => {
+  // Riders here are serializeRidersForSave snapshots: amounts pre-resolved.
+  const rune = { id: 'rune', label: 'Striking Rune', amount: 1 };
+  const weakness = {
+    id: 'exploit-weakness', label: 'weakness (fire 5)',
+    weakness: 5, appliesToEntryIds: ['e-gob'],
+  };
+  const basePersistent = {
+    id: 'zap', label: 'Persistent electricity',
+    persistent: { dice: '1d4', type: 'electricity' },
+  };
+  const critOnlyBleed = {
+    id: 'shard-bleed', label: 'Shards: persistent bleed',
+    persistent: { dice: '1d6', type: 'bleed' }, on: ['criticalFailure'],
+  };
+
+  it('null on a critical success or missing degree', () => {
+    expect(computeSaveDamage({ entered: 12, degree: 'criticalSuccess' })).toBeNull();
+    expect(computeSaveDamage({ entered: 12, degree: null })).toBeNull();
+  });
+
+  it('failure takes the full total plus bonus riders', () => {
+    const out = computeSaveDamage({ entered: 12, degree: 'failure', riders: [rune], entryId: 'e-gob' });
+    expect(out.final).toBe(13);
+    expect(out.parts.multiplier).toBeNull();
+    expect(out.parts.riders).toEqual([{ label: 'Striking Rune', amount: 1 }]);
+  });
+
+  it('success halves after bonuses, rounded down', () => {
+    const out = computeSaveDamage({ entered: 12, degree: 'success', riders: [rune], entryId: 'e-gob' });
+    // floor((12 + 1) / 2) = 6
+    expect(out.final).toBe(6);
+    expect(out.parts.multiplier).toBe('half');
+  });
+
+  it('critical failure doubles after bonuses', () => {
+    const out = computeSaveDamage({ entered: 12, degree: 'criticalFailure', riders: [rune], entryId: 'e-gob' });
+    expect(out.final).toBe(26);
+    expect(out.parts.multiplier).toBe('double');
+  });
+
+  it('weakness applies after the multiplier, never halved or doubled, scoped by entryId', () => {
+    const half = computeSaveDamage({ entered: 12, degree: 'success', riders: [weakness], entryId: 'e-gob' });
+    expect(half.final).toBe(11); // 6 + 5
+    const dbl = computeSaveDamage({ entered: 12, degree: 'criticalFailure', riders: [weakness], entryId: 'e-gob' });
+    expect(dbl.final).toBe(29); // 24 + 5
+    const other = computeSaveDamage({ entered: 12, degree: 'failure', riders: [weakness], entryId: 'e-other' });
+    expect(other.final).toBe(12);
+    expect(other.parts.weaknesses).toEqual([]);
+  });
+
+  it('weakness does not trigger when no damage got through', () => {
+    const out = computeSaveDamage({ entered: 1, degree: 'success', riders: [weakness], entryId: 'e-gob' });
+    // floor(1/2) = 0 → weakness skipped
+    expect(out.final).toBe(0);
+    expect(out.parts.weaknesses).toEqual([]);
+  });
+
+  it('persistent defaults to failure/criticalFailure, doubled on a crit fail', () => {
+    const success = computeSaveDamage({ entered: 12, degree: 'success', riders: [basePersistent], entryId: 'e-gob' });
+    expect(success.persistent).toEqual([]);
+    const failure = computeSaveDamage({ entered: 12, degree: 'failure', riders: [basePersistent], entryId: 'e-gob' });
+    expect(failure.persistent).toEqual([{ dice: '1d4', type: 'electricity', label: 'Persistent electricity' }]);
+    const critFail = computeSaveDamage({ entered: 12, degree: 'criticalFailure', riders: [basePersistent], entryId: 'e-gob' });
+    expect(critFail.persistent).toEqual([{ dice: '2d4', type: 'electricity', label: 'Persistent electricity' }]);
+  });
+
+  it('a crit-fail-exclusive persistent rider keeps its authored dice (Shard Strike)', () => {
+    const failure = computeSaveDamage({ entered: 6, degree: 'failure', riders: [critOnlyBleed], entryId: 'e-gob' });
+    expect(failure.persistent).toEqual([]);
+    const critFail = computeSaveDamage({ entered: 6, degree: 'criticalFailure', riders: [critOnlyBleed], entryId: 'e-gob' });
+    expect(critFail.persistent).toEqual([{ dice: '1d6', type: 'bleed', label: 'Shards: persistent bleed' }]);
+  });
+
+  it('a rider authored to apply on a success is flagged half (Polarize)', () => {
+    const allDegrees = { ...basePersistent, on: ['success', 'failure', 'criticalFailure'] };
+    const out = computeSaveDamage({ entered: null, degree: 'success', riders: [allDegrees], entryId: 'e-gob' });
+    expect(out.persistent).toEqual([
+      { dice: '1d4', type: 'electricity', label: 'Persistent electricity', half: true },
+    ]);
+  });
+
+  it('persistent-only profiles work without an entered total', () => {
+    const out = computeSaveDamage({ entered: null, degree: 'failure', riders: [basePersistent], entryId: 'e-gob' });
+    expect(out.final).toBeNull();
+    expect(out.persistent).toHaveLength(1);
+    expect(computeSaveDamage({ entered: null, degree: 'success', riders: [basePersistent], entryId: 'e-gob' })).toBeNull();
+  });
+
+  it('snapshot-disabled riders are skipped', () => {
+    const out = computeSaveDamage({
+      entered: 12, degree: 'failure',
+      riders: [{ ...rune, enabled: false }], entryId: 'e-gob',
+    });
+    expect(out.final).toBe(12);
+  });
+});
+
+describe('serializeRidersForSave', () => {
+  const character = { abilities: { constitution: 18 } };
+  const riders = [
+    { id: 'con', label: '+Con', bonus: { ability: 'constitution' }, ctx: { expression: '2d6', character } },
+    {
+      id: 'exploit-weakness', label: 'weakness (fire 5)', weakness: 5,
+      appliesToEntryIds: ['e-gob'], defaultOn: true, ctx: { expression: '2d6', character },
+    },
+    {
+      id: 'bleed', label: 'Bleed', persistent: { dice: '1d6', type: 'bleed' },
+      on: ['criticalFailure'], ctx: { expression: '2d6', character },
+    },
+    { id: 'noop', label: 'Nothing', note: 'flavor only', ctx: { expression: '2d6', character } },
+  ];
+
+  it('pre-resolves amounts, strips ctx, and drops no-op riders', () => {
+    const out = serializeRidersForSave(riders, {});
+    expect(out).toEqual([
+      { id: 'con', label: '+Con', amount: 4 },
+      { id: 'exploit-weakness', label: 'weakness (fire 5)', weakness: 5, appliesToEntryIds: ['e-gob'] },
+      { id: 'bleed', label: 'Bleed', persistent: { dice: '1d6', type: 'bleed' }, on: ['criticalFailure'] },
+    ]);
+    expect(JSON.parse(JSON.stringify(out))).toEqual(out);
+  });
+
+  it('omits riders the caster unticked', () => {
+    const out = serializeRidersForSave(riders, { con: false });
+    expect(out.map((r) => r.id)).toEqual(['exploit-weakness', 'bleed']);
+  });
+});
+
 describe('formatDamageBreakdown', () => {
+  it('renders the save-degree multiplier', () => {
+    expect(formatDamageBreakdown({
+      final: 6, parts: { base: 12, riders: [], multiplier: 'half', weaknesses: [] }, persistent: [],
+    })).toBe('6 (12 half)');
+    expect(formatDamageBreakdown({
+      final: 26,
+      parts: { base: 12, riders: [{ label: 'Rune', amount: 1 }], multiplier: 'double', weaknesses: [] },
+      persistent: [],
+    })).toBe('26 (12 +1 Rune ×2)');
+  });
+
+  it('marks halved persistent entries', () => {
+    expect(formatDamageBreakdown({
+      final: 6, parts: { base: 12, riders: [], multiplier: 'half', weaknesses: [] },
+      persistent: [{ dice: '1d4', type: 'electricity', label: 'x', half: true }],
+    })).toBe('6 (12 half) · 1d4 persistent electricity (half) (DC 15 flat to end)');
+  });
+
+  it('persistent-only results log just the persistent fragments', () => {
+    expect(formatDamageBreakdown({
+      final: null, parts: { base: null, riders: [], multiplier: null, weaknesses: [] },
+      persistent: [{ dice: '2d4', type: 'electricity', label: 'x' }],
+    })).toBe('2d4 persistent electricity (DC 15 flat to end)');
+  });
+
   it('bare total when nothing modified it', () => {
     expect(formatDamageBreakdown({
       final: 9, parts: { base: 9, riders: [], crit: false, weaknesses: [] }, persistent: [],
@@ -372,5 +528,63 @@ describe('buildDamageProfile', () => {
     expect(profile.expression).toBe('2d6+4');
     expect(noDice).not.toBeNull();
     expect(noDice.expression).toBeNull();
+  });
+
+  // ── variant damage override (#268) ─────────────────────────────────────────
+
+  const blazingBolt = {
+    name: 'Blazing Bolt',
+    level: 2,
+    traits: ['Attack', 'Fire'],
+    damageData: { base: '9d9', type: 'acid' }, // wrong on purpose — override must win
+  };
+  const oneRay = { base: '2d6', type: 'fire', heightened: { '+1': { base: '1d6' } } };
+  const multiRay = { base: '4d6', type: 'fire', heightened: { '+1': { base: '2d6' } } };
+
+  it('damageOverride replaces base, type, and heightened map field-for-field', () => {
+    const one = buildDamageProfile(blazingBolt, { id: 'c' }, { damageOverride: oneRay });
+    expect(one.expression).toBe('2d6');
+    expect(one.typeLabel).toBe('fire');
+    const multi = buildDamageProfile(blazingBolt, { id: 'c' }, { damageOverride: multiRay, castRank: 3 });
+    // 4d6 + 2d6 per rank above 2
+    expect(multi.expression).toBe('6d6');
+  });
+
+  it('no override → damageData unchanged', () => {
+    const profile = buildDamageProfile(blazingBolt, { id: 'c' }, {});
+    expect(profile.expression).toBe('9d9');
+    expect(profile.typeLabel).toBe('acid');
+  });
+
+  // ── level-scaled content phrases (Eld/amulet powers) ───────────────────────
+
+  it('scales authored per-level phrases to the character level', () => {
+    const chains = {
+      name: 'Chains of Rust',
+      damageData: { base: '2d6 (+1d6 per level)', type: 'bludgeoning' },
+    };
+    expect(buildDamageProfile(chains, { id: 'c', level: 4 }, {}).expression).toBe('6d6');
+    // No level → authored string passes through untouched.
+    expect(buildDamageProfile(chains, { id: 'c' }, {}).expression).toBe('2d6 (+1d6 per level)');
+  });
+
+  it('scales persistent rider dice phrases (Polarize)', () => {
+    const polarize = {
+      name: 'Polarize',
+      damageData: {
+        riders: [{
+          id: 'polarize-persistent', label: 'Persistent electricity',
+          persistent: { dice: '1d4 per two levels you have', type: 'electricity' },
+          on: ['success', 'failure', 'criticalFailure'],
+        }],
+      },
+    };
+    const profile = buildDamageProfile(polarize, { id: 'c', level: 6 }, {});
+    expect(profile.riders[0].persistent.dice).toBe('3d4');
+  });
+
+  it('plain dice expressions are never touched by scaling', () => {
+    const profile = buildDamageProfile(strike, { ...character, level: 7 }, {});
+    expect(profile.expression).toBe('2d6+4');
   });
 });

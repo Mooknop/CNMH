@@ -75,9 +75,13 @@ describe('heightenedEntriesFor', () => {
     ]);
   });
 
-  test('cantrip (level 0 native) heightens from rank 0', () => {
+  test('cantrip (level 0 native) heightens from rank 1', () => {
     const cantrip = { level: 0, heightened: { '+1': 'Add 1d4.' } };
+    expect(heightenedEntriesFor(cantrip, 1)).toEqual([]);
     expect(heightenedEntriesFor(cantrip, 2)).toEqual([
+      { key: '+1', text: 'Add 1d4.', times: 1 },
+    ]);
+    expect(heightenedEntriesFor(cantrip, 3)).toEqual([
       { key: '+1', text: 'Add 1d4.', times: 2 },
     ]);
   });

@@ -8,9 +8,15 @@
 //   - character data:       character.damageRiders (e.g. Implement's Empowerment)
 //   - runtime:              the actor's active Exploit Vulnerability weakness
 // Kept side-effect-free so the modal, resolver, and tests share the same algebra.
+//
+// Rider `on` degrees are mode-relative: attack riders default to
+// ['success','criticalSuccess'] (the attacker's roll), save riders to
+// ['failure','criticalFailure'] (the target's save). Author accordingly —
+// no ability is resolved through both modes.
 
 import { getAbilityModifier } from './CharacterUtils';
 import { heightenedEntriesFor } from './spellHeighten';
+import { scaleDamageText } from './eldScaling';
 
 // '2d6+3' → { dice: [{count: 2, size: 6}], flat: 3 }; null on anything that
 // isn't plain dice notation (damage strings are hand-curated; skip, don't throw).
@@ -150,22 +156,132 @@ export const computeTargetDamage = ({
   };
 };
 
+const SAVE_DAMAGE_DEGREES     = ['success', 'failure', 'criticalFailure'];
+const SAVE_PERSISTENT_DEFAULT = ['failure', 'criticalFailure'];
+
+/**
+ * JSON-safe rider snapshots for a save request (#270). The caster's toggle
+ * state is baked in (unticked riders are omitted — the GM does not re-toggle)
+ * and numeric bonuses are pre-resolved, because the GM side has neither the
+ * character nor the rider ctx. `appliesToEntryIds` survive as-is: they are the
+ * same encounter entryIds the request's targets carry.
+ */
+export const serializeRidersForSave = (riders, riderState) =>
+  (riders || [])
+    .filter((r) => riderEnabled(r, riderState))
+    .map((r) => {
+      const amount = riderAmount(r, r.ctx);
+      const out = { id: r.id, label: r.label };
+      if (amount !== 0) out.amount = amount;
+      if (typeof r.weakness === 'number') out.weakness = r.weakness;
+      if (r.appliesToEntryIds) out.appliesToEntryIds = r.appliesToEntryIds;
+      if (r.persistent?.dice) {
+        out.persistent = { dice: r.persistent.dice, type: r.persistent.type || '' };
+      }
+      if (r.on) out.on = r.on;
+      return out;
+    })
+    .filter((r) => r.amount != null || r.weakness != null || r.persistent);
+
+/**
+ * Per-target damage for a basic save (#270), from the caster's entered total
+ * and the target's save degree: success halves (round down), failure takes it
+ * full, critical failure doubles; critical success means no damage at all.
+ * Bonus riders add before the degree multiplier, weakness after (never
+ * multiplied, and only when some damage got through).
+ *
+ * Persistent riders default to `on: ['failure','criticalFailure']`. Dice are
+ * doubled on a critical failure only when the rider also applies on a plain
+ * failure — a crit-fail-exclusive rider (Shard Strike's bleed) already states
+ * its crit amount. A rider authored to apply on a success keeps its dice and
+ * is flagged `half: true` (basic saves halve persistent damage too).
+ *
+ * Riders here are serializeRidersForSave snapshots ({ amount } pre-resolved).
+ * `entered` may be null for persistent-only profiles (Polarize) — the result
+ * then carries `final: null` and only the persistent entries.
+ *
+ * @returns {null|{ entered, final, parts, persistent, riderIds }}
+ */
+export const computeSaveDamage = ({ entered, degree, riders = [], entryId }) => {
+  if (!SAVE_DAMAGE_DEGREES.includes(degree)) return null;
+  const enabled = riders.filter((r) => r.enabled !== false);
+
+  const persistent = enabled
+    .filter((r) => r.persistent?.dice
+      && (r.on ?? SAVE_PERSISTENT_DEFAULT).includes(degree))
+    .map((r) => {
+      const doubled = degree === 'criticalFailure'
+        && (r.on ?? SAVE_PERSISTENT_DEFAULT).includes('failure');
+      return {
+        dice: doubled ? doubleDice(r.persistent.dice) : r.persistent.dice,
+        type: r.persistent.type || '',
+        label: r.label,
+        ...(degree === 'success' && { half: true }),
+      };
+    });
+
+  const hasEntered = typeof entered === 'number' && !Number.isNaN(entered);
+  if (!hasEntered) {
+    if (!persistent.length) return null;
+    return {
+      entered: null,
+      final: null,
+      parts: { base: null, riders: [], multiplier: null, weaknesses: [] },
+      persistent,
+      riderIds: enabled.map((r) => r.id),
+    };
+  }
+
+  const bonusParts = enabled
+    .filter((r) => typeof r.amount === 'number' && r.amount !== 0
+      && (r.on ?? SAVE_DAMAGE_DEGREES).includes(degree))
+    .map((r) => ({ label: r.label, amount: r.amount }));
+
+  let total = entered + bonusParts.reduce((sum, p) => sum + p.amount, 0);
+  const multiplier = degree === 'success' ? 'half'
+    : degree === 'criticalFailure' ? 'double'
+    : null;
+  if (multiplier === 'half') total = Math.floor(total / 2);
+  if (multiplier === 'double') total *= 2;
+
+  const weaknessParts = total > 0
+    ? enabled
+        .filter((r) => typeof r.weakness === 'number'
+          && (r.on ?? SAVE_DAMAGE_DEGREES).includes(degree)
+          && (r.appliesToEntryIds ?? []).includes(entryId))
+        .map((r) => ({ label: r.label, amount: r.weakness }))
+    : [];
+  total += weaknessParts.reduce((sum, p) => sum + p.amount, 0);
+
+  return {
+    entered,
+    final: total,
+    parts: { base: entered, riders: bonusParts, multiplier, weaknesses: weaknessParts },
+    persistent,
+    riderIds: enabled.map((r) => r.id),
+  };
+};
+
 // Compact log fragment: '30 (9 +4 Implement's Empowerment ×2 +4 weakness (fire))'
 // plus ' · 1d4 persistent bleed (DC 15 flat to end)' per persistent entry.
-// A bare total (no riders, no crit) logs as just the number.
+// A bare total (no riders, no crit) logs as just the number. Save results
+// render their degree multiplier ('half'/'×2'); persistent-only results
+// (final: null) log just the persistent fragments.
 export const formatDamageBreakdown = ({ final, parts, persistent = [] }) => {
+  const persistentStr = persistent
+    .map((p) => ` · ${p.dice} persistent ${p.type || 'damage'}${p.half ? ' (half)' : ''} (DC 15 flat to end)`)
+    .join('');
+  if (final == null) return persistentStr.replace(/^ · /, '');
   const bits = [];
   for (const p of parts.riders) {
     bits.push(`${p.amount > 0 ? '+' : ''}${p.amount} ${p.label}`);
   }
-  if (parts.crit) bits.push('×2');
+  if (parts.crit || parts.multiplier === 'double') bits.push('×2');
+  else if (parts.multiplier === 'half') bits.push('half');
   for (const w of parts.weaknesses) {
     bits.push(`+${w.amount} ${w.label}`);
   }
   const breakdown = bits.length ? `${final} (${parts.base} ${bits.join(' ')})` : String(final);
-  const persistentStr = persistent
-    .map((p) => ` · ${p.dice} persistent ${p.type || 'damage'} (DC 15 flat to end)`)
-    .join('');
   return `${breakdown}${persistentStr}`;
 };
 
@@ -210,13 +326,21 @@ const exploitRider = (exploit, enemyEntries, order) => {
  * adds dice to the hint expression; `persistent` adds to every persistent
  * rider's dice (Shocking Grasp: '+1' → { base: '1d12', persistent: 1 }).
  *
- * @param {Object}      ability       - strike or spell object
- * @param {Object}      character     - the acting character
- * @param {number|null} chosenActions - effective action count (gates when.actions riders)
- * @param {number}      [castRank]    - the rank this cast happens at (spells)
- * @param {Object|null} exploit       - the actor's active exploit (useExploitVulnerability)
- * @param {Array}       enemyEntries  - enemy targets shown on the resolver
- * @param {Array}       order         - full encounter order (creatureKey lookups)
+ * `damageOverride` (#268) lets a chosen variant (Blazing Bolt's action count)
+ * or rider-choice option (Polarize's Discharge) replace damageData fields —
+ * field-level preference, no merging. Base and persistent dice run through
+ * scaleDamageText so content can author level-scaled phrases
+ * ('2d6 (+1d6 per level)', '1d4 per two levels you have') instead of dice
+ * that rot on level-up; plain expressions pass through untouched.
+ *
+ * @param {Object}      ability        - strike or spell object
+ * @param {Object}      character      - the acting character
+ * @param {number|null} chosenActions  - effective action count (gates when.actions riders)
+ * @param {number}      [castRank]     - the rank this cast happens at (spells)
+ * @param {Object|null} exploit        - the actor's active exploit (useExploitVulnerability)
+ * @param {Array}       enemyEntries   - enemy targets shown on the resolver
+ * @param {Array}       order          - full encounter order (creatureKey lookups)
+ * @param {Object|null} damageOverride - { base?, type?, heightened?, riders? }
  */
 export const buildDamageProfile = (ability, character, {
   chosenActions = null,
@@ -224,15 +348,22 @@ export const buildDamageProfile = (ability, character, {
   exploit = null,
   enemyEntries = [],
   order = [],
+  damageOverride = null,
 } = {}) => {
   if (!ability) return null;
-  let expression = ability.damageData?.base ?? ability.damage ?? null;
-  const typeLabel = ability.damageData?.type ?? null;
+  const dd = ability.damageData;
+  const level = character?.level;
+  let expression = scaleDamageText(
+    damageOverride?.base ?? dd?.base ?? ability.damage ?? null,
+    level
+  );
+  const typeLabel = damageOverride?.type ?? dd?.type ?? null;
+  const heightenedMap = damageOverride?.heightened ?? dd?.heightened;
 
   // Heightened damage scaling — cumulative entries at this cast rank.
-  const heightenSteps = ability.damageData?.heightened
+  const heightenSteps = heightenedMap
     ? heightenedEntriesFor(
-        { heightened: ability.damageData.heightened, level: ability.level },
+        { heightened: heightenedMap, level: ability.level },
         castRank
       )
     : [];
@@ -252,14 +383,15 @@ export const buildDamageProfile = (ability, character, {
   // Strikes are the abilities built by strikeUtils — they carry a numeric attackMod.
   const isStrike = typeof ability.attackMod === 'number';
 
-  const abilityRiders = (ability.damageData?.riders ?? ability.riders ?? [])
+  const abilityRiders = (damageOverride?.riders ?? dd?.riders ?? ability.riders ?? [])
     .filter((r) => r.when?.actions == null || r.when.actions === chosenActions)
     .map((r) => {
-      if (!r.persistent?.dice || !persistentBumps.length) return r;
-      let dice = r.persistent.dice;
+      if (!r.persistent?.dice) return r;
+      let dice = scaleDamageText(r.persistent.dice, level);
       for (const bump of persistentBumps) {
         dice = addExpressions(dice, bump.add, bump.times);
       }
+      if (dice === r.persistent.dice) return r;
       return { ...r, persistent: { ...r.persistent, dice } };
     });
 
