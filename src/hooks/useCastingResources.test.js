@@ -41,10 +41,13 @@ afterEach(() => vi.clearAllMocks());
 
 describe('useCastingResources', () => {
   describe('optionsFor — free casts', () => {
-    it('cantrips cost nothing', () => {
+    it('cantrips cost nothing and carry the auto-heightened rank (#271)', () => {
       const { result } = setup();
       const opts = result.current.optionsFor({ name: 'Detect Magic', level: 0 }, 'slot');
-      expect(opts).toEqual([expect.objectContaining({ type: 'cantrip', enabled: true })]);
+      // Level-5 caster → rank ceil(5/2) = 3; label unchanged.
+      expect(opts).toEqual([expect.objectContaining({
+        type: 'cantrip', enabled: true, rank: 3, label: 'Cantrip — no cost',
+      })]);
     });
 
     it('innate spells cost nothing', () => {

@@ -5,6 +5,7 @@ import TargetRollResolver from './TargetRollResolver';
 import MultiRayResolver from './MultiRayResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
 import ChainedSpellSection from './ChainedSpellSection';
+import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
 import { useSession } from '../../contexts/SessionContext';
 import { useContent } from '../../contexts/ContentContext';
@@ -22,7 +23,7 @@ import { immunityConfigFor } from '../../utils/immunity';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
-import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
+import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -114,6 +115,11 @@ const UseAbilityModal = ({
   // Rider choice (#225) — which either/or rider option is picked. null =
   // default to the first available option.
   const [riderChoiceId, setRiderChoiceId] = useState(null);
+
+  // Save-based damage entry (#270): the caster's rolled total and rider
+  // toggles, carried into the save request for GM-side per-degree resolution.
+  const [saveDmgInput, setSaveDmgInput] = useState('');
+  const [saveRiderState, setSaveRiderState] = useState({});
 
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
@@ -286,26 +292,31 @@ const UseAbilityModal = ({
       ? ability.level
       : undefined);
 
-  // Damage step (#222) — AC attacks resolved inline (single-roll and multi-ray;
-  // chained strikes build their own per-strike profile). The profile carries the
-  // dice hint (heightened at the cast rank) plus rider toggles, including the
-  // actor's active exploit weakness.
-  const damageProfile = (rollProfile.mode === 'actor-roll'
-    && effectiveDefense === 'ac'
-    && resolverTargets.length > 0)
-    ? buildDamageProfile(ability, character, {
-        chosenActions: typeof castCost === 'number' ? castCost : null,
-        castRank: directCastRank,
-        exploit: exploitFor(character.id),
-        enemyEntries: resolverTargets,
-        order,
-      })
-    : null;
-
   // For target-save: enemy targets whose save mod we can read (used in the save request).
   const saveTargets = rollProfile.mode === 'target-save'
     ? selectedEntries.filter((e) => e.kind === 'enemy')
     : [];
+
+  // Damage step (#222) — AC attacks resolved inline (single-roll and multi-ray;
+  // chained strikes build their own per-strike profile) and basic-save abilities
+  // (#270), where the caster enters the total here and the GM derives per-degree
+  // damage in RequestedSaves. The profile carries the dice hint (heightened at
+  // the cast rank) plus rider toggles, including the actor's active exploit
+  // weakness. The chosen action-count variant or rider option may override the
+  // dice (#268 — Blazing Bolt, Polarize's Discharge).
+  const isSaveDamage = rollProfile.mode === 'target-save' && saveTargets.length > 0;
+  const damageProfile = ((rollProfile.mode === 'actor-roll'
+    && effectiveDefense === 'ac'
+    && resolverTargets.length > 0) || isSaveDamage)
+    ? buildDamageProfile(ability, character, {
+        chosenActions: typeof castCost === 'number' ? castCost : null,
+        castRank: directCastRank,
+        exploit: exploitFor(character.id),
+        enemyEntries: isSaveDamage ? saveTargets : resolverTargets,
+        order,
+        damageOverride: variant?.damage ?? selectedRider?.damage ?? null,
+      })
+    : null;
 
   // Block the cast while the chosen pool is empty, unless overridden.
   const castGateOk =
@@ -400,8 +411,10 @@ const UseAbilityModal = ({
         sendUpdate,
         appendLog,
         verb: effectiveVerb,
-        // Only when heightened above native — native casts keep their log text.
-        rank: directCastRank > (ability.level || 0) ? directCastRank : undefined,
+        // Only when heightened above native — native casts keep their log
+        // text, and cantrips (auto-heightened, #271) never decorate it.
+        rank: (typeof ability.level === 'number' && ability.level > 0
+          && directCastRank > ability.level) ? directCastRank : undefined,
         nowSecs,
       });
     } else {
@@ -497,13 +510,28 @@ const UseAbilityModal = ({
       }
     }
 
-    // Push a save request to the GM for target-save abilities.
+    // Push a save request to the GM for target-save abilities. When a damage
+    // profile exists (#270), the caster's entered total and rider snapshot
+    // travel with it — RequestedSaves derives per-degree totals GM-side.
     if (rollProfile.mode === 'target-save' && saveTargets.length > 0 && rollProfile.dc != null) {
       const targets = saveTargets.map((e) => ({
         entryId: e.entryId,
         name: e.name,
         saveMod: e.defenses?.saves?.[rollProfile.defense] ?? null,
       }));
+      let damage;
+      if (damageProfile) {
+        const enteredNum = parseInt(saveDmgInput, 10);
+        const savedRiders = serializeRidersForSave(damageProfile.riders, saveRiderState);
+        if (!Number.isNaN(enteredNum) || savedRiders.length > 0) {
+          damage = {
+            entered: Number.isNaN(enteredNum) ? null : enteredNum,
+            expression: damageProfile.expression ?? null,
+            typeLabel: damageProfile.typeLabel ?? null,
+            riders: savedRiders,
+          };
+        }
+      }
       addSaveRequest({
         casterId: character.id,
         casterName: character.name,
@@ -513,6 +541,7 @@ const UseAbilityModal = ({
         basic: !!(ability.basic),
         rank: directCastRank,
         targets,
+        ...(damage && { damage }),
       });
     }
 
@@ -693,14 +722,26 @@ const UseAbilityModal = ({
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {
     const saveLabel = DEFENSE_LABELS[rollProfile.defense] || rollProfile.defense;
     rollSection = (
-      <div className="ct-save-request-preview" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-        <strong>Save request → GM:</strong> {saveLabel} DC {saveDc}
-        <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
-          {saveTargets.map((e) => (
-            <li key={e.entryId}>{e.name}</li>
-          ))}
-        </ul>
-      </div>
+      <>
+        <div className="ct-save-request-preview" style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+          <strong>Save request → GM:</strong> {saveLabel} DC {saveDc}
+          <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1.25rem' }}>
+            {saveTargets.map((e) => (
+              <li key={e.entryId}>{e.name}</li>
+            ))}
+          </ul>
+        </div>
+        {damageProfile && (
+          <DamagePanel
+            mode="save"
+            profile={damageProfile}
+            entered={saveDmgInput}
+            onEntered={setSaveDmgInput}
+            riderState={saveRiderState}
+            onToggleRider={(id, on) => setSaveRiderState((cur) => ({ ...cur, [id]: on }))}
+          />
+        )}
+      </>
     );
   }
 

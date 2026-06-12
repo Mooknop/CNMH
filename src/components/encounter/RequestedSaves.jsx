@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { computeSaveDamage, formatDamageBreakdown } from '../../utils/damage';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { useSessionLog } from '../../hooks/useSessionLog';
 
@@ -25,7 +26,23 @@ const DEGREE_CLASSES = {
  * adds each enemy's save modifier, compares to the caster's DC, resolves the
  * degree of success with the PF2e nat-20/nat-1 rules, and logs the result.
  * The request is removed once every target has been resolved.
+ *
+ * Requests carrying a `damage` payload (#270 — the caster's entered total and
+ * rider snapshot) derive per-target damage from each degree as the d20s are
+ * typed (none/half/full/double) and append it to the log lines.
  */
+const damageFor = (req, degree, entryId) => {
+  if (!req.damage || !degree) return null;
+  if (degree === 'criticalSuccess') return { none: true };
+  const dmg = computeSaveDamage({
+    entered: req.damage.entered,
+    degree,
+    riders: req.damage.riders,
+    entryId,
+  });
+  return dmg ? { dmg } : null;
+};
+
 const RequestedSaves = () => {
   const { encounter, appendLog, removeSaveRequest } = useEncounter();
   const { appendEvent } = useSessionLog();
@@ -59,10 +76,14 @@ const RequestedSaves = () => {
     const saveLabel = DEFENSE_LABELS[req.save] || req.save;
     results.forEach((r) => {
       const degreeLabel = DEGREE_LABELS[r.degree] || r.degree;
+      const d = damageFor(req, r.degree, r.entryId);
+      const dmgSuffix = d
+        ? (d.none ? ' · no damage' : ` · damage ${formatDamageBreakdown(d.dmg)}`)
+        : '';
       appendLog({
         type:   'action',
         charId: req.casterId,
-        text:   `${r.name} rolls ${saveLabel} vs DC ${req.dc} (${req.abilityName}): ${r.total} → ${degreeLabel}`,
+        text:   `${r.name} rolls ${saveLabel} vs DC ${req.dc} (${req.abilityName}): ${r.total} → ${degreeLabel}${dmgSuffix}`,
       });
     });
 
@@ -97,6 +118,14 @@ const RequestedSaves = () => {
               {saveLabel} DC {req.dc}
               {req.basic && <span className="gm-save-req-basic"> (basic)</span>}
             </div>
+            {req.damage && (
+              <div className="gm-save-req-dmg-hint">
+                {[
+                  [req.damage.expression, req.damage.typeLabel].filter(Boolean).join(' '),
+                  req.damage.entered != null ? `rolled ${req.damage.entered}` : null,
+                ].filter(Boolean).join(' — ')}
+              </div>
+            )}
             {req.targets.map((t) => {
               const raw   = getD20(req.id, t.entryId);
               const d20   = parseInt(raw, 10);
@@ -128,6 +157,15 @@ const RequestedSaves = () => {
                       {DEGREE_LABELS[degree]}
                     </span>
                   )}
+                  {(() => {
+                    const d = damageFor(req, degree, t.entryId);
+                    if (!d) return null;
+                    return (
+                      <span className="gm-save-req-dmg">
+                        {d.none ? 'no damage' : formatDamageBreakdown(d.dmg)}
+                      </span>
+                    );
+                  })()}
                 </div>
               );
             })}

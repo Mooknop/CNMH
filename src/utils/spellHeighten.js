@@ -22,9 +22,13 @@ export const parseHeightenedKey = (key) => {
 // cumulative (every tier ≤ castRank), in authored map order. Each entry is
 // { key, text, times } — `times` > 1 means a relative step applies repeatedly
 // (e.g. '+1' cast three ranks up → times: 3).
+//
+// Cantrips (level 0) are statted at rank 1 and heighten per rank above 1 —
+// a rank-2 cantrip applies a '+1' entry once, not twice.
 export const heightenedEntriesFor = (spell, castRank) => {
   const heightened = spell?.heightened;
-  const nativeRank = spell?.level || 0;
+  const nativeRank =
+    typeof spell?.level === 'number' && spell.level > 0 ? spell.level : 1;
   if (!heightened || typeof castRank !== 'number' || castRank <= nativeRank) {
     return [];
   }

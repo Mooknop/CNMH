@@ -647,15 +647,16 @@ describe('CastSpellModal', () => {
       );
     });
 
-    it('cantrip cast produces no rank on the save request', () => {
+    it('cantrip save request carries the auto-heightened rank (#271)', () => {
       const cantripSave = {
         id: 'daze', name: 'Daze', level: 0, actions: 'Two Actions', defense: 'Will',
       };
       render(<CastSpellModal {...defaultProps} character={casterChar} spell={cantripSave} castSource="slot" />);
       fireEvent.click(screen.getByRole('button', { name: 'Target Goblin' }));
       fireEvent.click(screen.getByLabelText('confirm-cast'));
+      // Level-5 caster → cantrips auto-heighten to rank ceil(5/2) = 3.
       expect(mockAddSaveRequest).toHaveBeenCalledWith(
-        expect.objectContaining({ abilityName: 'Daze', rank: undefined })
+        expect.objectContaining({ abilityName: 'Daze', rank: 3 })
       );
     });
   });

@@ -251,4 +251,95 @@ describe('RequestedSaves', () => {
     // Only one "Log Results" button (for the pending one)
     expect(screen.getAllByRole('button', { name: /log results/i })).toHaveLength(1);
   });
+
+  // ── save-based damage derivation (#270) ────────────────────────────────────
+
+  const withDamage = (damage, extra = {}) => {
+    useEncounter.mockReturnValue({
+      encounter: makeEncounter([{ ...baseRequest, basic: true, damage, ...extra }]),
+      appendLog: mockAppendLog,
+      removeSaveRequest: mockRemoveSaveReq,
+    });
+  };
+  const dmgFixture = { entered: 12, expression: '6d6', typeLabel: 'fire', riders: [] };
+  const enterGoblinD20 = (v) =>
+    fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: String(v) } });
+
+  describe('damage payloads (#270)', () => {
+    test('header shows the expression, type, and rolled total', () => {
+      withDamage(dmgFixture);
+      render(<RequestedSaves />);
+      expect(screen.getByText('6d6 fire — rolled 12')).toBeInTheDocument();
+    });
+
+    test('live per-target damage tracks the degree: full / half / double / none', () => {
+      withDamage(dmgFixture);
+      render(<RequestedSaves />);
+      // DC 20, mod +5. d20 10 → 15 → Failure → full 12.
+      enterGoblinD20(10);
+      expect(screen.getByText('12')).toBeInTheDocument();
+      // d20 15 → 20 → Success → floor(12/2) = 6.
+      enterGoblinD20(15);
+      expect(screen.getByText('6 (12 half)')).toBeInTheDocument();
+      // d20 1 → nat 1 → Critical Failure → 24.
+      enterGoblinD20(1);
+      expect(screen.getByText('24 (12 ×2)')).toBeInTheDocument();
+      // d20 20 → Critical Success → no damage.
+      enterGoblinD20(20);
+      expect(screen.getByText('no damage')).toBeInTheDocument();
+    });
+
+    test('log lines carry the damage breakdown per degree', () => {
+      withDamage(dmgFixture);
+      render(<RequestedSaves />);
+      enterGoblinD20(15); // Success
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 20 → Success · damage 6 (12 half)',
+      }));
+    });
+
+    test('a critical success logs "no damage"', () => {
+      withDamage(dmgFixture);
+      render(<RequestedSaves />);
+      enterGoblinD20(20);
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: expect.stringMatching(/Critical Success · no damage$/),
+      }));
+    });
+
+    test('weakness riders only hit their scoped entryId', () => {
+      withDamage(
+        { ...dmgFixture, riders: [{ id: 'w', label: 'weakness (fire 5)', weakness: 5, appliesToEntryIds: ['e-goblin'] }] },
+        { targets: [goblinTarget, trollTarget] }
+      );
+      render(<RequestedSaves />);
+      enterGoblinD20(10); // Failure → 12 + 5
+      fireEvent.change(screen.getByLabelText(/Troll d20/i), { target: { value: '7' } }); // 15 → Failure → 12
+      expect(screen.getByText('17 (12 +5 weakness (fire 5))')).toBeInTheDocument();
+      expect(screen.getByText('12')).toBeInTheDocument();
+    });
+
+    test('persistent riders fire on a crit fail (doubled) but not on a success', () => {
+      withDamage({
+        ...dmgFixture,
+        riders: [{ id: 'p', label: 'Persistent electricity', persistent: { dice: '1d4', type: 'electricity' } }],
+      });
+      render(<RequestedSaves />);
+      enterGoblinD20(15); // Success — default `on` excludes it
+      expect(screen.queryByText(/persistent/)).toBeNull();
+      enterGoblinD20(1); // Critical Failure — dice doubled
+      expect(screen.getByText(/2d4 persistent electricity \(DC 15 flat to end\)/)).toBeInTheDocument();
+    });
+
+    test('requests without damage log the exact legacy line', () => {
+      render(<RequestedSaves />);
+      enterGoblinD20(15);
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 20 → Success',
+      }));
+    });
+  });
 });
