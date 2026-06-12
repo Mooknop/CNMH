@@ -710,4 +710,69 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText("Pellias's kinetic aura is active")).toBeInTheDocument();
   });
 
+  // ── Turn-start free-action offers (#228 — Primary Threat) ─────────────────
+
+  const primaryThreatChar = {
+    id: 'Pellias',
+    name: 'Pellias',
+    feats: [{
+      name: 'Primary Threat',
+      freeActions: [{
+        name: 'Primary Threat',
+        offerAt: { round: 1 },
+        reminder: 'Enemies that act after Pellias take a -1 circumstance penalty to attack rolls against his allies until the start of his next turn.',
+      }],
+    }],
+  };
+
+  it('offers a round-1 free action at turn start; Use logs the action and the reminder', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" character={primaryThreatChar} />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    expect(screen.getByRole('group', { name: 'Primary Threat (free action)' })).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Use Primary Threat'));
+
+    expect(screen.queryByRole('group', { name: 'Primary Threat (free action)' })).toBeNull();
+    const texts = drv.encounter.log.map((e) => e.text);
+    expect(texts.some((t) => t.includes('Pellias used Primary Threat (free action)'))).toBe(true);
+    expect(texts.some((t) => t.includes('-1 circumstance penalty to attack rolls'))).toBe(true);
+  });
+
+  it('Dismiss hides the offer without logging', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" character={primaryThreatChar} />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    const logLen = drv.encounter.log.length;
+    fireEvent.click(screen.getByLabelText('Dismiss Primary Threat'));
+    expect(screen.queryByRole('group', { name: 'Primary Threat (free action)' })).toBeNull();
+    expect(drv.encounter.log.length).toBe(logLen);
+  });
+
+  it('round-gated offers do not appear on later rounds', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" character={primaryThreatChar} />
+      </>
+    );
+    startMyTurn(() => drv);
+    expect(screen.getByRole('group', { name: 'Primary Threat (free action)' })).toBeInTheDocument();
+
+    act(() => drv.beginNextRound());
+    expect(screen.queryByRole('group', { name: 'Primary Threat (free action)' })).toBeNull();
+  });
+
 });

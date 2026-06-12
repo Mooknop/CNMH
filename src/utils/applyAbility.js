@@ -184,7 +184,9 @@ export function applyAbility({
 export function applyAbilityImmunity({ ability, caster, targetCharIds, nowSecs, getState, sendUpdate }) {
   const config = immunityConfigFor(ability);
   if (!config) return;
-  const abilityKey  = freqKeyFor(ability);
+  // `immunityKey` lets variants share one immunity pool (#228 — Murmured
+  // Prayer's 1/day +2 Guidance stamps and checks the same key as Guidance).
+  const abilityKey  = ability.immunityKey || freqKeyFor(ability);
   const abilityName = ability.name || '';
   (targetCharIds || []).forEach((targetCharId) => {
     const current = getState(targetCharId, 'effects') || [];
