@@ -28,6 +28,34 @@ const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
   });
 };
 
+// Build the stored effect entry for one structured effect on one target.
+// Durations resolve in precedence order: clock minutes (absolute expireAtSecs,
+// pruned by the #218 expiry sweep) → encounter boundaries via resolveExpireAt →
+// the daily-prep flag.
+const buildEffectEntry = ({ eff, caster, abilityName, encounter, casterEntryId, targetEntryId, nowSecs }) => {
+  const minutes = Number(eff.duration?.minutes);
+  const expireAtSecs =
+    Number.isFinite(minutes) && minutes > 0 && typeof nowSecs === 'number'
+      ? nowSecs + minutes * 60
+      : undefined;
+  const expireAt = expireAtSecs == null
+    ? resolveExpireAt(eff.duration || null, encounter, casterEntryId, targetEntryId)
+    : null;
+  return {
+    id:        newEntryUid(),
+    effectId:  eff.effectId,
+    appliedBy: caster.id,
+    source:    abilityName,
+    expireAt:  expireAt || undefined,
+    ...(expireAtSecs != null ? { expireAtSecs } : {}),
+    // Effects that last "until daily preparations" (Mystic Armor, Light)
+    // carry a flag the daily-prep flow clears — they have no encounter
+    // boundary, so resolveExpireAt returns null for them.
+    ...(eff.duration?.until === 'daily-prep' ? { expireOnDailyPrep: true } : {}),
+    ts:        Date.now(),
+  };
+};
+
 /**
  * Applies an ability's structured effects[] and grants[] to resolved targets.
  * React-free — accepts hooks' return values as plain function arguments.
@@ -45,6 +73,7 @@ const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
  * @param {Function} appendLog        - ({ type, charId, text }) => void
  * @param {string}   verb             - 'cast' | 'used' (lower-case for log lines)
  * @param {number}   [rank]           - Cast rank when heightened above native (#235); decorates log lines
+ * @param {number}   [nowSecs]        - Current absolute game seconds; enables minute durations
  */
 export function applyAbility({
   ability,
@@ -60,6 +89,7 @@ export function applyAbility({
   appendLog,
   verb = 'used',
   rank,
+  nowSecs,
 }) {
   const effects = Array.isArray(ability.effects) ? ability.effects : [];
   const grants  = Array.isArray(ability.grants)  ? ability.grants  : [];
@@ -72,20 +102,10 @@ export function applyAbility({
   effects.forEach((eff) => {
     const resolved = resolveApplyTargets(eff.applyTo, caster, targetCharIds, order);
     resolved.forEach(({ charId: targetCharId, entryId: targetEntryId }) => {
-      const expireAt = resolveExpireAt(eff.duration || null, encounter, casterEntryId, targetEntryId);
       const current  = getState(targetCharId, 'effects') || [];
-      const newEntry = {
-        id:        newEntryUid(),
-        effectId:  eff.effectId,
-        appliedBy: caster.id,
-        source:    name,
-        expireAt:  expireAt || undefined,
-        // Effects that last "until daily preparations" (Mystic Armor, Light)
-        // carry a flag the daily-prep flow clears — they have no encounter
-        // boundary, so resolveExpireAt returns null for them.
-        ...(eff.duration?.until === 'daily-prep' ? { expireOnDailyPrep: true } : {}),
-        ts:        Date.now(),
-      };
+      const newEntry = buildEffectEntry({
+        eff, caster, abilityName: name, encounter, casterEntryId, targetEntryId, nowSecs,
+      });
       const next = [...current, newEntry];
       writeLocal(`cnmh_effects_${targetCharId}`, next);
       sendUpdate(targetCharId, 'effects', next);
@@ -175,6 +195,67 @@ export function applyAbilityImmunity({ ability, caster, targetCharIds, nowSecs, 
     const next = [...current, entry];
     writeLocal(`cnmh_effects_${targetCharId}`, next);
     sendUpdate(targetCharId, 'effects', next);
+  });
+}
+
+/**
+ * Apply one chosen rider option from an ability's `riderChoice` config (#225 —
+ * e.g. the electric Eld powers' "become Charged" vs "Discharge"). Rider
+ * effects are caster-scoped: `appliesEffect` lands on the caster, and
+ * `removesEffectId` strips matching entries from the caster's effects.
+ * React-free; the modal calls this alongside applyAbility on confirm.
+ *
+ * option shape: { id, label, note?, appliesEffect?: { effectId, duration? },
+ *                 removesEffectId?, requiresEffectId? }
+ */
+export function applyRiderChoice({
+  option,
+  ability,
+  caster,
+  casterEntryId,
+  encounter,
+  nowSecs,
+  getState,
+  sendUpdate,
+  appendLog,
+}) {
+  if (!option) return;
+  let current = getState(caster.id, 'effects') || [];
+  let changed = false;
+
+  if (option.removesEffectId) {
+    const next = current.filter((e) => e.effectId !== option.removesEffectId);
+    if (next.length !== current.length) {
+      current = next;
+      changed = true;
+    }
+  }
+
+  if (option.appliesEffect?.effectId) {
+    current = [
+      ...current,
+      buildEffectEntry({
+        eff: option.appliesEffect,
+        caster,
+        abilityName: ability.name || '',
+        encounter,
+        casterEntryId,
+        targetEntryId: casterEntryId,
+        nowSecs,
+      }),
+    ];
+    changed = true;
+  }
+
+  if (changed) {
+    writeLocal(`cnmh_effects_${caster.id}`, current);
+    sendUpdate(caster.id, 'effects', current);
+  }
+
+  appendLog({
+    type:   'action',
+    charId: caster.id,
+    text:   `${caster.name} chose ${option.label} (${ability.name})${option.note ? ` — ${option.note}` : ''}`,
   });
 }
 
