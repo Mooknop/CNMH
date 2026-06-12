@@ -56,24 +56,45 @@ export const hasGodlessHealing = (character) =>
  * @param {Function} appendLog  - ({ type, charId, text }) => void
  */
 export function applyHealingConsumable({ user, itemName, amount, getState, sendUpdate, appendLog }) {
+  applyHealing({
+    target: user,
+    amount,
+    getState,
+    sendUpdate,
+    appendLog,
+    logText: `${user.name} used ${itemName} — healed ${amount} HP`,
+  });
+}
+
+/**
+ * Generic HP-up (clamped to max) with a combat-log line — the shared core of
+ * healing consumables, Harrow Casting's Shields/Stars suits (#227), and any
+ * future player-rolled healing. HP writes go through sendUpdate(id, 'hp', v)
+ * so the Foundry bridge picks them up.
+ *
+ * @param {Object}   target   - { id, name, maxHp? } — the healed character
+ * @param {number}   amount   - HP entered by the player (rolled physically)
+ * @param {string}   [logText] - full log line; defaults to "<name> healed N HP"
+ */
+export function applyHealing({ target, amount, getState, sendUpdate, appendLog, logText }) {
   const seedHp = {
-    current: user.maxHp || 0,
-    max:     user.maxHp || 0,
+    current: target.maxHp || 0,
+    max:     target.maxHp || 0,
     temp:    0,
     dying:   0,
     wounded: 0,
     doomed:  0,
   };
-  const currentHp = getState(user.id, 'hp') || seedHp;
+  const currentHp = getState(target.id, 'hp') || seedHp;
   const newHp = { ...currentHp, current: Math.min(currentHp.max, currentHp.current + amount) };
 
-  writeLocal(`cnmh_hp_${user.id}`, newHp);
-  sendUpdate(user.id, 'hp', newHp);
+  writeLocal(`cnmh_hp_${target.id}`, newHp);
+  sendUpdate(target.id, 'hp', newHp);
 
   appendLog({
     type:   'action',
-    charId: user.id,
-    text:   `${user.name} used ${itemName} — healed ${amount} HP`,
+    charId: target.id,
+    text:   logText || `${target.name} healed ${amount} HP`,
   });
 }
 

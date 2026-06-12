@@ -730,6 +730,41 @@ describe('TurnTrackerPanel', () => {
     expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
   });
 
+  it('submitting the turn clears a pending-loss omen and logs it (#227)', () => {
+    let drv, setOmen;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    act(() => setOmen({ suit: 'Keys', pendingLoss: true, ts: 1 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
+    expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
+    expect(
+      drv.encounter.log.some((e) => e.text.includes("Pellias's harrow omen (Keys) is lost"))
+    ).toBe(true);
+  });
+
+  it('submitting the turn leaves an unflagged omen alone', () => {
+    let drv, setOmen;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    act(() => setOmen({ suit: 'Keys', ts: 1 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
+    expect(screen.getByLabelText("Pellias's harrow omen is Keys")).toBeInTheDocument();
+  });
+
   // ── Turn-start free-action offers (#228 — Primary Threat) ─────────────────
 
   const primaryThreatChar = {
