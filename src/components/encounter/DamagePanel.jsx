@@ -7,6 +7,11 @@ import './DamagePanel.css';
  * Presentational: the resolver owns all state and the per-target math
  * (computeTargetDamage), so getResults() stays synchronous.
  *
+ * Save mode (#270, `mode="save"`): rendered in UseAbilityModal before the
+ * degrees exist — no hitResults, no crit toggle; the entered total and rider
+ * snapshot travel with the save request and the GM derives per-target damage.
+ *
+ * @param {string}   mode        - 'attack' (default) | 'save'
  * @param {Object}   profile     - { expression, typeLabel, riders } from buildDamageProfile
  * @param {Array}    hitResults  - resolver results with degree success/criticalSuccess,
  *                                 each already carrying its computed `damage` (or null)
@@ -19,6 +24,7 @@ import './DamagePanel.css';
  * @param {Function} onCritDouble
  */
 const DamagePanel = ({
+  mode = 'attack',
   profile,
   hitResults = [],
   entered,
@@ -28,7 +34,8 @@ const DamagePanel = ({
   critDouble,
   onCritDouble,
 }) => {
-  if (!profile || hitResults.length === 0) return null;
+  const isSave = mode === 'save';
+  if (!profile || (!isSave && hitResults.length === 0)) return null;
 
   const anyCrit = hitResults.some((r) => r.degree === 'criticalSuccess');
 
@@ -42,29 +49,35 @@ const DamagePanel = ({
             {profile.typeLabel ? ` ${profile.typeLabel}` : ''}
           </span>
         )}
-        <span className="dmg-hint-note">enter your rolled total (un-doubled)</span>
+        <span className="dmg-hint-note">
+          {isSave
+            ? 'enter your rolled total — each target halves/doubles by its save'
+            : 'enter your rolled total (un-doubled)'}
+        </span>
       </div>
 
-      <div className="dmg-entry-row">
-        <input
-          type="number"
-          className="dmg-total-input"
-          placeholder="total"
-          aria-label="rolled damage total"
-          value={entered}
-          onChange={(e) => onEntered(e.target.value)}
-        />
-        {anyCrit && (
-          <label className="dmg-rider-toggle">
-            <input
-              type="checkbox"
-              checked={critDouble}
-              onChange={(e) => onCritDouble(e.target.checked)}
-            />
-            <span>Crit ×2</span>
-          </label>
-        )}
-      </div>
+      {(!isSave || profile.expression) && (
+        <div className="dmg-entry-row">
+          <input
+            type="number"
+            className="dmg-total-input"
+            placeholder="total"
+            aria-label="rolled damage total"
+            value={entered}
+            onChange={(e) => onEntered(e.target.value)}
+          />
+          {anyCrit && (
+            <label className="dmg-rider-toggle">
+              <input
+                type="checkbox"
+                checked={critDouble}
+                onChange={(e) => onCritDouble(e.target.checked)}
+              />
+              <span>Crit ×2</span>
+            </label>
+          )}
+        </div>
+      )}
 
       {profile.riders.length > 0 && (
         <div className="dmg-riders" role="group" aria-label="damage riders">

@@ -136,9 +136,16 @@ export const useCastingResources = (character) => {
           : (spell.innate || spell.fromInnate) ? 'innate'
           : 'slot');
 
-      // Cantrips are free from every source except a consumed scroll.
+      // Cantrips are free from every source except a consumed scroll. They
+      // auto-heighten to half the caster's level rounded up (#271) — the rank
+      // flows into the heighten path; spend() stays a no-op.
       if (spell.level === 0 && source !== 'scroll') {
-        return [{ type: 'cantrip', label: 'Cantrip — no cost', enabled: true }];
+        return [{
+          type: 'cantrip',
+          label: 'Cantrip — no cost',
+          enabled: true,
+          rank: Math.ceil((character?.level || 1) / 2),
+        }];
       }
       if (source === 'innate') {
         return [{ type: 'innate', label: 'Innate — no cost', enabled: true }];
@@ -222,7 +229,7 @@ export const useCastingResources = (character) => {
         };
       });
     },
-    [spellSlots, slotRemainingFor, focusRemaining, staffRemaining, wandStateFor, consumableRemainingFor]
+    [spellSlots, slotRemainingFor, focusRemaining, staffRemaining, wandStateFor, consumableRemainingFor, character?.level]
   );
 
   /**
