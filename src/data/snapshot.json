@@ -4719,6 +4719,18 @@
           }
         ]
       },
+      "damageRiders": [
+        {
+          "id": "implements-empowerment",
+          "label": "Implement's Empowerment",
+          "appliesTo": "strikes",
+          "bonus": {
+            "perWeaponDie": 2
+          },
+          "defaultOn": true,
+          "note": "Hold an implement; hands free except a single one-handed weapon, other implements, or esoterica"
+        }
+      ],
       "image": "img_7ff08743-6d95-4ecf-960d-210c7aca0192.jpg",
       "id": "AshkaBGosh",
       "name": "Ashka B'Gosh",
@@ -7558,6 +7570,19 @@
                 "Primal"
               ],
               "damage": "1d8",
+              "riders": [
+                {
+                  "id": "blast-2a-con",
+                  "label": "+Con (2-action blast)",
+                  "bonus": {
+                    "ability": "constitution"
+                  },
+                  "when": {
+                    "actions": 2
+                  },
+                  "defaultOn": true
+                }
+              ],
               "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage."
             },
             {
@@ -7575,6 +7600,19 @@
               ],
               "type": "ranged",
               "damage": "1d8",
+              "riders": [
+                {
+                  "id": "blast-2a-con",
+                  "label": "+Con (2-action blast)",
+                  "bonus": {
+                    "ability": "constitution"
+                  },
+                  "when": {
+                    "actions": 2
+                  },
+                  "defaultOn": true
+                }
+              ],
               "range": "30ft",
               "traits": [
                 "Attack",
