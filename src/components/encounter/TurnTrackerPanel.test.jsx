@@ -710,6 +710,26 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getByLabelText("Pellias's kinetic aura is active")).toBeInTheDocument();
   });
 
+  // ── Harrow omen chip (#227) ───────────────────────────────────────────────
+
+  it('shows the omen chip when a PC has an active omen, hides it when cleared', () => {
+    let drv, setOmen;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
+    act(() => setOmen({ suit: 'Stars', ts: 1 }));
+    expect(screen.getByLabelText("Pellias's harrow omen is Stars")).toBeInTheDocument();
+    act(() => setOmen({ suit: null, ts: 2 }));
+    expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
+  });
+
   // ── Turn-start free-action offers (#228 — Primary Threat) ─────────────────
 
   const primaryThreatChar = {

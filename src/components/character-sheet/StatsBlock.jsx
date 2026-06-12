@@ -9,6 +9,7 @@ import { formatModifier, getProficiencyBonus } from '../../utils/CharacterUtils'
 import { useCharacter } from '../../hooks/useCharacter';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
+import { useOmen } from '../../hooks/useOmen';
 import { characterHasKineticAura } from '../../utils/kineticAura';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from '../../utils/EffectUtils';
@@ -76,6 +77,10 @@ const StatsBlock = ({ character, characterColor }) => {
 
   // Kinetic aura (#228) — badge + out-of-encounter Dismiss for kineticists.
   const { active: auraActive, deactivate: deactivateAura } = useAura(characterKey);
+
+  // Harrow omen (#227) — read-only badge for harrowers; the suit picker
+  // lives in the Harrowing panel.
+  const { suit: omenSuit } = useOmen(characterKey);
 
   if (!charData) return null;
 
@@ -459,6 +464,17 @@ const StatsBlock = ({ character, characterColor }) => {
           })}
         </div>
       </div>
+
+      {/* Harrow omen (#227) — read-only row for harrowers (GM visibility);
+          the suit picker lives in the Harrowing panel. */}
+      {charData.hasHarrowing && (
+        <div className="aura-row">
+          <span className="aura-label">Harrow Omen</span>
+          <span className={`aura-pill${omenSuit ? ' aura-pill--omen' : ''}`}>
+            {omenSuit ? `🂠 ${omenSuit}` : 'none'}
+          </span>
+        </div>
+      )}
 
       {/* Kinetic aura (#228) — only kineticists render the row. Dismiss here is
           the out-of-encounter hygiene surface (no action economy); in-encounter

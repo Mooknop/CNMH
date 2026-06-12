@@ -3,10 +3,15 @@ import React from 'react';
 import CollapsibleCard from '../shared/CollapsibleCard';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
+import { useOmen } from '../../hooks/useOmen';
+import { HARROW_SUITS, suitById } from '../../utils/harrow';
 import './Harrowing.css';
 
 /**
- * Component to display Harrowing mechanics and ritual information
+ * Harrowing mechanics panel. The active-omen section is live (#227): the
+ * physical deck stays at the table — the player draws a card there and picks
+ * the suit here, which syncs cnmh_omen_<charId> for the GM, the turn-tracker
+ * badge, and the Harrow Cast / Avoid Dire Fate gates.
  * @param {Object} props
  * @param {Object} props.character - Character data
  * @param {string} props.themeColor - Theme color from character
@@ -16,17 +21,10 @@ const Harrowing = ({ character, themeColor }) => {
   const hasHarrowCasting = character.feats && character.feats.some(
     feat => feat.name === "Harrow Casting"
   );
-  
-  // Harrow suits and their meanings
-  const harrowSuits = [
-    { name: "Hammers", ability: "Strikes", description: "Force and direct action" },
-    { name: "Keys", ability: "Reflex Saves", description: "Cunning and adaptability" },
-    { name: "Shields", ability: "Fortitude Saves", description: "Protection and endurance" },
-    { name: "Books", ability: "Skill Checks", description: "Knowledge and learning" },
-    { name: "Stars", ability: "Will Saves", description: "Fate and cosmic forces" },
-    { name: "Crowns", ability: "Other", description: "Leadership and dominion" }
-  ];
-  
+
+  const { suit: activeSuit, setSuit, clear } = useOmen(character?.id);
+  const activeSuitMeta = suitById(activeSuit);
+
   return (
     <div className="harrowing">
       <div className="harrowing-header">
@@ -39,9 +37,46 @@ const Harrowing = ({ character, themeColor }) => {
         </div>
       </div>
 
+      {/* Active Harrow Omen (#227) — synced suit picker */}
+      <div className="harrow-omen-panel" role="group" aria-label="Active Harrow Omen">
+        <div className="harrow-omen-status">
+          <span className="harrow-omen-label">Active Omen:</span>
+          {activeSuitMeta ? (
+            <>
+              <span className="harrow-omen-suit">🂠 {activeSuitMeta.id}</span>
+              <span className="harrow-omen-checks">({activeSuitMeta.checks})</span>
+              <button
+                type="button"
+                className="harrow-omen-clear"
+                onClick={clear}
+                aria-label="Clear omen"
+              >
+                Clear
+              </button>
+            </>
+          ) : (
+            <span className="harrow-omen-none">none — draw from your deck, then pick the suit</span>
+          )}
+        </div>
+        <div className="harrow-omen-picker" role="radiogroup" aria-label="Drawn suit">
+          {HARROW_SUITS.map((suit) => (
+            <button
+              key={suit.id}
+              type="button"
+              className={`harrow-omen-btn${activeSuit === suit.id ? ' harrow-omen-btn--active' : ''}`}
+              aria-pressed={activeSuit === suit.id}
+              title={`${suit.checks} — ${suit.flavor}`}
+              onClick={() => setSuit(suit.id)}
+            >
+              {suit.id}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Harrow Deck Reference */}
       <div className="harrow-deck-reference">
-        <CollapsibleCard 
+        <CollapsibleCard
           className="reference-card"
           header={
             <h4 >Harrow Suits</h4>
@@ -52,12 +87,12 @@ const Harrowing = ({ character, themeColor }) => {
           <div className="deck-reference-content">
             <div className="suits-section">
               <div className="suits-grid">
-                {harrowSuits.map((suit, index) => (
-                  <div key={index} className="suit-card">
-                    <h6 className="suit-name">{suit.name}</h6>
+                {HARROW_SUITS.map((suit) => (
+                  <div key={suit.id} className="suit-card">
+                    <h6 className="suit-name">{suit.id}</h6>
                     <div className="suit-details">
-                      <span className="suit-ability">Omen: {suit.ability}</span>
-                      <span className="suit-description">{suit.description}</span>
+                      <span className="suit-ability">Omen: {suit.checks}</span>
+                      <span className="suit-description">{suit.flavor}</span>
                     </div>
                   </div>
                 ))}
@@ -65,7 +100,7 @@ const Harrowing = ({ character, themeColor }) => {
             </div>
           </div>
         </CollapsibleCard>
-      </div>   
+      </div>
 
       {/* Tell Fortune */}
       <div className="harrow-deck-reference">

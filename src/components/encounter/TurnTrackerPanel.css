@@ -357,6 +357,15 @@
   border-color: rgba(138, 95, 200, 0.5);
 }
 
+/* Harrow omen chip (#227) — order-strip badge */
+.ttp-omen-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  color: var(--gold-mid);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 /* Turn-start free-action offer bar (#228 — Primary Threat) */
 .ttp-offer {
   display: flex;

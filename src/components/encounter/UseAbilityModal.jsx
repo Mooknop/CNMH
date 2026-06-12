@@ -18,6 +18,7 @@ import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useAura } from '../../hooks/useAura';
+import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -122,6 +123,11 @@ const UseAbilityModal = ({
   const charData = useCharacter(character);
   const { raised: shieldRaised } = useShield(character?.id || 'nobody', charData?.inventory || []);
   const [shieldOverride, setShieldOverride] = useState(false);
+
+  // Harrow omen gate (#227) — omen-bound abilities (Avoid Dire Fate, Harrow
+  // Casting) need an active omen; using a clearsOmen ability spends it.
+  const omen = useOmen(character?.id || 'nobody');
+  const [omenOverride, setOmenOverride] = useState(false);
 
   // Target-immunity gate (#218) — override when all picked targets are immune.
   const [immunityOverride, setImmunityOverride] = useState(false);
@@ -352,6 +358,12 @@ const UseAbilityModal = ({
   const shieldGateBlocked = ability.requiresShieldRaised === true && !shieldRaised;
   const shieldGateOk = !shieldGateBlocked || shieldOverride;
 
+  // Harrow omen gate (#227): omen-bound abilities need an active omen.
+  const omenGateBlocked = ability.requiresOmen === true && !omen.suit;
+  const omenGateOk = !omenGateBlocked || omenOverride;
+  // Abilities that interact with the omen surface its current suit.
+  const showsOmen = ability.requiresOmen === true || ability.clearsOmen === true;
+
   // Ally resistance note (#228 — Retributive Strike's "2 + your level").
   const allyResistance = ability.allyResistance
     ? (Number(ability.allyResistance.base) || 0)
@@ -360,7 +372,7 @@ const UseAbilityModal = ({
 
   const confirmEnabled =
     (!needsPicker || targets.length > 0)
-    && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk;
+    && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk && omenGateOk;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -420,6 +432,18 @@ const UseAbilityModal = ({
     }
     if (shieldGateBlocked && shieldOverride) {
       sourceSuffix += ' (override — shield not raised)';
+    }
+    if (omenGateBlocked && omenOverride) {
+      sourceSuffix += ' (override — no active omen)';
+    }
+    // Harrow omen (#227): clearsOmen abilities spend the active omen.
+    if (ability.clearsOmen === true && omen.suit) {
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name}'s harrow omen (${omen.suit}) is spent (${ability.name})`,
+      });
+      omen.clear();
     }
     // Ally resistance (#228): the GM applies it to the triggering damage.
     if (allyResistance != null) {
@@ -850,6 +874,12 @@ const UseAbilityModal = ({
             Ally gains resistance {allyResistance} against the triggering damage.
           </p>
         )}
+        {showsOmen && (
+          <p className="uam-omen-line" style={{ fontSize: '0.85rem', fontWeight: 600, margin: '0 0 0.25rem' }}>
+            Active harrow omen: {omen.suit || 'none'}
+            {ability.clearsOmen === true && omen.suit ? ' — spent on use' : ''}
+          </p>
+        )}
         {actionsSelector}
       </section>
 
@@ -893,6 +923,27 @@ const UseAbilityModal = ({
                 type="checkbox"
                 checked={auraOverride}
                 onChange={(e) => setAuraOverride(e.target.checked)}
+              />
+              Override (GM ruling) — use anyway
+            </label>
+          </section>
+        </>
+      )}
+
+      {/* Harrow omen gate (#227) — omen-bound abilities need an active omen */}
+      {omenGateBlocked && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Harrow Omen</h3>
+            <div className="uam-cost-empty">
+              No active harrow omen — draw an omen from your deck first.
+            </div>
+            <label className="uam-cost-override">
+              <input
+                type="checkbox"
+                checked={omenOverride}
+                onChange={(e) => setOmenOverride(e.target.checked)}
               />
               Override (GM ruling) — use anyway
             </label>
