@@ -43,6 +43,9 @@ const ChainedSpellSection = forwardRef(({
   conditions,
   effects,
   onTotalCostChange,
+  // Live selected-spell callback (#227) — the parent's blood magic picker
+  // needs to know whether the chained spell carries the bloodline flag.
+  onSpellChange,
   mapStep = 0,
   // The parent's useCastingResources instance (#235). Optional: without it the
   // section has no rank picker and the parent falls back to native-rank spend.
@@ -54,6 +57,15 @@ const ChainedSpellSection = forwardRef(({
     if (chain.spellFilter === 'has-range') {
       return spells.filter(
         (s) => s.range && s.range.trim() !== '' && s.range.toLowerCase() !== 'touch'
+      );
+    }
+    // Split Shot (#227): ranged single-target attack spells without a duration.
+    if (chain.spellFilter === 'single-target-attack') {
+      return spells.filter(
+        (s) => isAttackAbility(s)
+          && s.range && s.range.trim() !== '' && s.range.toLowerCase() !== 'touch'
+          && (s.targets || '').trim().toLowerCase() === '1 creature'
+          && !s.duration
       );
     }
     return spells;
@@ -95,6 +107,12 @@ const ChainedSpellSection = forwardRef(({
   const flatPassed = Number.isNaN(flatNum) ? null : flatNum >= HARROW_CAST_DC;
   const healNum = parseInt(healEntered, 10);
 
+  // Split Shot (#227): one roll vs both ACs (the resolver already compares a
+  // single roll to every target); the player designates the second target,
+  // which takes half damage and no other effects.
+  const isSplitShot = chain.splitShot === true;
+  const [secondaryOverride, setSecondaryOverride] = useState(null);
+
   const rollProfile = useMemo(() => selectedSpell
     ? resolveActionRoll(selectedSpell, character, { conditions, effects, effectCatalog, mapStep })
     : { mode: 'none', bonus: null, dc: null, defense: null },
@@ -106,10 +124,20 @@ const ChainedSpellSection = forwardRef(({
 
   const saveTargets = rollProfile.mode === 'target-save' ? enemyTargets : [];
 
+  // Split Shot second target: default to the second selected enemy.
+  const secondaryEntry = isSplitShot && resolverTargets.length >= 2
+    ? (resolverTargets.find((e) => e.entryId === secondaryOverride) || resolverTargets[1])
+    : null;
+
   // Notify parent whenever totalCost changes so the confirm button can reflect it.
   useEffect(() => {
     onTotalCostChange?.(totalCost);
   }, [totalCost, onTotalCostChange]);
+
+  // Surface the live spell selection (#227 — blood magic trigger detection).
+  useEffect(() => {
+    onSpellChange?.(selectedSpell);
+  }, [selectedSpell, onSpellChange]);
 
   useImperativeHandle(ref, () => ({
     getResults: () => {
@@ -134,6 +162,11 @@ const ChainedSpellSection = forwardRef(({
           flatPassed,
           effect: harrowEffect,
           healEntered: Number.isNaN(healNum) ? null : healNum,
+        } : null,
+        spellBloodline: selectedSpell.bloodline === true,
+        splitShot: isSplitShot ? {
+          secondaryEntryId: secondaryEntry?.entryId ?? null,
+          secondaryName: secondaryEntry?.name ?? null,
         } : null,
       };
     },
@@ -224,6 +257,48 @@ const ChainedSpellSection = forwardRef(({
                 onChange={(e) => setHealEntered(e.target.value)}
               />
             </label>
+          )}
+        </div>
+      )}
+
+      {isSplitShot && (
+        <div
+          role="group"
+          aria-label="Split Shot"
+          style={{ margin: '0.4rem 0', padding: '0.5rem', border: '1px dashed var(--shell-border-strong)', borderRadius: '6px' }}
+        >
+          {resolverTargets.length < 2 && (
+            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              Select two enemy targets — one attack roll is compared to both ACs (one attack for MAP).
+            </div>
+          )}
+          {resolverTargets.length > 2 && (
+            <div style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+              Split Shot allows exactly two targets — deselect {resolverTargets.length - 2}.
+            </div>
+          )}
+          {secondaryEntry && (
+            <>
+              <div role="radiogroup" aria-label="Second target" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '0.85rem' }}>Second target:</span>
+                {resolverTargets.map((e) => (
+                  <label key={e.entryId} style={{ fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <input
+                      type="radio"
+                      name="split-shot-secondary"
+                      checked={secondaryEntry.entryId === e.entryId}
+                      onChange={() => setSecondaryOverride(e.entryId)}
+                      aria-label={`second-target-${e.name}`}
+                      style={{ marginRight: '4px' }}
+                    />
+                    {e.name}
+                  </label>
+                ))}
+              </div>
+              <div className="uam-variant-note">
+                {secondaryEntry.name} takes half damage and suffers no effects beyond the spell's initial damage.
+              </div>
+            </>
           )}
         </div>
       )}
