@@ -251,6 +251,18 @@ const PF2E_CONDITIONS = [
     summary: 'Creatures don\'t know your location',
     effect: () => 'Creatures cannot observe you or know your location; they must Seek (Perception) to detect you; attackers must guess your square (DC 11 flat check, then regular attack roll)',
   },
+  // Display-only (#272): the Foundry bridge pushes this slug when persistent
+  // damage is applied to a PC in Foundry — without a definition here,
+  // hydrateConditions silently dropped it. App-side tracking lives in
+  // cnmh_persistent_global (see utils/persistentDamage.js), not in this
+  // condition, so it is excluded from the Add Condition browser.
+  {
+    id: 'persistent-damage',
+    name: 'Persistent Damage',
+    valued: false,
+    summary: 'Takes the listed damage at end of turn; DC 15 flat check to end',
+    effect: () => 'At the end of each of your turns, take the persistent damage, then attempt a DC 15 flat check to end it',
+  },
 ];
 
 // ── Hydration helpers ────────────────────────────────────────────────

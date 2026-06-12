@@ -31,6 +31,11 @@ vi.mock('../../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: mockSendUpdate }),
 }));
 
+// PersistentChip (#272) pulls in useGmAuth, which probes /api/gm/whoami.
+vi.mock('../../hooks/useGmAuth', () => ({
+  useGmAuth: () => ({ isGm: false, email: null, loading: false }),
+}));
+
 import { __reset, useSyncedState } from '../../hooks/useSyncedState';
 import TurnTrackerPanel from './TurnTrackerPanel';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -551,6 +556,31 @@ describe('TurnTrackerPanel', () => {
     act(() => setFlanked({ [goblin.entryId]: { byCharIds: ['Pellias', 'Ashka'] } }));
 
     expect(screen.getByLabelText('Goblin is flanked')).toBeInTheDocument();
+  });
+
+  // ── Persistent-damage chip (#272) ─────────────────────────────────────────
+
+  it('shows a persistent-damage chip on the afflicted order entry', () => {
+    let drv, setPersistent;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_persistent_global" onReady={(s) => (setPersistent = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurnWithEnemy(() => drv);
+    const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
+
+    expect(screen.queryByRole('button', { name: /persistent/ })).toBeNull();
+
+    act(() => setPersistent({
+      [goblin.entryId]: [{ id: 'pd-1', dice: '1d4', type: 'electricity', sourceName: 'Polarize' }],
+    }));
+
+    expect(
+      screen.getByRole('button', { name: 'Goblin: 1d4 persistent electricity' })
+    ).toBeInTheDocument();
   });
 
   // ── Shield Block reaction (Slice 4) ──────────────────────────────────────

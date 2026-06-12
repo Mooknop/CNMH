@@ -1,0 +1,95 @@
+/* Persistent-damage chip + clear popover (#272). Sits inline beside the
+   combatant name in the turn-tracker strip and the GM initiative rows,
+   styled in the family of .ttp-flanked-badge. */
+
+.pdc-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pdc-badge {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0.85;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.pdc-badge:hover,
+.pdc-badge[aria-expanded='true'] {
+  opacity: 1;
+}
+
+.pdc-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  min-width: 220px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  text-align: left;
+}
+
+.pdc-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1) 0;
+}
+
+.pdc-row + .pdc-row {
+  border-top: 1px solid var(--shell-border);
+}
+
+.pdc-desc {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--shell-text-primary);
+  white-space: nowrap;
+}
+
+.pdc-source {
+  font-weight: 400;
+  color: var(--shell-text-secondary);
+}
+
+.pdc-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.pdc-clear-btn {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pdc-clear-btn:hover {
+  border-color: var(--accent-outline);
+  color: var(--shell-text-primary);
+  background: var(--accent-tint);
+}
+
+.pdc-note {
+  margin-top: var(--space-1);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}

@@ -5,6 +5,7 @@ import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
+import PersistentChip from '../../components/encounter/PersistentChip';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import PlayModeControl from '../../components/gm/PlayModeControl';
 import './gm.css';
@@ -101,6 +102,7 @@ const GmEncounter = () => {
                   data-testid={`order-row-${e.entryId}`}
                 >
                   <span className="gm-encounter-name">{e.name}</span>
+                  <PersistentChip entry={e} />
                   {phase === 'in-progress' && e.kind === 'pc' && e.charId && (
                     <GmReactionBadge charId={e.charId} name={e.name} />
                   )}

@@ -37,11 +37,25 @@ vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: vi.fn(),
 }));
 
+// Key-aware synced-state mock (#272): capture the cnmh_persistent_global
+// setter so tests can apply its functional updater and inspect the map.
+const syncedMock = vi.hoisted(() => ({ persistentSetter: null }));
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: (key) => {
+    if (key === 'cnmh_persistent_global') {
+      syncedMock.persistentSetter = syncedMock.persistentSetter || vi.fn();
+      return [{}, syncedMock.persistentSetter];
+    }
+    return [[], vi.fn()];
+  },
+}));
+
 // Re-import after mock so we can .mockReturnValue inside tests.
 import { useEncounter } from '../../hooks/useEncounter';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  syncedMock.persistentSetter = null;
   useEncounter.mockReturnValue({
     encounter: makeEncounter([baseRequest]),
     appendLog: mockAppendLog,
@@ -340,6 +354,60 @@ describe('RequestedSaves', () => {
       expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
         text: 'Goblin rolls Reflex DC vs DC 20 (Fireball): 20 → Success',
       }));
+    });
+  });
+
+  // ── persistent-damage recording (#272) ─────────────────────────────────────
+
+  describe('persistent-damage recording (#272)', () => {
+    const persistentRider = {
+      id: 'p', label: 'Persistent electricity',
+      persistent: { dice: '1d4', type: 'electricity' },
+    };
+
+    // The setter receives a functional updater — apply it to the prior map.
+    const recordedMap = (prior = {}) =>
+      syncedMock.persistentSetter.mock.calls.reduce((map, [updater]) => updater(map), prior);
+
+    test('a failed save records the instance with dice, type, and source', () => {
+      withDamage({ ...dmgFixture, riders: [persistentRider] });
+      render(<RequestedSaves />);
+      enterGoblinD20(10); // 15 vs DC 20 → Failure
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      const map = recordedMap();
+      expect(map['e-goblin']).toHaveLength(1);
+      expect(map['e-goblin'][0]).toMatchObject({
+        dice: '1d4',
+        type: 'electricity',
+        sourceName: 'Fireball',
+      });
+    });
+
+    test('a critical failure records the doubled dice', () => {
+      withDamage({ ...dmgFixture, riders: [persistentRider] });
+      render(<RequestedSaves />);
+      enterGoblinD20(1); // nat 1 → Critical Failure
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(recordedMap()['e-goblin'][0].dice).toBe('2d4');
+    });
+
+    test('successful saves record nothing under the default rider gating', () => {
+      withDamage({ ...dmgFixture, riders: [persistentRider] });
+      render(<RequestedSaves />);
+      enterGoblinD20(15); // Success
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(syncedMock.persistentSetter).not.toHaveBeenCalled();
+    });
+
+    test('a success-applicable rider records with the half flag', () => {
+      withDamage({
+        ...dmgFixture,
+        riders: [{ ...persistentRider, on: ['success', 'failure', 'criticalFailure'] }],
+      });
+      render(<RequestedSaves />);
+      enterGoblinD20(15); // Success — basic saves halve persistent too
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(recordedMap()['e-goblin'][0]).toMatchObject({ dice: '1d4', half: true });
     });
   });
 });

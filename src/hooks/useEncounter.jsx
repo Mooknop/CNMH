@@ -28,6 +28,7 @@ import {
 const ENCOUNTER_KEY  = 'cnmh_encounter_global';
 const ACTORMAP_KEY   = 'cnmh_actormap_global';
 const KNOWLEDGE_KEY  = 'cnmh_knowledge_global';
+const PERSISTENT_KEY = 'cnmh_persistent_global';
 
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
@@ -40,6 +41,7 @@ export const useEncounter = () => {
   const [encounter, setEncounter]   = useSyncedState(ENCOUNTER_KEY, defaultEncounter());
   const [actorMap, setActorMap]     = useSyncedState(ACTORMAP_KEY, {});
   const [, setKnowledge]            = useSyncedState(KNOWLEDGE_KEY, {});
+  const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
   const { sendUpdate } = useSession();
 
   // Resolve Foundry actor IDs → CNMH charIds using the GM-maintained actorMap.
@@ -291,8 +293,9 @@ export const useEncounter = () => {
     () => {
       setEncounter(() => defaultEncounter());
       setKnowledge({});
+      setPersistentMap({}); // tracked persistent damage dies with the encounter (#272)
     },
-    [setEncounter, setKnowledge]
+    [setEncounter, setKnowledge, setPersistentMap]
   );
 
   const addSaveRequest = useCallback(

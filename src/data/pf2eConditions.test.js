@@ -100,6 +100,16 @@ describe('pf2eConditions', () => {
       expect(cond.valued).toBe(false);
       expect(typeof cond.effect(null)).toBe('string');
     });
+
+    it('Persistent Damage (#272) is a toggle and survives a hydrate round-trip', () => {
+      // The Foundry bridge pushes this slug; without the definition,
+      // hydrateConditions dropped bridged persistent damage silently.
+      const cond = PF2E_CONDITIONS.find((c) => c.id === 'persistent-damage');
+      expect(cond.valued).toBe(false);
+      const hydrated = hydrateConditions([{ id: 'persistent-damage', value: null }]);
+      expect(hydrated).toHaveLength(1);
+      expect(hydrated[0].name).toBe('Persistent Damage');
+    });
   });
 
   describe('hydration helpers', () => {

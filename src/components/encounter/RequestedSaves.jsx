@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { computeSaveDamage, formatDamageBreakdown } from '../../utils/damage';
 import { DEFENSE_LABELS } from '../../utils/defense';
+import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
 import { useSessionLog } from '../../hooks/useSessionLog';
 
 const DEGREE_LABELS = {
@@ -47,6 +49,8 @@ const RequestedSaves = () => {
   const { encounter, appendLog, removeSaveRequest } = useEncounter();
   const { appendEvent } = useSessionLog();
   const [d20Inputs, setD20Inputs] = useState({});
+  // Persistent-damage tracking (#272) — failed saves record their entries here.
+  const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   const requests = (encounter?.saveRequests || []).filter((r) => r.status === 'pending');
 
@@ -86,6 +90,23 @@ const RequestedSaves = () => {
         text:   `${r.name} rolls ${saveLabel} vs DC ${req.dc} (${req.abilityName}): ${r.total} → ${degreeLabel}${dmgSuffix}`,
       });
     });
+
+    // Persistent-damage tracking (#272): computeSaveDamage already gated the
+    // entries by degree (and doubled/halved their dice) — record what's left.
+    const persistentHits = results
+      .map((r) => {
+        const d = damageFor(req, r.degree, r.entryId);
+        return d?.dmg?.persistent?.length
+          ? { entryId: r.entryId, persistent: d.dmg.persistent }
+          : null;
+      })
+      .filter(Boolean);
+    if (persistentHits.length) {
+      setPersistentMap((m) => persistentHits.reduce(
+        (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, req.abilityName)),
+        m || {}
+      ));
+    }
 
     const names = results.map((r) => r.name).join(', ');
     appendEvent({ type: 'save', text: `${saveLabel} DC ${req.dc} (${req.abilityName}) resolved — ${names}` });

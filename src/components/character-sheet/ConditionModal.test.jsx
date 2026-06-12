@@ -207,4 +207,26 @@ describe('ConditionModal', () => {
       expect(container.querySelector('.ct-browser-card--active')).toBeInTheDocument();
     });
   });
+
+  describe('persistent-damage (#272)', () => {
+    it('is excluded from the Add Condition browser', () => {
+      render(<ConditionModal {...defaultProps} />);
+      expect(screen.queryByText('Persistent Damage')).toBeNull();
+    });
+
+    it('still renders in the active list when bridge-pushed', () => {
+      const active = [
+        {
+          id: 'persistent-damage',
+          name: 'Persistent Damage',
+          valued: false,
+          value: null,
+          decrements: false,
+          effect: () => 'At the end of each of your turns, take the persistent damage',
+        },
+      ];
+      render(<ConditionModal {...defaultProps} activeConditions={active} />);
+      expect(screen.getByText('Persistent Damage')).toBeInTheDocument();
+    });
+  });
 });

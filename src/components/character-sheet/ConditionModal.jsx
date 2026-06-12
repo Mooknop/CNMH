@@ -87,7 +87,9 @@ const ConditionModal = ({
       <section className="ct-section">
         <h3 className="ct-section-title">Add Condition</h3>
         <div className="ct-browser-grid">
-          {PF2E_CONDITIONS.map((cond) => {
+          {/* persistent-damage is recorder/bridge-owned (#272) — a hand-added
+              bare entry carries no dice/type, so it stays out of the browser. */}
+          {PF2E_CONDITIONS.filter((cond) => cond.id !== 'persistent-damage').map((cond) => {
             const isActive = activeIds.has(cond.id) && !cond.valued;
             return (
               <button
