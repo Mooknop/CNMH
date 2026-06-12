@@ -61,3 +61,29 @@ describe('useOmen', () => {
     expect('cnmh_omen_none' in __store).toBe(true);
   });
 });
+
+describe('useOmen — pendingLoss (#227)', () => {
+  beforeEach(() => __reset());
+
+  it('flagPendingLoss keeps the suit and sets the flag', () => {
+    const { result } = renderHook(() => useOmen('JadeInferno'));
+    act(() => result.current.setSuit('Keys'));
+    act(() => result.current.flagPendingLoss());
+    expect(result.current.suit).toBe('Keys');
+    expect(result.current.pendingLoss).toBe(true);
+    expect(__store['cnmh_omen_JadeInferno']).toMatchObject({ suit: 'Keys', pendingLoss: true });
+  });
+
+  it('drawing a new suit or clearing drops the pending-loss flag', () => {
+    const { result } = renderHook(() => useOmen('JadeInferno'));
+    act(() => result.current.setSuit('Keys'));
+    act(() => result.current.flagPendingLoss());
+    act(() => result.current.setSuit('Stars'));
+    expect(result.current.pendingLoss).toBe(false);
+
+    act(() => result.current.flagPendingLoss());
+    act(() => result.current.clear());
+    expect(result.current.pendingLoss).toBe(false);
+    expect(result.current.suit).toBeNull();
+  });
+});

@@ -2,6 +2,7 @@ import {
   consumableMeta,
   consumableVerb,
   hasGodlessHealing,
+  applyHealing,
   applyHealingConsumable,
   applyEffectConsumable,
 } from './consumables';
@@ -140,5 +141,36 @@ describe('applyEffectConsumable', () => {
     const { updates, getState, sendUpdate, appendLog } = makeStubs();
     applyEffectConsumable({ user, itemName: 'Drakeheart Mutagen', meta, getState, sendUpdate, appendLog });
     expect(updates.find((u) => u.key === 'effects').value[0]).not.toHaveProperty('expireAtSecs');
+  });
+});
+
+describe('applyHealing (generic, #227)', () => {
+  const getState = vi.fn(() => ({ current: 12, max: 30, temp: 0, dying: 0, wounded: 0, doomed: 0 }));
+  const sendUpdate = vi.fn();
+  const appendLog = vi.fn();
+
+  beforeEach(() => vi.clearAllMocks());
+
+  it('heals clamped to max with a custom log line', () => {
+    applyHealing({
+      target: { id: 'JadeInferno', name: 'Jade', maxHp: 30 },
+      amount: 25,
+      getState, sendUpdate, appendLog,
+      logText: 'Jade healed 25 HP (Harrow Casting — Shields)',
+    });
+    expect(sendUpdate).toHaveBeenCalledWith('JadeInferno', 'hp', expect.objectContaining({ current: 30 }));
+    expect(appendLog).toHaveBeenCalledWith({
+      type: 'action', charId: 'JadeInferno',
+      text: 'Jade healed 25 HP (Harrow Casting — Shields)',
+    });
+  });
+
+  it('defaults the log line when none is given', () => {
+    applyHealing({
+      target: { id: 'JadeInferno', name: 'Jade', maxHp: 30 },
+      amount: 5,
+      getState, sendUpdate, appendLog,
+    });
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: 'Jade healed 5 HP' }));
   });
 });

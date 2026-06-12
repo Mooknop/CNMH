@@ -339,3 +339,219 @@ describe('ChainedSpellSection rank picker', () => {
     expect(ref.current.getResults().castRank).toBe(1); // back to first enabled
   });
 });
+
+describe('ChainedSpellSection — Harrow Cast (#227)', () => {
+  const harrowCastChain = { into: 'spell', cost: 'added', spellFilter: 'any', harrow: true };
+
+  const renderHarrow = (ref) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={character}
+      chain={harrowCastChain}
+      parentCost={1}
+      enemyTargets={[]}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => localStorage.clear());
+
+  it('non-harrow chains render no Harrow Cast group', () => {
+    render(
+      <ChainedSpellSection
+        character={character}
+        chain={reachChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(screen.queryByRole('group', { name: 'Harrow Cast' })).toBeNull();
+  });
+
+  it('renders the suit picker and reports the drawn suit + effect via getResults', () => {
+    const ref = createRef();
+    renderHarrow(ref);
+    expect(screen.getByRole('group', { name: 'Harrow Cast' })).toBeInTheDocument();
+    expect(ref.current.getResults().harrow).toMatchObject({ drawnSuit: null, omenSuit: null });
+
+    fireEvent.click(screen.getByLabelText('drawn-Keys'));
+    const harrow = ref.current.getResults().harrow;
+    expect(harrow.drawnSuit).toBe('Keys');
+    expect(harrow.match).toBe(false);
+    expect(harrow.effect).toMatchObject({ kind: 'self-effect', effectId: 'harrow-key-ward' });
+  });
+
+  it('detects an omen match and upgrades the suit effect', () => {
+    localStorage.setItem('cnmh_omen_Jade', JSON.stringify({ suit: 'Keys', ts: 1 }));
+    const ref = createRef();
+    renderHarrow(ref);
+
+    fireEvent.click(screen.getByLabelText('drawn-Keys'));
+    const harrow = ref.current.getResults().harrow;
+    expect(harrow.match).toBe(true);
+    expect(harrow.effect.effectId).toBe('harrow-key-ward-2');
+    expect(screen.getByText(/omen match/)).toBeInTheDocument();
+  });
+
+  it('computes the DC 11 flat check from the entered d20', () => {
+    const ref = createRef();
+    renderHarrow(ref);
+    const input = screen.getByLabelText('harrow flat check d20');
+
+    fireEvent.change(input, { target: { value: '10' } });
+    expect(screen.getByText(/failed — omen lost at end of turn/)).toBeInTheDocument();
+    expect(ref.current.getResults().harrow.flatPassed).toBe(false);
+
+    fireEvent.change(input, { target: { value: '11' } });
+    expect(screen.getByText('passed')).toBeInTheDocument();
+    expect(ref.current.getResults().harrow).toMatchObject({ flatD20: 11, flatPassed: true });
+  });
+
+  it('shows the healing input for Shields and carries the entered total', () => {
+    const ref = createRef();
+    renderHarrow(ref);
+    expect(screen.queryByLabelText('harrow healing rolled')).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('drawn-Shields'));
+    fireEvent.change(screen.getByLabelText('harrow healing rolled'), { target: { value: '9' } });
+    const harrow = ref.current.getResults().harrow;
+    expect(harrow.effect.kind).toBe('self-heal');
+    expect(harrow.healEntered).toBe(9);
+  });
+});
+
+// Blood magic trigger surface (#227): the section reports the live spell pick
+// and whether the chosen spell carries the bloodline flag.
+describe('ChainedSpellSection — bloodline surface (#227)', () => {
+  const FORCE = { id: 'force', name: 'Force Barrage', actions: 'Two Actions', range: '120 feet', bloodline: true };
+
+  it('notifies the parent of the selected spell via onSpellChange', () => {
+    const onSpellChange = vi.fn();
+    render(
+      <ChainedSpellSection
+        character={{ ...character, spellcasting: { spells: [LIGHT, FORCE] } }}
+        chain={harrowChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+        onSpellChange={onSpellChange}
+      />
+    );
+    expect(onSpellChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Light' }));
+    fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'force' } });
+    expect(onSpellChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Force Barrage' }));
+  });
+
+  it('getResults reports spellBloodline for flagged spells only', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={{ ...character, spellcasting: { spells: [LIGHT, FORCE] } }}
+        chain={harrowChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(ref.current.getResults().spellBloodline).toBe(false);
+    fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'force' } });
+    expect(ref.current.getResults().spellBloodline).toBe(true);
+  });
+});
+
+describe('ChainedSpellSection — Split Shot (#227)', () => {
+  const splitChain = { into: 'spell', cost: 'added', spellFilter: 'single-target-attack', splitShot: true };
+
+  const TKP   = { id: 'tkp',   name: 'Telekinetic Projectile', actions: 'Two Actions', range: '30 feet',  targets: '1 creature',         traits: ['Attack', 'Cantrip'] };
+  const GRASP = { id: 'grasp', name: 'Shocking Grasp',         actions: 'Two Actions', range: 'Touch',    targets: '1 creature',         traits: ['Attack'] };
+  const BOLT  = { id: 'bolt',  name: 'Blazing Bolt',           actions: 'Two Actions', range: '60 feet',  targets: '1 or more creature', traits: ['Attack'] };
+  const SAVE  = { id: 'sb',    name: 'Sudden Bolt',            actions: 'Two Actions', range: '600 feet', targets: '1 creature',         traits: ['Electricity'] };
+  const SUSTAINED = { id: 'sus', name: 'Sustained Ray', actions: 'Two Actions', range: '60 feet', targets: '1 creature', traits: ['Attack'], duration: 'sustained up to 1 minute' };
+
+  const splitCharacter = { ...character, spellcasting: { spells: [TKP, GRASP, BOLT, SAVE, SUSTAINED] } };
+  const twoTargets = [
+    { entryId: 'g1', name: 'Goblin', defenses: { ac: 15 } },
+    { entryId: 'g2', name: 'Orc',    defenses: { ac: 17 } },
+  ];
+
+  const renderSplit = (ref, targets = twoTargets) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={splitCharacter}
+      chain={splitChain}
+      parentCost={1}
+      enemyTargets={targets}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  it('filters to ranged single-target attack spells without a duration', () => {
+    renderSplit(createRef(), []);
+    const opts = Array.from(screen.getByLabelText('spell picker').options).map((o) => o.text);
+    expect(opts.some((t) => t.includes('Telekinetic Projectile'))).toBe(true);
+    expect(opts.some((t) => t.includes('Shocking Grasp'))).toBe(false);  // touch
+    expect(opts.some((t) => t.includes('Blazing Bolt'))).toBe(false);    // multi-target
+    expect(opts.some((t) => t.includes('Sudden Bolt'))).toBe(false);     // no attack roll
+    expect(opts.some((t) => t.includes('Sustained Ray'))).toBe(false);   // has a duration
+  });
+
+  it('prompts for two targets while fewer are selected', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    renderSplit(createRef(), [twoTargets[0]]);
+    expect(screen.getByText(/Select two enemy targets/)).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Second target' })).toBeNull();
+  });
+
+  it('defaults the second target to the second selected enemy', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    const ref = createRef();
+    renderSplit(ref);
+    expect(screen.getByRole('radiogroup', { name: 'Second target' })).toBeInTheDocument();
+    expect(screen.getByText(/Orc takes half damage/)).toBeInTheDocument();
+    expect(ref.current.getResults().splitShot).toMatchObject({
+      secondaryEntryId: 'g2',
+      secondaryName: 'Orc',
+    });
+  });
+
+  it('lets the caster re-designate the second target', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    const ref = createRef();
+    renderSplit(ref);
+    fireEvent.click(screen.getByLabelText('second-target-Goblin'));
+    expect(ref.current.getResults().splitShot).toMatchObject({
+      secondaryEntryId: 'g1',
+      secondaryName: 'Goblin',
+    });
+    expect(screen.getByText(/Goblin takes half damage/)).toBeInTheDocument();
+  });
+
+  it('warns when more than two targets are selected', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    renderSplit(createRef(), [...twoTargets, { entryId: 'g3', name: 'Bugbear', defenses: { ac: 18 } }]);
+    expect(screen.getByText(/exactly two targets — deselect 1/)).toBeInTheDocument();
+  });
+
+  it('non-split chains report no splitShot in getResults', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={character}
+        chain={reachChain}
+        parentCost={1}
+        enemyTargets={twoTargets}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(ref.current.getResults().splitShot).toBeNull();
+  });
+});
