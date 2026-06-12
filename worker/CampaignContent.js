@@ -9,7 +9,7 @@
 // combined) and character sheets (30-50 KB each) exceed the 128 KiB
 // per-value key-value cap. One row per entity keyed by (collection, id).
 
-const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'image', 'theme', 'monster'];
+const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'image', 'theme', 'monster'];
 
 // Versions kept per (collection, id). Deliberately small: character sheets are
 // 30-50 KB, so unbounded history would blow the free-tier SQLite budget for a

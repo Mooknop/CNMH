@@ -10,6 +10,7 @@ import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, us
 import TargetRollResolver from './TargetRollResolver';
 import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll } from '../../utils/rollResolution';
+import { useContent } from '../../contexts/ContentContext';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { isAttackAbility } from '../../utils/map';
 
@@ -45,6 +46,7 @@ const ChainedSpellSection = forwardRef(({
   // section has no rank picker and the parent falls back to native-rank spend.
   resources = null,
 }, ref) => {
+  const { effects: effectCatalog } = useContent();
   const filteredSpells = useMemo(() => {
     const spells = character?.spellcasting?.spells || [];
     if (chain.spellFilter === 'has-range') {
@@ -77,9 +79,9 @@ const ChainedSpellSection = forwardRef(({
   const totalCost = typeof spellCost === 'number' ? parentNum + spellCost : parentCost;
 
   const rollProfile = useMemo(() => selectedSpell
-    ? resolveActionRoll(selectedSpell, character, { conditions, effects, mapStep })
+    ? resolveActionRoll(selectedSpell, character, { conditions, effects, effectCatalog, mapStep })
     : { mode: 'none', bonus: null, dc: null, defense: null },
-  [selectedSpell, character, conditions, effects, mapStep]);
+  [selectedSpell, character, conditions, effects, effectCatalog, mapStep]);
 
   const resolverTargets = rollProfile.mode === 'actor-roll'
     ? enemyTargets.filter((e) => e.defenses)

@@ -76,7 +76,7 @@ const UseAbilityModal = ({
   themeColor,
 }) => {
   const { getState, sendUpdate } = useSession();
-  const { characters } = useContent();
+  const { characters, effects: effectCatalog } = useContent();
   const { gameDate, time } = useGameDate();
   const { encounter, appendLog, addSaveRequest } = useEncounter();
   const { turnState, spendActions, spendReaction, recordAttack } =
@@ -272,6 +272,7 @@ const UseAbilityModal = ({
   const rollProfile = resolveActionRoll(ability, character, {
     conditions: activeConditions || [],
     effects: activeEffects || [],
+    effectCatalog,
     mapStep,
   });
 

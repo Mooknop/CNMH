@@ -13,8 +13,9 @@ import {
   spells as defaultSpells,
   images as defaultImages,
   themeDocs as defaultThemeDocs,
+  effects as snapshotEffects,
 } from '../data';
-import defaultEffects from '../data/pf2eEffects';
+import bootstrapEffects from '../data/pf2eEffects';
 
 export const slugify = (str) =>
   String(str || '')
@@ -470,7 +471,9 @@ export const defaultContent = () => ({
   character: normalizeCharacters(defaultCharacters),
   item: normalizeItems(defaultItems || []),
   spell: normalizeSpells(defaultSpells || []),
-  effect: normalizeEffects(defaultEffects),
+  // Effects migrated to the DO (issue #263): the snapshot is canonical once it
+  // carries an effect collection; pf2eEffects.js only bootstraps the first seed.
+  effect: normalizeEffects(snapshotEffects.length ? snapshotEffects : bootstrapEffects),
   image: normalizeImages(defaultImages || []),
   theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
   monster: [],

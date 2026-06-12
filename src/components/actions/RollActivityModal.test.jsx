@@ -6,7 +6,6 @@ import { useEffects } from '../../hooks/useEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
-import { getEffect } from '../../data/pf2eEffects';
 
 vi.mock('../shared/Modal', () => ({
   default: function DummyModal({ isOpen, onClose, title, children }) {
@@ -38,7 +37,14 @@ vi.mock('../../contexts/CharacterContext', async () => {
   return { CharacterContext: createContext({ characters: [] }) };
 });
 
-vi.mock('../../data/pf2eEffects', () => ({ getEffect: vi.fn() }));
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({
+    effects: [
+      { id: 'avoid-notice-hidden', name: 'Avoiding Notice', modifiers: [] },
+      { id: 'treat-poison-resist', name: 'Treat Poison', modifiers: [{ stat: 'fort', kind: 'circumstance', amount: 2 }] },
+    ],
+  }),
+}));
 
 const makeModel = (profs = {}) => ({
   flags: {},
@@ -68,11 +74,6 @@ describe('RollActivityModal', () => {
     useSyncedState.mockImplementation(() => [[], vi.fn()]);
     resolveActionRoll.mockReturnValue({
       mode: 'actor-roll', bonus: 7, breakdown: { base: 7, total: 7, sources: [] },
-    });
-    getEffect.mockImplementation((id) => {
-      if (id === 'avoid-notice-hidden') return { id, name: 'Avoiding Notice', modifiers: [] };
-      if (id === 'treat-poison-resist') return { id, name: 'Treat Poison', modifiers: [{ stat: 'fort', kind: 'circumstance', amount: 2 }] };
-      return null;
     });
   });
 
