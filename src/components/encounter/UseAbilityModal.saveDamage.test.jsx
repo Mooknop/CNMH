@@ -71,8 +71,13 @@ vi.mock('../../hooks/useCastingResources', () => ({
 vi.mock('../../hooks/useExploitVulnerability', () => ({
   useExploitVulnerability: () => ({ exploitFor: () => mockExploit }),
 }));
+// Aura key reads active so the Impulse-trait fixture (Shard Strike) passes the
+// kinetic aura gate (#228); every other key echoes an empty list.
 vi.mock('../../hooks/useSyncedState', () => ({
-  useSyncedState: () => [[], vi.fn()],
+  useSyncedState: (key) =>
+    String(key).startsWith('cnmh_aura_')
+      ? [{ active: true, ts: 1 }, vi.fn()]
+      : [[], vi.fn()],
 }));
 vi.mock('../../utils/rollResolution', () => ({
   resolveActionRoll: () => mockRollProfile,

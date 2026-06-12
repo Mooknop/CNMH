@@ -17,6 +17,7 @@ import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
+import { useAura } from '../../hooks/useAura';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
 import { immunityConfigFor } from '../../utils/immunity';
@@ -26,6 +27,7 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
+import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
@@ -109,6 +111,10 @@ const UseAbilityModal = ({
 
   // Frequency gate (#218) — declarative cooldown override for table rulings.
   const [freqOverride, setFreqOverride] = useState(false);
+
+  // Kinetic aura gate (#228) — impulses need the aura up; override for rulings.
+  const aura = useAura(character?.id || 'nobody');
+  const [auraOverride, setAuraOverride] = useState(false);
 
   // Target-immunity gate (#218) — override when all picked targets are immune.
   const [immunityOverride, setImmunityOverride] = useState(false);
@@ -327,8 +333,13 @@ const UseAbilityModal = ({
   const castGateOk =
     castOptions.length === 0 || selectedCastOption?.enabled || castOverride;
 
+  // Kinetic aura gate (#228): impulses are unusable while the aura is down.
+  // Channel Elements itself activates (no Impulse trait), so it never blocks.
+  const auraGateBlocked = requiresAura(ability) && !aura.active;
+  const auraGateOk = !auraGateBlocked || auraOverride;
+
   const confirmEnabled =
-    (!needsPicker || targets.length > 0) && castGateOk && freqGateOk && immunityGateOk;
+    (!needsPicker || targets.length > 0) && castGateOk && freqGateOk && immunityGateOk && auraGateOk;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -365,6 +376,26 @@ const UseAbilityModal = ({
       if (!freqGate.available && freqOverride) {
         sourceSuffix += ' (override — frequency)';
       }
+    }
+    // Kinetic aura (#228): activating abilities switch it on; overflow
+    // impulses burn it out on use.
+    if (activatesAura(ability) && !aura.active) {
+      aura.activate();
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name}'s kinetic aura activates`,
+      });
+    } else if (isOverflow(ability) && aura.active) {
+      aura.deactivate();
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name}'s kinetic aura deactivates (overflow)`,
+      });
+    }
+    if (auraGateBlocked && auraOverride) {
+      sourceSuffix += ' (override — aura inactive)';
     }
     let suffixLogged = false;
 
@@ -807,6 +838,27 @@ const UseAbilityModal = ({
             >
               Clear lock (GM ruling)
             </button>
+          </section>
+        </>
+      )}
+
+      {/* Kinetic aura gate (#228) — impulses blocked while the aura is down */}
+      {auraGateBlocked && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Kinetic Aura</h3>
+            <div className="uam-cost-empty">
+              Kinetic aura is not active — use Channel Elements first.
+            </div>
+            <label className="uam-cost-override">
+              <input
+                type="checkbox"
+                checked={auraOverride}
+                onChange={(e) => setAuraOverride(e.target.checked)}
+              />
+              Override (GM ruling) — use anyway
+            </label>
           </section>
         </>
       )}

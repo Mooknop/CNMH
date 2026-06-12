@@ -641,4 +641,73 @@ describe('TurnTrackerPanel', () => {
     expect(screen.getAllByText('Goblin').length).toBeGreaterThanOrEqual(1);
   });
 
+  // ── Kinetic aura (#228) ───────────────────────────────────────────────────
+
+  it('no aura UI while the aura is down', () => {
+    let drv;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    expect(screen.queryByLabelText('Dismiss Aura')).toBeNull();
+    expect(screen.queryByLabelText(/kinetic aura is active/)).toBeNull();
+  });
+
+  it('shows the aura chip in the order strip and a Dismiss button on my turn', () => {
+    let drv, setAura;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_aura_Pellias" onReady={(s) => (setAura = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+
+    act(() => setAura({ active: true, ts: 1 }));
+    expect(screen.getByLabelText("Pellias's kinetic aura is active")).toBeInTheDocument();
+    expect(screen.getByLabelText('Dismiss Aura')).toBeInTheDocument();
+  });
+
+  it('Dismiss spends one action, drops the aura, and logs it', () => {
+    let drv, tsDriver, setAura;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <SyncDriver skey="cnmh_aura_Pellias" onReady={(s) => (setAura = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    act(() => setAura({ active: true, ts: 1 }));
+
+    fireEvent.click(screen.getByLabelText('Dismiss Aura'));
+    expect(tsDriver.turnState.actionsSpent).toBe(1);
+    expect(screen.queryByLabelText('Dismiss Aura')).toBeNull();
+    expect(screen.queryByLabelText("Pellias's kinetic aura is active")).toBeNull();
+    expect(
+      drv.encounter.log.some((e) => e.text.includes('Dismissed their kinetic aura'))
+    ).toBe(true);
+  });
+
+  it('the aura survives turn changes (unlike a raised shield)', () => {
+    let drv, setAura;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_aura_Pellias" onReady={(s) => (setAura = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    act(() => setAura({ active: true, ts: 1 }));
+
+    act(() => drv.beginNextRound());
+    expect(screen.getByLabelText("Pellias's kinetic aura is active")).toBeInTheDocument();
+  });
+
 });

@@ -430,4 +430,35 @@ describe('StatsBlock', () => {
     // (Take Cover / Shield cantrip) — only the highest applies — is unit-tested
     // directly against bestOfKind in EffectUtils.test.js.
   });
+
+  describe('kinetic aura badge (#228)', () => {
+    const kineticist = {
+      ...mockCharacter,
+      feats: [{
+        name: 'Kineticist Dedication',
+        actions: [{ name: 'Channel Elements', traits: ['Aura', 'Kineticist'] }],
+      }],
+    };
+
+    it('non-kineticists render no aura row', () => {
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.queryByText('Kinetic Aura')).toBeNull();
+    });
+
+    it('a kineticist shows the row, Inactive by default, no Dismiss', () => {
+      render(<StatsBlock character={kineticist} characterColor="#7E8C9A" />);
+      expect(screen.getByText('Kinetic Aura')).toBeInTheDocument();
+      expect(screen.getByText('Inactive')).toBeInTheDocument();
+      expect(screen.queryByLabelText('Dismiss kinetic aura')).toBeNull();
+    });
+
+    it('an active aura shows the pill and Dismiss deactivates it', () => {
+      localStorage.setItem('cnmh_aura_1', JSON.stringify({ active: true, ts: 1 }));
+      render(<StatsBlock character={kineticist} characterColor="#7E8C9A" />);
+      expect(screen.getByText('◈ Active')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('Dismiss kinetic aura'));
+      expect(screen.getByText('Inactive')).toBeInTheDocument();
+      expect(screen.queryByText('◈ Active')).toBeNull();
+    });
+  });
 });
