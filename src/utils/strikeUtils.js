@@ -119,6 +119,8 @@ export const getStrikes = (character) => {
             source: feat.name,
             range: strike.range,
             ...(strike.variants ? { variants: strike.variants } : {}),
+            // Damage riders (#222) — carried through so the damage step sees them.
+            ...(strike.riders ? { riders: strike.riders } : {}),
           };
         })
       );
@@ -150,6 +152,8 @@ export const getStrikes = (character) => {
             source: item.name,
             range: weaponStrike.range,
             ...(weaponStrike.variants ? { variants: weaponStrike.variants } : {}),
+            // Damage riders (#222) — carried through so the damage step sees them.
+            ...(weaponStrike.riders ? { riders: weaponStrike.riders } : {}),
             // Gated: a weapon's Strike is only usable while it is wielded
             // (held), unless the catalog flags it noHandRequired.
             active: itemAbilitiesActive(item),

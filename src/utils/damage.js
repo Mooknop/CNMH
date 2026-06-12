@@ -1,0 +1,222 @@
+// Pure helpers for the damage step (#222). After a hit/crit the resolver shows
+// a damage entry: the player rolls the dice physically and enters the total;
+// the app adds toggled riders, doubles on a crit, and applies weakness last
+// (weakness is per-target and never doubled — PF2e damage order).
+//
+// Rider sources, all sharing one shape (see buildDamageProfile):
+//   - ability/strike data:  ability.damageData.riders ?? ability.riders
+//   - character data:       character.damageRiders (e.g. Implement's Empowerment)
+//   - runtime:              the actor's active Exploit Vulnerability weakness
+// Kept side-effect-free so the modal, resolver, and tests share the same algebra.
+
+import { getAbilityModifier } from './CharacterUtils';
+
+// '2d6+3' → { dice: [{count: 2, size: 6}], flat: 3 }; null on anything that
+// isn't plain dice notation (damage strings are hand-curated; skip, don't throw).
+export const parseDamageExpression = (str) => {
+  if (typeof str !== 'string' || !str.trim()) return null;
+  const terms = str.replace(/\s+/g, '').replace(/-/g, '+-').split('+').filter(Boolean);
+  const dice = [];
+  let flat = 0;
+  for (const term of terms) {
+    const die = /^(\d+)d(\d+)$/i.exec(term);
+    if (die) {
+      dice.push({ count: Number(die[1]), size: Number(die[2]) });
+      continue;
+    }
+    const num = /^-?\d+$/.exec(term);
+    if (num) {
+      flat += Number(term);
+      continue;
+    }
+    return null;
+  }
+  return dice.length || terms.length ? { dice, flat } : null;
+};
+
+// Total dice in an expression — drives perWeaponDie riders ('2d8+4' → 2).
+export const weaponDiceCount = (expression) => {
+  const parsed = parseDamageExpression(expression);
+  if (!parsed) return 0;
+  return parsed.dice.reduce((sum, d) => sum + d.count, 0);
+};
+
+// '1d4' → '2d4' — crit-doubled persistent dice are rolled doubled, not ×2'd.
+export const doubleDice = (expression) => {
+  const parsed = parseDamageExpression(expression);
+  if (!parsed) return expression;
+  const dice = parsed.dice.map((d) => `${d.count * 2}d${d.size}`).join('+');
+  const flat = parsed.flat * 2;
+  if (!dice) return String(flat);
+  return flat ? `${dice}${flat > 0 ? '+' : ''}${flat}` : dice;
+};
+
+// Numeric add for a bonus rider. Forms: { flat: n } | { perWeaponDie: n }
+// (n × dice in the base expression) | { ability: 'constitution' } (actor's mod).
+export const riderAmount = (rider, { expression, character } = {}) => {
+  const bonus = rider?.bonus;
+  if (!bonus) return 0;
+  if (typeof bonus.flat === 'number') return bonus.flat;
+  if (typeof bonus.perWeaponDie === 'number') {
+    return bonus.perWeaponDie * weaponDiceCount(expression);
+  }
+  if (typeof bonus.ability === 'string') {
+    return getAbilityModifier(character?.abilities?.[bonus.ability]);
+  }
+  return 0;
+};
+
+const HIT_DEGREES = ['success', 'criticalSuccess'];
+
+// A rider is on unless the player unticked it (or it was authored defaultOn:false).
+export const riderEnabled = (rider, riderState) =>
+  riderState?.[rider.id] ?? rider.defaultOn !== false;
+
+const riderAppliesOnDegree = (rider, degree) =>
+  (rider.on ?? HIT_DEGREES).includes(degree);
+
+/**
+ * Final damage for one target. `entered` is the player's rolled total
+ * (un-doubled); numeric riders add before crit doubling, weakness after.
+ *
+ * @returns {null|{ entered, final, parts, persistent, riderIds }}
+ *   parts:      { base, riders: [{label, amount}], crit, weaknesses: [{label, amount}] }
+ *   persistent: [{ dice, type, label }] — display/log only in this slice (#222 slice 3 tracks)
+ */
+export const computeTargetDamage = ({
+  entered,
+  degree,
+  riders = [],
+  riderState = {},
+  entryId,
+  critDouble = true,
+}) => {
+  if (typeof entered !== 'number' || Number.isNaN(entered)) return null;
+  if (!HIT_DEGREES.includes(degree)) return null;
+
+  const enabled = riders.filter(
+    (r) => riderEnabled(r, riderState) && riderAppliesOnDegree(r, degree)
+  );
+  const isCrit = degree === 'criticalSuccess' && critDouble;
+
+  const bonusParts = enabled
+    .filter((r) => r.bonus)
+    .map((r) => ({ label: r.label, amount: riderAmount(r, r.ctx) }))
+    .filter((p) => p.amount !== 0);
+
+  let total = entered + bonusParts.reduce((sum, p) => sum + p.amount, 0);
+  if (isCrit) total *= 2;
+
+  const weaknessParts = enabled
+    .filter((r) => typeof r.weakness === 'number'
+      && (r.appliesToEntryIds ?? []).includes(entryId))
+    .map((r) => ({ label: r.label, amount: r.weakness }));
+  total += weaknessParts.reduce((sum, p) => sum + p.amount, 0);
+
+  const persistent = enabled
+    .filter((r) => r.persistent?.dice)
+    .map((r) => ({
+      dice: isCrit ? doubleDice(r.persistent.dice) : r.persistent.dice,
+      type: r.persistent.type || '',
+      label: r.label,
+    }));
+
+  return {
+    entered,
+    final: total,
+    parts: { base: entered, riders: bonusParts, crit: isCrit, weaknesses: weaknessParts },
+    persistent,
+    riderIds: enabled.map((r) => r.id),
+  };
+};
+
+// Compact log fragment: '30 (9 +4 Implement's Empowerment ×2 +4 weakness (fire))'
+// plus ' · 1d4 persistent bleed (DC 15 flat to end)' per persistent entry.
+// A bare total (no riders, no crit) logs as just the number.
+export const formatDamageBreakdown = ({ final, parts, persistent = [] }) => {
+  const bits = [];
+  for (const p of parts.riders) {
+    bits.push(`${p.amount > 0 ? '+' : ''}${p.amount} ${p.label}`);
+  }
+  if (parts.crit) bits.push('×2');
+  for (const w of parts.weaknesses) {
+    bits.push(`+${w.amount} ${w.label}`);
+  }
+  const breakdown = bits.length ? `${final} (${parts.base} ${bits.join(' ')})` : String(final);
+  const persistentStr = persistent
+    .map((p) => ` · ${p.dice} persistent ${p.type || 'damage'} (DC 15 flat to end)`)
+    .join('');
+  return `${breakdown}${persistentStr}`;
+};
+
+// The exploited creature's weakness as a runtime rider, scoped to the matching
+// targets: Personal Antithesis hits the exact combatant; Mortal Weakness hits
+// every combatant sharing the exploited entry's creatureKey (manually-added
+// enemies have no creatureKey and degrade to exact-entry matching).
+const exploitRider = (exploit, enemyEntries, order) => {
+  if (!exploit) return null;
+  const matchIds = new Set([exploit.targetEntryId]);
+  if (exploit.type === 'mortal') {
+    const exploited = (order || []).find((e) => e.entryId === exploit.targetEntryId);
+    if (exploited?.creatureKey) {
+      for (const e of order) {
+        if (e.kind === 'enemy' && e.creatureKey === exploited.creatureKey) {
+          matchIds.add(e.entryId);
+        }
+      }
+    }
+  }
+  const applies = (enemyEntries || []).filter((e) => matchIds.has(e.entryId));
+  if (!applies.length) return null;
+  const scope = exploit.type === 'mortal'
+    ? `${exploit.weaknessType} ${exploit.value}`
+    : `Personal Antithesis ${exploit.value}`;
+  return {
+    id: 'exploit-weakness',
+    label: `weakness (${scope})`,
+    weakness: exploit.value,
+    appliesToEntryIds: applies.map((e) => e.entryId),
+    defaultOn: true,
+  };
+};
+
+/**
+ * Damage profile for the resolver's damage panel — base dice hint plus the
+ * riders that apply to this use. Returns null when the ability carries no
+ * usable damage signal at all (no expression and no riders).
+ *
+ * @param {Object}      ability       - strike or spell object
+ * @param {Object}      character     - the acting character
+ * @param {number|null} chosenActions - effective action count (gates when.actions riders)
+ * @param {Object|null} exploit       - the actor's active exploit (useExploitVulnerability)
+ * @param {Array}       enemyEntries  - enemy targets shown on the resolver
+ * @param {Array}       order         - full encounter order (creatureKey lookups)
+ */
+export const buildDamageProfile = (ability, character, {
+  chosenActions = null,
+  exploit = null,
+  enemyEntries = [],
+  order = [],
+} = {}) => {
+  if (!ability) return null;
+  const expression = ability.damageData?.base ?? ability.damage ?? null;
+  const typeLabel = ability.damageData?.type ?? null;
+  const ctx = { expression, character };
+
+  // Strikes are the abilities built by strikeUtils — they carry a numeric attackMod.
+  const isStrike = typeof ability.attackMod === 'number';
+
+  const abilityRiders = (ability.damageData?.riders ?? ability.riders ?? [])
+    .filter((r) => r.when?.actions == null || r.when.actions === chosenActions);
+
+  const characterRiders = (character?.damageRiders ?? [])
+    .filter((r) => r.appliesTo !== 'strikes' || isStrike);
+
+  const riders = [...abilityRiders, ...characterRiders].map((r) => ({ ...r, ctx }));
+
+  const exploitR = exploitRider(exploit, enemyEntries, order);
+  if (exploitR) riders.push(exploitR);
+
+  if (!expression && !riders.length) return null;
+  return { expression, typeLabel, riders };
+};
