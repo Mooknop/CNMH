@@ -24,6 +24,7 @@ import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
+import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -120,6 +121,9 @@ const UseAbilityModal = ({
   // toggles, carried into the save request for GM-side per-degree resolution.
   const [saveDmgInput, setSaveDmgInput] = useState('');
   const [saveRiderState, setSaveRiderState] = useState({});
+
+  // Persistent-damage tracking (#272) — confirm records per-target entries here.
+  const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
@@ -508,6 +512,17 @@ const UseAbilityModal = ({
           }
         });
       }
+    }
+
+    // Persistent-damage tracking (#272): record each target's persistent
+    // entries (already crit-doubled by computeTargetDamage) so the turn
+    // tracker chips them and the watcher reminds at their turn end.
+    const persistentHits = collectFromResults(rayGroups, hasChainStrike ? chainResults : null);
+    if (persistentHits.length) {
+      setPersistentMap((m) => persistentHits.reduce(
+        (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, ability.name)),
+        m || {}
+      ));
     }
 
     // Push a save request to the GM for target-save abilities. When a damage

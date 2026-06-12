@@ -9,6 +9,7 @@ import PlayModeControl from '../../components/gm/PlayModeControl';
 import PartyPanel from '../../components/gm/PartyPanel';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
+import PersistentChip from '../../components/encounter/PersistentChip';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import SetLocationModal from '../../components/gm/SetLocationModal';
 import AdjustHpModal from '../../components/gm/AdjustHpModal';
@@ -94,6 +95,7 @@ const InitiativePanel = ({ encounter, actorMap, setActorMap, characters }) => {
                   data-testid={`order-row-${e.entryId}`}
                 >
                   <span className="gm-encounter-name">{e.name}</span>
+                  <PersistentChip entry={e} />
                   <span className="gm-encounter-init">
                     init {e.initiative === null || e.initiative === undefined ? '—' : e.initiative}
                   </span>

@@ -9,6 +9,7 @@ import { nextTurnIndex } from '../../utils/encounterUtils';
 import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
+import PersistentChip from './PersistentChip';
 import './TurnTrackerPanel.css';
 
 const formatCombatTime = (secs) => {
@@ -264,6 +265,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
               {entry.kind === 'enemy' && flankedMap?.[entry.entryId] && (
                 <span className="ttp-flanked-badge" aria-label={`${entry.name} is flanked`} title="Flanked">⚔</span>
               )}
+              <PersistentChip entry={entry} viewerCharId={charId} />
               <span className="ttp-entry-init">
                 {entry.initiative !== null && entry.initiative !== undefined
                   ? entry.initiative
