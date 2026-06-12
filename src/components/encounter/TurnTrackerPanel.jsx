@@ -7,6 +7,7 @@ import { useAura } from '../../hooks/useAura';
 import { useSession } from '../../contexts/SessionContext';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
+import { getFreeActions } from '../../utils/actionUtils';
 import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
@@ -60,10 +61,16 @@ const ReactionIcon = ({ state }) => {
   );
 };
 
-const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
+const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = null }) => {
   const { encounter, advanceTurn, appendLog } = useEncounter();
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
   const { sendUpdate } = useSession();
+
+  // Turn-start free-action offers (#228 — Primary Threat). Authored as
+  // `offerAt: { round? }` on a free action; offered on the actor's turn while
+  // the round matches. Handled state is keyed by turn token so a remount
+  // mid-turn doesn't re-offer something already used or dismissed.
+  const [offersHandled, setOffersHandled] = useState({});
 
   // Raise a Shield (Slice 1); the Shield Block bar is its own component now.
   const { heldShield, raised, broken, raiseShield, lowerShield } =
@@ -244,6 +251,26 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
     appendLog({ type: 'action', charId, text: `${characterName} Dismissed their kinetic aura` });
   };
 
+  // Turn-start free-action offers (#228) — see state above.
+  const turnStartOffers = (character ? getFreeActions(character) : []).filter(
+    (fa) => fa.offerAt
+      && (fa.offerAt.round == null || fa.offerAt.round === (encounter?.round ?? 0))
+      && fa.active !== false
+      && !offersHandled[`${fa.name}:${turnToken}`]
+  );
+
+  const markOfferHandled = (fa) =>
+    setOffersHandled((cur) => ({ ...cur, [`${fa.name}:${turnToken}`]: true }));
+
+  const handleUseFreeAction = (fa) => {
+    spendActions(0, fa.name);
+    appendLog({ type: 'action', charId, text: `${characterName} used ${fa.name} (free action)` });
+    if (fa.reminder) {
+      appendLog({ type: 'system', text: fa.reminder });
+    }
+    markOfferHandled(fa);
+  };
+
   const reactionState = !hasStartedFirstTurn
     ? 'unavailable'
     : reactionSpent
@@ -404,6 +431,30 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
           </button>
         </div>
       )}
+
+      {/* Turn-start free-action offers (#228 — Primary Threat on round 1) */}
+      {isInProgress && isMyTurn && turnStartOffers.map((fa) => (
+        <div key={fa.name} className="ttp-offer" role="group" aria-label={`${fa.name} (free action)`}>
+          <span className="ttp-offer-name">
+            {fa.name} <span className="ttp-offer-cost">(free action)</span>
+          </span>
+          <button
+            className="btn-secondary ttp-offer-use"
+            onClick={() => handleUseFreeAction(fa)}
+            title={fa.description || undefined}
+            aria-label={`Use ${fa.name}`}
+          >
+            Use
+          </button>
+          <button
+            className="btn-text"
+            onClick={() => markOfferHandled(fa)}
+            aria-label={`Dismiss ${fa.name}`}
+          >
+            Dismiss
+          </button>
+        </div>
+      ))}
 
       {/* Shield Block reaction — visible any in-progress turn while raised */}
       {isInProgress && (

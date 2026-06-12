@@ -226,6 +226,22 @@ const PF2E_EFFECTS = [
     description: 'A 20-foot emanation of billowing rust: creatures inside are concealed, and creatures outside are concealed to those inside. Lasts 10 minutes, until Dismissed (2 actions), or until you fall unconscious.',
     modifiers: [],
   },
+
+  // ── Devoted Guardian (champion ward, #228) ─────────────────────────
+  // Stamped on the warded ally; lasts while the warder's shield stays
+  // raised — WardSync removes it when their `raised` goes false.
+  {
+    id: 'devoted-guardian',
+    name: 'Devoted Guardian',
+    description: '+1 circumstance bonus to AC while your guardian stays adjacent with their shield raised.',
+    modifiers: [{ stat: 'ac', kind: 'circumstance', amount: 1 }],
+  },
+  {
+    id: 'devoted-guardian-tower',
+    name: 'Devoted Guardian (Tower Shield)',
+    description: '+2 circumstance bonus to AC while your guardian stays adjacent with their tower shield raised.',
+    modifiers: [{ stat: 'ac', kind: 'circumstance', amount: 2 }],
+  },
 ];
 
 export default PF2E_EFFECTS;

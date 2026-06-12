@@ -141,7 +141,7 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} />
-                  <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} />
+                  <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
                   <HandsPanel character={character} characterColor={characterColor} />
                 </>
               ) : (
