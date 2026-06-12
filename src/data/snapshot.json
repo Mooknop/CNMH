@@ -5855,6 +5855,10 @@
                 "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
                 "defense": "Fortitude",
                 "basic": true,
+                "damageData": {
+                  "base": "2d6 (+1d6 per level)",
+                  "type": "bludgeoning"
+                },
                 "degrees": {
                   "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
                   "Critical Failure": "The creature is immobilized until the start of your next turn."
@@ -5877,6 +5881,10 @@
                 "description": "You blast a cone of disorienting mental energy to muddle your foes' minds and throw them off guard. You deal 1d4 (+1d4 per level) mental damage to all creatures in a 15-foot cone with a basic Will save.",
                 "defense": "Will",
                 "basic": true,
+                "damageData": {
+                  "base": "1d4 (+1d4 per level)",
+                  "type": "mental"
+                },
                 "degrees": {
                   "Success": "The creature is Off-Guard until the start of their next turn",
                   "Failure": "The creature is Off-Guard and Stupefied 1 until the end of your next turn",
@@ -6010,6 +6018,19 @@
                       "note": "Off-guard vs electricity attacks and -2 to saves vs electric effects until it ends.",
                       "appliesEffect": {
                         "effectId": "eld-charged"
+                      },
+                      "damage": {
+                        "riders": [
+                          {
+                            "id": "polarize-persistent",
+                            "label": "Persistent electricity",
+                            "persistent": {
+                              "dice": "1d4 per two levels you have",
+                              "type": "electricity"
+                            },
+                            "on": ["success", "failure", "criticalFailure"]
+                          }
+                        ]
                       }
                     },
                     {
@@ -6017,7 +6038,20 @@
                       "label": "Discharge",
                       "note": "Consumes Charged - the persistent electricity damage increases to 1d4 per level.",
                       "removesEffectId": "eld-charged",
-                      "requiresEffectId": "eld-charged"
+                      "requiresEffectId": "eld-charged",
+                      "damage": {
+                        "riders": [
+                          {
+                            "id": "polarize-persistent",
+                            "label": "Persistent electricity (Discharge)",
+                            "persistent": {
+                              "dice": "1d4 per level you have",
+                              "type": "electricity"
+                            },
+                            "on": ["success", "failure", "criticalFailure"]
+                          }
+                        ]
+                      }
                     }
                   ]
                 }
@@ -7097,15 +7131,42 @@
             "variants": [
               {
                 "actions": 1,
-                "note": "1 ray, 2d6 fire"
+                "note": "1 ray, 2d6 fire",
+                "damage": {
+                  "base": "2d6",
+                  "type": "fire",
+                  "heightened": {
+                    "+1": {
+                      "base": "1d6"
+                    }
+                  }
+                }
               },
               {
                 "actions": 2,
-                "note": "2 rays, 4d6 fire each"
+                "note": "2 rays, 4d6 fire each",
+                "damage": {
+                  "base": "4d6",
+                  "type": "fire",
+                  "heightened": {
+                    "+1": {
+                      "base": "2d6"
+                    }
+                  }
+                }
               },
               {
                 "actions": 3,
-                "note": "3 rays, 4d6 fire each"
+                "note": "3 rays, 4d6 fire each",
+                "damage": {
+                  "base": "4d6",
+                  "type": "fire",
+                  "heightened": {
+                    "+1": {
+                      "base": "2d6"
+                    }
+                  }
+                }
               }
             ],
             "range": "60 feet",
@@ -7854,6 +7915,22 @@
               "basic": true,
               "roll": {
                 "type": "class-dc"
+              },
+              "damageData": {
+                "base": "1d6",
+                "type": "slashing or piercing",
+                "riders": [
+                  {
+                    "id": "shard-bleed",
+                    "label": "Shards: persistent bleed",
+                    "persistent": {
+                      "dice": "1d6",
+                      "type": "bleed"
+                    },
+                    "on": ["criticalFailure"],
+                    "note": "Shards form only — untick for Spines"
+                  }
+                ]
               }
             }
           ],
