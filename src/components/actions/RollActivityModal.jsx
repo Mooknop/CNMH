@@ -6,7 +6,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSession } from '../../contexts/SessionContext';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
-import { getEffect } from '../../data/pf2eEffects';
+import { useContent } from '../../contexts/ContentContext';
 import { newEntryUid } from '../../utils/uid';
 import './RollActivityModal.css';
 
@@ -51,6 +51,7 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
 
   const characterModel = useCharacter(character);
   const { effects } = useEffects(character?.id || '');
+  const { effects: effectCatalog } = useContent();
   const [activeConditions] = useSyncedState(
     `cnmh_conditions_${character?.id || 'none'}`, []
   );
@@ -67,7 +68,9 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
   const isSecret     = !!roll?.secret;
   const hasTargetPick = roll?.target === 'party-pc';
   const onSuccessEffectId = roll?.onSuccessEffect || null;
-  const effectDef = onSuccessEffectId ? getEffect(onSuccessEffectId) : null;
+  const effectDef = onSuccessEffectId
+    ? (effectCatalog || []).find((e) => e.id === onSuccessEffectId) || null
+    : null;
 
   // The effective skill id for the current roll
   const skillId = isPickType ? pickedSkill : roll?.skill;
@@ -86,8 +89,9 @@ const RollActivityModal = ({ isOpen, onClose, activity, character, themeColor })
     return resolveActionRoll(syntheticAbility, character, {
       conditions: activeConditions || [],
       effects: effects || [],
+      effectCatalog,
     });
-  }, [skillId, character, characterModel, activeConditions, effects]);
+  }, [skillId, character, characterModel, activeConditions, effects, effectCatalog]);
 
   // Follow the Expert: check if a +2 circumstance applies for the current skill
   const followExpert = getState(character?.id, 'followexpert');

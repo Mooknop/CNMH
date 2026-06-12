@@ -7,6 +7,7 @@
 import React, { useState, useImperativeHandle, forwardRef, useRef } from 'react';
 import TargetRollResolver from './TargetRollResolver';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useContent } from '../../contexts/ContentContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { mapPenaltyFor } from '../../utils/map';
@@ -23,6 +24,7 @@ const ChainedStrikeSection = forwardRef(({
   order = [],
 }, ref) => {
   const { strikes } = useCharacter(character);
+  const { effects: effectCatalog } = useContent();
 
   const filteredStrikes = chain.strikeTrait
     ? strikes.filter((s) => Array.isArray(s.traits) && s.traits.includes(chain.strikeTrait))
@@ -40,7 +42,7 @@ const ChainedStrikeSection = forwardRef(({
   const selectedStrike = filteredStrikes.find((s) => s.name === selectedStrikeName) ?? filteredStrikes[0] ?? null;
 
   const baseRoll = selectedStrike
-    ? resolveActionRoll(selectedStrike, character, { conditions, effects, mapStep })
+    ? resolveActionRoll(selectedStrike, character, { conditions, effects, effectCatalog, mapStep })
     : { mode: 'none', bonus: null };
 
   const augmentedBonus = baseRoll.bonus != null
@@ -50,7 +52,7 @@ const ChainedStrikeSection = forwardRef(({
   // Flurry strike 2 is one MAP step deeper (agile-aware via the strike's traits).
   const strike2Step = Math.min(mapStep + 1, 2);
   const strike2Roll = selectedStrike
-    ? resolveActionRoll(selectedStrike, character, { conditions, effects, mapStep: strike2Step })
+    ? resolveActionRoll(selectedStrike, character, { conditions, effects, effectCatalog, mapStep: strike2Step })
     : { mode: 'none', bonus: null };
   const strike2Bonus = strike2Roll.bonus != null
     ? strike2Roll.bonus + (chain.attackBonus || 0)
