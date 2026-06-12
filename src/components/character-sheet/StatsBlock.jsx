@@ -8,6 +8,8 @@ import ProficiencyPips from '../shared/ProficiencyPips';
 import { formatModifier, getProficiencyBonus } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useShield } from '../../hooks/useShield';
+import { useAura } from '../../hooks/useAura';
+import { characterHasKineticAura } from '../../utils/kineticAura';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from '../../utils/EffectUtils';
 import { useEffects } from '../../hooks/useEffects';
@@ -71,6 +73,9 @@ const StatsBlock = ({ character, characterColor }) => {
   // synthetic effect injected into the same computeEffectBonuses pipeline (so
   // stacking with Take Cover / the Shield cantrip is handled by bestOfKind).
   const { shieldEffect } = useShield(characterKey, charData?.inventory);
+
+  // Kinetic aura (#228) — badge + out-of-encounter Dismiss for kineticists.
+  const { active: auraActive, deactivate: deactivateAura } = useAura(characterKey);
 
   if (!charData) return null;
 
@@ -454,6 +459,28 @@ const StatsBlock = ({ character, characterColor }) => {
           })}
         </div>
       </div>
+
+      {/* Kinetic aura (#228) — only kineticists render the row. Dismiss here is
+          the out-of-encounter hygiene surface (no action economy); in-encounter
+          Dismiss lives on the turn tracker and spends the action. */}
+      {characterHasKineticAura(character) && (
+        <div className="aura-row">
+          <span className="aura-label">Kinetic Aura</span>
+          <span className={`aura-pill${auraActive ? ' aura-pill--active' : ''}`}>
+            {auraActive ? '◈ Active' : 'Inactive'}
+          </span>
+          {auraActive && (
+            <button
+              type="button"
+              className="aura-dismiss-btn"
+              onClick={deactivateAura}
+              aria-label="Dismiss kinetic aura"
+            >
+              Dismiss
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Size and Speed Section */}
       <div className="character-attributes">

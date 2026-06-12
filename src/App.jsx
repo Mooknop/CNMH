@@ -19,6 +19,7 @@ import ActorMapSync from './components/encounter/ActorMapSync';
 import EncounterClockSync from './components/encounter/EncounterClockSync';
 import EffectExpirySync from './components/encounter/EffectExpirySync';
 import PersistentSync from './components/encounter/PersistentSync';
+import AuraKoSync from './components/encounter/AuraKoSync';
 import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
@@ -71,6 +72,7 @@ function App() {
           <EncounterClockSync />
           <EffectExpirySync />
           <PersistentSync />
+          <AuraKoSync />
           <CharacterProvider>
             <TraitProvider>
               <LoreProvider>

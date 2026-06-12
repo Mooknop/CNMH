@@ -3,6 +3,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
+import { useAura } from '../../hooks/useAura';
 import { useSession } from '../../contexts/SessionContext';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
@@ -10,6 +11,7 @@ import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import PersistentChip from './PersistentChip';
+import AuraChip from './AuraChip';
 import './TurnTrackerPanel.css';
 
 const formatCombatTime = (secs) => {
@@ -66,6 +68,10 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
   // Raise a Shield (Slice 1); the Shield Block bar is its own component now.
   const { heldShield, raised, broken, raiseShield, lowerShield } =
     useShield(charId, inventory);
+
+  // Kinetic aura (#228) — Dismiss is one of the three ways the aura ends.
+  // Unlike a raised shield it persists across turns, so no turn-start reset.
+  const { active: auraActive, deactivate: deactivateAura } = useAura(charId);
 
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -231,6 +237,13 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
     appendLog({ type: 'action', charId, text: `${characterName} lowered their shield` });
   };
 
+  // Dismiss is a 1-action concentrate activity in combat.
+  const handleDismissAura = () => {
+    deactivateAura();
+    spendActions(1, 'Dismiss');
+    appendLog({ type: 'action', charId, text: `${characterName} Dismissed their kinetic aura` });
+  };
+
   const reactionState = !hasStartedFirstTurn
     ? 'unavailable'
     : reactionSpent
@@ -265,6 +278,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
               {entry.kind === 'enemy' && flankedMap?.[entry.entryId] && (
                 <span className="ttp-flanked-badge" aria-label={`${entry.name} is flanked`} title="Flanked">⚔</span>
               )}
+              {entry.kind === 'pc' && <AuraChip entry={entry} />}
               <PersistentChip entry={entry} viewerCharId={charId} />
               <span className="ttp-entry-init">
                 {entry.initiative !== null && entry.initiative !== undefined
@@ -366,6 +380,17 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [] }) => {
               aria-label="Lower Shield"
             >
               🛡 Lower
+            </button>
+          )}
+
+          {auraActive && (
+            <button
+              className="btn-secondary ttp-aura-dismiss"
+              onClick={handleDismissAura}
+              title="Dismiss your kinetic aura (1 action)"
+              aria-label="Dismiss Aura"
+            >
+              ◈ Dismiss
             </button>
           )}
 

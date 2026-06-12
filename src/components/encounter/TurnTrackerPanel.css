@@ -343,6 +343,20 @@
   vertical-align: middle;
 }
 
+/* Kinetic aura (#228) — order-strip chip + Dismiss control */
+.ttp-aura-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  color: #b18fe0;
+  vertical-align: middle;
+}
+
+.ttp-aura-dismiss {
+  background: rgba(138, 95, 200, 0.25);
+  color: #b18fe0;
+  border-color: rgba(138, 95, 200, 0.5);
+}
+
 /* Shield Block bar rules live in ShieldBlockBar.css (shared with ReactionPrompt). */
 
 /* ── Dark shell overrides (match base styles already — kept for specificity) */
