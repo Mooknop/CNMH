@@ -7830,7 +7830,15 @@
               "traits": [
                 "Champion"
               ],
-              "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward. Select one adjacent creature. As long as your shield is raised and the creature remains adjacent to you, the creature gains a +1 circumstance bonus to their AC, or a +2 circumstance bonus if the shield you raised was a tower shield."
+              "targets": "1 adjacent ally",
+              "requiresShieldRaised": true,
+              "effects": [
+                {
+                  "effectId": "devoted-guardian-tower",
+                  "applyTo": "ally"
+                }
+              ],
+              "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward. Select one adjacent creature. As long as your shield is raised and the creature remains adjacent to you, the creature gains a +1 circumstance bonus to their AC, or a +2 circumstance bonus if the shield you raised was a tower shield. (Pellias carries a reinforced tower shield, so the +2 effect is applied; the ward ends automatically when his shield is no longer raised — the GM should clear it early if the ally moves away.)"
             }
           ],
           "name": "Devoted Guardian",
@@ -7896,6 +7904,10 @@
                 "Champion"
               ],
               "trigger": "Your turn begins and it is the first round of combat",
+              "offerAt": {
+                "round": 1
+              },
+              "reminder": "Primary Threat: Pellias Delays (GM moves him in the Foundry tracker). Enemies that act after he used Delay take a -1 circumstance penalty to attack rolls against his allies until the start of his next turn; a creature can spend a single concentrate action to remove it.",
               "description": "You Delay while presenting an imposing afront to your enemies. Enemy creatures that go after you used Delay take a -1 circumstance penalty to attack rolls against your allies until the beginning of your next turn. Creatures can remove this penalty by spending a single action with the concentrate trait to do their own threat evaluation."
             }
           ],
@@ -7988,6 +8000,31 @@
               "actions": "One Action",
               "range": "30ft",
               "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour.",
+              "immunityKey": "guidance",
+              "immunity": {
+                "duration": {
+                  "value": 1,
+                  "unit": "hour"
+                }
+              }
+            },
+            {
+              "id": "murmured-prayer-plus",
+              "name": "Murmured Prayer (+2 Guidance)",
+              "level": 0,
+              "baseLevel": 1,
+              "traits": [
+                "Cantrip",
+                "Concentrate"
+              ],
+              "actions": "One Action",
+              "range": "30ft",
+              "frequencyRule": {
+                "per": "day",
+                "uses": 1
+              },
+              "description": "You utter a prayer to a particularly relevant deity as part of casting Guidance: the target gains a +2 status bonus instead of +1 to one attack roll, Perception check, saving throw, or skill check before the start of your next turn. If the deity's goals do not align with your own, they may refuse to aid you. The target is immune to further Guidance for 1 hour either way.",
+              "immunityKey": "guidance",
               "immunity": {
                 "duration": {
                   "value": 1,
@@ -8026,7 +8063,11 @@
             "into": "strike",
             "cost": "included"
           },
-          "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it.",
+          "allyResistance": {
+            "base": 2,
+            "addLevel": true
+          },
+          "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it. Nimble Reprisal: you can instead make a ranged Strike (foe in range and in your aura), and if the foe is within 5 feet of your reach you can Step before the melee Strike.",
           "traits": [
             "Champion"
           ]
