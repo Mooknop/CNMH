@@ -174,4 +174,135 @@ describe('TargetRollResolver', () => {
       ])
     );
   });
+
+  // ── degree-of-success effect text (#222) ──────────────────────────────────
+
+  const fearDegrees = {
+    'Critical Success': 'The target is unaffected.',
+    'Success': 'The target is frightened 1.',
+    'Failure': 'The target is frightened 2.',
+    'Critical Failure': 'The target is frightened 3 and fleeing.',
+  };
+
+  test('renders authored degree text next to the computed degree', () => {
+    render(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        degrees={fearDegrees}
+      />
+    );
+    enterD20(10); // total 15 = AC → Hit → 'Success' text
+    expect(screen.getByText('The target is frightened 1.')).toBeInTheDocument();
+  });
+
+  test('degree text renders on misses too', () => {
+    render(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        degrees={fearDegrees}
+      />
+    );
+    enterD20(5); // total 10 < AC → Miss → 'Failure' text
+    expect(screen.getByText('The target is frightened 2.')).toBeInTheDocument();
+  });
+
+  test('no degrees prop → no degree text (legacy output unchanged)', () => {
+    const { container } = render(
+      <TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5} />
+    );
+    enterD20(10);
+    expect(container.querySelector('.trr-degree-text')).toBeNull();
+    expect(container.querySelector('.dmg-panel')).toBeNull();
+  });
+
+  // ── damage step (#222) ────────────────────────────────────────────────────
+
+  const damageProfile = {
+    expression: '2d6+4',
+    typeLabel: null,
+    riders: [
+      { id: 'ie', label: "Implement's Empowerment", bonus: { flat: 4 }, defaultOn: true },
+      {
+        id: 'exploit-weakness', label: 'weakness (fire 5)',
+        weakness: 5, appliesToEntryIds: ['cbt-goblin'], defaultOn: true,
+      },
+    ],
+  };
+
+  function enterDamage(value) {
+    fireEvent.change(screen.getByLabelText(/rolled damage total/i), { target: { value: String(value) } });
+  }
+
+  test('damage panel appears only after a hit', () => {
+    const { container } = render(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={damageProfile}
+      />
+    );
+    expect(container.querySelector('.dmg-panel')).toBeNull();
+    enterD20(5); // miss
+    expect(container.querySelector('.dmg-panel')).toBeNull();
+    enterD20(10); // hit
+    expect(container.querySelector('.dmg-panel')).not.toBeNull();
+    expect(screen.getByText('2d6+4')).toBeInTheDocument();
+  });
+
+  test('hit: entered total + toggled riders + weakness flow into getResults()', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={damageProfile}
+      />
+    );
+    enterD20(10); // hit
+    enterDamage(9);
+    // 9 + 4 (rider) + 5 (weakness, matching entry) = 18
+    expect(ref.current.getResults()[0].damage).toMatchObject({ entered: 9, final: 18 });
+  });
+
+  test('crit doubles before weakness; the ×2 toggle disables doubling', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={damageProfile}
+      />
+    );
+    enterD20(20); // crit
+    enterDamage(9);
+    // (9 + 4) × 2 + 5 = 31
+    expect(ref.current.getResults()[0].damage.final).toBe(31);
+    fireEvent.click(screen.getByRole('checkbox', { name: /crit ×2/i }));
+    // 9 + 4 + 5 = 18
+    expect(ref.current.getResults()[0].damage.final).toBe(18);
+  });
+
+  test('unticking a rider drops it from the total', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={damageProfile}
+      />
+    );
+    enterD20(10);
+    enterDamage(9);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Implement's Empowerment/i }));
+    // 9 + 5 weakness only
+    expect(ref.current.getResults()[0].damage.final).toBe(14);
+  });
+
+  test('damage is null on results without an entered total', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        damage={damageProfile}
+      />
+    );
+    enterD20(10);
+    expect(ref.current.getResults()[0].damage).toBeNull();
+  });
 });

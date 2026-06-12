@@ -1,7 +1,9 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import DamagePanel from './DamagePanel';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { defenseDC, DEFENSE_LABELS, DEFENSE_OPTIONS } from '../../utils/defense';
 import { formatModifier } from '../../utils/CharacterUtils';
+import { computeTargetDamage } from '../../utils/damage';
 import './TargetRollResolver.css';
 
 // Degree labels differ by context: AC uses attack terminology, saves use save terminology.
@@ -23,6 +25,14 @@ function degreeLabels(defense) {
   return defense === 'ac' ? DEGREE_LABELS_AC : DEGREE_LABELS_SAVE;
 }
 
+// Authored degree-text maps (ability.degrees) key on the rulebook headings.
+const DEGREE_TEXT_KEYS = {
+  criticalSuccess: 'Critical Success',
+  success:         'Success',
+  failure:         'Failure',
+  criticalFailure: 'Critical Failure',
+};
+
 /**
  * Inline roll-resolver for the UseAbilityModal. The player enters a RAW d20 face;
  * the component adds `rollBonus` to compute the total and auto-detects nat 20 / nat 1
@@ -36,11 +46,25 @@ function degreeLabels(defense) {
  * @param {Array}       enemyTargets  - encounter entries (kind:'enemy', with defenses)
  * @param {string}      targetDefense - 'ac'|'fortitude'|'reflex'|'will'|'' ('' = show override)
  * @param {number|null} rollBonus     - actor's net bonus to add to the raw d20; null = manual-total mode
+ * @param {Object}      [damage]      - damage profile (buildDamageProfile, #222); shows the
+ *                                      damage entry panel after a hit/crit when present
+ * @param {Object}      [degrees]     - authored degree-of-success text map (ability.degrees)
  * @param {object}      ref           - forwarded ref; exposes { getResults() }
  */
-const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '', rollBonus = null }, ref) => {
+const TargetRollResolver = forwardRef(({
+  enemyTargets = [],
+  targetDefense = '',
+  rollBonus = null,
+  damage = null,
+  degrees = null,
+}, ref) => {
   const [d20Input,       setD20Input]       = useState('');
   const [defenseOverride, setDefenseOverride] = useState('ac');
+
+  // Damage step state (#222) — only meaningful when a damage profile is passed.
+  const [dmgInput,   setDmgInput]   = useState('');
+  const [riderState, setRiderState] = useState({});
+  const [critDouble, setCritDouble] = useState(true);
 
   const effectiveDefense = targetDefense || defenseOverride;
 
@@ -53,6 +77,8 @@ const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '', 
   const total   = hasD20 ? (rollBonus !== null ? d20 + rollBonus : d20) : NaN;
   const d20face = hasD20 ? d20 : 10; // 10 is the neutral face (no degree shift)
 
+  const enteredDamage = parseInt(dmgInput, 10);
+
   const computeResults = () => {
     if (!hasD20) return null;
     return enemyTargets.map((entry) => {
@@ -60,7 +86,17 @@ const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '', 
       const degree = dc != null
         ? computeSaveDegree({ d20: d20face, total, dc })
         : null;
-      return { entryId: entry.entryId, name: entry.name, dc, total, degree };
+      const dmg = damage
+        ? computeTargetDamage({
+            entered: isNaN(enteredDamage) ? null : enteredDamage,
+            degree,
+            riders: damage.riders,
+            riderState,
+            entryId: entry.entryId,
+            critDouble,
+          })
+        : null;
+      return { entryId: entry.entryId, name: entry.name, dc, total, degree, damage: dmg };
     });
   };
 
@@ -130,6 +166,7 @@ const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '', 
         <div className="trr-results">
           {results.map((r) => {
             const info = r.degree ? labels[r.degree] : null;
+            const degreeText = r.degree ? degrees?.[DEGREE_TEXT_KEYS[r.degree]] : null;
             return (
               <div
                 key={r.entryId}
@@ -144,10 +181,28 @@ const TargetRollResolver = forwardRef(({ enemyTargets = [], targetDefense = '', 
                 ) : (
                   <span className="trr-no-dc">no DC available</span>
                 )}
+                {degreeText && (
+                  <span className="trr-degree-text">{degreeText}</span>
+                )}
               </div>
             );
           })}
         </div>
+      )}
+
+      {damage && results && (
+        <DamagePanel
+          profile={damage}
+          hitResults={results.filter(
+            (r) => r.degree === 'success' || r.degree === 'criticalSuccess'
+          )}
+          entered={dmgInput}
+          onEntered={setDmgInput}
+          riderState={riderState}
+          onToggleRider={(id, on) => setRiderState((cur) => ({ ...cur, [id]: on }))}
+          critDouble={critDouble}
+          onCritDouble={setCritDouble}
+        />
       )}
     </div>
   );

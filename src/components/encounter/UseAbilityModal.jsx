@@ -15,12 +15,14 @@ import { useTargeting } from '../../hooks/useTargeting';
 import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
+import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, abilityNeedsPicker } from '../../utils/applyAbility';
 import { immunityConfigFor } from '../../utils/immunity';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
+import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -79,6 +81,7 @@ const UseAbilityModal = ({
     useTurnState(character?.id || 'nobody');
   const { gateFor, record: recordFreqUse, clear: clearFreqLock } =
     useFrequency(character?.id || 'nobody');
+  const { exploitFor } = useExploitVulnerability();
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
@@ -254,6 +257,21 @@ const UseAbilityModal = ({
     ? enemyWithDefenses
     : [];
 
+  // Damage step (#222) — single-roll AC attacks only this slice (multi-ray and
+  // chained strikes keep their existing flow). The profile carries the dice
+  // hint plus rider toggles, including the actor's active exploit weakness.
+  const damageProfile = (rollProfile.mode === 'actor-roll'
+    && effectiveDefense === 'ac'
+    && !isMultiRay
+    && resolverTargets.length > 0)
+    ? buildDamageProfile(ability, character, {
+        chosenActions: typeof castCost === 'number' ? castCost : null,
+        exploit: exploitFor(character.id),
+        enemyEntries: resolverTargets,
+        order,
+      })
+    : null;
+
   // For target-save: enemy targets whose save mod we can read (used in the save request).
   const saveTargets = rollProfile.mode === 'target-save'
     ? selectedEntries.filter((e) => e.kind === 'enemy')
@@ -376,10 +394,14 @@ const UseAbilityModal = ({
         g.results.forEach((r) => {
           if (!r.degree) return;
           const degreeLabel = degreeMap[r.degree] || r.degree;
+          // Damage step result (#222): per-target total with the rider breakdown.
+          const dmgSuffix = r.damage?.final != null
+            ? ` · damage ${formatDamageBreakdown(r.damage)}`
+            : '';
           appendLog({
             type:   'action',
             charId: character.id,
-            text:   `${character.name} ${effectiveVerb} ${ability.name}${rayPrefix} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}`,
+            text:   `${character.name} ${effectiveVerb} ${ability.name}${rayPrefix} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}${dmgSuffix}`,
           });
         });
       });
@@ -593,6 +615,8 @@ const UseAbilityModal = ({
         enemyTargets={resolverTargets}
         targetDefense={effectiveDefense}
         rollBonus={rollProfile.bonus}
+        damage={damageProfile}
+        degrees={ability.degrees}
       />
     );
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {
