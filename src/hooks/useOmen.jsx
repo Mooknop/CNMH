@@ -26,7 +26,22 @@ export const useOmen = (charId) => {
     [setOmenState]
   );
 
-  return { suit: omenState?.suit || null, setSuit, clear };
+  // Failed Harrow Cast flat check (#227): the omen is lost at the END of the
+  // turn, not immediately — the turn tracker clears flagged omens on submit.
+  // setSuit/clear write a fresh shape, so drawing anew or spending the omen
+  // (Avoid Dire Fate) drops the flag with it.
+  const flagPendingLoss = useCallback(
+    () => setOmenState((cur) => ({ ...(cur || IDLE_OMEN), pendingLoss: true, ts: Date.now() })),
+    [setOmenState]
+  );
+
+  return {
+    suit: omenState?.suit || null,
+    pendingLoss: !!omenState?.pendingLoss,
+    setSuit,
+    clear,
+    flagPendingLoss,
+  };
 };
 
 export default useOmen;

@@ -31,6 +31,8 @@ import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } fro
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
+import { HARROW_CAST_DC } from '../../utils/harrow';
+import { applyHealing } from '../../utils/consumables';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
 import { parseFrequency, freqKeyFor, lockMessage } from '../../utils/frequency';
@@ -707,6 +709,68 @@ const UseAbilityModal = ({
             saveMod: e.defenses?.saves?.[chainResults.rollProfile.defense] ?? null,
           })),
         });
+      }
+
+      // Harrow Casting (#227): the drawn card, the flat check, and the suit's
+      // mechanics. Key/Star effects are real catalog entries (until the start
+      // of the caster's next turn); Shields/Stars healing is player-rolled;
+      // Hammers stays a manual rider note until chained-spell damage (#281).
+      const hc = chainResults.harrow;
+      if (hc?.drawnSuit) {
+        const flatText = hc.flatD20 != null
+          ? ` — flat check DC ${HARROW_CAST_DC}: ${hc.flatD20} (${hc.flatPassed ? 'passed' : 'failed'})`
+          : '';
+        appendLog({
+          type:   'action',
+          charId: character.id,
+          text:   `${character.name} draws ${hc.drawnSuit}${hc.match ? ' — omen match!' : ''}${flatText}`,
+        });
+        if (hc.flatPassed === false) {
+          omen.flagPendingLoss();
+          appendLog({
+            type: 'system',
+            text: `${character.name}'s harrow omen (${omen.suit || '—'}) will be lost at the end of their turn (failed Harrow Cast flat check)`,
+          });
+        }
+        const heff = hc.effect;
+        if (heff?.kind === 'self-effect') {
+          applyAbility({
+            ability: { name: `Harrow Casting — ${hc.drawnSuit}`, effects: [{ effectId: heff.effectId, applyTo: 'self', duration: { until: 'caster-turn-start' } }] },
+            caster: character, casterEntryId, targetCharIds: [], enemyTargetNames: [],
+            order, encounter, characters, getState, sendUpdate, appendLog,
+            verb: 'gains', nowSecs,
+          });
+        } else if (heff?.kind === 'self-heal') {
+          if (hc.healEntered != null) {
+            applyHealing({
+              target: character, amount: hc.healEntered, getState, sendUpdate, appendLog,
+              logText: `${character.name} healed ${hc.healEntered} HP (Harrow Casting — ${hc.drawnSuit})`,
+            });
+          } else {
+            appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
+          }
+        } else if (heff?.kind === 'target-heal') {
+          const healTargetId = targetCharIds[0] || null;
+          const healTarget = healTargetId ? characters.find((c) => c.id === healTargetId) : null;
+          if (hc.healEntered != null && healTarget) {
+            applyHealing({
+              target: healTarget, amount: hc.healEntered, getState, sendUpdate, appendLog,
+              logText: `${healTarget.name} healed ${hc.healEntered} HP (Harrow Casting — ${hc.drawnSuit})`,
+            });
+          } else {
+            appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
+          }
+          if (heff.effectId && healTargetId) {
+            applyAbility({
+              ability: { name: `Harrow Casting — ${hc.drawnSuit}`, effects: [{ effectId: heff.effectId, applyTo: 'ally', duration: { until: 'caster-turn-start' } }] },
+              caster: character, casterEntryId, targetCharIds: [healTargetId], enemyTargetNames: [],
+              order, encounter, characters, getState, sendUpdate, appendLog,
+              verb: 'grants', nowSecs,
+            });
+          }
+        } else if (heff) {
+          appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
+        }
       }
     }
 

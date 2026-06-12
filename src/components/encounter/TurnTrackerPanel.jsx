@@ -4,6 +4,7 @@ import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
+import { useOmen } from '../../hooks/useOmen';
 import { useSession } from '../../contexts/SessionContext';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
@@ -80,6 +81,10 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Kinetic aura (#228) — Dismiss is one of the three ways the aura ends.
   // Unlike a raised shield it persists across turns, so no turn-start reset.
   const { active: auraActive, deactivate: deactivateAura } = useAura(charId);
+
+  // Harrow omen (#227) — a failed Harrow Cast flat check flags the omen for
+  // loss at the END of the turn; submitting the turn is that boundary.
+  const omen = useOmen(charId);
 
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -205,6 +210,15 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     if (!canSubmit) return;
 
     cancelMove(); // close any open move UI when the turn ends
+
+    // A failed Harrow Cast flat check loses the omen at end of turn (#227).
+    if (omen.pendingLoss && omen.suit) {
+      appendLog({
+        type: 'system',
+        text: `${characterName}'s harrow omen (${omen.suit}) is lost (failed Harrow Cast flat check)`,
+      });
+      omen.clear();
+    }
 
     // Determine next actor BEFORE advancing so we can reset their state.
     const { currentTurnIndex: nextIdx } = nextTurnIndex(

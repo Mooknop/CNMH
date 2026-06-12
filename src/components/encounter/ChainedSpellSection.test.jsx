@@ -339,3 +339,86 @@ describe('ChainedSpellSection rank picker', () => {
     expect(ref.current.getResults().castRank).toBe(1); // back to first enabled
   });
 });
+
+describe('ChainedSpellSection — Harrow Cast (#227)', () => {
+  const harrowCastChain = { into: 'spell', cost: 'added', spellFilter: 'any', harrow: true };
+
+  const renderHarrow = (ref) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={character}
+      chain={harrowCastChain}
+      parentCost={1}
+      enemyTargets={[]}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => localStorage.clear());
+
+  it('non-harrow chains render no Harrow Cast group', () => {
+    render(
+      <ChainedSpellSection
+        character={character}
+        chain={reachChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(screen.queryByRole('group', { name: 'Harrow Cast' })).toBeNull();
+  });
+
+  it('renders the suit picker and reports the drawn suit + effect via getResults', () => {
+    const ref = createRef();
+    renderHarrow(ref);
+    expect(screen.getByRole('group', { name: 'Harrow Cast' })).toBeInTheDocument();
+    expect(ref.current.getResults().harrow).toMatchObject({ drawnSuit: null, omenSuit: null });
+
+    fireEvent.click(screen.getByLabelText('drawn-Keys'));
+    const harrow = ref.current.getResults().harrow;
+    expect(harrow.drawnSuit).toBe('Keys');
+    expect(harrow.match).toBe(false);
+    expect(harrow.effect).toMatchObject({ kind: 'self-effect', effectId: 'harrow-key-ward' });
+  });
+
+  it('detects an omen match and upgrades the suit effect', () => {
+    localStorage.setItem('cnmh_omen_Jade', JSON.stringify({ suit: 'Keys', ts: 1 }));
+    const ref = createRef();
+    renderHarrow(ref);
+
+    fireEvent.click(screen.getByLabelText('drawn-Keys'));
+    const harrow = ref.current.getResults().harrow;
+    expect(harrow.match).toBe(true);
+    expect(harrow.effect.effectId).toBe('harrow-key-ward-2');
+    expect(screen.getByText(/omen match/)).toBeInTheDocument();
+  });
+
+  it('computes the DC 11 flat check from the entered d20', () => {
+    const ref = createRef();
+    renderHarrow(ref);
+    const input = screen.getByLabelText('harrow flat check d20');
+
+    fireEvent.change(input, { target: { value: '10' } });
+    expect(screen.getByText(/failed — omen lost at end of turn/)).toBeInTheDocument();
+    expect(ref.current.getResults().harrow.flatPassed).toBe(false);
+
+    fireEvent.change(input, { target: { value: '11' } });
+    expect(screen.getByText('passed')).toBeInTheDocument();
+    expect(ref.current.getResults().harrow).toMatchObject({ flatD20: 11, flatPassed: true });
+  });
+
+  it('shows the healing input for Shields and carries the entered total', () => {
+    const ref = createRef();
+    renderHarrow(ref);
+    expect(screen.queryByLabelText('harrow healing rolled')).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('drawn-Shields'));
+    fireEvent.change(screen.getByLabelText('harrow healing rolled'), { target: { value: '9' } });
+    const harrow = ref.current.getResults().harrow;
+    expect(harrow.effect.kind).toBe('self-heal');
+    expect(harrow.healEntered).toBe(9);
+  });
+});
