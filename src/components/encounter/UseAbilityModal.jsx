@@ -1042,7 +1042,8 @@ const UseAbilityModal = ({
             {hasChainStrike ? (
               <>
                 <h3 className="ct-section-title" style={{ marginTop: '0.75rem' }}>
-                  {ability.chain.modes?.includes('flurry') ? 'Strike or Flurry of Blows' : 'Strike'}
+                  {ability.chain.heading
+                    || (ability.chain.modes?.includes('flurry') ? 'Strike or Flurry of Blows' : 'Strike')}
                   <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--color-text-muted)' }}>
                     (included in {effectiveCost})
                   </span>
