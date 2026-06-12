@@ -7451,11 +7451,13 @@
                 "Spellshape"
               ],
               "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn.",
+              "requiresOmen": true,
               "chain": {
                 "into": "spell",
                 "cost": "added",
                 "spellFilter": "any",
-                "modifier": "Draw a Harrow card before the spell; DC 11 flat check or lose your Harrow Omen"
+                "harrow": true,
+                "modifier": "Draw a Harrow card before the spell; DC 11 flat check or lose your Harrow Omen at the end of your turn"
               }
             }
           ],
@@ -9877,6 +9879,82 @@
       "name": "Fly (spell)",
       "description": "Character gains a fly Speed equal to their land Speed. Track manually.",
       "modifiers": []
+    },
+    {
+      "id": "harrow-key-ward",
+      "name": "Harrow Casting — Key",
+      "description": "+1 status bonus to AC and all saving throws until the start of your next turn (Harrow Casting, Key drawn).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "harrow-key-ward-2",
+      "name": "Harrow Casting — Key (omen match)",
+      "description": "+2 status bonus to AC and all saving throws until the start of your next turn (Harrow Casting, Key drawn matching the Keys omen).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "harrow-star-saves",
+      "name": "Harrow Casting — Star (omen match)",
+      "description": "+2 status bonus to all saving throws until the start of the caster's next turn (Harrow Casting, Star drawn matching the Stars omen).",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "heroism-1",
