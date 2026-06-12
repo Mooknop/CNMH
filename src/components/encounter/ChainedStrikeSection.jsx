@@ -10,6 +10,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { mapPenaltyFor } from '../../utils/map';
+import { buildDamageProfile } from '../../utils/damage';
 
 const ChainedStrikeSection = forwardRef(({
   character,
@@ -18,6 +19,8 @@ const ChainedStrikeSection = forwardRef(({
   conditions,
   effects,
   mapStep = 0,
+  exploit = null,
+  order = [],
 }, ref) => {
   const { strikes } = useCharacter(character);
 
@@ -57,6 +60,19 @@ const ChainedStrikeSection = forwardRef(({
   const augmentedDamage = selectedStrike
     ? (chain.damageBonus ? `${selectedStrike.damage} + ${chain.damageBonus}` : selectedStrike.damage)
     : '';
+
+  // Damage step (#222): profile from the selected strike (rider scaling stays on
+  // the strike's own dice), with the chain-augmented expression as the hint.
+  // Both flurry resolvers share the profile; each owns its own entered total.
+  const damageProfile = (() => {
+    if (!selectedStrike) return null;
+    const profile = buildDamageProfile(selectedStrike, character, {
+      exploit,
+      enemyEntries: enemyTargets,
+      order,
+    });
+    return profile ? { ...profile, expression: augmentedDamage } : null;
+  })();
 
   useImperativeHandle(ref, () => ({
     getResults: () => {
@@ -134,6 +150,7 @@ const ChainedStrikeSection = forwardRef(({
         enemyTargets={enemyTargets}
         targetDefense="ac"
         rollBonus={augmentedBonus}
+        damage={damageProfile}
       />
 
       {selectedMode === 'flurry' && (
@@ -146,6 +163,7 @@ const ChainedStrikeSection = forwardRef(({
             enemyTargets={enemyTargets}
             targetDefense="ac"
             rollBonus={strike2Bonus}
+            damage={damageProfile}
           />
         </div>
       )}

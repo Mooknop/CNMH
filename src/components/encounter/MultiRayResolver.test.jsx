@@ -11,7 +11,7 @@ vi.mock('./TargetRollResolver', () => {
   const { forwardRef, useImperativeHandle } = require('react');
   const React = require('react');
   return {
-    default: forwardRef(({ enemyTargets, rollBonus }, ref) => {
+    default: forwardRef(({ enemyTargets, rollBonus, damage, degrees }, ref) => {
       const target = enemyTargets[0];
       useImperativeHandle(ref, () => ({
         getResults: () =>
@@ -22,6 +22,8 @@ vi.mock('./TargetRollResolver', () => {
       return React.createElement('div', {
         'data-testid': 'resolver',
         'data-target': target?.name,
+        'data-damage': damage ? damage.expression : '',
+        'data-degrees': degrees ? 'yes' : '',
       }, `bonus=${rollBonus}`);
     }),
   };
@@ -70,6 +72,20 @@ describe('MultiRayResolver', () => {
     expect(res[0]).toMatchObject({ rayIndex: 0 });
     expect(res[0].results[0]).toMatchObject({ name: 'Goblin', degree: 'success', total: 19 });
     expect(res[1].results[0]).toMatchObject({ name: 'Orc' });
+  });
+
+  it('forwards the damage profile and degree map to every ray (#222)', () => {
+    render(
+      <MultiRayResolver
+        rayCount={2} enemyTargets={targets} rollBonus={9}
+        damage={{ expression: '2d6', riders: [] }}
+        degrees={{ Success: 'zap' }}
+      />
+    );
+    for (const resolver of screen.getAllByTestId('resolver')) {
+      expect(resolver).toHaveAttribute('data-damage', '2d6');
+      expect(resolver).toHaveAttribute('data-degrees', 'yes');
+    }
   });
 
   it('drops rays with no d20 entered', () => {

@@ -14,7 +14,7 @@ vi.mock('../../utils/rollResolution', () => ({
 vi.mock('./TargetRollResolver', () => {
   const { forwardRef, useImperativeHandle } = require('react');
    
-  return { default: forwardRef(({ enemyTargets, rollBonus }, ref) => {
+  return { default: forwardRef(({ enemyTargets, rollBonus, damage }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => enemyTargets.map((e) => ({
         entryId: e.entryId,
@@ -25,7 +25,11 @@ vi.mock('./TargetRollResolver', () => {
       })),
     }));
     const React = require('react');
-    return React.createElement('div', { 'data-testid': `resolver-${enemyTargets.length}` }, `bonus=${rollBonus}`);
+    return React.createElement('div', {
+      'data-testid': `resolver-${enemyTargets.length}`,
+      'data-damage-expression': damage ? damage.expression : '',
+      'data-damage-riders': damage ? damage.riders.map((r) => r.id).join(',') : '',
+    }, `bonus=${rollBonus}`);
   }) };
 });
 
@@ -55,6 +59,58 @@ const strikeChain = {
   attackBonus: 1,
   damageBonus: '1d6',
 };
+
+describe('ChainedStrikeSection — damage step (#222)', () => {
+  it('passes a damage profile with the chain-augmented expression to the resolver', () => {
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={strikeChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={effects}
+      />
+    );
+    expect(screen.getByTestId('resolver-1'))
+      .toHaveAttribute('data-damage-expression', '1d6+4 + 1d6');
+  });
+
+  it("includes the actor's exploit weakness rider for matching targets", () => {
+    const exploit = { targetEntryId: 'e1', targetName: 'Goblin', type: 'antithesis', value: 4 };
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={strikeChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={effects}
+        exploit={exploit}
+        order={enemyTargets}
+      />
+    );
+    expect(screen.getByTestId('resolver-1'))
+      .toHaveAttribute('data-damage-riders', 'exploit-weakness');
+  });
+
+  it('flurry passes the same profile to both resolvers', () => {
+    const flurryChain = { ...strikeChain, modes: ['strike', 'flurry'] };
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={flurryChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={effects}
+      />
+    );
+    fireEvent.click(screen.getByLabelText('Flurry of Blows'));
+    const resolvers = screen.getAllByTestId('resolver-1');
+    expect(resolvers).toHaveLength(2);
+    for (const r of resolvers) {
+      expect(r).toHaveAttribute('data-damage-expression', '1d6+4 + 1d6');
+    }
+  });
+});
 
 describe('ChainedStrikeSection', () => {
   it('filters strikes by trait — only Unarmed strikes shown', () => {

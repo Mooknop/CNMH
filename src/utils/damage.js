@@ -10,6 +10,7 @@
 // Kept side-effect-free so the modal, resolver, and tests share the same algebra.
 
 import { getAbilityModifier } from './CharacterUtils';
+import { heightenedEntriesFor } from './spellHeighten';
 
 // '2d6+3' → { dice: [{count: 2, size: 6}], flat: 3 }; null on anything that
 // isn't plain dice notation (damage strings are hand-curated; skip, don't throw).
@@ -39,6 +40,25 @@ export const weaponDiceCount = (expression) => {
   const parsed = parseDamageExpression(expression);
   if (!parsed) return 0;
   return parsed.dice.reduce((sum, d) => sum + d.count, 0);
+};
+
+// Sum two expressions, the second applied `times` over (heightening repeats
+// relative steps): '2d12' + '1d12'×2 → '4d12'; '1d4' + '1'×2 → '1d4+2'.
+// Unparseable input on either side returns the base unchanged.
+export const addExpressions = (base, add, times = 1) => {
+  const a = parseDamageExpression(base);
+  const b = parseDamageExpression(typeof add === 'number' ? String(add) : add);
+  if (!a || !b || times < 1) return base;
+  const dice = a.dice.map((d) => ({ ...d }));
+  for (const bd of b.dice) {
+    const existing = dice.find((d) => d.size === bd.size);
+    if (existing) existing.count += bd.count * times;
+    else dice.push({ count: bd.count * times, size: bd.size });
+  }
+  const flat = a.flat + b.flat * times;
+  const diceStr = dice.map((d) => `${d.count}d${d.size}`).join('+');
+  if (!diceStr) return String(flat);
+  return flat ? `${diceStr}${flat > 0 ? '+' : ''}${flat}` : diceStr;
 };
 
 // '1d4' → '2d4' — crit-doubled persistent dice are rolled doubled, not ×2'd.
@@ -185,29 +205,63 @@ const exploitRider = (exploit, enemyEntries, order) => {
  * riders that apply to this use. Returns null when the ability carries no
  * usable damage signal at all (no expression and no riders).
  *
+ * Heightening: `damageData.heightened` maps cast-rank keys ('+1', '3rd' — same
+ * algebra as spell.heightened) to `{ base?, persistent? }` increments. `base`
+ * adds dice to the hint expression; `persistent` adds to every persistent
+ * rider's dice (Shocking Grasp: '+1' → { base: '1d12', persistent: 1 }).
+ *
  * @param {Object}      ability       - strike or spell object
  * @param {Object}      character     - the acting character
  * @param {number|null} chosenActions - effective action count (gates when.actions riders)
+ * @param {number}      [castRank]    - the rank this cast happens at (spells)
  * @param {Object|null} exploit       - the actor's active exploit (useExploitVulnerability)
  * @param {Array}       enemyEntries  - enemy targets shown on the resolver
  * @param {Array}       order         - full encounter order (creatureKey lookups)
  */
 export const buildDamageProfile = (ability, character, {
   chosenActions = null,
+  castRank = undefined,
   exploit = null,
   enemyEntries = [],
   order = [],
 } = {}) => {
   if (!ability) return null;
-  const expression = ability.damageData?.base ?? ability.damage ?? null;
+  let expression = ability.damageData?.base ?? ability.damage ?? null;
   const typeLabel = ability.damageData?.type ?? null;
+
+  // Heightened damage scaling — cumulative entries at this cast rank.
+  const heightenSteps = ability.damageData?.heightened
+    ? heightenedEntriesFor(
+        { heightened: ability.damageData.heightened, level: ability.level },
+        castRank
+      )
+    : [];
+  const persistentBumps = [];
+  for (const step of heightenSteps) {
+    const inc = step.text; // entry value: { base?, persistent? }
+    if (inc?.base && expression) {
+      expression = addExpressions(expression, inc.base, step.times);
+    }
+    if (inc?.persistent != null) {
+      persistentBumps.push({ add: inc.persistent, times: step.times });
+    }
+  }
+
   const ctx = { expression, character };
 
   // Strikes are the abilities built by strikeUtils — they carry a numeric attackMod.
   const isStrike = typeof ability.attackMod === 'number';
 
   const abilityRiders = (ability.damageData?.riders ?? ability.riders ?? [])
-    .filter((r) => r.when?.actions == null || r.when.actions === chosenActions);
+    .filter((r) => r.when?.actions == null || r.when.actions === chosenActions)
+    .map((r) => {
+      if (!r.persistent?.dice || !persistentBumps.length) return r;
+      let dice = r.persistent.dice;
+      for (const bump of persistentBumps) {
+        dice = addExpressions(dice, bump.add, bump.times);
+      }
+      return { ...r, persistent: { ...r.persistent, dice } };
+    });
 
   const characterRiders = (character?.damageRiders ?? [])
     .filter((r) => r.appliesTo !== 'strikes' || isStrike);

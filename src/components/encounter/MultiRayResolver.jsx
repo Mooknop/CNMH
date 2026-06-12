@@ -20,6 +20,8 @@ const MultiRayResolver = forwardRef(({
   enemyTargets = [],
   targetDefense = 'ac',
   rollBonus = null,
+  damage = null,
+  degrees = null,
 }, ref) => {
   const rayRefs = useRef([]);
   // Per-ray chosen target entryId; unset entries fall back to defaultTargetId(i).
@@ -75,6 +77,8 @@ const MultiRayResolver = forwardRef(({
               enemyTargets={[target]}
               targetDefense={targetDefense}
               rollBonus={rollBonus}
+              damage={damage}
+              degrees={degrees}
             />
           </div>
         );
