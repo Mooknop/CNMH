@@ -59,13 +59,25 @@ vi.mock('../../hooks/useTargeting', () => ({
     toggleTarget: vi.fn(),
   }),
 }));
+// Per-test cast options (heightened-cast tests set a higher-rank slot).
+let mockCastOptions = [];
 vi.mock('../../hooks/useCastingResources', () => ({
   useCastingResources: () => ({
-    optionsFor: () => [],
+    optionsFor: () => mockCastOptions,
     spend: () => ({ label: '' }),
     slots: { remainingFor: () => 0, spend: vi.fn() },
   }),
 }));
+
+// Chained-strike section stub — modal logging tests inject its results here.
+const chainStrikeMock = vi.hoisted(() => ({ results: null }));
+vi.mock('./ChainedStrikeSection', () => {
+  const { forwardRef, useImperativeHandle, createElement } = require('react');
+  return { default: forwardRef((props, ref) => {
+    useImperativeHandle(ref, () => ({ getResults: () => chainStrikeMock.results }));
+    return createElement('div', { 'data-testid': 'chained-strike-section' });
+  }) };
+});
 vi.mock('../../hooks/useExploitVulnerability', () => ({
   useExploitVulnerability: () => ({ exploitFor: () => mockExploit }),
 }));
@@ -114,6 +126,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockRollProfile = { mode: 'actor-roll', bonus: 5, defense: 'ac', dc: null };
   mockExploit = null;
+  mockCastOptions = [];
+  chainStrikeMock.results = null;
 });
 
 describe('UseAbilityModal — damage step (#222)', () => {
@@ -201,6 +215,113 @@ describe('UseAbilityModal — damage step (#222)', () => {
     expect(loggedLines()).toContainEqual(
       expect.stringContaining('1d6 persistent bleed (DC 15 flat to end)')
     );
+  });
+
+  it('heightened cast scales the dice hint and persistent rider (#222 slice 2)', () => {
+    mockCastOptions = [{ type: 'slot', rank: 3, enabled: true, label: 'Rank 3 slot' }];
+    const shockingGrasp = {
+      name: 'Shocking Grasp',
+      level: 1,
+      actions: 'Two Actions',
+      traits: ['Attack', 'Electricity'],
+      targetDefense: 'ac',
+      damageData: {
+        base: '2d12',
+        type: 'electricity',
+        heightened: { '+1': { base: '1d12', persistent: 1 } },
+        riders: [{
+          id: 'sg-metal', label: 'Persistent electricity (metal armor)',
+          persistent: { dice: '1d4', type: 'electricity' }, defaultOn: true,
+        }],
+      },
+    };
+    render(<UseAbilityModal {...props} ability={shockingGrasp} verb="Cast" />);
+    enterD20(10); // hit
+    // 2 steps above native: 2d12 + 2×1d12 = 4d12; persistent 1d4 + 2
+    expect(screen.getByText(/4d12 electricity/)).toBeInTheDocument();
+    enterDamage(20);
+    confirm();
+    expect(loggedLines()).toContainEqual(
+      expect.stringContaining('1d4+2 persistent electricity (DC 15 flat to end)')
+    );
+  });
+
+  it('multi-ray attack spells get a damage entry per ray', () => {
+    const scorchingRays = {
+      name: 'Twin Rays',
+      level: 2,
+      actions: 'Two Actions',
+      traits: ['Attack', 'Fire'],
+      targetDefense: 'ac',
+      rollCount: 2,
+      damageData: { base: '2d6', type: 'fire' },
+    };
+    render(<UseAbilityModal {...props} ability={scorchingRays} verb="Cast" />);
+    const d20s = screen.getAllByLabelText(/raw d20/i);
+    expect(d20s).toHaveLength(2);
+    fireEvent.change(d20s[0], { target: { value: '10' } }); // hit
+    fireEvent.change(d20s[1], { target: { value: '20' } }); // crit
+    const dmgInputs = screen.getAllByLabelText(/rolled damage total/i);
+    expect(dmgInputs).toHaveLength(2);
+    fireEvent.change(dmgInputs[0], { target: { value: '7' } });
+    fireEvent.change(dmgInputs[1], { target: { value: '9' } });
+    confirm();
+    expect(loggedLines()).toContainEqual(
+      expect.stringMatching(/ray 1 .*damage 7/)
+    );
+    expect(loggedLines()).toContainEqual(
+      expect.stringMatching(/ray 2 .*damage 18 \(9 ×2\)/)
+    );
+  });
+
+  it('chained strikes log real per-target totals; flurry adds a combined line', () => {
+    const dmg = (final, base) => ({
+      entered: base, final,
+      parts: { base, riders: [], crit: false, weaknesses: [] },
+      persistent: [],
+    });
+    chainStrikeMock.results = {
+      mode: 'flurry',
+      strikeName: 'Unarmed Strike',
+      attackBonus: 9,
+      damage: '1d6+4',
+      rolls: [
+        [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 19, degree: 'success', damage: dmg(10, 10) }],
+        [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 16, degree: 'success', damage: dmg(13, 13) }],
+      ],
+    };
+    const flurryAbility = {
+      name: 'Inner Upheaval',
+      actions: 'Two Actions',
+      chain: { into: 'strike', modes: ['flurry'] },
+    };
+    render(<UseAbilityModal {...props} ability={flurryAbility} />);
+    confirm();
+    expect(loggedLines()).toContainEqual(expect.stringContaining('Flurry of Blows (1) vs Goblin (AC 15): 19 → Hit · damage 10'));
+    expect(loggedLines()).toContainEqual(expect.stringContaining('Flurry of Blows (2) vs Goblin (AC 15): 16 → Hit · damage 13'));
+    expect(loggedLines()).toContainEqual(
+      'Flurry of Blows combined vs Goblin: 23 damage (apply resistance/weakness once)'
+    );
+  });
+
+  it('chained strikes without an entered total keep the dice-string fallback', () => {
+    chainStrikeMock.results = {
+      mode: 'strike',
+      strikeName: 'Unarmed Strike',
+      attackBonus: 9,
+      damage: '1d6+4 + 1d6',
+      rolls: [
+        [{ entryId: 'e-gob', name: 'Goblin', dc: 15, total: 19, degree: 'success', damage: null }],
+      ],
+    };
+    const chainAbility = {
+      name: 'Inner Upheaval',
+      actions: 'Two Actions',
+      chain: { into: 'strike', modes: ['strike'] },
+    };
+    render(<UseAbilityModal {...props} ability={chainAbility} />);
+    confirm();
+    expect(loggedLines()).toContainEqual(expect.stringContaining('· dmg 1d6+4 + 1d6'));
   });
 
   it('degree text from the ability data renders inline with the result', () => {

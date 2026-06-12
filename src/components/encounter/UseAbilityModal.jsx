@@ -257,15 +257,23 @@ const UseAbilityModal = ({
     ? enemyWithDefenses
     : [];
 
-  // Damage step (#222) — single-roll AC attacks only this slice (multi-ray and
-  // chained strikes keep their existing flow). The profile carries the dice
-  // hint plus rider toggles, including the actor's active exploit weakness.
+  // The rank this cast happens at (#235): the chosen slot option's rank, or
+  // the spell's native rank for free/focus casts. Non-spell actions: none.
+  const directCastRank = selectedCastOption?.rank
+    ?? (effectiveVerb === 'cast' && typeof ability.level === 'number' && ability.level > 0
+      ? ability.level
+      : undefined);
+
+  // Damage step (#222) — AC attacks resolved inline (single-roll and multi-ray;
+  // chained strikes build their own per-strike profile). The profile carries the
+  // dice hint (heightened at the cast rank) plus rider toggles, including the
+  // actor's active exploit weakness.
   const damageProfile = (rollProfile.mode === 'actor-roll'
     && effectiveDefense === 'ac'
-    && !isMultiRay
     && resolverTargets.length > 0)
     ? buildDamageProfile(ability, character, {
         chosenActions: typeof castCost === 'number' ? castCost : null,
+        castRank: directCastRank,
         exploit: exploitFor(character.id),
         enemyEntries: resolverTargets,
         order,
@@ -289,13 +297,6 @@ const UseAbilityModal = ({
   const handleConfirm = () => {
     const rawResults   = resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
-
-    // The rank this cast happens at (#235): the chosen slot option's rank, or
-    // the spell's native rank for free/focus casts. Non-spell actions: none.
-    const directCastRank = selectedCastOption?.rank
-      ?? (effectiveVerb === 'cast' && typeof ability.level === 'number' && ability.level > 0
-        ? ability.level
-        : undefined);
 
     // Normalise resolver output into ray groups so single-roll and multi-ray casts
     // share one logging path. Single-roll returns a flat result array → one group
@@ -407,7 +408,9 @@ const UseAbilityModal = ({
       });
     }
 
-    // Log chained strike results (Inner Upheaval and similar).
+    // Log chained strike results (Inner Upheaval and similar). Results with a
+    // resolved damage entry log the real per-target total (#222); the static
+    // dice string stays as the fallback when no total was entered.
     if (chainResults && hasChainStrike) {
       const strikeLabel = chainResults.mode === 'flurry' ? 'Flurry of Blows' : chainResults.strikeName;
       chainResults.rolls.forEach((rollSet, rollIdx) => {
@@ -417,15 +420,42 @@ const UseAbilityModal = ({
           const degreeLabel = r.degree
             ? ({ criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }[r.degree] || r.degree)
             : null;
+          const dmgText = r.damage?.final != null
+            ? ` · damage ${formatDamageBreakdown(r.damage)}`
+            : ` · dmg ${chainResults.damage}`;
           const resultText = degreeLabel
-            ? `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel} · dmg ${chainResults.damage}`
-            : `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} · dmg ${chainResults.damage}`;
+            ? `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel}${dmgText}`
+            : `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum}${dmgText}`;
           appendLog({ type: 'action', charId: character.id, text: resultText });
         });
         if (!rollSet.length) {
           appendLog({ type: 'action', charId: character.id, text: `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} · dmg ${chainResults.damage}` });
         }
       });
+
+      // Flurry of Blows combines its damage before resistances/weaknesses —
+      // log the per-target sum when both strikes resolved damage on one target.
+      if (chainResults.mode === 'flurry') {
+        const sums = new Map();
+        chainResults.rolls.forEach((rollSet) => {
+          (rollSet || []).forEach((r) => {
+            if (r.damage?.final == null) return;
+            const cur = sums.get(r.entryId) || { name: r.name, total: 0, count: 0 };
+            cur.total += r.damage.final;
+            cur.count += 1;
+            sums.set(r.entryId, cur);
+          });
+        });
+        sums.forEach((s) => {
+          if (s.count > 1) {
+            appendLog({
+              type:   'action',
+              charId: character.id,
+              text:   `Flurry of Blows combined vs ${s.name}: ${s.total} damage (apply resistance/weakness once)`,
+            });
+          }
+        });
+      }
     }
 
     // Push a save request to the GM for target-save abilities.
@@ -608,6 +638,8 @@ const UseAbilityModal = ({
         enemyTargets={resolverTargets}
         targetDefense={effectiveDefense}
         rollBonus={rollProfile.bonus}
+        damage={damageProfile}
+        degrees={ability.degrees}
       />
     ) : (
       <TargetRollResolver
@@ -845,6 +877,8 @@ const UseAbilityModal = ({
                   conditions={activeConditions || []}
                   effects={activeEffects || []}
                   mapStep={mapStep}
+                  exploit={exploitFor(character.id)}
+                  order={order}
                 />
               </>
             ) : hasChainSpell ? (

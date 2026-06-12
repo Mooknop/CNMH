@@ -6,6 +6,7 @@ import {
   parseDamageExpression,
   weaponDiceCount,
   doubleDice,
+  addExpressions,
   riderAmount,
   riderEnabled,
   computeTargetDamage,
@@ -52,6 +53,24 @@ describe('weaponDiceCount / doubleDice', () => {
 
   it('passes unparseable expressions through unchanged', () => {
     expect(doubleDice('??')).toBe('??');
+  });
+});
+
+describe('addExpressions', () => {
+  it('merges dice of the same size', () => {
+    expect(addExpressions('2d12', '1d12')).toBe('3d12');
+    expect(addExpressions('2d12', '1d12', 3)).toBe('5d12');
+  });
+
+  it('keeps distinct die sizes and sums flats', () => {
+    expect(addExpressions('1d8+4', '1d6')).toBe('1d8+1d6+4');
+    expect(addExpressions('1d4', '1', 2)).toBe('1d4+2');
+    expect(addExpressions('1d4', 1, 2)).toBe('1d4+2');
+  });
+
+  it('returns the base unchanged on unparseable input', () => {
+    expect(addExpressions('??', '1d6')).toBe('??');
+    expect(addExpressions('1d6', 'junk')).toBe('1d6');
   });
 });
 
@@ -298,6 +317,51 @@ describe('buildDamageProfile', () => {
 
   it('no exploit, no riders, no damage string → null profile', () => {
     expect(buildDamageProfile({ name: 'Shove' }, { id: 'c' }, {})).toBeNull();
+  });
+
+  // ── heightened damageData (slice 2) ───────────────────────────────────────
+
+  const shockingGrasp = {
+    name: 'Shocking Grasp',
+    level: 1,
+    traits: ['Attack', 'Electricity'],
+    damageData: {
+      base: '2d12',
+      type: 'electricity',
+      heightened: { '+1': { base: '1d12', persistent: 1 } },
+      riders: [{
+        id: 'sg-metal', label: 'Persistent electricity (metal armor)',
+        persistent: { dice: '1d4', type: 'electricity' }, defaultOn: false,
+      }],
+    },
+  };
+
+  it('native-rank cast keeps the authored base and persistent dice', () => {
+    const profile = buildDamageProfile(shockingGrasp, { id: 'c' }, { castRank: 1 });
+    expect(profile.expression).toBe('2d12');
+    expect(profile.typeLabel).toBe('electricity');
+    expect(profile.riders[0].persistent.dice).toBe('1d4');
+  });
+
+  it('heightened cast scales base dice and persistent riders per step', () => {
+    const profile = buildDamageProfile(shockingGrasp, { id: 'c' }, { castRank: 3 });
+    // +1d12 × 2 steps; persistent +1 × 2 steps
+    expect(profile.expression).toBe('4d12');
+    expect(profile.riders[0].persistent.dice).toBe('1d4+2');
+  });
+
+  it('no castRank → no heightening', () => {
+    const profile = buildDamageProfile(shockingGrasp, { id: 'c' }, {});
+    expect(profile.expression).toBe('2d12');
+  });
+
+  it('absolute heightened keys apply once at or above their rank', () => {
+    const spell = {
+      name: 'Test', level: 1,
+      damageData: { base: '1d6', heightened: { '3rd': { base: '1d6' } } },
+    };
+    expect(buildDamageProfile(spell, { id: 'c' }, { castRank: 2 }).expression).toBe('1d6');
+    expect(buildDamageProfile(spell, { id: 'c' }, { castRank: 3 }).expression).toBe('2d6');
   });
 
   it('riders without a damage expression still produce a profile', () => {
