@@ -18,6 +18,8 @@ import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useAura } from '../../hooks/useAura';
+import { useShield } from '../../hooks/useShield';
+import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
 import { immunityConfigFor } from '../../utils/immunity';
@@ -115,6 +117,11 @@ const UseAbilityModal = ({
   // Kinetic aura gate (#228) — impulses need the aura up; override for rulings.
   const aura = useAura(character?.id || 'nobody');
   const [auraOverride, setAuraOverride] = useState(false);
+
+  // Raised-shield gate (#228) — Devoted Guardian requires the shield up.
+  const charData = useCharacter(character);
+  const { raised: shieldRaised } = useShield(character?.id || 'nobody', charData?.inventory || []);
+  const [shieldOverride, setShieldOverride] = useState(false);
 
   // Target-immunity gate (#218) — override when all picked targets are immune.
   const [immunityOverride, setImmunityOverride] = useState(false);
@@ -242,13 +249,16 @@ const UseAbilityModal = ({
   // Battle Medicine, …), flag picked PC targets already immune. The use is
   // blocked only when every picked target is immune (override available).
   const immunityConfig = immunityConfigFor(ability);
+  // `immunityKey` lets variants share one immunity pool (#228 — Murmured
+  // Prayer's 1/day +2 Guidance is still "Guidance" for the 1-hour immunity).
+  const immunityAbilityKey = ability.immunityKey || freqKeyFor(ability);
   const immuneTargets = immunityConfig
     ? targetCharIds
         .map((cid) => {
           const tEffects = getState(cid, 'effects') || [];
           const immune = tEffects.find(
             (e) => e.effectId === 'ability-immunity'
-              && e.abilityKey === freqKeyFor(ability)
+              && e.abilityKey === immunityAbilityKey
               && (immunityConfig.scope !== 'per-caster' || e.appliedBy === character.id)
               && !(typeof e.expireAtSecs === 'number' && e.expireAtSecs <= nowSecs)
           );
@@ -338,8 +348,19 @@ const UseAbilityModal = ({
   const auraGateBlocked = requiresAura(ability) && !aura.active;
   const auraGateOk = !auraGateBlocked || auraOverride;
 
+  // Raised-shield gate (#228): Devoted Guardian and kin need the shield up.
+  const shieldGateBlocked = ability.requiresShieldRaised === true && !shieldRaised;
+  const shieldGateOk = !shieldGateBlocked || shieldOverride;
+
+  // Ally resistance note (#228 — Retributive Strike's "2 + your level").
+  const allyResistance = ability.allyResistance
+    ? (Number(ability.allyResistance.base) || 0)
+      + (ability.allyResistance.addLevel ? (character.level || 0) : 0)
+    : null;
+
   const confirmEnabled =
-    (!needsPicker || targets.length > 0) && castGateOk && freqGateOk && immunityGateOk && auraGateOk;
+    (!needsPicker || targets.length > 0)
+    && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk;
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -396,6 +417,17 @@ const UseAbilityModal = ({
     }
     if (auraGateBlocked && auraOverride) {
       sourceSuffix += ' (override — aura inactive)';
+    }
+    if (shieldGateBlocked && shieldOverride) {
+      sourceSuffix += ' (override — shield not raised)';
+    }
+    // Ally resistance (#228): the GM applies it to the triggering damage.
+    if (allyResistance != null) {
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name}'s ally gains resistance ${allyResistance} against the triggering damage (${ability.name})`,
+      });
     }
     let suffixLogged = false;
 
@@ -813,6 +845,11 @@ const UseAbilityModal = ({
             {ability.description}
           </p>
         )}
+        {allyResistance != null && (
+          <p className="uam-ally-resistance" style={{ fontSize: '0.85rem', fontWeight: 600, margin: '0 0 0.25rem' }}>
+            Ally gains resistance {allyResistance} against the triggering damage.
+          </p>
+        )}
         {actionsSelector}
       </section>
 
@@ -856,6 +893,27 @@ const UseAbilityModal = ({
                 type="checkbox"
                 checked={auraOverride}
                 onChange={(e) => setAuraOverride(e.target.checked)}
+              />
+              Override (GM ruling) — use anyway
+            </label>
+          </section>
+        </>
+      )}
+
+      {/* Raised-shield gate (#228) — Devoted Guardian needs the shield up */}
+      {shieldGateBlocked && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Shield</h3>
+            <div className="uam-cost-empty">
+              Your shield is not raised — Raise a Shield first.
+            </div>
+            <label className="uam-cost-override">
+              <input
+                type="checkbox"
+                checked={shieldOverride}
+                onChange={(e) => setShieldOverride(e.target.checked)}
               />
               Override (GM ruling) — use anyway
             </label>
