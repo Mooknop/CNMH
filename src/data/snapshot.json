@@ -6846,6 +6846,15 @@
             ],
             "heightened": {
               "+1": "The damage increases by 1d4."
+            },
+            "damageData": {
+              "base": "2d4",
+              "type": "cold",
+              "heightened": {
+                "+1": {
+                  "base": "1d4"
+                }
+              }
             }
           },
           {
@@ -6870,6 +6879,25 @@
             ],
             "heightened": {
               "+1": "The damage increases by 1d6."
+            },
+            "damageData": {
+              "base": "1d6",
+              "type": "B/P/S (object)",
+              "heightened": {
+                "+1": {
+                  "base": "1d6"
+                }
+              },
+              "riders": [
+                {
+                  "id": "tk-projectile-mod",
+                  "label": "+ spellcasting modifier",
+                  "bonus": {
+                    "ability": "charisma"
+                  },
+                  "defaultOn": true
+                }
+              ]
             }
           },
           {
@@ -6968,6 +6996,28 @@
             ],
             "heightened": {
               "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
+            },
+            "damageData": {
+              "base": "2d12",
+              "type": "electricity",
+              "heightened": {
+                "+1": {
+                  "base": "1d12",
+                  "persistent": 1
+                }
+              },
+              "riders": [
+                {
+                  "id": "shocking-grasp-metal",
+                  "label": "Metal armor: persistent electricity",
+                  "persistent": {
+                    "dice": "1d4",
+                    "type": "electricity"
+                  },
+                  "defaultOn": false,
+                  "note": "Only if the target wears metal armor or is made of metal (you also get +1 on the attack roll)"
+                }
+              ]
             }
           },
           {
