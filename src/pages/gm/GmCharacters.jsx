@@ -12,6 +12,7 @@ import ItemEditModal from '../../components/gm/ItemEditModal';
 import EntryListEditor from '../../components/gm/EntryListEditor';
 import ImageField from '../../components/gm/ImageField';
 import ConsumablesCleanup from '../../components/gm/ConsumablesCleanup';
+import EldAttunementControl from '../../components/gm/EldAttunementControl';
 import {
   strikeToForm,
   strikeFromForm,
@@ -1420,6 +1421,9 @@ const GmCharacters = () => {
 
       {/* Live consumable usage + cleanup of fully-used items */}
       <ConsumablesCleanup />
+
+      {/* Eld attunement override (live synced state, not the character doc) */}
+      <EldAttunementControl />
     </div>
   );
 };

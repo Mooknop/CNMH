@@ -1,6 +1,7 @@
-﻿import React from 'react';
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import EldPowers from './EldPowers';
+import { toGameSeconds } from '../../utils/gameTime';
 
 vi.mock('../shared/CollapsibleCard', () => ({
   default: function DummyCollapsibleCard({ children, header }) {
@@ -35,6 +36,22 @@ vi.mock('../encounter/UseAbilityModal', () => ({
   }
 }));
 
+// Cooldown display reads the game clock + encounter; pin both so gate math is
+// deterministic (the component renders fine without real providers).
+// vi.hoisted: mock factories are hoisted above module consts.
+const { CLOCK } = vi.hoisted(() => ({
+  CLOCK: { gameDate: { year: 4725, month: 0, day: 1 }, time: { hour: 8, minute: 0 } },
+}));
+const NOW_SECS = toGameSeconds({ ...CLOCK.gameDate, ...CLOCK.time });
+
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => CLOCK,
+}));
+
+vi.mock('../../hooks/useEncounter', () => ({
+  useEncounter: () => ({ encounter: null }),
+}));
+
 const makePower = (overrides = {}) => ({
   name: 'Power of Nature',
   description: 'Channel the wild.',
@@ -48,8 +65,8 @@ const makeSource = (source, powers, overrides = {}) => ({
 });
 
 describe('EldPowers', () => {
-  // Attuned source is now synced via cnmh_eldattune_<id>, which falls back to
-  // localStorage with no SessionProvider — clear it so tests don't bleed.
+  // Attunement (cnmh_eldattune_<id>) and the frequency ledger (cnmh_freq_<id>)
+  // fall back to localStorage with no SessionProvider — clear between tests.
   beforeEach(() => localStorage.clear());
 
   it('renders empty state when eldPowers is empty array', () => {
@@ -197,10 +214,13 @@ describe('EldPowers', () => {
     expect(screen.queryByText('Degrees of Success:')).toBeNull();
   });
 
-  describe('Use button (frequency-gated, #218)', () => {
+  describe('Use button (frequency-gated, #218; attunement-gated, #225)', () => {
     const character = { id: 'char-izzy', name: 'Izzy' };
+    const attuneTo = (source) =>
+      localStorage.setItem('cnmh_eldattune_char-izzy', JSON.stringify(source));
 
     it('renders a Use button per power when character is provided', () => {
+      attuneTo('Forest');
       const sources = [
         makeSource('Forest', [
           makePower({ name: 'Wind Gust' }),
@@ -220,6 +240,7 @@ describe('EldPowers', () => {
     });
 
     it('opens the use modal with the once-per-hour rule injected', () => {
+      attuneTo('Forest');
       const sources = [makeSource('Forest', [makePower({ name: 'Wind Gust' })])];
       render(
         <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
@@ -227,22 +248,75 @@ describe('EldPowers', () => {
       fireEvent.click(screen.getByText('Use'));
       expect(screen.getByTestId('use-ability-modal')).toHaveTextContent('Use: Wind Gust (hour/1)');
     });
+
+    it('disables Use when no source is attuned, with a hint', () => {
+      const sources = [makeSource('Forest', [makePower({ name: 'Wind Gust' })])];
+      render(
+        <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
+      );
+      expect(screen.getByText('Use')).toBeDisabled();
+      expect(
+        screen.getByText('No source attuned. Choose one at daily preparations.')
+      ).toBeInTheDocument();
+    });
+
+    it('disables Use while browsing a non-attuned source', () => {
+      attuneTo('Forest');
+      const sources = [
+        makeSource('Forest', [makePower({ name: 'Forest Power' })]),
+        makeSource('River', [makePower({ name: 'River Power' })]),
+      ];
+      render(
+        <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
+      );
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'River' } });
+      expect(screen.getByText('Use')).toBeDisabled();
+      expect(
+        screen.getByText('Browsing — only Forest powers can be used today.')
+      ).toBeInTheDocument();
+    });
+
+    it('shows a ready-at cooldown note for a power used within the hour', () => {
+      attuneTo('Forest');
+      // Ledger key is the power-name slug; a use 10 minutes ago locks it for
+      // the next 50 minutes of game time.
+      localStorage.setItem(
+        'cnmh_freq_char-izzy',
+        JSON.stringify({
+          'wind-gust': [{ gameSecs: NOW_SECS - 600, realTs: Date.now(), per: 'hour' }],
+        })
+      );
+      const sources = [makeSource('Forest', [makePower({ name: 'Wind Gust' })])];
+      render(
+        <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
+      );
+      expect(screen.getByText(/On cooldown — ready at/)).toBeInTheDocument();
+    });
+
+    it('shows no cooldown note for an unused power', () => {
+      attuneTo('Forest');
+      const sources = [makeSource('Forest', [makePower({ name: 'Wind Gust' })])];
+      render(
+        <EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />
+      );
+      expect(screen.queryByText(/On cooldown/)).toBeNull();
+    });
   });
 
-  describe('attunement sync (#219)', () => {
+  describe('attunement (#219/#225: daily-prep choice, browse-only dropdown)', () => {
     const character = { id: 'char-izzy', name: 'Izzy' };
 
-    it('persists the chosen source to cnmh_eldattune_<id>', () => {
+    it('does NOT write the synced attunement when browsing', () => {
       const sources = [
         makeSource('Forest', [makePower({ name: 'Forest Power' })]),
         makeSource('River', [makePower({ name: 'River Power' })]),
       ];
       render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />);
       fireEvent.change(screen.getByRole('combobox'), { target: { value: 'River' } });
-      expect(JSON.parse(localStorage.getItem('cnmh_eldattune_char-izzy'))).toBe('River');
+      expect(localStorage.getItem('cnmh_eldattune_char-izzy')).toBeNull();
     });
 
-    it('hydrates the selection from a stored attunement', () => {
+    it('follows a stored attunement and marks it in the dropdown', () => {
       localStorage.setItem('cnmh_eldattune_char-izzy', JSON.stringify('River'));
       const sources = [
         makeSource('Forest', [makePower({ name: 'Forest Power' })]),
@@ -251,6 +325,19 @@ describe('EldPowers', () => {
       render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />);
       expect(screen.getByRole('combobox')).toHaveValue('River');
       expect(screen.getByText('River Power')).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'River (attuned)' })).toBeInTheDocument();
+      expect(screen.getByText('Attuned')).toBeInTheDocument();
+    });
+
+    it('shows the attuned-elsewhere chip while browsing another source', () => {
+      localStorage.setItem('cnmh_eldattune_char-izzy', JSON.stringify('Forest'));
+      const sources = [
+        makeSource('Forest', [makePower({ name: 'Forest Power' })]),
+        makeSource('River', [makePower({ name: 'River Power' })]),
+      ];
+      render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={5} character={character} />);
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'River' } });
+      expect(screen.getByText('Attuned: Forest')).toBeInTheDocument();
     });
   });
 });
