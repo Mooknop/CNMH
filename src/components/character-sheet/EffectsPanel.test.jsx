@@ -8,16 +8,19 @@ vi.mock('../../hooks/useEffects', () => ({
   useEffects: () => mockEffects,
 }));
 
-// pf2eEffects exports a default catalog array plus a named getEffect helper.
-vi.mock('../../data/pf2eEffects', () => {
-  const catalog = [
-    { id: 'heroism-1', name: 'Heroism 1', modifiers: [] },
-    { id: 'bless', name: 'Bless', modifiers: [] },
-    { id: 'ability-immunity', name: 'Immune', modifiers: [] },
-  ];
-  const getEffect = (id) => catalog.find((e) => e.id === id);
-  return { __esModule: true, default: catalog, getEffect };
-});
+// The panel resolves effect names from the ContentContext catalog (#284 — DO
+// source of truth), so mock that directly; the bundled pf2eEffects module is
+// only the seed fallback and never reaches this component.
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({
+    effects: [
+      { id: 'heroism-1', name: 'Heroism 1', modifiers: [] },
+      { id: 'bless', name: 'Bless', modifiers: [] },
+      { id: 'ability-immunity', name: 'Immune', modifiers: [] },
+    ],
+    characters: [],
+  }),
+}));
 
 // Fixed clock: 5 Pharast 4725 08:00.
 vi.mock('../../contexts/GameDateContext', () => ({
