@@ -422,3 +422,136 @@ describe('ChainedSpellSection — Harrow Cast (#227)', () => {
     expect(harrow.healEntered).toBe(9);
   });
 });
+
+// Blood magic trigger surface (#227): the section reports the live spell pick
+// and whether the chosen spell carries the bloodline flag.
+describe('ChainedSpellSection — bloodline surface (#227)', () => {
+  const FORCE = { id: 'force', name: 'Force Barrage', actions: 'Two Actions', range: '120 feet', bloodline: true };
+
+  it('notifies the parent of the selected spell via onSpellChange', () => {
+    const onSpellChange = vi.fn();
+    render(
+      <ChainedSpellSection
+        character={{ ...character, spellcasting: { spells: [LIGHT, FORCE] } }}
+        chain={harrowChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+        onSpellChange={onSpellChange}
+      />
+    );
+    expect(onSpellChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Light' }));
+    fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'force' } });
+    expect(onSpellChange).toHaveBeenCalledWith(expect.objectContaining({ name: 'Force Barrage' }));
+  });
+
+  it('getResults reports spellBloodline for flagged spells only', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={{ ...character, spellcasting: { spells: [LIGHT, FORCE] } }}
+        chain={harrowChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(ref.current.getResults().spellBloodline).toBe(false);
+    fireEvent.change(screen.getByLabelText('spell picker'), { target: { value: 'force' } });
+    expect(ref.current.getResults().spellBloodline).toBe(true);
+  });
+});
+
+describe('ChainedSpellSection — Split Shot (#227)', () => {
+  const splitChain = { into: 'spell', cost: 'added', spellFilter: 'single-target-attack', splitShot: true };
+
+  const TKP   = { id: 'tkp',   name: 'Telekinetic Projectile', actions: 'Two Actions', range: '30 feet',  targets: '1 creature',         traits: ['Attack', 'Cantrip'] };
+  const GRASP = { id: 'grasp', name: 'Shocking Grasp',         actions: 'Two Actions', range: 'Touch',    targets: '1 creature',         traits: ['Attack'] };
+  const BOLT  = { id: 'bolt',  name: 'Blazing Bolt',           actions: 'Two Actions', range: '60 feet',  targets: '1 or more creature', traits: ['Attack'] };
+  const SAVE  = { id: 'sb',    name: 'Sudden Bolt',            actions: 'Two Actions', range: '600 feet', targets: '1 creature',         traits: ['Electricity'] };
+  const SUSTAINED = { id: 'sus', name: 'Sustained Ray', actions: 'Two Actions', range: '60 feet', targets: '1 creature', traits: ['Attack'], duration: 'sustained up to 1 minute' };
+
+  const splitCharacter = { ...character, spellcasting: { spells: [TKP, GRASP, BOLT, SAVE, SUSTAINED] } };
+  const twoTargets = [
+    { entryId: 'g1', name: 'Goblin', defenses: { ac: 15 } },
+    { entryId: 'g2', name: 'Orc',    defenses: { ac: 17 } },
+  ];
+
+  const renderSplit = (ref, targets = twoTargets) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={splitCharacter}
+      chain={splitChain}
+      parentCost={1}
+      enemyTargets={targets}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  it('filters to ranged single-target attack spells without a duration', () => {
+    renderSplit(createRef(), []);
+    const opts = Array.from(screen.getByLabelText('spell picker').options).map((o) => o.text);
+    expect(opts.some((t) => t.includes('Telekinetic Projectile'))).toBe(true);
+    expect(opts.some((t) => t.includes('Shocking Grasp'))).toBe(false);  // touch
+    expect(opts.some((t) => t.includes('Blazing Bolt'))).toBe(false);    // multi-target
+    expect(opts.some((t) => t.includes('Sudden Bolt'))).toBe(false);     // no attack roll
+    expect(opts.some((t) => t.includes('Sustained Ray'))).toBe(false);   // has a duration
+  });
+
+  it('prompts for two targets while fewer are selected', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    renderSplit(createRef(), [twoTargets[0]]);
+    expect(screen.getByText(/Select two enemy targets/)).toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: 'Second target' })).toBeNull();
+  });
+
+  it('defaults the second target to the second selected enemy', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    const ref = createRef();
+    renderSplit(ref);
+    expect(screen.getByRole('radiogroup', { name: 'Second target' })).toBeInTheDocument();
+    expect(screen.getByText(/Orc takes half damage/)).toBeInTheDocument();
+    expect(ref.current.getResults().splitShot).toMatchObject({
+      secondaryEntryId: 'g2',
+      secondaryName: 'Orc',
+    });
+  });
+
+  it('lets the caster re-designate the second target', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    const ref = createRef();
+    renderSplit(ref);
+    fireEvent.click(screen.getByLabelText('second-target-Goblin'));
+    expect(ref.current.getResults().splitShot).toMatchObject({
+      secondaryEntryId: 'g1',
+      secondaryName: 'Goblin',
+    });
+    expect(screen.getByText(/Goblin takes half damage/)).toBeInTheDocument();
+  });
+
+  it('warns when more than two targets are selected', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, defense: 'ac', dc: null });
+    renderSplit(createRef(), [...twoTargets, { entryId: 'g3', name: 'Bugbear', defenses: { ac: 18 } }]);
+    expect(screen.getByText(/exactly two targets — deselect 1/)).toBeInTheDocument();
+  });
+
+  it('non-split chains report no splitShot in getResults', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={character}
+        chain={reachChain}
+        parentCost={1}
+        enemyTargets={twoTargets}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(ref.current.getResults().splitShot).toBeNull();
+  });
+});

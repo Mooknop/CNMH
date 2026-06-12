@@ -32,6 +32,7 @@ import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
 import { HARROW_CAST_DC } from '../../utils/harrow';
+import { bloodMagicTriggered, bloodMagicOption, BLOOD_MAGIC_OPTIONS } from '../../utils/bloodMagic';
 import { applyHealing } from '../../utils/consumables';
 import { getVariableActionRange, variantFor } from '../../utils/ActionsUtils';
 import { toGameSeconds } from '../../utils/gameTime';
@@ -98,6 +99,14 @@ const UseAbilityModal = ({
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
   const onSpellChainCostChange = useCallback((cost) => setSpellChainTotalCost(cost), []);
+
+  // The spell currently picked inside a chained cast (#227) — blood magic
+  // triggers when it carries the bloodline flag.
+  const [chainSpell, setChainSpell] = useState(null);
+  const onChainSpellChange = useCallback((spell) => setChainSpell(spell), []);
+
+  // Blood magic (#227) — Imperial: +1 status to AC or saves, caster's pick.
+  const [bloodMagicChoice, setBloodMagicChoice] = useState('ac');
 
   // Multiple Attack Penalty — auto step from attacks already made this turn,
   // with a manual override for table corrections. null = follow the auto step.
@@ -185,6 +194,14 @@ const UseAbilityModal = ({
 
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
   const effectiveVerb = verb.toLowerCase();
+
+  // Blood magic (#227): a bloodline-flagged spell — cast directly or as the
+  // spell a Spellshape chains into — triggers the bloodline's rider.
+  const bloodMagicActive = bloodMagicTriggered(
+    character,
+    effectiveVerb === 'cast' ? ability : null,
+    hasChainSpell ? chainSpell : null
+  );
 
   // Variable action-cost abilities (#215): the in-modal picker is authoritative
   // for the spend. Reactions/free actions and chained abilities (which own their
@@ -675,15 +692,21 @@ const UseAbilityModal = ({
         ? `${chainResults.spellName} [${chainResults.modifier}]`
         : chainResults.spellName) + chainSuffix;
       if (chainResults.rollResults) {
+        // Attack-roll chains read as hits/misses; everything else keeps
+        // success/failure wording.
+        const chainDegreeMap = chainResults.rollProfile?.defense === 'ac'
+          ? { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }
+          : { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' };
         chainResults.rollResults.forEach((r) => {
-          const degreeLabel = r.degree
-            ? ({ criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss',
-                 ...{ criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' } }[r.degree] || r.degree)
-            : null;
+          const degreeLabel = r.degree ? (chainDegreeMap[r.degree] || r.degree) : null;
+          // Split Shot (#227): the designated second target takes half damage.
+          const splitSuffix = chainResults.splitShot?.secondaryEntryId === r.entryId
+            ? ' · second target — half damage, no other effects'
+            : '';
           appendLog({
             type: 'action', charId: character.id,
             text: degreeLabel
-              ? `${character.name} ${effectiveVerb} ${ability.name} → ${label} vs ${r.name}: ${r.total} → ${degreeLabel}`
+              ? `${character.name} ${effectiveVerb} ${ability.name} → ${label} vs ${r.name}: ${r.total} → ${degreeLabel}${splitSuffix}`
               : `${character.name} ${effectiveVerb} ${ability.name} → ${label}`,
           });
         });
@@ -772,6 +795,27 @@ const UseAbilityModal = ({
           appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
         }
       }
+    }
+
+    // Blood magic (#227): the bloodline rider lands on the caster as a catalog
+    // effect until the start of their next turn. Re-derived from chainResults
+    // (not the live chainSpell state) so confirm matches what was actually cast.
+    const bloodMagicFires = bloodMagicTriggered(
+      character,
+      effectiveVerb === 'cast' ? ability : null,
+      hasChainSpell && chainResults?.spellBloodline ? { bloodline: true } : null
+    );
+    if (bloodMagicFires) {
+      const bmOption = bloodMagicOption(bloodMagicChoice);
+      applyAbility({
+        ability: {
+          name: `Blood Magic (${character.spellcasting.bloodline.name || 'bloodline'})`,
+          effects: [{ effectId: bmOption.effectId, applyTo: 'self', duration: { until: 'caster-turn-start' } }],
+        },
+        caster: character, casterEntryId, targetCharIds: [], enemyTargetNames: [],
+        order, encounter, characters, getState, sendUpdate, appendLog,
+        verb: 'gains', nowSecs,
+      });
     }
 
     // Resource suffix not carried by a line above (effects/roll paths) gets a
@@ -1112,6 +1156,32 @@ const UseAbilityModal = ({
         </>
       )}
 
+      {/* Blood magic (#227) — bloodline spell cast: pick the rider */}
+      {bloodMagicActive && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">
+              Blood Magic{character.spellcasting?.bloodline?.name ? ` (${character.spellcasting.bloodline.name})` : ''}
+            </h3>
+            <div className="uam-variant-note">{character.spellcasting.bloodline.blood_magic}</div>
+            <div className="uam-cost-options" role="radiogroup" aria-label="Blood magic choice">
+              {BLOOD_MAGIC_OPTIONS.map((opt) => (
+                <label key={opt.id} className="uam-cost-option">
+                  <input
+                    type="radio"
+                    name="blood-magic-choice"
+                    checked={bloodMagicChoice === opt.id}
+                    onChange={() => setBloodMagicChoice(opt.id)}
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
       {/* Rider choice (#225) — either/or rider picked at use time */}
       {riderChoice && (
         <>
@@ -1248,6 +1318,7 @@ const UseAbilityModal = ({
                   conditions={activeConditions || []}
                   effects={activeEffects || []}
                   onTotalCostChange={onSpellChainCostChange}
+                  onSpellChange={onChainSpellChange}
                   mapStep={mapStep}
                   resources={resources}
                 />
