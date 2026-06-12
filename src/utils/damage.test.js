@@ -137,6 +137,18 @@ describe('computeTargetDamage', () => {
     expect(out.parts.riders).toEqual([{ label: "Implement's Empowerment", amount: 4 }]);
   });
 
+  it('condition riders surface on their degree without changing the total (#228)', () => {
+    const critClumsy = {
+      id: 'clumsy', label: 'Clumsy 1', condition: 'clumsy 1', on: ['criticalSuccess'], defaultOn: true,
+    };
+    const hit = computeTargetDamage({ entered: 9, degree: 'success', riders: [critClumsy], entryId: 'e-gob' });
+    expect(hit.conditions).toEqual([]);
+    expect(hit.final).toBe(9);
+    const crit = computeTargetDamage({ entered: 9, degree: 'criticalSuccess', riders: [critClumsy], entryId: 'e-gob' });
+    expect(crit.final).toBe(18);
+    expect(crit.conditions).toEqual([{ label: 'Clumsy 1', condition: 'clumsy 1' }]);
+  });
+
   it('crit doubles base + riders, weakness added after and never doubled', () => {
     const out = computeTargetDamage({
       entered: 9, degree: 'criticalSuccess',
@@ -295,6 +307,30 @@ describe('computeSaveDamage', () => {
     });
     expect(out.final).toBe(12);
   });
+
+  // Condition riders (#228 — Spines' clumsy 1)
+  const spineClumsy = {
+    id: 'spine-clumsy', label: 'Spines: clumsy 1',
+    condition: 'clumsy 1 until the start of your next turn', on: ['criticalFailure'],
+  };
+
+  it('condition riders surface on their degree and never change the total', () => {
+    const failure = computeSaveDamage({ entered: 6, degree: 'failure', riders: [spineClumsy], entryId: 'e-gob' });
+    expect(failure.conditions).toEqual([]);
+    expect(failure.final).toBe(6);
+    const critFail = computeSaveDamage({ entered: 6, degree: 'criticalFailure', riders: [spineClumsy], entryId: 'e-gob' });
+    expect(critFail.final).toBe(12);
+    expect(critFail.conditions).toEqual([
+      { label: 'Spines: clumsy 1', condition: 'clumsy 1 until the start of your next turn' },
+    ]);
+  });
+
+  it('condition-only results work without an entered total', () => {
+    const out = computeSaveDamage({ entered: null, degree: 'criticalFailure', riders: [spineClumsy], entryId: 'e-gob' });
+    expect(out.final).toBeNull();
+    expect(out.conditions).toHaveLength(1);
+    expect(computeSaveDamage({ entered: null, degree: 'failure', riders: [spineClumsy], entryId: 'e-gob' })).toBeNull();
+  });
 });
 
 describe('serializeRidersForSave', () => {
@@ -325,6 +361,15 @@ describe('serializeRidersForSave', () => {
   it('omits riders the caster unticked', () => {
     const out = serializeRidersForSave(riders, { con: false });
     expect(out.map((r) => r.id)).toEqual(['exploit-weakness', 'bleed']);
+  });
+
+  it('condition riders survive serialization (#228)', () => {
+    const out = serializeRidersForSave([
+      { id: 'spine-clumsy', label: 'Spines: clumsy 1', condition: 'clumsy 1', on: ['criticalFailure'] },
+    ], {});
+    expect(out).toEqual([
+      { id: 'spine-clumsy', label: 'Spines: clumsy 1', condition: 'clumsy 1', on: ['criticalFailure'] },
+    ]);
   });
 });
 
@@ -378,6 +423,22 @@ describe('formatDamageBreakdown', () => {
       final: 9, parts: { base: 9, riders: [], crit: false, weaknesses: [] },
       persistent: [{ dice: '1d4', type: 'electricity', label: 'x' }],
     })).toBe('9 · 1d4 persistent electricity (DC 15 flat to end)');
+  });
+
+  it('appends condition fragments after persistent (#228)', () => {
+    expect(formatDamageBreakdown({
+      final: 12, parts: { base: 6, riders: [], multiplier: 'double', weaknesses: [] },
+      persistent: [],
+      conditions: [{ label: 'Spines: clumsy 1', condition: 'clumsy 1 until the start of your next turn' }],
+    })).toBe('12 (6 ×2) · clumsy 1 until the start of your next turn');
+  });
+
+  it('condition-only results log just the condition', () => {
+    expect(formatDamageBreakdown({
+      final: null, parts: { base: null, riders: [], multiplier: null, weaknesses: [] },
+      persistent: [],
+      conditions: [{ label: 'x', condition: 'clumsy 1' }],
+    })).toBe('clumsy 1');
   });
 });
 
