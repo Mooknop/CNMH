@@ -9,6 +9,7 @@ import { useFrequency } from '../../hooks/useFrequency';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
+import { scaleEldPower } from '../../utils/eldScaling';
 import './EldPowers.css';
 
 // Eld Attunement: each power is usable once per hour (class feature, so the
@@ -130,7 +131,10 @@ const EldPowers = ({ eldPowers, themeColor, characterLevel, character }) => {
       <div className="eld-powers-list">
         <h4>Available Powers (Once per Hour)</h4>
         <div className="eld-powers-grid">
-          {currentSourceData.powers.map((power, index) => {
+          {currentSourceData.powers.map((rawPower, index) => {
+            // Level-scaled dice rendered concretely ("2d10 (+1d10 per level)"
+            // → "6d10" at level 4) on the card and in the use modal.
+            const power = scaleEldPower(rawPower, characterLevel);
             const gate = character
               ? gateFor({ ...power, frequencyRule: ELD_FREQUENCY_RULE }, freqCtx)
               : null;

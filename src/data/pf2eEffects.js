@@ -204,6 +204,28 @@ const PF2E_EFFECTS = [
     description: 'Temporarily immune to a specific ability (e.g. Guidance, Battle Medicine, Tell Fortune). Applied automatically on use and cleared when the game clock passes its expiry.',
     modifiers: [],
   },
+
+  // ── Eld Power states (Izzy homebrew, #225) ──────────────────────────
+  // Conditional penalties (off-guard vs electricity, −2 saves vs electric)
+  // can't be netted by the modifier engine — they stay descriptive (#274).
+  {
+    id: 'eld-charged',
+    name: 'Charged (Eld)',
+    description: 'Off-guard against attacks that deal electricity damage and −2 to saves against electric effects. Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.',
+    modifiers: [],
+  },
+  {
+    id: 'eld-shrouded',
+    name: 'Shrouded',
+    description: 'All light within 20 feet is lowered one step in intensity (bright → dim, dim → darkness). Lasts until the end of your turn.',
+    modifiers: [],
+  },
+  {
+    id: 'eld-rust-cloud',
+    name: 'Rust Cloud',
+    description: 'A 20-foot emanation of billowing rust: creatures inside are concealed, and creatures outside are concealed to those inside. Lasts 10 minutes, until Dismissed (2 actions), or until you fall unconscious.',
+    modifiers: [],
+  },
 ];
 
 export default PF2E_EFFECTS;

@@ -214,6 +214,21 @@ describe('EldPowers', () => {
     expect(screen.queryByText('Degrees of Success:')).toBeNull();
   });
 
+  it('renders level-scaled dice in descriptions and degrees (#225)', () => {
+    const sources = [
+      makeSource('Forest', [
+        makePower({
+          description: 'dealing 2d10 (+1d10 per level) void damage.',
+          degrees: { Failure: 'damage equal to 2 + half your level' },
+        }),
+      ]),
+    ];
+    render(<EldPowers eldPowers={sources} themeColor="#4a90d9" characterLevel={4} />);
+    expect(screen.getByText('dealing 6d10 void damage.')).toBeInTheDocument();
+    expect(screen.getByText('damage equal to 4')).toBeInTheDocument();
+    expect(screen.queryByText(/per level/)).toBeNull();
+  });
+
   describe('Use button (frequency-gated, #218; attunement-gated, #225)', () => {
     const character = { id: 'char-izzy', name: 'Izzy' };
     const attuneTo = (source) =>

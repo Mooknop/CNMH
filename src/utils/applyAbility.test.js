@@ -2,7 +2,7 @@
 // The existing effects[]/grants[] paths are exercised via UseAbilityModal integration
 // tests; this file covers only the new foundryEffect → applyeffect sendUpdate block.
 
-import { applyAbility } from './applyAbility';
+import { applyAbility, applyRiderChoice } from './applyAbility';
 
 const caster  = { id: 'Pellias', name: 'Pellias' };
 const izzy    = { id: 'IzzyUncut', name: 'Izzy' };
@@ -132,6 +132,99 @@ describe('applyAbility — daily-prep effect flag', () => {
     applyAbility(args);
     const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
     expect(call[2][0].expireOnDailyPrep).toBeUndefined();
+  });
+});
+
+describe('applyAbility — minute durations (#225)', () => {
+  it('stamps expireAtSecs from duration.minutes when nowSecs is provided', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'eld-rust-cloud', applyTo: 'self', duration: { minutes: 10 } }],
+    });
+    applyAbility({ ...args, nowSecs: 1000 });
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[2][0]).toMatchObject({ effectId: 'eld-rust-cloud', expireAtSecs: 1600 });
+    expect(call[2][0].expireAt).toBeUndefined();
+  });
+
+  it('falls back to no expiry when nowSecs is missing', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'eld-rust-cloud', applyTo: 'self', duration: { minutes: 10 } }],
+    });
+    applyAbility(args);
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[2][0].expireAtSecs).toBeUndefined();
+    expect(call[2][0].expireAt).toBeUndefined();
+  });
+});
+
+describe('applyRiderChoice (#225)', () => {
+  const ability = { name: 'Electric Surge' };
+  const makeRiderArgs = (option, currentEffects = []) => {
+    const sendUpdate = vi.fn();
+    const appendLog = vi.fn();
+    return {
+      args: {
+        option,
+        ability,
+        caster,
+        casterEntryId: 'cbt-pellias',
+        encounter: {},
+        nowSecs: 1000,
+        getState: () => currentEffects,
+        sendUpdate,
+        appendLog,
+      },
+      sendUpdate,
+      appendLog,
+    };
+  };
+
+  it('applies the option effect to the caster and logs the choice', () => {
+    const { args, sendUpdate, appendLog } = makeRiderArgs({
+      id: 'charge', label: 'Become Charged', appliesEffect: { effectId: 'eld-charged' },
+    });
+    applyRiderChoice(args);
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[0]).toBe('Pellias');
+    expect(call[2]).toHaveLength(1);
+    expect(call[2][0]).toMatchObject({ effectId: 'eld-charged', appliedBy: 'Pellias', source: 'Electric Surge' });
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Pellias chose Become Charged (Electric Surge)' })
+    );
+  });
+
+  it('removes the consumed effect on a discharge-style option, noting it in the log', () => {
+    const existing = [
+      { id: 'e1', effectId: 'eld-charged' },
+      { id: 'e2', effectId: 'heroism-1' },
+    ];
+    const { args, sendUpdate, appendLog } = makeRiderArgs(
+      { id: 'discharge', label: 'Discharge', note: '40-foot line and d8s', removesEffectId: 'eld-charged' },
+      existing,
+    );
+    applyRiderChoice(args);
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[2]).toEqual([{ id: 'e2', effectId: 'heroism-1' }]);
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Pellias chose Discharge (Electric Surge) — 40-foot line and d8s' })
+    );
+  });
+
+  it('logs without writing state when the option changes nothing', () => {
+    const { args, sendUpdate, appendLog } = makeRiderArgs(
+      { id: 'discharge', label: 'Discharge', removesEffectId: 'eld-charged' },
+      [], // nothing to remove
+    );
+    applyRiderChoice(args);
+    expect(sendUpdate).not.toHaveBeenCalled();
+    expect(appendLog).toHaveBeenCalledTimes(1);
+  });
+
+  it('no-ops entirely without an option', () => {
+    const { args, sendUpdate, appendLog } = makeRiderArgs(null);
+    applyRiderChoice(args);
+    expect(sendUpdate).not.toHaveBeenCalled();
+    expect(appendLog).not.toHaveBeenCalled();
   });
 });
 
