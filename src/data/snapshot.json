@@ -5802,7 +5802,16 @@
                   "Metal",
                   "Magical"
                 ],
-                "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first."
+                "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first.",
+                "effects": [
+                  {
+                    "effectId": "eld-rust-cloud",
+                    "applyTo": "self",
+                    "duration": {
+                      "minutes": 10
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -5823,7 +5832,16 @@
                   "Darkness",
                   "Magical"
                 ],
-                "description": "You reach into the shadows and pull out a blade of pure darkness. You deal 2d6 (+1d6 per level) void damage to a foe within your reach with a Melee Spell Attack. If you're hidden, you deal an additional 2d4 (+1d4 per level) percision damage. You become Shrouded until the end of your turn."
+                "description": "You reach into the shadows and pull out a blade of pure darkness. You deal 2d6 (+1d6 per level) void damage to a foe within your reach with a Melee Spell Attack. If you're hidden, you deal an additional 2d4 (+1d4 per level) percision damage. You become Shrouded until the end of your turn.",
+                "effects": [
+                  {
+                    "effectId": "eld-shrouded",
+                    "applyTo": "self",
+                    "duration": {
+                      "until": "caster-turn-end"
+                    }
+                  }
+                ]
               },
               {
                 "name": "Chains of Rust",
@@ -5835,6 +5853,8 @@
                   "Magical"
                 ],
                 "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
+                "defense": "Fortitude",
+                "basic": true,
                 "degrees": {
                   "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
                   "Critical Failure": "The creature is immobilized until the start of your next turn."
@@ -5855,6 +5875,8 @@
                   "Mental"
                 ],
                 "description": "You blast a cone of disorienting mental energy to muddle your foes' minds and throw them off guard. You deal 1d4 (+1d4 per level) mental damage to all creatures in a 15-foot cone with a basic Will save.",
+                "defense": "Will",
+                "basic": true,
                 "degrees": {
                   "Success": "The creature is Off-Guard until the start of their next turn",
                   "Failure": "The creature is Off-Guard and Stupefied 1 until the end of your next turn",
@@ -5916,6 +5938,8 @@
                   "Magical"
                 ],
                 "description": "You call forth a guiding light to surround your foe and guide your attacks toward them. Choose an enemy in range; you deal 2d4 (+1d4 per level + half your level) fire damage with a Basic Fortitude Save.",
+                "defense": "Fortitude",
+                "basic": true,
                 "degrees": {
                   "Critical Success": "The creature resists entirely and is unaffected",
                   "Success": "The enemy is Limned until the end of your next turn. You can choose to deal no fire damage rather than half; if you do, you and your allies get a +1 circumstance bonus to attack rolls against them until the end of your next turn, as long as it remains limned",
@@ -5941,7 +5965,29 @@
                   "Electricity",
                   "Magical"
                 ],
-                "description": "You send a surging current of electricity in front of you, shocking creatures in a line. You deal 1d4 (+1d4 per level) electric damage to all creatures in a 20ft line with a Basic Reflex Save. Choose one rider effect: you either become Charged, or you Discharge to increase the are to a 40ft line and the damage increases from d4s to d8s."
+                "description": "You send a surging current of electricity in front of you, shocking creatures in a line. You deal 1d4 (+1d4 per level) electric damage to all creatures in a 20ft line with a Basic Reflex Save. Choose one rider effect: you either become Charged, or you Discharge to increase the are to a 40ft line and the damage increases from d4s to d8s.",
+                "defense": "Reflex",
+                "basic": true,
+                "riderChoice": {
+                  "prompt": "Rider",
+                  "options": [
+                    {
+                      "id": "charge",
+                      "label": "Become Charged",
+                      "note": "Off-guard vs electricity attacks and -2 to saves vs electric effects until it ends.",
+                      "appliesEffect": {
+                        "effectId": "eld-charged"
+                      }
+                    },
+                    {
+                      "id": "discharge",
+                      "label": "Discharge",
+                      "note": "Consumes Charged - the line extends to 40 feet and the damage dice become d8s.",
+                      "removesEffectId": "eld-charged",
+                      "requiresEffectId": "eld-charged"
+                    }
+                  ]
+                }
               },
               {
                 "name": "Polarize",
@@ -5952,7 +5998,29 @@
                   "Electricity",
                   "Magical"
                 ],
-                "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 per level you have."
+                "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 per level you have.",
+                "defense": "Fortitude",
+                "basic": true,
+                "riderChoice": {
+                  "prompt": "Rider",
+                  "options": [
+                    {
+                      "id": "charge",
+                      "label": "Become Charged",
+                      "note": "Off-guard vs electricity attacks and -2 to saves vs electric effects until it ends.",
+                      "appliesEffect": {
+                        "effectId": "eld-charged"
+                      }
+                    },
+                    {
+                      "id": "discharge",
+                      "label": "Discharge",
+                      "note": "Consumes Charged - the persistent electricity damage increases to 1d4 per level.",
+                      "removesEffectId": "eld-charged",
+                      "requiresEffectId": "eld-charged"
+                    }
+                  ]
+                }
               }
             ]
           }
