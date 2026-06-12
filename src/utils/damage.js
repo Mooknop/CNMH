@@ -147,11 +147,19 @@ export const computeTargetDamage = ({
       label: r.label,
     }));
 
+  // Condition riders (#228 — Spines' clumsy 1) carry a rules note, not a
+  // number. They ride the same degree gating and surface in the breakdown/log
+  // for the GM to apply — never doubled.
+  const conditions = enabled
+    .filter((r) => r.condition)
+    .map((r) => ({ label: r.label, condition: r.condition }));
+
   return {
     entered,
     final: total,
     parts: { base: entered, riders: bonusParts, crit: isCrit, weaknesses: weaknessParts },
     persistent,
+    conditions,
     riderIds: enabled.map((r) => r.id),
   };
 };
@@ -178,10 +186,11 @@ export const serializeRidersForSave = (riders, riderState) =>
       if (r.persistent?.dice) {
         out.persistent = { dice: r.persistent.dice, type: r.persistent.type || '' };
       }
+      if (r.condition) out.condition = r.condition;
       if (r.on) out.on = r.on;
       return out;
     })
-    .filter((r) => r.amount != null || r.weakness != null || r.persistent);
+    .filter((r) => r.amount != null || r.weakness != null || r.persistent || r.condition);
 
 /**
  * Per-target damage for a basic save (#270), from the caster's entered total
@@ -220,14 +229,22 @@ export const computeSaveDamage = ({ entered, degree, riders = [], entryId }) => 
       };
     });
 
+  // Condition riders (#228 — Spines' clumsy 1 on a critical failure). Same
+  // degree default as persistent riders; surfaced for the GM to apply, never
+  // halved or doubled by the save multiplier.
+  const conditions = enabled
+    .filter((r) => r.condition && (r.on ?? SAVE_PERSISTENT_DEFAULT).includes(degree))
+    .map((r) => ({ label: r.label, condition: r.condition }));
+
   const hasEntered = typeof entered === 'number' && !Number.isNaN(entered);
   if (!hasEntered) {
-    if (!persistent.length) return null;
+    if (!persistent.length && !conditions.length) return null;
     return {
       entered: null,
       final: null,
       parts: { base: null, riders: [], multiplier: null, weaknesses: [] },
       persistent,
+      conditions,
       riderIds: enabled.map((r) => r.id),
     };
   }
@@ -258,19 +275,21 @@ export const computeSaveDamage = ({ entered, degree, riders = [], entryId }) => 
     final: total,
     parts: { base: entered, riders: bonusParts, multiplier, weaknesses: weaknessParts },
     persistent,
+    conditions,
     riderIds: enabled.map((r) => r.id),
   };
 };
 
 // Compact log fragment: '30 (9 +4 Implement's Empowerment ×2 +4 weakness (fire))'
-// plus ' · 1d4 persistent bleed (DC 15 flat to end)' per persistent entry.
-// A bare total (no riders, no crit) logs as just the number. Save results
-// render their degree multiplier ('half'/'×2'); persistent-only results
-// (final: null) log just the persistent fragments.
-export const formatDamageBreakdown = ({ final, parts, persistent = [] }) => {
+// plus ' · 1d4 persistent bleed (DC 15 flat to end)' per persistent entry and
+// ' · clumsy 1 …' per condition rider. A bare total (no riders, no crit) logs
+// as just the number. Save results render their degree multiplier
+// ('half'/'×2'); damage-less results (final: null) log just the fragments.
+export const formatDamageBreakdown = ({ final, parts, persistent = [], conditions = [] }) => {
   const persistentStr = persistent
     .map((p) => ` · ${p.dice} persistent ${p.type || 'damage'}${p.half ? ' (half)' : ''} (DC 15 flat to end)`)
-    .join('');
+    .join('')
+    + conditions.map((c) => ` · ${c.condition}`).join('');
   if (final == null) return persistentStr.replace(/^ · /, '');
   const bits = [];
   for (const p of parts.riders) {

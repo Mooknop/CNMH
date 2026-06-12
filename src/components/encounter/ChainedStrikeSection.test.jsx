@@ -112,6 +112,61 @@ describe('ChainedStrikeSection — damage step (#222)', () => {
   });
 });
 
+describe('ChainedStrikeSection — optional chain (#228)', () => {
+  const optionalChain = {
+    into: 'strike', optional: true, heading: 'Elemental Blast',
+    strikeTrait: 'Unarmed', modes: ['strike'],
+  };
+
+  it('renders an include toggle, defaulting to included', () => {
+    const ref = createRef();
+    render(
+      <ChainedStrikeSection
+        ref={ref}
+        character={character}
+        chain={optionalChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={effects}
+      />
+    );
+    expect(screen.getByLabelText('Include Elemental Blast')).toBeChecked();
+    expect(screen.getByTestId('resolver-1')).toBeInTheDocument();
+    expect(ref.current.getResults()).not.toBeNull();
+  });
+
+  it('unticking collapses the section and reports no strike', () => {
+    const ref = createRef();
+    render(
+      <ChainedStrikeSection
+        ref={ref}
+        character={character}
+        chain={optionalChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={effects}
+      />
+    );
+    fireEvent.click(screen.getByLabelText('Include Elemental Blast'));
+    expect(screen.queryByTestId('resolver-1')).toBeNull();
+    expect(screen.queryByLabelText('strike picker')).toBeNull();
+    expect(ref.current.getResults()).toBeNull();
+  });
+
+  it('non-optional chains render no toggle', () => {
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={strikeChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={effects}
+      />
+    );
+    expect(screen.queryByLabelText(/^Include /)).toBeNull();
+  });
+});
+
 describe('ChainedStrikeSection', () => {
   it('filters strikes by trait — only Unarmed strikes shown', () => {
     render(

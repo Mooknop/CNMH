@@ -36,6 +36,13 @@ const ChainedStrikeSection = forwardRef(({
     filteredStrikes.length > 0 ? filteredStrikes[0].name : ''
   );
 
+  // Optional chains (#228 — Channel Elements can bundle a 1-action blast, or
+  // just activate the aura). Defaults to included; unticking collapses the
+  // section and getResults reports no strike.
+  const [included, setIncluded] = useState(true);
+  const optional = chain.optional === true;
+  const strikeIncluded = !optional || included;
+
   const resolver1Ref = useRef(null);
   const resolver2Ref = useRef(null);
 
@@ -78,7 +85,7 @@ const ChainedStrikeSection = forwardRef(({
 
   useImperativeHandle(ref, () => ({
     getResults: () => {
-      if (!selectedStrike) return null;
+      if (!selectedStrike || !strikeIncluded) return null;
       const rolls = [resolver1Ref.current?.getResults() ?? null];
       if (selectedMode === 'flurry') {
         rolls.push(resolver2Ref.current?.getResults() ?? null);
@@ -103,6 +110,20 @@ const ChainedStrikeSection = forwardRef(({
 
   return (
     <div style={{ marginTop: '0.5rem' }}>
+      {optional && (
+        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={included}
+            onChange={(e) => setIncluded(e.target.checked)}
+            aria-label={`Include ${chain.heading || 'strike'}`}
+            style={{ marginRight: '6px' }}
+          />
+          Include {chain.heading || 'strike'}
+        </label>
+      )}
+
+      {strikeIncluded && (<>
       {modes.length > 1 && (
         <div style={{ marginBottom: '0.5rem' }}>
           {modes.map((m) => (
@@ -169,6 +190,7 @@ const ChainedStrikeSection = forwardRef(({
           />
         </div>
       )}
+      </>)}
     </div>
   );
 });
