@@ -30,6 +30,9 @@ vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
 vi.mock('../../hooks/useTurnState', () => ({ useTurnState: vi.fn() }));
 vi.mock('../../hooks/useEnemyEffects', () => ({ useEnemyEffects: vi.fn() }));
 vi.mock('../../utils/rollResolution', () => ({ resolveActionRoll: vi.fn() }));
+vi.mock('../../utils/CharacterUtils', () => ({
+  getSkillModifier: (_c, s) => ({ athletics: 8, acrobatics: 5 }[s] ?? 0),
+}));
 vi.mock('../../utils/gameTime', () => ({ toGameSeconds: () => 1000 }));
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({ gameDate: {}, time: {} }),
@@ -217,5 +220,57 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
       character,
       expect.objectContaining({ mapStep: 1 }),
     );
+  });
+});
+
+describe('SkillActionModal (Feint)', () => {
+  const feint = getSkillAction('feint');
+
+  it('rolls vs a GM-entered Perception DC and applies off-guard on success', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={feint} character={character} />);
+    pickGoblin(); // Goblin has no perception → GM enters the DC
+    fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '14' } });
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    expect(screen.getByText('Success — Off-Guard')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
+    expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'off-guard' }));
+    expect(recordAttack).not.toHaveBeenCalled(); // Feint has no Attack trait
+    expect(stampImmunity).not.toHaveBeenCalled();
+  });
+
+  it('crit-failure leaves the acting PC off-guard', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={feint} character={character} />);
+    pickGoblin();
+    fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '14' } });
+    // d20 1 + 5 = 6 vs DC 14 → failure, nat-1 shifts to critical failure
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
+    expect(applyCondition).not.toHaveBeenCalled();
+    expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', [{ id: 'off-guard', value: null }]);
+  });
+});
+
+describe('SkillActionModal (Escape)', () => {
+  const escape = getSkillAction('escape');
+
+  it('is self-targeted: no enemy picker, with a skill choice', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={escape} character={character} />);
+    expect(screen.queryByRole('button', { name: 'Goblin' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Athletics' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Acrobatics' })).toBeInTheDocument();
+  });
+
+  it('success sheds grabbed from the acting PC and advances MAP', () => {
+    // The PC is currently grabbed (both the preview source and the write source).
+    useSyncedState.mockImplementation(() => [[{ id: 'grabbed', value: null }], vi.fn()]);
+    mockGetState.mockReturnValue([{ id: 'grabbed', value: null }]);
+    render(<SkillActionModal isOpen onClose={() => {}} action={escape} character={character} />);
+    fireEvent.change(screen.getByLabelText('DC'), { target: { value: '14' } });
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    expect(screen.getByText('Success — you are no longer Grabbed')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Escape/ }));
+    expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', []);
+    expect(recordAttack).toHaveBeenCalledWith(1); // Escape has the Attack trait
+    expect(applyCondition).not.toHaveBeenCalled();
   });
 });
