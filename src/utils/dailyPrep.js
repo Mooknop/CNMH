@@ -84,6 +84,13 @@ function computeResets(character, getState) {
     resets.push({ type: 'spellcounters', value: [], label: 'tracked spells' });
   }
 
+  // Stance (#224) — a lingering stance is dropped on rest (you don't wake up
+  // mid-stance). Cleared defensively; encounter end is the usual clear path.
+  const stance = getState(id, 'stance');
+  if (stance?.active) {
+    resets.push({ type: 'stance', value: { active: false, name: null, ts: 0 }, label: 'stance' });
+  }
+
   return resets;
 }
 

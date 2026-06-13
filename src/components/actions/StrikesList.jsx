@@ -7,6 +7,7 @@ import ThaumaturgeImplementsDisplay from './ThaumaturgeImplementsDisplay';
 import UseActionChip from '../shared/UseActionChip';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
+import { useStance } from '../../hooks/useStance';
 import { formatModifier } from '../../utils/CharacterUtils';
 
 
@@ -23,6 +24,8 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
   const { isThaumaturge } = flags;
   const { exploitFor } = useExploitVulnerability();
   const activeExploit = character?.id ? exploitFor(character.id) : null;
+  // Stance-gated strikes (#224) — Dragon Tail is usable only while its stance is up.
+  const { stanceName } = useStance(character?.id);
 
   // Separate strikes into melee and ranged categories
   const meleeStrikes = strikes.filter(strike => strike.type === 'melee');
@@ -42,7 +45,9 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
   };
   
   const renderStrikeCard = (strike, index) => {
-    const inactive = strike.active === false;
+    // A stance strike is locked unless that exact stance is currently active.
+    const stanceLocked = !!strike.stance && strike.stance !== stanceName;
+    const inactive = strike.active === false || stanceLocked;
 
     const headerRight = encounterMode && !inactive
       ? (
@@ -114,7 +119,9 @@ const StrikesList = ({ character, themeColor, encounterMode, onUse }) => {
 
         {inactive && (
           <div className="ability-inactive-hint">
-            Not in hand — draw this weapon to Strike with it.
+            {stanceLocked
+              ? `Requires ${strike.stance}.`
+              : 'Not in hand — draw this weapon to Strike with it.'}
           </div>
         )}
 

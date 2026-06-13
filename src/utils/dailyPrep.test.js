@@ -102,6 +102,15 @@ describe('performDailyPrep — resets', () => {
     expect(summary).toMatch(/tracked spells/);
   });
 
+  it('clears a lingering active stance (#224)', () => {
+    const { updates, getState, sendUpdate } = makeStubs({
+      stance: { active: true, name: 'Dragon Stance', ts: 1 },
+    });
+    const { summary } = performDailyPrep({ character, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'stance').value).toMatchObject({ active: false, name: null });
+    expect(summary).toMatch(/stance/);
+  });
+
   it('writes nothing for a character with full resources', () => {
     const { updates, getState, sendUpdate } = makeStubs({ slots: { 1: 0 }, focus: 0 });
     const { summary } = performDailyPrep({ character, getState, sendUpdate });

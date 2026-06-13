@@ -193,6 +193,14 @@ describe('useEncounter', () => {
     expect(JSON.parse(localStorage.getItem('cnmh_sustains_Pellias'))).toEqual([]);
   });
 
+  it('endEncounter clears each PC active stance (#224)', () => {
+    localStorage.setItem('cnmh_stance_Pellias', JSON.stringify({ active: true, name: 'Dragon Stance', ts: 1 }));
+    const { result } = setup();
+    act(() => result.current.startEncounter([pellias]));
+    act(() => result.current.endEncounter());
+    expect(JSON.parse(localStorage.getItem('cnmh_stance_Pellias'))).toMatchObject({ active: false, name: null });
+  });
+
   it('appendLog adds entries with ids + timestamps', () => {
     const { result } = setup();
     act(() => result.current.appendLog({ type: 'note', text: 'hi' }));

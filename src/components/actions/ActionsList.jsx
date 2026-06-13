@@ -10,6 +10,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useGrantedActions } from '../../hooks/useGrantedActions';
+import { useStance } from '../../hooks/useStance';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
@@ -24,6 +25,7 @@ const ActionsList = ({ character, characterColor }) => {
   const hasMagic = flags.hasSpellcasting || flags.hasFocusSpells || flags.hasInnateSpells
     || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
   const { grantedActions, removeGrantedAction } = useGrantedActions(character.id);
+  const { enter: enterStance } = useStance(character.id);
 
   const encounterMode = !!(encounter && encounter.active && encounter.phase === 'in-progress');
 
@@ -34,6 +36,28 @@ const ActionsList = ({ character, characterColor }) => {
       // Battle Medicine has its own resolution flow.
       if (item.name === 'Battle Medicine') {
         setTreatWoundsOpen(true);
+        return;
+      }
+
+      // Stances (#224) — entering toggles synced state and spends the action;
+      // there's no target or roll, so skip the modal. Entering a new stance
+      // overwrites any current one (you can only be in one stance).
+      if (item.traits?.includes('Stance')) {
+        enterStance(item.name);
+        if (encounterMode) {
+          spendActions(cost, item.name);
+          appendLog({
+            type: 'action',
+            charId: character.id,
+            text: `${character.name} entered ${item.name} (${cost} act)`,
+          });
+        } else {
+          appendLog({
+            type: 'action',
+            charId: character.id,
+            text: `${character.name} entered ${item.name}`,
+          });
+        }
         return;
       }
 
@@ -66,7 +90,7 @@ const ActionsList = ({ character, characterColor }) => {
         });
       }
     },
-    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode]
+    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode, enterStance]
   );
 
   const handleUseGranted = useCallback(

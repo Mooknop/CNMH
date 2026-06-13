@@ -23,6 +23,13 @@ vi.mock('../../hooks/useSpellCounters', () => ({
   useSpellCounters: () => mockCounters,
 }));
 
+const mockLeaveStance = vi.fn();
+const mockStance = { active: false, stanceName: null, leave: mockLeaveStance };
+
+vi.mock('../../hooks/useStance', () => ({
+  useStance: () => mockStance,
+}));
+
 // The panel resolves effect names from the ContentContext catalog (#284 — DO
 // source of truth), so mock that directly; the bundled pf2eEffects module is
 // only the seed fallback and never reaches this component.
@@ -56,6 +63,8 @@ describe('EffectsPanel', () => {
     mockEffects.effects = [];
     mockSustains.sustains = [];
     mockCounters.counters = [];
+    mockStance.active = false;
+    mockStance.stanceName = null;
   });
 
   it('renders nothing when no effects are active', () => {
@@ -189,5 +198,31 @@ describe('EffectsPanel', () => {
     // 1 effect + 1 sustain + 1 counter → header count of 3.
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByText('2 images')).toBeInTheDocument();
+  });
+
+  // ── Active stance (#224) ─────────────────────────────────────────────────
+  it('renders the panel when only a stance is active (no effects)', () => {
+    mockStance.active = true;
+    mockStance.stanceName = 'Dragon Stance';
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('EFFECTS')).toBeInTheDocument();
+    expect(screen.getByText('Dragon Stance')).toBeInTheDocument();
+    expect(screen.getByText('stance')).toBeInTheDocument();
+  });
+
+  it('counts the active stance alongside effects', () => {
+    mockEffects.effects = [{ id: 'uid-1', effectId: 'heroism-1', ts: 1 }];
+    mockStance.active = true;
+    mockStance.stanceName = 'Dragon Stance';
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  it('calls leave when the stance × is clicked', () => {
+    mockStance.active = true;
+    mockStance.stanceName = 'Dragon Stance';
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    fireEvent.click(screen.getByTitle('Leave Dragon Stance'));
+    expect(mockLeaveStance).toHaveBeenCalled();
   });
 });

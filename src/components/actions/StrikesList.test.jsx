@@ -33,7 +33,17 @@ vi.mock('../../hooks/useCharacter', () => ({
   },
 }));
 
+const mockStance = { active: false, stanceName: null };
+vi.mock('../../hooks/useStance', () => ({
+  useStance: () => mockStance,
+}));
+
 const mockCharacter = { id: '1', name: 'Fighter' };
+
+beforeEach(() => {
+  mockStance.active = false;
+  mockStance.stanceName = null;
+});
 
 describe('StrikesList', () => {
   it('renders empty state when no strikes', () => {
@@ -193,6 +203,37 @@ describe('StrikesList', () => {
       fireEvent.change(sel, { target: { value: '2' } });
       fireEvent.click(screen.getByRole('button', { name: 'Use Longsword' }));
       expect(onUse).toHaveBeenCalledWith(strike, 2);
+    });
+  });
+
+  // ── Stance-gated strikes (#224) ──────────────────────────────────────────
+  describe('stance gating', () => {
+    const dragonTail = { name: 'Dragon Tail Strike', type: 'melee', attackMod: 7, damage: '1d10', traits: [], actionCount: 1, stance: 'Dragon Stance' };
+
+    it('dims a stance strike and shows a Requires note when the stance is inactive', () => {
+      const char = { ...mockCharacter, _strikes: [dragonTail] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={vi.fn()} />);
+      expect(screen.getByText('Requires Dragon Stance.')).toBeInTheDocument();
+      expect(screen.getByTestId('collapsible-card').className).toContain('is-inactive');
+      expect(screen.queryByRole('button', { name: /Use Dragon Tail Strike/ })).toBeNull();
+    });
+
+    it('shows the stance strike normally when its stance is active', () => {
+      mockStance.active = true;
+      mockStance.stanceName = 'Dragon Stance';
+      const char = { ...mockCharacter, _strikes: [dragonTail] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={vi.fn()} />);
+      expect(screen.queryByText('Requires Dragon Stance.')).not.toBeInTheDocument();
+      expect(screen.getByTestId('collapsible-card').className).not.toContain('is-inactive');
+      expect(screen.getByRole('button', { name: 'Use Dragon Tail Strike' })).toBeInTheDocument();
+    });
+
+    it('locks a stance strike when a different stance is active', () => {
+      mockStance.active = true;
+      mockStance.stanceName = 'Tiger Stance';
+      const char = { ...mockCharacter, _strikes: [dragonTail] };
+      render(<StrikesList character={char} themeColor="#f00" encounterMode onUse={vi.fn()} />);
+      expect(screen.getByText('Requires Dragon Stance.')).toBeInTheDocument();
     });
   });
 

@@ -77,8 +77,16 @@ export const getStrikes = (character) => {
   if (character.feats) {
     const featStrikes = character.feats
       .filter(feat => feat.strikes && Array.isArray(feat.strikes) && feat.strikes.length > 0)
-      .flatMap(feat =>
-        feat.strikes.map(strike => {
+      .flatMap(feat => {
+        // Stance-gated strikes (#224): when a feat carries a Stance-trait action
+        // (e.g. Dragon Stance), its strikes (Dragon Tail) are only usable while
+        // that stance is active. Co-location heuristic — the stance action and
+        // its strikes share a feat block — so we tag each strike with the stance
+        // action's name and let the strike list gate on the live stance state.
+        const stanceName = feat.actions
+          ?.find(a => a.traits?.includes('Stance'))?.name || null;
+
+        return feat.strikes.map(strike => {
           const { attackBonus, damageString } = resolveStrikeMods(strike, character);
 
           // Variable action count parsing (e.g. "One to Two Actions")
@@ -121,9 +129,11 @@ export const getStrikes = (character) => {
             ...(strike.variants ? { variants: strike.variants } : {}),
             // Damage riders (#222) — carried through so the damage step sees them.
             ...(strike.riders ? { riders: strike.riders } : {}),
+            // Stance gate (#224) — present only for strikes from a stance feat.
+            ...(stanceName ? { stance: stanceName } : {}),
           };
-        })
-      );
+        });
+      });
     allStrikes = [...allStrikes, ...featStrikes];
   }
 
