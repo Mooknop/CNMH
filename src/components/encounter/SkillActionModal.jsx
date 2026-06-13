@@ -9,10 +9,12 @@ import { useTargeting } from '../../hooks/useTargeting';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useContent } from '../../contexts/ContentContext';
+import { useSession } from '../../contexts/SessionContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import { immunityConfigFor } from '../../utils/immunity';
+import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getCondition } from '../../data/pf2eConditions';
 import { toGameSeconds } from '../../utils/gameTime';
 import './SkillActionModal.css';
@@ -27,13 +29,16 @@ const DEGREE_LABELS = {
 const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
 
 /**
- * Player-initiated skill action against an enemy (#260). Slice 1: Demoralize.
+ * Player-initiated skill action against an enemy (#260). Demoralize and the
+ * Athletics maneuvers (Trip / Grapple / Shove / Disarm).
  *
  * Mirrors the existing roll resolvers — the player picks one enemy, sees their
  * skill modifier, enters a raw d20, and the degree is computed vs the target's
  * defense DC (prefilled from the enemy's defenses when known, GM-entered
- * otherwise). On confirm the action is spent, the degree's condition is applied
- * to the enemy, and the action's per-target immunity is stamped.
+ * otherwise). On confirm the action is spent and the degree's outcome is applied:
+ * an enemy condition, a note for GM-resolved effects, and/or a self-condition on
+ * a maneuver crit-fail. Attack-trait maneuvers read and advance the Multiple
+ * Attack Penalty; Demoralize stamps its per-target immunity.
  *
  * @param {object} action - a skillActions.js entry
  */
@@ -43,9 +48,16 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const { effects: effectCatalog } = useContent();
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
   const { encounter, appendLog } = useEncounter();
-  const { spendActions } = useTurnState(character?.id);
+  const { spendActions, recordAttack, turnState } = useTurnState(character?.id);
   const { applyCondition, stampImmunity, isImmune } = useEnemyEffects();
+  const { getState, sendUpdate } = useSession();
   const { gameDate, time } = useGameDate();
+
+  // Attack-trait maneuvers participate in the Multiple Attack Penalty.
+  const isAttack = isAttackAbility(action);
+  const autoStep = mapStepFor(turnState?.attacksMade ?? 0);
+  const [mapOverride, setMapOverride] = useState(null);
+  const mapStep = isAttack ? (mapOverride ?? autoStep) : 0;
 
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(character?.id, order);
@@ -64,16 +76,19 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     [order, pickedId]
   );
 
-  // Net skill modifier via the shared resolver (conditions + effects applied).
+  // Net skill modifier via the shared resolver (conditions + effects + MAP).
+  // The synthetic ability carries the action's traits so the resolver's post-hoc
+  // MAP block applies to Attack-trait maneuvers exactly like a strike.
   const rollProfile = useMemo(() => {
     if (!character || !characterModel || !action) return null;
-    const synthetic = { roll: { type: 'skill', skill: action.skill } };
+    const synthetic = { traits: action.traits, roll: { type: 'skill', skill: action.skill } };
     return resolveActionRoll(synthetic, character, {
       conditions: activeConditions || [],
       effects: effects || [],
       effectCatalog,
+      mapStep,
     });
-  }, [character, characterModel, action, activeConditions, effects, effectCatalog]);
+  }, [character, characterModel, action, activeConditions, effects, effectCatalog, mapStep]);
 
   const netMod = rollProfile?.bonus ?? null;
 
@@ -99,7 +114,25 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     : false;
 
   const outcome = degree ? action?.outcomes?.[degree] || null : null;
-  const conditionName = outcome ? (getCondition(outcome.condition)?.name || outcome.condition) : null;
+
+  // A condition catalog entry is "valued" (frightened 2) vs flat (prone).
+  const condLabel = (id, value) => {
+    if (!id) return null;
+    const def = getCondition(id);
+    const name = def?.name || id;
+    return def?.valued && value != null ? `${name} ${value}` : name;
+  };
+
+  // Human-readable summary of an outcome: enemy condition, GM note, and/or the
+  // self-condition a maneuver crit-fail leaves on the acting PC.
+  const describeOutcome = (o) => {
+    if (!o) return 'no effect';
+    const parts = [];
+    if (o.condition) parts.push(condLabel(o.condition, o.value));
+    if (o.note) parts.push(o.note);
+    if (o.selfCondition) parts.push(`you are ${condLabel(o.selfCondition)}`);
+    return parts.length ? parts.join('; ') : 'no effect';
+  };
 
   const defenseLabel = DEFENSE_LABELS[action?.defense] || 'DC';
 
@@ -121,13 +154,26 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
     spendActions(action.actionCost, action.name);
 
-    if (outcome) {
+    // Enemy condition (frightened / prone / grabbed / restrained).
+    if (outcome?.condition) {
       applyCondition(pickedId, {
         id: outcome.condition,
-        value: outcome.value,
+        value: outcome.value ?? null,
         source: action.name,
       });
     }
+
+    // Self-condition on a maneuver crit-fail (you fall prone). Mirrors the
+    // off-guard write in useExploitVulnerability — de-dupe, then sync.
+    if (outcome?.selfCondition && character?.id) {
+      const cur = getState(character.id, 'conditions') || [];
+      if (!cur.some((c) => c.id === outcome.selfCondition)) {
+        sendUpdate(character.id, 'conditions', [...cur, { id: outcome.selfCondition, value: null }]);
+      }
+    }
+
+    // Attack-trait maneuvers advance the Multiple Attack Penalty.
+    if (isAttack) recordAttack(1);
 
     // Per RAW the target is temporarily immune after any (non-errored) attempt.
     if (immuneConfig) {
@@ -140,22 +186,21 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
       });
     }
 
-    const resultStr = outcome
-      ? `${conditionName} ${outcome.value}`
-      : 'no effect';
+    const resultStr = describeOutcome(outcome);
     appendLog({
       type: 'action',
       charId: character?.id,
       text: `${character?.name} ${action.name} vs ${target.name} (${defenseLabel} ${dcVal}): ${total} → ${DEGREE_LABELS[degree]} — ${resultStr}`,
     });
 
-    setResolved({ degree, total, conditionName, value: outcome?.value ?? null, targetName: target.name });
+    setResolved({ degree, total, resultStr, targetName: target.name });
   };
 
   const handleClose = () => {
     setPickedId(null);
     setD20('');
     setDcInput('');
+    setMapOverride(null);
     setResolved(null);
     onClose();
   };
@@ -209,6 +254,29 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
               </div>
             )}
 
+            {/* Multiple Attack Penalty — Attack-trait maneuvers only */}
+            {isAttack && (
+              <div className="sam-field">
+                <label className="sam-label">Multiple attack penalty</label>
+                <div className="sam-target-picks">
+                  {[0, 1, 2].map((step) => {
+                    const pen = mapPenaltyFor(action, step);
+                    const active = mapStep === step;
+                    return (
+                      <button
+                        key={step}
+                        className={`sam-target-btn${active ? ' sam-target-btn--active' : ''}`}
+                        onClick={() => setMapOverride(step)}
+                        disabled={!!resolved}
+                      >
+                        {pen === 0 ? 'No MAP' : pen}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* d20 + DC */}
             <div className="sam-inputs">
               <div className="sam-field">
@@ -249,16 +317,14 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
             )}
             {degree && (
               <div className={`sam-degree sam-degree--${degree}`}>
-                {DEGREE_LABELS[degree]}
-                {outcome ? ` — ${conditionName} ${outcome.value}` : ' — no effect'}
+                {DEGREE_LABELS[degree]} — {describeOutcome(outcome)}
               </div>
             )}
 
             {/* Confirm / result */}
             {resolved ? (
               <div className="sam-result">
-                ✓ {action.name} applied to {resolved.targetName}
-                {resolved.conditionName ? ` — ${resolved.conditionName} ${resolved.value}` : ' — no effect'}
+                ✓ {action.name} vs {resolved.targetName} — {resolved.resultStr}
               </div>
             ) : (
               <button

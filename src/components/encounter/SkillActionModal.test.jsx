@@ -38,30 +38,39 @@ vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ effects: [] }),
 }));
 
+const mockGetState = vi.fn(() => []);
+const mockSendUpdate = vi.fn();
+vi.mock('../../contexts/SessionContext', () => ({
+  useSession: () => ({ getState: (...a) => mockGetState(...a), sendUpdate: (...a) => mockSendUpdate(...a) }),
+}));
+
 const action = getSkillAction('demoralize');
 const character = { id: 'izzy', name: 'Izzy', abilities: {}, skills: {} };
 
-// Enemy A has a known Will save (mod 4 → DC 14); Enemy B has no defenses (GM DC).
+// Enemy A has known saves (mod 4 → DC 14 each); Enemy B has no defenses (GM DC).
 const order = [
-  { entryId: 'e-a', kind: 'enemy', name: 'Goblin', defenses: { ac: 16, saves: { will: 4 } } },
+  { entryId: 'e-a', kind: 'enemy', name: 'Goblin', defenses: { ac: 16, saves: { will: 4, reflex: 4, fortitude: 4 } } },
   { entryId: 'e-b', kind: 'enemy', name: 'Orc' },
   { entryId: 'p-1', kind: 'pc', charId: 'jade', name: 'Jade' },
 ];
 
-let spendActions, applyCondition, stampImmunity, appendLog, isImmuneFn;
+let spendActions, recordAttack, applyCondition, stampImmunity, appendLog, isImmuneFn;
 
 beforeEach(() => {
   spendActions = vi.fn();
+  recordAttack = vi.fn();
   applyCondition = vi.fn();
   stampImmunity = vi.fn();
   appendLog = vi.fn();
   isImmuneFn = vi.fn(() => false);
+  mockGetState.mockReturnValue([]);
+  mockSendUpdate.mockClear();
 
   useCharacter.mockReturnValue({ flags: {} });
   useEffects.mockReturnValue({ effects: [] });
   useSyncedState.mockImplementation(() => [[], vi.fn()]);
   useEncounter.mockReturnValue({ encounter: { order }, appendLog });
-  useTurnState.mockReturnValue({ spendActions });
+  useTurnState.mockReturnValue({ spendActions, recordAttack, turnState: { attacksMade: 0 } });
   useEnemyEffects.mockReturnValue({
     applyCondition, stampImmunity, isImmune: isImmuneFn,
   });
@@ -138,5 +147,75 @@ describe('SkillActionModal (Demoralize)', () => {
     fireEvent.click(btn);
     expect(spendActions).not.toHaveBeenCalled();
     expect(applyCondition).not.toHaveBeenCalled();
+  });
+
+  it('does not show a MAP toggle and never advances MAP', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
+    pickGoblin();
+    expect(screen.queryByText('Multiple attack penalty')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '19' } });
+    fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
+    expect(recordAttack).not.toHaveBeenCalled();
+  });
+});
+
+describe('SkillActionModal (Athletics maneuvers)', () => {
+  const trip = getSkillAction('trip');
+  const grapple = getSkillAction('grapple');
+  const shove = getSkillAction('shove');
+
+  it('Trip success applies prone to the enemy and advances MAP', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={trip} character={character} />);
+    pickGoblin();
+    // Reflex DC 14; d20 10 + 5 = 15 → success
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    expect(screen.getByText('Success — Prone')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
+    expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'prone' }));
+    expect(recordAttack).toHaveBeenCalledWith(1);
+    expect(stampImmunity).not.toHaveBeenCalled();
+  });
+
+  it('Grapple crit-success applies restrained', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={grapple} character={character} />);
+    pickGoblin();
+    // Fortitude DC 14; d20 19 + 5 = 24 ≥ 24 → critical success
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '19' } });
+    expect(screen.getByText('Critical Success — Restrained')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Grapple/ }));
+    expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'restrained' }));
+  });
+
+  it('Shove success logs a note and applies no enemy condition', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={shove} character={character} />);
+    pickGoblin();
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    expect(screen.getByText('Success — Pushed back 5 ft')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Shove/ }));
+    expect(applyCondition).not.toHaveBeenCalled();
+    expect(recordAttack).toHaveBeenCalledWith(1);
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({ text: expect.stringContaining('Pushed back 5 ft') }));
+  });
+
+  it('Trip crit-failure leaves the acting PC prone via a conditions sync', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={trip} character={character} />);
+    pickGoblin();
+    // d20 1 + 5 = 6 vs DC 14 → failure, nat-1 shifts to critical failure
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
+    expect(applyCondition).not.toHaveBeenCalled();
+    expect(mockSendUpdate).toHaveBeenCalledWith('izzy', 'conditions', [{ id: 'prone', value: null }]);
+  });
+
+  it('reads the current MAP step from attacksMade and shows the toggle', () => {
+    useTurnState.mockReturnValue({ spendActions, recordAttack, turnState: { attacksMade: 1 } });
+    render(<SkillActionModal isOpen onClose={() => {}} action={trip} character={character} />);
+    pickGoblin();
+    expect(screen.getByText('Multiple attack penalty')).toBeInTheDocument();
+    expect(resolveActionRoll).toHaveBeenCalledWith(
+      expect.objectContaining({ traits: ['Attack'] }),
+      character,
+      expect.objectContaining({ mapStep: 1 }),
+    );
   });
 });
