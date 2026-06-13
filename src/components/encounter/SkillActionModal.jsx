@@ -12,6 +12,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { getSkillModifier } from '../../utils/CharacterUtils';
 import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import { immunityConfigFor } from '../../utils/immunity';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
@@ -29,16 +30,16 @@ const DEGREE_LABELS = {
 const fmtMod = (m) => (m >= 0 ? `+${m}` : `${m}`);
 
 /**
- * Player-initiated skill action against an enemy (#260). Demoralize and the
- * Athletics maneuvers (Trip / Grapple / Shove / Disarm).
+ * Player-initiated skill action (#260). Enemy-facing — Demoralize, the Athletics
+ * maneuvers (Trip / Grapple / Shove / Disarm), Feint — and self-facing (Escape).
  *
- * Mirrors the existing roll resolvers — the player picks one enemy, sees their
- * skill modifier, enters a raw d20, and the degree is computed vs the target's
- * defense DC (prefilled from the enemy's defenses when known, GM-entered
- * otherwise). On confirm the action is spent and the degree's outcome is applied:
- * an enemy condition, a note for GM-resolved effects, and/or a self-condition on
- * a maneuver crit-fail. Attack-trait maneuvers read and advance the Multiple
- * Attack Penalty; Demoralize stamps its per-target immunity.
+ * Mirrors the existing roll resolvers — the player sees their skill modifier,
+ * enters a raw d20, and the degree is computed vs a DC (the enemy's defense,
+ * prefilled when known, or GM-entered). On confirm the action is spent and the
+ * degree's outcome is applied: an enemy condition, a note for GM-resolved
+ * effects, a self-condition (maneuver/Feint crit-fail), and/or removing
+ * conditions from the acting PC (Escape). Attack-trait actions read and advance
+ * the Multiple Attack Penalty; Demoralize stamps its per-target immunity.
  *
  * @param {object} action - a skillActions.js entry
  */
@@ -53,11 +54,15 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const { getState, sendUpdate } = useSession();
   const { gameDate, time } = useGameDate();
 
-  // Attack-trait maneuvers participate in the Multiple Attack Penalty.
+  // Attack-trait actions participate in the Multiple Attack Penalty.
   const isAttack = isAttackAbility(action);
   const autoStep = mapStepFor(turnState?.attacksMade ?? 0);
   const [mapOverride, setMapOverride] = useState(null);
   const mapStep = isAttack ? (mapOverride ?? autoStep) : 0;
+
+  // Self-facing actions (Escape) resolve against the acting PC: no enemy picker,
+  // GM-entered DC, and condition-removal outcomes.
+  const selfTarget = !!action?.selfTarget;
 
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(character?.id, order);
@@ -69,6 +74,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [pickedId, setPickedId] = useState(null);
   const [d20, setD20] = useState('');
   const [dcInput, setDcInput] = useState('');
+  const [pickedSkill, setPickedSkill] = useState(null);
   const [resolved, setResolved] = useState(null); // locks the UI after confirm
 
   const target = useMemo(
@@ -76,19 +82,31 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     [order, pickedId]
   );
 
+  // Skill choice — actions with skillOptions (Escape) let the player pick; we
+  // default to whichever option has the higher modifier for this character.
+  const skillOptions = action?.skillOptions || null;
+  const defaultSkill = useMemo(() => {
+    if (!skillOptions || !character) return action?.skill;
+    return skillOptions.reduce(
+      (best, s) => (getSkillModifier(character, s) > getSkillModifier(character, best) ? s : best),
+      skillOptions[0]
+    );
+  }, [skillOptions, character, action]);
+  const activeSkill = pickedSkill || defaultSkill;
+
   // Net skill modifier via the shared resolver (conditions + effects + MAP).
   // The synthetic ability carries the action's traits so the resolver's post-hoc
-  // MAP block applies to Attack-trait maneuvers exactly like a strike.
+  // MAP block applies to Attack-trait actions exactly like a strike.
   const rollProfile = useMemo(() => {
     if (!character || !characterModel || !action) return null;
-    const synthetic = { traits: action.traits, roll: { type: 'skill', skill: action.skill } };
+    const synthetic = { traits: action.traits, roll: { type: 'skill', skill: activeSkill } };
     return resolveActionRoll(synthetic, character, {
       conditions: activeConditions || [],
       effects: effects || [],
       effectCatalog,
       mapStep,
     });
-  }, [character, characterModel, action, activeConditions, effects, effectCatalog, mapStep]);
+  }, [character, characterModel, action, activeSkill, activeConditions, effects, effectCatalog, mapStep]);
 
   const netMod = rollProfile?.bonus ?? null;
 
@@ -123,21 +141,29 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     return def?.valued && value != null ? `${name} ${value}` : name;
   };
 
-  // Human-readable summary of an outcome: enemy condition, GM note, and/or the
-  // self-condition a maneuver crit-fail leaves on the acting PC.
+  // Conditions an Escape would actually shed — the removeSelf ids the PC has now.
+  const removableNow = (o) =>
+    (o?.removeSelf || []).filter((id) => (activeConditions || []).some((c) => c.id === id));
+
+  // Human-readable summary of an outcome: enemy condition, GM note, a
+  // self-condition (maneuver/Feint crit-fail), and/or conditions Escape sheds.
   const describeOutcome = (o) => {
     if (!o) return 'no effect';
     const parts = [];
     if (o.condition) parts.push(condLabel(o.condition, o.value));
     if (o.note) parts.push(o.note);
     if (o.selfCondition) parts.push(`you are ${condLabel(o.selfCondition)}`);
+    if (o.removeSelf) {
+      const shed = removableNow(o);
+      parts.push(shed.length ? `you are no longer ${shed.map((id) => condLabel(id)).join(', ')}` : 'nothing to escape');
+    }
     return parts.length ? parts.join('; ') : 'no effect';
   };
 
   const defenseLabel = DEFENSE_LABELS[action?.defense] || 'DC';
 
   const canConfirm =
-    !resolved && !!target && !targetImmune && total != null && degree != null;
+    !resolved && (selfTarget || (!!target && !targetImmune)) && total != null && degree != null;
 
   const handleD20 = (e) => {
     const v = e.target.value;
@@ -163,8 +189,8 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
       });
     }
 
-    // Self-condition on a maneuver crit-fail (you fall prone). Mirrors the
-    // off-guard write in useExploitVulnerability — de-dupe, then sync.
+    // Self-condition on a maneuver/Feint crit-fail (you fall prone / off-guard).
+    // Mirrors the off-guard write in useExploitVulnerability — de-dupe, then sync.
     if (outcome?.selfCondition && character?.id) {
       const cur = getState(character.id, 'conditions') || [];
       if (!cur.some((c) => c.id === outcome.selfCondition)) {
@@ -172,7 +198,14 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
       }
     }
 
-    // Attack-trait maneuvers advance the Multiple Attack Penalty.
+    // Escape success — shed grabbed/restrained/immobilized from the acting PC.
+    if (outcome?.removeSelf && character?.id) {
+      const cur = getState(character.id, 'conditions') || [];
+      const next = cur.filter((c) => !outcome.removeSelf.includes(c.id));
+      if (next.length !== cur.length) sendUpdate(character.id, 'conditions', next);
+    }
+
+    // Attack-trait actions advance the Multiple Attack Penalty.
     if (isAttack) recordAttack(1);
 
     // Per RAW the target is temporarily immune after any (non-errored) attempt.
@@ -187,19 +220,21 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     }
 
     const resultStr = describeOutcome(outcome);
+    const targetClause = selfTarget ? '' : ` vs ${target.name}`;
     appendLog({
       type: 'action',
       charId: character?.id,
-      text: `${character?.name} ${action.name} vs ${target.name} (${defenseLabel} ${dcVal}): ${total} → ${DEGREE_LABELS[degree]} — ${resultStr}`,
+      text: `${character?.name} ${action.name}${targetClause} (${defenseLabel} ${dcVal}): ${total} → ${DEGREE_LABELS[degree]} — ${resultStr}`,
     });
 
-    setResolved({ degree, total, resultStr, targetName: target.name });
+    setResolved({ degree, total, resultStr, targetName: selfTarget ? character?.name : target.name });
   };
 
   const handleClose = () => {
     setPickedId(null);
     setD20('');
     setDcInput('');
+    setPickedSkill(null);
     setMapOverride(null);
     setResolved(null);
     onClose();
@@ -216,28 +251,49 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
       maxWidth="400px"
     >
       <div className="sam-body">
-        {/* Target picker */}
-        <div className="sam-field">
-          <label className="sam-label">Target</label>
-          <div className="sam-target-picks">
-            {enemyTargets.length === 0 ? (
-              <span className="sam-empty">No enemies in the encounter.</span>
-            ) : (
-              enemyTargets.map((e) => (
+        {/* Target picker — enemy-facing actions only */}
+        {!selfTarget && (
+          <div className="sam-field">
+            <label className="sam-label">Target</label>
+            <div className="sam-target-picks">
+              {enemyTargets.length === 0 ? (
+                <span className="sam-empty">No enemies in the encounter.</span>
+              ) : (
+                enemyTargets.map((e) => (
+                  <button
+                    key={e.entryId}
+                    className={`sam-target-btn${pickedId === e.entryId ? ' sam-target-btn--active' : ''}`}
+                    onClick={() => { setPickedId(e.entryId); setDcInput(''); setResolved(null); }}
+                    disabled={!!resolved}
+                  >
+                    {e.name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Skill choice — actions that allow more than one skill (Escape) */}
+        {skillOptions && (
+          <div className="sam-field">
+            <label className="sam-label">Skill</label>
+            <div className="sam-target-picks">
+              {skillOptions.map((s) => (
                 <button
-                  key={e.entryId}
-                  className={`sam-target-btn${pickedId === e.entryId ? ' sam-target-btn--active' : ''}`}
-                  onClick={() => { setPickedId(e.entryId); setDcInput(''); setResolved(null); }}
+                  key={s}
+                  className={`sam-target-btn${activeSkill === s ? ' sam-target-btn--active' : ''}`}
+                  onClick={() => { setPickedSkill(s); setResolved(null); }}
                   disabled={!!resolved}
                 >
-                  {e.name}
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
-              ))
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {target && (
+        {(selfTarget || target) && (
           <>
             {/* Immunity notice */}
             {targetImmune && (
@@ -324,7 +380,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
             {/* Confirm / result */}
             {resolved ? (
               <div className="sam-result">
-                ✓ {action.name} vs {resolved.targetName} — {resolved.resultStr}
+                ✓ {action.name}{selfTarget ? '' : ` vs ${resolved.targetName}`} — {resolved.resultStr}
               </div>
             ) : (
               <button

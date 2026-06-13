@@ -57,6 +57,39 @@ describe('skillActions registry', () => {
     });
   });
 
+  describe('Feint', () => {
+    it('rolls Deception vs Perception with no MAP and no immunity', () => {
+      const f = getSkillAction('feint');
+      expect(f.skill).toBe('deception');
+      expect(f.defense).toBe('perception');
+      expect(f.traits).not.toContain('Attack');
+      expect(f.immunity).toBeUndefined();
+    });
+
+    it('applies off-guard to the enemy, and to the PC on a crit-fail', () => {
+      const f = getSkillAction('feint');
+      expect(f.outcomes.success).toEqual({ condition: 'off-guard' });
+      expect(f.outcomes.criticalSuccess).toEqual({ condition: 'off-guard' });
+      expect(f.outcomes.criticalFailure).toEqual({ selfCondition: 'off-guard' });
+    });
+  });
+
+  describe('Escape', () => {
+    it('is a self-targeted Attack action with a skill choice and no preset DC', () => {
+      const e = getSkillAction('escape');
+      expect(e.selfTarget).toBe(true);
+      expect(e.traits).toContain('Attack');
+      expect(e.skillOptions).toEqual(['athletics', 'acrobatics']);
+      expect(e.defense).toBeNull();
+    });
+
+    it('clears grabbed/restrained/immobilized from the PC on success', () => {
+      const e = getSkillAction('escape');
+      expect(e.outcomes.success.removeSelf).toEqual(['grabbed', 'restrained', 'immobilized']);
+      expect(e.outcomes.criticalSuccess.removeSelf).toEqual(['grabbed', 'restrained', 'immobilized']);
+    });
+  });
+
   describe('skillActionsFor', () => {
     const pc = { id: 'AshkaBGosh', name: 'Ashka' };
 

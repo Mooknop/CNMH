@@ -19,6 +19,14 @@ describe('defenseDC', () => {
     expect(defenseDC(defenses, 'will')).toBe(15);
   });
 
+  test('returns 10 + perception modifier (top-level, not under saves)', () => {
+    expect(defenseDC({ ...defenses, perception: 9 }, 'perception')).toBe(19);
+  });
+
+  test('returns null when perception is absent', () => {
+    expect(defenseDC(defenses, 'perception')).toBeNull();
+  });
+
   test('returns null when ac is null', () => {
     expect(defenseDC({ ac: null, saves: {} }, 'ac')).toBeNull();
   });
@@ -47,12 +55,13 @@ describe('DEFENSE_LABELS', () => {
     expect(DEFENSE_LABELS.fortitude).toBe('Fortitude DC');
     expect(DEFENSE_LABELS.reflex).toBe('Reflex DC');
     expect(DEFENSE_LABELS.will).toBe('Will DC');
+    expect(DEFENSE_LABELS.perception).toBe('Perception DC');
   });
 });
 
 describe('DEFENSE_OPTIONS', () => {
-  test('includes all four options', () => {
+  test('includes ac, the three saves, and perception', () => {
     const values = DEFENSE_OPTIONS.map((o) => o.value);
-    expect(values).toEqual(['ac', 'fortitude', 'reflex', 'will']);
+    expect(values).toEqual(['ac', 'fortitude', 'reflex', 'will', 'perception']);
   });
 });
