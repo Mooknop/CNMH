@@ -7,8 +7,11 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeSaveDegree } from '../../utils/saveDegree';
-import { formatModifier } from '../../utils/CharacterUtils';
+import { formatModifier, hasFeat } from '../../utils/CharacterUtils';
+import { hasGodlessHealing } from '../../utils/consumables';
 import { toGameSeconds } from '../../utils/gameTime';
+
+const GODLESS_HEALING_BONUS = 2;
 import {
   availableDcs,
   healHint,
@@ -46,6 +49,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   const [selectedDc, setSelectedDc] = useState(null);
   const [d20Input, setD20Input] = useState('');
   const [amountInput, setAmountInput] = useState('');
+  const [mortalChecked, setMortalChecked] = useState(false);
 
   const actionName = mode === 'battle-medicine' ? 'Battle Medicine' : 'Treat Wounds';
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
@@ -66,10 +70,25 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
     ? computeSaveDegree({ d20, total, dc: selectedDc })
     : null;
 
-  const hint       = degree && degree !== 'failure' && selectedDc != null
-    ? healHint(selectedDc, degree)
+  // Mortal Healing (Blu) — on a Treat Wounds success against a creature that
+  // hasn't had divine healing in 24h, upgrade to a critical success. The 24h
+  // condition can't be tracked, so it's a player-confirmed checkbox; offered
+  // only on a raw success (you can't upgrade a crit or a failure).
+  const canMortalHeal = mode !== 'battle-medicine'
+    && hasFeat(healer, 'Mortal Healing')
+    && degree === 'success';
+  const effectiveDegree = (canMortalHeal && mortalChecked) ? 'criticalSuccess' : degree;
+
+  // Godless Healing (Blu) — +2 HP from healing-only effects received by the
+  // target. Applies on any delivered healing (success / critical success).
+  const targetGodless = !!selectedTarget && hasGodlessHealing(selectedTarget);
+  const godlessApplies = targetGodless
+    && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess');
+
+  const hint       = effectiveDegree && effectiveDegree !== 'failure' && selectedDc != null
+    ? healHint(selectedDc, effectiveDegree)
     : null;
-  const needsAmount = degree === 'success' || degree === 'criticalSuccess' || degree === 'criticalFailure';
+  const needsAmount = effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess' || effectiveDegree === 'criticalFailure';
 
   const amount    = parseInt(amountInput, 10);
   const hasAmount = !isNaN(amount) && amount > 0;
@@ -85,26 +104,32 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   const handleTargetSelect = (id) => {
     setSelectedTargetId((prev) => (prev === id ? null : id));
     setAmountInput('');
+    setMortalChecked(false);
   };
 
   const handleDcSelect = (dc) => {
     setSelectedDc(dc);
     setAmountInput('');
+    setMortalChecked(false);
   };
 
   const handleD20Change = (val) => {
     setD20Input(val);
     setAmountInput('');
+    setMortalChecked(false);
   };
 
   const handleConfirm = () => {
     if (!confirmEnabled || !selectedTarget) return;
+    const healAmount = needsAmount
+      ? amount + (godlessApplies ? GODLESS_HEALING_BONUS : 0)
+      : 0;
     applyTreatWounds({
       healer:     { id: healer.id, name: healer.name },
       target:     { id: selectedTarget.id, name: selectedTarget.name, maxHp: selectedTarget.maxHp },
       dc:         selectedDc,
-      degree,
-      amount:     needsAmount ? amount : 0,
+      degree:     effectiveDegree,
+      amount:     healAmount,
       actionName,
       nowSecs:    toGameSeconds({ ...gameDate, ...time }),
       getState,
@@ -119,7 +144,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
 
   if (!isOpen || !healer) return null;
 
-  const degreeInfo = degree ? DEGREE_INFO[degree] : null;
+  const degreeInfo = effectiveDegree ? DEGREE_INFO[effectiveDegree] : null;
 
   return (
     <Modal
@@ -203,6 +228,22 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
             </span>
           )}
         </div>
+
+        {/* Mortal Healing (#224) — upgrade a Treat Wounds success to a crit when
+            the target hasn't had divine healing in 24h (player-confirmed). */}
+        {canMortalHeal && (
+          <label className="tw-feat-toggle">
+            <input
+              type="checkbox"
+              checked={mortalChecked}
+              onChange={(e) => setMortalChecked(e.target.checked)}
+            />
+            <span>
+              <strong>Mortal Healing:</strong> target hasn't regained HP from
+              divine magic in 24h — upgrade to a critical success.
+            </span>
+          </label>
+        )}
       </section>
 
       {/* ── Amount (healing or damage) ───────────────────────────────────── */}
@@ -219,11 +260,17 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
                 type="number"
                 className="trr-roll-input"
                 placeholder="total"
-                aria-label={degree === 'criticalFailure' ? 'damage total' : 'hp healed'}
+                aria-label={effectiveDegree === 'criticalFailure' ? 'damage total' : 'hp healed'}
                 value={amountInput}
                 onChange={(e) => setAmountInput(e.target.value)}
               />
             </div>
+            {godlessApplies && (
+              <p className="tw-feat-note">
+                <strong>Godless Healing:</strong> +{GODLESS_HEALING_BONUS} HP (healing-only)
+                applied on top of the rolled total.
+              </p>
+            )}
           </section>
         </>
       )}
