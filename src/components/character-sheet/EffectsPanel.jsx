@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffects } from '../../hooks/useEffects';
 import { useSustains } from '../../hooks/useSustains';
+import { useSpellCounters } from '../../hooks/useSpellCounters';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import './EffectsPanel.css';
@@ -14,13 +15,14 @@ const FROM_NAME_EFFECT_IDS = [IMMUNITY_EFFECT_ID, ABILITY_IMMUNITY_EFFECT_ID];
 const EffectsPanel = ({ charId, themeColor }) => {
   const { effects, removeEffect } = useEffects(charId);
   const { sustains, end: endSustain } = useSustains(charId);
+  const { counters, adjust: adjustCounter, end: endCounter } = useSpellCounters(charId);
   const { effects: effectCatalog, characters } = useContent();
   const { gameDate, time } = useGameDate();
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
   const getEffect = (id) => (effectCatalog || []).find((e) => e.id === id) || null;
   const getCharName = (id) => (characters || []).find((c) => c.id === id)?.name || null;
 
-  if (effects.length === 0 && sustains.length === 0) return null;
+  if (effects.length === 0 && sustains.length === 0 && counters.length === 0) return null;
 
   return (
     <div className="effects-panel" aria-label="Active effects">
@@ -28,7 +30,7 @@ const EffectsPanel = ({ charId, themeColor }) => {
         <span className="effects-panel-title">
           EFFECTS
         </span>
-        <span className="effects-panel-count">{effects.length + sustains.length}</span>
+        <span className="effects-panel-count">{effects.length + sustains.length + counters.length}</span>
       </div>
       <ul className="effects-panel-list">
         {effects.map((entry) => {
@@ -77,6 +79,40 @@ const EffectsPanel = ({ charId, themeColor }) => {
               onClick={() => endSustain(s.id)}
               aria-label={`End ${s.spellName}`}
               title={`End ${s.spellName}`}
+            >
+              ×
+            </button>
+          </li>
+        ))}
+        {/* Per-spell counters (#220) — Mirror Image images, Bless radius. */}
+        {counters.map((c) => (
+          <li key={c.id} className="effects-panel-item effects-panel-item--counter">
+            <span className="effects-panel-name">{c.spellName}</span>
+            <span className="effects-panel-tag">{c.value}{c.unit ? ` ${c.unit}` : ''}</span>
+            {c.kind === 'images' ? (
+              <button
+                className="effects-panel-adjust"
+                onClick={() => adjustCounter(c.id, -1)}
+                aria-label={`Destroy an image of ${c.spellName}`}
+                title="An image is destroyed"
+              >
+                Pop
+              </button>
+            ) : (
+              <button
+                className="effects-panel-adjust"
+                onClick={() => adjustCounter(c.id, c.step)}
+                aria-label={`Grow ${c.spellName} by ${c.step} ${c.unit}`}
+                title={`+${c.step} ${c.unit}`}
+              >
+                +{c.step}
+              </button>
+            )}
+            <button
+              className="effects-panel-remove"
+              onClick={() => endCounter(c.id)}
+              aria-label={`End ${c.spellName}`}
+              title={`End ${c.spellName}`}
             >
               ×
             </button>

@@ -80,3 +80,20 @@
 .effects-panel-item--sustain .effects-panel-name {
   font-style: italic;
 }
+
+/* Per-spell counter controls (#220) — Pop an image / grow an emanation. */
+.effects-panel-adjust {
+  background: var(--surface-inset, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text, inherit);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.effects-panel-adjust:hover {
+  border-color: var(--color-theme, var(--verdant-light));
+}

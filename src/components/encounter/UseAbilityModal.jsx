@@ -24,6 +24,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
+import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
 import { immunityConfigFor } from '../../utils/immunity';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
@@ -504,6 +505,18 @@ const UseAbilityModal = ({
         getState,
         sendUpdate,
         appendLog,
+      });
+    }
+
+    // Per-spell counters (#220) — Mirror Image images, Bless emanation radius.
+    // Not turn-bound, so registered on any cast (the EffectsPanel surfaces them).
+    if (hasSpellCounter(ability)) {
+      registerSpellCounter({
+        ability,
+        caster: character,
+        round: encounter?.round,
+        getState,
+        sendUpdate,
       });
     }
 
