@@ -67,3 +67,16 @@
   color: var(--color-text-muted);
   white-space: nowrap;
 }
+
+/* Sustained-spell tag (#220) — distinguishes a sustain entry from an effect. */
+.effects-panel-tag {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.effects-panel-item--sustain .effects-panel-name {
+  font-style: italic;
+}
