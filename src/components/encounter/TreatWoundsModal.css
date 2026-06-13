@@ -117,6 +117,28 @@
   border: 1px solid var(--d-cf-border);
 }
 
+/* Feat modifiers (#224 — Mortal Healing toggle, Godless Healing note) */
+.tw-feat-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+
+.tw-feat-toggle input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.tw-feat-note {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
+
 .tw-footer {
   display: flex;
   gap: var(--space-2);

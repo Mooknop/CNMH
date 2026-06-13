@@ -61,9 +61,13 @@ function renderModal(props = {}) {
   return render(<TreatWoundsModal {...defaultProps} {...props} />);
 }
 
+const mortalHealer = { id: 'h1', name: 'Blu', feats: [{ name: 'Mortal Healing' }] };
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetState.mockReturnValue(undefined);
+  // Reset any feats a test attached to the shared target fixtures (#224).
+  mockCharacters.forEach((c) => { delete c.feats; });
   useCharacter.mockReturnValue({
     skillModifiers:    { medicine: 7 },
     skillProficiencies:{ medicine: 2 },
@@ -356,5 +360,105 @@ describe('confirm handling', () => {
     // failure → no amount needed → confirm enabled
     fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
     expect(mockSpendActions).not.toHaveBeenCalled();
+  });
+});
+
+// ── Feat modifiers (#224 — Mortal Healing, Godless Healing) ───────────────────
+
+describe('Mortal Healing', () => {
+  // Brakor + DC 15 + d20 10 (=17) → success.
+  function setupSuccess(props = {}) {
+    renderModal(props);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+  }
+
+  it('hides the toggle without the feat', () => {
+    setupSuccess();
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('hides the toggle in Battle Medicine mode even with the feat', () => {
+    setupSuccess({ healer: mortalHealer, mode: 'battle-medicine' });
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('hides the toggle on a critical success (nothing to upgrade)', () => {
+    renderModal({ healer: mortalHealer });
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '20' } });
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('shows the toggle on a success for a feat-holder', () => {
+    setupSuccess({ healer: mortalHealer });
+    expect(screen.getByText(/Mortal Healing/)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+  });
+
+  it('upgrades the degree and hint to a critical success when checked', () => {
+    setupSuccess({ healer: mortalHealer });
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('2d8')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByText('Critical Success')).toBeInTheDocument();
+    expect(screen.getByText('4d8')).toBeInTheDocument();
+  });
+
+  it('confirms with the upgraded degree', () => {
+    setupSuccess({ healer: mortalHealer });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '30' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      degree: 'criticalSuccess',
+      amount: 30,
+    }));
+  });
+});
+
+describe('Godless Healing', () => {
+  it('adds +2 to the healed amount when the target has the feat', () => {
+    mockCharacters[0].feats = [{ name: 'Godless Healing' }];
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.getByText(/Godless Healing/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 14,
+    }));
+  });
+
+  it('does not add the bonus for a target without the feat', () => {
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.queryByText(/Godless Healing/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 12,
+    }));
+  });
+
+  it('does not add the bonus to critical-failure damage', () => {
+    mockCharacters[0].feats = [{ name: 'Godless Healing' }];
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 20').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '1' } });
+    expect(screen.queryByText(/Godless Healing/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('damage total'), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      degree: 'criticalFailure',
+      amount: 5,
+    }));
   });
 });
