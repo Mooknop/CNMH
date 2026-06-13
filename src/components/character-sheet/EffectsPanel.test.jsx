@@ -15,6 +15,14 @@ vi.mock('../../hooks/useSustains', () => ({
   useSustains: () => mockSustains,
 }));
 
+const mockAdjustCounter = vi.fn();
+const mockEndCounter = vi.fn();
+const mockCounters = { counters: [], adjust: mockAdjustCounter, end: mockEndCounter };
+
+vi.mock('../../hooks/useSpellCounters', () => ({
+  useSpellCounters: () => mockCounters,
+}));
+
 // The panel resolves effect names from the ContentContext catalog (#284 — DO
 // source of truth), so mock that directly; the bundled pf2eEffects module is
 // only the seed fallback and never reaches this component.
@@ -47,6 +55,7 @@ describe('EffectsPanel', () => {
     vi.clearAllMocks();
     mockEffects.effects = [];
     mockSustains.sustains = [];
+    mockCounters.counters = [];
   });
 
   it('renders nothing when no effects are active', () => {
@@ -136,9 +145,49 @@ describe('EffectsPanel', () => {
   });
 
   it('calls end with the sustain id when its End button is clicked', () => {
-    mockSustains.sustains = [{ id: 'sus-end', spellName: 'Mirror Image' }];
+    mockSustains.sustains = [{ id: 'sus-end', spellName: 'Cackle' }];
     render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
-    fireEvent.click(screen.getByTitle('End Mirror Image'));
+    fireEvent.click(screen.getByTitle('End Cackle'));
     expect(mockEndSustain).toHaveBeenCalledWith('sus-end');
+  });
+
+  // ── Per-spell counters (#220) ────────────────────────────────────────────
+  it('renders a Mirror Image image counter with a Pop control', () => {
+    mockCounters.counters = [
+      { id: 'mi', spellName: 'Mirror Image', kind: 'images', value: 3, step: 1, unit: 'images' },
+    ];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('Mirror Image')).toBeInTheDocument();
+    expect(screen.getByText('3 images')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Destroy an image of Mirror Image' })).toBeInTheDocument();
+  });
+
+  it('Pop adjusts the images counter by -1', () => {
+    mockCounters.counters = [
+      { id: 'mi', spellName: 'Mirror Image', kind: 'images', value: 3, step: 1, unit: 'images' },
+    ];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Destroy an image of Mirror Image' }));
+    expect(mockAdjustCounter).toHaveBeenCalledWith('mi', -1);
+  });
+
+  it('renders a Bless emanation counter with a grow control', () => {
+    mockCounters.counters = [
+      { id: 'bl', spellName: 'Bless', kind: 'emanation', value: 15, step: 10, unit: 'ft' },
+    ];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('15 ft')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Grow Bless by 10 ft' }));
+    expect(mockAdjustCounter).toHaveBeenCalledWith('bl', 10);
+  });
+
+  it('counts counters alongside effects and sustains', () => {
+    mockEffects.effects = [{ id: 'uid-1', effectId: 'heroism-1', ts: 1 }];
+    mockSustains.sustains = [{ id: 'sus-1', spellName: 'Bless' }];
+    mockCounters.counters = [{ id: 'mi', spellName: 'Mirror Image', kind: 'images', value: 2, unit: 'images' }];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    // 1 effect + 1 sustain + 1 counter → header count of 3.
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('2 images')).toBeInTheDocument();
   });
 });
