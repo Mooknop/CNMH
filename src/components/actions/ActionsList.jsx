@@ -7,6 +7,8 @@ import MagicModal from '../spells/MagicModal';
 import UseAbilityModal from '../encounter/UseAbilityModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import HuntPreyModal from '../encounter/HuntPreyModal';
+import SkillActionModal from '../encounter/SkillActionModal';
+import { skillActionsFor } from '../../data/skillActions';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -20,6 +22,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [usingAbility, setUsingAbility] = useState(null); // { ability, cost } | null
   const [treatWoundsMode, setTreatWoundsMode] = useState(null); // 'battle-medicine' | 'staunch-bleeding' | null
   const [huntPreyCost, setHuntPreyCost] = useState(null); // action cost when the Hunt Prey modal is open, else null
+  const [skillAction, setSkillAction] = useState(null); // a skillActions.js entry while its modal is open, else null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -32,6 +35,9 @@ const ActionsList = ({ character, characterColor }) => {
   const encounterMode = !!(encounter && encounter.active && encounter.phase === 'in-progress');
 
   const themeColor = characterColor || 'var(--color-primary)';
+
+  // Player-initiated skill actions (#260) — Demoralize today. Only in encounter.
+  const skillActions = skillActionsFor(character, { encounterMode });
 
   const handleUse = useCallback(
     (item, cost) => {
@@ -148,6 +154,24 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
+      {encounterMode && skillActions.length > 0 && (
+        <div className="granted-actions-section" aria-label="Skill actions">
+          <h3 className="granted-actions-title">Skill Actions</h3>
+          {skillActions.map((sa) => (
+            <div key={sa.id} className="granted-action-row">
+              <span className="granted-action-name">{sa.name}</span>
+              <button
+                className="btn-encounter-use"
+                aria-label={`Use ${sa.name}`}
+                onClick={() => setSkillAction(sa)}
+              >
+                Use ({sa.actionCost} act)
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="section-tabs">
         <button
           className={`section-tab ${activeSection === 'actions' ? 'active' : ''}`}
@@ -236,6 +260,16 @@ const ActionsList = ({ character, characterColor }) => {
           character={character}
           themeColor={themeColor}
           actionCost={huntPreyCost}
+        />
+      )}
+
+      {skillAction && (
+        <SkillActionModal
+          isOpen
+          onClose={() => setSkillAction(null)}
+          action={skillAction}
+          character={character}
+          themeColor={themeColor}
         />
       )}
     </div>
