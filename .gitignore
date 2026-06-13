@@ -21,6 +21,10 @@ foundry-bridge/coverage
 .dev.vars
 .wrangler
 
+# Obsidian per-machine workspace state inside the lore vault (commit nothing
+# else from .obsidian/)
+lore-vault/.obsidian/workspace*
+
 # misc
 .DS_Store
 .env.local
