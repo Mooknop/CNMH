@@ -1,22 +1,48 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000';
+// Two run profiles, selected by whether E2E_BASE_URL is set:
+//   • LOCAL (unset)  → full-stack `wrangler dev --env e2e` on :8788, booted as
+//     Playwright's webServer. Real Worker + both DOs + simulated R2, zero CF
+//     usage. `npm run test:e2e:local`.
+//   • STAGING (set)  → point at the deployed cnmh-staging Worker with CF Access
+//     service-token headers. `E2E_BASE_URL=… npm run test:e2e` (CI default).
+const LOCAL = !process.env.E2E_BASE_URL;
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:8788';
+
+// Dedicated, ephemeral DO/R2 state dir for the local stack — wiped before
+// wrangler reads it so each run starts clean even before the first reset().
+const E2E_STATE_DIR = '.wrangler/e2e-state';
 
 export default defineConfig({
   testDir: './e2e',
-  // Staging is a single shared instance — run specs serially to avoid
+  // Single shared instance (local DO or staging) — run specs serially to avoid
   // test data collisions. Parallelism lives inside a spec file via test.step.
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  // 1 retry (not 2) caps write-amplification on the shared CF staging DO.
-  // A deterministic flake still gets one chance; a real failure surfaces fast.
-  retries: process.env.CI ? 1 : 0,
-  // 60s (not Playwright's default 30s) gives slower staging saves room before
-  // Playwright tears down the request context — the "Request context disposed"
-  // cascade on retry beforeEach is the symptom of the prior 30s being too tight.
-  timeout: 60_000,
+  // Local: no network latency, so a real failure should surface immediately.
+  // Staging: 1 retry (not 2) caps write-amplification on the shared CF DO — a
+  // deterministic flake still gets one chance.
+  retries: LOCAL ? 0 : process.env.CI ? 1 : 0,
+  // Local: Playwright's default 30s is ample. Staging: 60s gives slower remote
+  // saves room before the request context is torn down (the "Request context
+  // disposed" cascade on retry beforeEach is the symptom of 30s being too tight).
+  timeout: LOCAL ? 30_000 : 60_000,
   reporter: process.env.CI ? [['html'], ['github']] : 'list',
+
+  // Local stack: build the app (served via the ASSETS binding) then boot the
+  // real Worker + DOs. STAGING runs against an already-deployed Worker, so no
+  // webServer. The inline node rm wipes prior DO/R2 state before wrangler reads it.
+  webServer: LOCAL
+    ? {
+        command: `node -e "require('fs').rmSync('${E2E_STATE_DIR}',{recursive:true,force:true})" && npm run build:app && npx wrangler dev --env e2e --port 8788 --persist-to ${E2E_STATE_DIR}`,
+        url: 'http://localhost:8788/api/content',
+        timeout: 120_000,
+        reuseExistingServer: !process.env.CI,
+        stdout: 'pipe',
+        stderr: 'pipe',
+      }
+    : undefined,
 
   use: {
     baseURL: BASE_URL,

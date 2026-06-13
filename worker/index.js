@@ -65,7 +65,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/gm/_test/reset') {
       const gm = await verifyAccess(request, env);
       if (!gm) return new Response('Forbidden', { status: 403 });
-      if (env.ENVIRONMENT !== 'staging') return new Response('Not found', { status: 404 });
+      if (!['staging', 'e2e'].includes(env.ENVIRONMENT)) return new Response('Not found', { status: 404 });
       const resetUrl = new URL('/_internal/reset', request.url);
       if (url.searchParams.has('keep_session')) resetUrl.searchParams.set('keep_session', '1');
       if (url.searchParams.has('keep_content')) resetUrl.searchParams.set('keep_content', '1');

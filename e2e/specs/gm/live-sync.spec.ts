@@ -21,7 +21,9 @@ import { testId, testTitle } from '../../helpers/ids';
 // the page + WS handshake through.
 const ctxOptions = () => {
   const base: Record<string, unknown> = {
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:3000',
+    // Mirror playwright.config.ts: staging when E2E_BASE_URL is set, otherwise
+    // the local wrangler-dev stack on :8788 (manual contexts don't inherit it).
+    baseURL: process.env.E2E_BASE_URL || 'http://localhost:8788',
   };
   if (process.env.CF_ACCESS_CLIENT_ID) {
     base.extraHTTPHeaders = {
