@@ -10,6 +10,7 @@ type SeedCollections = {
   character?: object[];
   item?: object[];
   spell?: object[];
+  effect?: object[];
 };
 
 // `reset` fixture calls /api/gm/_test/reset to wipe both DOs before a test.
