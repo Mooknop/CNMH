@@ -327,7 +327,9 @@ test.describe('Character editor', () => {
     await addEntry(form, 'reactions', 'Add reactions entry');
     await form.getByLabel('reactions-0-name').fill('E2E Counter');
     // Default cost is Reaction (R); check it saved that way without changing it
-    await form.getByLabel('reactions-0-trigger').fill('An enemy attacks an ally adjacent to you.');
+    await form
+      .getByLabel('reactions-0-trigger', { exact: true })
+      .fill('An enemy attacks an ally adjacent to you.');
 
     const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);

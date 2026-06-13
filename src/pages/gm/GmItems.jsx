@@ -459,7 +459,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     setError(null);
     try {
       await saveDocument('item', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (err) {
       setError(err.message);
     } finally {
