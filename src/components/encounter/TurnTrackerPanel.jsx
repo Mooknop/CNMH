@@ -17,6 +17,7 @@ import PersistentChip from './PersistentChip';
 import AuraChip from './AuraChip';
 import OmenChip from './OmenChip';
 import StanceChip from './StanceChip';
+import HuntPreyBadge from './HuntPreyBadge';
 import './TurnTrackerPanel.css';
 
 const formatCombatTime = (secs) => {
@@ -351,6 +352,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
               {entry.kind === 'enemy' && flankedMap?.[entry.entryId] && (
                 <span className="ttp-flanked-badge" aria-label={`${entry.name} is flanked`} title="Flanked">⚔</span>
               )}
+              {entry.kind === 'enemy' && <HuntPreyBadge enemyEntry={entry} order={order} />}
               {entry.kind === 'pc' && <AuraChip entry={entry} />}
               {entry.kind === 'pc' && <OmenChip entry={entry} />}
               {entry.kind === 'pc' && <StanceChip entry={entry} />}

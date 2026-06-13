@@ -3,13 +3,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ActionsList from './ActionsList';
 
 const STANCE_ACTION = { name: 'Dragon Stance', traits: ['Monk', 'Stance'], actionCount: 1 };
+const HUNT_PREY_ACTION = { name: 'Hunt Prey', traits: ['Concentrate', 'Ranger'], actionCount: 1 };
 
-// CharacterActionsList is mocked as an inert testid div, plus a button that
-// fires the onUse callback so we can exercise ActionsList.handleUse.
+// CharacterActionsList is mocked as an inert testid div, plus buttons that
+// fire the onUse callback so we can exercise ActionsList.handleUse.
 vi.mock('./CharacterActionsList', () => ({
   default: ({ onUse }) => (
     <div data-testid="character-actions-list">
       <button onClick={() => onUse?.(STANCE_ACTION, 1)}>use-stance</button>
+      <button onClick={() => onUse?.(HUNT_PREY_ACTION, 1)}>use-hunt-prey</button>
     </div>
   ),
 }));
@@ -17,6 +19,7 @@ vi.mock('./ReactionsList', () => ({ default: () => <div data-testid="reactions-l
 vi.mock('./FreeActionsList', () => ({ default: () => <div data-testid="free-actions-list" /> }));
 vi.mock('../spells/MagicModal', () => ({ default: () => null }));
 vi.mock('../encounter/UseAbilityModal', () => ({ default: () => <div data-testid="use-ability-modal" /> }));
+vi.mock('../encounter/HuntPreyModal', () => ({ default: () => <div data-testid="hunt-prey-modal" /> }));
 
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: () => ({
@@ -131,5 +134,14 @@ describe('ActionsList', () => {
     fireEvent.click(screen.getByRole('button', { name: 'use-stance' }));
     expect(mockEnterStance).toHaveBeenCalledWith('Dragon Stance');
     expect(mockSpendActions).not.toHaveBeenCalled();
+  });
+
+  // ── Hunt Prey (#223) ─────────────────────────────────────────────────────
+  it('using the Hunt Prey action opens the Hunt Prey modal (not the ability modal)', () => {
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByTestId('hunt-prey-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'use-hunt-prey' }));
+    expect(screen.getByTestId('hunt-prey-modal')).toBeInTheDocument();
+    expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
   });
 });
