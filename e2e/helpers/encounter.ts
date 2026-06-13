@@ -20,3 +20,52 @@ export function activeEncounter(
     ...extra,
   };
 }
+
+// Order-entry builders mirroring makePcEntry/makeEnemyEntry (encounterUtils.js),
+// with stable entryIds so tests can re-push a consistent order across turns.
+export const pcEntry = (charId: string, name: string, initiative: number | null = null) => ({
+  entryId: `e2e-pc-${charId}`,
+  kind: 'pc' as const,
+  charId,
+  name,
+  initiative,
+});
+
+export const enemyEntry = (name: string, initiative: number | null = null) => ({
+  entryId: `e2e-enemy-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+  kind: 'enemy' as const,
+  name,
+  initiative,
+});
+
+// Full encounter record at an arbitrary phase, for seeding/pushing via mockSession.
+export const encounterState = ({
+  phase,
+  round = 1,
+  currentTurnIndex = 0,
+  order = [],
+}: {
+  phase: 'setup' | 'in-progress';
+  round?: number;
+  currentTurnIndex?: number;
+  order?: Array<Record<string, unknown>>;
+}) => ({
+  active: true,
+  phase,
+  round,
+  currentTurnIndex,
+  order,
+  log: [],
+  saveRequests: [],
+});
+
+// Matches src/utils/encounterUtils.js defaultEncounter() — an ended/idle encounter.
+export const idleEncounter = () => ({
+  active: false,
+  phase: 'idle',
+  round: 0,
+  currentTurnIndex: 0,
+  order: [],
+  log: [],
+  saveRequests: [],
+});
