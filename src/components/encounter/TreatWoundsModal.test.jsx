@@ -28,16 +28,24 @@ vi.mock('../../contexts/GameDateContext', () => ({
 }));
 
 const mockAppendLog = vi.fn();
+const mockEncounterState = { active: false, phase: 'idle', order: [] };
 vi.mock('../../hooks/useEncounter', () => ({
-  useEncounter: () => ({
-    encounter: { active: false, phase: 'idle', order: [] },
-    appendLog: mockAppendLog,
-  }),
+  useEncounter: () => ({ encounter: mockEncounterState, appendLog: mockAppendLog }),
 }));
 
 const mockSpendActions = vi.fn();
 vi.mock('../../hooks/useTurnState', () => ({
   useTurnState: () => ({ spendActions: mockSpendActions }),
+}));
+
+// Persistent-bleed map (Staunch Bleeding) — the modal reads/writes it via
+// useSyncedState(PERSISTENT_KEY).
+let mockPersistentMap = {};
+const mockSetPersistentMap = vi.fn((u) => {
+  mockPersistentMap = typeof u === 'function' ? u(mockPersistentMap) : u;
+});
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: () => [mockPersistentMap, mockSetPersistentMap],
 }));
 
 // healer with Expert Medicine (rank 2, modifier +7) — unlocks DC 15 and DC 20
@@ -68,11 +76,16 @@ beforeEach(() => {
   mockGetState.mockReturnValue(undefined);
   // Reset any feats a test attached to the shared target fixtures (#224).
   mockCharacters.forEach((c) => { delete c.feats; });
+  mockEncounterState.active = false;
+  mockEncounterState.phase = 'idle';
+  mockEncounterState.order = [];
+  mockPersistentMap = {};
   useCharacter.mockReturnValue({
     skillModifiers:    { medicine: 7 },
     skillProficiencies:{ medicine: 2 },
   });
   vi.spyOn(treatWounds, 'applyTreatWounds').mockImplementation(() => {});
+  vi.spyOn(treatWounds, 'applyStaunchBleeding').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -460,5 +473,78 @@ describe('Godless Healing', () => {
       degree: 'criticalFailure',
       amount: 5,
     }));
+  });
+});
+
+// ── Staunch Bleeding mode (#224) ──────────────────────────────────────────────
+
+describe('Staunch Bleeding mode', () => {
+  const staunchProps = { mode: 'staunch-bleeding', healer: { id: 'h1', name: 'Blu' } };
+
+  // Brakor (c1) ↔ encounter entry e-brakor; one tracked bleed on that entry.
+  function withBleed() {
+    mockEncounterState.order = [{ entryId: 'e-brakor', charId: 'c1', kind: 'pc', name: 'Brakor' }];
+    mockPersistentMap = { 'e-brakor': [{ id: 'pd1', type: 'bleed', dice: '1d4', sourceName: 'Shard Strike' }] };
+  }
+
+  it('titles the modal Staunch Bleeding and shows the action-cost toggle', () => {
+    renderModal(staunchProps);
+    expect(screen.getByRole('heading', { level: 2, name: 'Staunch Bleeding' })).toBeInTheDocument();
+    expect(screen.getByText('1 action')).toBeInTheDocument();
+    expect(screen.getByText('2 actions')).toBeInTheDocument();
+  });
+
+  it('shows the target\'s tracked bleeds, not a heal amount input', () => {
+    withBleed();
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.getByText(/1d4 persistent bleed/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('hp healed')).not.toBeInTheDocument();
+  });
+
+  it('the two-action variant lowers the effective DC by 10 (DC 15 → success on a low roll)', () => {
+    withBleed();
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    // roll 2 + 7 = 9: fails DC 15, but with 2 actions DC becomes 5 → success
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '2' } });
+    expect(screen.getByText('Failure')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('2 actions').closest('button'));
+    expect(screen.getByText('Success')).toBeInTheDocument();
+  });
+
+  it('confirms via applyStaunchBleeding with the resolved entry, bleeds, and degree', () => {
+    withBleed();
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /Staunch Bleeding/ }));
+    expect(treatWounds.applyStaunchBleeding).toHaveBeenCalledWith(expect.objectContaining({
+      entryId: 'e-brakor',
+      degree: 'success',
+      dc: 15,
+      bleeds: [expect.objectContaining({ id: 'pd1' })],
+    }));
+    expect(treatWounds.applyTreatWounds).not.toHaveBeenCalled();
+  });
+
+  it('does not offer the Mortal Healing toggle in staunch mode', () => {
+    withBleed();
+    renderModal({ ...staunchProps, healer: { id: 'h1', name: 'Blu', feats: [{ name: 'Mortal Healing' }] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('shows a no-bleeding notice when the target has none tracked', () => {
+    mockEncounterState.order = [{ entryId: 'e-brakor', charId: 'c1', kind: 'pc', name: 'Brakor' }];
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    expect(screen.getByText(/No tracked bleeding/)).toBeInTheDocument();
   });
 });

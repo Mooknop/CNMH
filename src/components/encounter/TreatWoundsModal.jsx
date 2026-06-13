@@ -6,19 +6,24 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { formatModifier, hasFeat } from '../../utils/CharacterUtils';
 import { hasGodlessHealing } from '../../utils/consumables';
 import { toGameSeconds } from '../../utils/gameTime';
-
-const GODLESS_HEALING_BONUS = 2;
+import { PERSISTENT_KEY } from '../../utils/persistentDamage';
 import {
   availableDcs,
   healHint,
   hasImmunityFrom,
+  bleedInstances,
   applyTreatWounds,
+  applyStaunchBleeding,
 } from '../../utils/treatWounds';
 import './TreatWoundsModal.css';
+
+const GODLESS_HEALING_BONUS = 2;
+const STAUNCH_TWO_ACTION_DC_REDUCTION = 10;
 
 const DEGREE_INFO = {
   criticalSuccess: { label: 'Critical Success', cls: 'tw-degree--crit-success' },
@@ -28,14 +33,14 @@ const DEGREE_INFO = {
 };
 
 /**
- * Resolution modal for Treat Wounds and Battle Medicine.
+ * Resolution modal for Treat Wounds, Battle Medicine, and Staunch Bleeding.
  *
  * @param {boolean} isOpen
  * @param {Function} onClose
- * @param {'treat-wounds'|'battle-medicine'} mode
+ * @param {'treat-wounds'|'battle-medicine'|'staunch-bleeding'} mode
  * @param {Object}  healer      - raw character object (the acting PC)
  * @param {string}  themeColor
- * @param {number}  actionCost  - actions to spend on confirm (1 for Battle Medicine in encounter, 0 otherwise)
+ * @param {number}  actionCost  - actions to spend on confirm (1 for Battle Medicine in encounter, 0 otherwise; Staunch Bleeding spends its own 1–2 action choice)
  */
 const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCost }) => {
   const { getState, sendUpdate } = useSession();
@@ -44,14 +49,19 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   const { encounter, appendLog } = useEncounter();
   const healerModel = useCharacter(healer);
   const { spendActions } = useTurnState(healer?.id || 'nobody');
+  const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   const [selectedTargetId, setSelectedTargetId] = useState(null);
   const [selectedDc, setSelectedDc] = useState(null);
   const [d20Input, setD20Input] = useState('');
   const [amountInput, setAmountInput] = useState('');
   const [mortalChecked, setMortalChecked] = useState(false);
+  const [staunchActions, setStaunchActions] = useState(1);
 
-  const actionName = mode === 'battle-medicine' ? 'Battle Medicine' : 'Treat Wounds';
+  const staunch = mode === 'staunch-bleeding';
+  const actionName = staunch
+    ? 'Staunch Bleeding'
+    : (mode === 'battle-medicine' ? 'Battle Medicine' : 'Treat Wounds');
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
 
   const medicineModifier = healerModel?.skillModifiers?.medicine ?? 0;
@@ -62,33 +72,53 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   const targetEffects  = selectedTarget ? (getState(selectedTarget.id, 'effects') || []) : [];
   const isImmune       = selectedTarget && hasImmunityFrom(targetEffects, healer?.id);
 
+  // Staunch Bleeding (#224) — the two-action variant lowers the DC by 10, and
+  // success clears the target's tracked persistent bleed. Bleeds live in the
+  // encounter-keyed persistent map, so map the chosen PC to their entryId.
+  const targetEntryId = selectedTarget
+    ? (encounter?.order || []).find((e) => e.charId === selectedTarget.id)?.entryId || null
+    : null;
+  const targetBleeds = staunch && targetEntryId
+    ? bleedInstances(persistentMap?.[targetEntryId])
+    : [];
+  const effectiveDc = selectedDc != null
+    ? selectedDc - (staunch && staunchActions === 2 ? STAUNCH_TWO_ACTION_DC_REDUCTION : 0)
+    : null;
+
   const d20     = parseInt(d20Input, 10);
   const hasD20  = !isNaN(d20);
   const total   = hasD20 ? d20 + medicineModifier : NaN;
 
-  const degree = (hasD20 && selectedDc != null)
-    ? computeSaveDegree({ d20, total, dc: selectedDc })
+  const degree = (hasD20 && effectiveDc != null)
+    ? computeSaveDegree({ d20, total, dc: effectiveDc })
     : null;
 
   // Mortal Healing (Blu) — on a Treat Wounds success against a creature that
   // hasn't had divine healing in 24h, upgrade to a critical success. The 24h
   // condition can't be tracked, so it's a player-confirmed checkbox; offered
   // only on a raw success (you can't upgrade a crit or a failure).
-  const canMortalHeal = mode !== 'battle-medicine'
+  const canMortalHeal = mode === 'treat-wounds'
     && hasFeat(healer, 'Mortal Healing')
     && degree === 'success';
   const effectiveDegree = (canMortalHeal && mortalChecked) ? 'criticalSuccess' : degree;
 
   // Godless Healing (Blu) — +2 HP from healing-only effects received by the
-  // target. Applies on any delivered healing (success / critical success).
-  const targetGodless = !!selectedTarget && hasGodlessHealing(selectedTarget);
+  // target. Applies on any delivered healing (success / critical success); not
+  // to Staunch Bleeding, which restores no HP.
+  const targetGodless = !staunch && !!selectedTarget && hasGodlessHealing(selectedTarget);
   const godlessApplies = targetGodless
     && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess');
 
-  const hint       = effectiveDegree && effectiveDegree !== 'failure' && selectedDc != null
+  const staunchSuccess = staunch
+    && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess');
+
+  const hint       = !staunch && effectiveDegree && effectiveDegree !== 'failure' && selectedDc != null
     ? healHint(selectedDc, effectiveDegree)
     : null;
-  const needsAmount = effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess' || effectiveDegree === 'criticalFailure';
+  // Staunch Bleeding restores/deals no HP — it clears bleed on success, nothing
+  // on failure — so it never needs a rolled amount.
+  const needsAmount = !staunch
+    && (effectiveDegree === 'success' || effectiveDegree === 'criticalSuccess' || effectiveDegree === 'criticalFailure');
 
   const amount    = parseInt(amountInput, 10);
   const hasAmount = !isNaN(amount) && amount > 0;
@@ -121,6 +151,27 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
 
   const handleConfirm = () => {
     if (!confirmEnabled || !selectedTarget) return;
+    const nowSecs = toGameSeconds({ ...gameDate, ...time });
+
+    if (staunch) {
+      applyStaunchBleeding({
+        healer:  { id: healer.id, name: healer.name },
+        target:  { id: selectedTarget.id, name: selectedTarget.name },
+        entryId: targetEntryId,
+        dc:      effectiveDc,
+        degree:  effectiveDegree,
+        bleeds:  targetBleeds,
+        nowSecs,
+        getState,
+        sendUpdate,
+        setPersistentMap,
+        appendLog,
+      });
+      if (encounterMode) spendActions(staunchActions, actionName);
+      onClose();
+      return;
+    }
+
     const healAmount = needsAmount
       ? amount + (godlessApplies ? GODLESS_HEALING_BONUS : 0)
       : 0;
@@ -131,7 +182,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
       degree:     effectiveDegree,
       amount:     healAmount,
       actionName,
-      nowSecs:    toGameSeconds({ ...gameDate, ...time }),
+      nowSecs,
       getState,
       sendUpdate,
       appendLog,
@@ -177,6 +228,30 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
 
       <hr className="ct-divider" />
 
+      {/* ── Action cost (Staunch Bleeding only) ──────────────────────────── */}
+      {staunch && (
+        <>
+          <section className="ct-section">
+            <h3 className="ct-section-title">Actions</h3>
+            <div className="tw-dc-row" role="group" aria-label="Select action cost">
+              {[1, 2].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={['tw-dc-btn', staunchActions === n ? 'tw-dc-btn--on' : ''].filter(Boolean).join(' ')}
+                  style={staunchActions === n ? { '--color-theme': themeColor, borderColor: themeColor } : {}}
+                  onClick={() => setStaunchActions(n)}
+                >
+                  <span className="tw-dc-value">{n} action{n > 1 ? 's' : ''}</span>
+                  <span className="tw-dc-hint">{n === 2 ? 'DC −10' : 'normal DC'}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+          <hr className="ct-divider" />
+        </>
+      )}
+
       {/* ── DC ─────────────────────────────────────────────────────────── */}
       <section className="ct-section">
         <h3 className="ct-section-title">DC</h3>
@@ -194,7 +269,9 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
               >
                 <span className="tw-dc-value">DC {dc}</span>
                 <span className="tw-dc-hint">
-                  {healHint(dc, 'success')} / {healHint(dc, 'criticalSuccess')}
+                  {staunch
+                    ? `vs DC ${dc - (staunchActions === 2 ? STAUNCH_TWO_ACTION_DC_REDUCTION : 0)}`
+                    : `${healHint(dc, 'success')} / ${healHint(dc, 'criticalSuccess')}`}
                 </span>
               </button>
             ))}
@@ -275,6 +352,31 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
         </>
       )}
 
+      {/* ── Bleeding (Staunch Bleeding only) ─────────────────────────────── */}
+      {staunch && selectedTarget && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Bleeding</h3>
+            {targetBleeds.length === 0 ? (
+              <p className="tw-locked-notice">No tracked bleeding on {selectedTarget.name}.</p>
+            ) : (
+              <ul className="tw-bleed-list">
+                {targetBleeds.map((b) => (
+                  <li key={b.id} className="tw-bleed-row">
+                    {b.dice} persistent {b.type || 'bleed'}
+                    {b.sourceName && <span className="tw-bleed-source"> · {b.sourceName}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {staunchSuccess && targetBleeds.length > 0 && (
+              <p className="tw-feat-note">Cleared on confirm.</p>
+            )}
+          </section>
+        </>
+      )}
+
       {/* ── Immunity block ────────────────────────────────────────────────── */}
       {isImmune && (
         <div className="tw-immunity-notice">
@@ -290,7 +392,10 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
           onClick={handleConfirm}
           disabled={!confirmEnabled}
         >
-          {actionName}{actionCost > 0 ? ` (${actionCost} act)` : ''}
+          {actionName}
+          {staunch
+            ? (encounterMode ? ` (${staunchActions} act)` : '')
+            : (actionCost > 0 ? ` (${actionCost} act)` : '')}
         </button>
       </div>
     </Modal>

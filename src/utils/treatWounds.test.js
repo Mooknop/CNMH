@@ -2,7 +2,9 @@ import {
   availableDcs,
   healHint,
   hasImmunityFrom,
+  bleedInstances,
   applyTreatWounds,
+  applyStaunchBleeding,
   IMMUNITY_EFFECT_ID,
 } from './treatWounds';
 
@@ -232,5 +234,76 @@ describe('applyTreatWounds — criticalFailure', () => {
 
     const hpUpdate = updates.find((u) => u.key === 'hp');
     expect(hpUpdate.value.current).toBe(0);
+  });
+});
+
+// ── bleedInstances (#224) ────────────────────────────────────────────────────
+
+describe('bleedInstances', () => {
+  it('keeps only bleed-typed instances', () => {
+    const list = [
+      { id: 'a', type: 'bleed' },
+      { id: 'b', type: 'fire' },
+      { id: 'c', type: 'bleeding' },
+      { id: 'd' },
+    ];
+    expect(bleedInstances(list).map((i) => i.id)).toEqual(['a', 'c']);
+  });
+
+  it('tolerates null/undefined', () => {
+    expect(bleedInstances(null)).toEqual([]);
+    expect(bleedInstances(undefined)).toEqual([]);
+  });
+});
+
+// ── applyStaunchBleeding (#224) ──────────────────────────────────────────────
+
+function makePersistent(initial = {}) {
+  let map = initial;
+  const setPersistentMap = (updater) => { map = typeof updater === 'function' ? updater(map) : updater; };
+  return { get: () => map, setPersistentMap };
+}
+
+describe('applyStaunchBleeding', () => {
+  const tgt = { id: 't1', name: 'Brakor' };
+
+  it('clears the target bleeds and stamps immunity on success', () => {
+    const { updates, logs, getState, sendUpdate, appendLog } = makeStubs();
+    const pm = makePersistent({ 'e-t1': [{ id: 'pd1', type: 'bleed', dice: '1d4' }], 'e-x': [{ id: 'pd2', type: 'fire' }] });
+    applyStaunchBleeding({
+      healer, target: tgt, entryId: 'e-t1', dc: 15, degree: 'success',
+      bleeds: [{ id: 'pd1' }], nowSecs: 1000,
+      getState, sendUpdate, setPersistentMap: pm.setPersistentMap, appendLog,
+    });
+
+    expect(pm.get()['e-t1']).toBeUndefined();           // bleed removed (key dropped)
+    expect(pm.get()['e-x']).toHaveLength(1);             // unrelated entry untouched
+    const eff = updates.find((u) => u.key === 'effects');
+    expect(eff.value[0].effectId).toBe(IMMUNITY_EFFECT_ID);
+    expect(eff.value[0].expireAtSecs).toBe(1000 + 3600);
+    expect(logs[0].text).toMatch(/Success — stopped the bleeding/);
+  });
+
+  it('leaves bleeds and applies no immunity on failure', () => {
+    const { updates, logs, getState, sendUpdate, appendLog } = makeStubs();
+    const pm = makePersistent({ 'e-t1': [{ id: 'pd1', type: 'bleed', dice: '1d4' }] });
+    applyStaunchBleeding({
+      healer, target: tgt, entryId: 'e-t1', dc: 15, degree: 'failure',
+      bleeds: [{ id: 'pd1' }], getState, sendUpdate, setPersistentMap: pm.setPersistentMap, appendLog,
+    });
+
+    expect(pm.get()['e-t1']).toHaveLength(1);            // bleed stays
+    expect(updates.find((u) => u.key === 'effects')).toBeUndefined();
+    expect(logs[0].text).toMatch(/Failure — bleeding continues/);
+  });
+
+  it('logs no-bleed when there is nothing to clear on success', () => {
+    const { logs, getState, sendUpdate, appendLog } = makeStubs();
+    const pm = makePersistent({});
+    applyStaunchBleeding({
+      healer, target: tgt, entryId: 'e-t1', dc: 5, degree: 'criticalSuccess',
+      bleeds: [], getState, sendUpdate, setPersistentMap: pm.setPersistentMap, appendLog,
+    });
+    expect(logs[0].text).toMatch(/no tracked bleeding to clear/);
   });
 });
