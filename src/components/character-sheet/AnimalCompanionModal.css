@@ -72,6 +72,24 @@
   padding: 1rem;
 }
 
+/* Clickable strike (#261) — resolves the companion's attack through the roll
+   resolver. Reset the native button look, keep the card appearance. */
+.companion-strike--roll {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.1s, background 0.1s;
+}
+
+.companion-strike--roll:hover {
+  border-color: var(--accent-outline);
+  background: var(--surface-2);
+}
+
 .strike-header {
   display: flex;
   justify-content: space-between;

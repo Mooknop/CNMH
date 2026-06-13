@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
+import { minionTurnId, MINION_COMPANION } from '../../utils/minionUtils';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
@@ -71,6 +72,14 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   const { encounter, advanceTurn, appendLog } = useEncounter();
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
   const { sendUpdate } = useSession();
+
+  // The companion acts on its owner's turn (Command an Animal), so its Multiple
+  // Attack Penalty resets when the owner's turn does (#261). Familiars make no
+  // strikes, so only the companion needs a counter reset.
+  const hasCompanion = !!character?.animalCompanion;
+  const { resetForNewTurn: resetCompanionTurn } = useTurnState(
+    minionTurnId(charId, MINION_COMPANION)
+  );
 
   // Turn-start free-action offers (#228 — Primary Threat). Authored as
   // `offerAt: { round? }` on a free action; offered on the actor's turn while
@@ -199,13 +208,14 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     if (phase !== 'in-progress') return;
     if (isMyTurn && turnState?.turnToken !== turnToken) {
       resetForNewTurn(turnToken);
+      if (hasCompanion) resetCompanionTurn(turnToken);
       setFeetThisAction(0); // distance budget is per-turn
       // "Until the start of your next turn" — a raised shield expires now.
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
       if (raised) lowerShield();
     }
-  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, raised, lowerShield]);
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, raised, lowerShield]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 

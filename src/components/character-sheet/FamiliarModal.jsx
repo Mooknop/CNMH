@@ -3,11 +3,14 @@ import Modal from '../shared/Modal';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { useMinions } from '../../hooks/useMinions';
+import { MINION_FAMILIAR } from '../../utils/minionUtils';
 import './FamiliarModal.css';
 
 const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor }) => {
   const [activeConditions, setActiveConditions] = useState([]);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
+  const { getHp } = useMinions(character?.id);
 
   // Keep mounted (state preserved) while Modal handles the visual hide
   if (!familiar || !character) return null;
@@ -82,6 +85,8 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
             <div className="defense">
               <span className="defense-label">HP</span>
               <span className="defense-value">
+                {getHp(MINION_FAMILIAR, familiarData.hp).current}
+                <span className="familiar-hp-sep">/</span>
                 <PenaltyDisplay base={familiarData.hp} penalty={effects.maxHp} />
               </span>
             </div>

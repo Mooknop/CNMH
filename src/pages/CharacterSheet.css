@@ -248,6 +248,14 @@
   font-size: 12px;
 }
 
+/* Synced minion HP (#261) shown on the companion/familiar buttons. */
+.cs-minion-hp {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.55rem;
+  color: var(--shell-text-tertiary, var(--shell-text-secondary));
+  opacity: 0.85;
+}
+
 /* ── Vitals strip ────────────────────────────────────────── */
 .cs-vitals {
   display: grid;

@@ -28,6 +28,8 @@ import CombatLogPanel from '../components/encounter/CombatLogPanel';
 import EffectsPanel from '../components/character-sheet/EffectsPanel';
 import DailyPrepModal from '../components/character-sheet/DailyPrepModal';
 import { useCharacter } from '../hooks/useCharacter';
+import { useMinions } from '../hooks/useMinions';
+import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { useFocusReset } from '../hooks/useFocusReset';
 import { hydrateConditions } from '../data/pf2eConditions';
@@ -109,6 +111,9 @@ const CharacterSheet = () => {
     () => hydrateConditions(activeConditions),
     [activeConditions]
   );
+
+  // Synced minion HP (#261) for the masthead companion/familiar buttons.
+  const { getHp: getMinionHp } = useMinions(character?.id);
 
   if (!character || !characterModel) return <div data-testid="character-loading">Loading character...</div>;
 
@@ -288,6 +293,9 @@ const CharacterSheet = () => {
                     onClick={() => setIsFamiliarModalOpen(true)}
                   >
                     {familiar.name}
+                    <span className="cs-minion-hp">
+                      {getMinionHp(MINION_FAMILIAR, familiar.hp).current}/{familiar.hp}
+                    </span>
                   </button>
                 )}
                 {hasAnimalCompanion && (
@@ -296,6 +304,9 @@ const CharacterSheet = () => {
                     onClick={() => setIsAnimalCompanionOpen(true)}
                   >
                     {animalCompanion.name}
+                    <span className="cs-minion-hp">
+                      {getMinionHp(MINION_COMPANION, animalCompanion.hp).current}/{animalCompanion.hp}
+                    </span>
                   </button>
                 )}
               </div>
