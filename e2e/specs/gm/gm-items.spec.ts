@@ -137,6 +137,8 @@ test.describe('Item catalog editor', () => {
     });
 
     await page.goto('/gm/items');
+    // Master/detail shell: select the seeded item's list row to open its form.
+    await page.getByRole('button', { name: 'E2E Striking Pick' }).click();
     await expect(page.getByTestId(`item-form-${pickId}`)).toBeVisible();
 
     // The strikes section should show one entry (the existing single-object strike)

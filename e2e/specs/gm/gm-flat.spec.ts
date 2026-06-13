@@ -269,11 +269,10 @@ test.describe('Lore editor', () => {
     await form.getByLabel('category').fill('Location');
     await form.getByLabel('summary').fill('A place for automated testing.');
     await form.getByLabel('content').fill('Detailed lore content goes here.');
-    await form.getByLabel('related').fill('e2e-quest, some-npc');
-    await form.getByLabel('tags').fill('testing, automation');
     await form.getByRole('button', { name: 'Create entry' }).click();
     await expectSaved(page);
 
+    // Reselect-on-create keeps the saved entry's form open (new form collapses).
     await expect(page.getByTestId('lore-form-new')).not.toBeVisible();
     await expect(page.getByTestId(`lore-form-${id}`)).toBeVisible();
 
@@ -284,8 +283,6 @@ test.describe('Lore editor', () => {
       title,
       category: 'Location',
       summary: 'A place for automated testing.',
-      related: ['e2e-quest', 'some-npc'],
-      tags: ['testing', 'automation'],
     });
 
     // --- Edit ---
@@ -324,20 +321,24 @@ test.describe('Lore editor', () => {
 
     await page.goto('/gm/lore');
 
-    // "All" tab shows both
+    // Master/detail shell: the category tabs filter the master *list*; assert on
+    // the list rows (buttons named by title), not per-entry form cards.
     const nav = page.getByRole('navigation', { name: 'lore categories' });
-    await expect(page.getByTestId(`lore-form-${locId}`)).toBeVisible();
-    await expect(page.getByTestId(`lore-form-${npcId}`)).toBeVisible();
+    const list = page.getByRole('list', { name: 'entry list' });
+
+    // "All" tab shows both
+    await expect(list.getByRole('button', { name: locTitle })).toBeVisible();
+    await expect(list.getByRole('button', { name: npcTitle })).toBeVisible();
 
     // Switch to Location tab
     await nav.getByRole('button', { name: 'Location' }).click();
-    await expect(page.getByTestId(`lore-form-${locId}`)).toBeVisible();
-    await expect(page.getByTestId(`lore-form-${npcId}`)).not.toBeVisible();
+    await expect(list.getByRole('button', { name: locTitle })).toBeVisible();
+    await expect(list.getByRole('button', { name: npcTitle })).not.toBeVisible();
 
     // Switch to NPC tab
     await nav.getByRole('button', { name: 'NPC' }).click();
-    await expect(page.getByTestId(`lore-form-${npcId}`)).toBeVisible();
-    await expect(page.getByTestId(`lore-form-${locId}`)).not.toBeVisible();
+    await expect(list.getByRole('button', { name: npcTitle })).toBeVisible();
+    await expect(list.getByRole('button', { name: locTitle })).not.toBeVisible();
   });
 
   test('slug collision triggers overwrite confirm and saves successfully', async ({
@@ -354,6 +355,8 @@ test.describe('Lore editor', () => {
     });
 
     await page.goto('/gm/lore');
+    // Master/detail shell: select the seeded entry's list row to open its form.
+    await page.getByRole('button', { name: baseTitle }).click();
     await expect(page.getByTestId(`lore-form-${baseId}`)).toBeVisible();
 
     // Click + New entry and fill the same title → same slug → collision

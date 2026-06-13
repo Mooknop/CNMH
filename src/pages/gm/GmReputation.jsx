@@ -38,7 +38,7 @@ const FactionForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     setError(null);
     try {
       await saveDocument('faction', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (e) {
       setError(e.message);
     } finally {

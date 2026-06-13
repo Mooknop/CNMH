@@ -79,7 +79,7 @@ const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     setError(null);
     try {
       await saveDocument('effect', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (err) {
       setError(err.message);
     } finally {

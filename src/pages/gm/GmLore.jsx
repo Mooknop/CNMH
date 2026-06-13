@@ -75,7 +75,7 @@ const LoreForm = ({ initial, isNew, existingIds, allEntries, onSaved, onRestored
     setError(null);
     try {
       await saveDocument('lore', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (err) {
       setError(err.message);
     } finally {

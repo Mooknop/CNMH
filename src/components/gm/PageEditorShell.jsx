@@ -45,8 +45,13 @@ const PageEditorShell = ({
   const selectedEntry = isNew ? null : entries.find((e) => idOf(e) === selectedId) ?? null;
   const showDetail = selectedId != null && (isNew || selectedEntry != null);
 
-  const onSaved = (wasNew) => {
-    if (wasNew) setSelectedId(null);
+  // After creating an entry, keep its form open (reselect by saved id) so the GM
+  // can keep editing what they just made instead of dropping back to the empty
+  // hint. The form remounts on the saved entry once it lands in `entries` via
+  // the content-sync broadcast. Callers that omit savedId (deletes, bulk panel)
+  // fall back to deselect.
+  const onSaved = (wasNew, savedId) => {
+    if (wasNew) setSelectedId(savedId ?? null);
     setFlash('Saved. Changes are live for every connected player.');
   };
   const onRestored = () =>
