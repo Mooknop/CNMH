@@ -17,7 +17,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [activeSection, setActiveSection] = useState('actions');
   const [isMagicOpen, setIsMagicOpen] = useState(false);
   const [usingAbility, setUsingAbility] = useState(null); // { ability, cost } | null
-  const [treatWoundsOpen, setTreatWoundsOpen] = useState(false);
+  const [treatWoundsMode, setTreatWoundsMode] = useState(null); // 'battle-medicine' | 'staunch-bleeding' | null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -35,7 +35,14 @@ const ActionsList = ({ character, characterColor }) => {
     (item, cost) => {
       // Battle Medicine has its own resolution flow.
       if (item.name === 'Battle Medicine') {
-        setTreatWoundsOpen(true);
+        setTreatWoundsMode('battle-medicine');
+        return;
+      }
+
+      // Staunch Bleeding (#224) — a Treat Wounds variant that stops bleeding;
+      // routes to the same modal in its own mode (handles its 1–2 action cost).
+      if (item.name === 'Staunch Bleeding') {
+        setTreatWoundsMode('staunch-bleeding');
         return;
       }
 
@@ -202,14 +209,14 @@ const ActionsList = ({ character, characterColor }) => {
         />
       )}
 
-      {treatWoundsOpen && (
+      {treatWoundsMode && (
         <TreatWoundsModal
           isOpen
-          onClose={() => setTreatWoundsOpen(false)}
-          mode="battle-medicine"
+          onClose={() => setTreatWoundsMode(null)}
+          mode={treatWoundsMode}
           healer={character}
           themeColor={themeColor}
-          actionCost={encounterMode ? 1 : 0}
+          actionCost={treatWoundsMode === 'battle-medicine' && encounterMode ? 1 : 0}
         />
       )}
     </div>

@@ -28,16 +28,24 @@ vi.mock('../../contexts/GameDateContext', () => ({
 }));
 
 const mockAppendLog = vi.fn();
+const mockEncounterState = { active: false, phase: 'idle', order: [] };
 vi.mock('../../hooks/useEncounter', () => ({
-  useEncounter: () => ({
-    encounter: { active: false, phase: 'idle', order: [] },
-    appendLog: mockAppendLog,
-  }),
+  useEncounter: () => ({ encounter: mockEncounterState, appendLog: mockAppendLog }),
 }));
 
 const mockSpendActions = vi.fn();
 vi.mock('../../hooks/useTurnState', () => ({
   useTurnState: () => ({ spendActions: mockSpendActions }),
+}));
+
+// Persistent-bleed map (Staunch Bleeding) — the modal reads/writes it via
+// useSyncedState(PERSISTENT_KEY).
+let mockPersistentMap = {};
+const mockSetPersistentMap = vi.fn((u) => {
+  mockPersistentMap = typeof u === 'function' ? u(mockPersistentMap) : u;
+});
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: () => [mockPersistentMap, mockSetPersistentMap],
 }));
 
 // healer with Expert Medicine (rank 2, modifier +7) — unlocks DC 15 and DC 20
@@ -61,14 +69,23 @@ function renderModal(props = {}) {
   return render(<TreatWoundsModal {...defaultProps} {...props} />);
 }
 
+const mortalHealer = { id: 'h1', name: 'Blu', feats: [{ name: 'Mortal Healing' }] };
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetState.mockReturnValue(undefined);
+  // Reset any feats a test attached to the shared target fixtures (#224).
+  mockCharacters.forEach((c) => { delete c.feats; });
+  mockEncounterState.active = false;
+  mockEncounterState.phase = 'idle';
+  mockEncounterState.order = [];
+  mockPersistentMap = {};
   useCharacter.mockReturnValue({
     skillModifiers:    { medicine: 7 },
     skillProficiencies:{ medicine: 2 },
   });
   vi.spyOn(treatWounds, 'applyTreatWounds').mockImplementation(() => {});
+  vi.spyOn(treatWounds, 'applyStaunchBleeding').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -356,5 +373,178 @@ describe('confirm handling', () => {
     // failure → no amount needed → confirm enabled
     fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
     expect(mockSpendActions).not.toHaveBeenCalled();
+  });
+});
+
+// ── Feat modifiers (#224 — Mortal Healing, Godless Healing) ───────────────────
+
+describe('Mortal Healing', () => {
+  // Brakor + DC 15 + d20 10 (=17) → success.
+  function setupSuccess(props = {}) {
+    renderModal(props);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+  }
+
+  it('hides the toggle without the feat', () => {
+    setupSuccess();
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('hides the toggle in Battle Medicine mode even with the feat', () => {
+    setupSuccess({ healer: mortalHealer, mode: 'battle-medicine' });
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('hides the toggle on a critical success (nothing to upgrade)', () => {
+    renderModal({ healer: mortalHealer });
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '20' } });
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('shows the toggle on a success for a feat-holder', () => {
+    setupSuccess({ healer: mortalHealer });
+    expect(screen.getByText(/Mortal Healing/)).toBeInTheDocument();
+    expect(screen.getByRole('checkbox')).toBeInTheDocument();
+  });
+
+  it('upgrades the degree and hint to a critical success when checked', () => {
+    setupSuccess({ healer: mortalHealer });
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('2d8')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(screen.getByText('Critical Success')).toBeInTheDocument();
+    expect(screen.getByText('4d8')).toBeInTheDocument();
+  });
+
+  it('confirms with the upgraded degree', () => {
+    setupSuccess({ healer: mortalHealer });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '30' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      degree: 'criticalSuccess',
+      amount: 30,
+    }));
+  });
+});
+
+describe('Godless Healing', () => {
+  it('adds +2 to the healed amount when the target has the feat', () => {
+    mockCharacters[0].feats = [{ name: 'Godless Healing' }];
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.getByText(/Godless Healing/)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 14,
+    }));
+  });
+
+  it('does not add the bonus for a target without the feat', () => {
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.queryByText(/Godless Healing/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 12,
+    }));
+  });
+
+  it('does not add the bonus to critical-failure damage', () => {
+    mockCharacters[0].feats = [{ name: 'Godless Healing' }];
+    renderModal();
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 20').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '1' } });
+    expect(screen.queryByText(/Godless Healing/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('damage total'), { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: /Treat Wounds/ }));
+    expect(treatWounds.applyTreatWounds).toHaveBeenCalledWith(expect.objectContaining({
+      degree: 'criticalFailure',
+      amount: 5,
+    }));
+  });
+});
+
+// ── Staunch Bleeding mode (#224) ──────────────────────────────────────────────
+
+describe('Staunch Bleeding mode', () => {
+  const staunchProps = { mode: 'staunch-bleeding', healer: { id: 'h1', name: 'Blu' } };
+
+  // Brakor (c1) ↔ encounter entry e-brakor; one tracked bleed on that entry.
+  function withBleed() {
+    mockEncounterState.order = [{ entryId: 'e-brakor', charId: 'c1', kind: 'pc', name: 'Brakor' }];
+    mockPersistentMap = { 'e-brakor': [{ id: 'pd1', type: 'bleed', dice: '1d4', sourceName: 'Shard Strike' }] };
+  }
+
+  it('titles the modal Staunch Bleeding and shows the action-cost toggle', () => {
+    renderModal(staunchProps);
+    expect(screen.getByRole('heading', { level: 2, name: 'Staunch Bleeding' })).toBeInTheDocument();
+    expect(screen.getByText('1 action')).toBeInTheDocument();
+    expect(screen.getByText('2 actions')).toBeInTheDocument();
+  });
+
+  it('shows the target\'s tracked bleeds, not a heal amount input', () => {
+    withBleed();
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.getByText(/1d4 persistent bleed/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('hp healed')).not.toBeInTheDocument();
+  });
+
+  it('the two-action variant lowers the effective DC by 10 (DC 15 → success on a low roll)', () => {
+    withBleed();
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    // roll 2 + 7 = 9: fails DC 15, but with 2 actions DC becomes 5 → success
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '2' } });
+    expect(screen.getByText('Failure')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('2 actions').closest('button'));
+    expect(screen.getByText('Success')).toBeInTheDocument();
+  });
+
+  it('confirms via applyStaunchBleeding with the resolved entry, bleeds, and degree', () => {
+    withBleed();
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /Staunch Bleeding/ }));
+    expect(treatWounds.applyStaunchBleeding).toHaveBeenCalledWith(expect.objectContaining({
+      entryId: 'e-brakor',
+      degree: 'success',
+      dc: 15,
+      bleeds: [expect.objectContaining({ id: 'pd1' })],
+    }));
+    expect(treatWounds.applyTreatWounds).not.toHaveBeenCalled();
+  });
+
+  it('does not offer the Mortal Healing toggle in staunch mode', () => {
+    withBleed();
+    renderModal({ ...staunchProps, healer: { id: 'h1', name: 'Blu', feats: [{ name: 'Mortal Healing' }] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    fireEvent.click(screen.getByText('DC 15').closest('button'));
+    fireEvent.change(screen.getByPlaceholderText('d20'), { target: { value: '10' } });
+    expect(screen.queryByText(/Mortal Healing/)).not.toBeInTheDocument();
+  });
+
+  it('shows a no-bleeding notice when the target has none tracked', () => {
+    mockEncounterState.order = [{ entryId: 'e-brakor', charId: 'c1', kind: 'pc', name: 'Brakor' }];
+    renderModal(staunchProps);
+    fireEvent.click(screen.getByRole('button', { name: 'Brakor' }));
+    expect(screen.getByText(/No tracked bleeding/)).toBeInTheDocument();
   });
 });

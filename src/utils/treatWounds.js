@@ -3,6 +3,7 @@
 // React-free — mirrors the style of applyAbility.js.
 
 import { newEntryUid } from './uid';
+import { removeInstance } from './persistentDamage';
 
 // PF2e Treat Wounds DC table.
 // requiredRank: minimum Medicine proficiency rank to unlock this DC.
@@ -39,6 +40,13 @@ export function hasImmunityFrom(targetEffects, healerId) {
   return (targetEffects || []).some(
     (e) => e.effectId === IMMUNITY_EFFECT_ID && e.appliedBy === healerId,
   );
+}
+
+// Persistent-damage instances that are bleeds (Staunch Bleeding, #224). Matches
+// 'bleed'/'bleeding' on the instance type so a target's tracked bleeds can be
+// cleared on a successful Treat Wounds.
+export function bleedInstances(instances) {
+  return (instances || []).filter((i) => /bleed/i.test(i?.type || ''));
 }
 
 const writeLocal = (key, value) => {
@@ -136,4 +144,82 @@ export function applyTreatWounds({
     writeLocal(`cnmh_effects_${target.id}`, nextEffects);
     sendUpdate(target.id, 'effects', nextEffects);
   }
+}
+
+/**
+ * Applies a Staunch Bleeding resolution (#224). It's a use of Treat Wounds that
+ * stops bleeding rather than restoring HP, so on a success it clears the
+ * target's tracked persistent bleeds (cnmh_persistent_global, keyed by the
+ * target's encounter entryId) and stamps the same 1-hour Treat Wounds immunity.
+ * Failure/critical failure leaves the bleeding in place — the feat's downside is
+ * "no effect", not Treat Wounds' self-damage.
+ *
+ * @param {Object}   healer          - { id, name }
+ * @param {Object}   target          - { id, name }
+ * @param {string}   entryId         - the target's encounter entryId (bleed map key)
+ * @param {number}   dc              - effective DC (already reduced by 10 for the 2-action variant)
+ * @param {string}   degree          - computeSaveDegree result
+ * @param {Array}    bleeds          - the bleed instances to clear on success ([{ id, dice, type }])
+ * @param {number}   [nowSecs]       - current absolute game seconds (immunity expiry)
+ * @param {Function} getState        - (charId, key) => value
+ * @param {Function} sendUpdate      - (charId, key, value) => void
+ * @param {Function} setPersistentMap- synced setter for cnmh_persistent_global
+ * @param {Function} appendLog       - ({ type, charId, text }) => void
+ */
+export function applyStaunchBleeding({
+  healer,
+  target,
+  entryId,
+  dc,
+  degree,
+  bleeds,
+  nowSecs,
+  getState,
+  sendUpdate,
+  setPersistentMap,
+  appendLog,
+}) {
+  const actionName = 'Staunch Bleeding';
+
+  if (degree === 'failure' || degree === 'criticalFailure') {
+    const label = degree === 'criticalFailure' ? 'Critical Failure' : 'Failure';
+    appendLog({
+      type:   'action',
+      charId: healer.id,
+      text:   `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): ${label} — bleeding continues`,
+    });
+    return;
+  }
+
+  // success / criticalSuccess — clear the tracked bleeds.
+  const cleared = bleeds || [];
+  if (entryId && cleared.length && setPersistentMap) {
+    setPersistentMap((m) =>
+      cleared.reduce((acc, b) => removeInstance(acc, entryId, b.id), m || {}),
+    );
+  }
+
+  const label = degree === 'criticalSuccess' ? 'Critical Success' : 'Success';
+  const tail = cleared.length
+    ? `stopped ${cleared.length === 1 ? 'the bleeding' : `${cleared.length} bleeds`}`
+    : 'no tracked bleeding to clear';
+  appendLog({
+    type:   'action',
+    charId: healer.id,
+    text:   `${healer.name} used ${actionName} on ${target.name} (DC ${dc}): ${label} — ${tail}`,
+  });
+
+  // Same 1-hour Treat Wounds immunity as a normal treat (it is Treat Wounds).
+  const currentEffects = getState(target.id, 'effects') || [];
+  const immunityEntry = {
+    id:        newEntryUid(),
+    effectId:  IMMUNITY_EFFECT_ID,
+    appliedBy: healer.id,
+    source:    actionName,
+    ...(typeof nowSecs === 'number' ? { expireAtSecs: nowSecs + 3600 } : {}),
+    ts:        Date.now(),
+  };
+  const nextEffects = [...currentEffects, immunityEntry];
+  writeLocal(`cnmh_effects_${target.id}`, nextEffects);
+  sendUpdate(target.id, 'effects', nextEffects);
 }
