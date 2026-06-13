@@ -50,6 +50,8 @@ test.describe('Lore history', () => {
     });
 
     await page.goto('/gm/lore');
+    // Master/detail shell: select the seeded entry's list row to open its form.
+    await page.getByRole('button', { name: title }).click();
     const form = page.getByTestId(`lore-form-${id}`);
     await expect(form).toBeVisible();
 

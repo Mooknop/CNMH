@@ -129,7 +129,7 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     setError(null);
     try {
       await saveDocument('spell', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (err) {
       setError(err.message);
     } finally {

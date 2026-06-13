@@ -44,7 +44,7 @@ const QuestForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     setError(null);
     try {
       await saveDocument('quest', id, payload);
-      onSaved(isNew);
+      onSaved(isNew, id);
     } catch (e) {
       setError(e.message);
     } finally {

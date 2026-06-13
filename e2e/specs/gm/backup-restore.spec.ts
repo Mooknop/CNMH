@@ -56,6 +56,8 @@ test.describe('Backup → reseed → restore', () => {
     });
 
     await page.goto('/gm');
+    // Backup / reseed / restore live inside the collapsed "Maintenance" <details>.
+    await page.locator('details.gm-dash-maintenance > summary').click();
     await expect(page.getByRole('button', { name: 'Download backup' })).toBeVisible();
 
     // --- 2. Capture backup download ---

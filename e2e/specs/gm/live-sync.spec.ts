@@ -69,11 +69,15 @@ test.describe('GM live-sync', () => {
       await formA.getByLabel('description').fill('Broadcast test.');
       await formA.getByRole('button', { name: 'Create quest' }).click();
 
-      // pageA: the saved form appears
+      // pageA: reselect-on-create keeps the saved quest's form open.
       await expect(pageA.getByTestId(`quest-form-${id}`)).toBeVisible({ timeout: 20_000 });
 
-      // pageB: same form must appear via WebSocket CONTENT_UPDATE — no reload
-      await expect(pageB.getByTestId(`quest-form-${id}`)).toBeVisible({ timeout: 20_000 });
+      // pageB never selected anything, so in the master/detail shell the broadcast
+      // shows up as a new master-list row (not a form card) — no reload. This is
+      // the cross-tab CONTENT_UPDATE invariant this suite exists to verify.
+      await expect(
+        pageB.getByRole('list', { name: 'quest list' }).getByRole('button', { name: title }),
+      ).toBeVisible({ timeout: 20_000 });
     } finally {
       await contextA.close();
       await contextB.close();
