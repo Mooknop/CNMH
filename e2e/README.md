@@ -41,6 +41,24 @@ for verifying the real deployment path (Access, real DO/R2, asset serving).
 
 Reach for **local** unless you specifically need to exercise the deployed Cloudflare stack.
 
+## Mocking the session socket (`fixtures/session.ts`)
+
+`mockSession(page, { seed })` intercepts the `/session/*` relay with
+`page.routeWebSocket`, mirroring `worker/CampaignSession.js`. Call it **before**
+`page.goto`. It lets a spec:
+
+- **seed synced `cnmh_*` state** deterministically (replayed as `FULL_STATE` on connect), and
+- **simulate a peer the backend can't provide** — above all the Foundry bridge:
+  `session.push('cnmh_moveopts_<id>', …)` plays the bridge, `session.onSent('cnmh_movereq_<id>', …)`
+  reacts to what the app sends, `session.expectSent('cnmh_moveconfirm_<id>', matcher)` asserts it.
+
+It only intercepts `/session`, so `/api/content` + `/content-sync` still load real content from the
+local stack. See `specs/player/movement.spec.ts` for the movement state-machine example.
+
+**When to mock vs. not:** mock when you're simulating a peer (the bridge) or seeding synced state;
+use the **real** relay when the sync layer itself is under test (`specs/gm/live-sync.spec.ts`).
+It's opt-in — only specs that call `mockSession` are mocked.
+
 ## In CI
 
 - **`.github/workflows/e2e-local.yml` — the PR gate.** Runs the full suite against the local
