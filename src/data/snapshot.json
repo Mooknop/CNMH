@@ -5535,6 +5535,7 @@
               "traits": [
                 "Dragon"
               ],
+              "frequencyRule": { "per": "round", "uses": 1 },
               "description": "You've grown a pair of scaled wings, but they're taking some getting used to. Once per round, you can fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
             }
           ],
