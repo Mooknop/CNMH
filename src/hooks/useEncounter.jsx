@@ -29,6 +29,7 @@ const ENCOUNTER_KEY  = 'cnmh_encounter_global';
 const ACTORMAP_KEY   = 'cnmh_actormap_global';
 const KNOWLEDGE_KEY  = 'cnmh_knowledge_global';
 const PERSISTENT_KEY = 'cnmh_persistent_global';
+const ENEMY_FX_KEY   = 'cnmh_enemyfx_global';
 
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
@@ -42,6 +43,7 @@ export const useEncounter = () => {
   const [actorMap, setActorMap]     = useSyncedState(ACTORMAP_KEY, {});
   const [, setKnowledge]            = useSyncedState(KNOWLEDGE_KEY, {});
   const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
+  const [, setEnemyFx]              = useSyncedState(ENEMY_FX_KEY, {});
   const { sendUpdate } = useSession();
   const { effects: effectCatalog } = useContent();
 
@@ -319,8 +321,9 @@ export const useEncounter = () => {
       setEncounter(() => defaultEncounter());
       setKnowledge({});
       setPersistentMap({}); // tracked persistent damage dies with the encounter (#272)
+      setEnemyFx({});       // enemy conditions + immunity timers die with the encounter (#260)
     },
-    [setEncounter, setKnowledge, setPersistentMap, sendUpdate]
+    [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, sendUpdate]
   );
 
   const addSaveRequest = useCallback(
