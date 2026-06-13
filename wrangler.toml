@@ -74,3 +74,37 @@ new_sqlite_classes = ["CampaignContent"]
 [[env.staging.r2_buckets]]
 binding = "CAMPAIGN_IMAGES"
 bucket_name = "cnmh-staging-images"
+
+# ── Local E2E environment ─────────────────────────────────────────────────────
+# Dev-only: never deployed. `wrangler dev --env e2e` runs the real Worker + both
+# DOs + a simulated R2 bucket on the runner, so the full E2E suite consumes zero
+# Cloudflare resources. GM_DEV_BYPASS short-circuits Access (worker/access.js);
+# ENVIRONMENT = "e2e" un-gates /api/gm/_test/reset (worker/index.js) while keeping
+# prod 404'd. Playwright boots this as its webServer (playwright.config.ts).
+[env.e2e]
+name = "cnmh-e2e"
+
+[env.e2e.vars]
+GM_DEV_BYPASS = "true"
+GM_EMAIL = "mooknop@gmail.com"
+ENVIRONMENT = "e2e"
+
+[[env.e2e.durable_objects.bindings]]
+name = "CAMPAIGN_SESSION"
+class_name = "CampaignSession"
+
+[[env.e2e.durable_objects.bindings]]
+name = "CAMPAIGN_CONTENT"
+class_name = "CampaignContent"
+
+[[env.e2e.migrations]]
+tag = "v1"
+new_sqlite_classes = ["CampaignSession"]
+
+[[env.e2e.migrations]]
+tag = "v2"
+new_sqlite_classes = ["CampaignContent"]
+
+[[env.e2e.r2_buckets]]
+binding = "CAMPAIGN_IMAGES"
+bucket_name = "cnmh-e2e-images"

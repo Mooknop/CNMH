@@ -9,6 +9,10 @@
 /coverage
 foundry-bridge/coverage
 
+# Playwright E2E artifacts (local runs)
+/test-results
+/playwright-report
+
 # production build output
 /build
 /dist
