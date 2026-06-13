@@ -7433,10 +7433,28 @@
         },
         {
           "id": "feat-7",
-          "actions": [],
+          "actions": [
+            {
+              "name": "Split Shot",
+              "actionCount": 1,
+              "traits": [
+                "Concentrate",
+                "Sorcerer",
+                "Spellshape"
+              ],
+              "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals half the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
+              "chain": {
+                "into": "spell",
+                "cost": "added",
+                "spellFilter": "single-target-attack",
+                "splitShot": true,
+                "modifier": "Second target within range — one attack roll compared to both ACs (one attack for MAP); the second target takes half damage and no other effects"
+              }
+            }
+          ],
           "name": "Split Shot",
           "source": "Sorcerer",
-          "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals hafl the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
+          "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals half the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
           "level": 4
         },
         {
@@ -7451,11 +7469,13 @@
                 "Spellshape"
               ],
               "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn.",
+              "requiresOmen": true,
               "chain": {
                 "into": "spell",
                 "cost": "added",
                 "spellFilter": "any",
-                "modifier": "Draw a Harrow card before the spell; DC 11 flat check or lose your Harrow Omen"
+                "harrow": true,
+                "modifier": "Draw a Harrow card before the spell; DC 11 flat check or lose your Harrow Omen at the end of your turn"
               }
             }
           ],
@@ -9879,6 +9899,82 @@
       "modifiers": []
     },
     {
+      "id": "harrow-key-ward",
+      "name": "Harrow Casting — Key",
+      "description": "+1 status bonus to AC and all saving throws until the start of your next turn (Harrow Casting, Key drawn).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "harrow-key-ward-2",
+      "name": "Harrow Casting — Key (omen match)",
+      "description": "+2 status bonus to AC and all saving throws until the start of your next turn (Harrow Casting, Key drawn matching the Keys omen).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "harrow-star-saves",
+      "name": "Harrow Casting — Star (omen match)",
+      "description": "+2 status bonus to all saving throws until the start of the caster's next turn (Harrow Casting, Star drawn matching the Stars omen).",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 2
+        }
+      ]
+    },
+    {
       "id": "heroism-1",
       "name": "Heroism (Rank 1–3)",
       "description": "+1 status bonus to attack rolls, Perception, and saving throws for 10 minutes.",
@@ -10101,6 +10197,40 @@
       "name": "Treat Wounds Immunity",
       "description": "Cannot be healed by Treat Wounds or Battle Medicine from the specific healer who applied this effect. Applied automatically on a successful Treat Wounds or Battle Medicine check. Remove to allow re-treatment.",
       "modifiers": []
+    },
+    {
+      "id": "imperial-blood-magic-ac",
+      "name": "Blood Magic — AC (Imperial)",
+      "description": "+1 status bonus to AC until the start of your next turn (Imperial blood magic).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "imperial-blood-magic-saves",
+      "name": "Blood Magic — Saving Throws (Imperial)",
+      "description": "+1 status bonus to all saving throws until the start of your next turn (Imperial blood magic).",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
     }
   ],
   "image": [
