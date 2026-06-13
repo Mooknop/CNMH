@@ -6203,6 +6203,7 @@
           },
           {
             "id": "spell-8",
+            "spellState": { "kind": "emanation", "start": 15, "step": 10, "unit": "ft" },
             "description": "Blessings from beyond help your companions strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane.",
             "name": "Bless",
             "actions": "Two Actions",
@@ -6645,6 +6646,7 @@
           },
           {
             "id": "staff-spell-6",
+            "spellState": { "kind": "images", "start": 3 },
             "name": "Mirror Image",
             "level": 2,
             "traits": [
