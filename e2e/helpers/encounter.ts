@@ -69,3 +69,15 @@ export const idleEncounter = () => ({
   log: [],
   saveRequests: [],
 });
+
+// A turn state with the reaction available — defaultTurnState (useTurnState.jsx)
+// has the reaction unavailable until a first turn, so tests that exercise
+// reaction-cost actions (Shield Block, reaction prompts) seed this.
+export const readyTurnState = () => ({
+  actionsSpent: 0,
+  attacksMade: 0,
+  reactionAvailable: true,
+  reactionSpent: false,
+  hasStartedFirstTurn: true,
+  actionsLog: [], // spendReaction/spendActions spread this — must be present
+});
