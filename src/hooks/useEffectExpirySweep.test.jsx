@@ -13,9 +13,12 @@ vi.mock('../contexts/SessionContext', () => ({
   useSession: () => ({ getState: mockGetState, sendUpdate: mockSendUpdate }),
 }));
 
+// Catalog comes from the ContentContext (DO-backed since #263), not the
+// bundled pf2eEffects module — DO-only effects must resolve in expiry logs.
 let mockCharacters = [];
+let mockEffectCatalog = [];
 vi.mock('../contexts/ContentContext', () => ({
-  useContent: () => ({ characters: mockCharacters }),
+  useContent: () => ({ characters: mockCharacters, effects: mockEffectCatalog }),
 }));
 
 let mockClock = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second: 0 };
@@ -46,6 +49,10 @@ beforeEach(() => {
   mockIsGm = true;
   mockClock = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second: 0 };
   mockCharacters = [{ id: 'char-a', name: 'Izzy' }];
+  mockEffectCatalog = [
+    { id: 'ability-immunity', name: 'Immune' },
+    { id: 'heroism-1', name: 'Heroism' },
+  ];
 });
 
 describe('useEffectExpirySweep', () => {
@@ -63,6 +70,17 @@ describe('useEffectExpirySweep', () => {
     expect(mockAppendEvent).toHaveBeenCalledWith({
       type: 'expire',
       text: 'Immune (Guidance) expired on Izzy',
+    });
+  });
+
+  it('resolves DO-only (GM-authored) effects by name in the expiry log', () => {
+    // 'shrouded' is not in the bundled pf2eEffects.js — only the context catalog.
+    mockEffectCatalog = [...mockEffectCatalog, { id: 'shrouded', name: 'Shrouded' }];
+    seed('char-a', [{ id: 'e1', effectId: 'shrouded', expireAtSecs: NOW - 1 }]);
+    renderHook(() => useEffectExpirySweep());
+    expect(mockAppendEvent).toHaveBeenCalledWith({
+      type: 'expire',
+      text: 'Shrouded expired on Izzy',
     });
   });
 

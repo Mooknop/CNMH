@@ -18,11 +18,11 @@ vi.mock('../contexts/SessionContext', () => ({
   useSession: () => ({ sendUpdate: vi.fn(), getState: vi.fn(() => []) }),
 }));
 
-// pf2eEffects — sweep looks up effect names; no effects in these tests.
-vi.mock('../data/pf2eEffects', () => {
-  const list = [];
-  return { __esModule: true, default: list, getEffect: () => null };
-});
+// ContentContext — sweep looks up effect names in the DO-backed catalog;
+// no effects in these tests.
+vi.mock('../contexts/ContentContext', () => ({
+  useContent: () => ({ effects: [] }),
+}));
 
 // expiry utilities — keep the sweep a no-op in unit tests so they only
 // test the encounter state machine, not side-effect wiring.

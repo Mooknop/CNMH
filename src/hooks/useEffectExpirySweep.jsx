@@ -4,7 +4,6 @@ import { useContent } from '../contexts/ContentContext';
 import { useGameDate } from '../contexts/GameDateContext';
 import { useGmAuth } from './useGmAuth';
 import { useSessionLog } from './useSessionLog';
-import { getEffect } from '../data/pf2eEffects';
 import { toGameSeconds } from '../utils/gameTime';
 
 const writeLocal = (key, value) => {
@@ -22,7 +21,7 @@ const writeLocal = (key, value) => {
 // writes the pruned list back through sendUpdate (+ localStorage fallback).
 export function useEffectExpirySweep() {
   const { getState, sendUpdate } = useSession();
-  const { characters } = useContent();
+  const { characters, effects: effectCatalog } = useContent();
   const { gameDate, time } = useGameDate();
   const { isGm } = useGmAuth();
   const { appendEvent } = useSessionLog();
@@ -50,12 +49,13 @@ export function useEffectExpirySweep() {
       sendUpdate(c.id, 'effects', next);
 
       expired.forEach((e) => {
-        const label = getEffect(e.effectId)?.name || e.effectId;
+        const def = (effectCatalog || []).find((d) => d.id === e.effectId);
+        const label = def?.name || e.effectId;
         const what = e.source ? `${label} (${e.source})` : label;
         appendEvent({ type: 'expire', text: `${what} expired on ${c.name}` });
       });
     });
-  }, [isGm, nowSecs, characters, getState, sendUpdate, appendEvent]);
+  }, [isGm, nowSecs, characters, effectCatalog, getState, sendUpdate, appendEvent]);
 }
 
 export default useEffectExpirySweep;

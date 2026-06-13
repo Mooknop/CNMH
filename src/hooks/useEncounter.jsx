@@ -1,7 +1,7 @@
 import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
-import { getEffect } from '../data/pf2eEffects';
+import { useContent } from '../contexts/ContentContext';
 import { boundariesCrossedBy, isExpired } from '../utils/expiry';
 import {
   defaultEncounter,
@@ -43,6 +43,7 @@ export const useEncounter = () => {
   const [, setKnowledge]            = useSyncedState(KNOWLEDGE_KEY, {});
   const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
   const { sendUpdate } = useSession();
+  const { effects: effectCatalog } = useContent();
 
   // Resolve Foundry actor IDs → CNMH charIds using the GM-maintained actorMap.
   // Components always receive resolved entries so they never need to know about
@@ -88,7 +89,8 @@ export const useEncounter = () => {
           effects
             .filter((e) => isExpired(e.expireAt, boundaries))
             .forEach((e) => {
-              const name = getEffect(e.effectId)?.name || e.effectId;
+              const def = (effectCatalog || []).find((d) => d.id === e.effectId);
+              const name = def?.name || e.effectId;
               setEncounter((c) => {
                 const base = c || defaultEncounter();
                 return {
@@ -126,7 +128,7 @@ export const useEncounter = () => {
         }
       }
     },
-    [sendUpdate, setEncounter]
+    [sendUpdate, setEncounter, effectCatalog]
   );
 
   const appendLog = useCallback(
