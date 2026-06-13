@@ -6,6 +6,7 @@ import FreeActionsList from './FreeActionsList';
 import MagicModal from '../spells/MagicModal';
 import UseAbilityModal from '../encounter/UseAbilityModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
+import HuntPreyModal from '../encounter/HuntPreyModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -18,6 +19,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [isMagicOpen, setIsMagicOpen] = useState(false);
   const [usingAbility, setUsingAbility] = useState(null); // { ability, cost } | null
   const [treatWoundsMode, setTreatWoundsMode] = useState(null); // 'battle-medicine' | 'staunch-bleeding' | null
+  const [huntPreyCost, setHuntPreyCost] = useState(null); // action cost when the Hunt Prey modal is open, else null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -43,6 +45,13 @@ const ActionsList = ({ character, characterColor }) => {
       // routes to the same modal in its own mode (handles its 1–2 action cost).
       if (item.name === 'Staunch Bleeding') {
         setTreatWoundsMode('staunch-bleeding');
+        return;
+      }
+
+      // Hunt Prey (#223) — designating prey picks an enemy and sets synced
+      // state; the modal handles the pick + the 1-action spend in encounter.
+      if (item.name === 'Hunt Prey') {
+        setHuntPreyCost(encounterMode ? 1 : 0);
         return;
       }
 
@@ -217,6 +226,16 @@ const ActionsList = ({ character, characterColor }) => {
           healer={character}
           themeColor={themeColor}
           actionCost={treatWoundsMode === 'battle-medicine' && encounterMode ? 1 : 0}
+        />
+      )}
+
+      {huntPreyCost !== null && (
+        <HuntPreyModal
+          isOpen
+          onClose={() => setHuntPreyCost(null)}
+          character={character}
+          themeColor={themeColor}
+          actionCost={huntPreyCost}
         />
       )}
     </div>

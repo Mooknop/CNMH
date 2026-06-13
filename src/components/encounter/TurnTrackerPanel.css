@@ -343,6 +343,13 @@
   vertical-align: middle;
 }
 
+/* Hunt Prey (#223) — prey marker on the designated enemy */
+.ttp-prey-badge {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
 /* Kinetic aura (#228) — order-strip chip + Dismiss control */
 .ttp-aura-chip {
   font-size: var(--text-xs);
