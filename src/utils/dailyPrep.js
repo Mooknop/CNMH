@@ -78,6 +78,12 @@ function computeResets(character, getState) {
     resets.push({ type: 'sustains', value: [], label: 'sustained spells' });
   }
 
+  // Per-spell counters (#220) — Mirror Image / Bless trackers cleared on rest.
+  const spellcounters = getState(id, 'spellcounters');
+  if (Array.isArray(spellcounters) && spellcounters.length) {
+    resets.push({ type: 'spellcounters', value: [], label: 'tracked spells' });
+  }
+
   return resets;
 }
 

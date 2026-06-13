@@ -93,6 +93,15 @@ describe('performDailyPrep — resets', () => {
     expect(summary).toMatch(/sustained spells/);
   });
 
+  it('clears lingering per-spell counters', () => {
+    const { updates, getState, sendUpdate } = makeStubs({
+      spellcounters: [{ id: 'mi', spellName: 'Mirror Image', value: 2 }],
+    });
+    const { summary } = performDailyPrep({ character, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'spellcounters').value).toEqual([]);
+    expect(summary).toMatch(/tracked spells/);
+  });
+
   it('writes nothing for a character with full resources', () => {
     const { updates, getState, sendUpdate } = makeStubs({ slots: { 1: 0 }, focus: 0 });
     const { summary } = performDailyPrep({ character, getState, sendUpdate });
