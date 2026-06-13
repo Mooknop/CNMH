@@ -8,6 +8,13 @@ vi.mock('../../hooks/useEffects', () => ({
   useEffects: () => mockEffects,
 }));
 
+const mockEndSustain = vi.fn();
+const mockSustains = { sustains: [], end: mockEndSustain };
+
+vi.mock('../../hooks/useSustains', () => ({
+  useSustains: () => mockSustains,
+}));
+
 // The panel resolves effect names from the ContentContext catalog (#284 — DO
 // source of truth), so mock that directly; the bundled pf2eEffects module is
 // only the seed fallback and never reaches this component.
@@ -39,6 +46,7 @@ describe('EffectsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockEffects.effects = [];
+    mockSustains.sustains = [];
   });
 
   it('renders nothing when no effects are active', () => {
@@ -106,5 +114,31 @@ describe('EffectsPanel', () => {
     expect(screen.getByText('Immune: Guidance')).toBeInTheDocument();
     // 08:00 + 1h, same day → bare time.
     expect(screen.getByText('09:00')).toBeInTheDocument();
+  });
+
+  // ── Sustained spells (#220) ──────────────────────────────────────────────
+  it('renders the panel when only a sustain is active (no effects)', () => {
+    mockSustains.sustains = [{ id: 'sus-1', spellName: 'Bless' }];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('EFFECTS')).toBeInTheDocument();
+    expect(screen.getByText('Bless')).toBeInTheDocument();
+    expect(screen.getByText('sustained')).toBeInTheDocument();
+  });
+
+  it('counts sustains alongside effects', () => {
+    mockEffects.effects = [{ id: 'uid-1', effectId: 'heroism-1', ts: 1 }];
+    mockSustains.sustains = [
+      { id: 'sus-1', spellName: 'Bless' },
+      { id: 'sus-2', spellName: 'Forbidding Ward' },
+    ];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('3')).toBeInTheDocument();
+  });
+
+  it('calls end with the sustain id when its End button is clicked', () => {
+    mockSustains.sustains = [{ id: 'sus-end', spellName: 'Mirror Image' }];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    fireEvent.click(screen.getByTitle('End Mirror Image'));
+    expect(mockEndSustain).toHaveBeenCalledWith('sus-end');
   });
 });
