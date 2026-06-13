@@ -185,6 +185,14 @@ describe('useEncounter', () => {
     });
   });
 
+  it('endEncounter clears each PC sustained-spell ledger (#220)', () => {
+    localStorage.setItem('cnmh_sustains_Pellias', JSON.stringify([{ id: 's1', spellName: 'Bless' }]));
+    const { result } = setup();
+    act(() => result.current.startEncounter([pellias]));
+    act(() => result.current.endEncounter());
+    expect(JSON.parse(localStorage.getItem('cnmh_sustains_Pellias'))).toEqual([]);
+  });
+
   it('appendLog adds entries with ids + timestamps', () => {
     const { result } = setup();
     act(() => result.current.appendLog({ type: 'note', text: 'hi' }));

@@ -5,6 +5,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
+import { useSustains } from '../../hooks/useSustains';
 import { useSession } from '../../contexts/SessionContext';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
@@ -85,6 +86,12 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Harrow omen (#227) — a failed Harrow Cast flat check flags the omen for
   // loss at the END of the turn; submitting the turn is that boundary.
   const omen = useOmen(charId);
+
+  // Sustained spells (#220) — Bless, Mirror Image, Summon Undead, … prompt the
+  // caster to Sustain a Spell (1 action) at the start of each of their turns.
+  // `lastSustainedRound` on each entry tracks whether it's been kept alive this
+  // round; forgetting (submitting without sustaining) lapses it.
+  const { sustains, sustain: doSustain, end: endSustain } = useSustains(charId);
 
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
@@ -220,6 +227,14 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
       omen.clear();
     }
 
+    // Sustained spells not sustained this round lapse when the turn ends (#220).
+    sustains.forEach((s) => {
+      if (s.lastSustainedRound !== encounter.round) {
+        appendLog({ type: 'system', text: `${s.spellName} ends (not sustained)` });
+        endSustain(s.id);
+      }
+    });
+
     // Determine next actor BEFORE advancing so we can reset their state.
     const { currentTurnIndex: nextIdx } = nextTurnIndex(
       order,
@@ -284,6 +299,21 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
       appendLog({ type: 'system', text: fa.reminder });
     }
     markOfferHandled(fa);
+  };
+
+  // Sustain prompts (#220) — show on the caster's turn for any tracked spell not
+  // yet sustained this round (a spell cast this turn already reads as current).
+  const pendingSustains = sustains.filter((s) => s.lastSustainedRound !== encounter?.round);
+
+  const handleSustain = (s) => {
+    spendActions(1, `Sustain ${s.spellName}`);
+    doSustain(s.id, encounter?.round);
+    appendLog({ type: 'action', charId, text: `${characterName} sustained ${s.spellName}` });
+  };
+
+  const handleEndSustain = (s) => {
+    endSustain(s.id);
+    appendLog({ type: 'system', text: `${s.spellName} ends` });
   };
 
   const reactionState = !hasStartedFirstTurn
@@ -468,6 +498,29 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
             aria-label={`Dismiss ${fa.name}`}
           >
             Dismiss
+          </button>
+        </div>
+      ))}
+
+      {/* Sustain-a-Spell prompts (#220) — one per tracked sustained spell */}
+      {isInProgress && isMyTurn && pendingSustains.map((s) => (
+        <div key={s.id} className="ttp-offer ttp-offer--sustain" role="group" aria-label={`Sustain ${s.spellName}`}>
+          <span className="ttp-offer-name">
+            Sustain {s.spellName} <span className="ttp-offer-cost">(1 action)</span>
+          </span>
+          <button
+            className="btn-secondary ttp-offer-use"
+            onClick={() => handleSustain(s)}
+            aria-label={`Sustain ${s.spellName}`}
+          >
+            Sustain
+          </button>
+          <button
+            className="btn-text"
+            onClick={() => handleEndSustain(s)}
+            aria-label={`End ${s.spellName}`}
+          >
+            End
           </button>
         </div>
       ))}

@@ -72,6 +72,12 @@ function computeResets(character, getState) {
     resets.push({ type: 'huntprey', value: null, label: 'Hunt Prey' });
   }
 
+  // Sustained spells (#220) — any lingering sustain ledger is cleared on rest.
+  const sustains = getState(id, 'sustains');
+  if (Array.isArray(sustains) && sustains.length) {
+    resets.push({ type: 'sustains', value: [], label: 'sustained spells' });
+  }
+
   return resets;
 }
 

@@ -293,11 +293,23 @@ export const useEncounter = () => {
 
   const endEncounter = useCallback(
     () => {
+      // Sustained spells are encounter-bound — clear each PC's ledger so a stale
+      // sustain doesn't re-prompt at the start of the next encounter (#220).
+      for (const entry of encounterRef.current?.order || []) {
+        if (entry.kind !== 'pc' || !entry.charId) continue;
+        const key = `cnmh_sustains_${entry.charId}`;
+        let cur;
+        try { cur = JSON.parse(window.localStorage.getItem(key)) || []; } catch { cur = []; }
+        if (cur.length) {
+          window.localStorage.setItem(key, JSON.stringify([]));
+          sendUpdate(entry.charId, 'sustains', []);
+        }
+      }
       setEncounter(() => defaultEncounter());
       setKnowledge({});
       setPersistentMap({}); // tracked persistent damage dies with the encounter (#272)
     },
-    [setEncounter, setKnowledge, setPersistentMap]
+    [setEncounter, setKnowledge, setPersistentMap, sendUpdate]
   );
 
   const addSaveRequest = useCallback(
