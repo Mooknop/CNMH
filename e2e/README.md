@@ -41,9 +41,12 @@ for verifying the real deployment path (Access, real DO/R2, asset serving).
 
 Reach for **local** unless you specifically need to exercise the deployed Cloudflare stack.
 
-## Known failures
+## In CI
 
-A batch of GM specs currently fail against the real app (they fail on staging too — the
-e2e job had been skipped long enough for the suite to drift). These are **not** local-stack
-issues; tracked in **#313** (editor deselects after create, collapsed Maintenance `<details>`,
-a duplicate-selector spec bug). Until that lands, expect those specs red on both profiles.
+- **`.github/workflows/e2e-local.yml` — the PR gate.** Runs the full suite against the local
+  `wrangler dev` stack on every PR that touches app/worker/e2e code. No secrets, no Cloudflare
+  usage, no label needed. This is the check that should stay green.
+- **`.github/workflows/staging-e2e.yml` — on-demand staging smoke.** Deploys to `cnmh-staging`
+  on qualifying PRs; its E2E job is gated behind the `run-e2e` label / `workflow_dispatch` and
+  runs `smoke.spec.ts` only (Access service token, real DO/R2, asset serving). Dispatch it with
+  `scope=full` to run the whole suite against staging for pre-release confidence.

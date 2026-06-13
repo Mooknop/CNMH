@@ -1,12 +1,20 @@
 name: Staging CI
 
 # Staging deploy runs automatically on every PR that touches app/worker code
-# (path-filtered). The e2e job is decoupled and stays opt-in — apply the
-# 'run-e2e' label (or use workflow_dispatch) to run it — so the shared staging
-# Worker's CF DO write budget isn't drained by routine pushes.
-# cancel-in-progress means only the latest push on a given PR runs at once.
+# (path-filtered). The e2e job is an on-demand *deployment smoke* — apply the
+# 'run-e2e' label (or use workflow_dispatch) to run it. The free local-stack
+# suite (e2e-local.yml) is the real PR gate; this job verifies the things local
+# can't (Cloudflare Access service tokens, real DO/R2, asset serving) and so
+# runs smoke.spec.ts only by default. Dispatch with scope=full for the whole
+# suite (pre-release confidence). cancel-in-progress keeps one run per PR.
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Staging E2E scope'
+        type: choice
+        options: [smoke, full]
+        default: smoke
   pull_request:
     types: [opened, synchronize, reopened, labeled]
     paths:
@@ -53,7 +61,7 @@ jobs:
           command: deploy --env staging
 
   e2e:
-    name: E2E tests
+    name: Staging E2E smoke (deploy verification)
     runs-on: ubuntu-latest
     needs: [deploy]
     if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'run-e2e')
@@ -99,26 +107,20 @@ jobs:
           echo "=== Public /api/content (no auth, sanity check) ==="
           curl -is https://cnmh-staging.mooknop.workers.dev/api/content | head -20
 
-      - name: Run E2E suite
-        run: npm run test:e2e
+      - name: Run staging E2E (${{ github.event.inputs.scope || 'smoke' }})
+        # Default (label or dispatch): smoke.spec.ts only — Access service token,
+        # real DO reachability, asset serving. Dispatch with scope=full to run the
+        # whole suite against staging for pre-release confidence.
+        run: |
+          if [ "${{ github.event.inputs.scope }}" = "full" ]; then
+            npm run test:e2e
+          else
+            npm run test:e2e -- e2e/specs/smoke.spec.ts
+          fi
         env:
           E2E_BASE_URL: https://cnmh-staging.mooknop.workers.dev
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
-
-      - name: Write budget summary
-        if: always()
-        run: |
-          # Static estimate based on the cost model documented in the plan:
-          # reset (2) + seed (~25) + N saves (3 each) ≈ 35 writes per test on average.
-          # Surfaces budget consumption so we notice creep before hitting the 100k cap.
-          TEST_COUNT=$(find e2e/specs -name '*.spec.ts' -exec grep -c "^\s*test(" {} \; | awk '{sum+=$1} END {print sum}')
-          EST_WRITES=$((TEST_COUNT * 35))
-          echo "=== E2E Write Budget Summary ==="
-          echo "Tests in suite: $TEST_COUNT"
-          echo "Estimated writes per run: ~$EST_WRITES (model: ~35 writes/test)"
-          echo "Daily CF DO free-tier limit: 100,000 rows_written"
-          echo "Headroom: ~$((100000 / (EST_WRITES > 0 ? EST_WRITES : 1))) full passing runs/day"
 
       - name: Upload Playwright report
         if: failure()

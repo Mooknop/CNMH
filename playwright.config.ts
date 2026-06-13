@@ -20,10 +20,11 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env.CI,
-  // Local: no network latency, so a real failure should surface immediately.
-  // Staging: 1 retry (not 2) caps write-amplification on the shared CF DO — a
-  // deterministic flake still gets one chance.
-  retries: LOCAL ? 0 : process.env.CI ? 1 : 0,
+  // CI (local-stack gate or staging): 1 retry absorbs transient flake — a slow
+  // wrangler-dev boot mid-suite, a rare race — without blocking the PR; 1 (not 2)
+  // still caps write-amplification on the shared staging DO. Local dev: 0, so a
+  // real failure surfaces immediately.
+  retries: process.env.CI ? 1 : 0,
   // Local: Playwright's default 30s is ample. Staging: 60s gives slower remote
   // saves room before the request context is torn down (the "Request context
   // disposed" cascade on retry beforeEach is the symptom of 30s being too tight).

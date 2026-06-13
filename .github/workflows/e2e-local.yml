@@ -1,0 +1,58 @@
+name: E2E (local stack)
+
+# The default E2E gate: runs the full Playwright suite against a local full-stack
+# instance (real Worker + both Durable Objects + simulated R2 via `wrangler dev`,
+# booted as Playwright's webServer). Zero Cloudflare usage, no secrets, no label
+# gate — so it can run on every qualifying PR. Staging E2E (staging-e2e.yml) is
+# now an on-demand smoke for deploy verification only.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'worker/**'
+      - 'wrangler.toml'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/e2e-local.yml'
+
+# Per-branch dedup: latest push on a PR wins. Each runner is fully isolated
+# (its own wrangler-dev stack), so this is not a shared-resource group.
+concurrency:
+  group: e2e-local-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local:
+    name: E2E against local stack
+    runs-on: ubuntu-latest
+    # No CF DO budget to protect; this ceiling just caps a hung webServer/run.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browser
+        # chromium engine also backs the mobile-chromium (Pixel 7) project.
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E suite (local wrangler-dev stack)
+        # No E2E_BASE_URL / CF_ACCESS_* → playwright.config.ts boots
+        # `wrangler dev --env e2e` as its webServer and uses GM_DEV_BYPASS.
+        run: npm run test:e2e:local
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
