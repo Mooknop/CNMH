@@ -23,6 +23,7 @@ import { useShield } from '../../hooks/useShield';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
+import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { immunityConfigFor } from '../../utils/immunity';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
@@ -489,6 +490,20 @@ const UseAbilityModal = ({
         nowSecs,
         getState,
         sendUpdate,
+      });
+    }
+
+    // Sustained spells (#220) — register on the caster's ledger so the turn
+    // tracker can prompt "Sustain a Spell" each turn. Only in an active
+    // encounter, where turn-start prompts exist.
+    if (isSustainedSpell(ability) && encounter?.phase === 'in-progress' && casterEntryId) {
+      registerSustain({
+        ability,
+        caster: character,
+        round: encounter.round,
+        getState,
+        sendUpdate,
+        appendLog,
       });
     }
 

@@ -830,4 +830,87 @@ describe('TurnTrackerPanel', () => {
     expect(screen.queryByRole('group', { name: 'Primary Threat (free action)' })).toBeNull();
   });
 
+  // ── Sustained-spell prompts (#220) ───────────────────────────────────────
+  // Seed the caster's sustain ledger directly via useSyncedState (the shared
+  // mock store), mirroring how registerSustain writes it in the real cast flow.
+  const seedSustain = (set, entries) => act(() => set(entries));
+
+  it('shows a Sustain prompt for a spell not yet sustained this round', () => {
+    let drv, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    seedSustain(setSustains, [{ id: 's1', spellName: 'Bless', lastSustainedRound: 0 }]);
+    expect(screen.getByRole('group', { name: 'Sustain Bless' })).toBeInTheDocument();
+  });
+
+  it('does not prompt for a spell already sustained (or cast) this round', () => {
+    let drv, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv); // round 1
+    seedSustain(setSustains, [{ id: 's1', spellName: 'Bless', lastSustainedRound: 1 }]);
+    expect(screen.queryByRole('group', { name: 'Sustain Bless' })).toBeNull();
+  });
+
+  it('Sustain spends one action and dismisses the prompt', () => {
+    let drv, tsDriver, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv); // round 1
+    seedSustain(setSustains, [{ id: 's1', spellName: 'Bless', lastSustainedRound: 0 }]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sustain Bless' }));
+    expect(tsDriver.turnState.actionsSpent).toBe(1);
+    expect(screen.queryByRole('group', { name: 'Sustain Bless' })).toBeNull();
+  });
+
+  it('End removes the sustain and logs it', () => {
+    let drv, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    seedSustain(setSustains, [{ id: 's1', spellName: 'Bless', lastSustainedRound: 0 }]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'End Bless' }));
+    expect(screen.queryByRole('group', { name: 'Sustain Bless' })).toBeNull();
+    expect(drv.encounter.log.some((l) => l.text === 'Bless ends')).toBe(true);
+  });
+
+  it('submitting the turn lapses a sustain not sustained this round', () => {
+    let drv, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv); // single PC, round 1
+    seedSustain(setSustains, [{ id: 's1', spellName: 'Bless', lastSustainedRound: 0 }]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
+    expect(drv.encounter.log.some((l) => l.text === 'Bless ends (not sustained)')).toBe(true);
+  });
 });

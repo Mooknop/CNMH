@@ -390,6 +390,13 @@
   color: var(--shell-text-tertiary);
 }
 
+/* Sustain-a-Spell prompt (#220) — solid accent border distinguishes it from
+   the dashed free-action offer bar. */
+.ttp-offer--sustain {
+  border-style: solid;
+  border-color: var(--color-arcane, var(--shell-border-strong));
+}
+
 /* Shield Block bar rules live in ShieldBlockBar.css (shared with ReactionPrompt). */
 
 /* ── Dark shell overrides (match base styles already — kept for specificity) */

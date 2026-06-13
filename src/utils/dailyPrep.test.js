@@ -84,6 +84,15 @@ describe('performDailyPrep — resets', () => {
     expect(updates.find((u) => u.key === 'effects').value.map((e) => e.id)).toEqual(['keep']);
   });
 
+  it('clears a lingering sustained-spell ledger', () => {
+    const { updates, getState, sendUpdate } = makeStubs({
+      sustains: [{ id: 's1', spellName: 'Bless' }],
+    });
+    const { summary } = performDailyPrep({ character, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'sustains').value).toEqual([]);
+    expect(summary).toMatch(/sustained spells/);
+  });
+
   it('writes nothing for a character with full resources', () => {
     const { updates, getState, sendUpdate } = makeStubs({ slots: { 1: 0 }, focus: 0 });
     const { summary } = performDailyPrep({ character, getState, sendUpdate });
