@@ -2,6 +2,7 @@ import React from 'react';
 import { useEffects } from '../../hooks/useEffects';
 import { useSustains } from '../../hooks/useSustains';
 import { useSpellCounters } from '../../hooks/useSpellCounters';
+import { useStance } from '../../hooks/useStance';
 import { useContent } from '../../contexts/ContentContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import './EffectsPanel.css';
@@ -16,13 +17,15 @@ const EffectsPanel = ({ charId, themeColor }) => {
   const { effects, removeEffect } = useEffects(charId);
   const { sustains, end: endSustain } = useSustains(charId);
   const { counters, adjust: adjustCounter, end: endCounter } = useSpellCounters(charId);
+  const { active: stanceActive, stanceName, leave: leaveStance } = useStance(charId);
   const { effects: effectCatalog, characters } = useContent();
   const { gameDate, time } = useGameDate();
   const nowSecs = toGameSeconds({ ...gameDate, ...time });
   const getEffect = (id) => (effectCatalog || []).find((e) => e.id === id) || null;
   const getCharName = (id) => (characters || []).find((c) => c.id === id)?.name || null;
 
-  if (effects.length === 0 && sustains.length === 0 && counters.length === 0) return null;
+  const stanceCount = stanceActive ? 1 : 0;
+  if (effects.length === 0 && sustains.length === 0 && counters.length === 0 && !stanceActive) return null;
 
   return (
     <div className="effects-panel" aria-label="Active effects">
@@ -30,7 +33,7 @@ const EffectsPanel = ({ charId, themeColor }) => {
         <span className="effects-panel-title">
           EFFECTS
         </span>
-        <span className="effects-panel-count">{effects.length + sustains.length + counters.length}</span>
+        <span className="effects-panel-count">{effects.length + sustains.length + counters.length + stanceCount}</span>
       </div>
       <ul className="effects-panel-list">
         {effects.map((entry) => {
@@ -118,6 +121,22 @@ const EffectsPanel = ({ charId, themeColor }) => {
             </button>
           </li>
         ))}
+        {/* Active stance (#224) — the voluntary-leave path; auto-clears at
+            encounter end via the cnmh_stance_<charId> sweep in endEncounter. */}
+        {stanceActive && (
+          <li className="effects-panel-item effects-panel-item--stance">
+            <span className="effects-panel-name">{stanceName || 'Stance'}</span>
+            <span className="effects-panel-tag" title="Active stance">stance</span>
+            <button
+              className="effects-panel-remove"
+              onClick={() => leaveStance()}
+              aria-label={`Leave ${stanceName || 'stance'}`}
+              title={`Leave ${stanceName || 'stance'}`}
+            >
+              ×
+            </button>
+          </li>
+        )}
       </ul>
     </div>
   );

@@ -366,6 +366,14 @@
   vertical-align: middle;
 }
 
+/* Stance chip (#224) — order-strip badge while a stance is active */
+.ttp-stance-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
 /* Turn-start free-action offer bar (#228 — Primary Threat) */
 .ttp-offer {
   display: flex;

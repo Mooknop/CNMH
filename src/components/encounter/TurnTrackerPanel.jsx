@@ -16,6 +16,7 @@ import ShieldBlockBar from './ShieldBlockBar';
 import PersistentChip from './PersistentChip';
 import AuraChip from './AuraChip';
 import OmenChip from './OmenChip';
+import StanceChip from './StanceChip';
 import './TurnTrackerPanel.css';
 
 const formatCombatTime = (secs) => {
@@ -352,6 +353,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
               )}
               {entry.kind === 'pc' && <AuraChip entry={entry} />}
               {entry.kind === 'pc' && <OmenChip entry={entry} />}
+              {entry.kind === 'pc' && <StanceChip entry={entry} />}
               <PersistentChip entry={entry} viewerCharId={charId} />
               <span className="ttp-entry-init">
                 {entry.initiative !== null && entry.initiative !== undefined

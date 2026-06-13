@@ -304,6 +304,17 @@ export const useEncounter = () => {
           window.localStorage.setItem(key, JSON.stringify([]));
           sendUpdate(entry.charId, 'sustains', []);
         }
+
+        // Stances are encounter-bound (#224) — drop any active stance so it
+        // doesn't linger into the next encounter or onto the sheet.
+        const stanceKey = `cnmh_stance_${entry.charId}`;
+        let stance;
+        try { stance = JSON.parse(window.localStorage.getItem(stanceKey)); } catch { stance = null; }
+        if (stance?.active) {
+          const idle = { active: false, name: null, ts: 0 };
+          window.localStorage.setItem(stanceKey, JSON.stringify(idle));
+          sendUpdate(entry.charId, 'stance', idle);
+        }
       }
       setEncounter(() => defaultEncounter());
       setKnowledge({});
