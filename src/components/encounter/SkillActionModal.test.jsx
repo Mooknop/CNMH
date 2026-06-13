@@ -274,3 +274,34 @@ describe('SkillActionModal (Escape)', () => {
     expect(applyCondition).not.toHaveBeenCalled();
   });
 });
+
+describe('SkillActionModal (circumstance bonuses, AC4)', () => {
+  it('a free-form +N adjusts the net, flips the degree, and is logged', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={action} character={character} />);
+    pickGoblin(); // Will DC 14
+    // d20 8 + 5 = 13 → Failure
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '8' } });
+    expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
+    // +2 circumstance → 15 → Success
+    fireEvent.change(screen.getByLabelText(/Other circumstance/), { target: { value: '2' } });
+    expect(screen.getByText('Success — Frightened 1')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('[+2 circumstance]') })
+    );
+  });
+
+  it('a declared feat toggle adds its bonus when active', () => {
+    const aidDemo = { ...getSkillAction('demoralize'), toggles: [{ id: 'aid', label: 'Aid', bonus: 2 }] };
+    render(<SkillActionModal isOpen onClose={() => {}} action={aidDemo} character={character} />);
+    pickGoblin();
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '8' } }); // 13 → Failure
+    expect(screen.getByText('Failure — no effect')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Aid +2' })); // 15 → Success
+    expect(screen.getByText('Success — Frightened 1')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Demoralize/ }));
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('[Aid]') })
+    );
+  });
+});
