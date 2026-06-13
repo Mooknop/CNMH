@@ -20,6 +20,43 @@ describe('skillActions registry', () => {
     SKILL_ACTIONS.forEach((a) => expect(typeof a.skill).toBe('string'));
   });
 
+  describe('Athletics maneuvers', () => {
+    it('defines the four maneuvers as Attack-trait athletics actions with no immunity', () => {
+      ['trip', 'grapple', 'shove', 'disarm'].forEach((id) => {
+        const m = getSkillAction(id);
+        expect(m).toBeTruthy();
+        expect(m.skill).toBe('athletics');
+        expect(m.traits).toContain('Attack');
+        expect(m.immunity).toBeUndefined();
+      });
+    });
+
+    it('uses the correct target defenses per RAW', () => {
+      expect(getSkillAction('trip').defense).toBe('reflex');
+      expect(getSkillAction('disarm').defense).toBe('reflex');
+      expect(getSkillAction('grapple').defense).toBe('fortitude');
+      expect(getSkillAction('shove').defense).toBe('fortitude');
+    });
+
+    it('Grapple applies grabbed on success and restrained on crit', () => {
+      const g = getSkillAction('grapple');
+      expect(g.outcomes.success).toEqual({ condition: 'grabbed' });
+      expect(g.outcomes.criticalSuccess).toEqual({ condition: 'restrained' });
+    });
+
+    it('Trip applies prone and leaves the PC prone on a crit-fail', () => {
+      const t = getSkillAction('trip');
+      expect(t.outcomes.success).toEqual({ condition: 'prone' });
+      expect(t.outcomes.criticalFailure).toEqual({ selfCondition: 'prone' });
+    });
+
+    it('Shove and Disarm are note-only (no enemy condition)', () => {
+      expect(getSkillAction('shove').outcomes.success.condition).toBeUndefined();
+      expect(getSkillAction('shove').outcomes.success.note).toBeTruthy();
+      expect(getSkillAction('disarm').outcomes.success.note).toBeTruthy();
+    });
+  });
+
   describe('skillActionsFor', () => {
     const pc = { id: 'AshkaBGosh', name: 'Ashka' };
 
