@@ -11,15 +11,22 @@
 //   id          stable key, also the immunity abilityKey
 //   name        display label
 //   skill       skill id whose modifier the roll uses
+//   skillOptions optional list of skill ids the player chooses among (Escape:
+//               Athletics or Acrobatics); the modal defaults to the higher one
 //   actionCost  actions spent on use
 //   traits      PF2e traits; the 'Attack' trait makes the action participate in
 //               the Multiple Attack Penalty (read + advance) like a strike
-//   defense     target defense the degree is computed against ('will' = Will DC)
+//   defense     target defense the degree is computed against ('will' = Will DC,
+//               'perception' = Perception DC); null when the DC is GM-entered
+//   selfTarget  true for actions that resolve against the acting PC rather than
+//               an enemy (Escape) — no enemy picker, DC is GM-entered
 //   outcomes    degree → outcome applied; absent degrees do nothing. An outcome is
 //               one or more of:
 //                 condition + value   enemy condition (value null = unvalued)
 //                 selfCondition       condition applied to the acting PC (e.g. a
 //                                     maneuver crit-fail leaving you prone)
+//                 removeSelf          condition ids cleared from the acting PC
+//                                     (Escape success removes grabbed/restrained)
 //                 note                free text logged for GM-resolved effects
 //                                     (Shove push, Disarm) with no condition
 //   immunity    declarative immunity config (see utils/immunity.js); stamped on
@@ -94,6 +101,42 @@ export const SKILL_ACTIONS = [
     outcomes: {
       criticalSuccess: { note: 'Item knocked to the ground' },
       success:         { note: 'Disarmed (−2 to attacks with that weapon until its turn ends)' },
+    },
+    availableTo: 'all',
+  },
+  // Feint (#260 slice 3) — Deception vs the target's Perception DC. The off-guard
+  // it grants is scoped to your own attacks in RAW; we apply a generic off-guard
+  // and rely on GM adjudication (see #348 for observer-scoped conditions).
+  {
+    id: 'feint',
+    name: 'Feint',
+    skill: 'deception',
+    actionCost: 1,
+    traits: ['Mental'],
+    defense: 'perception',
+    outcomes: {
+      criticalSuccess: { condition: 'off-guard' },
+      success:         { condition: 'off-guard' },
+      criticalFailure: { selfCondition: 'off-guard' },
+    },
+    availableTo: 'all',
+  },
+  // Escape (#260 slice 3) — self-targeted: shed grabbed/restrained/immobilized.
+  // Has the Attack trait, so it reads + advances MAP. The DC is the binding
+  // effect's (the grabber's), entered by the GM. Athletics or Acrobatics (the
+  // unarmed-attack option is #349).
+  {
+    id: 'escape',
+    name: 'Escape',
+    skill: 'athletics',
+    skillOptions: ['athletics', 'acrobatics'],
+    actionCost: 1,
+    traits: ['Attack'],
+    defense: null,
+    selfTarget: true,
+    outcomes: {
+      criticalSuccess: { removeSelf: ['grabbed', 'restrained', 'immobilized'] },
+      success:         { removeSelf: ['grabbed', 'restrained', 'immobilized'] },
     },
     availableTo: 'all',
   },
