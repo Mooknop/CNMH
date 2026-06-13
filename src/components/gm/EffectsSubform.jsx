@@ -2,7 +2,7 @@
 // AbilitySubforms (action / reaction effects). Each row lets the GM pick an
 // effect from the catalog, set the applyTo rule, and configure the duration.
 import React from 'react';
-import PF2E_EFFECTS from '../../data/pf2eEffects';
+import { useContent } from '../../contexts/ContentContext';
 
 export const APPLY_TO_OPTIONS = ['self', 'ally', 'target', 'all-allies'];
 export const DURATION_UNTIL_OPTIONS = [
@@ -58,6 +58,7 @@ export const effectsFromForm = (formEffects) => {
  * @param {string}   idPrefix   - Prefix for aria-labels to keep them unique
  */
 const EffectsSubform = ({ value = [], onChange, idPrefix = '' }) => {
+  const { effects: effectCatalog } = useContent();
   const setEff = (i, patch) =>
     onChange(value.map((ef, idx) => (idx === i ? { ...ef, ...patch } : ef)));
   const setEffDur = (i, patch) =>
@@ -84,7 +85,7 @@ const EffectsSubform = ({ value = [], onChange, idPrefix = '' }) => {
             onChange={(ev) => setEff(i, { effectId: ev.target.value })}
           >
             <option value="">— choose effect —</option>
-            {PF2E_EFFECTS.map((ef) => (
+            {(effectCatalog || []).map((ef) => (
               <option key={ef.id} value={ef.id}>{ef.name}</option>
             ))}
           </select>
