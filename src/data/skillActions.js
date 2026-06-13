@@ -31,6 +31,10 @@
 //                                     (Shove push, Disarm) with no condition
 //   immunity    declarative immunity config (see utils/immunity.js); stamped on
 //               the target on any non-error outcome (maneuvers omit this)
+//   toggles     optional circumstance line items [{ id, label, bonus }] offered
+//               as checkboxes on the roll (#260 AC4). The hook #223/#226 hang
+//               feat bonuses on (Threat Display, Hunt Prey vs prey, Squox +2);
+//               the modal also always offers a free-form "+N" circumstance entry
 //   availableTo 'all' for basic actions everyone has; future entries gate per
 //               character (feat-granted)
 

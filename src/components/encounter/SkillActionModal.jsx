@@ -75,6 +75,8 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [d20, setD20] = useState('');
   const [dcInput, setDcInput] = useState('');
   const [pickedSkill, setPickedSkill] = useState(null);
+  const [toggledIds, setToggledIds] = useState([]); // declared circumstance toggles, active
+  const [circumstance, setCircumstance] = useState(''); // free-form "+N (reason)" entry
   const [resolved, setResolved] = useState(null); // locks the UI after confirm
 
   const target = useMemo(
@@ -108,7 +110,25 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     });
   }, [character, characterModel, action, activeSkill, activeConditions, effects, effectCatalog, mapStep]);
 
-  const netMod = rollProfile?.bonus ?? null;
+  const baseMod = rollProfile?.bonus ?? null;
+
+  // Situational bonus toggles (#260 AC4): feat-declared circumstance line items
+  // plus a free-form "+N (reason)" for table rulings (Aid, GM-granted bonuses).
+  // The declared list is the hook #223/#226 wire feat bonuses (Threat Display,
+  // prey, Squox) onto. Active toggles + the free-form value adjust the net.
+  const declaredToggles = action?.toggles || [];
+  const toggleBonus = declaredToggles
+    .filter((t) => toggledIds.includes(t.id))
+    .reduce((sum, t) => sum + (t.bonus || 0), 0);
+  const freeform = /^-?\d+$/.test(circumstance) ? parseInt(circumstance, 10) : 0;
+  const circumstanceBonus = toggleBonus + freeform;
+  const netMod = baseMod != null ? baseMod + circumstanceBonus : null;
+
+  // Labels for the active circumstance sources (combat log + summary).
+  const circumstanceSources = [
+    ...declaredToggles.filter((t) => toggledIds.includes(t.id)).map((t) => t.label),
+    ...(freeform ? [`${freeform >= 0 ? '+' : ''}${freeform} circumstance`] : []),
+  ];
 
   // DC: prefill from the enemy's defense when present; always GM-overridable.
   const prefilledDC = target?.defenses ? defenseDC(target.defenses, action?.defense) : null;
@@ -221,10 +241,11 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
     const resultStr = describeOutcome(outcome);
     const targetClause = selfTarget ? '' : ` vs ${target.name}`;
+    const circumstanceClause = circumstanceSources.length ? ` [${circumstanceSources.join(', ')}]` : '';
     appendLog({
       type: 'action',
       charId: character?.id,
-      text: `${character?.name} ${action.name}${targetClause} (${defenseLabel} ${dcVal}): ${total} → ${DEGREE_LABELS[degree]} — ${resultStr}`,
+      text: `${character?.name} ${action.name}${targetClause} (${defenseLabel} ${dcVal}): ${total}${circumstanceClause} → ${DEGREE_LABELS[degree]} — ${resultStr}`,
     });
 
     setResolved({ degree, total, resultStr, targetName: selfTarget ? character?.name : target.name });
@@ -236,9 +257,14 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     setDcInput('');
     setPickedSkill(null);
     setMapOverride(null);
+    setToggledIds([]);
+    setCircumstance('');
     setResolved(null);
     onClose();
   };
+
+  const toggleCircumstance = (id) =>
+    setToggledIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   if (!isOpen || !action) return null;
 
@@ -307,6 +333,9 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
               <div className="sam-bonus-row">
                 <span className="sam-bonus-label">{action.name}</span>
                 <span className="sam-bonus-value">{fmtMod(netMod)}</span>
+                {circumstanceBonus !== 0 && (
+                  <span className="sam-bonus-note">(incl. {fmtMod(circumstanceBonus)} circumstance)</span>
+                )}
               </div>
             )}
 
@@ -332,6 +361,37 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
                 </div>
               </div>
             )}
+
+            {/* Situational bonuses — declared feat toggles + a free-form entry */}
+            {declaredToggles.length > 0 && (
+              <div className="sam-field">
+                <label className="sam-label">Circumstance</label>
+                <div className="sam-target-picks">
+                  {declaredToggles.map((t) => (
+                    <button
+                      key={t.id}
+                      className={`sam-target-btn${toggledIds.includes(t.id) ? ' sam-target-btn--active' : ''}`}
+                      onClick={() => toggleCircumstance(t.id)}
+                      disabled={!!resolved}
+                    >
+                      {t.label} {t.bonus >= 0 ? `+${t.bonus}` : t.bonus}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="sam-field">
+              <label className="sam-label" htmlFor="sam-circ">Other circumstance ±</label>
+              <input
+                id="sam-circ"
+                className="sam-input"
+                type="number"
+                placeholder="0"
+                value={circumstance}
+                onChange={(e) => setCircumstance(e.target.value)}
+                disabled={!!resolved}
+              />
+            </div>
 
             {/* d20 + DC */}
             <div className="sam-inputs">
