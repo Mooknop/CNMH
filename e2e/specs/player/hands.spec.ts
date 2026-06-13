@@ -13,6 +13,8 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { expectOnSheet } from '../../helpers/sheet';
+import { mockSession } from '../../fixtures/session';
+import { activeEncounter } from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-fighter';
 const LONGSWORD_UID = 'uid-longsword-1';
@@ -22,11 +24,7 @@ async function waitForSheet(page: import('@playwright/test').Page) {
   await expect(page.getByRole('heading', { name: 'E2E Fighter', level: 1 })).toBeVisible({ timeout: 15_000 });
 }
 
-// DEFERRED: same failure pattern as spell-consumption.spec.ts — page stays
-// at /character/:id but the h1 never renders. Needs the same local debug
-// session before re-enabling. Skipping to keep CI signal clean and avoid
-// burning writes on a known bad path.
-test.describe.skip('HandsPanel + InventoryTab', () => {
+test.describe('HandsPanel + InventoryTab', () => {
   test.beforeEach(async ({ reset }) => {
     await reset();
   });
@@ -53,12 +51,20 @@ test.describe.skip('HandsPanel + InventoryTab', () => {
       }],
     });
 
+    // HandsPanel lives in the encounter surface, so put the sheet in an active
+    // encounter via the mocked session (no Foundry / GM peer in an E2E run).
+    await mockSession(page, {
+      seed: { cnmh_encounter_global: activeEncounter(CHAR_ID, 'E2E Fighter') },
+    });
+
     await page.goto(`/character/${CHAR_ID}`);
     await waitForSheet(page);
 
-    // Encounter is the default tab and contains the HandsPanel. Click it to be
-    // explicit (no harm if already active).
-    await page.getByRole('button', { name: 'Encounter', exact: true }).click();
+    // Default tab is Stats; switch to the mode-aware play tab (Encounter).
+    await page
+      .getByRole('navigation', { name: 'Character sheet sections' })
+      .getByRole('button', { name: 'Encounter', exact: true })
+      .click();
 
     // --- SWAP flow ---
     await page.getByTestId('hands-swap').click();
@@ -69,14 +75,21 @@ test.describe.skip('HandsPanel + InventoryTab', () => {
     // hands-slot-1 should now show the longsword name
     await expect(page.getByTestId('hands-slot-1')).toContainText('E2E Longsword');
 
-    // --- Inventory tab: held badge ---
-    await page.getByRole('button', { name: 'Inventory', exact: true }).click();
-    const longswordRow = page.locator(`[data-testid="inv-row-${LONGSWORD_UID}"], [data-testid*="${LONGSWORD_UID}"]`).first();
-    // The state badge text "Held in 1 Hand" comes from ITEM_STATE_LABEL.held1
-    await expect(page.getByText('Held in 1 Hand', { exact: false })).toBeVisible({ timeout: 10_000 });
+    // --- Inventory tab: held indicator ---
+    await page
+      .getByRole('navigation', { name: 'Character sheet sections' })
+      .getByRole('button', { name: 'Inventory', exact: true })
+      .click();
+    // Held items show a ✊ indicator labelled from ITEM_STATE_LABEL.held1.
+    await expect(page.getByRole('img', { name: 'Held in 1 Hand' })).toBeVisible({ timeout: 10_000 });
 
-    // --- Drop ---
-    await page.getByTestId(`inv-${LONGSWORD_UID}-drop`).click();
-    await expect(page.getByText('(dropped)', { exact: false })).toBeVisible({ timeout: 10_000 });
+    // --- Drop: loadout actions live in the ItemModal opened on tap ---
+    await page.getByTestId(`item-card-${LONGSWORD_UID}`).click();
+    // "Release" drops a held item.
+    await page.getByTestId('item-action-release').click();
+
+    // Re-open the item: it's now dropped, so only "Pick up" is offered.
+    await page.getByTestId(`item-card-${LONGSWORD_UID}`).click();
+    await expect(page.getByTestId('item-action-pickup')).toBeVisible({ timeout: 10_000 });
   });
 });

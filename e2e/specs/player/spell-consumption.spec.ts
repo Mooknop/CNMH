@@ -16,6 +16,8 @@
 
 import { test, expect } from '../../fixtures/gm';
 import { expectOnSheet } from '../../helpers/sheet';
+import { mockSession } from '../../fixtures/session';
+import { activeEncounter } from '../../helpers/encounter';
 
 const CHAR_ID = 'e2e-spellcaster';
 
@@ -25,20 +27,25 @@ async function waitForSheet(page: import('@playwright/test').Page, charId: strin
   await expect(page.getByRole('heading', { name: charName, level: 1 })).toBeVisible({ timeout: 15_000 });
 }
 
-// TODO (EncounterTabRefresh): Magic tab was removed from CharacterSheet. Spells are now
-// accessed via the MagicModal opened from the Actions/Encounter tab. When unskipping this
-// suite, replace openMagic() with: click the "Magic" button in CharacterActionsList, then
-// select the appropriate sub-view inside MagicModal.
+// Spells are accessed via the MagicModal, opened from the "Magic" button in
+// CharacterActionsList — which renders in the encounter surface. So switch to
+// the play tab (Encounter, via the seeded active encounter) before opening it.
 async function openMagic(page: import('@playwright/test').Page) {
+  await page
+    .getByRole('navigation', { name: 'Character sheet sections' })
+    .getByRole('button', { name: 'Encounter', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Magic' }).click();
 }
 
+// MagicModal level 1 is a category grid (.magic-category-btn); selecting one
+// opens the level-2 list where each spell renders an <h3 class="spell-name">.
 async function openView(page: import('@playwright/test').Page, label: string) {
-  await page.locator('.view-mode-btn', { hasText: label }).click();
+  await page.locator('.magic-category-btn', { hasText: label }).click();
 }
 
 async function expectSpellChip(page: import('@playwright/test').Page, spellName: string) {
-  await expect(page.locator('.chip-name', { hasText: spellName })).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('.spell-name', { hasText: spellName })).toBeVisible({ timeout: 10_000 });
 }
 
 const BASE_CHAR = {
@@ -48,18 +55,14 @@ const BASE_CHAR = {
   spellcasting: { tradition: 'arcane', ability: 'intelligence', proficiency: 2, spells: [] },
 };
 
-// DEFERRED: every test fails at waitForSheet — expectOnSheet passes (URL is
-// still /character/:id) but the h1 never appears, suggesting the page is
-// stuck on the "Loading character..." early-return. Most likely the seeded
-// character shape doesn't satisfy useCharacter()'s expectations and it
-// returns null (characterModel falsy → early return → no h1). Needs a local
-// `wrangler dev` debug session to trace which field is missing or how the
-// shape needs to match useCharacter's resolved tree. Until then, skipping
-// to avoid burning ~10 failed tests × 35 writes × every CI run on a known
-// bad path.
-test.describe.skip('Spell consumption on player character sheet', () => {
-  test.beforeEach(async ({ reset }) => {
+test.describe('Spell consumption on player character sheet', () => {
+  test.beforeEach(async ({ page, reset }) => {
     await reset();
+    // The Magic button lives in the encounter surface; seed an active encounter
+    // through the mocked session so the play tab exposes it.
+    await mockSession(page, {
+      seed: { cnmh_encounter_global: activeEncounter(CHAR_ID, 'E2E Spellcaster') },
+    });
   });
 
   test('scroll spellRef resolves spell name in Scrolls view', async ({ page, seed }) => {
@@ -164,6 +167,6 @@ test.describe.skip('Spell consumption on player character sheet', () => {
     await openMagic(page);
     await openView(page, 'Wands');
     await expectSpellChip(page, 'E2E Arc v2');
-    await expect(page.locator('.chip-name', { hasText: 'E2E Arc v1' })).not.toBeVisible();
+    await expect(page.locator('.spell-name', { hasText: 'E2E Arc v1' })).not.toBeVisible();
   });
 });
