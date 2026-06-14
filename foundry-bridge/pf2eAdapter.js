@@ -315,6 +315,56 @@ export function moveToken(token, x, y) {
   return token.document.update({ x, y }, { [BRIDGE_SOURCE_FLAG]: 'app', animate: true });
 }
 
+// Create a token for an actor on the active scene at a pixel position (#362).
+// Builds the token from the actor's prototype token (so it inherits art/size/
+// vision), then places it. Tagged with BRIDGE_SOURCE_FLAG for consistency with
+// the other bridge writes. Returns null when there's no scene to place into.
+export function createTokenForActor(actor, x, y) {
+  const scene = canvas.scene;
+  if (!scene?.createEmbeddedDocuments || !actor) return null;
+  const tokenData = actor.prototypeToken?.toObject?.() ?? {};
+  tokenData.x = x;
+  tokenData.y = y;
+  return scene.createEmbeddedDocuments('Token', [tokenData], { [BRIDGE_SOURCE_FLAG]: 'app' });
+}
+
+// Find an open 1×1 cell adjacent to a token to drop a spawned minion into (#362).
+// Scans the 8 neighbours, skipping cells occupied by any token or blocked by a
+// wall (center-to-center, matching the movement probe). Falls back to the owner's
+// own cell if every neighbour is taken — a visible overlap beats no token.
+export function findOpenAdjacentCell(ownerToken) {
+  const gridSize = getGridSize();
+  const { col: originCol, row: originRow } = getTokenGridPosition(ownerToken);
+
+  const occupied = new Set();
+  for (const t of getAllTokens()) {
+    const baseCol = Math.round(t.x / gridSize);
+    const baseRow = Math.round(t.y / gridSize);
+    const { width, height } = getTokenDimensions(t);
+    for (let c = 0; c < width; c++) {
+      for (let r = 0; r < height; r++) occupied.add(`${baseCol + c},${baseRow + r}`);
+    }
+  }
+
+  const { width: oW, height: oH } = getTokenDimensions(ownerToken);
+  const fromX = ownerToken.x + (oW * gridSize) / 2;
+  const fromY = ownerToken.y + (oH * gridSize) / 2;
+  const half = gridSize / 2;
+
+  for (let dc = -1; dc <= 1; dc++) {
+    for (let dr = -1; dr <= 1; dr++) {
+      if (dc === 0 && dr === 0) continue;
+      const col = originCol + dc;
+      const row = originRow + dr;
+      if (occupied.has(`${col},${row}`)) continue;
+      const { x, y } = gridToPixels(col, row);
+      if (hasWallCollision(fromX, fromY, x + half, y + half)) continue;
+      return { x, y };
+    }
+  }
+  return gridToPixels(originCol, originRow);
+}
+
 // Measure movement cost in feet between two pixel points using the PF2e diagonal rule.
 // Movement cost in scene distance units (feet) between two pixel points,
 // honoring the scene's diagonal rule (PF2e's alternating 5/10 when configured).
@@ -356,6 +406,61 @@ export function getSummonFolderActors(folderName) {
         img:      bestiary?.img ?? null,
       };
     });
+}
+
+// Derive companion/familiar → owner-PC links from Foundry actor ownership (#362).
+// A minion actor is a player-owned `familiar` (role 'familiar') or a player-owned
+// `npc` animal companion (role 'companion'); it's tied to the PC owned by the same
+// player user. `actorMap` is the app's { foundryActorId: charId } map, which tells
+// us which Foundry PC actor corresponds to which app charId.
+//
+// Returns [{ foundryActorId, ownerCharId, role, name, onScene }]. Actors whose
+// owning player has no mapped PC are skipped (we can't name an owner for them).
+export function getMinionActorLinks(actorMap = {}) {
+  const map = actorMap || {};
+  const allActors = game.actors?.contents ?? [];
+  const users = game.users?.contents ?? (Array.isArray(game.users) ? game.users : []);
+  const gmUserIds = new Set(users.filter((u) => u?.isGM).map((u) => u.id));
+  // Foundry CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER === 3; fall back to the literal
+  // so the derivation is testable without the full Foundry CONST global.
+  const OWNER = globalThis.CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+
+  // Non-GM user ids that own (OWNER level) the given actor.
+  const playerOwnerIds = (actor) =>
+    Object.entries(actor.ownership ?? {})
+      .filter(([uid, lvl]) => lvl === OWNER && uid !== 'default' && !gmUserIds.has(uid))
+      .map(([uid]) => uid);
+
+  // player user id → the app charId of the PC they own (first match wins).
+  const userToCharId = {};
+  for (const actor of allActors) {
+    if (actor.type !== 'character' || !actor.hasPlayerOwner) continue;
+    const charId = map[getActorId(actor)];
+    if (!charId) continue;
+    for (const uid of playerOwnerIds(actor)) {
+      if (!(uid in userToCharId)) userToCharId[uid] = charId;
+    }
+  }
+
+  const links = [];
+  for (const actor of allActors) {
+    let role = null;
+    if (actor.type === 'familiar') role = 'familiar';
+    else if (actor.type === 'npc' && actor.hasPlayerOwner) role = 'companion';
+    if (!role) continue;
+    const ownerCharId = playerOwnerIds(actor)
+      .map((uid) => userToCharId[uid])
+      .find(Boolean);
+    if (!ownerCharId) continue;
+    links.push({
+      foundryActorId: getActorId(actor),
+      ownerCharId,
+      role,
+      name: actor.name,
+      onScene: getActorTokens(actor).length > 0,
+    });
+  }
+  return links;
 }
 
 // --- Door / wall data ---

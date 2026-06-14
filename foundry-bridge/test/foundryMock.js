@@ -65,6 +65,11 @@ export function makeActor(opts = {}) {
     compendiumSource = null,
     sourceId = null,
     folderName = null,
+    // Ownership / type fields (#362 minion linking).
+    type = null,
+    hasPlayerOwner = false,
+    ownership = null,
+    prototypeToken = null,
   } = opts;
 
   const conditionItems = conditions.map((c) =>
@@ -75,6 +80,12 @@ export function makeActor(opts = {}) {
     name,
     img,
     documentName: 'Actor',
+    ...(type !== null ? { type } : {}),
+    hasPlayerOwner,
+    ...(ownership !== null ? { ownership } : {}),
+    ...(prototypeToken !== null
+      ? { prototypeToken: { toObject: () => ({ ...prototypeToken }) } }
+      : {}),
     ...(folderName !== null ? { folder: { name: folderName } } : {}),
     ...(compendiumSource !== null ? { _stats: { compendiumSource } } : {}),
     ...(sourceId !== null ? { flags: { core: { sourceId } } } : {}),
@@ -216,7 +227,10 @@ export function makeCanvas(opts = {}) {
   const tokens = { placeables: opts.placeables ?? [] };
   tokens.get = (id) => (tokens.placeables || []).find((t) => t.id === id) ?? null;
   return {
-    scene: { grid: { size: gridSize } },
+    scene: {
+      grid: { size: gridSize },
+      createEmbeddedDocuments: jest.fn().mockResolvedValue([]),
+    },
     grid: { size: gridSize, measurePath },
     tokens,
     walls: {},
@@ -239,6 +253,7 @@ export function makeGame(opts = {}) {
     combat: opts.combat ?? null,
     combats: makeCollection(opts.combats ?? []),
     actors: makeCollection(opts.actors ?? []),
+    users: makeCollection(opts.users ?? []),
     user: opts.user ?? { id: 'user1', targets: new Set(), updateTokenTargets: jest.fn() },
     settings: {
       register: jest.fn(),

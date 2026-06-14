@@ -8,6 +8,7 @@ import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { useMinions } from '../../hooks/useMinions';
 import { MINION_COMPANION } from '../../utils/minionUtils';
 import MinionStrikeModal from '../encounter/MinionStrikeModal';
+import MinionSpawnButton from '../encounter/MinionSpawnButton';
 import './AnimalCompanionModal.css';
 
 const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, characterColor }) => {
@@ -151,6 +152,8 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
               <span className="defense-value">{hasConditions ? activeConditions.length : '—'}</span>
             </button>
           </div>
+
+          <MinionSpawnButton ownerId={character.id} role={MINION_COMPANION} />
 
           {/* Saves */}
           <div className="companion-saves">

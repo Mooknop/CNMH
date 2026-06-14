@@ -17,6 +17,7 @@ import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
+import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { getPlayerActors, getActorId, getSpeed } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
@@ -70,6 +71,7 @@ Hooks.once('ready', () => {
   initMovement(sendUpdate);
   initFlankingPush(sendUpdate);
   initSummonPool(sendUpdate);
+  initMinionActors(sendUpdate);
   initDoors(sendUpdate);
   connect();
 });
@@ -107,6 +109,7 @@ function connect() {
     schedulePing();
     pushRoster();
     pushSummonPool();
+    pushMinionActors();
   };
 
   ws.onclose = (evt) => {
@@ -152,7 +155,8 @@ function dispatch(msg) {
     const map = msg.payload?.global?.actormap;
     if (map) {
       updateActorMap(map);
-      pushFlankedState(); // actorMap just became valid — re-evaluate with correct PC set
+      pushFlankedState();  // actorMap just became valid — re-evaluate with correct PC set
+      pushMinionActors();  // minion→PC links resolve through the actor map
     }
     return;
   }
@@ -177,7 +181,20 @@ function dispatch(msg) {
   // Actor map updated by GM in GmEncounter → refresh bridge-side resolution.
   if (characterId === 'global' && key === 'actormap') {
     updateActorMap(value);
-    pushFlankedState(); // PC set changed — re-evaluate immediately
+    pushFlankedState();  // PC set changed — re-evaluate immediately
+    pushMinionActors();  // minion→PC links resolve through the actor map
+    return;
+  }
+
+  // App requests a fresh minion-actor link map (reconnect / refresh).
+  if (characterId === 'global' && key === 'minionactorsreq') {
+    handleMinionActorsReq();
+    return;
+  }
+
+  // App asked to spawn a linked minion's token on the active scene.
+  if (characterId === 'global' && key === 'spawnminion') {
+    handleSpawnMinion(value);
     return;
   }
 

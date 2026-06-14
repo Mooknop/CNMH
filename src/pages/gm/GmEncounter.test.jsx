@@ -179,6 +179,23 @@ describe('GmEncounter (read-only Foundry mirror)', () => {
     expect(screen.getByLabelText('Pellias reaction spent')).toBeInTheDocument();
   });
 
+  it('lists linked companions/familiars and spawns one on click (#362)', () => {
+    act(() => {
+      __set('cnmh_minionactors_global', {
+        'Ashka-companion': {
+          foundryActorId: 'Actor.zev', name: 'Zevira', role: 'companion',
+          ownerCharId: 'Ashka', onScene: false,
+        },
+      });
+    });
+    render(<GmEncounter />);
+
+    expect(screen.getByLabelText('minion-spawn-list')).toBeInTheDocument();
+    const btn = screen.getByRole('button', { name: /spawn zevira/i });
+    fireEvent.click(btn);
+    expect(__get('cnmh_spawnminion_global')).toMatchObject({ ownerCharId: 'Ashka', role: 'companion' });
+  });
+
   it('renders a GM-added summon row with HP, and Dismiss removes it (#261)', () => {
     act(() => {
       __set('cnmh_encounter_global', FOUNDRY_ENCOUNTER);
