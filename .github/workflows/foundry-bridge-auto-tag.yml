@@ -10,6 +10,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+    outputs:
+      bump: ${{ steps.pr.outputs.bump }}
+      tag:  ${{ steps.next.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v5
@@ -71,3 +74,15 @@ jobs:
         run: |
           git tag "${{ steps.next.outputs.tag }}"
           git push origin "${{ steps.next.outputs.tag }}"
+
+  # A tag pushed above with the default GITHUB_TOKEN does NOT fire the release
+  # workflow's push:tags trigger (GitHub's anti-recursion rule). So invoke it
+  # directly here, in the same run, with the version we just tagged.
+  release:
+    needs: auto-tag
+    if: needs.auto-tag.outputs.bump != ''
+    permissions:
+      contents: write
+    uses: ./.github/workflows/foundry-bridge-release.yml
+    with:
+      tag: ${{ needs.auto-tag.outputs.tag }}
