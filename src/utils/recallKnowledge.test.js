@@ -8,6 +8,7 @@ import {
   highestWeakness,
   revealFromExploit,
   rkKeyFor,
+  pruneEncounterKnowledge,
   KNOWLEDGE_SKILLS,
 } from './recallKnowledge';
 
@@ -23,6 +24,57 @@ describe('rkKeyFor', () => {
   test('returns null when neither is present', () => {
     expect(rkKeyFor({})).toBeNull();
     expect(rkKeyFor(null)).toBeNull();
+  });
+});
+
+describe('pruneEncounterKnowledge (#333)', () => {
+  const order = [
+    { kind: 'pc', charId: 'char-a', entryId: 'pc-1' },
+    { kind: 'enemy', entryId: 'e-gob-1', creatureKey: 'goblin-warrior' },
+    { kind: 'enemy', entryId: 'e-manual-1' }, // homebrew, no creatureKey
+  ];
+
+  test('keeps creatureKey-keyed records (persist across encounters)', () => {
+    const knowledge = {
+      'goblin-warrior': { ...defaultRecord(), identity: true, ac: true },
+    };
+    const next = pruneEncounterKnowledge(knowledge, order);
+    expect(next['goblin-warrior']).toMatchObject({ identity: true, ac: true });
+  });
+
+  test('keeps creatureKey records even when absent from the just-ended order', () => {
+    const knowledge = {
+      ogre: { ...defaultRecord(), identity: true },
+    };
+    expect(pruneEncounterKnowledge(knowledge, order).ogre).toMatchObject({ identity: true });
+  });
+
+  test('prunes ephemeral entryId-keyed records from the ended encounter', () => {
+    const knowledge = {
+      'e-manual-1': { ...defaultRecord(), identity: true },
+      'goblin-warrior': { ...defaultRecord(), identity: true },
+    };
+    const next = pruneEncounterKnowledge(knowledge, order);
+    expect(next['e-manual-1']).toBeUndefined();
+    expect(next['goblin-warrior']).toBeDefined();
+  });
+
+  test('resets per-character crit-fail locks on surviving records', () => {
+    const knowledge = {
+      'goblin-warrior': { ...defaultRecord(), identity: true, lockedOut: { 'char-a': true } },
+    };
+    expect(pruneEncounterKnowledge(knowledge, order)['goblin-warrior'].lockedOut).toEqual({});
+  });
+
+  test('leaves reveal fields otherwise unchanged', () => {
+    const record = { ...defaultRecord(), identity: true, hp: true, saves: { fortitude: true, reflex: false, will: false } };
+    const next = pruneEncounterKnowledge({ 'goblin-warrior': record }, order)['goblin-warrior'];
+    expect(next).toMatchObject({ identity: true, hp: true, saves: { fortitude: true, reflex: false, will: false } });
+  });
+
+  test('returns an empty object for null/empty input', () => {
+    expect(pruneEncounterKnowledge(null, order)).toEqual({});
+    expect(pruneEncounterKnowledge({}, [])).toEqual({});
   });
 });
 

@@ -12,8 +12,11 @@ import ConfirmDialog from '../shared/ConfirmDialog';
 // Only creatures with a non-null creatureKey appear (null-key creatures have no
 // stable id to override and behave as today in BestiaryModal).
 //
-// Per-entry stored shape: { id: creatureKey, name, descriptionOverride }
-// An empty descriptionOverride means the GM chose to redact entirely.
+// Per-entry stored shape: { id: creatureKey, name, descriptionOverride,
+//   bestiary, defenses, capturedAt, lastSeenAt }. This editor only owns name +
+// descriptionOverride; the stat block is captured by BestiaryCaptureSync (#332)
+// and preserved here on save. An empty descriptionOverride means the GM chose to
+// redact entirely.
 
 const MonsterForm = ({ entry, onSaved }) => {
   const { importedDescription, creatureKey, name } = entry;
@@ -33,7 +36,11 @@ const MonsterForm = ({ entry, onSaved }) => {
     setBusy(true);
     setError(null);
     try {
+      // Spread the existing doc so a description edit never clobbers the
+      // captured stat block (bestiary/defenses/capturedAt/lastSeenAt) the
+      // BestiaryCaptureSync writer persists (#332).
       await saveDocument('monster', creatureKey, {
+        ...(override || {}),
         id: creatureKey,
         name,
         descriptionOverride,
