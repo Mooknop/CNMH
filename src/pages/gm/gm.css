@@ -1565,3 +1565,24 @@
 p.gm-live-note {
   display: flex;
 }
+
+/* ---- Trait coverage report + reverse view (GmTraits) ---------------------- */
+.gm-trait-coverage {
+  margin-bottom: 1rem;
+}
+.gm-trait-coverage h3 {
+  margin: 0 0 0.5rem;
+}
+.gm-trait-coverage-list,
+.gm-trait-refs-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.gm-trait-refs {
+  margin: 0.75rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--shell-border);
+}
