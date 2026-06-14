@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useSummons } from '../../hooks/useSummons';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import PersistentChip from '../../components/encounter/PersistentChip';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
+import AddSummonModal from '../../components/gm/AddSummonModal';
 import PlayModeControl from '../../components/gm/PlayModeControl';
 import './gm.css';
 
@@ -21,7 +23,9 @@ import './gm.css';
 const GmEncounter = () => {
   const { characters } = useContent();
   const { encounter, actorMap, setActorMap } = useEncounter();
+  const { removeSummon } = useSummons();
   const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
+  const [isAddSummonOpen, setIsAddSummonOpen] = useState(false);
 
   const phase        = encounter?.phase          || 'idle';
   const order        = encounter?.order          || [];
@@ -57,6 +61,13 @@ const GmEncounter = () => {
           onClick={() => setIsEffectsModalOpen(true)}
         >
           Apply Effect
+        </button>
+        <button
+          className="btn-secondary"
+          aria-label="Add summon to encounter"
+          onClick={() => setIsAddSummonOpen(true)}
+        >
+          Add summon
         </button>
       </header>
 
@@ -97,7 +108,7 @@ const GmEncounter = () => {
                   className={[
                     'gm-encounter-row',
                     phase === 'in-progress' && i === currentIndex ? 'is-current' : '',
-                    e.kind === 'enemy' ? 'is-enemy' : 'is-pc',
+                    e.kind === 'summon' ? 'is-summon' : e.kind === 'enemy' ? 'is-enemy' : 'is-pc',
                   ].filter(Boolean).join(' ')}
                   data-testid={`order-row-${e.entryId}`}
                 >
@@ -106,9 +117,24 @@ const GmEncounter = () => {
                   {phase === 'in-progress' && e.kind === 'pc' && e.charId && (
                     <GmReactionBadge charId={e.charId} name={e.name} />
                   )}
-                  <span className="gm-encounter-init">
-                    init {e.initiative === null || e.initiative === undefined ? '—' : e.initiative}
-                  </span>
+                  {e.kind === 'summon' ? (
+                    <>
+                      <span className="gm-encounter-summon-hp" aria-label={`${e.name} hp`}>
+                        {e.bestiary?.hp?.current ?? 0}/{e.bestiary?.hp?.max ?? 0}
+                      </span>
+                      <button
+                        className="btn-secondary gm-encounter-dismiss"
+                        aria-label={`Dismiss ${e.name}`}
+                        onClick={() => removeSummon(e.entryId)}
+                      >
+                        Dismiss
+                      </button>
+                    </>
+                  ) : (
+                    <span className="gm-encounter-init">
+                      init {e.initiative === null || e.initiative === undefined ? '—' : e.initiative}
+                    </span>
+                  )}
                   {e.foundryActorId && (
                     <select
                       className="gm-encounter-assign"
@@ -133,6 +159,10 @@ const GmEncounter = () => {
         onClose={() => setIsEffectsModalOpen(false)}
         selfCharId="gm"
         selfName="GM"
+      />
+      <AddSummonModal
+        isOpen={isAddSummonOpen}
+        onClose={() => setIsAddSummonOpen(false)}
       />
     </div>
   );

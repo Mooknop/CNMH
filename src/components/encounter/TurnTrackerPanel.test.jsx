@@ -40,6 +40,15 @@ import { __reset, useSyncedState } from '../../hooks/useSyncedState';
 import TurnTrackerPanel from './TurnTrackerPanel';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
+import { useSummons } from '../../hooks/useSummons';
+
+// Exposes the shared summon ledger so a test can seed a summon and observe the
+// panel's sustain-end reconciler prune it (#261).
+const SummonsDriver = ({ onReady }) => {
+  const s = useSummons();
+  React.useEffect(() => { onReady(s); }, [s, onReady]);
+  return null;
+};
 
 // Lets a test inject bridge responses (cnmh_moveopts_* / cnmh_movedone_*) into
 // the shared synced-state store.
@@ -896,6 +905,25 @@ describe('TurnTrackerPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'End Bless' }));
     expect(screen.queryByRole('group', { name: 'Sustain Bless' })).toBeNull();
     expect(drv.encounter.log.some((l) => l.text === 'Bless ends')).toBe(true);
+  });
+
+  it('prunes a linked summon when its sustain ends (#261)', () => {
+    let drv, setSustains, summonsApi;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <SummonsDriver onReady={(s) => (summonsApi = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    seedSustain(setSustains, [{ id: 's1', spellName: 'Summon Undead', lastSustainedRound: 0 }]);
+    act(() => summonsApi.addSummon({ name: 'Skeleton', casterId: 'Pellias', sustainId: 's1', maxHp: 10 }));
+    expect(summonsApi.summons).toHaveLength(1); // alive while sustain s1 exists
+
+    fireEvent.click(screen.getByRole('button', { name: 'End Summon Undead' }));
+    expect(summonsApi.summons).toHaveLength(0); // sustain gone → summon pruned
   });
 
   it('submitting the turn lapses a sustain not sustained this round', () => {

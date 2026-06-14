@@ -246,6 +246,32 @@ describe('AdjustHpModal', () => {
     });
   });
 
+  describe('GM summons (#261)', () => {
+    beforeEach(() => {
+      __store['cnmh_summons_global'] = [
+        { entryId: 'sum-1', kind: 'summon', name: 'Skeletal Champion', casterId: 'thorn', sustainId: 's1', bestiary: { hp: { current: 50, max: 60 } } },
+      ];
+    });
+
+    it('lists active summons as options', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      expect(screen.getByText('Summon — Skeletal Champion')).toBeInTheDocument();
+    });
+
+    it('damage writes to cnmh_summons_global, not cnmh_hp', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'summon:sum-1' } });
+      });
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '15' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_summons_global'][0].bestiary.hp.current).toBe(35);
+      expect(__store['cnmh_hp_summon:sum-1']).toBeUndefined();
+    });
+  });
+
   it('calls onClose when the modal is closed', () => {
     const onClose = vi.fn();
     render(<AdjustHpModal isOpen={true} onClose={onClose} />);

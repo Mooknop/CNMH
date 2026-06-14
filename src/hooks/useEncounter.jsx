@@ -30,6 +30,7 @@ const ACTORMAP_KEY   = 'cnmh_actormap_global';
 const KNOWLEDGE_KEY  = 'cnmh_knowledge_global';
 const PERSISTENT_KEY = 'cnmh_persistent_global';
 const ENEMY_FX_KEY   = 'cnmh_enemyfx_global';
+const SUMMONS_KEY    = 'cnmh_summons_global';
 
 let logCounter = 0;
 const makeLogEntry = (entry) => ({
@@ -44,6 +45,7 @@ export const useEncounter = () => {
   const [, setKnowledge]            = useSyncedState(KNOWLEDGE_KEY, {});
   const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
   const [, setEnemyFx]              = useSyncedState(ENEMY_FX_KEY, {});
+  const [summons, setSummons]       = useSyncedState(SUMMONS_KEY, []);
   const { sendUpdate } = useSession();
   const { effects: effectCatalog } = useContent();
 
@@ -64,8 +66,19 @@ export const useEncounter = () => {
 
   // Ref so the sweep callbacks always see the latest resolved encounter without
   // adding it as a useCallback dependency (avoids recreating on every turn).
+  // Deliberately summon-free (resolvedEncounter, not the merged display view) so
+  // turn math / expiry sweeps never count GM-added summons.
   const encounterRef = useRef(resolvedEncounter);
   useEffect(() => { encounterRef.current = resolvedEncounter; }, [resolvedEncounter]);
+
+  // Display view: GM-added summons (#261) appended to the order so they show and
+  // are targetable. Appended (not initiative-sorted) so the bridge's
+  // currentTurnIndex still indexes the right entry, and writers — which read the
+  // raw cnmh_encounter_global, not this — never see summons.
+  const displayEncounter = useMemo(() => {
+    if (!summons || summons.length === 0) return resolvedEncounter;
+    return { ...resolvedEncounter, order: [...(resolvedEncounter.order || []), ...summons] };
+  }, [resolvedEncounter, summons]);
 
   // Sweep expired effects and granted-actions from every PC's keys. Called
   // before the encounter state advances so we can compute the correct boundary set.
@@ -322,8 +335,9 @@ export const useEncounter = () => {
       setKnowledge({});
       setPersistentMap({}); // tracked persistent damage dies with the encounter (#272)
       setEnemyFx({});       // enemy conditions + immunity timers die with the encounter (#260)
+      setSummons([]);       // GM-added summons die with the encounter (#261)
     },
-    [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, sendUpdate]
+    [setEncounter, setKnowledge, setPersistentMap, setEnemyFx, setSummons, sendUpdate]
   );
 
   const addSaveRequest = useCallback(
@@ -351,7 +365,7 @@ export const useEncounter = () => {
   );
 
   return {
-    encounter: resolvedEncounter,
+    encounter: displayEncounter,
     actorMap,
     setActorMap,
     startEncounter,

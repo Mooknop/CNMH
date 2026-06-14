@@ -3,20 +3,25 @@ import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useMinions } from '../../hooks/useMinions';
+import { useSummons } from '../../hooks/useSummons';
 import { minionRoster } from '../../utils/minionUtils';
 import './AdjustHpModal.css';
 
 const EMPTY_HP = { current: 0, max: 0, temp: 0, dying: 0, wounded: 0, doomed: 0 };
 
-// A PC selects by its plain id (stable contract for existing callers/e2e); an
-// allied minion (#261) is prefixed so the two never collide:
+// A PC selects by its plain id (stable contract for existing callers/e2e); allied
+// minions and GM summons (#261) are prefixed so the kinds never collide:
 //   <charId>                 → the PC's own cnmh_hp_<charId>
 //   minion:<ownerId>:<role>  → an entry in the owner's cnmh_minions_<ownerId>
+//   summon:<entryId>         → a summon in cnmh_summons_global
 const parseSelection = (value) => {
   if (!value) return null;
   if (value.startsWith('minion:')) {
     const [, ownerId, role] = value.split(':');
     return { kind: 'minion', ownerId, role };
+  }
+  if (value.startsWith('summon:')) {
+    return { kind: 'summon', entryId: value.slice('summon:'.length) };
   }
   return { kind: 'char', id: value };
 };
@@ -38,6 +43,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   );
   const minionOwner = sel?.kind === 'minion' ? sel.ownerId : 'none';
   const { getHp, damage, heal } = useMinions(minionOwner);
+  const { summons, getHp: getSummonHp, setHp: setSummonHp } = useSummons();
 
   // The authored max HP for the selected minion (from owner character data).
   const minionMax = useMemo(() => {
@@ -47,7 +53,10 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
     return entry?.maxHp ?? 0;
   }, [sel, characters]);
 
-  const hp = sel?.kind === 'minion' ? getHp(sel.role, minionMax) : charHp;
+  const hp =
+    sel?.kind === 'minion' ? getHp(sel.role, minionMax)
+    : sel?.kind === 'summon' ? { ...getSummonHp(sel.entryId), temp: 0 }
+    : charHp;
 
   const handleApply = () => {
     const n = parseInt(amount, 10);
@@ -56,6 +65,11 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
     if (sel.kind === 'minion') {
       if (mode === 'heal') heal(sel.role, n, minionMax);
       else damage(sel.role, n, minionMax);
+    } else if (sel.kind === 'summon') {
+      const next = mode === 'heal'
+        ? { current: Math.min(hp.max, hp.current + n), max: hp.max }
+        : { current: Math.max(0, hp.current - n), max: hp.max };
+      setSummonHp(sel.entryId, next);
     } else {
       let newHp;
       if (mode === 'heal') {
@@ -110,6 +124,11 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                 </React.Fragment>
               );
             })}
+            {summons.map((s) => (
+              <option key={s.entryId} value={`summon:${s.entryId}`}>
+                Summon — {s.name}
+              </option>
+            ))}
           </select>
         </div>
 

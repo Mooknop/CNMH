@@ -502,6 +502,7 @@ const UseAbilityModal = ({
         ability,
         caster: character,
         round: encounter.round,
+        castRank: directCastRank,
         getState,
         sendUpdate,
         appendLog,
