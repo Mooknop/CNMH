@@ -30,6 +30,7 @@ import {
   getTokenDimensions,
   getActorById,
   getActorTokens,
+  getMinionActorLinks,
   getTokenGridPosition,
   getTokenDisposition,
   gridToPixels,
@@ -73,13 +74,27 @@ function occupiedCells(movingToken, gridSize) {
 export function resolveToken(charId) {
   const actorMap = getActorMap();
   const actorId  = Object.keys(actorMap).find((k) => actorMap[k] === charId);
-  if (!actorId) return null;
-  const actor = getActorById(actorId);
-  if (!actor) return null;
-  // PCs have a single token on the scene; companions/familiars are separate
-  // actors, so the first active token is the PC's own.
-  const tokens = getActorTokens(actor);
-  return tokens[0] ?? null;
+  if (actorId) {
+    const actor = getActorById(actorId);
+    // PCs have a single token on the scene; companions/familiars are separate
+    // actors, so the first active token is the PC's own.
+    const tokens = actor ? getActorTokens(actor) : [];
+    if (tokens[0]) return tokens[0];
+  }
+
+  // Minion fallback (#362): a charId of the form `<ownerCharId>-<role>` is a
+  // companion/familiar that isn't in the PC actor map. Resolve it through the
+  // ownership-derived minion link to its own Foundry actor token. (Imported from
+  // pf2eAdapter, not minionActors.js, to avoid a circular import.)
+  const link = getMinionActorLinks(actorMap)
+    .find((l) => `${l.ownerCharId}-${l.role}` === charId);
+  if (link) {
+    const actor  = getActorById(link.foundryActorId);
+    const tokens = actor ? getActorTokens(actor) : [];
+    return tokens[0] ?? null;
+  }
+
+  return null;
 }
 
 // Called by bridge.js when cnmh_movereq_<charId> arrives. moveType (step vs

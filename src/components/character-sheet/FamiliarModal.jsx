@@ -6,6 +6,7 @@ import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { useMinions } from '../../hooks/useMinions';
 import { MINION_FAMILIAR } from '../../utils/minionUtils';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
+import MinionMove from '../encounter/MinionMove';
 import './FamiliarModal.css';
 
 const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor }) => {
@@ -109,6 +110,7 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
           </div>
 
           <MinionSpawnButton ownerId={character.id} role={MINION_FAMILIAR} />
+          <MinionMove ownerId={character.id} role={MINION_FAMILIAR} />
 
           <div className="familiar-defenses">
             <div className="defense">
