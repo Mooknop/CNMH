@@ -1523,6 +1523,100 @@
   background: var(--accent-outline);
 }
 
+/* ── Inline quick actions (#230 slice 3) ───────────────────── */
+.gm-party-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gm-party-panel-head h2 {
+  margin: 0;
+}
+
+.gm-party-sweep-btn {
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--shell-text-secondary);
+  font: inherit;
+  font-size: 0.76rem;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.gm-party-sweep-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--shell-text-primary);
+  border-color: var(--accent-outline);
+}
+
+/* Small ±/× control shared by chips, pills and timers */
+.gm-party-mini-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: 4px;
+  background: var(--surface-card);
+  color: var(--shell-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.gm-party-mini-btn:hover:not(:disabled) {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border-color: var(--accent-outline);
+}
+
+.gm-party-mini-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ± cluster inside a resource chip keeps the value centred */
+.gm-party-chip-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gm-party-chip-edit .gm-party-chip-value {
+  min-width: 2.5ch;
+  text-align: center;
+}
+
+/* End/clear (×) buttons read as a subtle remove until hovered */
+.gm-party-pill-end,
+.gm-party-timer-clear {
+  border-color: transparent;
+  background: transparent;
+  color: var(--shell-text-tertiary);
+}
+
+.gm-party-pill-end {
+  margin-left: 2px;
+}
+
+.gm-party-timer-clear {
+  margin-left: 4px;
+}
+
+.gm-party-pill-end:hover:not(:disabled),
+.gm-party-timer-clear:hover:not(:disabled) {
+  background: rgba(183, 28, 28, 0.16);
+  border-color: var(--peril-light);
+  color: var(--peril-light);
+}
+
 /* ── Characters card grid ─────────────────────────────────── */
 .gm-char-grid {
   display: grid;
