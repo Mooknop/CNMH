@@ -1,0 +1,6 @@
+/* Minion "Spawn on map" button (#362). Inherits .btn-secondary theming; this
+   only adds the small layout the surfaces share. */
+.minion-spawn-btn {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm, 0.85rem);
+}
