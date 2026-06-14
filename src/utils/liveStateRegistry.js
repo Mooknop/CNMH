@@ -3,12 +3,15 @@
 // (`cnmh_<type>_<charId>`). Both the GM Character-State inspector (#229) and the
 // party resource dashboard (#230) consume this so the two never drift apart.
 //
-// Each descriptor is pure: `format(value, character)` turns a raw synced value
-// into a human label, `editor` is a hint for the #229 edit affordances, and
-// `group` places it in the inspector layout. Keys not described here are not an
-// error — they fall through to the inspector's raw escape hatch (partition's
-// `unrecognized`), which is exactly how brand-new keys stay visible without a
-// registry edit.
+// Each descriptor is pure:
+//   format(value, character)  → human label for the read view
+//   editor                    → which inline control the inspector renders
+//   edit                      → pure helpers backing that control (see below)
+//   group                     → placement in the inspector layout
+// Keys not described here are not an error — they fall through to the inspector's
+// raw escape hatch (partition's `unrecognized`), which is how brand-new keys stay
+// visible without a registry edit. Descriptors with no `edit` are remediated via
+// the inspector's raw-JSON editor.
 //
 // React-free on purpose (mirrors dailyPrep.js / frequency.js): takes plain
 // values + an optional resolved character, so it works in tests and from the
@@ -25,10 +28,18 @@ export const LIVE_STATE_GROUPS = [
 
 const asArray  = (v) => (Array.isArray(v) ? v : []);
 const asObject = (v) => (v && typeof v === 'object' ? v : {});
+const clampMin0 = (n) => Math.max(0, Math.floor(Number(n) || 0));
+const removeAt = (v, i) => asArray(v).filter((_, idx) => idx !== i);
 
-// ─── Descriptors ─────────────────────────────────────────────
-// editor hints (consumed by #229 Slice 2): 'number' | 'toggle' | 'list' |
-// 'text' | 'json'. Unspecialised shapes use 'json' (validated raw editor).
+// ─── Edit-helper shapes (consumed by CharacterStateModal) ────
+// editor: 'number'|'toggle'|'list'|'text'|'json'.  edit.kind:
+//   'pool'    { read(v,char)->{spent,max|null}, write(spent)->stored }      (focus, staff)
+//   'poolMap' { read(v,char)->[{key,spent,max}], write(v,key,spent)->stored } (slots)
+//   'count'   { read(v)->n, write(n)->stored }                              (hero points)
+//   'toggle'  { isOn(v)->bool, write(v,on)->stored }                        (aura, shield)
+//   'clear'   { write()->cleared }                                          (stance, prey)
+//   'list'    { itemLabel(item)->string, write(v,index)->stored }          (arrays)
+//   'text'    { read(v)->string, write(v,str)->stored }                     (eld attune)
 export const LIVE_STATE_REGISTRY = [
   // ── Turn economy ──
   {
@@ -46,6 +57,7 @@ export const LIVE_STATE_REGISTRY = [
 
   // ── Resource pools ──
   {
+    // HP is remediated through the dedicated Adjust HP modal; raw JSON only here.
     type: 'hp', group: 'resources', label: 'Hit points', editor: 'json',
     format: (v) => {
       const c = v?.current ?? 0;
@@ -59,7 +71,7 @@ export const LIVE_STATE_REGISTRY = [
     },
   },
   {
-    type: 'slots', group: 'resources', label: 'Spell slots', editor: 'json',
+    type: 'slots', group: 'resources', label: 'Spell slots', editor: 'number',
     format: (v, character) => {
       const totals = asObject(character?.spellcasting?.spell_slots);
       const ranks = Object.keys(totals)
@@ -73,6 +85,17 @@ export const LIVE_STATE_REGISTRY = [
         .map((r) => `R${r} ${Number(totals[r]) - (Number(asObject(v)[r]) || 0)}/${totals[r]}`)
         .join(', ');
     },
+    edit: {
+      kind: 'poolMap',
+      read: (v, character) => {
+        const totals = asObject(character?.spellcasting?.spell_slots);
+        return Object.keys(totals)
+          .filter((k) => k !== 'cantrips' && Number(totals[k]) > 0)
+          .sort((a, b) => Number(a) - Number(b))
+          .map((k) => ({ key: k, max: Number(totals[k]), spent: clampMin0(asObject(v)[k]) }));
+      },
+      write: (v, key, spent) => ({ ...asObject(v), [key]: clampMin0(spent) }),
+    },
   },
   {
     type: 'focus', group: 'resources', label: 'Focus points', editor: 'number',
@@ -82,12 +105,22 @@ export const LIVE_STATE_REGISTRY = [
       if (max != null) return `${Math.max(0, max - spent)}/${max}`;
       return spent > 0 ? `${spent} spent` : 'full';
     },
+    edit: {
+      kind: 'pool',
+      read: (v, character) => ({ spent: clampMin0(v), max: getFocusInfo(character)?.max ?? null }),
+      write: (spent) => clampMin0(spent),
+    },
   },
   {
     type: 'staff', group: 'resources', label: 'Staff charges', editor: 'number',
     format: (v) => {
       const spent = Number(v) || 0;
       return spent > 0 ? `${spent} charge${spent !== 1 ? 's' : ''} spent` : 'full';
+    },
+    edit: {
+      kind: 'pool',
+      read: (v) => ({ spent: clampMin0(v), max: null }),
+      write: (spent) => clampMin0(spent),
     },
   },
   {
@@ -102,6 +135,7 @@ export const LIVE_STATE_REGISTRY = [
   {
     type: 'heropoints', group: 'resources', label: 'Hero points', editor: 'number',
     format: (v) => `${Number(v) || 0}`,
+    edit: { kind: 'count', read: (v) => clampMin0(v), write: (n) => clampMin0(n) },
   },
   {
     type: 'shieldstate', group: 'resources', label: 'Shield HP', editor: 'json',
@@ -123,18 +157,30 @@ export const LIVE_STATE_REGISTRY = [
   {
     type: 'shieldraise', group: 'combat', label: 'Shield raised', editor: 'toggle',
     format: (v) => (v?.raised ? 'raised' : 'lowered'),
+    edit: {
+      kind: 'toggle',
+      isOn: (v) => !!v?.raised,
+      write: (v, on) => ({ ...asObject(v), raised: on, ts: on ? Date.now() : 0 }),
+    },
   },
   {
-    type: 'stance', group: 'combat', label: 'Stance', editor: 'json',
+    type: 'stance', group: 'combat', label: 'Stance', editor: 'clear',
     format: (v) => (v?.active ? (v.name || 'active') : 'none'),
+    edit: { kind: 'clear', write: () => ({ active: false, name: null, ts: 0 }) },
   },
   {
     type: 'aura', group: 'combat', label: 'Aura', editor: 'toggle',
     format: (v) => (v?.active ? 'active' : 'off'),
+    edit: {
+      kind: 'toggle',
+      isOn: (v) => !!v?.active,
+      write: (v, on) => ({ active: on, ts: on ? Date.now() : 0 }),
+    },
   },
   {
-    type: 'huntprey', group: 'combat', label: 'Hunt Prey', editor: 'json',
+    type: 'huntprey', group: 'combat', label: 'Hunt Prey', editor: 'clear',
     format: (v) => (v?.targetName ? `prey: ${v.targetName}` : 'none'),
+    edit: { kind: 'clear', write: () => null },
   },
   {
     type: 'conditions', group: 'combat', label: 'Conditions', editor: 'list',
@@ -142,6 +188,11 @@ export const LIVE_STATE_REGISTRY = [
       const arr = asArray(v);
       if (!arr.length) return 'none';
       return arr.map((c) => (c?.value != null ? `${c.id} ${c.value}` : c.id)).join(', ');
+    },
+    edit: {
+      kind: 'list',
+      itemLabel: (c) => (c?.value != null ? `${c.id} ${c.value}` : c.id),
+      write: removeAt,
     },
   },
   {
@@ -151,6 +202,11 @@ export const LIVE_STATE_REGISTRY = [
       if (!arr.length) return 'none';
       return arr.map((e) => e.name || e.effectId || e.id).join(', ');
     },
+    edit: {
+      kind: 'list',
+      itemLabel: (e) => e.name || e.effectId || e.id,
+      write: removeAt,
+    },
   },
   {
     type: 'grantedactions', group: 'combat', label: 'Granted actions', editor: 'list',
@@ -158,12 +214,22 @@ export const LIVE_STATE_REGISTRY = [
       const arr = asArray(v);
       return arr.length ? `${arr.length} granted` : 'none';
     },
+    edit: {
+      kind: 'list',
+      itemLabel: (a) => a.name || a.id || 'action',
+      write: removeAt,
+    },
   },
 
   // ── Class & spell state ──
   {
     type: 'eldattune', group: 'class', label: 'Eld attunement', editor: 'text',
     format: (v) => (typeof v === 'string' && v ? v : 'none'),
+    edit: {
+      kind: 'text',
+      read: (v) => (typeof v === 'string' ? v : ''),
+      write: (v, str) => str,
+    },
   },
   {
     type: 'omen', group: 'class', label: 'Omen', editor: 'json',
@@ -183,6 +249,11 @@ export const LIVE_STATE_REGISTRY = [
       if (!arr.length) return 'none';
       return arr.map((s) => s.spellName || s.spellId || s.id).join(', ');
     },
+    edit: {
+      kind: 'list',
+      itemLabel: (s) => s.spellName || s.spellId || s.id,
+      write: removeAt,
+    },
   },
   {
     type: 'spellcounters', group: 'class', label: 'Spell counters', editor: 'list',
@@ -190,6 +261,11 @@ export const LIVE_STATE_REGISTRY = [
       const arr = asArray(v);
       if (!arr.length) return 'none';
       return arr.map((c) => `${c.id}: ${c.value}`).join(', ');
+    },
+    edit: {
+      kind: 'list',
+      itemLabel: (c) => `${c.id}: ${c.value}`,
+      write: removeAt,
     },
   },
 ];
@@ -244,6 +320,7 @@ export function partitionLiveState(liveState, character) {
       descriptor: d,
       label: d.label,
       editor: d.editor,
+      edit: d.edit,
       formatted: formatLiveValue(d.type, obj[d.type], character),
     });
   }

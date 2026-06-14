@@ -71,3 +71,9 @@
   border-color: var(--shell-border-strong);
   background: var(--surface-inset);
 }
+
+.gm-slog-entry--gm .gm-slog-badge {
+  color: var(--arcane-light, #b79cff);
+  border-color: rgba(140, 110, 220, 0.4);
+  background: rgba(140, 110, 220, 0.1);
+}
