@@ -5,6 +5,9 @@ import {
   buildBacklinkMap,
   getConnectionData,
   filterBySearchTerm,
+  parseWikiTarget,
+  buildTitleToIdMap,
+  resolveWikilink,
 } from './loreUtils';
 
 const entry = (overrides = {}) => ({
@@ -180,5 +183,54 @@ describe('filterBySearchTerm', () => {
 
   it('trims whitespace from search term', () => {
     expect(filterBySearchTerm(entries, '  aroden  ')).toHaveLength(1);
+  });
+});
+
+describe('parseWikiTarget', () => {
+  it('strips the wikilink brackets', () => {
+    expect(parseWikiTarget('[[Sandpoint]]')).toBe('Sandpoint');
+  });
+
+  it('uses the target, not the alias, for piped links', () => {
+    expect(parseWikiTarget('[[Sandpoint|the town]]')).toBe('Sandpoint');
+  });
+
+  it('tolerates surrounding whitespace and bare text', () => {
+    expect(parseWikiTarget('  [[Abadar]] ')).toBe('Abadar');
+    expect(parseWikiTarget('Abadar')).toBe('Abadar');
+  });
+});
+
+describe('buildTitleToIdMap', () => {
+  it('maps lowercased titles to ids', () => {
+    const map = buildTitleToIdMap([
+      entry({ id: 'sandpoint', title: 'Sandpoint' }),
+      entry({ id: 'abadar', title: 'Abadar' }),
+    ]);
+    expect(map.get('sandpoint')).toBe('sandpoint');
+    expect(map.get('abadar')).toBe('abadar');
+  });
+
+  it('skips entries missing a title or id', () => {
+    const map = buildTitleToIdMap([{ id: 'x' }, { title: 'Y' }]);
+    expect(map.size).toBe(0);
+  });
+});
+
+describe('resolveWikilink', () => {
+  const map = buildTitleToIdMap([entry({ id: 'sandpoint', title: 'Sandpoint' })]);
+
+  it('resolves case-insensitively, honoring aliases', () => {
+    expect(resolveWikilink('[[sandpoint]]', map)).toBe('sandpoint');
+    expect(resolveWikilink('[[SANDPOINT|home]]', map)).toBe('sandpoint');
+  });
+
+  it('returns null for an unknown target', () => {
+    expect(resolveWikilink('[[Nowhere]]', map)).toBeNull();
+  });
+
+  it('returns null with no map or empty target', () => {
+    expect(resolveWikilink('[[Sandpoint]]', null)).toBeNull();
+    expect(resolveWikilink('', map)).toBeNull();
   });
 });

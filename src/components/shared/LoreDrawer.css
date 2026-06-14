@@ -114,6 +114,70 @@
   margin: 0 0 0.75rem 0;
 }
 
+.lore-drawer-content h1,
+.lore-drawer-content h2,
+.lore-drawer-content h3,
+.lore-drawer-content h4,
+.lore-drawer-content h5,
+.lore-drawer-content h6 {
+  color: var(--color-theme, var(--theme-accent));
+  line-height: 1.3;
+  margin: 1.25rem 0 0.5rem 0;
+}
+
+.lore-drawer-content h1 { font-size: 1.15rem; }
+.lore-drawer-content h2 { font-size: 1.05rem; }
+.lore-drawer-content h3,
+.lore-drawer-content h4,
+.lore-drawer-content h5,
+.lore-drawer-content h6 { font-size: 0.95rem; }
+
+.lore-drawer-content :first-child {
+  margin-top: 0;
+}
+
+.lore-drawer-content ul,
+.lore-drawer-content ol {
+  margin: 0 0 0.75rem 0;
+  padding-left: 1.25rem;
+}
+
+.lore-drawer-content li {
+  margin-bottom: 0.25rem;
+}
+
+.lore-drawer-content strong {
+  color: var(--shell-text-tertiary);
+  font-weight: 600;
+}
+
+.lore-drawer-content blockquote {
+  margin: 0 0 0.75rem 0;
+  padding: 0.1rem 0 0.1rem 0.85rem;
+  border-left: 2px solid var(--shell-border-strong);
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+}
+
+/* Inline wikilink: a themed text link with no button chrome. */
+.lore-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: var(--color-theme, var(--theme-accent));
+  text-decoration: none;
+}
+
+.lore-link:hover {
+  text-decoration: underline;
+}
+
+.lore-drawer-content a {
+  color: var(--color-theme, var(--theme-accent));
+}
+
 .lore-drawer-connections {
   border-top: 1px solid var(--shell-border);
   padding-top: 1rem;
