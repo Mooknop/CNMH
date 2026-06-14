@@ -24,12 +24,28 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
+            const { owner, repo } = context.repo;
+
+            // Primary: commit → PR association. Right after a merge this can lag
+            // (GitHub hasn't indexed the link yet) and rebase/squash merges may
+            // never associate, so it isn't reliable on its own. (This was the
+            // cause of a silently-skipped bridge release — see PR fixing this.)
+            const { data: assoc } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner, repo, commit_sha: context.sha,
             });
-            const merged = prs.find(pr => pr.merged_at);
+            let merged = assoc.find(pr => pr.merged_at) || null;
+
+            // Fallback: the recently-merged PR whose merge_commit_sha is this
+            // push's HEAD. merge_commit_sha is set the instant a PR merges (no
+            // indexing lag) and equals the branch HEAD for merge/squash/rebase.
+            if (!merged) {
+              const { data: recent } = await github.rest.pulls.list({
+                owner, repo, state: 'closed', sort: 'updated', direction: 'desc', per_page: 30,
+              });
+              merged = recent.find(pr => pr.merged_at && pr.merge_commit_sha === context.sha) || null;
+              if (merged) core.info(`Resolved PR #${merged.number} via merge_commit_sha fallback.`);
+            }
+
             if (!merged) {
               core.info('No merged PR found for this push — skipping.');
               core.setOutput('bump', '');
