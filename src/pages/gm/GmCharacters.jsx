@@ -48,6 +48,7 @@ import {
   variantsFromForm,
   VariantsControl,
 } from '../../components/gm/AbilitySubforms';
+import TraitsField from '../../components/shared/TraitsField';
 import './gm.css';
 
 // 5a: identity/abilities/saves. 5b: skills + proficiencies. 5c: the top-level
@@ -493,8 +494,8 @@ const SpellRow = ({ index, spell, onChange, onRemove }) => {
         ))}
       </div>
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input aria-label={`spell-${index}-traits`} value={spell.traits} onChange={(e) => onChange({ ...spell, traits: e.target.value })} />
+        <label>traits</label>
+        <TraitsField ariaLabel={`spell-${index}-traits`} value={spell.traits} onChange={(v) => onChange({ ...spell, traits: v })} />
       </div>
       <FrequencyRuleControl
         value={spell.frequencyRule || frequencyRuleToForm(null)}

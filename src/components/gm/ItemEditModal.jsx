@@ -1,5 +1,6 @@
 import React from 'react';
 import Modal from '../shared/Modal';
+import TraitsField from '../shared/TraitsField';
 
 // Catalog summary line for a reference entry — same content the old inline
 // RefRow showed, kept so the GM can confirm what the ref resolves to.
@@ -222,11 +223,11 @@ const ItemEditModal = ({
             </div>
           </div>
           <div className="form-group">
-            <label>traits (comma-separated)</label>
-            <input
-              aria-label={`${tag}-traits`}
+            <label>traits</label>
+            <TraitsField
+              ariaLabel={`${tag}-traits`}
               value={item.traits}
-              onChange={(e) => onPatch({ traits: e.target.value })}
+              onChange={(v) => onPatch({ traits: v })}
             />
           </div>
           <div className="form-group">

@@ -12,6 +12,8 @@ import {
 } from '../../components/gm/AbilitySubforms';
 import ImageField from '../../components/gm/ImageField';
 import PageEditorShell from '../../components/gm/PageEditorShell';
+import TraitsField from '../../components/shared/TraitsField';
+import { toList } from '../../utils/traitRefs';
 import './gm.css';
 
 // Slice 2: the shared item catalog editor. Catalog items hold ONLY the shared
@@ -34,12 +36,6 @@ const toNum = (v) => {
   const n = parseFloat(v);
   return Number.isNaN(n) ? 0 : n;
 };
-
-const toList = (csv) =>
-  csv
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
 
 // Managed scalar fields on a scroll/wand's nested spell. Anything else on the
 // spell (id, etc.) is preserved verbatim through `rest`.
@@ -315,11 +311,11 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
         ))}
       </div>
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input
-          aria-label="spell-traits"
+        <label>traits</label>
+        <TraitsField
+          ariaLabel="spell-traits"
           value={spell.traits}
-          onChange={(e) => onChange({ ...spell, traits: e.target.value })}
+          onChange={(v) => onChange({ ...spell, traits: v })}
         />
       </div>
       <div className="form-group">
@@ -555,8 +551,8 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       </div>
 
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input aria-label="traits" value={e.traits} onChange={(ev) => set({ traits: ev.target.value })} />
+        <label>traits</label>
+        <TraitsField ariaLabel="traits" value={e.traits} onChange={(v) => set({ traits: v })} />
       </div>
       <div className="form-group">
         <label>description</label>
