@@ -1,20 +1,21 @@
 /**
  * GM history (HistoryModal) round-trip suite.
  *
- * Verifies the per-entity version browser for the shared ConfirmDialog
- * typed-restore flow. Lore is the test vehicle (smallest editor surface,
- * exercises the same archive/restore plumbing every collection uses).
+ * Verifies the per-entity version browser + typed-restore flow that every
+ * collection editor shares. Quest is the test vehicle (lore lost its editor in
+ * #289 — it's now a reveal-only manager — so this exercises the same
+ * archive/restore plumbing via a collection that still has the full form).
  *
  * Flow:
- *  - Seed a lore entry at summary V1 (seed does NOT archive).
+ *  - Seed a quest at description V1 (seed does NOT archive).
  *  - Edit via UI to V2 → archive captures V1.
  *  - Edit via UI to V3 → archive captures V2. History now [V2, V1] newest-first.
  *  - Open HistoryModal → assert 2 version cards visible.
  *  - Click "Restore" on the V1 card → typed-confirm with the entry title.
- *  - Assert: form summary now shows V1, /api/content reflects V1, and the
+ *  - Assert: form description now shows V1, /api/content reflects V1, and the
  *    pre-restore V3 was itself archived (history is now [V3, V2, V1]).
  *
- * Reset-free: uses a unique lore ID per run so data never bleeds between tests.
+ * Reset-free: uses a unique quest ID per run so data never bleeds between tests.
  *
  * Desktop-only: GM Tools has no responsive layout.
  */
@@ -27,7 +28,7 @@ async function expectSaved(page: import('@playwright/test').Page) {
   await expect(page.getByRole('status')).toContainText('Changes are live', { timeout: 20_000 });
 }
 
-test.describe('Lore history', () => {
+test.describe('GM history (restore)', () => {
   test('edit twice, list 2 versions, restore older, pre-restore archived', async ({
     page,
     seed,
@@ -38,30 +39,31 @@ test.describe('Lore history', () => {
 
     // Seed at V1 (seed path passes archive=false, so history starts empty)
     await seed({
-      lore: [{
+      quest: [{
         id,
         title,
-        category: 'Location',
-        summary: 'V1',
-        content: '',
-        related: [],
-        tags: [],
+        status: 'active',
+        priority: 'medium',
+        location: '',
+        giver: '',
+        description: 'V1',
+        notes: [],
       }],
     });
 
-    await page.goto('/gm/lore');
+    await page.goto('/gm/quests');
     // Master/detail shell: select the seeded entry's list row to open its form.
     await page.getByRole('button', { name: title }).click();
-    const form = page.getByTestId(`lore-form-${id}`);
+    const form = page.getByTestId(`quest-form-${id}`);
     await expect(form).toBeVisible();
 
     // --- Edit V1 → V2 (archives V1) ---
-    await form.getByLabel('summary').fill('V2');
+    await form.getByLabel('description').fill('V2');
     await form.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
     // --- Edit V2 → V3 (archives V2) ---
-    await form.getByLabel('summary').fill('V3');
+    await form.getByLabel('description').fill('V3');
     await form.getByRole('button', { name: 'Save' }).click();
     await expectSaved(page);
 
@@ -87,14 +89,14 @@ test.describe('Lore history', () => {
     await expectSaved(page);
 
     // --- Assert form reflects V1 ---
-    // The form re-seeds from the restored data via onRestored(doc), so summary
-    // should now display V1 again.
-    await expect(form.getByLabel('summary')).toHaveValue('V1');
+    // The form re-seeds from the restored data via onRestored(doc), so the
+    // description should now display V1 again.
+    await expect(form.getByLabel('description')).toHaveValue('V1');
 
     // --- Assert /api/content reflects V1 ---
     const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'lore', id) as any;
-    expect(entry).toMatchObject({ id, summary: 'V1' });
+    const entry = findInCollection(payload, 'quest', id) as any;
+    expect(entry).toMatchObject({ id, description: 'V1' });
 
     // --- Assert pre-restore (V3) was itself archived ---
     // The restore path archives the current row before overwriting, so opening
