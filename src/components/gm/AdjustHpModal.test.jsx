@@ -77,7 +77,7 @@ describe('AdjustHpModal', () => {
     __store['cnmh_hp_thorn'] = { ...THORN_HP };
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     expect(screen.getByLabelText('current hp')).toBeInTheDocument();
     expect(screen.getByText('20')).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('AdjustHpModal', () => {
     __store['cnmh_hp_thorn'] = { ...THORN_HP };
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     expect(screen.queryByText(/temp/)).not.toBeInTheDocument();
   });
@@ -97,7 +97,7 @@ describe('AdjustHpModal', () => {
     __store['cnmh_hp_thorn'] = { ...THORN_HP_WITH_TEMP };
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     expect(screen.getByText('+5 temp')).toBeInTheDocument();
   });
@@ -106,7 +106,7 @@ describe('AdjustHpModal', () => {
     __store['cnmh_hp_thorn'] = { ...THORN_HP };
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     expect(screen.getByLabelText('Apply heal')).toBeDisabled();
   });
@@ -116,7 +116,7 @@ describe('AdjustHpModal', () => {
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
 
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '15' } });
     fireEvent.click(screen.getByLabelText('Apply heal'));
@@ -129,7 +129,7 @@ describe('AdjustHpModal', () => {
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
 
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '99' } });
     fireEvent.click(screen.getByLabelText('Apply heal'));
@@ -142,7 +142,7 @@ describe('AdjustHpModal', () => {
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
 
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     fireEvent.click(screen.getByRole('button', { name: /damage/i }));
     fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
@@ -156,7 +156,7 @@ describe('AdjustHpModal', () => {
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
 
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     fireEvent.click(screen.getByRole('button', { name: /damage/i }));
     fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
@@ -172,7 +172,7 @@ describe('AdjustHpModal', () => {
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
 
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     fireEvent.click(screen.getByRole('button', { name: /damage/i }));
     fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '999' } });
@@ -186,7 +186,7 @@ describe('AdjustHpModal', () => {
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
 
     act(() => {
-      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'char:thorn' } });
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
     });
     fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '10' } });
     fireEvent.click(screen.getByLabelText('Apply heal'));

@@ -8,15 +8,17 @@ import './AdjustHpModal.css';
 
 const EMPTY_HP = { current: 0, max: 0, temp: 0, dying: 0, wounded: 0, doomed: 0 };
 
-// Selection values are prefixed so a PC and an allied minion (#261) never collide:
-//   char:<charId>            → the PC's own cnmh_hp_<charId>
+// A PC selects by its plain id (stable contract for existing callers/e2e); an
+// allied minion (#261) is prefixed so the two never collide:
+//   <charId>                 → the PC's own cnmh_hp_<charId>
 //   minion:<ownerId>:<role>  → an entry in the owner's cnmh_minions_<ownerId>
 const parseSelection = (value) => {
   if (!value) return null;
-  const [kind, a, b] = value.split(':');
-  if (kind === 'minion') return { kind: 'minion', ownerId: a, role: b };
-  if (kind === 'char') return { kind: 'char', id: a };
-  return null;
+  if (value.startsWith('minion:')) {
+    const [, ownerId, role] = value.split(':');
+    return { kind: 'minion', ownerId, role };
+  }
+  return { kind: 'char', id: value };
 };
 
 const AdjustHpModal = ({ isOpen, onClose }) => {
@@ -99,7 +101,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
               const minions = minionRoster(c);
               return (
                 <React.Fragment key={c.id}>
-                  <option value={`char:${c.id}`}>{c.name}</option>
+                  <option value={c.id}>{c.name}</option>
                   {minions.map((m) => (
                     <option key={m.role} value={`minion:${c.id}:${m.role}`}>
                       {c.name} — {m.name}
