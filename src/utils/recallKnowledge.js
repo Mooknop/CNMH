@@ -83,6 +83,28 @@ export function rkKeyFor(enemy) {
   return enemy?.creatureKey || enemy?.entryId || null;
 }
 
+// Prune the campaign knowledge store at encounter end (#333). creatureKey-keyed
+// records persist for the whole campaign — a creature learned in one fight stays
+// revealed when it shows up later. Only the *ephemeral* records keyed by the
+// just-ended encounter's entryIds (manual/homebrew enemies with no creatureKey —
+// they can't dedupe across encounters anyway) are dropped, so no stale buildup
+// accumulates. Per-character crit-fail locks reset on the surviving records: a
+// new fight is a fresh chance to roll.
+export function pruneEncounterKnowledge(knowledge, order = []) {
+  if (!knowledge) return {};
+  const ephemeral = new Set();
+  for (const entry of order) {
+    if (entry?.kind !== 'enemy') continue;
+    if (!entry.creatureKey && entry.entryId) ephemeral.add(entry.entryId);
+  }
+  const next = {};
+  for (const [key, record] of Object.entries(knowledge)) {
+    if (ephemeral.has(key)) continue;
+    next[key] = { ...record, lockedOut: {} };
+  }
+  return next;
+}
+
 export function defaultRecord() {
   return {
     identity: false,        // name + level + traits — auto-revealed on any success

@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { boundariesCrossedBy, isExpired } from '../utils/expiry';
+import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
 import {
   defaultEncounter,
   makePcEntry,
@@ -332,7 +333,11 @@ export const useEncounter = () => {
         }
       }
       setEncounter(() => defaultEncounter());
-      setKnowledge({});
+      // Recall Knowledge persists across encounters by creatureKey (#333) — only
+      // this fight's ephemeral entryId-keyed records are pruned, not the lot.
+      setKnowledge((cur) =>
+        pruneEncounterKnowledge(cur, encounterRef.current?.order || [])
+      );
       setPersistentMap({}); // tracked persistent damage dies with the encounter (#272)
       setEnemyFx({});       // enemy conditions + immunity timers die with the encounter (#260)
       setSummons([]);       // GM-added summons die with the encounter (#261)
