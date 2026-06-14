@@ -1,0 +1,29 @@
+name: E2E (local stack)
+
+# Companion to e2e-local.yml. That workflow is path-filtered, but its job
+# "E2E against local stack" is a REQUIRED status check in branch protection — so
+# a PR that touches none of those paths (docs-, scripts-, or CI-only changes)
+# would otherwise hang forever on "Expected — Waiting for status to be reported".
+#
+# This workflow runs on the *inverse* path set and reports the same check name as
+# an immediate pass, satisfying the requirement for PRs that don't need E2E.
+# (GitHub's documented pattern for skipped-but-required checks: same workflow
+# name + same job name on paths/paths-ignore complements.)
+on:
+  pull_request:
+    paths-ignore:
+      - 'src/**'
+      - 'worker/**'
+      - 'wrangler.toml'
+      - 'e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/e2e-local.yml'
+
+jobs:
+  local:
+    name: E2E against local stack
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No E2E-relevant paths changed — reporting the required check as passed."
