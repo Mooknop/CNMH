@@ -5,6 +5,7 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { useMinions } from '../../hooks/useMinions';
 import { MINION_FAMILIAR } from '../../utils/minionUtils';
+import MinionSpawnButton from '../encounter/MinionSpawnButton';
 import './FamiliarModal.css';
 
 const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor }) => {
@@ -106,6 +107,8 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
               <span className="defense-value">{hasConditions ? activeConditions.length : '—'}</span>
             </button>
           </div>
+
+          <MinionSpawnButton ownerId={character.id} role={MINION_FAMILIAR} />
 
           <div className="familiar-defenses">
             <div className="defense">

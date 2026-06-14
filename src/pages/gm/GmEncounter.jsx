@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useSummons } from '../../hooks/useSummons';
+import { useMinionActors } from '../../hooks/useMinionActors';
+import MinionSpawnButton from '../../components/encounter/MinionSpawnButton';
 import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
@@ -24,6 +26,7 @@ const GmEncounter = () => {
   const { characters } = useContent();
   const { encounter, actorMap, setActorMap } = useEncounter();
   const { removeSummon } = useSummons();
+  const { links: minionLinks } = useMinionActors();
   const [isEffectsModalOpen, setIsEffectsModalOpen] = useState(false);
   const [isAddSummonOpen, setIsAddSummonOpen] = useState(false);
 
@@ -82,6 +85,26 @@ const GmEncounter = () => {
               )}
             </>
           )}
+        </div>
+      )}
+
+      {Object.keys(minionLinks).length > 0 && (
+        <div className="gm-encounter-minions">
+          <h3>Companions &amp; familiars</h3>
+          <ul className="gm-encounter-minion-list" aria-label="minion-spawn-list">
+            {Object.entries(minionLinks).map(([key, link]) => {
+              const owner = (characters || []).find((c) => c.id === link.ownerCharId);
+              return (
+                <li key={key} className="gm-encounter-minion-row">
+                  <span className="gm-encounter-minion-name">
+                    {link.name}
+                    {owner && <span className="gm-encounter-minion-owner"> · {owner.name}</span>}
+                  </span>
+                  <MinionSpawnButton ownerId={link.ownerCharId} role={link.role} />
+                </li>
+              );
+            })}
+          </ul>
         </div>
       )}
 
