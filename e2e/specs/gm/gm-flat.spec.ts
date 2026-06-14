@@ -252,58 +252,49 @@ test.describe('Calendar editor', () => {
 // Lore entries: create, edit, delete, category tab filter, slug collision
 // ---------------------------------------------------------------------------
 
-test.describe('Lore editor', () => {
-  test('create, edit summary, and delete a lore entry round-trips', async ({
+// Lore content is authored in the Obsidian vault, not the app (#285). The GM
+// page is a reveal-only manager: select an entry, preview it, flip reveal live.
+test.describe('Lore reveal manager', () => {
+  test('reveals then hides an entry live, preserving vault content', async ({
     page,
+    seed,
     request,
   }) => {
-    const id = testId('location');
-    const title = testTitle('location', id);
+    const id = testId('reveal');
+    const title = testTitle('reveal', id);
 
-    await page.goto('/gm/lore');
-
-    // --- Create ---
-    await page.getByRole('button', { name: '+ New entry' }).click();
-    const form = page.getByTestId('lore-form-new');
-    await form.getByLabel('title').fill(title);
-    await form.getByLabel('category').fill('Location');
-    await form.getByLabel('summary').fill('A place for automated testing.');
-    await form.getByLabel('content').fill('Detailed lore content goes here.');
-    await form.getByRole('button', { name: 'Create entry' }).click();
-    await expectSaved(page);
-
-    // Reselect-on-create keeps the saved entry's form open (new form collapses).
-    await expect(page.getByTestId('lore-form-new')).not.toBeVisible();
-    await expect(page.getByTestId(`lore-form-${id}`)).toBeVisible();
-
-    let payload = await fetchContent(request);
-    let entry = findInCollection(payload, 'lore', id);
-    expect(entry).toMatchObject({
-      id,
-      title,
-      category: 'Location',
-      summary: 'A place for automated testing.',
+    await seed({
+      lore: [{
+        id,
+        title,
+        category: 'Location',
+        summary: 'Hidden lore.',
+        content: 'Secret body.',
+        related: [],
+        visibility: 'gm',
+        tags: [],
+      }],
     });
 
-    // --- Edit ---
-    const savedForm = page.getByTestId(`lore-form-${id}`);
-    await savedForm.getByLabel('summary').fill('Updated summary for E2E Location.');
-    await savedForm.getByRole('button', { name: 'Save' }).click();
+    await page.goto('/gm/lore');
+    await page.getByRole('button', { name: title }).click();
+    const detail = page.getByTestId(`lore-detail-${id}`);
+    await expect(detail).toBeVisible();
+    // Read-only manager: no content-editing controls.
+    await expect(detail.getByLabel('content')).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: 'Delete' })).toHaveCount(0);
+
+    // --- Reveal (full doc preserved, only visibility changes) ---
+    await detail.getByRole('button', { name: 'Reveal to players' }).click();
     await expectSaved(page);
+    let entry = findInCollection(await fetchContent(request), 'lore', id);
+    expect(entry).toMatchObject({ visibility: 'revealed', content: 'Secret body.' });
 
-    payload = await fetchContent(request);
-    entry = findInCollection(payload, 'lore', id);
-    expect(entry).toMatchObject({ summary: 'Updated summary for E2E Location.' });
-
-    // --- Delete ---
-    await savedForm.getByRole('button', { name: 'Delete' }).click();
-    await confirmTyped(page, title, 'Delete forever');
+    // --- Hide (button flips in place) ---
+    await detail.getByRole('button', { name: 'Hide from players' }).click();
     await expectSaved(page);
-
-    await expect(page.getByTestId(`lore-form-${id}`)).not.toBeVisible();
-
-    payload = await fetchContent(request);
-    expect(findInCollection(payload, 'lore', id)).toBeUndefined();
+    entry = findInCollection(await fetchContent(request), 'lore', id);
+    expect(entry).toMatchObject({ visibility: 'gm' });
   });
 
   test('category tab filter shows only matching entries', async ({ page, seed }) => {
@@ -339,42 +330,5 @@ test.describe('Lore editor', () => {
     await nav.getByRole('button', { name: 'NPC' }).click();
     await expect(list.getByRole('button', { name: npcTitle })).toBeVisible();
     await expect(list.getByRole('button', { name: locTitle })).not.toBeVisible();
-  });
-
-  test('slug collision triggers overwrite confirm and saves successfully', async ({
-    page,
-    seed,
-    request,
-  }) => {
-    const baseId = testId('collision');
-    const baseTitle = testTitle('collision', baseId);
-
-    // Pre-seed an entry with the unique id
-    await seed({
-      lore: [{ id: baseId, title: baseTitle, category: 'Location', summary: 'Original', content: '', related: [], tags: [] }],
-    });
-
-    await page.goto('/gm/lore');
-    // Master/detail shell: select the seeded entry's list row to open its form.
-    await page.getByRole('button', { name: baseTitle }).click();
-    await expect(page.getByTestId(`lore-form-${baseId}`)).toBeVisible();
-
-    // Click + New entry and fill the same title → same slug → collision
-    await page.getByRole('button', { name: '+ New entry' }).click();
-    const form = page.getByTestId('lore-form-new');
-    await form.getByLabel('title').fill(baseTitle);
-    await form.getByLabel('category').fill('Location');
-    await form.getByLabel('summary').fill('Replacement');
-    await form.getByRole('button', { name: 'Create entry' }).click();
-
-    // ConfirmDialog appears (no requireType for collision — plain confirm).
-    // Modal renders as div.modal-container, not a role="dialog" element.
-    await expect(page.locator('.modal-container')).toContainText('already exists');
-    await page.getByRole('button', { name: 'Overwrite' }).click();
-    await expectSaved(page);
-
-    const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'lore', baseId);
-    expect(entry).toMatchObject({ summary: 'Replacement' });
   });
 });
