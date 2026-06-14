@@ -42,6 +42,9 @@ const CHARACTERS = [
 const THORN_HP = { current: 20, max: 40, temp: 0, dying: 0, wounded: 0, doomed: 0 };
 const THORN_HP_WITH_TEMP = { ...THORN_HP, temp: 5 };
 
+// Ashka fields an animal companion (Zevira, hp 32) — exercises the #261 minion path.
+const ASHKA = { id: 'ashka', name: 'Ashka', animalCompanion: { name: 'Zevira', hp: 32 } };
+
 beforeEach(() => {
   __reset();
   useContent.mockReturnValue({ characters: CHARACTERS });
@@ -189,6 +192,58 @@ describe('AdjustHpModal', () => {
     fireEvent.click(screen.getByLabelText('Apply heal'));
 
     expect(screen.getByLabelText('hp amount').value).toBe('');
+  });
+
+  describe('allied minions (#261)', () => {
+    beforeEach(() => {
+      useContent.mockReturnValue({ characters: [...CHARACTERS, ASHKA] });
+    });
+
+    it('lists the owner and the companion as separate options', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      expect(screen.getByText('Ashka')).toBeInTheDocument();
+      expect(screen.getByText('Ashka — Zevira')).toBeInTheDocument();
+    });
+
+    it('shows the companion HP from data max when unset (lazy default)', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), {
+          target: { value: 'minion:ashka:companion' },
+        });
+      });
+      // current and max both read back as the data max (32) until something writes
+      expect(screen.getAllByText('32')).toHaveLength(2);
+    });
+
+    it('damage writes to cnmh_minions_<owner>, not cnmh_hp', () => {
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), {
+          target: { value: 'minion:ashka:companion' },
+        });
+      });
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '10' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_minions_ashka'].companion.hp.current).toBe(22);
+      expect(__store['cnmh_hp_minion:ashka:companion']).toBeUndefined();
+    });
+
+    it('heal on the companion is capped at its data max', () => {
+      __store['cnmh_minions_ashka'] = { companion: { hp: { current: 30, max: 32, temp: 0 } } };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), {
+          target: { value: 'minion:ashka:companion' },
+        });
+      });
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '99' } });
+      fireEvent.click(screen.getByLabelText('Apply heal'));
+
+      expect(__store['cnmh_minions_ashka'].companion.hp.current).toBe(32);
+    });
   });
 
   it('calls onClose when the modal is closed', () => {

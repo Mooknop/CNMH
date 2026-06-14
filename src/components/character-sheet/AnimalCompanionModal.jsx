@@ -5,11 +5,16 @@ import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { getAbilityModifier, getProficiencyBonus, formatModifier } from '../../utils/CharacterUtils';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { useMinions } from '../../hooks/useMinions';
+import { MINION_COMPANION } from '../../utils/minionUtils';
+import MinionStrikeModal from '../encounter/MinionStrikeModal';
 import './AnimalCompanionModal.css';
 
 const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, characterColor }) => {
   const [activeConditions, setActiveConditions] = useState([]);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
+  const [strikeForRoll, setStrikeForRoll] = useState(null);
+  const { getHp } = useMinions(character?.id);
 
   // Keep mounted so condition state persists across open/close cycles
   if (!animalCompanion || !character) return null;
@@ -125,6 +130,8 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
             <div className="defense">
               <span className="defense-label">HP</span>
               <span className="defense-value">
+                {getHp(MINION_COMPANION, companionData.hp).current}
+                <span className="companion-hp-sep">/</span>
                 <PenaltyDisplay base={companionData.hp} penalty={effects.maxHp} />
               </span>
             </div>
@@ -182,7 +189,13 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
                 <h4 >Strikes</h4>
                 <div className="companion-strikes-list">
                   {companionData.strikes.map((strike, index) => (
-                    <div key={index} className="companion-strike">
+                    <button
+                      key={index}
+                      type="button"
+                      className="companion-strike companion-strike--roll"
+                      onClick={() => setStrikeForRoll(strike)}
+                      title={`Roll ${strike.name}`}
+                    >
                       <div className="strike-header">
                         <h5>{strike.name}</h5>
                         <h5 className="strike-details">
@@ -201,7 +214,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
                           ))}
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -250,6 +263,16 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
         onRemove={handleRemove}
         onChangeValue={handleChangeValue}
         highZ
+      />
+
+      <MinionStrikeModal
+        isOpen={!!strikeForRoll}
+        onClose={() => setStrikeForRoll(null)}
+        strike={strikeForRoll}
+        companionData={companionData}
+        character={character}
+        role={MINION_COMPANION}
+        themeColor={themeColor}
       />
     </>
   );
