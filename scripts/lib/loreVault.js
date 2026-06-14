@@ -90,8 +90,12 @@ function serializeDoc(doc, idToTitle = new Map()) {
 }
 
 // Split `---\nYAML\n---\nbody` into its frontmatter object and raw body.
+// Line endings are normalized to LF first: Obsidian/Windows checkouts (and
+// `core.autocrlf=true`) produce CRLF, which would otherwise defeat the `---\n`
+// frontmatter match (every id reads as missing) and leave stray `\r` in body
+// content (spurious diffs against the LF-stored DO docs).
 function splitFrontmatter(markdown) {
-  const text = String(markdown || '');
+  const text = String(markdown || '').replace(/\r\n?/g, '\n');
   const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!match) return { data: {}, body: text };
   return { data: YAML.parse(match[1]) || {}, body: match[2] };

@@ -106,6 +106,25 @@ describe('splitFrontmatter', () => {
   it('returns the body verbatim when there is no frontmatter', () => {
     expect(splitFrontmatter('just a body').body).toBe('just a body');
   });
+
+  it('parses CRLF files (Obsidian/Windows checkouts) and normalizes body to LF', () => {
+    const crlf = '---\r\nid: sandpoint\r\n---\r\n\r\nFirst.\r\n\r\nSecond.\r\n';
+    const { data, body } = splitFrontmatter(crlf);
+    expect(data.id).toBe('sandpoint');
+    expect(body).not.toMatch(/\r/);
+    expect(body).toContain('First.\n\nSecond.');
+  });
+});
+
+describe('parseFile (CRLF)', () => {
+  it('reads id/title/related from a CRLF file', () => {
+    const crlf = ['---', 'id: sandpoint', 'related:', '  - "[[Abadar]]"', '---', '', 'Body text.', ''].join('\r\n');
+    const doc = parseFile(crlf, { category: 'Location', filenameTitle: 'Sandpoint' });
+    expect(doc.id).toBe('sandpoint');
+    expect(doc.title).toBe('Sandpoint');
+    expect(doc.related).toEqual(['Abadar']);
+    expect(doc.content).toBe('Body text.');
+  });
 });
 
 describe('round-trip (authored fields)', () => {
