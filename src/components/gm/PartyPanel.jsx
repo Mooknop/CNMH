@@ -1,6 +1,7 @@
 import React from 'react';
 import { useContent } from '../../contexts/ContentContext';
-import { useSyncedState } from '../../hooks/useSyncedState';
+import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
+import { formatLiveValue } from '../../utils/liveStateRegistry';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 
 // ─── HP status tier ──────────────────────────────────────────
@@ -15,21 +16,51 @@ const hpStatus = (current, max) => {
   return 'full';
 };
 
+// ─── Resource read-out (#230, slice 1) ───────────────────────
+// Compact, read-only "what does everyone have left" board. Both bands are
+// driven off liveStateRegistry so they never drift from the inspector: a chip
+// is rendered only when the PC actually has that key (graceful degrade — rows
+// omit pools a character/feature doesn't use). Labels are short on purpose so
+// the row stays glanceable; the inspector (#229) carries the full names.
+
+// Resource pools — value is the point, so show whenever the key is present.
+const RESOURCE_CHIPS = [
+  { type: 'heropoints',  label: 'Hero'  },
+  { type: 'focus',       label: 'Focus' },
+  { type: 'slots',       label: 'Slots' },
+  { type: 'staff',       label: 'Staff' },
+  { type: 'wands',       label: 'Wands' },
+  { type: 'shieldstate', label: 'Shield' },
+  { type: 'consumed',    label: 'Used'  },
+];
+
+// Combat/class flags — skipped when their formatter reports an empty state,
+// so the strip only shows what's actually active.
+const STATE_PILLS = [
+  { type: 'stance',    label: 'Stance' },
+  { type: 'aura',      label: 'Aura'   },
+  { type: 'huntprey',  label: 'Prey'   },
+  { type: 'omen',      label: 'Omen'   },
+  { type: 'eldattune', label: 'Eld'    },
+  { type: 'sustains',  label: 'Sustain' },
+];
+
+// Formatter "nothing here" sentinels — a present-but-inactive flag.
+const EMPTY_VALUES = new Set(['none', 'off', 'lowered', '']);
+
+// Reaction lives inside turnstate; surface just the at-a-glance bit.
+const reactionChip = (turnstate) => {
+  if (turnstate == null) return null;
+  const spent = turnstate.reactionSpent || turnstate.reactionAvailable === false;
+  return { key: 'reaction', label: 'Reaction', value: spent ? 'spent' : 'ready', spent };
+};
+
 // ─── Single-character row ────────────────────────────────────
 // Hooks must be called at component top level — one PartyMemberRow
-// per character so each can call useSyncedState independently.
+// per character so each can subscribe to its own live state.
 const PartyMemberRow = ({ character, color }) => {
-  const [hp] = useSyncedState(
-    `cnmh_hp_${character.id}`,
-    () => ({
-      current: character.maxHp || 0,
-      max:     character.maxHp || 0,
-      temp:    0,
-      dying:   0,
-      wounded: 0,
-      doomed:  0,
-    })
-  );
+  const { liveState } = useCharacterLiveState(character.id);
+  const hp = liveState.hp;
 
   const current = hp?.current ?? character.maxHp ?? 0;
   const max     = hp?.max     ?? character.maxHp ?? 0;
@@ -40,6 +71,21 @@ const PartyMemberRow = ({ character, color }) => {
   const pct    = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
   const status = hpStatus(current, max);
 
+  const chips = RESOURCE_CHIPS
+    .filter((c) => c.type in liveState)
+    .map((c) => ({
+      key: c.type,
+      label: c.label,
+      value: formatLiveValue(c.type, liveState[c.type], character),
+    }));
+  const reaction = reactionChip(liveState.turnstate);
+  if (reaction) chips.push(reaction);
+
+  const pills = STATE_PILLS
+    .filter((p) => p.type in liveState)
+    .map((p) => ({ ...p, value: formatLiveValue(p.type, liveState[p.type], character) }))
+    .filter((p) => !EMPTY_VALUES.has(String(p.value).trim().toLowerCase()));
+
   // --x-theme: per-character accent (allowed dynamic bridge)
   // --hp-pct: fill width as a CSS custom property (avoids inline width)
   return (
@@ -49,31 +95,63 @@ const PartyMemberRow = ({ character, color }) => {
       style={{ '--x-theme': color, '--hp-pct': `${pct}%` }}
       data-testid={`party-row-${character.id}`}
     >
-      <span className="gm-party-name">{character.name}</span>
-      <div className="gm-party-bar" aria-hidden="true">
-        <div className="gm-party-fill" />
-      </div>
-      <span className="gm-party-hp" aria-label={`hp-${character.id}`}>
-        {current}/{max}
-        {temp > 0 && (
-          <span className="gm-party-temp-label">+{temp}</span>
+      <div className="gm-party-head">
+        <span className="gm-party-name">{character.name}</span>
+        <div className="gm-party-bar" aria-hidden="true">
+          <div className="gm-party-fill" />
+        </div>
+        <span className="gm-party-hp" aria-label={`hp-${character.id}`}>
+          {current}/{max}
+          {temp > 0 && (
+            <span className="gm-party-temp-label">+{temp}</span>
+          )}
+        </span>
+        {dying > 0 && (
+          <span
+            className="gm-party-badge gm-party-dying"
+            aria-label={`dying-${character.id}`}
+          >
+            Dying {dying}
+          </span>
         )}
-      </span>
-      {dying > 0 && (
-        <span
-          className="gm-party-badge gm-party-dying"
-          aria-label={`dying-${character.id}`}
-        >
-          Dying {dying}
-        </span>
+        {wounded > 0 && dying === 0 && (
+          <span
+            className="gm-party-badge gm-party-wounded"
+            aria-label={`wounded-${character.id}`}
+          >
+            Wounded {wounded}
+          </span>
+        )}
+      </div>
+
+      {chips.length > 0 && (
+        <ul className="gm-party-chips" aria-label={`resources-${character.id}`}>
+          {chips.map((c) => (
+            <li
+              className={`gm-party-chip${c.spent ? ' is-spent' : ''}`}
+              key={c.key}
+              data-testid={`party-chip-${character.id}-${c.key}`}
+            >
+              <span className="gm-party-chip-label">{c.label}</span>
+              <span className="gm-party-chip-value">{c.value}</span>
+            </li>
+          ))}
+        </ul>
       )}
-      {wounded > 0 && dying === 0 && (
-        <span
-          className="gm-party-badge gm-party-wounded"
-          aria-label={`wounded-${character.id}`}
-        >
-          Wounded {wounded}
-        </span>
+
+      {pills.length > 0 && (
+        <ul className="gm-party-pills" aria-label={`state-${character.id}`}>
+          {pills.map((p) => (
+            <li
+              className="gm-party-pill"
+              key={p.type}
+              data-testid={`party-pill-${character.id}-${p.type}`}
+            >
+              <span className="gm-party-pill-label">{p.label}</span>
+              <span className="gm-party-pill-value">{p.value}</span>
+            </li>
+          ))}
+        </ul>
       )}
     </li>
   );
