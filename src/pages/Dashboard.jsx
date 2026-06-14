@@ -35,7 +35,8 @@ const Dashboard = () => {
   const activeChar = party[activeIndex] || null;
   const accent = getCharacterColor(activeIndex);
 
-  // Retint the page chrome to the centered character (card glows + dots read --accent).
+  // Retint the page chrome to the centered character (card glows, dots, CTA,
+  // header kicker and the top wash all read --accent off the dashboard root).
   useEffect(() => {
     if (rootRef.current) {
       rootRef.current.style.setProperty('--accent', accent);
@@ -43,112 +44,109 @@ const Dashboard = () => {
     }
   }, [accent]);
 
-  const navigateTo = (path) => {
-    navigate(path);
-  };
-
   const openCharacter = () => {
     if (activeChar) navigate(`/character/${activeChar.id}`);
   };
 
   return (
     <div className="dashboard" ref={rootRef}>
-      <h1>{PARTY_NAME}</h1>
+      <div className="dash-grain" aria-hidden="true" />
 
-      {party.length > 0 && (
-        <>
-          <CharacterCarousel
-            characters={party}
-            active={activeIndex}
-            setActive={setActive}
-            onOpen={openCharacter}
-          />
-          <div className="cc-select-bar">
-            <button
-              type="button"
-              className="cc-cta"
-              onClick={openCharacter}
-              style={{ '--accent': accent }}
-            >
-              <OpenIcon />
-              <span>Open <span className="cc-cta-name">{activeChar?.name}</span></span>
-            </button>
-            <div className="cc-hint">Swipe to choose · tap a card to open</div>
-          </div>
-        </>
-      )}
+      <div className="dash-col">
+        <header className="dash-header">
+          <div className="dash-kicker">Osprey Covey</div>
+          <h1 className="dash-title">{PARTY_NAME}</h1>
+        </header>
 
-      {/* Campaign Stats */}
-      {
-        <div className="content-section">
-          <div className="stats-grid">
-            <button
-            className="stat-card clickable-stat-card party-level-stat"
-            onClick={() => navigateTo('/party-summary')}
-            title="Click to view detailed party summary">
-              <div className="stat-icon">🌟</div>
-              <div className="stat-content">
-                <div className="stat-label">Party Level</div>
-                <div className="stat-number">4</div>
-              </div>
+        {party.length > 0 && (
+          <>
+            <CharacterCarousel
+              characters={party}
+              active={activeIndex}
+              setActive={setActive}
+              onOpen={openCharacter}
+            />
+            <div className="cc-select-bar">
+              <button type="button" className="cc-cta" onClick={openCharacter}>
+                <OpenIcon />
+                <span>Open <span className="cc-cta-name">{activeChar?.name}</span></span>
+              </button>
+              <div className="cc-hint">Swipe to choose · tap a card to open</div>
+            </div>
+          </>
+        )}
+
+        {/* Campaign stats — 4-up grid below the carousel */}
+        <div className="dash-stats">
+          <button
+            type="button"
+            className="dash-chip is-level"
+            onClick={() => navigate('/party-summary')}
+            title="View detailed party summary"
+          >
+            <span className="ic">🌟</span>
+            <span className="meta">
+              <span className="lbl">Party Level</span>
+              <span className="val">4</span>
+            </span>
           </button>
 
-            <button
-              className={`stat-card${locationLoreId ? ' clickable-stat-card' : ''}`}
-              onClick={locationLoreId ? () => openLore(locationLoreId) : undefined}
-              title={locationLoreId ? 'Click to view lore about this location' : undefined}
-            >
-              <div className="stat-icon">🗺️</div>
-              <div className="stat-content">
-                <div className="stat-label">Current Location</div>
-                <div className="stat-number">{currentLocation || '—'}</div>
-              </div>
-            </button>
+          <button
+            type="button"
+            className="dash-chip"
+            onClick={locationLoreId ? () => openLore(locationLoreId) : undefined}
+            title={locationLoreId ? 'View lore about this location' : undefined}
+          >
+            <span className="ic">🗺️</span>
+            <span className="meta">
+              <span className="lbl">Location</span>
+              <span className="val">{currentLocation || '—'}</span>
+            </span>
+          </button>
 
-            <button
-            className="stat-card clickable-stat-card"
-            onClick={() => navigateTo('/party-wealth')}
-            title="Click to view party inventory">
-              <div className="stat-icon">💰</div>
-              <div className="stat-content">
-                <div className="stat-label">Party Gold</div>
-                <div className="stat-number">{partyGold} gp</div>
-              </div>
-            </button>
+          <button
+            type="button"
+            className="dash-chip"
+            onClick={() => navigate('/party-wealth')}
+            title="View party wealth"
+          >
+            <span className="ic">💰</span>
+            <span className="meta">
+              <span className="lbl">Party Gold</span>
+              <span className="val">{partyGold} gp</span>
+            </span>
+          </button>
 
-            <button
-            className="stat-card clickable-stat-card"
-            onClick={() => navigateTo('/quests')}>
-              <span className="stat-icon">📜</span>
-              <span className="stat-number">Adventure</span>
-            </button>
-
-            <button
-            className="stat-card clickable-stat-card"
-            onClick={() => navigateTo('/bestiary')}
-            title="Browse creatures the party has encountered">
-              <span className="stat-icon">🐉</span>
-              <span className="stat-number">Bestiary</span>
-            </button>
-
-            {/* Golarion Calendar Button - Now using centralized game date */}
-            <button
-            className="stat-card clickable-stat-card calendar-card"
-            onClick={() => navigateTo('/calendar')}
-            title="View Golarion Calendar and current date">
-              <div className="stat-icon">📅</div>
-              <div className="stat-content">
-                <div className="stat-label">Current Date</div>
-                <div className="stat-number">{formatGameDate()}</div>
-              </div>
-            </button>
-          </div>
+          <button
+            type="button"
+            className="dash-chip"
+            onClick={() => navigate('/calendar')}
+            title="View the Golarion calendar"
+          >
+            <span className="ic">📅</span>
+            <span className="meta">
+              <span className="lbl">Date</span>
+              <span className="val">{formatGameDate()}</span>
+            </span>
+          </button>
         </div>
-        }
 
-      { <div className="dashboard-links">
-
-      </div> }
+        {/* Secondary nav */}
+        <nav className="dash-secondary">
+          <button type="button" className="dash-sec-btn" onClick={() => navigate('/quests')}>
+            <span className="ic">📜</span>
+            <span className="lb">Adventure</span>
+          </button>
+          <button type="button" className="dash-sec-btn" onClick={() => navigate('/bestiary')}>
+            <span className="ic">🐉</span>
+            <span className="lb">Bestiary</span>
+          </button>
+          <button type="button" className="dash-sec-btn" onClick={() => navigate('/calendar')}>
+            <span className="ic">📅</span>
+            <span className="lb">Calendar</span>
+          </button>
+        </nav>
+      </div>
     </div>
   );
 };
