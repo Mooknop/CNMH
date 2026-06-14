@@ -1,0 +1,6 @@
+# The lore vault is parsed by scripts/lib/loreVault.js and round-tripped by the
+# export/push scripts. Force LF on checkout (even with core.autocrlf=true) so the
+# committed format stays stable across platforms and re-exports produce no diff.
+# The parser also normalizes CRLF defensively (Obsidian on Windows can still
+# write CRLF on save), but pinning eol here keeps git-checked-out files clean.
+lore-vault/**/*.md text eol=lf
