@@ -67,7 +67,7 @@ export const MOON_PHASE_SYMBOLS = [
 const LUNAR_CYCLE_DAYS = 32;
 
 // Default clock seed: the campaign start date + an 8:00 morning start.
-const DEFAULT_CLOCK = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second: 0 };
+export const DEFAULT_CLOCK = { day: 5, month: 2, year: 4725, hour: 8, minute: 0, second: 0 };
 
 /**
  * Advance a { day, month, year } date forward by a whole number of days,

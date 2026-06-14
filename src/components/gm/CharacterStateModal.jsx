@@ -4,7 +4,7 @@ import ConfirmDialog from '../shared/ConfirmDialog';
 import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
-import { useGameDate } from '../../contexts/GameDateContext';
+import { DEFAULT_CLOCK } from '../../contexts/GameDateContext';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
 import { partitionLiveState } from '../../utils/liveStateRegistry';
 import { performDailyPrep } from '../../utils/dailyPrep';
@@ -223,7 +223,6 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
   const { characters } = useContent();
   const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
-  const { gameDate, time } = useGameDate();
   const [selectedId, setSelectedId] = useState('');
   const [confirm, setConfirm] = useState(null);
   const { liveState, refresh } = useCharacterLiveState(selectedId || null);
@@ -267,7 +266,9 @@ const CharacterStateModal = ({ isOpen, onClose }) => {
 
   const fullRestore = () => {
     setConfirm(null);
-    const nowSecs = toGameSeconds({ ...gameDate, ...time });
+    // Read the shared clock straight off the session (cnmh_clock_global) so the
+    // modal doesn't depend on GameDateProvider being mounted above it.
+    const nowSecs = toGameSeconds(getState('global', 'clock') || DEFAULT_CLOCK);
     const { summary } = performDailyPrep({
       character,
       getState,

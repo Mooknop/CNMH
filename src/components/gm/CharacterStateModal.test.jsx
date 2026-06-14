@@ -28,13 +28,6 @@ vi.mock('../../contexts/SessionContext', () => ({ useSession: () => h.sessionApi
 vi.mock('../../hooks/useSessionLog', () => ({
   useSessionLog: () => ({ appendEvent: h.appendEvent, log: [] }),
 }));
-vi.mock('../../contexts/GameDateContext', () => ({
-  useGameDate: () => ({
-    gameDate: { year: 4725, month: 0, day: 1 },
-    time: { hour: 8, minute: 0, second: 0 },
-  }),
-}));
-
 import { useContent } from '../../contexts/ContentContext';
 import CharacterStateModal from './CharacterStateModal';
 
