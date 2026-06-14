@@ -1,7 +1,10 @@
 import React from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
+import { useGameDate } from '../../contexts/GameDateContext';
 import { formatLiveValue } from '../../utils/liveStateRegistry';
+import { collectCooldowns, collectImmunities } from '../../utils/partyCooldowns';
+import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
 import { getCharacterColor } from '../../utils/CharacterUtils';
 
 // ─── HP status tier ──────────────────────────────────────────
@@ -57,8 +60,9 @@ const reactionChip = (turnstate) => {
 
 // ─── Single-character row ────────────────────────────────────
 // Hooks must be called at component top level — one PartyMemberRow
-// per character so each can subscribe to its own live state.
-const PartyMemberRow = ({ character, color }) => {
+// per character so each can subscribe to its own live state. nowSecs is
+// threaded from the panel so every row reads one shared clock snapshot.
+const PartyMemberRow = ({ character, color, nowSecs }) => {
   const { liveState } = useCharacterLiveState(character.id);
   const hp = liveState.hp;
 
@@ -85,6 +89,12 @@ const PartyMemberRow = ({ character, color }) => {
     .filter((p) => p.type in liveState)
     .map((p) => ({ ...p, value: formatLiveValue(p.type, liveState[p.type], character) }))
     .filter((p) => !EMPTY_VALUES.has(String(p.value).trim().toLowerCase()));
+
+  // Clock-derived ready-at timers (#230 slice 2): window cooldowns from the
+  // freq ledger + ability/treat-wounds immunities from effects.
+  const cooldowns  = collectCooldowns(character, liveState.freq, { nowSecs });
+  const immunities = collectImmunities(liveState.effects, nowSecs);
+  const hasTimers  = cooldowns.length > 0 || immunities.length > 0;
 
   // --x-theme: per-character accent (allowed dynamic bridge)
   // --hp-pct: fill width as a CSS custom property (avoids inline width)
@@ -153,6 +163,35 @@ const PartyMemberRow = ({ character, color }) => {
           ))}
         </ul>
       )}
+
+      {hasTimers && (
+        <ul className="gm-party-timers" aria-label={`timers-${character.id}`}>
+          {cooldowns.map((c) => (
+            <li
+              className="gm-party-timer gm-party-timer--cooldown"
+              key={`cd-${c.key}`}
+              data-testid={`party-cooldown-${character.id}-${c.key}`}
+            >
+              <span className="gm-party-timer-name">{c.name}</span>
+              <span className="gm-party-timer-when">
+                ready {formatAvailableAt(c.availableAtSecs, nowSecs)}
+              </span>
+            </li>
+          ))}
+          {immunities.map((i) => (
+            <li
+              className="gm-party-timer gm-party-timer--immunity"
+              key={`imm-${i.id}`}
+              data-testid={`party-immunity-${character.id}-${i.id}`}
+            >
+              <span className="gm-party-timer-name">Immune: {i.label}</span>
+              <span className="gm-party-timer-when">
+                until {formatAvailableAt(i.expireAtSecs, nowSecs)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </li>
   );
 };
@@ -160,7 +199,11 @@ const PartyMemberRow = ({ character, color }) => {
 // ─── Party Panel ─────────────────────────────────────────────
 const PartyPanel = () => {
   const { characters } = useContent();
+  const { gameDate, time } = useGameDate();
   const roster = Array.isArray(characters) ? characters : [];
+
+  // One shared clock snapshot for every row's cooldown/immunity math.
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
 
   return (
     <section className="gm-dash-panel gm-party-panel" aria-label="Party">
@@ -174,6 +217,7 @@ const PartyPanel = () => {
               key={c.id}
               character={c}
               color={getCharacterColor(i)}
+              nowSecs={nowSecs}
             />
           ))}
         </ul>
