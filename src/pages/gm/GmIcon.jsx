@@ -79,6 +79,12 @@ const PATHS = {
       <path d="M12 8v8M8 12h8" />
     </>
   ),
+  tag: (
+    <>
+      <path d="M3 11.5 11.5 3H19a2 2 0 0 1 2 2v7.5L12.5 21a2 2 0 0 1-2.8 0L3 14.3a2 2 0 0 1 0-2.8z" />
+      <circle cx="16.5" cy="7.5" r="1.2" />
+    </>
+  ),
 };
 
 const GmIcon = ({ name, className = '' }) => {
