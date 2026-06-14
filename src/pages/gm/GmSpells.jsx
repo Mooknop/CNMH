@@ -13,6 +13,8 @@ import {
   immunityToForm, immunityFromForm, ImmunityControl,
 } from '../../components/gm/AbilitySubforms';
 import PageEditorShell from '../../components/gm/PageEditorShell';
+import TraitsField from '../../components/shared/TraitsField';
+import { toList } from '../../utils/traitRefs';
 import './gm.css';
 
 // Spell catalog editor. Shape mirrors `src/data/spells.json` and the nested
@@ -25,11 +27,6 @@ const toInt = (v) => {
   const n = parseInt(v, 10);
   return Number.isNaN(n) ? 0 : n;
 };
-const toList = (csv) =>
-  String(csv || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
 
 const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration', 'description'];
 
@@ -190,11 +187,11 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </div>
       </div>
       <div className="form-group">
-        <label>Traits (comma-separated)</label>
-        <input
-          aria-label="traits"
+        <label>Traits</label>
+        <TraitsField
+          ariaLabel="traits"
           value={e.traits}
-          onChange={(ev) => set({ traits: ev.target.value })}
+          onChange={(v) => set({ traits: v })}
         />
       </div>
       <div className="gm-row">

@@ -8,6 +8,8 @@ import ImageField from './ImageField';
 import EffectsSubform, { effectsToForm, effectsFromForm } from './EffectsSubform';
 import { SKILL_ABILITY_MAP } from '../../utils/CharacterUtils';
 import { TRIGGER_TYPES } from '../../utils/reactionTriggers';
+import TraitsField from '../shared/TraitsField';
+import { toList } from '../../utils/traitRefs';
 
 export const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -17,11 +19,9 @@ export const toNum = (v) => {
   const n = parseFloat(v);
   return Number.isNaN(n) ? 0 : n;
 };
-export const toList = (csv) =>
-  String(csv || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+// `toList` now lives in utils/traitRefs (shared with the chip input); re-export
+// it here to keep this module's long-standing public surface.
+export { toList };
 
 // ----- Roll source -----------------------------------------------------------
 // Codec for the optional ability.roll config object.
@@ -767,11 +767,11 @@ export const AbilitySubform = ({ value, onChange, idPrefix }) => {
         onChange={(v) => onChange({ ...value, variants: v })}
       />
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input
-          aria-label={`${idPrefix}-traits`}
+        <label>traits</label>
+        <TraitsField
+          ariaLabel={`${idPrefix}-traits`}
           value={value.traits}
-          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+          onChange={(v) => onChange({ ...value, traits: v })}
         />
       </div>
       <div className="form-group">
@@ -1087,11 +1087,11 @@ export const FamiliarSubform = ({ value, onChange, idPrefix }) => {
         </div>
       </div>
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input
-          aria-label={`${idPrefix}-traits`}
+        <label>traits</label>
+        <TraitsField
+          ariaLabel={`${idPrefix}-traits`}
           value={value.traits}
-          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+          onChange={(v) => onChange({ ...value, traits: v })}
         />
       </div>
       <div className="form-group">
@@ -1345,11 +1345,11 @@ export const AnimalCompanionSubform = ({ value, onChange, idPrefix }) => {
         />
       </div>
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input
-          aria-label={`${idPrefix}-traits`}
+        <label>traits</label>
+        <TraitsField
+          ariaLabel={`${idPrefix}-traits`}
           value={value.traits}
-          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+          onChange={(v) => onChange({ ...value, traits: v })}
         />
       </div>
       <div className="form-group">
@@ -1452,11 +1452,11 @@ export const FeatSubform = ({ value, onChange, idPrefix }) => {
         </div>
       </div>
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input
-          aria-label={`${idPrefix}-traits`}
+        <label>traits</label>
+        <TraitsField
+          ariaLabel={`${idPrefix}-traits`}
           value={value.traits}
-          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+          onChange={(v) => onChange({ ...value, traits: v })}
         />
       </div>
       <div className="form-group">
@@ -1553,11 +1553,11 @@ export const StrikeSubform = ({ value, onChange, idPrefix }) => {
         onChange={(v) => onChange({ ...value, variants: v })}
       />
       <div className="form-group">
-        <label>traits (comma-separated)</label>
-        <input
-          aria-label={`${idPrefix}-traits`}
+        <label>traits</label>
+        <TraitsField
+          ariaLabel={`${idPrefix}-traits`}
           value={value.traits}
-          onChange={(e) => onChange({ ...value, traits: e.target.value })}
+          onChange={(v) => onChange({ ...value, traits: v })}
         />
       </div>
       <div className="form-group">
