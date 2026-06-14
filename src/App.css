@@ -51,7 +51,8 @@
   top: 22px;
 }
 
-.app-staging .character-sheet-page {
+.app-staging .character-sheet-page,
+.app-staging .dashboard {
   top: 74px; /* 22px banner + 52px navbar */
 }
 

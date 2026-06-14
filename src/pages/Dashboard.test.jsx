@@ -76,9 +76,9 @@ describe('Dashboard', () => {
     expect(screen.getByText('4')).toBeInTheDocument();
   });
 
-  it('should display current location stat', () => {
+  it('should display location stat', () => {
     renderWithRouter(<Dashboard />);
-    expect(screen.getByText('Current Location')).toBeInTheDocument();
+    expect(screen.getByText('Location')).toBeInTheDocument();
     expect(screen.getByText('Absalom')).toBeInTheDocument();
   });
 
@@ -98,25 +98,23 @@ describe('Dashboard', () => {
     expect(screen.getByText('Arodus 1, 4719')).toBeInTheDocument();
   });
 
-  it('should have clickable stat cards that navigate', () => {
+  it('should have clickable stat chips that navigate', () => {
     renderWithRouter(<Dashboard />);
-    
+
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);
   });
 
-  it('should render stats grid', () => {
+  it('should render the campaign stats strip', () => {
     const { container } = renderWithRouter(<Dashboard />);
-    const statsGrid = container.querySelector('.stats-grid');
-    expect(statsGrid).toBeInTheDocument();
+    const stats = container.querySelector('.dash-stats');
+    expect(stats).toBeInTheDocument();
   });
 
-  it('should display stat icons', () => {
-    renderWithRouter(<Dashboard />);
-    
-    // Check for emoji icons
-    const dashboardContent = screen.getByText('The Chaotic Neutral Milk Hotel').parentElement;
-    expect(dashboardContent).toBeInTheDocument();
+  it('should render the secondary nav row', () => {
+    const { container } = renderWithRouter(<Dashboard />);
+    const secondary = container.querySelector('.dash-secondary');
+    expect(secondary).toBeInTheDocument();
   });
 
   it('should contain main dashboard section', () => {
@@ -125,9 +123,9 @@ describe('Dashboard', () => {
     expect(dashboard).toBeInTheDocument();
   });
 
-  it('should contain content section for stats', () => {
+  it('should render the mobile column', () => {
     const { container } = renderWithRouter(<Dashboard />);
-    const contentSection = container.querySelector('.content-section');
-    expect(contentSection).toBeInTheDocument();
+    const col = container.querySelector('.dash-col');
+    expect(col).toBeInTheDocument();
   });
 });
