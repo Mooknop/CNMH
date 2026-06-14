@@ -1,11 +1,13 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import PartyPanel from './PartyPanel';
 
 // ─── mocks ───────────────────────────────────────────────────
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useCharacterLiveState', () => ({ useCharacterLiveState: vi.fn() }));
 vi.mock('../../contexts/GameDateContext', () => ({ useGameDate: vi.fn() }));
+vi.mock('../../contexts/SessionContext', () => ({ useSession: vi.fn() }));
+vi.mock('../../hooks/useSessionLog', () => ({ useSessionLog: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getCharacterColor: (i) => ['#c03030', '#3060c0', '#30a060'][i % 3],
 }));
@@ -13,11 +15,18 @@ vi.mock('../../utils/CharacterUtils', () => ({
 import { useContent } from '../../contexts/ContentContext';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
 import { useGameDate } from '../../contexts/GameDateContext';
+import { useSession } from '../../contexts/SessionContext';
+import { useSessionLog } from '../../hooks/useSessionLog';
 import { toGameSeconds } from '../../utils/gameTime';
 
 // Fixed campaign clock → a stable nowSecs for cooldown/immunity math.
 const CLOCK = { year: 4725, month: 5, day: 10, hour: 12, minute: 0, second: 0 };
 const NOW = toGameSeconds(CLOCK);
+
+// Shared session/log spies, reset per test.
+const sendUpdate = vi.fn();
+const appendEvent = vi.fn();
+const getState = vi.fn(() => undefined);
 
 // ─── fixtures ────────────────────────────────────────────────
 const THORN   = { id: 'thorn',   name: 'Thorn',   maxHp: 50 };
@@ -39,11 +48,16 @@ afterEach(() => vi.restoreAllMocks());
 
 // Default: two characters, full HP for each
 beforeEach(() => {
+  sendUpdate.mockClear();
+  appendEvent.mockClear();
+  getState.mockClear().mockReturnValue(undefined);
   useContent.mockReturnValue({ characters: [THORN, PELLIAS] });
   useGameDate.mockReturnValue({
     gameDate: { year: CLOCK.year, month: CLOCK.month, day: CLOCK.day },
     time: { hour: CLOCK.hour, minute: CLOCK.minute, second: CLOCK.second },
   });
+  useSession.mockReturnValue({ getState, sendUpdate });
+  useSessionLog.mockReturnValue({ appendEvent });
   mockLiveState({
     thorn:   { hp: FULL_HP(THORN) },
     pellias: { hp: FULL_HP(PELLIAS) },
@@ -262,6 +276,87 @@ describe('PartyPanel', () => {
       });
       render(<PartyPanel />);
       expect(screen.queryByTestId('party-cooldown-thorn-eld-flare')).not.toBeInTheDocument();
+    });
+  });
+
+  // ── Inline quick actions (#230 slice 3) ──
+  describe('inline quick actions', () => {
+    it('nudges a hero-point chip ±1 and logs it', () => {
+      mockLiveState({ thorn: { hp: FULL_HP(THORN), heropoints: 1 } });
+      render(<PartyPanel />);
+      fireEvent.click(screen.getByLabelText('increase Hero for Thorn'));
+      expect(sendUpdate).toHaveBeenCalledWith('thorn', 'heropoints', 2);
+      expect(appendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'gm', text: expect.stringContaining('Hero points to 2') }),
+      );
+    });
+
+    it('disables the decrement at zero', () => {
+      mockLiveState({ thorn: { hp: FULL_HP(THORN), heropoints: 0 } });
+      render(<PartyPanel />);
+      expect(screen.getByLabelText('decrease Hero for Thorn')).toBeDisabled();
+    });
+
+    it('does not offer ± on a non-nudgeable chip (staff has no clear max)', () => {
+      mockLiveState({ thorn: { hp: FULL_HP(THORN), staff: 2 } });
+      render(<PartyPanel />);
+      expect(screen.queryByLabelText('increase Staff for Thorn')).not.toBeInTheDocument();
+    });
+
+    it('ends an active stance pill and logs it', () => {
+      mockLiveState({ thorn: { hp: FULL_HP(THORN), stance: { active: true, name: 'Mountain Stance' } } });
+      render(<PartyPanel />);
+      fireEvent.click(screen.getByLabelText('end Stance for Thorn'));
+      expect(sendUpdate).toHaveBeenCalledWith('thorn', 'stance', { active: false, name: null, ts: 0 });
+      expect(appendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('cleared Stance') }),
+      );
+    });
+
+    it('clears a cooldown from the ledger', () => {
+      mockLiveState({
+        thorn: { hp: FULL_HP(THORN), freq: { 'eld-flare': [{ per: 'hour', gameSecs: NOW - 600 }] } },
+      });
+      render(<PartyPanel />);
+      fireEvent.click(screen.getByLabelText('clear cooldown Eld Flare for Thorn'));
+      expect(sendUpdate).toHaveBeenCalledWith('thorn', 'freq', {});
+    });
+
+    it('ends an immunity by removing its effect entry', () => {
+      mockLiveState({
+        thorn: {
+          hp: FULL_HP(THORN),
+          effects: [{ id: 'i1', effectId: 'treat-wounds-immunity', source: 'Battle Medicine', expireAtSecs: NOW + 3600 }],
+        },
+      });
+      render(<PartyPanel />);
+      fireEvent.click(screen.getByLabelText('end immunity Battle Medicine for Thorn'));
+      expect(sendUpdate).toHaveBeenCalledWith('thorn', 'effects', []);
+    });
+  });
+
+  // ── Party-wide encounter-end sweep (#230 slice 3) ──
+  describe('encounter-end sweep', () => {
+    it('runs the sweep for every PC after confirmation and logs once', () => {
+      // One PC has a dirty stance the sweep should clear.
+      getState.mockImplementation((id, type) =>
+        id === 'thorn' && type === 'stance' ? { active: true, name: 'Mountain Stance' } : undefined,
+      );
+      render(<PartyPanel />);
+      fireEvent.click(screen.getByRole('button', { name: 'End-encounter sweep' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Sweep party' }));
+
+      expect(sendUpdate).toHaveBeenCalledWith('thorn', 'stance', { active: false, name: null, ts: 0 });
+      expect(appendEvent).toHaveBeenCalledTimes(1);
+      expect(appendEvent).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('cleared turn/combat state') }),
+      );
+    });
+
+    it('hides the sweep button when the roster is empty', () => {
+      useContent.mockReturnValue({ characters: [] });
+      render(<PartyPanel />);
+      expect(screen.queryByRole('button', { name: 'End-encounter sweep' })).not.toBeInTheDocument();
     });
   });
 });
