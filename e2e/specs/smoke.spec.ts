@@ -16,13 +16,17 @@ test('public content endpoint returns a snapshot', async ({ request }) => {
 });
 
 test('app shell loads', async ({ page }) => {
+  // Register the error listener BEFORE navigating so load-time crashes are caught.
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+
   await page.goto('/');
   // Nav bar is the first meaningful structural element
   await expect(page.locator('nav')).toBeVisible();
-  // No JS crash on initial load
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  await page.waitForLoadState('networkidle');
+  // `networkidle` never settles under the persistent session relay WS; wait for
+  // the document load + a concrete app-ready signal (the SyncStatus badge) instead.
+  await page.waitForLoadState('load');
+  await expect(page.getByTestId('sync-status')).toBeVisible();
   expect(errors).toHaveLength(0);
 });
 

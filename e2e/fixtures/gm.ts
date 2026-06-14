@@ -1,6 +1,31 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, type APIRequestContext, type APIResponse } from '@playwright/test';
+import { waitForContent } from '../helpers/content';
 
 export { expect };
+
+// POST with retry on transient 5xx / connection errors. The local `wrangler dev`
+// stack occasionally restarts mid-request ("Your worker restarted mid-request",
+// 503), and staging has brief blips; reset/seed are idempotent, so retrying is
+// safe and turns those infra hiccups from a test failure into a non-event.
+async function postWithRetry(
+  request: APIRequestContext,
+  url: string,
+  opts: Parameters<APIRequestContext['post']>[1] = {},
+  attempts = 4,
+): Promise<APIResponse> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await request.post(url, opts);
+      if (res.status() < 500) return res;
+      lastErr = new Error(`${url} → ${res.status()} ${await res.text()}`);
+    } catch (err) {
+      lastErr = err; // connection reset while the worker is restarting
+    }
+    await new Promise((r) => setTimeout(r, 250 * (i + 1)));
+  }
+  throw new Error(`${url} failed after ${attempts} attempts: ${String(lastErr)}`);
+}
 
 type SeedCollections = {
   quest?: object[];
@@ -31,7 +56,7 @@ export const test = base.extend<{
       if (opts.keepSession) params.set('keep_session', '1');
       if (opts.keepContent) params.set('keep_content', '1');
       const url = `/api/gm/_test/reset${params.size ? `?${params}` : ''}`;
-      const res = await request.post(url);
+      const res = await postWithRetry(request, url);
       if (!res.ok()) {
         throw new Error(`Staging reset failed: ${res.status()} ${await res.text()}`);
       }
@@ -50,7 +75,7 @@ export const test = base.extend<{
 
   seed: async ({ request }, use) => {
     await use(async (collections, opts = {}) => {
-      const res = await request.post('/api/gm/seed', {
+      const res = await postWithRetry(request, '/api/gm/seed', {
         data: { force: opts.force ?? true, collections },
       });
       if (!res.ok()) {
@@ -63,6 +88,21 @@ export const test = base.extend<{
       const body = await res.json();
       if (body.ok !== true) {
         throw new Error(`Staging seed returned unexpected body: ${JSON.stringify(body)}`);
+      }
+
+      // Propagation barrier: the seed POST commits to the CampaignContent DO, but
+      // the app reads its content from the same DO on `page.goto`. Block here until
+      // every seeded doc is visible in /api/content so no spec can navigate ahead
+      // of its own data — the root cause of the seed→goto→interact flake class.
+      // Safe for all collections: /api/content always returns every collection key
+      // (snapshot() inits them to []), so findInCollection resolves by id.
+      for (const [collection, docs] of Object.entries(collections)) {
+        if (!Array.isArray(docs)) continue;
+        for (const doc of docs) {
+          const id = (doc as { id?: string })?.id;
+          if (!id) continue;
+          await waitForContent(request, collection, id, (entry) => !!entry);
+        }
       }
     });
   },

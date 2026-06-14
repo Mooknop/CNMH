@@ -258,6 +258,8 @@ export const createCalendarHelpers = ({
   const getEventsForDate = (year, month, day) => {
     const standardEvents = timelineData.filter(event => {
       if (event.recurring) return false;
+      // A malformed event without a date must not crash the whole calendar render.
+      if (!event.date) return false;
       if (event.date.year && event.date.year === year && event.date.month === month && event.date.day === day) return true;
       if (!event.date.year && event.date.month === month && event.date.day === day) return true;
       return false;

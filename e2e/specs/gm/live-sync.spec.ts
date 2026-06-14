@@ -56,9 +56,14 @@ test.describe('GM live-sync', () => {
         expect(pageB.getByRole('button', { name: '+ New quest' })).toBeVisible(),
       ]);
 
-      // Give the WebSocket subscription on each context a brief moment to
-      // settle. Without this, the broadcast can race the second tab's WS open.
-      await pageA.waitForTimeout(1000);
+      // Wait until BOTH tabs' relay subscriptions are live before broadcasting —
+      // otherwise the broadcast can race the second tab's WS open and pageB never
+      // receives it. The SyncStatus badge exposes `connected` as a DOM attribute;
+      // [data-connected="true"] is the deterministic signal (replaces a fixed sleep).
+      await Promise.all([
+        expect(pageA.getByTestId('sync-status')).toHaveAttribute('data-connected', 'true'),
+        expect(pageB.getByTestId('sync-status')).toHaveAttribute('data-connected', 'true'),
+      ]);
 
       // --- pageA: create a quest ---
       await pageA.getByRole('button', { name: '+ New quest' }).click();
