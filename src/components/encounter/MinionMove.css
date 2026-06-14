@@ -1,0 +1,35 @@
+/* Minion token movement pad (#362). Mirrors the exploration move panel layout;
+   the Move button inherits .btn-secondary theming. */
+.mm-panel {
+  margin-top: var(--space-2);
+}
+
+.mm-move-btn {
+  font-size: var(--font-size-sm, 0.85rem);
+}
+
+.mm-status {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  padding: var(--space-2) 0;
+  text-align: center;
+}
+
+.mm-status--refresh {
+  font-size: var(--text-xs);
+  opacity: 0.6;
+  margin-bottom: var(--space-1);
+}
+
+.mm-distance {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  text-align: center;
+  padding: var(--space-1) 0;
+}
+
+.mm-distance strong {
+  color: var(--theme-text, var(--shell-text));
+}

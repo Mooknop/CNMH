@@ -1,9 +1,9 @@
 // Movement unit tests — reachable-square computation + confirm/move write-back.
 // Geometry logic lives here; raw canvas/actor reads go through the adapter.
 
-import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
+import { initMovement, handleMoveRequest, handleMoveConfirm, resolveToken } from './movement.js';
 import { updateActorMap } from './encounter.js';
-import { makeActor, makeToken } from './test/foundryMock.js';
+import { makeActor, makeToken, makeGame } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
 let send;
@@ -151,5 +151,73 @@ describe('handleMoveConfirm', () => {
     await handleMoveConfirm('Nobody', { destination: { col: 6, row: 5 }, ts: 1 });
     expect(token.document.update).not.toHaveBeenCalled();
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+// Minion movement (#362): a `<ownerCharId>-<role>` id isn't in the PC actor map;
+// resolveToken falls back to the ownership-derived minion link → the minion's own
+// Foundry actor token, so the whole movement state machine works unchanged.
+describe('minion movement', () => {
+  // Ashka (PC, mapped) + her companion Zevira (player-owned NPC) with a token on
+  // the scene at grid (5,5). Build the world via makeGame so getMinionActorLinks
+  // can iterate actors/users .contents.
+  function setupMinion({ speed = 20 } = {}) {
+    const GM = { id: 'gm', isGM: true };
+    const PLAYER = { id: 'player1', isGM: false };
+    const OWNED = { gm: 3, player1: 3 };
+    const ashka = makeActor({
+      id: 'actor-ashka', name: 'Ashka', type: 'character',
+      hasPlayerOwner: true, ownership: OWNED,
+    });
+    const zevToken = makeToken({ id: 'tok-zev', x: 500, y: 500 });
+    const zevira = makeActor({
+      id: 'actor-zev', name: 'Zevira', type: 'npc',
+      hasPlayerOwner: true, ownership: OWNED, speed, tokens: [zevToken],
+    });
+    global.game = makeGame({ actors: [ashka, zevira], users: [GM, PLAYER] });
+    updateActorMap({ 'actor-ashka': 'Ashka' });
+    global.canvas.tokens.placeables = [zevToken];
+    return { zevToken, zevira };
+  }
+
+  test('resolveToken finds the minion token via its <owner>-<role> id', () => {
+    const { zevToken } = setupMinion();
+    expect(resolveToken('Ashka-companion')).toBe(zevToken);
+  });
+
+  test("resolveToken returns null for a minion that isn't linked", () => {
+    setupMinion();
+    expect(resolveToken('Ashka-familiar')).toBeNull();
+  });
+
+  test('handleMoveRequest pushes opts under the minion id, using the minion Speed', async () => {
+    setupMinion({ speed: 20 });
+    await handleMoveRequest('Ashka-companion', { moveType: 'stride', ts: 7 });
+
+    expect(send).toHaveBeenCalledTimes(1);
+    const [charId, key, opts] = send.mock.calls[0];
+    expect(charId).toBe('Ashka-companion');
+    expect(key).toBe('moveopts');
+    expect(opts.origin).toEqual({ col: 5, row: 5 });
+    expect(opts.speed).toBe(20);
+    expect(opts.reqTs).toBe(7);
+    expect(opts.reachable.length + opts.blocked.length).toBe(8);
+  });
+
+  test('handleMoveConfirm moves the minion token and reports movedone', async () => {
+    const { zevToken } = setupMinion();
+    await handleMoveConfirm('Ashka-companion', {
+      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 9,
+    });
+
+    expect(zevToken.document.update).toHaveBeenCalledWith(
+      { x: 600, y: 500 },
+      { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
+    );
+    expect(send).toHaveBeenCalledWith('Ashka-companion', 'movedone', {
+      newPosition: { col: 6, row: 5, x: 600, y: 500 },
+      feetMoved: 5,
+      reqTs: 9,
+    });
   });
 });
