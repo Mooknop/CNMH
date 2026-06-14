@@ -37,6 +37,7 @@ import GmEncounter from './pages/gm/GmEncounter';
 import GmImages from './pages/gm/GmImages';
 import GmTheme from './pages/gm/GmTheme';
 import GmMonsters from './pages/gm/GmMonsters';
+import GmTraits from './pages/gm/GmTraits';
 import './App.css';
 
 const IS_STAGING = import.meta.env.VITE_ENVIRONMENT === 'staging';
@@ -113,6 +114,7 @@ function App() {
                           <Route path="catalog/effects" element={<GmEffects />} />
                           <Route path="catalog/images" element={<GmImages />} />
                           <Route path="catalog/monsters" element={<GmMonsters />} />
+                          <Route path="catalog/traits" element={<GmTraits />} />
 
                           {/* Top-level areas */}
                           <Route path="characters" element={<GmCharacters />} />
@@ -130,6 +132,7 @@ function App() {
                           <Route path="spells" element={<Navigate to="/gm/catalog/spells" replace />} />
                           <Route path="effects" element={<Navigate to="/gm/catalog/effects" replace />} />
                           <Route path="images" element={<Navigate to="/gm/catalog/images" replace />} />
+                          <Route path="traits" element={<Navigate to="/gm/catalog/traits" replace />} />
                         </Route>
                       </Routes>
                     </main>
