@@ -40,6 +40,26 @@ function parseWikilink(link) {
   return target.trim();
 }
 
+// Pull every inline `[[Target]]` / `[[Target|alias]]` out of a markdown body and
+// return the resolution targets (titles). The slice-2 push unions these with the
+// `related:` frontmatter list (epic #285: "frontmatter ∪ inline body"), so an
+// entry that merely *mentions* another in prose still forms a relation. Order is
+// first-seen; duplicates are removed.
+function extractBodyWikilinks(body) {
+  const seen = new Set();
+  const out = [];
+  const re = /\[\[([^\]]+)\]\]/g;
+  let m;
+  while ((m = re.exec(String(body || ''))) !== null) {
+    const target = m[1].split('|')[0].trim();
+    if (target && !seen.has(target)) {
+      seen.add(target);
+      out.push(target);
+    }
+  }
+  return out;
+}
+
 // Build the markdown file for one lore doc. `idToTitle` maps related ids to
 // titles; related ids with no known title (dead pointers the app already
 // ignores via `.filter(Boolean)`) are dropped — they can't be valid wikilinks.
@@ -99,4 +119,11 @@ function parseFile(markdown, { category, filenameTitle } = {}) {
   return doc;
 }
 
-module.exports = { sanitizeFilename, parseWikilink, serializeDoc, splitFrontmatter, parseFile };
+module.exports = {
+  sanitizeFilename,
+  parseWikilink,
+  extractBodyWikilinks,
+  serializeDoc,
+  splitFrontmatter,
+  parseFile,
+};
