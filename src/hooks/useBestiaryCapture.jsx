@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useEncounter } from './useEncounter';
+import { useSyncedState } from './useSyncedState';
 import { useContent } from '../contexts/ContentContext';
 import { useGmAuth } from './useGmAuth';
 import { saveDocument } from '../utils/gmApi';
@@ -20,19 +21,28 @@ export function useBestiaryCapture() {
   const { encounter } = useEncounter();
   const { monsters } = useContent();
   const { isGm } = useGmAuth();
-  // creatureKeys already captured this mount — avoids a PUT storm when the
-  // content store re-broadcasts our own write back through `monsters`.
+  // The party's current location is a Lore entry (GM-set via SetLocationModal).
+  // We stamp it onto each capture so the bestiary entry can link back to the
+  // location's lore page, and the lore page can list monsters fought there (#334).
+  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  // `creatureKey@locationLoreId` pairs already captured this mount — avoids a PUT
+  // storm when the content store re-broadcasts our own write back through
+  // `monsters`, while still recording a fresh location if the same creature is
+  // re-fought somewhere new this session.
   const writtenRef = useRef(new Set());
 
   useEffect(() => {
     if (!isGm) return;
     const order = encounter?.order || [];
+    const loreId = campaign?.locationLoreId || '';
+    const locName = campaign?.location || '';
     for (const e of order) {
       if (e.kind !== 'enemy') continue;
       const key = e.creatureKey;
       if (!key) continue; // manual/homebrew enemies have no stable key
-      if (writtenRef.current.has(key)) continue;
-      writtenRef.current.add(key);
+      const guard = `${key}@${loreId}`;
+      if (writtenRef.current.has(guard)) continue;
+      writtenRef.current.add(guard);
 
       const existing = monsters.find((m) => m.id === key) || {};
       const now = Date.now();
@@ -48,10 +58,16 @@ export function useBestiaryCapture() {
       if (existing.descriptionOverride !== undefined) {
         doc.descriptionOverride = existing.descriptionOverride;
       }
+      // Accrue the location this creature was fought at, keyed by lore id.
+      const locations = { ...(existing.locations || {}) };
+      if (loreId) {
+        locations[loreId] = { name: locName, lastSeenAt: now };
+      }
+      doc.locations = locations;
       // Fire-and-forget; non-GM clients are blocked server-side too.
       saveDocument('monster', key, doc).catch(() => {});
     }
-  }, [isGm, encounter, monsters]);
+  }, [isGm, encounter, monsters, campaign]);
 }
 
 export default useBestiaryCapture;

@@ -72,6 +72,14 @@ const Dashboard = () => {
               <span className="stat-number">Adventure</span>
             </button>
 
+            <button
+            className="stat-card clickable-stat-card"
+            onClick={() => navigateTo('/bestiary')}
+            title="Browse creatures the party has encountered">
+              <span className="stat-icon">🐉</span>
+              <span className="stat-number">Bestiary</span>
+            </button>
+
             {/* Golarion Calendar Button - Now using centralized game date */}
             <button
             className="stat-card clickable-stat-card calendar-card"

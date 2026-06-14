@@ -14,6 +14,7 @@ import PartyWealth from './pages/PartyWealth';
 import GolarionCalendar from './pages/GolarionCalendar';
 import HistoryTimeline from './pages/HistoryTimeline';
 import PartySummary from './components/party/PartySummary';
+import BestiaryBrowser from './pages/BestiaryBrowser';
 import LoreDrawer from './components/shared/LoreDrawer';
 import ActorMapSync from './components/encounter/ActorMapSync';
 import EncounterClockSync from './components/encounter/EncounterClockSync';
@@ -93,6 +94,8 @@ function App() {
                         <Route path="/calendar" element={<GolarionCalendar />} />
                         <Route path="/timeline" element={<HistoryTimeline />} />
                         <Route path="/party-summary" element={<PartySummary />} />
+                        <Route path="/bestiary" element={<BestiaryBrowser />} />
+                        <Route path="/bestiary/:creatureKey" element={<BestiaryBrowser />} />
                         <Route path="/gm" element={<GmLayout />}>
                           <Route index element={<GmDashboard />} />
 
