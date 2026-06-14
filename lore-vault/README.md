@@ -5,10 +5,10 @@ This folder is the **source of truth for lore content** in CNMH. It is a plain
 per lore entry, edited in Obsidian (or any text editor), committed as a
 content-only change, and synced to the live `CampaignContent` Durable Object.
 
-Part of epic [#285](https://github.com/Mooknop/CNMH/issues/285). This slice
-(#286) sets up the format and the one-time export. The push-to-DO sync is a
-follow-up slice (#287); until then, edits here are committed but not yet
-auto-published.
+Part of epic [#285](https://github.com/Mooknop/CNMH/issues/285). The format and
+one-time export landed in #286; the push-to-DO sync (#287) makes this vault the
+**write path**: edit → commit → `npm run lore:push` → the live app updates
+instantly (see [Publishing edits](#publishing-edits-vault--do)).
 
 ## File layout
 
@@ -63,8 +63,57 @@ body links and the `related:` frontmatter list feed the app's
 Connections / Referenced By panels and Obsidian's own graph + backlinks.
 
 Dead links (a wikilink or related id with no matching entry) are dropped by the
-export and will be flagged by the sync script. The old DO data had a number of
-these dangling pointers; the export prints them when it runs.
+export and **fail the push** (a wikilink that resolves to no vault file is a hard
+error). The old DO data had a number of dangling pointers; the export prints them
+when it runs.
+
+## Publishing edits (vault → DO)
+
+`npm run lore:push` parses the vault, validates it, diffs against the live DO, and
+PUT/DELETEs only the entries that changed. Per-entity writes broadcast to
+connected clients, so a tab at the table updates **without a reload** — no deploy,
+no force-reseed.
+
+```bash
+npm run lore:push -- --dry-run        # report what would change; writes nothing
+npm run lore:push                     # push creates + updates
+npm run lore:push -- --allow-delete   # also DELETE entries removed from the vault
+# against another deployment:
+node scripts/pushLoreVault.js https://cnmh-staging.example.workers.dev --dry-run
+```
+
+- **Validation** (aborts before any write): duplicate/missing `id`, missing
+  title/category, and broken wikilinks. `History` entries with no `dateArStart`
+  warn (they render as "Unknown Date") but don't block.
+- **`related[]`** is compiled from the `related:` frontmatter **and** inline
+  `[[wikilinks]]` in the body, resolved title→id (case-insensitive).
+- **Deletions are opt-in.** Without `--allow-delete`, entries present live but
+  missing from the vault are listed and skipped.
+- **Reveal state is never touched.** `visibility` is read from the live doc and
+  preserved on every PUT; new entries default to `gm`.
+
+> The first push after the #286 export also cleans up the live DO's residual dead
+> `related` pointers (the export already dropped them from the vault), so it
+> reports a few updates. After that, `--dry-run` reports zero changes.
+
+### One-time auth setup (CF Access service token)
+
+Reads (`/api/content`) are public; writes hit the Access-gated GM API and need a
+Cloudflare Access **service token**:
+
+1. In **Cloudflare Zero Trust → Access → Service Auth**, create a service token.
+   Note the Client ID and Client Secret.
+2. Add that service token to the Access application policy that protects
+   `/api/gm/*` (an *Include → Service Token* rule). `worker/access.js` already
+   accepts service-token JWTs.
+3. Export the credentials before pushing (the same secrets the E2E runner uses):
+
+   ```bash
+   export CF_ACCESS_CLIENT_ID=<client-id>
+   export CF_ACCESS_CLIENT_SECRET=<client-secret>
+   ```
+
+   `--dry-run` needs no token.
 
 ## Regenerating the vault from the live DO
 
@@ -90,5 +139,5 @@ The shared parse/serialize contract lives in
 future push script read and write exactly the same format.
 
 > ⚠️ Re-running the export **overwrites local edits** with whatever is live in
-> the DO. Once the push sync (#287) lands, the vault is the write path: edit
-> here, then push — don't re-export over unpushed changes.
+> the DO. The vault is now the write path: edit here, then `npm run lore:push` —
+> don't re-export over unpushed changes.

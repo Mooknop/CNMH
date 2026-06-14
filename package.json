@@ -45,7 +45,8 @@
     "test:e2e": "playwright test",
     "test:e2e:local": "playwright test",
     "snapshot:content": "node scripts/snapshotContent.js",
-    "lore:export": "node scripts/exportLoreVault.js"
+    "lore:export": "node scripts/exportLoreVault.js",
+    "lore:push": "node scripts/pushLoreVault.js"
   },
   "browserslist": {
     "production": [
