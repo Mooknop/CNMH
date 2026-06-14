@@ -32,7 +32,7 @@ const asObject = (v) => (v && typeof v === 'object' ? v : {});
 export const LIVE_STATE_REGISTRY = [
   // ── Turn economy ──
   {
-    type: 'turnstate', group: 'turn', label: 'Turn economy', editor: 'json',
+    type: 'turnstate', group: 'turn', label: 'Actions & reaction', editor: 'json',
     format: (v) => {
       const a = Number(v?.actionsSpent) || 0;
       const parts = [`${a}/3 actions`];
