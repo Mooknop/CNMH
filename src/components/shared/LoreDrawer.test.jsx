@@ -18,7 +18,7 @@ const LORE = [
     id: 'aroden',
     title: 'Aroden',
     category: 'History',
-    content: 'A great god.\nHe died mysteriously.',
+    content: 'A great god.\n\nHe died mysteriously.',
     summary: 'A dead god.',
     related: ['absalom'],
   },
@@ -160,5 +160,42 @@ describe('LoreDrawer', () => {
   it('does not render entity image when entry.image is absent', () => {
     const { container } = renderDrawer();
     expect(container.querySelector('.entity-image')).toBeNull();
+  });
+
+  describe('wikilinks in content', () => {
+    const HIDDEN = { id: 'the-pit', title: 'The Pit', category: 'Locations', content: 'Secret.', related: [] };
+    const WITH_LINK = {
+      id: 'sage',
+      title: 'The Sage',
+      category: 'NPC',
+      content: 'Speaks of [[Absalom]] and the [[The Pit]] in hushed tones.',
+      related: [],
+    };
+
+    beforeEach(() => {
+      useContent.mockReturnValue({
+        loreEntries: [...LORE, WITH_LINK], // player: no The Pit
+        allLoreEntries: [...LORE, WITH_LINK, HIDDEN], // GM: includes The Pit
+      });
+      useLore.mockReturnValue({ isOpen: true, currentEntryId: 'sage', closeLore, navigateTo, goBack, canGoBack: false });
+    });
+
+    it('navigates the drawer when a content wikilink is clicked', () => {
+      renderDrawer('/');
+      fireEvent.click(screen.getByRole('button', { name: 'Absalom' }));
+      expect(navigateTo).toHaveBeenCalledWith('absalom');
+    });
+
+    it('renders a link to an unrevealed entry as plain text on player routes', () => {
+      renderDrawer('/');
+      expect(screen.queryByRole('button', { name: 'The Pit' })).not.toBeInTheDocument();
+      expect(screen.getByText(/The Pit/)).toBeInTheDocument();
+    });
+
+    it('renders the same link as a button on GM routes', () => {
+      renderDrawer('/gm');
+      fireEvent.click(screen.getByRole('button', { name: 'The Pit' }));
+      expect(navigateTo).toHaveBeenCalledWith('the-pit');
+    });
   });
 });

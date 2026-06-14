@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useLore } from '../../contexts/LoreContext';
 import { useContent } from '../../contexts/ContentContext';
 import { buildBacklinkMap, getConnectionData } from '../../utils/loreUtils';
+import LoreMarkdown from './LoreMarkdown';
 import './LoreDrawer.css';
 
 const LoreDrawer = () => {
@@ -64,9 +65,11 @@ const LoreDrawer = () => {
             )}
 
             <div className="lore-drawer-content">
-              {(entry.content || entry.summary || '').split('\n').filter(Boolean).map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
+              <LoreMarkdown
+                content={entry.content || entry.summary || ''}
+                entries={loreEntries}
+                onNavigate={navigateTo}
+              />
             </div>
 
             {hasConnections && (
