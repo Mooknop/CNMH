@@ -35,13 +35,23 @@ const Dashboard = () => {
   const activeChar = party[activeIndex] || null;
   const accent = getCharacterColor(activeIndex);
 
-  // Retint the page chrome to the centered character (card glows, dots, CTA,
-  // header kicker and the top wash all read --accent off the dashboard root).
+  // Retint the page chrome to the centered character. The dashboard subtree
+  // (card glows, dots, CTA, header kicker, top wash) reads --accent off the
+  // dashboard root; the *global* navbar lives outside that subtree, so we also
+  // set --accent on <html> and clear it on unmount so the navbar tints on /
+  // and falls back to ember on every other route.
   useEffect(() => {
+    const html = document.documentElement;
+    html.style.setProperty('--accent', accent);
+    html.style.setProperty('--accent-strength', '1');
     if (rootRef.current) {
       rootRef.current.style.setProperty('--accent', accent);
       rootRef.current.style.setProperty('--accent-strength', '1');
     }
+    return () => {
+      html.style.removeProperty('--accent');
+      html.style.removeProperty('--accent-strength');
+    };
   }, [accent]);
 
   const openCharacter = () => {
