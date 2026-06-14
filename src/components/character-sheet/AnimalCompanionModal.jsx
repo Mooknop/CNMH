@@ -9,6 +9,7 @@ import { useMinions } from '../../hooks/useMinions';
 import { MINION_COMPANION } from '../../utils/minionUtils';
 import MinionStrikeModal from '../encounter/MinionStrikeModal';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
+import MinionMove from '../encounter/MinionMove';
 import './AnimalCompanionModal.css';
 
 const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, characterColor }) => {
@@ -154,6 +155,7 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
           </div>
 
           <MinionSpawnButton ownerId={character.id} role={MINION_COMPANION} />
+          <MinionMove ownerId={character.id} role={MINION_COMPANION} />
 
           {/* Saves */}
           <div className="companion-saves">
