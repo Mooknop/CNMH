@@ -5,12 +5,19 @@ import PartyPanel from './PartyPanel';
 // ─── mocks ───────────────────────────────────────────────────
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useCharacterLiveState', () => ({ useCharacterLiveState: vi.fn() }));
+vi.mock('../../contexts/GameDateContext', () => ({ useGameDate: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getCharacterColor: (i) => ['#c03030', '#3060c0', '#30a060'][i % 3],
 }));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useCharacterLiveState } from '../../hooks/useCharacterLiveState';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
+
+// Fixed campaign clock → a stable nowSecs for cooldown/immunity math.
+const CLOCK = { year: 4725, month: 5, day: 10, hour: 12, minute: 0, second: 0 };
+const NOW = toGameSeconds(CLOCK);
 
 // ─── fixtures ────────────────────────────────────────────────
 const THORN   = { id: 'thorn',   name: 'Thorn',   maxHp: 50 };
@@ -33,6 +40,10 @@ afterEach(() => vi.restoreAllMocks());
 // Default: two characters, full HP for each
 beforeEach(() => {
   useContent.mockReturnValue({ characters: [THORN, PELLIAS] });
+  useGameDate.mockReturnValue({
+    gameDate: { year: CLOCK.year, month: CLOCK.month, day: CLOCK.day },
+    time: { hour: CLOCK.hour, minute: CLOCK.minute, second: CLOCK.second },
+  });
   mockLiveState({
     thorn:   { hp: FULL_HP(THORN) },
     pellias: { hp: FULL_HP(PELLIAS) },
@@ -211,6 +222,46 @@ describe('PartyPanel', () => {
       expect(screen.queryByTestId('party-pill-thorn-aura')).not.toBeInTheDocument();
       expect(screen.queryByTestId('party-pill-thorn-huntprey')).not.toBeInTheDocument();
       expect(screen.queryByLabelText('state-thorn')).not.toBeInTheDocument();
+    });
+  });
+
+  // ── Clock-derived cooldown/immunity timers (#230 slice 2) ──
+  describe('clock-derived timers', () => {
+    it('renders a cooldown ready-at derived from the freq ledger', () => {
+      mockLiveState({
+        thorn: { hp: FULL_HP(THORN), freq: { 'eld-flare': [{ per: 'hour', gameSecs: NOW - 600 }] } },
+      });
+      render(<PartyPanel />);
+      const cd = screen.getByTestId('party-cooldown-thorn-eld-flare');
+      expect(cd).toHaveTextContent('Eld Flare');
+      expect(cd).toHaveTextContent('ready 12:50');
+    });
+
+    it('renders an immunity until-time from effects', () => {
+      mockLiveState({
+        thorn: {
+          hp: FULL_HP(THORN),
+          effects: [{ id: 'i1', effectId: 'treat-wounds-immunity', source: 'Battle Medicine', expireAtSecs: NOW + 3600 }],
+        },
+      });
+      render(<PartyPanel />);
+      const imm = screen.getByTestId('party-immunity-thorn-i1');
+      expect(imm).toHaveTextContent('Immune: Battle Medicine');
+      expect(imm).toHaveTextContent('until 13:00');
+    });
+
+    it('omits the timers list when nothing is on cooldown or immune', () => {
+      mockLiveState({ thorn: { hp: FULL_HP(THORN) } });
+      render(<PartyPanel />);
+      expect(screen.queryByLabelText('timers-thorn')).not.toBeInTheDocument();
+    });
+
+    it('drops a cooldown whose window has already aged out', () => {
+      mockLiveState({
+        thorn: { hp: FULL_HP(THORN), freq: { 'eld-flare': [{ per: 'hour', gameSecs: NOW - 7200 }] } },
+      });
+      render(<PartyPanel />);
+      expect(screen.queryByTestId('party-cooldown-thorn-eld-flare')).not.toBeInTheDocument();
     });
   });
 });

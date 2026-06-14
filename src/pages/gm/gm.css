@@ -1473,6 +1473,56 @@
   color: var(--shell-text-secondary);
 }
 
+/* Clock-derived ready-at timers — cooldowns & immunities (#230 slice 2) */
+.gm-party-timers {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 calc(9rem + var(--space-3));
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gm-party-timer {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.gm-party-timer-name {
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gm-party-timer-when {
+  color: var(--shell-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* A small leading dot keys cooldown (gold) vs immunity (accent) apart */
+.gm-party-timer::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  align-self: center;
+}
+
+.gm-party-timer--cooldown::before {
+  background: var(--gold-light, #f9a825);
+}
+
+.gm-party-timer--immunity::before {
+  background: var(--accent-outline);
+}
+
 /* ── Characters card grid ─────────────────────────────────── */
 .gm-char-grid {
   display: grid;
