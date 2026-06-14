@@ -1,0 +1,50 @@
+name: Lore sync
+
+# Auto-publish lore: a merge that touches lore-vault/** runs the push script
+# against the production CampaignContent DO (per-entity PUTs broadcast
+# CONTENT_UPDATE, so connected clients update live). workflow_dispatch also allows
+# a manual run — used for the one-time #287 dead-pointer cleanup and any re-sync.
+# Epic #285, slice #290. Depends on the #287 CRLF fix being on main.
+on:
+  push:
+    branches: [main]
+    paths: ['lore-vault/**']
+  workflow_dispatch:
+
+# Serialize runs so two quick merges don't interleave PUTs. Never cancel an
+# in-flight push — it may be mid-write.
+concurrency:
+  group: lore-sync
+  cancel-in-progress: false
+
+jobs:
+  push:
+    name: Push lore vault to the DO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Push lore vault → CampaignContent DO
+        # The script defaults to production, reads these env vars, validates before
+        # any write (exits 1 on error), and skips deletions without --allow-delete.
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          node scripts/pushLoreVault.js 2>&1 | tee push.log
+          status=${PIPESTATUS[0]}
+          {
+            echo '## Lore vault push'
+            echo ''
+            echo '```'
+            cat push.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $status
