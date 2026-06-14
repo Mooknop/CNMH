@@ -62,6 +62,50 @@
   font-size: 1.5rem;
 }
 
+/* ── Carousel select bar + primary CTA ─────────────────────── */
+.cc-select-bar {
+  padding: 6px 20px 18px;
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+}
+.cc-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 54px;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, #fff 8%), color-mix(in srgb, var(--accent) 78%, #000 22%));
+  box-shadow: 0 6px 20px -4px color-mix(in srgb, var(--accent) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.16s ease, box-shadow 0.3s ease, background 0.4s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.cc-cta:hover { transform: translateY(-1px); }
+.cc-cta:active { transform: translateY(0) scale(0.99); }
+.cc-cta-name { font-family: var(--font-display); font-weight: 700; }
+.cc-cta svg { width: 17px; height: 17px; }
+.cc-hint {
+  text-align: center;
+  margin-top: 9px;
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--shell-text-tertiary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-cta { transition: none; }
+}
+
 /* Stats grid */
 .stats-grid {
   display: grid;
