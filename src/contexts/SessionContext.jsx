@@ -9,6 +9,7 @@ const RECONNECT_MS = 3000;
 const NOOP_SESSION = {
   connected: false,
   getState: () => undefined,
+  getAllState: () => undefined,
   sendUpdate: () => {},
   subscribe: () => () => {},
 };
@@ -102,6 +103,13 @@ export const SessionProvider = ({ children }) => {
     return serverState.current[characterId]?.[stateType];
   }, []);
 
+  // Whole per-character live-state map ({ [stateType]: value }) — the primitive
+  // the GM state inspector needs to enumerate every key, including ones no hook
+  // declares. Returns the live ref object; callers that retain it should copy.
+  const getAllState = useCallback((characterId) => {
+    return serverState.current[characterId];
+  }, []);
+
   const sendUpdate = useCallback((characterId, stateType, value) => {
     if (!serverState.current[characterId]) serverState.current[characterId] = {};
     serverState.current[characterId][stateType] = value;
@@ -128,7 +136,7 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ connected, getState, sendUpdate, subscribe }}>
+    <SessionContext.Provider value={{ connected, getState, getAllState, sendUpdate, subscribe }}>
       {children}
     </SessionContext.Provider>
   );
