@@ -37,3 +37,8 @@ yarn-debug.log*
 yarn-error.log*
 .claude/settings.local.json
 CLAUDE.md
+lore-vault/.obsidian/app.json
+lore-vault/.obsidian/appearance.json
+lore-vault/.obsidian/core-plugins.json
+lore-vault/.obsidian/graph.json
+lore-vault/README.md
