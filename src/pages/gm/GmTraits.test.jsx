@@ -103,4 +103,48 @@ describe('GmTraits', () => {
     render(<GmTraits />);
     expect(screen.getByText('Showing 0 of 0')).toBeInTheDocument();
   });
+
+  it('coverage report lists referenced traits with no definition', () => {
+    setContent({
+      items: [{ id: 'elixir', name: 'Elixir', traits: ['Healing', 'Frobnicate'] }],
+      spells: [{ id: 'breathe-fire', name: 'Breathe Fire', traits: ['Fire'] }],
+    });
+    render(<GmTraits />);
+    const panel = screen.getByLabelText('Trait coverage');
+    // 'Healing' and 'Frobnicate' have no definition; 'Fire' does.
+    expect(within(panel).getByText(/2 referenced traits have no definition/i)).toBeInTheDocument();
+    expect(within(panel).getByText('Frobnicate')).toBeInTheDocument();
+    expect(within(panel).getByText('Healing')).toBeInTheDocument();
+    expect(within(panel).getAllByText(/Elixir/).length).toBeGreaterThan(0);
+    expect(within(panel).queryByText('Fire')).not.toBeInTheDocument();
+  });
+
+  it('coverage report shows all-clear when every reference resolves', () => {
+    setContent({ spells: [{ id: 's', name: 'S', traits: ['Fire', 'Manipulate'] }] });
+    render(<GmTraits />);
+    expect(
+      within(screen.getByLabelText('Trait coverage')).getByText(/All referenced traits have definitions/i)
+    ).toBeInTheDocument();
+  });
+
+  it('reverse view lists content referencing the selected definition', () => {
+    setContent({
+      spells: [{ id: 'breathe-fire', name: 'Breathe Fire', traits: ['Fire'] }],
+      items: [{ id: 'flaming', name: 'Flaming Sword', traits: ['Fire'] }],
+    });
+    render(<GmTraits />);
+    selectTrait('Fire');
+    const form = screen.getByTestId('trait-form-fire');
+    expect(within(form).getByText('Referenced by 2:')).toBeInTheDocument();
+    expect(within(form).getByText(/Breathe Fire/)).toBeInTheDocument();
+    expect(within(form).getByText(/Flaming Sword/)).toBeInTheDocument();
+  });
+
+  it('reverse view shows the empty state for an unreferenced definition', () => {
+    setContent({ spells: [{ id: 'breathe-fire', name: 'Breathe Fire', traits: ['Fire'] }] });
+    render(<GmTraits />);
+    selectTrait('Manipulate');
+    const form = screen.getByTestId('trait-form-manipulate');
+    expect(within(form).getByText('Not referenced by any content.')).toBeInTheDocument();
+  });
 });
