@@ -1,0 +1,139 @@
+/* ============================================================
+   Sigil character card — locked design (player-dashboard handoff)
+   Tokens from pf2e-tokens.css; --c is the per-character accent.
+   ============================================================ */
+.sigil-card-inner {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #100d0b;
+  box-shadow: var(--shadow-lg);
+}
+
+.sigil-band {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 26%, #14110e) 0%, #100d0b 55%);
+}
+
+/* Portrait, clipped diagonally (bottom edge slopes up to the right) */
+.sigil-portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+}
+.sigil-portrait-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 0%;
+}
+
+/* No-image fallback: oversized monogram over an accent gradient */
+.sigil-mono {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 150px;
+  line-height: 1;
+  color: color-mix(in srgb, var(--c) 55%, transparent);
+  background:
+    radial-gradient(80% 60% at 50% 32%, color-mix(in srgb, var(--c) 30%, transparent), transparent 70%),
+    linear-gradient(160deg, color-mix(in srgb, var(--c) 16%, #14110e), #100d0b 75%);
+  text-shadow: 0 6px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom scrim, mirrors the portrait's diagonal seam */
+.sigil-cut {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: 120px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, #0c0a08 72%);
+  clip-path: polygon(0 38%, 100% 14%, 100% 100%, 0 100%);
+}
+
+/* Accent edge line tracing the diagonal */
+.sigil-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 86px;
+  z-index: 3;
+  height: 3px;
+  pointer-events: none;
+  background: var(--c);
+  box-shadow: 0 0 14px 1px color-mix(in srgb, var(--c) 70%, transparent);
+  transform: rotate(-2.4deg) translateY(2px);
+  transform-origin: left center;
+}
+
+/* Inset accent hairline */
+.sigil-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) calc(55% * var(--accent-strength, 1)), transparent);
+}
+
+/* Top-right pennant level badge */
+.sigil-badge {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 0.95;
+  padding: 9px 10px 7px;
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: var(--c);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.sigil-badge-t { font-size: 7px; letter-spacing: 0.1em; opacity: 0.85; text-transform: uppercase; }
+.sigil-badge-n { font-size: 17px; }
+
+/* Bottom-left caption */
+.sigil-caption {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  z-index: 6;
+}
+.sigil-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 27px;
+  line-height: 0.98;
+  color: #fff;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.8);
+  text-wrap: balance;
+}
+.sigil-kicker {
+  margin-top: 7px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--c) 65%, #fff 35%);
+}
