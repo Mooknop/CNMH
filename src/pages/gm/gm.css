@@ -1310,13 +1310,19 @@
 }
 
 .gm-party-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2) 0;
+}
+
+.gm-party-head {
   display: grid;
   grid-template-columns: 9rem 1fr auto;
   grid-template-rows: auto auto;
   align-items: center;
   column-gap: var(--space-3);
   row-gap: 3px;
-  padding: var(--space-2) 0;
 }
 
 .gm-party-row + .gm-party-row {
@@ -1395,6 +1401,76 @@
   background: rgba(245, 124, 0, 0.12);
   border: 1px solid rgba(245, 124, 0, 0.5);
   color: var(--gold-light, #f9a825);
+}
+
+/* ── Resource chips & active-state pills (#230 slice 1) ─────── */
+.gm-party-chips,
+.gm-party-pills {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 calc(9rem + var(--space-3));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+/* Resource chip: short label + remaining value */
+.gm-party-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.gm-party-chip-label {
+  color: var(--shell-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.64rem;
+}
+
+.gm-party-chip-value {
+  color: var(--shell-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A spent reaction reads as a warning */
+.gm-party-chip.is-spent {
+  border-color: rgba(245, 124, 0, 0.45);
+}
+
+.gm-party-chip.is-spent .gm-party-chip-value {
+  color: var(--gold-light, #f9a825);
+}
+
+/* Active-state pill: tinted with the per-character accent */
+.gm-party-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--x-theme, var(--accent-outline)) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--x-theme, var(--accent-outline)) 45%, transparent);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.gm-party-pill-label {
+  color: var(--x-theme, var(--shell-text-secondary));
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.64rem;
+  font-weight: 600;
+}
+
+.gm-party-pill-value {
+  color: var(--shell-text-secondary);
 }
 
 /* ── Characters card grid ─────────────────────────────────── */
