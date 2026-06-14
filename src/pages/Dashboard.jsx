@@ -132,7 +132,7 @@ const Dashboard = () => {
         </div>
 
         {/* Secondary nav */}
-        <nav className="dash-secondary">
+        <div className="dash-secondary">
           <button type="button" className="dash-sec-btn" onClick={() => navigate('/quests')}>
             <span className="ic">📜</span>
             <span className="lb">Adventure</span>
@@ -145,7 +145,7 @@ const Dashboard = () => {
             <span className="ic">📅</span>
             <span className="lb">Calendar</span>
           </button>
-        </nav>
+        </div>
       </div>
     </div>
   );
