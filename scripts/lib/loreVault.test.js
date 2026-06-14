@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   sanitizeFilename,
   parseWikilink,
+  extractBodyWikilinks,
   serializeDoc,
   splitFrontmatter,
   parseFile,
@@ -42,6 +43,24 @@ describe('parseWikilink', () => {
   it('tolerates surrounding whitespace and bare text', () => {
     expect(parseWikilink('  [[Abadar]]  ')).toBe('Abadar');
     expect(parseWikilink('Abadar')).toBe('Abadar');
+  });
+});
+
+describe('extractBodyWikilinks', () => {
+  it('pulls inline links and resolves their targets, not aliases', () => {
+    const body = 'See [[Sandpoint]] and [[Abadar|the god]] for details.';
+    expect(extractBodyWikilinks(body)).toEqual(['Sandpoint', 'Abadar']);
+  });
+
+  it('de-duplicates repeated mentions, keeping first-seen order', () => {
+    const body = '[[Sandpoint]] then [[Abadar]] then [[Sandpoint]] again.';
+    expect(extractBodyWikilinks(body)).toEqual(['Sandpoint', 'Abadar']);
+  });
+
+  it('returns an empty array when there are no links', () => {
+    expect(extractBodyWikilinks('plain prose')).toEqual([]);
+    expect(extractBodyWikilinks('')).toEqual([]);
+    expect(extractBodyWikilinks(null)).toEqual([]);
   });
 });
 
