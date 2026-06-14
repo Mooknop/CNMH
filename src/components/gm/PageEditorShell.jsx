@@ -11,6 +11,8 @@ import React, { useState } from 'react';
 //   idOf(e)       – unique id (default: e => e.id)
 //   noun          – singular noun for hints, e.g. 'quest', 'item'
 //   addLabel      – "New" button text
+//   allowNew      – show the "New" button + enable the create path (default true);
+//                   false for read-only managers (e.g. GmLore reveal manager)
 //   renderDetail(entry | null, isNew, { onSaved, onRestored }) – form body
 //   emptyHint     – right-pane text when nothing is selected
 //   header        – optional ReactNode above the list (e.g. GmLore category tabs)
@@ -28,6 +30,7 @@ const PageEditorShell = ({
   idOf = (e) => e.id,
   noun = 'entry',
   addLabel,
+  allowNew = true,
   renderDetail,
   emptyHint,
   header,
@@ -93,14 +96,16 @@ const PageEditorShell = ({
         <div className="gm-ped-master">
           {header}
           <div className="gm-ped-toolbar">
-            <button
-              type="button"
-              className="btn-primary btn-small gm-ped-add"
-              disabled={selecting}
-              onClick={() => setSelectedId('__new__')}
-            >
-              {addLabel ?? `+ New ${noun}`}
-            </button>
+            {allowNew && (
+              <button
+                type="button"
+                className="btn-primary btn-small gm-ped-add"
+                disabled={selecting}
+                onClick={() => setSelectedId('__new__')}
+              >
+                {addLabel ?? `+ New ${noun}`}
+              </button>
+            )}
             {renderBulkPanel && (
               <button
                 type="button"
