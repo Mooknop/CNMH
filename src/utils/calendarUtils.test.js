@@ -320,6 +320,19 @@ describe('calendarUtils', () => {
         const events = helpers.getEventsForDate(4725, 2, 5);
         expect(events.some(e => e.title === 'Regular Event')).toBe(true);
       });
+
+      it('should ignore a malformed event with no date instead of throwing', () => {
+        const robustHelpers = createCalendarHelpers({
+          GOLARION_MONTHS: mockGOLARION_MONTHS,
+          GOLARION_WEEKDAYS: mockGOLARION_WEEKDAYS,
+          getDayOfWeek: mockGetDayOfWeek,
+          getMoonPhaseInfo: mockGetMoonPhaseInfo,
+          timelineData: [{ title: 'Dateless', type: 'holiday' }],
+        });
+        mockGetMoonPhaseInfo.mockReturnValue({ isFullMoon: false });
+        expect(() => robustHelpers.getEventsForDate(4725, 2, 5)).not.toThrow();
+        expect(robustHelpers.getEventsForDate(4725, 2, 5)).toHaveLength(0);
+      });
     });
   });
 });

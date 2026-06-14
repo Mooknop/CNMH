@@ -29,6 +29,11 @@ export default defineConfig({
   // saves room before the request context is torn down (the "Request context
   // disposed" cascade on retry beforeEach is the symptom of 30s being too tight).
   timeout: LOCAL ? 30_000 : 60_000,
+  // Per-assertion timeout (Playwright default 5s). The seed fixture now barriers
+  // on content propagation, so the data race is gone; this just gives a cold CI
+  // *render* a little headroom after the data is present. Kept modest so a truly
+  // stuck assertion still fails fast; specs with known-slow saves set their own.
+  expect: { timeout: LOCAL ? 7_000 : 10_000 },
   reporter: process.env.CI ? [['html'], ['github']] : 'list',
 
   // Local stack: build the app (served via the ASSETS binding) then boot the
