@@ -121,6 +121,61 @@ export function defaultRecord() {
   };
 }
 
+// Ordered field list for the GM bestiary editor's per-field reveal toggles
+// (#335). `key` is a path into a record — flat (`'ac'`) or nested
+// (`'saves.fortitude'`, `'iwr.immunities'`).
+export const REVEAL_FIELDS = [
+  { key: 'identity',         label: 'Identity (name/level/traits)' },
+  { key: 'description',      label: 'Description' },
+  { key: 'hp',               label: 'HP' },
+  { key: 'ac',               label: 'AC' },
+  { key: 'perception',       label: 'Perception' },
+  { key: 'speed',            label: 'Speed' },
+  { key: 'saves.fortitude',  label: 'Fortitude' },
+  { key: 'saves.reflex',     label: 'Reflex' },
+  { key: 'saves.will',       label: 'Will' },
+  { key: 'iwr.immunities',   label: 'Immunities' },
+  { key: 'iwr.resistances',  label: 'Resistances' },
+  { key: 'iwr.weaknesses',   label: 'Weaknesses' },
+];
+
+// Read a REVEAL_FIELDS path off a record.
+export function isPathRevealed(record, key) {
+  if (!record || !key) return false;
+  const [head, leaf] = key.split('.');
+  return leaf ? !!record[head]?.[leaf] : !!record[head];
+}
+
+// Immutably set a REVEAL_FIELDS path on a record (#335). Returns a new record.
+export function setRecordFieldRevealed(record, key, value) {
+  const base = record || defaultRecord();
+  const [head, leaf] = key.split('.');
+  if (leaf) {
+    return { ...base, [head]: { ...(base[head] || {}), [leaf]: !!value } };
+  }
+  return { ...base, [head]: !!value };
+}
+
+// A record with every field force-revealed — the GM "Reveal all" action (#335).
+// Roll history is preserved; partial weakness reveals are dropped since the full
+// `iwr.weaknesses` flag supersedes them.
+export function fullyRevealedRecord(record = defaultRecord()) {
+  const base = record || defaultRecord();
+  return {
+    ...base,
+    identity: true,
+    description: true,
+    hp: true,
+    ac: true,
+    perception: true,
+    speed: true,
+    saves: { fortitude: true, reflex: true, will: true },
+    iwr: { immunities: true, resistances: true, weaknesses: true },
+    weaknessesRevealed: {},
+    history: base.history || [],
+  };
+}
+
 export function isLockedFor(record, charId) {
   return !!(record?.lockedOut?.[charId]);
 }

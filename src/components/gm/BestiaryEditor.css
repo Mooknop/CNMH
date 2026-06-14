@@ -1,0 +1,44 @@
+/* GM Bestiary editor (#335) — provenance, stats preview, per-field toggles */
+
+.be-provenance {
+  margin-top: 2px;
+}
+
+.be-imported-desc {
+  white-space: pre-wrap;
+}
+
+/* Read-only captured-stats preview — frames the shared BestiaryEntry card. */
+.be-preview {
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 6px);
+  background: var(--surface-inset, rgba(0, 0, 0, 0.2));
+  padding: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+/* Per-field visibility toggle grid. */
+.be-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px 16px;
+  margin-top: 6px;
+}
+
+.be-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--shell-text-primary, #f5ede4);
+  cursor: pointer;
+}
+
+.be-toggle input {
+  cursor: pointer;
+}
+
+.be-bulk {
+  margin-top: 10px;
+}
