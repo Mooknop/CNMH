@@ -11,9 +11,23 @@ vi.mock('../../contexts/ContentContext', () => ({
 }));
 
 vi.mock('../../hooks/useEncounter', () => ({
-  useEncounter: () => ({
-    encounter: { order: mockEncounterOrder },
-  }),
+  useEncounter: () => ({ encounter: { order: mockEncounterOrder } }),
+}));
+
+let mockRecord = {
+  identity: false, description: false, hp: false, ac: false, perception: false, speed: false,
+  saves: { fortitude: false, reflex: false, will: false },
+  iwr: { immunities: false, resistances: false, weaknesses: false },
+  weaknessesRevealed: {}, lockedOut: {}, history: [],
+};
+const mockMergeRecord = vi.fn();
+vi.mock('../../hooks/useRecallKnowledge', () => ({
+  useRecallKnowledge: () => ({ recordFor: () => mockRecord, mergeRecord: mockMergeRecord }),
+}));
+
+// Stub the shared preview card — its own behavior is covered by BestiaryEntry.test.
+vi.mock('../bestiary/BestiaryEntry', () => ({
+  default: ({ revealAll }) => <div data-testid="bestiary-preview">preview revealAll={String(!!revealAll)}</div>,
 }));
 
 const mockSaveDocument = vi.fn();
@@ -40,246 +54,218 @@ import BestiaryEditor from './BestiaryEditor';
 // ── Fixtures ─────────────────────────────────────────────────────────────────
 
 const GOBLIN_KEY = 'Compendium.pf2e.bestiary.Actor.gob';
-const TROLL_KEY  = 'Compendium.pf2e.bestiary.Actor.trl';
 
 const mkEnemy = (entryId, name, creatureKey, description = '') => ({
-  entryId,
-  kind: 'enemy',
-  name,
-  creatureKey: creatureKey || null,
-  bestiary: { description },
+  entryId, kind: 'enemy', name, creatureKey: creatureKey || null,
+  bestiary: { description }, defenses: {},
 });
 
-const goblinEntry  = mkEnemy('e1', 'Goblin Warrior',  GOBLIN_KEY, 'A sneaky goblin.');
-const goblin2Entry = mkEnemy('e2', 'Goblin Warrior 2', GOBLIN_KEY, 'A sneaky goblin.');
-const trollEntry   = mkEnemy('e3', 'Cave Troll',       TROLL_KEY,  'A big troll.');
+const goblinEntry  = mkEnemy('e1', 'Goblin Warrior', GOBLIN_KEY, 'A sneaky goblin.');
 const nullKeyEntry = mkEnemy('e4', 'Mysterious Figure', null);
 
-function renderEditor() {
-  return render(<BestiaryEditor />);
-}
+const goblinDoc = (extra = {}) => ({
+  id: GOBLIN_KEY, name: 'Goblin Warrior',
+  bestiary: { description: 'A sneaky goblin.', level: -1 }, defenses: { ac: 16 },
+  capturedAt: 1700000000000, lastSeenAt: 1700100000000,
+  locations: { sandpoint: { name: 'Sandpoint', lastSeenAt: 1700100000000 } },
+  ...extra,
+});
+
+const selectGoblin = () => fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
 
 beforeEach(() => {
   mockMonsters = [];
   mockEncounterOrder = [];
+  mockRecord = {
+    identity: false, description: false, hp: false, ac: false, perception: false, speed: false,
+    saves: { fortitude: false, reflex: false, will: false },
+    iwr: { immunities: false, resistances: false, weaknesses: false },
+    weaknessesRevealed: {}, lockedOut: {}, history: [],
+  };
   mockSaveDocument.mockResolvedValue({ ok: true });
   mockDeleteDocument.mockResolvedValue({ ok: true });
   vi.clearAllMocks();
 });
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// ── List ───────────────────────────────────────────────────────────────────
 
-describe('BestiaryEditor — empty state', () => {
-  test('shows empty state when no encounter enemies and no overrides', () => {
-    renderEditor();
+describe('BestiaryEditor — list', () => {
+  test('empty state when nothing seen or persisted', () => {
+    render(<BestiaryEditor />);
     expect(screen.getByText(/No creatures yet/i)).toBeInTheDocument();
   });
 
-  test('does not show empty state once enemies are present', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    expect(screen.queryByText(/No creatures yet/i)).not.toBeInTheDocument();
-  });
-});
-
-// ── List building ─────────────────────────────────────────────────────────────
-
-describe('BestiaryEditor — list', () => {
-  test('shows one row per creatureKey from encounter', () => {
-    mockEncounterOrder = [goblinEntry, goblin2Entry, trollEntry];
-    renderEditor();
-    const items = screen.getAllByRole('button', { name: /Goblin Warrior|Cave Troll/ });
-    // Two buttons (Goblin, Troll), both deduped
-    expect(items).toHaveLength(2);
-  });
-
-  test('null-key enemies are excluded from the list', () => {
+  test('null-key enemies are excluded', () => {
     mockEncounterOrder = [goblinEntry, nullKeyEntry];
-    renderEditor();
+    render(<BestiaryEditor />);
     expect(screen.queryByRole('button', { name: /Mysterious Figure/ })).not.toBeInTheDocument();
   });
 
-  test('existing override rows appear even without encounter entries', () => {
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Edited.' }];
-    renderEditor();
+  test('persisted docs appear without an active encounter', () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
     expect(screen.getByRole('button', { name: /Goblin Warrior/ })).toBeInTheDocument();
   });
 
-  test('encounter + override union — no duplicates', () => {
+  test('no ● badge for an encounter-only creature', () => {
     mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Edited.' }];
-    renderEditor();
-    const items = screen.getAllByRole('button', { name: /Goblin Warrior/ });
-    expect(items).toHaveLength(1);
+    render(<BestiaryEditor />);
+    expect(screen.getByRole('button', { name: /Goblin Warrior/ })).not.toHaveTextContent('●');
   });
 
-  test('override badge (●) shown for creatures with an override', () => {
-    mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Edited.' }];
-    renderEditor();
-    const row = screen.getByRole('button', { name: /Goblin Warrior/ });
-    expect(row).toHaveTextContent('●');
-  });
-
-  test('no override badge for a creature without an override', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    const row = screen.getByRole('button', { name: /Goblin Warrior/ });
-    expect(row).not.toHaveTextContent('●');
+  test('● badge marks a persisted entry', () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    expect(screen.getByRole('button', { name: /Goblin Warrior/ })).toHaveTextContent('●');
   });
 });
 
-// ── Detail form ───────────────────────────────────────────────────────────────
+// ── Detail form ────────────────────────────────────────────────────────────
 
 describe('BestiaryEditor — detail form', () => {
-  test('shows placeholder when no creature selected', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    expect(screen.getByText(/Select a creature/i)).toBeInTheDocument();
+  test('shows display name, stats preview, provenance', () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    expect(screen.getByLabelText('display-name')).toHaveValue('Goblin Warrior');
+    expect(screen.getByTestId('bestiary-preview')).toHaveTextContent('revealAll=true');
+    expect(screen.getByTestId('be-provenance')).toHaveTextContent(/Captured/);
+    expect(screen.getByTestId('be-provenance')).toHaveTextContent(/Sandpoint/);
   });
 
-  test('clicking a creature shows its form', () => {
+  test('description mode defaults to imported when no override, custom textarea hidden', () => {
     mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    expect(screen.getByLabelText('description-override')).toBeInTheDocument();
+    render(<BestiaryEditor />);
+    selectGoblin();
+    expect(screen.getByLabelText('description-mode')).toHaveValue('imported');
+    expect(screen.queryByLabelText('description-override')).not.toBeInTheDocument();
   });
 
-  test('form shows imported description as read-only reference', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    expect(screen.getByText('A sneaky goblin.')).toBeInTheDocument();
+  test('existing custom override pre-selects custom + fills textarea', () => {
+    mockMonsters = [goblinDoc({ descriptionOverride: 'Custom text.' })];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    expect(screen.getByLabelText('description-mode')).toHaveValue('custom');
+    expect(screen.getByLabelText('description-override')).toHaveValue('Custom text.');
   });
 
-  test('form pre-fills textarea with existing override', () => {
-    mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Existing override.' }];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    expect(screen.getByLabelText('description-override')).toHaveValue('Existing override.');
-  });
-
-  test('save button disabled when form is not dirty', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    expect(screen.getByRole('button', { name: /Save/ })).toBeDisabled();
-  });
-
-  test('save button enabled after editing textarea', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.change(screen.getByLabelText('description-override'), {
-      target: { value: 'New text.' },
-    });
-    expect(screen.getByRole('button', { name: /Save/ })).not.toBeDisabled();
+  test('save disabled until something changes', () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    expect(screen.getByRole('button', { name: /^Save$/ })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('display-name'), { target: { value: 'Renamed Goblin' } });
+    expect(screen.getByRole('button', { name: /^Save$/ })).not.toBeDisabled();
   });
 });
 
-// ── Save ──────────────────────────────────────────────────────────────────────
+// ── Save (name + description tri-state) ──────────────────────────────────────
 
 describe('BestiaryEditor — save', () => {
-  test('save calls saveDocument with monster collection and creatureKey id', async () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.change(screen.getByLabelText('description-override'), {
-      target: { value: 'Redacted goblin text.' },
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Save/ }));
-    });
-    expect(mockSaveDocument).toHaveBeenCalledWith('monster', GOBLIN_KEY, {
-      id: GOBLIN_KEY,
-      name: 'Goblin Warrior',
-      descriptionOverride: 'Redacted goblin text.',
-    });
+  test('saves edited name, spreading the existing doc to preserve stats', async () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.change(screen.getByLabelText('display-name'), { target: { value: 'Renamed Goblin' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Save$/ })));
+    const [, key, doc] = mockSaveDocument.mock.calls[0];
+    expect(key).toBe(GOBLIN_KEY);
+    expect(doc.name).toBe('Renamed Goblin');
+    expect(doc.bestiary).toEqual({ description: 'A sneaky goblin.', level: -1 }); // preserved
+    expect(doc.capturedAt).toBe(1700000000000);
   });
 
-  test('empty-string override is saved (redact entirely)', async () => {
-    mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Prior text.' }];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.change(screen.getByLabelText('description-override'), {
-      target: { value: '' },
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Save/ }));
-    });
-    expect(mockSaveDocument).toHaveBeenCalledWith('monster', GOBLIN_KEY, {
-      id: GOBLIN_KEY,
-      name: 'Goblin Warrior',
-      descriptionOverride: '',
-    });
+  test('imported mode omits the descriptionOverride key', async () => {
+    mockMonsters = [goblinDoc({ descriptionOverride: 'Custom text.' })];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.change(screen.getByLabelText('description-mode'), { target: { value: 'imported' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Save$/ })));
+    const doc = mockSaveDocument.mock.calls[0][2];
+    expect('descriptionOverride' in doc).toBe(false);
   });
 
-  test('flash message appears after successful save', async () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.change(screen.getByLabelText('description-override'), {
-      target: { value: 'x' },
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Save/ }));
-    });
+  test('custom mode saves the entered text', async () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.change(screen.getByLabelText('description-mode'), { target: { value: 'custom' } });
+    fireEvent.change(screen.getByLabelText('description-override'), { target: { value: 'Rewritten.' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Save$/ })));
+    expect(mockSaveDocument.mock.calls[0][2].descriptionOverride).toBe('Rewritten.');
+  });
+
+  test('redacted mode saves an empty string', async () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.change(screen.getByLabelText('description-mode'), { target: { value: 'redacted' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Save$/ })));
+    expect(mockSaveDocument.mock.calls[0][2].descriptionOverride).toBe('');
+  });
+
+  test('flash on success, error on failure', async () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.change(screen.getByLabelText('display-name'), { target: { value: 'X' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Save$/ })));
     expect(screen.getByTestId('be-flash')).toBeInTheDocument();
-  });
 
-  test('error message shown on save failure', async () => {
-    mockSaveDocument.mockRejectedValue(new Error('Network error'));
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.change(screen.getByLabelText('description-override'), {
-      target: { value: 'x' },
-    });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Save/ }));
-    });
+    mockSaveDocument.mockRejectedValueOnce(new Error('Network error'));
+    fireEvent.change(screen.getByLabelText('display-name'), { target: { value: 'Y' } });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /^Save$/ })));
     expect(screen.getByRole('alert')).toHaveTextContent('Network error');
   });
 });
 
-// ── Revert ────────────────────────────────────────────────────────────────────
+// ── Per-field visibility ─────────────────────────────────────────────────────
 
-describe('BestiaryEditor — revert', () => {
-  test('Revert button absent when no override exists', () => {
-    mockEncounterOrder = [goblinEntry];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    expect(screen.queryByRole('button', { name: /Revert/i })).not.toBeInTheDocument();
+describe('BestiaryEditor — visibility', () => {
+  test('toggling a field calls mergeRecord with an updater', () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.click(screen.getByLabelText('reveal-ac'));
+    expect(mockMergeRecord).toHaveBeenCalledWith(GOBLIN_KEY, expect.any(Function));
   });
 
-  test('Revert button present when override exists', () => {
-    mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Override.' }];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    expect(screen.getByRole('button', { name: /Revert to imported/i })).toBeInTheDocument();
+  test('checkbox reflects the current record', () => {
+    mockMonsters = [goblinDoc()];
+    mockRecord = { ...mockRecord, ac: true };
+    render(<BestiaryEditor />);
+    selectGoblin();
+    expect(screen.getByLabelText('reveal-ac')).toBeChecked();
+    expect(screen.getByLabelText('reveal-identity')).not.toBeChecked();
   });
 
-  test('clicking Revert shows confirm dialog', () => {
+  test('Reveal all and Re-fog call mergeRecord', () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.click(screen.getByRole('button', { name: /Reveal all/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Re-fog/ }));
+    expect(mockMergeRecord).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ── Delete ───────────────────────────────────────────────────────────────────
+
+describe('BestiaryEditor — delete', () => {
+  test('Delete entry shown only for persisted docs', () => {
     mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Override.' }];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Revert to imported/i }));
-    expect(screen.getByTestId('confirm-dialog')).toBeInTheDocument();
+    render(<BestiaryEditor />);
+    selectGoblin();
+    expect(screen.queryByRole('button', { name: /Delete entry/ })).not.toBeInTheDocument();
   });
 
-  test('confirming revert calls deleteDocument', async () => {
-    mockEncounterOrder = [goblinEntry];
-    mockMonsters = [{ id: GOBLIN_KEY, name: 'Goblin Warrior', descriptionOverride: 'Override.' }];
-    renderEditor();
-    fireEvent.click(screen.getByRole('button', { name: /Goblin Warrior/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Revert to imported/i }));
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /Confirm/ }));
-    });
+  test('confirming delete calls deleteDocument and re-fogs', async () => {
+    mockMonsters = [goblinDoc()];
+    render(<BestiaryEditor />);
+    selectGoblin();
+    fireEvent.click(screen.getByRole('button', { name: /Delete entry/ }));
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: /Confirm/ })));
     expect(mockDeleteDocument).toHaveBeenCalledWith('monster', GOBLIN_KEY);
+    expect(mockMergeRecord).toHaveBeenCalled(); // re-fog
   });
 });

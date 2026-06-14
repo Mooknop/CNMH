@@ -1,50 +1,82 @@
 import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
+import {
+  defaultRecord,
+  fullyRevealedRecord,
+  setRecordFieldRevealed,
+  isPathRevealed,
+  REVEAL_FIELDS,
+} from '../../utils/recallKnowledge';
+import { monsterToEnemy, monsterLocations, formatLastSeen } from '../../utils/bestiary';
+import BestiaryEntry from '../bestiary/BestiaryEntry';
 import ConfirmDialog from '../shared/ConfirmDialog';
+import './BestiaryEditor.css';
 
-// Shared Bestiary override editor. Used by:
+// GM Bestiary editor. Used by:
 //   - GmDashboard quick-action modal (encounter mode)
 //   - GmMonsters catalog page (/gm/catalog/monsters)
 //
-// List = union of seen enemies (deduped by creatureKey) + existing override rows.
+// List = union of seen enemies (deduped by creatureKey) + persisted monster docs.
 // Only creatures with a non-null creatureKey appear (null-key creatures have no
-// stable id to override and behave as today in BestiaryModal).
+// stable id and behave as today in BestiaryModal).
 //
-// Per-entry stored shape: { id: creatureKey, name, descriptionOverride,
-//   bestiary, defenses, capturedAt, lastSeenAt }. This editor only owns name +
-// descriptionOverride; the stat block is captured by BestiaryCaptureSync (#332)
-// and preserved here on save. An empty descriptionOverride means the GM chose to
-// redact entirely.
+// Per-entry stored shape: { id: creatureKey, name, descriptionOverride?,
+//   bestiary, defenses, capturedAt, lastSeenAt, locations }. The captured stat
+// block is owned by BestiaryCaptureSync (#332) and preserved on save; this editor
+// owns the display name + descriptionOverride and curates per-field visibility
+// (the shared cnmh_knowledge_global record) for the player Bestiary (#335).
 
-const MonsterForm = ({ entry, onSaved }) => {
-  const { importedDescription, creatureKey, name } = entry;
-  const override = entry.override || null;
+// descriptionOverride tri-state: absent → imported text; '' → redacted; text → custom.
+const descModeOf = (override) => {
+  if (!override || override.descriptionOverride === undefined) return 'imported';
+  if (override.descriptionOverride === '') return 'redacted';
+  return 'custom';
+};
 
-  const [descriptionOverride, setDescriptionOverride] = useState(
-    override?.descriptionOverride ?? ''
+const MonsterForm = ({ entry, onSaved, onDeleted }) => {
+  const { importedDescription, creatureKey, name: seenName, override } = entry;
+  const { recordFor, mergeRecord } = useRecallKnowledge();
+  const record = recordFor(creatureKey);
+
+  const [name, setName] = useState(override?.name || seenName || creatureKey);
+  const [descMode, setDescMode] = useState(descModeOf(override));
+  const [customText, setCustomText] = useState(
+    override?.descriptionOverride && override.descriptionOverride !== '' ? override.descriptionOverride : ''
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [confirm, setConfirm] = useState(false);
 
+  const origMode = descModeOf(override);
+  const origCustom = override?.descriptionOverride && override.descriptionOverride !== '' ? override.descriptionOverride : '';
   const isDirty =
-    descriptionOverride !== (override?.descriptionOverride ?? '');
+    name !== (override?.name || seenName || creatureKey) ||
+    descMode !== origMode ||
+    (descMode === 'custom' && customText !== origCustom);
+
+  // Preview enemy: prefer the persisted doc (has stats), else the encounter entry.
+  const previewDoc = override || { id: creatureKey, name, bestiary: entry.bestiary, defenses: entry.defenses };
+  const previewEnemy = monsterToEnemy(previewDoc);
+  const locations = monsterLocations(override || {});
 
   const save = async () => {
     setBusy(true);
     setError(null);
     try {
-      // Spread the existing doc so a description edit never clobbers the
-      // captured stat block (bestiary/defenses/capturedAt/lastSeenAt) the
-      // BestiaryCaptureSync writer persists (#332).
-      await saveDocument('monster', creatureKey, {
-        ...(override || {}),
-        id: creatureKey,
-        name,
-        descriptionOverride,
-      });
+      // Spread the existing doc so name/description edits never clobber captured
+      // stats, locations, or timestamps (#332).
+      const doc = { ...(override || {}), id: creatureKey, name };
+      if (descMode === 'imported') {
+        delete doc.descriptionOverride; // fall back to the imported bestiary text
+      } else if (descMode === 'redacted') {
+        doc.descriptionOverride = '';
+      } else {
+        doc.descriptionOverride = customText;
+      }
+      await saveDocument('monster', creatureKey, doc);
       onSaved();
     } catch (err) {
       setError(err.message);
@@ -53,13 +85,15 @@ const MonsterForm = ({ entry, onSaved }) => {
     }
   };
 
-  const doRevert = async () => {
+  const doDelete = async () => {
     setConfirm(false);
     setBusy(true);
     setError(null);
     try {
       await deleteDocument('monster', creatureKey);
-      onSaved();
+      // Forget what the party learned so a re-encounter starts clean.
+      mergeRecord(creatureKey, defaultRecord());
+      onDeleted();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -67,64 +101,114 @@ const MonsterForm = ({ entry, onSaved }) => {
     }
   };
 
+  const toggleField = (key, value) =>
+    mergeRecord(creatureKey, (prev) => setRecordFieldRevealed(prev, key, value));
+  const revealAll = () => mergeRecord(creatureKey, fullyRevealedRecord(record));
+  const refog = () => mergeRecord(creatureKey, { ...defaultRecord(), history: record.history || [] });
+
   return (
     <div className="gm-card" data-testid={`monster-form-${creatureKey}`}>
-      <p className="gm-count">Creature key: {creatureKey}</p>
-
-      {importedDescription ? (
-        <div className="form-group">
-          <label>Imported description (read-only)</label>
-          <p className="gm-hint be-imported-desc">{importedDescription}</p>
-        </div>
-      ) : (
-        <p className="gm-hint">No imported description for this creature.</p>
-      )}
-
+      {/* Header / provenance */}
       <div className="form-group">
-        <label>Description override</label>
-        <p className="gm-hint">
-          Replaces the imported description in the player Bestiary. Leave blank to
-          redact entirely (players see nothing even when revealed).
-        </p>
-        <textarea
-          aria-label="description-override"
-          rows={5}
-          value={descriptionOverride}
-          onChange={(e) => setDescriptionOverride(e.target.value)}
+        <label htmlFor={`be-name-${creatureKey}`}>Display name</label>
+        <input
+          id={`be-name-${creatureKey}`}
+          aria-label="display-name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
+      </div>
+      <p className="gm-count">Creature key: {creatureKey}</p>
+      <p className="gm-hint be-provenance" data-testid="be-provenance">
+        {override?.capturedAt && <>Captured {formatLastSeen(override.capturedAt)}</>}
+        {override?.lastSeenAt && <> · Last seen {formatLastSeen(override.lastSeenAt)}</>}
+        {locations.length > 0 && <> · Encountered at {locations.map((l) => l.name).join(', ')}</>}
+      </p>
+
+      {/* Captured stats preview — exactly what a fully-revealed player sees. */}
+      <div className="form-group">
+        <label>Captured stats (preview)</label>
+        <div className="be-preview">
+          <BestiaryEntry enemy={previewEnemy} record={record} revealAll />
+        </div>
+      </div>
+
+      {/* Description in the player bestiary */}
+      <div className="form-group">
+        <label htmlFor={`be-descmode-${creatureKey}`}>Description in player Bestiary</label>
+        {importedDescription ? (
+          <p className="gm-hint be-imported-desc">Imported: {importedDescription}</p>
+        ) : (
+          <p className="gm-hint">No imported description for this creature.</p>
+        )}
+        <select
+          id={`be-descmode-${creatureKey}`}
+          aria-label="description-mode"
+          value={descMode}
+          onChange={(e) => setDescMode(e.target.value)}
+        >
+          <option value="imported">Imported (show original text)</option>
+          <option value="custom">Custom (rewrite the text)</option>
+          <option value="redacted">Redacted (show nothing)</option>
+        </select>
+        {descMode === 'custom' && (
+          <textarea
+            aria-label="description-override"
+            rows={5}
+            value={customText}
+            onChange={(e) => setCustomText(e.target.value)}
+          />
+        )}
+      </div>
+
+      {/* Per-field visibility — live writes to the shared learned-knowledge record. */}
+      <div className="form-group">
+        <label>Player visibility (applies live)</label>
+        <p className="gm-hint">
+          Force-reveal or redact individual fields for every player. This is the same learned state
+          used in the in-combat Bestiary.
+        </p>
+        <div className="be-toggle-grid" data-testid="be-toggle-grid">
+          {REVEAL_FIELDS.map((f) => (
+            <label key={f.key} className="be-toggle">
+              <input
+                type="checkbox"
+                aria-label={`reveal-${f.key}`}
+                checked={isPathRevealed(record, f.key)}
+                onChange={(e) => toggleField(f.key, e.target.checked)}
+              />
+              {f.label}
+            </label>
+          ))}
+        </div>
+        <div className="gm-actions be-bulk">
+          <button type="button" className="btn-secondary" onClick={revealAll}>Reveal all</button>
+          <button type="button" className="btn-secondary" onClick={refog}>Re-fog (reset)</button>
+        </div>
       </div>
 
       {error && (
-        <p className="gm-warn" role="alert">
-          {error}
-        </p>
+        <p className="gm-warn" role="alert">{error}</p>
       )}
 
       <div className="gm-actions">
-        <button
-          className="btn-primary"
-          disabled={busy || !isDirty}
-          onClick={save}
-        >
+        <button className="btn-primary" disabled={busy || !isDirty} onClick={save}>
           Save
         </button>
         {override && (
-          <button
-            className="btn-danger"
-            disabled={busy}
-            onClick={() => setConfirm(true)}
-          >
-            Revert to imported
+          <button className="btn-danger" disabled={busy} onClick={() => setConfirm(true)}>
+            Delete entry
           </button>
         )}
       </div>
 
       <ConfirmDialog
         isOpen={confirm}
-        title="Revert to imported description?"
-        message={`Remove the override for "${name}". The player Bestiary will show the original imported text again.`}
-        confirmLabel="Revert"
-        onConfirm={doRevert}
+        title="Delete this bestiary entry?"
+        message={`Remove "${name}" from the campaign bestiary, including its captured stats and learned reveals. It will be re-captured the next time the party fights it.`}
+        confirmLabel="Delete"
+        onConfirm={doDelete}
         onCancel={() => setConfirm(false)}
       />
     </div>
@@ -137,13 +221,12 @@ const BestiaryEditor = () => {
   const [selectedKey, setSelectedKey] = useState(null);
   const [flash, setFlash] = useState(null);
 
-  // Build the unified list: seen enemies (with creatureKey) + orphaned override rows.
+  // Build the unified list: seen enemies (with creatureKey) + persisted docs.
   const entries = useMemo(() => {
     const map = new Map();
 
-    // Seen enemies from the current encounter order.
-    // Only creatures with a stable creatureKey are editable — entryIds are
-    // per-session and cannot be used as a persistent override key.
+    // Seen enemies from the current encounter order. Only creatures with a stable
+    // creatureKey are editable — entryIds are per-session.
     const order = encounter?.order || [];
     for (const e of order) {
       if (e.kind !== 'enemy') continue;
@@ -154,22 +237,28 @@ const BestiaryEditor = () => {
           creatureKey: key,
           name: e.name,
           importedDescription: e.bestiary?.description || '',
+          bestiary: e.bestiary || null,
+          defenses: e.defenses || null,
           override: null,
         });
       }
     }
 
-    // Existing override rows (may include creatures from past encounters).
+    // Persisted monster docs (creatures from past encounters too).
     for (const m of monsters) {
       const key = m.id;
       if (!key) continue;
       if (map.has(key)) {
-        map.get(key).override = m;
+        const row = map.get(key);
+        row.override = m;
+        if (!row.importedDescription) row.importedDescription = m.bestiary?.description || '';
       } else {
         map.set(key, {
           creatureKey: key,
           name: m.name || key,
-          importedDescription: '',
+          importedDescription: m.bestiary?.description || '',
+          bestiary: m.bestiary || null,
+          defenses: m.defenses || null,
           override: m,
         });
       }
@@ -184,6 +273,10 @@ const BestiaryEditor = () => {
 
   const onSaved = () => {
     setFlash('Saved. Changes are live for every connected player.');
+  };
+  const onDeleted = () => {
+    setSelectedKey(null);
+    setFlash('Entry deleted. The player Bestiary no longer lists this creature.');
   };
 
   if (entries.length === 0) {
@@ -220,7 +313,7 @@ const BestiaryEditor = () => {
                 >
                   {e.name}
                   {e.override && (
-                    <span className="gm-ct" title="Has override">●</span>
+                    <span className="gm-ct" title="Persisted entry">●</span>
                   )}
                 </button>
               </li>
@@ -236,10 +329,11 @@ const BestiaryEditor = () => {
               key={selectedEntry.creatureKey}
               entry={selectedEntry}
               onSaved={onSaved}
+              onDeleted={onDeleted}
             />
           ) : (
             <p className="gm-count gm-ped-hint">
-              Select a creature to edit its description.
+              Select a creature to edit its bestiary entry.
             </p>
           )}
         </div>

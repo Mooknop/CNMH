@@ -9,6 +9,10 @@ import {
   revealFromExploit,
   rkKeyFor,
   pruneEncounterKnowledge,
+  REVEAL_FIELDS,
+  isPathRevealed,
+  setRecordFieldRevealed,
+  fullyRevealedRecord,
   KNOWLEDGE_SKILLS,
 } from './recallKnowledge';
 
@@ -24,6 +28,48 @@ describe('rkKeyFor', () => {
   test('returns null when neither is present', () => {
     expect(rkKeyFor({})).toBeNull();
     expect(rkKeyFor(null)).toBeNull();
+  });
+});
+
+describe('GM reveal helpers (#335)', () => {
+  test('isPathRevealed reads flat and nested paths', () => {
+    const r = { ...defaultRecord(), ac: true, saves: { fortitude: true, reflex: false, will: false } };
+    expect(isPathRevealed(r, 'ac')).toBe(true);
+    expect(isPathRevealed(r, 'identity')).toBe(false);
+    expect(isPathRevealed(r, 'saves.fortitude')).toBe(true);
+    expect(isPathRevealed(r, 'saves.reflex')).toBe(false);
+    expect(isPathRevealed(null, 'ac')).toBe(false);
+  });
+
+  test('setRecordFieldRevealed sets a flat path immutably', () => {
+    const r = defaultRecord();
+    const next = setRecordFieldRevealed(r, 'ac', true);
+    expect(next.ac).toBe(true);
+    expect(r.ac).toBe(false); // original untouched
+  });
+
+  test('setRecordFieldRevealed sets a nested path without clobbering siblings', () => {
+    const r = { ...defaultRecord(), saves: { fortitude: true, reflex: false, will: false } };
+    const next = setRecordFieldRevealed(r, 'iwr.weaknesses', true);
+    expect(next.iwr.weaknesses).toBe(true);
+    expect(next.iwr.immunities).toBe(false);
+    expect(next.saves.fortitude).toBe(true); // untouched branch preserved
+  });
+
+  test('REVEAL_FIELDS covers every gated field', () => {
+    expect(REVEAL_FIELDS.map((f) => f.key)).toEqual([
+      'identity', 'description', 'hp', 'ac', 'perception', 'speed',
+      'saves.fortitude', 'saves.reflex', 'saves.will',
+      'iwr.immunities', 'iwr.resistances', 'iwr.weaknesses',
+    ]);
+  });
+
+  test('fullyRevealedRecord turns every field on and keeps history', () => {
+    const r = { ...defaultRecord(), history: [{ ts: 1 }], weaknessesRevealed: { cold: true } };
+    const all = fullyRevealedRecord(r);
+    REVEAL_FIELDS.forEach((f) => expect(isPathRevealed(all, f.key)).toBe(true));
+    expect(all.history).toEqual([{ ts: 1 }]);
+    expect(all.weaknessesRevealed).toEqual({}); // superseded by full iwr.weaknesses
   });
 });
 
