@@ -99,11 +99,66 @@ describe('partitionLiveState — known vs raw escape hatch', () => {
     expect(partitionLiveState(undefined)).toEqual({ groups: [], unrecognized: [] });
   });
 
-  it('attaches descriptor + formatted label to each entry', () => {
+  it('attaches descriptor + formatted label + edit to each entry', () => {
     const { groups } = partitionLiveState({ focus: 2 }, { spellcasting: { focus: { max: 3 } } });
     const entry = groups[0].entries[0];
     expect(entry.label).toBe('Focus points');
     expect(entry.formatted).toBe('1/3');
     expect(entry.editor).toBe('number');
+    expect(entry.edit.kind).toBe('pool');
+  });
+});
+
+describe('liveStateRegistry — edit helpers', () => {
+  const editOf = (type) => getLiveStateDescriptor(type).edit;
+
+  it('focus pool reads spent+max and writes clamped spent', () => {
+    const e = editOf('focus');
+    expect(e.read(1, { spellcasting: { focus: { max: 3 } } })).toEqual({ spent: 1, max: 3 });
+    expect(e.write(2)).toBe(2);
+    expect(e.write(-5)).toBe(0);
+  });
+
+  it('staff pool has no known max', () => {
+    expect(editOf('staff').read(2).max).toBeNull();
+  });
+
+  it('slots poolMap reads per-rank and writes one rank', () => {
+    const e = editOf('slots');
+    const rows = e.read({ 1: 1 }, { spellcasting: { spell_slots: { 1: 3, 2: 2, cantrips: 5 } } });
+    expect(rows).toEqual([{ key: '1', max: 3, spent: 1 }, { key: '2', max: 2, spent: 0 }]);
+    expect(e.write({ 1: 1 }, '2', 1)).toEqual({ 1: 1, 2: 1 });
+  });
+
+  it('heropoints count clamps at 0', () => {
+    const e = editOf('heropoints');
+    expect(e.read('3')).toBe(3);
+    expect(e.write(-1)).toBe(0);
+  });
+
+  it('toggles flip the active/raised flag and preserve other fields', () => {
+    expect(editOf('aura').write({}, true).active).toBe(true);
+    expect(editOf('aura').write({ active: true }, false).active).toBe(false);
+    const raised = editOf('shieldraise').write({ uid: 's1' }, true);
+    expect(raised.raised).toBe(true);
+    expect(raised.uid).toBe('s1');
+  });
+
+  it('clear helpers produce the cleared value', () => {
+    expect(editOf('stance').write()).toEqual({ active: false, name: null, ts: 0 });
+    expect(editOf('huntprey').write()).toBeNull();
+  });
+
+  it('list write removes the indexed item; itemLabel formats', () => {
+    const e = editOf('conditions');
+    expect(e.write([{ id: 'a' }, { id: 'b' }], 0)).toEqual([{ id: 'b' }]);
+    expect(e.itemLabel({ id: 'frightened', value: 2 })).toBe('frightened 2');
+  });
+
+  it('text editor reads/writes a string', () => {
+    const e = editOf('eldattune');
+    expect(e.read('Astral')).toBe('Astral');
+    expect(e.read(null)).toBe('');
+    expect(e.write('x', 'Ley Line')).toBe('Ley Line');
   });
 });

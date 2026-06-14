@@ -6,6 +6,7 @@ const TYPE_LABELS = {
   mode:   'Mode',
   save:   'Save',
   recall: 'RK',
+  gm:     'GM',
 };
 
 const formatTime = (ts) => {

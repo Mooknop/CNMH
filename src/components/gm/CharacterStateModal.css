@@ -72,25 +72,231 @@
   word-break: break-word;
 }
 
-.cs-row--raw {
+.cs-row--block {
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-1);
 }
 
-.cs-raw-note {
-  margin: 0;
+.cs-control {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
-.cs-raw {
-  margin: 0;
-  padding: var(--space-2);
+.cs-row--block .cs-control {
+  justify-content: stretch;
+}
+
+/* Steppers (pools, slots, counts) */
+.cs-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cs-step-rank {
   font-size: 0.78rem;
-  background: var(--surface-inset);
-  border: 1px solid var(--shell-border);
+  font-weight: 700;
+  color: var(--shell-text-tertiary);
+  min-width: 1.6rem;
+}
+
+.cs-step-btn {
+  width: 1.6rem;
+  height: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
   border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-primary);
+  cursor: pointer;
+}
+
+.cs-step-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+}
+
+.cs-step-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.cs-step-val {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--shell-text-primary);
+}
+
+.cs-poolmap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  align-items: flex-end;
+}
+
+/* Toggle + clear */
+.cs-toggle,
+.cs-clear-btn,
+.cs-save-btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
   color: var(--shell-text-secondary);
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
+  cursor: pointer;
+}
+
+.cs-toggle:hover,
+.cs-clear-btn:hover:not(:disabled),
+.cs-save-btn:hover:not(:disabled) {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+.cs-toggle.is-on {
+  background: rgba(42, 102, 64, 0.25);
+  border-color: rgba(61, 148, 88, 0.5);
+  color: var(--verdant-light);
+}
+
+.cs-clear-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cs-clear-btn:disabled,
+.cs-save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* List remove */
+.cs-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.cs-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0.2rem 0.4rem;
+  background: var(--surface-inset);
+  border-radius: var(--radius-sm);
+}
+
+.cs-item-label {
+  font-size: 0.86rem;
+  color: var(--shell-text-primary);
+}
+
+.cs-item-remove {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--shell-border-strong);
+  color: var(--peril-light);
+  cursor: pointer;
+}
+
+.cs-item-remove:hover {
+  background: rgba(183, 28, 28, 0.18);
+}
+
+/* Text editor */
+.cs-text-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cs-text-input {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.86rem;
+  border-radius: var(--radius-sm);
+  max-width: 12rem;
+}
+
+/* Presets */
+.cs-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cs-preset-btn {
+  flex: 1 1 auto;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border-strong);
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+
+.cs-preset-btn:hover {
+  background: var(--surface-inset-hover);
+  color: var(--shell-text-primary);
+}
+
+/* Raw JSON editor */
+.cs-raw-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.cs-raw-edit {
+  width: 100%;
+}
+
+.cs-raw-edit summary {
+  font-size: 0.8rem;
+  color: var(--shell-text-tertiary);
+  cursor: pointer;
+}
+
+.cs-raw-textarea {
+  width: 100%;
+  min-height: 6rem;
+  margin-top: var(--space-1);
+  padding: var(--space-2);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.cs-error {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8rem;
+  color: var(--peril-light);
+}
+
+.cs-raw-note {
+  margin: 0;
 }
