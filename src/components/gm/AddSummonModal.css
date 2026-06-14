@@ -1,0 +1,91 @@
+/* AddSummonModal — GM adds a Foundry-sourced summon tied to a sustain (#261) */
+
+.asm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.asm-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.asm-field label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.asm-field select {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+
+.asm-empty {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+}
+
+.asm-hint {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+.asm-pool-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.asm-refresh {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.asm-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+.asm-warn {
+  color: var(--gold-mid, var(--shell-text-secondary));
+  font-size: var(--text-xs);
+}
+
+.asm-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}
+
+.asm-add {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.asm-add:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

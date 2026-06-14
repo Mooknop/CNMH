@@ -64,6 +64,7 @@ export function makeActor(opts = {}) {
     publicNotes = '',
     compendiumSource = null,
     sourceId = null,
+    folderName = null,
   } = opts;
 
   const conditionItems = conditions.map((c) =>
@@ -74,6 +75,7 @@ export function makeActor(opts = {}) {
     name,
     img,
     documentName: 'Actor',
+    ...(folderName !== null ? { folder: { name: folderName } } : {}),
     ...(compendiumSource !== null ? { _stats: { compendiumSource } } : {}),
     ...(sourceId !== null ? { flags: { core: { sourceId } } } : {}),
     system: {

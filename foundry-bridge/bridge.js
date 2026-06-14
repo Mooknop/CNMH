@@ -16,6 +16,7 @@ import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
+import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { getPlayerActors, getActorId, getSpeed } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
@@ -52,6 +53,14 @@ Hooks.once('init', () => {
     type: String,
     default: CAMPAIGN_ID,
   });
+  game.settings.register(MODULE_ID, 'summonFolder', {
+    name: 'Summons folder',
+    hint: 'Name of the Actors folder whose creatures the app offers as summons (#261).',
+    scope: 'world',
+    config: true,
+    type: String,
+    default: 'Summons',
+  });
 });
 
 Hooks.once('ready', () => {
@@ -60,6 +69,7 @@ Hooks.once('ready', () => {
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
   initFlankingPush(sendUpdate);
+  initSummonPool(sendUpdate);
   initDoors(sendUpdate);
   connect();
 });
@@ -96,6 +106,7 @@ function connect() {
     clearTimeout(_reconnTimer);
     schedulePing();
     pushRoster();
+    pushSummonPool();
   };
 
   ws.onclose = (evt) => {
@@ -154,6 +165,12 @@ function dispatch(msg) {
   // App requests a fresh roster (e.g. after reconnect).
   if (characterId === 'global' && key === 'rosterreq') {
     pushRoster();
+    return;
+  }
+
+  // App requests a fresh summon pool (Add-summon modal refresh / reconnect).
+  if (characterId === 'global' && key === 'summonpoolreq') {
+    handleSummonPoolReq();
     return;
   }
 

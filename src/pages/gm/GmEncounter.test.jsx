@@ -178,4 +178,26 @@ describe('GmEncounter (read-only Foundry mirror)', () => {
     });
     expect(screen.getByLabelText('Pellias reaction spent')).toBeInTheDocument();
   });
+
+  it('renders a GM-added summon row with HP, and Dismiss removes it (#261)', () => {
+    act(() => {
+      __set('cnmh_encounter_global', FOUNDRY_ENCOUNTER);
+      __set('cnmh_summons_global', [
+        {
+          entryId: 'sum-1', kind: 'summon', name: 'Skeletal Champion',
+          casterId: 'IzzyUncut', sustainId: 's1',
+          bestiary: { hp: { current: 42, max: 60 } },
+        },
+      ]);
+    });
+    render(<GmEncounter />);
+
+    const row = screen.getByTestId('order-row-sum-1');
+    expect(row.className).toMatch(/is-summon/);
+    expect(screen.getByLabelText('Skeletal Champion hp').textContent).toBe('42/60');
+
+    fireEvent.click(screen.getByLabelText('Dismiss Skeletal Champion'));
+    expect(__get('cnmh_summons_global')).toEqual([]);
+    expect(screen.queryByTestId('order-row-sum-1')).toBeNull();
+  });
 });

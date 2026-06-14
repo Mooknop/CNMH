@@ -336,6 +336,28 @@ export function getPlayerActors() {
   );
 }
 
+// World actors filed under the named folder, mapped to the summon-pool shape the
+// app's Add-summon flow consumes (#261). Stats reuse the same extractors as
+// combat enemies, so a summoned creature carries identical defenses/HP. The GM
+// curates the folder in Foundry; an empty/absent folder yields [].
+export function getSummonFolderActors(folderName) {
+  const target = folderName || 'Summons';
+  return (game.actors?.contents ?? [])
+    .filter((a) => a.folder?.name === target)
+    .map((a) => {
+      const bestiary = getBestiaryInfo(a);
+      return {
+        key:      getActorId(a),
+        name:     a.name,
+        level:    bestiary?.level ?? null,
+        hp:       { max: bestiary?.hp?.max ?? 0 },
+        defenses: getDefenses(a),
+        traits:   bestiary?.traits ?? [],
+        img:      bestiary?.img ?? null,
+      };
+    });
+}
+
 // --- Door / wall data ---
 
 export function getSceneWalls() {

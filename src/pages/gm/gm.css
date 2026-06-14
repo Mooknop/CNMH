@@ -383,6 +383,23 @@
   border-color: var(--accent-outline);
 }
 
+/* GM-added summons (#261) — an allied creature row with HP + a Dismiss control. */
+.gm-encounter-row.is-summon {
+  background: rgba(108, 92, 231, 0.07);
+  border-color: rgba(108, 92, 231, 0.3);
+}
+
+.gm-encounter-summon-hp {
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-secondary);
+  font-family: var(--font-mono, monospace);
+}
+
+.gm-encounter-dismiss {
+  padding: 2px 10px;
+  font-size: 0.72rem;
+}
+
 .gm-encounter-name {
   font-weight: 600;
 }

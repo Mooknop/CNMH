@@ -7,6 +7,7 @@ import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { useSustains } from '../../hooks/useSustains';
+import { useSummons } from '../../hooks/useSummons';
 import { useSession } from '../../contexts/SessionContext';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { nextTurnIndex } from '../../utils/encounterUtils';
@@ -104,6 +105,17 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // `lastSustainedRound` on each entry tracks whether it's been kept alive this
   // round; forgetting (submitting without sustaining) lapses it.
   const { sustains, sustain: doSustain, end: endSustain } = useSustains(charId);
+
+  // GM-added summons (#261) are tied to a sustain. Every sustain-end path (manual
+  // End, lapse on turn submit, encounter end) mutates this caster's ledger, so a
+  // single reconciler here prunes any of *this* caster's summons whose sustain is
+  // gone — no need to hook each end path.
+  const { summons, pruneOrphans } = useSummons();
+  useEffect(() => {
+    const liveIds = new Set(sustains.map((s) => s.id));
+    const hasOrphan = summons.some((s) => s.casterId === charId && !liveIds.has(s.sustainId));
+    if (hasOrphan) pruneOrphans(charId, [...liveIds]);
+  }, [sustains, summons, charId, pruneOrphans]);
 
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
