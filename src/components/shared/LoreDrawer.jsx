@@ -1,14 +1,21 @@
 import React, { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLore } from '../../contexts/LoreContext';
 import { useContent } from '../../contexts/ContentContext';
+import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
+import { useGmAuth } from '../../hooks/useGmAuth';
 import { buildBacklinkMap, getConnectionData } from '../../utils/loreUtils';
+import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
+import { rkKeyFor } from '../../utils/recallKnowledge';
 import LoreMarkdown from './LoreMarkdown';
 import './LoreDrawer.css';
 
 const LoreDrawer = () => {
   const { isOpen, currentEntryId, closeLore, navigateTo, goBack, canGoBack } = useLore();
-  const { loreEntries: visibleEntries, allLoreEntries } = useContent();
+  const { loreEntries: visibleEntries, allLoreEntries, monsters } = useContent();
+  const { recordFor } = useRecallKnowledge();
+  const { isGm } = useGmAuth();
+  const navigate = useNavigate();
   // On GM pages (Access-gated at the edge) the drawer resolves unrevealed
   // entries too — e.g. the marquee's location link. Player routes only ever
   // see revealed lore; an unrevealed id falls through to "Entry not found".
@@ -26,6 +33,17 @@ const LoreDrawer = () => {
     () => entry ? getConnectionData(entry, loreEntries, backlinkMap) : null,
     [entry, loreEntries, backlinkMap]
   );
+
+  // Creatures the party has fought at this location (#334) — derived from the
+  // captured monster docs' `locations` map, gated to the party's learned state.
+  const monstersHere = useMemo(() => {
+    if (!entry) return [];
+    return monstersAtLocation(monsters, entry.id).map((doc) => {
+      const enemy = monsterToEnemy(doc);
+      const visible = isGm || !!recordFor(rkKeyFor(enemy)).identity;
+      return { doc, visible };
+    });
+  }, [entry, monsters, isGm, recordFor]);
 
   if (!isOpen) return null;
 
@@ -117,6 +135,25 @@ const LoreDrawer = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {monstersHere.length > 0 && (
+              <div className="lore-drawer-connections">
+                <div className="lore-drawer-section">
+                  <p className="lore-drawer-section-label">Monsters encountered here</p>
+                  <div className="lore-drawer-conn-list">
+                    {monstersHere.map(({ doc, visible }) => (
+                      <button
+                        key={doc.id}
+                        className="lore-drawer-conn-btn"
+                        onClick={() => { closeLore(); navigate(`/bestiary/${encodeURIComponent(doc.id)}`); }}
+                      >
+                        {visible ? doc.name : 'Unknown creature'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </div>

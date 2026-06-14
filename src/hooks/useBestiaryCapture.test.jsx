@@ -17,6 +17,11 @@ vi.mock('./useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
 }));
 
+let mockCampaign = { location: '', locationLoreId: '' };
+vi.mock('./useSyncedState', () => ({
+  useSyncedState: () => [mockCampaign, vi.fn()],
+}));
+
 const mockSaveDocument = vi.fn(() => Promise.resolve({}));
 vi.mock('../utils/gmApi', () => ({
   saveDocument: (...args) => mockSaveDocument(...args),
@@ -42,6 +47,7 @@ beforeEach(() => {
   mockIsGm = true;
   mockMonsters = [];
   mockEncounter = { active: false, order: [] };
+  mockCampaign = { location: '', locationLoreId: '' };
 });
 
 describe('useBestiaryCapture (#332)', () => {
@@ -110,5 +116,46 @@ describe('useBestiaryCapture (#332)', () => {
     mockMonsters = [{ id: 'goblin-warrior', name: 'Goblin Warrior', bestiary: goblin.bestiary, defenses: goblin.defenses, capturedAt: 1, lastSeenAt: 1 }];
     rerender();
     expect(mockSaveDocument).toHaveBeenCalledTimes(1);
+  });
+
+  test('records the active location (#334) keyed by lore id', () => {
+    mockCampaign = { location: 'Thistletop', locationLoreId: 'thistletop' };
+    mockEncounter = { active: true, order: [goblin] };
+    setup();
+    const [, , doc] = mockSaveDocument.mock.calls[0];
+    expect(doc.locations).toMatchObject({ thistletop: { name: 'Thistletop' } });
+    expect(doc.locations.thistletop.lastSeenAt).toEqual(expect.any(Number));
+  });
+
+  test('merges a new location with previously-recorded ones', () => {
+    mockMonsters = [{
+      id: 'goblin-warrior', name: 'Goblin Warrior', bestiary: goblin.bestiary, defenses: goblin.defenses,
+      capturedAt: 1, lastSeenAt: 1, locations: { sandpoint: { name: 'Sandpoint', lastSeenAt: 1 } },
+    }];
+    mockCampaign = { location: 'Thistletop', locationLoreId: 'thistletop' };
+    mockEncounter = { active: true, order: [goblin] };
+    setup();
+    const [, , doc] = mockSaveDocument.mock.calls[0];
+    expect(Object.keys(doc.locations).sort()).toEqual(['sandpoint', 'thistletop']);
+  });
+
+  test('no location recorded when the GM has not set one', () => {
+    mockEncounter = { active: true, order: [goblin] };
+    setup();
+    const [, , doc] = mockSaveDocument.mock.calls[0];
+    expect(doc.locations).toEqual({});
+  });
+
+  test('same creature re-fought at a new location records the new location', () => {
+    mockCampaign = { location: 'Sandpoint', locationLoreId: 'sandpoint' };
+    mockEncounter = { active: true, order: [goblin] };
+    const { rerender } = setup();
+    expect(mockSaveDocument).toHaveBeenCalledTimes(1);
+    // Same session, GM moves the party, the creature is fought again elsewhere.
+    mockCampaign = { location: 'Thistletop', locationLoreId: 'thistletop' };
+    rerender();
+    expect(mockSaveDocument).toHaveBeenCalledTimes(2);
+    const [, , doc] = mockSaveDocument.mock.calls[1];
+    expect(doc.locations).toMatchObject({ thistletop: { name: 'Thistletop' } });
   });
 });
