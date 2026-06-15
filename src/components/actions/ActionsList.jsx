@@ -9,7 +9,7 @@ import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import HuntPreyModal from '../encounter/HuntPreyModal';
 import SkillActionModal from '../encounter/SkillActionModal';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
-import { skillActionsFor } from '../../data/skillActions';
+import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -183,7 +183,7 @@ const ActionsList = ({ character, characterColor }) => {
               <button
                 className="btn-encounter-use"
                 aria-label={`Use ${sa.name}`}
-                onClick={() => setSkillAction(sa)}
+                onClick={() => setSkillAction(augmentSkillAction(character, sa))}
               >
                 Use ({sa.actionCost} act)
               </button>

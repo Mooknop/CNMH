@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SkillActionModal from './SkillActionModal';
-import { getSkillAction } from '../../data/skillActions';
+import { getSkillAction, augmentSkillAction } from '../../data/skillActions';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useEffects } from '../../hooks/useEffects';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -32,6 +32,7 @@ vi.mock('../../hooks/useEnemyEffects', () => ({ useEnemyEffects: vi.fn() }));
 vi.mock('../../utils/rollResolution', () => ({ resolveActionRoll: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getSkillModifier: (_c, s) => ({ athletics: 8, acrobatics: 5 }[s] ?? 0),
+  hasFeat: (c, name) => (c?.feats || []).some((f) => f.name?.toLowerCase() === name.toLowerCase()),
 }));
 vi.mock('../../utils/gameTime', () => ({ toGameSeconds: () => 1000 }));
 vi.mock('../../contexts/GameDateContext', () => ({
@@ -303,5 +304,30 @@ describe('SkillActionModal (circumstance bonuses, AC4)', () => {
     expect(appendLog).toHaveBeenCalledWith(
       expect.objectContaining({ text: expect.stringContaining('[Aid]') })
     );
+  });
+});
+
+describe('SkillActionModal (Ashka feat augments, #223)', () => {
+  const ashka = {
+    id: 'ashka', name: 'Ashka', abilities: {}, skills: {},
+    feats: [{ name: 'Ranger Dedication' }],
+    familiar: { name: 'Lazarus', abilities: [{ name: 'Threat Display' }] },
+  };
+
+  it('shows the Threat Display hint on Demoralize for the familiar holder', () => {
+    const demo = augmentSkillAction(ashka, getSkillAction('demoralize'));
+    render(<SkillActionModal isOpen onClose={() => {}} action={demo} character={ashka} />);
+    expect(screen.getByText(/Threat Display/)).toBeInTheDocument();
+    expect(screen.getByText(/Lazarus/)).toBeInTheDocument();
+  });
+
+  it('offers a Hunt Prey +2 toggle on Seek that lifts the net modifier', () => {
+    const seek = augmentSkillAction(ashka, getSkillAction('seek'));
+    render(<SkillActionModal isOpen onClose={() => {}} action={seek} character={ashka} />);
+    pickGoblin();
+    const toggle = screen.getByRole('button', { name: 'Hunt Prey vs prey +2' });
+    expect(screen.queryByText('(incl. +2 circumstance)')).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.getByText('(incl. +2 circumstance)')).toBeInTheDocument();
   });
 });
