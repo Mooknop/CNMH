@@ -11,8 +11,21 @@ export { CampaignSession, CampaignContent };
 
 const CAMPAIGN_ID = 'osprey-covey';
 
+// Shared image-upload constraints (used by both the Access-gated GM upload and
+// the BRIDGE_SECRET-gated Foundry token import).
+const IMAGE_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+const IMAGE_MAX_BYTES = 1.5 * 1024 * 1024;
+
 const contentStub = (env) =>
   env.CAMPAIGN_CONTENT.get(env.CAMPAIGN_CONTENT.idFromName(CAMPAIGN_ID));
+
+// SHA-256 of the bytes as lowercase hex — used for content-addressed dedup of
+// imported token art (identical art across creatures/encounters → one object).
+async function sha256Hex(bytes) {
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 export default {
   async fetch(request, env) {
@@ -99,20 +112,17 @@ export default {
         return new Response('Missing file field', { status: 400 });
       }
 
-      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
       const mime = file.type;
-      if (!ALLOWED_TYPES.includes(mime)) {
+      if (!IMAGE_ALLOWED_TYPES.includes(mime)) {
         return new Response('Only JPEG, PNG, and WebP are allowed', { status: 415 });
       }
 
-      const MAX_BYTES = 1.5 * 1024 * 1024;
       const bytes = await file.arrayBuffer();
-      if (bytes.byteLength > MAX_BYTES) {
+      if (bytes.byteLength > IMAGE_MAX_BYTES) {
         return new Response('File too large (max 1.5 MB after resize)', { status: 413 });
       }
 
-      const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
-      const id = `img_${crypto.randomUUID()}${EXT[mime]}`;
+      const id = `img_${crypto.randomUUID()}${IMAGE_EXT[mime]}`;
       await env.CAMPAIGN_IMAGES.put(id, bytes, { httpMetadata: { contentType: mime } });
 
       const name = (formData.get('name') || file.name || id).slice(0, 200);
@@ -170,6 +180,14 @@ export default {
           references.push({ collection: 'character', id: char.id, name: `${char.name || char.id} (animal companion)` });
         }
       }
+      // Check captured monster docs — token art imported by the bridge stores the
+      // public /api/images/<id> URL in bestiary.img, so match on that suffix.
+      for (const monster of payload.monster || []) {
+        const img = monster.bestiary && monster.bestiary.img;
+        if (typeof img === 'string' && img.endsWith(`/api/images/${id}`)) {
+          references.push({ collection: 'monster', id: monster.id, name: monster.name || monster.id });
+        }
+      }
 
       if (references.length > 0) {
         return Response.json({ references }, { status: 409 });
@@ -181,6 +199,55 @@ export default {
       );
 
       return Response.json({ ok: true });
+    }
+
+    // Foundry token import: POST /api/bridge/image?key=<secret> — gated by the
+    // shared BRIDGE_SECRET (the bridge has no Cloudflare Access JWT). The bridge
+    // is the only peer that can read Foundry token bytes (same origin as the
+    // Foundry asset server), so it streams them here. Bytes are content-addressed
+    // for dedup and a catalog entry is registered so the art shows up in
+    // GM Tools → Images alongside hand-uploaded images.
+    if (request.method === 'POST' && url.pathname === '/api/bridge/image') {
+      const secret = url.searchParams.get('key');
+      if (!env.BRIDGE_SECRET || secret !== env.BRIDGE_SECRET) {
+        return new Response('Forbidden', { status: 403 });
+      }
+
+      const mime = request.headers.get('Content-Type') || '';
+      if (!IMAGE_ALLOWED_TYPES.includes(mime)) {
+        return new Response('Only JPEG, PNG, and WebP are allowed', { status: 415 });
+      }
+
+      const bytes = await request.arrayBuffer();
+      if (bytes.byteLength === 0) {
+        return new Response('Empty body', { status: 400 });
+      }
+      if (bytes.byteLength > IMAGE_MAX_BYTES) {
+        return new Response('File too large (max 1.5 MB)', { status: 413 });
+      }
+
+      const hash = await sha256Hex(bytes);
+      const id = `tok_${hash}${IMAGE_EXT[mime]}`;
+
+      // Content-addressed: identical bytes already in R2 → skip both the byte
+      // write and the catalog registration (bytes + catalog entry are created
+      // together, so a head() hit means the entry already exists).
+      const existing = await env.CAMPAIGN_IMAGES.head(id);
+      if (!existing) {
+        await env.CAMPAIGN_IMAGES.put(id, bytes, { httpMetadata: { contentType: mime } });
+
+        const name = (url.searchParams.get('name') || id).slice(0, 200);
+        const catalogEntry = { id, name, folder: 'Bestiary Tokens', mimeType: mime, createdAt: Date.now() };
+        await contentStub(env).fetch(
+          new Request(`${url.origin}/api/gm/image/${encodeURIComponent(id)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(catalogEntry),
+          })
+        );
+      }
+
+      return Response.json({ id, url: `/api/images/${id}` });
     }
 
     // GM writes — verified server-side before reaching the content DO.
