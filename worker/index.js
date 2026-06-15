@@ -207,23 +207,40 @@ export default {
     // Foundry asset server), so it streams them here. Bytes are content-addressed
     // for dedup and a catalog entry is registered so the art shows up in
     // GM Tools → Images alongside hand-uploaded images.
-    if (request.method === 'POST' && url.pathname === '/api/bridge/image') {
+    //
+    // The bridge runs on a different origin (e.g. Forge), and the image/* body
+    // Content-Type is not CORS-safelisted, so the browser sends a preflight.
+    // Auth is the `key` query param (not a cookie), so we can allow any origin.
+    if (url.pathname === '/api/bridge/image') {
+      const CORS = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Max-Age': '86400',
+      };
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: CORS });
+      }
+      if (request.method !== 'POST') {
+        return new Response('Method not allowed', { status: 405, headers: CORS });
+      }
+
       const secret = url.searchParams.get('key');
       if (!env.BRIDGE_SECRET || secret !== env.BRIDGE_SECRET) {
-        return new Response('Forbidden', { status: 403 });
+        return new Response('Forbidden', { status: 403, headers: CORS });
       }
 
       const mime = request.headers.get('Content-Type') || '';
       if (!IMAGE_ALLOWED_TYPES.includes(mime)) {
-        return new Response('Only JPEG, PNG, and WebP are allowed', { status: 415 });
+        return new Response('Only JPEG, PNG, and WebP are allowed', { status: 415, headers: CORS });
       }
 
       const bytes = await request.arrayBuffer();
       if (bytes.byteLength === 0) {
-        return new Response('Empty body', { status: 400 });
+        return new Response('Empty body', { status: 400, headers: CORS });
       }
       if (bytes.byteLength > IMAGE_MAX_BYTES) {
-        return new Response('File too large (max 1.5 MB)', { status: 413 });
+        return new Response('File too large (max 1.5 MB)', { status: 413, headers: CORS });
       }
 
       const hash = await sha256Hex(bytes);
@@ -247,7 +264,7 @@ export default {
         );
       }
 
-      return Response.json({ id, url: `/api/images/${id}` });
+      return Response.json({ id, url: `/api/images/${id}` }, { headers: CORS });
     }
 
     // GM writes — verified server-side before reaching the content DO.
