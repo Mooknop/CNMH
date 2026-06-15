@@ -6,6 +6,7 @@ import { resizeImageToBlob } from '../../utils/imageUpload';
 import { existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
+import ImageReclaimModal from '../../components/gm/ImageReclaimModal';
 import './gm.css';
 import './GmImages.css';
 
@@ -156,6 +157,7 @@ const GmImages = () => {
   const [flash, setFlash] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [reclaimOpen, setReclaimOpen] = useState(false);
   const fileRef = useRef(null);
 
   const tabs = useMemo(
@@ -240,6 +242,12 @@ const GmImages = () => {
         >
           {uploading ? 'Uploading…' : '+ Upload image'}
         </button>
+        <button
+          className="btn-secondary"
+          onClick={() => setReclaimOpen(true)}
+        >
+          Reclaim unused
+        </button>
         <input
           ref={fileRef}
           type="file"
@@ -251,6 +259,12 @@ const GmImages = () => {
       </div>
 
       {uploadError && <p className="gm-warn" role="alert">{uploadError}</p>}
+
+      <ImageReclaimModal
+        isOpen={reclaimOpen}
+        onClose={() => setReclaimOpen(false)}
+        onDone={() => setFlash('Reclaimed unused images. Changes are live for every connected player.')}
+      />
 
       <p className="gm-count">Showing {filtered.length} of {inTab.length}</p>
 
