@@ -6,6 +6,7 @@
 import { CampaignSession } from './CampaignSession.js';
 import { CampaignContent } from './CampaignContent.js';
 import { verifyAccess } from './access.js';
+import { scanImageReferences } from './imageReferences.js';
 
 export { CampaignSession, CampaignContent };
 
@@ -155,40 +156,9 @@ export default {
       const snap = await snapRes.json();
       const payload = snap.payload || {};
 
-      const references = [];
-      // Check items
-      for (const item of payload.item || []) {
-        if (item.image === id) {
-          references.push({ collection: 'item', id: item.id, name: item.name || item.id });
-        }
-      }
-      // Check lore entries
-      for (const entry of payload.lore || []) {
-        if (entry.image === id) {
-          references.push({ collection: 'lore', id: entry.id, name: entry.title || entry.id });
-        }
-      }
-      // Check characters (incl. nested familiar + animalCompanion)
-      for (const char of payload.character || []) {
-        if (char.image === id) {
-          references.push({ collection: 'character', id: char.id, name: char.name || char.id });
-        }
-        if (char.familiar && char.familiar.image === id) {
-          references.push({ collection: 'character', id: char.id, name: `${char.name || char.id} (familiar)` });
-        }
-        if (char.animalCompanion && char.animalCompanion.image === id) {
-          references.push({ collection: 'character', id: char.id, name: `${char.name || char.id} (animal companion)` });
-        }
-      }
-      // Check captured monster docs — token art imported by the bridge stores the
-      // public /api/images/<id> URL in bestiary.img, so match on that suffix.
-      for (const monster of payload.monster || []) {
-        const img = monster.bestiary && monster.bestiary.img;
-        if (typeof img === 'string' && img.endsWith(`/api/images/${id}`)) {
-          references.push({ collection: 'monster', id: monster.id, name: monster.name || monster.id });
-        }
-      }
-
+      // Shared deep reference scan (worker/imageReferences.js) — also walks
+      // nested ability/action images and monster bestiary.img token URLs.
+      const references = scanImageReferences(payload).get(id) || [];
       if (references.length > 0) {
         return Response.json({ references }, { status: 409 });
       }
