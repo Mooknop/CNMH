@@ -113,8 +113,49 @@ describe('encounter payload push', () => {
     expect(goblin.bestiary).toBeDefined();
     expect(goblin.bestiary.level).toBe(1);
     expect(goblin.bestiary.rarity).toBe('common');
-    expect(goblin.bestiary.img).toBe('tokens/goblin.webp');
+    // Token image is resolved asynchronously (#394). With no window/fetch in the
+    // test env the raw Foundry-relative path is never leaked — img is null until
+    // a stable app URL is uploaded (covered in tokenImages.test.js).
+    expect(goblin.bestiary.img).toBeNull();
     expect(goblin.bestiary.description).toBe('A goblin.');
+  });
+
+  test('resolves the enemy token image and re-pushes with the stable URL', async () => {
+    global.window = { location: { origin: 'https://foundry.example' } };
+    global.fetch = jest.fn()
+      // GET the token bytes from Foundry (same origin as the bridge).
+      .mockResolvedValueOnce({ ok: true, blob: async () => ({ type: 'image/webp', size: 1234 }) })
+      // POST to the Worker's bridge-image endpoint → stable app URL.
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ id: 'tok_abc.webp', url: '/api/images/tok_abc.webp' }) });
+
+    try {
+      const goblinActor = makeActor({ id: 'actor-goblin', img: 'tokens/goblin.webp', level: 1 });
+      global.game.actors.set('actor-goblin', goblinActor);
+
+      // Register the combat so the post-upload re-push can resolve the live combat.
+      const combat = combatWithGoblinAndPellias();
+      global.game.combat = combat;
+      global.Hooks.fire('createCombat', combat);
+
+      // First push happens synchronously with img unresolved.
+      expect(send.mock.calls[0][2].order.find((e) => e.name === 'Goblin').bestiary.img).toBeNull();
+
+      // Let the async fetch → upload → re-push chain settle.
+      await new Promise((res) => setTimeout(res, 0));
+
+      // The Worker upload URL carried the secret and a derived name.
+      const uploadCall = global.fetch.mock.calls.find(([u]) => String(u).includes('/api/bridge/image'));
+      expect(uploadCall).toBeDefined();
+      expect(uploadCall[0]).toContain('name=goblin');
+      expect(uploadCall[1]).toMatchObject({ method: 'POST', headers: { 'Content-Type': 'image/webp' } });
+
+      // The re-push carries the resolved stable URL.
+      const last = send.mock.calls[send.mock.calls.length - 1][2];
+      expect(last.order.find((e) => e.name === 'Goblin').bestiary.img).toBe('/api/images/tok_abc.webp');
+    } finally {
+      delete global.window;
+      delete global.fetch;
+    }
   });
 
   test('enemy entry includes a top-level creatureKey', () => {
