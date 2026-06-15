@@ -45,6 +45,18 @@ export const minionStrikeAttackMod = (strike, companionData, ownerLevel) => {
   return bestAbilityMod + getProficiencyBonus(strike?.proficiency ?? 0, ownerLevel);
 };
 
+// A familiar's skill modifier (#223). Familiars carry no ability scores in our
+// data; the sheet shows skills the familiar is trained in at a flat bonus and
+// everything else lower. Mirror that convention — master level + 3 when trained,
+// level − 1 otherwise — so the Squox maneuver resolver and the FamiliarModal
+// display read off one source and can't drift.
+export const familiarSkillBonus = (skillName, familiarData, masterLevel = 1) => {
+  const trained = (familiarData?.skills || []).some(
+    (s) => String(s).toLowerCase() === String(skillName).toLowerCase()
+  );
+  return trained ? masterLevel + 3 : masterLevel - 1;
+};
+
 // Damage string with the companion's Str mod folded into melee strikes (mirrors
 // the strikeUtils convention; ranged strikes carry no Str-to-damage).
 export const minionStrikeDamage = (strike, companionData) => {

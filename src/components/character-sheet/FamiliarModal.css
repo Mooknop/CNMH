@@ -97,6 +97,14 @@
   color: var(--color-condition-highlight);
 }
 
+/* Squox Tricks maneuver buttons (#223) */
+.familiar-maneuvers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .familiar-defenses {
