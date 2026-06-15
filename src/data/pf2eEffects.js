@@ -9,6 +9,17 @@
 //   amount: the flat bonus (positive integer)
 
 const PF2E_EFFECTS = [
+  // ── Shadow Hound Support (Zevira, #223) ────────────────────────────
+  // No auto stat change: the concealment is conditional (you must damage a
+  // creature within the hound's reach) and positional, so it's GM-adjudicated.
+  // This entry exists so the "until your next turn" marker chip renders a label.
+  {
+    id: 'shadow-hound-support',
+    name: 'Shadow Hound Support',
+    description:
+      'Until the start of your next turn, when you damage a creature with a Strike and it is within reach of your Shadow Hound, you and your hound are Concealed to it until the end of your next turn.',
+    modifiers: [],
+  },
   // ── Heroism (occult spell, heightened) ─────────────────────────────
   {
     id: 'heroism-1',

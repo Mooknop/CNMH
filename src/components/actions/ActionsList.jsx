@@ -8,6 +8,7 @@ import UseAbilityModal from '../encounter/UseAbilityModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import HuntPreyModal from '../encounter/HuntPreyModal';
 import SkillActionModal from '../encounter/SkillActionModal';
+import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import { skillActionsFor } from '../../data/skillActions';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
@@ -23,6 +24,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [treatWoundsMode, setTreatWoundsMode] = useState(null); // 'battle-medicine' | 'staunch-bleeding' | null
   const [huntPreyCost, setHuntPreyCost] = useState(null); // action cost when the Hunt Prey modal is open, else null
   const [skillAction, setSkillAction] = useState(null); // a skillActions.js entry while its modal is open, else null
+  const [companionOpen, setCompanionOpen] = useState(false); // Command an Animal → companion command surface
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -38,6 +40,24 @@ const ActionsList = ({ character, characterColor }) => {
 
   // Player-initiated skill actions (#260) — Demoralize today. Only in encounter.
   const skillActions = skillActionsFor(character, { encounterMode });
+
+  // Command an Animal (#223) — present only for a PC with an animal companion.
+  // Spends 1 of the owner's actions and opens the companion command surface
+  // (strike/move/Support). The granted-action *pool* (the companion's 2 actions)
+  // is deferred to #391; the companion's own MAP already resets with the turn.
+  const hasCompanion = !!character.animalCompanion;
+
+  const handleCommandAnimal = useCallback(() => {
+    if (encounterMode) {
+      spendActions(1, 'Command an Animal');
+      appendLog({
+        type: 'action',
+        charId: character.id,
+        text: `${character.name} commanded ${character.animalCompanion?.name || 'their companion'} (Command an Animal, 1 act)`,
+      });
+    }
+    setCompanionOpen(true);
+  }, [encounterMode, spendActions, appendLog, character.id, character.name, character.animalCompanion]);
 
   const handleUse = useCallback(
     (item, cost) => {
@@ -172,6 +192,22 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
+      {encounterMode && hasCompanion && (
+        <div className="granted-actions-section" aria-label="Companion">
+          <h3 className="granted-actions-title">Companion</h3>
+          <div className="granted-action-row">
+            <span className="granted-action-name">Command an Animal</span>
+            <button
+              className="btn-encounter-use"
+              aria-label="Command an Animal"
+              onClick={handleCommandAnimal}
+            >
+              Use (1 act)
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="section-tabs">
         <button
           className={`section-tab ${activeSection === 'actions' ? 'active' : ''}`}
@@ -270,6 +306,16 @@ const ActionsList = ({ character, characterColor }) => {
           action={skillAction}
           character={character}
           themeColor={themeColor}
+        />
+      )}
+
+      {hasCompanion && (
+        <AnimalCompanionModal
+          isOpen={companionOpen}
+          onClose={() => setCompanionOpen(false)}
+          animalCompanion={character.animalCompanion}
+          character={character}
+          characterColor={themeColor}
         />
       )}
     </div>

@@ -20,6 +20,9 @@ vi.mock('./FreeActionsList', () => ({ default: () => <div data-testid="free-acti
 vi.mock('../spells/MagicModal', () => ({ default: () => null }));
 vi.mock('../encounter/UseAbilityModal', () => ({ default: () => <div data-testid="use-ability-modal" /> }));
 vi.mock('../encounter/HuntPreyModal', () => ({ default: () => <div data-testid="hunt-prey-modal" /> }));
+vi.mock('../character-sheet/AnimalCompanionModal', () => ({
+  default: ({ isOpen }) => (isOpen ? <div data-testid="companion-modal" /> : null),
+}));
 
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: () => ({
@@ -143,5 +146,33 @@ describe('ActionsList', () => {
     fireEvent.click(screen.getByRole('button', { name: 'use-hunt-prey' }));
     expect(screen.getByTestId('hunt-prey-modal')).toBeInTheDocument();
     expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
+  });
+
+  // ── Command an Animal (#223) ─────────────────────────────────────────────
+  const companionCharacter = {
+    ...mockCharacter,
+    animalCompanion: { name: 'Zevira', type: 'Young Shadow Hound' },
+  };
+
+  it('does not show the Companion section for a PC without an animal companion', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByRole('button', { name: 'Command an Animal' })).not.toBeInTheDocument();
+  });
+
+  it('does not show the Companion section out of an encounter', () => {
+    render(<ActionsList character={companionCharacter} />);
+    expect(screen.queryByRole('button', { name: 'Command an Animal' })).not.toBeInTheDocument();
+  });
+
+  it('Command an Animal spends 1 action and opens the companion surface', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={companionCharacter} />);
+    expect(screen.queryByTestId('companion-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Command an Animal' }));
+    expect(mockSpendActions).toHaveBeenCalledWith(1, 'Command an Animal');
+    expect(screen.getByTestId('companion-modal')).toBeInTheDocument();
   });
 });
