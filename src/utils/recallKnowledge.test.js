@@ -363,6 +363,23 @@ describe('applyRecallKnowledge', () => {
     });
     expect(isLockedFor(next, 'c2')).toBe(false);
   });
+
+  test('out-of-combat criticalFailure does not set the per-encounter lockout (#396)', () => {
+    const { next, learned } = applyRecallKnowledge(defaultRecord(), {
+      degree: 'criticalFailure', defenses, choices: [], charId: 'c1', outOfCombat: true,
+    });
+    expect(next.lockedOut).toEqual({});
+    expect(isLockedFor(next, 'c1')).toBe(false);
+    expect(learned).toBeNull();
+  });
+
+  test('out-of-combat success still reveals normally (#396)', () => {
+    const { next } = applyRecallKnowledge(defaultRecord(), {
+      degree: 'success', defenses, choices: ['ac'], charId: 'c1', outOfCombat: true,
+    });
+    expect(next.identity).toBe(true);
+    expect(next.ac).toBe(true);
+  });
 });
 
 // ── Exploit Vulnerability helpers ─────────────────────────────────────────────

@@ -32,6 +32,11 @@ vi.mock('../contexts/LoreContext', () => ({
   useLore: () => ({ openLore: mockOpenLore }),
 }));
 
+// Out-of-combat RK is covered by its own test; stub it here to a sentinel.
+vi.mock('../components/bestiary/BestiaryRecallKnowledge', () => ({
+  default: ({ enemy }) => <div data-testid="bestiary-rk-mock">{enemy?.id}</div>,
+}));
+
 const goblin = {
   id: 'goblin-warrior',
   name: 'Goblin Warrior',
@@ -95,6 +100,13 @@ describe('BestiaryBrowser (#334)', () => {
     render(<BestiaryBrowser />);
     // The focused detail pane shows the Ogre's AC.
     expect(screen.getByText('19')).toBeInTheDocument();
+  });
+
+  test('renders out-of-combat Recall Knowledge for the focused creature (#396)', () => {
+    mockIsGm = true;
+    mockParams = { creatureKey: 'ogre' };
+    render(<BestiaryBrowser />);
+    expect(screen.getByTestId('bestiary-rk-mock')).toHaveTextContent('ogre');
   });
 
   test('"Encountered at" link opens the location lore', () => {

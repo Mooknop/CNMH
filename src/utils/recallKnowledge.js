@@ -235,7 +235,7 @@ function applyOneChoice(record, choice, defenses) {
 //   'fortitude'|'reflex'|'will'|'lowest'|'highest'|
 //   'immunities'|'resistances'|'weaknesses'
 // `defenses` is the enemy's defenses object (for lowest/highest resolution).
-export function applyRecallKnowledge(record, { degree, defenses, choices, charId }) {
+export function applyRecallKnowledge(record, { degree, defenses, choices, charId, outOfCombat }) {
   const base = record || defaultRecord();
 
   if (degree === 'criticalSuccess' || degree === 'success') {
@@ -251,6 +251,11 @@ export function applyRecallKnowledge(record, { degree, defenses, choices, charId
   }
 
   if (degree === 'criticalFailure') {
+    // The in-combat lockout (`lockedOut`) is cleared at encounter end. Out of
+    // combat there is no encounter to end it, so we don't set a per-encounter
+    // lock here — the next-in-game-day lockout is added in a later slice. An
+    // out-of-combat critical failure simply reveals nothing for now.
+    if (outOfCombat) return { next: base, learned: null };
     const id = charId || '__unknown__';
     return {
       next: { ...base, lockedOut: { ...base.lockedOut, [id]: true } },
