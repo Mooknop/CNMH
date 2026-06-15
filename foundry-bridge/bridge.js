@@ -18,6 +18,7 @@ import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
+import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
 import { getPlayerActors, getActorId, getSpeed } from './pf2eAdapter.js';
 
 const MODULE_ID = 'cnmh-bridge';
@@ -72,6 +73,7 @@ Hooks.once('ready', () => {
   initFlankingPush(sendUpdate);
   initSummonPool(sendUpdate);
   initMinionActors(sendUpdate);
+  initMinionSync(sendUpdate);
   initDoors(sendUpdate);
   connect();
 });
@@ -158,6 +160,11 @@ function dispatch(msg) {
       pushFlankedState();  // actorMap just became valid — re-evaluate with correct PC set
       pushMinionActors();  // minion→PC links resolve through the actor map
     }
+    // Seed the minion-HP merge cache from persisted state so the first Foundry→app
+    // push for one role doesn't clobber the other (#362 stretch).
+    for (const [cid, state] of Object.entries(msg.payload || {})) {
+      if (cid !== 'global' && state?.minions) cacheMinions(cid, state.minions);
+    }
     return;
   }
 
@@ -227,6 +234,12 @@ function dispatch(msg) {
   // HP / hero points write-back from app → Foundry actor.
   if (key === 'hp' || key === 'heropoints') {
     handleCharacterUpdate(characterId, key, value);
+    return;
+  }
+
+  // Minion (companion/familiar) HP write-back from app → linked Foundry actor(s).
+  if (key === 'minions') {
+    handleMinionsUpdate(characterId, value);
     return;
   }
 
