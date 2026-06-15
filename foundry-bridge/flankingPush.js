@@ -9,7 +9,7 @@
 // off-guard (−2 circumstance to AC, attacker-relative).
 
 import { getActorMap } from './encounter.js';
-import { getCombatTokenMap, checkFlanking } from './pf2eAdapter.js';
+import { getCombatTokenMap, checkFlanking, getMinionActorLinks } from './pf2eAdapter.js';
 
 let _sendUpdate = null;
 let _latest = {};
@@ -48,20 +48,40 @@ export function pushFlankedState() {
 
   if (!combatMap.length) { send0(); return; }
 
-  // Split into PC entries and enemy entries using the app-maintained actor map.
-  const pcEntries     = [];
-  const enemyEntries  = [];
+  // Companions/familiars in the combat aren't in the PC actor map (#362). Index
+  // them by Foundry actor id so we can classify their combatants as allies, not
+  // enemies. Only animal companions flank — familiars don't grant flanking, so
+  // they're left out of the flanker set entirely (and never counted as enemies).
+  const minionByActorId = {};
+  for (const link of getMinionActorLinks(actorMap)) {
+    minionByActorId[link.foundryActorId] = link;
+  }
+
+  // Split combatants into flankers (PCs + companions, each with a stable id) and
+  // enemy entries. A flanker id is a PC charId or a minion `<owner>-<role>` id,
+  // so the pushed byCharIds can reference a companion's own strikes.
+  const allyEntries  = [];
+  const enemyEntries = [];
 
   for (const entry of combatMap) {
     const charId = entry.actorId ? (actorMap[entry.actorId] ?? null) : null;
     if (charId) {
-      pcEntries.push({ charId, token: entry.token });
-    } else {
-      enemyEntries.push({ combatantId: entry.combatantId, token: entry.token });
+      allyEntries.push({ id: charId, token: entry.token });
+      continue;
     }
+    const minion = entry.actorId ? minionByActorId[entry.actorId] : null;
+    if (minion) {
+      // Companions flank (keyed by their minion id); familiars are allies that
+      // don't flank — drop them from both sets.
+      if (minion.role === 'companion') {
+        allyEntries.push({ id: `${minion.ownerCharId}-${minion.role}`, token: entry.token });
+      }
+      continue;
+    }
+    enemyEntries.push({ combatantId: entry.combatantId, token: entry.token });
   }
 
-  if (!pcEntries.length || !enemyEntries.length) { send0(); return; }
+  if (!allyEntries.length || !enemyEntries.length) { send0(); return; }
 
   // Delegate flanking detection to the PF2e system.
   // TokenPF2e.isFlanking(target) returns true when this token AND at least one
@@ -69,9 +89,9 @@ export function pushFlankedState() {
   // reach weapons, multi-square tokens, and wall blocking — we don't need to.
   const result = {};
   for (const { combatantId, token: enemyToken } of enemyEntries) {
-    const byCharIds = pcEntries
-      .filter(({ token: pcToken }) => checkFlanking(pcToken, enemyToken))
-      .map(({ charId }) => charId);
+    const byCharIds = allyEntries
+      .filter(({ token: allyToken }) => checkFlanking(allyToken, enemyToken))
+      .map(({ id }) => id);
     if (byCharIds.length > 0) {
       result[combatantId] = { byCharIds };
     }
