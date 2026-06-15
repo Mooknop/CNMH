@@ -27,15 +27,16 @@ async function waitForSheet(page: import('@playwright/test').Page, charId: strin
   await expect(page.getByRole('heading', { name: charName, level: 1 })).toBeVisible({ timeout: 15_000 });
 }
 
-// Spells are accessed via the MagicModal, opened from the "Magic" button in
-// CharacterActionsList — which renders in the encounter surface. So switch to
-// the play tab (Encounter, via the seeded active encounter) before opening it.
+// Spells are accessed via the MagicModal, opened from the "Cast a Spell"
+// launcher in the Command Sheet action grid (ActionGrid) — which renders in the
+// encounter surface. So switch to the play tab (Encounter, via the seeded active
+// encounter) before opening it.
 async function openMagic(page: import('@playwright/test').Page) {
   await page
     .getByRole('navigation', { name: 'Character sheet sections' })
     .getByRole('button', { name: 'Encounter', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Magic' }).click();
+  await page.getByRole('button', { name: 'Cast a Spell' }).click();
 }
 
 // MagicModal level 1 is a category grid (.magic-category-btn); selecting one

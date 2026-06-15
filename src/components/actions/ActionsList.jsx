@@ -1,6 +1,6 @@
 // src/components/actions/ActionsList.js
 import React, { useCallback, useState } from 'react';
-import CharacterActionsList from './CharacterActionsList';
+import ActionGrid from '../encounter/commandsheet/ActionGrid';
 import ReactionsList from './ReactionsList';
 import FreeActionsList from './FreeActionsList';
 import MagicModal from '../spells/MagicModal';
@@ -231,7 +231,7 @@ const ActionsList = ({ character, characterColor }) => {
 
       <div className="section-content">
         {activeSection === 'actions' && (
-          <CharacterActionsList
+          <ActionGrid
             character={character}
             themeColor={themeColor}
             encounterMode={encounterMode}

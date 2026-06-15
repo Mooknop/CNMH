@@ -5,11 +5,11 @@ import ActionsList from './ActionsList';
 const STANCE_ACTION = { name: 'Dragon Stance', traits: ['Monk', 'Stance'], actionCount: 1 };
 const HUNT_PREY_ACTION = { name: 'Hunt Prey', traits: ['Concentrate', 'Ranger'], actionCount: 1 };
 
-// CharacterActionsList is mocked as an inert testid div, plus buttons that
-// fire the onUse callback so we can exercise ActionsList.handleUse.
-vi.mock('./CharacterActionsList', () => ({
+// ActionGrid is mocked as an inert testid div, plus buttons that fire the onUse
+// callback so we can exercise ActionsList.handleUse.
+vi.mock('../encounter/commandsheet/ActionGrid', () => ({
   default: ({ onUse }) => (
-    <div data-testid="character-actions-list">
+    <div data-testid="action-grid">
       <button onClick={() => onUse?.(STANCE_ACTION, 1)}>use-stance</button>
       <button onClick={() => onUse?.(HUNT_PREY_ACTION, 1)}>use-hunt-prey</button>
     </div>
@@ -73,7 +73,7 @@ describe('ActionsList', () => {
 
   it('shows Actions section by default', () => {
     render(<ActionsList character={mockCharacter} />);
-    expect(screen.getByTestId('character-actions-list')).toBeInTheDocument();
+    expect(screen.getByTestId('action-grid')).toBeInTheDocument();
   });
 
   it('does not show other sections by default', () => {
@@ -98,7 +98,7 @@ describe('ActionsList', () => {
     render(<ActionsList character={mockCharacter} />);
     fireEvent.click(screen.getByRole('button', { name: 'Reactions' }));
     expect(screen.getByTestId('reactions-list')).toBeInTheDocument();
-    expect(screen.queryByTestId('character-actions-list')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('action-grid')).not.toBeInTheDocument();
   });
 
   it('switches to Free Actions section on click', () => {
@@ -111,7 +111,7 @@ describe('ActionsList', () => {
     render(<ActionsList character={mockCharacter} />);
     fireEvent.click(screen.getByRole('button', { name: 'Reactions' }));
     fireEvent.click(screen.getByRole('button', { name: 'Actions' }));
-    expect(screen.getByTestId('character-actions-list')).toBeInTheDocument();
+    expect(screen.getByTestId('action-grid')).toBeInTheDocument();
     expect(screen.queryByTestId('reactions-list')).not.toBeInTheDocument();
   });
 
