@@ -25,11 +25,11 @@ export const useRecallKnowledge = () => {
   );
 
   const resolve = useCallback(
-    (entryId, { degree, defenses, choices, by, byName, skill, d20, total, dc, outOfCombat }) => {
+    (entryId, { degree, defenses, choices, by, byName, skill, d20, total, dc, outOfCombat, currentDay }) => {
       setKnowledge((cur) => {
         const prev = cur?.[entryId] || defaultRecord();
         const { next, learned } = applyRecallKnowledge(prev, {
-          degree, defenses, choices, charId: by, outOfCombat,
+          degree, defenses, choices, charId: by, outOfCombat, currentDay,
         });
         const historyEntry = { ts: Date.now(), by, byName, skill, d20, total, dc, degree, learned };
         return {

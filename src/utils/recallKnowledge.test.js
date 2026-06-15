@@ -4,6 +4,7 @@ import {
   applyRecallKnowledge,
   defaultRecord,
   isLockedFor,
+  isDayLockedFor,
   personalAntithesisValue,
   highestWeakness,
   revealFromExploit,
@@ -110,6 +111,15 @@ describe('pruneEncounterKnowledge (#333)', () => {
       'goblin-warrior': { ...defaultRecord(), identity: true, lockedOut: { 'char-a': true } },
     };
     expect(pruneEncounterKnowledge(knowledge, order)['goblin-warrior'].lockedOut).toEqual({});
+  });
+
+  test('preserves out-of-combat day locks while clearing in-combat locks (#396)', () => {
+    const knowledge = {
+      'goblin-warrior': { ...defaultRecord(), lockedOut: { 'char-a': true }, dayLocked: { 'char-a': 42 } },
+    };
+    const pruned = pruneEncounterKnowledge(knowledge, order)['goblin-warrior'];
+    expect(pruned.lockedOut).toEqual({});
+    expect(pruned.dayLocked).toEqual({ 'char-a': 42 });
   });
 
   test('leaves reveal fields otherwise unchanged', () => {
@@ -364,12 +374,13 @@ describe('applyRecallKnowledge', () => {
     expect(isLockedFor(next, 'c2')).toBe(false);
   });
 
-  test('out-of-combat criticalFailure does not set the per-encounter lockout (#396)', () => {
+  test('out-of-combat criticalFailure day-locks instead of the per-encounter lockout (#396)', () => {
     const { next, learned } = applyRecallKnowledge(defaultRecord(), {
-      degree: 'criticalFailure', defenses, choices: [], charId: 'c1', outOfCombat: true,
+      degree: 'criticalFailure', defenses, choices: [], charId: 'c1', outOfCombat: true, currentDay: 42,
     });
-    expect(next.lockedOut).toEqual({});
+    expect(next.lockedOut).toEqual({});      // no per-encounter lock out of combat
     expect(isLockedFor(next, 'c1')).toBe(false);
+    expect(next.dayLocked).toEqual({ c1: 42 });
     expect(learned).toBeNull();
   });
 
@@ -379,6 +390,27 @@ describe('applyRecallKnowledge', () => {
     });
     expect(next.identity).toBe(true);
     expect(next.ac).toBe(true);
+  });
+});
+
+describe('isDayLockedFor (#396)', () => {
+  const rec = { ...defaultRecord(), dayLocked: { c1: 42 } };
+
+  test('locked on the day of the crit-fail', () => {
+    expect(isDayLockedFor(rec, 'c1', 42)).toBe(true);
+  });
+
+  test('unlocked on the next in-game day', () => {
+    expect(isDayLockedFor(rec, 'c1', 43)).toBe(false);
+  });
+
+  test('not locked for a different character', () => {
+    expect(isDayLockedFor(rec, 'c2', 42)).toBe(false);
+  });
+
+  test('not locked with no record or no current day', () => {
+    expect(isDayLockedFor(undefined, 'c1', 42)).toBe(false);
+    expect(isDayLockedFor(rec, 'c1', null)).toBe(false);
   });
 });
 

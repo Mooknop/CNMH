@@ -43,14 +43,15 @@ describe('useRecallKnowledge.resolve — out-of-combat (#396)', () => {
     expect(mockKnowledge.gob.ac).toBe(true);
   });
 
-  test('out-of-combat critical failure records history without a lockout', () => {
+  test('out-of-combat critical failure day-locks and records history without an encounter log', () => {
     const { result } = renderHook(() => useRecallKnowledge());
     act(() => result.current.resolve('gob', {
       degree: 'criticalFailure', by: 'c1', byName: 'Vex',
-      skill: 'Arcana', d20: 1, total: 6, dc: 20, outOfCombat: true,
+      skill: 'Arcana', d20: 1, total: 6, dc: 18, outOfCombat: true, currentDay: 7,
     }));
     expect(mockAppendLog).not.toHaveBeenCalled();
     expect(mockKnowledge.gob.lockedOut).toEqual({});
+    expect(mockKnowledge.gob.dayLocked).toEqual({ c1: 7 });
     expect(mockKnowledge.gob.history).toHaveLength(1);
   });
 });

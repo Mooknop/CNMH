@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
+import { totalDaysSince4700 } from '../../utils/gameTime';
+import { rkKeyFor, isDayLockedFor } from '../../utils/recallKnowledge';
 import RecallKnowledgeResolver from '../encounter/RecallKnowledgeResolver';
 import './BestiaryRecallKnowledge.css';
 
@@ -10,6 +14,8 @@ import './BestiaryRecallKnowledge.css';
 // identifying a creature here unlocks it everywhere.
 const BestiaryRecallKnowledge = ({ enemy }) => {
   const { characters } = useContent();
+  const { gameDate } = useGameDate();
+  const { recordFor } = useRecallKnowledge();
   const party = useMemo(() => (characters || []).filter(Boolean), [characters]);
 
   const [actingCharId, setActingCharId] = useState(party[0]?.id ?? null);
@@ -26,6 +32,12 @@ const BestiaryRecallKnowledge = ({ enemy }) => {
 
   const actingChar = party.find((c) => c.id === actingCharId) || null;
 
+  // Day-based crit-fail lockout (#396): a PC who critically failed today can't
+  // retry this creature until the in-game date advances.
+  const currentDay = totalDaysSince4700(gameDate);
+  const record = recordFor(rkKeyFor(enemy));
+  const locked = actingCharId ? isDayLockedFor(record, actingCharId, currentDay) : false;
+
   return (
     <div className="bestiary-rk" data-testid="bestiary-rk">
       {open ? (
@@ -34,32 +46,42 @@ const BestiaryRecallKnowledge = ({ enemy }) => {
           actingCharId={actingCharId}
           actingCharName={actingChar?.name || ''}
           outOfCombat
+          currentDay={currentDay}
           onDone={() => setOpen(false)}
         />
       ) : (
-        <div className="bestiary-rk-trigger">
-          <label className="bestiary-rk-char">
-            <span className="bestiary-rk-char-label">Recall as</span>
-            <select
-              className="bestiary-rk-select"
-              value={actingCharId ?? ''}
-              onChange={(e) => setActingCharId(e.target.value)}
-              aria-label="Acting character"
+        <>
+          <div className="bestiary-rk-trigger">
+            <label className="bestiary-rk-char">
+              <span className="bestiary-rk-char-label">Recall as</span>
+              <select
+                className="bestiary-rk-select"
+                value={actingCharId ?? ''}
+                onChange={(e) => setActingCharId(e.target.value)}
+                aria-label="Acting character"
+              >
+                {party.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="btn-secondary bestiary-rk-btn"
+              onClick={() => setOpen(true)}
+              disabled={locked}
+              aria-label="Recall Knowledge"
             >
-              {party.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="button"
-            className="btn-secondary bestiary-rk-btn"
-            onClick={() => setOpen(true)}
-            aria-label="Recall Knowledge"
-          >
-            Recall Knowledge
-          </button>
-        </div>
+              Recall Knowledge
+            </button>
+          </div>
+          {locked && (
+            <p className="bestiary-rk-locked" data-testid="bestiary-rk-locked">
+              {actingChar?.name || 'This character'} failed to recall anything about this creature
+              today — try again tomorrow.
+            </p>
+          )}
+        </>
       )}
     </div>
   );

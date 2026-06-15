@@ -41,7 +41,7 @@ const DEGREE_INFO = {
 // How many facts the player picks per degree.
 const CHOICE_LIMIT = { success: 1, criticalSuccess: 2 };
 
-const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, outOfCombat = false }) => {
+const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, outOfCombat = false, currentDay = null }) => {
   const { characters } = useContent();
   const rawChar = characters.find((c) => c.id === actingCharId) || null;
   const charModel = useCharacter(rawChar);
@@ -57,9 +57,11 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
   const [choices, setChoices]             = useState([]);
 
   const skillMod  = charModel?.skillModifiers?.[selectedSkill] ?? 0;
-  const dc        = bestiary?.level != null
+  const baseDc    = bestiary?.level != null
     ? recallKnowledgeDC(bestiary.level, bestiary.rarity)
     : null;
+  // Out of combat the party studies at leisure: DC is 2 lower (#396).
+  const dc        = baseDc != null ? baseDc - (outOfCombat ? 2 : 0) : null;
 
   const d20    = parseInt(d20Input, 10);
   const hasD20 = !isNaN(d20) && d20 >= 1 && d20 <= 20;
@@ -94,6 +96,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
       total,
       dc,
       outOfCombat,
+      currentDay,
     });
     onDone();
   };
@@ -107,6 +110,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, 
         <div className="rkr-dc-row">
           <span className="rkr-dc-label">DC</span>
           <span className="rkr-dc-value">{dc}</span>
+          {outOfCombat && <span className="rkr-dc-note">−2 · studied</span>}
         </div>
       )}
 

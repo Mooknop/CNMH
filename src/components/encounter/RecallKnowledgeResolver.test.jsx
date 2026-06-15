@@ -163,10 +163,22 @@ test('Confirm calls resolve with correct args on success', () => {
 
 test('passes outOfCombat to resolve when set (#396)', () => {
   renderResolver({ outOfCombat: true });
-  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
-  fireEvent.click(screen.getByLabelText('Reflex save'));
+  // d20=10 → failure (no choice needed), keeps the assertion degree-agnostic.
+  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
   fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
   expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ outOfCombat: true }));
+});
+
+test('out-of-combat lowers the DC by 2 (level 10 common: 27 → 25) (#396)', () => {
+  renderResolver({ outOfCombat: true });
+  expect(screen.getByText('25')).toBeInTheDocument();
+});
+
+test('passes currentDay through to resolve out of combat (#396)', () => {
+  renderResolver({ outOfCombat: true, currentDay: 99 });
+  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+  fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
+  expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ currentDay: 99, outOfCombat: true }));
 });
 
 test('defaults outOfCombat to false (in-combat)', () => {

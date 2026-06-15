@@ -39,3 +39,10 @@
 .bestiary-rk-btn {
   flex: 0 0 auto;
 }
+
+.bestiary-rk-locked {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
+}

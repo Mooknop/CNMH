@@ -88,8 +88,9 @@ export function rkKeyFor(enemy) {
 // revealed when it shows up later. Only the *ephemeral* records keyed by the
 // just-ended encounter's entryIds (manual/homebrew enemies with no creatureKey —
 // they can't dedupe across encounters anyway) are dropped, so no stale buildup
-// accumulates. Per-character crit-fail locks reset on the surviving records: a
-// new fight is a fresh chance to roll.
+// accumulates. Per-character in-combat crit-fail locks (`lockedOut`) reset on the
+// surviving records: a new fight is a fresh chance to roll. Out-of-combat day
+// locks (`dayLocked`) are preserved — they expire by in-game date, not encounter.
 export function pruneEncounterKnowledge(knowledge, order = []) {
   if (!knowledge) return {};
   const ephemeral = new Set();
@@ -116,7 +117,8 @@ export function defaultRecord() {
     saves: { fortitude: false, reflex: false, will: false },
     iwr: { immunities: false, resistances: false, weaknesses: false },
     weaknessesRevealed: {}, // { [type]: true } — partial single-weakness reveal (EV success)
-    lockedOut: {},
+    lockedOut: {},          // { [charId]: true } — in-combat crit-fail lock, cleared at encounter end
+    dayLocked: {},          // { [charId]: dayIndex } — out-of-combat crit-fail lock, clears next in-game day (#396)
     history: [],
   };
 }
@@ -180,6 +182,16 @@ export function isLockedFor(record, charId) {
   return !!(record?.lockedOut?.[charId]);
 }
 
+// Out-of-combat Recall Knowledge lockout (#396): a critical failure locks the
+// character out of that creature until the next in-game day. `currentDay` is a
+// day index (e.g. totalDaysSince4700). Locked while currentDay <= the day the
+// crit-fail happened; clears once the clock advances past it.
+export function isDayLockedFor(record, charId, currentDay) {
+  const lockedDay = record?.dayLocked?.[charId];
+  if (lockedDay == null || currentDay == null) return false;
+  return currentDay <= lockedDay;
+}
+
 export function isFieldRevealed(record, field) {
   return !!(record?.[field]);
 }
@@ -235,7 +247,7 @@ function applyOneChoice(record, choice, defenses) {
 //   'fortitude'|'reflex'|'will'|'lowest'|'highest'|
 //   'immunities'|'resistances'|'weaknesses'
 // `defenses` is the enemy's defenses object (for lowest/highest resolution).
-export function applyRecallKnowledge(record, { degree, defenses, choices, charId, outOfCombat }) {
+export function applyRecallKnowledge(record, { degree, defenses, choices, charId, outOfCombat, currentDay }) {
   const base = record || defaultRecord();
 
   if (degree === 'criticalSuccess' || degree === 'success') {
@@ -251,12 +263,17 @@ export function applyRecallKnowledge(record, { degree, defenses, choices, charId
   }
 
   if (degree === 'criticalFailure') {
-    // The in-combat lockout (`lockedOut`) is cleared at encounter end. Out of
-    // combat there is no encounter to end it, so we don't set a per-encounter
-    // lock here — the next-in-game-day lockout is added in a later slice. An
-    // out-of-combat critical failure simply reveals nothing for now.
-    if (outOfCombat) return { next: base, learned: null };
     const id = charId || '__unknown__';
+    // The in-combat lockout (`lockedOut`) is cleared at encounter end. Out of
+    // combat there is no encounter to end it, so the lockout is keyed to the
+    // in-game day (`dayLocked`): the PC can try again on the next day
+    // (currentDay > lockedDay). See isDayLockedFor.
+    if (outOfCombat) {
+      return {
+        next: { ...base, dayLocked: { ...base.dayLocked, [id]: currentDay ?? null } },
+        learned: null,
+      };
+    }
     return {
       next: { ...base, lockedOut: { ...base.lockedOut, [id]: true } },
       learned: null,
