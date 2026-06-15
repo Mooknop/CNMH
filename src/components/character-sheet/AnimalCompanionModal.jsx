@@ -10,6 +10,9 @@ import { MINION_COMPANION } from '../../utils/minionUtils';
 import MinionStrikeModal from '../encounter/MinionStrikeModal';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
 import MinionMove from '../encounter/MinionMove';
+import { useEncounter } from '../../hooks/useEncounter';
+import { useSession } from '../../contexts/SessionContext';
+import { applyAbility } from '../../utils/applyAbility';
 import './AnimalCompanionModal.css';
 
 const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, characterColor }) => {
@@ -17,12 +20,50 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
   const [strikeForRoll, setStrikeForRoll] = useState(null);
   const { getHp } = useMinions(character?.id);
+  const { encounter, appendLog } = useEncounter();
+  const { getState, sendUpdate } = useSession();
 
   // Keep mounted so condition state persists across open/close cycles
   if (!animalCompanion || !character) return null;
 
   const themeColor = characterColor || 'var(--color-primary)';
   const companionData = animalCompanion;
+
+  // Support (#223) — the companion's Support benefit (e.g. Zevira's shadow
+  // concealment) is a self-effect on the owner that lasts until the start of
+  // their next turn. Only meaningful in an active encounter where the owner has
+  // an initiative entry; routed through the shared applyAbility effect path.
+  const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
+  const casterEntryId = (encounter?.order || []).find(
+    (e) => e.kind === 'pc' && e.charId === character.id
+  )?.entryId || null;
+  const canSupport = encounterMode && !!casterEntryId;
+
+  const handleSupport = () => {
+    if (!canSupport) return;
+    applyAbility({
+      ability: {
+        name: `${companionData.name} — Support`,
+        effects: [{ effectId: 'shadow-hound-support', applyTo: 'self', duration: { until: 'caster-turn-start' } }],
+      },
+      caster: character,
+      casterEntryId,
+      targetCharIds: [],
+      enemyTargetNames: [],
+      order: encounter?.order || [],
+      encounter,
+      characters: [character],
+      getState,
+      sendUpdate,
+      appendLog,
+      verb: 'used',
+    });
+    appendLog({
+      type: 'note',
+      charId: character.id,
+      text: `${companionData.name}'s Support is ready: until ${character.name}'s next turn, a damaging Strike vs a creature within the hound's reach Conceals both of them from it.`,
+    });
+  };
 
   const effects = computeConditionEffects(activeConditions, '', character.level);
 
@@ -230,6 +271,16 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
               <div className="companion-section">
                 <h4 >Support Benefit</h4>
                 <p>{companionData.support}</p>
+                {canSupport && (
+                  <button
+                    type="button"
+                    className="condition-btn"
+                    onClick={handleSupport}
+                    title="Apply the Support benefit until the start of your next turn"
+                  >
+                    Support
+                  </button>
+                )}
               </div>
             )}
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AnimalCompanionModal from './AnimalCompanionModal';
+import { applyAbility } from '../../utils/applyAbility';
 
 vi.mock('../../utils/CharacterUtils', () => ({
   getAbilityModifier: vi.fn((score) => Math.floor(((score || 10) - 10) / 2)),
@@ -8,6 +9,23 @@ vi.mock('../../utils/CharacterUtils', () => ({
   formatModifier: vi.fn((n) => (n >= 0 ? `+${n}` : `${n}`)),
   getProficiencyBonus: vi.fn((prof, level) => (prof || 0) * 2 + (level || 0)),
 }));
+
+vi.mock('../../utils/applyAbility', () => ({ applyAbility: vi.fn() }));
+
+// Mutable encounter the Support button reads; inactive by default so the rest of
+// the suite (which renders out of combat) never shows the Support button.
+const mockEnc = { active: false, phase: 'idle', order: [] };
+const mockAppendLog = vi.fn();
+vi.mock('../../hooks/useEncounter', () => ({
+  useEncounter: () => ({ encounter: mockEnc, appendLog: mockAppendLog }),
+}));
+
+afterEach(() => {
+  vi.clearAllMocks();
+  mockEnc.active = false;
+  mockEnc.phase = 'idle';
+  mockEnc.order = [];
+});
 
 const baseCharacter = { name: 'Aria', level: 5 };
 
@@ -194,6 +212,35 @@ describe('AnimalCompanionModal', () => {
       />
     );
     expect(screen.queryByText('Support Benefit')).toBeNull();
+  });
+
+  // ── Support action (#223) ────────────────────────────────────────────────
+  it('hides the Support button out of an encounter', () => {
+    const companion = { ...baseCompanion, support: 'Shadows.' };
+    render(
+      <AnimalCompanionModal isOpen onClose={vi.fn()} animalCompanion={companion} character={baseCharacter} />
+    );
+    expect(screen.queryByRole('button', { name: 'Support' })).toBeNull();
+  });
+
+  it('applies the support self-effect until the start of the owner\'s next turn', () => {
+    mockEnc.active = true;
+    mockEnc.phase = 'in-progress';
+    mockEnc.order = [{ kind: 'pc', charId: 'ash', entryId: 'e1' }];
+    const companion = { ...baseCompanion, name: 'Zevira', support: 'Shadows.' };
+    const owner = { id: 'ash', name: 'Ashka', level: 4 };
+    render(
+      <AnimalCompanionModal isOpen onClose={vi.fn()} animalCompanion={companion} character={owner} />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Support' }));
+    expect(applyAbility).toHaveBeenCalledTimes(1);
+    const arg = applyAbility.mock.calls[0][0];
+    expect(arg.casterEntryId).toBe('e1');
+    expect(arg.ability.effects[0]).toEqual({
+      effectId: 'shadow-hound-support',
+      applyTo: 'self',
+      duration: { until: 'caster-turn-start' },
+    });
   });
 
   it('renders description when present', () => {
