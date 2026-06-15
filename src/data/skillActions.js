@@ -37,6 +37,7 @@
 //               the modal also always offers a free-form "+N" circumstance entry
 //   availableTo 'all' for basic actions everyone has; future entries gate per
 //               character (feat-granted)
+import { hasFeat } from '../utils/CharacterUtils';
 
 export const SKILL_ACTIONS = [
   {
@@ -51,6 +52,23 @@ export const SKILL_ACTIONS = [
       success:         { condition: 'frightened', value: 1 },
     },
     immunity: { duration: { value: 10, unit: 'minute' }, scope: 'per-caster' },
+    availableTo: 'all',
+  },
+  // Seek (#223) — Perception to find a hidden/undetected creature. No save
+  // defense: the DC is the creature's Stealth, GM-entered. Detection states
+  // (undetected/hidden/observed) aren't modeled, so the outcomes are GM notes.
+  // Hunt Prey layers a +2-vs-prey toggle via skillActionFeatAugments.
+  {
+    id: 'seek',
+    name: 'Seek',
+    skill: 'perception',
+    actionCost: 1,
+    traits: ['Concentrate', 'Secret'],
+    defense: null,
+    outcomes: {
+      criticalSuccess: { note: 'Pinpoint the creature (undetected → observed, hidden → observed)' },
+      success:         { note: 'Locate the creature (undetected → hidden)' },
+    },
     availableTo: 'all',
   },
   // Athletics maneuvers (#260 slice 2). Attack-trait → MAP applies and advances.
@@ -161,3 +179,59 @@ export function skillActionsFor(character, { encounterMode = false } = {}) {
 }
 
 export const getSkillAction = (id) => SKILL_ACTIONS.find((a) => a.id === id) || null;
+
+/**
+ * Feat- and companion-driven augments layered onto a base skill action for a
+ * specific character (#223). The hook the SkillActionModal comments anticipate:
+ *   - toggles: circumstance line items [{ id, label, bonus }] the player flips on
+ *     (rendered beside the free-form "+N" entry); use for real bonuses.
+ *   - hints: informational reminders for things the app can't auto-net — e.g.
+ *     ignoring a penalty it never modeled. Rendered as a note, no math.
+ * React-free; reads only character data.
+ *
+ * @param {object} character  the acting PC
+ * @param {object} action     a SKILL_ACTIONS entry
+ * @returns {{ toggles: Array, hints: string[] }}
+ */
+export function skillActionFeatAugments(character, action) {
+  const toggles = [];
+  const hints = [];
+  if (!character || !action) return { toggles, hints };
+
+  // Threat Display (Squox familiar): while the familiar is within 30 ft you may
+  // Demoralize a creature that doesn't share your language without the −4
+  // penalty. The app never applies that penalty, so surface a hint, not a bonus.
+  const hasThreatDisplay = (character.familiar?.abilities || []).some(
+    (a) => /threat display/i.test(a?.name || '')
+  );
+  if (action.id === 'demoralize' && hasThreatDisplay) {
+    hints.push(
+      `Threat Display: while ${character.familiar?.name || 'your familiar'} is within 30 ft and able to act, ignore the −4 penalty to Demoralize a creature that doesn't share your language.`
+    );
+  }
+
+  // Hunt Prey: +2 circumstance to Seek your designated prey. Ranger Dedication
+  // grants the Hunt Prey action; the player flips the toggle when Seeking prey
+  // (the prey badge on the initiative list shows which enemy that is).
+  if (action.id === 'seek' && hasFeat(character, 'Ranger Dedication')) {
+    toggles.push({ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 });
+  }
+
+  return { toggles, hints };
+}
+
+/**
+ * Immutably layer a character's feat augments onto a base skill action so the
+ * SkillActionModal can render the extra toggles/hints. Returns the action
+ * unchanged when there's nothing to add.
+ */
+export function augmentSkillAction(character, action) {
+  if (!action) return action;
+  const { toggles, hints } = skillActionFeatAugments(character, action);
+  if (!toggles.length && !hints.length) return action;
+  return {
+    ...action,
+    toggles: [...(action.toggles || []), ...toggles],
+    hints: [...(action.hints || []), ...hints],
+  };
+}

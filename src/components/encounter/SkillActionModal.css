@@ -75,6 +75,24 @@
   line-height: var(--leading-snug);
 }
 
+/* Feat/companion hints (#223) — informational reminders, no math. */
+.sam-hints {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sam-hint {
+  margin: 0;
+  background: var(--surface-trigger);
+  border-left: 3px solid var(--gold-mid);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  line-height: var(--leading-snug);
+}
+
 /* Net modifier */
 .sam-bonus-row {
   display: flex;

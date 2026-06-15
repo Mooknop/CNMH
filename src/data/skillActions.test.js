@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { SKILL_ACTIONS, skillActionsFor, getSkillAction } from './skillActions';
+import {
+  SKILL_ACTIONS,
+  skillActionsFor,
+  getSkillAction,
+  skillActionFeatAugments,
+  augmentSkillAction,
+} from './skillActions';
 
 describe('skillActions registry', () => {
   it('defines Demoralize with the expected resolution shape', () => {
@@ -87,6 +93,62 @@ describe('skillActions registry', () => {
       const e = getSkillAction('escape');
       expect(e.outcomes.success.removeSelf).toEqual(['grabbed', 'restrained', 'immobilized']);
       expect(e.outcomes.criticalSuccess.removeSelf).toEqual(['grabbed', 'restrained', 'immobilized']);
+    });
+  });
+
+  describe('Seek (#223)', () => {
+    it('is a 1-action Perception action with a GM-entered DC and note outcomes', () => {
+      const s = getSkillAction('seek');
+      expect(s).toBeTruthy();
+      expect(s.skill).toBe('perception');
+      expect(s.actionCost).toBe(1);
+      expect(s.defense).toBeNull();
+      expect(s.traits).not.toContain('Attack');
+      expect(s.outcomes.success.note).toBeTruthy();
+      expect(s.outcomes.criticalSuccess.note).toBeTruthy();
+    });
+  });
+
+  describe('skillActionFeatAugments (#223)', () => {
+    const ranger = {
+      name: 'Ashka',
+      feats: [{ name: 'Ranger Dedication' }],
+      familiar: { name: 'Lazarus', abilities: [{ name: 'Threat Display' }, { name: 'Manual Dexterity' }] },
+    };
+    const plain = { name: 'Nobody', feats: [], familiar: null };
+
+    it('adds a Threat Display hint to Demoralize when the familiar has it', () => {
+      const { hints, toggles } = skillActionFeatAugments(ranger, getSkillAction('demoralize'));
+      expect(toggles).toEqual([]);
+      expect(hints).toHaveLength(1);
+      expect(hints[0]).toMatch(/Threat Display/);
+      expect(hints[0]).toMatch(/Lazarus/);
+    });
+
+    it('adds a Hunt Prey +2 toggle to Seek for a Ranger Dedication holder', () => {
+      const { toggles, hints } = skillActionFeatAugments(ranger, getSkillAction('seek'));
+      expect(hints).toEqual([]);
+      expect(toggles).toEqual([{ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 }]);
+    });
+
+    it('adds nothing for a PC without the feat/familiar', () => {
+      expect(skillActionFeatAugments(plain, getSkillAction('demoralize'))).toEqual({ toggles: [], hints: [] });
+      expect(skillActionFeatAugments(plain, getSkillAction('seek'))).toEqual({ toggles: [], hints: [] });
+    });
+
+    it('does not cross-apply (no prey toggle on Demoralize, no hint on Seek)', () => {
+      expect(skillActionFeatAugments(ranger, getSkillAction('demoralize')).toggles).toEqual([]);
+      expect(skillActionFeatAugments(ranger, getSkillAction('seek')).hints).toEqual([]);
+    });
+
+    it('augmentSkillAction merges augments immutably and returns the base when empty', () => {
+      const baseSeek = getSkillAction('seek');
+      const aug = augmentSkillAction(ranger, baseSeek);
+      expect(aug).not.toBe(baseSeek);
+      expect(aug.toggles).toEqual([{ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 }]);
+      expect(baseSeek.toggles).toBeUndefined(); // base untouched
+      // No augments → same reference back.
+      expect(augmentSkillAction(plain, baseSeek)).toBe(baseSeek);
     });
   });
 

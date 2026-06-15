@@ -277,6 +277,16 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
       maxWidth="400px"
     >
       <div className="sam-body">
+        {/* Feat/companion hints (#223) — reminders for bonuses the app can't
+            auto-net (e.g. Threat Display ignoring the −4 no-language penalty). */}
+        {(action.hints || []).length > 0 && (
+          <div className="sam-hints" role="note">
+            {action.hints.map((h, i) => (
+              <p key={i} className="sam-hint">{h}</p>
+            ))}
+          </div>
+        )}
+
         {/* Target picker — enemy-facing actions only */}
         {!selfTarget && (
           <div className="sam-field">
