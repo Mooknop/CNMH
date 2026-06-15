@@ -3,6 +3,7 @@ import {
   minionStrikeAttackMod,
   minionStrikeDamage,
   minionTurnId,
+  familiarSkillBonus,
   MINION_COMPANION,
   MINION_FAMILIAR,
 } from './minionUtils';
@@ -51,5 +52,24 @@ describe('minionTurnId', () => {
   it('is owner-scoped so two PCs do not share a MAP counter', () => {
     expect(minionTurnId('Ashka', MINION_COMPANION)).toBe('Ashka-companion');
     expect(minionTurnId('Izzy', MINION_COMPANION)).toBe('Izzy-companion');
+  });
+});
+
+describe('familiarSkillBonus', () => {
+  // Lazarus — Squox trained in Acrobatics/Stealth/Perception (snapshot data).
+  const lazarusFam = { skills: ['Stealth', 'Acrobatics', 'Perception'] };
+
+  it('returns master level + 3 for a trained skill (case-insensitive)', () => {
+    expect(familiarSkillBonus('acrobatics', lazarusFam, 4)).toBe(7);
+    expect(familiarSkillBonus('Acrobatics', lazarusFam, 4)).toBe(7);
+  });
+
+  it('returns master level − 1 for an untrained skill', () => {
+    expect(familiarSkillBonus('athletics', lazarusFam, 4)).toBe(3);
+  });
+
+  it('defaults the master level to 1 when missing and tolerates no skills', () => {
+    expect(familiarSkillBonus('acrobatics', lazarusFam)).toBe(4);
+    expect(familiarSkillBonus('acrobatics', {}, 4)).toBe(3);
   });
 });

@@ -3,15 +3,24 @@ import Modal from '../shared/Modal';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { formatModifier } from '../../utils/CharacterUtils';
 import { useMinions } from '../../hooks/useMinions';
-import { MINION_FAMILIAR } from '../../utils/minionUtils';
+import { MINION_FAMILIAR, familiarSkillBonus } from '../../utils/minionUtils';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
 import MinionMove from '../encounter/MinionMove';
+import FamiliarManeuverModal from '../encounter/FamiliarManeuverModal';
 import './FamiliarModal.css';
+
+// Squox Tricks (#223) — the familiar can Disarm and Trip via Acrobatics.
+const SQUOX_MANEUVERS = [
+  { id: 'disarm', name: 'Disarm' },
+  { id: 'trip', name: 'Trip' },
+];
 
 const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor }) => {
   const [activeConditions, setActiveConditions] = useState([]);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
+  const [maneuver, setManeuver] = useState(null); // a SQUOX_MANEUVERS entry while its modal is open
   const { getHp } = useMinions(character?.id);
 
   // Keep mounted (state preserved) while Modal handles the visual hide
@@ -19,6 +28,14 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
 
   const themeColor = characterColor || 'var(--color-primary)';
   const familiarData = familiar;
+
+  // Skill modifiers (the familiar carries no ability scores; mirror the helper
+  // used by the maneuver resolver so display + rolls stay in lockstep).
+  const trainedSkillMod = formatModifier(familiarSkillBonus(familiarData.skills?.[0], familiarData, character.level));
+  const untrainedSkillMod = formatModifier(familiarSkillBonus('__none__', familiarData, character.level));
+
+  // Squox Tricks lets the familiar Disarm/Trip with Acrobatics (+2 vs off-guard).
+  const hasSquoxTricks = (familiarData.abilities || []).some((a) => /squox tricks/i.test(a?.name || ''));
 
   // Familiar conditions affect its own AC, Speed, and its use of the master's saves
   const effects = computeConditionEffects(activeConditions, '', character.level);
@@ -137,8 +154,27 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
             {familiarData.skills && (
               <div className="familiar-section">
                 <h4 >Skills</h4>
-                <p>{familiarData.skills.join(", ")}: +7</p>
-                <p>All Other Skills: +3</p>
+                <p>{familiarData.skills.join(", ")}: {trainedSkillMod}</p>
+                <p>All Other Skills: {untrainedSkillMod}</p>
+              </div>
+            )}
+
+            {hasSquoxTricks && (
+              <div className="familiar-section">
+                <h4>Squox Tricks</h4>
+                <p>Disarm or Trip with Acrobatics; +2 circumstance vs an off-guard target.</p>
+                <div className="familiar-maneuvers">
+                  {SQUOX_MANEUVERS.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className="condition-btn"
+                      onClick={() => setManeuver(m)}
+                    >
+                      {m.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -189,6 +225,15 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
         onRemove={handleRemove}
         onChangeValue={handleChangeValue}
         highZ
+      />
+
+      <FamiliarManeuverModal
+        isOpen={!!maneuver}
+        onClose={() => setManeuver(null)}
+        maneuver={maneuver}
+        familiarData={familiarData}
+        character={character}
+        themeColor={themeColor}
       />
     </>
   );

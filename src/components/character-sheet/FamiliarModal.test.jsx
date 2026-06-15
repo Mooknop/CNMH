@@ -2,8 +2,14 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FamiliarModal from './FamiliarModal';
 
+vi.mock('../encounter/FamiliarManeuverModal', () => ({
+  default: ({ isOpen, maneuver }) =>
+    isOpen ? <div data-testid="maneuver-modal">{maneuver?.name}</div> : null,
+}));
+
 const baseCharacter = {
   name: 'Aria',
+  level: 4,
   saves: { fortitude: 8, reflex: 6, will: 5 },
 };
 
@@ -185,6 +191,39 @@ describe('FamiliarModal', () => {
       />
     );
     expect(screen.queryByText('Familiar Abilities')).toBeNull();
+  });
+
+  // ── Squox Tricks (#223) ──────────────────────────────────────────────────
+  const squox = {
+    ...baseFamiliar,
+    skills: ['Acrobatics', 'Stealth', 'Perception'],
+    abilities: [{ name: 'Squox Tricks', description: 'Disarm/Trip with Acrobatics.' }],
+  };
+
+  it('shows trained skills at the familiar bonus (level 4 → +7)', () => {
+    render(<FamiliarModal isOpen onClose={vi.fn()} familiar={squox} character={baseCharacter} />);
+    expect(screen.getByText(/Acrobatics, Stealth, Perception: \+7/)).toBeInTheDocument();
+    expect(screen.getByText(/All Other Skills: \+3/)).toBeInTheDocument();
+  });
+
+  it('renders a Squox Tricks section with Disarm and Trip when the ability is present', () => {
+    render(<FamiliarModal isOpen onClose={vi.fn()} familiar={squox} character={baseCharacter} />);
+    // The name appears as both the ability (h5) and the maneuver section (h4).
+    expect(screen.getByRole('heading', { level: 4, name: 'Squox Tricks' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Disarm' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trip' })).toBeInTheDocument();
+  });
+
+  it('does not render Squox Tricks for a familiar without the ability', () => {
+    render(<FamiliarModal isOpen onClose={vi.fn()} familiar={baseFamiliar} character={baseCharacter} />);
+    expect(screen.queryByText('Squox Tricks')).toBeNull();
+  });
+
+  it('opens the maneuver modal when a trick is clicked', () => {
+    render(<FamiliarModal isOpen onClose={vi.fn()} familiar={squox} character={baseCharacter} />);
+    expect(screen.queryByTestId('maneuver-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Trip' }));
+    expect(screen.getByTestId('maneuver-modal')).toHaveTextContent('Trip');
   });
 
   it('renders description when present', () => {
