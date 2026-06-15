@@ -1,0 +1,49 @@
+/* Reclaim-unused (image GC) modal — GM Tools → Images (#399) */
+
+.reclaim-bucket {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--shell-border, rgba(255, 255, 255, 0.08));
+}
+
+.reclaim-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.reclaim-bucket-head {
+  font-weight: 600;
+}
+
+.reclaim-bucket-label {
+  color: var(--shell-text-primary, #fff);
+}
+
+.reclaim-bucket-help {
+  margin: 4px 0 8px 24px;
+  font-size: 0.82rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
+}
+
+.reclaim-list {
+  list-style: none;
+  margin: 0 0 0 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.reclaim-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reclaim-item-size {
+  font-size: 0.78rem;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
+}

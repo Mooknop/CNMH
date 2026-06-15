@@ -227,3 +227,14 @@ export const deleteImage = async (id) => {
 // referencedCount, totalR2, totalCatalog, graceWindowHours, scannedAt }.
 export const auditImages = () =>
   fetch('/api/gm/images/audit', { credentials: 'include' }).then(json);
+
+// Reclaim the given orphaned image ids. The server re-validates each id is still
+// an orphan (and outside the grace window) before deleting, so a stale dry-run
+// never reaps a now-referenced image. Returns { reclaimed: [...], skipped: [...] }.
+export const sweepImages = (ids) =>
+  fetch('/api/gm/images/audit/sweep', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  }).then(json);

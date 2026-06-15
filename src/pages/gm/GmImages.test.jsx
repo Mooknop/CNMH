@@ -7,6 +7,8 @@ vi.mock('../../utils/gmApi', () => ({
   saveDocument: vi.fn(),
   uploadImage: vi.fn(),
   deleteImage: vi.fn(),
+  auditImages: vi.fn(() => new Promise(() => {})), // never resolves; modal stays in "scanning"
+  sweepImages: vi.fn(),
 }));
 vi.mock('../../utils/imageUpload', () => ({ resizeImageToBlob: vi.fn() }));
 
@@ -41,6 +43,15 @@ describe('GmImages', () => {
     expect(screen.getByTestId('image-tile-img_abc.jpg')).toBeInTheDocument();
     expect(screen.getByTestId('image-tile-img_def.png')).toBeInTheDocument();
     expect(screen.getByText(/Showing 2 of 2/)).toBeInTheDocument();
+  });
+
+  it('offers a Reclaim unused action that opens the GC modal', () => {
+    setContent();
+    render(<GmImages />);
+    const btn = screen.getByRole('button', { name: /Reclaim unused/i });
+    expect(btn).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(screen.getByText(/Reclaim unused images/i)).toBeInTheDocument(); // modal title
   });
 
   it('filters by name', () => {

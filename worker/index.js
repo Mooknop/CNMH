@@ -39,6 +39,26 @@ async function listAllImages(env) {
   return out;
 }
 
+// Compute the orphaned-image report (shared by the audit GET and the sweep POST):
+// live R2 listing + `image` catalog + the referenced-id set from the deep scanner.
+async function imageAuditReport(env, origin) {
+  const snapRes = await contentStub(env).fetch(
+    new Request(`${origin}/api/content`, { method: 'GET' })
+  );
+  const snap = await snapRes.json();
+  const payload = snap.payload || {};
+  const r2Objects = await listAllImages(env);
+  const catalog = payload.image || [];
+  const referencedIds = new Set(scanImageReferences(payload).keys());
+  return computeImageOrphans({
+    r2Objects,
+    catalog,
+    referencedIds,
+    now: Date.now(),
+    graceMs: IMAGE_GC_GRACE_MS,
+  });
+}
+
 const contentStub = (env) =>
   env.CAMPAIGN_CONTENT.get(env.CAMPAIGN_CONTENT.idFromName(CAMPAIGN_ID));
 
@@ -199,25 +219,47 @@ export default {
       const gm = await verifyAccess(request, env);
       if (!gm) return new Response('Forbidden', { status: 403 });
 
-      const snapRes = await contentStub(env).fetch(
-        new Request(`${url.origin}/api/content`, { method: 'GET' })
-      );
-      const snap = await snapRes.json();
-      const payload = snap.payload || {};
-
-      const r2Objects = await listAllImages(env);
-      const catalog = payload.image || [];
-      const referencedIds = new Set(scanImageReferences(payload).keys());
-
-      const report = computeImageOrphans({
-        r2Objects,
-        catalog,
-        referencedIds,
-        now: Date.now(),
-        graceMs: IMAGE_GC_GRACE_MS,
-      });
-
+      const report = await imageAuditReport(env, url.origin);
       return Response.json({ ...report, graceWindowHours: IMAGE_GC_GRACE_HOURS, scannedAt: Date.now() });
+    }
+
+    // Image GC sweep: POST /api/gm/images/audit/sweep — Access-gated. Body
+    // { ids: [...] }. Re-runs the audit and only deletes ids that are STILL
+    // orphaned (and still outside the grace window) at this moment — a referenced
+    // or too-new id requested from a stale dry-run report is skipped, never reaped.
+    if (request.method === 'POST' && url.pathname === '/api/gm/images/audit/sweep') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+
+      let body;
+      try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400 }); }
+      const ids = Array.isArray(body?.ids) ? body.ids : null;
+      if (!ids) return new Response('Expected { ids: [...] }', { status: 400 });
+
+      const report = await imageAuditReport(env, url.origin);
+      // id → what to delete: 'both' (bytes + catalog), 'bytes', or 'catalog'.
+      const action = new Map();
+      for (const o of report.unreferenced)        action.set(o.id, 'both');
+      for (const o of report.bytesWithoutCatalog) action.set(o.id, 'bytes');
+      for (const o of report.catalogWithoutBytes) action.set(o.id, 'catalog');
+
+      const reclaimed = [];
+      const skipped = [];
+      for (const id of ids) {
+        const act = action.get(id);
+        if (!act) { skipped.push({ id, reason: 'not-orphan' }); continue; }
+        if (act === 'both' || act === 'bytes') {
+          await env.CAMPAIGN_IMAGES.delete(id);
+        }
+        if (act === 'both' || act === 'catalog') {
+          await contentStub(env).fetch(
+            new Request(`${url.origin}/api/gm/image/${encodeURIComponent(id)}`, { method: 'DELETE' })
+          );
+        }
+        reclaimed.push({ id, action: act });
+      }
+
+      return Response.json({ reclaimed, skipped });
     }
 
     // Foundry token import: POST /api/bridge/image?key=<secret> — gated by the
