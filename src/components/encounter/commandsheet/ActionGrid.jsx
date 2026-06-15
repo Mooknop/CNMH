@@ -80,7 +80,7 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
       </div>
 
       {showMagicLauncher && (
-        <button type="button" className="cmd-magic-launcher" onClick={onMagicOpen}>
+        <button type="button" className="cmd-magic-launcher" aria-label="Cast a Spell" onClick={onMagicOpen}>
           <span className="cmd-magic-glyph" aria-hidden="true">✦</span>
           <span className="cmd-magic-label">Cast a Spell</span>
           <span className="cmd-magic-sub">Open spellbook</span>
