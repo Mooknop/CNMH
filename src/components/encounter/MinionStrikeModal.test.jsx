@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import MinionStrikeModal from './MinionStrikeModal';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
+import { SessionContext } from '../../contexts/SessionContext';
 
 // Dummy modal — render children inline so queries work without a portal.
 vi.mock('../shared/Modal', () => ({
@@ -91,5 +92,40 @@ describe('MinionStrikeModal', () => {
       charId: 'Ashka',
       text: expect.stringContaining('Zevira Bite vs Goblin (AC 18): 20 → Hit'),
     });
+  });
+
+  // Flanking (#362): the bridge keys the companion's own minion id under a flanked
+  // enemy. Render inside a session whose getState returns the flanked map.
+  const renderWithFlanked = (flankedMap) => {
+    useEncounter.mockReturnValue({ encounter: { order }, appendLog });
+    useTurnState.mockReturnValue({ turnState: { attacksMade: 0 }, recordAttack });
+    const session = {
+      connected: true,
+      getState: (charId, type) =>
+        charId === 'global' && type === 'flanked' ? flankedMap : undefined,
+      getAllState: () => ({}),
+      sendUpdate: vi.fn(),
+      subscribe: () => () => {},
+    };
+    return render(
+      <SessionContext.Provider value={session}>
+        <MinionStrikeModal
+          isOpen onClose={() => {}} strike={bite}
+          companionData={zevira} character={ashka} role="companion"
+        />
+      </SessionContext.Provider>
+    );
+  };
+
+  it('shows the off-guard cue when the companion flanks the picked target', () => {
+    renderWithFlanked({ 'e-a': { byCharIds: ['Ashka-companion'] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    expect(screen.getByLabelText('Goblin is flanked')).toBeInTheDocument();
+  });
+
+  it('shows no off-guard cue when the companion is not among the flankers', () => {
+    renderWithFlanked({ 'e-a': { byCharIds: ['Ashka'] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    expect(screen.queryByLabelText('Goblin is flanked')).not.toBeInTheDocument();
   });
 });

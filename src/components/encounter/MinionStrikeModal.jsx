@@ -4,6 +4,7 @@ import TargetRollResolver from './TargetRollResolver';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useTurnState } from '../../hooks/useTurnState';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
@@ -41,6 +42,13 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(ownerId, order);
   const enemyTargets = useMemo(() => selectable.filter((e) => e.kind === 'enemy'), [selectable]);
+
+  // Flanking (#362): the bridge lists the companion's own minion id under a
+  // flanked enemy's byCharIds when it flanks (animal companions flank; familiars
+  // don't, so they never reach this strike modal). Surface it as an off-guard
+  // cue — like the PC flanked badge, it's informational; the GM applies the −2 in
+  // Foundry. The action-economy epic (#391) is where this could feed roll math.
+  const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
 
   const [pickedId, setPickedId] = useState(null);
   const [mapOverride, setMapOverride] = useState(null);
@@ -82,6 +90,8 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
     [enemyTargets, pickedId]
   );
   const resolverTargets = useMemo(() => (target ? [target] : []), [target]);
+
+  const isFlanking = !!(pickedId && flankedMap?.[pickedId]?.byCharIds?.includes(turnId));
 
   const handleConfirm = () => {
     const results = resolverRef.current?.getResults();
@@ -158,6 +168,14 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Flanking cue — companion + an ally sandwich the target (off-guard) */}
+        {target && isFlanking && (
+          <div className="msm-flank" aria-label={`${target.name} is flanked`}>
+            <span className="msm-flank-badge" aria-hidden="true">⚔</span>
+            Flanking — {target.name} is off-guard
           </div>
         )}
 

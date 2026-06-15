@@ -6,7 +6,7 @@
 
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { updateActorMap } from './encounter.js';
-import { makeCombat, makeCombatant, makeToken } from './test/foundryMock.js';
+import { makeCombat, makeCombatant, makeToken, makeActor, makeGame } from './test/foundryMock.js';
 
 let send;
 
@@ -129,5 +129,77 @@ describe('pushFlankedState', () => {
     expect(send).toHaveBeenCalledWith('global', 'flanked', expect.objectContaining({
       'cbt-goblin': expect.any(Object),
     }));
+  });
+});
+
+// Minion flanking (#362): a companion participates as a flanker (keyed by its own
+// `<owner>-companion` id); a familiar never flanks and is never treated as an enemy.
+describe('pushFlankedState — minions', () => {
+  const OWNED = { gm: 3, player1: 3 };
+
+  // Ashka (PC), her companion Zevira (player-owned NPC), her familiar Lazarus, and
+  // a goblin. Build the full game world so getMinionActorLinks can derive the links.
+  function setupMinionCombat({ companionFlanks = true, familiarFlanks = true } = {}) {
+    send = jest.fn();
+    const ashka = makeActor({
+      id: 'actor-ashka', name: 'Ashka', type: 'character',
+      hasPlayerOwner: true, ownership: OWNED,
+    });
+    const zevira = makeActor({
+      id: 'actor-zev', name: 'Zevira', type: 'npc',
+      hasPlayerOwner: true, ownership: OWNED,
+    });
+    const lazarus = makeActor({
+      id: 'actor-laz', name: 'Lazarus', type: 'familiar',
+      hasPlayerOwner: true, ownership: OWNED,
+    });
+    global.game = makeGame({
+      actors: [ashka, zevira, lazarus],
+      users: [{ id: 'gm', isGM: true }, { id: 'player1', isGM: false }],
+    });
+
+    const tokGoblin = makeToken({ id: 'tok-goblin' });
+    const tokAshka  = makeToken({ id: 'tok-ashka',  isFlanking: true });
+    const tokZev    = makeToken({ id: 'tok-zev',    isFlanking: companionFlanks });
+    const tokLaz    = makeToken({ id: 'tok-laz',    isFlanking: familiarFlanks });
+
+    const combatants = [
+      makeCombatant({ id: 'cbt-ashka',  actorId: 'actor-ashka', tokenId: 'tok-ashka' }),
+      makeCombatant({ id: 'cbt-zev',    actorId: 'actor-zev',   tokenId: 'tok-zev' }),
+      makeCombatant({ id: 'cbt-laz',    actorId: 'actor-laz',   tokenId: 'tok-laz' }),
+      makeCombatant({ id: 'cbt-goblin', actorId: null,          tokenId: 'tok-goblin' }),
+    ];
+    global.canvas.tokens.placeables = [tokGoblin, tokAshka, tokZev, tokLaz];
+    global.game.combat = makeCombat({ combatants });
+    updateActorMap({ 'actor-ashka': 'Ashka' });
+    initFlankingPush(send);
+    return { tokGoblin, tokZev, tokLaz };
+  }
+
+  it('lists the companion as a flanker under its <owner>-companion id', () => {
+    setupMinionCombat({ companionFlanks: true });
+    pushFlankedState();
+
+    const [[, , payload]] = send.mock.calls;
+    expect(payload['cbt-goblin'].byCharIds.sort()).toEqual(['Ashka', 'Ashka-companion']);
+  });
+
+  it('never treats the companion/familiar combatants as flankable enemies', () => {
+    setupMinionCombat();
+    pushFlankedState();
+
+    const [[, , payload]] = send.mock.calls;
+    // Only the goblin is an enemy; the ally combatants are not keys in the map.
+    expect(Object.keys(payload)).toEqual(['cbt-goblin']);
+  });
+
+  it('excludes the familiar from flankers even when it is geometrically flanking', () => {
+    setupMinionCombat({ companionFlanks: false, familiarFlanks: true });
+    pushFlankedState();
+
+    const [[, , payload]] = send.mock.calls;
+    // Ashka still flanks; the familiar id is never added despite isFlanking=true.
+    expect(payload['cbt-goblin'].byCharIds).toEqual(['Ashka']);
+    expect(payload['cbt-goblin'].byCharIds).not.toContain('Ashka-familiar');
   });
 });
