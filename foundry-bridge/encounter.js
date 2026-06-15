@@ -14,6 +14,7 @@ import {
   getBestiaryInfo,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
 } from './pf2eAdapter.js';
+import { initTokenImages, resolveTokenUrl, ensureTokenUploaded } from './tokenImages.js';
 
 let _sendUpdate    = null;  // injected by bridge.js on init
 let _activeCombatId = null;  // stored on createCombat/updateCombat for reliable lookup
@@ -34,6 +35,7 @@ export function getActorMap() {
 
 export function initEncounter(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
+  initTokenImages();
 
   Hooks.on('createCombat',    (combat)             => { _activeCombatId = combat.id; pushEncounterState(combat); });
   Hooks.on('deleteCombat',    ()                   => { _activeCombatId = null;     pushIdleState(); });
@@ -64,6 +66,13 @@ function pushEncounterState(combat) {
   _sendUpdate?.('global', 'encounter', value);
 }
 
+// Re-push the live combat — used as the callback when an enemy's token image
+// finishes uploading, so the refreshed payload carries the now-resolved URL.
+function repushActiveEncounter() {
+  const combat = (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
+  if (combat) pushEncounterState(combat);
+}
+
 function pushIdleState() {
   _sendUpdate?.('global', 'encounter', {
     active: false,
@@ -92,6 +101,16 @@ function buildEncounterPayload(combat) {
     const defenses = actor ? getDefenses(actor) : undefined;
     const isEnemy  = !charId;
     const bestiary = (isEnemy && actor) ? getBestiaryInfo(actor) : undefined;
+    // Replace the raw Foundry-relative img with a stable app URL (uploading the
+    // bytes on first sighting). Emit null until resolved — never the raw path,
+    // which would 404 against the app's origin (#394).
+    if (bestiary && bestiary.img) {
+      const rawImg = bestiary.img;
+      bestiary.img = resolveTokenUrl(rawImg);
+      if (bestiary.img === null) {
+        ensureTokenUploaded(rawImg, repushActiveEncounter);
+      }
+    }
     return {
       entryId:       c.id,
       kind:          charId ? 'pc' : 'enemy',
