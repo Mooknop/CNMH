@@ -221,3 +221,9 @@ export const deleteImage = async (id) => {
   }
   return json(res);
 };
+
+// Image GC audit (#399): read-only dry-run report of orphaned R2 objects + stale
+// catalog rows. Returns { unreferenced, catalogWithoutBytes, bytesWithoutCatalog,
+// referencedCount, totalR2, totalCatalog, graceWindowHours, scannedAt }.
+export const auditImages = () =>
+  fetch('/api/gm/images/audit', { credentials: 'include' }).then(json);

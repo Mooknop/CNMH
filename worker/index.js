@@ -7,6 +7,7 @@ import { CampaignSession } from './CampaignSession.js';
 import { CampaignContent } from './CampaignContent.js';
 import { verifyAccess } from './access.js';
 import { scanImageReferences } from './imageReferences.js';
+import { computeImageOrphans } from './imageOrphans.js';
 
 export { CampaignSession, CampaignContent };
 
@@ -17,6 +18,26 @@ const CAMPAIGN_ID = 'osprey-covey';
 const IMAGE_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 const IMAGE_MAX_BYTES = 1.5 * 1024 * 1024;
+
+// Image GC (#399): never reap an R2 object / catalog entry created within this
+// window, so an in-flight token capture whose monster doc hasn't persisted yet
+// is safe.
+const IMAGE_GC_GRACE_HOURS = 24;
+const IMAGE_GC_GRACE_MS = IMAGE_GC_GRACE_HOURS * 60 * 60 * 1000;
+
+// Page through the whole R2 image bucket → [{ key, uploaded(ms), size }].
+async function listAllImages(env) {
+  const out = [];
+  let cursor;
+  do {
+    const page = await env.CAMPAIGN_IMAGES.list({ cursor });
+    for (const obj of page.objects) {
+      out.push({ key: obj.key, uploaded: obj.uploaded ? obj.uploaded.getTime() : null, size: obj.size });
+    }
+    cursor = page.truncated ? page.cursor : undefined;
+  } while (cursor);
+  return out;
+}
 
 const contentStub = (env) =>
   env.CAMPAIGN_CONTENT.get(env.CAMPAIGN_CONTENT.idFromName(CAMPAIGN_ID));
@@ -169,6 +190,34 @@ export default {
       );
 
       return Response.json({ ok: true });
+    }
+
+    // Image GC audit: GET /api/gm/images/audit — Access-gated, READ-ONLY.
+    // Reports orphaned R2 objects + stale catalog rows in three buckets so a GM
+    // can review before reclaiming (the sweep is a separate, explicit action).
+    if (request.method === 'GET' && url.pathname === '/api/gm/images/audit') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+
+      const snapRes = await contentStub(env).fetch(
+        new Request(`${url.origin}/api/content`, { method: 'GET' })
+      );
+      const snap = await snapRes.json();
+      const payload = snap.payload || {};
+
+      const r2Objects = await listAllImages(env);
+      const catalog = payload.image || [];
+      const referencedIds = new Set(scanImageReferences(payload).keys());
+
+      const report = computeImageOrphans({
+        r2Objects,
+        catalog,
+        referencedIds,
+        now: Date.now(),
+        graceMs: IMAGE_GC_GRACE_MS,
+      });
+
+      return Response.json({ ...report, graceWindowHours: IMAGE_GC_GRACE_HOURS, scannedAt: Date.now() });
     }
 
     // Foundry token import: POST /api/bridge/image?key=<secret> — gated by the
