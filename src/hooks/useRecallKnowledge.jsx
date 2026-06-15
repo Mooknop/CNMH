@@ -25,11 +25,11 @@ export const useRecallKnowledge = () => {
   );
 
   const resolve = useCallback(
-    (entryId, { degree, defenses, choices, by, byName, skill, d20, total, dc }) => {
+    (entryId, { degree, defenses, choices, by, byName, skill, d20, total, dc, outOfCombat }) => {
       setKnowledge((cur) => {
         const prev = cur?.[entryId] || defaultRecord();
         const { next, learned } = applyRecallKnowledge(prev, {
-          degree, defenses, choices, charId: by,
+          degree, defenses, choices, charId: by, outOfCombat,
         });
         const historyEntry = { ts: Date.now(), by, byName, skill, d20, total, dc, degree, learned };
         return {
@@ -37,6 +37,10 @@ export const useRecallKnowledge = () => {
           [entryId]: { ...next, history: [...(next.history || []), historyEntry] },
         };
       });
+
+      // Out of combat there is no encounter, so don't write to the encounter log
+      // (which would otherwise spawn phantom encounter state).
+      if (outOfCombat) return;
 
       const learnedStr = (() => {
         if (degree === 'criticalSuccess') {

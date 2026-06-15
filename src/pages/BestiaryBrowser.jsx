@@ -7,6 +7,7 @@ import { useLore } from '../contexts/LoreContext';
 import { rkKeyFor } from '../utils/recallKnowledge';
 import { capturedMonsters, monsterToEnemy, monsterLocations, formatLastSeen } from '../utils/bestiary';
 import BestiaryEntry from '../components/bestiary/BestiaryEntry';
+import BestiaryRecallKnowledge from '../components/bestiary/BestiaryRecallKnowledge';
 import './BestiaryBrowser.css';
 
 // Out-of-combat Bestiary — a standing log of every creature the party has ever
@@ -154,6 +155,7 @@ const BestiaryBrowser = () => {
                 {focused ? (
                   <>
                     <BestiaryEntry enemy={focused.enemy} record={focused.record} revealAll={isGm} />
+                    <BestiaryRecallKnowledge key={focused.doc.id} enemy={focused.enemy} />
                     <div className="bestiary-seen">
                       <span className="bestiary-seen-label">Encountered at</span>
                       {focusedLocations.length > 0 ? (

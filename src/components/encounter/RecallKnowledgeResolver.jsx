@@ -41,7 +41,7 @@ const DEGREE_INFO = {
 // How many facts the player picks per degree.
 const CHOICE_LIMIT = { success: 1, criticalSuccess: 2 };
 
-const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }) => {
+const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone, outOfCombat = false }) => {
   const { characters } = useContent();
   const rawChar = characters.find((c) => c.id === actingCharId) || null;
   const charModel = useCharacter(rawChar);
@@ -93,6 +93,7 @@ const RecallKnowledgeResolver = ({ enemy, actingCharId, actingCharName, onDone }
       d20,
       total,
       dc,
+      outOfCombat,
     });
     onDone();
   };

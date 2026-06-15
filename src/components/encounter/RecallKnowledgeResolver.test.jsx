@@ -161,6 +161,22 @@ test('Confirm calls resolve with correct args on success', () => {
   expect(onDone).toHaveBeenCalled();
 });
 
+test('passes outOfCombat to resolve when set (#396)', () => {
+  renderResolver({ outOfCombat: true });
+  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
+  fireEvent.click(screen.getByLabelText('Reflex save'));
+  fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
+  expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ outOfCombat: true }));
+});
+
+test('defaults outOfCombat to false (in-combat)', () => {
+  renderResolver();
+  fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '20' } });
+  fireEvent.click(screen.getByLabelText('Reflex save'));
+  fireEvent.click(screen.getByRole('button', { name: /Apply/i }));
+  expect(mockResolve).toHaveBeenCalledWith('e1', expect.objectContaining({ outOfCombat: false }));
+});
+
 test('Cancel calls onDone without resolving', () => {
   const onDone = vi.fn();
   renderResolver({ onDone });
