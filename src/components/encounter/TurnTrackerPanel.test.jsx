@@ -86,94 +86,6 @@ describe('TurnTrackerPanel', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('shows setup message during setup phase', () => {
-    let drv;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias, ashka]));
-    expect(screen.getByText(/Waiting for all players/)).toBeInTheDocument();
-  });
-
-  it('shows round and current actor when in-progress', () => {
-    let drv;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias, ashka]));
-    const [p, a] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 20));
-    act(() => drv.setInitiative(a.entryId, 10));
-    act(() => drv.beginRound1());
-    expect(screen.getByText('Round 1')).toBeInTheDocument();
-    expect(screen.getByText(/Pellias's turn/)).toBeInTheDocument();
-  });
-
-  it('shows 3 action pips and reaction icon when it is my turn', () => {
-    let drv;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias]));
-    const [p] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 15));
-    act(() => drv.beginRound1());
-    expect(screen.getByRole('group', { name: 'Turn controls' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Actions spent')).toBeInTheDocument();
-  });
-
-  it('shows the MAP chip after recorded attacks and clamps at −10', () => {
-    let drv, tsDriver;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias]));
-    const [p] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 15));
-    act(() => drv.beginRound1());
-
-    expect(screen.queryByText(/^MAP/)).toBeNull();
-    act(() => tsDriver.recordAttack());
-    expect(screen.getByText('MAP −5')).toBeInTheDocument();
-    act(() => tsDriver.recordAttack());
-    expect(screen.getByText('MAP −10')).toBeInTheDocument();
-    act(() => tsDriver.recordAttack());
-    expect(screen.getByText('MAP −10')).toBeInTheDocument();
-  });
-
-  it('MAP chip resets on a new turn', () => {
-    let drv, tsDriver;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias]));
-    const [p] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 15));
-    act(() => drv.beginRound1());
-
-    act(() => tsDriver.recordAttack(2));
-    expect(screen.getByText('MAP −10')).toBeInTheDocument();
-    act(() => tsDriver.resetForNewTurn('1:0'));
-    expect(screen.queryByText(/^MAP/)).toBeNull();
-  });
-
   it('hides turn controls when it is not my turn', () => {
     let drv;
     render(
@@ -189,86 +101,6 @@ describe('TurnTrackerPanel', () => {
     act(() => drv.beginRound1());
     // Pellias is current, Ashka's panel should not show controls
     expect(screen.queryByRole('group', { name: 'Turn controls' })).toBeNull();
-  });
-
-  it('Submit Turn is disabled when actionsSpent > 3', () => {
-    let drv, tsDriver;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias]));
-    const [p] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 12));
-    act(() => drv.beginRound1());
-    // Spend 4 actions (over budget)
-    act(() => tsDriver.spendActions(4, 'Overdrive'));
-    const btn = screen.getByRole('button', { name: 'Submit turn' });
-    expect(btn).toBeDisabled();
-  });
-
-  it('Submit Turn is enabled at 3 actions spent', () => {
-    let drv, tsDriver;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias]));
-    const [p] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 12));
-    act(() => drv.beginRound1());
-    act(() => tsDriver.spendActions(3, 'Triple'));
-    const btn = screen.getByRole('button', { name: 'Submit turn' });
-    expect(btn).not.toBeDisabled();
-  });
-
-  it('Submit Turn advances the encounter and resets next PC turnstate', () => {
-    let drv;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias, ashka]));
-    const [p, a] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 20));
-    act(() => drv.setInitiative(a.entryId, 10));
-    act(() => drv.beginRound1());
-
-    // Pellias submits their turn
-    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
-
-    // Encounter should have advanced to Ashka
-    expect(drv.encounter.currentTurnIndex).toBe(1);
-    // sendUpdate should have been called to reset Ashka's turnstate
-    expect(mockSendUpdate).toHaveBeenCalledWith('Ashka', 'turnstate', expect.objectContaining({
-      actionsSpent: 0,
-      reactionAvailable: true,
-      hasStartedFirstTurn: true,
-    }));
-  });
-
-  it('reaction is available at the start of your turn (regained each turn)', () => {
-    let drv;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    act(() => drv.startEncounter([pellias]));
-    const [p] = drv.encounter.order;
-    act(() => drv.setInitiative(p.entryId, 12));
-    act(() => drv.beginRound1());
-    // The self-reset on turn start gives a fresh turn: reaction available.
-    expect(screen.getByLabelText('Reaction (available)')).toBeInTheDocument();
   });
 
   // ── Movement (Feature 3) ────────────────────────────────────────────────
@@ -549,48 +381,6 @@ describe('TurnTrackerPanel', () => {
     act(() => getDrv().beginRound1());
   };
 
-  it('shows a flanked badge on enemy order entry when flanked state arrives', () => {
-    let drv, setFlanked;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_flanked_global" onReady={(s) => (setFlanked = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurnWithEnemy(() => drv);
-    const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
-
-    // Simulate bridge pushing flanked state.
-    act(() => setFlanked({ [goblin.entryId]: { byCharIds: ['Pellias', 'Ashka'] } }));
-
-    expect(screen.getByLabelText('Goblin is flanked')).toBeInTheDocument();
-  });
-
-  // ── Persistent-damage chip (#272) ─────────────────────────────────────────
-
-  it('shows a persistent-damage chip on the afflicted order entry', () => {
-    let drv, setPersistent;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_persistent_global" onReady={(s) => (setPersistent = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurnWithEnemy(() => drv);
-    const goblin = drv.encounter.order.find((e) => e.name === 'Goblin');
-
-    expect(screen.queryByRole('button', { name: /persistent/ })).toBeNull();
-
-    act(() => setPersistent({
-      [goblin.entryId]: [{ id: 'pd-1', dice: '1d4', type: 'electricity', sourceName: 'Polarize' }],
-    }));
-
-    expect(
-      screen.getByRole('button', { name: 'Goblin: 1d4 persistent electricity' })
-    ).toBeInTheDocument();
-  });
 
   // ── Shield Block reaction (Slice 4) ──────────────────────────────────────
 
@@ -665,7 +455,7 @@ describe('TurnTrackerPanel', () => {
     expect(screen.queryByLabelText(/kinetic aura is active/)).toBeNull();
   });
 
-  it('shows the aura chip in the order strip and a Dismiss button on my turn', () => {
+  it('shows a Dismiss button when the aura is active on my turn', () => {
     let drv, setAura;
     render(
       <>
@@ -677,7 +467,7 @@ describe('TurnTrackerPanel', () => {
     startMyTurn(() => drv);
 
     act(() => setAura({ active: true, ts: 1 }));
-    expect(screen.getByLabelText("Pellias's kinetic aura is active")).toBeInTheDocument();
+    // The aura chip itself now lives in the InitiativeStrip; the Dismiss control stays here.
     expect(screen.getByLabelText('Dismiss Aura')).toBeInTheDocument();
   });
 
@@ -716,62 +506,8 @@ describe('TurnTrackerPanel', () => {
     act(() => setAura({ active: true, ts: 1 }));
 
     act(() => drv.beginNextRound());
-    expect(screen.getByLabelText("Pellias's kinetic aura is active")).toBeInTheDocument();
-  });
-
-  // ── Harrow omen chip (#227) ───────────────────────────────────────────────
-
-  it('shows the omen chip when a PC has an active omen, hides it when cleared', () => {
-    let drv, setOmen;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv);
-
-    expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
-    act(() => setOmen({ suit: 'Stars', ts: 1 }));
-    expect(screen.getByLabelText("Pellias's harrow omen is Stars")).toBeInTheDocument();
-    act(() => setOmen({ suit: null, ts: 2 }));
-    expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
-  });
-
-  it('submitting the turn clears a pending-loss omen and logs it (#227)', () => {
-    let drv, setOmen;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv);
-    act(() => setOmen({ suit: 'Keys', pendingLoss: true, ts: 1 }));
-
-    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
-    expect(screen.queryByLabelText(/harrow omen/)).toBeNull();
-    expect(
-      drv.encounter.log.some((e) => e.text.includes("Pellias's harrow omen (Keys) is lost"))
-    ).toBe(true);
-  });
-
-  it('submitting the turn leaves an unflagged omen alone', () => {
-    let drv, setOmen;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_omen_Pellias" onReady={(s) => (setOmen = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv);
-    act(() => setOmen({ suit: 'Keys', ts: 1 }));
-
-    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
-    expect(screen.getByLabelText("Pellias's harrow omen is Keys")).toBeInTheDocument();
+    // Dismiss control still offered next round → the aura persisted (a raised shield would have dropped).
+    expect(screen.getByLabelText('Dismiss Aura')).toBeInTheDocument();
   });
 
   // ── Turn-start free-action offers (#228 — Primary Threat) ─────────────────
@@ -926,19 +662,4 @@ describe('TurnTrackerPanel', () => {
     expect(summonsApi.summons).toHaveLength(0); // sustain gone → summon pruned
   });
 
-  it('submitting the turn lapses a sustain not sustained this round', () => {
-    let drv, setSustains;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv); // single PC, round 1
-    seedSustain(setSustains, [{ id: 's1', spellName: 'Bless', lastSustainedRound: 0 }]);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Submit turn' }));
-    expect(drv.encounter.log.some((l) => l.text === 'Bless ends (not sustained)')).toBe(true);
-  });
 });

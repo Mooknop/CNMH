@@ -8,6 +8,7 @@ import ActionTile from './ActionTile';
 import ActionDetailModal from '../ActionDetailModal';
 import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../../hooks/useCharacter';
+import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { buildActionCatalog, filterTiles, categoriesPresent } from './buildActionCatalog';
 import './ActionGrid.css';
 
@@ -29,6 +30,8 @@ const COST_GROUPS = [
 
 const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
   const { actions, strikes, flags, thaumaturge } = useCharacter(character);
+  const { focusEnemy } = useFocusTarget(character.id);
+  const hasFocus = !!focusEnemy;
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
   const [openItem, setOpenItem] = useState(null);
@@ -95,7 +98,13 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
             <h3 className="cmd-group-head">{label}</h3>
             <div className="cmd-group-grid">
               {groupTiles.map((tile) => (
-                <ActionTile key={tile.id} tile={tile} onSelect={setOpenItem} />
+                <ActionTile
+                  key={tile.id}
+                  tile={tile}
+                  onSelect={setOpenItem}
+                  encounterMode={encounterMode}
+                  hasFocus={hasFocus}
+                />
               ))}
             </div>
           </section>

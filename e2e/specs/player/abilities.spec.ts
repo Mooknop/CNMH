@@ -81,7 +81,7 @@ test.describe('Abilities, sustains, auras & conditions', () => {
       (v) => Array.isArray(v) && v.find((s: any) => s.id === 'keep')?.lastSustainedRound === 1,
     );
 
-    await page.getByRole('button', { name: 'Submit turn' }).click();
+    await page.getByRole('button', { name: 'End turn' }).click();
     await session.expectSent(
       'cnmh_sustains_e2e-fighter',
       (v) => Array.isArray(v) && v.length === 1 && v[0].id === 'keep',

@@ -57,6 +57,13 @@ const catForCustomAction = (item) => {
   return 'other';
 };
 
+// Whether a tile needs a focused foe before it can resolve (#411). Strikes and
+// any maneuver that rolls "vs <defense>" (e.g. Demoralize vs Will, Feint vs
+// Perception) need a target; an action can opt out with `requiresTarget: false`
+// (pure movement like Stride, self-buffs like Stand).
+const tileNeedsTarget = (item, cat) =>
+  (cat === 'attack' || item.targetDefense != null) ? item.requiresTarget !== false : false;
+
 let uid = 0;
 const makeTile = (item, cat, originType) => {
   uid += 1;
@@ -70,6 +77,7 @@ const makeTile = (item, cat, originType) => {
     traits: item.traits || [],
     type: 'action',
     requiresTarget: item.requiresTarget,
+    needsTarget: tileNeedsTarget(item, cat),
     variableActionCount: item.variableActionCount,
     inactive: item.active === false,
     statLine: statLineFor(item, cat),

@@ -102,4 +102,13 @@ describe('ActionGrid', () => {
     render(<ActionGrid character={character} onUse={vi.fn()} />);
     expect(screen.getByTestId('thaumaturge-exploits')).toBeInTheDocument();
   });
+
+  it('dims a target-needing tile with a "Tap a foe" hint when in encounter with no focus', () => {
+    // No focus is set (default), so the strike tile (needsTarget) shows the cue
+    // instead of its stat line — but stays tappable.
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    const tile = screen.getByRole('button', { name: 'Longsword' });
+    expect(within(tile).getByText('Tap a foe to target')).toBeInTheDocument();
+    expect(within(tile).queryByText('+9 · 1d8+4')).not.toBeInTheDocument();
+  });
 });

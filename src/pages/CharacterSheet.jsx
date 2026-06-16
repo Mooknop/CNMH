@@ -19,6 +19,9 @@ import InventoryTab from '../components/inventory/InventoryTab';
 import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
+import ActionDial from '../components/encounter/commandsheet/ActionDial';
+import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
+import FocusBanner from '../components/encounter/commandsheet/FocusBanner';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
@@ -146,6 +149,9 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} />
+                  <ActionDial charId={character.id} characterName={character.name} character={character} />
+                  <InitiativeStrip charId={character.id} />
+                  <FocusBanner charId={character.id} />
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
                   <HandsPanel character={character} characterColor={characterColor} />
                 </>
