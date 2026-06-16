@@ -3,6 +3,7 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { boundariesCrossedBy, isExpired } from '../utils/expiry';
+import { isEncounterScopedEffect } from '../utils/EffectUtils';
 import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
 import {
   defaultEncounter,
@@ -330,6 +331,20 @@ export const useEncounter = () => {
           const idle = { active: false, name: null, ts: 0 };
           window.localStorage.setItem(stanceKey, JSON.stringify(idle));
           sendUpdate(entry.charId, 'stance', idle);
+        }
+
+        // Encounter-scoped effects (#275) — drop turn/round-bound leftovers and
+        // catalog-flagged states like eld-charged so they don't linger past the
+        // fight. Manual effects and clock-based immunities are kept.
+        const fxKey = `cnmh_effects_${entry.charId}`;
+        let fx;
+        try { fx = JSON.parse(window.localStorage.getItem(fxKey)) || []; } catch { fx = []; }
+        if (Array.isArray(fx) && fx.length) {
+          const keptFx = fx.filter((e) => !isEncounterScopedEffect(e));
+          if (keptFx.length !== fx.length) {
+            window.localStorage.setItem(fxKey, JSON.stringify(keptFx));
+            sendUpdate(entry.charId, 'effects', keptFx);
+          }
         }
       }
       setEncounter(() => defaultEncounter());

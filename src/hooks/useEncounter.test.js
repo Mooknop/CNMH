@@ -201,6 +201,17 @@ describe('useEncounter', () => {
     expect(JSON.parse(localStorage.getItem('cnmh_stance_Pellias'))).toMatchObject({ active: false, name: null });
   });
 
+  it('endEncounter drops encounter-scoped effects (eld-charged) but keeps manual ones (#275)', () => {
+    localStorage.setItem('cnmh_effects_IzzyUncut', JSON.stringify([
+      { id: 'c1', effectId: 'eld-charged' }, // catalog-flagged encounterScoped
+      { id: 'm1', effectId: 'mage-armor' },  // manual, kept
+    ]));
+    const { result } = setup();
+    act(() => result.current.startEncounter([izzy]));
+    act(() => result.current.endEncounter());
+    expect(JSON.parse(localStorage.getItem('cnmh_effects_IzzyUncut')).map((e) => e.id)).toEqual(['m1']);
+  });
+
   it('appendLog adds entries with ids + timestamps', () => {
     const { result } = setup();
     act(() => result.current.appendLog({ type: 'note', text: 'hi' }));

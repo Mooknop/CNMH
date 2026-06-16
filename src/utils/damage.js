@@ -1,3 +1,12 @@
+// Canonical PF2e damage types — the shared source for type pickers (e.g. the GM
+// Adjust HP flow, #275). Persistent-damage riders elsewhere use free-form `type`
+// strings; this list is for UI selection, not validation.
+export const DAMAGE_TYPES = [
+  'bludgeoning', 'piercing', 'slashing',
+  'acid', 'cold', 'electricity', 'fire', 'sonic',
+  'vitality', 'void', 'force', 'mental', 'poison', 'bleed', 'precision',
+];
+
 // Pure helpers for the damage step (#222). After a hit/crit the resolver shows
 // a damage entry: the player rolls the dice physically and enters the total;
 // the app adds toggled riders, doubles on a crit, and applies weakness last

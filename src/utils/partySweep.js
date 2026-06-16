@@ -10,6 +10,7 @@
 // pattern) so the same logic drives a per-character call and the party loop.
 // Only writes state that's actually dirty, so the log summary stays meaningful.
 import { defaultTurnState } from '../hooks/useTurnState';
+import { isEncounterScopedEffect } from './EffectUtils';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -55,13 +56,14 @@ function computeCombatResets(character, getState) {
   return resets;
 }
 
-// Drop effects whose duration is anchored to the encounter (turn/round-bound,
-// i.e. they carry an `expireAt`). Manual effects (no expiry) and clock-based
-// immunities (`expireAtSecs`) survive the sweep.
+// Drop effects anchored to the encounter: turn/round-bound ones (they carry an
+// `expireAt`) plus catalog-flagged `encounterScoped` states like eld-charged
+// (#275). Manual effects (no expiry) and clock-based immunities (`expireAtSecs`)
+// survive the sweep.
 function expireEncounterEffects(character, getState) {
   const effects = getState(character?.id, 'effects');
   if (!Array.isArray(effects) || effects.length === 0) return null;
-  const kept = effects.filter((e) => !e.expireAt);
+  const kept = effects.filter((e) => !isEncounterScopedEffect(e));
   return kept.length === effects.length ? null : kept;
 }
 

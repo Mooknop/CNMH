@@ -1,4 +1,9 @@
-import { computeEffectBonuses, combineModifiers } from './EffectUtils';
+import {
+  computeEffectBonuses,
+  combineModifiers,
+  isEncounterScopedEffect,
+  clearsOnDamageType,
+} from './EffectUtils';
 
 const catalog = [
   {
@@ -232,5 +237,48 @@ describe('combineModifiers', () => {
 
   it('pure penalty case (no bonus) has correct total', () => {
     expect(combineModifiers(penalty, null).total).toBe(-2);
+  });
+});
+
+describe('isEncounterScopedEffect (#275)', () => {
+  const cat = [
+    { id: 'eld-charged', name: 'Charged', encounterScoped: true },
+    { id: 'mage-armor', name: 'Mage Armor' },
+  ];
+
+  it('is true for turn/round-bound effects (carry expireAt)', () => {
+    expect(isEncounterScopedEffect({ effectId: 'x', expireAt: { round: 2 } }, cat)).toBe(true);
+  });
+
+  it('is true for catalog-flagged encounterScoped effects with no expireAt', () => {
+    expect(isEncounterScopedEffect({ effectId: 'eld-charged' }, cat)).toBe(true);
+  });
+
+  it('is false for manual effects (no expiry, not flagged)', () => {
+    expect(isEncounterScopedEffect({ effectId: 'mage-armor' }, cat)).toBe(false);
+  });
+
+  it('resolves eld-charged against the bundled catalog by default', () => {
+    expect(isEncounterScopedEffect({ effectId: 'eld-charged' })).toBe(true);
+  });
+});
+
+describe('clearsOnDamageType (#275)', () => {
+  const cat = [{ id: 'eld-charged', name: 'Charged', clearOnDamageType: 'electricity' }];
+
+  it('matches the declared damage type', () => {
+    expect(clearsOnDamageType({ effectId: 'eld-charged' }, 'electricity', cat)).toBe(true);
+  });
+
+  it('does not match a different damage type', () => {
+    expect(clearsOnDamageType({ effectId: 'eld-charged' }, 'fire', cat)).toBe(false);
+  });
+
+  it('is false when no type is given', () => {
+    expect(clearsOnDamageType({ effectId: 'eld-charged' }, '', cat)).toBe(false);
+  });
+
+  it('resolves eld-charged → electricity against the bundled catalog by default', () => {
+    expect(clearsOnDamageType({ effectId: 'eld-charged' }, 'electricity')).toBe(true);
   });
 });

@@ -4,6 +4,14 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 // ─── mocks ───────────────────────────────────────────────────
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 
+// useEncounter is only used here for appendLog; isolate it from the session/
+// content machinery and expose the spy for assertions (#275).
+const { appendLogMock } = vi.hoisted(() => ({ appendLogMock: vi.fn() }));
+vi.mock('../../hooks/useEncounter', () => ({
+  __esModule: true,
+  useEncounter: () => ({ appendLog: appendLogMock }),
+}));
+
 vi.mock('../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
   const store = {};
@@ -47,6 +55,7 @@ const ASHKA = { id: 'ashka', name: 'Ashka', animalCompanion: { name: 'Zevira', h
 
 beforeEach(() => {
   __reset();
+  appendLogMock.mockClear();
   useContent.mockReturnValue({ characters: CHARACTERS });
 });
 
@@ -179,6 +188,73 @@ describe('AdjustHpModal', () => {
     fireEvent.click(screen.getByLabelText('Apply damage'));
 
     expect(__store['cnmh_hp_thorn'].current).toBe(0);
+  });
+
+  // ─── typed damage + Charged auto-clear (#275) ───────────────
+  it('damage-type select shows in Damage mode and not in Heal mode', () => {
+    __store['cnmh_hp_thorn'] = { ...THORN_HP };
+    render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+    act(() => {
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+    });
+    // Heal is the default mode — no damage-type picker.
+    expect(screen.queryByLabelText('damage type')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+    expect(screen.getByLabelText('damage type')).toBeInTheDocument();
+  });
+
+  it('applying electricity damage clears eld-charged and logs it', () => {
+    __store['cnmh_hp_thorn'] = { ...THORN_HP };
+    __store['cnmh_effects_thorn'] = [
+      { id: 'c1', effectId: 'eld-charged' },
+      { id: 'm1', effectId: 'mage-armor' },
+    ];
+    render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+    act(() => {
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+    fireEvent.change(screen.getByLabelText('damage type'), { target: { value: 'electricity' } });
+    fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '6' } });
+    fireEvent.click(screen.getByLabelText('Apply damage'));
+
+    expect(__store['cnmh_effects_thorn'].map((e) => e.id)).toEqual(['m1']);
+    expect(__store['cnmh_hp_thorn'].current).toBe(14);
+    expect(appendLogMock).toHaveBeenCalledWith(
+      expect.objectContaining({ charId: 'thorn', text: expect.stringContaining('electricity') })
+    );
+  });
+
+  it('non-electricity damage leaves eld-charged in place', () => {
+    __store['cnmh_hp_thorn'] = { ...THORN_HP };
+    __store['cnmh_effects_thorn'] = [{ id: 'c1', effectId: 'eld-charged' }];
+    render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+    act(() => {
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+    fireEvent.change(screen.getByLabelText('damage type'), { target: { value: 'fire' } });
+    fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '6' } });
+    fireEvent.click(screen.getByLabelText('Apply damage'));
+
+    expect(__store['cnmh_effects_thorn'].map((e) => e.id)).toEqual(['c1']);
+    expect(appendLogMock).not.toHaveBeenCalled();
+  });
+
+  it('untyped damage does not touch effects (no regression)', () => {
+    __store['cnmh_hp_thorn'] = { ...THORN_HP };
+    __store['cnmh_effects_thorn'] = [{ id: 'c1', effectId: 'eld-charged' }];
+    render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+    act(() => {
+      fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+    });
+    fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+    fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '6' } });
+    fireEvent.click(screen.getByLabelText('Apply damage'));
+
+    expect(__store['cnmh_effects_thorn'].map((e) => e.id)).toEqual(['c1']);
+    expect(__store['cnmh_hp_thorn'].current).toBe(14);
+    expect(appendLogMock).not.toHaveBeenCalled();
   });
 
   it('amount field clears after applying', () => {
