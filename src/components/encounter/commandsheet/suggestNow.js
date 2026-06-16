@@ -31,11 +31,16 @@ export function usable(tile, hasFocus) {
  * @param {number} opts.hpRatio          acting PC's HP fraction (0–1); a low value
  *                                        floats healing to the top (#428)
  * @param {boolean} opts.allyFocused      an ally is focused → surface support (#429)
+ * @param {boolean} opts.allyInReach       focused ally is within reach (#430); when
+ *                                          false, out-of-reach support is dropped
  * @returns {Array} up to 4 tiles, most relevant first
  */
-export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false, hpRatio = 1, allyFocused = false } = {}) {
+export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false, hpRatio = 1, allyFocused = false, allyInReach = true } = {}) {
   const live = (tiles || []).filter(
     (t) => affordable(t, actionsLeft) && usable(t, hasFocus)
+      // Don't suggest ally support you can't perform: a focused ally out of reach
+      // drops support tiles from the shortlist (#430).
+      && !(t.supports && allyFocused && !allyInReach)
   );
 
   const hurt = hpRatio < 0.6;

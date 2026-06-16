@@ -86,6 +86,15 @@ describe('suggestNow', () => {
     expect(out[0].name).toBe('Battle Medicine'); // supports +9 outranks move +8
   });
 
+  it('ally focused but out of reach → support is dropped from the shortlist (#430)', () => {
+    const battleMed = tile({ name: 'Battle Medicine', cat: 'skill', supports: true });
+    const out = suggestNow([move, defense, battleMed], {
+      actionsLeft: 3, hasFocus: false, allyFocused: true, allyInReach: false,
+    });
+    expect(out.map((t) => t.name)).not.toContain('Battle Medicine');
+    expect(out.map((t) => t.name)).toContain('Stride');
+  });
+
   it('a stowed healing potion is unaffordable at 2 actions (drink 1 + retrieve 2 = 3)', () => {
     const tiles = buildActionCatalog({
       inventory: [{ name: 'Elixir of Life', state: 'stowed', consumable: { kind: 'healing' } }],

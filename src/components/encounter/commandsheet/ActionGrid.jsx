@@ -11,6 +11,7 @@ import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useTurnState } from '../../../hooks/useTurnState';
 import { useSyncedState } from '../../../hooks/useSyncedState';
+import { useAdjacency } from '../../../hooks/useAdjacency';
 import { buildActionCatalog, filterTiles, categoriesPresent } from './buildActionCatalog';
 import { suggestNow } from './suggestNow';
 import './ActionGrid.css';
@@ -35,10 +36,15 @@ const COST_GROUPS = [
 const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
   const { actions, strikes, reactions, freeActions, inventory, maxHp, flags, thaumaturge } = useCharacter(character);
   const { focusEnemy, focusAlly } = useFocusTarget(character.id);
+  const { inReach } = useAdjacency(character.id);
   const { turnState } = useTurnState(character.id);
   const [hp] = useSyncedState(`cnmh_hp_${character.id}`, null);
   const hasFocus = !!focusEnemy;
   const allyFocused = !!focusAlly;
+  // A focused ally out of reach hard-disables ally-support tiles (#430). No relay
+  // data ⇒ inReach is true, so the gate is dormant without a connected bridge.
+  const allyInReach = !focusAlly || inReach(focusAlly.entryId);
+  const allyOutOfReach = allyFocused && !allyInReach;
   // HP fraction drives the low-HP healing boost in suggestNow (#428); 1 (full) if unknown.
   const hpRatio = (typeof hp === 'number' && maxHp > 0) ? hp / maxHp : 1;
   const [cat, setCat] = useState('all');
@@ -68,8 +74,8 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
   // + focus, so it stays useful no matter which chip/search is active.
   const actionsLeft = Math.max(0, 3 - (turnState?.actionsSpent ?? 0));
   const suggestions = useMemo(
-    () => (encounterMode ? suggestNow(tiles, { actionsLeft, hasFocus, hpRatio, allyFocused }) : []),
-    [encounterMode, tiles, actionsLeft, hasFocus, hpRatio, allyFocused]
+    () => (encounterMode ? suggestNow(tiles, { actionsLeft, hasFocus, hpRatio, allyFocused, allyInReach }) : []),
+    [encounterMode, tiles, actionsLeft, hasFocus, hpRatio, allyFocused, allyInReach]
   );
 
   const showMagicLauncher = !!onMagicOpen && (cat === 'all' || cat === 'magic');
@@ -95,6 +101,7 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
                 onSelect={handleTileSelect}
                 encounterMode={encounterMode}
                 hasFocus={hasFocus}
+                allyOutOfReach={allyOutOfReach}
               />
             ))}
           </div>
@@ -148,6 +155,7 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
                   onSelect={handleTileSelect}
                   encounterMode={encounterMode}
                   hasFocus={hasFocus}
+                  allyOutOfReach={allyOutOfReach}
                 />
               ))}
             </div>

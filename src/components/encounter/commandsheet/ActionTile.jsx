@@ -16,16 +16,20 @@ const drawCueFor = (tile) =>
     ? (DRAW_CUE[tile.raw?.state] || `draw +${tile.drawCost}`)
     : null;
 
-const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false }) => {
+const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false, allyOutOfReach = false }) => {
   const glyphCost = tile.variableActionCount ? tile.variableActionCount.min : tile.cost;
   const rightTrait = tile.traits?.[0] ?? null;
   const awaitingFocus = encounterMode && tile.needsTarget && !hasFocus;
+  // A support action (Battle Medicine, …) on a focused ally who is out of reach
+  // can't be performed — hard-disable it with a "move closer" cue (#430).
+  const outOfReach = encounterMode && tile.supports && allyOutOfReach;
   const drawCue = drawCueFor(tile);
 
   const className = [
     'cmd-tile',
     tile.inactive ? 'cmd-tile--inactive' : '',
     awaitingFocus ? 'cmd-tile--awaiting-focus' : '',
+    outOfReach ? 'cmd-tile--out-of-reach' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -33,6 +37,7 @@ const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false })
       type="button"
       className={className}
       onClick={() => onSelect(tile)}
+      disabled={outOfReach}
       aria-label={tile.name}
     >
       <span className="cmd-tile-top">
@@ -43,7 +48,9 @@ const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false })
         {rightTrait && <span className="cmd-tile-trait">{rightTrait}</span>}
       </span>
       <span className="cmd-tile-name">{tile.name}</span>
-      {awaitingFocus ? (
+      {outOfReach ? (
+        <span className="cmd-tile-hint">Move closer to target</span>
+      ) : awaitingFocus ? (
         <span className="cmd-tile-hint">Tap a foe to target</span>
       ) : drawCue ? (
         <span className="cmd-tile-stat cmd-tile-stat--draw">{drawCue}</span>

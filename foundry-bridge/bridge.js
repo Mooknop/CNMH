@@ -16,6 +16,7 @@ import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
+import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
@@ -71,6 +72,7 @@ Hooks.once('ready', () => {
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
   initFlankingPush(sendUpdate);
+  initAdjacencyPush(sendUpdate);
   initSummonPool(sendUpdate);
   initMinionActors(sendUpdate);
   initMinionSync(sendUpdate);
@@ -160,6 +162,10 @@ function dispatch(msg) {
       pushFlankedState();  // actorMap just became valid — re-evaluate with correct PC set
       pushMinionActors();  // minion→PC links resolve through the actor map
     }
+    // Adjacency is classification-agnostic (keyed by combatant id), so it doesn't
+    // need the actor map — but push once on connect so a mid-combat reconnect has
+    // reach data without waiting for a token to move.
+    pushAdjacencyState();
     // Seed the minion-HP merge cache from persisted state so the first Foundry→app
     // push for one role doesn't clobber the other (#362 stretch).
     for (const [cid, state] of Object.entries(msg.payload || {})) {
