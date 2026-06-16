@@ -1,0 +1,84 @@
+/* Target picker + flanked badge styles. Relocated from TurnTrackerPanel.css
+   (#425); keeps the ttp- class names for continuity. */
+
+/* Flanked badge (also reused by the order-strip persistent chip family). */
+.ttp-flanked-badge {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  opacity: 0.85;
+  vertical-align: middle;
+}
+
+.ttp-target-ui {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.ttp-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ttp-target-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ttp-target-chip--on {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--shell-text-primary);
+}
+
+.ttp-target-chip--enemy {
+  border-color: rgba(179, 64, 46, 0.5);
+}
+
+.ttp-target-chip--enemy.ttp-target-chip--on {
+  background: rgba(179, 64, 46, 0.18);
+  border-color: rgba(179, 64, 46, 0.7);
+  color: var(--peril-light);
+}
+
+.ttp-target-kind {
+  font-size: var(--text-xs);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ttp-target-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.ttp-targets-empty {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}
+
+/* Dark shell overrides (relocated with the classes from CharacterSheet/TTP). */
+.cs-content .ttp-target-chip {
+  background: var(--surface-inset);
+  border-color: var(--shell-border-strong);
+  color: var(--shell-text-secondary);
+}
+
+.cs-content .ttp-target-chip--on {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--shell-text-primary);
+}

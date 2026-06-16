@@ -1,6 +1,6 @@
 /* Persistent-damage chip + clear popover (#272). Sits inline beside the
    combatant name in the turn-tracker strip and the GM initiative rows,
-   styled in the family of .ttp-flanked-badge. */
+   styled in the family of .ttp-flanked-badge (TargetPicker.css). */
 
 .pdc-wrap {
   position: relative;

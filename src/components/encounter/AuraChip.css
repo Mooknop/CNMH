@@ -1,0 +1,8 @@
+/* Kinetic aura (#228) — order-strip chip.
+   Relocated from TurnTrackerPanel.css (#425). */
+.ttp-aura-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  color: #b18fe0;
+  vertical-align: middle;
+}

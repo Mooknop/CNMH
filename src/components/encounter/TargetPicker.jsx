@@ -1,4 +1,5 @@
 import React from 'react';
+import './TargetPicker.css';
 
 // Compact multi-select target picker. Renders one toggle chip per selectable
 // encounter entry (name + pc/enemy kind). Reusable by the turn tracker now and
