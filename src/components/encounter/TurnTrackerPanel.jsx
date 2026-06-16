@@ -1,33 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
-import { useTurnState, defaultTurnState } from '../../hooks/useTurnState';
+import { useTurnState } from '../../hooks/useTurnState';
 import { minionTurnId, MINION_COMPANION } from '../../utils/minionUtils';
-import { useSyncedState } from '../../hooks/useSyncedState';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
-import { useOmen } from '../../hooks/useOmen';
 import { useSustains } from '../../hooks/useSustains';
 import { useSummons } from '../../hooks/useSummons';
-import { useSession } from '../../contexts/SessionContext';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
-import { nextTurnIndex } from '../../utils/encounterUtils';
 import { getFreeActions } from '../../utils/actionUtils';
 import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
-import PersistentChip from './PersistentChip';
-import AuraChip from './AuraChip';
-import OmenChip from './OmenChip';
-import StanceChip from './StanceChip';
-import HuntPreyBadge from './HuntPreyBadge';
-import EnemyConditionBadge from './EnemyConditionBadge';
 import './TurnTrackerPanel.css';
-
-const formatCombatTime = (secs) => {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return `${m}:${String(s).padStart(2, '0')}`;
-};
 
 // PF2e movement actions the player can pick before requesting reachable squares.
 const MOVE_ACTIONS = [
@@ -35,44 +19,14 @@ const MOVE_ACTIONS = [
   { type: 'stride', label: 'Stride', cost: 1 },
 ];
 
-// Derived from defaultTurnState so new fields (attacksMade, …) can't drift.
-const RESET_STATE = {
-  ...defaultTurnState(),
-  reactionAvailable: true,
-  hasStartedFirstTurn: true,
-};
-
-const writeLocal = (key, value) => {
-  try {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  } catch { /* noop */ }
-};
-
-const ActionPip = ({ filled }) => (
-  <span className={`ttp-pip${filled ? ' ttp-pip--filled' : ''}`} aria-hidden="true" />
-);
-
-const ReactionIcon = ({ state }) => {
-  const labels = {
-    unavailable: 'Reaction (unavailable until your first turn)',
-    available: 'Reaction (available)',
-    spent: 'Reaction (spent)',
-  };
-  return (
-    <span
-      className={`ttp-reaction ttp-reaction--${state}`}
-      title={labels[state]}
-      aria-label={labels[state]}
-    >
-      ↩
-    </span>
-  );
-};
-
+// Residual turn panel (#411): initiative order, round/status, action pips, MAP,
+// reaction and End Turn now live in the Command Sheet (InitiativeStrip + ActionDial).
+// What remains here is the per-turn machinery that has no home in the dial yet:
+// token movement (Stride/Step), Raise/Lower Shield + Shield Block, Dismiss aura,
+// turn-start free-action offers, Sustain prompts, and the Bestiary.
 const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = null }) => {
-  const { encounter, advanceTurn, appendLog } = useEncounter();
+  const { encounter, appendLog } = useEncounter();
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
-  const { sendUpdate } = useSession();
 
   // The companion acts on its owner's turn (Command an Animal), so its Multiple
   // Attack Penalty resets when the owner's turn does (#261). Familiars make no
@@ -96,14 +50,10 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Unlike a raised shield it persists across turns, so no turn-start reset.
   const { active: auraActive, deactivate: deactivateAura } = useAura(charId);
 
-  // Harrow omen (#227) — a failed Harrow Cast flat check flags the omen for
-  // loss at the END of the turn; submitting the turn is that boundary.
-  const omen = useOmen(charId);
-
   // Sustained spells (#220) — Bless, Mirror Image, Summon Undead, … prompt the
   // caster to Sustain a Spell (1 action) at the start of each of their turns.
   // `lastSustainedRound` on each entry tracks whether it's been kept alive this
-  // round; forgetting (submitting without sustaining) lapses it.
+  // round. (The lapse-on-end-turn sweep now lives in ActionDial.)
   const { sustains, sustain: doSustain, end: endSustain } = useSustains(charId);
 
   // GM-added summons (#261) are tied to a sustain. Every sustain-end path (manual
@@ -119,16 +69,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
 
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
-
-  // ── Flanking (Slice 3) ───────────────────────────────────────────────────
-  // Bridge pushes { [enemyEntryId]: { byCharIds:[...] } } whenever tokens move or
-  // turns advance. We read it here so the order strip can show the flanked badge.
-  const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
-
-  // ── Combat clock ─────────────────────────────────────────────────────────
-  // Elapsed seconds accrued by useEncounterClock (running in EncounterClockSync).
-  // Read-only here — writing is gated to the GM in the hook.
-  const [combatSecs] = useSyncedState('cnmh_combatsecs_global', 0);
 
   // ── Movement (Feature 3) — 8-direction stepper ─────────────────────────────
   // isChoosingMove: local-only Step/Stride selection UI.
@@ -213,7 +153,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Reset my own turnstate when my turn begins. This is the authoritative reset
   // path — relying on the previous actor to reset the "next" PC is unreliable
   // once Foundry interleaves enemy turns (a PC after an enemy would never get
-  // reset, leaving stale actionsSpent that disables their Submit Turn button).
+  // reset, leaving stale actionsSpent that disables their End Turn button).
   // Comparing against the *persisted* token (not a ref) means remounting the
   // panel mid-turn won't wipe actions already spent this turn.
   useEffect(() => {
@@ -229,63 +169,17 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     }
   }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, raised, lowerShield]);
 
+  // The dial owns End Turn now; when it ends my turn (or Foundry advances), close
+  // any move UI I left open so it doesn't linger on someone else's turn.
+  useEffect(() => {
+    if (!isMyTurn && (moveStage !== null || isChoosingMove)) {
+      setIsChoosingMove(false);
+      setFeetThisAction(0);
+      rawCancelMove();
+    }
+  }, [isMyTurn, moveStage, isChoosingMove, rawCancelMove]);
+
   if (!encounter || encounter.phase === 'idle') return null;
-
-  const { actionsSpent, reactionAvailable, reactionSpent, hasStartedFirstTurn } =
-    turnState || defaultTurnState();
-  const attacksMade = turnState?.attacksMade ?? 0;
-  const mapPenalty = Math.min(attacksMade, 2) * 5;
-
-  const canSubmit = isMyTurn && actionsSpent <= 3;
-
-  const handleSubmit = () => {
-    if (!canSubmit) return;
-
-    cancelMove(); // close any open move UI when the turn ends
-
-    // A failed Harrow Cast flat check loses the omen at end of turn (#227).
-    if (omen.pendingLoss && omen.suit) {
-      appendLog({
-        type: 'system',
-        text: `${characterName}'s harrow omen (${omen.suit}) is lost (failed Harrow Cast flat check)`,
-      });
-      omen.clear();
-    }
-
-    // Sustained spells not sustained this round lapse when the turn ends (#220).
-    sustains.forEach((s) => {
-      if (s.lastSustainedRound !== encounter.round) {
-        appendLog({ type: 'system', text: `${s.spellName} ends (not sustained)` });
-        endSustain(s.id);
-      }
-    });
-
-    // Determine next actor BEFORE advancing so we can reset their state.
-    const { currentTurnIndex: nextIdx } = nextTurnIndex(
-      order,
-      encounter.currentTurnIndex || 0,
-      encounter.round || 1
-    );
-    const nextEntry = order[nextIdx] || null;
-
-    appendLog({
-      type: 'action',
-      charId,
-      text: `${characterName} submitted their turn`,
-    });
-
-    if (encounter.foundryCombatId) {
-      sendUpdate('global', 'turncmd', { action: 'next-turn', ts: Date.now() });
-    } else {
-      advanceTurn();
-    }
-
-    if (nextEntry && nextEntry.kind === 'pc') {
-      const key = `cnmh_turnstate_${nextEntry.charId}`;
-      writeLocal(key, RESET_STATE);
-      sendUpdate(nextEntry.charId, 'turnstate', RESET_STATE);
-    }
-  };
 
   const handleRaiseShield = () => {
     if (!heldShield || broken) return;
@@ -341,109 +235,14 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     appendLog({ type: 'system', text: `${s.spellName} ends` });
   };
 
-  const reactionState = !hasStartedFirstTurn
-    ? 'unavailable'
-    : reactionSpent
-    ? 'spent'
-    : reactionAvailable
-    ? 'available'
-    : 'unavailable';
-
-  const isSetup = encounter.phase === 'setup';
   const isInProgress = encounter.phase === 'in-progress';
   const enemies = order.filter((e) => e.kind === 'enemy');
 
   return (
     <div className="ttp-panel" role="region" aria-label="Encounter tracker">
-      {/* Initiative order strip */}
-      <div className="ttp-order" aria-label="Initiative order">
-        {order.map((entry, idx) => {
-          const isCurrent = isInProgress && idx === encounter.currentTurnIndex;
-          return (
-            <div
-              key={entry.entryId}
-              className={[
-                'ttp-entry',
-                isCurrent ? 'ttp-entry--current' : '',
-                entry.kind === 'enemy' ? 'ttp-entry--enemy' : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              aria-current={isCurrent ? 'true' : undefined}
-            >
-              <span className="ttp-entry-name">{entry.name}</span>
-              {entry.kind === 'enemy' && flankedMap?.[entry.entryId] && (
-                <span className="ttp-flanked-badge" aria-label={`${entry.name} is flanked`} title="Flanked">⚔</span>
-              )}
-              {entry.kind === 'enemy' && <HuntPreyBadge enemyEntry={entry} order={order} />}
-              {entry.kind === 'enemy' && <EnemyConditionBadge enemyEntry={entry} />}
-              {entry.kind === 'pc' && <AuraChip entry={entry} />}
-              {entry.kind === 'pc' && <OmenChip entry={entry} />}
-              {entry.kind === 'pc' && <StanceChip entry={entry} />}
-              <PersistentChip entry={entry} viewerCharId={charId} />
-              <span className="ttp-entry-init">
-                {entry.initiative !== null && entry.initiative !== undefined
-                  ? entry.initiative
-                  : '?'}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Round + current actor + elapsed time */}
-      {isInProgress && (
-        <div className="ttp-status">
-          <span className="ttp-round">
-            Round {encounter.round}
-            {combatSecs > 0 && (
-              <span className="ttp-elapsed" aria-label={`${combatSecs} seconds elapsed`}>
-                {' · '}{formatCombatTime(combatSecs)}
-              </span>
-            )}
-          </span>
-          {currentEntry && (
-            <span className="ttp-current-actor">
-              {currentEntry.kind === 'enemy'
-                ? `Enemy: ${currentEntry.name}'s turn`
-                : `${currentEntry.name}'s turn`}
-            </span>
-          )}
-        </div>
-      )}
-
-      {isSetup && (
-        <div className="ttp-status ttp-status--setup">
-          Waiting for all players to enter initiative…
-        </div>
-      )}
-
       {/* Local character controls — only on their turn, only for PCs */}
       {isInProgress && isMyTurn && (
         <div className="ttp-controls" role="group" aria-label="Turn controls">
-          <div className="ttp-pips" aria-label="Actions spent">
-            {[1, 2, 3].map((n) => (
-              <ActionPip key={n} filled={n <= actionsSpent} />
-            ))}
-            {actionsSpent > 3 && (
-              <span className="ttp-over-budget" aria-label="Over action budget">
-                +{actionsSpent - 3}
-              </span>
-            )}
-          </div>
-
-          <ReactionIcon state={reactionState} />
-
-          {attacksMade > 0 && (
-            <span
-              className="ttp-map-chip"
-              title="Multiple Attack Penalty (−4/−8 with agile weapons)"
-              aria-label={`Multiple Attack Penalty −${mapPenalty}`}
-            >
-              MAP −{mapPenalty}
-            </span>
-          )}
-
           {moveStage !== null && pendingMoveType === 'stride' && (
             <span className="ttp-move-dist" aria-label="Stride distance">
               {feetThisAction}/{pickerOpts?.speed ?? speedRef.current} ft
@@ -494,15 +293,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
               ◈ Dismiss
             </button>
           )}
-
-          <button
-            className="btn-primary ttp-submit"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            aria-label="Submit turn"
-          >
-            Submit Turn
-          </button>
         </div>
       )}
 

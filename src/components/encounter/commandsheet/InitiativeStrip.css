@@ -1,0 +1,82 @@
+/* src/components/encounter/commandsheet/InitiativeStrip.css
+   Command Sheet initiative strip (#411). Mirrors the old ttp-order rail with
+   tap-to-focus enemy chips. Dark-shell tokens from pf2e-tokens.css. */
+
+.cmd-init {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.cmd-init::-webkit-scrollbar { height: 4px; }
+.cmd-init::-webkit-scrollbar-thumb {
+  background: var(--shell-border-strong);
+  border-radius: 2px;
+}
+
+.cmd-init-entry {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  min-width: 52px;
+  text-align: center;
+  font: inherit;
+  color: inherit;
+}
+
+/* Enemy entries are buttons — make them feel tappable. */
+button.cmd-init-entry {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button.cmd-init-entry:hover { border-color: var(--accent-outline); }
+
+.cmd-init-entry--current {
+  border-color: var(--accent-outline);
+  background: var(--accent-tint);
+  box-shadow: var(--accent-glow);
+}
+
+.cmd-init-entry--enemy {
+  background: rgba(217, 122, 43, 0.1);
+  border-color: rgba(217, 122, 43, 0.4);
+}
+.cmd-init-entry--enemy.cmd-init-entry--current {
+  background: rgba(217, 122, 43, 0.18);
+  border-color: rgba(217, 122, 43, 0.7);
+}
+
+/* Focused foe — strong ring so the target context is obvious. */
+.cmd-init-entry--focused {
+  border-color: var(--color-theme);
+  box-shadow: 0 0 0 2px var(--color-theme);
+}
+
+.cmd-init-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 72px;
+  color: var(--shell-text-secondary);
+}
+.cmd-init-entry--current .cmd-init-name { color: var(--shell-text-primary); }
+
+.cmd-init-init {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--shell-text-secondary);
+  line-height: 1;
+}
+.cmd-init-entry--current .cmd-init-init { color: var(--accent-text); }

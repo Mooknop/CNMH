@@ -150,6 +150,14 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Target-needing tile with no focused foe (#411): dim + hint, still tappable. */
+.cmd-tile--awaiting-focus { opacity: 0.62; }
+.cmd-tile-hint {
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
 .cmd-empty {
   color: var(--shell-text-tertiary);
   font-style: italic;

@@ -1,0 +1,66 @@
+/* src/components/encounter/commandsheet/FocusBanner.css
+   Command Sheet focus banner (#411). Dark-shell tokens from pf2e-tokens.css. */
+
+.cmd-focus {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: rgba(217, 122, 43, 0.1);
+  border: 1px solid rgba(217, 122, 43, 0.4);
+  border-radius: var(--radius-md);
+}
+
+.cmd-focus-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-md);
+  color: var(--shell-text-primary);
+}
+
+.cmd-focus-empty {
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+.cmd-focus-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cmd-focus-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cmd-focus-stat-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--shell-text-tertiary);
+}
+
+.cmd-focus-stat-value {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--shell-text-primary);
+}
+
+.cmd-focus-weak {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.cmd-focus-weak-values {
+  font-size: var(--text-sm);
+  color: var(--color-success, var(--accent-text));
+}

@@ -1,18 +1,28 @@
 // src/components/encounter/commandsheet/ActionTile.jsx
 // A single tile in the Command Sheet action grid (#410). Shows the cost glyph,
 // name, and the one stat that matters; tapping opens the existing detail/resolve
-// path via onSelect.
+// path via onSelect. In encounter mode a target-needing tile (#411) dims and
+// hints "Tap a foe" until the player has focused one in the InitiativeStrip — the
+// tile stays tappable (the resolver has its own target picker), the cue just
+// points players at the focus-first flow.
 import React from 'react';
 import ActionSymbol from '../../shared/ActionSymbol';
 
-const ActionTile = ({ tile, onSelect }) => {
+const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false }) => {
   const glyphCost = tile.variableActionCount ? tile.variableActionCount.min : tile.cost;
   const rightTrait = tile.traits?.[0] ?? null;
+  const awaitingFocus = encounterMode && tile.needsTarget && !hasFocus;
+
+  const className = [
+    'cmd-tile',
+    tile.inactive ? 'cmd-tile--inactive' : '',
+    awaitingFocus ? 'cmd-tile--awaiting-focus' : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <button
       type="button"
-      className={`cmd-tile${tile.inactive ? ' cmd-tile--inactive' : ''}`}
+      className={className}
       onClick={() => onSelect(tile)}
       aria-label={tile.name}
     >
@@ -24,7 +34,11 @@ const ActionTile = ({ tile, onSelect }) => {
         {rightTrait && <span className="cmd-tile-trait">{rightTrait}</span>}
       </span>
       <span className="cmd-tile-name">{tile.name}</span>
-      {tile.statLine && <span className="cmd-tile-stat">{tile.statLine}</span>}
+      {awaitingFocus ? (
+        <span className="cmd-tile-hint">Tap a foe to target</span>
+      ) : (
+        tile.statLine && <span className="cmd-tile-stat">{tile.statLine}</span>
+      )}
     </button>
   );
 };

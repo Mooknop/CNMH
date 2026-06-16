@@ -46,8 +46,9 @@ test.describe('Encounter lifecycle & turn tracker', () => {
 
     // Active encounter → the play tab is Encounter, and setup-phase UI shows.
     await expect(page.getByRole('region', { name: 'Initiative entry' })).toBeVisible();
-    await expect(page.getByText('Waiting for all players to enter initiative')).toBeVisible();
-    const order = page.getByRole('region', { name: 'Encounter tracker' }).getByLabel('Initiative order');
+    // The Command Sheet dial owns the round/status line now; in setup it waits.
+    await expect(page.getByRole('region', { name: 'Turn budget' })).toContainText(/Waiting for initiative/);
+    const order = page.getByLabel('Initiative order');
     await expect(order).toContainText(CHAR_NAME);
     await expect(order).toContainText('E2E Goblin');
 
@@ -73,33 +74,35 @@ test.describe('Encounter lifecycle & turn tracker', () => {
     await openEncounterTab(page);
 
     const tracker = page.getByRole('region', { name: 'Encounter tracker' });
-    await expect(tracker).toContainText('Round 1');
-    await expect(tracker).toContainText(`${CHAR_NAME}'s turn`);
-    // The PC's entry is the current turn.
-    await expect(tracker.locator('[aria-current="true"]')).toContainText(CHAR_NAME);
+    const dial = page.getByRole('region', { name: 'Turn budget' });
+    const endTurn = page.getByRole('button', { name: 'End turn' });
 
-    const submit = page.getByRole('button', { name: 'Submit turn' });
-    await expect(submit).toBeVisible();
-    await submit.click();
+    // The dial owns round + turn budget; on my own turn it offers End Turn.
+    await expect(dial).toContainText('Round 1');
+    await expect(endTurn).toBeVisible();
+    // The PC's entry is the current turn in the initiative strip.
+    await expect(page.getByLabel('Initiative order').locator('[aria-current="true"]')).toContainText(CHAR_NAME);
+
+    await endTurn.click();
 
     // App advances the shared turn index; UI moves to the enemy's turn.
     await session.expectSent('cnmh_encounter_global', (v) => v?.currentTurnIndex === 1);
-    await expect(tracker).toContainText("Enemy: E2E Goblin's turn");
-    await expect(submit).toBeHidden();
+    await expect(dial).toContainText("Enemy: E2E Goblin's turn");
+    await expect(endTurn).toBeHidden();
 
     // GM advances past the enemy into round 2 (player's turn again) → ≥1 full round.
     await session.push(
       'cnmh_encounter_global',
       encounterState({ phase: 'in-progress', round: 2, currentTurnIndex: 0, order }),
     );
-    await expect(tracker).toContainText('Round 2');
-    await expect(tracker).toContainText(`${CHAR_NAME}'s turn`);
+    await expect(dial).toContainText('Round 2');
+    await expect(endTurn).toBeVisible();
 
     // GM ends the encounter → the play tab returns to Exploration and the tracker is gone.
     await session.push('cnmh_encounter_global', idleEncounter());
     await expect(
       page.getByRole('navigation', { name: 'Character sheet sections' }).getByRole('button', { name: 'Exploration' }),
     ).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Encounter tracker' })).toBeHidden();
+    await expect(tracker).toBeHidden();
   });
 });
