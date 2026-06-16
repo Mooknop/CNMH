@@ -24,6 +24,7 @@ import { useShield } from '../../hooks/useShield';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
+import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
 import { immunityConfigFor } from '../../utils/immunity';
@@ -547,6 +548,11 @@ const UseAbilityModal = ({
     }
 
     if (hasEffects) {
+      // Lingering Composition (#226-B): a pending extension on the caster
+      // lengthens this composition's effect, then is consumed.
+      const lingering = getState(character.id, 'lingering');
+      const effectDurationOverride = lingeringDurationOverride(ability, lingering) || undefined;
+
       applyAbility({
         ability,
         caster: character,
@@ -565,7 +571,18 @@ const UseAbilityModal = ({
         rank: (typeof ability.level === 'number' && ability.level > 0
           && directCastRank > ability.level) ? directCastRank : undefined,
         nowSecs,
+        effectDurationOverride,
       });
+
+      if (effectDurationOverride) {
+        try { window.localStorage.setItem(`cnmh_lingering_${character.id}`, JSON.stringify(null)); } catch { /* noop */ }
+        sendUpdate(character.id, 'lingering', null);
+        appendLog({
+          type: 'action',
+          charId: character.id,
+          text: `${character.name}'s ${ability.name} is extended to ${effectDurationOverride.rounds} rounds (Lingering Composition)`,
+        });
+      }
     } else {
       // Generic action log — omit enemies whose roll result will be logged below.
       const genericNames = [

@@ -1,0 +1,160 @@
+/* LingeringCompositionModal — bard spellshape Performance roll (#226-B) */
+
+.lcm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.lcm-blurb {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  line-height: var(--leading-snug);
+}
+
+.lcm-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.lcm-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+/* Performance modifier */
+.lcm-mod-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.lcm-mod-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary);
+}
+
+.lcm-mod-value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+/* d20 + DC inputs */
+.lcm-inputs {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.lcm-input {
+  width: 4.5rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-align: center;
+}
+
+.lcm-input:focus {
+  outline: none;
+  border-color: var(--accent-outline);
+}
+
+/* Running total */
+.lcm-total-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.lcm-total-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.lcm-total-value {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+/* Degree of success */
+.lcm-degree {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lcm-degree--criticalSuccess { background: var(--d-crit-bg); color: var(--d-crit-fg); }
+.lcm-degree--success         { background: var(--d-succ-bg); color: var(--d-succ-fg); }
+.lcm-degree--failure         { background: var(--d-fail-bg); color: var(--d-fail-fg); }
+.lcm-degree--criticalFailure { background: var(--d-cf-bg);   color: var(--d-cf-fg);   }
+
+/* Confirm button */
+.lcm-confirm-btn {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-outline);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lcm-confirm-btn:hover:not(:disabled) {
+  background: var(--accent-tint-hover);
+}
+
+.lcm-confirm-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* Applied result */
+.lcm-result {
+  font-size: var(--text-sm);
+  color: var(--d-succ-fg);
+  background: var(--d-succ-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  text-align: center;
+}
+
+/* Footer */
+.lcm-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}

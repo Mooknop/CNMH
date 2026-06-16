@@ -74,6 +74,9 @@ const buildEffectEntry = ({ eff, caster, abilityName, encounter, casterEntryId, 
  * @param {string}   verb             - 'cast' | 'used' (lower-case for log lines)
  * @param {number}   [rank]           - Cast rank when heightened above native (#235); decorates log lines
  * @param {number}   [nowSecs]        - Current absolute game seconds; enables minute durations
+ * @param {Object}   [effectDurationOverride] - Replaces each effect's authored duration
+ *                                      (e.g. Lingering Composition extends a 1-round
+ *                                      composition to { until:'rounds', rounds } — #226-B)
  */
 export function applyAbility({
   ability,
@@ -90,6 +93,7 @@ export function applyAbility({
   verb = 'used',
   rank,
   nowSecs,
+  effectDurationOverride,
 }) {
   const effects = Array.isArray(ability.effects) ? ability.effects : [];
   const grants  = Array.isArray(ability.grants)  ? ability.grants  : [];
@@ -100,11 +104,16 @@ export function applyAbility({
 
   // ── Structured effects ──────────────────────────────────────────────────────
   effects.forEach((eff) => {
+    // Per-cast duration override (Lingering Composition, #226-B): swap the
+    // authored duration only when both an override and an authored duration exist.
+    const effForApply = (effectDurationOverride && eff.duration)
+      ? { ...eff, duration: effectDurationOverride }
+      : eff;
     const resolved = resolveApplyTargets(eff.applyTo, caster, targetCharIds, order);
     resolved.forEach(({ charId: targetCharId, entryId: targetEntryId }) => {
       const current  = getState(targetCharId, 'effects') || [];
       const newEntry = buildEffectEntry({
-        eff, caster, abilityName: name, encounter, casterEntryId, targetEntryId, nowSecs,
+        eff: effForApply, caster, abilityName: name, encounter, casterEntryId, targetEntryId, nowSecs,
       });
       const next = [...current, newEntry];
       writeLocal(`cnmh_effects_${targetCharId}`, next);
