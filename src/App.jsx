@@ -20,6 +20,7 @@ import ActorMapSync from './components/encounter/ActorMapSync';
 import EncounterClockSync from './components/encounter/EncounterClockSync';
 import EffectExpirySync from './components/encounter/EffectExpirySync';
 import PersistentSync from './components/encounter/PersistentSync';
+import TurnEffectsSync from './components/encounter/TurnEffectsSync';
 import BestiaryCaptureSync from './components/encounter/BestiaryCaptureSync';
 import AuraKoSync from './components/encounter/AuraKoSync';
 import WardSync from './components/encounter/WardSync';
@@ -76,6 +77,7 @@ function App() {
           <EncounterClockSync />
           <EffectExpirySync />
           <PersistentSync />
+          <TurnEffectsSync />
           <BestiaryCaptureSync />
           <AuraKoSync />
           <WardSync />
