@@ -12,6 +12,7 @@ import {
   consumableMeta,
   consumableVerb,
   hasGodlessHealing,
+  applyHealing,
   applyHealingConsumable,
   applyEffectConsumable,
 } from '../../utils/consumables';
@@ -31,10 +32,13 @@ import './UseConsumableModal.css';
  * @param {string}  themeColor
  * @param {number}  actionCost - actions to spend in encounter (#428): the drink/apply
  *                  plus any draw/retrieve to get it in hand. Defaults to 1.
+ * @param {string}  defaultTargetId - charId of a focused ally to administer a *healing*
+ *                  consumable to (#434); defaults to self. Reach is gated upstream (the
+ *                  tile disables out-of-reach), so the recipient here is already valid.
  */
-const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, actionCost = 1 }) => {
+const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, actionCost = 1, defaultTargetId = null }) => {
   const { getState, sendUpdate } = useSession();
-  const { effects: effectCatalog } = useContent();
+  const { effects: effectCatalog, characters } = useContent();
   const { gameDate, time } = useGameDate();
   const { encounter, appendLog } = useEncounter();
   const { appendEvent } = useSessionLog();
@@ -51,6 +55,17 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
   const verb = consumableVerb(item);
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
   const remaining = item.quantity ?? 1;
+
+  // Administer to a focused ally (#434) — only for *healing* consumables; effect
+  // potions stay self-use even with an ally focused. Reach was validated by the
+  // tile gate (#430). `ally` is the recipient's character model (for maxHp clamp
+  // + their Godless Healing); falls back to self when there's no ally target.
+  const ally = (defaultTargetId && meta.kind === 'healing' && defaultTargetId !== character.id)
+    ? (characters || []).find((c) => c.id === defaultTargetId)
+    : null;
+  const recipient = ally
+    ? { id: ally.id, name: ally.name, maxHp: ally.maxHp }
+    : { id: character.id, name: character.name, maxHp: character.maxHp };
 
   const catalogEffect = meta.kind === 'effect'
     ? (effectCatalog || []).find((e) => e.id === meta.effectId)
@@ -77,9 +92,21 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
 
     const user = { id: character.id, name: character.name, maxHp: character.maxHp };
     if (meta.kind === 'healing') {
-      applyHealingConsumable({
-        user, itemName: item.name, amount, getState, sendUpdate, appendLog: log,
-      });
+      if (ally) {
+        // Administering to a focused ally: heal the ally, log it as administered.
+        applyHealing({
+          target: recipient,
+          amount,
+          getState,
+          sendUpdate,
+          appendLog: log,
+          logText: `${character.name} administered ${item.name} to ${recipient.name} — healed ${amount} HP`,
+        });
+      } else {
+        applyHealingConsumable({
+          user, itemName: item.name, amount, getState, sendUpdate, appendLog: log,
+        });
+      }
     } else {
       applyEffectConsumable({
         user,
@@ -109,7 +136,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${verb} ${item.name}`}
+      title={ally ? `${verb} ${item.name} → ${ally.name}` : `${verb} ${item.name}`}
       themeColor={themeColor}
       maxWidth="420px"
       placement="bottom"
@@ -140,10 +167,10 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
               />
               <span className="ucm-roll-hint">roll your dice, enter the total</span>
             </div>
-            {hasGodlessHealing(character) && (
+            {hasGodlessHealing(ally || character) && (
               <p className="ucm-godless-hint">
                 <strong>Godless Healing:</strong> +2 HP from healing-only effects —
-                add it to your total.
+                add it to {ally ? `${ally.name}'s` : 'your'} total.
               </p>
             )}
           </section>

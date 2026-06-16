@@ -21,8 +21,8 @@ vi.mock('../encounter/commandsheet/ActionGrid', () => ({
   ),
 }));
 vi.mock('../inventory/UseConsumableModal', () => ({
-  default: ({ item, actionCost }) => (
-    <div data-testid="consumable-modal">{item.name}:{actionCost}</div>
+  default: ({ item, actionCost, defaultTargetId }) => (
+    <div data-testid="consumable-modal">{item.name}:{actionCost}:{defaultTargetId || 'self'}</div>
   ),
 }));
 vi.mock('../encounter/MoveActionSheet', () => ({
@@ -44,8 +44,9 @@ vi.mock('../../hooks/useCharacter', () => ({
   }),
 }));
 
+const mockUseFocusTarget = vi.fn(() => ({ focusAlly: null, focusEnemy: null }));
 vi.mock('../../hooks/useFocusTarget', () => ({
-  useFocusTarget: () => ({ focusAlly: null, focusEnemy: null }),
+  useFocusTarget: (...args) => mockUseFocusTarget(...args),
 }));
 
 const mockAppendLog = vi.fn();
@@ -72,6 +73,7 @@ const mockCharacter = { id: '1', name: 'Test', level: 1, actions: [], reactions:
 
 afterEach(() => {
   vi.clearAllMocks();
+  mockUseFocusTarget.mockReturnValue({ focusAlly: null, focusEnemy: null });
   mockEncounterState.active = false;
   mockEncounterState.phase = 'idle';
 });
@@ -152,6 +154,15 @@ describe('ActionsList', () => {
     // Worn potion → actionCost 2 (drink 1 + draw 1); routed to the consumable flow.
     expect(screen.getByTestId('consumable-modal')).toHaveTextContent('Healing Potion:2');
     expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
+  });
+
+  it('passes the focused ally to the consumable modal as the target (#434)', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    mockUseFocusTarget.mockReturnValue({ focusAlly: { charId: 'ally-1' }, focusEnemy: null });
+    render(<ActionsList character={mockCharacter} />);
+    fireEvent.click(screen.getByRole('button', { name: 'use-consumable' }));
+    expect(screen.getByTestId('consumable-modal')).toHaveTextContent('Healing Potion:2:ally-1');
   });
 
   // ── Command an Animal (#223) ─────────────────────────────────────────────

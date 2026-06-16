@@ -51,9 +51,11 @@ const statLineFor = (item, cat) => {
 };
 
 // Ally-support actions (#429) — surfaced/ranked when an ally is focused. A
-// Healing-trait action or one of the canonical medic actions counts.
+// Healing-trait action or one of the canonical medic actions counts. Treat Wounds
+// is intentionally absent (#433): it's a 10-minute *exploration* activity, not an
+// encounter action — Battle Medicine is its 1-action in-combat equivalent.
 const SUPPORT_NAMES = new Set([
-  'Battle Medicine', 'Treat Wounds', 'Administer First Aid', 'Staunch Bleeding',
+  'Battle Medicine', 'Administer First Aid', 'Staunch Bleeding',
 ]);
 const isSupportAction = (item) =>
   !!(item.traits?.includes('Healing') || SUPPORT_NAMES.has(item.name));
@@ -105,8 +107,10 @@ const makeConsumableTile = (item) => {
     type: 'consumable',
     requiresTarget: false,
     needsTarget: false,
-    // Consumables stay self-use until #430 (administering to an ally needs reach).
-    supports: false,
+    // Healing consumables are ally-supportable (#434): administering to a focused
+    // ally is reach-gated (ActionTile) + ally-ranked (suggestNow), exactly like
+    // Battle Medicine. Effect consumables stay self-use (supports:false).
+    supports: meta?.kind === 'healing',
     inactive: false,
     statLine: null,
     raw: item,
