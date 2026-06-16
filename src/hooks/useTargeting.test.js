@@ -42,6 +42,24 @@ describe('useTargeting', () => {
     expect(result.current.targets).toEqual([]);
   });
 
+  it('defaultTargetId pre-selects one entry on mount (#412)', () => {
+    const { result } = renderHook(() =>
+      useTargeting('Pellias', order, { defaultTargetId: 'e2' })
+    );
+    expect(result.current.targets).toEqual(['e2']);
+    expect(result.current.isTargeted('e2')).toBe(true);
+    // Still toggleable afterwards.
+    act(() => result.current.toggleTarget('e2'));
+    expect(result.current.targets).toEqual([]);
+  });
+
+  it('defaultTargetId not in the order is dropped (no stale target)', () => {
+    const { result } = renderHook(() =>
+      useTargeting('Pellias', order, { defaultTargetId: 'ghost' })
+    );
+    expect(result.current.targets).toEqual([]);
+  });
+
   it('drops a selected entry that leaves the order', () => {
     const { result, rerender } = renderHook(({ o }) => useTargeting('Pellias', o), {
       initialProps: { o: order },

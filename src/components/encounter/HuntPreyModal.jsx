@@ -46,7 +46,7 @@ const HuntPreyModal = ({ isOpen, onClose, character, themeColor, actionCost = 0 
   if (!isOpen || !character) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Hunt Prey" themeColor={themeColor} maxWidth="460px">
+    <Modal isOpen={isOpen} onClose={onClose} title="Hunt Prey" themeColor={themeColor} maxWidth="460px" placement="bottom">
       <section className="ct-section">
         <h3 className="ct-section-title">Designate prey</h3>
         {enemies.length === 0 ? (

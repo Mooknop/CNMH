@@ -14,13 +14,16 @@ import './Modal.css';
  *   maxWidth    – (optional) max-width of the dialog; defaults to '600px'
  *   highZ       – (optional) use elevated z-index stack (for modals that must
  *                 appear above other floating content)
+ *   placement   – (optional) 'center' (default) or 'bottom' for a slide-up sheet
+ *                 anchored to the bottom edge (Command Sheet resolvers, #412)
  *   children    – the modal body content
  */
-const Modal = ({ isOpen, onClose, title, themeColor, maxWidth, highZ, children }) => {
+const Modal = ({ isOpen, onClose, title, themeColor, maxWidth, highZ, placement = 'center', children }) => {
   if (!isOpen) return null;
 
-  const overlayClass = `modal-overlay${highZ ? ' modal-overlay--high' : ''}`;
-  const containerClass = `modal-container${highZ ? ' modal-container--high' : ''}`;
+  const bottom = placement === 'bottom';
+  const overlayClass = `modal-overlay${highZ ? ' modal-overlay--high' : ''}${bottom ? ' modal-overlay--bottom' : ''}`;
+  const containerClass = `modal-container${highZ ? ' modal-container--high' : ''}${bottom ? ' modal-container--bottom' : ''}`;
   const headerClass = `modal-header${themeColor ? ' modal-header--themed' : ''}`;
   const containerStyle = {
     maxWidth: maxWidth || '600px',

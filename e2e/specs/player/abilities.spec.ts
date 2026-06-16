@@ -48,8 +48,8 @@ test.describe('Abilities, sustains, auras & conditions', () => {
     await expectSheet(page);
     await openEncounterTab(page);
 
+    // Tapping the tile goes straight to the resolver now (no description step).
     await page.getByRole('button', { name: /E2E Battle Cry/ }).click();
-    await page.getByRole('button', { name: 'Use E2E Battle Cry' }).click();
     await page.getByLabel('confirm-cast').click();
 
     await session.expectSent(

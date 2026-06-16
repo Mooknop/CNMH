@@ -1,11 +1,11 @@
 // src/components/encounter/commandsheet/ActionGrid.jsx
-// Command Sheet action grid (#410) — replaces the old category buttons +
-// ActionCategoryModal. One filterable grid grouped by action cost. Tiles still
-// open the existing resolution path (ActionDetailModal → onUse → handleUse), so
-// behavior is preserved while the navigation collapses to a single screen.
+// Command Sheet action grid (#410, #412) — replaces the old category buttons +
+// ActionCategoryModal. One filterable grid grouped by action cost. Tapping a tile
+// goes STRAIGHT to resolution via onUse → ActionsList.handleUse (which opens the
+// right slide-up resolver, pre-filled with the focused foe) — no intermediate
+// description modal.
 import React, { useMemo, useState } from 'react';
 import ActionTile from './ActionTile';
-import ActionDetailModal from '../ActionDetailModal';
 import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
@@ -34,7 +34,13 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
   const hasFocus = !!focusEnemy;
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
-  const [openItem, setOpenItem] = useState(null);
+
+  // Tapping a tile resolves immediately: hand the raw action + its cost to
+  // handleUse, which routes to the right slide-up resolver (or logs+spends for
+  // no-dice basics). Variable-cost actions pass their minimum; the resolver lets
+  // the player bump it (actionCountOverride).
+  const handleTileSelect = (tile) =>
+    onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost);
 
   const tiles = useMemo(
     () => buildActionCatalog({ actions, strikes }),
@@ -101,7 +107,7 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
                 <ActionTile
                   key={tile.id}
                   tile={tile}
-                  onSelect={setOpenItem}
+                  onSelect={handleTileSelect}
                   encounterMode={encounterMode}
                   hasFocus={hasFocus}
                 />
@@ -113,18 +119,6 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
 
       {showGroups && visible.length === 0 && (
         <p className="cmd-empty">No actions match.</p>
-      )}
-
-      {openItem && (
-        <ActionDetailModal
-          item={openItem.raw}
-          type="action"
-          isOpen
-          onClose={() => setOpenItem(null)}
-          themeColor={themeColor}
-          encounterMode={encounterMode}
-          onUse={onUse}
-        />
       )}
     </div>
   );

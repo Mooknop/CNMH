@@ -6,6 +6,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
+import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useContent } from '../../contexts/ContentContext';
@@ -71,7 +72,12 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     [selectable]
   );
 
-  const [pickedId, setPickedId] = useState(null);
+  // Pre-select the focused foe (#412) so focus → maneuver is one tap (not for
+  // self-target actions like Escape).
+  const { focusEnemy } = useFocusTarget(character?.id);
+  const [pickedId, setPickedId] = useState(
+    () => (!selfTarget && focusEnemy?.entryId) || null
+  );
   const [d20, setD20] = useState('');
   const [dcInput, setDcInput] = useState('');
   const [pickedSkill, setPickedSkill] = useState(null);
@@ -275,6 +281,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
       title={action.name}
       themeColor={themeColor}
       maxWidth="400px"
+      placement="bottom"
     >
       <div className="sam-body">
         {/* Feat/companion hints (#223) — reminders for bonuses the app can't
