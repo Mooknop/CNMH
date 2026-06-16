@@ -10,6 +10,7 @@ import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useTurnState } from '../../../hooks/useTurnState';
+import { useSyncedState } from '../../../hooks/useSyncedState';
 import { buildActionCatalog, filterTiles, categoriesPresent } from './buildActionCatalog';
 import { suggestNow } from './suggestNow';
 import './ActionGrid.css';
@@ -32,10 +33,13 @@ const COST_GROUPS = [
 ];
 
 const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
-  const { actions, strikes, reactions, freeActions, flags, thaumaturge } = useCharacter(character);
+  const { actions, strikes, reactions, freeActions, inventory, maxHp, flags, thaumaturge } = useCharacter(character);
   const { focusEnemy } = useFocusTarget(character.id);
   const { turnState } = useTurnState(character.id);
+  const [hp] = useSyncedState(`cnmh_hp_${character.id}`, null);
   const hasFocus = !!focusEnemy;
+  // HP fraction drives the low-HP healing boost in suggestNow (#428); 1 (full) if unknown.
+  const hpRatio = (typeof hp === 'number' && maxHp > 0) ? hp / maxHp : 1;
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
 
@@ -47,8 +51,8 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
     onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost);
 
   const tiles = useMemo(
-    () => buildActionCatalog({ actions, strikes, reactions, freeActions }),
-    [actions, strikes, reactions, freeActions]
+    () => buildActionCatalog({ actions, strikes, reactions, freeActions, inventory }),
+    [actions, strikes, reactions, freeActions, inventory]
   );
 
   const chips = useMemo(() => {
@@ -63,8 +67,8 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
   // + focus, so it stays useful no matter which chip/search is active.
   const actionsLeft = Math.max(0, 3 - (turnState?.actionsSpent ?? 0));
   const suggestions = useMemo(
-    () => (encounterMode ? suggestNow(tiles, { actionsLeft, hasFocus }) : []),
-    [encounterMode, tiles, actionsLeft, hasFocus]
+    () => (encounterMode ? suggestNow(tiles, { actionsLeft, hasFocus, hpRatio }) : []),
+    [encounterMode, tiles, actionsLeft, hasFocus, hpRatio]
   );
 
   const showMagicLauncher = !!onMagicOpen && (cat === 'all' || cat === 'magic');

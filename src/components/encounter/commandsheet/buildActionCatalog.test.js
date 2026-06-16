@@ -3,6 +3,7 @@ import {
   buildActionCatalog,
   filterTiles,
   categoriesPresent,
+  drawCost,
 } from './buildActionCatalog';
 
 describe('buildActionCatalog', () => {
@@ -136,5 +137,47 @@ describe('categoriesPresent', () => {
     expect(cats).toContain('move');
     // order: attack before defense before move
     expect(cats.indexOf('attack')).toBeLessThan(cats.indexOf('defense'));
+  });
+});
+
+describe('consumables (#428)', () => {
+  it('drawCost: held +0, worn +1, stowed +2, unknown → worn default', () => {
+    expect(drawCost('held1')).toBe(0);
+    expect(drawCost('held2')).toBe(0);
+    expect(drawCost('worn')).toBe(1);
+    expect(drawCost('stowed')).toBe(2);
+    expect(drawCost(undefined)).toBe(1);
+  });
+
+  it('emits a consumable tile with effective cost (drink + draw/retrieve) and heals flag', () => {
+    const tiles = buildActionCatalog({
+      inventory: [
+        { name: 'Held Potion', state: 'held1', consumable: { kind: 'healing' } },
+        { name: 'Worn Potion', state: 'worn', consumable: { kind: 'healing' } },
+        { name: 'Stowed Elixir', state: 'stowed', consumable: { kind: 'healing' } },
+        { name: 'Mutagen', state: 'worn', consumable: { kind: 'effect' } },
+      ],
+    });
+    const byName = Object.fromEntries(tiles.map((t) => [t.name, t]));
+    expect(byName['Held Potion'].cost).toBe(1);
+    expect(byName['Worn Potion'].cost).toBe(2);
+    expect(byName['Stowed Elixir'].cost).toBe(3);
+    expect(byName['Stowed Elixir'].costGroup).toBe('3');
+    expect(byName['Held Potion'].heals).toBe(true);
+    expect(byName['Mutagen'].heals).toBe(false);
+    // Consumables are self-use this slice — never gate on a focused foe.
+    expect(byName['Held Potion'].cat).toBe('item');
+    expect(byName['Held Potion'].needsTarget).toBe(false);
+  });
+
+  it('skips dropped consumables and non-consumable inventory', () => {
+    const tiles = buildActionCatalog({
+      inventory: [
+        { name: 'Dropped Potion', state: 'dropped', consumable: { kind: 'healing' } },
+        { name: 'Longsword', state: 'held1' }, // no consumable meta
+      ],
+    });
+    expect(tiles.some((t) => t.name === 'Dropped Potion')).toBe(false);
+    expect(tiles.some((t) => t.kind === 'consumable')).toBe(false);
   });
 });

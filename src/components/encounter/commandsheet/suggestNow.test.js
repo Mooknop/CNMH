@@ -66,6 +66,29 @@ describe('suggestNow', () => {
     expect(suggestNow(many, { actionsLeft: 3, hasFocus: false })).toHaveLength(4);
   });
 
+  // ── Low-HP healing boost (#428) ───────────────────────────────────────────
+  it('floats a healing tile to the top when hurt (hpRatio < 0.6)', () => {
+    const potion = tile({ name: 'Healing Potion', cat: 'item', heals: true });
+    const out = suggestNow([move, defense, potion], { actionsLeft: 3, hasFocus: false, hpRatio: 0.3 });
+    expect(out[0].name).toBe('Healing Potion'); // +9 outranks move +8 / defense +7
+  });
+
+  it('does not boost healing at healthy HP (hpRatio >= 0.6)', () => {
+    const potion = tile({ name: 'Healing Potion', cat: 'item', heals: true });
+    const out = suggestNow([move, potion], { actionsLeft: 3, hasFocus: false, hpRatio: 0.9 });
+    expect(out[0].name).toBe('Stride'); // move +8 beats an unboosted item (0)
+  });
+
+  it('a stowed healing potion is unaffordable at 2 actions (drink 1 + retrieve 2 = 3)', () => {
+    const tiles = buildActionCatalog({
+      inventory: [{ name: 'Elixir of Life', state: 'stowed', consumable: { kind: 'healing' } }],
+    });
+    const elixir = tiles.find((t) => t.name === 'Elixir of Life');
+    expect(elixir.cost).toBe(3);
+    expect(affordable(elixir, 2)).toBe(false);
+    expect(affordable(elixir, 3)).toBe(true);
+  });
+
   it('works over a real catalog — a strike ranks first when a foe is focused', () => {
     const tiles = buildActionCatalog({
       strikes: [{ name: 'Longsword', actionCount: 1, traits: ['Attack'], targetDefense: 'ac', attackMod: 9, damage: '1d8+4' }],

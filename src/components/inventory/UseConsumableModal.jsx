@@ -29,8 +29,10 @@ import './UseConsumableModal.css';
  * @param {Object}  item       - resolved inventory item (quantity already consumed-adjusted)
  * @param {Object}  character  - raw character object (the user)
  * @param {string}  themeColor
+ * @param {number}  actionCost - actions to spend in encounter (#428): the drink/apply
+ *                  plus any draw/retrieve to get it in hand. Defaults to 1.
  */
-const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor }) => {
+const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, actionCost = 1 }) => {
   const { getState, sendUpdate } = useSession();
   const { effects: effectCatalog } = useContent();
   const { gameDate, time } = useGameDate();
@@ -90,8 +92,15 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor }) =>
       });
     }
 
-    if (encounterMode) {
-      spendActions(1, `${verb} ${item.name}`);
+    if (encounterMode && actionCost > 0) {
+      // A worn/stowed item costs extra to get in hand first (#428).
+      if (actionCost > 1) {
+        log({
+          type: 'action',
+          text: `${character.name} ${actionCost >= 3 ? 'retrieved' : 'drew'} ${item.name}`,
+        });
+      }
+      spendActions(actionCost, `${verb} ${item.name}`);
     }
     onClose();
   };
@@ -103,6 +112,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor }) =>
       title={`${verb} ${item.name}`}
       themeColor={themeColor}
       maxWidth="420px"
+      placement="bottom"
       highZ
     >
       <section className="ct-section">
@@ -163,7 +173,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor }) =>
           onClick={handleConfirm}
           disabled={!confirmEnabled}
         >
-          {verb}{encounterMode ? ' (1 act)' : ''}
+          {verb}{encounterMode && actionCost > 0 ? ` (${actionCost} act)` : ''}
         </button>
       </div>
     </Modal>
