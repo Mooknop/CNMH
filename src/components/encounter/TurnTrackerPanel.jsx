@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { minionTurnId, MINION_COMPANION } from '../../utils/minionUtils';
@@ -6,24 +6,16 @@ import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useSustains } from '../../hooks/useSustains';
 import { useSummons } from '../../hooks/useSummons';
-import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { getFreeActions } from '../../utils/actionUtils';
-import MoveGridPicker from './MoveGridPicker';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import './TurnTrackerPanel.css';
 
-// PF2e movement actions the player can pick before requesting reachable squares.
-const MOVE_ACTIONS = [
-  { type: 'step',   label: 'Step',   cost: 1 },
-  { type: 'stride', label: 'Stride', cost: 1 },
-];
-
-// Residual turn panel (#411): initiative order, round/status, action pips, MAP,
-// reaction and End Turn now live in the Command Sheet (InitiativeStrip + ActionDial).
-// What remains here is the per-turn machinery that has no home in the dial yet:
-// token movement (Stride/Step), Raise/Lower Shield + Shield Block, Dismiss aura,
-// turn-start free-action offers, Sustain prompts, and the Bestiary.
+// Residual turn panel (#411, #415): initiative order, round/status, action pips,
+// MAP, reaction and End Turn live in the Command Sheet (InitiativeStrip + ActionDial);
+// movement (Stride/Step) is now a grid tile → MoveActionSheet. What remains here is
+// the per-turn machinery with no home elsewhere yet: Raise/Lower Shield + Shield
+// Block, Dismiss aura, turn-start free-action offers, Sustain prompts, and the Bestiary.
 const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = null }) => {
   const { encounter, appendLog } = useEncounter();
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
@@ -70,74 +62,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // ── Bestiary ──────────────────────────────────────────────────────────────
   const [bestiaryOpen, setBestiaryOpen] = useState(false);
 
-  // ── Movement (Feature 3) — 8-direction stepper ─────────────────────────────
-  // isChoosingMove: local-only Step/Stride selection UI.
-  // feetThisAction: feet walked under the current Stride action. A Stride covers
-  // up to the character's Speed for 1 action; crossing each Speed increment
-  // charges another action. A Step is its own dedicated single 5-ft action.
-  const [isChoosingMove, setIsChoosingMove] = useState(false);
-  const [feetThisAction, setFeetThisAction] = useState(0);
-
-  // requestMoveRefresh / cancelMove are returned by the hook below but are
-  // referenced inside onMoveDone (which the hook needs as input) — bridge them
-  // through refs to break the cycle. moveTypeRef/speedRef likewise carry the
-  // live move type and Speed into the callback without stale closures.
-  const requestMoveRefreshRef = useRef(null);
-  const cancelMoveRef = useRef(null);
-  const moveTypeRef = useRef(null);
-  const speedRef = useRef(0);
-
-  const handleMoveDone = useCallback((done) => {
-    const stepFeet = done?.feetMoved ?? 5;
-    appendLog({ type: 'action', charId, text: `${characterName} moved ${stepFeet} ft` });
-
-    if (moveTypeRef.current === 'step') {
-      // A Step is a single dedicated action: one 5-ft move, then close the pad.
-      spendActions(1, 'Step');
-      cancelMoveRef.current?.();
-      return;
-    }
-
-    // Stride: charge the 1st action on the 1st step, and one more each time the
-    // running distance would cross the character's Speed.
-    const speed = speedRef.current || stepFeet;
-    const needNewAction = feetThisAction === 0 || feetThisAction + stepFeet > speed;
-    if (needNewAction) {
-      spendActions(1, 'Stride');
-      setFeetThisAction(stepFeet);
-    } else {
-      setFeetThisAction(feetThisAction + stepFeet);
-    }
-    requestMoveRefreshRef.current?.('stride'); // keep the pad open to chain steps
-  }, [feetThisAction, spendActions, appendLog, charId, characterName]);
-
-  const {
-    stage: moveStage,
-    pickerOpts,
-    pendingMoveType,
-    requestMove: rawRequestMove,
-    requestMoveRefresh,
-    confirmMove: rawConfirmMove,
-    cancelMove: rawCancelMove,
-  } = useTokenMovement(charId, { onMoveDone: handleMoveDone });
-
-  requestMoveRefreshRef.current = requestMoveRefresh;
-  cancelMoveRef.current = rawCancelMove;
-  speedRef.current = pickerOpts?.speed || speedRef.current;
-
-  const requestMove = (moveType) => {
-    setIsChoosingMove(false);
-    moveTypeRef.current = moveType;
-    if (moveType === 'stride') setFeetThisAction(0);
-    rawRequestMove(moveType);
-  };
-
-  const cancelMove = () => {
-    setIsChoosingMove(false);
-    setFeetThisAction(0);
-    rawCancelMove();
-  };
-
   // ── Turn identity (computed before the early return so the self-reset effect
   // can use it without violating the Rules of Hooks) ────────────────────────
   const order = encounter?.order || [];
@@ -161,23 +85,12 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     if (isMyTurn && turnState?.turnToken !== turnToken) {
       resetForNewTurn(turnToken);
       if (hasCompanion) resetCompanionTurn(turnToken);
-      setFeetThisAction(0); // distance budget is per-turn
       // "Until the start of your next turn" — a raised shield expires now.
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
       if (raised) lowerShield();
     }
   }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, raised, lowerShield]);
-
-  // The dial owns End Turn now; when it ends my turn (or Foundry advances), close
-  // any move UI I left open so it doesn't linger on someone else's turn.
-  useEffect(() => {
-    if (!isMyTurn && (moveStage !== null || isChoosingMove)) {
-      setIsChoosingMove(false);
-      setFeetThisAction(0);
-      rawCancelMove();
-    }
-  }, [isMyTurn, moveStage, isChoosingMove, rawCancelMove]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 
@@ -243,22 +156,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
       {/* Local character controls — only on their turn, only for PCs */}
       {isInProgress && isMyTurn && (
         <div className="ttp-controls" role="group" aria-label="Turn controls">
-          {moveStage !== null && pendingMoveType === 'stride' && (
-            <span className="ttp-move-dist" aria-label="Stride distance">
-              {feetThisAction}/{pickerOpts?.speed ?? speedRef.current} ft
-            </span>
-          )}
-
-          {moveStage === null && !isChoosingMove && (
-            <button
-              className="btn-secondary ttp-move"
-              onClick={() => setIsChoosingMove(true)}
-              aria-label="Move"
-            >
-              Move
-            </button>
-          )}
-
           {heldShield && !raised && (
             <button
               className="btn-secondary ttp-shield"
@@ -346,46 +243,6 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
       {/* Shield Block reaction — visible any in-progress turn while raised */}
       {isInProgress && (
         <ShieldBlockBar charId={charId} characterName={characterName} inventory={inventory} />
-      )}
-
-      {/* Movement sub-UI */}
-      {isInProgress && isMyTurn && isChoosingMove && moveStage === null && (
-        <div className="ttp-move-choose" role="group" aria-label="Choose move action">
-          {MOVE_ACTIONS.map((a) => (
-            <button
-              key={a.type}
-              className="btn-secondary"
-              onClick={() => requestMove(a.type)}
-              aria-label={`move-${a.type}`}
-            >
-              {a.label} <span className="ttp-move-cost">({a.cost})</span>
-            </button>
-          ))}
-          <button className="btn-text" onClick={cancelMove} aria-label="cancel-move">
-            Cancel
-          </button>
-        </div>
-      )}
-
-      {isInProgress && isMyTurn && moveStage === 'awaiting-opts' && (
-        <div className="ttp-move-status">Calculating reachable squares…</div>
-      )}
-
-      {isInProgress && isMyTurn && moveStage === 'picking' && pickerOpts && (
-        <MoveGridPicker
-          origin={pickerOpts.origin}
-          reachable={pickerOpts.reachable}
-          blocked={pickerOpts.blocked}
-          radius={1}
-          stepMode
-          cancelLabel="Done"
-          onSelect={rawConfirmMove}
-          onCancel={cancelMove}
-        />
-      )}
-
-      {isInProgress && isMyTurn && moveStage === 'awaiting-done' && (
-        <div className="ttp-move-status">Moving…</div>
       )}
 
       {enemies.length > 0 && (

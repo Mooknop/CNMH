@@ -112,6 +112,10 @@ export const BASIC_ACTIONS_MOVEMENT = [
     actionCount: 1,
     traits: ['Move'],
     requiresTarget: false,
+    // controller:'move' routes the grid tile to the Foundry token controller
+    // (MoveGridPicker) instead of the dice resolver (#415).
+    controller: 'move',
+    moveType: 'stride',
     description: 'You move up to your Speed.',
   },
   {
@@ -119,6 +123,8 @@ export const BASIC_ACTIONS_MOVEMENT = [
     actionCount: 1,
     traits: ['Move'],
     requiresTarget: false,
+    controller: 'move',
+    moveType: 'step',
     description: "You carefully move 5 feet. Unlike Stride, this movement doesn't trigger reactions that are triggered by movement.",
   },
   {

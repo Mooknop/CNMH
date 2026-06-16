@@ -4,6 +4,7 @@ import ActionsList from './ActionsList';
 
 const STANCE_ACTION = { name: 'Dragon Stance', traits: ['Monk', 'Stance'], actionCount: 1 };
 const HUNT_PREY_ACTION = { name: 'Hunt Prey', traits: ['Concentrate', 'Ranger'], actionCount: 1 };
+const STRIDE_ACTION = { name: 'Stride', traits: ['Move'], actionCount: 1, requiresTarget: false, controller: 'move', moveType: 'stride' };
 
 // ActionGrid is mocked as an inert testid div, plus buttons that fire the onUse
 // callback so we can exercise ActionsList.handleUse.
@@ -12,8 +13,12 @@ vi.mock('../encounter/commandsheet/ActionGrid', () => ({
     <div data-testid="action-grid">
       <button onClick={() => onUse?.(STANCE_ACTION, 1)}>use-stance</button>
       <button onClick={() => onUse?.(HUNT_PREY_ACTION, 1)}>use-hunt-prey</button>
+      <button onClick={() => onUse?.(STRIDE_ACTION, 1)}>use-stride</button>
     </div>
   ),
+}));
+vi.mock('../encounter/MoveActionSheet', () => ({
+  default: ({ moveType }) => <div data-testid="move-sheet">{moveType}</div>,
 }));
 vi.mock('./ReactionsList', () => ({ default: () => <div data-testid="reactions-list" /> }));
 vi.mock('./FreeActionsList', () => ({ default: () => <div data-testid="free-actions-list" /> }));
@@ -146,6 +151,18 @@ describe('ActionsList', () => {
     fireEvent.click(screen.getByRole('button', { name: 'use-hunt-prey' }));
     expect(screen.getByTestId('hunt-prey-modal')).toBeInTheDocument();
     expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
+  });
+
+  // ── Movement tile → Foundry controller (#415) ───────────────────────────
+  it('using a movement action opens the move sheet, not the ability modal or a bare spend', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByTestId('move-sheet')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'use-stride' }));
+    expect(screen.getByTestId('move-sheet')).toHaveTextContent('stride');
+    expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
+    expect(mockSpendActions).not.toHaveBeenCalled(); // the sheet charges actions, not handleUse
   });
 
   // ── Command an Animal (#223) ─────────────────────────────────────────────
