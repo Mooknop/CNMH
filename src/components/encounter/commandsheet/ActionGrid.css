@@ -188,6 +188,9 @@
 
 /* Target-needing tile with no focused foe (#411): dim + hint, still tappable. */
 .cmd-tile--awaiting-focus { opacity: 0.62; }
+/* Support tile on an out-of-reach focused ally (#430): hard-disabled. */
+.cmd-tile--out-of-reach { opacity: 0.45; cursor: not-allowed; }
+.cmd-tile--out-of-reach:hover { border-color: var(--shell-border); background: var(--surface-card); }
 .cmd-tile-hint {
   font-size: 0.72rem;
   font-style: italic;

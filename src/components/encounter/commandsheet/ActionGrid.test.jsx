@@ -18,6 +18,11 @@ vi.mock('../../../hooks/useTurnState', () => ({
   useTurnState: (...args) => mockUseTurnState(...args),
 }));
 
+const mockUseAdjacency = vi.fn();
+vi.mock('../../../hooks/useAdjacency', () => ({
+  useAdjacency: (...args) => mockUseAdjacency(...args),
+}));
+
 vi.mock('../../actions/ThaumaturgeExploitsDisplay', () => ({
   default: () => <div data-testid="thaumaturge-exploits" />,
 }));
@@ -39,6 +44,7 @@ describe('ActionGrid', () => {
     mockUseCharacter.mockReturnValue(baseModel());
     mockUseFocusTarget.mockReturnValue({ focusEnemy: null });
     mockUseTurnState.mockReturnValue({ turnState: { actionsSpent: 0 } });
+    mockUseAdjacency.mockReturnValue({ inReach: () => true });
   });
 
   it('renders cost-group headers and a strike tile', () => {
@@ -160,5 +166,32 @@ describe('ActionGrid', () => {
 
     fireEvent.click(within(group).getByRole('button', { name: 'Quick Draw' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Quick Draw' }), 'free');
+  });
+
+  // ── Reach gating for ally support (#430) ───────────────────────────────────
+
+  const withBattleMedicine = () => baseModel({
+    actions: [{ name: 'Battle Medicine', actionCount: 1, traits: ['Manipulate'] }],
+  });
+  const focusedAlly = { focusEnemy: null, focusAlly: { entryId: 'e-ally', kind: 'pc', charId: 'Ashka' } };
+
+  it('hard-disables an ally-support tile when the focused ally is out of reach', () => {
+    mockUseCharacter.mockReturnValue(withBattleMedicine());
+    mockUseFocusTarget.mockReturnValue(focusedAlly);
+    mockUseAdjacency.mockReturnValue({ inReach: () => false });
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    const tile = screen.getByRole('button', { name: 'Battle Medicine' }); // dropped from Right Now when unreachable
+    expect(tile).toBeDisabled();
+    expect(within(tile).getByText('Move closer to target')).toBeInTheDocument();
+  });
+
+  it('keeps the ally-support tile enabled when the focused ally is in reach', () => {
+    mockUseCharacter.mockReturnValue(withBattleMedicine());
+    mockUseFocusTarget.mockReturnValue(focusedAlly);
+    mockUseAdjacency.mockReturnValue({ inReach: () => true });
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    const tiles = screen.getAllByRole('button', { name: 'Battle Medicine' }); // grid + Right Now
+    expect(tiles.length).toBeGreaterThan(0);
+    tiles.forEach((t) => expect(t).not.toBeDisabled());
   });
 });
