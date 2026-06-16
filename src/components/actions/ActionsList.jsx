@@ -1,8 +1,6 @@
 // src/components/actions/ActionsList.js
 import React, { useCallback, useState } from 'react';
 import ActionGrid from '../encounter/commandsheet/ActionGrid';
-import ReactionsList from './ReactionsList';
-import FreeActionsList from './FreeActionsList';
 import MagicModal from '../spells/MagicModal';
 import UseAbilityModal from '../encounter/UseAbilityModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
@@ -19,7 +17,6 @@ import { useStance } from '../../hooks/useStance';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
-  const [activeSection, setActiveSection] = useState('actions');
   const [isMagicOpen, setIsMagicOpen] = useState(false);
   const [usingAbility, setUsingAbility] = useState(null); // { ability, cost } | null
   const [treatWoundsMode, setTreatWoundsMode] = useState(null); // 'battle-medicine' | 'staunch-bleeding' | null
@@ -218,54 +215,15 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
-      <div className="section-tabs">
-        <button
-          className={`section-tab ${activeSection === 'actions' ? 'active' : ''}`}
-          onClick={() => setActiveSection('actions')}
-        >
-          Actions
-        </button>
-        <button
-          className={`section-tab ${activeSection === 'reactions' ? 'active' : ''}`}
-          onClick={() => setActiveSection('reactions')}
-        >
-          Reactions
-        </button>
-        <button
-          className={`section-tab ${activeSection === 'free' ? 'active' : ''}`}
-          onClick={() => setActiveSection('free')}
-        >
-          Free Actions
-        </button>
-      </div>
-
-      <div className="section-content">
-        {activeSection === 'actions' && (
-          <ActionGrid
-            character={character}
-            themeColor={themeColor}
-            encounterMode={encounterMode}
-            onUse={handleUse}
-            onMagicOpen={hasMagic ? () => setIsMagicOpen(true) : undefined}
-          />
-        )}
-        {activeSection === 'reactions' && (
-          <ReactionsList
-            character={character}
-            themeColor={themeColor}
-            encounterMode={encounterMode}
-            onUse={handleUse}
-          />
-        )}
-        {activeSection === 'free' && (
-          <FreeActionsList
-            character={character}
-            themeColor={themeColor}
-            encounterMode={encounterMode}
-            onUse={handleUse}
-          />
-        )}
-      </div>
+      {/* All action types — Strikes, actions, Reactions & Free, Magic launcher —
+          live in the one grid now (#424); the old Actions/Reactions/Free tabs are gone. */}
+      <ActionGrid
+        character={character}
+        themeColor={themeColor}
+        encounterMode={encounterMode}
+        onUse={handleUse}
+        onMagicOpen={hasMagic ? () => setIsMagicOpen(true) : undefined}
+      />
 
       {hasMagic && (
         <MagicModal

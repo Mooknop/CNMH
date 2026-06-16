@@ -25,6 +25,8 @@ vi.mock('../../actions/ThaumaturgeExploitsDisplay', () => ({
 const baseModel = (overrides = {}) => ({
   actions: [],
   strikes: [{ name: 'Longsword', type: 'melee', actionCount: 1, attackMod: 9, damage: '1d8+4' }],
+  reactions: [],
+  freeActions: [],
   flags: { isThaumaturge: false },
   thaumaturge: null,
   ...overrides,
@@ -140,5 +142,23 @@ describe('ActionGrid', () => {
     const region = screen.getByRole('region', { name: 'Right now' });
     fireEvent.click(within(region).getByRole('button', { name: 'Longsword' }));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longsword' }), 1);
+  });
+
+  // ── Reactions & Free group (#424) ──────────────────────────────────────────
+
+  it('renders a Reactions & Free group and routes taps with the reaction/free cost', () => {
+    mockUseCharacter.mockReturnValue(baseModel({
+      reactions: [{ name: 'Shield Block', traits: [] }],
+      freeActions: [{ name: 'Quick Draw', traits: [] }],
+    }));
+    const onUse = vi.fn();
+    render(<ActionGrid character={character} encounterMode onUse={onUse} />);
+    const group = screen.getByRole('region', { name: 'Reactions & Free' });
+
+    fireEvent.click(within(group).getByRole('button', { name: 'Shield Block' }));
+    expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Shield Block' }), 'reaction');
+
+    fireEvent.click(within(group).getByRole('button', { name: 'Quick Draw' }));
+    expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Quick Draw' }), 'free');
   });
 });

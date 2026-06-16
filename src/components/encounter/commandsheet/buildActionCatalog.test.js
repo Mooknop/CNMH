@@ -81,6 +81,26 @@ describe('buildActionCatalog', () => {
     expect(tiles.find((t) => t.name === 'Stowed').inactive).toBe(true);
     expect(tiles.find((t) => t.name === 'Stride').requiresTarget).toBe(false);
   });
+
+  // ── Reactions & Free group (#424) ──────────────────────────────────────────
+  it('emits reaction/free tiles in the rf cost group, never target-gated', () => {
+    const tiles = buildActionCatalog({
+      reactions: [{ name: 'Shield Block', traits: [] }],
+      freeActions: [{ name: 'Quick Draw', traits: [] }],
+    });
+    const block = tiles.find((t) => t.name === 'Shield Block');
+    const draw = tiles.find((t) => t.name === 'Quick Draw');
+    expect(block).toMatchObject({ cost: 'reaction', costGroup: 'rf', needsTarget: false, origin: 'reaction' });
+    expect(draw).toMatchObject({ cost: 'free', costGroup: 'rf', needsTarget: false, origin: 'free' });
+  });
+
+  it('includes the basic encounter free actions in the rf group', () => {
+    const tiles = buildActionCatalog({});
+    const rf = tiles.filter((t) => t.costGroup === 'rf');
+    // BASIC_ENCOUNTER_FREE_ACTIONS are always appended (e.g. Delay / Release).
+    expect(rf.length).toBeGreaterThan(0);
+    expect(rf.every((t) => t.cost === 'reaction' || t.cost === 'free')).toBe(true);
+  });
 });
 
 describe('filterTiles', () => {

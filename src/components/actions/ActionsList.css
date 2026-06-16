@@ -72,50 +72,7 @@
   margin-bottom: 0;
 }
 
-/* Section tabs — dark segmented pill strip */
-.section-tabs {
-  display: flex;
-  gap: var(--space-1);
-  margin-bottom: var(--space-4);
-  background: var(--surface-inset);
-  border: 1px solid var(--shell-border);
-  border-radius: var(--radius-full);
-  padding: 3px;
-}
-
-.section-tab {
-  flex: 1;
-  padding: var(--space-2);
-  background: none;
-  border: none;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: var(--text-xs);
-  letter-spacing: 0.05em;
-  color: var(--shell-text-secondary);
-  transition: background 0.15s, color 0.15s;
-  text-align: center;
-  min-height: 30px;
-  white-space: nowrap;
-}
-
-.section-tab:hover {
-  background: var(--surface-inset-hover);
-  color: var(--shell-text-primary);
-}
-
-.section-tab.active {
-  background: var(--tab-active-bg);
-  color: var(--tab-active-text);
-  border: 1px solid var(--tab-active-border);
-}
-
-.section-content {
-  border-radius: var(--radius-lg);
-  padding: 0;
-}
+/* Section tabs removed in #424 — all action types live in the one grid now. */
 
 /* Flat row list — used by ActionCardList */
 .action-row-list {
@@ -310,11 +267,6 @@
 }
 
 @media (max-width: 768px) {
-  .section-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-
   .strikes-grid {
     grid-template-columns: 1fr;
   }
