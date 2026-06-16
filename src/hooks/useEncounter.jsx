@@ -5,6 +5,7 @@ import { useContent } from '../contexts/ContentContext';
 import { boundariesCrossedBy, isExpired } from '../utils/expiry';
 import { isEncounterScopedEffect } from '../utils/EffectUtils';
 import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
+import { hymnFastHealingFor, applyHymnFastHealing } from '../utils/hymnHealing';
 import {
   defaultEncounter,
   makePcEntry,
@@ -48,7 +49,7 @@ export const useEncounter = () => {
   const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
   const [, setEnemyFx]              = useSyncedState(ENEMY_FX_KEY, {});
   const [summons, setSummons]       = useSyncedState(SUMMONS_KEY, []);
-  const { sendUpdate } = useSession();
+  const { getState, sendUpdate } = useSession();
   const { effects: effectCatalog } = useContent();
 
   // Resolve Foundry actor IDs → CNMH charIds using the GM-maintained actorMap.
@@ -146,6 +147,52 @@ export const useEncounter = () => {
       }
     },
     [sendUpdate, setEncounter, effectCatalog]
+  );
+
+  // Fast-healing tick (#226, Hymn of Healing). At the start of a PC's turn, apply
+  // the strongest Hymn fast healing aimed at them from any caster's sustain
+  // ledger (read live — ending the sustain stops the healing, no separate
+  // effect). Single writer (the client driving turn advance), like the sweep.
+  const runFastHealingTick = useCallback(
+    (cur, startIdx) => {
+      if (cur.foundryCombatId) return;
+      const startEntry = (cur.order || [])[startIdx];
+      if (!startEntry || startEntry.kind !== 'pc' || !startEntry.charId) return;
+      const targetId = startEntry.charId;
+
+      // Strongest fast-healing amount aimed at this entry across all casters.
+      let amount = 0;
+      let maxHp;
+      for (const entry of cur.order || []) {
+        if (entry.kind !== 'pc' || !entry.charId) continue;
+        const sustains = getState(entry.charId, 'sustains') || [];
+        const fh = hymnFastHealingFor(sustains, targetId);
+        if (fh > amount) {
+          amount = fh;
+          maxHp = sustains.find((s) => s.heal?.targetId === targetId)?.heal?.targetMaxHp;
+        }
+      }
+      if (amount <= 0) return;
+
+      const healed = applyHymnFastHealing({
+        getState, sendUpdate,
+        target: { id: targetId, name: startEntry.name, maxHp },
+        amount,
+      });
+      if (healed > 0) {
+        setEncounter((c) => {
+          const base = c || defaultEncounter();
+          return {
+            ...base,
+            log: [...(base.log || []), makeLogEntry({
+              type: 'system',
+              text: `Fast healing ${amount} (Hymn of Healing) — ${startEntry.name} +${healed} HP`,
+            })],
+          };
+        });
+      }
+    },
+    [getState, sendUpdate, setEncounter]
   );
 
   const appendLog = useCallback(
@@ -255,6 +302,7 @@ export const useEncounter = () => {
       );
       // Expiry sweep runs before the state update so it reads current encounter
       runExpirySweep(cur, nextIdx, nextRound);
+      runFastHealingTick(cur, nextIdx);
       setEncounter((base) => {
         const b = base || defaultEncounter();
         const next = (b.order || [])[nextIdx];
@@ -275,7 +323,7 @@ export const useEncounter = () => {
         return { ...b, currentTurnIndex: nextIdx, round: nextRound, log };
       });
     },
-    [runExpirySweep, setEncounter]
+    [runExpirySweep, runFastHealingTick, setEncounter]
   );
 
   const beginNextRound = useCallback(
@@ -285,6 +333,7 @@ export const useEncounter = () => {
       const round = (cur.round || 1) + 1;
       // Sweep: treat this as advancing past the last entry to index 0, round+1
       runExpirySweep(cur, 0, round);
+      runFastHealingTick(cur, 0);
       setEncounter((base) => {
         const b = base || defaultEncounter();
         const first = (b.order || [])[0];
@@ -305,7 +354,7 @@ export const useEncounter = () => {
         return { ...b, currentTurnIndex: 0, round, log };
       });
     },
-    [runExpirySweep, setEncounter]
+    [runExpirySweep, runFastHealingTick, setEncounter]
   );
 
   const endEncounter = useCallback(

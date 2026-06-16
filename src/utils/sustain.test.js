@@ -34,6 +34,14 @@ describe('makeSustainEntry', () => {
     expect(entry.registeredRound).toBeNull();
     expect(entry.lastSustainedRound).toBeNull();
   });
+
+  it('carries an optional heal payload (Hymn of Healing #226), omitted otherwise', () => {
+    const heal = { targetId: 'Blu', fastHealing: 4, tempHp: 4 };
+    const withHeal = makeSustainEntry({ ability: { name: 'Hymn of Healing', duration: 'sustained' }, round: 1, heal });
+    expect(withHeal.heal).toEqual(heal);
+    const plain = makeSustainEntry({ ability: { name: 'Bless', duration: 'Sustained' }, round: 1 });
+    expect(plain).not.toHaveProperty('heal');
+  });
 });
 
 describe('registerSustain', () => {

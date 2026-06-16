@@ -27,8 +27,9 @@ vi.mock('../../hooks/useSyncedState', () => {
 });
 
 const mockSendUpdate = vi.fn();
+const mockGetState = vi.fn(() => undefined);
 vi.mock('../../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: mockSendUpdate }),
+  useSession: () => ({ sendUpdate: mockSendUpdate, getState: mockGetState }),
 }));
 
 // PersistentChip (#272) pulls in useGmAuth, which probes /api/gm/whoami.
@@ -511,6 +512,27 @@ describe('TurnTrackerPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sustain Bless' }));
     expect(tsDriver.turnState.actionsSpent).toBe(1);
     expect(screen.queryByRole('group', { name: 'Sustain Bless' })).toBeNull();
+  });
+
+  it('Sustaining Hymn of Healing re-grants the target temp HP (#226)', () => {
+    let drv, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    seedSustain(setSustains, [{
+      id: 's1', spellId: 'hymn-of-healing', spellName: 'Hymn of Healing', lastSustainedRound: 0,
+      heal: { targetId: 'Ashka', targetName: 'Ashka', targetMaxHp: 30, fastHealing: 4, tempHp: 4 },
+    }]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sustain Hymn of Healing' }));
+    // Temp HP written to the heal target (no stored hp → seeded full, temp set).
+    expect(mockSendUpdate).toHaveBeenCalledWith('Ashka', 'hp', expect.objectContaining({ temp: 4 }));
+    expect(drv.encounter.log.some((l) => /Ashka gains 4 temporary HP/.test(l.text))).toBe(true);
   });
 
   it('End removes the sustain and logs it', () => {
