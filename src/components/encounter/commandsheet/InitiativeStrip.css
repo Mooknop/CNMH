@@ -1,5 +1,5 @@
 /* src/components/encounter/commandsheet/InitiativeStrip.css
-   Command Sheet initiative strip (#411). Mirrors the old ttp-order rail with
+   Command Sheet initiative strip (#411). Mirrors the old TurnTrackerPanel order rail with
    tap-to-focus enemy chips. Dark-shell tokens from pf2e-tokens.css. */
 
 .cmd-init {
