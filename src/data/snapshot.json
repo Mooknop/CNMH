@@ -5535,7 +5535,10 @@
               "traits": [
                 "Dragon"
               ],
-              "frequencyRule": { "per": "round", "uses": 1 },
+              "frequencyRule": {
+                "per": "round",
+                "uses": 1
+              },
               "description": "You've grown a pair of scaled wings, but they're taking some getting used to. Once per round, you can fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
             }
           ],
@@ -6204,7 +6207,12 @@
           },
           {
             "id": "spell-8",
-            "spellState": { "kind": "emanation", "start": 15, "step": 10, "unit": "ft" },
+            "spellState": {
+              "kind": "emanation",
+              "start": 15,
+              "step": 10,
+              "unit": "ft"
+            },
             "description": "Blessings from beyond help your companions strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane.",
             "name": "Bless",
             "actions": "Two Actions",
@@ -6647,7 +6655,10 @@
           },
           {
             "id": "staff-spell-6",
-            "spellState": { "kind": "images", "start": 3 },
+            "spellState": {
+              "kind": "images",
+              "start": 3
+            },
             "name": "Mirror Image",
             "level": 2,
             "traits": [
@@ -8193,7 +8204,12 @@
     {
       "id": "antidote",
       "name": "Antidote",
-      "consumable": { "kind": "effect", "effectId": "antidote", "durationMinutes": 360, "note": "+2 item Fort vs poison (6 hr)" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "antidote",
+        "durationMinutes": 360,
+        "note": "+2 item Fort vs poison (6 hr)"
+      },
       "weight": 0.1,
       "traits": [
         "Alchemical",
@@ -8219,7 +8235,12 @@
     {
       "id": "antiplague",
       "name": "Antiplague",
-      "consumable": { "kind": "effect", "effectId": "antiplague", "durationMinutes": 1440, "note": "+2 item Fort vs disease (24 hr)" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "antiplague",
+        "durationMinutes": 1440,
+        "note": "+2 item Fort vs disease (24 hr)"
+      },
       "weight": 0.1,
       "traits": [
         "Alchemical",
@@ -8327,7 +8348,12 @@
     {
       "id": "eagle-eye-elixir",
       "name": "Eagle-eye Elixir",
-      "consumable": { "kind": "effect", "effectId": "eagle-eye-elixir", "durationMinutes": 60, "note": "+1 item Perception (1 hr)" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "eagle-eye-elixir",
+        "durationMinutes": 60,
+        "note": "+1 item Perception (1 hr)"
+      },
       "weight": 0.1,
       "traits": [
         "Alchemical",
@@ -8411,7 +8437,12 @@
     {
       "id": "gecko-potion",
       "name": "Gecko Potion",
-      "consumable": { "kind": "effect", "effectId": "gecko-potion", "durationMinutes": 5, "note": "Climb/Palm (5 min)" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "gecko-potion",
+        "durationMinutes": 5,
+        "note": "Climb/Palm (5 min)"
+      },
       "price": 3,
       "weight": 0.1,
       "traits": [
@@ -8541,7 +8572,11 @@
     {
       "id": "moderate-drakeheart-mutagen",
       "name": "Moderate Drakeheart Mutagen",
-      "consumable": { "kind": "effect", "effectId": "drakeheart-mutagen", "note": "+5 item AC, +2 item Perception; Dex cap +2 & −1 Will/Reflex/RK penalties (see effect)" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "drakeheart-mutagen",
+        "note": "+5 item AC, +2 item Perception; Dex cap +2 & −1 Will/Reflex/RK penalties (see effect)"
+      },
       "price": 12,
       "weight": 0.1,
       "traits": [
@@ -8588,7 +8623,12 @@
     {
       "id": "oil-of-weightlessness",
       "name": "Oil of Weightlessness",
-      "consumable": { "kind": "effect", "effectId": "weightlessness", "durationMinutes": 60, "note": "Negligible Bulk (1 hr) — object-target stopgap, see #339" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "weightlessness",
+        "durationMinutes": 60,
+        "note": "Negligible Bulk (1 hr) — object-target stopgap, see #339"
+      },
       "price": 6,
       "weight": 0.1,
       "traits": [
@@ -8601,7 +8641,12 @@
     {
       "id": "potion-of-waterbreathing",
       "name": "Potion of Waterbreathing",
-      "consumable": { "kind": "effect", "effectId": "waterbreathing", "durationMinutes": 60, "note": "Breathe underwater (1 hr)" },
+      "consumable": {
+        "kind": "effect",
+        "effectId": "waterbreathing",
+        "durationMinutes": 60,
+        "note": "Breathe underwater (1 hr)"
+      },
       "price": 11,
       "weight": 0.1,
       "traits": [
@@ -9551,7 +9596,16 @@
       "actions": "One Action",
       "area": "60-foot emanation",
       "duration": "1 round",
-      "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects."
+      "description": "You inspire your allies with words or tunes of encouragement. You and all allies in the area gain a +1 status bonus to attack rolls, damage rolls, and saves against fear effects.",
+      "effects": [
+        {
+          "effectId": "inspire-courage",
+          "applyTo": "all-allies",
+          "duration": {
+            "until": "caster-turn-start"
+          }
+        }
+      ]
     },
     {
       "id": "instant-parade",
@@ -9735,65 +9789,6 @@
   ],
   "effect": [
     {
-      "id": "eagle-eye-elixir",
-      "name": "Eagle-eye Elixir",
-      "description": "+1 item bonus to Perception (Lesser; Moderate elixir is +2). The greater +2/+3 bonus to find secret doors and traps is conditional and not netted here. Lasts 1 hour.",
-      "modifiers": [
-        {
-          "stat": "perception",
-          "kind": "item",
-          "amount": 1
-        }
-      ]
-    },
-    {
-      "id": "drakeheart-mutagen",
-      "name": "Drakeheart Mutagen (Moderate)",
-      "description": "+5 item bonus to AC and +2 item bonus to Perception. Drawbacks are not modeled: a Dexterity cap of +2, and a −1 penalty to Will saves, Reflex saves, and Recall Knowledge skill checks. You can burn the remaining duration to Stride twice (1 action).",
-      "modifiers": [
-        {
-          "stat": "ac",
-          "kind": "item",
-          "amount": 5
-        },
-        {
-          "stat": "perception",
-          "kind": "item",
-          "amount": 2
-        }
-      ]
-    },
-    {
-      "id": "antidote",
-      "name": "Antidote",
-      "description": "+2 item bonus to Fortitude saves against poisons (Lesser; Moderate antidote is +3). The bonus is conditional ('vs poison') and is not netted automatically — applied as a tracked reminder. Lasts 6 hours.",
-      "modifiers": []
-    },
-    {
-      "id": "antiplague",
-      "name": "Antiplague",
-      "description": "+2 item bonus to Fortitude saves against diseases (Lesser; Moderate antiplague is +3), including the daily save against a disease's progression. The bonus is conditional ('vs disease') and is not netted automatically — applied as a tracked reminder. Lasts 24 hours.",
-      "modifiers": []
-    },
-    {
-      "id": "gecko-potion",
-      "name": "Gecko Potion",
-      "description": "+1 item bonus to Climb and to Palm an Object, and you can cling to surfaces. Skill bonuses are not netted automatically — applied as a tracked reminder. Lasts 5 minutes.",
-      "modifiers": []
-    },
-    {
-      "id": "waterbreathing",
-      "name": "Waterbreathing",
-      "description": "You can breathe underwater. Lasts 1 hour.",
-      "modifiers": []
-    },
-    {
-      "id": "weightlessness",
-      "name": "Weightlessness",
-      "description": "The treated item (1 Bulk or less) has negligible Bulk. Applies to an object — tracked here as a reminder. Lasts 1 hour.",
-      "modifiers": []
-    },
-    {
       "id": "ability-immunity",
       "name": "Immune",
       "description": "Temporarily immune to a specific ability (e.g. Guidance, Battle Medicine, Tell Fortune). Applied automatically on use and cleared when the game clock passes its expiry.",
@@ -9874,6 +9869,18 @@
       ]
     },
     {
+      "id": "antidote",
+      "name": "Antidote",
+      "description": "+2 item bonus to Fortitude saves against poisons (Lesser; Moderate antidote is +3). The bonus is conditional ('vs poison') and is not netted automatically — applied as a tracked reminder. Lasts 6 hours.",
+      "modifiers": []
+    },
+    {
+      "id": "antiplague",
+      "name": "Antiplague",
+      "description": "+2 item bonus to Fortitude saves against diseases (Lesser; Moderate antiplague is +3), including the daily save against a disease's progression. The bonus is conditional ('vs disease') and is not netted automatically — applied as a tracked reminder. Lasts 24 hours.",
+      "modifiers": []
+    },
+    {
       "id": "avoid-notice-hidden",
       "name": "Avoiding Notice",
       "description": "Successful Stealth check at start of exploration — Hidden from creatures that haven't noticed you.",
@@ -9944,6 +9951,35 @@
       "modifiers": []
     },
     {
+      "id": "drakeheart-mutagen",
+      "name": "Drakeheart Mutagen (Moderate)",
+      "description": "+5 item bonus to AC and +2 item bonus to Perception. Drawbacks are not modeled: a Dexterity cap of +2, and a −1 penalty to Will saves, Reflex saves, and Recall Knowledge skill checks. You can burn the remaining duration to Stride twice (1 action).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "item",
+          "amount": 5
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "eagle-eye-elixir",
+      "name": "Eagle-eye Elixir",
+      "description": "+1 item bonus to Perception (Lesser; Moderate elixir is +2). The greater +2/+3 bonus to find secret doors and traps is conditional and not netted here. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 1
+        }
+      ]
+    },
+    {
       "id": "eld-charged",
       "name": "Charged (Eld)",
       "description": "Off-guard against attacks that deal electricity damage and −2 to saves against electric effects. Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.",
@@ -9965,6 +10001,12 @@
       "id": "fly-spell",
       "name": "Fly (spell)",
       "description": "Character gains a fly Speed equal to their land Speed. Track manually.",
+      "modifiers": []
+    },
+    {
+      "id": "gecko-potion",
+      "name": "Gecko Potion",
+      "description": "+1 item bonus to Climb and to Palm an Object, and you can cling to surfaces. Skill bonuses are not netted automatically — applied as a tracked reminder. Lasts 5 minutes.",
       "modifiers": []
     },
     {
@@ -10170,6 +10212,40 @@
       ]
     },
     {
+      "id": "imperial-blood-magic-ac",
+      "name": "Blood Magic — AC (Imperial)",
+      "description": "+1 status bonus to AC until the start of your next turn (Imperial blood magic).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "imperial-blood-magic-saves",
+      "name": "Blood Magic — Saving Throws (Imperial)",
+      "description": "+1 status bonus to all saving throws until the start of your next turn (Imperial blood magic).",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
+    },
+    {
       "id": "inspire-courage",
       "name": "Inspire Courage",
       "description": "+1 status bonus to attack rolls and damage rolls while the composition lasts.",
@@ -10268,38 +10344,16 @@
       "modifiers": []
     },
     {
-      "id": "imperial-blood-magic-ac",
-      "name": "Blood Magic — AC (Imperial)",
-      "description": "+1 status bonus to AC until the start of your next turn (Imperial blood magic).",
-      "modifiers": [
-        {
-          "stat": "ac",
-          "kind": "status",
-          "amount": 1
-        }
-      ]
+      "id": "waterbreathing",
+      "name": "Waterbreathing",
+      "description": "You can breathe underwater. Lasts 1 hour.",
+      "modifiers": []
     },
     {
-      "id": "imperial-blood-magic-saves",
-      "name": "Blood Magic — Saving Throws (Imperial)",
-      "description": "+1 status bonus to all saving throws until the start of your next turn (Imperial blood magic).",
-      "modifiers": [
-        {
-          "stat": "fort",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "reflex",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "will",
-          "kind": "status",
-          "amount": 1
-        }
-      ]
+      "id": "weightlessness",
+      "name": "Weightlessness",
+      "description": "The treated item (1 Bulk or less) has negligible Bulk. Applies to an object — tracked here as a reminder. Lasts 1 hour.",
+      "modifiers": []
     }
   ],
   "image": [
