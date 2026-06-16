@@ -14,6 +14,7 @@ import { consumableMeta } from '../../utils/consumables';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useGrantedActions } from '../../hooks/useGrantedActions';
 import { useStance } from '../../hooks/useStance';
 import './ActionsList.css';
@@ -35,6 +36,8 @@ const ActionsList = ({ character, characterColor }) => {
     || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
   const { grantedActions, removeGrantedAction } = useGrantedActions(character.id);
   const { enter: enterStance } = useStance(character.id);
+  // A focused ally (#429) pre-targets the support resolvers (Battle Medicine / Treat Wounds).
+  const { focusAlly } = useFocusTarget(character.id);
 
   const encounterMode = !!(encounter && encounter.active && encounter.phase === 'in-progress');
 
@@ -265,6 +268,7 @@ const ActionsList = ({ character, characterColor }) => {
           healer={character}
           themeColor={themeColor}
           actionCost={treatWoundsMode === 'battle-medicine' && encounterMode ? 1 : 0}
+          defaultTargetId={focusAlly?.charId}
         />
       )}
 

@@ -44,6 +44,10 @@ vi.mock('../../hooks/useCharacter', () => ({
   }),
 }));
 
+vi.mock('../../hooks/useFocusTarget', () => ({
+  useFocusTarget: () => ({ focusAlly: null, focusEnemy: null }),
+}));
+
 const mockAppendLog = vi.fn();
 const mockEncounterState = { active: false, phase: 'idle', order: [], log: [], round: 0, currentTurnIndex: 0 };
 vi.mock('../../hooks/useEncounter', () => ({

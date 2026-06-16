@@ -180,4 +180,26 @@ describe('consumables (#428)', () => {
     expect(tiles.some((t) => t.name === 'Dropped Potion')).toBe(false);
     expect(tiles.some((t) => t.kind === 'consumable')).toBe(false);
   });
+
+  it('consumables stay self-use (supports false) until #430', () => {
+    const tiles = buildActionCatalog({
+      inventory: [{ name: 'Potion', state: 'held1', consumable: { kind: 'healing' } }],
+    });
+    expect(tiles.find((t) => t.name === 'Potion').supports).toBe(false);
+  });
+});
+
+describe('ally-support flag (#429)', () => {
+  it('flags Battle Medicine / Healing-trait actions as support; basics are not', () => {
+    const tiles = buildActionCatalog({
+      actions: [
+        { name: 'Battle Medicine', actionCount: 1, traits: ['Manipulate'] }, // by name
+        { name: 'Lay on Hands', actionCount: 1, traits: ['Healing'] },        // by trait
+      ],
+    });
+    const byName = Object.fromEntries(tiles.map((t) => [t.name, t]));
+    expect(byName['Battle Medicine'].supports).toBe(true);
+    expect(byName['Lay on Hands'].supports).toBe(true);
+    expect(byName.Stride.supports).toBe(false);
+  });
 });

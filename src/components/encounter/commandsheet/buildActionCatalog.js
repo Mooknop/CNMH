@@ -50,6 +50,14 @@ const statLineFor = (item, cat) => {
   return null;
 };
 
+// Ally-support actions (#429) — surfaced/ranked when an ally is focused. A
+// Healing-trait action or one of the canonical medic actions counts.
+const SUPPORT_NAMES = new Set([
+  'Battle Medicine', 'Treat Wounds', 'Administer First Aid', 'Staunch Bleeding',
+]);
+const isSupportAction = (item) =>
+  !!(item.traits?.includes('Healing') || SUPPORT_NAMES.has(item.name));
+
 // Category for a custom (character/feat/item) action, derived from its traits.
 const catForCustomAction = (item) => {
   if (item.traits?.includes('Attack')) return 'attack';
@@ -97,6 +105,8 @@ const makeConsumableTile = (item) => {
     type: 'consumable',
     requiresTarget: false,
     needsTarget: false,
+    // Consumables stay self-use until #430 (administering to an ally needs reach).
+    supports: false,
     inactive: false,
     statLine: null,
     raw: item,
@@ -120,6 +130,7 @@ const makeTile = (item, cat, originType, costOverride) => {
     type: 'action',
     requiresTarget: item.requiresTarget,
     needsTarget: isRf ? false : tileNeedsTarget(item, cat),
+    supports: isSupportAction(item), // ally-support ranking when an ally is focused (#429)
     variableActionCount: item.variableActionCount,
     inactive: item.active === false,
     statLine: statLineFor(item, cat),

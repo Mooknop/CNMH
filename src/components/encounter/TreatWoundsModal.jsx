@@ -42,7 +42,7 @@ const DEGREE_INFO = {
  * @param {string}  themeColor
  * @param {number}  actionCost  - actions to spend on confirm (1 for Battle Medicine in encounter, 0 otherwise; Staunch Bleeding spends its own 1–2 action choice)
  */
-const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCost }) => {
+const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCost, defaultTargetId = null }) => {
   const { getState, sendUpdate } = useSession();
   const { characters } = useContent();
   const { gameDate, time } = useGameDate();
@@ -51,7 +51,9 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
   const { spendActions } = useTurnState(healer?.id || 'nobody');
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
-  const [selectedTargetId, setSelectedTargetId] = useState(null);
+  // Pre-select the focused ally (#429) when one was handed in; the picker still
+  // lets the healer change it.
+  const [selectedTargetId, setSelectedTargetId] = useState(defaultTargetId);
   const [selectedDc, setSelectedDc] = useState(null);
   const [d20Input, setD20Input] = useState('');
   const [amountInput, setAmountInput] = useState('');

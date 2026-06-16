@@ -1,9 +1,9 @@
 // src/components/encounter/commandsheet/InitiativeStrip.jsx
-// Command Sheet initiative strip (#411). Compact horizontal turn order lifted
-// from TurnTrackerPanel, with one new capability: tapping an enemy focuses it
-// (toggle) so the focus banner + target-needing tiles adapt to that foe. All the
-// existing per-entry chips travel with it (flanked / Hunt Prey / conditions /
-// aura / omen / stance / persistent) — they live nowhere else.
+// Command Sheet initiative strip (#411, #429). Compact horizontal turn order
+// lifted from TurnTrackerPanel. Tapping any combatant focuses it (toggle): an
+// enemy drives the foe stat line + offensive tiles, an ally drives the support
+// banner + ally-targeted support (#429). All the existing per-entry chips travel
+// with it (flanked / Hunt Prey / conditions / aura / omen / stance / persistent).
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useSyncedState } from '../../../hooks/useSyncedState';
@@ -48,7 +48,7 @@ const InitiativeStrip = ({ charId }) => {
     <div className="cmd-init" aria-label="Initiative order">
       {order.map((entry, idx) => {
         const isCurrent = isInProgress && idx === encounter.currentTurnIndex;
-        const isFocused = entry.kind === 'enemy' && entry.entryId === focusId;
+        const isFocused = entry.entryId === focusId;
         const className = [
           'cmd-init-entry',
           isCurrent ? 'cmd-init-entry--current' : '',
@@ -56,30 +56,20 @@ const InitiativeStrip = ({ charId }) => {
           isFocused ? 'cmd-init-entry--focused' : '',
         ].filter(Boolean).join(' ');
 
-        // Enemies are tap-to-focus; PCs are static.
-        if (entry.kind === 'enemy') {
-          return (
-            <button
-              key={entry.entryId}
-              type="button"
-              className={className}
-              aria-current={isCurrent ? 'true' : undefined}
-              aria-pressed={isFocused}
-              aria-label={`Focus ${entry.name}`}
-              onClick={() => toggleFocus(entry.entryId)}
-            >
-              {renderInner(entry)}
-            </button>
-          );
-        }
+        // Every combatant is tap-to-focus (#429): foes drive offense, allies
+        // drive support.
         return (
-          <div
+          <button
             key={entry.entryId}
+            type="button"
             className={className}
             aria-current={isCurrent ? 'true' : undefined}
+            aria-pressed={isFocused}
+            aria-label={`Focus ${entry.name}`}
+            onClick={() => toggleFocus(entry.entryId)}
           >
             {renderInner(entry)}
-          </div>
+          </button>
         );
       })}
     </div>
