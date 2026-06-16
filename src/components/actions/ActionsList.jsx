@@ -7,6 +7,7 @@ import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import HuntPreyModal from '../encounter/HuntPreyModal';
 import SkillActionModal from '../encounter/SkillActionModal';
 import MoveActionSheet from '../encounter/MoveActionSheet';
+import EncounterDoors from '../encounter/EncounterDoors';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import UseConsumableModal from '../inventory/UseConsumableModal';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
@@ -227,6 +228,11 @@ const ActionsList = ({ character, characterColor }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Interact: open/close a door in reach (#435) — self-hides when none nearby. */}
+      {encounterMode && (
+        <EncounterDoors charId={character.id} characterName={character.name} />
       )}
 
       {/* All action types — Strikes, actions, Reactions & Free, Magic launcher —

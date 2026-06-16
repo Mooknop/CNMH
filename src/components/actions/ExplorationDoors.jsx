@@ -1,6 +1,5 @@
-import React, { useEffect, useCallback } from 'react';
-import { useSyncedState } from '../../hooks/useSyncedState';
-import { useSession } from '../../contexts/SessionContext';
+import React from 'react';
+import { useDoors } from '../../hooks/useDoors';
 import './ExplorationDoors.css';
 
 const DOOR_STATE_LABEL = { 0: 'Closed', 1: 'Open', 2: 'Locked' };
@@ -15,30 +14,9 @@ const DOOR_GLYPH = { 0: '🚪', 1: '🔓', 2: '🔒' };
 // doors just appear.
 
 const ExplorationDoors = ({ charId, moveDoneTs }) => {
-  const { sendUpdate } = useSession();
-  const [doorOpts] = useSyncedState(`cnmh_dooropts_${charId}`, null);
-
-  const detect = useCallback(() => {
-    sendUpdate(charId, 'doorreq', { ts: Date.now() });
-  }, [charId, sendUpdate]);
-
-  // Detect on mount.
-  useEffect(() => {
-    detect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Re-detect after each confirmed move.
-  useEffect(() => {
-    if (moveDoneTs == null) return;
-    detect();
-  }, [moveDoneTs, detect]);
-
-  const interact = (wallId, op) => {
-    sendUpdate(charId, 'doorinteract', { wallId, op, ts: Date.now() });
-  };
-
-  const doors = doorOpts?.doors ?? [];
+  // Detection + toggle live in useDoors (shared with the encounter Interact, #435);
+  // re-detect after each confirmed move.
+  const { doors, interactDoor: interact } = useDoors(charId, { refreshTs: moveDoneTs });
 
   return (
     <div className="ed-panel">

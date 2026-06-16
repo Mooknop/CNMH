@@ -28,6 +28,9 @@ vi.mock('../inventory/UseConsumableModal', () => ({
 vi.mock('../encounter/MoveActionSheet', () => ({
   default: ({ moveType }) => <div data-testid="move-sheet">{moveType}</div>,
 }));
+vi.mock('../encounter/EncounterDoors', () => ({
+  default: () => <div data-testid="encounter-doors" />,
+}));
 vi.mock('../spells/MagicModal', () => ({ default: () => null }));
 vi.mock('../encounter/UseAbilityModal', () => ({ default: () => <div data-testid="use-ability-modal" /> }));
 vi.mock('../encounter/HuntPreyModal', () => ({ default: () => <div data-testid="hunt-prey-modal" /> }));
