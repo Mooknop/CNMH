@@ -8,10 +8,19 @@
 import React from 'react';
 import ActionSymbol from '../../shared/ActionSymbol';
 
+// Why a consumable costs more than its 1-action drink/apply (#428): the extra is
+// the draw (worn) / retrieve (stowed) Interact to get it in hand.
+const DRAW_CUE = { stowed: 'retrieve +2' };
+const drawCueFor = (tile) =>
+  tile.kind === 'consumable' && tile.drawCost > 0
+    ? (DRAW_CUE[tile.raw?.state] || `draw +${tile.drawCost}`)
+    : null;
+
 const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false }) => {
   const glyphCost = tile.variableActionCount ? tile.variableActionCount.min : tile.cost;
   const rightTrait = tile.traits?.[0] ?? null;
   const awaitingFocus = encounterMode && tile.needsTarget && !hasFocus;
+  const drawCue = drawCueFor(tile);
 
   const className = [
     'cmd-tile',
@@ -36,6 +45,8 @@ const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false })
       <span className="cmd-tile-name">{tile.name}</span>
       {awaitingFocus ? (
         <span className="cmd-tile-hint">Tap a foe to target</span>
+      ) : drawCue ? (
+        <span className="cmd-tile-stat cmd-tile-stat--draw">{drawCue}</span>
       ) : (
         tile.statLine && <span className="cmd-tile-stat">{tile.statLine}</span>
       )}

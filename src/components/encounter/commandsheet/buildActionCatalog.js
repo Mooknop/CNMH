@@ -16,6 +16,7 @@ import {
   BASIC_ENCOUNTER_FREE_ACTIONS,
 } from '../../../data/encounterActions';
 import { formatModifier } from '../../../utils/CharacterUtils';
+import { consumableMeta } from '../../../utils/consumables';
 
 // Short labels for the maneuver "vs <defense>" stat line.
 const DEFENSE_SHORT = {
@@ -65,7 +66,43 @@ const catForCustomAction = (item) => {
 const tileNeedsTarget = (item, cat) =>
   (cat === 'attack' || item.targetDefense != null) ? item.requiresTarget !== false : false;
 
+// Draw/retrieve action cost to get a consumable in hand (#428): a held item is
+// ready (+0), a worn one needs an Interact to draw (+1), a stowed one a 2-action
+// retrieve (+2). Anything unknown collapses to the worn default. `dropped` items
+// aren't surfaced at all.
+const DRAW_COST = { held1: 0, held2: 0, stowed: 2 };
+export const drawCost = (state) => (state in DRAW_COST ? DRAW_COST[state] : 1);
+
 let uid = 0;
+
+// Self-use consumable (potion/elixir) tile (#428). Its effective cost is the
+// 1-action drink/apply plus the draw/retrieve cost of getting it in hand, so
+// affordability + the displayed glyph reflect a stowed Elixir really costing 3.
+const makeConsumableTile = (item) => {
+  uid += 1;
+  const meta = consumableMeta(item);
+  const draw = drawCost(item.state);
+  const cost = 1 + draw;
+  return {
+    id: `consumable-${item.uid || item.name}-${uid}`,
+    name: item.name,
+    origin: 'item',
+    kind: 'consumable',
+    heals: meta?.kind === 'healing',
+    cost,
+    drawCost: draw,
+    costGroup: String(Math.min(Math.max(cost, 1), 3)),
+    cat: 'item',
+    traits: item.traits || [],
+    type: 'consumable',
+    requiresTarget: false,
+    needsTarget: false,
+    inactive: false,
+    statLine: null,
+    raw: item,
+  };
+};
+
 // costOverride: 'reaction' | 'free' for the Reactions & Free group (#424); those
 // tiles skip the numeric cost-group clamp and never gate on a focused foe.
 const makeTile = (item, cat, originType, costOverride) => {
@@ -97,9 +134,10 @@ const makeTile = (item, cat, originType, costOverride) => {
  * @param {Array}   input.strikes      - resolved strikes (useCharacter().strikes)
  * @param {Array}   input.reactions    - reactions (useCharacter().reactions)
  * @param {Array}   input.freeActions  - free actions (useCharacter().freeActions)
+ * @param {Array}   input.inventory    - effective inventory (useCharacter().inventory)
  * @returns {Array} tile objects
  */
-export function buildActionCatalog({ actions = [], strikes = [], reactions = [], freeActions = [] } = {}) {
+export function buildActionCatalog({ actions = [], strikes = [], reactions = [], freeActions = [], inventory = [] } = {}) {
   uid = 0;
   const tiles = [];
 
@@ -115,6 +153,14 @@ export function buildActionCatalog({ actions = [], strikes = [], reactions = [],
   BASIC_ACTIONS_MOVEMENT.forEach((a) => {
     const cat = a.traits?.includes('Attack') ? 'attack' : 'move';
     tiles.push(makeTile(a, cat, 'basic'));
+  });
+
+  // Consumables as self-use tiles (#428) — potions/elixirs from the carried
+  // inventory, costed by their draw/retrieve state. Dropped items aren't usable.
+  inventory.forEach((item) => {
+    if (item && consumableMeta(item) && item.state !== 'dropped') {
+      tiles.push(makeConsumableTile(item));
+    }
   });
 
   // Reactions & Free (#424) — one cost group ('rf'), filterable by their own

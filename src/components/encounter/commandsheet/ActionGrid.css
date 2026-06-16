@@ -183,6 +183,8 @@
   color: var(--shell-text-secondary);
   font-variant-numeric: tabular-nums;
 }
+/* Draw/retrieve cost cue on a consumable tile (#428). */
+.cmd-tile-stat--draw { color: var(--shell-text-tertiary); font-style: italic; }
 
 /* Target-needing tile with no focused foe (#411): dim + hint, still tappable. */
 .cmd-tile--awaiting-focus { opacity: 0.62; }

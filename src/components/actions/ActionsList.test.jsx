@@ -5,6 +5,8 @@ import ActionsList from './ActionsList';
 const STANCE_ACTION = { name: 'Dragon Stance', traits: ['Monk', 'Stance'], actionCount: 1 };
 const HUNT_PREY_ACTION = { name: 'Hunt Prey', traits: ['Concentrate', 'Ranger'], actionCount: 1 };
 const STRIDE_ACTION = { name: 'Stride', traits: ['Move'], actionCount: 1, requiresTarget: false, controller: 'move', moveType: 'stride' };
+// A worn healing potion → effective cost 2 (drink 1 + draw 1).
+const CONSUMABLE_ITEM = { name: 'Healing Potion', traits: ['Potion'], consumable: { kind: 'healing' }, state: 'worn' };
 
 // ActionGrid is mocked as an inert testid div, plus buttons that fire the onUse
 // callback so we can exercise ActionsList.handleUse.
@@ -14,7 +16,13 @@ vi.mock('../encounter/commandsheet/ActionGrid', () => ({
       <button onClick={() => onUse?.(STANCE_ACTION, 1)}>use-stance</button>
       <button onClick={() => onUse?.(HUNT_PREY_ACTION, 1)}>use-hunt-prey</button>
       <button onClick={() => onUse?.(STRIDE_ACTION, 1)}>use-stride</button>
+      <button onClick={() => onUse?.(CONSUMABLE_ITEM, 2)}>use-consumable</button>
     </div>
+  ),
+}));
+vi.mock('../inventory/UseConsumableModal', () => ({
+  default: ({ item, actionCost }) => (
+    <div data-testid="consumable-modal">{item.name}:{actionCost}</div>
   ),
 }));
 vi.mock('../encounter/MoveActionSheet', () => ({
@@ -129,6 +137,17 @@ describe('ActionsList', () => {
     expect(screen.getByTestId('move-sheet')).toHaveTextContent('stride');
     expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
     expect(mockSpendActions).not.toHaveBeenCalled(); // the sheet charges actions, not handleUse
+  });
+
+  // ── Consumables (#428) ───────────────────────────────────────────────────
+  it('using a consumable opens the consumable modal with the effective cost (not the ability modal)', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={mockCharacter} />);
+    fireEvent.click(screen.getByRole('button', { name: 'use-consumable' }));
+    // Worn potion → actionCost 2 (drink 1 + draw 1); routed to the consumable flow.
+    expect(screen.getByTestId('consumable-modal')).toHaveTextContent('Healing Potion:2');
+    expect(screen.queryByTestId('use-ability-modal')).not.toBeInTheDocument();
   });
 
   // ── Command an Animal (#223) ─────────────────────────────────────────────

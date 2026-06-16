@@ -8,7 +8,9 @@ import HuntPreyModal from '../encounter/HuntPreyModal';
 import SkillActionModal from '../encounter/SkillActionModal';
 import MoveActionSheet from '../encounter/MoveActionSheet';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
+import UseConsumableModal from '../inventory/UseConsumableModal';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
+import { consumableMeta } from '../../utils/consumables';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -24,6 +26,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [skillAction, setSkillAction] = useState(null); // a skillActions.js entry while its modal is open, else null
   const [companionOpen, setCompanionOpen] = useState(false); // Command an Animal → companion command surface
   const [moveAction, setMoveAction] = useState(null); // { moveType } while the movement sheet is open (#415), else null
+  const [consumable, setConsumable] = useState(null); // { item, actionCost } while the consumable sheet is open (#428), else null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -107,6 +110,14 @@ const ActionsList = ({ character, characterColor }) => {
       // charges actions per the Stride/Step accounting.
       if (encounterMode && item.controller === 'move') {
         setMoveAction({ moveType: item.moveType || 'stride' });
+        return;
+      }
+
+      // Consumables (#428) — potions/elixirs route to their own resolve flow.
+      // `cost` is the tile's effective cost (drink + draw/retrieve); pass it as the
+      // action cost so a stowed Elixir spends 3, a held one 1. Self-use this slice.
+      if (consumableMeta(item)) {
+        setConsumable({ item, actionCost: encounterMode ? cost : 0 });
         return;
       }
 
@@ -293,6 +304,17 @@ const ActionsList = ({ character, characterColor }) => {
           moveType={moveAction.moveType}
           themeColor={themeColor}
           onClose={() => setMoveAction(null)}
+        />
+      )}
+
+      {consumable && (
+        <UseConsumableModal
+          isOpen
+          onClose={() => setConsumable(null)}
+          item={consumable.item}
+          character={character}
+          themeColor={themeColor}
+          actionCost={consumable.actionCost}
         />
       )}
     </div>

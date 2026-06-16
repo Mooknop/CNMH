@@ -3,9 +3,9 @@
 // catalog (buildActionCatalog tiles) + live turn state + focus. Answers "what
 // can I do right now?" with ≤4 affordable, usable actions ranked by context.
 //
-// Ported from the design prototype's suggestNow(). Enemy-focused only this slice:
-// the support/healing dimension (ally targeting, consumables-as-tiles + their
-// draw/retrieve action cost, low-HP boost) is a separate follow-up slice. Spells
+// Ported from the design prototype's suggestNow(). Self-support landed in #428
+// (consumables-as-tiles + their draw/retrieve cost surface here, and a low-HP
+// boost floats healing to the top); ally targeting is still a follow-up. Spells
 // aren't catalog tiles (the grid has a "Cast a Spell" launcher), so they don't
 // surface here — consistent with the grid.
 
@@ -28,15 +28,21 @@ export function usable(tile, hasFocus) {
  * @param {Object} opts
  * @param {number} opts.actionsLeft      actions remaining this turn
  * @param {boolean} opts.hasFocus        whether a foe is focused
+ * @param {number} opts.hpRatio          acting PC's HP fraction (0–1); a low value
+ *                                        floats healing to the top (#428)
  * @returns {Array} up to 4 tiles, most relevant first
  */
-export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false } = {}) {
+export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false, hpRatio = 1 } = {}) {
   const live = (tiles || []).filter(
     (t) => affordable(t, actionsLeft) && usable(t, hasFocus)
   );
 
+  const hurt = hpRatio < 0.6;
+
   const score = (t) => {
     let s = 0;
+    // Hurt → surface healing first, regardless of foe focus (#428).
+    if (hurt && t.heals) s += 9;
     if (hasFocus) {
       // A foe is targeted → offense first.
       if (t.origin === 'strike') s += 10;
