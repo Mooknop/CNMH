@@ -13,6 +13,7 @@ import {
   BASIC_ACTIONS_OFFENSIVE,
   BASIC_ACTIONS_DEFENSIVE,
   BASIC_ACTIONS_MOVEMENT,
+  BASIC_ENCOUNTER_FREE_ACTIONS,
 } from '../../../data/encounterActions';
 import { formatModifier } from '../../../utils/CharacterUtils';
 
@@ -65,20 +66,23 @@ const tileNeedsTarget = (item, cat) =>
   (cat === 'attack' || item.targetDefense != null) ? item.requiresTarget !== false : false;
 
 let uid = 0;
-const makeTile = (item, cat, originType) => {
+// costOverride: 'reaction' | 'free' for the Reactions & Free group (#424); those
+// tiles skip the numeric cost-group clamp and never gate on a focused foe.
+const makeTile = (item, cat, originType, costOverride) => {
   uid += 1;
-  const cost = baseCost(item);
+  const isRf = costOverride === 'reaction' || costOverride === 'free';
+  const cost = isRf ? costOverride : baseCost(item);
   return {
     id: `${originType}-${item.name}-${uid}`,
     name: item.name,
-    origin: originType, // 'strike' | 'custom' | 'basic' — lets suggestNow score strikes (#413)
+    origin: originType, // 'strike' | 'custom' | 'basic' | 'reaction' | 'free' — lets suggestNow score strikes (#413)
     cost,
-    costGroup: String(Math.min(Math.max(cost, 1), 3)),
+    costGroup: isRf ? 'rf' : String(Math.min(Math.max(cost, 1), 3)),
     cat,
     traits: item.traits || [],
     type: 'action',
     requiresTarget: item.requiresTarget,
-    needsTarget: tileNeedsTarget(item, cat),
+    needsTarget: isRf ? false : tileNeedsTarget(item, cat),
     variableActionCount: item.variableActionCount,
     inactive: item.active === false,
     statLine: statLineFor(item, cat),
@@ -89,11 +93,13 @@ const makeTile = (item, cat, originType) => {
 /**
  * Build the flat tile catalog for the action grid.
  * @param {Object}  input
- * @param {Array}   input.actions  - character/feat/item actions (useCharacter().actions)
- * @param {Array}   input.strikes  - resolved strikes (useCharacter().strikes)
+ * @param {Array}   input.actions      - character/feat/item actions (useCharacter().actions)
+ * @param {Array}   input.strikes      - resolved strikes (useCharacter().strikes)
+ * @param {Array}   input.reactions    - reactions (useCharacter().reactions)
+ * @param {Array}   input.freeActions  - free actions (useCharacter().freeActions)
  * @returns {Array} tile objects
  */
-export function buildActionCatalog({ actions = [], strikes = [] } = {}) {
+export function buildActionCatalog({ actions = [], strikes = [], reactions = [], freeActions = [] } = {}) {
   uid = 0;
   const tiles = [];
 
@@ -110,6 +116,14 @@ export function buildActionCatalog({ actions = [], strikes = [] } = {}) {
     const cat = a.traits?.includes('Attack') ? 'attack' : 'move';
     tiles.push(makeTile(a, cat, 'basic'));
   });
+
+  // Reactions & Free (#424) — one cost group ('rf'), filterable by their own
+  // category when one applies. Free includes the character/feat/item free actions
+  // plus the basic encounter free actions (Delay, Release, …).
+  reactions.forEach((r) => tiles.push(makeTile(r, catForCustomAction(r), 'reaction', 'reaction')));
+  [...freeActions, ...BASIC_ENCOUNTER_FREE_ACTIONS].forEach((f) =>
+    tiles.push(makeTile(f, catForCustomAction(f), 'free', 'free'))
+  );
 
   return tiles;
 }

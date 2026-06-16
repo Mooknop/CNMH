@@ -28,10 +28,11 @@ const COST_GROUPS = [
   { key: '1', label: '1 Action' },
   { key: '2', label: '2 Actions' },
   { key: '3', label: '3 Actions' },
+  { key: 'rf', label: 'Reactions & Free' },
 ];
 
 const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
-  const { actions, strikes, flags, thaumaturge } = useCharacter(character);
+  const { actions, strikes, reactions, freeActions, flags, thaumaturge } = useCharacter(character);
   const { focusEnemy } = useFocusTarget(character.id);
   const { turnState } = useTurnState(character.id);
   const hasFocus = !!focusEnemy;
@@ -46,8 +47,8 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
     onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost);
 
   const tiles = useMemo(
-    () => buildActionCatalog({ actions, strikes }),
-    [actions, strikes]
+    () => buildActionCatalog({ actions, strikes, reactions, freeActions }),
+    [actions, strikes, reactions, freeActions]
   );
 
   const chips = useMemo(() => {
