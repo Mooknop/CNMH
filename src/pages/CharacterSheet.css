@@ -473,32 +473,10 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* TurnTrackerPanel dark overrides */
-.cs-content .ttp-status {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--shell-text-primary);
-}
-
+/* TurnTrackerPanel dark overrides (status/order-strip moved to the Command Sheet) */
 .cs-content .ttp-controls {
   background: rgba(255, 255, 255, 0.03);
   border-color: var(--shell-border);
-}
-
-.cs-content .ttp-entry {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--shell-border);
-  color: var(--shell-text-secondary);
-}
-
-.cs-content .ttp-entry--current {
-  background: var(--accent-tint, rgba(192, 68, 14, 0.14));
-  border-color: var(--accent-outline, var(--color-theme));
-  color: var(--shell-text-primary);
-}
-
-.cs-content .ttp-entry--enemy {
-  background: rgba(255, 152, 0, 0.08);
-  border-color: rgba(255, 152, 0, 0.25);
 }
 
 /* ── Bottom navigation rail ──────────────────────────────── */

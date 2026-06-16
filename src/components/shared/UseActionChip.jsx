@@ -6,7 +6,7 @@ import './UseActionChip.css';
  * Unified encounter-mode action chip. Merges the PF2e action-cost symbol with
  * the action verb (Use / Cast / Hold) into one tappable control.
  *
- * Replaces btn-encounter-use across ActionCardList, StrikesList, and SpellCard.
+ * Replaces btn-encounter-use across ActionCardList and SpellCard.
  *
  * @param {number|string} cost         - 1 | 2 | 3 | 'reaction' | 'free'
  * @param {string}        verb         - 'Use' | 'Cast' (default 'Use')

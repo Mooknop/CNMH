@@ -496,7 +496,7 @@ export const ChainControl = ({ value, onChange, idPrefix }) => {
 // and re-emit ONE canonical encoding that every downstream consumer already
 // normalizes identically:
 //   1|2|3   -> actionCount: <n>
-//             (strikeUtils parseInt, actionUtils, ActionCardList, StrikesList)
+//             (strikeUtils parseInt, actionUtils, ActionCardList)
 //   Variable-> variableActionCount:{min,max} + actionCount:"<min> to <max>"
 //             (char strikes/actions read variableActionCount; the feat-strike
 //              path in strikeUtils only derives a range from a STRING

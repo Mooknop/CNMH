@@ -164,8 +164,8 @@ describe('variantsToForm / variantsFromForm (#215)', () => {
 });
 
 // The canonical cost re-emit changes the stored key but must NOT change what a
-// player sees. Compare the consumer-rendered action descriptor (StrikesList /
-// ActionCardList both resolve via this same precedence) plus every non-cost
+// player sees. Compare the consumer-rendered action descriptor (ActionCardList
+// resolves via this same precedence) plus every non-cost
 // field, for every real bundled strike.
 const COST_KEYS = ['action', 'actionCount', 'variableActionCount', 'actions'];
 const stripCost = (o) => {

@@ -6,125 +6,11 @@
   background: var(--surface-card, var(--dark-card-bg));
 }
 
-/* ── Status bar — accent-left banner ────────────────────── */
-.ttp-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  background: var(--accent-tint);
-  border-left: 3px solid var(--accent-outline);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  font-size: var(--text-sm);
-  margin-bottom: var(--space-3);
-  min-height: 40px;
-}
-
-.ttp-status--setup {
-  background: rgba(196, 154, 46, 0.12);
-  border-left-color: var(--gold-mid);
-}
-
-.ttp-round {
-  font-family: var(--font-display);
-  font-weight: 700;
-  color: var(--color-theme, var(--ember-base));
-  white-space: nowrap;
-  font-size: var(--text-md);
-}
-
-.ttp-elapsed {
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  color: var(--shell-text-secondary);
-}
-
-.ttp-current-actor {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--shell-text-primary);
-}
-
-/* ── Initiative strip — horizontal scrolling chip rail ──── */
-.ttp-order {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px;
-}
-
-.ttp-order::-webkit-scrollbar {
-  height: 4px;
-}
-
-.ttp-order::-webkit-scrollbar-thumb {
-  background: var(--shell-border-strong);
-  border-radius: 2px;
-}
-
-.ttp-entry {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--shell-border);
-  border-radius: var(--radius-md);
-  background: var(--surface-inset);
-  min-width: 52px;
-  text-align: center;
-}
-
-.ttp-entry--current {
-  border-color: var(--accent-outline);
-  background: var(--accent-tint);
-  box-shadow: var(--accent-glow);
-}
-
-.ttp-entry--enemy {
-  background: rgba(217, 122, 43, 0.1);
-  border-color: rgba(217, 122, 43, 0.4);
-}
-
-.ttp-entry--enemy.ttp-entry--current {
-  background: rgba(217, 122, 43, 0.18);
-  border-color: rgba(217, 122, 43, 0.7);
-}
-
-.ttp-entry-name {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 72px;
-  color: var(--shell-text-secondary);
-}
-
-.ttp-entry--current .ttp-entry-name {
-  color: var(--shell-text-primary);
-}
-
-.ttp-entry-init {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-md);
-  color: var(--shell-text-secondary);
-  line-height: 1;
-}
-
-.ttp-entry--current .ttp-entry-init {
-  color: var(--accent-text);
-}
-
-/* ── Action economy — large circular pips ───────────────── */
+/* ── Turn controls ──────────────────────────────────────── */
+/* The action pips, MAP chip, reaction icon, Submit button, status bar, and
+   initiative order strip moved to the Command Sheet (ActionDial / InitiativeStrip,
+   `cmd-*` classes) in #411. What remains here is the residual panel: movement,
+   shield/aura, turn-start offers, and sustain prompts. */
 .ttp-controls {
   display: flex;
   align-items: center;
@@ -134,82 +20,6 @@
   border-radius: var(--radius-md);
   border: 1px solid var(--shell-border);
   flex-wrap: wrap;
-}
-
-.ttp-pips {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-/* Large circular action pips — ≥34px */
-.ttp-pip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid var(--shell-border-strong);
-  background: transparent;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: var(--text-base);
-  color: var(--shell-text-tertiary);
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.ttp-pip--filled {
-  background: var(--accent-tint);
-  border-color: var(--accent-outline);
-  color: var(--accent-text);
-}
-
-.ttp-over-budget {
-  font-size: var(--text-xs);
-  color: var(--color-danger);
-  font-weight: 700;
-}
-
-/* Multiple Attack Penalty chip — appears after the first attack each turn */
-.ttp-map-chip {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-danger);
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  padding: 1px 8px;
-  white-space: nowrap;
-}
-
-/* Reaction icon — gold to distinguish from action pips */
-.ttp-reaction {
-  font-size: var(--text-xl);
-  line-height: 1;
-  cursor: default;
-  transition: opacity 0.15s;
-}
-
-.ttp-reaction--unavailable {
-  opacity: 0.25;
-  color: var(--shell-text-tertiary);
-}
-
-.ttp-reaction--available {
-  opacity: 1;
-  color: var(--gold-mid);
-}
-
-.ttp-reaction--spent {
-  opacity: 0.35;
-  text-decoration: line-through;
-  color: var(--shell-text-tertiary);
-}
-
-.ttp-submit {
-  margin-left: auto;
 }
 
 /* Live Stride distance readout (feet walked / Speed) shown while stepping. */
@@ -435,43 +245,9 @@
   border-color: var(--shell-border);
 }
 
-.cs-content .ttp-status {
-  background: var(--accent-tint);
-  border-left-color: var(--color-theme, var(--ember-base));
-  color: var(--shell-text-primary);
-}
-
-.cs-content .ttp-status--setup {
-  background: rgba(196, 154, 46, 0.1);
-  border-left-color: var(--gold-mid);
-  color: var(--gold-light);
-}
-
-.cs-content .ttp-round {
-  color: var(--color-theme, var(--ember-base));
-}
-
 .cs-content .ttp-controls {
   background: rgba(255, 255, 255, 0.03);
   border-color: var(--shell-border);
-}
-
-.cs-content .ttp-pip {
-  border-color: var(--shell-border-strong);
-}
-
-.cs-content .ttp-pip--filled {
-  background: var(--accent-tint);
-  border-color: var(--accent-outline);
-  color: var(--accent-text);
-}
-
-.cs-content .ttp-over-budget {
-  color: var(--color-danger);
-}
-
-.cs-content .ttp-reaction--available {
-  color: var(--gold-mid);
 }
 
 .cs-content .ttp-shield--raised {
