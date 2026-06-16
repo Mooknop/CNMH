@@ -19,6 +19,17 @@ describe('buildActionCatalog', () => {
     expect(names).toContain('Stride');     // movement basic
   });
 
+  it('tags each tile with its origin (strike / custom / basic) for ranking', () => {
+    const tiles = buildActionCatalog({
+      actions: [{ name: 'Custom Action', actionCount: 1, traits: [] }],
+      strikes: [{ name: 'Longsword', type: 'melee', actionCount: 1, attackMod: 9, damage: '1d8+4' }],
+    });
+    const byName = Object.fromEntries(tiles.map((t) => [t.name, t]));
+    expect(byName.Longsword.origin).toBe('strike');
+    expect(byName['Custom Action'].origin).toBe('custom');
+    expect(byName.Stride.origin).toBe('basic');
+  });
+
   it('groups by cost into 1/2/3, clamping higher costs into group 3', () => {
     const tiles = buildActionCatalog({
       actions: [
