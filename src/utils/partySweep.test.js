@@ -58,6 +58,18 @@ describe('performEncounterSweep', () => {
     expect(sendUpdate).toHaveBeenCalledWith('thorn', 'effects', expect.any(Array));
   });
 
+  it('drops catalog-flagged encounterScoped effects (eld-charged) with no expireAt', () => {
+    store['thorn:effects'] = [
+      { id: 'c1', effectId: 'eld-charged' }, // no expireAt, but flagged encounterScoped (#275)
+      { id: 'm1', effectId: 'mage-armor' },  // manual, kept
+    ];
+
+    performEncounterSweep({ character: CHAR, getState, sendUpdate });
+
+    expect(store['thorn:effects'].map((e) => e.id)).toEqual(['m1']);
+    expect(sendUpdate).toHaveBeenCalledWith('thorn', 'effects', expect.any(Array));
+  });
+
   it('leaves effects untouched when none are encounter-scoped', () => {
     store['thorn:effects'] = [{ id: 'e2', effectId: 'mage-armor' }];
     const { changed } = performEncounterSweep({ character: CHAR, getState, sendUpdate });

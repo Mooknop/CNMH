@@ -75,6 +75,33 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
 }
 
 /**
+ * True when an active effect should be dropped at encounter end: either it's
+ * turn/round-bound (carries an `expireAt`) or its catalog entry is flagged
+ * `encounterScoped` (e.g. eld-charged, #275). Used by both encounter-end sweeps.
+ *
+ * @param {object} effect           - an active-effects entry ({ effectId, expireAt?, … })
+ * @param {Array}  [catalog]        - defaults to PF2E_EFFECTS
+ */
+export function isEncounterScopedEffect(effect, catalog = PF2E_EFFECTS) {
+  if (!effect) return false;
+  if (effect.expireAt) return true;
+  return !!catalog.find((d) => d.id === effect.effectId)?.encounterScoped;
+}
+
+/**
+ * True when an active effect declares it should be cleared by the given incoming
+ * damage type (catalog `clearOnDamageType`, e.g. eld-charged → 'electricity', #275).
+ *
+ * @param {object} effect           - an active-effects entry
+ * @param {string} type             - the damage type being applied
+ * @param {Array}  [catalog]        - defaults to PF2E_EFFECTS
+ */
+export function clearsOnDamageType(effect, type, catalog = PF2E_EFFECTS) {
+  if (!effect || !type) return false;
+  return catalog.find((d) => d.id === effect.effectId)?.clearOnDamageType === type;
+}
+
+/**
  * Combine a ConditionUtils penalty object with an EffectUtils bonus object
  * into a single net-modifier object suitable for PenaltyDisplay.
  */

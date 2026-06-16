@@ -4,7 +4,11 @@ import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useMinions } from '../../hooks/useMinions';
 import { useSummons } from '../../hooks/useSummons';
+import { useEncounter } from '../../hooks/useEncounter';
 import { minionRoster } from '../../utils/minionUtils';
+import { DAMAGE_TYPES } from '../../utils/damage';
+import { clearsOnDamageType } from '../../utils/EffectUtils';
+import PF2E_EFFECTS from '../../data/pf2eEffects';
 import './AdjustHpModal.css';
 
 const EMPTY_HP = { current: 0, max: 0, temp: 0, dying: 0, wounded: 0, doomed: 0 };
@@ -28,9 +32,11 @@ const parseSelection = (value) => {
 
 const AdjustHpModal = ({ isOpen, onClose }) => {
   const { characters } = useContent();
+  const { appendLog } = useEncounter();
   const [selectedId, setSelectedId] = useState('');
   const [amount, setAmount] = useState('');
   const [mode, setMode] = useState('heal');
+  const [damageType, setDamageType] = useState('');
 
   const sel = parseSelection(selectedId);
 
@@ -41,6 +47,7 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
     `cnmh_hp_${charId}`,
     () => ({ ...EMPTY_HP }),
   );
+  const [charEffects, setCharEffects] = useSyncedState(`cnmh_effects_${charId}`, () => []);
   const minionOwner = sel?.kind === 'minion' ? sel.ownerId : 'none';
   const { getHp, damage, heal } = useMinions(minionOwner);
   const { summons, getHp: getSummonHp, setHp: setSummonHp } = useSummons();
@@ -84,12 +91,33 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
         };
       }
       setCharHp(newHp);
+
+      // Typed damage clears effects that end on it — e.g. eld-charged on
+      // electricity (#275). Applies even when temp HP absorbs the hit (taking
+      // the damage is what counts).
+      if (mode === 'damage' && damageType) {
+        const cur = charEffects || [];
+        const cleared = cur.filter((e) => clearsOnDamageType(e, damageType));
+        if (cleared.length) {
+          setCharEffects(cur.filter((e) => !clearsOnDamageType(e, damageType)));
+          const charName = (characters || []).find((c) => c.id === sel.id)?.name || 'Character';
+          const names = cleared
+            .map((e) => PF2E_EFFECTS.find((d) => d.id === e.effectId)?.name || e.effectId)
+            .join(', ');
+          appendLog({
+            type: 'action',
+            charId: sel.id,
+            text: `${charName} took ${damageType} damage — ${names} cleared`,
+          });
+        }
+      }
     }
     setAmount('');
   };
 
   const handleClose = () => {
     setAmount('');
+    setDamageType('');
     onClose();
   };
 
@@ -157,12 +185,29 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                 type="button"
                 className={`adj-hp-mode-btn${mode === 'heal' ? ' is-active' : ''}`}
                 data-mode="heal"
-                onClick={() => setMode('heal')}
+                onClick={() => { setMode('heal'); setDamageType(''); }}
                 aria-pressed={mode === 'heal'}
               >
                 Heal
               </button>
             </div>
+
+            {mode === 'damage' && (
+              <div className="adj-hp-dtype-row">
+                <label htmlFor="adj-hp-dtype">Damage type</label>
+                <select
+                  id="adj-hp-dtype"
+                  value={damageType}
+                  onChange={(e) => setDamageType(e.target.value)}
+                  aria-label="damage type"
+                >
+                  <option value="">— untyped —</option>
+                  {DAMAGE_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="adj-hp-entry">
               <input

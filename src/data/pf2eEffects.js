@@ -224,6 +224,10 @@ const PF2E_EFFECTS = [
     name: 'Charged (Eld)',
     description: 'Off-guard against attacks that deal electricity damage and −2 to saves against electric effects. Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.',
     modifiers: [],
+    // Rules triggers automated via catalog flags (#275): the encounter-end
+    // sweeps drop it, and applying electricity damage in the GM HP flow clears it.
+    encounterScoped: true,
+    clearOnDamageType: 'electricity',
   },
   {
     id: 'eld-shrouded',
