@@ -2,10 +2,10 @@ import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
-import { boundariesCrossedBy, isExpired } from '../utils/expiry';
+import { boundariesCrossedBy } from '../utils/expiry';
 import { isEncounterScopedEffect } from '../utils/EffectUtils';
 import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
-import { hymnFastHealingFor, applyHymnFastHealing } from '../utils/hymnHealing';
+import { sweepExpiredOnBoundaries, applyTurnStartFastHealing } from '../utils/turnEffects';
 import {
   defaultEncounter,
   makePcEntry,
@@ -83,118 +83,7 @@ export const useEncounter = () => {
     return { ...resolvedEncounter, order: [...(resolvedEncounter.order || []), ...summons] };
   }, [resolvedEncounter, summons]);
 
-  // Sweep expired effects and granted-actions from every PC's keys. Called
-  // before the encounter state advances so we can compute the correct boundary set.
-  const runExpirySweep = useCallback(
-    (cur, nextTurnIdx, nextRound) => {
-      if (cur.foundryCombatId) return;
-      const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
-      for (const entry of cur.order || []) {
-        if (entry.kind !== 'pc' || !entry.charId) continue;
-
-        // --- effects sweep ---
-        const effectsKey = `cnmh_effects_${entry.charId}`;
-        let effects;
-        try {
-          effects = JSON.parse(window.localStorage.getItem(effectsKey)) || [];
-        } catch {
-          effects = [];
-        }
-        const nextEffects = effects.filter((e) => !isExpired(e.expireAt, boundaries));
-        if (nextEffects.length !== effects.length) {
-          window.localStorage.setItem(effectsKey, JSON.stringify(nextEffects));
-          sendUpdate(entry.charId, 'effects', nextEffects);
-          effects
-            .filter((e) => isExpired(e.expireAt, boundaries))
-            .forEach((e) => {
-              const def = (effectCatalog || []).find((d) => d.id === e.effectId);
-              const name = def?.name || e.effectId;
-              setEncounter((c) => {
-                const base = c || defaultEncounter();
-                return {
-                  ...base,
-                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired on ${entry.name}` })],
-                };
-              });
-            });
-        }
-
-        // --- granted actions sweep ---
-        const grantsKey = `cnmh_grantedactions_${entry.charId}`;
-        let grants;
-        try {
-          grants = JSON.parse(window.localStorage.getItem(grantsKey)) || [];
-        } catch {
-          grants = [];
-        }
-        const nextGrants = grants.filter((g) => !isExpired(g.expireAt, boundaries));
-        if (nextGrants.length !== grants.length) {
-          window.localStorage.setItem(grantsKey, JSON.stringify(nextGrants));
-          sendUpdate(entry.charId, 'grantedactions', nextGrants);
-          grants
-            .filter((g) => isExpired(g.expireAt, boundaries))
-            .forEach((g) => {
-              const name = g.action?.name || g.source || 'Granted action';
-              setEncounter((c) => {
-                const base = c || defaultEncounter();
-                return {
-                  ...base,
-                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired for ${entry.name}` })],
-                };
-              });
-            });
-        }
-      }
-    },
-    [sendUpdate, setEncounter, effectCatalog]
-  );
-
-  // Fast-healing tick (#226, Hymn of Healing). At the start of a PC's turn, apply
-  // the strongest Hymn fast healing aimed at them from any caster's sustain
-  // ledger (read live — ending the sustain stops the healing, no separate
-  // effect). Single writer (the client driving turn advance), like the sweep.
-  const runFastHealingTick = useCallback(
-    (cur, startIdx) => {
-      if (cur.foundryCombatId) return;
-      const startEntry = (cur.order || [])[startIdx];
-      if (!startEntry || startEntry.kind !== 'pc' || !startEntry.charId) return;
-      const targetId = startEntry.charId;
-
-      // Strongest fast-healing amount aimed at this entry across all casters.
-      let amount = 0;
-      let maxHp;
-      for (const entry of cur.order || []) {
-        if (entry.kind !== 'pc' || !entry.charId) continue;
-        const sustains = getState(entry.charId, 'sustains') || [];
-        const fh = hymnFastHealingFor(sustains, targetId);
-        if (fh > amount) {
-          amount = fh;
-          maxHp = sustains.find((s) => s.heal?.targetId === targetId)?.heal?.targetMaxHp;
-        }
-      }
-      if (amount <= 0) return;
-
-      const healed = applyHymnFastHealing({
-        getState, sendUpdate,
-        target: { id: targetId, name: startEntry.name, maxHp },
-        amount,
-      });
-      if (healed > 0) {
-        setEncounter((c) => {
-          const base = c || defaultEncounter();
-          return {
-            ...base,
-            log: [...(base.log || []), makeLogEntry({
-              type: 'system',
-              text: `Fast healing ${amount} (Hymn of Healing) — ${startEntry.name} +${healed} HP`,
-            })],
-          };
-        });
-      }
-    },
-    [getState, sendUpdate, setEncounter]
-  );
-
+  // Defined ahead of the sweep/tick callbacks below so they can log through it.
   const appendLog = useCallback(
     (entry) =>
       setEncounter((cur) => ({
@@ -202,6 +91,34 @@ export const useEncounter = () => {
         log: [...((cur && cur.log) || []), makeLogEntry(entry)],
       })),
     [setEncounter]
+  );
+
+  // App-driven turn advance only (#443): a Foundry-linked combat never calls
+  // advanceTurn (the bridge writes round/currentTurnIndex back), so these
+  // early-return and useEncounterTurnEffects handles the bridge transition off
+  // the same shared helpers. The two paths are mutually exclusive on
+  // foundryCombatId, so there's no double expiry / double heal.
+  const runExpirySweep = useCallback(
+    (cur, nextTurnIdx, nextRound) => {
+      if (cur.foundryCombatId) return;
+      const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
+      sweepExpiredOnBoundaries({
+        order: cur.order, boundaries, sendUpdate, appendLog, effectCatalog,
+      });
+    },
+    [sendUpdate, appendLog, effectCatalog]
+  );
+
+  // Hymn of Healing fast healing (#226) at the start of the incoming turn.
+  const runFastHealingTick = useCallback(
+    (cur, startIdx) => {
+      if (cur.foundryCombatId) return;
+      applyTurnStartFastHealing({
+        order: cur.order, startEntry: (cur.order || [])[startIdx],
+        getState, sendUpdate, appendLog,
+      });
+    },
+    [getState, sendUpdate, appendLog]
   );
 
   const startEncounter = useCallback(
