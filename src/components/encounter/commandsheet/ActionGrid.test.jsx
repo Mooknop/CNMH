@@ -8,6 +8,16 @@ vi.mock('../../../hooks/useCharacter', () => ({
   useCharacter: (...args) => mockUseCharacter(...args),
 }));
 
+const mockUseFocusTarget = vi.fn();
+vi.mock('../../../hooks/useFocusTarget', () => ({
+  useFocusTarget: (...args) => mockUseFocusTarget(...args),
+}));
+
+const mockUseTurnState = vi.fn();
+vi.mock('../../../hooks/useTurnState', () => ({
+  useTurnState: (...args) => mockUseTurnState(...args),
+}));
+
 vi.mock('../../actions/ThaumaturgeExploitsDisplay', () => ({
   default: () => <div data-testid="thaumaturge-exploits" />,
 }));
@@ -25,6 +35,8 @@ const character = { id: 'p1', name: 'Hero' };
 describe('ActionGrid', () => {
   beforeEach(() => {
     mockUseCharacter.mockReturnValue(baseModel());
+    mockUseFocusTarget.mockReturnValue({ focusEnemy: null });
+    mockUseTurnState.mockReturnValue({ turnState: { actionsSpent: 0 } });
   });
 
   it('renders cost-group headers and a strike tile', () => {
@@ -97,5 +109,36 @@ describe('ActionGrid', () => {
     const tile = screen.getByRole('button', { name: 'Longsword' });
     expect(within(tile).getByText('Tap a foe to target')).toBeInTheDocument();
     expect(within(tile).queryByText('+9 · 1d8+4')).not.toBeInTheDocument();
+  });
+
+  // ── Right Now shortlist (#413) ─────────────────────────────────────────────
+
+  it('renders the Right Now shortlist in encounter mode', () => {
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    const region = screen.getByRole('region', { name: 'Right now' });
+    // With no focus the shortlist surfaces move/defense basics (e.g. Stride).
+    expect(within(region).getByRole('button', { name: 'Stride' })).toBeInTheDocument();
+  });
+
+  it('hides the Right Now shortlist out of encounter', () => {
+    render(<ActionGrid character={character} onUse={vi.fn()} />);
+    expect(screen.queryByRole('region', { name: 'Right now' })).not.toBeInTheDocument();
+  });
+
+  it('hides the Right Now shortlist when no actions remain', () => {
+    mockUseTurnState.mockReturnValue({ turnState: { actionsSpent: 3 } });
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    expect(screen.queryByRole('region', { name: 'Right now' })).not.toBeInTheDocument();
+  });
+
+  it('with a focused foe, a strike surfaces in Right Now and tapping it calls onUse', () => {
+    mockUseFocusTarget.mockReturnValue({
+      focusEnemy: { entryId: 'e1', kind: 'enemy', name: 'Goblin' },
+    });
+    const onUse = vi.fn();
+    render(<ActionGrid character={character} encounterMode onUse={onUse} />);
+    const region = screen.getByRole('region', { name: 'Right now' });
+    fireEvent.click(within(region).getByRole('button', { name: 'Longsword' }));
+    expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longsword' }), 1);
   });
 });

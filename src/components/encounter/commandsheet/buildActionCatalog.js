@@ -71,6 +71,7 @@ const makeTile = (item, cat, originType) => {
   return {
     id: `${originType}-${item.name}-${uid}`,
     name: item.name,
+    origin: originType, // 'strike' | 'custom' | 'basic' — lets suggestNow score strikes (#413)
     cost,
     costGroup: String(Math.min(Math.max(cost, 1), 3)),
     cat,

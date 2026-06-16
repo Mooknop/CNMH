@@ -9,7 +9,9 @@ import ActionTile from './ActionTile';
 import ThaumaturgeExploitsDisplay from '../../actions/ThaumaturgeExploitsDisplay';
 import { useCharacter } from '../../../hooks/useCharacter';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
+import { useTurnState } from '../../../hooks/useTurnState';
 import { buildActionCatalog, filterTiles, categoriesPresent } from './buildActionCatalog';
+import { suggestNow } from './suggestNow';
 import './ActionGrid.css';
 
 const CAT_LABEL = {
@@ -31,6 +33,7 @@ const COST_GROUPS = [
 const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
   const { actions, strikes, flags, thaumaturge } = useCharacter(character);
   const { focusEnemy } = useFocusTarget(character.id);
+  const { turnState } = useTurnState(character.id);
   const hasFocus = !!focusEnemy;
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
@@ -54,6 +57,15 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
 
   const visible = useMemo(() => filterTiles(tiles, { cat, query }), [tiles, cat, query]);
 
+  // "Right Now" shortlist (#413) — the most likely next actions, one tap away.
+  // Ranked over the full catalog (not the filtered view) against the live budget
+  // + focus, so it stays useful no matter which chip/search is active.
+  const actionsLeft = Math.max(0, 3 - (turnState?.actionsSpent ?? 0));
+  const suggestions = useMemo(
+    () => (encounterMode ? suggestNow(tiles, { actionsLeft, hasFocus }) : []),
+    [encounterMode, tiles, actionsLeft, hasFocus]
+  );
+
   const showMagicLauncher = !!onMagicOpen && (cat === 'all' || cat === 'magic');
   const showGroups = cat !== 'magic';
 
@@ -61,6 +73,26 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
     <div className="cmd-grid-root">
       {flags?.isThaumaturge && (
         <ThaumaturgeExploitsDisplay thaumaturge={thaumaturge} themeColor={themeColor} />
+      )}
+
+      {suggestions.length > 0 && (
+        <section className="cmd-now" aria-label="Right now">
+          <h3 className="cmd-now-head">
+            <span className="cmd-now-dot" aria-hidden="true" />
+            Right Now
+          </h3>
+          <div className="cmd-now-grid">
+            {suggestions.map((tile) => (
+              <ActionTile
+                key={`now-${tile.id}`}
+                tile={tile}
+                onSelect={handleTileSelect}
+                encounterMode={encounterMode}
+                hasFocus={hasFocus}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       <div className="cmd-controls">
