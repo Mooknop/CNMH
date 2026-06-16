@@ -1,0 +1,8 @@
+/* Stance chip (#224) — order-strip badge while a stance is active.
+   Relocated from TurnTrackerPanel.css (#425). */
+.ttp-stance-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  white-space: nowrap;
+  vertical-align: middle;
+}

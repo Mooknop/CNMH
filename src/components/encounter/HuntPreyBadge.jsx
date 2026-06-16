@@ -1,6 +1,7 @@
 import React from 'react';
 import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { preyMatches } from '../../utils/huntPrey';
+import './HuntPreyBadge.css';
 
 /**
  * Prey badge for one enemy in the order strip (#223). The designation lives on

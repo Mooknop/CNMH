@@ -113,7 +113,7 @@ describe('TurnTrackerPanel', () => {
     act(() => getDrv().beginRound1());
   };
 
-  it('Move button reveals action choices and requests reachable squares', () => {
+  it('no longer renders a Move button — movement is a grid tile now (#415)', () => {
     let drv;
     render(
       <>
@@ -122,120 +122,7 @@ describe('TurnTrackerPanel', () => {
       </>
     );
     startMyTurn(() => drv);
-
-    fireEvent.click(screen.getByLabelText('Move'));
-    expect(screen.getByLabelText('move-stride')).toBeInTheDocument();
-
-    vi.spyOn(Date, 'now').mockReturnValue(999);
-    fireEvent.click(screen.getByLabelText('move-stride'));
-    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'movereq', { moveType: 'stride', ts: 999 });
-    Date.now.mockRestore();
-  });
-
-  // Drive one eastward step through the real movement hook: feed reachable
-  // neighbours, tap the East arrow, then confirm the move completed. Date.now is
-  // mocked to a constant so every reqTs correlates.
-  const stepEast = (setOpts, setDone) => {
-    act(() => setOpts({
-      reqTs: 555,
-      origin: { col: 5, row: 5 },
-      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-      blocked: [],
-      speed: 25,
-    }));
-    fireEvent.click(screen.getByLabelText('Step east'));
-    act(() => setDone({ reqTs: 555, newPosition: { col: 6, row: 5 }, feetMoved: 5 }));
-  };
-
-  it('Stride charges 1 action per Speed of accumulated stepping', () => {
-    let drv, tsDriver, setOpts, setDone;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
-        <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv);
-
-    vi.spyOn(Date, 'now').mockReturnValue(555);
-    fireEvent.click(screen.getByLabelText('Move'));
-    fireEvent.click(screen.getByLabelText('move-stride'));
-
-    // First step spends the Stride action; the confirm carries no action cost
-    // (accounting happens on move-done, not on confirm).
-    stepEast(setOpts, setDone);
-    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
-      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 555,
-    }));
-    expect(tsDriver.turnState.actionsSpent).toBe(1);
-    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('5/25 ft');
-
-    // Steps 2–5 stay within the 25ft Speed → still 1 action.
-    for (let i = 0; i < 4; i++) stepEast(setOpts, setDone);
-    expect(tsDriver.turnState.actionsSpent).toBe(1);
-    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('25/25 ft');
-
-    // Step 6 crosses Speed → a 2nd Stride action, distance resets to this step.
-    stepEast(setOpts, setDone);
-    expect(tsDriver.turnState.actionsSpent).toBe(2);
-    expect(screen.getByLabelText('Stride distance')).toHaveTextContent('5/25 ft');
-
-    Date.now.mockRestore();
-  });
-
-  it('Step spends exactly one action and closes the pad', () => {
-    let drv, tsDriver, setOpts, setDone;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <TurnDriver charId="Pellias" onReady={(t) => (tsDriver = t)} />
-        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
-        <SyncDriver skey="cnmh_movedone_Pellias" onReady={(s) => (setDone = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv);
-
-    vi.spyOn(Date, 'now').mockReturnValue(555);
-    fireEvent.click(screen.getByLabelText('Move'));
-    fireEvent.click(screen.getByLabelText('move-step'));
-    stepEast(setOpts, setDone);
-
-    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'moveconfirm', expect.objectContaining({
-      moveType: 'step', ts: 555,
-    }));
-    expect(tsDriver.turnState.actionsSpent).toBe(1);
-    // Single dedicated action → pad closes, Move button returns.
-    expect(screen.getByLabelText('Move')).toBeInTheDocument();
-    Date.now.mockRestore();
-  });
-
-  it('ignores stale option sets from a previous request', () => {
-    let drv, setOpts;
-    render(
-      <>
-        <EncounterDriver onReady={(e) => (drv = e)} />
-        <SyncDriver skey="cnmh_moveopts_Pellias" onReady={(s) => (setOpts = s)} />
-        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
-      </>
-    );
-    startMyTurn(() => drv);
-
-    vi.spyOn(Date, 'now').mockReturnValue(100);
-    fireEvent.click(screen.getByLabelText('Move'));
-    fireEvent.click(screen.getByLabelText('move-stride'));
-
-    // A stale response (different reqTs) must not open the grid.
-    act(() => setOpts({
-      reqTs: 1, origin: { col: 5, row: 5 },
-      reachable: [{ col: 6, row: 5, feet: 5, terrain: 'normal' }],
-      blocked: [], speed: 25,
-    }));
-    expect(screen.queryByLabelText('Step east')).toBeNull();
-    Date.now.mockRestore();
+    expect(screen.queryByLabelText('Move')).toBeNull();
   });
 
   // ── Raise a Shield (Slice 1) ────────────────────────────────────────────

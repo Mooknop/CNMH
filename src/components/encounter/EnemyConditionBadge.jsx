@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { getCondition } from '../../data/pf2eConditions';
+import './EnemyConditionBadge.css';
 
 /**
  * Conditions applied to an enemy by player skill actions (#260) — frightened

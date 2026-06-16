@@ -1,0 +1,9 @@
+/* Harrow omen chip (#227) — order-strip badge.
+   Relocated from TurnTrackerPanel.css (#425). */
+.ttp-omen-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  color: var(--gold-mid);
+  white-space: nowrap;
+  vertical-align: middle;
+}

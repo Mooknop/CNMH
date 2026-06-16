@@ -1,6 +1,7 @@
 import React from 'react';
 import { useOmen } from '../../hooks/useOmen';
 import { suitById } from '../../utils/harrow';
+import './OmenChip.css';
 
 /**
  * Active-omen badge for one PC in the order strip (#227). A child component

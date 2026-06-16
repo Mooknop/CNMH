@@ -2,6 +2,47 @@
   border-radius: var(--radius-lg);
 }
 
+/* "Use" affordances on granted/skill action rows (#425 — relocated from
+   TurnTrackerPanel.css; only ActionsList uses these). */
+.action-use-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}
+
+.btn-encounter-use {
+  font-size: var(--text-xs);
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  border: 1px solid var(--accent-outline);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-encounter-use:hover {
+  background: var(--accent-tint-hover);
+}
+
+.action-use-variable {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.action-use-variable select {
+  font-size: var(--text-xs);
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-inset);
+  color: var(--shell-text-primary);
+}
+
 .actions-list h2 {
   margin-top: 0;
   margin-bottom: var(--space-4);

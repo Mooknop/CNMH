@@ -1,5 +1,6 @@
 import React from 'react';
 import { useStance } from '../../hooks/useStance';
+import './StanceChip.css';
 
 /**
  * Stance badge for one PC in the order strip (#224). A child component (the

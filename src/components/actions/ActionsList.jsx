@@ -8,6 +8,7 @@ import UseAbilityModal from '../encounter/UseAbilityModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import HuntPreyModal from '../encounter/HuntPreyModal';
 import SkillActionModal from '../encounter/SkillActionModal';
+import MoveActionSheet from '../encounter/MoveActionSheet';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -25,6 +26,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [huntPreyCost, setHuntPreyCost] = useState(null); // action cost when the Hunt Prey modal is open, else null
   const [skillAction, setSkillAction] = useState(null); // a skillActions.js entry while its modal is open, else null
   const [companionOpen, setCompanionOpen] = useState(false); // Command an Animal → companion command surface
+  const [moveAction, setMoveAction] = useState(null); // { moveType } while the movement sheet is open (#415), else null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -100,6 +102,14 @@ const ActionsList = ({ character, characterColor }) => {
             text: `${character.name} entered ${item.name}`,
           });
         }
+        return;
+      }
+
+      // Movement actions (Stride/Step) drive the Foundry token, not a roll (#415).
+      // Open the movement sheet, which mounts useTokenMovement + MoveGridPicker and
+      // charges actions per the Stride/Step accounting.
+      if (encounterMode && item.controller === 'move') {
+        setMoveAction({ moveType: item.moveType || 'stride' });
         return;
       }
 
@@ -316,6 +326,15 @@ const ActionsList = ({ character, characterColor }) => {
           animalCompanion={character.animalCompanion}
           character={character}
           characterColor={themeColor}
+        />
+      )}
+
+      {moveAction && (
+        <MoveActionSheet
+          character={character}
+          moveType={moveAction.moveType}
+          themeColor={themeColor}
+          onClose={() => setMoveAction(null)}
         />
       )}
     </div>

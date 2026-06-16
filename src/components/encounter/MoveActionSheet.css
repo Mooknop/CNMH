@@ -1,0 +1,23 @@
+/* src/components/encounter/MoveActionSheet.css
+   Movement resolver bottom-sheet body (#415). Tokens from pf2e-tokens.css. */
+
+.mas-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.mas-dist {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-secondary);
+  white-space: nowrap;
+}
+
+.mas-status {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}

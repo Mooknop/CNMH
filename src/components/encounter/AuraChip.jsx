@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAura } from '../../hooks/useAura';
+import './AuraChip.css';
 
 /**
  * Kinetic-aura badge for one PC in the order strip (#228). A child component
