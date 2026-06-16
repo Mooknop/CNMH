@@ -14,8 +14,12 @@ vi.mock('../../contexts/SessionContext', () => ({
 const mockEffectCatalog = [
   { id: 'drakeheart-mutagen', name: 'Drakeheart Mutagen', description: '+2 item bonus to AC.' },
 ];
+const mockCharacters = [
+  { id: 'c1', name: 'Blu', maxHp: 30, feats: [] },
+  { id: 'a1', name: 'Vex', maxHp: 24, feats: [] },
+];
 vi.mock('../../contexts/ContentContext', () => ({
-  useContent: () => ({ effects: mockEffectCatalog }),
+  useContent: () => ({ effects: mockEffectCatalog, characters: mockCharacters }),
 }));
 
 vi.mock('../../contexts/GameDateContext', () => ({
@@ -83,6 +87,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   consumedState = {};
   mockEncounter = { active: false, phase: 'idle', order: [] };
+  vi.spyOn(consumables, 'applyHealing').mockImplementation(() => {});
   vi.spyOn(consumables, 'applyHealingConsumable').mockImplementation(() => {});
   vi.spyOn(consumables, 'applyEffectConsumable').mockImplementation(() => {});
 });
@@ -158,6 +163,45 @@ describe('healing consumable', () => {
   it('shows the Godless Healing hint for a feat-holder', () => {
     renderModal({ character: { ...character, feats: [{ name: 'Godless Healing' }] } });
     expect(screen.getByText(/Godless Healing/)).toBeInTheDocument();
+  });
+});
+
+// ── Administering to a focused ally (#434) ───────────────────────────────────
+
+describe('administer to a focused ally', () => {
+  it('heals the ally (their maxHp), titles + logs as administered, not self', () => {
+    renderModal({ defaultTargetId: 'a1' });
+    expect(screen.getByRole('heading', { level: 2, name: 'Drink Minor Healing Potion → Vex' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '6' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink' }));
+
+    expect(consumables.applyHealing).toHaveBeenCalledWith(expect.objectContaining({
+      target: { id: 'a1', name: 'Vex', maxHp: 24 },
+      amount: 6,
+      logText: 'Blu administered Minor Healing Potion to Vex — healed 6 HP',
+    }));
+    // Self-use path is not taken when administering.
+    expect(consumables.applyHealingConsumable).not.toHaveBeenCalled();
+    // The item still comes from the user's overlay.
+    expect(consumedState).toEqual({ 'Minor Healing Potion': 1 });
+  });
+
+  it('falls back to self when the target id is the user', () => {
+    renderModal({ defaultTargetId: 'c1' });
+    fireEvent.change(screen.getByLabelText('hp healed'), { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink' }));
+    expect(consumables.applyHealingConsumable).toHaveBeenCalled();
+    expect(consumables.applyHealing).not.toHaveBeenCalled();
+  });
+
+  it('ignores defaultTargetId for an effect consumable (effects are self-use)', () => {
+    renderModal({ item: mutagen, defaultTargetId: 'a1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Drink' }));
+    expect(consumables.applyEffectConsumable).toHaveBeenCalledWith(expect.objectContaining({
+      user: { id: 'c1', name: 'Blu', maxHp: 30 },
+    }));
+    expect(consumables.applyHealing).not.toHaveBeenCalled();
   });
 });
 

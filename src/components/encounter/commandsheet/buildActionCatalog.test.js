@@ -181,11 +181,15 @@ describe('consumables (#428)', () => {
     expect(tiles.some((t) => t.kind === 'consumable')).toBe(false);
   });
 
-  it('consumables stay self-use (supports false) until #430', () => {
+  it('healing consumables are ally-supportable; effect consumables are not (#434)', () => {
     const tiles = buildActionCatalog({
-      inventory: [{ name: 'Potion', state: 'held1', consumable: { kind: 'healing' } }],
+      inventory: [
+        { name: 'Potion', state: 'held1', consumable: { kind: 'healing' } },
+        { name: 'Mutagen', state: 'held1', consumable: { kind: 'effect' } },
+      ],
     });
-    expect(tiles.find((t) => t.name === 'Potion').supports).toBe(false);
+    expect(tiles.find((t) => t.name === 'Potion').supports).toBe(true);
+    expect(tiles.find((t) => t.name === 'Mutagen').supports).toBe(false);
   });
 });
 
@@ -201,5 +205,12 @@ describe('ally-support flag (#429)', () => {
     expect(byName['Battle Medicine'].supports).toBe(true);
     expect(byName['Lay on Hands'].supports).toBe(true);
     expect(byName.Stride.supports).toBe(false);
+  });
+
+  it('does not treat "Treat Wounds" as encounter support (#433 — exploration-only)', () => {
+    const tiles = buildActionCatalog({
+      actions: [{ name: 'Treat Wounds', actionCount: 1, traits: ['Manipulate'] }],
+    });
+    expect(tiles.find((t) => t.name === 'Treat Wounds').supports).toBe(false);
   });
 });

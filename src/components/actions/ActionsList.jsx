@@ -319,6 +319,7 @@ const ActionsList = ({ character, characterColor }) => {
           character={character}
           themeColor={themeColor}
           actionCost={consumable.actionCost}
+          defaultTargetId={focusAlly?.charId}
         />
       )}
     </div>

@@ -194,4 +194,27 @@ describe('ActionGrid', () => {
     expect(tiles.length).toBeGreaterThan(0);
     tiles.forEach((t) => expect(t).not.toBeDisabled());
   });
+
+  // A healing consumable is ally-supportable too (#434), so it's reach-gated like Battle Medicine.
+  const withHealingPotion = () => baseModel({
+    inventory: [{ name: 'Healing Potion', state: 'worn', consumable: { kind: 'healing' } }],
+  });
+
+  it('hard-disables a healing consumable when the focused ally is out of reach (#434)', () => {
+    mockUseCharacter.mockReturnValue(withHealingPotion());
+    mockUseFocusTarget.mockReturnValue(focusedAlly);
+    mockUseAdjacency.mockReturnValue({ inReach: () => false });
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    const tile = screen.getByRole('button', { name: 'Healing Potion' });
+    expect(tile).toBeDisabled();
+    expect(within(tile).getByText('Move closer to target')).toBeInTheDocument();
+  });
+
+  it('keeps the healing consumable enabled when the focused ally is in reach (#434)', () => {
+    mockUseCharacter.mockReturnValue(withHealingPotion());
+    mockUseFocusTarget.mockReturnValue(focusedAlly);
+    mockUseAdjacency.mockReturnValue({ inReach: () => true });
+    render(<ActionGrid character={character} encounterMode onUse={vi.fn()} />);
+    screen.getAllByRole('button', { name: 'Healing Potion' }).forEach((t) => expect(t).not.toBeDisabled());
+  });
 });
