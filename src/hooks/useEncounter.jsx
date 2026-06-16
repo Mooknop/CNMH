@@ -346,6 +346,16 @@ export const useEncounter = () => {
             sendUpdate(entry.charId, 'effects', keptFx);
           }
         }
+
+        // A pending Lingering Composition extension (#226-B) that never got
+        // spent on a composition shouldn't survive into the next encounter.
+        const lingKey = `cnmh_lingering_${entry.charId}`;
+        let ling;
+        try { ling = JSON.parse(window.localStorage.getItem(lingKey)); } catch { ling = null; }
+        if (ling) {
+          window.localStorage.setItem(lingKey, JSON.stringify(null));
+          sendUpdate(entry.charId, 'lingering', null);
+        }
       }
       setEncounter(() => defaultEncounter());
       // Recall Knowledge persists across encounters by creatureKey (#333) — only

@@ -157,6 +157,37 @@ describe('applyAbility — minute durations (#225)', () => {
   });
 });
 
+describe('applyAbility — effectDurationOverride (Lingering Composition #226-B)', () => {
+  it('replaces the authored duration so expireAt reflects the override rounds', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'inspire-courage', applyTo: 'self', duration: { until: 'rounds', rounds: 1 } }],
+    });
+    applyAbility({ ...args, effectDurationOverride: { until: 'rounds', rounds: 3 } });
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    // encounter.round defaults to 1; resolveExpireAt for rounds:3 → round 1+3 = 4.
+    expect(call[2][0].expireAt).toEqual({ round: 4, entryId: 'cbt-pellias', boundary: 'turn-end' });
+  });
+
+  it('leaves the authored 1-round duration intact without the override', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'inspire-courage', applyTo: 'self', duration: { until: 'rounds', rounds: 1 } }],
+    });
+    applyAbility(args);
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    // Native 1 round → round 1+1 = 2.
+    expect(call[2][0].expireAt).toEqual({ round: 2, entryId: 'cbt-pellias', boundary: 'turn-end' });
+  });
+
+  it('does not override an effect that has no authored duration', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'inspire-courage', applyTo: 'self' }],
+    });
+    applyAbility({ ...args, effectDurationOverride: { until: 'rounds', rounds: 3 } });
+    const call = sendUpdate.mock.calls.find(([, key]) => key === 'effects');
+    expect(call[2][0].expireAt).toBeUndefined();
+  });
+});
+
 describe('applyRiderChoice (#225)', () => {
   const ability = { name: 'Electric Surge' };
   const makeRiderArgs = (option, currentEffects = []) => {
