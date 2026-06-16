@@ -30,9 +30,10 @@ export function usable(tile, hasFocus) {
  * @param {boolean} opts.hasFocus        whether a foe is focused
  * @param {number} opts.hpRatio          acting PC's HP fraction (0–1); a low value
  *                                        floats healing to the top (#428)
+ * @param {boolean} opts.allyFocused      an ally is focused → surface support (#429)
  * @returns {Array} up to 4 tiles, most relevant first
  */
-export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false, hpRatio = 1 } = {}) {
+export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false, hpRatio = 1, allyFocused = false } = {}) {
   const live = (tiles || []).filter(
     (t) => affordable(t, actionsLeft) && usable(t, hasFocus)
   );
@@ -41,8 +42,10 @@ export function suggestNow(tiles, { actionsLeft = 0, hasFocus = false, hpRatio =
 
   const score = (t) => {
     let s = 0;
-    // Hurt → surface healing first, regardless of foe focus (#428).
+    // Hurt → surface own healing first (#428). Ally focused → surface support
+    // (healing items + Battle Medicine etc.) for that ally (#429).
     if (hurt && t.heals) s += 9;
+    if (allyFocused && (t.heals || t.supports)) s += 9;
     if (hasFocus) {
       // A foe is targeted → offense first.
       if (t.origin === 'strike') s += 10;

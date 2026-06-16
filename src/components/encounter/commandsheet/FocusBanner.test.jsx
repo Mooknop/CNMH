@@ -156,4 +156,30 @@ describe('FocusBanner', () => {
     expect(screen.getByText('Goblin')).toBeInTheDocument();
     expect(screen.getByText(/No stat block/)).toBeInTheDocument();
   });
+
+  // ── Ally focus (#429) ──────────────────────────────────────────────────────
+  it('shows an ally banner with HP + conditions when an ally is focused', () => {
+    let drv, setFocus, setHp, setConds;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_hp_Ashka" onReady={(s) => (setHp = s)} />
+        <SyncDriver skey="cnmh_conditions_Ashka" onReady={(s) => (setConds = s)} />
+        <FocusBanner charId="Pellias" />
+      </>
+    );
+    act(() => drv.startEncounter([pellias, { id: 'Ashka', name: 'Ashka' }]));
+    const ashka = drv.encounter.order.find((e) => e.name === 'Ashka');
+    act(() => setHp(12));
+    act(() => setConds([{ id: 'frightened', value: 1 }]));
+    act(() => setFocus(ashka.entryId));
+
+    const banner = screen.getByRole('region', { name: 'Focused ally: Ashka' });
+    expect(banner).toHaveTextContent('Ashka');
+    expect(banner).toHaveTextContent('12');
+    expect(banner).toHaveTextContent(/Frightened 1/);
+    // Not the enemy stat-line banner.
+    expect(screen.queryByText('RK DC')).toBeNull();
+  });
 });

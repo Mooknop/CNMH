@@ -122,15 +122,20 @@ describe('InitiativeStrip', () => {
     expect(focus.val).toBeNull();
   });
 
-  it('does not make PC entries focus-clickable', () => {
-    let drv;
+  it('makes PC entries focus-clickable too — focusing an ally (#429)', () => {
+    let drv, focus;
     render(
       <>
         <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (focus = s)} />
         <InitiativeStrip charId="Pellias" />
       </>
     );
     startWithEnemy(() => drv);
-    expect(screen.queryByRole('button', { name: 'Focus Pellias' })).toBeNull();
+    const pellias = drv.encounter.order.find((e) => e.name === 'Pellias');
+    const btn = screen.getByRole('button', { name: 'Focus Pellias' });
+    fireEvent.click(btn);
+    expect(focus.val).toBe(pellias.entryId);
+    expect(screen.getByRole('button', { name: 'Focus Pellias' })).toHaveAttribute('aria-pressed', 'true');
   });
 });

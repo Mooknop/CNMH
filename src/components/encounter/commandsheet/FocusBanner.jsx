@@ -1,14 +1,15 @@
 // src/components/encounter/commandsheet/FocusBanner.jsx
-// Command Sheet focus banner (#411). The persistent target context: the focused
-// foe's AC / save DCs / Perception DC / Recall-Knowledge DC / weaknesses. Drives
-// what the grid adapts to. Visibility follows the same Recall Knowledge reveal
-// gating as BestiaryEntry — a player only sees what they've learned — and the
-// whole banner degrades gracefully (rows hide, "no stat block" fallback) when a
-// foe hasn't been captured.
+// Command Sheet focus banner (#411, #429). The persistent target context:
+// - a focused **foe** shows AC / save DCs / Perception / RK DC / weaknesses,
+//   reveal-gated by Recall Knowledge (degrades gracefully when uncaptured);
+// - a focused **ally** (#429) shows their HP + conditions — the support context
+//   the grid targets healing/Battle Medicine against.
 import React from 'react';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
+import { useSyncedState } from '../../../hooks/useSyncedState';
 import { defenseDC } from '../../../utils/defense';
+import { hydrateConditions } from '../../../data/pf2eConditions';
 import {
   rkKeyFor,
   recallKnowledgeDC,
@@ -22,8 +23,39 @@ import './FocusBanner.css';
 const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
 
 const FocusBanner = ({ charId }) => {
-  const { focusEnemy } = useFocusTarget(charId);
+  const { focusEnemy, focusAlly } = useFocusTarget(charId);
   const { recordFor } = useRecallKnowledge();
+  // Ally state (read unconditionally to keep hook order stable; keys are inert
+  // when no ally is focused).
+  const allyId = focusAlly?.charId || 'none';
+  const [allyHp] = useSyncedState(`cnmh_hp_${allyId}`, null);
+  const [allyConditionsRaw] = useSyncedState(`cnmh_conditions_${allyId}`, []);
+
+  // Focused ally (#429) — support context.
+  if (focusAlly) {
+    const conditions = hydrateConditions(allyConditionsRaw || []);
+    return (
+      <div className="cmd-focus cmd-focus--ally" role="region" aria-label={`Focused ally: ${focusAlly.name}`}>
+        <span className="cmd-focus-name">{focusAlly.name}</span>
+        {typeof allyHp === 'number' && (
+          <div className="cmd-focus-stats">
+            <span className="cmd-focus-stat">
+              <span className="cmd-focus-stat-label">HP</span>
+              <span className="cmd-focus-stat-value">{allyHp}</span>
+            </span>
+          </div>
+        )}
+        {conditions.length > 0 && (
+          <div className="cmd-focus-weak">
+            <span className="cmd-focus-stat-label">Conditions</span>
+            <span className="cmd-focus-weak-values">
+              {conditions.map((c) => `${c.name}${c.value ? ` ${c.value}` : ''}`).join(', ')}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (!focusEnemy) return null;
 

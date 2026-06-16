@@ -79,6 +79,13 @@ describe('suggestNow', () => {
     expect(out[0].name).toBe('Stride'); // move +8 beats an unboosted item (0)
   });
 
+  // ── Ally focus → surface support (#429) ───────────────────────────────────
+  it('ally focused → support actions surface first', () => {
+    const battleMed = tile({ name: 'Battle Medicine', cat: 'skill', supports: true });
+    const out = suggestNow([move, defense, battleMed], { actionsLeft: 3, hasFocus: false, allyFocused: true });
+    expect(out[0].name).toBe('Battle Medicine'); // supports +9 outranks move +8
+  });
+
   it('a stowed healing potion is unaffordable at 2 actions (drink 1 + retrieve 2 = 3)', () => {
     const tiles = buildActionCatalog({
       inventory: [{ name: 'Elixir of Life', state: 'stowed', consumable: { kind: 'healing' } }],
