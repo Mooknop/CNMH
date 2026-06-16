@@ -10,12 +10,16 @@ import { useState, useCallback, useMemo } from 'react';
 // Self is excluded by default (you attack others); pass includeSelf for buffs
 // that can target the caster.
 //
+// `defaultTargetId` pre-selects one entry on mount (#412) — used to seed the
+// focused foe so focus → resolve is one tap. An id that isn't selectable is
+// harmlessly dropped by the validTargets filter below.
+//
 // @param {string} charId  - the acting character (used to identify "self")
 // @param {Array}  order   - encounter.order entries [{ entryId, kind, name, charId? }]
-// @param {{ includeSelf?: boolean }} [opts]
+// @param {{ includeSelf?: boolean, defaultTargetId?: string|null }} [opts]
 export const useTargeting = (charId, order = [], opts = {}) => {
-  const { includeSelf = false } = opts;
-  const [targets, setTargets] = useState([]);
+  const { includeSelf = false, defaultTargetId = null } = opts;
+  const [targets, setTargets] = useState(() => (defaultTargetId ? [defaultTargetId] : []));
 
   const selectable = useMemo(
     () =>

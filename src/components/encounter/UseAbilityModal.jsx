@@ -13,6 +13,7 @@ import { useGameDate } from '../../contexts/GameDateContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
+import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
@@ -163,8 +164,16 @@ const UseAbilityModal = ({
 
   const order = encounter?.order || [];
 
+  // Pre-select the focused foe (#412) for offensive abilities so focus → resolve
+  // is one tap. Gate on the ability's shape (targets a defense / Attack trait) so
+  // self-buffs and no-target abilities don't auto-pick an enemy.
+  const { focusEnemy } = useFocusTarget(character?.id || '');
+  const offensiveShape = !!(ability && (ability.targetDefense != null || ability.traits?.includes('Attack')));
   const { targets, selectable, isTargeted, toggleTarget } =
-    useTargeting(character?.id || '', order, { includeSelf: true });
+    useTargeting(character?.id || '', order, {
+      includeSelf: true,
+      defaultTargetId: offensiveShape ? (focusEnemy?.entryId || null) : null,
+    });
 
   if (!ability || !character) return null;
 
@@ -992,6 +1001,7 @@ const UseAbilityModal = ({
       title={`${verb}: ${ability.name}`}
       themeColor={themeColor}
       maxWidth="560px"
+      placement="bottom"
       highZ
     >
       {/* Ability summary */}

@@ -12,18 +12,6 @@ vi.mock('../../actions/ThaumaturgeExploitsDisplay', () => ({
   default: () => <div data-testid="thaumaturge-exploits" />,
 }));
 
-// Real ActionDetailModal is heavy; stub it to a simple marker that exposes the
-// item name and a Use button wired to onUse.
-vi.mock('../ActionDetailModal', () => ({
-  default: ({ item, isOpen, onUse }) =>
-    isOpen ? (
-      <div data-testid="action-detail-modal">
-        <span>{item.name}</span>
-        <button onClick={() => onUse?.(item, item.actionCount || 1)}>detail-use</button>
-      </div>
-    ) : null,
-}));
-
 const baseModel = (overrides = {}) => ({
   actions: [],
   strikes: [{ name: 'Longsword', type: 'melee', actionCount: 1, attackMod: 9, damage: '1d8+4' }],
@@ -71,13 +59,12 @@ describe('ActionGrid', () => {
     expect(screen.getByText('No actions match.')).toBeInTheDocument();
   });
 
-  it('tapping a tile opens the detail modal and Use routes to onUse', () => {
+  it('tapping a tile calls onUse directly with the raw action + cost (no detail modal)', () => {
     const onUse = vi.fn();
     render(<ActionGrid character={character} encounterMode onUse={onUse} />);
     fireEvent.click(screen.getByRole('button', { name: 'Longsword' }));
-    const modal = screen.getByTestId('action-detail-modal');
-    fireEvent.click(within(modal).getByText('detail-use'));
     expect(onUse).toHaveBeenCalledWith(expect.objectContaining({ name: 'Longsword' }), 1);
+    expect(screen.queryByTestId('action-detail-modal')).not.toBeInTheDocument();
   });
 
   it('shows the Magic launcher only when onMagicOpen is provided', () => {

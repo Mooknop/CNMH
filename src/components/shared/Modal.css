@@ -144,6 +144,28 @@
   color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.28));
 }
 
+/* ---------- Bottom slide-up sheet (Command Sheet resolvers, #412) ---------- */
+.modal-overlay--bottom {
+  align-items: flex-end;
+  padding: 0;
+}
+.modal-container--bottom {
+  width: 100%;
+  max-height: 88vh;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-bottom: none;
+  animation: modal-slide-up 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes modal-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-container--bottom { animation: none; }
+}
+/* Anchored to the bottom — the centered top-margin nudges don't apply. */
+.modal-overlay--bottom .modal-container { margin-top: 0; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .modal-container {

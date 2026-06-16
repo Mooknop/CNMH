@@ -204,6 +204,7 @@ const TreatWoundsModal = ({ isOpen, onClose, mode, healer, themeColor, actionCos
       title={actionName}
       themeColor={themeColor}
       maxWidth="460px"
+      placement="bottom"
     >
       {/* ── Target ─────────────────────────────────────────────────────── */}
       <section className="ct-section">
