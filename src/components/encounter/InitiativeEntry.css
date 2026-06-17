@@ -47,3 +47,21 @@
   color: var(--shell-text-primary, #f5ede4);
   font-size: 1rem;
 }
+
+.initiative-entry-bystander {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gold-light, #e8be56);
+  cursor: pointer;
+}
+
+.initiative-entry-breakdown {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--gold-mid, #c49a2e);
+}

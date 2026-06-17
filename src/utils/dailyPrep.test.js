@@ -64,6 +64,12 @@ describe('performDailyPrep — resets', () => {
     expect(updates.find((u) => u.key === 'huntprey').value).toBeNull();
   });
 
+  it('clears a leftover Harmless Bystander declaration', () => {
+    const { updates, getState, sendUpdate } = makeStubs({ bystander: { active: true, mod: 'deception', ts: 1 } });
+    performDailyPrep({ character, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'bystander').value).toMatchObject({ active: false, mod: null });
+  });
+
   it('drops until-daily-prep effects but keeps the rest', () => {
     const effects = [
       { id: 'a', effectId: 'mystic-armor', expireOnDailyPrep: true },

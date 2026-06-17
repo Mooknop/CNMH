@@ -30,9 +30,24 @@ vi.mock('../../hooks/useSyncedState', () => {
   };
 });
 
+// useCharacter is the data hook InitiativeEntry reads its skill modifiers from.
+// Return null when no character is passed (every pre-existing test) so the
+// Harmless Bystander toggle stays hidden; return the carried modifiers when one
+// is. hasFeat (real, from CharacterUtils) reads the raw character.feats prop.
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: (c) => (c ? { skillModifiers: c.skillModifiers || {} } : null),
+}));
+
 import { __reset, useSyncedState } from '../../hooks/useSyncedState';
 import InitiativeEntry from './InitiativeEntry';
 import { useEncounter } from '../../hooks/useEncounter';
+
+const izzy = {
+  id: 'IzzyUncut',
+  name: 'Izzy',
+  feats: [{ name: 'Harmless Bystander' }],
+  skillModifiers: { deception: 11, perception: 9 },
+};
 
 // Helper component to drive encounter mutations alongside the InitiativeEntry.
 const Driver = ({ onReady }) => {
@@ -137,6 +152,53 @@ describe('InitiativeEntry', () => {
       </>
     );
     expect(screen.queryByText(/\+1 circumstance bonus to initiative/)).not.toBeInTheDocument();
+  });
+
+  it('shows no Harmless Bystander toggle for a character without the feat', () => {
+    let drv;
+    const { rerender } = render(
+      <>
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="Pellias" character={{ id: 'Pellias', name: 'Pellias', feats: [] }} />
+      </>
+    );
+    startWith(drv, [{ id: 'Pellias', name: 'Pellias' }]);
+    rerender(
+      <>
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="Pellias" character={{ id: 'Pellias', name: 'Pellias', feats: [] }} />
+      </>
+    );
+    expect(screen.queryByLabelText('harmless-bystander-toggle')).toBeNull();
+    expect(screen.getByLabelText('initiative-input')).toBeInTheDocument();
+  });
+
+  it('Harmless Bystander toggle computes initiative as d20 + Deception and flags the declaration', () => {
+    let drv;
+    const renderTree = () => (
+      <>
+        <Driver onReady={(e) => (drv = e)} />
+        <InitiativeEntry charId="IzzyUncut" character={izzy} />
+      </>
+    );
+    const { rerender } = render(renderTree());
+    startWith(drv, [{ id: 'IzzyUncut', name: 'Izzy' }]);
+    rerender(renderTree());
+
+    // Toggle on → the total field is replaced by a d20 field.
+    fireEvent.click(screen.getByLabelText('harmless-bystander-toggle'));
+    expect(screen.getByLabelText('d20-input')).toBeInTheDocument();
+    expect(screen.queryByLabelText('initiative-input')).toBeNull();
+
+    // Entering a d20 writes d20 + Deception(11) as the order initiative.
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '14' } });
+    expect(drv.encounter.order[0].initiative).toBe(25);
+    expect(screen.getByLabelText('initiative-breakdown')).toHaveTextContent('d20 14 + Deception +11 = 25');
+
+    // Toggling off restores the total field and clears the computed initiative.
+    fireEvent.click(screen.getByLabelText('harmless-bystander-toggle'));
+    expect(screen.getByLabelText('initiative-input')).toBeInTheDocument();
+    expect(drv.encounter.order[0].initiative).toBeNull();
   });
 
   it('does NOT render once the encounter has moved to in-progress', () => {

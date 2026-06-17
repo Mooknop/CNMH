@@ -9,6 +9,7 @@ import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
 import PersistentChip from '../../components/encounter/PersistentChip';
+import BystanderChip from '../../components/encounter/BystanderChip';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
 import AddSummonModal from '../../components/gm/AddSummonModal';
 import PlayModeControl from '../../components/gm/PlayModeControl';
@@ -137,6 +138,7 @@ const GmEncounter = () => {
                 >
                   <span className="gm-encounter-name">{e.name}</span>
                   <PersistentChip entry={e} />
+                  <BystanderChip entry={e} />
                   {phase === 'in-progress' && e.kind === 'pc' && e.charId && (
                     <GmReactionBadge charId={e.charId} name={e.name} />
                   )}

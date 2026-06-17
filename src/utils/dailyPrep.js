@@ -91,6 +91,13 @@ function computeResets(character, getState) {
     resets.push({ type: 'stance', value: { active: false, name: null, ts: 0 }, label: 'stance' });
   }
 
+  // Harmless Bystander (#226 Slice D) — a leftover declaration is dropped on
+  // rest; encounter end is the usual clear path.
+  const bystander = getState(id, 'bystander');
+  if (bystander?.active) {
+    resets.push({ type: 'bystander', value: { active: false, mod: null, ts: 0 }, label: 'Harmless Bystander' });
+  }
+
   return resets;
 }
 

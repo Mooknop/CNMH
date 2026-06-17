@@ -148,7 +148,7 @@ const CharacterSheet = () => {
               <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
               {encounter?.active ? (
                 <>
-                  <InitiativeEntry charId={character.id} />
+                  <InitiativeEntry charId={character.id} character={character} />
                   <ActionDial charId={character.id} characterName={character.name} character={character} />
                   <InitiativeStrip charId={character.id} />
                   <FocusBanner charId={character.id} />
@@ -159,7 +159,7 @@ const CharacterSheet = () => {
                 <div className="cs-encounter-idle">
                   <span className="cs-encounter-idle-title">No Active Encounter</span>
                   <span className="cs-encounter-idle-sub">Initiative appears here when combat begins</span>
-                  <InitiativeEntry charId={character.id} />
+                  <InitiativeEntry charId={character.id} character={character} />
                 </div>
               )}
               <ActionsList character={character} characterColor={characterColor} />

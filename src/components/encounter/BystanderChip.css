@@ -1,0 +1,8 @@
+/* Harmless Bystander chip (#226 Slice D) — order-strip badge while a PC has
+   declared Harmless Bystander for the encounter. Mirrors StanceChip.css. */
+.ttp-bystander-chip {
+  font-size: var(--text-xs);
+  margin: 0 2px;
+  white-space: nowrap;
+  vertical-align: middle;
+}

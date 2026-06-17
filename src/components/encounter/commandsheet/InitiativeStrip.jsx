@@ -12,6 +12,7 @@ import PersistentChip from '../PersistentChip';
 import AuraChip from '../AuraChip';
 import OmenChip from '../OmenChip';
 import StanceChip from '../StanceChip';
+import BystanderChip from '../BystanderChip';
 import HuntPreyBadge from '../HuntPreyBadge';
 import EnemyConditionBadge from '../EnemyConditionBadge';
 import './InitiativeStrip.css';
@@ -37,6 +38,7 @@ const InitiativeStrip = ({ charId }) => {
       {entry.kind === 'pc' && <AuraChip entry={entry} />}
       {entry.kind === 'pc' && <OmenChip entry={entry} />}
       {entry.kind === 'pc' && <StanceChip entry={entry} />}
+      {entry.kind === 'pc' && <BystanderChip entry={entry} />}
       <PersistentChip entry={entry} viewerCharId={charId} />
       <span className="cmd-init-init">
         {entry.initiative !== null && entry.initiative !== undefined ? entry.initiative : '?'}
