@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useShield } from '../../hooks/useShield';
+import { useContent } from '../../contexts/ContentContext';
+import { spellCatalogMap, resolveFocusSpells } from '../../utils/contentUtils';
 import { matchingReactions, isReactionCost } from '../../utils/reactionTriggers';
 import UseAbilityModal from './UseAbilityModal';
 import ShieldBlockBar from './ShieldBlockBar';
@@ -33,9 +35,21 @@ const ReactionPrompt = ({ character, themeColor }) => {
   const [prompt, setPrompt] = useSyncedState(`cnmh_reactprompt_${charId}`, null);
   const { encounter } = useEncounter();
   const { turnState } = useTurnState(charId);
-  const { reactions, staffSpells, inventory } = useCharacter(character);
+  const { reactions, staffSpells, focusSpells, inventory } = useCharacter(character);
   const { raised, broken } = useShield(charId, inventory);
+  const { spells: catalogSpells } = useContent();
   const [usingReaction, setUsingReaction] = useState(null); // { ability, castSource? }
+
+  // Reaction-cost focus spells (e.g. Counter Performance) ride the same trigger
+  // metadata as staff reactions but live as `focus_spells: [{ spellRef }]` refs,
+  // so resolve them against the spell catalog before matching. Cast from focus
+  // so the focus point is spent by the cast flow.
+  const focusReactions = useMemo(() => {
+    const spellMap = spellCatalogMap(catalogSpells);
+    return resolveFocusSpells(focusSpells || [], spellMap)
+      .filter(isReactionCost)
+      .map((s) => ({ ...s, fromFocus: true, active: true }));
+  }, [focusSpells, catalogSpells]);
 
   // The reaction was spent (via the modal, the block bar, or any other path) —
   // the trigger window is consumed, so clear the synced prompt for good.
@@ -57,7 +71,10 @@ const ReactionPrompt = ({ character, themeColor }) => {
   // Staff spells with a reaction cost ride the same trigger metadata; they
   // carry fromStaff + the held-gated `active` flag from useCharacter.
   const staffReactions = (staffSpells || []).filter(isReactionCost);
-  const matched = matchingReactions([...(reactions || []), ...staffReactions], prompt.eventId)
+  const matched = matchingReactions(
+    [...(reactions || []), ...staffReactions, ...focusReactions],
+    prompt.eventId,
+  )
     // Shield Block is only a live option while the shield is raised (and whole).
     .filter((r) => r.name !== 'Shield Block' || (raised && !broken));
   const available =
@@ -100,12 +117,16 @@ const ReactionPrompt = ({ character, themeColor }) => {
               onClick={() =>
                 setUsingReaction({
                   ability: reaction,
-                  castSource: reaction.fromStaff ? 'staff' : undefined,
+                  castSource: reaction.fromStaff
+                    ? 'staff'
+                    : reaction.fromFocus
+                      ? 'focus'
+                      : undefined,
                 })
               }
               aria-label={`Use ${reaction.name}`}
             >
-              {reaction.fromStaff ? 'Cast ↩' : 'Use ↩'}
+              {reaction.fromStaff || reaction.fromFocus ? 'Cast ↩' : 'Use ↩'}
             </button>
           )}
         </div>
