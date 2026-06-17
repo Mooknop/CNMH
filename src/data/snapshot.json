@@ -6426,6 +6426,7 @@
                 "type": "skill",
                 "skill": "performance",
                 "opposed": true,
+                "skillChoice": true,
                 "successNote": "Applies only if the triggering creature failed their skill check (a critical success applies regardless)."
               },
               "effects": [
