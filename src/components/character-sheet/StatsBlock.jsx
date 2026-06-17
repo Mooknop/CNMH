@@ -395,6 +395,7 @@ const StatsBlock = ({ character, characterColor }) => {
             character={character}
             characterColor={themeColor}
             activeConditions={hydratedConditions}
+            effectBonuses={bonuses}
           />
         );
       default:
