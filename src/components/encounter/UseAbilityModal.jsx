@@ -33,6 +33,8 @@ import { immunityConfigFor } from '../../utils/immunity';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
+import { SKILL_KEYS } from '../../utils/EffectUtils';
+import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
@@ -346,8 +348,24 @@ const UseAbilityModal = ({
   // defense — so it bypasses the defense-driven resolver entirely.
   const isOpposedReaction = ability.roll?.opposed === true;
   const enemyOptions = isOpposedReaction ? order.filter((e) => e.kind === 'enemy') : [];
-  const opposedSkillLabel = rollProfile.skill
-    ? rollProfile.skill.charAt(0).toUpperCase() + rollProfile.skill.slice(1)
+  const opposedSkillLabel = rollProfile.skill ? skillLabel(rollProfile.skill) : null;
+
+  // Skill picker (#445 — Upstage): when the ability authors `roll.skillChoice`,
+  // the player may roll any of the 16 skills (the one the enemy used), not just
+  // the authored default. Precompute each skill's net bonus with the same
+  // condition/effect netting as the live roll by reusing resolveActionRoll with
+  // a skill-overridden ability — no duplicated netting logic. `null` for plain
+  // opposed reactions (Disrupting Performance) so the resolver shows no picker.
+  const hasSkillChoice = isOpposedReaction && ability.roll?.skillChoice === true;
+  const opposedSkillOptions = hasSkillChoice
+    ? SKILL_KEYS.map((skill) => {
+        const p = resolveActionRoll(
+          { ...ability, roll: { ...ability.roll, skill } },
+          character,
+          { conditions: activeConditions || [], effects: activeEffects || [], effectCatalog, mapStep },
+        );
+        return { skill, label: skillLabel(skill), bonus: p.bonus };
+      })
     : null;
 
   // Which defense to show on the resolver (actor-roll only).
@@ -471,7 +489,7 @@ const UseAbilityModal = ({
         type:   'action',
         charId: character.id,
         text:   (res?.degree != null && res?.dc != null)
-          ? `${character.name}'s ${ability.name} vs DC ${res.dc}: ${res.total} → ${degreeLabel}`
+          ? `${character.name}'s ${ability.name}${res.skill ? ` (${res.skill})` : ''} vs DC ${res.dc}: ${res.total} → ${degreeLabel}`
             + (res.enemyName ? ` (${res.enemyName})` : '')
           : `${character.name} ${effectiveVerb} ${ability.name}`,
       });
@@ -1044,6 +1062,8 @@ const UseAbilityModal = ({
       rollBonus={rollProfile.bonus}
       enemyOptions={enemyOptions}
       skillLabel={opposedSkillLabel}
+      skillOptions={opposedSkillOptions}
+      defaultSkill={ability.roll?.skill || 'performance'}
       successNote={ability.roll?.successNote || null}
     />
   ) : null;
