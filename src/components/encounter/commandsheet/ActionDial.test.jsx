@@ -28,7 +28,9 @@ vi.mock('../../../hooks/useSyncedState', () => {
 
 const mockSendUpdate = vi.fn();
 vi.mock('../../../contexts/SessionContext', () => ({
-  useSession: () => ({ sendUpdate: mockSendUpdate }),
+  // getState is read by useEncounter's turn-advance side-effects (effect expiry
+  // + Hymn fast healing) when End Turn calls advanceTurn (#226/#443).
+  useSession: () => ({ sendUpdate: mockSendUpdate, getState: () => [] }),
 }));
 
 import { __reset, useSyncedState } from '../../../hooks/useSyncedState';

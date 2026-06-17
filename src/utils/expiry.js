@@ -14,33 +14,49 @@ import { formatAvailableAt } from './gameTime';
 //   { round: number, entryId?: string, boundary: 'turn-start'|'turn-end'|'round-end' }
 
 /**
- * Compute which turn/round boundaries are crossed when advancing
- * from the current encounter state to (nextTurnIdx, nextRound).
+ * Compute the turn/round boundaries crossed by a transition from a `prev`
+ * encounter snapshot to a `next` one. The outgoing entry is read from
+ * `prev.order[prev.currentTurnIndex]` and the incoming entry from
+ * `next.order[next.currentTurnIndex]` — so it stays correct even when the
+ * Foundry bridge re-sorts the order wholesale between turns (entryIds are
+ * stable, indices are not).
+ *
+ * @param {object} prev - { order, currentTurnIndex, round } before the transition
+ * @param {object} next - { order, currentTurnIndex, round } after the transition
  */
-export function boundariesCrossedBy(encounter, nextTurnIdx, nextRound) {
-  const order = encounter.order || [];
-  const curIdx = encounter.currentTurnIndex ?? 0;
-  const curRound = encounter.round ?? 1;
-  const curEntry = order[curIdx];
-  const nextEntry = order[nextTurnIdx];
+export function boundariesBetween(prev, next) {
+  const outEntry = (prev.order || [])[prev.currentTurnIndex ?? 0];
+  const inEntry  = (next.order || [])[next.currentTurnIndex ?? 0];
+  const r0 = prev.round ?? 1;
+  const r1 = next.round ?? 1;
   const boundaries = [];
 
   // Outgoing entry's turn-end
-  if (curEntry) {
-    boundaries.push({ round: curRound, entryId: curEntry.entryId, boundary: 'turn-end' });
+  if (outEntry) {
+    boundaries.push({ round: r0, entryId: outEntry.entryId, boundary: 'turn-end' });
   }
-
-  // If round wrapped, add round-end for the outgoing round
-  if (nextRound !== curRound) {
-    boundaries.push({ round: curRound, boundary: 'round-end' });
+  // If the round wrapped, add round-end for the outgoing round
+  if (r1 !== r0) {
+    boundaries.push({ round: r0, boundary: 'round-end' });
   }
-
   // Incoming entry's turn-start
-  if (nextEntry) {
-    boundaries.push({ round: nextRound, entryId: nextEntry.entryId, boundary: 'turn-start' });
+  if (inEntry) {
+    boundaries.push({ round: r1, entryId: inEntry.entryId, boundary: 'turn-start' });
   }
 
   return boundaries;
+}
+
+/**
+ * Compute which turn/round boundaries are crossed when advancing the current
+ * encounter to (nextTurnIdx, nextRound). Thin wrapper over boundariesBetween
+ * for the app-driven path, where the order doesn't change across the transition.
+ */
+export function boundariesCrossedBy(encounter, nextTurnIdx, nextRound) {
+  return boundariesBetween(
+    encounter,
+    { order: encounter.order, currentTurnIndex: nextTurnIdx, round: nextRound },
+  );
 }
 
 /**

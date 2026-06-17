@@ -1,0 +1,103 @@
+/* HymnOfHealingModal — bard sustained heal composition (#226) */
+
+.hoh-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hoh-blurb {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  line-height: var(--leading-snug);
+}
+
+.hoh-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hoh-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.hoh-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hoh-target-chip {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.hoh-target-chip:hover:not(:disabled) {
+  border-color: var(--accent-outline);
+}
+
+.hoh-target-chip.is-selected {
+  border-color: var(--accent-outline);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+
+.hoh-target-chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.hoh-confirm-btn {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-outline);
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hoh-confirm-btn:hover:not(:disabled) {
+  background: var(--accent-tint-hover);
+}
+
+.hoh-confirm-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.hoh-result {
+  font-size: var(--text-sm);
+  color: var(--d-succ-fg);
+  background: var(--d-succ-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  text-align: center;
+}
+
+.hoh-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}

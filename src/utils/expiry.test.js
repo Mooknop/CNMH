@@ -1,5 +1,6 @@
 import {
   boundariesCrossedBy,
+  boundariesBetween,
   resolveExpireAt,
   isExpired,
   expiryLabel,
@@ -64,6 +65,42 @@ describe('boundariesCrossedBy', () => {
   it('handles empty order without throwing', () => {
     const enc = encounter(1, 0, []);
     expect(() => boundariesCrossedBy(enc, 0, 1)).not.toThrow();
+  });
+});
+
+// ── boundariesBetween (#443 — Foundry-driven transitions) ─────────────────────
+
+describe('boundariesBetween', () => {
+  const order = [pellias, ashka, goblin];
+
+  it('reads outgoing from prev.order and incoming from next.order', () => {
+    const prev = { order, currentTurnIndex: 0, round: 1 }; // Pellias
+    const next = { order, currentTurnIndex: 1, round: 1 }; // Ashka
+    const bs = boundariesBetween(prev, next);
+    expect(bs).toContainEqual({ round: 1, entryId: 'p1', boundary: 'turn-end' });
+    expect(bs).toContainEqual({ round: 1, entryId: 'p2', boundary: 'turn-start' });
+    expect(bs.some((b) => b.boundary === 'round-end')).toBe(false);
+  });
+
+  it('adds round-end when the round advances', () => {
+    const prev = { order, currentTurnIndex: 2, round: 1 }; // Goblin
+    const next = { order, currentTurnIndex: 0, round: 2 }; // Pellias, round 2
+    const bs = boundariesBetween(prev, next);
+    expect(bs).toContainEqual({ round: 1, boundary: 'round-end' });
+    expect(bs).toContainEqual({ round: 2, entryId: 'p1', boundary: 'turn-start' });
+  });
+
+  it('stays correct when the bridge re-sorts order between turns (entryIds stable)', () => {
+    // Outgoing index points at Pellias in the OLD order; the bridge then
+    // re-sorts so the same index now holds a different entry — the incoming
+    // entry must come from next.order, the outgoing from prev.order.
+    const prevOrder = [pellias, ashka, goblin];
+    const nextOrder = [goblin, pellias, ashka]; // re-sorted
+    const prev = { order: prevOrder, currentTurnIndex: 0, round: 1 }; // Pellias out
+    const next = { order: nextOrder, currentTurnIndex: 2, round: 1 }; // Ashka in
+    const bs = boundariesBetween(prev, next);
+    expect(bs).toContainEqual({ round: 1, entryId: 'p1', boundary: 'turn-end' });   // Pellias from prev
+    expect(bs).toContainEqual({ round: 1, entryId: 'p2', boundary: 'turn-start' }); // Ashka from next
   });
 });
 

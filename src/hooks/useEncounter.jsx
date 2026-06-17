@@ -2,9 +2,10 @@ import { useCallback, useRef, useEffect, useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
-import { boundariesCrossedBy, isExpired } from '../utils/expiry';
+import { boundariesCrossedBy } from '../utils/expiry';
 import { isEncounterScopedEffect } from '../utils/EffectUtils';
 import { pruneEncounterKnowledge } from '../utils/recallKnowledge';
+import { sweepExpiredOnBoundaries, applyTurnStartFastHealing } from '../utils/turnEffects';
 import {
   defaultEncounter,
   makePcEntry,
@@ -48,7 +49,7 @@ export const useEncounter = () => {
   const [, setPersistentMap]        = useSyncedState(PERSISTENT_KEY, {});
   const [, setEnemyFx]              = useSyncedState(ENEMY_FX_KEY, {});
   const [summons, setSummons]       = useSyncedState(SUMMONS_KEY, []);
-  const { sendUpdate } = useSession();
+  const { getState, sendUpdate } = useSession();
   const { effects: effectCatalog } = useContent();
 
   // Resolve Foundry actor IDs → CNMH charIds using the GM-maintained actorMap.
@@ -82,72 +83,7 @@ export const useEncounter = () => {
     return { ...resolvedEncounter, order: [...(resolvedEncounter.order || []), ...summons] };
   }, [resolvedEncounter, summons]);
 
-  // Sweep expired effects and granted-actions from every PC's keys. Called
-  // before the encounter state advances so we can compute the correct boundary set.
-  const runExpirySweep = useCallback(
-    (cur, nextTurnIdx, nextRound) => {
-      if (cur.foundryCombatId) return;
-      const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
-      for (const entry of cur.order || []) {
-        if (entry.kind !== 'pc' || !entry.charId) continue;
-
-        // --- effects sweep ---
-        const effectsKey = `cnmh_effects_${entry.charId}`;
-        let effects;
-        try {
-          effects = JSON.parse(window.localStorage.getItem(effectsKey)) || [];
-        } catch {
-          effects = [];
-        }
-        const nextEffects = effects.filter((e) => !isExpired(e.expireAt, boundaries));
-        if (nextEffects.length !== effects.length) {
-          window.localStorage.setItem(effectsKey, JSON.stringify(nextEffects));
-          sendUpdate(entry.charId, 'effects', nextEffects);
-          effects
-            .filter((e) => isExpired(e.expireAt, boundaries))
-            .forEach((e) => {
-              const def = (effectCatalog || []).find((d) => d.id === e.effectId);
-              const name = def?.name || e.effectId;
-              setEncounter((c) => {
-                const base = c || defaultEncounter();
-                return {
-                  ...base,
-                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired on ${entry.name}` })],
-                };
-              });
-            });
-        }
-
-        // --- granted actions sweep ---
-        const grantsKey = `cnmh_grantedactions_${entry.charId}`;
-        let grants;
-        try {
-          grants = JSON.parse(window.localStorage.getItem(grantsKey)) || [];
-        } catch {
-          grants = [];
-        }
-        const nextGrants = grants.filter((g) => !isExpired(g.expireAt, boundaries));
-        if (nextGrants.length !== grants.length) {
-          window.localStorage.setItem(grantsKey, JSON.stringify(nextGrants));
-          sendUpdate(entry.charId, 'grantedactions', nextGrants);
-          grants
-            .filter((g) => isExpired(g.expireAt, boundaries))
-            .forEach((g) => {
-              const name = g.action?.name || g.source || 'Granted action';
-              setEncounter((c) => {
-                const base = c || defaultEncounter();
-                return {
-                  ...base,
-                  log: [...(base.log || []), makeLogEntry({ type: 'system', text: `${name} expired for ${entry.name}` })],
-                };
-              });
-            });
-        }
-      }
-    },
-    [sendUpdate, setEncounter, effectCatalog]
-  );
-
+  // Defined ahead of the sweep/tick callbacks below so they can log through it.
   const appendLog = useCallback(
     (entry) =>
       setEncounter((cur) => ({
@@ -155,6 +91,34 @@ export const useEncounter = () => {
         log: [...((cur && cur.log) || []), makeLogEntry(entry)],
       })),
     [setEncounter]
+  );
+
+  // App-driven turn advance only (#443): a Foundry-linked combat never calls
+  // advanceTurn (the bridge writes round/currentTurnIndex back), so these
+  // early-return and useEncounterTurnEffects handles the bridge transition off
+  // the same shared helpers. The two paths are mutually exclusive on
+  // foundryCombatId, so there's no double expiry / double heal.
+  const runExpirySweep = useCallback(
+    (cur, nextTurnIdx, nextRound) => {
+      if (cur.foundryCombatId) return;
+      const boundaries = boundariesCrossedBy(cur, nextTurnIdx, nextRound);
+      sweepExpiredOnBoundaries({
+        order: cur.order, boundaries, sendUpdate, appendLog, effectCatalog,
+      });
+    },
+    [sendUpdate, appendLog, effectCatalog]
+  );
+
+  // Hymn of Healing fast healing (#226) at the start of the incoming turn.
+  const runFastHealingTick = useCallback(
+    (cur, startIdx) => {
+      if (cur.foundryCombatId) return;
+      applyTurnStartFastHealing({
+        order: cur.order, startEntry: (cur.order || [])[startIdx],
+        getState, sendUpdate, appendLog,
+      });
+    },
+    [getState, sendUpdate, appendLog]
   );
 
   const startEncounter = useCallback(
@@ -255,6 +219,7 @@ export const useEncounter = () => {
       );
       // Expiry sweep runs before the state update so it reads current encounter
       runExpirySweep(cur, nextIdx, nextRound);
+      runFastHealingTick(cur, nextIdx);
       setEncounter((base) => {
         const b = base || defaultEncounter();
         const next = (b.order || [])[nextIdx];
@@ -275,7 +240,7 @@ export const useEncounter = () => {
         return { ...b, currentTurnIndex: nextIdx, round: nextRound, log };
       });
     },
-    [runExpirySweep, setEncounter]
+    [runExpirySweep, runFastHealingTick, setEncounter]
   );
 
   const beginNextRound = useCallback(
@@ -285,6 +250,7 @@ export const useEncounter = () => {
       const round = (cur.round || 1) + 1;
       // Sweep: treat this as advancing past the last entry to index 0, round+1
       runExpirySweep(cur, 0, round);
+      runFastHealingTick(cur, 0);
       setEncounter((base) => {
         const b = base || defaultEncounter();
         const first = (b.order || [])[0];
@@ -305,7 +271,7 @@ export const useEncounter = () => {
         return { ...b, currentTurnIndex: 0, round, log };
       });
     },
-    [runExpirySweep, setEncounter]
+    [runExpirySweep, runFastHealingTick, setEncounter]
   );
 
   const endEncounter = useCallback(

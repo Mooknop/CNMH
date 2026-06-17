@@ -21,7 +21,7 @@ export const isSustainedSpell = (ability) =>
 // spell isn't asked to be sustained on the very turn it's cast — it lapses only
 // once a later turn passes without a sustain. `spellId`/`castRank` let the GM's
 // Add-summon flow (#261) default a summon's level off the spell's heightening.
-export const makeSustainEntry = ({ ability, round, castRank }) => ({
+export const makeSustainEntry = ({ ability, round, castRank, heal }) => ({
   id:                 newEntryUid(),
   spellId:            ability?.id ?? null,
   spellName:          ability?.name || 'Spell',
@@ -29,6 +29,10 @@ export const makeSustainEntry = ({ ability, round, castRank }) => ({
   registeredRound:    round ?? null,
   lastSustainedRound: round ?? null,
   castRank:           typeof castRank === 'number' ? castRank : null,
+  // Optional per-sustain payload (Hymn of Healing, #226): the heal target +
+  // fast-healing/temp-HP amounts, so the turn-start fast-healing tick and the
+  // Sustain prompt resolve healing straight off the ledger (no separate effect).
+  ...(heal ? { heal } : {}),
   ts:                 Date.now(),
 });
 
@@ -41,14 +45,15 @@ export const makeSustainEntry = ({ ability, round, castRank }) => ({
  * @param {Object}   caster     - { id, name }
  * @param {number}   round      - current encounter round
  * @param {number}   [castRank] - rank the spell was cast at (for summon heightening)
+ * @param {Object}   [heal]     - per-sustain heal payload (Hymn of Healing #226)
  * @param {Function} getState   - (charId, key) => value
  * @param {Function} sendUpdate - (charId, key, value) => void
  * @param {Function} [appendLog]- ({ type, text }) => void
  */
-export function registerSustain({ ability, caster, round, castRank, getState, sendUpdate, appendLog }) {
+export function registerSustain({ ability, caster, round, castRank, heal, getState, sendUpdate, appendLog }) {
   if (!isSustainedSpell(ability) || !caster?.id) return;
   const current = getState(caster.id, 'sustains') || [];
-  const entry = makeSustainEntry({ ability, round, castRank });
+  const entry = makeSustainEntry({ ability, round, castRank, heal });
   const next = [...current, entry];
   writeLocal(`cnmh_sustains_${caster.id}`, next);
   sendUpdate(caster.id, 'sustains', next);

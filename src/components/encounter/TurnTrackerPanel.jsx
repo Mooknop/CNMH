@@ -6,7 +6,9 @@ import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useSustains } from '../../hooks/useSustains';
 import { useSummons } from '../../hooks/useSummons';
+import { useSession } from '../../contexts/SessionContext';
 import { getFreeActions } from '../../utils/actionUtils';
+import { applyHymnTempHp } from '../../utils/hymnHealing';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import './TurnTrackerPanel.css';
@@ -19,6 +21,7 @@ import './TurnTrackerPanel.css';
 const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = null }) => {
   const { encounter, appendLog } = useEncounter();
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
+  const { getState, sendUpdate } = useSession();
 
   // The companion acts on its owner's turn (Command an Animal), so its Multiple
   // Attack Penalty resets when the owner's turn does (#261). Familiars make no
@@ -141,6 +144,18 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     spendActions(1, `Sustain ${s.spellName}`);
     doSustain(s.id, encounter?.round);
     appendLog({ type: 'action', charId, text: `${characterName} sustained ${s.spellName}` });
+
+    // Hymn of Healing (#226): the first time each round it's Sustained, the
+    // target gains temp HP again (take-higher). Fast healing keeps applying on
+    // its own at the target's turn start.
+    if (s.heal?.targetId) {
+      const target = { id: s.heal.targetId, name: s.heal.targetName, maxHp: s.heal.targetMaxHp };
+      applyHymnTempHp({ getState, sendUpdate, target, amount: s.heal.tempHp });
+      appendLog({
+        type: 'system',
+        text: `${s.heal.targetName} gains ${s.heal.tempHp} temporary HP (Hymn of Healing)`,
+      });
+    }
   };
 
   const handleEndSustain = (s) => {
