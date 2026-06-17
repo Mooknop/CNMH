@@ -44,4 +44,21 @@ describe('useMinions', () => {
     // familiar untouched, falls back to its own data max
     expect(result.current.getHp('familiar', 20)).toEqual({ current: 20, max: 20, temp: 0 });
   });
+
+  it('getConditions lazily defaults to an empty list', () => {
+    const { result } = setup();
+    expect(result.current.getConditions('companion')).toEqual([]);
+  });
+
+  it('setConditions stores a role list without disturbing the other role or its hp', () => {
+    const { result } = setup();
+    act(() => result.current.setHp('companion', { current: 30, max: 32, temp: 0 }));
+    act(() => result.current.setConditions('companion', [{ id: 'frightened', value: 2 }]));
+    act(() => result.current.setConditions('familiar', [{ id: 'prone', value: null }]));
+
+    expect(result.current.getConditions('companion')).toEqual([{ id: 'frightened', value: 2 }]);
+    expect(result.current.getConditions('familiar')).toEqual([{ id: 'prone', value: null }]);
+    // companion HP survives the condition writes (merge, not replace)
+    expect(result.current.getHp('companion', 32)).toEqual({ current: 30, max: 32, temp: 0 });
+  });
 });
