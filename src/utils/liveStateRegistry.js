@@ -220,6 +220,28 @@ export const LIVE_STATE_REGISTRY = [
       write: removeAt,
     },
   },
+  {
+    // Companion/familiar HP + conditions (#261/#362), one combined object per
+    // owner keyed by role. Read-only here — HP is remediated on the minion's own
+    // Adjust HP modal and conditions on its sheet; raw JSON for the rare manual fix.
+    type: 'minions', group: 'combat', label: 'Minions', editor: 'json',
+    format: (v) => {
+      const roles = Object.entries(asObject(v));
+      if (!roles.length) return 'none';
+      return roles
+        .map(([role, state]) => {
+          const hp = state?.hp;
+          const conds = asArray(state?.conditions)
+            .map((c) => (c?.value != null ? `${c.id} ${c.value}` : c.id))
+            .filter(Boolean);
+          const parts = [role];
+          if (hp) parts.push(`${hp.current ?? 0}/${hp.max ?? 0}`);
+          if (conds.length) parts.push(conds.join(', '));
+          return parts.join(' ');
+        })
+        .join('; ');
+    },
+  },
 
   // ── Class & spell state ──
   {

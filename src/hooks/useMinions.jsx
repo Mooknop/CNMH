@@ -1,15 +1,17 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 
-// Allied-minion live state (#261) — companion/familiar HP that the owner sheet,
-// the GM HP-adjust modal, and the encounter share. Synced so the GM and players
-// see the same numbers and they survive reload:
-//   cnmh_minions_<ownerId> = { [role]: { hp: { current, max, temp }, flags } }
+// Allied-minion live state (#261) — companion/familiar HP and conditions that the
+// owner sheet, the GM HP-adjust modal, and the encounter share. Synced so the GM
+// and players see the same numbers and they survive reload:
+//   cnmh_minions_<ownerId> = { [role]: { hp: { current, max, temp }, conditions: [{ id, value }], flags } }
 // Roles are the slugs from minionUtils (each PC has at most one of each). State
 // is lazy: until something writes, HP reads back the max authored in character
-// data, so no eager write is needed just to display a full-HP minion.
+// data and conditions read back empty, so no eager write is needed just to
+// display a full-HP, unafflicted minion.
 
 const EMPTY_MINIONS = {};
+const EMPTY_CONDITIONS = [];
 
 export const useMinions = (ownerId) => {
   const [minions, setMinions] = useSyncedState(
@@ -64,7 +66,25 @@ export const useMinions = (ownerId) => {
     [getHp, setHp]
   );
 
-  return { minions: minions || EMPTY_MINIONS, getHp, setHp, damage, heal };
+  // Active conditions for a role, lazily empty until something writes. Each entry
+  // is the ConditionModal shape ({ id, value, valued, maxValue, ... }).
+  const getConditions = useCallback(
+    (role) => minions?.[role]?.conditions || EMPTY_CONDITIONS,
+    [minions]
+  );
+
+  // Merge a role's condition list into the combined object without touching the
+  // other role or that role's hp/flags (same discipline as setHp).
+  const setConditions = useCallback(
+    (role, list) =>
+      setMinions((cur) => {
+        const base = cur || {};
+        return { ...base, [role]: { ...(base[role] || {}), conditions: list } };
+      }),
+    [setMinions]
+  );
+
+  return { minions: minions || EMPTY_MINIONS, getHp, setHp, damage, heal, getConditions, setConditions };
 };
 
 export default useMinions;

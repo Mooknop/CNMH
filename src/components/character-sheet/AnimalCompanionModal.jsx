@@ -5,6 +5,7 @@ import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { getAbilityModifier, getProficiencyBonus, formatModifier } from '../../utils/CharacterUtils';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { hydrateConditions } from '../../data/pf2eConditions';
 import { useMinions } from '../../hooks/useMinions';
 import { useTurnState } from '../../hooks/useTurnState';
 import { MINION_COMPANION, minionTurnId } from '../../utils/minionUtils';
@@ -18,10 +19,9 @@ import { applyAbility } from '../../utils/applyAbility';
 import './AnimalCompanionModal.css';
 
 const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, characterColor }) => {
-  const [activeConditions, setActiveConditions] = useState([]);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
   const [strikeForRoll, setStrikeForRoll] = useState(null);
-  const { getHp } = useMinions(character?.id);
+  const { getHp, getConditions, setConditions } = useMinions(character?.id);
   const { encounter, appendLog } = useEncounter();
   const { getState, sendUpdate } = useSession();
   // Granted-action pool (#391): the companion spends from the actions Command an
@@ -72,35 +72,41 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
     });
   };
 
+  // Conditions are synced (cnmh_minions_<owner>[companion].conditions) so they
+  // survive reload, surface to the GM, and write back to the Foundry actor (#362).
+  // Only the minimal {id,value} is persisted (functions don't serialize); the full
+  // catalog objects ConditionModal needs are rehydrated for render/effects.
+  const activeConditions = hydrateConditions(getConditions(MINION_COMPANION));
+  const persistConditions = (list) =>
+    setConditions(MINION_COMPANION, list.map((c) => ({ id: c.id, value: c.value })));
   const effects = computeConditionEffects(activeConditions, '', character.level);
 
   const handleAdd = (condition) => {
-    setActiveConditions((prev) => {
-      const existing = prev.find((c) => c.id === condition.id);
-      if (existing) {
-        if (!condition.valued) return prev;
-        return prev.map((c) =>
-          c.id === condition.id
-            ? { ...c, value: Math.min(c.value + 1, c.maxValue) }
-            : c
-        );
-      }
-      return [...prev, { ...condition, value: condition.valued ? 1 : null }];
-    });
+    const existing = activeConditions.find((c) => c.id === condition.id);
+    if (existing) {
+      if (!condition.valued) return;
+      persistConditions(
+        activeConditions.map((c) =>
+          c.id === condition.id ? { ...c, value: Math.min(c.value + 1, c.maxValue) } : c
+        )
+      );
+      return;
+    }
+    persistConditions([...activeConditions, { ...condition, value: condition.valued ? 1 : null }]);
   };
 
-  const handleRemove = (id) => setActiveConditions((prev) => prev.filter((c) => c.id !== id));
+  const handleRemove = (id) =>
+    persistConditions(activeConditions.filter((c) => c.id !== id));
 
-  const handleChangeValue = (id, delta) => {
-    setActiveConditions((prev) =>
-      prev.reduce((acc, c) => {
+  const handleChangeValue = (id, delta) =>
+    persistConditions(
+      activeConditions.reduce((acc, c) => {
         if (c.id !== id) return [...acc, c];
         const next = c.value + delta;
         if (next <= 0) return acc;
         return [...acc, { ...c, value: Math.min(next, c.maxValue) }];
       }, [])
     );
-  };
 
   const hasConditions = activeConditions.length > 0;
 

@@ -1,24 +1,26 @@
-// Minion HP write-back (#362 stretch) — companion/familiar HP ↔ Foundry actor.
+// Minion state write-back (#362 stretch) — companion/familiar HP + conditions ↔
+// Foundry actor.
 //
 // Mirrors characterSync.js but for minions, which differ from PCs two ways:
-//  - HP lives in a *combined* per-owner object
-//      cnmh_minions_<ownerId> = { [role]: { hp:{current,max,temp}, ... } }
+//  - HP/conditions live in a *combined* per-owner object
+//      cnmh_minions_<ownerId> = { [role]: { hp:{current,max,temp}, conditions:[{id,value}], ... } }
 //    holding both companion and familiar, so a Foundry→app push for one role must
 //    MERGE into that object, never replace it. We keep a small per-owner cache
 //    (seeded from FULL_STATE + every inbound minions UPDATE) to merge against.
 //  - Minions aren't in the PC actorMap; they resolve through the ownership-derived
 //    getMinionActorLinks(actorMap) — the same links spawn/movement/flanking use.
 //
-// Foundry → app: a minion actor's HP change merges into the owner object and pushes
-//   cnmh_minions_<ownerId>.
+// Foundry → app: a minion actor's HP or condition change merges that role into the
+//   owner object and pushes cnmh_minions_<ownerId>.
 // App → Foundry: an incoming minions update writes each role's HP to its linked
 //   actor, tagged _bridgeSource:'app' (via updateActorHp) so the hook above ignores
-//   the echo.
+//   the echo. Conditions are Foundry→app only, exactly like PCs.
 
 import { getActorMap } from './encounter.js';
-import { isBridgeEcho } from './utils.js';
+import { isBridgeEcho, slugToAppConditionId } from './utils.js';
 import {
   getActorById, getActorId, getHp, updateActorHp, getMinionActorLinks,
+  getConditions, isConditionItem, getConditionItemActor,
 } from './pf2eAdapter.js';
 
 let _sendUpdate = null;
@@ -30,6 +32,11 @@ const _minionsCache = new Map();
 export function initMinionSync(sendUpdateFn) {
   _sendUpdate = sendUpdateFn;
   Hooks.on('updateActor', onUpdateActorMinion);
+  // Conditions (incl. dying/wounded/doomed) are condition-type Items, so Foundry
+  // fires per-document hooks rather than updateActor — same as PCs.
+  Hooks.on('createItem', onMinionConditionItemChanged);
+  Hooks.on('updateItem', onMinionConditionItemChanged);
+  Hooks.on('deleteItem', onMinionConditionItemChanged);
 }
 
 // Seed/refresh the per-owner cache. Called from bridge.js on FULL_STATE and on
@@ -61,26 +68,56 @@ export async function handleMinionsUpdate(ownerId, value) {
   }
 }
 
-// Foundry → app: a minion actor's HP changed → merge that role into the owner
-// object (preserving the other role) and push the full object.
+// Merge a patch into one role of the cached owner object (preserving the other
+// role and the role's other fields) and push the full combined object.
+function mergeAndPushRole(ownerCharId, role, patch) {
+  const prev = _minionsCache.get(ownerCharId) || {};
+  const merged = {
+    ...prev,
+    [role]: { ...(prev[role] || {}), ...patch },
+  };
+  cacheMinions(ownerCharId, merged);
+  _sendUpdate?.(ownerCharId, 'minions', merged);
+}
+
+// Resolve a Foundry actor to its minion link, or null when it isn't a linked minion.
+function linkForActor(actor) {
+  if (!actor) return null;
+  const actorId = getActorId(actor);
+  return getMinionActorLinks(getActorMap()).find((l) => l.foundryActorId === actorId) || null;
+}
+
+// Foundry → app: a minion actor's HP changed → merge that role's HP into the
+// owner object (preserving the other role) and push the full object.
 function onUpdateActorMinion(actor, diff, options) {
   if (isBridgeEcho(options)) return;
   if (!diff?.system?.attributes?.hp) return;
 
-  const actorId = getActorId(actor);
-  const link = getMinionActorLinks(getActorMap()).find((l) => l.foundryActorId === actorId);
+  const link = linkForActor(actor);
   if (!link) return;
 
-  const { ownerCharId, role } = link;
   const snap = getHp(actor);
-  const prev = _minionsCache.get(ownerCharId) || {};
-  const merged = {
-    ...prev,
-    [role]: {
-      ...(prev[role] || {}),
-      hp: { current: snap.current, max: snap.max, temp: snap.temp },
-    },
-  };
-  cacheMinions(ownerCharId, merged);
-  _sendUpdate?.(ownerCharId, 'minions', merged);
+  mergeAndPushRole(link.ownerCharId, link.role, {
+    hp: { current: snap.current, max: snap.max, temp: snap.temp },
+  });
+}
+
+// Foundry → app: a condition item changed on a minion actor → merge that role's
+// condition list (and HP, since dying/wounded surface there and arrive as items)
+// into the owner object and push it. Conditions are Foundry→app only, like PCs.
+function onMinionConditionItemChanged(item) {
+  if (!isConditionItem(item)) return;
+  const actor = getConditionItemActor(item);
+  const link = linkForActor(actor);
+  if (!link) return;
+
+  const conditions = getConditions(actor).map((c) => ({
+    id: slugToAppConditionId(c.slug),
+    value: c.value,
+  }));
+  const snap = getHp(actor);
+  mergeAndPushRole(link.ownerCharId, link.role, {
+    conditions,
+    hp: { current: snap.current, max: snap.max, temp: snap.temp },
+  });
 }

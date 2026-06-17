@@ -3,6 +3,7 @@ import Modal from '../shared/Modal';
 import ConditionModal from './ConditionModal';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { hydrateConditions } from '../../data/pf2eConditions';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { useMinions } from '../../hooks/useMinions';
 import { useTurnState } from '../../hooks/useTurnState';
@@ -21,10 +22,9 @@ const SQUOX_MANEUVERS = [
 ];
 
 const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor }) => {
-  const [activeConditions, setActiveConditions] = useState([]);
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
   const [maneuver, setManeuver] = useState(null); // a SQUOX_MANEUVERS entry while its modal is open
-  const { getHp } = useMinions(character?.id);
+  const { getHp, getConditions, setConditions } = useMinions(character?.id);
   const { encounter } = useEncounter();
   // Granted-action pool (#391): a familiar spends from the actions Command grants
   // it. Hard-blocks Squox maneuvers once the pool is empty, in encounter only.
@@ -48,36 +48,42 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
   // Squox Tricks lets the familiar Disarm/Trip with Acrobatics (+2 vs off-guard).
   const hasSquoxTricks = (familiarData.abilities || []).some((a) => /squox tricks/i.test(a?.name || ''));
 
-  // Familiar conditions affect its own AC, Speed, and its use of the master's saves
+  // Familiar conditions affect its own AC, Speed, and its use of the master's
+  // saves. Synced (cnmh_minions_<owner>[familiar].conditions) so they survive
+  // reload, surface to the GM, and write back to the Foundry actor (#362). Only
+  // the minimal {id,value} is persisted (functions don't serialize); the full
+  // catalog objects ConditionModal needs are rehydrated for render/effects.
+  const activeConditions = hydrateConditions(getConditions(MINION_FAMILIAR));
+  const persistConditions = (list) =>
+    setConditions(MINION_FAMILIAR, list.map((c) => ({ id: c.id, value: c.value })));
   const effects = computeConditionEffects(activeConditions, '', character.level);
 
   const handleAdd = (condition) => {
-    setActiveConditions((prev) => {
-      const existing = prev.find((c) => c.id === condition.id);
-      if (existing) {
-        if (!condition.valued) return prev;
-        return prev.map((c) =>
-          c.id === condition.id
-            ? { ...c, value: Math.min(c.value + 1, c.maxValue) }
-            : c
-        );
-      }
-      return [...prev, { ...condition, value: condition.valued ? 1 : null }];
-    });
+    const existing = activeConditions.find((c) => c.id === condition.id);
+    if (existing) {
+      if (!condition.valued) return;
+      persistConditions(
+        activeConditions.map((c) =>
+          c.id === condition.id ? { ...c, value: Math.min(c.value + 1, c.maxValue) } : c
+        )
+      );
+      return;
+    }
+    persistConditions([...activeConditions, { ...condition, value: condition.valued ? 1 : null }]);
   };
 
-  const handleRemove = (id) => setActiveConditions((prev) => prev.filter((c) => c.id !== id));
+  const handleRemove = (id) =>
+    persistConditions(activeConditions.filter((c) => c.id !== id));
 
-  const handleChangeValue = (id, delta) => {
-    setActiveConditions((prev) =>
-      prev.reduce((acc, c) => {
+  const handleChangeValue = (id, delta) =>
+    persistConditions(
+      activeConditions.reduce((acc, c) => {
         if (c.id !== id) return [...acc, c];
         const next = c.value + delta;
         if (next <= 0) return acc;
         return [...acc, { ...c, value: Math.min(next, c.maxValue) }];
       }, [])
     );
-  };
 
   const hasConditions = activeConditions.length > 0;
 
