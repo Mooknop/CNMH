@@ -3,7 +3,8 @@ import Modal from '../shared/Modal';
 import TargetRollResolver from './TargetRollResolver';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTargeting } from '../../hooks/useTargeting';
-import { familiarSkillBonus } from '../../utils/minionUtils';
+import { useTurnState } from '../../hooks/useTurnState';
+import { familiarSkillBonus, minionTurnId, MINION_FAMILIAR } from '../../utils/minionUtils';
 import './FamiliarManeuverModal.css';
 
 const DEGREE_LABELS = {
@@ -40,6 +41,9 @@ const OUTCOMES = {
 const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, character, themeColor }) => {
   const { encounter, appendLog } = useEncounter();
   const ownerId = character?.id;
+  const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
+  // A maneuver costs the familiar 1 of its granted actions (#391), in encounter only.
+  const { spendActions } = useTurnState(minionTurnId(ownerId, MINION_FAMILIAR));
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(ownerId, order);
   const enemyTargets = useMemo(() => selectable.filter((e) => e.kind === 'enemy'), [selectable]);
@@ -81,6 +85,7 @@ const FamiliarManeuverModal = ({ isOpen, onClose, maneuver, familiarData, charac
       });
     });
 
+    if (encounterMode) spendActions(1, maneuver?.name || 'Maneuver');
     setResolved(true);
   };
 

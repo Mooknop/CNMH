@@ -37,6 +37,9 @@ vi.mock('../encounter/HuntPreyModal', () => ({ default: () => <div data-testid="
 vi.mock('../character-sheet/AnimalCompanionModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="companion-modal" /> : null),
 }));
+vi.mock('../character-sheet/FamiliarModal', () => ({
+  default: ({ isOpen }) => (isOpen ? <div data-testid="familiar-modal" /> : null),
+}));
 
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: () => ({
@@ -59,10 +62,12 @@ vi.mock('../../hooks/useEncounter', () => ({
 }));
 
 const mockSpendActions = vi.fn();
+const mockGrantActions = vi.fn();
 vi.mock('../../hooks/useTurnState', () => ({
   useTurnState: () => ({
-    turnState: { actionsSpent: 0, reactionAvailable: false, reactionSpent: false, hasStartedFirstTurn: false, actionsLog: [] },
+    turnState: { actionsSpent: 0, actionsGranted: 0, reactionAvailable: false, reactionSpent: false, hasStartedFirstTurn: false, actionsLog: [] },
     spendActions: mockSpendActions,
+    grantActions: mockGrantActions,
     spendReaction: vi.fn(),
   }),
 }));
@@ -186,13 +191,43 @@ describe('ActionsList', () => {
     expect(screen.queryByRole('button', { name: 'Command an Animal' })).not.toBeInTheDocument();
   });
 
-  it('Command an Animal spends 1 action and opens the companion surface', () => {
+  it('Command an Animal spends 1 action, grants the companion 2, and opens the companion surface', () => {
     mockEncounterState.active = true;
     mockEncounterState.phase = 'in-progress';
     render(<ActionsList character={companionCharacter} />);
     expect(screen.queryByTestId('companion-modal')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Command an Animal' }));
     expect(mockSpendActions).toHaveBeenCalledWith(1, 'Command an Animal');
+    expect(mockGrantActions).toHaveBeenCalledWith(2, 'Command an Animal');
     expect(screen.getByTestId('companion-modal')).toBeInTheDocument();
+  });
+
+  // ── Command a familiar (#391) ────────────────────────────────────────────
+  const familiarCharacter = {
+    ...mockCharacter,
+    familiar: { name: 'Squox' },
+  };
+
+  it('does not show the Familiar section for a PC without a familiar', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByRole('button', { name: /command squox/i })).not.toBeInTheDocument();
+  });
+
+  it('does not show the Familiar section out of an encounter', () => {
+    render(<ActionsList character={familiarCharacter} />);
+    expect(screen.queryByRole('button', { name: /command squox/i })).not.toBeInTheDocument();
+  });
+
+  it('Command a familiar spends 1 action, grants 2, and opens the familiar surface', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={familiarCharacter} />);
+    expect(screen.queryByTestId('familiar-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /command squox/i }));
+    expect(mockSpendActions).toHaveBeenCalledWith(1, 'Command');
+    expect(mockGrantActions).toHaveBeenCalledWith(2, 'Command');
+    expect(screen.getByTestId('familiar-modal')).toBeInTheDocument();
   });
 });

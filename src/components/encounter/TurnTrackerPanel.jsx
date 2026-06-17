@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
-import { minionTurnId, MINION_COMPANION } from '../../utils/minionUtils';
+import { minionTurnId, MINION_COMPANION, MINION_FAMILIAR } from '../../utils/minionUtils';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useSustains } from '../../hooks/useSustains';
@@ -23,12 +23,16 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   const { turnState, spendActions, resetForNewTurn } = useTurnState(charId);
   const { getState, sendUpdate } = useSession();
 
-  // The companion acts on its owner's turn (Command an Animal), so its Multiple
-  // Attack Penalty resets when the owner's turn does (#261). Familiars make no
-  // strikes, so only the companion needs a counter reset.
+  // Minions act on their owner's turn (Command), so their turn state — Multiple
+  // Attack Penalty (#261) and the granted-action pool (#391) — resets when the
+  // owner's turn does. Both companion and familiar carry a pool now.
   const hasCompanion = !!character?.animalCompanion;
+  const hasFamiliar = !!character?.familiar;
   const { resetForNewTurn: resetCompanionTurn } = useTurnState(
     minionTurnId(charId, MINION_COMPANION)
+  );
+  const { resetForNewTurn: resetFamiliarTurn } = useTurnState(
+    minionTurnId(charId, MINION_FAMILIAR)
   );
 
   // Turn-start free-action offers (#228 — Primary Threat). Authored as
@@ -88,12 +92,13 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     if (isMyTurn && turnState?.turnToken !== turnToken) {
       resetForNewTurn(turnToken);
       if (hasCompanion) resetCompanionTurn(turnToken);
+      if (hasFamiliar) resetFamiliarTurn(turnToken);
       // "Until the start of your next turn" — a raised shield expires now.
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
       if (raised) lowerShield();
     }
-  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, raised, lowerShield]);
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, hasFamiliar, resetFamiliarTurn, raised, lowerShield]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 

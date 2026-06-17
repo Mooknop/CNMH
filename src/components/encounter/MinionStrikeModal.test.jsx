@@ -32,11 +32,19 @@ const order = [
   { entryId: 'p-1', kind: 'pc', charId: 'jade', name: 'Jade' },
 ];
 
-let appendLog, recordAttack;
+let appendLog, recordAttack, spendActions;
 
-const renderModal = (attacksMade = 0) => {
-  useEncounter.mockReturnValue({ encounter: { order }, appendLog });
-  useTurnState.mockReturnValue({ turnState: { attacksMade }, recordAttack });
+const renderModal = (attacksMade = 0, opts = {}) => {
+  const { active = false, actionsGranted = 0, actionsSpent = 0 } = opts;
+  useEncounter.mockReturnValue({
+    encounter: { order, active, phase: active ? 'in-progress' : 'idle' },
+    appendLog,
+  });
+  useTurnState.mockReturnValue({
+    turnState: { attacksMade, actionsGranted, actionsSpent },
+    recordAttack,
+    spendActions,
+  });
   return render(
     <MinionStrikeModal
       isOpen
@@ -52,6 +60,7 @@ const renderModal = (attacksMade = 0) => {
 beforeEach(() => {
   appendLog = vi.fn();
   recordAttack = vi.fn();
+  spendActions = vi.fn();
 });
 
 describe('MinionStrikeModal', () => {
@@ -94,11 +103,36 @@ describe('MinionStrikeModal', () => {
     });
   });
 
+  it('spends 1 granted action on confirm during an encounter (#391)', () => {
+    renderModal(0, { active: true, actionsGranted: 2, actionsSpent: 0 });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
+    expect(spendActions).toHaveBeenCalledWith(1, 'Bite');
+  });
+
+  it('does not spend an action out of encounter', () => {
+    renderModal(0); // inactive encounter
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /log strike/i }));
+    expect(spendActions).not.toHaveBeenCalled();
+  });
+
+  it('hard-blocks the strike when no granted actions remain (#391)', () => {
+    renderModal(0, { active: true, actionsGranted: 0, actionsSpent: 0 });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    const confirm = screen.getByRole('button', { name: /no actions left/i });
+    expect(confirm).toBeDisabled();
+    fireEvent.click(confirm);
+    expect(spendActions).not.toHaveBeenCalled();
+  });
+
   // Flanking (#362): the bridge keys the companion's own minion id under a flanked
   // enemy. Render inside a session whose getState returns the flanked map.
   const renderWithFlanked = (flankedMap) => {
     useEncounter.mockReturnValue({ encounter: { order }, appendLog });
-    useTurnState.mockReturnValue({ turnState: { attacksMade: 0 }, recordAttack });
+    useTurnState.mockReturnValue({ turnState: { attacksMade: 0 }, recordAttack, spendActions });
     const session = {
       connected: true,
       getState: (charId, type) =>

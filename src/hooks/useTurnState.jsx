@@ -3,6 +3,10 @@ import { useSyncedState } from './useSyncedState';
 
 export const defaultTurnState = () => ({
   actionsSpent: 0,
+  // Actions granted to this actor this turn (minion pool). PCs ignore it — their
+  // budget is the implicit 3; a minion's pool is filled by Command an Animal (#391)
+  // and spent down by its Strikes/Strides/maneuvers. Resets with the owner's turn.
+  actionsGranted: 0,
   attacksMade: 0,
   reactionAvailable: false,
   reactionSpent: false,
@@ -48,6 +52,24 @@ export const useTurnState = (charId) => {
     [setTurnState]
   );
 
+  // Grant actions to a minion's pool (#391) — Command an Animal grants 2. Older
+  // persisted states lack the field, hence the ?? 0.
+  const grantActions = useCallback(
+    (count = 0, sourceLabel) =>
+      setTurnState((cur) => {
+        const base = cur || defaultTurnState();
+        return {
+          ...base,
+          actionsGranted: (base.actionsGranted ?? 0) + count,
+          actionsLog: [
+            ...base.actionsLog,
+            { name: sourceLabel || 'Granted', cost: 'granted', count, ts: Date.now() },
+          ],
+        };
+      }),
+    [setTurnState]
+  );
+
   // Attacks made this turn — drives the Multiple Attack Penalty step.
   // Older persisted states lack the field, hence the ?? 0.
   const recordAttack = useCallback(
@@ -76,6 +98,7 @@ export const useTurnState = (charId) => {
   return {
     turnState: turnState || defaultTurnState(),
     spendActions,
+    grantActions,
     spendReaction,
     recordAttack,
     resetForNewTurn,

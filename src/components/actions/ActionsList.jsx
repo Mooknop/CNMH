@@ -9,6 +9,7 @@ import SkillActionModal from '../encounter/SkillActionModal';
 import MoveActionSheet from '../encounter/MoveActionSheet';
 import EncounterDoors from '../encounter/EncounterDoors';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
+import FamiliarModal from '../character-sheet/FamiliarModal';
 import UseConsumableModal from '../inventory/UseConsumableModal';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { consumableMeta } from '../../utils/consumables';
@@ -18,6 +19,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useGrantedActions } from '../../hooks/useGrantedActions';
 import { useStance } from '../../hooks/useStance';
+import { minionTurnId, MINION_COMPANION, MINION_FAMILIAR } from '../../utils/minionUtils';
 import './ActionsList.css';
 
 const ActionsList = ({ character, characterColor }) => {
@@ -27,11 +29,15 @@ const ActionsList = ({ character, characterColor }) => {
   const [huntPreyCost, setHuntPreyCost] = useState(null); // action cost when the Hunt Prey modal is open, else null
   const [skillAction, setSkillAction] = useState(null); // a skillActions.js entry while its modal is open, else null
   const [companionOpen, setCompanionOpen] = useState(false); // Command an Animal → companion command surface
+  const [familiarOpen, setFamiliarOpen] = useState(false); // Command → familiar command surface (#391)
   const [moveAction, setMoveAction] = useState(null); // { moveType } while the movement sheet is open (#415), else null
   const [consumable, setConsumable] = useState(null); // { item, actionCost } while the consumable sheet is open (#428), else null
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
+  // Minion pools (#391) — Command spends 1 owner action and grants the minion 2.
+  const { grantActions: grantCompanion } = useTurnState(minionTurnId(character.id, MINION_COMPANION));
+  const { grantActions: grantFamiliar } = useTurnState(minionTurnId(character.id, MINION_FAMILIAR));
   const { flags } = useCharacter(character);
   const hasMagic = flags.hasSpellcasting || flags.hasFocusSpells || flags.hasInnateSpells
     || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
@@ -47,23 +53,40 @@ const ActionsList = ({ character, characterColor }) => {
   // Player-initiated skill actions (#260) — Demoralize today. Only in encounter.
   const skillActions = skillActionsFor(character, { encounterMode });
 
-  // Command an Animal (#223) — present only for a PC with an animal companion.
-  // Spends 1 of the owner's actions and opens the companion command surface
-  // (strike/move/Support). The granted-action *pool* (the companion's 2 actions)
-  // is deferred to #391; the companion's own MAP already resets with the turn.
+  // Command an Animal (#223, #391) — present only for a PC with an animal companion.
+  // Spends 1 of the owner's actions and grants the companion 2 actions (its pool),
+  // then opens the companion command surface (strike/move/Support). The companion
+  // spends from that pool and its MAP resets with the owner's turn.
   const hasCompanion = !!character.animalCompanion;
+  const hasFamiliar = !!character.familiar;
 
   const handleCommandAnimal = useCallback(() => {
     if (encounterMode) {
       spendActions(1, 'Command an Animal');
+      grantCompanion(2, 'Command an Animal');
       appendLog({
         type: 'action',
         charId: character.id,
-        text: `${character.name} commanded ${character.animalCompanion?.name || 'their companion'} (Command an Animal, 1 act)`,
+        text: `${character.name} commanded ${character.animalCompanion?.name || 'their companion'} (Command an Animal, 1 act → 2 actions)`,
       });
     }
     setCompanionOpen(true);
-  }, [encounterMode, spendActions, appendLog, character.id, character.name, character.animalCompanion]);
+  }, [encounterMode, spendActions, grantCompanion, appendLog, character.id, character.name, character.animalCompanion]);
+
+  // Command a familiar (#391) — familiars don't use Command an Animal, but per the
+  // table's ruling directing one grants the same 2-action pool for 1 owner action.
+  const handleCommandFamiliar = useCallback(() => {
+    if (encounterMode) {
+      spendActions(1, 'Command');
+      grantFamiliar(2, 'Command');
+      appendLog({
+        type: 'action',
+        charId: character.id,
+        text: `${character.name} commanded ${character.familiar?.name || 'their familiar'} (1 act → 2 actions)`,
+      });
+    }
+    setFamiliarOpen(true);
+  }, [encounterMode, spendActions, grantFamiliar, appendLog, character.id, character.name, character.familiar]);
 
   const handleUse = useCallback(
     (item, cost) => {
@@ -230,6 +253,22 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
+      {encounterMode && hasFamiliar && (
+        <div className="granted-actions-section" aria-label="Familiar">
+          <h3 className="granted-actions-title">Familiar</h3>
+          <div className="granted-action-row">
+            <span className="granted-action-name">Command {character.familiar?.name || 'familiar'}</span>
+            <button
+              className="btn-encounter-use"
+              aria-label={`Command ${character.familiar?.name || 'familiar'}`}
+              onClick={handleCommandFamiliar}
+            >
+              Use (1 act)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Interact: open/close a door in reach (#435) — self-hides when none nearby. */}
       {encounterMode && (
         <EncounterDoors charId={character.id} characterName={character.name} />
@@ -303,6 +342,16 @@ const ActionsList = ({ character, characterColor }) => {
           isOpen={companionOpen}
           onClose={() => setCompanionOpen(false)}
           animalCompanion={character.animalCompanion}
+          character={character}
+          characterColor={themeColor}
+        />
+      )}
+
+      {hasFamiliar && (
+        <FamiliarModal
+          isOpen={familiarOpen}
+          onClose={() => setFamiliarOpen(false)}
+          familiar={character.familiar}
           character={character}
           characterColor={themeColor}
         />
