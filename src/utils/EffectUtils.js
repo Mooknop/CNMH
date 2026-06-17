@@ -22,7 +22,7 @@ const STAT_KEYS = [
 // type:'skill' and highlightSkill paths. Kept as a local literal (rather than
 // derived from CharacterUtils.SKILL_ABILITY_MAP) so this pure util has no
 // module-load dependency that test mocks of CharacterUtils could break.
-const SKILL_KEYS = [
+export const SKILL_KEYS = [
   'acrobatics', 'arcana', 'athletics', 'crafting', 'deception', 'diplomacy',
   'intimidation', 'medicine', 'nature', 'occultism', 'performance', 'religion',
   'society', 'stealth', 'survival', 'thievery',

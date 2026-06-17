@@ -107,6 +107,15 @@ const disrupting = {
   immunity: { duration: { value: 1, unit: 'minute' }, scope: 'per-caster' },
 };
 
+// Upstage authoring (#445): `skillChoice` opens the skill picker so the player
+// rolls the same skill the enemy used (default Performance).
+const upstageChoice = {
+  ...upstage,
+  roll: { ...upstage.roll, skillChoice: true },
+};
+
+const pickSkill = (skill) => fireEvent.change(screen.getByLabelText('roll skill'), { target: { value: skill } });
+
 const setDc    = (v) => fireEvent.change(screen.getByLabelText('opposed dc'), { target: { value: String(v) } });
 const setD20   = (v) => fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: String(v) } });
 const pickEnemy = (id) => fireEvent.change(screen.getByLabelText('triggering enemy'), { target: { value: id } });
@@ -212,6 +221,23 @@ describe('UseAbilityModal — opposed reactions (#226-C)', () => {
     expect(screen.queryByText(/only if the enemy failed/i)).toBeNull();
     setD20(5); // success — note shown
     expect(screen.getByText(/only if the enemy failed/i)).toBeInTheDocument();
+  });
+
+  it('skillChoice (#445) renders the picker; no picker without the flag', () => {
+    const { unmount } = render(<UseAbilityModal {...props} ability={upstageChoice} />);
+    expect(screen.getByLabelText('roll skill')).toBeInTheDocument();
+    unmount();
+    render(<UseAbilityModal {...props} ability={upstage} />);
+    expect(screen.queryByLabelText('roll skill')).toBeNull(); // plain Upstage: static label
+  });
+
+  it('logs the chosen skill when a picker is used (#445)', () => {
+    render(<UseAbilityModal {...props} ability={upstageChoice} />);
+    pickSkill('deception');
+    setDc(15);
+    setD20(5); // 5 + 10 = 15 → success
+    confirm();
+    expect(lastLog()).toBe("Izzy's Upstage (Deception) vs DC 15: 15 → Success");
   });
 
   it('non-opposed abilities never render the opposed resolver (regression guard)', () => {
