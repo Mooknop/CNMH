@@ -37,7 +37,12 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
   const { encounter, appendLog } = useEncounter();
   const ownerId = character?.id;
   const turnId = minionTurnId(ownerId, role);
-  const { turnState, recordAttack } = useTurnState(turnId);
+  const { turnState, recordAttack, spendActions } = useTurnState(turnId);
+  const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
+  // Granted-action pool (#391): a Strike costs the minion 1 of its granted actions
+  // (in encounter only). Hard-blocked when the pool is empty.
+  const actionsLeft = (turnState?.actionsGranted ?? 0) - (turnState?.actionsSpent ?? 0);
+  const strikeBlocked = encounterMode && actionsLeft <= 0;
 
   const order = useMemo(() => encounter?.order || [], [encounter]);
   const { selectable } = useTargeting(ownerId, order);
@@ -107,6 +112,7 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
     });
 
     if (isAttack) recordAttack(1);
+    if (encounterMode) spendActions(1, strike.name);
     setResolved(true);
   };
 
@@ -195,9 +201,10 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
             type="button"
             className="btn-primary msm-confirm"
             onClick={handleConfirm}
-            disabled={!target || !!resolved}
+            disabled={!target || !!resolved || strikeBlocked}
+            title={strikeBlocked ? 'No granted actions left — Command an Animal first' : undefined}
           >
-            {resolved ? 'Resolved' : 'Log strike'}
+            {resolved ? 'Resolved' : strikeBlocked ? 'No actions left' : 'Log strike'}
           </button>
         </div>
       </div>

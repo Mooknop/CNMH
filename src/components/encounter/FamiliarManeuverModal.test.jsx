@@ -12,6 +12,10 @@ vi.mock('../shared/Modal', () => ({
 }));
 
 vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
+const mockSpendActions = vi.fn();
+vi.mock('../../hooks/useTurnState', () => ({
+  useTurnState: () => ({ turnState: { actionsGranted: 0, actionsSpent: 0 }, spendActions: mockSpendActions }),
+}));
 // useTargeting, TargetRollResolver, minionUtils all run for real so the test
 // exercises the actual bonus + Reflex-DC pipeline.
 
@@ -26,8 +30,11 @@ const order = [
 
 let appendLog;
 
-const renderModal = (maneuver = { id: 'trip', name: 'Trip' }) => {
-  useEncounter.mockReturnValue({ encounter: { order }, appendLog });
+const renderModal = (maneuver = { id: 'trip', name: 'Trip' }, { active = false } = {}) => {
+  useEncounter.mockReturnValue({
+    encounter: { order, active, phase: active ? 'in-progress' : 'idle' },
+    appendLog,
+  });
   return render(
     <FamiliarManeuverModal
       isOpen
@@ -39,7 +46,7 @@ const renderModal = (maneuver = { id: 'trip', name: 'Trip' }) => {
   );
 };
 
-beforeEach(() => { appendLog = vi.fn(); });
+beforeEach(() => { appendLog = vi.fn(); mockSpendActions.mockClear(); });
 
 describe('FamiliarManeuverModal', () => {
   it('lists only enemy targets (owner PC excluded)', () => {
@@ -73,6 +80,22 @@ describe('FamiliarManeuverModal', () => {
       charId: 'Ashka',
       text: expect.stringContaining('Lazarus Trip vs Goblin (Reflex DC 14): 17 → Success — Goblin knocked prone'),
     });
+  });
+
+  it('spends 1 granted action on confirm during an encounter (#391)', () => {
+    renderModal({ id: 'trip', name: 'Trip' }, { active: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
+    expect(mockSpendActions).toHaveBeenCalledWith(1, 'Trip');
+  });
+
+  it('does not spend an action out of encounter', () => {
+    renderModal({ id: 'trip', name: 'Trip' });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    fireEvent.change(screen.getByLabelText('raw d20'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /log trip/i }));
+    expect(mockSpendActions).not.toHaveBeenCalled();
   });
 
   it('notes the off-guard bonus in the log when toggled', () => {

@@ -6,8 +6,10 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { getAbilityModifier, getProficiencyBonus, formatModifier } from '../../utils/CharacterUtils';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { useMinions } from '../../hooks/useMinions';
-import { MINION_COMPANION } from '../../utils/minionUtils';
+import { useTurnState } from '../../hooks/useTurnState';
+import { MINION_COMPANION, minionTurnId } from '../../utils/minionUtils';
 import MinionStrikeModal from '../encounter/MinionStrikeModal';
+import MinionActionBudget from '../encounter/MinionActionBudget';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
 import MinionMove from '../encounter/MinionMove';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -22,6 +24,9 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
   const { getHp } = useMinions(character?.id);
   const { encounter, appendLog } = useEncounter();
   const { getState, sendUpdate } = useSession();
+  // Granted-action pool (#391): the companion spends from the actions Command an
+  // Animal grants it. Hard-blocks Strikes once the pool is empty, in encounter only.
+  const { turnState: companionTurn } = useTurnState(minionTurnId(character?.id, MINION_COMPANION));
 
   // Keep mounted so condition state persists across open/close cycles
   if (!animalCompanion || !character) return null;
@@ -34,6 +39,8 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
   // their next turn. Only meaningful in an active encounter where the owner has
   // an initiative entry; routed through the shared applyAbility effect path.
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
+  const actionsLeft = (companionTurn?.actionsGranted ?? 0) - (companionTurn?.actionsSpent ?? 0);
+  const strikesBlocked = encounterMode && actionsLeft <= 0;
   const casterEntryId = (encounter?.order || []).find(
     (e) => e.kind === 'pc' && e.charId === character.id
   )?.entryId || null;
@@ -110,6 +117,12 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title={companionData.name} themeColor={themeColor} maxWidth="700px">
+        {encounterMode && (
+          <MinionActionBudget
+            granted={companionTurn?.actionsGranted ?? 0}
+            spent={companionTurn?.actionsSpent ?? 0}
+          />
+        )}
         <div className="companion-basic-info">
           {companionData.image && (
             <img src={`/api/images/${companionData.image}`} alt="" className="entity-image" style={companionData.imagePosition ? { objectPosition: `${companionData.imagePosition.x}% ${companionData.imagePosition.y}%` } : undefined} />
@@ -240,7 +253,8 @@ const AnimalCompanionModal = ({ isOpen, onClose, animalCompanion, character, cha
                       type="button"
                       className="companion-strike companion-strike--roll"
                       onClick={() => setStrikeForRoll(strike)}
-                      title={`Roll ${strike.name}`}
+                      title={strikesBlocked ? 'No granted actions left — Command an Animal first' : `Roll ${strike.name}`}
+                      disabled={strikesBlocked}
                     >
                       <div className="strike-header">
                         <h5>{strike.name}</h5>

@@ -5,8 +5,11 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { useMinions } from '../../hooks/useMinions';
-import { MINION_FAMILIAR, familiarSkillBonus } from '../../utils/minionUtils';
+import { useTurnState } from '../../hooks/useTurnState';
+import { useEncounter } from '../../hooks/useEncounter';
+import { MINION_FAMILIAR, minionTurnId, familiarSkillBonus } from '../../utils/minionUtils';
 import MinionSpawnButton from '../encounter/MinionSpawnButton';
+import MinionActionBudget from '../encounter/MinionActionBudget';
 import MinionMove from '../encounter/MinionMove';
 import FamiliarManeuverModal from '../encounter/FamiliarManeuverModal';
 import './FamiliarModal.css';
@@ -22,9 +25,17 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
   const [isConditionModalOpen, setIsConditionModalOpen] = useState(false);
   const [maneuver, setManeuver] = useState(null); // a SQUOX_MANEUVERS entry while its modal is open
   const { getHp } = useMinions(character?.id);
+  const { encounter } = useEncounter();
+  // Granted-action pool (#391): a familiar spends from the actions Command grants
+  // it. Hard-blocks Squox maneuvers once the pool is empty, in encounter only.
+  const { turnState: familiarTurn } = useTurnState(minionTurnId(character?.id, MINION_FAMILIAR));
 
   // Keep mounted (state preserved) while Modal handles the visual hide
   if (!familiar || !character) return null;
+
+  const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
+  const actionsLeft = (familiarTurn?.actionsGranted ?? 0) - (familiarTurn?.actionsSpent ?? 0);
+  const maneuversBlocked = encounterMode && actionsLeft <= 0;
 
   const themeColor = characterColor || 'var(--color-primary)';
   const familiarData = familiar;
@@ -73,6 +84,12 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title={familiarData.name} themeColor={themeColor} maxWidth="600px">
+        {encounterMode && (
+          <MinionActionBudget
+            granted={familiarTurn?.actionsGranted ?? 0}
+            spent={familiarTurn?.actionsSpent ?? 0}
+          />
+        )}
         <div className="familiar-basic-info">
           {familiarData.image && (
             <img src={`/api/images/${familiarData.image}`} alt="" className="entity-image" style={familiarData.imagePosition ? { objectPosition: `${familiarData.imagePosition.x}% ${familiarData.imagePosition.y}%` } : undefined} />
@@ -170,6 +187,8 @@ const FamiliarModal = ({ isOpen, onClose, familiar, character, characterColor })
                       type="button"
                       className="condition-btn"
                       onClick={() => setManeuver(m)}
+                      disabled={maneuversBlocked}
+                      title={maneuversBlocked ? 'No granted actions left — Command first' : m.name}
                     >
                       {m.name}
                     </button>

@@ -83,6 +83,42 @@ describe('useTurnState', () => {
     expect(result.current.turnState.actionsLog[0].name).toBe('Reaction');
   });
 
+  describe('grantActions (minion pool)', () => {
+    it('default state starts with actionsGranted 0', () => {
+      const { result } = setup();
+      expect(result.current.turnState.actionsGranted).toBe(0);
+    });
+
+    it('increments actionsGranted and appends a granted log entry', () => {
+      const { result } = setup();
+      act(() => result.current.grantActions(2, 'Command an Animal'));
+      const { actionsGranted, actionsLog } = result.current.turnState;
+      expect(actionsGranted).toBe(2);
+      expect(actionsLog).toHaveLength(1);
+      expect(actionsLog[0]).toMatchObject({ name: 'Command an Animal', cost: 'granted', count: 2 });
+    });
+
+    it('accumulates across multiple grants', () => {
+      const { result } = setup();
+      act(() => result.current.grantActions(2, 'Command'));
+      act(() => result.current.grantActions(2, 'Command'));
+      expect(result.current.turnState.actionsGranted).toBe(4);
+    });
+
+    it('does not touch actionsSpent', () => {
+      const { result } = setup();
+      act(() => result.current.grantActions(2, 'Command'));
+      expect(result.current.turnState.actionsSpent).toBe(0);
+    });
+
+    it('resetForNewTurn zeroes actionsGranted', () => {
+      const { result } = setup();
+      act(() => result.current.grantActions(2, 'Command'));
+      act(() => result.current.resetForNewTurn());
+      expect(result.current.turnState.actionsGranted).toBe(0);
+    });
+  });
+
   describe('recordAttack (MAP tracking)', () => {
     it('increments attacksMade by 1 by default', () => {
       const { result } = setup();

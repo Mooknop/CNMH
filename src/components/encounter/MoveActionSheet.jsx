@@ -13,6 +13,7 @@ import MoveGridPicker from './MoveGridPicker';
 import { useTokenMovement } from '../../hooks/useTokenMovement';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useEncounter } from '../../hooks/useEncounter';
+import { needsNewStride } from '../../utils/movement';
 import './MoveActionSheet.css';
 
 const LABEL = { stride: 'Stride', step: 'Step' };
@@ -46,7 +47,7 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
     // Stride: charge the 1st action on the 1st step, then one more each time the
     // running distance would cross the character's Speed.
     const speed = speedRef.current || stepFeet;
-    const needNewAction = feetThisAction === 0 || feetThisAction + stepFeet > speed;
+    const needNewAction = needsNewStride(feetThisAction, stepFeet, speed);
     if (needNewAction) {
       spendActions(1, 'Stride');
       setFeetThisAction(stepFeet);

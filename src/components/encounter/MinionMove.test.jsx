@@ -1,12 +1,16 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   linkFor: vi.fn(),
   requestMove: vi.fn(),
   confirmMove: vi.fn(),
   cancelMove: vi.fn(),
+  spendActions: vi.fn(),
   lastMovementId: null,
+  lastMoveOpts: null,
   moveState: null,
+  encounter: { active: false, phase: 'idle' },
+  turnState: { actionsGranted: 0, actionsSpent: 0 },
 }));
 
 vi.mock('../../hooks/useMinionActors', () => ({
@@ -14,10 +18,21 @@ vi.mock('../../hooks/useMinionActors', () => ({
   useMinionActors: () => ({ linkFor: h.linkFor, spawn: vi.fn(), links: {} }),
 }));
 
+vi.mock('../../hooks/useEncounter', () => ({
+  __esModule: true,
+  useEncounter: () => ({ encounter: h.encounter, appendLog: vi.fn() }),
+}));
+
+vi.mock('../../hooks/useTurnState', () => ({
+  __esModule: true,
+  useTurnState: () => ({ turnState: h.turnState, spendActions: h.spendActions }),
+}));
+
 vi.mock('../../hooks/useTokenMovement', () => ({
   __esModule: true,
-  useTokenMovement: (id) => {
+  useTokenMovement: (id, opts) => {
     h.lastMovementId = id;
+    h.lastMoveOpts = opts;
     return h.moveState;
   },
 }));
@@ -39,6 +54,8 @@ const { linkFor, requestMove, confirmMove, cancelMove } = h;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  h.encounter = { active: false, phase: 'idle' };
+  h.turnState = { actionsGranted: 0, actionsSpent: 0 };
   h.moveState = {
     stage: null,
     pickerOpts: null,
@@ -89,5 +106,37 @@ describe('MinionMove', () => {
 
     fireEvent.click(screen.getByText('done-pad'));
     expect(cancelMove).toHaveBeenCalled();
+  });
+
+  // ── Granted-action accounting (#391) ─────────────────────────────────────
+  it('charges a Stride against the granted pool on the first step in encounter', () => {
+    linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+    h.encounter = { active: true, phase: 'in-progress' };
+    h.turnState = { actionsGranted: 2, actionsSpent: 0 };
+    h.moveState.stage = 'picking';
+    h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30 };
+    render(<MinionMove ownerId="Ashka" role="companion" />);
+
+    act(() => h.lastMoveOpts.onMoveDone({ feetMoved: 5 }));
+    expect(h.spendActions).toHaveBeenCalledWith(1, 'Stride');
+  });
+
+  it('does not charge actions for movement out of encounter', () => {
+    linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+    h.moveState.stage = 'picking';
+    h.moveState.pickerOpts = { origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30 };
+    render(<MinionMove ownerId="Ashka" role="companion" />);
+
+    act(() => h.lastMoveOpts.onMoveDone({ feetMoved: 5 }));
+    expect(h.spendActions).not.toHaveBeenCalled();
+    expect(h.moveState.requestMoveRefresh).toHaveBeenCalledWith('stride');
+  });
+
+  it('disables the Move button when the granted pool is empty in encounter', () => {
+    linkFor.mockReturnValue({ name: 'Zevira', onScene: true });
+    h.encounter = { active: true, phase: 'in-progress' };
+    h.turnState = { actionsGranted: 0, actionsSpent: 0 };
+    render(<MinionMove ownerId="Ashka" role="companion" />);
+    expect(screen.getByRole('button', { name: /move zevira/i })).toBeDisabled();
   });
 });

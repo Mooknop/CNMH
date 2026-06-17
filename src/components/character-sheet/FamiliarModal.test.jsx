@@ -7,6 +7,13 @@ vi.mock('../encounter/FamiliarManeuverModal', () => ({
     isOpen ? <div data-testid="maneuver-modal">{maneuver?.name}</div> : null,
 }));
 
+// Inactive encounter by default — the granted-action pool UI (#391) only shows in
+// combat, so the rest of the suite (rendered out of combat) is unaffected.
+const mockEnc = { active: false, phase: 'idle', order: [] };
+vi.mock('../../hooks/useEncounter', () => ({
+  useEncounter: () => ({ encounter: mockEnc, appendLog: vi.fn() }),
+}));
+
 const baseCharacter = {
   name: 'Aria',
   level: 4,
