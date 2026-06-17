@@ -147,15 +147,31 @@ export function updateActorHeroPoints(actor, value) {
   }, { [BRIDGE_SOURCE_FLAG]: 'app' });
 }
 
-// Apply a PF2e effect item to an actor by Foundry compendium UUID.
-// Resolves the UUID, clones the source document, and creates it as an embedded
-// Item on the actor — producing the effect icon/aura visible in Foundry.
-// Tagged with BRIDGE_SOURCE_FLAG so the characterSync createItem hook ignores it
-// (the hook already guards with isConditionItem, but tagging is belt-and-suspenders).
-// Returns null when the UUID resolves to nothing (invalid / wrong pack).
-export async function applyEffectByUuid(actor, ref) {
+// Resolve an effect ref to a source document. Two forms are supported:
+//   • a Foundry UUID (e.g. Compendium.pf2e.spell-effects.Item.…) → fromUuid
+//   • a "slug:<slug>" ref → the first World Items entry with that slug. This lets
+//     content reference a GM-imported world effect (the Courageous Anthem aura,
+//     #455) by a stable slug instead of an install-specific world UUID.
+async function resolveEffectSource(ref) {
+  if (typeof ref !== 'string' || !ref) return null;
+  const slugMatch = /^slug:(.+)$/.exec(ref);
+  if (slugMatch) {
+    const slug = slugMatch[1];
+    const items = game.items?.contents ?? (Array.isArray(game.items) ? game.items : []);
+    return items.find((i) => i.slug === slug) ?? null;
+  }
   // eslint-disable-next-line no-undef
-  const source = await fromUuid(ref);
+  return fromUuid(ref);
+}
+
+// Apply a PF2e effect item to an actor by ref (UUID or slug: form — see
+// resolveEffectSource). Clones the source document and creates it as an embedded
+// Item on the actor — producing the effect icon/aura visible in Foundry.
+// Tagged with BRIDGE_SOURCE_FLAG so the characterSync item hooks treat the create
+// as bridge-originated (no echo back to the app).
+// Returns null when the ref resolves to nothing (invalid / wrong pack / not imported).
+export async function applyEffectByUuid(actor, ref) {
+  const source = await resolveEffectSource(ref);
   if (!source || !actor) return null;
   return actor.createEmbeddedDocuments('Item', [source.toObject()],
     { [BRIDGE_SOURCE_FLAG]: 'app' });
@@ -172,6 +188,36 @@ export function getConditionItemActor(item) {
   const actor = item?.parent;
   if (!actor || actor.documentName !== 'Actor') return null;
   return actor;
+}
+
+// --- Effect items (Foundry → app effect read-back, #455) ---
+
+export function isEffectItem(item) {
+  return item?.type === 'effect';
+}
+
+// The owning Actor of an effect Item, or null when it isn't embedded on an actor.
+// Shares the parent-document check with conditions; kept separate so callers read
+// at the right granularity.
+export function getEffectItemActor(item) {
+  const actor = item?.parent;
+  if (!actor || actor.documentName !== 'Actor') return null;
+  return actor;
+}
+
+// All active (non-disabled, non-expired) effect items on an actor, as
+// { slug, name, img }. This is the snapshot the read-back pushes whenever an
+// effect item changes on a synced PC, so the app mirrors Foundry-applied buffs
+// (e.g. the Courageous Anthem aura granted to allies in range).
+export function getEffects(actor) {
+  return (actor?.itemTypes?.effect ?? [])
+    .filter((e) => !e.isExpired && !e.system?.disabled)
+    .map((e) => ({
+      slug: e.slug ?? e.system?.slug ?? null,
+      name: e.name,
+      img:  e.img ?? null,
+    }))
+    .filter((e) => e.slug);
 }
 
 // --- Combat data ---

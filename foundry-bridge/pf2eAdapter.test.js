@@ -22,11 +22,12 @@ import {
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
   applyEffectByUuid,
+  isEffectItem, getEffectItemActor, getEffects,
   getBestiaryInfo,
 } from './pf2eAdapter.js';
 import {
   hydrateActorFixture, hydrateCombatFixture, makeActor, makeToken,
-  makeCombat, makeCombatant,
+  makeCombat, makeCombatant, makeEffectItem,
 } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
@@ -392,6 +393,66 @@ describe('applyEffectByUuid (Slice B)', () => {
 
     const result = await applyEffectByUuid(null, 'Compendium.pf2e.x.Item.1');
     expect(result).toBeNull();
+  });
+
+  test('slug: ref resolves a world Item by slug (no fromUuid call)', async () => {
+    const actor = makeActor();
+    const worldEffect = { slug: 'courageous-anthem-aura', toObject: jest.fn().mockReturnValue({ type: 'effect', name: 'Aura' }) };
+    global.game.items = { contents: [worldEffect] };
+    global.fromUuid = jest.fn();
+
+    await applyEffectByUuid(actor, 'slug:courageous-anthem-aura');
+
+    expect(global.fromUuid).not.toHaveBeenCalled();
+    expect(worldEffect.toObject).toHaveBeenCalled();
+    expect(actor.createEmbeddedDocuments).toHaveBeenCalledWith(
+      'Item', [{ type: 'effect', name: 'Aura' }], { [BRIDGE_SOURCE_FLAG]: 'app' },
+    );
+  });
+
+  test('slug: ref with no matching world Item returns null', async () => {
+    const actor = makeActor();
+    global.game.items = { contents: [] };
+    const result = await applyEffectByUuid(actor, 'slug:not-imported');
+    expect(result).toBeNull();
+    expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+});
+
+describe('effect item read-back helpers (#455)', () => {
+  test('isEffectItem matches only effect-type items', () => {
+    expect(isEffectItem({ type: 'effect' })).toBe(true);
+    expect(isEffectItem({ type: 'condition' })).toBe(false);
+    expect(isEffectItem(null)).toBe(false);
+  });
+
+  test('getEffectItemActor returns the parent actor or null', () => {
+    const actor = makeActor();
+    expect(getEffectItemActor(makeEffectItem({ parent: actor }))).toBe(actor);
+    expect(getEffectItemActor(makeEffectItem({ parent: null }))).toBeNull();
+  });
+
+  test('getEffects lists active effect items as { slug, name, img }', () => {
+    const actor = makeActor({
+      effects: [{ slug: 'spell-effect-courageous-anthem', name: 'Spell Effect: Courageous Anthem', img: 'x.webp' }],
+    });
+    expect(getEffects(actor)).toEqual([
+      { slug: 'spell-effect-courageous-anthem', name: 'Spell Effect: Courageous Anthem', img: 'x.webp' },
+    ]);
+  });
+
+  test('getEffects drops expired, disabled, and slugless effects', () => {
+    const actor = makeActor({
+      effects: [
+        { slug: 'spell-effect-courageous-anthem', name: 'Active' },
+        { slug: 'expired-one', name: 'Expired', isExpired: true },
+        { slug: 'disabled-one', name: 'Disabled', disabled: true },
+        { slug: '', name: 'Slugless' },
+      ],
+    });
+    expect(getEffects(actor)).toEqual([
+      { slug: 'spell-effect-courageous-anthem', name: 'Active', img: null },
+    ]);
   });
 });
 

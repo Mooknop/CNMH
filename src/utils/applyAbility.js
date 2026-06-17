@@ -77,6 +77,11 @@ const buildEffectEntry = ({ eff, caster, abilityName, encounter, casterEntryId, 
  * @param {Object}   [effectDurationOverride] - Replaces each effect's authored duration
  *                                      (e.g. Lingering Composition extends a 1-round
  *                                      composition to { until:'rounds', rounds } — #226-B)
+ * @param {boolean}  [suppressStructuredEffects] - Skip the structured effects[] writes,
+ *                                      leaving the buff to Foundry's aura engine + the
+ *                                      cnmh_foundryeffects read-back (#455). Set when the
+ *                                      ability is Foundry-authoritative AND the bridge is
+ *                                      connected; grants/immunity/foundryEffect still run.
  */
 export function applyAbility({
   ability,
@@ -94,6 +99,7 @@ export function applyAbility({
   rank,
   nowSecs,
   effectDurationOverride,
+  suppressStructuredEffects = false,
 }) {
   const effects = Array.isArray(ability.effects) ? ability.effects : [];
   const grants  = Array.isArray(ability.grants)  ? ability.grants  : [];
@@ -103,7 +109,11 @@ export function applyAbility({
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   // ── Structured effects ──────────────────────────────────────────────────────
-  effects.forEach((eff) => {
+  // When Foundry owns this ability's buff (aura engine, #455) and the bridge is
+  // connected, skip the app-side effect writes — the buff arrives via the
+  // foundryEffect link below + the cnmh_foundryeffects read-back. The forEach is
+  // simply gated rather than removed so the enemy-target logging still runs.
+  (suppressStructuredEffects ? [] : effects).forEach((eff) => {
     // Per-cast duration override (Lingering Composition, #226-B): swap the
     // authored duration only when both an override and an authored duration exist.
     const effForApply = (effectDurationOverride && eff.duration)

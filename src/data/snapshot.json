@@ -9622,7 +9622,12 @@
             "until": "caster-turn-start"
           }
         }
-      ]
+      ],
+      "foundryEffect": {
+        "ref": "slug:courageous-anthem-aura",
+        "applyTo": "self",
+        "authoritative": true
+      }
     },
     {
       "id": "instant-parade",

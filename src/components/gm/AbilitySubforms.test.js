@@ -401,6 +401,14 @@ describe('foundryEffectToForm / foundryEffectFromForm', () => {
     expect(out).toEqual({ ref: 'Compendium.pf2e.spell-effects.Item.abc123', applyTo: 'self' });
   });
 
+  it('round-trips the authoritative flag, emitting it only when true (#455)', () => {
+    const src = { ref: 'slug:courageous-anthem-aura', applyTo: 'self', authoritative: true };
+    expect(foundryEffectFromForm(foundryEffectToForm(src))).toEqual(src);
+    // Falsy authoritative is dropped from the persisted shape.
+    const out = foundryEffectFromForm(foundryEffectToForm({ ref: 'slug:x', applyTo: 'self' }));
+    expect(out).not.toHaveProperty('authoritative');
+  });
+
   it('returns null when ref is empty', () => {
     expect(foundryEffectFromForm(foundryEffectToForm(null))).toBeNull();
     expect(foundryEffectFromForm(foundryEffectToForm({ ref: '' }))).toBeNull();

@@ -305,8 +305,9 @@ export const RollSourceControl = ({ value, onChange, idPrefix }) => {
 // Round-trip contract: delete from `rest` on toForm; only emit if ref is set.
 
 export const foundryEffectToForm = (fe) => ({
-  ref:     fe?.ref     || '',
-  applyTo: fe?.applyTo || '',
+  ref:           fe?.ref     || '',
+  applyTo:       fe?.applyTo || '',
+  authoritative: !!fe?.authoritative,
 });
 
 export const foundryEffectFromForm = (f) => {
@@ -314,6 +315,10 @@ export const foundryEffectFromForm = (f) => {
   return {
     ref:     f.ref.trim(),
     applyTo: f.applyTo || 'self',
+    // When set, Foundry owns this ability's buff while the bridge is connected:
+    // the app suppresses its structured effects[] and mirrors the result via the
+    // cnmh_foundryeffects read-back (#455). Only emitted when true.
+    ...(f.authoritative ? { authoritative: true } : {}),
   };
 };
 
@@ -330,18 +335,29 @@ export const FoundryEffectControl = ({ value, onChange, idPrefix }) => {
         style={{ width: '100%' }}
       />
       {value.ref.trim() && (
-        <select
-          aria-label={`${idPrefix}-foundry-effect-apply-to`}
-          value={value.applyTo}
-          onChange={(e) => set({ applyTo: e.target.value })}
-          style={{ marginTop: '4px' }}
-        >
-          <option value="">— apply to (default: self)</option>
-          <option value="self">self</option>
-          <option value="ally">ally (picked target)</option>
-          <option value="all-allies">all allies</option>
-          <option value="target">target (picked)</option>
-        </select>
+        <>
+          <select
+            aria-label={`${idPrefix}-foundry-effect-apply-to`}
+            value={value.applyTo}
+            onChange={(e) => set({ applyTo: e.target.value })}
+            style={{ marginTop: '4px' }}
+          >
+            <option value="">— apply to (default: self)</option>
+            <option value="self">self</option>
+            <option value="ally">ally (picked target)</option>
+            <option value="all-allies">all allies</option>
+            <option value="target">target (picked)</option>
+          </select>
+          <label style={{ display: 'block', marginTop: '4px' }}>
+            <input
+              type="checkbox"
+              aria-label={`${idPrefix}-foundry-effect-authoritative`}
+              checked={value.authoritative}
+              onChange={(e) => set({ authoritative: e.target.checked })}
+            />
+            {' '}Foundry owns this buff (aura) — suppress app effect when bridged
+          </label>
+        </>
       )}
     </div>
   );

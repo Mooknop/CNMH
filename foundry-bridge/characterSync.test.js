@@ -3,7 +3,7 @@
 
 import { initCharacterSync, handleCharacterUpdate } from './characterSync.js';
 import { updateActorMap } from './encounter.js';
-import { makeActor, makeConditionItem } from './test/foundryMock.js';
+import { makeActor, makeConditionItem, makeEffectItem } from './test/foundryMock.js';
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
 let send;
@@ -77,6 +77,59 @@ describe('onConditionItemChanged (Foundry → app)', () => {
   test('condition item with no actor parent is ignored', () => {
     global.Hooks.fire('deleteItem', makeConditionItem({ slug: 'prone', parent: null }));
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('onEffectItemChanged (Foundry → app effect read-back, #455)', () => {
+  test('a mapped effect pushes cnmh_foundryeffects with the app effectId', () => {
+    const actor = makeActor({
+      id: 'actor-pellias',
+      effects: [{ slug: 'spell-effect-courageous-anthem', name: 'Spell Effect: Courageous Anthem' }],
+    });
+    const effItem = actor.itemTypes.effect[0];
+
+    global.Hooks.fire('createItem', effItem);
+
+    expect(send).toHaveBeenCalledWith('Pellias', 'foundryeffects', [
+      { id: 'foundry-inspire-courage', effectId: 'inspire-courage', source: 'Spell Effect: Courageous Anthem', fromFoundry: true },
+    ]);
+  });
+
+  test('removing the last mapped effect pushes an empty list', () => {
+    // After the delete the actor has no effect items left; the removed item still
+    // fires the hook and carries a back-link to its (now-empty) parent.
+    const actor = makeActor({ id: 'actor-pellias', effects: [] });
+    const removed = makeEffectItem({ slug: 'spell-effect-courageous-anthem', parent: actor });
+    global.Hooks.fire('deleteItem', removed);
+    expect(send).toHaveBeenCalledWith('Pellias', 'foundryeffects', []);
+  });
+
+  test('unmodelled effect slugs (incl. the aura source) are dropped', () => {
+    const actor = makeActor({
+      id: 'actor-pellias',
+      effects: [
+        { slug: 'courageous-anthem-aura', name: 'Effect: Courageous Anthem (CNMH Aura)' },
+        { slug: 'spell-effect-courageous-anthem', name: 'Spell Effect: Courageous Anthem' },
+      ],
+    });
+    global.Hooks.fire('updateItem', actor.itemTypes.effect[1]);
+    expect(send).toHaveBeenCalledWith('Pellias', 'foundryeffects', [
+      { id: 'foundry-inspire-courage', effectId: 'inspire-courage', source: 'Spell Effect: Courageous Anthem', fromFoundry: true },
+    ]);
+  });
+
+  test('non-effect items are ignored', () => {
+    global.Hooks.fire('createItem', { type: 'weapon' });
+    expect(send).not.toHaveBeenCalledWith('Pellias', 'foundryeffects', expect.anything());
+  });
+
+  test('an effect on an unmapped actor is ignored', () => {
+    const actor = makeActor({
+      id: 'actor-unknown',
+      effects: [{ slug: 'spell-effect-courageous-anthem' }],
+    });
+    global.Hooks.fire('createItem', actor.itemTypes.effect[0]);
+    expect(send).not.toHaveBeenCalledWith(expect.anything(), 'foundryeffects', expect.anything());
   });
 });
 

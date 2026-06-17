@@ -8,11 +8,12 @@
 // Actor→charId resolution uses the app-maintained actorMap (set by GM in the
 // encounter UI and stored in session state) rather than the static config.js map.
 import { getActorMap } from './encounter.js';
-import { isBridgeEcho, slugToAppConditionId } from './utils.js';
+import { isBridgeEcho, slugToAppConditionId, slugToAppEffectId } from './utils.js';
 import {
-  getHp, getHeroPoints, getConditions,
+  getHp, getHeroPoints, getConditions, getEffects,
   getActorById, getActorId, updateActorHp, updateActorHeroPoints,
   isConditionItem, getConditionItemActor,
+  isEffectItem, getEffectItemActor,
 } from './pf2eAdapter.js';
 
 let _sendUpdate = null;
@@ -28,6 +29,15 @@ export function initCharacterSync(sendUpdateFn) {
   Hooks.on('createItem', onConditionItemChanged);
   Hooks.on('updateItem', onConditionItemChanged);
   Hooks.on('deleteItem', onConditionItemChanged);
+
+  // Effect items — Foundry → app effect read-back (#455). The Courageous Anthem
+  // aura grants the stock spell effect to allied tokens in range; mirroring those
+  // effect items into cnmh_foundryeffects_<charId> lets the app show + apply the
+  // +1 the same way an app-applied effect would. Enter/leave the aura fires
+  // create/delete on the ally actor, so membership tracking is automatic.
+  Hooks.on('createItem', onEffectItemChanged);
+  Hooks.on('updateItem', onEffectItemChanged);
+  Hooks.on('deleteItem', onEffectItemChanged);
 }
 
 // Called by bridge.js when an incoming relay UPDATE arrives for a character key.
@@ -86,4 +96,27 @@ function onConditionItemChanged(item) {
   // …and re-push HP, since dying/wounded/doomed surface in the HP box and are
   // applied as condition items rather than direct actor-attribute writes.
   _sendUpdate?.(charId, 'hp', getHp(actor));
+}
+
+// Effect-item create/update/delete on a synced PC → push the actor's current
+// app-modelled effects as cnmh_foundryeffects_<charId>. The bridge owns this key
+// outright (full-list replace, like conditions), so it never clobbers the app's
+// own cnmh_effects_<charId> store. Effect slugs the app doesn't model
+// (slugToAppEffectId → null) — including the aura *source* — are dropped.
+function onEffectItemChanged(item) {
+  if (!isEffectItem(item)) return;
+  const actor = getEffectItemActor(item);
+  if (!actor) return;
+
+  const charId = getActorMap()[getActorId(actor)];
+  if (!charId) return;
+
+  const effects = getEffects(actor)
+    .map((e) => ({ slug: e.slug, effectId: slugToAppEffectId(e.slug), source: e.name }))
+    .filter((e) => e.effectId)
+    // Stable id per (effectId) so the app can key/merge without churn; the same
+    // buff appearing twice collapses to one entry.
+    .map((e) => ({ id: `foundry-${e.effectId}`, effectId: e.effectId, source: e.source, fromFoundry: true }));
+
+  _sendUpdate?.(charId, 'foundryeffects', effects);
 }

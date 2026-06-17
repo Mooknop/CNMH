@@ -120,6 +120,16 @@ describe('EffectsPanel', () => {
     expect(removeButtons).toHaveLength(2);
   });
 
+  it('renders Foundry-sourced effects read-only (no ×, aura tag) — #455', () => {
+    mockEffects.effects = [{ id: 'foundry-bless', effectId: 'bless', fromFoundry: true }];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    // Name shows from the catalog, but there is no remove control…
+    expect(screen.getByText('Bless')).toBeInTheDocument();
+    expect(screen.queryByTitle('Remove Bless')).not.toBeInTheDocument();
+    // …and it carries the read-only aura tag instead.
+    expect(screen.getByText('aura')).toBeInTheDocument();
+  });
+
   it('labels an ability immunity with its source and clock expiry', () => {
     mockEffects.effects = [{
       id: 'uid-imm',
