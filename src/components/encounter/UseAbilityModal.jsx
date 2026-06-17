@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
-import TargetRollResolver from './TargetRollResolver';
+import TargetRollResolver, { DEGREE_LABELS_SAVE } from './TargetRollResolver';
+import OpposedReactionResolver from './OpposedReactionResolver';
 import MultiRayResolver from './MultiRayResolver';
 import ChainedStrikeSection from './ChainedStrikeSection';
 import ChainedSpellSection from './ChainedSpellSection';
@@ -21,6 +22,7 @@ import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
+import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
@@ -99,6 +101,11 @@ const UseAbilityModal = ({
 
   const resolverRef = useRef(null);
   const chainRef    = useRef(null);
+  const opposedRef  = useRef(null);
+
+  // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
+  // self-expiring per-enemy immunity, keyed by encounter entryId.
+  const { stampImmunity } = useEnemyEffects();
 
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
@@ -333,6 +340,16 @@ const UseAbilityModal = ({
   // 2 actions on Staunch Bleeding lowers the DC by 10.
   const saveDc = rollProfile.dc != null ? rollProfile.dc + (variant?.dcDelta ?? 0) : rollProfile.dc;
 
+  // Opposed reaction (#226-C): a reaction-cost ability whose roll config carries
+  // `opposed: true`. It resolves the actor's skill total (already in
+  // rollProfile.bonus) against a GM-called DC the player relays, not a target's
+  // defense — so it bypasses the defense-driven resolver entirely.
+  const isOpposedReaction = ability.roll?.opposed === true;
+  const enemyOptions = isOpposedReaction ? order.filter((e) => e.kind === 'enemy') : [];
+  const opposedSkillLabel = rollProfile.skill
+    ? rollProfile.skill.charAt(0).toUpperCase() + rollProfile.skill.slice(1)
+    : null;
+
   // Which defense to show on the resolver (actor-roll only).
   const effectiveDefense = rollProfile.mode === 'actor-roll'
     ? rollProfile.defense
@@ -408,6 +425,64 @@ const UseAbilityModal = ({
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
+    // Opposed reaction (#226-C) — its own resolution path. The actor's skill
+    // roll is compared to the GM-called DC; the authored self effect and any
+    // per-enemy immunity land only on a success. Returns early so none of the
+    // target-defense / save-request / MAP machinery below ever runs for it.
+    if (isOpposedReaction) {
+      const res = opposedRef.current?.getResults() ?? null;
+      const succeeded = res?.degree === 'success' || res?.degree === 'criticalSuccess';
+
+      // Authored self effect (Upstage's +1 status buff). Crit and plain success
+      // both apply at the engine level; the "only if the enemy failed" caveat is
+      // the rendered success note, not auto-enforced.
+      if (succeeded && hasEffects) {
+        applyAbility({
+          ability,
+          caster: character,
+          casterEntryId,
+          targetCharIds: [],
+          enemyTargetNames: [],
+          order,
+          encounter,
+          characters,
+          getState,
+          sendUpdate,
+          appendLog,
+          verb: effectiveVerb,
+          nowSecs,
+        });
+      }
+
+      // Per-enemy immunity (Disrupting Performance's 1-minute lockout) — only
+      // when the check succeeded and a triggering enemy was picked.
+      if (succeeded && immunityConfig && res?.enemyEntryId) {
+        stampImmunity(res.enemyEntryId, {
+          abilityKey:   immunityAbilityKey,
+          abilityName:  ability.name,
+          casterId:     character.id,
+          nowSecs,
+          durationSecs: immunityConfig.durationSecs,
+        });
+      }
+
+      const degreeLabel = res?.degree ? (DEGREE_LABELS_SAVE[res.degree]?.label || res.degree) : null;
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   (res?.degree != null && res?.dc != null)
+          ? `${character.name}'s ${ability.name} vs DC ${res.dc}: ${res.total} → ${degreeLabel}`
+            + (res.enemyName ? ` (${res.enemyName})` : '')
+          : `${character.name} ${effectiveVerb} ${ability.name}`,
+      });
+
+      if (effectiveCost === 'reaction') {
+        spendReaction(`${verb} ${ability.name}`);
+      }
+      onClose();
+      return;
+    }
+
     const rawResults   = resolverRef.current?.getResults() ?? null;
     const chainResults = chainRef.current?.getResults() ?? null;
 
@@ -961,6 +1036,18 @@ const UseAbilityModal = ({
     </>
   ) : null;
 
+  // Opposed-reaction resolver (#226-C) — DC entry + optional enemy picker + the
+  // actor's skill roll. Replaces the defense-driven roll section for these.
+  const opposedSection = isOpposedReaction ? (
+    <OpposedReactionResolver
+      ref={opposedRef}
+      rollBonus={rollProfile.bonus}
+      enemyOptions={enemyOptions}
+      skillLabel={opposedSkillLabel}
+      successNote={ability.roll?.successNote || null}
+    />
+  ) : null;
+
   // The roll resolution section: inline resolver (actor-roll) or save-request info (target-save).
   // Multi-ray attack spells render one resolver row per ray instead of a single roll.
   let rollSection = null;
@@ -1292,15 +1379,19 @@ const UseAbilityModal = ({
               </div>
             ))}
 
-            {needsPicker && (
-              <TargetPicker
-                selectable={selectable}
-                isTargeted={isTargeted}
-                onToggle={toggleTarget}
-              />
+            {isOpposedReaction ? opposedSection : (
+              <>
+                {needsPicker && (
+                  <TargetPicker
+                    selectable={selectable}
+                    isTargeted={isTargeted}
+                    onToggle={toggleTarget}
+                  />
+                )}
+                {mapSection}
+                {rollSection}
+              </>
             )}
-            {mapSection}
-            {rollSection}
           </section>
         </>
       )}
@@ -1329,7 +1420,16 @@ const UseAbilityModal = ({
         </>
       )}
 
-      {!hasEffects && (
+      {!hasEffects && isOpposedReaction && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            {opposedSection}
+          </section>
+        </>
+      )}
+
+      {!hasEffects && !isOpposedReaction && (
         <>
           <hr className="ct-divider" />
           <section className="ct-section">
