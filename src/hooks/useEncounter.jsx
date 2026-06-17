@@ -299,6 +299,17 @@ export const useEncounter = () => {
           sendUpdate(entry.charId, 'stance', idle);
         }
 
+        // Harmless Bystander is declared per-encounter (#226 Slice D) — drop the
+        // flag so it doesn't carry into the next fight or onto the sheet.
+        const bystanderKey = `cnmh_bystander_${entry.charId}`;
+        let bystander;
+        try { bystander = JSON.parse(window.localStorage.getItem(bystanderKey)); } catch { bystander = null; }
+        if (bystander?.active) {
+          const idle = { active: false, mod: null, ts: 0 };
+          window.localStorage.setItem(bystanderKey, JSON.stringify(idle));
+          sendUpdate(entry.charId, 'bystander', idle);
+        }
+
         // Encounter-scoped effects (#275) — drop turn/round-bound leftovers and
         // catalog-flagged states like eld-charged so they don't linger past the
         // fight. Manual effects and clock-based immunities are kept.
