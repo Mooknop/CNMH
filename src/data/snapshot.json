@@ -6421,7 +6421,22 @@
               "degrees": {
                 "Critical Success": "You gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn.",
                 "Success": "As critical success, except you gain the benefits only if the triggering creature failed their skill check."
-              }
+              },
+              "roll": {
+                "type": "skill",
+                "skill": "performance",
+                "opposed": true,
+                "successNote": "Applies only if the triggering creature failed their skill check (a critical success applies regardless)."
+              },
+              "effects": [
+                {
+                  "effectId": "upstage",
+                  "applyTo": "self",
+                  "duration": {
+                    "until": "caster-turn-end"
+                  }
+                }
+              ]
             }
           ],
           "name": "Celebrity Dedication",
