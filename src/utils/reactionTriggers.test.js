@@ -60,6 +60,13 @@ describe('reactionTriggers', () => {
       expect(matchingReactions([abeyance], 'ranged-attack')).toEqual([]);
     });
 
+    it('auditory-visual-effect wakes Counter Performance', () => {
+      // Counter Performance: you or an ally is affected by an auditory/visual effect.
+      const counter = { name: 'Counter Performance', triggerType: 'auditory-visual-effect' };
+      expect(matchingReactions([counter], 'auditory-visual-effect')).toEqual([counter]);
+      expect(matchingReactions([counter], 'damaged')).toEqual([]);
+    });
+
     it('check-failed wakes self-check-failed reactions', () => {
       // Avoid Dire Fate: you fail a check matching your harrow omen suit.
       const direFate = { name: 'Avoid Dire Fate', triggerType: 'self-check-failed' };

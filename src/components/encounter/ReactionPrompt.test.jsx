@@ -35,12 +35,19 @@ vi.mock('../../hooks/useTurnState', () => ({
 
 let mockReactions;
 let mockStaffSpells;
+let mockFocusSpells;
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: () => ({
     reactions: mockReactions,
     staffSpells: mockStaffSpells,
+    focusSpells: mockFocusSpells,
     inventory: [],
   }),
+}));
+
+let mockCatalogSpells;
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ spells: mockCatalogSpells }),
 }));
 
 let mockShield;
@@ -102,6 +109,8 @@ beforeEach(() => {
     { name: 'Wing Deflection',    triggerType: 'attack-any' },
   ];
   mockStaffSpells = [];
+  mockFocusSpells = [];
+  mockCatalogSpells = [];
   mockShield = { raised: false, broken: false };
 });
 
@@ -216,6 +225,45 @@ describe('ReactionPrompt', () => {
     ];
     setup();
     act(() => setPrompt({ ...prompt, eventId: 'damaged', label: 'PC was damaged' }));
+    expect(screen.queryByRole('region')).toBeNull();
+  });
+
+  it('reaction-cost focus spells match and Cast from focus', () => {
+    mockReactions = [];
+    mockFocusSpells = [
+      { spellRef: 'counter-performance' },
+      // A non-reaction focus spell never enters the matching pool.
+      { spellRef: 'inspire-courage' },
+    ];
+    mockCatalogSpells = [
+      {
+        id: 'counter-performance',
+        name: 'Counter Performance',
+        actions: 'Reaction',
+        triggerType: 'auditory-visual-effect',
+      },
+      {
+        id: 'inspire-courage',
+        name: 'Inspire Courage',
+        actions: 'Single Action',
+        triggerType: 'auditory-visual-effect',
+      },
+    ];
+    setup();
+    act(() => setPrompt({ ...prompt, eventId: 'auditory-visual-effect', label: 'Auditory/visual effect' }));
+    expect(screen.queryByText('Inspire Courage')).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('Use Counter Performance'));
+    expect(screen.getByTestId('use-ability-modal'))
+      .toHaveTextContent('Cast Counter Performance (reaction from focus)');
+  });
+
+  it('a dangling focus spellRef is skipped without matching', () => {
+    mockReactions = [];
+    mockFocusSpells = [{ spellRef: 'counter-performance' }];
+    mockCatalogSpells = []; // ref resolves to an "(unknown spell)" stub with no actions
+    setup();
+    act(() => setPrompt({ ...prompt, eventId: 'auditory-visual-effect', label: 'Auditory/visual effect' }));
     expect(screen.queryByRole('region')).toBeNull();
   });
 
