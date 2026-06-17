@@ -9367,6 +9367,7 @@
         "Mental"
       ],
       "actions": "Reaction",
+      "triggerType": "auditory-visual-effect",
       "trigger": "You or an ally within 60 feet would be affected by an auditory or visual effect.",
       "area": "60-foot emanation",
       "description": "Your performance protects you and your allies. Roll a Performance check for a type you know—it must be an auditory performance if the trigger was auditory or a visual one for a visual trigger, and this action gains the traits for the type of performance (page 243). You and allies in the area can use the better result between your Performance check and the saving throw."
