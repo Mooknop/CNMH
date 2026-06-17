@@ -1,0 +1,35 @@
+{
+  "name": "Effect: Courageous Anthem (CNMH Aura)",
+  "type": "effect",
+  "img": "systems/pf2e/icons/spells/inspire-courage.webp",
+  "system": {
+    "slug": "courageous-anthem-aura",
+    "description": {
+      "value": "<p>Bridge-applied aura source for Courageous Anthem (CNMH #455). When applied to the caster it emits the stock <em>Spell Effect: Courageous Anthem</em> to the caster and every ally within a 60-foot emanation, then expires at the start of the caster's next turn (matching the spell's 1-round duration). The CNMH app references this effect by slug (<code>slug:courageous-anthem-aura</code>); import it once into the World Items directory and the bridge resolves it automatically.</p>"
+    },
+    "rules": [
+      {
+        "key": "Aura",
+        "slug": "courageous-anthem",
+        "radius": 60,
+        "effects": [
+          {
+            "uuid": "Compendium.pf2e.spell-effects.Item.beReeFroAx24hj83",
+            "affects": "allies",
+            "includesSelf": true,
+            "removeOnExit": true
+          }
+        ],
+        "traits": ["auditory", "emotion", "mental", "visual"]
+      }
+    ],
+    "tokenIcon": { "show": true },
+    "duration": { "value": 1, "unit": "rounds", "expiry": "turn-start", "sustained": false },
+    "level": { "value": 1 },
+    "start": { "value": 0, "initiative": null },
+    "traits": { "value": ["auditory", "emotion", "mental", "visual"], "rarity": "common" },
+    "badge": null,
+    "context": null,
+    "unidentified": false
+  }
+}

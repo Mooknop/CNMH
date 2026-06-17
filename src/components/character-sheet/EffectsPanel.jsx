@@ -52,6 +52,9 @@ const EffectsPanel = ({ charId, themeColor }) => {
             ? getCharName(entry.appliedBy)
             : null;
           const displayName = sourceName ? `${name} — from ${sourceName}` : name;
+          // Foundry-sourced effects (#455) are owned by Foundry's own duration /
+          // aura engine — show them read-only (no × ) with a tag, mirroring how
+          // sustained spells render below.
           return (
             <li key={entry.id} className="effects-panel-item">
               <span className="effects-panel-name">{displayName}</span>
@@ -60,14 +63,18 @@ const EffectsPanel = ({ charId, themeColor }) => {
                   {expLabel}
                 </span>
               )}
-              <button
-                className="effects-panel-remove"
-                onClick={() => removeEffect(entry.id)}
-                aria-label={`Remove ${displayName}`}
-                title={`Remove ${displayName}`}
-              >
-                ×
-              </button>
+              {entry.fromFoundry ? (
+                <span className="effects-panel-tag" title="Applied in Foundry">aura</span>
+              ) : (
+                <button
+                  className="effects-panel-remove"
+                  onClick={() => removeEffect(entry.id)}
+                  aria-label={`Remove ${displayName}`}
+                  title={`Remove ${displayName}`}
+                >
+                  ×
+                </button>
+              )}
             </li>
           );
         })}

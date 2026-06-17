@@ -42,6 +42,14 @@ describe('makeSustainEntry', () => {
     const plain = makeSustainEntry({ ability: { name: 'Bless', duration: 'Sustained' }, round: 1 });
     expect(plain).not.toHaveProperty('heal');
   });
+
+  it('carries an optional foundryAura payload (#455), omitted otherwise', () => {
+    const foundryAura = { ref: 'slug:courageous-anthem-aura', casterEntryId: 'cbt-izzy' };
+    const withAura = makeSustainEntry({ ability: { name: 'Some Aura', duration: 'sustained' }, round: 1, foundryAura });
+    expect(withAura.foundryAura).toEqual(foundryAura);
+    const plain = makeSustainEntry({ ability: { name: 'Bless', duration: 'Sustained' }, round: 1 });
+    expect(plain).not.toHaveProperty('foundryAura');
+  });
 });
 
 describe('registerSustain', () => {

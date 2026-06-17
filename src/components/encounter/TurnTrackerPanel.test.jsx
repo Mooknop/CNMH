@@ -535,6 +535,30 @@ describe('TurnTrackerPanel', () => {
     expect(drv.encounter.log.some((l) => /Ashka gains 4 temporary HP/.test(l.text))).toBe(true);
   });
 
+  it('Sustaining a Foundry aura re-clones the effect onto the caster (#455)', () => {
+    let drv, setSustains;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_sustains_Pellias" onReady={(s) => (setSustains = s)} />
+        <TurnTrackerPanel charId="Pellias" characterName="Pellias" />
+      </>
+    );
+    startMyTurn(() => drv);
+    seedSustain(setSustains, [{
+      id: 's1', spellId: 'aura-spell', spellName: 'Some Aura', lastSustainedRound: 0,
+      foundryAura: { ref: 'slug:courageous-anthem-aura', casterEntryId: 'cbt-pellias' },
+    }]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sustain Some Aura' }));
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('Pellias', 'applyeffect', expect.objectContaining({
+      ref: 'slug:courageous-anthem-aura',
+      op: 'apply',
+      targets: ['cbt-pellias'],
+    }));
+  });
+
   it('End removes the sustain and logs it', () => {
     let drv, setSustains;
     render(

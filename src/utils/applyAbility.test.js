@@ -280,3 +280,33 @@ describe('applyAbility — heightened cast rank (#235)', () => {
     );
   });
 });
+
+describe('applyAbility — suppressStructuredEffects (Foundry-authoritative, #455)', () => {
+  it('skips structured effects[] writes but still emits the foundryEffect', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'inspire-courage', applyTo: 'all-allies', duration: { until: 'caster-turn-start' } }],
+      foundryEffect: { ref: 'slug:courageous-anthem-aura', applyTo: 'self', authoritative: true },
+    });
+
+    applyAbility({ ...args, suppressStructuredEffects: true });
+
+    // No per-target effect write…
+    expect(sendUpdate.mock.calls.find(([, key]) => key === 'effects')).toBeUndefined();
+    // …but the aura still goes to the bridge.
+    const fe = sendUpdate.mock.calls.find(([, key]) => key === 'applyeffect');
+    expect(fe).toBeDefined();
+    expect(fe[2].ref).toBe('slug:courageous-anthem-aura');
+  });
+
+  it('writes structured effects[] as normal when not suppressed', () => {
+    const { args, sendUpdate } = makeArgs({
+      effects: [{ effectId: 'inspire-courage', applyTo: 'all-allies', duration: { until: 'caster-turn-start' } }],
+      foundryEffect: { ref: 'slug:courageous-anthem-aura', applyTo: 'self', authoritative: true },
+    });
+
+    applyAbility(args);
+
+    const effectWrites = sendUpdate.mock.calls.filter(([, key]) => key === 'effects');
+    expect(effectWrites).toHaveLength(2); // both PCs (all-allies)
+  });
+});

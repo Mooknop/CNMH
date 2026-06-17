@@ -59,6 +59,24 @@ export function slugToAppConditionId(slug) {
   return CONDITION_SLUG_MAP[slug] ?? slug;
 }
 
+// PF2e effect-item slug → CNMH effect-catalog id (#455 read-back). Only effects
+// the app models as a buff are listed; effect items without a mapping (the aura
+// *source* machinery, unmapped spell effects) are skipped by the read-back so they
+// never surface as a phantom app effect. The stock "Spell Effect: Courageous
+// Anthem" sluggifies to `spell-effect-courageous-anthem`; the legacy `inspire-
+// courage`/`courageous-anthem` slugs are mapped too for resilience across PF2e data.
+export const EFFECT_SLUG_MAP = {
+  'spell-effect-courageous-anthem': 'inspire-courage',
+  'courageous-anthem':             'inspire-courage',
+  'inspire-courage':               'inspire-courage',
+};
+
+// Map a PF2e effect slug to an app effect id, or null when the effect isn't one
+// the app models (so the read-back can drop it).
+export function slugToAppEffectId(slug) {
+  return EFFECT_SLUG_MAP[slug] ?? null;
+}
+
 // Stable incrementing counter for log entry deduplication.
 let _logCounter = 0;
 export function nextLogId() {

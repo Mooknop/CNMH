@@ -443,6 +443,15 @@ const UseAbilityModal = ({
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
   const handleConfirm = () => {
+    // Foundry-authoritative buffs (#455): when the ability's foundryEffect is
+    // flagged `authoritative` AND the Foundry bridge is connected (its roster is
+    // present), let Foundry's aura engine own the effect — the app skips its own
+    // structured-effect writes and instead mirrors the result via the
+    // cnmh_foundryeffects read-back. With no bridge, the authored effects[] (e.g.
+    // Inspire Courage's all-allies fallback) apply as before.
+    const bridgePresent = (getState('global', 'roster') || []).length > 0;
+    const foundryAuthoritative = !!ability.foundryEffect?.authoritative && bridgePresent;
+
     // Opposed reaction (#226-C) — its own resolution path. The actor's skill
     // roll is compared to the GM-called DC; the authored self effect and any
     // per-enemy immunity land only on a success. Returns early so none of the
@@ -606,6 +615,11 @@ const UseAbilityModal = ({
         caster: character,
         round: encounter.round,
         castRank: directCastRank,
+        // Foundry-authoritative aura (#455): carry the effect ref so each Sustain
+        // re-clones it onto the caster and PF2e re-evaluates aura membership.
+        foundryAura: (foundryAuthoritative && ability.foundryEffect?.ref)
+          ? { ref: ability.foundryEffect.ref, casterEntryId }
+          : undefined,
         getState,
         sendUpdate,
         appendLog,
@@ -665,6 +679,7 @@ const UseAbilityModal = ({
           && directCastRank > ability.level) ? directCastRank : undefined,
         nowSecs,
         effectDurationOverride,
+        suppressStructuredEffects: foundryAuthoritative,
       });
 
       if (effectDurationOverride) {

@@ -150,6 +150,19 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
     doSustain(s.id, encounter?.round);
     appendLog({ type: 'action', charId, text: `${characterName} sustained ${s.spellName}` });
 
+    // Foundry-authoritative aura (#455): re-clone the effect onto the caster so
+    // PF2e's aura engine refreshes the buff and re-evaluates which allies are
+    // currently in range. No-op when the bridge isn't carrying the aura.
+    if (s.foundryAura?.ref) {
+      sendUpdate(charId, 'applyeffect', {
+        ref:     s.foundryAura.ref,
+        op:      'apply',
+        targets: [s.foundryAura.casterEntryId].filter(Boolean),
+        source:  s.spellName,
+        ts:      Date.now(),
+      });
+    }
+
     // Hymn of Healing (#226): the first time each round it's Sustained, the
     // target gains temp HP again (take-higher). Fast healing keeps applying on
     // its own at the target's turn start.

@@ -53,6 +53,7 @@ export function makeActor(opts = {}) {
     focus = {},
     speed = 25,
     conditions = [],
+    effects = [],
     tokens = [],
     // Bestiary / NPC fields
     img = null,
@@ -74,6 +75,9 @@ export function makeActor(opts = {}) {
 
   const conditionItems = conditions.map((c) =>
     makeConditionItem({ slug: c.slug, value: c.value }));
+
+  const effectItems = effects.map((e) =>
+    makeEffectItem({ slug: e.slug, name: e.name, img: e.img, isExpired: e.isExpired, disabled: e.disabled }));
 
   const actor = {
     id,
@@ -113,14 +117,15 @@ export function makeActor(opts = {}) {
       },
       ...(perception !== null ? { perception: { mod: perception } } : {}),
     },
-    itemTypes: { condition: conditionItems },
+    itemTypes: { condition: conditionItems, effect: effectItems },
     getActiveTokens: () => tokens,
     update: jest.fn().mockResolvedValue(undefined),
     createEmbeddedDocuments: jest.fn().mockResolvedValue([]),
   };
 
-  // Back-link condition items to their parent actor.
+  // Back-link condition + effect items to their parent actor.
   conditionItems.forEach((c) => { c.parent = actor; });
+  effectItems.forEach((e) => { e.parent = actor; });
   tokens.forEach((t) => { if (!t.actor) t.actor = actor; });
   return actor;
 }
@@ -134,6 +139,29 @@ export function makeConditionItem(opts = {}) {
     type: 'condition',
     slug,
     system: { slug, value: { value } },
+    parent,
+  };
+}
+
+// A PF2e effect is an effect-type embedded Item. `slug` is a derived getter on the
+// live document; `isExpired`/`system.disabled` gate whether getEffects includes it.
+export function makeEffectItem(opts = {}) {
+  const {
+    slug = 'spell-effect-courageous-anthem',
+    name = 'Spell Effect: Courageous Anthem',
+    img = null,
+    isExpired = false,
+    disabled = false,
+    parent = null,
+  } = opts;
+  return {
+    id: autoId('item'),
+    type: 'effect',
+    slug,
+    name,
+    img,
+    isExpired,
+    system: { slug, disabled },
     parent,
   };
 }
