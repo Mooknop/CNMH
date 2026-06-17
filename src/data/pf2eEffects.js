@@ -86,6 +86,26 @@ const PF2E_EFFECTS = [
     ],
   },
 
+  // ── Upstage (Celebrity Dedication reaction, #226-C) ────────────────
+  // +1 status bonus until the end of your next turn (caster-turn-end, authored
+  // on the content effect block). The skill-check clause of the bonus is not
+  // modelled here — the effect engine has no skill-check bonus path yet (#447);
+  // attacks, Perception, and saves are covered the way Heroism's are.
+  {
+    id: 'upstage',
+    name: 'Upstage',
+    description: '+1 status bonus to attack rolls, Perception, saving throws, and skill checks until the end of your next turn.',
+    modifiers: [
+      { stat: 'meleeAttack',  kind: 'status', amount: 1 },
+      { stat: 'rangedAttack', kind: 'status', amount: 1 },
+      { stat: 'spellAttack',  kind: 'status', amount: 1 },
+      { stat: 'perception',   kind: 'status', amount: 1 },
+      { stat: 'fort',         kind: 'status', amount: 1 },
+      { stat: 'reflex',       kind: 'status', amount: 1 },
+      { stat: 'will',         kind: 'status', amount: 1 },
+    ],
+  },
+
   // ── Bless (divine/primal area spell) ───────────────────────────────
   {
     id: 'bless',
