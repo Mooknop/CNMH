@@ -5,9 +5,12 @@ import PenaltyDisplay from '../shared/PenaltyDisplay';
 import ProficiencyPips from '../shared/ProficiencyPips';
 import { useCharacter } from '../../hooks/useCharacter';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
+import { combineModifiers } from '../../utils/EffectUtils';
 import { getLoreSkillModifier } from '../../utils/CharacterUtils';
 
-const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }) => {
+const EMPTY_MOD = { total: 0, sources: [] };
+
+const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], effectBonuses = {} }) => {
   // Use the characterColor or default to the theme color
   const themeColor = characterColor || 'var(--color-primary)';
 
@@ -280,7 +283,13 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
           const abilityMod  = abilityModifiers[skill.ability] || 0;
           const abilityModStr = abilityMod >= 0 ? `+${abilityMod}` : String(abilityMod);
           const itemBonus   = itemBonuses[skill.id] || 0;
-          const condPenalty = condEffects.skillPenalty(skill.ability);
+          // Net condition penalties with active-effect skill bonuses (#447), e.g.
+          // Upstage's +1 status to skill checks. combineModifiers carries each
+          // source's isBuff flag so PenaltyDisplay colours buffs vs penalties.
+          const skillMods   = combineModifiers(
+            condEffects.skillPenalty(skill.ability),
+            effectBonuses[skill.id] ?? EMPTY_MOD
+          );
 
           const proficiencyColorClass = getProficiencyColor(proficiency);
 
@@ -297,7 +306,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [] }
               </h3>
               <div className="skill-info">
                 <div className="skill-modifier">
-                  <PenaltyDisplay base={modifier} penalty={condPenalty} format="modifier" />
+                  <PenaltyDisplay base={modifier} penalty={skillMods} format="modifier" />
                 </div>
                 <div className={`skill-proficiency ${proficiencyColorClass}`}>
                   <ProficiencyPips rank={proficiency} showLabel={false} />

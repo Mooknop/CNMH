@@ -194,6 +194,29 @@ describe('resolveActionRoll — highlightSkill', () => {
   });
 });
 
+// ─── skill-check effect bonus (#447) ─────────────────────────────────────────
+describe('resolveActionRoll — skill-check effect bonus (#447)', () => {
+  const skillCatalog = [
+    { id: 'upstage', name: 'Upstage', modifiers: [{ stat: 'skills', kind: 'status', amount: 1 }] },
+  ];
+  const upstage = { effects: [{ id: 'u1', effectId: 'upstage' }], effectCatalog: skillCatalog };
+
+  it('adds a skills-status effect to a type:skill roll', () => {
+    const grapple = { name: 'Grapple', roll: { type: 'skill', skill: 'athletics' }, targetDefense: 'fortitude' };
+    const base = resolveActionRoll(grapple, baseCharacter, noEffects).bonus;
+    const buffed = resolveActionRoll(grapple, baseCharacter, upstage);
+    expect(buffed.bonus).toBe(base + 1);
+    expect(buffed.breakdown.sources.some((s) => s.label === 'Upstage' && s.isBuff)).toBe(true);
+  });
+
+  it('adds a skills-status effect to a highlightSkill maneuver', () => {
+    const grapple = { name: 'Grapple', highlightSkill: 'athletics', targetDefense: 'fortitude', traits: ['Attack'] };
+    const base = resolveActionRoll(grapple, baseCharacter, noEffects).bonus;
+    const buffed = resolveActionRoll(grapple, baseCharacter, upstage);
+    expect(buffed.bonus).toBe(base + 1);
+  });
+});
+
 // ─── priority 4: spell inference ─────────────────────────────────────────────
 describe('resolveActionRoll — spell inference', () => {
   it('Fireball (defense: Reflex) → target-save', () => {

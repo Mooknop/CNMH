@@ -88,9 +88,8 @@ const PF2E_EFFECTS = [
 
   // ── Upstage (Celebrity Dedication reaction, #226-C) ────────────────
   // +1 status bonus until the end of your next turn (caster-turn-end, authored
-  // on the content effect block). The skill-check clause of the bonus is not
-  // modelled here — the effect engine has no skill-check bonus path yet (#447);
-  // attacks, Perception, and saves are covered the way Heroism's are.
+  // on the content effect block). Covers attacks, Perception, saves the way
+  // Heroism's are, plus skill checks via the 'skills' fan-out (#447).
   {
     id: 'upstage',
     name: 'Upstage',
@@ -103,6 +102,7 @@ const PF2E_EFFECTS = [
       { stat: 'fort',         kind: 'status', amount: 1 },
       { stat: 'reflex',       kind: 'status', amount: 1 },
       { stat: 'will',         kind: 'status', amount: 1 },
+      { stat: 'skills',       kind: 'status', amount: 1 },
     ],
   },
 

@@ -108,6 +108,16 @@ describe('EnhancedSkillsList', () => {
     // Athletics modifier was +5; with Frightened 2 → +3
     expect(screen.getByText('+3')).toBeInTheDocument();
   });
+
+  it('nets an active-effect skill bonus into the skill modifier (#447)', () => {
+    const effectBonuses = { deception: { total: 1, sources: [{ label: 'Upstage', bonus: 1 }] } };
+    const { container } = render(
+      <EnhancedSkillsList character={{ id: '1' }} effectBonuses={effectBonuses} />
+    );
+    // Deception (+2) buffed to +3 (net bonus) with the Upstage source in the tooltip.
+    expect(screen.getByText('Upstage')).toBeInTheDocument();
+    expect(container.querySelector('.pd-bonus')).not.toBeNull();
+  });
 });
 
 describe('EnhancedSkillsList with Untrained Improvisation', () => {

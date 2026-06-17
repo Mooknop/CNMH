@@ -185,6 +185,54 @@ describe('computeEffectBonuses', () => {
       expect(result.meleeAttack.total).toBe(0);
     });
   });
+
+  describe('skill check bonuses (#447)', () => {
+    const skillCat = [
+      {
+        id: 'upstage',
+        name: 'Upstage',
+        modifiers: [
+          { stat: 'perception', kind: 'status', amount: 1 },
+          { stat: 'skills', kind: 'status', amount: 1 },
+        ],
+      },
+      // A targeted single-skill bonus (the future Gecko-Potion shape).
+      { id: 'gecko', name: 'Gecko Potion', modifiers: [{ stat: 'athletics', kind: 'item', amount: 1 }] },
+    ];
+
+    it("'skills' fans out to every skill key", () => {
+      const result = computeEffectBonuses([entry('upstage')], skillCat);
+      expect(result.deception.total).toBe(1);
+      expect(result.athletics.total).toBe(1);
+      expect(result.stealth.total).toBe(1);
+      expect(result.deception.sources[0].label).toBe('Upstage');
+    });
+
+    it('perception stays its own stat (not double-counted by the skills fan-out)', () => {
+      const result = computeEffectBonuses([entry('upstage')], skillCat);
+      expect(result.perception.total).toBe(1);
+      expect(result.perception.sources).toHaveLength(1);
+    });
+
+    it('a targeted skill modifier only hits that skill', () => {
+      const result = computeEffectBonuses([entry('gecko')], skillCat);
+      expect(result.athletics.total).toBe(1);
+      expect(result.acrobatics.total).toBe(0);
+    });
+
+    it('same-kind skill bonuses do not stack — highest wins', () => {
+      const result = computeEffectBonuses([entry('upstage'), entry('gecko')], skillCat);
+      // Upstage (+1 status) and Gecko (+1 item) are different kinds → stack.
+      expect(result.athletics.total).toBe(2);
+      // Deception only gets Upstage's status.
+      expect(result.deception.total).toBe(1);
+    });
+
+    it('the empty-effects result includes skill keys', () => {
+      const result = computeEffectBonuses([], skillCat);
+      expect(result.deception).toEqual({ total: 0, sources: [] });
+    });
+  });
 });
 
 describe('combineModifiers', () => {

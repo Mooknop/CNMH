@@ -15,6 +15,21 @@ const STAT_KEYS = [
   'spellDC', 'classDC', 'perception', 'speed',
 ];
 
+// Skill check bonus keys (#447). The fixed PF2e skill list (perception stays a
+// STAT_KEY — it has its own sheet line). A modifier with `stat: 'skills'` fans
+// out to all of these; one with `stat: '<skillId>'` targets a single skill.
+// resolveActionRoll already reads effectBonuses[skillId] for both the
+// type:'skill' and highlightSkill paths. Kept as a local literal (rather than
+// derived from CharacterUtils.SKILL_ABILITY_MAP) so this pure util has no
+// module-load dependency that test mocks of CharacterUtils could break.
+const SKILL_KEYS = [
+  'acrobatics', 'arcana', 'athletics', 'crafting', 'deception', 'diplomacy',
+  'intimidation', 'medicine', 'nature', 'occultism', 'performance', 'religion',
+  'society', 'stealth', 'survival', 'thievery',
+];
+
+const BONUS_KEYS = [...STAT_KEYS, ...SKILL_KEYS];
+
 const EMPTY = { total: 0, sources: [] };
 
 function bestOfKind(candidates) {
@@ -42,12 +57,12 @@ function combineBonus(...parts) {
  */
 export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
   if (!activeEffects || activeEffects.length === 0) {
-    return Object.fromEntries(STAT_KEYS.map((k) => [k, EMPTY]));
+    return Object.fromEntries(BONUS_KEYS.map((k) => [k, EMPTY]));
   }
 
   // Build per-stat, per-kind candidate lists
   const buckets = {};
-  for (const stat of STAT_KEYS) {
+  for (const stat of BONUS_KEYS) {
     buckets[stat] = { status: [], circumstance: [], item: [] };
   }
 
@@ -56,14 +71,18 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
     if (!def || !def.modifiers || def.modifiers.length === 0) continue;
     const label = def.name;
     for (const mod of def.modifiers) {
-      if (!buckets[mod.stat]) continue;
       const kind = mod.kind === 'status' || mod.kind === 'circumstance' ? mod.kind : 'item';
-      buckets[mod.stat][kind].push({ amount: mod.amount, label });
+      // 'skills' fans out to every skill bucket; otherwise target one stat/skill.
+      const targets = mod.stat === 'skills' ? SKILL_KEYS : [mod.stat];
+      for (const stat of targets) {
+        if (!buckets[stat]) continue;
+        buckets[stat][kind].push({ amount: mod.amount, label });
+      }
     }
   }
 
   const result = {};
-  for (const stat of STAT_KEYS) {
+  for (const stat of BONUS_KEYS) {
     const b = buckets[stat];
     result[stat] = combineBonus(
       bestOfKind(b.status),
