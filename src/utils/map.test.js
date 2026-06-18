@@ -1,4 +1,4 @@
-import { hasTrait, isAttackAbility, isAgile, mapStepFor, mapPenaltyFor } from './map';
+import { hasTrait, isAttackAbility, isAgile, mapStepFor, mapPenaltyFor, autoMapStep } from './map';
 
 describe('map (Multiple Attack Penalty helpers)', () => {
   describe('hasTrait', () => {
@@ -54,6 +54,23 @@ describe('map (Multiple Attack Penalty helpers)', () => {
     it('clamps the step', () => {
       expect(mapPenaltyFor(strike, 7)).toBe(-10);
       expect(mapPenaltyFor(strike, -1)).toBe(0);
+    });
+  });
+
+  describe('autoMapStep', () => {
+    it('steps off attacks made for a normal (non-reaction) use', () => {
+      expect(autoMapStep({ isReaction: false, attacksMade: 0 })).toBe(0);
+      expect(autoMapStep({ isReaction: false, attacksMade: 1 })).toBe(1);
+      expect(autoMapStep({ isReaction: false, attacksMade: 5 })).toBe(2);
+    });
+
+    it('starts a reaction at MAP 0 even with stale off-turn attacksMade', () => {
+      expect(autoMapStep({ isReaction: true, attacksMade: 2 })).toBe(0);
+      expect(autoMapStep({ isReaction: true, attacksMade: 0 })).toBe(0);
+    });
+
+    it('defaults safely with no args', () => {
+      expect(autoMapStep()).toBe(0);
     });
   });
 });

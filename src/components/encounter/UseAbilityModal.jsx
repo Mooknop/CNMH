@@ -37,7 +37,7 @@ import { SKILL_KEYS } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
-import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
+import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
 import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
 import { HARROW_CAST_DC } from '../../utils/harrow';
 import { bloodMagicTriggered, bloodMagicOption, BLOOD_MAGIC_OPTIONS } from '../../utils/bloodMagic';
@@ -326,8 +326,13 @@ const UseAbilityModal = ({
   const enemyWithDefenses = selectedEntries.filter((e) => e.kind === 'enemy' && e.defenses);
 
   // Multiple Attack Penalty step: attacks already made this turn, or the override.
+  // A reaction Strike fires off-turn (AoO, Retributive Strike) so its MAP starts
+  // at 0 rather than the stale attacksMade from the player's last turn (#475).
   const isAttack = isAttackAbility(ability);
-  const autoStep = mapStepFor(turnState?.attacksMade ?? 0);
+  const autoStep = autoMapStep({
+    isReaction: explicitCost === 'reaction',
+    attacksMade: turnState?.attacksMade ?? 0,
+  });
   const mapStep  = mapOverride ?? autoStep;
 
   // Resolve roll profile — includes condition/effect netting for the actor.
