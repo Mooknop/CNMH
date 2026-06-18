@@ -1,11 +1,11 @@
 // Single chokepoint for all PF2e system.* data access AND canvas/movement APIs.
 // If PF2e or Foundry changes schema/API in a future version, only this file
-// needs updating. Current target: Foundry v13 + PF2e v6.x.
+// needs updating. Current target: Foundry v13 + PF2e v7.x.
 //
 // v14 MIGRATION NOTES are marked inline. When Forge recommends v14:
 //   1. Bump module.json compatibility.verified to "14"
 //   2. Update the two canvas functions marked [v14-MIGRATION] below
-//   3. Re-verify system.* data paths (stable across v13→v14 for PF2e 6.x)
+//   3. Re-verify system.* data paths (stable across v13→v14 for PF2e 7.x)
 
 import { BRIDGE_SOURCE_FLAG } from './utils.js';
 
@@ -238,6 +238,41 @@ export function getCombatantInitiative(combatant) {
 
 export function getCombatById(combatId) {
   return game.combats?.get(combatId) ?? null;
+}
+
+// --- Chat-message action detection (#472b) ---
+
+// Normalize a PF2e chat message into the action-feed context the bridge needs,
+// or null when the message carries no roll context (chat banter, GM narration,
+// damage-only cards, etc.) — that null is the "context-typed actions only" filter.
+//
+// ChatMessagePF2e exposes `actor` / `item` / `target` getters and stashes the
+// roll context under flags.pf2e.context. Raw item-cost hints are passed through
+// untouched; actorFeed.js maps them to the app's compact 1|2|3|'r'|'f' cost form.
+//
+// v14 MIGRATION: the ChatMessagePF2e getters and the flags.pf2e.context shape are
+// stable across v13→v14 for PF2e 7.x; re-verify the context.type vocabulary only
+// if PF2e renames its check domains.
+export function getChatMessageContext(message) {
+  const context = message?.flags?.pf2e?.context;
+  if (!context?.type) return null;
+
+  const actor  = message.actor  ?? null;
+  const item   = message.item   ?? null;
+  const target = message.target ?? null;
+
+  return {
+    type:       context.type,                 // attack-roll|spell-cast|skill-check|saving-throw|…
+    outcome:    context.outcome ?? null,       // degree of success for checks
+    actorId:    actor?.id ?? message.speaker?.actor ?? null,
+    itemName:   item?.name ?? null,
+    itemType:   item?.type ?? null,
+    // Raw cost hints — actorFeed.js normalizes these to the compact form.
+    actionCount: item?.system?.actions?.value ?? null,     // actions / feats: 1|2|3
+    actionType:  item?.system?.actionType?.value ?? null,  // 'action'|'reaction'|'free'
+    spellTime:   item?.system?.time?.value ?? null,        // spells: '1'|'2'|'reaction'|…
+    targetName:  target?.token?.name ?? target?.actor?.name ?? null,
+  };
 }
 
 export function getActiveCombat() {

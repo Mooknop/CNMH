@@ -10,6 +10,7 @@
 
 import { WORKER_WSS_URL, CAMPAIGN_ID, BRIDGE_SECRET } from './config.js';
 import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js';
+import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
 import { handleAction } from './targeting.js';
@@ -69,6 +70,7 @@ Hooks.once('init', () => {
 Hooks.once('ready', () => {
   console.log('CNMH Bridge | Foundry ready — connecting to session relay');
   initEncounter(sendUpdate);
+  initActorFeed(sendUpdate);
   initCharacterSync(sendUpdate);
   initMovement(sendUpdate);
   initFlankingPush(sendUpdate);
