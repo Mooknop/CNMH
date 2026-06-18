@@ -43,16 +43,6 @@ export const isCharTurn = (encounter, charId) => {
   return !!entry && entry.kind === 'pc' && entry.charId === charId;
 };
 
-// Which command surface the encounter tab shows for this character (#477):
-//   'setup' → initiative still being rolled; the action dial is meaningless.
-//   'stage' → in-progress and it isn't your turn — spotlight who's acting.
-//   'dial'  → your turn (or any other phase) — the on-turn command dial.
-export const commandSurface = (encounter, charId) => {
-  if (encounter?.phase === 'setup') return 'setup';
-  if (encounter?.phase === 'in-progress' && !isCharTurn(encounter, charId)) return 'stage';
-  return 'dial';
-};
-
 export const findEntry = (order, entryId) =>
   (order || []).find((e) => e && e.entryId === entryId) || null;
 

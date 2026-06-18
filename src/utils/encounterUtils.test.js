@@ -10,7 +10,6 @@ import {
   everyEntryHasInitiative,
   activeEntry,
   isCharTurn,
-  commandSurface,
 } from './encounterUtils';
 
 describe('encounterUtils', () => {
@@ -139,31 +138,6 @@ describe('encounterUtils', () => {
     it('isCharTurn is false when there is no acting entry', () => {
       expect(isCharTurn({ order: [], currentTurnIndex: 0 }, 'p1')).toBe(false);
       expect(isCharTurn(null, 'p1')).toBe(false);
-    });
-  });
-
-  describe('commandSurface', () => {
-    const order = [
-      { entryId: 'a', kind: 'pc', charId: 'p1' },
-      { entryId: 'b', kind: 'enemy' },
-    ];
-
-    it('setup phase shows the setup placeholder, never the dial or stage', () => {
-      expect(commandSurface({ phase: 'setup', order, currentTurnIndex: 0 }, 'p1')).toBe('setup');
-    });
-
-    it('in-progress off your turn shows the stage', () => {
-      expect(commandSurface({ phase: 'in-progress', order, currentTurnIndex: 1 }, 'p1')).toBe('stage');
-    });
-
-    it('in-progress on your turn shows the dial', () => {
-      expect(commandSurface({ phase: 'in-progress', order, currentTurnIndex: 0 }, 'p1')).toBe('dial');
-    });
-
-    it('idle / ended fall through to the dial slot (the idle block owns that branch)', () => {
-      expect(commandSurface({ phase: 'idle', order, currentTurnIndex: 0 }, 'p1')).toBe('dial');
-      expect(commandSurface({ phase: 'ended', order, currentTurnIndex: 0 }, 'p1')).toBe('dial');
-      expect(commandSurface(null, 'p1')).toBe('dial');
     });
   });
 });

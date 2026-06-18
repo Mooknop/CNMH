@@ -36,7 +36,7 @@ import { useMinions } from '../hooks/useMinions';
 import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { useFocusReset } from '../hooks/useFocusReset';
-import { commandSurface } from '../utils/encounterUtils';
+import { isCharTurn } from '../utils/encounterUtils';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
 
@@ -151,27 +151,17 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} character={character} />
-                  {/* Phase-aware command slot (#471/#477): off-turn the action-budget
-                      dial is meaningless, so the stage REPLACES it in-progress; during
-                      setup the dial is meaningless too (no turn yet), so a deliberate
-                      "rolling initiative" placeholder stands in while InitiativeEntry
-                      above collects rolls. The Shield Block bar + ReactionPrompt below
-                      keep reactions reachable until the stage owns them (#474/#475). */}
-                  {(() => {
-                    switch (commandSurface(encounter, character.id)) {
-                      case 'setup':
-                        return (
-                          <div className="cs-encounter-setup" role="status">
-                            <span className="cs-encounter-setup-title">Rolling initiative…</span>
-                            <span className="cs-encounter-setup-sub">Enter your roll above — the stage opens when Round 1 begins</span>
-                          </div>
-                        );
-                      case 'stage':
-                        return <EncounterStage character={character} characterColor={characterColor} />;
-                      default:
-                        return <ActionDial charId={character.id} characterName={character.name} character={character} />;
-                    }
-                  })()}
+                  {/* Off-turn (#471): the action-budget dial is meaningless when it
+                      isn't your turn, so the stage REPLACES it in-progress — you only
+                      see who's acting now. In setup the dial shows its own
+                      "Waiting for initiative" state, so it stays. The Shield Block bar
+                      + ReactionPrompt below keep reactions reachable until the stage
+                      owns them (#474/#475). */}
+                  {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
+                    <EncounterStage character={character} characterColor={characterColor} />
+                  ) : (
+                    <ActionDial charId={character.id} characterName={character.name} character={character} />
+                  )}
                   <InitiativeStrip charId={character.id} />
                   <FocusBanner charId={character.id} />
                   <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />

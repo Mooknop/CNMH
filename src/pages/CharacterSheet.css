@@ -593,34 +593,6 @@
   color: var(--shell-text-tertiary);
 }
 
-/* Setup-phase command-slot placeholder (#477) — the action dial is meaningless
-   before initiative is rolled, so a deliberate state stands in. */
-.cs-encounter-setup {
-  border: 1px dashed var(--shell-border-strong);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5) var(--space-4);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: 10px;
-}
-
-.cs-encounter-setup-title {
-  font-family: var(--font-display);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--shell-text-secondary);
-}
-
-.cs-encounter-setup-sub {
-  font-size: 0.7rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--shell-text-tertiary);
-}
-
 /* Reusable section header used by Encounter action list + Spells rank headers */
 .cs-section-header {
   display: flex;
