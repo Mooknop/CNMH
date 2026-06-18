@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import ActorFeed from './ActorFeed';
 
 describe('ActorFeed', () => {
@@ -29,5 +29,28 @@ describe('ActorFeed', () => {
     render(<ActorFeed feed={[{ n: 3, label: 'Deciding…', detail: '1 action left', state: 'pending' }]} />);
     expect(screen.getByText('Deciding…')).toBeInTheDocument();
     expect(screen.queryByLabelText(/action/)).toBeNull();
+  });
+
+  it('threads an inline cue card under the entry that armed it and resolves on press', () => {
+    const onReact = vi.fn();
+    const opt = { reaction: { name: 'Deflect Projectile' }, castSource: null };
+    render(
+      <ActorFeed
+        feed={[
+          { n: 1, cost: 1, label: 'Longbow', state: 'done' },
+          { n: 2, cost: 1, label: 'Longsword', state: 'done' },
+        ]}
+        cues={{ 1: [opt] }}
+        onReact={onReact}
+      />
+    );
+    expect(screen.getByText('Trigger met · your reaction')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Deflect Projectile' }));
+    expect(onReact).toHaveBeenCalledWith(opt);
+  });
+
+  it('renders no cue when an entry has no match', () => {
+    render(<ActorFeed feed={[{ n: 1, cost: 1, label: 'Longsword', state: 'done' }]} cues={{}} onReact={vi.fn()} />);
+    expect(screen.queryByText('Trigger met · your reaction')).toBeNull();
   });
 });

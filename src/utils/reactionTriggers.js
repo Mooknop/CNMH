@@ -54,3 +54,37 @@ export const matchingReactions = (reactions, eventId) => {
     (r) => r && r.triggerType && event.matches.includes(r.triggerType) && r.active !== false
   );
 };
+
+/**
+ * Map an actor-feed entry (relayed from the bridge, #472b) to the TRIGGER_EVENTS
+ * id it satisfies for *this viewer*, or null when it arms nothing. The bridge
+ * emits only neutral facts (type, attackRange, targetActorId); this is the sole
+ * place those facts become reaction-trigger semantics, so the bridge and #221
+ * can't disagree. Narration only — it never fires a reaction.
+ *
+ * @param {object} entry - feed entry: { type, attackRange?, targetActorId? }
+ * @param {object} ctx
+ * @param {string} ctx.actorKind     - 'pc' | 'enemy' (the acting combatant)
+ * @param {string} ctx.viewerCharId  - the character whose stage this is
+ * @param {(foundryActorId:string)=>string|null} ctx.targetCharIdOf
+ *        - resolves the entry's target to a PC charId (null for non-PCs)
+ * @returns {string|null} a TRIGGER_EVENTS id
+ */
+export const feedTriggerEvent = (entry, { actorKind, viewerCharId, targetCharIdOf } = {}) => {
+  if (!entry?.type) return null;
+  const targetCharId = entry.targetActorId ? targetCharIdOf?.(entry.targetActorId) ?? null : null;
+
+  switch (entry.type) {
+    case 'attack-roll':
+      // Attack triggers are "targets you" — only arm when this viewer is the mark.
+      if (targetCharId !== viewerCharId) return null;
+      return entry.attackRange === 'ranged' ? 'ranged-attack' : 'melee-attack';
+    case 'skill-check':
+      return actorKind === 'enemy' ? 'enemy-skill-check' : null;
+    case 'damage-roll':
+      if (!targetCharId) return null;             // damage to a non-PC arms no ally reaction
+      return targetCharId === viewerCharId ? 'damaged' : 'ally-damaged';
+    default:
+      return null;
+  }
+};

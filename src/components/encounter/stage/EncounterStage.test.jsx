@@ -23,6 +23,18 @@ vi.mock('../../../hooks/useActorFeed', () => ({
   useActorFeed: () => mockActorFeed,
 }));
 
+let mockReactionOptions;
+vi.mock('../../../hooks/useReactionOptions', () => ({
+  useReactionOptions: () => ({ options: mockReactionOptions }),
+}));
+
+// UseAbilityModal carries the full casting-resource web; the stage test only
+// needs the cue to mount and wire, so stub it.
+vi.mock('../UseAbilityModal', () => ({
+  __esModule: true,
+  default: () => <div data-testid="use-ability-modal" />,
+}));
+
 // The armed-reaction bar carries its own hook web (#474); the stage test only
 // cares that it mounts, so stub it.
 vi.mock('./ArmedReactionBar', () => ({
@@ -38,6 +50,7 @@ describe('EncounterStage', () => {
   beforeEach(() => {
     mockCharacters = [];
     mockReactors = [];
+    mockReactionOptions = [];
     mockActorFeed = { actions: 3, spent: 0, reaction: true, feed: [] };
     mockUseEncounter.mockReturnValue(
       encWith({ entryId: 'o1', kind: 'enemy', name: 'Ogre Warrior', bestiary: { level: 3 } })
@@ -102,6 +115,35 @@ describe('EncounterStage', () => {
     expect(screen.getByText('Jaws Strike')).toBeInTheDocument();
     expect(screen.queryByText(/Waiting for/)).toBeNull();
     expect(screen.getByRole('img', { name: '2 of 3 actions spent, reaction spent' })).toBeInTheDocument();
+  });
+
+  it('threads an inline cue when an enemy action arms one of the viewer\'s live reactions', () => {
+    // Acting combatant is an enemy making a skill check → enemy-skill-check event.
+    mockReactionOptions = [
+      { reaction: { name: 'Upstage', triggerType: 'enemy-skill-check' }, castSource: null, live: true },
+      { reaction: { name: 'Deflect Projectile', triggerType: 'attack-ranged' }, castSource: null, live: true },
+    ];
+    mockActorFeed = {
+      actions: 3, spent: 1, reaction: true,
+      feed: [{ n: 1, cost: 1, label: 'Stealth', type: 'skill-check', state: 'done' }],
+    };
+    render(<EncounterStage character={{ id: 'me' }} />);
+    expect(screen.getByText('Trigger met · your reaction')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Upstage' })).toBeInTheDocument();
+    // The non-matching reaction does not surface a cue button.
+    expect(screen.queryByRole('button', { name: 'Deflect Projectile' })).toBeNull();
+  });
+
+  it('renders no cue when the matching reaction is not live', () => {
+    mockReactionOptions = [
+      { reaction: { name: 'Upstage', triggerType: 'enemy-skill-check' }, castSource: null, live: false },
+    ];
+    mockActorFeed = {
+      actions: 3, spent: 0, reaction: true,
+      feed: [{ n: 1, cost: 1, label: 'Stealth', type: 'skill-check', state: 'done' }],
+    };
+    render(<EncounterStage character={{ id: 'me' }} />);
+    expect(screen.queryByText('Trigger met · your reaction')).toBeNull();
   });
 
   it('renders nothing when there is no acting entry', () => {

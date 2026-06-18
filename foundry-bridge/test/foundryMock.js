@@ -239,21 +239,24 @@ export function makeCombat(opts = {}) {
 export function makeChatMessage(opts = {}) {
   const {
     actorId = null,
-    type = null,            // attack-roll | spell-cast | skill-check | saving-throw
+    type = null,            // attack-roll | spell-cast | skill-check | saving-throw | damage-roll
     outcome = null,
     itemName = null,
     itemType = null,
     actionCount = null,     // item.system.actions.value
     actionType = null,      // item.system.actionType.value
     spellTime = null,       // item.system.time.value
+    ranged = null,          // true → item.isRanged; false → item.isMelee (weapons only)
     targetName = null,
+    targetActorId = null,   // message.target.actor.id
   } = opts;
 
   const context = type ? { type, ...(outcome ? { outcome } : {}) } : undefined;
-  const item = itemName || itemType || actionCount != null || actionType || spellTime != null
+  const item = itemName || itemType || actionCount != null || actionType || spellTime != null || ranged != null
     ? {
         name: itemName,
         type: itemType,
+        ...(ranged != null ? { isRanged: ranged === true, isMelee: ranged === false } : {}),
         system: {
           ...(actionCount != null ? { actions: { value: actionCount } } : {}),
           ...(actionType ? { actionType: { value: actionType } } : {}),
@@ -262,11 +265,18 @@ export function makeChatMessage(opts = {}) {
       }
     : null;
 
+  const target = (targetName || targetActorId)
+    ? {
+        token: { name: targetName },
+        actor: { id: targetActorId, name: targetName },
+      }
+    : null;
+
   return {
     id: autoId('msg'),
     actor: actorId ? { id: actorId } : null,
     item,
-    target: targetName ? { token: { name: targetName }, actor: { name: targetName } } : null,
+    target,
     speaker: { actor: actorId },
     flags: { pf2e: context ? { context } : {} },
   };

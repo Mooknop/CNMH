@@ -99,6 +99,11 @@ function buildEntry(ctx, cost, n) {
     ...(detail ? { detail } : {}),
     ...(result ? { result } : {}),
     ...(tone   ? { tone }   : {}),
+    // Neutral facts the app maps to a reaction-trigger event (#472c). The bridge
+    // stays semantics-free; src/utils/reactionTriggers.js owns the interpretation.
+    type: ctx.type,
+    ...(ctx.attackRange   ? { attackRange:   ctx.attackRange }   : {}),
+    ...(ctx.targetActorId ? { targetActorId: ctx.targetActorId } : {}),
     state: 'done',
   };
 }
@@ -115,6 +120,7 @@ function compactCost(ctx) {
   switch (ctx.type) {
     case 'attack-roll':  return 1;            // a Strike is 1 action
     case 'saving-throw': return null;         // a save is not one of your 3 actions
+    case 'damage-roll':  return null;         // the damage of an action already counted — never its own action
     case 'spell-cast':   return normGlyph(ctx.spellTime);
     case 'skill-check':
     default:
@@ -155,6 +161,7 @@ const TYPE_LABEL = {
   'spell-cast':   'Spell',
   'skill-check':  'Skill check',
   'saving-throw': 'Save',
+  'damage-roll':  'Damage',
 };
 function prettyType(type) {
   return TYPE_LABEL[type] ?? 'Action';

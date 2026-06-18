@@ -3,6 +3,7 @@ import {
   TRIGGER_EVENTS,
   eventById,
   matchingReactions,
+  feedTriggerEvent,
   isReactionCost,
 } from './reactionTriggers';
 
@@ -89,6 +90,51 @@ describe('reactionTriggers', () => {
       expect(matchingReactions(undefined, 'ranged-attack')).toEqual([]);
       expect(matchingReactions([], 'ranged-attack')).toEqual([]);
       expect(matchingReactions(all, 'unknown-event')).toEqual([]);
+    });
+  });
+
+  describe('feedTriggerEvent', () => {
+    // Map foundry actor ids → PC charIds the way the live order does.
+    const targetCharIdOf = (fid) => ({ 'fa-me': 'me', 'fa-ally': 'ally' })[fid] ?? null;
+    const ctx = { actorKind: 'enemy', viewerCharId: 'me', targetCharIdOf };
+
+    it('a ranged attack at you wakes ranged-attack; a melee attack wakes melee-attack', () => {
+      expect(feedTriggerEvent(
+        { type: 'attack-roll', attackRange: 'ranged', targetActorId: 'fa-me' }, ctx
+      )).toBe('ranged-attack');
+      expect(feedTriggerEvent(
+        { type: 'attack-roll', attackRange: 'melee', targetActorId: 'fa-me' }, ctx
+      )).toBe('melee-attack');
+    });
+
+    it('an attack aimed at someone else arms nothing for you', () => {
+      expect(feedTriggerEvent(
+        { type: 'attack-roll', attackRange: 'ranged', targetActorId: 'fa-ally' }, ctx
+      )).toBeNull();
+    });
+
+    it('an enemy skill check wakes enemy-skill-check; a PC skill check does not', () => {
+      expect(feedTriggerEvent({ type: 'skill-check' }, ctx)).toBe('enemy-skill-check');
+      expect(feedTriggerEvent({ type: 'skill-check' }, { ...ctx, actorKind: 'pc' })).toBeNull();
+    });
+
+    it('damage resolves per viewer: you → damaged, an ally → ally-damaged', () => {
+      expect(feedTriggerEvent(
+        { type: 'damage-roll', targetActorId: 'fa-me' }, ctx
+      )).toBe('damaged');
+      expect(feedTriggerEvent(
+        { type: 'damage-roll', targetActorId: 'fa-ally' }, ctx
+      )).toBe('ally-damaged');
+    });
+
+    it('damage to a non-PC arms nothing', () => {
+      expect(feedTriggerEvent({ type: 'damage-roll', targetActorId: 'fa-foe' }, ctx)).toBeNull();
+    });
+
+    it('unknown / typeless entries return null', () => {
+      expect(feedTriggerEvent({ type: 'spell-cast' }, ctx)).toBeNull();
+      expect(feedTriggerEvent({}, ctx)).toBeNull();
+      expect(feedTriggerEvent(null, ctx)).toBeNull();
     });
   });
 });

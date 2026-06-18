@@ -47,7 +47,8 @@ describe('chat-message parsing', () => {
     expect(p.entryId).toBe('cbt-hero');
     expect(p.feed).toHaveLength(1);
     expect(p.feed[0]).toEqual({
-      n: 1, cost: 1, label: 'Longsword', detail: 'vs Foe', result: 'Hit', state: 'done',
+      n: 1, cost: 1, label: 'Longsword', detail: 'vs Foe', result: 'Hit',
+      type: 'attack-roll', state: 'done',
     });
     expect(p.spent).toBe(1);
   });
@@ -89,6 +90,25 @@ describe('chat-message parsing', () => {
     expect(send.mock.calls.length).toBe(before);
   });
 
+  test('entries carry the neutral facts the app maps to reaction triggers', () => {
+    startCombat();
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'attack-roll', itemName: 'Longbow', itemType: 'weapon',
+      ranged: true, targetName: 'Kestrel', targetActorId: 'actor-kestrel',
+    }));
+    expect(lastPayload().feed[0]).toMatchObject({
+      type: 'attack-roll', attackRange: 'ranged', targetActorId: 'actor-kestrel', detail: 'vs Kestrel',
+    });
+  });
+
+  test('a melee weapon is tagged attackRange melee', () => {
+    startCombat();
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'attack-roll', itemName: 'Longsword', itemType: 'weapon', ranged: false,
+    }));
+    expect(lastPayload().feed[0]).toMatchObject({ type: 'attack-roll', attackRange: 'melee' });
+  });
+
   test('a message from a different actor is ignored', () => {
     startCombat();
     const before = send.mock.calls.length;
@@ -120,6 +140,23 @@ describe('action economy', () => {
     expect(p.feed[0].cost).toBe('r');
     expect(p.reaction).toBe(false);
     expect(p.spent).toBe(0);
+  });
+
+  test('a damage roll adds an entry but never accrues an action (the #489 double-count fix)', () => {
+    startCombat();
+    // A strike that hits: the attack roll (1 action) then a separate damage roll.
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'attack-roll', itemName: 'Longsword', ranged: false,
+    }));
+    global.Hooks.fire('createChatMessage', makeChatMessage({
+      actorId: 'actor-hero', type: 'damage-roll', itemName: 'Longsword',
+      targetName: 'Kestrel', targetActorId: 'actor-kestrel',
+    }));
+    const p = lastPayload();
+    expect(p.spent).toBe(1);                       // the strike, counted once
+    expect(p.feed).toHaveLength(2);
+    expect(p.feed[1]).toMatchObject({ type: 'damage-roll', targetActorId: 'actor-kestrel' });
+    expect(p.feed[1].cost).toBeUndefined();
   });
 
   test('a saving throw adds an entry but costs nothing', () => {
