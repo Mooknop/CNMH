@@ -8,6 +8,7 @@ import GmSaveRequest from '../../components/gm/GmSaveRequest';
 import GmTriggerConsole from '../../components/gm/GmTriggerConsole';
 import GmReactionBadge from '../../components/gm/GmReactionBadge';
 import RequestedSaves from '../../components/encounter/RequestedSaves';
+import GmInitiativePanel from '../../components/gm/GmInitiativePanel';
 import PersistentChip from '../../components/encounter/PersistentChip';
 import BystanderChip from '../../components/encounter/BystanderChip';
 import EffectsModal from '../../components/character-sheet/EffectsModal';
@@ -36,6 +37,13 @@ const GmEncounter = () => {
   const round        = encounter?.round          || 0;
   const currentIndex = encounter?.currentTurnIndex ?? 0;
   const foundryLinked = !!encounter?.foundryCombatId;
+
+  // Expected PC combatants for the Foundry-linked setup panel (#494 Slice 4):
+  // resolved PC entries the initiative flow waits on. Derived live from the order so
+  // mid-setup add/remove reflects in the N/M count.
+  const expectedPcs = order
+    .filter((e) => e.kind === 'pc' && e.charId)
+    .map((e) => ({ charId: e.charId, entryId: e.entryId, name: e.name }));
 
   const handleAssign = (foundryActorId, charId) => {
     setActorMap((prev) => {
@@ -107,6 +115,10 @@ const GmEncounter = () => {
             })}
           </ul>
         </div>
+      )}
+
+      {foundryLinked && phase === 'setup' && (
+        <GmInitiativePanel pcs={expectedPcs} />
       )}
 
       {phase !== 'idle' && (
