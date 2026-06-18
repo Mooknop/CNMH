@@ -261,16 +261,25 @@ export function getChatMessageContext(message) {
   const item   = message.item   ?? null;
   const target = message.target ?? null;
 
+  // Melee vs ranged, for the app's attack reaction triggers (#472c). WeaponPF2e
+  // classifies on the presence of a range band: isRanged === !!system.range,
+  // isMelee === !isRanged. Non-weapon attacks (e.g. spell attacks) leave it null.
+  const attackRange = context.type === 'attack-roll'
+    ? (item?.isRanged === true ? 'ranged' : item?.isMelee === true ? 'melee' : null)
+    : null;
+
   return {
-    type:       context.type,                 // attack-roll|spell-cast|skill-check|saving-throw|…
+    type:       context.type,                 // attack-roll|spell-cast|skill-check|saving-throw|damage-roll|…
     outcome:    context.outcome ?? null,       // degree of success for checks
     actorId:    actor?.id ?? message.speaker?.actor ?? null,
     itemName:   item?.name ?? null,
     itemType:   item?.type ?? null,
+    attackRange,                                // 'ranged' | 'melee' | null
     // Raw cost hints — actorFeed.js normalizes these to the compact form.
     actionCount: item?.system?.actions?.value ?? null,     // actions / feats: 1|2|3
     actionType:  item?.system?.actionType?.value ?? null,  // 'action'|'reaction'|'free'
     spellTime:   item?.system?.time?.value ?? null,        // spells: '1'|'2'|'reaction'|…
+    targetActorId: target?.actor?.id ?? null,              // who the action targets (damage/attack)
     targetName:  target?.token?.name ?? target?.actor?.name ?? null,
   };
 }

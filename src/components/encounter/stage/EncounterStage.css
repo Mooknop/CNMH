@@ -251,6 +251,44 @@
   color: var(--shell-text-secondary);
 }
 
+/* Inline reaction cue — threads under the feed entry that armed it (#472c). */
+.stage-feed-cue {
+  margin: 0.15rem 0 0.35rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--accent-outline);
+  border-radius: 10px;
+  background: var(--accent-tint);
+}
+.stage-feed-cue-head {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.stage-feed-cue-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.stage-feed-cue-btn {
+  min-height: 36px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid var(--accent-outline);
+  border-radius: 8px;
+  background: var(--surface-trigger);
+  color: var(--shell-text-primary);
+  cursor: pointer;
+}
+.stage-feed-cue-btn:hover {
+  background: var(--accent-tint-hover);
+}
+
 /* ── Armed reaction footer (#474) ────────────────────────────── */
 .stage-reactbar {
   display: flex;

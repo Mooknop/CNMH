@@ -10,25 +10,64 @@
 //   · actor / reactor token art         → #473
 //   · typed-d20 / opposed reaction polish → #475
 //   · reactor presence avatars          → #476
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { useReactors } from '../../../hooks/useReactors';
 import { useActorFeed } from '../../../hooks/useActorFeed';
+import { useReactionOptions } from '../../../hooks/useReactionOptions';
+import { useReactionResolver } from '../../../hooks/useReactionResolver';
 import { useContent } from '../../../contexts/ContentContext';
 import { activeEntry } from '../../../utils/encounterUtils';
+import { feedTriggerEvent, matchingReactions } from '../../../utils/reactionTriggers';
 import { entryPortrait } from '../../../utils/stagePortrait';
 import StagePortrait from './StagePortrait';
 import ReactorAvatars from './ReactorAvatars';
 import ActorFeed from './ActorFeed';
 import ArmedReactionBar from './ArmedReactionBar';
+import UseAbilityModal from '../UseAbilityModal';
 import './EncounterStage.css';
 
 const EncounterStage = ({ character, characterColor }) => {
   const { encounter } = useEncounter();
   const { reactors } = useReactors();
   const { characters } = useContent();
+  const { options } = useReactionOptions(character);
+  const { using, open, close } = useReactionResolver(character);
   const actor = activeEntry(encounter);
   const { actions, spent, reaction, feed } = useActorFeed(actor?.entryId);
+
+  // Resolve a damage/attack target's Foundry actor id to a PC charId via the
+  // live order (bridge entries carry foundryActorId + charId), so damage cues
+  // can tell "you" from "an ally".
+  const order = encounter?.order;
+  const targetCharIdOf = useCallback(
+    (foundryActorId) =>
+      (order || []).find((e) => e.kind === 'pc' && e.foundryActorId === foundryActorId)?.charId ?? null,
+    [order]
+  );
+
+  // The viewer's armed (live) reactions, and which feed entries they wake for.
+  const liveOptions = useMemo(() => options.filter((o) => o.live), [options]);
+  const cues = useMemo(() => {
+    if (!actor) return {};
+    const liveReactions = liveOptions.map((o) => o.reaction);
+    const map = {};
+    for (const entry of feed) {
+      const event = feedTriggerEvent(entry, {
+        actorKind: actor.kind,
+        viewerCharId: character?.id,
+        targetCharIdOf,
+      });
+      if (!event) continue;
+      const matched = matchingReactions(liveReactions, event);
+      if (matched.length) {
+        map[entry.n] = matched
+          .map((r) => liveOptions.find((o) => o.reaction === r))
+          .filter(Boolean);
+      }
+    }
+    return map;
+  }, [feed, actor, liveOptions, character?.id, targetCharIdOf]);
 
   // Defensive: routing only mounts this for an in-progress, not-my-turn
   // encounter, which always has an acting entry. Render nothing if not.
@@ -86,7 +125,11 @@ const EncounterStage = ({ character, characterColor }) => {
           Live · this turn
         </div>
         {feed.length > 0 ? (
-          <ActorFeed feed={feed} />
+          <ActorFeed
+            feed={feed}
+            cues={cues}
+            onReact={({ reaction: react, castSource }) => open(react, castSource)}
+          />
         ) : (
           <p className="stage-feed-empty">Waiting for {actor.name}&rsquo;s next action&hellip;</p>
         )}
@@ -94,6 +137,20 @@ const EncounterStage = ({ character, characterColor }) => {
 
       {/* Armed reactions — your reactions, your call (#474). */}
       <ArmedReactionBar character={character} themeColor={characterColor} />
+
+      {/* Inline cue cards resolve through the same modal as the armed footer. */}
+      {using && (
+        <UseAbilityModal
+          isOpen
+          onClose={close}
+          ability={using.ability}
+          cost="reaction"
+          verb={using.castSource ? 'Cast' : 'Use'}
+          castSource={using.castSource}
+          character={character}
+          themeColor={characterColor}
+        />
+      )}
     </div>
   );
 };
