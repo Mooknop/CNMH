@@ -16,7 +16,7 @@ const drawCueFor = (tile) =>
     ? (DRAW_CUE[tile.raw?.state] || `draw +${tile.drawCost}`)
     : null;
 
-const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false, allyOutOfReach = false, readOnly = false }) => {
+const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false, allyOutOfReach = false }) => {
   const glyphCost = tile.variableActionCount ? tile.variableActionCount.min : tile.cost;
   const rightTrait = tile.traits?.[0] ?? null;
   const awaitingFocus = encounterMode && tile.needsTarget && !hasFocus;
@@ -30,15 +30,14 @@ const ActionTile = ({ tile, onSelect, encounterMode = false, hasFocus = false, a
     tile.inactive ? 'cmd-tile--inactive' : '',
     awaitingFocus ? 'cmd-tile--awaiting-focus' : '',
     outOfReach ? 'cmd-tile--out-of-reach' : '',
-    readOnly ? 'cmd-tile--readonly' : '',
   ].filter(Boolean).join(' ');
 
   return (
     <button
       type="button"
       className={className}
-      onClick={readOnly ? undefined : () => onSelect(tile)}
-      disabled={outOfReach || readOnly}
+      onClick={() => onSelect(tile)}
+      disabled={outOfReach}
       aria-label={tile.name}
     >
       <span className="cmd-tile-top">

@@ -151,20 +151,18 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} character={character} />
-                  {/* Off-turn (#471): hand the screen to the stage when an encounter
-                      is in-progress and it isn't this PC's turn. Setup and on-turn
-                      keep the Command Sheet block (which self-gates by phase). */}
-                  {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
-                    <EncounterStage character={character} characterColor={characterColor} />
-                  ) : (
-                    <>
-                      <ActionDial charId={character.id} characterName={character.name} character={character} />
-                      <InitiativeStrip charId={character.id} />
-                      <FocusBanner charId={character.id} />
-                      <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
-                      <HandsPanel character={character} characterColor={characterColor} />
-                    </>
+                  {/* Off-turn (#471): spotlight the acting combatant above the dial
+                      when an encounter is in-progress and it isn't this PC's turn.
+                      The dial + Shield Block bar below stay in place (they own the
+                      off-turn turn indicator + reactions until later epic slices). */}
+                  {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) && (
+                    <EncounterStage characterColor={characterColor} />
                   )}
+                  <ActionDial charId={character.id} characterName={character.name} character={character} />
+                  <InitiativeStrip charId={character.id} />
+                  <FocusBanner charId={character.id} />
+                  <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
+                  <HandsPanel character={character} characterColor={characterColor} />
                 </>
               ) : (
                 <div className="cs-encounter-idle">

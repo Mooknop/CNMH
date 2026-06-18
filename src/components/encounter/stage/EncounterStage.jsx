@@ -1,11 +1,12 @@
 // src/components/encounter/stage/EncounterStage.jsx
-// Off-turn encounter stage (#471, epic #479). Shown in the encounter tab when an
-// encounter is in-progress and it is NOT this device's turn — the on-turn Command
-// Sheet is replaced by a view that spotlights whoever IS acting.
+// Off-turn encounter stage (#471, epic #479). Shown in the encounter tab above
+// the turn dial when an encounter is in-progress and it is NOT this device's
+// turn — a spotlight on whoever IS acting.
 //
-// This slice is the shell + routing + a working grid peek. The banner shows the
-// acting combatant (real), while the action feed and armed-reaction footer are
-// deliberate placeholder regions filled by later slices:
+// This slice is the additive shell: a hero banner spotlighting the acting
+// combatant plus a live-feed scaffold. The existing off-turn dial (turn
+// indicator + reactions) and Shield Block bar stay in place beneath it. Later
+// slices fill the scaffold and progressively absorb the dial's off-turn role:
 //   · live action feed + economy pips   → #472 (bridge relay)
 //   · actor / reactor token art         → #473
 //   · armed, player-initiated reactions → #474 / #475
@@ -13,12 +14,11 @@
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { activeEntry } from '../../../utils/encounterUtils';
-import GridPeek from './GridPeek';
 import './EncounterStage.css';
 
 const monogramOf = (name) => (name || '?').trim().charAt(0).toUpperCase() || '?';
 
-const EncounterStage = ({ character, characterColor }) => {
+const EncounterStage = ({ characterColor }) => {
   const { encounter } = useEncounter();
   const actor = activeEntry(encounter);
 
@@ -63,16 +63,6 @@ const EncounterStage = ({ character, characterColor }) => {
         </div>
         <p className="stage-feed-empty">Waiting for {actor.name}&rsquo;s next action&hellip;</p>
       </div>
-
-      {/* Armed reactions — your reactions become live here in #474 / #475. */}
-      <div className="stage-reactbar" aria-label="Your reactions">
-        <div className="stage-reactbar-head">Your reactions &middot; your call</div>
-        <p className="stage-reactbar-empty">
-          Reactions light up here when their trigger fires.
-        </p>
-      </div>
-
-      <GridPeek character={character} themeColor={characterColor} />
     </div>
   );
 };
