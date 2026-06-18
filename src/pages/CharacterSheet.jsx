@@ -156,7 +156,7 @@ const CharacterSheet = () => {
                       see who's acting now. The Shield Block bar + ReactionPrompt below
                       keep reactions reachable until the stage owns them (#474/#475). */}
                   {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
-                    <EncounterStage characterColor={characterColor} />
+                    <EncounterStage character={character} characterColor={characterColor} />
                   ) : (
                     <ActionDial charId={character.id} characterName={character.name} character={character} />
                   )}

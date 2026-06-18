@@ -107,6 +107,85 @@
   color: var(--shell-text-tertiary);
 }
 
+/* ── Armed reaction footer (#474) ────────────────────────────── */
+.stage-reactbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-trigger);
+}
+.stage-reactbar-head {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.stage-reactbar-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+.stage-reactbar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Armed reaction button — gold-accented, the player's trigger to call. */
+.stage-react {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  border: 1px solid var(--accent-outline);
+  border-radius: 10px;
+  background: var(--accent-tint);
+  color: var(--shell-text-primary);
+  cursor: pointer;
+}
+.stage-react:hover {
+  background: var(--accent-tint-hover);
+}
+.stage-react--blocked {
+  border-color: var(--theme-border);
+  background: var(--surface-inset);
+  cursor: default;
+  opacity: 0.6;
+}
+.stage-react-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.stage-react-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.stage-react-state {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.stage-react--blocked .stage-react-state {
+  color: var(--shell-text-tertiary);
+}
+.stage-react-trigger {
+  font-size: 0.78rem;
+  color: var(--shell-text-secondary);
+  line-height: 1.4;
+}
+
 @keyframes stage-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }

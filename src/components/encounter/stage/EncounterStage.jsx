@@ -3,22 +3,22 @@
 // the turn dial when an encounter is in-progress and it is NOT this device's
 // turn — a spotlight on whoever IS acting.
 //
-// This slice is the additive shell: a hero banner spotlighting the acting
-// combatant plus a live-feed scaffold. The existing off-turn dial (turn
-// indicator + reactions) and Shield Block bar stay in place beneath it. Later
-// slices fill the scaffold and progressively absorb the dial's off-turn role:
+// The stage REPLACES the action-budget dial off-turn (#481). It carries a hero
+// banner spotlighting the acting combatant, a live-feed scaffold, and the armed
+// reaction bar (#474). Remaining slices fill the rest:
 //   · live action feed + economy pips   → #472 (bridge relay)
 //   · actor / reactor token art         → #473
-//   · armed, player-initiated reactions → #474 / #475
+//   · typed-d20 / opposed reaction polish → #475
 //   · reactor presence avatars          → #476
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
 import { activeEntry } from '../../../utils/encounterUtils';
+import ArmedReactionBar from './ArmedReactionBar';
 import './EncounterStage.css';
 
 const monogramOf = (name) => (name || '?').trim().charAt(0).toUpperCase() || '?';
 
-const EncounterStage = ({ characterColor }) => {
+const EncounterStage = ({ character, characterColor }) => {
   const { encounter } = useEncounter();
   const actor = activeEntry(encounter);
 
@@ -63,6 +63,9 @@ const EncounterStage = ({ characterColor }) => {
         </div>
         <p className="stage-feed-empty">Waiting for {actor.name}&rsquo;s next action&hellip;</p>
       </div>
+
+      {/* Armed reactions — your reactions, your call (#474). */}
+      <ArmedReactionBar character={character} themeColor={characterColor} />
     </div>
   );
 };

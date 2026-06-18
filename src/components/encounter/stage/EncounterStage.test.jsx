@@ -8,6 +8,13 @@ vi.mock('../../../hooks/useEncounter', () => ({
   useEncounter: () => mockUseEncounter(),
 }));
 
+// The armed-reaction bar carries its own hook web (#474); the stage test only
+// cares that it mounts, so stub it.
+vi.mock('./ArmedReactionBar', () => ({
+  __esModule: true,
+  default: () => <div data-testid="armed-reaction-bar" />,
+}));
+
 const encWith = (actor, currentTurnIndex = 0) => ({
   encounter: { order: [actor], currentTurnIndex, phase: 'in-progress' },
 });
