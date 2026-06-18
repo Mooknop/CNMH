@@ -232,6 +232,46 @@ export function makeCombat(opts = {}) {
   return combat;
 }
 
+// A PF2e chat message as seen by createChatMessage. ChatMessagePF2e exposes
+// `actor` / `item` / `target` getters and stashes roll context under
+// flags.pf2e.context — this factory assembles exactly those reads. Pass plain
+// values; omit `context` (or its `type`) to model a context-free message.
+export function makeChatMessage(opts = {}) {
+  const {
+    actorId = null,
+    type = null,            // attack-roll | spell-cast | skill-check | saving-throw
+    outcome = null,
+    itemName = null,
+    itemType = null,
+    actionCount = null,     // item.system.actions.value
+    actionType = null,      // item.system.actionType.value
+    spellTime = null,       // item.system.time.value
+    targetName = null,
+  } = opts;
+
+  const context = type ? { type, ...(outcome ? { outcome } : {}) } : undefined;
+  const item = itemName || itemType || actionCount != null || actionType || spellTime != null
+    ? {
+        name: itemName,
+        type: itemType,
+        system: {
+          ...(actionCount != null ? { actions: { value: actionCount } } : {}),
+          ...(actionType ? { actionType: { value: actionType } } : {}),
+          ...(spellTime != null ? { time: { value: spellTime } } : {}),
+        },
+      }
+    : null;
+
+  return {
+    id: autoId('msg'),
+    actor: actorId ? { id: actorId } : null,
+    item,
+    target: targetName ? { token: { name: targetName }, actor: { name: targetName } } : null,
+    speaker: { actor: actorId },
+    flags: { pf2e: context ? { context } : {} },
+  };
+}
+
 // --- Canvas ---------------------------------------------------------------
 
 // measurePath default: PF2e-agnostic chebyshev distance in feet (5ft/square).
