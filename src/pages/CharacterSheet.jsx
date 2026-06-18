@@ -153,8 +153,10 @@ const CharacterSheet = () => {
                   <InitiativeEntry charId={character.id} character={character} />
                   {/* Off-turn (#471): the action-budget dial is meaningless when it
                       isn't your turn, so the stage REPLACES it in-progress — you only
-                      see who's acting now. The Shield Block bar + ReactionPrompt below
-                      keep reactions reachable until the stage owns them (#474/#475). */}
+                      see who's acting now. In setup the dial shows its own
+                      "Waiting for initiative" state, so it stays. The Shield Block bar
+                      + ReactionPrompt below keep reactions reachable until the stage
+                      owns them (#474/#475). */}
                   {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
                     <EncounterStage character={character} characterColor={characterColor} />
                   ) : (

@@ -30,7 +30,11 @@ export const useReactors = () => {
     [setReactors]
   );
 
-  return { reactors: reactors || EMPTY, declare, clear };
+  // Drop every declaration — used by the turn-change sweep (#477) to retire
+  // reactions left declared against the combatant whose turn just ended.
+  const clearAll = useCallback(() => setReactors(EMPTY), [setReactors]);
+
+  return { reactors: reactors || EMPTY, declare, clear, clearAll };
 };
 
 export default useReactors;
