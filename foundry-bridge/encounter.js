@@ -13,6 +13,7 @@ import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
   getBestiaryInfo,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
+  setMultipleInitiatives, rollNpcInitiatives, startCombat,
 } from './pf2eAdapter.js';
 import { initTokenImages, resolveTokenUrl, ensureTokenUploaded } from './tokenImages.js';
 
@@ -53,6 +54,36 @@ export async function handleTurnCommand(value) {
   const combat = (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
   if (!combat) return;
   await advanceCombatTurn(combat);
+}
+
+// Commit app-collected initiatives into Foundry and start the encounter (#495).
+// value = { rolls: [{ entryId, initiative }], rollNpcs }.
+// The executor primitive: write each PC's initiative, roll the NPCs, start combat.
+// No detection logic here — anything that sends the command triggers it (Slice 3
+// adds the "all players rolled" gate). The resulting updateCombat hooks re-push the
+// now-in-progress encounter via the existing path, so no extra push is needed here.
+export async function handleInitCommit(value) {
+  const combat = (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
+  if (!combat) return;
+  // Idempotent: a resent command must not double-start an already-running combat.
+  if (getCombatState(combat).started) return;
+
+  // Map the app's { entryId, initiative, statistic? } rolls to PF2e SetInitiativeData
+  // and write them all in one batched call (single relay push). statistic is passed
+  // through when present so a later slice can carry the rolling stat; absent today.
+  const rolls = Array.isArray(value?.rolls) ? value.rolls : [];
+  const initiatives = rolls
+    .filter(({ entryId, initiative }) => entryId && typeof initiative === 'number')
+    .map(({ entryId, initiative, statistic }) => ({
+      id: entryId,
+      value: initiative,
+      ...(statistic ? { statistic } : {}),
+    }));
+  if (initiatives.length) await setMultipleInitiatives(combat, initiatives);
+
+  if (value?.rollNpcs) await rollNpcInitiatives(combat);
+
+  await startCombat(combat);
 }
 
 function onUpdateCombat(combat, diff, opts) {

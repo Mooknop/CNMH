@@ -292,6 +292,40 @@ export function advanceCombatTurn(combat) {
   return combat.nextTurn();
 }
 
+// --- Combat writes (initiative-commit flow, #494/#495) ---
+// The bridge runs in the GM client, so these GM-only combat writes are available.
+// All three are core CombatEncounter methods (stable across v13→v14 for PF2e 7.x).
+
+// Write several combatants' initiatives in one shot. `initiatives` is an array of
+// PF2e SetInitiativeData: { id, value, statistic?, overridePriority? } where `id`
+// is the Foundry combatant.id (the encounter payload's entryId).
+//
+// EncounterPF2e.setMultipleInitiatives batches the writes into a single
+// updateEmbeddedDocuments call (one updateCombat hook → one relay push, vs one per
+// combatant with setInitiative) and preserves the current turn. `statistic` is the
+// PF2e initiative statistic used for tie-breaks; omitting it stores null, which is
+// acceptable here — the app sends a precomputed total and tie-break is ordering-only
+// (per #494 design). Verified against foundryvtt/pf2e src/module/encounter/document.ts.
+// v14 MIGRATION: setMultipleInitiatives is a PF2e EncounterPF2e method (PF2e 7.x);
+// re-verify it survives the v14 system release. The base Combat#setInitiative(id,
+// value) is the fallback if PF2e ever drops it.
+export function setMultipleInitiatives(combat, initiatives) {
+  return combat.setMultipleInitiatives(initiatives);
+}
+
+// Roll initiative for every NPC combatant that has no initiative yet.
+// v14 MIGRATION: Combat#rollNPC() is unchanged in v14.
+export function rollNpcInitiatives(combat) {
+  return combat.rollNPC();
+}
+
+// Begin the encounter (round 1, first turn). Combat#startCombat() flips
+// started → true and fires updateCombat.
+// v14 MIGRATION: Combat#startCombat() is unchanged in v14.
+export function startCombat(combat) {
+  return combat.startCombat();
+}
+
 // The version-independent combat snapshot the encounter payload is built from.
 // Keeping these reads here means a v14 Combat API rename touches only this file.
 export function getCombatState(combat) {
