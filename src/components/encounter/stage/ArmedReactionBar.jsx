@@ -10,6 +10,7 @@
 // rather than the reaction list. Surfacing it here too would double the bar.
 import React, { useState } from 'react';
 import { useReactionOptions } from '../../../hooks/useReactionOptions';
+import { useReactors } from '../../../hooks/useReactors';
 import UseAbilityModal from '../UseAbilityModal';
 
 const triggerTextOf = (reaction) => reaction.trigger || reaction.description || '';
@@ -34,10 +35,22 @@ const ReactionButton = ({ reaction, live, liveReason, onUse }) => (
 
 const ArmedReactionBar = ({ character, themeColor }) => {
   const { options } = useReactionOptions(character);
+  const { declare, clear } = useReactors();
   const [using, setUsing] = useState(null); // { ability, castSource }
 
   // Shield Block lives in its own bar (see header note) — drop it from the list.
   const shown = options.filter((o) => o.reaction.name !== 'Shield Block');
+
+  // Press declares this PC onto every device's stage; closing the resolver
+  // (confirm or cancel) clears the declaration (#476).
+  const open = (reaction, castSource) => {
+    setUsing({ ability: reaction, castSource });
+    declare(character.id, reaction.name);
+  };
+  const close = () => {
+    setUsing(null);
+    clear(character.id);
+  };
 
   return (
     <div className="stage-reactbar" aria-label="Your reactions">
@@ -53,7 +66,7 @@ const ArmedReactionBar = ({ character, themeColor }) => {
               reaction={reaction}
               live={live}
               liveReason={liveReason}
-              onUse={() => setUsing({ ability: reaction, castSource })}
+              onUse={() => open(reaction, castSource)}
             />
           ))}
         </div>
@@ -62,7 +75,7 @@ const ArmedReactionBar = ({ character, themeColor }) => {
       {using && (
         <UseAbilityModal
           isOpen
-          onClose={() => setUsing(null)}
+          onClose={close}
           ability={using.ability}
           cost="reaction"
           verb={using.castSource ? 'Cast' : 'Use'}

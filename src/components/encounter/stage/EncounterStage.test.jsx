@@ -13,6 +13,11 @@ vi.mock('../../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: mockCharacters }),
 }));
 
+let mockReactors;
+vi.mock('../../../hooks/useReactors', () => ({
+  useReactors: () => ({ reactors: mockReactors, declare: () => {}, clear: () => {} }),
+}));
+
 // The armed-reaction bar carries its own hook web (#474); the stage test only
 // cares that it mounts, so stub it.
 vi.mock('./ArmedReactionBar', () => ({
@@ -27,6 +32,7 @@ const encWith = (actor, currentTurnIndex = 0) => ({
 describe('EncounterStage', () => {
   beforeEach(() => {
     mockCharacters = [];
+    mockReactors = [];
     mockUseEncounter.mockReturnValue(
       encWith({ entryId: 'o1', kind: 'enemy', name: 'Ogre Warrior', bestiary: { level: 3 } })
     );
@@ -59,6 +65,14 @@ describe('EncounterStage', () => {
     expect(screen.getByText('Ally')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Portrait of Brakk' }))
       .toHaveAttribute('src', '/api/images/brakk.png');
+  });
+
+  it('shows declared reactors as avatars on the banner', () => {
+    mockCharacters = [{ id: 'p3', name: 'Pellias', image: 'pel.png' }];
+    mockReactors = [{ pcId: 'p3', label: 'Nimble Dodge', status: 'resolving' }];
+    render(<EncounterStage />);
+    expect(screen.getByLabelText('Reacting players')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Portrait of Pellias' })).toBeInTheDocument();
   });
 
   it('renders the live-feed scaffold region', () => {

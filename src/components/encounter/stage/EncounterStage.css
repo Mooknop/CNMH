@@ -44,10 +44,15 @@
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: var(--d-fail-fg);
-  font-size: 2.4rem;
+  color: var(--shell-text-secondary);
+  font-size: 1.4rem;
   font-weight: 700;
   line-height: 1;
+}
+/* The acting-combatant banner is foe-toned and large. */
+.stage-banner-portrait .stage-portrait-mono {
+  color: var(--d-fail-fg);
+  font-size: 2.4rem;
 }
 .stage-banner-id {
   flex: 1;
@@ -84,6 +89,44 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--shell-text-tertiary);
+}
+
+/* ── Reactor avatars on the banner (#476) ────────────────────── */
+.stage-reactors {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.stage-reactors-stack {
+  display: flex;
+}
+.stage-reactor-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--theme-border);
+  background: var(--surface-inset);
+  margin-left: -9px;
+}
+.stage-reactor-avatar:first-child {
+  margin-left: 0;
+}
+.stage-reactor-avatar--self {
+  border-color: var(--accent-outline);
+}
+.stage-reactor-avatar .stage-portrait-mono {
+  font-size: 1rem;
+  color: var(--accent-text);
+}
+.stage-reactors-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
 }
 
 /* ── Live action feed (placeholder until #472) ───────────────── */
