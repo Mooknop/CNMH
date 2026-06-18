@@ -207,7 +207,6 @@
   border-radius: 50%;
   background: var(--iron, var(--shell-text-tertiary));
 }
-.stage-feed-row--move .stage-feed-node { background: #6fb3d6; }
 .stage-feed-row--amber .stage-feed-node { background: var(--d-fail-fg); }
 .stage-feed-row.is-pending .stage-feed-node {
   background: transparent;
@@ -275,7 +274,7 @@
   gap: 0.35rem;
 }
 .stage-feed-cue-btn {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0.35rem 0.7rem;
   font-size: 0.85rem;
   font-weight: 700;

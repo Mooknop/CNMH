@@ -8,7 +8,7 @@ describe('ActorFeed', () => {
     render(
       <ActorFeed
         feed={[
-          { n: 1, cost: 1, label: 'Stride', detail: '25 ft', tone: 'move', state: 'done' },
+          { n: 1, cost: 1, label: 'Stride', detail: '25 ft', state: 'done' },
           { n: 2, cost: 1, label: 'Jaws Strike', detail: 'vs Kestrel', result: 'Hit · 12', tone: 'amber', state: 'done' },
         ]}
       />
