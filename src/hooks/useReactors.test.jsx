@@ -35,4 +35,14 @@ describe('useReactors', () => {
     act(() => result.current.clear('p1'));
     expect(result.current.reactors.map((r) => r.pcId)).toEqual(['p2']);
   });
+
+  it('clearAll drops every declaration (turn-change sweep)', () => {
+    const { result } = renderHook(() => useReactors());
+    act(() => result.current.declare('p1', 'Nimble Dodge'));
+    act(() => result.current.declare('p2', 'Reactive Strike'));
+    expect(result.current.reactors).toHaveLength(2);
+
+    act(() => result.current.clearAll());
+    expect(result.current.reactors).toEqual([]);
+  });
 });
