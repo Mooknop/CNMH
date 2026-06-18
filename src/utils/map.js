@@ -16,6 +16,15 @@ export const isAgile = (ability) => hasTrait(ability, 'Agile');
 export const mapStepFor = (attacksMade) =>
   Math.min(Math.max(attacksMade || 0, 0), 2);
 
+// Default MAP step for an ability use. A reaction Strike (Attack of Opportunity,
+// Retributive Strike) fires on another creature's turn, so it is never part of
+// THIS character's attack sequence — its MAP starts fresh at 0 no matter how
+// many attacks were made earlier (turn state only resets at the start of your
+// own turn, so attacksMade is stale off-turn). Everything else steps off the
+// attacks already made this turn. The player can still override via the toggle.
+export const autoMapStep = ({ isReaction = false, attacksMade = 0 } = {}) =>
+  isReaction ? 0 : mapStepFor(attacksMade);
+
 // Penalty for an ability at a given step: 0, −5/−10 (−4/−8 agile).
 export const mapPenaltyFor = (ability, step) => {
   const s = Math.min(Math.max(step || 0, 0), 2);
