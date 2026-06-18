@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { minionTurnId, MINION_COMPANION, MINION_FAMILIAR } from '../../utils/minionUtils';
+import { isCharTurn } from '../../utils/encounterUtils';
 import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useSustains } from '../../hooks/useSustains';
@@ -73,11 +74,7 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // can use it without violating the Rules of Hooks) ────────────────────────
   const order = encounter?.order || [];
   const currentTurnIndex = encounter?.currentTurnIndex ?? 0;
-  const currentEntry = order[currentTurnIndex] || null;
-  const isMyTurn =
-    !!currentEntry &&
-    currentEntry.kind === 'pc' &&
-    currentEntry.charId === charId;
+  const isMyTurn = isCharTurn(encounter, charId);
   const phase = encounter?.phase;
   const turnToken = `${encounter?.round ?? 0}:${currentTurnIndex}`;
 

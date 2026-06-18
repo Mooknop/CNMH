@@ -22,6 +22,7 @@ import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import ActionDial from '../components/encounter/commandsheet/ActionDial';
 import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
 import FocusBanner from '../components/encounter/commandsheet/FocusBanner';
+import EncounterStage from '../components/encounter/stage/EncounterStage';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
@@ -35,6 +36,7 @@ import { useMinions } from '../hooks/useMinions';
 import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { useFocusReset } from '../hooks/useFocusReset';
+import { isCharTurn } from '../utils/encounterUtils';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
 
@@ -149,6 +151,13 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} character={character} />
+                  {/* Off-turn (#471): spotlight the acting combatant above the dial
+                      when an encounter is in-progress and it isn't this PC's turn.
+                      The dial + Shield Block bar below stay in place (they own the
+                      off-turn turn indicator + reactions until later epic slices). */}
+                  {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) && (
+                    <EncounterStage characterColor={characterColor} />
+                  )}
                   <ActionDial charId={character.id} characterName={character.name} character={character} />
                   <InitiativeStrip charId={character.id} />
                   <FocusBanner charId={character.id} />

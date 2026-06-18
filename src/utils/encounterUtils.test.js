@@ -8,6 +8,8 @@ import {
   makePcEntry,
   makeEnemyEntry,
   everyEntryHasInitiative,
+  activeEntry,
+  isCharTurn,
 } from './encounterUtils';
 
 describe('encounterUtils', () => {
@@ -99,5 +101,43 @@ describe('encounterUtils', () => {
     expect(everyEntryHasInitiative([{ initiative: 10 }])).toBe(true);
     expect(everyEntryHasInitiative([{ initiative: 10 }, { initiative: null }])).toBe(false);
     expect(everyEntryHasInitiative([{ initiative: 0 }])).toBe(true); // 0 is valid
+  });
+
+  describe('activeEntry / isCharTurn', () => {
+    const enc = (order, currentTurnIndex = 0) => ({ order, currentTurnIndex });
+
+    it('activeEntry returns the entry at currentTurnIndex', () => {
+      const order = [
+        { entryId: 'a', kind: 'pc', charId: 'p1' },
+        { entryId: 'b', kind: 'enemy' },
+      ];
+      expect(activeEntry(enc(order, 0)).entryId).toBe('a');
+      expect(activeEntry(enc(order, 1)).entryId).toBe('b');
+    });
+
+    it('activeEntry defaults the index to 0 and tolerates empty/missing', () => {
+      expect(activeEntry({ order: [{ entryId: 'a' }] }).entryId).toBe('a');
+      expect(activeEntry({ order: [], currentTurnIndex: 0 })).toBeNull();
+      expect(activeEntry({ order: [{ entryId: 'a' }], currentTurnIndex: 5 })).toBeNull();
+      expect(activeEntry(null)).toBeNull();
+      expect(activeEntry(undefined)).toBeNull();
+    });
+
+    it('isCharTurn is true only when the acting entry is this PC', () => {
+      const order = [
+        { entryId: 'a', kind: 'pc', charId: 'p1' },
+        { entryId: 'b', kind: 'enemy' },
+        { entryId: 'c', kind: 'pc', charId: 'p2' },
+      ];
+      expect(isCharTurn(enc(order, 0), 'p1')).toBe(true);
+      expect(isCharTurn(enc(order, 0), 'p2')).toBe(false); // someone else's PC turn
+      expect(isCharTurn(enc(order, 1), 'p1')).toBe(false); // an enemy is acting
+      expect(isCharTurn(enc(order, 2), 'p2')).toBe(true);
+    });
+
+    it('isCharTurn is false when there is no acting entry', () => {
+      expect(isCharTurn({ order: [], currentTurnIndex: 0 }, 'p1')).toBe(false);
+      expect(isCharTurn(null, 'p1')).toBe(false);
+    });
   });
 });

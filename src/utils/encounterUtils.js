@@ -32,6 +32,17 @@ export const makeSaveRequest = (req) => ({
 
 export const isPc = (entry) => !!entry && entry.kind === 'pc';
 
+// The order entry whose turn it currently is. Single source for "who's acting"
+// shared by the on-turn panel and the off-turn stage so they never disagree.
+export const activeEntry = (encounter) =>
+  (encounter?.order || [])[encounter?.currentTurnIndex ?? 0] || null;
+
+// Whether the currently-acting entry is this character's PC turn.
+export const isCharTurn = (encounter, charId) => {
+  const entry = activeEntry(encounter);
+  return !!entry && entry.kind === 'pc' && entry.charId === charId;
+};
+
 export const findEntry = (order, entryId) =>
   (order || []).find((e) => e && e.entryId === entryId) || null;
 
