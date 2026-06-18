@@ -201,7 +201,7 @@ describe('InitiativeEntry', () => {
     expect(drv.encounter.order[0].initiative).toBeNull();
   });
 
-  it('does NOT render once the encounter has moved to in-progress', () => {
+  it('does NOT render once the encounter has moved to in-progress (app-only)', () => {
     let drv;
     const { rerender } = render(
       <>
@@ -226,5 +226,152 @@ describe('InitiativeEntry', () => {
       </>
     );
     expect(screen.queryByLabelText('initiative-input')).toBeNull();
+  });
+});
+
+// ── Foundry-linked path: d20 + skill → per-player cnmh_initroll_<charId> ──
+describe('InitiativeEntry — Foundry-linked', () => {
+  const vask = {
+    id: 'Vask',
+    name: 'Vask',
+    feats: [],
+    skillModifiers: { perception: 7, stealth: 10, deception: 2 },
+  };
+
+  // A bridge-pushed setup-phase encounter: foundryCombatId set, PC already in the
+  // order with a null initiative (not yet rolled).
+  const foundryEncounter = (charId, name) => ({
+    active: true,
+    phase: 'setup',
+    round: 0,
+    currentTurnIndex: 0,
+    foundryCombatId: 'combat-1',
+    order: [{ entryId: `cbt-${charId}`, kind: 'pc', charId, name, initiative: null }],
+    log: [],
+    saveRequests: [],
+  });
+
+  // Seeds the shared synced store with a Foundry-linked encounter on mount.
+  const Seeder = ({ value }) => {
+    const [, set] = useSyncedState('cnmh_encounter_global', null);
+    React.useEffect(() => { set(value); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return null;
+  };
+
+  // Captures the live cnmh_initroll_<charId> and raw encounter for assertions.
+  let captured;
+  const Reader = ({ charId }) => {
+    const [roll] = useSyncedState(`cnmh_initroll_${charId}`, null);
+    const [enc]  = useSyncedState('cnmh_encounter_global', null);
+    captured = { roll, enc };
+    return null;
+  };
+
+  const ScoutSetter = ({ value }) => {
+    const [, set] = useSyncedState('cnmh_scoutbonus_global', null);
+    React.useEffect(() => { set(value); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return null;
+  };
+
+  beforeEach(() => { captured = undefined; });
+
+  // Render the seeded tree, then rerender so InitiativeEntry reads the now-populated
+  // store (the Seeder's mount effect lands after the first render, as in the
+  // ScoutSetter tests above).
+  const renderFoundry = (extra = null) => {
+    const tree = () => (
+      <>
+        {extra}
+        <Seeder value={foundryEncounter('Vask', 'Vask')} />
+        <Reader charId="Vask" />
+        <InitiativeEntry charId="Vask" character={vask} />
+      </>
+    );
+    const { rerender } = render(tree());
+    rerender(tree());
+    return { rerender, tree };
+  };
+
+  it('shows the d20 + skill entry (not the app-only total field)', () => {
+    renderFoundry();
+    expect(screen.getByLabelText('d20-input')).toBeInTheDocument();
+    expect(screen.getByLabelText('initiative-skill-select')).toBeInTheDocument();
+    expect(screen.queryByLabelText('initiative-input')).toBeNull();
+  });
+
+  it('d20 + default Perception writes the total to cnmh_initroll_<charId>, not the order', () => {
+    renderFoundry();
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    expect(screen.getByLabelText('initiative-breakdown'))
+      .toHaveTextContent('d20 15 + Perception +7 = 22');
+
+    fireEvent.click(screen.getByLabelText('submit-initiative'));
+    expect(captured.roll).toMatchObject({ d20: 15, mod: 7, total: 22, skill: 'perception' });
+    // The encounter order is left untouched — the bridge owns it.
+    expect(captured.enc.order[0].initiative).toBeNull();
+  });
+
+  it('skill selection changes the modifier used', () => {
+    renderFoundry();
+    fireEvent.change(screen.getByLabelText('initiative-skill-select'), { target: { value: 'stealth' } });
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    expect(screen.getByLabelText('initiative-breakdown'))
+      .toHaveTextContent('d20 15 + Stealth +10 = 25');
+
+    fireEvent.click(screen.getByLabelText('submit-initiative'));
+    expect(captured.roll).toMatchObject({ mod: 10, total: 25, skill: 'stealth' });
+  });
+
+  it('folds the Scout +1 circumstance bonus into the total', () => {
+    renderFoundry(<ScoutSetter value="someone-else" />);
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    expect(screen.getByLabelText('initiative-breakdown'))
+      .toHaveTextContent('d20 15 + Perception +7 + Scout +1 = 23');
+
+    fireEvent.click(screen.getByLabelText('submit-initiative'));
+    expect(captured.roll).toMatchObject({ mod: 8, total: 23, skill: 'perception' });
+  });
+
+  it('Harmless Bystander forces Deception and folds it in', () => {
+    const izzyFoundry = {
+      id: 'Vask', // keep charId aligned with the seeded order entry
+      name: 'Izzy',
+      feats: [{ name: 'Harmless Bystander' }],
+      skillModifiers: { perception: 7, stealth: 10, deception: 11 },
+    };
+    const tree = () => (
+      <>
+        <Seeder value={foundryEncounter('Vask', 'Izzy')} />
+        <Reader charId="Vask" />
+        <InitiativeEntry charId="Vask" character={izzyFoundry} />
+      </>
+    );
+    const { rerender } = render(tree());
+    rerender(tree());
+
+    fireEvent.click(screen.getByLabelText('harmless-bystander-toggle'));
+    // Skill select is forced to Deception and locked.
+    expect(screen.getByLabelText('initiative-skill-select')).toHaveValue('deception');
+    expect(screen.getByLabelText('initiative-skill-select')).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '14' } });
+    expect(screen.getByLabelText('initiative-breakdown'))
+      .toHaveTextContent('d20 14 + Deception +11 = 25');
+    fireEvent.click(screen.getByLabelText('submit-initiative'));
+    expect(captured.roll).toMatchObject({ total: 25, skill: 'deception' });
+  });
+
+  it('shows a submitted state and allows re-entry until combat starts', () => {
+    renderFoundry();
+    fireEvent.change(screen.getByLabelText('d20-input'), { target: { value: '15' } });
+    fireEvent.click(screen.getByLabelText('submit-initiative'));
+
+    // Submitted view replaces the input with a confirmation + breakdown.
+    expect(screen.getByLabelText('initiative-submitted')).toBeInTheDocument();
+    expect(screen.queryByLabelText('d20-input')).toBeNull();
+
+    // Re-enter restores the input, seeded with the prior d20.
+    fireEvent.click(screen.getByText('Re-enter'));
+    expect(screen.getByLabelText('d20-input')).toHaveValue(15);
   });
 });
