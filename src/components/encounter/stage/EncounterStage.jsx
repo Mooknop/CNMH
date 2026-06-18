@@ -12,14 +12,16 @@
 //   · reactor presence avatars          → #476
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
+import { useContent } from '../../../contexts/ContentContext';
 import { activeEntry } from '../../../utils/encounterUtils';
+import { entryPortrait } from '../../../utils/stagePortrait';
+import StagePortrait from './StagePortrait';
 import ArmedReactionBar from './ArmedReactionBar';
 import './EncounterStage.css';
 
-const monogramOf = (name) => (name || '?').trim().charAt(0).toUpperCase() || '?';
-
 const EncounterStage = ({ character, characterColor }) => {
   const { encounter } = useEncounter();
+  const { characters } = useContent();
   const actor = activeEntry(encounter);
 
   // Defensive: routing only mounts this for an in-progress, not-my-turn
@@ -33,6 +35,8 @@ const EncounterStage = ({ character, characterColor }) => {
       ? `Level ${actor.bestiary.level}`
       : 'Foe';
 
+  const art = entryPortrait(actor, characters);
+
   return (
     <div
       className="stage"
@@ -40,11 +44,14 @@ const EncounterStage = ({ character, characterColor }) => {
       role="region"
       aria-label="Off-turn encounter stage"
     >
-      {/* Hero banner — who is acting. Token art arrives in #473; monogram for now. */}
+      {/* Hero banner — who is acting, with token art (monogram fallback). */}
       <div className="stage-banner">
-        <div className="stage-banner-mono" aria-hidden="true">
-          {monogramOf(actor.name)}
-        </div>
+        <StagePortrait
+          className="stage-banner-portrait"
+          src={art.src}
+          name={actor.name}
+          imagePosition={art.imagePosition}
+        />
         <div className="stage-banner-id">
           <div className="stage-banner-live">
             <span className="stage-banner-live-dot" aria-hidden="true" />
