@@ -227,9 +227,12 @@ export function makeCombat(opts = {}) {
     combatants,
     combatant: activeTurnIndex >= 0 ? combatants[activeTurnIndex] ?? null : null,
     nextTurn: jest.fn().mockResolvedValue(undefined),
-    setInitiative: jest.fn().mockResolvedValue(undefined),
-    rollNPC: jest.fn().mockResolvedValue(undefined),
-    startCombat: jest.fn().mockResolvedValue(undefined),
+    // EncounterPF2e batches initiative writes via setMultipleInitiatives; rollNPC +
+    // startCombat are inherited from the base Combat. Returning the combat matches the
+    // real Promise<Combat> for the latter two.
+    setMultipleInitiatives: jest.fn().mockResolvedValue(undefined),
+    rollNPC: jest.fn(function rollNPC() { return Promise.resolve(this); }),
+    startCombat: jest.fn(function startCombat() { return Promise.resolve(this); }),
   };
   combatants.forEach((c) => { if (!c.combat) c.combat = combat; });
   return combat;

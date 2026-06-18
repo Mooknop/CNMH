@@ -36,7 +36,7 @@ from it.
 | `actormap` | app → bridge | `global` | `{ [foundryActorId]: charId }` |
 | `encounter` | bridge → app | `global` | `{ active, phase, round, currentTurnIndex, order[], log[], foundryCombatId }` |
 | `turncmd` | app → bridge | `global` | `{ action: 'next-turn' }` |
-| `initcommit` | app → bridge | `global` | `{ rolls: [{ entryId, initiative }], rollNpcs }` — write each PC initiative, roll NPCs, then `startCombat` (idempotent; no-op once started) |
+| `initcommit` | app → bridge | `global` | `{ rolls: [{ entryId, initiative, statistic? }], rollNpcs }` — batch-write PC initiatives (`setMultipleInitiatives`), roll NPCs, then `startCombat` (idempotent; no-op once started) |
 | `hp` | both | charId | `{ current, max, temp, dying, wounded, doomed }` |
 | `conditions` | bridge → app | charId | `[{ id, value }]` |
 | `heropoints` | both | charId | `number` |

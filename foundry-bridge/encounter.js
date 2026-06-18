@@ -13,7 +13,7 @@ import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
   getBestiaryInfo,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
-  setCombatantInitiative, rollNpcInitiatives, startCombat,
+  setMultipleInitiatives, rollNpcInitiatives, startCombat,
 } from './pf2eAdapter.js';
 import { initTokenImages, resolveTokenUrl, ensureTokenUploaded } from './tokenImages.js';
 
@@ -68,11 +68,18 @@ export async function handleInitCommit(value) {
   // Idempotent: a resent command must not double-start an already-running combat.
   if (getCombatState(combat).started) return;
 
+  // Map the app's { entryId, initiative, statistic? } rolls to PF2e SetInitiativeData
+  // and write them all in one batched call (single relay push). statistic is passed
+  // through when present so a later slice can carry the rolling stat; absent today.
   const rolls = Array.isArray(value?.rolls) ? value.rolls : [];
-  for (const { entryId, initiative } of rolls) {
-    if (!entryId || typeof initiative !== 'number') continue;
-    await setCombatantInitiative(combat, entryId, initiative);
-  }
+  const initiatives = rolls
+    .filter(({ entryId, initiative }) => entryId && typeof initiative === 'number')
+    .map(({ entryId, initiative, statistic }) => ({
+      id: entryId,
+      value: initiative,
+      ...(statistic ? { statistic } : {}),
+    }));
+  if (initiatives.length) await setMultipleInitiatives(combat, initiatives);
 
   if (value?.rollNpcs) await rollNpcInitiatives(combat);
 

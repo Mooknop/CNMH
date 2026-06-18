@@ -272,29 +272,43 @@ describe('handleInitCommit', () => {
     return combat;
   }
 
-  test('writes each PC initiative, rolls NPCs, then starts combat — in order', async () => {
+  test('batches PC initiatives, rolls NPCs, then starts combat — in order', async () => {
     const combat = setupCombat();
     const calls = [];
-    combat.setInitiative.mockImplementation((id, v) => { calls.push(['setInitiative', id, v]); return Promise.resolve(); });
-    combat.rollNPC.mockImplementation(() => { calls.push(['rollNPC']); return Promise.resolve(); });
-    combat.startCombat.mockImplementation(() => { calls.push(['startCombat']); return Promise.resolve(); });
+    combat.setMultipleInitiatives.mockImplementation((inits) => { calls.push(['setMultipleInitiatives', inits]); return Promise.resolve(); });
+    combat.rollNPC.mockImplementation(() => { calls.push(['rollNPC']); return Promise.resolve(combat); });
+    combat.startCombat.mockImplementation(() => { calls.push(['startCombat']); return Promise.resolve(combat); });
 
     await handleInitCommit({
-      rolls: [{ entryId: 'cbt-pellias', initiative: 18 }],
+      rolls: [
+        { entryId: 'cbt-pellias', initiative: 18 },
+        { entryId: 'cbt-vask', initiative: 14 },
+      ],
       rollNpcs: true,
     });
 
     expect(calls).toEqual([
-      ['setInitiative', 'cbt-pellias', 18],
+      ['setMultipleInitiatives', [
+        { id: 'cbt-pellias', value: 18 },
+        { id: 'cbt-vask', value: 14 },
+      ]],
       ['rollNPC'],
       ['startCombat'],
+    ]);
+  });
+
+  test('passes a per-roll statistic through to SetInitiativeData when present', async () => {
+    const combat = setupCombat();
+    await handleInitCommit({ rolls: [{ entryId: 'cbt-pellias', initiative: 18, statistic: 'stealth' }], rollNpcs: false });
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([
+      { id: 'cbt-pellias', value: 18, statistic: 'stealth' },
     ]);
   });
 
   test('rollNpcs: false skips the NPC roll', async () => {
     const combat = setupCombat();
     await handleInitCommit({ rolls: [{ entryId: 'cbt-pellias', initiative: 18 }], rollNpcs: false });
-    expect(combat.setInitiative).toHaveBeenCalledWith('cbt-pellias', 18);
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([{ id: 'cbt-pellias', value: 18 }]);
     expect(combat.rollNPC).not.toHaveBeenCalled();
     expect(combat.startCombat).toHaveBeenCalledTimes(1);
   });
@@ -303,7 +317,7 @@ describe('handleInitCommit', () => {
     const combat = combatWithGoblinAndPellias({ started: true });
     global.game.combat = combat;
     await handleInitCommit({ rolls: [{ entryId: 'cbt-pellias', initiative: 18 }], rollNpcs: true });
-    expect(combat.setInitiative).not.toHaveBeenCalled();
+    expect(combat.setMultipleInitiatives).not.toHaveBeenCalled();
     expect(combat.rollNPC).not.toHaveBeenCalled();
     expect(combat.startCombat).not.toHaveBeenCalled();
   });
@@ -323,8 +337,15 @@ describe('handleInitCommit', () => {
       ],
       rollNpcs: false,
     });
-    expect(combat.setInitiative).toHaveBeenCalledTimes(1);
-    expect(combat.setInitiative).toHaveBeenCalledWith('cbt-pellias', 18);
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([{ id: 'cbt-pellias', value: 18 }]);
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+
+  test('no rolls → still rolls NPCs and starts (the GM "start anyway" path)', async () => {
+    const combat = setupCombat();
+    await handleInitCommit({ rolls: [], rollNpcs: true });
+    expect(combat.setMultipleInitiatives).not.toHaveBeenCalled();
+    expect(combat.rollNPC).toHaveBeenCalledTimes(1);
     expect(combat.startCombat).toHaveBeenCalledTimes(1);
   });
 });
