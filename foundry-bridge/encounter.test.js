@@ -3,7 +3,8 @@
 // all Foundry reads go through pf2eAdapter.
 
 import {
-  initEncounter, handleTurnCommand, handleInitCommit, updateActorMap, getActorMap,
+  initEncounter, handleTurnCommand, handleInitCommit, handleInitRoll,
+  updateActorMap, getActorMap,
 } from './encounter.js';
 import { makeCombat, makeCombatant, makeActor } from './test/foundryMock.js';
 
@@ -347,5 +348,113 @@ describe('handleInitCommit', () => {
     expect(combat.setMultipleInitiatives).not.toHaveBeenCalled();
     expect(combat.rollNPC).toHaveBeenCalledTimes(1);
     expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('handleInitRoll — auto-detect + commit', () => {
+  const flush = () => new Promise((res) => setTimeout(res, 0));
+
+  // Two PCs (Pellias, Vask) + one enemy (Goblin), in setup. Registers the combat as
+  // active and fires createCombat so _activeCombatId is set and the tally is reset.
+  function setupCombatWithPCs({ started = false } = {}) {
+    updateActorMap({ 'actor-pellias': 'Pellias', 'actor-vask': 'Vask' });
+    const pellias = makeCombatant({ id: 'cbt-pellias', name: 'Pellias', actorId: 'actor-pellias', initiative: null });
+    const vask    = makeCombatant({ id: 'cbt-vask',    name: 'Vask',    actorId: 'actor-vask',    initiative: null });
+    const goblin  = makeCombatant({ id: 'cbt-goblin',  name: 'Goblin',  actorId: 'actor-goblin',  initiative: null });
+    const combat  = makeCombat({ id: 'combat1', active: true, started, round: 0, combatants: [pellias, vask, goblin] });
+    global.game.combat = combat;
+    global.game.combats.set('combat1', combat);
+    global.Hooks.fire('createCombat', combat); // sets _activeCombatId, resets tally
+    return combat;
+  }
+
+  test('commits only once every expected PC has rolled', async () => {
+    const combat = setupCombatWithPCs();
+
+    await handleInitRoll('Pellias', { total: 18 });
+    expect(combat.startCombat).not.toHaveBeenCalled(); // Vask still pending
+
+    await handleInitRoll('Vask', { total: 14 });
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([
+      { id: 'cbt-pellias', value: 18 },
+      { id: 'cbt-vask', value: 14 },
+    ]);
+    expect(combat.rollNPC).toHaveBeenCalledTimes(1);
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not wait on enemy (non-PC) combatants', async () => {
+    // Only Pellias is mapped; Goblin is an enemy and Vask is unmapped here.
+    updateActorMap({ 'actor-pellias': 'Pellias' });
+    const pellias = makeCombatant({ id: 'cbt-pellias', name: 'Pellias', actorId: 'actor-pellias', initiative: null });
+    const goblin  = makeCombatant({ id: 'cbt-goblin',  name: 'Goblin',  actorId: 'actor-goblin',  initiative: null });
+    const combat  = makeCombat({ id: 'combat1', active: true, started: false, round: 0, combatants: [pellias, goblin] });
+    global.game.combat = combat;
+    global.game.combats.set('combat1', combat);
+    global.Hooks.fire('createCombat', combat);
+
+    await handleInitRoll('Pellias', { total: 20 });
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([{ id: 'cbt-pellias', value: 20 }]);
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+
+  test('ignores a roll that arrives after combat has started', async () => {
+    const combat = setupCombatWithPCs({ started: true });
+    await handleInitRoll('Pellias', { total: 18 });
+    await handleInitRoll('Vask', { total: 14 });
+    expect(combat.setMultipleInitiatives).not.toHaveBeenCalled();
+    expect(combat.startCombat).not.toHaveBeenCalled();
+  });
+
+  test('a PC removed mid-setup unblocks the remaining set', async () => {
+    const combat = setupCombatWithPCs();
+    await handleInitRoll('Pellias', { total: 18 });
+    expect(combat.startCombat).not.toHaveBeenCalled(); // Vask pending
+
+    // GM removes Vask before he rolls → only Pellias remains expected.
+    combat.combatants = combat.combatants.filter((c) => c.id !== 'cbt-vask');
+    global.Hooks.fire('deleteCombatant', { combat });
+    await flush();
+
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([{ id: 'cbt-pellias', value: 18 }]);
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+
+  test('a new combat resets the tally', async () => {
+    const combat = setupCombatWithPCs();
+    await handleInitRoll('Pellias', { total: 18 }); // tallied: Pellias
+
+    global.Hooks.fire('createCombat', combat);       // resets tally
+
+    await handleInitRoll('Vask', { total: 14 });     // Pellias no longer counted
+    expect(combat.startCombat).not.toHaveBeenCalled();
+
+    await handleInitRoll('Pellias', { total: 18 });  // now complete again
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+
+  test('a re-roll before start overwrites the tally (latest total wins)', async () => {
+    const combat = setupCombatWithPCs();
+    await handleInitRoll('Pellias', { total: 10 });
+    await handleInitRoll('Pellias', { total: 18 }); // re-roll, not yet complete
+    await handleInitRoll('Vask', { total: 14 });
+    expect(combat.setMultipleInitiatives).toHaveBeenCalledWith([
+      { id: 'cbt-pellias', value: 18 },
+      { id: 'cbt-vask', value: 14 },
+    ]);
+  });
+
+  test('a cleared roll (null/non-numeric total) retracts the player from the tally', async () => {
+    const combat = setupCombatWithPCs();
+    await handleInitRoll('Pellias', { total: 18 });
+    await handleInitRoll('Vask', { total: 14 });
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+
+    // Sanity: retracting Pellias removes him so a hypothetical re-check wouldn't
+    // treat the set as complete off a stale entry.
+    combat.startCombat.mockClear();
+    await handleInitRoll('Pellias', null);
+    await handleInitRoll('Vask', { total: 9 });
+    expect(combat.startCombat).not.toHaveBeenCalled(); // Pellias retracted → incomplete
   });
 });

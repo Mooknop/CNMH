@@ -15,7 +15,9 @@ export default defineConfig({
     // test (they re-install via beforeEach).
     mockReset: true,
     // Exclude Playwright specs — they use @playwright/test globals, not Vitest.
-    exclude: ['node_modules', 'e2e/**', 'foundry-bridge/**'],
+    // '.claude/**' keeps Vitest from picking up stale duplicate test files in
+    // on-disk agent worktrees (.claude/worktrees/**) during local single-file runs.
+    exclude: ['node_modules', 'e2e/**', 'foundry-bridge/**', '.claude/**'],
     coverage: {
       provider: 'v8',
       include: ['src/**/*.{js,jsx}'],

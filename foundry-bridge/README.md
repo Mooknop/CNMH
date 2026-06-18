@@ -37,7 +37,7 @@ from it.
 | `encounter` | bridge → app | `global` | `{ active, phase, round, currentTurnIndex, order[], log[], foundryCombatId }` |
 | `turncmd` | app → bridge | `global` | `{ action: 'next-turn' }` |
 | `initcommit` | app → bridge | `global` | `{ rolls: [{ entryId, initiative, statistic? }], rollNpcs }` — batch-write PC initiatives (`setMultipleInitiatives`), roll NPCs, then `startCombat` (idempotent; no-op once started) |
-| `initroll` | app → bridge | charId | `{ d20, mod, total, skill, ts }` — a player's setup-phase initiative roll; survives `encounter` overwrites. Slice 3 tallies these to drive `initcommit` |
+| `initroll` | app → bridge | charId | `{ d20, mod, total, skill, ts }` — a player's setup-phase initiative roll; survives `encounter` overwrites. The bridge tallies these against the PC combatant set and auto-runs `initcommit` once every expected PC has rolled |
 | `hp` | both | charId | `{ current, max, temp, dying, wounded, doomed }` |
 | `conditions` | bridge → app | charId | `[{ id, value }]` |
 | `heropoints` | both | charId | `number` |
