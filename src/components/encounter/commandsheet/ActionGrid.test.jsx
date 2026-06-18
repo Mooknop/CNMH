@@ -53,6 +53,15 @@ describe('ActionGrid', () => {
     expect(screen.getByRole('button', { name: 'Longsword' })).toBeInTheDocument();
   });
 
+  it('readOnly renders tiles inert (disabled) and never calls onUse', () => {
+    const onUse = vi.fn();
+    render(<ActionGrid character={character} onUse={onUse} readOnly />);
+    const tile = screen.getByRole('button', { name: 'Longsword' });
+    expect(tile).toBeDisabled();
+    fireEvent.click(tile);
+    expect(onUse).not.toHaveBeenCalled();
+  });
+
   it('renders filter chips including All and Attack', () => {
     render(<ActionGrid character={character} onUse={vi.fn()} />);
     expect(screen.getByRole('tab', { name: 'All' })).toBeInTheDocument();

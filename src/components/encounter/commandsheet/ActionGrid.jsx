@@ -33,7 +33,7 @@ const COST_GROUPS = [
   { key: 'rf', label: 'Reactions & Free' },
 ];
 
-const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }) => {
+const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen, readOnly = false }) => {
   const { actions, strikes, reactions, freeActions, inventory, maxHp, flags, thaumaturge } = useCharacter(character);
   const { focusEnemy, focusAlly } = useFocusTarget(character.id);
   const { inReach } = useAdjacency(character.id);
@@ -156,6 +156,7 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
                   encounterMode={encounterMode}
                   hasFocus={hasFocus}
                   allyOutOfReach={allyOutOfReach}
+                  readOnly={readOnly}
                 />
               ))}
             </div>

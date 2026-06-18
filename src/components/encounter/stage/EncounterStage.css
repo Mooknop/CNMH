@@ -1,0 +1,196 @@
+/* src/components/encounter/stage/EncounterStage.css
+   Off-turn stage (#471, epic #479). Dark-shell tokens from pf2e-tokens.css.
+   The acting combatant ("foe") accent reads from the degree-of-success FAIL ramp
+   (--d-fail-*) — no new color tokens. Per-character accent rides --color-theme. */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+/* ── Hero banner — who is acting ─────────────────────────────── */
+.stage-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--d-fail-border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--d-fail-bg);
+}
+.stage-banner-mono {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--d-fail-border);
+  background: var(--surface-inset);
+  color: var(--d-fail-fg);
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.stage-banner-id {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.stage-banner-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--d-fail-fg);
+}
+.stage-banner-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--d-fail-fg);
+  box-shadow: 0 0 7px var(--d-fail-fg);
+  animation: stage-blink 1.3s ease-in-out infinite;
+}
+.stage-banner-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+.stage-banner-sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Live action feed (placeholder until #472) ───────────────── */
+.stage-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-card);
+}
+.stage-feed-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--d-fail-fg);
+}
+.stage-feed-head-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 7px currentColor;
+  animation: stage-blink 1.3s ease-in-out infinite;
+}
+.stage-feed-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Armed reaction footer (placeholder until #474/#475) ─────── */
+.stage-reactbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-trigger);
+}
+.stage-reactbar-head {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.stage-reactbar-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+/* ── Grid peek — collapsed, inert command grid ───────────────── */
+.stage-peek {
+  border: 1px solid var(--theme-border);
+  border-radius: var(--radius-lg, 14px);
+  background: var(--surface-inset);
+  overflow: hidden;
+}
+.stage-peek-handle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--shell-text-primary);
+  text-align: left;
+}
+.stage-peek-grip {
+  width: 30px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--theme-border-strong);
+}
+.stage-peek-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.stage-peek-sub {
+  font-size: 0.72rem;
+  color: var(--shell-text-tertiary);
+}
+.stage-peek-chev {
+  margin-left: auto;
+  color: var(--shell-text-tertiary);
+}
+.stage-peek-body {
+  padding: 0 0.85rem 0.85rem;
+}
+.stage-peek-note {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--shell-text-tertiary);
+}
+
+/* Inert tiles in the peek — non-interactive, no hover/press affordance. */
+.cmd-tile--readonly {
+  cursor: default;
+  opacity: 0.72;
+}
+
+@keyframes stage-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-banner-live-dot,
+  .stage-feed-head-dot {
+    animation: none;
+  }
+}

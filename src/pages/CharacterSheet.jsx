@@ -22,6 +22,7 @@ import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import ActionDial from '../components/encounter/commandsheet/ActionDial';
 import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
 import FocusBanner from '../components/encounter/commandsheet/FocusBanner';
+import EncounterStage from '../components/encounter/stage/EncounterStage';
 import SavePrompt from '../components/encounter/SavePrompt';
 import ReactionPrompt from '../components/encounter/ReactionPrompt';
 import SkillPrompt from '../components/encounter/SkillPrompt';
@@ -35,6 +36,7 @@ import { useMinions } from '../hooks/useMinions';
 import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
 import { useFocusReset } from '../hooks/useFocusReset';
+import { isCharTurn } from '../utils/encounterUtils';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
 
@@ -149,11 +151,20 @@ const CharacterSheet = () => {
               {encounter?.active ? (
                 <>
                   <InitiativeEntry charId={character.id} character={character} />
-                  <ActionDial charId={character.id} characterName={character.name} character={character} />
-                  <InitiativeStrip charId={character.id} />
-                  <FocusBanner charId={character.id} />
-                  <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
-                  <HandsPanel character={character} characterColor={characterColor} />
+                  {/* Off-turn (#471): hand the screen to the stage when an encounter
+                      is in-progress and it isn't this PC's turn. Setup and on-turn
+                      keep the Command Sheet block (which self-gates by phase). */}
+                  {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
+                    <EncounterStage character={character} characterColor={characterColor} />
+                  ) : (
+                    <>
+                      <ActionDial charId={character.id} characterName={character.name} character={character} />
+                      <InitiativeStrip charId={character.id} />
+                      <FocusBanner charId={character.id} />
+                      <TurnTrackerPanel charId={character.id} characterName={character.name} inventory={characterModel.inventory} character={character} />
+                      <HandsPanel character={character} characterColor={characterColor} />
+                    </>
+                  )}
                 </>
               ) : (
                 <div className="cs-encounter-idle">
