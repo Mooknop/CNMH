@@ -12,15 +12,18 @@
 //   · reactor presence avatars          → #476
 import React from 'react';
 import { useEncounter } from '../../../hooks/useEncounter';
+import { useReactors } from '../../../hooks/useReactors';
 import { useContent } from '../../../contexts/ContentContext';
 import { activeEntry } from '../../../utils/encounterUtils';
 import { entryPortrait } from '../../../utils/stagePortrait';
 import StagePortrait from './StagePortrait';
+import ReactorAvatars from './ReactorAvatars';
 import ArmedReactionBar from './ArmedReactionBar';
 import './EncounterStage.css';
 
 const EncounterStage = ({ character, characterColor }) => {
   const { encounter } = useEncounter();
+  const { reactors } = useReactors();
   const { characters } = useContent();
   const actor = activeEntry(encounter);
 
@@ -60,6 +63,7 @@ const EncounterStage = ({ character, characterColor }) => {
           <div className="stage-banner-name">{actor.name}</div>
           <div className="stage-banner-sub">{actorSub}</div>
         </div>
+        <ReactorAvatars reactors={reactors} characters={characters} selfId={character?.id} />
       </div>
 
       {/* Live action feed — populated by the bridge relay in #472. */}

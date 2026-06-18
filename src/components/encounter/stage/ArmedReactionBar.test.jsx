@@ -8,11 +8,18 @@ vi.mock('../../../hooks/useReactionOptions', () => ({
   useReactionOptions: () => ({ options: mockOptions }),
 }));
 
+const declare = vi.fn();
+const clear = vi.fn();
+vi.mock('../../../hooks/useReactors', () => ({
+  useReactors: () => ({ reactors: [], declare, clear }),
+}));
+
 vi.mock('../UseAbilityModal', () => ({
   __esModule: true,
-  default: ({ ability, cost, verb, castSource }) => (
+  default: ({ ability, cost, verb, castSource, onClose }) => (
     <div data-testid="use-ability-modal">
       {verb} {ability.name} ({cost}{castSource ? ` from ${castSource}` : ''})
+      <button onClick={onClose} aria-label="close modal">close</button>
     </div>
   ),
 }));
@@ -21,6 +28,8 @@ const character = { id: 'p1', name: 'Kestrel' };
 
 beforeEach(() => {
   mockOptions = [];
+  declare.mockClear();
+  clear.mockClear();
 });
 
 describe('ArmedReactionBar', () => {
@@ -41,6 +50,19 @@ describe('ArmedReactionBar', () => {
 
     fireEvent.click(btn);
     expect(screen.getByTestId('use-ability-modal')).toHaveTextContent('Use Nimble Dodge (reaction)');
+  });
+
+  it('broadcasts the declaration on press and clears it when the resolver closes', () => {
+    mockOptions = [
+      { reaction: { name: 'Nimble Dodge' }, castSource: undefined, live: true, liveReason: null },
+    ];
+    render(<ArmedReactionBar character={character} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use Nimble Dodge' }));
+    expect(declare).toHaveBeenCalledWith('p1', 'Nimble Dodge');
+
+    fireEvent.click(screen.getByLabelText('close modal'));
+    expect(clear).toHaveBeenCalledWith('p1');
   });
 
   it('casts a staff reaction from the staff source', () => {
