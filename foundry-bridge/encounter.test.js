@@ -3,7 +3,7 @@
 // all Foundry reads go through pf2eAdapter.
 
 import {
-  initEncounter, handleTurnCommand, updateActorMap, getActorMap,
+  initEncounter, handleTurnCommand, handleInitCommit, updateActorMap, getActorMap,
 } from './encounter.js';
 import { makeCombat, makeCombatant, makeActor } from './test/foundryMock.js';
 
@@ -261,5 +261,70 @@ describe('handleTurnCommand', () => {
   test('no-op when there is no combat', async () => {
     global.game.combat = null;
     await expect(handleTurnCommand({ action: 'next-turn' })).resolves.toBeUndefined();
+  });
+});
+
+describe('handleInitCommit', () => {
+  // A fresh setup-phase combat (active, not yet started) ready to receive inits.
+  function setupCombat() {
+    const combat = combatWithGoblinAndPellias({ started: false });
+    global.game.combat = combat;
+    return combat;
+  }
+
+  test('writes each PC initiative, rolls NPCs, then starts combat — in order', async () => {
+    const combat = setupCombat();
+    const calls = [];
+    combat.setInitiative.mockImplementation((id, v) => { calls.push(['setInitiative', id, v]); return Promise.resolve(); });
+    combat.rollNPC.mockImplementation(() => { calls.push(['rollNPC']); return Promise.resolve(); });
+    combat.startCombat.mockImplementation(() => { calls.push(['startCombat']); return Promise.resolve(); });
+
+    await handleInitCommit({
+      rolls: [{ entryId: 'cbt-pellias', initiative: 18 }],
+      rollNpcs: true,
+    });
+
+    expect(calls).toEqual([
+      ['setInitiative', 'cbt-pellias', 18],
+      ['rollNPC'],
+      ['startCombat'],
+    ]);
+  });
+
+  test('rollNpcs: false skips the NPC roll', async () => {
+    const combat = setupCombat();
+    await handleInitCommit({ rolls: [{ entryId: 'cbt-pellias', initiative: 18 }], rollNpcs: false });
+    expect(combat.setInitiative).toHaveBeenCalledWith('cbt-pellias', 18);
+    expect(combat.rollNPC).not.toHaveBeenCalled();
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
+  });
+
+  test('idempotent — no-op when combat is already started', async () => {
+    const combat = combatWithGoblinAndPellias({ started: true });
+    global.game.combat = combat;
+    await handleInitCommit({ rolls: [{ entryId: 'cbt-pellias', initiative: 18 }], rollNpcs: true });
+    expect(combat.setInitiative).not.toHaveBeenCalled();
+    expect(combat.rollNPC).not.toHaveBeenCalled();
+    expect(combat.startCombat).not.toHaveBeenCalled();
+  });
+
+  test('no-op when there is no active combat', async () => {
+    global.game.combat = null;
+    await expect(handleInitCommit({ rolls: [], rollNpcs: true })).resolves.toBeUndefined();
+  });
+
+  test('skips entries with a missing id or non-numeric initiative', async () => {
+    const combat = setupCombat();
+    await handleInitCommit({
+      rolls: [
+        { entryId: 'cbt-pellias', initiative: 18 },
+        { entryId: '', initiative: 5 },
+        { entryId: 'cbt-x', initiative: undefined },
+      ],
+      rollNpcs: false,
+    });
+    expect(combat.setInitiative).toHaveBeenCalledTimes(1);
+    expect(combat.setInitiative).toHaveBeenCalledWith('cbt-pellias', 18);
+    expect(combat.startCombat).toHaveBeenCalledTimes(1);
   });
 });

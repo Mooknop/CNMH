@@ -292,6 +292,32 @@ export function advanceCombatTurn(combat) {
   return combat.nextTurn();
 }
 
+// --- Combat writes (initiative-commit flow, #494/#495) ---
+// The bridge runs in the GM client, so these GM-only combat writes are available.
+// All three are core CombatEncounter methods (stable across v13→v14 for PF2e 7.x).
+
+// Write a single combatant's initiative. `combatantId` is the Foundry combatant.id
+// (the encounter payload's entryId). Combat#setInitiative(id, value) updates the
+// embedded combatant and re-sorts the turn order.
+// v14 MIGRATION: setInitiative is unchanged on CombatEncounter in v14; re-verify the
+// signature against the bundled build if PF2e overrides it.
+export function setCombatantInitiative(combat, combatantId, value) {
+  return combat.setInitiative(combatantId, value);
+}
+
+// Roll initiative for every NPC combatant that has no initiative yet.
+// v14 MIGRATION: Combat#rollNPC() is unchanged in v14.
+export function rollNpcInitiatives(combat) {
+  return combat.rollNPC();
+}
+
+// Begin the encounter (round 1, first turn). Combat#startCombat() flips
+// started → true and fires updateCombat.
+// v14 MIGRATION: Combat#startCombat() is unchanged in v14.
+export function startCombat(combat) {
+  return combat.startCombat();
+}
+
 // The version-independent combat snapshot the encounter payload is built from.
 // Keeping these reads here means a v14 Combat API rename touches only this file.
 export function getCombatState(combat) {

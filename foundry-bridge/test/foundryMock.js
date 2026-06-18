@@ -227,6 +227,9 @@ export function makeCombat(opts = {}) {
     combatants,
     combatant: activeTurnIndex >= 0 ? combatants[activeTurnIndex] ?? null : null,
     nextTurn: jest.fn().mockResolvedValue(undefined),
+    setInitiative: jest.fn().mockResolvedValue(undefined),
+    rollNPC: jest.fn().mockResolvedValue(undefined),
+    startCombat: jest.fn().mockResolvedValue(undefined),
   };
   combatants.forEach((c) => { if (!c.combat) c.combat = combat; });
   return combat;

@@ -13,6 +13,7 @@ import {
   getCombatantActorId, getCombatantInitiative, getCombatantActor, getDefenses,
   getBestiaryInfo,
   getCombatById, getActiveCombat, advanceCombatTurn, getCombatState,
+  setCombatantInitiative, rollNpcInitiatives, startCombat,
 } from './pf2eAdapter.js';
 import { initTokenImages, resolveTokenUrl, ensureTokenUploaded } from './tokenImages.js';
 
@@ -53,6 +54,29 @@ export async function handleTurnCommand(value) {
   const combat = (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
   if (!combat) return;
   await advanceCombatTurn(combat);
+}
+
+// Commit app-collected initiatives into Foundry and start the encounter (#495).
+// value = { rolls: [{ entryId, initiative }], rollNpcs }.
+// The executor primitive: write each PC's initiative, roll the NPCs, start combat.
+// No detection logic here — anything that sends the command triggers it (Slice 3
+// adds the "all players rolled" gate). The resulting updateCombat hooks re-push the
+// now-in-progress encounter via the existing path, so no extra push is needed here.
+export async function handleInitCommit(value) {
+  const combat = (_activeCombatId ? getCombatById(_activeCombatId) : null) ?? getActiveCombat();
+  if (!combat) return;
+  // Idempotent: a resent command must not double-start an already-running combat.
+  if (getCombatState(combat).started) return;
+
+  const rolls = Array.isArray(value?.rolls) ? value.rolls : [];
+  for (const { entryId, initiative } of rolls) {
+    if (!entryId || typeof initiative !== 'number') continue;
+    await setCombatantInitiative(combat, entryId, initiative);
+  }
+
+  if (value?.rollNpcs) await rollNpcInitiatives(combat);
+
+  await startCombat(combat);
 }
 
 function onUpdateCombat(combat, diff, opts) {

@@ -9,7 +9,7 @@
 // movement) and exposes sendUpdate for those modules to push outbound messages.
 
 import { WORKER_WSS_URL, CAMPAIGN_ID, BRIDGE_SECRET } from './config.js';
-import { initEncounter, handleTurnCommand, updateActorMap } from './encounter.js';
+import { initEncounter, handleTurnCommand, handleInitCommit, updateActorMap } from './encounter.js';
 import { initActorFeed } from './actorFeed.js';
 import { initCharacterSync, handleCharacterUpdate }    from './characterSync.js';
 import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.js';
@@ -216,6 +216,12 @@ function dispatch(msg) {
   // Encounter turn command from app → drive Foundry combat.
   if (characterId === 'global' && key === 'turncmd') {
     handleTurnCommand(value);
+    return;
+  }
+
+  // Initiative commit from app → write inits, roll NPCs, start Foundry combat (#495).
+  if (characterId === 'global' && key === 'initcommit') {
+    handleInitCommit(value);
     return;
   }
 
