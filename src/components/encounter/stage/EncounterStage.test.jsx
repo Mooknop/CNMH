@@ -18,6 +18,11 @@ vi.mock('../../../hooks/useReactors', () => ({
   useReactors: () => ({ reactors: mockReactors, declare: () => {}, clear: () => {} }),
 }));
 
+let mockActorFeed;
+vi.mock('../../../hooks/useActorFeed', () => ({
+  useActorFeed: () => mockActorFeed,
+}));
+
 // The armed-reaction bar carries its own hook web (#474); the stage test only
 // cares that it mounts, so stub it.
 vi.mock('./ArmedReactionBar', () => ({
@@ -33,6 +38,7 @@ describe('EncounterStage', () => {
   beforeEach(() => {
     mockCharacters = [];
     mockReactors = [];
+    mockActorFeed = { actions: 3, spent: 0, reaction: true, feed: [] };
     mockUseEncounter.mockReturnValue(
       encWith({ entryId: 'o1', kind: 'enemy', name: 'Ogre Warrior', bestiary: { level: 3 } })
     );
@@ -75,10 +81,27 @@ describe('EncounterStage', () => {
     expect(screen.getByRole('img', { name: 'Portrait of Pellias' })).toBeInTheDocument();
   });
 
-  it('renders the live-feed scaffold region', () => {
+  it('shows the waiting state and full economy pips when the feed is empty', () => {
     render(<EncounterStage />);
     expect(screen.getByText('Live · this turn')).toBeInTheDocument();
-    expect(screen.getByLabelText('Action feed')).toBeInTheDocument();
+    expect(screen.getByText(/Waiting for Ogre Warrior/)).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '0 of 3 actions spent, reaction available' })).toBeInTheDocument();
+  });
+
+  it('renders the relayed feed and reflects spent actions / used reaction in the pips', () => {
+    mockActorFeed = {
+      actions: 3,
+      spent: 2,
+      reaction: false,
+      feed: [
+        { n: 1, cost: 1, label: 'Stride', detail: '25 ft', tone: 'move', state: 'done' },
+        { n: 2, cost: 1, label: 'Jaws Strike', result: 'Hit · 12', tone: 'amber', state: 'done' },
+      ],
+    };
+    render(<EncounterStage />);
+    expect(screen.getByText('Jaws Strike')).toBeInTheDocument();
+    expect(screen.queryByText(/Waiting for/)).toBeNull();
+    expect(screen.getByRole('img', { name: '2 of 3 actions spent, reaction spent' })).toBeInTheDocument();
   });
 
   it('renders nothing when there is no acting entry', () => {

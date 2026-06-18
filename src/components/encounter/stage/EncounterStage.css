@@ -129,7 +129,29 @@
   color: var(--accent-text);
 }
 
-/* ── Live action feed (placeholder until #472) ───────────────── */
+/* ── Action-economy pips (#472a) — foe-toned ─────────────────── */
+.stage-pips {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+.stage-pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--d-fail-border);
+  box-sizing: border-box;
+}
+.stage-pip--spent {
+  background: var(--d-fail-fg);
+  border-color: var(--d-fail-fg);
+}
+.stage-pip--react {
+  border-style: dashed;
+}
+
+/* ── Live action feed (#472a) ────────────────────────────────── */
 .stage-feed {
   display: flex;
   flex-direction: column;
@@ -162,6 +184,71 @@
   font-size: 0.85rem;
   font-style: italic;
   color: var(--shell-text-tertiary);
+}
+
+/* feed timeline */
+.stage-feed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.stage-feed-row {
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.25rem 0;
+}
+.stage-feed-node {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background: var(--iron, var(--shell-text-tertiary));
+}
+.stage-feed-row--move .stage-feed-node { background: #6fb3d6; }
+.stage-feed-row--amber .stage-feed-node { background: var(--d-fail-fg); }
+.stage-feed-row.is-pending .stage-feed-node {
+  background: transparent;
+  border: 2px dashed var(--shell-text-tertiary);
+  animation: stage-blink 1.4s ease-in-out infinite;
+}
+.stage-feed-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.stage-feed-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.stage-feed-cost {
+  font-size: 0.8rem;
+  color: var(--d-fail-fg);
+}
+.stage-feed-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.stage-feed-row.is-pending .stage-feed-label {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
+}
+.stage-feed-result {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+.stage-feed-row--amber .stage-feed-result { color: var(--d-fail-fg); }
+.stage-feed-detail {
+  font-size: 0.78rem;
+  color: var(--shell-text-secondary);
 }
 
 /* ── Armed reaction footer (#474) ────────────────────────────── */
@@ -249,7 +336,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .stage-banner-live-dot,
-  .stage-feed-head-dot {
+  .stage-feed-head-dot,
+  .stage-feed-row.is-pending .stage-feed-node {
     animation: none;
   }
 }
