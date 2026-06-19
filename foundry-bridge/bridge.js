@@ -18,6 +18,7 @@ import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
+import { initPositions, pushPositions } from './positions.js';
 import { initSummonPool, pushSummonPool, handleSummonPoolReq } from './summonPool.js';
 import { initMinionActors, pushMinionActors, handleMinionActorsReq, handleSpawnMinion } from './minionActors.js';
 import { initMinionSync, handleMinionsUpdate, cacheMinions } from './minionSync.js';
@@ -75,6 +76,7 @@ Hooks.once('ready', () => {
   initMovement(sendUpdate);
   initFlankingPush(sendUpdate);
   initAdjacencyPush(sendUpdate);
+  initPositions(sendUpdate);
   initSummonPool(sendUpdate);
   initMinionActors(sendUpdate);
   initMinionSync(sendUpdate);
@@ -116,6 +118,7 @@ function connect() {
     pushRoster();
     pushSummonPool();
     pushMinionActors();
+    pushPositions();
   };
 
   ws.onclose = (evt) => {
@@ -190,6 +193,12 @@ function dispatch(msg) {
   // App requests a fresh summon pool (Add-summon modal refresh / reconnect).
   if (characterId === 'global' && key === 'summonpoolreq') {
     handleSummonPoolReq();
+    return;
+  }
+
+  // App requests fresh combatant positions (range-increment resolver / reconnect).
+  if (characterId === 'global' && key === 'positionsreq') {
+    pushPositions();
     return;
   }
 
