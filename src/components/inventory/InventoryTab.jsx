@@ -3,7 +3,7 @@ import './InventoryTab.css';
 import './ItemCard.css';
 import ItemCard from './ItemCard';
 import ContainersList from './ContainersList';
-import { formatBulk, getBulkStatus, isConsumable, remainingQuantity } from '../../utils/InventoryUtils';
+import { formatBulk, getBulkStatus, applyConsumedOverlay } from '../../utils/InventoryUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 
@@ -40,14 +40,9 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   };
 
   // Hide fully-consumed consumables; show live remaining counts on the rest.
-  // Sort inventory items alphabetically by name.
-  const sortedInventory = inventory
-    .filter((item) => !isConsumable(item) || remainingQuantity(item, consumed) > 0)
-    .map((item) =>
-      isConsumable(item)
-        ? { ...item, quantity: remainingQuantity(item, consumed) }
-        : item
-    )
+  // Sort inventory items alphabetically by name. (Container contents get the
+  // same overlay inside ContainerItem via the `consumed` prop — #253.)
+  const sortedInventory = applyConsumedOverlay(inventory, consumed)
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   return (
@@ -105,6 +100,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       {/* Display containers section if character has any */}
       <ContainersList
         inventory={sortedInventory}
+        consumed={consumed}
         themeColor={characterColor}
         onItemClick={onItemClick}
       />

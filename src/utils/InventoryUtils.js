@@ -242,3 +242,21 @@ export const remainingQuantity = (item, consumedMap = {}) => {
   if (!isConsumable(item)) return qty;
   return Math.max(0, qty - ((consumedMap || {})[item.name] || 0));
 };
+
+/**
+ * Apply the consumed-consumables overlay to a list for *display*: drop
+ * fully-consumed consumables and stamp the remaining quantity on the rest.
+ * Non-consumables pass through untouched. Used for both the top-level list and
+ * container contents (#253) so a stowed consumable shows its live count and
+ * disappears at 0, matching top-level behavior.
+ * @param {Array}  items        - inventory entries
+ * @param {Object} consumedMap  - value of `cnmh_consumed_<charId>` ({ [name]: count })
+ */
+export const applyConsumedOverlay = (items, consumedMap = {}) =>
+  (Array.isArray(items) ? items : [])
+    .filter((item) => !isConsumable(item) || remainingQuantity(item, consumedMap) > 0)
+    .map((item) =>
+      isConsumable(item)
+        ? { ...item, quantity: remainingQuantity(item, consumedMap) }
+        : item
+    );

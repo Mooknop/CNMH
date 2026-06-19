@@ -9,6 +9,7 @@ import {
   isShieldBroken,
   isConsumable,
   remainingQuantity,
+  applyConsumedOverlay,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -360,6 +361,28 @@ describe('InventoryUtils', () => {
 
     it('ignores the overlay for non-consumables', () => {
       expect(remainingQuantity({ name: 'Sword', quantity: 1 }, { Sword: 1 })).toBe(1);
+    });
+  });
+
+  describe('applyConsumedOverlay', () => {
+    const potion = { name: 'Minor Healing Potion', quantity: 3, consumable: { kind: 'healing' } };
+    const sword = { name: 'Sword', quantity: 1 };
+
+    it('stamps the remaining quantity on a partially-used consumable', () => {
+      const out = applyConsumedOverlay([potion, sword], { 'Minor Healing Potion': 2 });
+      expect(out).toHaveLength(2);
+      expect(out.find((i) => i.name === 'Minor Healing Potion').quantity).toBe(1);
+      expect(out.find((i) => i.name === 'Sword').quantity).toBe(1);
+    });
+
+    it('drops a fully-consumed consumable', () => {
+      const out = applyConsumedOverlay([potion, sword], { 'Minor Healing Potion': 3 });
+      expect(out.map((i) => i.name)).toEqual(['Sword']);
+    });
+
+    it('passes non-consumables through untouched and tolerates a missing overlay', () => {
+      expect(applyConsumedOverlay([sword])).toEqual([sword]);
+      expect(applyConsumedOverlay(null, {})).toEqual([]);
     });
   });
 

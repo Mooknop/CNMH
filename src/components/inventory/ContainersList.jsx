@@ -10,7 +10,7 @@ import { isContainer } from '../../utils/InventoryUtils';
  * @param {string} props.themeColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
-const ContainersList = ({ inventory, themeColor, onItemClick }) => {
+const ContainersList = ({ inventory, consumed, themeColor, onItemClick }) => {
   if (!inventory || !Array.isArray(inventory)) {
     return null;
   }
@@ -39,6 +39,7 @@ const ContainersList = ({ inventory, themeColor, onItemClick }) => {
           <ContainerItem
             key={container.id || `container-${index}`}
             container={container}
+            consumed={consumed}
             themeColor={themeColor}
             onItemClick={onItemClick}
           />
