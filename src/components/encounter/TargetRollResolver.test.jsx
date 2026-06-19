@@ -350,6 +350,20 @@ describe('TargetRollResolver', () => {
     expect(ref.current.getResults()[0]).toMatchObject({ degree: null, outOfRange: true });
   });
 
+  test('shows the Hunt Prey waiver note when the 2nd increment is ignored', () => {
+    const preyAt2nd = { 'cbt-goblin': { feet: 150, increments: 2, penalty: 0, beyondMaxRange: false, waived: true } };
+    render(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        rangeByEntry={preyAt2nd}
+      />
+    );
+    enterD20(10);
+    expect(screen.getByText(/Hunt Prey: 2nd increment ignored/)).toBeInTheDocument();
+    // No penalty applied — 15 still meets AC 15.
+    expect(screen.getByText('Hit')).toBeInTheDocument();
+  });
+
   test('no rangeByEntry → totals and degrees unchanged (legacy output)', () => {
     const ref = createRef();
     render(

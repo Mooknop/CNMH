@@ -59,14 +59,21 @@ export function parseRangeIncrement(range) {
  * @param {{col,row}} opts.to          - target cell
  * @param {number}   opts.incrementFt  - the weapon's range increment in feet
  * @param {number}   [opts.feetPerSquare=5]
- * @returns {{ feet:number, increments:number, penalty:number, beyondMaxRange:boolean } | null}
+ * @param {boolean}  [opts.waiveSecondIncrement] - Hunt Prey (#408): ignore the
+ *                   penalty for the 2nd range increment vs the designated prey, so
+ *                   increment 2 costs 0 (and each later increment is reduced by one).
+ * @returns {{ feet:number, increments:number, penalty:number, beyondMaxRange:boolean, waived:boolean } | null}
  *          null when the increment is missing/invalid or a cell is missing.
  */
-export function rangeIncrementResult({ from, to, incrementFt, feetPerSquare = 5 }) {
+export function rangeIncrementResult({ from, to, incrementFt, feetPerSquare = 5, waiveSecondIncrement = false }) {
   if (!incrementFt || incrementFt <= 0 || !from || !to) return null;
   const feet = gridDistanceFeet(from, to, feetPerSquare);
   const increments = Math.max(1, Math.ceil(feet / incrementFt));
-  const penalty = increments > 1 ? -2 * (increments - 1) : 0;
+  // Penalised increments: every increment past the 1st (−2 each). Hunt Prey also
+  // forgives the 2nd, so the count starts one increment later.
+  const penalised = Math.max(0, increments - (waiveSecondIncrement ? 2 : 1));
+  const penalty = penalised > 0 ? -2 * penalised : 0;
   const beyondMaxRange = increments > MAX_RANGE_INCREMENTS;
-  return { feet, increments, penalty, beyondMaxRange };
+  const waived = waiveSecondIncrement && increments >= 2;
+  return { feet, increments, penalty, beyondMaxRange, waived };
 }

@@ -15,6 +15,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useFocusTarget } from '../../hooks/useFocusTarget';
+import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { useEffects } from '../../hooks/useEffects';
 import { useCastingResources } from '../../hooks/useCastingResources';
 import { useFrequency } from '../../hooks/useFrequency';
@@ -35,6 +36,7 @@ import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
+import { preyMatches } from '../../utils/huntPrey';
 import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
@@ -184,6 +186,7 @@ const UseAbilityModal = ({
   // increments. Request a fresh push when the modal opens so a stale snapshot
   // doesn't misjudge distance; degrades to no range gating when absent.
   const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const { prey } = useHuntPrey(character?.id || '');
   const isRangedStrike = ability?.type === 'ranged';
   useEffect(() => {
     if (isOpen && isRangedStrike) sendUpdate('global', 'positionsreq', { ts: Date.now() });
@@ -435,7 +438,12 @@ const UseAbilityModal = ({
   if (rangeFrom) {
     for (const t of resolverTargets) {
       const to = positions[t.entryId];
-      if (to) rangeByEntry[t.entryId] = rangeIncrementResult({ from: rangeFrom, to, incrementFt: rangeIncrementFt });
+      // Hunt Prey (#408): a ranged attack against the designated prey ignores the
+      // second-range-increment penalty.
+      if (to) rangeByEntry[t.entryId] = rangeIncrementResult({
+        from: rangeFrom, to, incrementFt: rangeIncrementFt,
+        waiveSecondIncrement: preyMatches(prey, t),
+      });
     }
   }
   const hasRangeData = Object.keys(rangeByEntry).length > 0;

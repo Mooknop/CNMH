@@ -268,6 +268,7 @@ const TargetRollResolver = forwardRef(({
                     {r.range.increments > 1 && !r.outOfRange
                       ? ` · ${r.range.increments}${ordinalSuffix(r.range.increments)} increment ${r.range.penalty}`
                       : ''}
+                    {r.range.waived ? ' · Hunt Prey: 2nd increment ignored' : ''}
                   </span>
                 )}
                 {degreeText && !r.outOfRange && (
