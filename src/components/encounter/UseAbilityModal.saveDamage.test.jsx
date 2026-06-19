@@ -174,6 +174,32 @@ describe('UseAbilityModal — save-based damage (#270)', () => {
     expect(requestArg().damage).toBeUndefined();
   });
 
+  it('attaches casterEffect with resolved allies when the ability has a saveOutcomeEffect (#274)', () => {
+    const shiningGuidance = {
+      name: 'Shining Guidance', actions: 'Two Actions', defense: 'Fortitude', basic: true,
+      saveOutcomeEffect: {
+        effectId: 'shining-guidance', applyTo: 'all-allies',
+        onDegrees: ['success', 'failure', 'criticalFailure'],
+        duration: { until: 'caster-turn-end' },
+      },
+    };
+    render(<UseAbilityModal {...props} ability={shiningGuidance} />);
+    confirm();
+    expect(requestArg().casterEffect).toMatchObject({
+      casterId: 'char-a',
+      def: { effectId: 'shining-guidance', onDegrees: ['success', 'failure', 'criticalFailure'] },
+      // 'all-allies' resolves to the only PC in the order
+      targets: [{ charId: 'char-a', entryId: 'e-caster' }],
+    });
+  });
+
+  it('omits casterEffect for a plain save request', () => {
+    const plainSave = { name: 'Addling Blast', actions: 'Two Actions', targetDefense: 'will', basic: true };
+    render(<UseAbilityModal {...props} ability={plainSave} />);
+    confirm();
+    expect(requestArg().casterEffect).toBeUndefined();
+  });
+
   it('persistent-only profiles hide the total input and send entered: null (Polarize)', () => {
     const polarize = {
       name: 'Polarize', actions: 'Two Actions',

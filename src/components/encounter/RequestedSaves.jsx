@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { computeSaveDamage, formatDamageBreakdown } from '../../utils/damage';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
+import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
 
 const DEGREE_LABELS = {
@@ -47,6 +49,7 @@ const damageFor = (req, degree, entryId) => {
 
 const RequestedSaves = () => {
   const { encounter, appendLog, removeSaveRequest } = useEncounter();
+  const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
   const [d20Inputs, setD20Inputs] = useState({});
   // Persistent-damage tracking (#272) — failed saves record their entries here.
@@ -106,6 +109,35 @@ const RequestedSaves = () => {
         (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, req.abilityName)),
         m || {}
       ));
+    }
+
+    // Save-outcome-gated caster-side buff (#274 — Shining Guidance's Limned bonus):
+    // when the resolved degree is one this effect triggers on, write it to the
+    // pre-resolved ally targets. Single-target ability → keyed off the worst
+    // (most-affected) degree among the targets.
+    const ce = req.casterEffect;
+    if (ce && ce.def?.onDegrees?.length) {
+      const triggered = results.some((r) => ce.def.onDegrees.includes(r.degree));
+      if (triggered) {
+        const caster = { id: ce.casterId, name: ce.casterName };
+        (ce.targets || []).forEach(({ charId, entryId }) => {
+          const current  = getState(charId, 'effects') || [];
+          const newEntry = buildEffectEntry({
+            eff: { effectId: ce.def.effectId, duration: ce.def.duration || null },
+            caster,
+            abilityName: req.abilityName,
+            encounter,
+            casterEntryId: ce.casterEntryId || null,
+            targetEntryId: entryId,
+          });
+          sendUpdate(charId, 'effects', [...current, newEntry]);
+        });
+        appendLog({
+          type:   'action',
+          charId: ce.casterId,
+          text:   `${ce.casterName}'s ${req.abilityName} buffs the party vs ${req.targets.map((t) => t.name).join(', ')}`,
+        });
+      }
     }
 
     const names = results.map((r) => r.name).join(', ');

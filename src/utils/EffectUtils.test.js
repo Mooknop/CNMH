@@ -2,6 +2,7 @@ import {
   computeEffectBonuses,
   combineModifiers,
   conditionalModifiersFor,
+  conditionalTogglesFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
 } from './EffectUtils';
@@ -320,6 +321,45 @@ describe('computeEffectBonuses', () => {
       const result = computeEffectBonuses([entry('heroism-1'), entry('aid')], catalog);
       expect(result.meleeAttack.total).toBe(3);
       expect(result._conditional).toEqual({});
+    });
+  });
+
+  describe("'attacks' meta-stat fan-out (#274)", () => {
+    const atkCat = [
+      { id: 'inspire', name: 'Inspire', modifiers: [{ stat: 'attacks', kind: 'status', amount: 1 }] },
+      { id: 'limned', name: 'Limned', modifiers: [{ stat: 'attacks', kind: 'circumstance', amount: 1, vs: 'limned target' }] },
+    ];
+
+    it('an unconditional attacks modifier nets into all three attack stats', () => {
+      const result = computeEffectBonuses([entry('inspire')], atkCat);
+      expect(result.meleeAttack.total).toBe(1);
+      expect(result.rangedAttack.total).toBe(1);
+      expect(result.spellAttack.total).toBe(1);
+      // does not leak to saves/skills
+      expect(result.will.total).toBe(0);
+      expect(result.athletics.total).toBe(0);
+    });
+
+    it('a conditional attacks modifier lands in _conditional under every attack stat, not the total', () => {
+      const result = computeEffectBonuses([entry('limned')], atkCat);
+      expect(result.meleeAttack.total).toBe(0);
+      expect(result._conditional.meleeAttack).toEqual([{ amount: 1, kind: 'circumstance', label: 'Limned', vs: 'limned target' }]);
+      expect(result._conditional.rangedAttack[0].vs).toBe('limned target');
+      expect(result._conditional.spellAttack[0].vs).toBe('limned target');
+    });
+  });
+
+  describe('conditionalTogglesFor (#274)', () => {
+    const cat = [
+      { id: 'limned', name: 'Limned', modifiers: [{ stat: 'attacks', kind: 'circumstance', amount: 1, vs: 'limned target' }] },
+    ];
+    it('maps conditional modifiers on a stat to toggle line items', () => {
+      const toggles = conditionalTogglesFor([entry('limned')], 'meleeAttack', cat);
+      expect(toggles).toEqual([{ id: 'effect-Limned-limned target', label: 'Limned (vs limned target)', bonus: 1 }]);
+    });
+    it('returns [] when nothing conditional targets the stat', () => {
+      expect(conditionalTogglesFor([entry('limned')], 'will', cat)).toEqual([]);
+      expect(conditionalTogglesFor([], 'meleeAttack', cat)).toEqual([]);
     });
   });
 });

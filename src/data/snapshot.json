@@ -5952,6 +5952,12 @@
                 "description": "You call forth a guiding light to surround your foe and guide your attacks toward them. Choose an enemy in range; you deal 2d4 (+1d4 per level + half your level) fire damage with a Basic Fortitude Save.",
                 "defense": "Fortitude",
                 "basic": true,
+                "saveOutcomeEffect": {
+                  "effectId": "shining-guidance",
+                  "applyTo": "all-allies",
+                  "onDegrees": ["success", "failure", "criticalFailure"],
+                  "duration": { "until": "caster-turn-end" }
+                },
                 "degrees": {
                   "Critical Success": "The creature resists entirely and is unaffected",
                   "Success": "The enemy is Limned until the end of your next turn. You can choose to deal no fire damage rather than half; if you do, you and your allies get a +1 circumstance bonus to attack rolls against them until the end of your next turn, as long as it remains limned",
@@ -10063,6 +10069,19 @@
       "name": "Shrouded",
       "description": "All light within 20 feet is lowered one step in intensity (bright → dim, dim → darkness). Lasts until the end of your turn.",
       "modifiers": []
+    },
+    {
+      "id": "shining-guidance",
+      "name": "Shining Guidance",
+      "description": "You and your allies gain a +1 circumstance bonus to attack rolls against the limned creature while it stays limned (Izzy's Shining Guidance, #225). Conditional ('vs limned target') — it surfaces as an opt-in toggle in the attack resolver, applied to the target you choose. Applied to the party automatically when Shining Guidance's save resolves to anything but a critical success; lasts until the end of your next turn (two rounds on a critical failure — re-apply if needed).",
+      "modifiers": [
+        {
+          "stat": "attacks",
+          "kind": "circumstance",
+          "amount": 1,
+          "vs": "limned target"
+        }
+      ]
     },
     {
       "id": "fly-spell",

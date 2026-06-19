@@ -11,7 +11,7 @@ const writeLocal = (key, value) => {
 //  'self'       -> caster only
 //  'all-allies' -> every PC in the encounter order
 //  'target'/'ally' -> the passed-in picked PC targets
-const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
+export const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
   if (applyTo === 'self') {
     const selfEntry = (order || []).find((e) => e.kind === 'pc' && e.charId === caster.id);
     return [{ charId: caster.id, entryId: selfEntry?.entryId || null }];
@@ -32,7 +32,7 @@ const resolveApplyTargets = (applyTo, caster, targetCharIds, order) => {
 // Durations resolve in precedence order: clock minutes (absolute expireAtSecs,
 // pruned by the #218 expiry sweep) → encounter boundaries via resolveExpireAt →
 // the daily-prep flag.
-const buildEffectEntry = ({ eff, caster, abilityName, encounter, casterEntryId, targetEntryId, nowSecs }) => {
+export const buildEffectEntry = ({ eff, caster, abilityName, encounter, casterEntryId, targetEntryId, nowSecs }) => {
   const minutes = Number(eff.duration?.minutes);
   const expireAtSecs =
     Number.isFinite(minutes) && minutes > 0 && typeof nowSecs === 'number'

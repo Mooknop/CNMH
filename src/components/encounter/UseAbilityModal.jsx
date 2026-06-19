@@ -25,7 +25,7 @@ import { useShield } from '../../hooks/useShield';
 import { useEnemyEffects } from '../../hooks/useEnemyEffects';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
-import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker } from '../../utils/applyAbility';
+import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
 import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
@@ -33,7 +33,7 @@ import { immunityConfigFor } from '../../utils/immunity';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
-import { SKILL_KEYS } from '../../utils/EffectUtils';
+import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
@@ -383,6 +383,17 @@ const UseAbilityModal = ({
     ? enemyWithDefenses
     : [];
 
+  // Situational bonus toggles (#274): conditional ('vs X') effect modifiers on the
+  // rolled attack stat become opt-in toggles in the resolver. The stat depends on
+  // whether this is a spell attack or a weapon strike.
+  const attackStat = (rollProfile.mode === 'actor-roll' && effectiveDefense === 'ac')
+    ? (/spell-attack/.test(rollProfile.source) ? 'spellAttack'
+      : ability.type === 'ranged' ? 'rangedAttack' : 'meleeAttack')
+    : null;
+  const attackToggles = attackStat
+    ? conditionalTogglesFor(activeEffects || [], attackStat, effectCatalog)
+    : [];
+
   // The rank this cast happens at (#235): the chosen slot option's rank, or
   // the spell's native rank for free/focus casts. Non-spell actions: none.
   const directCastRank = selectedCastOption?.rank
@@ -730,10 +741,14 @@ const UseAbilityModal = ({
           const dmgSuffix = r.damage?.final != null
             ? ` · damage ${formatDamageBreakdown(r.damage)}`
             : '';
+          // Situational bonus reason (#274): note the applied circumstance toggles.
+          const adjustSuffix = r.adjust
+            ? ` (incl. ${r.adjust > 0 ? '+' : ''}${r.adjust}: ${(r.adjustSources || []).join(', ')})`
+            : '';
           appendLog({
             type:   'action',
             charId: character.id,
-            text:   `${character.name} ${effectiveVerb} ${ability.name}${rayPrefix} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}${dmgSuffix}`,
+            text:   `${character.name} ${effectiveVerb} ${ability.name}${rayPrefix} vs ${r.name} (${defLabel} ${r.dc}): ${r.total} → ${degreeLabel}${adjustSuffix}${dmgSuffix}`,
           });
         });
       });
@@ -822,6 +837,21 @@ const UseAbilityModal = ({
           };
         }
       }
+      // Save-outcome-gated caster-side buff (#274 — Shining Guidance's Limned
+      // bonus): resolve the ally targets now and ride them along; RequestedSaves
+      // applies the effect on the matching save degrees.
+      let casterEffect;
+      if (ability.saveOutcomeEffect?.effectId) {
+        const soe = ability.saveOutcomeEffect;
+        const resolved = resolveApplyTargets(soe.applyTo || 'self', character, [], order);
+        casterEffect = {
+          def: { effectId: soe.effectId, duration: soe.duration || null, onDegrees: soe.onDegrees || [] },
+          targets: resolved,
+          casterId: character.id,
+          casterName: character.name,
+          casterEntryId,
+        };
+      }
       addSaveRequest({
         casterId: character.id,
         casterName: character.name,
@@ -832,6 +862,7 @@ const UseAbilityModal = ({
         rank: directCastRank,
         targets,
         ...(damage && { damage }),
+        ...(casterEffect && { casterEffect }),
       });
     }
 
@@ -1101,6 +1132,7 @@ const UseAbilityModal = ({
         rollBonus={rollProfile.bonus}
         damage={damageProfile}
         degrees={ability.degrees}
+        toggles={attackToggles}
       />
     ) : (
       <TargetRollResolver
@@ -1110,6 +1142,7 @@ const UseAbilityModal = ({
         rollBonus={rollProfile.bonus}
         damage={damageProfile}
         degrees={ability.degrees}
+        toggles={attackToggles}
       />
     );
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {

@@ -37,6 +37,13 @@ vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: vi.fn(),
 }));
 
+// Session mock (#274): capture sendUpdate so the caster-side save-outcome effect
+// writes can be inspected; getState returns the target's current effects ([]).
+const sessionMock = vi.hoisted(() => ({ sendUpdate: vi.fn(), getState: vi.fn(() => []) }));
+vi.mock('../../contexts/SessionContext', () => ({
+  useSession: () => ({ sendUpdate: sessionMock.sendUpdate, getState: sessionMock.getState }),
+}));
+
 // Key-aware synced-state mock (#272): capture the cnmh_persistent_global
 // setter so tests can apply its functional updater and inspect the map.
 const syncedMock = vi.hoisted(() => ({ persistentSetter: null }));
@@ -408,6 +415,58 @@ describe('RequestedSaves', () => {
       enterGoblinD20(15); // Success — basic saves halve persistent too
       fireEvent.click(screen.getByRole('button', { name: /log results/i }));
       expect(recordedMap()['e-goblin'][0]).toMatchObject({ dice: '1d4', half: true });
+    });
+  });
+
+  // ── save-outcome-gated caster-side effect (#274 — Shining Guidance) ─────────
+
+  describe('save-outcome caster-side effect (#274)', () => {
+    const limnReq = {
+      ...baseRequest,
+      id: 'req-limn',
+      save: 'fortitude',
+      basic: true,
+      abilityName: 'Shining Guidance',
+      targets: [goblinTarget],
+      casterEffect: {
+        def: { effectId: 'shining-guidance', duration: { until: 'caster-turn-end' }, onDegrees: ['success', 'failure', 'criticalFailure'] },
+        targets: [{ charId: 'char-a', entryId: 'pc-a' }, { charId: 'char-b', entryId: 'pc-b' }],
+        casterId: 'char-a',
+        casterName: 'Izzy',
+        casterEntryId: 'pc-a',
+      },
+    };
+    const withLimn = (extra = {}) =>
+      useEncounter.mockReturnValue({
+        encounter: makeEncounter([{ ...limnReq, ...extra }]),
+        appendLog: mockAppendLog,
+        removeSaveRequest: mockRemoveSaveReq,
+      });
+
+    test('applies the effect to every ally on a gating degree (Failure)', () => {
+      withLimn();
+      render(<RequestedSaves />);
+      enterGoblinD20(10); // 15 vs DC 20 → Failure (in onDegrees)
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      const writes = sessionMock.sendUpdate.mock.calls.filter(([, key]) => key === 'effects');
+      expect(writes.map(([charId]) => charId).sort()).toEqual(['char-a', 'char-b']);
+      // the written entry carries the effect id
+      expect(writes[0][2][0]).toMatchObject({ effectId: 'shining-guidance' });
+    });
+
+    test('skips application on a critical success (target resists)', () => {
+      withLimn();
+      render(<RequestedSaves />);
+      enterGoblinD20(20); // 25 vs DC 20, nat-20 → Critical Success (not in onDegrees)
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(sessionMock.sendUpdate.mock.calls.filter(([, key]) => key === 'effects')).toHaveLength(0);
+    });
+
+    test('a plain save request (no casterEffect) writes no effects', () => {
+      render(<RequestedSaves />); // baseRequest, no casterEffect
+      fireEvent.change(screen.getByLabelText(/Goblin d20/i), { target: { value: '10' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+      expect(sessionMock.sendUpdate.mock.calls.filter(([, key]) => key === 'effects')).toHaveLength(0);
     });
   });
 });

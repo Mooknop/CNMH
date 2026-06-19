@@ -16,6 +16,7 @@ import './gm.css';
 const STAT_OPTIONS = [
   'ac', 'fort', 'reflex', 'will',
   'meleeAttack', 'rangedAttack', 'spellAttack',
+  'attacks', // fans out to every attack stat (#274)
   'spellDC', 'classDC', 'perception', 'speed',
   'skills', // fans out to every skill
   ...SKILL_KEYS,

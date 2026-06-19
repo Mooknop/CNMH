@@ -49,6 +49,10 @@ const DEGREE_TEXT_KEYS = {
  * @param {Object}      [damage]      - damage profile (buildDamageProfile, #222); shows the
  *                                      damage entry panel after a hit/crit when present
  * @param {Object}      [degrees]     - authored degree-of-success text map (ability.degrees)
+ * @param {Array}       [toggles]     - opt-in conditional circumstance line items [{id,label,bonus}]
+ *                                      (#274) — sourced from the actor's conditional effect
+ *                                      modifiers on the rolled attack stat; player flips the
+ *                                      ones that apply (e.g. "Limned target (vs limned target) +1")
  * @param {object}      ref           - forwarded ref; exposes { getResults() }
  */
 const TargetRollResolver = forwardRef(({
@@ -57,9 +61,17 @@ const TargetRollResolver = forwardRef(({
   rollBonus = null,
   damage = null,
   degrees = null,
+  toggles = [],
 }, ref) => {
   const [d20Input,       setD20Input]       = useState('');
   const [defenseOverride, setDefenseOverride] = useState('ac');
+
+  // Situational bonus toggles (#274) — declared conditional-effect toggles the
+  // player flips on, plus a free-form "+N (reason)" for ad-hoc rulings (Aid).
+  const [toggledIds, setToggledIds] = useState([]);
+  const [circumstance, setCircumstance] = useState('');
+  const toggleCircumstance = (id) =>
+    setToggledIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   // Damage step state (#222) — only meaningful when a damage profile is passed.
   const [dmgInput,   setDmgInput]   = useState('');
@@ -71,10 +83,21 @@ const TargetRollResolver = forwardRef(({
   const d20 = parseInt(d20Input, 10);
   const hasD20 = !isNaN(d20);
 
+  // Active toggles + free-form entry adjust the roll before the degree is computed.
+  const activeToggles = toggles.filter((t) => toggledIds.includes(t.id));
+  const freeform = parseInt(circumstance, 10);
+  const adjust = activeToggles.reduce((s, t) => s + (t.bonus || 0), 0)
+    + (Number.isNaN(freeform) ? 0 : freeform);
+  const adjustSources = [
+    ...activeToggles.map((t) => t.label),
+    ...(Number.isNaN(freeform) || freeform === 0 ? [] : [`${freeform > 0 ? '+' : ''}${freeform} circumstance`]),
+  ];
+
   // When rollBonus is provided, derive total from d20 + bonus (and nat 20/1 from face).
   // When rollBonus is null (no derivable bonus), treat the input as the raw total instead —
-  // nat 20 / nat 1 are detected from the value directly.
-  const total   = hasD20 ? (rollBonus !== null ? d20 + rollBonus : d20) : NaN;
+  // nat 20 / nat 1 are detected from the value directly. The situational `adjust` (#274)
+  // is added on top in both modes.
+  const total   = hasD20 ? (rollBonus !== null ? d20 + rollBonus : d20) + adjust : NaN;
   const d20face = hasD20 ? d20 : 10; // 10 is the neutral face (no degree shift)
 
   const enteredDamage = parseInt(dmgInput, 10);
@@ -96,7 +119,10 @@ const TargetRollResolver = forwardRef(({
             critDouble,
           })
         : null;
-      return { entryId: entry.entryId, name: entry.name, dc, total, degree, damage: dmg };
+      return {
+        entryId: entry.entryId, name: entry.name, dc, total, degree, damage: dmg,
+        ...(adjust !== 0 ? { adjust, adjustSources } : {}),
+      };
     });
   };
 
@@ -141,6 +167,22 @@ const TargetRollResolver = forwardRef(({
         })}
       </div>
 
+      {(toggles.length > 0) && (
+        <div className="trr-toggle-row" role="group" aria-label="situational bonuses">
+          {toggles.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`trr-toggle${toggledIds.includes(t.id) ? ' trr-toggle--active' : ''}`}
+              aria-pressed={toggledIds.includes(t.id)}
+              onClick={() => toggleCircumstance(t.id)}
+            >
+              {t.label} {t.bonus >= 0 ? `+${t.bonus}` : t.bonus}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="trr-entry-row">
         <input
           type="number"
@@ -150,6 +192,14 @@ const TargetRollResolver = forwardRef(({
           value={d20Input}
           onChange={(e) => setD20Input(e.target.value)}
         />
+        <input
+          type="number"
+          className="trr-circ-input"
+          placeholder="± circ"
+          aria-label="other circumstance"
+          value={circumstance}
+          onChange={(e) => setCircumstance(e.target.value)}
+        />
         {bonusDisplay && (
           <span className="trr-bonus-badge" aria-label="roll bonus">
             {bonusDisplay}
@@ -158,6 +208,11 @@ const TargetRollResolver = forwardRef(({
         {totalDisplay !== null && (
           <span className="trr-total-badge" aria-label="computed total">
             = {totalDisplay}
+          </span>
+        )}
+        {adjust !== 0 && (
+          <span className="trr-adjust-note" aria-label="applied circumstance">
+            incl. {adjust > 0 ? '+' : ''}{adjust} ({adjustSources.join(', ')})
           </span>
         )}
       </div>

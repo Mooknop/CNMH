@@ -38,7 +38,7 @@
 //   availableTo 'all' for basic actions everyone has; future entries gate per
 //               character (feat-granted)
 import { hasFeat } from '../utils/CharacterUtils';
-import { conditionalModifiersFor } from '../utils/EffectUtils';
+import { conditionalTogglesFor } from '../utils/EffectUtils';
 
 export const SKILL_ACTIONS = [
   {
@@ -239,11 +239,10 @@ export function effectConditionalToggles(action, effects, effectCatalog) {
   const toggles = [];
   const seen = new Set();
   for (const skill of skills) {
-    for (const m of conditionalModifiersFor(effects, skill, effectCatalog)) {
-      const id = `effect-${m.label}-${m.vs}`;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      toggles.push({ id, label: `${m.label} (vs ${m.vs})`, bonus: m.amount });
+    for (const t of conditionalTogglesFor(effects, skill, effectCatalog)) {
+      if (seen.has(t.id)) continue;
+      seen.add(t.id);
+      toggles.push(t);
     }
   }
   return toggles;
