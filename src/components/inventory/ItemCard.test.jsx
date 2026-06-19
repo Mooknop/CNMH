@@ -34,6 +34,22 @@ describe('ItemCard', () => {
     expect(container.querySelector('.item-rarity')).not.toBeInTheDocument();
   });
 
+  it('renders an active item-effect badge for each stamped effect (#339)', () => {
+    const { container } = renderCard({
+      uid: 'u1', name: 'Full Plate', weight: 4,
+      activeEffects: [{ id: 'e1', label: 'Weightless', note: 'Negligible Bulk' }],
+    });
+    const chip = container.querySelector('.item-chip--effect');
+    expect(chip).toBeInTheDocument();
+    expect(chip).toHaveTextContent('Weightless');
+    expect(chip).toHaveAttribute('title', 'Negligible Bulk');
+  });
+
+  it('renders no effect badge when there are none', () => {
+    const { container } = renderCard({ uid: 'u1', name: 'Sword', weight: 1 });
+    expect(container.querySelector('.item-chip--effect')).toBeNull();
+  });
+
   it('applies the magical class for items with the Magical trait', () => {
     const { container } = renderCard({ uid: 'u1', name: 'Staff of Fire', weight: 1, traits: ['Magical'] });
     expect(container.querySelector('.item-card--magical')).toBeInTheDocument();

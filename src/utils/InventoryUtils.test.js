@@ -10,6 +10,7 @@ import {
   isConsumable,
   remainingQuantity,
   applyConsumedOverlay,
+  flattenInventory,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -361,6 +362,21 @@ describe('InventoryUtils', () => {
 
     it('ignores the overlay for non-consumables', () => {
       expect(remainingQuantity({ name: 'Sword', quantity: 1 }, { Sword: 1 })).toBe(1);
+    });
+  });
+
+  describe('flattenInventory', () => {
+    it('flattens container contents alongside top-level items (container kept)', () => {
+      const inv = [
+        { id: 'sword', name: 'Sword' },
+        { id: 'pack', name: 'Backpack', container: { contents: [{ id: 'rope', name: 'Rope' }, { id: 'oil', name: 'Oil' }] } },
+      ];
+      expect(flattenInventory(inv).map((i) => i.id)).toEqual(['sword', 'pack', 'rope', 'oil']);
+    });
+
+    it('tolerates non-arrays and missing contents', () => {
+      expect(flattenInventory(null)).toEqual([]);
+      expect(flattenInventory([{ id: 'a', container: {} }]).map((i) => i.id)).toEqual(['a']);
     });
   });
 

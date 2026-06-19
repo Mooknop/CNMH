@@ -48,6 +48,16 @@ const ItemCard = ({ item, onClick }) => {
           {showStateChip && (
             <span className="item-chip item-chip--state">{ITEM_STATE_LABEL[item.state]}</span>
           )}
+          {/* Active item-target effects (oils, #339) — display-only badge. */}
+          {(item.activeEffects || []).map((e) => (
+            <span
+              key={e.id}
+              className="item-chip item-chip--effect"
+              title={e.note || e.label}
+            >
+              ✨ {e.label}
+            </span>
+          ))}
         </div>
       </div>
       {held && (

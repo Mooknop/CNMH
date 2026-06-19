@@ -83,6 +83,12 @@
   border-color: var(--shell-border-strong);
 }
 
+/* Active item-target effect (oils, #339) */
+.item-chip--effect {
+  color: var(--accent-text, var(--gold-light));
+  border-color: var(--accent-outline, rgba(196, 154, 46, 0.5));
+}
+
 /* Rarity chips — match the spec (uncommon = gold, rare = arcane, unique = pink) */
 .item-rarity--uncommon {
   color: var(--gold-light);

@@ -113,4 +113,29 @@ describe('useEffectExpirySweep', () => {
     renderHook(() => useEffectExpirySweep());
     expect(mockSendUpdate).toHaveBeenCalledTimes(2);
   });
+
+  it('prunes expired item-target effects and logs them on the item (#339)', () => {
+    stateStore['char-a'] = {
+      itemeffects: [
+        { id: 'i1', itemId: 'plate', itemName: 'Full Plate', label: 'Weightless', source: 'Oil of Weightlessness', expireAtSecs: NOW - 1 },
+        { id: 'i2', itemId: 'bow', itemName: 'Bow', label: 'Oiled', source: 'Oil', expireAtSecs: NOW + 3600 },
+      ],
+    };
+    renderHook(() => useEffectExpirySweep());
+    const call = mockSendUpdate.mock.calls.find(([, key]) => key === 'itemeffects');
+    expect(call).toBeTruthy();
+    expect(call[2].map((e) => e.id)).toEqual(['i2']);
+    expect(mockAppendEvent).toHaveBeenCalledWith({
+      type: 'expire',
+      text: 'Weightless (Oil of Weightlessness) expired on Full Plate',
+    });
+  });
+
+  it('sweeps item effects even when the character has no creature effects', () => {
+    stateStore['char-a'] = {
+      itemeffects: [{ id: 'i1', itemId: 'plate', itemName: 'Full Plate', label: 'Weightless', source: 'Oil', expireAtSecs: NOW - 1 }],
+    };
+    renderHook(() => useEffectExpirySweep());
+    expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'itemeffects', []);
+  });
 });

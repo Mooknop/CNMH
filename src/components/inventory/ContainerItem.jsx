@@ -7,6 +7,7 @@ import {
   formatBulk,
   applyConsumedOverlay,
 } from '../../utils/InventoryUtils';
+import { stampItemEffects } from '../../utils/itemEffects';
 
 /**
  * Container fold row: header (name + bulk summary) expands to a nested bulk bar
@@ -16,7 +17,7 @@ import {
  * @param {string} props.themeColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
-const ContainerItem = ({ container, consumed, themeColor, onItemClick }) => {
+const ContainerItem = ({ container, consumed, itemEffects, themeColor, onItemClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Bail early if not a container
@@ -40,12 +41,12 @@ const ContainerItem = ({ container, consumed, themeColor, onItemClick }) => {
   const toggleExpanded = () => setIsExpanded(!isExpanded);
 
   // Apply the consumed overlay for display (drop fully-used consumables, show
-  // remaining counts), then sort alphabetically. The bulk math above still uses
-  // the authored contents, mirroring the top-level list where consumed items
-  // leave the card list but don't change Bulk (#253).
-  const sortedContents = applyConsumedOverlay(contents, consumed).sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-  );
+  // remaining counts) + stamp active item-target effects (#339) for the badge,
+  // then sort alphabetically. The bulk math above still uses the authored
+  // contents, mirroring the top-level list where consumed items leave the card
+  // list but don't change Bulk (#253).
+  const sortedContents = stampItemEffects(applyConsumedOverlay(contents, consumed), itemEffects)
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   return (
     <div className="container-item">

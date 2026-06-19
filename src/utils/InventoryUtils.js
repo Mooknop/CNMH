@@ -76,6 +76,21 @@ return !!item && !!item.container;
 };
 
 /**
+ * Flatten an inventory tree (top-level items + container contents) into a single
+ * list. Containers themselves are included. Depth-1 nesting matches the authored
+ * model. Used where a flat item list is needed (e.g. the item-target picker for
+ * oils, #339).
+ * @param {Array} inventory
+ * @returns {Array}
+ */
+export const flattenInventory = (inventory) =>
+  (Array.isArray(inventory) ? inventory : []).flatMap((item) =>
+    isContainer(item) && Array.isArray(item.container?.contents)
+      ? [item, ...item.container.contents]
+      : [item]
+  );
+
+/**
  * Normalize a shield block to the canonical key spelling:
  *   { bonus?, hardness?, hp?, brokenThreshold?, ...extras }
  *
