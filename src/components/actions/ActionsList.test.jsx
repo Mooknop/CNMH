@@ -34,6 +34,7 @@ vi.mock('../encounter/EncounterDoors', () => ({
 vi.mock('../spells/MagicModal', () => ({ default: () => null }));
 vi.mock('../encounter/UseAbilityModal', () => ({ default: () => <div data-testid="use-ability-modal" /> }));
 vi.mock('../encounter/HuntPreyModal', () => ({ default: () => <div data-testid="hunt-prey-modal" /> }));
+vi.mock('../encounter/ExploitVulnerabilityModal', () => ({ default: () => <div data-testid="exploit-modal" /> }));
 vi.mock('../character-sheet/AnimalCompanionModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="companion-modal" /> : null),
 }));
@@ -41,13 +42,13 @@ vi.mock('../character-sheet/FamiliarModal', () => ({
   default: ({ isOpen }) => (isOpen ? <div data-testid="familiar-modal" /> : null),
 }));
 
+let mockFlags = {
+  hasSpellcasting: false, hasFocusSpells: false, hasInnateSpells: false,
+  hasScrolls: false, hasWands: false, hasStaff: false, hasEldPowers: false, hasHarrowing: false,
+  isThaumaturge: false,
+};
 vi.mock('../../hooks/useCharacter', () => ({
-  useCharacter: () => ({
-    flags: {
-      hasSpellcasting: false, hasFocusSpells: false, hasInnateSpells: false,
-      hasScrolls: false, hasWands: false, hasStaff: false, hasEldPowers: false, hasHarrowing: false,
-    },
-  }),
+  useCharacter: () => ({ flags: mockFlags }),
 }));
 
 const mockUseFocusTarget = vi.fn(() => ({ focusAlly: null, focusEnemy: null }));
@@ -84,6 +85,11 @@ afterEach(() => {
   mockUseFocusTarget.mockReturnValue({ focusAlly: null, focusEnemy: null });
   mockEncounterState.active = false;
   mockEncounterState.phase = 'idle';
+  mockFlags = {
+    hasSpellcasting: false, hasFocusSpells: false, hasInnateSpells: false,
+    hasScrolls: false, hasWands: false, hasStaff: false, hasEldPowers: false, hasHarrowing: false,
+    isThaumaturge: false,
+  };
 });
 
 describe('ActionsList', () => {
@@ -229,5 +235,29 @@ describe('ActionsList', () => {
     expect(mockSpendActions).toHaveBeenCalledWith(1, 'Command');
     expect(mockGrantActions).toHaveBeenCalledWith(2, 'Command');
     expect(screen.getByTestId('familiar-modal')).toBeInTheDocument();
+  });
+
+  // ── Exploit Vulnerability (#454) ─────────────────────────────────────────
+  it('does not show the Exploit Vulnerability button for a non-Thaumaturge in encounter', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByRole('button', { name: 'Exploit Vulnerability' })).not.toBeInTheDocument();
+  });
+
+  it('does not show the Exploit Vulnerability button for a Thaumaturge out of an encounter', () => {
+    mockFlags = { ...mockFlags, isThaumaturge: true };
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByRole('button', { name: 'Exploit Vulnerability' })).not.toBeInTheDocument();
+  });
+
+  it('shows the Exploit Vulnerability button for a Thaumaturge in encounter and opens the modal', () => {
+    mockEncounterState.active = true;
+    mockEncounterState.phase = 'in-progress';
+    mockFlags = { ...mockFlags, isThaumaturge: true };
+    render(<ActionsList character={mockCharacter} />);
+    expect(screen.queryByTestId('exploit-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Exploit Vulnerability' }));
+    expect(screen.getByTestId('exploit-modal')).toBeInTheDocument();
   });
 });

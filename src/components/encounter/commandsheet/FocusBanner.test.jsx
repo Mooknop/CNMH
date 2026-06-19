@@ -157,6 +157,65 @@ describe('FocusBanner', () => {
     expect(screen.getByText(/No stat block/)).toBeInTheDocument();
   });
 
+  // ── Active Exploit Vulnerability indicator (#454) ────────────────────────────
+  it('shows the Exploited line when this foe is the active exploit target', () => {
+    let drv, setEnc, setFocus, setExploit;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
+        <FocusBanner charId="Pellias" />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+    act(() => setExploit({
+      Pellias: { targetEntryId: goblin.entryId, type: 'mortal', weaknessType: 'cold', value: 5 },
+    }));
+
+    const indicator = screen.getByTestId('cmd-focus-exploit');
+    expect(indicator).toHaveTextContent('Exploited');
+    expect(indicator).toHaveTextContent('Mortal Weakness cold 5');
+  });
+
+  it('shows the Personal Antithesis variant of the Exploited line', () => {
+    let drv, setEnc, setFocus, setExploit;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
+        <FocusBanner charId="Pellias" />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+    act(() => setExploit({
+      Pellias: { targetEntryId: goblin.entryId, type: 'antithesis', weaknessType: null, value: 4 },
+    }));
+
+    expect(screen.getByTestId('cmd-focus-exploit')).toHaveTextContent('Personal Antithesis 4');
+  });
+
+  it('hides the Exploited line when a different foe is the exploit target', () => {
+    let drv, setEnc, setFocus, setExploit;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_exploit_global" onReady={(s) => (setExploit = s)} />
+        <FocusBanner charId="Pellias" />
+      </>
+    );
+    setupFocus(() => drv, { setEnc, setFocus });
+    act(() => setExploit({
+      Pellias: { targetEntryId: 'some-other-entry', type: 'mortal', weaknessType: 'cold', value: 5 },
+    }));
+    expect(screen.queryByTestId('cmd-focus-exploit')).toBeNull();
+  });
+
   // ── Ally focus (#429) ──────────────────────────────────────────────────────
   it('shows an ally banner with HP + conditions when an ally is focused', () => {
     let drv, setFocus, setHp, setConds;

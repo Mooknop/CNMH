@@ -4,11 +4,8 @@ import { rkKeyFor } from '../../utils/recallKnowledge';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useGmAuth } from '../../hooks/useGmAuth';
-import { useContent } from '../../contexts/ContentContext';
-import { useCharacter } from '../../hooks/useCharacter';
 import BestiaryEntry from '../bestiary/BestiaryEntry';
 import RecallKnowledgeResolver from './RecallKnowledgeResolver';
-import ExploitVulnerabilityResolver from './ExploitVulnerabilityResolver';
 import './BestiaryModal.css';
 
 const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, themeColor }) => {
@@ -16,12 +13,8 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
   const { recordFor, clearLock } = useRecallKnowledge();
   const { exploitFor } = useExploitVulnerability();
   const { isGm } = useGmAuth();
-  const { characters } = useContent();
-  const rawActingChar = characters.find((c) => c.id === actingCharId) || null;
-  const actingCharModel = useCharacter(rawActingChar);
-  const isThaumaturge = actingCharModel?.flags?.isThaumaturge ?? false;
 
-  // 'none' | 'rk' | 'ev'
+  // 'none' | 'rk'
   const [resolverOpen, setResolverOpen] = useState('none');
 
   const record = recordFor(rkKey);
@@ -57,15 +50,6 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
             onDone={() => setResolverOpen('none')}
           />
         )}
-        {resolverOpen === 'ev' && (
-          <ExploitVulnerabilityResolver
-            enemy={enemy}
-            actingCharId={actingCharId}
-            actingCharName={actingCharName}
-            themeColor={themeColor}
-            onDone={() => setResolverOpen('none')}
-          />
-        )}
         {resolverOpen === 'none' && (
           <>
             <div className="bm-action-row">
@@ -78,17 +62,6 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
               >
                 Recall Knowledge
               </button>
-              {isThaumaturge && (
-                <button
-                  type="button"
-                  className="btn-secondary bm-rk-btn"
-                  onClick={() => setResolverOpen('ev')}
-                  aria-label="Exploit Vulnerability"
-                  data-testid="bm-ev-btn"
-                >
-                  Exploit Vulnerability
-                </button>
-              )}
             </div>
             {lockedForMe && (
               <p className="bm-rk-locked" data-testid="bm-rk-locked">
