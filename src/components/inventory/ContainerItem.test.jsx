@@ -3,14 +3,22 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ContainerItem from './ContainerItem';
 import { calculateContainerBulk } from '../../utils/InventoryUtils';
 
-vi.mock('../../utils/InventoryUtils', () => ({
-  calculateContainerBulk: vi.fn(({ contents = [] }) => ({
-    contentsBulk: contents.reduce((sum, i) => sum + (i.weight || 0), 0),
-    percentFull: 50,
-  })),
-  formatDecimal: vi.fn((n) => n),
-  formatBulk: vi.fn((b) => (b === 0 ? '—' : String(b))),
-}));
+vi.mock('../../utils/InventoryUtils', () => {
+  const isConsumable = (i) => !!(i && (i.scroll || i.consumable));
+  const remaining = (i, m = {}) => Math.max(0, (i.quantity ?? 1) - ((m || {})[i.name] || 0));
+  return {
+    calculateContainerBulk: vi.fn(({ contents = [] }) => ({
+      contentsBulk: contents.reduce((sum, i) => sum + (i.weight || 0), 0),
+      percentFull: 50,
+    })),
+    formatDecimal: vi.fn((n) => n),
+    formatBulk: vi.fn((b) => (b === 0 ? '—' : String(b))),
+    applyConsumedOverlay: (items, m = {}) =>
+      (Array.isArray(items) ? items : [])
+        .filter((i) => !isConsumable(i) || remaining(i, m) > 0)
+        .map((i) => (isConsumable(i) ? { ...i, quantity: remaining(i, m) } : i)),
+  };
+});
 
 // Container contents are rendered as ItemCards; mock to assert wiring only.
 vi.mock('./ItemCard', () => ({
@@ -165,6 +173,52 @@ describe('ContainerItem', () => {
     render(<ContainerItem container={container} themeColor="#4a90d9" onItemClick={vi.fn()} />);
     expand();
     expect(screen.queryByText('This container is empty')).toBeNull();
+  });
+
+  it('applies the consumed overlay to stowed consumables (#253)', () => {
+    const container = makeContainer({
+      container: {
+        capacity: 4, ignored: 0,
+        contents: [
+          { id: '1', name: 'Healing Potion', quantity: 3, consumable: { kind: 'healing' } },
+          { id: '2', name: 'Used Up Elixir', quantity: 1, consumable: { kind: 'healing' } },
+          { id: '3', name: 'Sword', weight: 1 },
+        ],
+      },
+    });
+    render(
+      <ContainerItem
+        container={container}
+        consumed={{ 'Healing Potion': 1, 'Used Up Elixir': 1 }}
+        themeColor="#4a90d9"
+        onItemClick={vi.fn()}
+      />
+    );
+    expand();
+    // Partially-used potion stays (remaining count surfaces via the card),
+    // fully-used elixir is dropped, non-consumable is untouched.
+    expect(screen.getByText('Healing Potion')).toBeInTheDocument();
+    expect(screen.getByText('Sword')).toBeInTheDocument();
+    expect(screen.queryByText('Used Up Elixir')).toBeNull();
+  });
+
+  it('shows the empty message when every stowed item is consumed (#253)', () => {
+    const container = makeContainer({
+      container: {
+        capacity: 4, ignored: 0,
+        contents: [{ id: '1', name: 'Last Potion', quantity: 1, consumable: { kind: 'healing' } }],
+      },
+    });
+    render(
+      <ContainerItem
+        container={container}
+        consumed={{ 'Last Potion': 1 }}
+        themeColor="#4a90d9"
+        onItemClick={vi.fn()}
+      />
+    );
+    expand();
+    expect(screen.getByText('This container is empty')).toBeInTheDocument();
   });
 
   it('handles contents being undefined gracefully', () => {

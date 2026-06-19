@@ -5,6 +5,7 @@ import ItemCard from './ItemCard';
 import {
   calculateContainerBulk,
   formatBulk,
+  applyConsumedOverlay,
 } from '../../utils/InventoryUtils';
 
 /**
@@ -15,7 +16,7 @@ import {
  * @param {string} props.themeColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
-const ContainerItem = ({ container, themeColor, onItemClick }) => {
+const ContainerItem = ({ container, consumed, themeColor, onItemClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Bail early if not a container
@@ -38,8 +39,11 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
 
   const toggleExpanded = () => setIsExpanded(!isExpanded);
 
-  // Sort the container contents alphabetically by name
-  const sortedContents = (Array.isArray(contents) ? [...contents] : []).sort((a, b) =>
+  // Apply the consumed overlay for display (drop fully-used consumables, show
+  // remaining counts), then sort alphabetically. The bulk math above still uses
+  // the authored contents, mirroring the top-level list where consumed items
+  // leave the card list but don't change Bulk (#253).
+  const sortedContents = applyConsumedOverlay(contents, consumed).sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
 
@@ -92,8 +96,8 @@ const ContainerItem = ({ container, themeColor, onItemClick }) => {
         </div>
       )}
 
-      {/* Empty state if expanded but no contents */}
-      {isExpanded && contents.length === 0 && (
+      {/* Empty state if expanded but no contents (after the consumed overlay) */}
+      {isExpanded && sortedContents.length === 0 && (
         <div className="empty-container">
           <p>This container is empty</p>
         </div>
