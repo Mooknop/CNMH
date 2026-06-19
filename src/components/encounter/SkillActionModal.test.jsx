@@ -227,14 +227,18 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
 describe('SkillActionModal (Feint)', () => {
   const feint = getSkillAction('feint');
 
-  it('rolls vs a GM-entered Perception DC and applies off-guard on success', () => {
+  it('rolls vs a GM-entered Perception DC and applies off-guard scoped to the attacker on success', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={feint} character={character} />);
     pickGoblin(); // Goblin has no perception → GM enters the DC
     fireEvent.change(screen.getByLabelText('Perception DC'), { target: { value: '14' } });
     fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
-    expect(screen.getByText('Success — Off-Guard')).toBeInTheDocument();
+    // Scoped outcome reads "to your attacks" (#348).
+    expect(screen.getByText('Success — Off-Guard to your attacks')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Use Feint/ }));
-    expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({ id: 'off-guard' }));
+    // off-guard records the acting PC so only their attacks benefit.
+    expect(applyCondition).toHaveBeenCalledWith('e-a', expect.objectContaining({
+      id: 'off-guard', scopedTo: 'izzy', scopedToName: 'Izzy',
+    }));
     expect(recordAttack).not.toHaveBeenCalled(); // Feint has no Attack trait
     expect(stampImmunity).not.toHaveBeenCalled();
   });

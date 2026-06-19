@@ -73,10 +73,11 @@ describe('skillActions registry', () => {
       expect(f.immunity).toBeUndefined();
     });
 
-    it('applies off-guard to the enemy, and to the PC on a crit-fail', () => {
+    it('applies off-guard scoped to the attacker on a hit, and to the PC on a crit-fail', () => {
       const f = getSkillAction('feint');
-      expect(f.outcomes.success).toEqual({ condition: 'off-guard' });
-      expect(f.outcomes.criticalSuccess).toEqual({ condition: 'off-guard' });
+      // off-guard is scoped to your own attacks (#348), not global.
+      expect(f.outcomes.success).toEqual({ condition: 'off-guard', scopedToAttacker: true });
+      expect(f.outcomes.criticalSuccess).toEqual({ condition: 'off-guard', scopedToAttacker: true });
       expect(f.outcomes.criticalFailure).toEqual({ selfCondition: 'off-guard' });
     });
   });

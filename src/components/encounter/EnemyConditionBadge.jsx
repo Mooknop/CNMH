@@ -22,10 +22,13 @@ const EnemyConditionBadge = ({ enemyEntry }) => {
     <>
       {conditions.map((c) => {
         const name = getCondition(c.id)?.name || c.id;
-        const label = c.value != null ? `${name} ${c.value}` : name;
+        const base = c.value != null ? `${name} ${c.value}` : name;
+        // Observer-scoped conditions (#348) name the attacker they apply to:
+        // "Off-Guard to Ashka".
+        const label = c.scopedToName ? `${base} to ${c.scopedToName}` : base;
         return (
           <span
-            key={c.id}
+            key={`${c.id}:${c.scopedTo || ''}`}
             className="ttp-condition-badge"
             title={`${enemyEntry.name}: ${label}`}
             aria-label={`${enemyEntry.name} is ${label}`}

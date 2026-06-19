@@ -36,4 +36,27 @@ describe('EnemyConditionBadge', () => {
     expect(screen.getByText('Frightened 2')).toBeInTheDocument();
     expect(screen.getByLabelText('Goblin is Frightened 2')).toBeInTheDocument();
   });
+
+  it('names the attacker for an observer-scoped condition (#348)', () => {
+    recordByEntry['e-gob'] = {
+      conditions: [{ id: 'off-guard', scopedTo: 'ashka', scopedToName: 'Ashka' }],
+      effects: [],
+    };
+    render(<EnemyConditionBadge enemyEntry={goblin} />);
+    expect(screen.getByText('Off-Guard to Ashka')).toBeInTheDocument();
+    expect(screen.getByLabelText('Goblin is Off-Guard to Ashka')).toBeInTheDocument();
+  });
+
+  it('renders a generic and a scoped off-guard as distinct chips', () => {
+    recordByEntry['e-gob'] = {
+      conditions: [
+        { id: 'off-guard', scopedTo: null },
+        { id: 'off-guard', scopedTo: 'izzy', scopedToName: 'Izzy' },
+      ],
+      effects: [],
+    };
+    render(<EnemyConditionBadge enemyEntry={goblin} />);
+    expect(screen.getByText('Off-Guard')).toBeInTheDocument();
+    expect(screen.getByText('Off-Guard to Izzy')).toBeInTheDocument();
+  });
 });

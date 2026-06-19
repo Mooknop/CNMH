@@ -176,7 +176,10 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const describeOutcome = (o) => {
     if (!o) return 'no effect';
     const parts = [];
-    if (o.condition) parts.push(condLabel(o.condition, o.value));
+    if (o.condition) {
+      const base = condLabel(o.condition, o.value);
+      parts.push(o.scopedToAttacker ? `${base} to your attacks` : base);
+    }
     if (o.note) parts.push(o.note);
     if (o.selfCondition) parts.push(`you are ${condLabel(o.selfCondition)}`);
     if (o.removeSelf) {
@@ -206,12 +209,17 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
     spendActions(action.actionCost, action.name);
 
-    // Enemy condition (frightened / prone / grabbed / restrained).
+    // Enemy condition (frightened / prone / grabbed / restrained). Outcomes
+    // flagged scopedToAttacker (Feint's off-guard, #348) record the acting PC so
+    // the attack resolver applies the off-guard only to that attacker's rolls.
     if (outcome?.condition) {
       applyCondition(pickedId, {
         id: outcome.condition,
         value: outcome.value ?? null,
         source: action.name,
+        ...(outcome.scopedToAttacker
+          ? { scopedTo: character?.id || null, scopedToName: character?.name || null }
+          : {}),
       });
     }
 

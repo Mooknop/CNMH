@@ -23,6 +23,9 @@
 //   outcomes    degree → outcome applied; absent degrees do nothing. An outcome is
 //               one or more of:
 //                 condition + value   enemy condition (value null = unvalued)
+//                 scopedToAttacker    true scopes the enemy `condition` to the
+//                                     acting PC (Feint's off-guard is "to your
+//                                     attacks only", #348) rather than global
 //                 selfCondition       condition applied to the acting PC (e.g. a
 //                                     maneuver crit-fail leaving you prone)
 //                 removeSelf          condition ids cleared from the acting PC
@@ -128,8 +131,10 @@ export const SKILL_ACTIONS = [
     availableTo: 'all',
   },
   // Feint (#260 slice 3) — Deception vs the target's Perception DC. The off-guard
-  // it grants is scoped to your own attacks in RAW; we apply a generic off-guard
-  // and rely on GM adjudication (see #348 for observer-scoped conditions).
+  // it grants is scoped to your own attacks (#348): on success off-guard to your
+  // melee attacks, on crit to all your attacks — both flagged scopedToAttacker so
+  // the enemy condition records the attacker (the attack resolver then offers the
+  // off-guard bonus only to that PC). The melee-vs-all nuance stays GM-judged.
   {
     id: 'feint',
     name: 'Feint',
@@ -138,8 +143,8 @@ export const SKILL_ACTIONS = [
     traits: ['Mental'],
     defense: 'perception',
     outcomes: {
-      criticalSuccess: { condition: 'off-guard' },
-      success:         { condition: 'off-guard' },
+      criticalSuccess: { condition: 'off-guard', scopedToAttacker: true },
+      success:         { condition: 'off-guard', scopedToAttacker: true },
       criticalFailure: { selfCondition: 'off-guard' },
     },
     availableTo: 'all',
