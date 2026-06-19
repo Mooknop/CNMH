@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Modal from '../shared/Modal';
 import TargetPicker from './TargetPicker';
 import TargetRollResolver, { DEGREE_LABELS_SAVE } from './TargetRollResolver';
@@ -34,6 +34,7 @@ import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
+import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
 import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
@@ -178,6 +179,15 @@ const UseAbilityModal = ({
   // Read the actor's active conditions and effects (same sources StatsBlock uses).
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || ''}`, []);
   const { effects: activeEffects } = useEffects(character?.id || '');
+
+  // Combatant grid positions from the bridge (#527) — drives ranged range
+  // increments. Request a fresh push when the modal opens so a stale snapshot
+  // doesn't misjudge distance; degrades to no range gating when absent.
+  const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const isRangedStrike = ability?.type === 'ranged';
+  useEffect(() => {
+    if (isOpen && isRangedStrike) sendUpdate('global', 'positionsreq', { ts: Date.now() });
+  }, [isOpen, isRangedStrike, sendUpdate]);
 
   const order = encounter?.order || [];
 
@@ -413,6 +423,24 @@ const UseAbilityModal = ({
     ...offGuardToggle,
   ];
 
+  // Ranged range increments (#530): for a ranged weapon Strike with a parseable
+  // range increment, measure attacker→target distance from the bridge positions
+  // and compute the per-target increment penalty. A target beyond 4× the
+  // increment is out of range and hard-blocks the Strike. Melee strikes, missing
+  // positions, or an unparseable range all degrade to no gating.
+  const rangeIncrementFt = isRangedStrike ? parseRangeIncrement(ability.range) : null;
+  const positions = positionsState?.positions || null;
+  const rangeFrom = rangeIncrementFt && positions ? positions[casterEntryId] : null;
+  const rangeByEntry = {};
+  if (rangeFrom) {
+    for (const t of resolverTargets) {
+      const to = positions[t.entryId];
+      if (to) rangeByEntry[t.entryId] = rangeIncrementResult({ from: rangeFrom, to, incrementFt: rangeIncrementFt });
+    }
+  }
+  const hasRangeData = Object.keys(rangeByEntry).length > 0;
+  const anyTargetOutOfRange = resolverTargets.some((t) => rangeByEntry[t.entryId]?.beyondMaxRange);
+
   // The rank this cast happens at (#235): the chosen slot option's rank, or
   // the spell's native rank for free/focus casts. Non-spell actions: none.
   const directCastRank = selectedCastOption?.rank
@@ -494,7 +522,8 @@ const UseAbilityModal = ({
   const confirmEnabled =
     (!needsPicker || targets.length > 0)
     && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk && omenGateOk
-    && (flatChecks.length === 0 || allFlatChecksRolled);
+    && (flatChecks.length === 0 || allFlatChecksRolled)
+    && !anyTargetOutOfRange;  // ranged Strike beyond 4× increment is out of range (#530)
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -1203,6 +1232,7 @@ const UseAbilityModal = ({
         damage={damageProfile}
         degrees={ability.degrees}
         toggles={attackToggles}
+        rangeByEntry={hasRangeData ? rangeByEntry : null}
       />
     );
   } else if (rollProfile.mode === 'target-save' && saveTargets.length > 0) {

@@ -155,6 +155,20 @@
   color: var(--shell-text-tertiary);
 }
 
+/* Range increments (#530) */
+.trr-out-of-range {
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--save-crit-failure, #c0392b);
+}
+
+.trr-range-note {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
 .trr-bonus-badge {
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);

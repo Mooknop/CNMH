@@ -306,6 +306,62 @@ describe('TargetRollResolver', () => {
     expect(ref.current.getResults()[0].damage).toBeNull();
   });
 
+  // ── range increments (#530) ───────────────────────────────────────────────
+
+  const at2nd = { 'cbt-goblin': { feet: 150, increments: 2, penalty: -2, beyondMaxRange: false } };
+  const outOfRange = { 'cbt-goblin': { feet: 450, increments: 5, penalty: -8, beyondMaxRange: true } };
+
+  test('applies the per-target range penalty to the total and degree', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        rangeByEntry={at2nd}
+      />
+    );
+    // d20 10 + bonus 5 = 15 (= AC 15, a Hit) − 2 second-increment = 13 → Miss
+    enterD20(10);
+    expect(screen.getByText('Miss')).toBeInTheDocument();
+    expect(ref.current.getResults()[0]).toMatchObject({ total: 13 });
+  });
+
+  test('shows the increment note for a target past the first increment', () => {
+    render(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        rangeByEntry={at2nd}
+      />
+    );
+    enterD20(10);
+    expect(screen.getByText(/150 ft · 2nd increment -2/)).toBeInTheDocument();
+  });
+
+  test('out-of-range target shows Out of range and yields no degree', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+        rangeByEntry={outOfRange}
+      />
+    );
+    enterD20(20); // would crit at point blank
+    expect(screen.getByText('Out of range')).toBeInTheDocument();
+    expect(screen.queryByText('Critical Hit')).not.toBeInTheDocument();
+    expect(ref.current.getResults()[0]).toMatchObject({ degree: null, outOfRange: true });
+  });
+
+  test('no rangeByEntry → totals and degrees unchanged (legacy output)', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5}
+      />
+    );
+    enterD20(10);
+    expect(ref.current.getResults()[0]).toMatchObject({ total: 15, degree: 'success' });
+    expect(ref.current.getResults()[0].range).toBeUndefined();
+  });
+
   // ── situational bonus toggles (#274) ──────────────────────────────────────
 
   const limnedToggle = [{ id: 'effect-Limned-limned target', label: 'Limned (vs limned target)', bonus: 1 }];
