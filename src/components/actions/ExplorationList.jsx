@@ -5,9 +5,13 @@ import ActionDetailModal from '../encounter/ActionDetailModal';
 import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import RollActivityModal from './RollActivityModal';
 import FollowExpertModal from './FollowExpertModal';
+import SkillCheckModal from './SkillCheckModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 import { EXPLORATION_ACTIVITIES, CATEGORY_ORDER } from '../../data/explorationActivities';
+import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { activityHighlightLabel } from '../../utils/explorationUtils';
 import './ExplorationList.css';
 
@@ -35,11 +39,18 @@ const ExplorationList = ({ character, characterColor }) => {
     null
   );
   const [followExpertLink] = useSyncedState(`cnmh_followexpert_${characterKey}`, null);
+  const { effects } = useEffects(character?.id || '');
+  const { effects: effectCatalog } = useContent();
 
   const [openActivity, setOpenActivity]     = useState(null);
   const [rollActivity, setRollActivity]     = useState(null);
   const [followExpertOpen, setFollowExpertOpen] = useState(false);
   const [treatWoundsOpen, setTreatWoundsOpen]   = useState(false);
+  const [skillAction, setSkillAction]           = useState(null);
+
+  // Out-of-encounter skill actions (#407) — Track and any future exploration
+  // skill checks. Resolved standalone via SkillCheckModal (no action spend).
+  const skillActions = skillActionsFor(character, { explorationMode: true });
 
   if (!characterModel) return null;
 
@@ -156,6 +167,27 @@ const ExplorationList = ({ character, characterColor }) => {
         );
       })}
 
+      {/* Skill actions — standalone exploration checks (Track) */}
+      {skillActions.length > 0 && (
+        <div>
+          <div className="el-section-divider">
+            <span className="el-section-label">Skill Actions</span>
+            <div className="el-section-line" />
+          </div>
+          <div className="el-activity-list">
+            {skillActions.map((sa) => (
+              <ActionRow
+                key={sa.id}
+                glyph="→"
+                name={sa.name}
+                rightLabel={SKILL_DISPLAY[sa.skill] || sa.skill}
+                onClick={() => setSkillAction(augmentSkillAction(character, sa, { effects, effectCatalog }))}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Activity detail modal */}
       {openActivity && (
         <ActionDetailModal
@@ -176,6 +208,17 @@ const ExplorationList = ({ character, characterColor }) => {
           isOpen={true}
           onClose={() => setRollActivity(null)}
           activity={rollActivity}
+          character={character}
+          themeColor={themeColor}
+        />
+      )}
+
+      {/* Skill check resolver */}
+      {skillAction && (
+        <SkillCheckModal
+          isOpen
+          onClose={() => setSkillAction(null)}
+          action={skillAction}
           character={character}
           themeColor={themeColor}
         />

@@ -56,7 +56,22 @@ vi.mock('./RollActivityModal', () => ({
   }
 }));
 
+vi.mock('./SkillCheckModal', () => ({
+  default: function DummySkillCheckModal({ isOpen, onClose, action }) {
+    if (!isOpen) return null;
+    return (
+      <div data-testid="skill-check-modal">
+        <span>{action?.name}</span>
+        <button onClick={onClose}>Close</button>
+      </div>
+    );
+  }
+}));
+
 vi.mock('../shared/TraitTag', () => ({ default: ({ trait }) => <span>{trait}</span> }));
+
+vi.mock('../../hooks/useEffects', () => ({ useEffects: vi.fn(() => ({ effects: [] })) }));
+vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn(() => ({ effects: [] })) }));
 
 const mockSetter = vi.fn();
 vi.mock('../../hooks/useSyncedState', () => ({
@@ -138,6 +153,16 @@ describe('ExplorationList', () => {
     useCharacter.mockReturnValue(makeCharacterModel({ flags: { hasSpellcasting: false, hasFocusSpells: true } }));
     render(<ExplorationList character={mockCharacter} />);
     expect(screen.getByText('Magic')).toBeInTheDocument();
+  });
+
+  it('surfaces Track under a Skill Actions section and opens the resolver (#407)', () => {
+    render(<ExplorationList character={mockCharacter} />);
+    expect(screen.getByText('Skill Actions')).toBeInTheDocument();
+    const trackRow = screen.getByText('Track').closest('[data-testid="action-row"]');
+    expect(trackRow).toBeTruthy();
+
+    fireEvent.click(trackRow);
+    expect(screen.getByTestId('skill-check-modal')).toBeInTheDocument();
   });
 
   it('hides Healing category when Medicine is untrained', () => {
