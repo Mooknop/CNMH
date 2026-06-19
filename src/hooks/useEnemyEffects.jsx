@@ -26,6 +26,23 @@ const ENEMY_FX_KEY = 'cnmh_enemyfx_global';
 
 const emptyRecord = () => ({ conditions: [], effects: [] });
 
+/**
+ * Pure: does any of these enemy records carry an off-guard condition that applies
+ * to the given attacker — either scoped to them (Feint, #348) or unscoped/global
+ * (flanking, prone)? Drives the off-guard situational-bonus toggle in the attack
+ * resolver.
+ *
+ * @param {Array<{conditions?: Array}>} records  - enemy effect records (effectsFor)
+ * @param {string} attackerId                     - the acting PC's charId
+ */
+export function offGuardAppliesTo(records, attackerId) {
+  return (records || []).some((rec) =>
+    (rec?.conditions || []).some(
+      (c) => c.id === 'off-guard' && (!c.scopedTo || c.scopedTo === attackerId)
+    )
+  );
+}
+
 export const useEnemyEffects = () => {
   const [enemyFx, setEnemyFx] = useSyncedState(ENEMY_FX_KEY, {});
 
@@ -37,18 +54,33 @@ export const useEnemyEffects = () => {
   // Apply a condition to an enemy. Valued conditions (frightened) take the higher
   // of any existing value and the incoming one — a fresh Demoralize never reduces
   // a stronger fear already in play.
+  //
+  // `scopedTo` (#348) optionally relates the condition to a specific attacker
+  // (their charId) — Feint grants off-guard "to your attacks only". A scoped
+  // condition coexists with a generic one and with other attackers' scopes, so
+  // dedupe keys on id + scope. `scopedToName` is the denormalized attacker name
+  // for the badge (mirrors `source`), saving a lookup.
   const applyCondition = useCallback(
-    (entryId, { id, value = null, source }) => {
+    (entryId, { id, value = null, source, scopedTo = null, scopedToName = null }) => {
       if (!entryId || !id) return;
       setEnemyFx((cur) => {
         const rec = cur?.[entryId] || emptyRecord();
-        const existing = rec.conditions.find((c) => c.id === id);
+        const existing = rec.conditions.find(
+          (c) => c.id === id && (c.scopedTo || null) === (scopedTo || null)
+        );
         const nextValue = value != null && existing?.value != null
           ? Math.max(existing.value, value)
           : (value != null ? value : existing?.value ?? null);
-        const entry = { id, value: nextValue, source: source || null, ts: Date.now() };
+        const entry = {
+          id,
+          value: nextValue,
+          source: source || null,
+          scopedTo: scopedTo || null,
+          scopedToName: scopedToName || null,
+          ts: Date.now(),
+        };
         const conditions = existing
-          ? rec.conditions.map((c) => (c.id === id ? entry : c))
+          ? rec.conditions.map((c) => (c === existing ? entry : c))
           : [...rec.conditions, entry];
         return { ...cur, [entryId]: { ...rec, conditions } };
       });

@@ -22,7 +22,7 @@ import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
-import { useEnemyEffects } from '../../hooks/useEnemyEffects';
+import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
@@ -106,8 +106,9 @@ const UseAbilityModal = ({
   const opposedRef  = useRef(null);
 
   // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
-  // self-expiring per-enemy immunity, keyed by encounter entryId.
-  const { stampImmunity } = useEnemyEffects();
+  // self-expiring per-enemy immunity, keyed by encounter entryId. effectsFor
+  // also feeds the off-guard attack toggle (#348).
+  const { stampImmunity, effectsFor } = useEnemyEffects();
 
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
@@ -390,9 +391,21 @@ const UseAbilityModal = ({
     ? (/spell-attack/.test(rollProfile.source) ? 'spellAttack'
       : ability.type === 'ranged' ? 'rangedAttack' : 'meleeAttack')
     : null;
-  const attackToggles = attackStat
-    ? conditionalTogglesFor(activeEffects || [], attackStat, effectCatalog)
+  // Off-guard (#348): an AC-attack target that is off-guard to this attacker
+  // (scoped via Feint) or off-guard generally (flanking/prone) takes a −2
+  // circumstance penalty to AC — surfaced as an opt-in +2 toggle, the same
+  // situational-bonus pattern as #274's conditional effect modifiers. Like those
+  // toggles it adjusts the roll uniformly, so it's exact for the common
+  // single-target attack; the player flips it only on the off-guard target.
+  // attackStat is non-null only for AC attacks (the only defense off-guard lowers).
+  const offGuardToggle = attackStat
+    && offGuardAppliesTo(resolverTargets.map((t) => effectsFor(t.entryId)), character.id)
+    ? [{ id: 'target-off-guard', label: 'Off-guard target', bonus: 2 }]
     : [];
+  const attackToggles = [
+    ...(attackStat ? conditionalTogglesFor(activeEffects || [], attackStat, effectCatalog) : []),
+    ...offGuardToggle,
+  ];
 
   // The rank this cast happens at (#235): the chosen slot option's rank, or
   // the spell's native rank for free/focus casts. Non-spell actions: none.

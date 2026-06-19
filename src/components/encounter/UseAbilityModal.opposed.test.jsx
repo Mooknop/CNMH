@@ -72,7 +72,11 @@ vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: () => [[], vi.fn()],
 }));
 vi.mock('../../hooks/useEnemyEffects', () => ({
-  useEnemyEffects: () => ({ stampImmunity: mockStampImmunity }),
+  useEnemyEffects: () => ({
+    stampImmunity: mockStampImmunity,
+    effectsFor: () => ({ conditions: [], effects: [] }),
+  }),
+  offGuardAppliesTo: () => false,
 }));
 vi.mock('../../utils/rollResolution', () => ({
   resolveActionRoll: () => mockRollProfile,
