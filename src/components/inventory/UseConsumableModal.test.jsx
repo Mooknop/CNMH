@@ -53,6 +53,11 @@ vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: () => [consumedState, mockSetConsumed],
 }));
 
+let mockCharData = { inventory: [] };
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: () => mockCharData,
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const character = { id: 'c1', name: 'Blu', maxHp: 30, feats: [] };
@@ -86,6 +91,7 @@ function renderModal(props = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   consumedState = {};
+  mockCharData = { inventory: [] };
   mockEncounter = { active: false, phase: 'idle', order: [] };
   vi.spyOn(consumables, 'applyHealing').mockImplementation(() => {});
   vi.spyOn(consumables, 'applyHealingConsumable').mockImplementation(() => {});
@@ -251,6 +257,62 @@ describe('in an active encounter', () => {
     appendLog({ type: 'action', text: 'x' });
     expect(mockAppendLog).toHaveBeenCalled();
     expect(mockAppendEvent).not.toHaveBeenCalled();
+  });
+});
+
+// ── Item-target flow (oils, #339) ────────────────────────────────────────────
+
+describe('item-target consumable (oil)', () => {
+  const oil = {
+    id: 'oil-of-weightlessness',
+    name: 'Oil of Weightlessness',
+    quantity: 1,
+    traits: ['Consumable', 'Oil'],
+    consumable: { kind: 'effect', target: 'item', label: 'Weightless', note: 'Negligible Bulk', durationMinutes: 60 },
+  };
+
+  beforeEach(() => {
+    mockCharData = {
+      inventory: [
+        { id: 'plate-1', name: 'Full Plate' },
+        { id: 'oil-of-weightlessness', name: 'Oil of Weightlessness' }, // the oil itself — excluded
+        { id: 'pack', name: 'Backpack', container: { contents: [{ id: 'rope', name: 'Rope' }] } },
+      ],
+    };
+  });
+
+  it('lists target items (flattened, excluding the oil itself) and gates confirm on a pick', () => {
+    renderModal({ item: oil });
+    expect(screen.getByRole('button', { name: 'Full Plate' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Rope' })).toBeInTheDocument();
+    // The oil cannot target itself.
+    expect(screen.queryByRole('button', { name: 'Oil of Weightlessness' })).not.toBeInTheDocument();
+    // No creature-effect section for an item-target consumable.
+    expect(screen.queryByText('Effect')).not.toBeInTheDocument();
+
+    const confirm = screen.getByRole('button', { name: 'Apply' });
+    expect(confirm).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Full Plate' }));
+    expect(confirm).not.toBeDisabled();
+  });
+
+  it('writes the item-effect overlay (not creature effects) and consumes the oil', () => {
+    renderModal({ item: oil });
+    fireEvent.click(screen.getByRole('button', { name: 'Full Plate' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
+    expect(consumables.applyEffectConsumable).not.toHaveBeenCalled();
+    expect(consumedState).toEqual({ 'Oil of Weightlessness': 1 });
+    expect(mockSendUpdate).toHaveBeenCalledWith(
+      'c1',
+      'itemeffects',
+      expect.arrayContaining([expect.objectContaining({
+        itemId: 'plate-1', itemName: 'Full Plate', label: 'Weightless', source: 'Oil of Weightlessness',
+      })]),
+    );
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Blu applied Oil of Weightlessness to Full Plate (60 min)',
+    }));
   });
 });
 

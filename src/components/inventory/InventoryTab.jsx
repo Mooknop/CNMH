@@ -4,6 +4,7 @@ import './ItemCard.css';
 import ItemCard from './ItemCard';
 import ContainersList from './ContainersList';
 import { formatBulk, getBulkStatus, applyConsumedOverlay } from '../../utils/InventoryUtils';
+import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 
@@ -24,6 +25,8 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Consumed-consumables overlay — fully-used items disappear from the list
   // (the GM cleanup tool removes them from authored content later).
   const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  // Item-target effects overlay (oils, #339) — surfaced as a chip on the item.
+  const [itemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
@@ -39,10 +42,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     return characterColor; // Use character's color theme
   };
 
-  // Hide fully-consumed consumables; show live remaining counts on the rest.
-  // Sort inventory items alphabetically by name. (Container contents get the
-  // same overlay inside ContainerItem via the `consumed` prop — #253.)
-  const sortedInventory = applyConsumedOverlay(inventory, consumed)
+  // Hide fully-consumed consumables; show live remaining counts on the rest, and
+  // stamp any active item-target effects (oils, #339) for the badge. Sort
+  // alphabetically. (Container contents get the same overlays inside
+  // ContainerItem via the `consumed`/`itemEffects` props — #253/#339.)
+  const sortedInventory = stampItemEffects(applyConsumedOverlay(inventory, consumed), itemEffects)
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   return (
@@ -101,6 +105,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       <ContainersList
         inventory={sortedInventory}
         consumed={consumed}
+        itemEffects={itemEffects}
         themeColor={characterColor}
         onItemClick={onItemClick}
       />

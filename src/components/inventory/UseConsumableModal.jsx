@@ -7,7 +7,9 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useCharacter } from '../../hooks/useCharacter';
 import { toGameSeconds } from '../../utils/gameTime';
+import { flattenInventory } from '../../utils/InventoryUtils';
 import {
   consumableMeta,
   consumableVerb,
@@ -16,6 +18,7 @@ import {
   applyHealingConsumable,
   applyEffectConsumable,
 } from '../../utils/consumables';
+import { applyItemEffect, itemKeyOf } from '../../utils/itemEffects';
 import './UseConsumableModal.css';
 
 /**
@@ -44,13 +47,24 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
   const { appendEvent } = useSessionLog();
   const { spendActions } = useTurnState(character?.id || 'nobody');
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  const charData = useCharacter(character);
 
   const [amountInput, setAmountInput] = useState('');
+  // Item-target consumables (#339) — which inventory item the oil is applied to.
+  const [targetItemId, setTargetItemId] = useState(null);
 
   if (!isOpen || !item || !character) return null;
 
   const meta = consumableMeta(item);
   if (!meta) return null;
+
+  // Item-targeted consumables (oils) resolve against an inventory item, not the
+  // creature: pick the target, then the effect is tracked on that item (#339).
+  const isItemTarget = meta.target === 'item';
+  const targetItems = isItemTarget
+    ? flattenInventory(charData?.inventory).filter((it) => itemKeyOf(it) !== itemKeyOf(item))
+    : [];
+  const targetItem = targetItems.find((it) => itemKeyOf(it) === targetItemId) || null;
 
   const verb = consumableVerb(item);
   const encounterMode = !!(encounter?.active && encounter.phase === 'in-progress');
@@ -76,7 +90,9 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
 
   const amount = parseInt(amountInput, 10);
   const hasAmount = !isNaN(amount) && amount > 0;
-  const confirmEnabled = remaining > 0 && (meta.kind !== 'healing' || hasAmount);
+  const confirmEnabled = remaining > 0
+    && (meta.kind !== 'healing' || hasAmount)
+    && (!isItemTarget || !!targetItem);
 
   // In-encounter log lines go to the combat log; otherwise to the session log.
   const log = encounter?.active
@@ -91,7 +107,19 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
     }));
 
     const user = { id: character.id, name: character.name, maxHp: character.maxHp };
-    if (meta.kind === 'healing') {
+    if (isItemTarget) {
+      // Oils etc. — track the effect on the chosen inventory item (#339).
+      applyItemEffect({
+        user,
+        targetItem,
+        itemName: item.name,
+        meta,
+        nowSecs: toGameSeconds({ ...gameDate, ...time }),
+        getState,
+        sendUpdate,
+        appendLog: log,
+      });
+    } else if (meta.kind === 'healing') {
       if (ally) {
         // Administering to a focused ally: heal the ally, log it as administered.
         applyHealing({
@@ -151,7 +179,36 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
         </div>
       </section>
 
-      {meta.kind === 'healing' && (
+      {isItemTarget && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Apply to item</h3>
+            {targetItems.length === 0 ? (
+              <p className="ucm-empty">No items to apply this to.</p>
+            ) : (
+              <div className="ucm-item-picks" role="radiogroup" aria-label="Target item">
+                {targetItems.map((it) => {
+                  const key = itemKeyOf(it);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`ucm-item-btn${targetItemId === key ? ' ucm-item-btn--active' : ''}`}
+                      aria-pressed={targetItemId === key}
+                      onClick={() => setTargetItemId(key)}
+                    >
+                      {it.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
+      {meta.kind === 'healing' && !isItemTarget && (
         <>
           <hr className="ct-divider" />
           <section className="ct-section">
@@ -177,7 +234,7 @@ const UseConsumableModal = ({ isOpen, onClose, item, character, themeColor, acti
         </>
       )}
 
-      {meta.kind === 'effect' && (
+      {meta.kind === 'effect' && !isItemTarget && (
         <>
           <hr className="ct-divider" />
           <section className="ct-section">

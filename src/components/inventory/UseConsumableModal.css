@@ -57,3 +57,35 @@
   justify-content: flex-end;
   margin-top: var(--space-4);
 }
+
+/* Item-target picker (oils, #339) */
+
+.ucm-item-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.ucm-item-btn {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--shell-border-strong, var(--color-text-muted));
+  background: transparent;
+  color: var(--shell-text-secondary);
+  cursor: pointer;
+}
+
+.ucm-item-btn--active {
+  background: var(--accent-tint, rgba(255, 255, 255, 0.12));
+  border-color: var(--accent-outline, currentColor);
+  color: var(--accent-text, inherit);
+  font-weight: 700;
+}
+
+.ucm-empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}

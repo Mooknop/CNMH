@@ -5,6 +5,7 @@ import { useGameDate } from '../contexts/GameDateContext';
 import { useGmAuth } from './useGmAuth';
 import { useSessionLog } from './useSessionLog';
 import { toGameSeconds } from '../utils/gameTime';
+import { pruneExpiredItemEffects, itemEffectsKey } from '../utils/itemEffects';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -38,22 +39,34 @@ export function useEffectExpirySweep() {
 
     (characters || []).forEach((c) => {
       const effects = getState(c.id, 'effects');
-      if (!Array.isArray(effects) || effects.length === 0) return;
-      const expired = effects.filter(
-        (e) => typeof e.expireAtSecs === 'number' && e.expireAtSecs <= nowSecs,
-      );
-      if (expired.length === 0) return;
+      if (Array.isArray(effects) && effects.length > 0) {
+        const expired = effects.filter(
+          (e) => typeof e.expireAtSecs === 'number' && e.expireAtSecs <= nowSecs,
+        );
+        if (expired.length > 0) {
+          const next = effects.filter((e) => !expired.includes(e));
+          writeLocal(`cnmh_effects_${c.id}`, next);
+          sendUpdate(c.id, 'effects', next);
 
-      const next = effects.filter((e) => !expired.includes(e));
-      writeLocal(`cnmh_effects_${c.id}`, next);
-      sendUpdate(c.id, 'effects', next);
+          expired.forEach((e) => {
+            const def = (effectCatalog || []).find((d) => d.id === e.effectId);
+            const label = def?.name || e.effectId;
+            const what = e.source ? `${label} (${e.source})` : label;
+            appendEvent({ type: 'expire', text: `${what} expired on ${c.name}` });
+          });
+        }
+      }
 
-      expired.forEach((e) => {
-        const def = (effectCatalog || []).find((d) => d.id === e.effectId);
-        const label = def?.name || e.effectId;
-        const what = e.source ? `${label} (${e.source})` : label;
-        appendEvent({ type: 'expire', text: `${what} expired on ${c.name}` });
-      });
+      // Item-target effects (#339) — same clock expiry on a parallel overlay.
+      const itemFx = getState(c.id, 'itemeffects');
+      const { next: nextItemFx, expired: expiredItemFx } = pruneExpiredItemEffects(itemFx, nowSecs);
+      if (expiredItemFx.length > 0) {
+        writeLocal(itemEffectsKey(c.id), nextItemFx);
+        sendUpdate(c.id, 'itemeffects', nextItemFx);
+        expiredItemFx.forEach((e) => {
+          appendEvent({ type: 'expire', text: `${e.label} (${e.source}) expired on ${e.itemName}` });
+        });
+      }
     });
   }, [isGm, nowSecs, characters, effectCatalog, getState, sendUpdate, appendEvent]);
 }

@@ -146,9 +146,11 @@ const toForm = (it) => {
     spellKind: it.scroll ? 'scroll' : it.wand ? 'wand' : 'none',
     spell: spellToForm(it.scroll || it.wand || {}),
     consumableKind: it.consumable?.kind || 'none',
+    consumableTarget: it.consumable?.target === 'item' ? 'item' : 'self',
     consumableEffectId: it.consumable?.effectId != null ? String(it.consumable.effectId) : '',
     consumableDuration:
       it.consumable?.durationMinutes != null ? String(it.consumable.durationMinutes) : '',
+    consumableLabel: it.consumable?.label != null ? String(it.consumable.label) : '',
     consumableNote: it.consumable?.note != null ? String(it.consumable.note) : '',
     restJson: JSON.stringify(rest, null, 2),
   };
@@ -215,14 +217,19 @@ const itemFromForm = (f) => {
   }
 
   if (f.consumableKind === 'healing' || f.consumableKind === 'effect') {
+    // Item-target effect consumables (oils, #339) track on an inventory item and
+    // use a label, so they don't require a catalog effect id.
+    const isItemTarget = f.consumableKind === 'effect' && f.consumableTarget === 'item';
     const effectId = (f.consumableEffectId || '').trim();
-    if (f.consumableKind === 'effect' && !effectId) {
+    if (f.consumableKind === 'effect' && !isItemTarget && !effectId) {
       throw new Error(`The effect consumable "${f.name}" needs an effect from the catalog.`);
     }
     const minutes = parseInt(f.consumableDuration, 10);
     out.consumable = {
       kind: f.consumableKind,
-      ...(f.consumableKind === 'effect' ? { effectId } : {}),
+      ...(isItemTarget ? { target: 'item' } : {}),
+      ...(f.consumableKind === 'effect' && !isItemTarget ? { effectId } : {}),
+      ...(isItemTarget && f.consumableLabel.trim() ? { label: f.consumableLabel.trim() } : {}),
       ...(f.consumableKind === 'effect' && !Number.isNaN(minutes) && minutes > 0
         ? { durationMinutes: minutes }
         : {}),
@@ -639,35 +646,59 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </select>
       </div>
       {e.consumableKind === 'effect' && (
-        <div className="gm-row">
+        <>
           <div className="form-group">
-            <label>effect</label>
+            <label>target</label>
             <select
-              aria-label="consumable-effect"
-              value={e.consumableEffectId}
-              onChange={(ev) => set({ consumableEffectId: ev.target.value })}
+              aria-label="consumable-target"
+              value={e.consumableTarget}
+              onChange={(ev) => set({ consumableTarget: ev.target.value })}
             >
-              <option value="">— pick an effect —</option>
-              {sortedEffects.map((fx) => (
-                <option key={fx.id} value={fx.id}>
-                  {fx.name || fx.id}
-                </option>
-              ))}
-              {e.consumableEffectId && !effectMatch && (
-                <option value={e.consumableEffectId}>(unknown: {e.consumableEffectId})</option>
-              )}
+              <option value="self">the user (creature effect)</option>
+              <option value="item">an inventory item (oil, #339)</option>
             </select>
           </div>
-          <div className="form-group">
-            <label>duration (minutes, blank = until removed)</label>
-            <input
-              aria-label="consumable-duration"
-              type="number"
-              value={e.consumableDuration}
-              onChange={(ev) => set({ consumableDuration: ev.target.value })}
-            />
+          <div className="gm-row">
+            {e.consumableTarget === 'item' ? (
+              <div className="form-group">
+                <label>badge label (e.g. "Weightless")</label>
+                <input
+                  aria-label="consumable-label"
+                  value={e.consumableLabel}
+                  onChange={(ev) => set({ consumableLabel: ev.target.value })}
+                />
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>effect</label>
+                <select
+                  aria-label="consumable-effect"
+                  value={e.consumableEffectId}
+                  onChange={(ev) => set({ consumableEffectId: ev.target.value })}
+                >
+                  <option value="">— pick an effect —</option>
+                  {sortedEffects.map((fx) => (
+                    <option key={fx.id} value={fx.id}>
+                      {fx.name || fx.id}
+                    </option>
+                  ))}
+                  {e.consumableEffectId && !effectMatch && (
+                    <option value={e.consumableEffectId}>(unknown: {e.consumableEffectId})</option>
+                  )}
+                </select>
+              </div>
+            )}
+            <div className="form-group">
+              <label>duration (minutes, blank = until removed)</label>
+              <input
+                aria-label="consumable-duration"
+                type="number"
+                value={e.consumableDuration}
+                onChange={(ev) => set({ consumableDuration: ev.target.value })}
+              />
+            </div>
           </div>
-        </div>
+        </>
       )}
       {e.consumableKind !== 'none' && (
         <div className="form-group">

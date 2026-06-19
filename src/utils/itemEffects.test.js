@@ -1,0 +1,104 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  itemEffectsKey,
+  itemKeyOf,
+  itemEffectsFor,
+  itemEffectLabel,
+  stampItemEffects,
+  applyItemEffect,
+  pruneExpiredItemEffects,
+} from './itemEffects';
+
+beforeEach(() => {
+  try { window.localStorage.clear(); } catch { /* noop */ }
+});
+
+describe('itemEffects (#339)', () => {
+  it('keys the synced overlay by character id', () => {
+    expect(itemEffectsKey('izzy')).toBe('cnmh_itemeffects_izzy');
+  });
+
+  it('itemKeyOf prefers id, falls back to name', () => {
+    expect(itemKeyOf({ id: 'sword-1', name: 'Sword' })).toBe('sword-1');
+    expect(itemKeyOf({ name: 'Sword' })).toBe('Sword');
+    expect(itemKeyOf(null)).toBeNull();
+  });
+
+  it('itemEffectsFor matches by item id (and name fallback)', () => {
+    const overlay = [
+      { id: 'e1', itemId: 'sword-1', label: 'Weightless' },
+      { id: 'e2', itemId: 'Shield', label: 'Oiled' },
+    ];
+    expect(itemEffectsFor(overlay, { id: 'sword-1' }).map((e) => e.id)).toEqual(['e1']);
+    expect(itemEffectsFor(overlay, { name: 'Shield' }).map((e) => e.id)).toEqual(['e2']);
+    expect(itemEffectsFor(overlay, { id: 'nope' })).toEqual([]);
+  });
+
+  it('itemEffectLabel falls back label → note → Active', () => {
+    expect(itemEffectLabel({ label: 'Weightless' })).toBe('Weightless');
+    expect(itemEffectLabel({ note: 'Negligible Bulk' })).toBe('Negligible Bulk');
+    expect(itemEffectLabel({})).toBe('Active');
+  });
+
+  it('stampItemEffects attaches activeEffects only to matching items', () => {
+    const overlay = [{ id: 'e1', itemId: 'sword-1', label: 'Weightless' }];
+    const out = stampItemEffects([{ id: 'sword-1', name: 'Sword' }, { id: 'bow', name: 'Bow' }], overlay);
+    expect(out[0].activeEffects).toHaveLength(1);
+    expect(out[1].activeEffects).toBeUndefined();
+  });
+
+  describe('applyItemEffect', () => {
+    const user = { id: 'izzy', name: 'Izzy' };
+    const target = { id: 'plate-1', name: 'Full Plate' };
+
+    it('appends an entry, writes the overlay via sendUpdate, and logs', () => {
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+      const getState = vi.fn(() => [{ id: 'old', itemId: 'x' }]);
+      const meta = { kind: 'effect', target: 'item', label: 'Weightless', note: 'Negligible Bulk', durationMinutes: 60 };
+
+      const next = applyItemEffect({
+        user, targetItem: target, itemName: 'Oil of Weightlessness', meta,
+        nowSecs: 1000, getState, sendUpdate, appendLog,
+      });
+
+      expect(next).toHaveLength(2);
+      const entry = next[1];
+      expect(entry).toMatchObject({
+        itemId: 'plate-1', itemName: 'Full Plate', label: 'Weightless',
+        note: 'Negligible Bulk', source: 'Oil of Weightlessness', appliedBy: 'izzy',
+        expireAtSecs: 1000 + 60 * 60,
+      });
+      expect(sendUpdate).toHaveBeenCalledWith('izzy', 'itemeffects', next);
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: 'Izzy applied Oil of Weightlessness to Full Plate (60 min)',
+      }));
+    });
+
+    it('omits expireAtSecs when the effect has no duration', () => {
+      const meta = { kind: 'effect', target: 'item', label: 'Protected' };
+      const next = applyItemEffect({
+        user, targetItem: target, itemName: 'Anticorrosion Oil', meta,
+        nowSecs: 1000, getState: () => [], sendUpdate: vi.fn(), appendLog: vi.fn(),
+      });
+      expect(next[0].expireAtSecs).toBeUndefined();
+    });
+  });
+
+  describe('pruneExpiredItemEffects', () => {
+    it('splits expired (<= now) from active and is a no-op when none expired', () => {
+      const overlay = [
+        { id: 'a', expireAtSecs: 500 },
+        { id: 'b', expireAtSecs: 5000 },
+        { id: 'c' }, // no expiry — never pruned
+      ];
+      const { next, expired } = pruneExpiredItemEffects(overlay, 1000);
+      expect(expired.map((e) => e.id)).toEqual(['a']);
+      expect(next.map((e) => e.id)).toEqual(['b', 'c']);
+
+      const none = pruneExpiredItemEffects(overlay, 100);
+      expect(none.expired).toEqual([]);
+      expect(none.next).toBe(overlay);
+    });
+  });
+});
