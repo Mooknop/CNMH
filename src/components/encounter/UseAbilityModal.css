@@ -193,3 +193,28 @@
   color: var(--color-text-muted);
   margin: 2px 0 0;
 }
+
+.uam-conceal-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0.25rem 0;
+}
+
+.uam-conceal-btn {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--shell-border-strong, var(--color-text-muted));
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.uam-conceal-btn--active {
+  background: var(--accent-tint, rgba(255, 255, 255, 0.12));
+  border-color: var(--accent-outline, currentColor);
+  color: var(--accent-text, inherit);
+  font-weight: 700;
+}

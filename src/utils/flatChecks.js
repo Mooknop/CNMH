@@ -63,6 +63,35 @@ export function requiredFlatChecks(ability, conditions = [], { isCast = false } 
   return checks;
 }
 
+// Target-concealment flat checks (#262). When you attack a creature that's
+// concealed (DC 5) or hidden (DC 11) you must succeed at a flat check first or
+// the attack is lost. Concealment isn't in the targeting payload, so the
+// attacker sets it manually on the attack — these are the picker options.
+export const CONCEALMENT_LEVELS = [
+  { id: 'none',      label: 'None',      dc: null },
+  { id: 'concealed', label: 'Concealed', dc: 5 },
+  { id: 'hidden',    label: 'Hidden',    dc: 11 },
+];
+
+/**
+ * The flat check a manually-flagged concealed/hidden target imposes on an attack,
+ * shaped like a requiredFlatChecks entry so it flows through the same gate.
+ *
+ * @param {string} level  'none' | 'concealed' | 'hidden'
+ * @returns {{ id, label, dc, reason, fail }|null}  null for 'none' / unknown
+ */
+export function concealmentFlatCheck(level) {
+  const opt = CONCEALMENT_LEVELS.find((l) => l.id === level);
+  if (!opt || opt.dc == null) return null;
+  return {
+    id: opt.id,
+    label: `${opt.label} target`,
+    dc: opt.dc,
+    reason: `Attacking a ${opt.id} target requires a DC ${opt.dc} flat check or the attack is lost.`,
+    fail: 'the attack is lost',
+  };
+}
+
 /**
  * Whether a raw d20 passes a flat check (>= dc). No modifiers, no crit rules.
  * @param {number} d20

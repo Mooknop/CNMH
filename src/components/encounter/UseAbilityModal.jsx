@@ -30,7 +30,7 @@ import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
 import { immunityConfigFor } from '../../utils/immunity';
-import { requiredFlatChecks, flatCheckPasses } from '../../utils/flatChecks';
+import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from '../../utils/flatChecks';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
@@ -169,6 +169,8 @@ const UseAbilityModal = ({
 
   // Condition flat checks (#262): raw d20 per required check (keyed by condition id).
   const [flatCheckRolls, setFlatCheckRolls] = useState({});
+  // Manually-flagged target concealment (#262) — 'none' | 'concealed' | 'hidden'.
+  const [concealment, setConcealment] = useState('none');
 
   // Persistent-damage tracking (#272) — confirm records per-target entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -473,9 +475,14 @@ const UseAbilityModal = ({
   // on a Manipulate action. The player rolls a raw d20 per required check before
   // the action resolves; a failed check loses the action (the cost is still
   // spent). `isCast` is the spell-cast flow (verb "Cast").
-  const flatChecks = requiredFlatChecks(ability, activeConditions || [], {
-    isCast: effectiveVerb === 'cast',
-  });
+  // Attacking a concealed/hidden target imposes its own flat check (DC 5 / 11) —
+  // a failed check loses the attack. Concealment isn't in the targeting payload,
+  // so it's a manual flag on attack abilities only; it flows through the same gate.
+  const concealmentCheck = isAttack ? concealmentFlatCheck(concealment) : null;
+  const flatChecks = [
+    ...requiredFlatChecks(ability, activeConditions || [], { isCast: effectiveVerb === 'cast' }),
+    ...(concealmentCheck ? [concealmentCheck] : []),
+  ];
   const flatCheckResults = flatChecks.map((fc) => {
     const raw = flatCheckRolls[fc.id];
     const d20 = /^\d+$/.test(raw || '') ? parseInt(raw, 10) : null;
@@ -1425,9 +1432,38 @@ const UseAbilityModal = ({
         </>
       )}
 
-      {/* Condition flat checks (#262) — stupefied cast / grabbed-manipulate.
-          The player rolls a raw d20 per check; a failed check loses the action
-          (cost still spent). Confirm stays disabled until each is entered. */}
+      {/* Target concealment (#262) — manual flag on attacks. Picking Concealed
+          (DC 5) or Hidden (DC 11) injects a flat check below; concealment isn't
+          in the targeting payload, so the attacker sets it here. */}
+      {isAttack && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Target Concealment</h3>
+            <div className="uam-conceal-row" role="radiogroup" aria-label="Target concealment">
+              {CONCEALMENT_LEVELS.map((lvl) => (
+                <button
+                  key={lvl.id}
+                  type="button"
+                  className={`uam-conceal-btn${concealment === lvl.id ? ' uam-conceal-btn--active' : ''}`}
+                  aria-pressed={concealment === lvl.id}
+                  onClick={() => {
+                    setConcealment(lvl.id);
+                    setFlatCheckRolls((cur) => { const next = { ...cur }; delete next.concealed; delete next.hidden; return next; });
+                  }}
+                >
+                  {lvl.label}{lvl.dc != null ? ` (DC ${lvl.dc})` : ''}
+                </button>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* Condition flat checks (#262) — stupefied cast / grabbed-manipulate, plus
+          a flagged concealed/hidden target. The player rolls a raw d20 per check;
+          a failed check loses the action (cost still spent). Confirm stays
+          disabled until each is entered. */}
       {flatChecks.length > 0 && (
         <>
           <hr className="ct-divider" />
