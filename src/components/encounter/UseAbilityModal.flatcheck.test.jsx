@@ -67,6 +67,7 @@ const props = { isOpen: true, onClose: vi.fn(), character, themeColor: '#0af' };
 
 const spell = { name: 'Electric Arc', actions: 'Two Actions', traits: ['Concentrate', 'Manipulate'] };
 const manipulateAction = { name: 'Administer a Potion', actions: 'One Action', traits: ['Manipulate'] };
+const strike = { name: 'Longsword', actions: 'One Action', traits: ['Attack'] };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -128,5 +129,47 @@ describe('UseAbilityModal — condition flat checks (#262)', () => {
     mockConditions = [{ id: 'grabbed' }];
     render(<UseAbilityModal {...props} verb="Use" ability={{ name: 'Step', actions: 'One Action', traits: ['Move'] }} />);
     expect(screen.queryByText('Flat Check')).not.toBeInTheDocument();
+  });
+
+  describe('target concealment (#262)', () => {
+    it('shows the concealment selector on attacks but not on non-attacks', () => {
+      const { unmount } = render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
+      expect(screen.getByText('Target Concealment')).toBeInTheDocument();
+      unmount();
+      render(<UseAbilityModal {...props} verb="Use" ability={manipulateAction} />);
+      expect(screen.queryByText('Target Concealment')).not.toBeInTheDocument();
+    });
+
+    it('defaults to None — no flat check, confirm enabled', () => {
+      render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
+      expect(screen.queryByText('Flat Check')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('confirm-cast')).toBeEnabled();
+    });
+
+    it('picking Hidden injects a DC 11 flat check and gates confirm', () => {
+      render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Hidden (DC 11)' }));
+      expect(screen.getByText('Hidden target — DC 11')).toBeInTheDocument();
+      expect(screen.getByLabelText('confirm-cast')).toBeDisabled();
+    });
+
+    it('a failed concealment check spends the cost, logs the lost attack, and skips resolution', () => {
+      render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Concealed (DC 5)' }));
+      fireEvent.change(screen.getByLabelText('Concealed target flat check d20'), { target: { value: '3' } });
+      expect(screen.getByText(/Fail — the attack is lost/)).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(mockSpendActions).toHaveBeenCalledWith(1, 'Use Longsword');
+      expect(lastTexts().some((t) => /Concealed target flat check failed \(DC 5: rolled 3\); the attack is lost/.test(t))).toBe(true);
+    });
+
+    it('a passing concealment check resolves normally', () => {
+      render(<UseAbilityModal {...props} verb="Use" ability={strike} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Concealed (DC 5)' }));
+      fireEvent.change(screen.getByLabelText('Concealed target flat check d20'), { target: { value: '12' } });
+      expect(screen.getByText('Pass')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('confirm-cast'));
+      expect(lastTexts().some((t) => /flat check failed/.test(t))).toBe(false);
+    });
   });
 });

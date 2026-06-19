@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { requiredFlatChecks, flatCheckPasses } from './flatChecks';
+import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from './flatChecks';
 
 const spell = { name: 'Electric Arc', traits: ['Cantrip', 'Concentrate', 'Electricity', 'Manipulate'] };
 const verbalSpell = { name: 'Bless', traits: ['Concentrate'] }; // no Manipulate
@@ -62,6 +62,25 @@ describe('requiredFlatChecks (#262)', () => {
     const checks = requiredFlatChecks(spell, [{ id: 'stupefied', value: 1 }, { id: 'grabbed' }], { isCast: true });
     expect(checks.map((c) => c.id)).toEqual(['stupefied', 'grabbed']);
     expect(checks.map((c) => c.dc)).toEqual([6, 5]);
+  });
+});
+
+describe('concealmentFlatCheck (#262)', () => {
+  it('returns null for none / unknown levels', () => {
+    expect(concealmentFlatCheck('none')).toBeNull();
+    expect(concealmentFlatCheck('bogus')).toBeNull();
+    expect(concealmentFlatCheck(undefined)).toBeNull();
+  });
+
+  it('maps concealed → DC 5 and hidden → DC 11, attack lost on failure', () => {
+    expect(concealmentFlatCheck('concealed')).toMatchObject({ id: 'concealed', dc: 5, label: 'Concealed target', fail: 'the attack is lost' });
+    expect(concealmentFlatCheck('hidden')).toMatchObject({ id: 'hidden', dc: 11, label: 'Hidden target', fail: 'the attack is lost' });
+  });
+
+  it('exposes the picker levels with their DCs', () => {
+    expect(CONCEALMENT_LEVELS.map((l) => [l.id, l.dc])).toEqual([
+      ['none', null], ['concealed', 5], ['hidden', 11],
+    ]);
   });
 });
 
