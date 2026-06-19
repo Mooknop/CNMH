@@ -292,6 +292,22 @@
   line-height: 1;
 }
 
+/* Conditional ('vs X') effect modifiers — shown beneath the save number (#338) */
+.defense-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  color: var(--shell-text-secondary, var(--color-theme));
+}
+
+.defense-hint-src {
+  opacity: 0.7;
+}
+
 /* ── Proficiencies ─────────────────────────────────────── */
 .proficiency-items {
   display: grid;

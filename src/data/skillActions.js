@@ -38,6 +38,7 @@
 //   availableTo 'all' for basic actions everyone has; future entries gate per
 //               character (feat-granted)
 import { hasFeat } from '../utils/CharacterUtils';
+import { conditionalModifiersFor } from '../utils/EffectUtils';
 
 export const SKILL_ACTIONS = [
   {
@@ -221,17 +222,51 @@ export function skillActionFeatAugments(character, action) {
 }
 
 /**
- * Immutably layer a character's feat augments onto a base skill action so the
+ * Conditional ('vs X') effect modifiers that target the skill(s) this action
+ * could roll, mapped to the SkillActionModal toggle shape so the player can opt
+ * the bonus/penalty in for the roll it applies to (#338). Unconditional skill
+ * effects already net into the roll profile, so only `vs`-scoped ones surface
+ * here. React-free; reads the character's active effects + the effect catalog.
+ *
+ * @param {object} action       a SKILL_ACTIONS entry
+ * @param {Array}  effects       active effects (cnmh_effects_<id>)
+ * @param {Array}  [effectCatalog] effect catalog (defaults to PF2E_EFFECTS)
+ * @returns {Array<{ id, label, bonus }>}
+ */
+export function effectConditionalToggles(action, effects, effectCatalog) {
+  if (!action || !effects || !effects.length) return [];
+  const skills = [action.skill, ...(action.skillOptions || [])].filter(Boolean);
+  const toggles = [];
+  const seen = new Set();
+  for (const skill of skills) {
+    for (const m of conditionalModifiersFor(effects, skill, effectCatalog)) {
+      const id = `effect-${m.label}-${m.vs}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      toggles.push({ id, label: `${m.label} (vs ${m.vs})`, bonus: m.amount });
+    }
+  }
+  return toggles;
+}
+
+/**
+ * Immutably layer a character's feat augments (and, when its active effects are
+ * supplied, conditional effect-modifier toggles) onto a base skill action so the
  * SkillActionModal can render the extra toggles/hints. Returns the action
  * unchanged when there's nothing to add.
+ *
+ * @param {object} character
+ * @param {object} action
+ * @param {{ effects?: Array, effectCatalog?: Array }} [opts]
  */
-export function augmentSkillAction(character, action) {
+export function augmentSkillAction(character, action, opts = {}) {
   if (!action) return action;
   const { toggles, hints } = skillActionFeatAugments(character, action);
-  if (!toggles.length && !hints.length) return action;
+  const effectToggles = effectConditionalToggles(action, opts.effects, opts.effectCatalog);
+  if (!toggles.length && !hints.length && !effectToggles.length) return action;
   return {
     ...action,
-    toggles: [...(action.toggles || []), ...toggles],
+    toggles: [...(action.toggles || []), ...toggles, ...effectToggles],
     hints: [...(action.hints || []), ...hints],
   };
 }

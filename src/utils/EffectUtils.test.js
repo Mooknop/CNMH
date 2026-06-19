@@ -1,6 +1,7 @@
 import {
   computeEffectBonuses,
   combineModifiers,
+  conditionalModifiersFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
 } from './EffectUtils';
@@ -231,6 +232,94 @@ describe('computeEffectBonuses', () => {
     it('the empty-effects result includes skill keys', () => {
       const result = computeEffectBonuses([], skillCat);
       expect(result.deception).toEqual({ total: 0, sources: [] });
+    });
+  });
+
+  describe('negative amounts / penalties (#338)', () => {
+    const penaltyCat = [
+      { id: 'drakeheart', name: 'Drakeheart Mutagen', modifiers: [
+        { stat: 'ac', kind: 'status', amount: 5 },
+        { stat: 'will', kind: 'status', amount: -1 },
+        { stat: 'reflex', kind: 'status', amount: -1 },
+      ] },
+      // A status bonus that should net against a status penalty of the same kind.
+      { id: 'guidance', name: 'Guidance', modifiers: [{ stat: 'will', kind: 'circumstance', amount: 1 }] },
+      { id: 'sap', name: 'Sapping Curse', modifiers: [{ stat: 'will', kind: 'status', amount: -2 }] },
+    ];
+
+    it('nets a flat negative modifier onto the stat', () => {
+      const result = computeEffectBonuses([entry('drakeheart')], penaltyCat);
+      expect(result.will.total).toBe(-1);
+      expect(result.reflex.total).toBe(-1);
+      expect(result.ac.total).toBe(5);
+    });
+
+    it('records the penalty source with a negative penalty field', () => {
+      const result = computeEffectBonuses([entry('drakeheart')], penaltyCat);
+      expect(result.will.sources).toEqual([{ label: 'Drakeheart Mutagen', penalty: -1 }]);
+    });
+
+    it('worst penalty of a kind wins (like the bonus best-of-kind rule)', () => {
+      const result = computeEffectBonuses([entry('drakeheart'), entry('sap')], penaltyCat);
+      // both are status will penalties: -1 and -2 → only the -2 applies
+      expect(result.will.total).toBe(-2);
+      expect(result.will.sources).toEqual([{ label: 'Sapping Curse', penalty: -2 }]);
+    });
+
+    it('a same-stat bonus and penalty of different kinds both apply and net', () => {
+      const result = computeEffectBonuses([entry('drakeheart'), entry('guidance')], penaltyCat);
+      // -1 status (Drakeheart) + +1 circumstance (Guidance) = 0, two sources
+      expect(result.will.total).toBe(0);
+      expect(result.will.sources).toHaveLength(2);
+    });
+  });
+
+  describe('conditional "vs" modifiers (#338)', () => {
+    const condCat = [
+      { id: 'antidote', name: 'Antidote', modifiers: [{ stat: 'fort', kind: 'item', amount: 2, vs: 'poison' }] },
+      { id: 'eld-charged', name: 'Charged', modifiers: [
+        { stat: 'reflex', kind: 'status', amount: -2, vs: 'electricity' },
+        { stat: 'will', kind: 'status', amount: -2, vs: 'electricity' },
+        { stat: 'fort', kind: 'status', amount: -2, vs: 'electricity' },
+      ] },
+      { id: 'gecko-climb', name: 'Gecko Potion', modifiers: [{ stat: 'athletics', kind: 'item', amount: 1, vs: 'Climb' }] },
+    ];
+
+    it('does NOT net a conditional modifier into the always-on stat total', () => {
+      const result = computeEffectBonuses([entry('antidote')], condCat);
+      expect(result.fort.total).toBe(0);
+      expect(result.fort.sources).toHaveLength(0);
+    });
+
+    it('collects the conditional modifier in _conditional keyed by stat', () => {
+      const result = computeEffectBonuses([entry('antidote')], condCat);
+      expect(result._conditional.fort).toEqual([
+        { amount: 2, kind: 'item', label: 'Antidote', vs: 'poison' },
+      ]);
+    });
+
+    it('conditionalModifiersFor returns the modifiers for a stat', () => {
+      const mods = conditionalModifiersFor([entry('eld-charged')], 'reflex', condCat);
+      expect(mods).toEqual([{ amount: -2, kind: 'status', label: 'Charged', vs: 'electricity' }]);
+    });
+
+    it('conditionalModifiersFor returns [] when none target the stat', () => {
+      expect(conditionalModifiersFor([entry('antidote')], 'will', condCat)).toEqual([]);
+      expect(conditionalModifiersFor([], 'fort', condCat)).toEqual([]);
+    });
+
+    it('a conditional skill modifier surfaces under that skill', () => {
+      const mods = conditionalModifiersFor([entry('gecko-climb')], 'athletics', condCat);
+      expect(mods[0].vs).toBe('Climb');
+      expect(mods[0].amount).toBe(1);
+    });
+  });
+
+  describe('existing positive/unconditional effects are unaffected (#338 regression)', () => {
+    it('an unconditional positive effect nets exactly as before', () => {
+      const result = computeEffectBonuses([entry('heroism-1'), entry('aid')], catalog);
+      expect(result.meleeAttack.total).toBe(3);
+      expect(result._conditional).toEqual({});
     });
   });
 });

@@ -33,12 +33,27 @@ const BONUS_KEYS = [...STAT_KEYS, ...SKILL_KEYS];
 const EMPTY = { total: 0, sources: [] };
 
 function bestOfKind(candidates) {
-  // candidates: Array of { amount, label }
-  // Returns { total: +N, sources: [{ label, bonus: N }] } for the best (highest)
-  const active = candidates.filter((c) => c.amount > 0);
-  if (!active.length) return EMPTY;
-  const best = active.reduce((a, b) => (b.amount > a.amount ? b : a));
-  return { total: best.amount, sources: [{ label: best.label, bonus: best.amount }] };
+  // candidates: Array of { amount, label }  (amount may be negative — #338)
+  // PF2e: per bonus type only the highest *bonus* applies, and only the worst
+  // *penalty* applies — but a bonus and a penalty of the same type both apply
+  // and net. So pick the best positive and the worst negative and sum them.
+  const bonuses   = candidates.filter((c) => c.amount > 0);
+  const penalties = candidates.filter((c) => c.amount < 0);
+  if (!bonuses.length && !penalties.length) return EMPTY;
+
+  const sources = [];
+  let total = 0;
+  if (bonuses.length) {
+    const best = bonuses.reduce((a, b) => (b.amount > a.amount ? b : a));
+    total += best.amount;
+    sources.push({ label: best.label, bonus: best.amount });
+  }
+  if (penalties.length) {
+    const worst = penalties.reduce((a, b) => (b.amount < a.amount ? b : a));
+    total += worst.amount;
+    sources.push({ label: worst.label, penalty: worst.amount });
+  }
+  return { total, sources };
 }
 
 function combineBonus(...parts) {
@@ -57,7 +72,8 @@ function combineBonus(...parts) {
  */
 export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
   if (!activeEffects || activeEffects.length === 0) {
-    return Object.fromEntries(BONUS_KEYS.map((k) => [k, EMPTY]));
+    const empties = Object.fromEntries(BONUS_KEYS.map((k) => [k, EMPTY]));
+    return { ...empties, _conditional: {} };
   }
 
   // Build per-stat, per-kind candidate lists
@@ -65,6 +81,11 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
   for (const stat of BONUS_KEYS) {
     buckets[stat] = { status: [], circumstance: [], item: [] };
   }
+  // Conditional ('vs X') modifiers are NOT netted into the always-on total —
+  // the app can't know a roll's context (e.g. saving "vs poison"). They're
+  // collected per stat so consumers can surface them as a hint or roll-time
+  // toggle (#338). Shape: { [stat]: [{ amount, kind, label, vs }] }.
+  const conditional = {};
 
   for (const entry of activeEffects) {
     const def = catalog.find((e) => e.id === entry.effectId);
@@ -76,12 +97,16 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
       const targets = mod.stat === 'skills' ? SKILL_KEYS : [mod.stat];
       for (const stat of targets) {
         if (!buckets[stat]) continue;
-        buckets[stat][kind].push({ amount: mod.amount, label });
+        if (mod.vs) {
+          (conditional[stat] ||= []).push({ amount: mod.amount, kind, label, vs: mod.vs });
+        } else {
+          buckets[stat][kind].push({ amount: mod.amount, label });
+        }
       }
     }
   }
 
-  const result = {};
+  const result = { _conditional: conditional };
   for (const stat of BONUS_KEYS) {
     const b = buckets[stat];
     result[stat] = combineBonus(
@@ -91,6 +116,21 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
     );
   }
   return result;
+}
+
+/**
+ * Conditional ('vs X') effect modifiers targeting a given stat/skill, for
+ * consumers that surface them as a hint (saves) or a roll-time toggle (skills).
+ * Returns [] when none. Safe to call with the raw effects array (#338).
+ *
+ * @param {Array}  activeEffects - from useEffects(charId).effects
+ * @param {string} stat          - stat or skill id (e.g. 'fort', 'athletics')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {Array<{ amount, kind, label, vs }>}
+ */
+export function conditionalModifiersFor(activeEffects, stat, catalog = PF2E_EFFECTS) {
+  const { _conditional } = computeEffectBonuses(activeEffects, catalog);
+  return _conditional[stat] || [];
 }
 
 /**

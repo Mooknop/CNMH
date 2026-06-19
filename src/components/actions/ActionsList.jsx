@@ -14,6 +14,8 @@ import FamiliarModal from '../character-sheet/FamiliarModal';
 import UseConsumableModal from '../inventory/UseConsumableModal';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { consumableMeta } from '../../utils/consumables';
+import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -45,6 +47,10 @@ const ActionsList = ({ character, characterColor }) => {
     || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
   const { grantedActions, removeGrantedAction } = useGrantedActions(character.id);
   const { enter: enterStance } = useStance(character.id);
+  // Active effects + catalog feed conditional ('vs X') effect-modifier toggles
+  // onto skill actions (#338) — surfaced as opt-in checkboxes in SkillActionModal.
+  const { effects: activeEffects } = useEffects(character.id);
+  const { effects: effectCatalog } = useContent();
   // A focused ally (#429) pre-targets the support resolvers (Battle Medicine / Treat Wounds).
   const { focusAlly } = useFocusTarget(character.id);
 
@@ -230,7 +236,7 @@ const ActionsList = ({ character, characterColor }) => {
               <button
                 className="btn-encounter-use"
                 aria-label={`Use ${sa.name}`}
-                onClick={() => setSkillAction(augmentSkillAction(character, sa))}
+                onClick={() => setSkillAction(augmentSkillAction(character, sa, { effects: activeEffects, effectCatalog }))}
               >
                 Use ({sa.actionCost} act)
               </button>
