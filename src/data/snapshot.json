@@ -9893,14 +9893,28 @@
     {
       "id": "antidote",
       "name": "Antidote",
-      "description": "+2 item bonus to Fortitude saves against poisons (Lesser; Moderate antidote is +3). The bonus is conditional ('vs poison') and is not netted automatically — applied as a tracked reminder. Lasts 6 hours.",
-      "modifiers": []
+      "description": "+2 item bonus to Fortitude saves against poisons (Lesser; Moderate antidote is +3). The bonus is conditional ('vs poison'), so it is shown as a reminder beneath the Fortitude save rather than netted into the always-on number. Lasts 6 hours.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 2,
+          "vs": "poison"
+        }
+      ]
     },
     {
       "id": "antiplague",
       "name": "Antiplague",
-      "description": "+2 item bonus to Fortitude saves against diseases (Lesser; Moderate antiplague is +3), including the daily save against a disease's progression. The bonus is conditional ('vs disease') and is not netted automatically — applied as a tracked reminder. Lasts 24 hours.",
-      "modifiers": []
+      "description": "+2 item bonus to Fortitude saves against diseases (Lesser; Moderate antiplague is +3), including the daily save against a disease's progression. The bonus is conditional ('vs disease'), so it is shown as a reminder beneath the Fortitude save rather than netted into the always-on number. Lasts 24 hours.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 2,
+          "vs": "disease"
+        }
+      ]
     },
     {
       "id": "avoid-notice-hidden",
@@ -9975,7 +9989,7 @@
     {
       "id": "drakeheart-mutagen",
       "name": "Drakeheart Mutagen (Moderate)",
-      "description": "+5 item bonus to AC and +2 item bonus to Perception. Drawbacks are not modeled: a Dexterity cap of +2, and a −1 penalty to Will saves, Reflex saves, and Recall Knowledge skill checks. You can burn the remaining duration to Stride twice (1 action).",
+      "description": "+5 item bonus to AC and +2 item bonus to Perception, with a −1 item penalty to Will and Reflex saves (now netted). Still not modeled: the Dexterity cap of +2 (see issue #507) and the −1 penalty to Recall Knowledge checks. You can burn the remaining duration to Stride twice (1 action).",
       "modifiers": [
         {
           "stat": "ac",
@@ -9986,6 +10000,16 @@
           "stat": "perception",
           "kind": "item",
           "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": -1
         }
       ]
     },
@@ -10004,8 +10028,29 @@
     {
       "id": "eld-charged",
       "name": "Charged (Eld)",
-      "description": "Off-guard against attacks that deal electricity damage and −2 to saves against electric effects. Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.",
-      "modifiers": []
+      "description": "Off-guard against attacks that deal electricity damage (still descriptive — no AC-vs-type surface) and −2 to saves against electric effects (now shown as a reminder beneath each save). Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": -2,
+          "vs": "electricity"
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": -2,
+          "vs": "electricity"
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": -2,
+          "vs": "electricity"
+        }
+      ],
+      "encounterScoped": true,
+      "clearOnDamageType": "electricity"
     },
     {
       "id": "eld-rust-cloud",
