@@ -16,6 +16,7 @@ devices.
 | `targeting.js` | Combat-action targeting: resolve entry ids → set Foundry user targets; off-guard annotation for flanking melee strikes. |
 | `flanking.js` | Pure geometry — `computeFlanking` (no Foundry globals). |
 | `flankingPush.js` | Hooks into token-move / turn-advance to push flanked state to the app. |
+| `positions.js` | Hooks into token-move / combat lifecycle to push each combatant's grid cell to the app (range-increment measurement). |
 | `pf2eAdapter.js` | **The seam.** Every Foundry / canvas / actor / combat / PF2e API call. |
 | `utils.js` | Echo-loop guard flags, condition-slug map, log ids. |
 | `config.js` | Per-campaign config (worker URL, secret, actor/token maps). |
@@ -49,6 +50,8 @@ from it.
 | `action` | app → bridge | charId | `{ kind:'strike'\|'spell'\|'save-effect', sourceUid, targets:[entryId], ts }` — sets Foundry's user target set; bridge annotates each target with `offGuard:true` if attacker is a flanker |
 | `applyeffect` | app → bridge | charId | `{ ref, op:'apply', targets:[entryId], source, ts }` — bridge clones the compendium effect item onto each target actor (apply-only; removal is Foundry's own concern) |
 | `flanked` | bridge → app | `global` | `{ [enemyEntryId]: { byCharIds:[charId,...] } }` — pushed on token-move and turn-advance |
+| `positions` | bridge → app | `global` | `{ gridSize, positions: { [entryId]: { col, row } } }` — each combatant's current grid cell; pushed on token-move and combat lifecycle, empty when no combat. App measures attacker→target distance for ranged range increments (#527) |
+| `positionsreq` | app → bridge | `global` | _(no payload)_ — request a fresh `positions` push (reconnect / resolver open) |
 
 ## Tests
 
