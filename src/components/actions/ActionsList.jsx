@@ -7,6 +7,7 @@ import TreatWoundsModal from '../encounter/TreatWoundsModal';
 import HuntPreyModal from '../encounter/HuntPreyModal';
 import SkillActionModal from '../encounter/SkillActionModal';
 import MoveActionSheet from '../encounter/MoveActionSheet';
+import ExploitVulnerabilityModal from '../encounter/ExploitVulnerabilityModal';
 import EncounterDoors from '../encounter/EncounterDoors';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import FamiliarModal from '../character-sheet/FamiliarModal';
@@ -32,6 +33,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [familiarOpen, setFamiliarOpen] = useState(false); // Command → familiar command surface (#391)
   const [moveAction, setMoveAction] = useState(null); // { moveType } while the movement sheet is open (#415), else null
   const [consumable, setConsumable] = useState(null); // { item, actionCost } while the consumable sheet is open (#428), else null
+  const [exploitOpen, setExploitOpen] = useState(false); // Exploit Vulnerability slide-up (#454)
 
   const { encounter, appendLog } = useEncounter();
   const { spendActions, spendReaction } = useTurnState(character.id);
@@ -269,6 +271,24 @@ const ActionsList = ({ character, characterColor }) => {
         </div>
       )}
 
+      {/* Exploit Vulnerability (#454) — Thaumaturge-only. Tap a foe in the
+          initiative strip to pre-target, then open the slide-up roll panel. */}
+      {encounterMode && flags.isThaumaturge && (
+        <div className="granted-actions-section" aria-label="Exploit Vulnerability">
+          <h3 className="granted-actions-title">Thaumaturge</h3>
+          <div className="granted-action-row">
+            <span className="granted-action-name">Exploit Vulnerability</span>
+            <button
+              className="btn-encounter-use"
+              aria-label="Exploit Vulnerability"
+              onClick={() => setExploitOpen(true)}
+            >
+              Use (1 act)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Interact: open/close a door in reach (#435) — self-hides when none nearby. */}
       {encounterMode && (
         <EncounterDoors charId={character.id} characterName={character.name} />
@@ -363,6 +383,15 @@ const ActionsList = ({ character, characterColor }) => {
           moveType={moveAction.moveType}
           themeColor={themeColor}
           onClose={() => setMoveAction(null)}
+        />
+      )}
+
+      {exploitOpen && (
+        <ExploitVulnerabilityModal
+          isOpen
+          onClose={() => setExploitOpen(false)}
+          character={character}
+          themeColor={themeColor}
         />
       )}
 

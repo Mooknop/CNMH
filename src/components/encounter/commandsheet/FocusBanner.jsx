@@ -7,6 +7,7 @@
 import React from 'react';
 import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useRecallKnowledge } from '../../../hooks/useRecallKnowledge';
+import { useExploitVulnerability } from '../../../hooks/useExploitVulnerability';
 import { useSyncedState } from '../../../hooks/useSyncedState';
 import { defenseDC } from '../../../utils/defense';
 import { hydrateConditions } from '../../../data/pf2eConditions';
@@ -25,6 +26,7 @@ const SAVE_LABEL = { fortitude: 'Fort', reflex: 'Ref', will: 'Will' };
 const FocusBanner = ({ charId }) => {
   const { focusEnemy, focusAlly } = useFocusTarget(charId);
   const { recordFor } = useRecallKnowledge();
+  const { exploitFor } = useExploitVulnerability();
   // Ally state (read unconditionally to keep hook order stable; keys are inert
   // when no ally is focused).
   const allyId = focusAlly?.charId || 'none';
@@ -98,6 +100,16 @@ const FocusBanner = ({ charId }) => {
     ? (defenses?.weaknesses || [])
     : (defenses?.weaknesses || []).filter((w) => rec.weaknessesRevealed?.[w.type]);
 
+  // Active Exploit Vulnerability (#454) — the persistent "which foe have I
+  // exploited" signal. Matches the acting character's exploit to this foe.
+  const exploit = exploitFor(charId);
+  const activeExploit = exploit?.targetEntryId === rkKeyFor(focusEnemy) ? exploit : null;
+  const exploitText = activeExploit
+    ? activeExploit.type === 'mortal'
+      ? `Mortal Weakness ${activeExploit.weaknessType} ${activeExploit.value}`
+      : `Personal Antithesis ${activeExploit.value}`
+    : null;
+
   return (
     <div className="cmd-focus" role="region" aria-label={`Focused: ${name}`}>
       <span className="cmd-focus-name">{name}</span>
@@ -117,6 +129,12 @@ const FocusBanner = ({ charId }) => {
           <span className="cmd-focus-weak-values">
             {weaknessList.map((w) => `${w.type} ${w.value}`).join(', ')}
           </span>
+        </div>
+      )}
+      {exploitText && (
+        <div className="cmd-focus-weak cmd-focus-exploit" data-testid="cmd-focus-exploit">
+          <span className="cmd-focus-stat-label">Exploited</span>
+          <span className="cmd-focus-weak-values">{exploitText}</span>
         </div>
       )}
     </div>

@@ -64,3 +64,13 @@
   font-size: var(--text-sm);
   color: var(--color-success, var(--accent-text));
 }
+
+/* Active Exploit Vulnerability (#454) — distinct from a plain weakness reveal. */
+.cmd-focus-exploit .cmd-focus-stat-label {
+  color: var(--color-theme, var(--color-primary));
+}
+
+.cmd-focus-exploit .cmd-focus-weak-values {
+  color: var(--color-theme, var(--color-primary));
+  font-weight: 600;
+}

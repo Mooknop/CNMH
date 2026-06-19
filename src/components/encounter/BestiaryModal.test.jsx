@@ -18,15 +18,6 @@ vi.mock('./RecallKnowledgeResolver', () => {
   return { default: RecallKnowledgeResolver };
 });
 
-vi.mock('./ExploitVulnerabilityResolver', () => {
-  const ExploitVulnerabilityResolver = ({ onDone }) => (
-    <div data-testid="evr-stub">
-      <button onClick={onDone}>Cancel</button>
-    </div>
-  );
-  return { default: ExploitVulnerabilityResolver };
-});
-
 // ── Mutable hook state ────────────────────────────────────────────────────────
 
 let mockRecord = {};
@@ -67,14 +58,9 @@ vi.mock('../../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ loading: false, isGm: mockIsGm, email: null }),
 }));
 
-// Acting character — non-Thaumaturge by default.
-let mockCharFlags = { isThaumaturge: false };
 let mockMonsters = [];
 vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: [], monsters: mockMonsters }),
-}));
-vi.mock('../../hooks/useCharacter', () => ({
-  useCharacter: () => ({ flags: mockCharFlags }),
 }));
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -150,7 +136,6 @@ beforeEach(() => {
   mockRecord = {};
   mockExploit = {};
   mockIsGm   = false;
-  mockCharFlags = { isThaumaturge: false };
   mockMonsters = [];
   mockClearLock.mockClear();
 });
@@ -202,9 +187,10 @@ describe('BestiaryModal — default redacted state', () => {
     expect(btn).not.toBeDisabled();
   });
 
-  test('Exploit Vulnerability button is NOT shown for non-Thaumaturge', () => {
+  test('Exploit Vulnerability trigger is no longer in the Bestiary modal (#454)', () => {
     renderModal({ enemies: [goblin] });
     expect(screen.queryByTestId('bm-ev-btn')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Exploit Vulnerability/i })).not.toBeInTheDocument();
   });
 
   test('list item name is redacted', () => {
@@ -436,37 +422,6 @@ describe('BestiaryModal — after critical success (identity + AC + fortitude)',
   test('RK DC box is shown (level 1 common → 15)', () => {
     renderModal({ enemies: [goblin] });
     expect(screen.getByTestId('bm-rk-dc')).toHaveTextContent('15');
-  });
-});
-
-// ── Exploit Vulnerability button (Thaumaturge only) ──────────────────────────
-
-describe('BestiaryModal — Exploit Vulnerability button', () => {
-  test('EV button shown for Thaumaturge', () => {
-    mockCharFlags = { isThaumaturge: true };
-    renderModal({ enemies: [goblin] });
-    expect(screen.getByTestId('bm-ev-btn')).toBeInTheDocument();
-  });
-
-  test('EV button not shown for non-Thaumaturge', () => {
-    mockCharFlags = { isThaumaturge: false };
-    renderModal({ enemies: [goblin] });
-    expect(screen.queryByTestId('bm-ev-btn')).not.toBeInTheDocument();
-  });
-
-  test('clicking EV button opens the EV resolver stub', () => {
-    mockCharFlags = { isThaumaturge: true };
-    renderModal({ enemies: [goblin] });
-    fireEvent.click(screen.getByTestId('bm-ev-btn'));
-    expect(screen.getByTestId('evr-stub')).toBeInTheDocument();
-  });
-
-  test('EV resolver cancel hides the resolver', () => {
-    mockCharFlags = { isThaumaturge: true };
-    renderModal({ enemies: [goblin] });
-    fireEvent.click(screen.getByTestId('bm-ev-btn'));
-    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
-    expect(screen.queryByTestId('evr-stub')).not.toBeInTheDocument();
   });
 });
 
