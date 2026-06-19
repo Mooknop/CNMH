@@ -175,14 +175,17 @@ describe('InventoryTab', () => {
   it('shows the encumbered warning and an amber bar when over the threshold', () => {
     const { container } = render(<InventoryTab character={{ id: 'enc' }} characterColor="#7E8C9A" />);
     expect(screen.getByText(/^Encumbered:/)).toBeInTheDocument();
-    expect(container.querySelector('.bulk-progress-bar')).toHaveStyle('background-color: var(--color-warning)');
+    // Assert the inline CSS variable directly: happy-dom doesn't surface an
+    // unresolved var() through toHaveStyle (getComputedStyle), but preserves it
+    // on element.style — which is what we actually set.
+    expect(container.querySelector('.bulk-progress-bar').style.backgroundColor).toBe('var(--color-warning)');
   });
 
   it('shows the overencumbered warning and a danger bar when over the limit', () => {
     const { container } = render(<InventoryTab character={{ id: 'over' }} characterColor="#7E8C9A" />);
     expect(screen.getByText(/^Overencumbered:/)).toBeInTheDocument();
     expect(container.querySelector('.bulk-warning.severe')).toBeInTheDocument();
-    expect(container.querySelector('.bulk-progress-bar')).toHaveStyle('background-color: var(--color-danger)');
+    expect(container.querySelector('.bulk-progress-bar').style.backgroundColor).toBe('var(--color-danger)');
   });
 
   // #217: consumable-tagged items honor the consumed overlay like scrolls do.

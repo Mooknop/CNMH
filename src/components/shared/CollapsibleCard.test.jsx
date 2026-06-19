@@ -69,7 +69,7 @@ describe('CollapsibleCard', () => {
     );
     
     const card = container.querySelector('.collapsible-card');
-    expect(card).toHaveStyle('background-color: rgb(240, 240, 240)');
+    expect(card).toHaveStyle('background-color: #f0f0f0');
     expect(card).toHaveStyle('padding: 10px');
   });
 

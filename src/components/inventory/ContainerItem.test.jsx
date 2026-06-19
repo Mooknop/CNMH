@@ -80,13 +80,15 @@ describe('ContainerItem', () => {
   it('progress bar uses danger color when percentFull >= 100', () => {
     calculateContainerBulk.mockReturnValue({ contentsBulk: 4, percentFull: 100 });
     const { container } = render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={vi.fn()} />);
-    expect(container.querySelector('.container-bulk-bar')).toHaveStyle('background-color: var(--color-danger)');
+    // happy-dom keeps an unresolved var() on element.style but not through
+    // toHaveStyle's computed-style path, so assert the inline value directly.
+    expect(container.querySelector('.container-bulk-bar').style.backgroundColor).toBe('var(--color-danger)');
   });
 
   it('progress bar uses warning color when percentFull >= 75 and < 100', () => {
     calculateContainerBulk.mockReturnValue({ contentsBulk: 3, percentFull: 80 });
     const { container } = render(<ContainerItem container={makeContainer()} themeColor="#4a90d9" onItemClick={vi.fn()} />);
-    expect(container.querySelector('.container-bulk-bar')).toHaveStyle('background-color: var(--color-warning)');
+    expect(container.querySelector('.container-bulk-bar').style.backgroundColor).toBe('var(--color-warning)');
   });
 
   it('progress bar uses themeColor when percentFull < 75', () => {
