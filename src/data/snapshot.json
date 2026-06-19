@@ -8531,7 +8531,7 @@
           "type": "ranged",
           "action": 1,
           "damage": "1d8",
-          "range": "30ft",
+          "range": "100 feet",
           "traits": [
             "Attack",
             "Deadly D10",
