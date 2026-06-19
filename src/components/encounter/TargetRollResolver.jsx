@@ -25,6 +25,18 @@ function degreeLabels(defense) {
   return defense === 'ac' ? DEGREE_LABELS_AC : DEGREE_LABELS_SAVE;
 }
 
+// 1→st, 2→nd, 3→rd, 4→th — for "2nd increment" labels (#530).
+function ordinalSuffix(n) {
+  const t = n % 100;
+  if (t >= 11 && t <= 13) return 'th';
+  switch (n % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
+}
+
 // Authored degree-text maps (ability.degrees) key on the rulebook headings.
 const DEGREE_TEXT_KEYS = {
   criticalSuccess: 'Critical Success',
@@ -53,6 +65,10 @@ const DEGREE_TEXT_KEYS = {
  *                                      (#274) — sourced from the actor's conditional effect
  *                                      modifiers on the rolled attack stat; player flips the
  *                                      ones that apply (e.g. "Limned target (vs limned target) +1")
+ * @param {Object}      [rangeByEntry] - per-target range-increment result keyed by entryId
+ *                                      (#530): { feet, increments, penalty, beyondMaxRange }.
+ *                                      The penalty is auto-applied to that target's total; a
+ *                                      target beyond max range shows "Out of range" and no degree.
  * @param {object}      ref           - forwarded ref; exposes { getResults() }
  */
 const TargetRollResolver = forwardRef(({
@@ -62,6 +78,7 @@ const TargetRollResolver = forwardRef(({
   damage = null,
   degrees = null,
   toggles = [],
+  rangeByEntry = null,
 }, ref) => {
   const [d20Input,       setD20Input]       = useState('');
   const [defenseOverride, setDefenseOverride] = useState('ac');
@@ -106,8 +123,14 @@ const TargetRollResolver = forwardRef(({
     if (!hasD20) return null;
     return enemyTargets.map((entry) => {
       const dc = defenseDC(entry.defenses, effectiveDefense);
-      const degree = dc != null
-        ? computeSaveDegree({ d20: d20face, total, dc })
+      // Per-target range increment (#530): out of range blocks the degree; an
+      // in-range penalty lowers this target's total only.
+      const range = rangeByEntry?.[entry.entryId] || null;
+      const outOfRange = !!range?.beyondMaxRange;
+      const rangePenalty = range && !outOfRange ? range.penalty : 0;
+      const entryTotal = total + rangePenalty;
+      const degree = (dc != null && !outOfRange)
+        ? computeSaveDegree({ d20: d20face, total: entryTotal, dc })
         : null;
       const dmg = damage
         ? computeTargetDamage({
@@ -120,8 +143,9 @@ const TargetRollResolver = forwardRef(({
           })
         : null;
       return {
-        entryId: entry.entryId, name: entry.name, dc, total, degree, damage: dmg,
+        entryId: entry.entryId, name: entry.name, dc, total: entryTotal, degree, damage: dmg,
         ...(adjust !== 0 ? { adjust, adjustSources } : {}),
+        ...(range ? { range, outOfRange } : {}),
       };
     });
   };
@@ -231,12 +255,22 @@ const TargetRollResolver = forwardRef(({
                 {r.dc != null && (
                   <span className="trr-result-dc">{DEFENSE_LABELS[effectiveDefense]} {r.dc}</span>
                 )}
-                {info ? (
+                {r.outOfRange ? (
+                  <span className="trr-out-of-range">Out of range</span>
+                ) : info ? (
                   <span className="trr-result-degree">{info.label}</span>
                 ) : (
                   <span className="trr-no-dc">no DC available</span>
                 )}
-                {degreeText && (
+                {r.range && (
+                  <span className="trr-range-note">
+                    {r.range.feet} ft
+                    {r.range.increments > 1 && !r.outOfRange
+                      ? ` · ${r.range.increments}${ordinalSuffix(r.range.increments)} increment ${r.range.penalty}`
+                      : ''}
+                  </span>
+                )}
+                {degreeText && !r.outOfRange && (
                   <span className="trr-degree-text">{degreeText}</span>
                 )}
               </div>
