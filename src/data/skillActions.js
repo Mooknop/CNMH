@@ -12,7 +12,9 @@
 //   name        display label
 //   skill       skill id whose modifier the roll uses
 //   skillOptions optional list of skill ids the player chooses among (Escape:
-//               Athletics or Acrobatics); the modal defaults to the higher one
+//               Athletics or Acrobatics); the special id 'unarmed' rolls the
+//               unarmed-attack modifier instead of a skill. The modal defaults
+//               to whichever option has the higher modifier
 //   actionCost  actions spent on use
 //   traits      PF2e traits; the 'Attack' trait makes the action participate in
 //               the Multiple Attack Penalty (read + advance) like a strike
@@ -72,6 +74,25 @@ export const SKILL_ACTIONS = [
     outcomes: {
       criticalSuccess: { note: 'Pinpoint the creature (undetected → observed, hidden → observed)' },
       success:         { note: 'Locate the creature (undetected → hidden)' },
+    },
+    availableTo: 'all',
+  },
+  // Tumble Through (#349) — Acrobatics vs the creature's Reflex DC to move
+  // through its space. Move trait, not Attack → no MAP. Movement-only: there's
+  // no condition to apply, so the outcomes are GM/movement notes. Critical
+  // results collapse to their non-critical counterparts per RAW.
+  {
+    id: 'tumble-through',
+    name: 'Tumble Through',
+    skill: 'acrobatics',
+    actionCost: 1,
+    traits: ['Move'],
+    defense: 'reflex',
+    outcomes: {
+      criticalSuccess: { note: 'Move through the creature\'s space' },
+      success:         { note: 'Move through the creature\'s space (treat its square as difficult terrain)' },
+      failure:         { note: 'Movement ends; you can\'t move through the space' },
+      criticalFailure: { note: 'Movement ends; you can\'t move through the space' },
     },
     availableTo: 'all',
   },
@@ -151,13 +172,13 @@ export const SKILL_ACTIONS = [
   },
   // Escape (#260 slice 3) — self-targeted: shed grabbed/restrained/immobilized.
   // Has the Attack trait, so it reads + advances MAP. The DC is the binding
-  // effect's (the grabber's), entered by the GM. Athletics or Acrobatics (the
-  // unarmed-attack option is #349).
+  // effect's (the grabber's), entered by the GM. Athletics, Acrobatics, or the
+  // unarmed-attack modifier (#349).
   {
     id: 'escape',
     name: 'Escape',
     skill: 'athletics',
-    skillOptions: ['athletics', 'acrobatics'],
+    skillOptions: ['athletics', 'acrobatics', 'unarmed'],
     actionCost: 1,
     traits: ['Attack'],
     defense: null,
