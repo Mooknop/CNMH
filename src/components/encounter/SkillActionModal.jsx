@@ -13,7 +13,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useSession } from '../../contexts/SessionContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { computeSaveDegree } from '../../utils/saveDegree';
-import { getSkillModifier } from '../../utils/CharacterUtils';
+import { getSkillModifier, getUnarmedAttackModifier } from '../../utils/CharacterUtils';
 import { defenseDC, DEFENSE_LABELS } from '../../utils/defense';
 import { immunityConfigFor } from '../../utils/immunity';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
@@ -91,14 +91,19 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   );
 
   // Skill choice — actions with skillOptions (Escape) let the player pick; we
-  // default to whichever option has the higher modifier for this character.
+  // default to whichever option has the higher modifier for this character. The
+  // special 'unarmed' option rolls the unarmed-attack modifier (#349) rather
+  // than a skill.
   const skillOptions = action?.skillOptions || null;
+  const optionModifier = (opt) =>
+    opt === 'unarmed' ? getUnarmedAttackModifier(character) : getSkillModifier(character, opt);
   const defaultSkill = useMemo(() => {
     if (!skillOptions || !character) return action?.skill;
     return skillOptions.reduce(
-      (best, s) => (getSkillModifier(character, s) > getSkillModifier(character, best) ? s : best),
+      (best, s) => (optionModifier(s) > optionModifier(best) ? s : best),
       skillOptions[0]
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [skillOptions, character, action]);
   const activeSkill = pickedSkill || defaultSkill;
 
@@ -107,7 +112,11 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   // MAP block applies to Attack-trait actions exactly like a strike.
   const rollProfile = useMemo(() => {
     if (!character || !characterModel || !action) return null;
-    const synthetic = { traits: action.traits, roll: { type: 'skill', skill: activeSkill } };
+    // 'unarmed' resolves through the strike path (attackMod → melee nets + MAP);
+    // every other option is a skill roll.
+    const synthetic = activeSkill === 'unarmed'
+      ? { traits: action.traits, type: 'melee', attackMod: getUnarmedAttackModifier(character) }
+      : { traits: action.traits, roll: { type: 'skill', skill: activeSkill } };
     return resolveActionRoll(synthetic, character, {
       conditions: activeConditions || [],
       effects: effects || [],

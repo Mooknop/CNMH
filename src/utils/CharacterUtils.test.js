@@ -11,6 +11,7 @@ import {
   getItemBonus,
   getSkillModifier,
   getAttackBonus,
+  getUnarmedAttackModifier,
   calculateBulkLimit,
   calculateClassDC,
   getClassDC,
@@ -245,6 +246,25 @@ describe('CharacterUtils', () => {
 
     it('handles negative ability modifiers', () => {
       expect(getAttackBonus(-1, 1, 1)).toBe('+2'); // -1 + 3 = 2
+    });
+  });
+
+  describe('getUnarmedAttackModifier', () => {
+    it('sums Str mod and unarmed proficiency for the level', () => {
+      const char = {
+        level: 1,
+        abilities: { strength: 18 }, // +4
+        proficiencies: { weapons: { unarmed: { proficiency: 1 } } }, // trained → 2+1
+      };
+      expect(getUnarmedAttackModifier(char)).toBe(7); // +4 + 3
+    });
+
+    it('defaults to Str +0 untrained when proficiency/abilities are absent', () => {
+      expect(getUnarmedAttackModifier({ level: 1 })).toBe(0);
+    });
+
+    it('returns 0 for a null character', () => {
+      expect(getUnarmedAttackModifier(null)).toBe(0);
     });
   });
 

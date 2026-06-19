@@ -212,6 +212,20 @@ export const getAttackBonus = (abilityMod, proficiency, level) => {
 };
 
 /**
+ * Unarmed-strike attack modifier (Str mod + unarmed proficiency). Mirrors the
+ * fallback unarmed strike in strikeUtils — used by skill actions that allow an
+ * unarmed-attack option in place of a skill (Escape, #349).
+ * @param {Object} character
+ * @returns {number}
+ */
+export const getUnarmedAttackModifier = (character) => {
+  if (!character) return 0;
+  const unarmedProficiency = character.proficiencies?.weapons?.unarmed?.proficiency || 0;
+  const strMod = getAbilityModifier(character.abilities?.strength || 10);
+  return getAttackBonusValue(strMod, unarmedProficiency, character.level || 0);
+};
+
+/**
  * Utility functions for inventory and bulk calculations
  */
 

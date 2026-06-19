@@ -32,6 +32,7 @@ vi.mock('../../hooks/useEnemyEffects', () => ({ useEnemyEffects: vi.fn() }));
 vi.mock('../../utils/rollResolution', () => ({ resolveActionRoll: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getSkillModifier: (_c, s) => ({ athletics: 8, acrobatics: 5 }[s] ?? 0),
+  getUnarmedAttackModifier: () => 9,
   hasFeat: (c, name) => (c?.feats || []).some((f) => f.name?.toLowerCase() === name.toLowerCase()),
 }));
 vi.mock('../../utils/gameTime', () => ({ toGameSeconds: () => 1000 }));
@@ -224,6 +225,25 @@ describe('SkillActionModal (Athletics maneuvers)', () => {
   });
 });
 
+describe('SkillActionModal (Tumble Through, #349)', () => {
+  const tumble = getSkillAction('tumble-through');
+
+  it('rolls Acrobatics vs the enemy Reflex DC, logs the move note, and never advances MAP', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={tumble} character={character} />);
+    pickGoblin(); // Reflex DC 14
+    expect(screen.queryByText('Multiple attack penalty')).not.toBeInTheDocument();
+    // d20 10 + 5 = 15 ≥ 14 → success
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    expect(screen.getByText(/Success — Move through the creature's space/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Use Tumble Through/ }));
+    expect(applyCondition).not.toHaveBeenCalled();
+    expect(recordAttack).not.toHaveBeenCalled();
+    expect(appendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.stringContaining('Move through the creature') })
+    );
+  });
+});
+
 describe('SkillActionModal (Feint)', () => {
   const feint = getSkillAction('feint');
 
@@ -258,11 +278,30 @@ describe('SkillActionModal (Feint)', () => {
 describe('SkillActionModal (Escape)', () => {
   const escape = getSkillAction('escape');
 
-  it('is self-targeted: no enemy picker, with a skill choice', () => {
+  it('is self-targeted: no enemy picker, with a skill choice including Unarmed (#349)', () => {
     render(<SkillActionModal isOpen onClose={() => {}} action={escape} character={character} />);
     expect(screen.queryByRole('button', { name: 'Goblin' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Athletics' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Acrobatics' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Unarmed' })).toBeInTheDocument();
+  });
+
+  it('defaults to the highest-modifier option (Unarmed +9) and rolls it via the strike path (#349)', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={escape} character={character} />);
+    // Unarmed (9) beats Athletics (8) and Acrobatics (5) → it is the default,
+    // resolved through the strike path (attackMod + type, not a skill roll).
+    expect(resolveActionRoll).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'melee', attackMod: 9 }),
+      character,
+      expect.objectContaining({ mapStep: 0 }),
+    );
+    // Switching to a skill option resolves through the skill path instead.
+    fireEvent.click(screen.getByRole('button', { name: 'Athletics' }));
+    expect(resolveActionRoll).toHaveBeenCalledWith(
+      expect.objectContaining({ roll: { type: 'skill', skill: 'athletics' } }),
+      character,
+      expect.anything(),
+    );
   });
 
   it('success sheds grabbed from the acting PC and advances MAP', () => {

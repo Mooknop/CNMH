@@ -82,12 +82,28 @@ describe('skillActions registry', () => {
     });
   });
 
+  describe('Tumble Through (#349)', () => {
+    it('is a 1-action Acrobatics Move action vs Reflex with note-only outcomes', () => {
+      const t = getSkillAction('tumble-through');
+      expect(t).toBeTruthy();
+      expect(t.skill).toBe('acrobatics');
+      expect(t.actionCost).toBe(1);
+      expect(t.defense).toBe('reflex');
+      expect(t.traits).toContain('Move');
+      expect(t.traits).not.toContain('Attack'); // no MAP
+      expect(t.outcomes.success.note).toBeTruthy();
+      expect(t.outcomes.failure.note).toBeTruthy();
+      expect(t.outcomes.success.condition).toBeUndefined();
+    });
+  });
+
   describe('Escape', () => {
     it('is a self-targeted Attack action with a skill choice and no preset DC', () => {
       const e = getSkillAction('escape');
       expect(e.selfTarget).toBe(true);
       expect(e.traits).toContain('Attack');
-      expect(e.skillOptions).toEqual(['athletics', 'acrobatics']);
+      // Athletics, Acrobatics, or the unarmed-attack modifier (#349).
+      expect(e.skillOptions).toEqual(['athletics', 'acrobatics', 'unarmed']);
       expect(e.defense).toBeNull();
     });
 
