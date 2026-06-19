@@ -28,6 +28,12 @@ export const SKILL_KEYS = [
   'society', 'stealth', 'survival', 'thievery',
 ];
 
+// The three attack-roll stats. A modifier with `stat: 'attacks'` fans out to all
+// of them (mirrors the `'skills'` meta-stat, #274) so a bonus that applies to
+// every attack roll — e.g. Limned's "+1 to attack rolls vs the limned target" —
+// is authored once instead of three times.
+export const ATTACK_KEYS = ['meleeAttack', 'rangedAttack', 'spellAttack'];
+
 const BONUS_KEYS = [...STAT_KEYS, ...SKILL_KEYS];
 
 const EMPTY = { total: 0, sources: [] };
@@ -93,8 +99,10 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
     const label = def.name;
     for (const mod of def.modifiers) {
       const kind = mod.kind === 'status' || mod.kind === 'circumstance' ? mod.kind : 'item';
-      // 'skills' fans out to every skill bucket; otherwise target one stat/skill.
-      const targets = mod.stat === 'skills' ? SKILL_KEYS : [mod.stat];
+      // 'skills'/'attacks' fan out to every skill/attack bucket; otherwise target one stat.
+      const targets = mod.stat === 'skills' ? SKILL_KEYS
+        : mod.stat === 'attacks' ? ATTACK_KEYS
+        : [mod.stat];
       for (const stat of targets) {
         if (!buckets[stat]) continue;
         if (mod.vs) {
@@ -131,6 +139,25 @@ export function computeEffectBonuses(activeEffects, catalog = PF2E_EFFECTS) {
 export function conditionalModifiersFor(activeEffects, stat, catalog = PF2E_EFFECTS) {
   const { _conditional } = computeEffectBonuses(activeEffects, catalog);
   return _conditional[stat] || [];
+}
+
+/**
+ * Conditional ('vs X') effect modifiers for a stat, shaped as opt-in roll-time
+ * toggle line items `[{ id, label, bonus }]` for SkillActionModal (#338) and the
+ * attack/spell resolvers (#274). Stable id from label+vs so toggle state survives
+ * re-renders. Shared by both surfaces to keep one mapping.
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {string} stat          - stat/skill id (e.g. 'meleeAttack', 'athletics')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {Array<{ id, label, bonus }>}
+ */
+export function conditionalTogglesFor(activeEffects, stat, catalog = PF2E_EFFECTS) {
+  return conditionalModifiersFor(activeEffects, stat, catalog).map((m) => ({
+    id: `effect-${m.label}-${m.vs}`,
+    label: `${m.label} (vs ${m.vs})`,
+    bonus: m.amount,
+  }));
 }
 
 /**

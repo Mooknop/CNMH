@@ -11,7 +11,7 @@ vi.mock('./TargetRollResolver', () => {
   const { forwardRef, useImperativeHandle } = require('react');
   const React = require('react');
   return {
-    default: forwardRef(({ enemyTargets, rollBonus, damage, degrees }, ref) => {
+    default: forwardRef(({ enemyTargets, rollBonus, damage, degrees, toggles }, ref) => {
       const target = enemyTargets[0];
       useImperativeHandle(ref, () => ({
         getResults: () =>
@@ -24,6 +24,7 @@ vi.mock('./TargetRollResolver', () => {
         'data-target': target?.name,
         'data-damage': damage ? damage.expression : '',
         'data-degrees': degrees ? 'yes' : '',
+        'data-toggles': (toggles || []).map((t) => t.id).join(','),
       }, `bonus=${rollBonus}`);
     }),
   };
@@ -85,6 +86,14 @@ describe('MultiRayResolver', () => {
     for (const resolver of screen.getAllByTestId('resolver')) {
       expect(resolver).toHaveAttribute('data-damage', '2d6');
       expect(resolver).toHaveAttribute('data-degrees', 'yes');
+    }
+  });
+
+  it('forwards the conditional toggles to every ray, so each row toggles independently (#274)', () => {
+    const toggles = [{ id: 'effect-Limned-limned target', label: 'Limned (vs limned target)', bonus: 1 }];
+    render(<MultiRayResolver rayCount={3} enemyTargets={targets} rollBonus={9} toggles={toggles} />);
+    for (const resolver of screen.getAllByTestId('resolver')) {
+      expect(resolver).toHaveAttribute('data-toggles', 'effect-Limned-limned target');
     }
   });
 

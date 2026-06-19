@@ -144,6 +144,16 @@ describe('GmEffects', () => {
       expect(values).toContain('athletics');
     });
 
+    it("offers the 'attacks' meta-stat in the dropdown (#274)", () => {
+      setContent();
+      render(<GmEffects />);
+      selectEffect('Bless');
+      const form = screen.getByTestId('effect-form-bless');
+      const stat = within(form).getByLabelText('modifier-0-stat');
+      const values = within(stat).getAllByRole('option').map((o) => o.value);
+      expect(values).toContain('attacks');
+    });
+
     it('round-trips a skill-targeted negative modifier with a vs scope', async () => {
       setContent();
       saveDocument.mockResolvedValue({ ok: true });

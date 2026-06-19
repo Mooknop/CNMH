@@ -305,4 +305,66 @@ describe('TargetRollResolver', () => {
     enterD20(10);
     expect(ref.current.getResults()[0].damage).toBeNull();
   });
+
+  // ── situational bonus toggles (#274) ──────────────────────────────────────
+
+  const limnedToggle = [{ id: 'effect-Limned-limned target', label: 'Limned (vs limned target)', bonus: 1 }];
+
+  test('no toggle group rendered when toggles is empty', () => {
+    render(<TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={5} />);
+    expect(screen.queryByRole('group', { name: /situational bonuses/i })).toBeNull();
+  });
+
+  test('flipping a toggle adds its bonus and can shift Miss → Hit', () => {
+    render(
+      <TargetRollResolver
+        enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={4} toggles={limnedToggle}
+      />
+    );
+    enterD20(10); // 14 < AC 15 → Miss
+    expect(screen.getByText('Miss')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Limned \(vs limned target\)/ }));
+    // 14 + 1 = 15 = AC → Hit
+    expect(screen.getByText('Hit')).toBeInTheDocument();
+    expect(screen.getByLabelText(/computed total/i)).toHaveTextContent('= 15');
+    expect(screen.getByLabelText(/applied circumstance/i)).toHaveTextContent('incl. +1');
+  });
+
+  test('free-form circumstance adjusts the total', () => {
+    render(
+      <TargetRollResolver enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={4} />
+    );
+    enterD20(10); // 14 → Miss
+    fireEvent.change(screen.getByLabelText(/other circumstance/i), { target: { value: '2' } });
+    // 14 + 2 = 16 → Hit
+    expect(screen.getByText('Hit')).toBeInTheDocument();
+  });
+
+  test('getResults() carries the applied adjust + sources', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={4} toggles={limnedToggle}
+      />
+    );
+    enterD20(10);
+    fireEvent.click(screen.getByRole('button', { name: /Limned \(vs limned target\)/ }));
+    const r = ref.current.getResults()[0];
+    expect(r.total).toBe(15);
+    expect(r.adjust).toBe(1);
+    expect(r.adjustSources).toEqual(['Limned (vs limned target)']);
+  });
+
+  test('un-flipped toggle leaves the roll unchanged (no adjust on results)', () => {
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={4} toggles={limnedToggle}
+      />
+    );
+    enterD20(10);
+    const r = ref.current.getResults()[0];
+    expect(r.total).toBe(14);
+    expect(r.adjust).toBeUndefined();
+  });
 });
