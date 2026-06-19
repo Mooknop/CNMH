@@ -30,6 +30,7 @@ import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
 import { immunityConfigFor } from '../../utils/immunity';
+import { requiredFlatChecks, flatCheckPasses } from '../../utils/flatChecks';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { resolveActionRoll } from '../../utils/rollResolution';
@@ -165,6 +166,9 @@ const UseAbilityModal = ({
   // toggles, carried into the save request for GM-side per-degree resolution.
   const [saveDmgInput, setSaveDmgInput] = useState('');
   const [saveRiderState, setSaveRiderState] = useState({});
+
+  // Condition flat checks (#262): raw d20 per required check (keyed by condition id).
+  const [flatCheckRolls, setFlatCheckRolls] = useState({});
 
   // Persistent-damage tracking (#272) — confirm records per-target entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
@@ -465,9 +469,25 @@ const UseAbilityModal = ({
       + (ability.allyResistance.addLevel ? (character.level || 0) : 0)
     : null;
 
+  // Condition flat checks (#262): stupefied on a spell cast, grabbed/restrained
+  // on a Manipulate action. The player rolls a raw d20 per required check before
+  // the action resolves; a failed check loses the action (the cost is still
+  // spent). `isCast` is the spell-cast flow (verb "Cast").
+  const flatChecks = requiredFlatChecks(ability, activeConditions || [], {
+    isCast: effectiveVerb === 'cast',
+  });
+  const flatCheckResults = flatChecks.map((fc) => {
+    const raw = flatCheckRolls[fc.id];
+    const d20 = /^\d+$/.test(raw || '') ? parseInt(raw, 10) : null;
+    return { ...fc, d20, passed: d20 != null && flatCheckPasses(d20, fc.dc) };
+  });
+  const allFlatChecksRolled = flatCheckResults.every((r) => r.d20 != null);
+  const failedFlatCheck = flatCheckResults.find((r) => r.d20 != null && !r.passed) || null;
+
   const confirmEnabled =
     (!needsPicker || targets.length > 0)
-    && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk && omenGateOk;
+    && castGateOk && freqGateOk && immunityGateOk && auraGateOk && shieldGateOk && omenGateOk
+    && (flatChecks.length === 0 || allFlatChecksRolled);
 
   const charName = (charId) => characters.find((c) => c.id === charId)?.name || charId;
 
@@ -615,6 +635,26 @@ const UseAbilityModal = ({
         text:   `${character.name}'s ally gains resistance ${allyResistance} against the triggering damage (${ability.name})`,
       });
     }
+
+    // Condition flat check (#262): a failed stupefied / grabbed-manipulate check
+    // loses the action. The casting resource, frequency and action cost are still
+    // spent (handled above + below); resolution — effects, saves, damage, MAP —
+    // is skipped, and the loss is logged.
+    if (failedFlatCheck) {
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name} ${effectiveVerb} ${ability.name}${sourceSuffix} — ${failedFlatCheck.label} flat check failed (DC ${failedFlatCheck.dc}: rolled ${failedFlatCheck.d20}); ${failedFlatCheck.fail}`,
+      });
+      if (castCost === 'reaction') {
+        spendReaction(`${verb} ${ability.name}`);
+      } else if (typeof castCost === 'number' && castCost > 0) {
+        spendActions(castCost, `${verb} ${ability.name}`);
+      }
+      onClose();
+      return;
+    }
+
     let suffixLogged = false;
 
     // Entry IDs of enemies whose result has a degree (they get a dedicated log line).
@@ -1381,6 +1421,45 @@ const UseAbilityModal = ({
                 </label>
               </>
             )}
+          </section>
+        </>
+      )}
+
+      {/* Condition flat checks (#262) — stupefied cast / grabbed-manipulate.
+          The player rolls a raw d20 per check; a failed check loses the action
+          (cost still spent). Confirm stays disabled until each is entered. */}
+      {flatChecks.length > 0 && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Flat Check</h3>
+            {flatCheckResults.map((fc) => (
+              <div key={fc.id} className="uam-flatcheck-row">
+                <div className="uam-flatcheck-head">
+                  <span className="uam-flatcheck-label">{fc.label} — DC {fc.dc}</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    className="uam-flatcheck-input"
+                    aria-label={`${fc.label} flat check d20`}
+                    value={flatCheckRolls[fc.id] ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === '' || (/^\d+$/.test(v) && +v >= 1 && +v <= 20)) {
+                        setFlatCheckRolls((cur) => ({ ...cur, [fc.id]: v }));
+                      }
+                    }}
+                  />
+                  {fc.d20 != null && (
+                    <span className={`uam-flatcheck-result uam-flatcheck-result--${fc.passed ? 'pass' : 'fail'}`}>
+                      {fc.passed ? 'Pass' : `Fail — ${fc.fail}`}
+                    </span>
+                  )}
+                </div>
+                <p className="uam-flatcheck-hint">{fc.reason}</p>
+              </div>
+            ))}
           </section>
         </>
       )}
