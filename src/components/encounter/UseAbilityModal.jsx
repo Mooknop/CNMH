@@ -184,9 +184,10 @@ const UseAbilityModal = ({
   // increments. Request a fresh push when the modal opens so a stale snapshot
   // doesn't misjudge distance; degrades to no range gating when absent.
   const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const isRangedStrike = ability?.type === 'ranged';
   useEffect(() => {
-    if (isOpen) sendUpdate('global', 'positionsreq', { ts: Date.now() });
-  }, [isOpen, sendUpdate]);
+    if (isOpen && isRangedStrike) sendUpdate('global', 'positionsreq', { ts: Date.now() });
+  }, [isOpen, isRangedStrike, sendUpdate]);
 
   const order = encounter?.order || [];
 
@@ -427,7 +428,7 @@ const UseAbilityModal = ({
   // and compute the per-target increment penalty. A target beyond 4× the
   // increment is out of range and hard-blocks the Strike. Melee strikes, missing
   // positions, or an unparseable range all degrade to no gating.
-  const rangeIncrementFt = ability.type === 'ranged' ? parseRangeIncrement(ability.range) : null;
+  const rangeIncrementFt = isRangedStrike ? parseRangeIncrement(ability.range) : null;
   const positions = positionsState?.positions || null;
   const rangeFrom = rangeIncrementFt && positions ? positions[casterEntryId] : null;
   const rangeByEntry = {};
