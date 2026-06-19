@@ -40,6 +40,10 @@
 //               as checkboxes on the roll (#260 AC4). The hook #223/#226 hang
 //               feat bonuses on (Threat Display, Hunt Prey vs prey, Squox +2);
 //               the modal also always offers a free-form "+N" circumstance entry
+//   surfaces    contexts the action appears in: 'encounter' (the combat Actions
+//               list) and/or 'exploration' (the Explore tab). Absent ⇒
+//               ['encounter'], so every combat action stays combat-only; Track
+//               (#407) is ['exploration']
 //   availableTo 'all' for basic actions everyone has; future entries gate per
 //               character (feat-granted)
 import { hasFeat } from '../utils/CharacterUtils';
@@ -74,6 +78,27 @@ export const SKILL_ACTIONS = [
     outcomes: {
       criticalSuccess: { note: 'Pinpoint the creature (undetected → observed, hidden → observed)' },
       success:         { note: 'Locate the creature (undetected → hidden)' },
+    },
+    availableTo: 'all',
+  },
+  // Track (#407) — Survival to follow a trail. An exploration check (surfaces:
+  // ['exploration']), not a combat action: it rolls vs a GM-entered DC, applies
+  // no condition (outcomes are GM notes), and resolves standalone (selfTarget,
+  // no enemy picker). Hunt Prey layers the same +2-vs-prey toggle it gives Seek.
+  {
+    id: 'track',
+    name: 'Track',
+    skill: 'survival',
+    actionCost: 1,
+    traits: ['Concentrate', 'Exploration', 'Move'],
+    defense: null,
+    selfTarget: true,
+    surfaces: ['exploration'],
+    outcomes: {
+      criticalSuccess: { note: 'Follow the trail and learn the quarry\'s direction and pace' },
+      success:         { note: 'Follow the trail (attempt a new check at each obstacle or fork)' },
+      failure:         { note: 'Lose the trail; retry after 1 hour or by backtracking' },
+      criticalFailure: { note: 'Lose the trail and can\'t try again for 24 hours' },
     },
     availableTo: 'all',
   },
@@ -192,17 +217,23 @@ export const SKILL_ACTIONS = [
 ];
 
 /**
- * Skill actions available to a character in the current context.
- * Slice 1: every PC gets the 'all' basic actions (Demoralize is usable untrained,
- * so no proficiency gate). Feat-granted entries will filter on character data here.
+ * Skill actions available to a character in the current context. Every PC gets
+ * the 'all' basic actions (Demoralize is usable untrained, so no proficiency
+ * gate); the active surface ('encounter' vs 'exploration') filters by each
+ * action's `surfaces` (absent ⇒ encounter-only). Feat-granted entries will
+ * filter on character data here.
  *
  * @param {object} character        the acting PC (unused for 'all' entries today)
- * @param {{ encounterMode?: boolean }} [opts]
+ * @param {{ encounterMode?: boolean, explorationMode?: boolean }} [opts]
  * @returns {Array} matching skill-action entries
  */
-export function skillActionsFor(character, { encounterMode = false } = {}) {
-  if (!character || !encounterMode) return [];
-  return SKILL_ACTIONS.filter((a) => a.availableTo === 'all');
+export function skillActionsFor(character, { encounterMode = false, explorationMode = false } = {}) {
+  if (!character) return [];
+  const ctx = encounterMode ? 'encounter' : explorationMode ? 'exploration' : null;
+  if (!ctx) return [];
+  return SKILL_ACTIONS.filter(
+    (a) => a.availableTo === 'all' && (a.surfaces || ['encounter']).includes(ctx)
+  );
 }
 
 export const getSkillAction = (id) => SKILL_ACTIONS.find((a) => a.id === id) || null;
@@ -237,11 +268,12 @@ export function skillActionFeatAugments(character, action) {
     );
   }
 
-  // Hunt Prey: +2 circumstance to Seek your designated prey. Ranger Dedication
-  // grants the Hunt Prey action; the player flips the toggle when Seeking prey
-  // (the prey badge on the initiative list shows which enemy that is).
-  if (action.id === 'seek' && hasFeat(character, 'Ranger Dedication')) {
-    toggles.push({ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 });
+  // Hunt Prey: +2 circumstance to Seek *and* Track your designated prey (#407).
+  // Ranger Dedication grants the Hunt Prey action; the player flips the toggle
+  // when Seeking prey in combat or Tracking it in exploration (the prey badge on
+  // the initiative list shows which enemy that is).
+  if ((action.id === 'seek' || action.id === 'track') && hasFeat(character, 'Ranger Dedication')) {
+    toggles.push({ id: `hunt-prey-${action.id}`, label: 'Hunt Prey vs prey', bonus: 2 });
   }
 
   return { toggles, hints };

@@ -1,0 +1,172 @@
+/* SkillCheckModal — out-of-encounter skill action resolver (#407) */
+
+.scm-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.scm-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.scm-label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+/* Skill / circumstance pickers */
+.scm-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.scm-pick-btn {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.scm-pick-btn:hover {
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+.scm-pick-btn--active {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
+/* Feat/companion hints — informational reminders, no math. */
+.scm-hints {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.scm-hint {
+  margin: 0;
+  background: var(--surface-trigger);
+  border-left: 3px solid var(--gold-mid);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+  line-height: var(--leading-snug);
+}
+
+/* Net modifier */
+.scm-bonus-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.scm-bonus-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--shell-text-secondary);
+}
+
+.scm-bonus-value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+.scm-bonus-note {
+  font-size: var(--text-xs);
+  color: var(--shell-text-tertiary);
+}
+
+/* d20 + DC inputs */
+.scm-inputs {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.scm-input {
+  width: 4.5rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-2);
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-align: center;
+}
+
+.scm-input:focus {
+  outline: none;
+  border-color: var(--accent-outline);
+}
+
+/* Running total */
+.scm-total-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.scm-total-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.scm-total-value {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--shell-text-primary);
+}
+
+/* Degree of success */
+.scm-degree {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scm-degree--criticalSuccess { background: var(--d-crit-bg); color: var(--d-crit-fg); }
+.scm-degree--success         { background: var(--d-succ-bg); color: var(--d-succ-fg); }
+.scm-degree--failure         { background: var(--d-fail-bg); color: var(--d-fail-fg); }
+.scm-degree--criticalFailure { background: var(--d-cf-bg);   color: var(--d-cf-fg);   }
+
+/* Footer */
+.scm-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--shell-border);
+}

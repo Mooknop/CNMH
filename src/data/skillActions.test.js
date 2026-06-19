@@ -127,6 +127,21 @@ describe('skillActions registry', () => {
     });
   });
 
+  describe('Track (#407)', () => {
+    it('is an exploration-surface Survival check with a GM DC and note outcomes', () => {
+      const t = getSkillAction('track');
+      expect(t).toBeTruthy();
+      expect(t.skill).toBe('survival');
+      expect(t.defense).toBeNull();
+      expect(t.selfTarget).toBe(true);
+      expect(t.surfaces).toEqual(['exploration']);
+      expect(t.traits).not.toContain('Attack');
+      ['criticalSuccess', 'success', 'failure', 'criticalFailure'].forEach((d) =>
+        expect(t.outcomes[d].note).toBeTruthy()
+      );
+    });
+  });
+
   describe('skillActionFeatAugments (#223)', () => {
     const ranger = {
       name: 'Ashka',
@@ -147,6 +162,14 @@ describe('skillActions registry', () => {
       const { toggles, hints } = skillActionFeatAugments(ranger, getSkillAction('seek'));
       expect(hints).toEqual([]);
       expect(toggles).toEqual([{ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 }]);
+    });
+
+    it('adds a Hunt Prey +2 toggle to Track for a Ranger Dedication holder (#407)', () => {
+      const { toggles, hints } = skillActionFeatAugments(ranger, getSkillAction('track'));
+      expect(hints).toEqual([]);
+      expect(toggles).toEqual([{ id: 'hunt-prey-track', label: 'Hunt Prey vs prey', bonus: 2 }]);
+      // …and nothing for a PC without the feat.
+      expect(skillActionFeatAugments(plain, getSkillAction('track'))).toEqual({ toggles: [], hints: [] });
     });
 
     it('adds nothing for a PC without the feat/familiar', () => {
@@ -211,18 +234,27 @@ describe('skillActions registry', () => {
   describe('skillActionsFor', () => {
     const pc = { id: 'AshkaBGosh', name: 'Ashka' };
 
-    it('returns the basic actions for a PC in encounter mode', () => {
-      const actions = skillActionsFor(pc, { encounterMode: true });
-      expect(actions.map((a) => a.id)).toContain('demoralize');
+    it('returns the basic actions for a PC in encounter mode, excluding exploration-only ones', () => {
+      const ids = skillActionsFor(pc, { encounterMode: true }).map((a) => a.id);
+      expect(ids).toContain('demoralize');
+      expect(ids).not.toContain('track'); // exploration-only
     });
 
-    it('returns nothing outside an encounter', () => {
+    it('returns only exploration-surface actions in exploration mode (#407)', () => {
+      const ids = skillActionsFor(pc, { explorationMode: true }).map((a) => a.id);
+      expect(ids).toContain('track');
+      expect(ids).not.toContain('demoralize'); // encounter-only
+      expect(ids).not.toContain('seek');       // encounter-only
+    });
+
+    it('returns nothing with no active surface', () => {
       expect(skillActionsFor(pc, { encounterMode: false })).toEqual([]);
       expect(skillActionsFor(pc)).toEqual([]);
     });
 
     it('returns nothing without a character', () => {
       expect(skillActionsFor(null, { encounterMode: true })).toEqual([]);
+      expect(skillActionsFor(null, { explorationMode: true })).toEqual([]);
     });
   });
 });
