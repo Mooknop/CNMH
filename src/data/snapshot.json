@@ -8647,9 +8647,10 @@
       "name": "Oil of Weightlessness",
       "consumable": {
         "kind": "effect",
-        "effectId": "weightlessness",
+        "target": "item",
+        "label": "Weightless",
         "durationMinutes": 60,
-        "note": "Negligible Bulk (1 hr) — object-target stopgap, see #339"
+        "note": "Negligible Bulk (1 hr)"
       },
       "price": 6,
       "weight": 0.1,
@@ -10480,12 +10481,6 @@
       "id": "waterbreathing",
       "name": "Waterbreathing",
       "description": "You can breathe underwater. Lasts 1 hour.",
-      "modifiers": []
-    },
-    {
-      "id": "weightlessness",
-      "name": "Weightlessness",
-      "description": "The treated item (1 Bulk or less) has negligible Bulk. Applies to an object — tracked here as a reminder. Lasts 1 hour.",
       "modifiers": []
     }
   ],
