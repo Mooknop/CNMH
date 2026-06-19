@@ -104,6 +104,29 @@ describe('GmEncounter (read-only Foundry mirror)', () => {
     expect(screen.queryByText(/Round/)).toBeNull();
   });
 
+  it('Foundry-linked setup: renders the initiative panel listing expected PCs (#494)', () => {
+    act(() => {
+      __set('cnmh_encounter_global', {
+        ...FOUNDRY_ENCOUNTER,
+        phase: 'setup', round: 0, currentTurnIndex: 0,
+        order: [
+          { entryId: 'e1', kind: 'pc',    charId: 'Pellias', foundryActorId: 'Actor.aaa', name: 'Pellias',  initiative: null },
+          { entryId: 'e2', kind: 'enemy', foundryActorId: 'Actor.ccc', name: 'Goblin 1', initiative: null },
+        ],
+      });
+    });
+    render(<GmEncounter />);
+    expect(screen.getByLabelText('initiative-setup-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('init-status-Pellias')).toHaveTextContent('waiting');
+    expect(screen.getByLabelText('initiative-rolled-count')).toHaveTextContent('0 / 1 in');
+  });
+
+  it('does not render the initiative panel once in-progress', () => {
+    act(() => { __set('cnmh_encounter_global', FOUNDRY_ENCOUNTER); });
+    render(<GmEncounter />);
+    expect(screen.queryByLabelText('initiative-setup-panel')).toBeNull();
+  });
+
   it('no authoring controls rendered', () => {
     render(<GmEncounter />);
     expect(screen.queryByLabelText('start-encounter')).toBeNull();
