@@ -6,32 +6,37 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Three independent jobs (lint · unit · bridge) run in parallel instead of one
+# sequential job. Wall-clock is now the slowest single job (unit) rather than
+# their sum, and a lint failure surfaces in ~1min without waiting on the suite.
+# Each job pays its own `npm ci`, but the npm cache keeps that cheap and the
+# runners are separate, so it's parallel — not added — time.
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [24.x]
-
     steps:
       - uses: actions/checkout@v5
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24.x
           cache: 'npm'
+      - run: npm ci
+      - name: Lint (zero-warnings gate)
+        run: npm run lint
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests with coverage
-        run: npm run test:ci
-
-      - name: Run Foundry bridge tests with coverage
-        run: npm run test:bridge:ci
-
+  unit:
+    name: Unit tests (app)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: 'npm'
+      - run: npm ci
+      - name: Run app tests with coverage
+        # Lint runs in its own parallel job, so this is the lint-free unit script.
+        run: npm run test:unit:ci
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5
         if: always()
@@ -39,4 +44,25 @@ jobs:
           files: ./coverage/coverage-final.json
           flags: unittests
           name: codecov-umbrella
+          fail_ci_if_error: false
+
+  bridge:
+    name: Foundry bridge tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: 'npm'
+      - run: npm ci
+      - name: Run Foundry bridge tests with coverage
+        run: npm run test:bridge:ci
+      - name: Upload bridge coverage reports
+        uses: codecov/codecov-action@v5
+        if: always()
+        with:
+          files: ./foundry-bridge/coverage/coverage-final.json
+          flags: bridge
+          name: codecov-bridge
           fail_ci_if_error: false
