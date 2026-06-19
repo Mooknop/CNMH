@@ -80,6 +80,20 @@ describe('rangeIncrementResult', () => {
     expect(at(150).feet).toBe(150);
   });
 
+  it('waiveSecondIncrement (Hunt Prey) forgives the 2nd increment penalty', () => {
+    const prey = (feet, incrementFt = 100) =>
+      rangeIncrementResult({
+        from: { col: 0, row: 0 }, to: { col: feet / 5, row: 0 },
+        incrementFt, waiveSecondIncrement: true,
+      });
+    expect(prey(100)).toMatchObject({ increments: 1, penalty: 0, waived: false });
+    expect(prey(150)).toMatchObject({ increments: 2, penalty: 0, waived: true });   // 2nd ignored
+    expect(prey(250)).toMatchObject({ increments: 3, penalty: -2, waived: true });  // only 3rd
+    expect(prey(350)).toMatchObject({ increments: 4, penalty: -4, waived: true });
+    // The waiver doesn't extend max range — still out of range past 4×.
+    expect(prey(450)).toMatchObject({ increments: 5, beyondMaxRange: true });
+  });
+
   it('returns null without a valid increment or cells', () => {
     expect(rangeIncrementResult({ from: { col: 0, row: 0 }, to: { col: 1, row: 0 }, incrementFt: null })).toBeNull();
     expect(rangeIncrementResult({ from: { col: 0, row: 0 }, to: { col: 1, row: 0 }, incrementFt: 0 })).toBeNull();

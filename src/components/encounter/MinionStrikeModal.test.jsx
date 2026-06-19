@@ -162,4 +162,71 @@ describe('MinionStrikeModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
     expect(screen.queryByLabelText('Goblin is flanked')).not.toBeInTheDocument();
   });
+
+  // Hunt Prey inheritance (#408): a ranged companion Strike reads the owner's prey
+  // and the companion's own cell to apply (and waive vs prey) range increments.
+  const spit = { name: 'Acid Spit', proficiency: 1, type: 'ranged', range: '30 feet', damage: '1d6', traits: ['Attack'] };
+  const orderRanged = [
+    { entryId: 'e-zev', kind: 'enemy', name: 'Zevira', foundryActorId: 'fa-zev' },
+    { entryId: 'e-a',   kind: 'enemy', name: 'Goblin', defenses: { ac: 18 } },
+  ];
+  const minionLinks = { 'Ashka-companion': { foundryActorId: 'fa-zev', role: 'companion', ownerCharId: 'Ashka' } };
+
+  const renderRanged = ({ positions, huntprey }) => {
+    useEncounter.mockReturnValue({ encounter: { order: orderRanged, active: false, phase: 'idle' }, appendLog });
+    useTurnState.mockReturnValue({ turnState: { attacksMade: 0 }, recordAttack, spendActions });
+    const session = {
+      connected: true,
+      getState: (charId, type) => {
+        if (charId === 'global' && type === 'positions') return positions;
+        if (charId === 'global' && type === 'minionactors') return minionLinks;
+        if (charId === 'Ashka' && type === 'huntprey') return huntprey;
+        return undefined;
+      },
+      getAllState: () => ({}),
+      sendUpdate: vi.fn(),
+      subscribe: () => () => {},
+    };
+    return render(
+      <SessionContext.Provider value={session}>
+        <MinionStrikeModal
+          isOpen onClose={() => {}} strike={spit}
+          companionData={zevira} character={ashka} role="companion"
+        />
+      </SessionContext.Provider>
+    );
+  };
+
+  it('hard-blocks a ranged companion Strike against an out-of-range target', () => {
+    // Companion at (0,0), goblin 40 squares east = 200 ft; increment 30 → 7× → out of range.
+    renderRanged({
+      positions: { gridSize: 100, positions: { 'e-zev': { col: 0, row: 0 }, 'e-a': { col: 40, row: 0 } } },
+      huntprey: null,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    const confirm = screen.getByRole('button', { name: /out of range/i });
+    expect(confirm).toBeDisabled();
+  });
+
+  it('waives the 2nd increment for the companion against the owner’s prey', () => {
+    // Goblin 9 squares east = 45 ft; increment 30 → 2nd increment. Prey waives it.
+    renderRanged({
+      positions: { gridSize: 100, positions: { 'e-zev': { col: 0, row: 0 }, 'e-a': { col: 9, row: 0 } } },
+      huntprey: { targetKey: 'e-a', targetName: 'Goblin' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+    expect(screen.getByText(/Hunt Prey: 2nd increment ignored/)).toBeInTheDocument();
+  });
+
+  it('applies the 2nd-increment penalty when the target is not the prey', () => {
+    renderRanged({
+      positions: { gridSize: 100, positions: { 'e-zev': { col: 0, row: 0 }, 'e-a': { col: 9, row: 0 } } },
+      huntprey: null,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin' }));
+    fireEvent.change(screen.getByLabelText(/raw d20/i), { target: { value: '10' } });
+    expect(screen.getByText(/2nd increment -2/)).toBeInTheDocument();
+    expect(screen.queryByText(/Hunt Prey/)).not.toBeInTheDocument();
+  });
 });

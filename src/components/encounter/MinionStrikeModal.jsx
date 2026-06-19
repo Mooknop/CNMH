@@ -5,9 +5,13 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useTargeting } from '../../hooks/useTargeting';
 import { useTurnState } from '../../hooks/useTurnState';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useMinionActors } from '../../hooks/useMinionActors';
+import { useHuntPrey } from '../../hooks/useHuntPrey';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { buildDamageProfile, formatDamageBreakdown } from '../../utils/damage';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
+import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
+import { preyMatches } from '../../utils/huntPrey';
 import { minionStrikeAttackMod, minionStrikeDamage, minionTurnId } from '../../utils/minionUtils';
 import './MinionStrikeModal.css';
 
@@ -55,6 +59,18 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
   // Foundry. The action-economy epic (#391) is where this could feed roll math.
   const [flankedMap] = useSyncedState('cnmh_flanked_global', {});
 
+  // Hunt Prey inheritance (#408): a ranged companion Strike against the owner's
+  // designated prey ignores the second-range-increment penalty, just like the
+  // owner's own ranged Strikes. Resolve the companion's own combatant cell via
+  // its linked Foundry actor, then measure against the target.
+  const [positionsState] = useSyncedState('cnmh_positions_global', null);
+  const { prey } = useHuntPrey(ownerId);
+  const { linkFor } = useMinionActors();
+  const companionLink = linkFor(ownerId, role);
+  const companionEntry = companionLink
+    ? order.find((e) => e.foundryActorId === companionLink.foundryActorId)
+    : null;
+
   const [pickedId, setPickedId] = useState(null);
   const [mapOverride, setMapOverride] = useState(null);
   const [resolved, setResolved] = useState(null);
@@ -95,6 +111,23 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
     [enemyTargets, pickedId]
   );
   const resolverTargets = useMemo(() => (target ? [target] : []), [target]);
+
+  // Range increments (#408) — ranged companion Strike vs the target, waiving the
+  // 2nd increment against the owner's prey. Degrades to nothing for melee
+  // companions, missing positions, or an unparseable range.
+  const incrementFt = strike?.type === 'ranged' ? parseRangeIncrement(strike?.range) : null;
+  const positions = positionsState?.positions || null;
+  const rangeFrom = incrementFt && positions && companionEntry ? positions[companionEntry.entryId] : null;
+  const rangeByEntry = {};
+  if (rangeFrom && target) {
+    const to = positions[target.entryId];
+    if (to) rangeByEntry[target.entryId] = rangeIncrementResult({
+      from: rangeFrom, to, incrementFt,
+      waiveSecondIncrement: preyMatches(prey, target),
+    });
+  }
+  const hasRangeData = Object.keys(rangeByEntry).length > 0;
+  const targetOutOfRange = !!(target && rangeByEntry[target.entryId]?.beyondMaxRange);
 
   const isFlanking = !!(pickedId && flankedMap?.[pickedId]?.byCharIds?.includes(turnId));
 
@@ -193,6 +226,7 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
             targetDefense="ac"
             rollBonus={rollProfile.bonus}
             damage={damageProfile}
+            rangeByEntry={hasRangeData ? rangeByEntry : null}
           />
         )}
 
@@ -201,10 +235,13 @@ const MinionStrikeModal = ({ isOpen, onClose, strike, companionData, character, 
             type="button"
             className="btn-primary msm-confirm"
             onClick={handleConfirm}
-            disabled={!target || !!resolved || strikeBlocked}
-            title={strikeBlocked ? 'No granted actions left — Command an Animal first' : undefined}
+            disabled={!target || !!resolved || strikeBlocked || targetOutOfRange}
+            title={
+              strikeBlocked ? 'No granted actions left — Command an Animal first'
+                : targetOutOfRange ? 'Target is out of range' : undefined
+            }
           >
-            {resolved ? 'Resolved' : strikeBlocked ? 'No actions left' : 'Log strike'}
+            {resolved ? 'Resolved' : strikeBlocked ? 'No actions left' : targetOutOfRange ? 'Out of range' : 'Log strike'}
           </button>
         </div>
       </div>
