@@ -10048,7 +10048,9 @@
           "amount": -2,
           "vs": "electricity"
         }
-      ]
+      ],
+      "encounterScoped": true,
+      "clearOnDamageType": "electricity"
     },
     {
       "id": "eld-rust-cloud",
