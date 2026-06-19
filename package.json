@@ -42,6 +42,7 @@
     "lint": "eslint src --max-warnings 0",
     "test": "vitest",
     "test:ci": "npm run lint && vitest run --coverage --passWithNoTests",
+    "test:unit:ci": "vitest run --coverage --passWithNoTests",
     "test:bridge": "jest --config foundry-bridge/jest.config.js",
     "test:bridge:ci": "jest --config foundry-bridge/jest.config.js --ci --coverage",
     "test:e2e": "playwright test",
