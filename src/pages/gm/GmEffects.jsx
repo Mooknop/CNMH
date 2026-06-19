@@ -5,15 +5,20 @@ import { slugify, existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import PageEditorShell from '../../components/gm/PageEditorShell';
+import { SKILL_KEYS } from '../../utils/EffectUtils';
 import './gm.css';
 
 // Effect catalog editor. Shape mirrors src/data/pf2eEffects.js:
-//   id, name, description, modifiers: [{ stat, kind, amount }]
+//   id, name, description, modifiers: [{ stat, kind, amount, vs? }]
+// `amount` may be negative (penalties) and `vs` scopes the modifier to a
+// context (e.g. 'poison') — both #338.
 
 const STAT_OPTIONS = [
   'ac', 'fort', 'reflex', 'will',
   'meleeAttack', 'rangedAttack', 'spellAttack',
   'spellDC', 'classDC', 'perception', 'speed',
+  'skills', // fans out to every skill
+  ...SKILL_KEYS,
 ];
 
 const KIND_OPTIONS = ['status', 'circumstance', 'item'];
@@ -29,6 +34,7 @@ const toForm = (e) => {
           stat: m.stat || STAT_OPTIONS[0],
           kind: m.kind || KIND_OPTIONS[0],
           amount: m.amount != null ? String(m.amount) : '0',
+          vs: m.vs || '',
         }))
       : [],
   };
@@ -40,11 +46,16 @@ const fromForm = (f) => {
   if (!f.name.trim()) throw new Error('Effect name is required.');
   const modifiers = f.modifiers
     .filter((m) => m.stat)
-    .map((m) => ({
-      stat: m.stat,
-      kind: m.kind,
-      amount: parseFloat(m.amount) || 0,
-    }));
+    .map((m) => {
+      const mod = {
+        stat: m.stat,
+        kind: m.kind,
+        amount: parseFloat(m.amount) || 0,
+      };
+      const vs = (m.vs || '').trim();
+      if (vs) mod.vs = vs;
+      return mod;
+    });
   return {
     name: f.name.trim(),
     description: f.description.trim(),
@@ -68,7 +79,7 @@ const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const addMod = () =>
     setE((cur) => ({
       ...cur,
-      modifiers: [...cur.modifiers, { stat: STAT_OPTIONS[0], kind: KIND_OPTIONS[0], amount: '1' }],
+      modifiers: [...cur.modifiers, { stat: STAT_OPTIONS[0], kind: KIND_OPTIONS[0], amount: '1', vs: '' }],
     }));
   const rmMod = (i) =>
     setE((cur) => ({ ...cur, modifiers: cur.modifiers.filter((_, idx) => idx !== i) }));
@@ -168,6 +179,13 @@ const EffectForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
               type="number"
               value={m.amount}
               onChange={(ev) => setMod(i, { amount: ev.target.value })}
+            />
+            <input
+              aria-label={`modifier-${i}-vs`}
+              type="text"
+              placeholder="vs (e.g. poison) — optional"
+              value={m.vs}
+              onChange={(ev) => setMod(i, { vs: ev.target.value })}
             />
             <button className="btn-small btn-danger" onClick={() => rmMod(i)}>
               Remove

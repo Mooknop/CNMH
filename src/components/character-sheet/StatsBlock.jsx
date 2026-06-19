@@ -12,7 +12,7 @@ import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { characterHasKineticAura } from '../../utils/kineticAura';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
-import { computeEffectBonuses, combineModifiers } from '../../utils/EffectUtils';
+import { computeEffectBonuses, combineModifiers, conditionalModifiersFor } from '../../utils/EffectUtils';
 import { useEffects } from '../../hooks/useEffects';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
@@ -145,6 +145,23 @@ const StatsBlock = ({ character, characterColor }) => {
   const bonuses = computeEffectBonuses(effectsList, catalogList);
   const mod = (stat) => combineModifiers(effects[stat], bonuses[stat]);
 
+  // Conditional ('vs X') effect modifiers can't be netted into the always-on
+  // save number (the app doesn't know what a save is against), so surface them
+  // as a small note beneath the relevant save line (#338).
+  const renderConditionalHint = (stat) => {
+    const mods = conditionalModifiersFor(effectsList, stat, catalogList);
+    if (!mods.length) return null;
+    return (
+      <div className="defense-hint" role="note">
+        {mods.map((m, i) => (
+          <span key={i} className="defense-hint-item">
+            {formatModifier(m.amount)} vs {m.vs} <span className="defense-hint-src">({m.label})</span>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   // Helper: raw attack bonus as a number (no formatting) so PenaltyDisplay can apply the delta
   const attackNum = (abilityMod, proficiency) =>
     abilityMod + getProficiencyBonus(proficiency, level);
@@ -196,18 +213,21 @@ const StatsBlock = ({ character, characterColor }) => {
                 <div className="defense-value">
                   <PenaltyDisplay base={saves.fortitude} penalty={mod('fort')} format="modifier" />
                 </div>
+                {renderConditionalHint('fort')}
               </div>
               <div className="defense">
                 <div className="defense-name">Ref</div>
                 <div className="defense-value">
                   <PenaltyDisplay base={saves.reflex} penalty={mod('reflex')} format="modifier" />
                 </div>
+                {renderConditionalHint('reflex')}
               </div>
               <div className="defense">
                 <div className="defense-name">Will</div>
                 <div className="defense-value">
                   <PenaltyDisplay base={saves.will} penalty={mod('will')} format="modifier" />
                 </div>
+                {renderConditionalHint('will')}
               </div>
             </div>
           </>

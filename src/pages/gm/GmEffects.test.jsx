@@ -131,4 +131,44 @@ describe('GmEffects', () => {
     render(<GmEffects />);
     expect(screen.getByText('Showing 0 of 0')).toBeInTheDocument();
   });
+
+  describe('conditional / negative / skill modifiers (#338)', () => {
+    it('offers skill options in the stat dropdown', () => {
+      setContent();
+      render(<GmEffects />);
+      selectEffect('Bless');
+      const form = screen.getByTestId('effect-form-bless');
+      const stat = within(form).getByLabelText('modifier-0-stat');
+      const values = within(stat).getAllByRole('option').map((o) => o.value);
+      expect(values).toContain('skills');
+      expect(values).toContain('athletics');
+    });
+
+    it('round-trips a skill-targeted negative modifier with a vs scope', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmEffects />);
+      selectEffect('Bless');
+      const form = screen.getByTestId('effect-form-bless');
+      fireEvent.change(within(form).getByLabelText('modifier-0-stat'), { target: { value: 'will' } });
+      fireEvent.change(within(form).getByLabelText('modifier-0-amount'), { target: { value: '-2' } });
+      fireEvent.change(within(form).getByLabelText('modifier-0-vs'), { target: { value: 'electricity' } });
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const [, , data] = saveDocument.mock.calls[0];
+      expect(data.modifiers[0]).toEqual({ stat: 'will', kind: 'status', amount: -2, vs: 'electricity' });
+    });
+
+    it('omits an empty vs scope from the saved modifier', async () => {
+      setContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmEffects />);
+      selectEffect('Bless');
+      const form = screen.getByTestId('effect-form-bless');
+      fireEvent.click(within(form).getByRole('button', { name: 'Save' }));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const [, , data] = saveDocument.mock.calls[0];
+      expect(data.modifiers[0].vs).toBeUndefined();
+    });
+  });
 });

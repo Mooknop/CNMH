@@ -5,6 +5,7 @@ import {
   getSkillAction,
   skillActionFeatAugments,
   augmentSkillAction,
+  effectConditionalToggles,
 } from './skillActions';
 
 describe('skillActions registry', () => {
@@ -149,6 +150,44 @@ describe('skillActions registry', () => {
       expect(baseSeek.toggles).toBeUndefined(); // base untouched
       // No augments → same reference back.
       expect(augmentSkillAction(plain, baseSeek)).toBe(baseSeek);
+    });
+  });
+
+  describe('effectConditionalToggles (#338)', () => {
+    const cat = [
+      { id: 'climb-aid', name: 'Climbing Aid', modifiers: [{ stat: 'athletics', kind: 'item', amount: 1, vs: 'Climb' }] },
+      { id: 'plain-buff', name: 'Plain', modifiers: [{ stat: 'athletics', kind: 'status', amount: 2 }] },
+    ];
+    const effects = [{ id: 'e1', effectId: 'climb-aid' }, { id: 'e2', effectId: 'plain-buff' }];
+    const grapple = getSkillAction('grapple'); // athletics maneuver
+
+    it('maps a conditional skill modifier to a toggle for a matching action', () => {
+      const toggles = effectConditionalToggles(grapple, effects, cat);
+      expect(toggles).toEqual([{ id: 'effect-Climbing Aid-Climb', label: 'Climbing Aid (vs Climb)', bonus: 1 }]);
+    });
+
+    it('ignores unconditional skill modifiers (they already net into the roll)', () => {
+      const toggles = effectConditionalToggles(grapple, [{ id: 'e2', effectId: 'plain-buff' }], cat);
+      expect(toggles).toEqual([]);
+    });
+
+    it('returns [] for an action whose skill nothing targets', () => {
+      expect(effectConditionalToggles(getSkillAction('demoralize'), effects, cat)).toEqual([]);
+    });
+
+    it('returns [] when there are no active effects', () => {
+      expect(effectConditionalToggles(grapple, [], cat)).toEqual([]);
+      expect(effectConditionalToggles(grapple, undefined, cat)).toEqual([]);
+    });
+
+    it('augmentSkillAction merges effect toggles alongside feat toggles', () => {
+      const ranger = { name: 'A', feats: [{ name: 'Ranger Dedication' }] };
+      const aug = augmentSkillAction(ranger, getSkillAction('seek'), { effects, effectCatalog: cat });
+      // Seek rolls perception, not athletics → no effect toggle, only the feat one.
+      expect(aug.toggles).toEqual([{ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 }]);
+
+      const augG = augmentSkillAction(ranger, grapple, { effects, effectCatalog: cat });
+      expect(augG.toggles).toContainEqual({ id: 'effect-Climbing Aid-Climb', label: 'Climbing Aid (vs Climb)', bonus: 1 });
     });
   });
 

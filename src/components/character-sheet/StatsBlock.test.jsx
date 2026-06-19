@@ -62,10 +62,24 @@ vi.mock('../character-sheet/EnhancedSkillsList', () => ({
   }
 }));
 
+// Active effects + the effect catalog feed the conditional save-line hints (#338).
+// Default to empty so the rest of the suite (which relied on the defensive real
+// hooks returning nothing) is unaffected.
+const mockUseEffects = vi.fn(() => ({ effects: [], removeEffect: vi.fn() }));
+vi.mock('../../hooks/useEffects', () => ({
+  useEffects: (...args) => mockUseEffects(...args),
+}));
+const mockUseContent = vi.fn(() => ({ effects: [] }));
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: (...args) => mockUseContent(...args),
+}));
+
 describe('StatsBlock', () => {
   beforeEach(() => {
     localStorage.clear();
     mockUseCharacter.mockImplementation((character) => character ? defaultCharData : null);
+    mockUseEffects.mockReturnValue({ effects: [], removeEffect: vi.fn() });
+    mockUseContent.mockReturnValue({ effects: [] });
   });
 
   const mockCharacter = {
@@ -459,6 +473,26 @@ describe('StatsBlock', () => {
       fireEvent.click(screen.getByLabelText('Dismiss kinetic aura'));
       expect(screen.getByText('Inactive')).toBeInTheDocument();
       expect(screen.queryByText('◈ Active')).toBeNull();
+    });
+  });
+
+  describe('conditional effect modifier hints on saves (#338)', () => {
+    it('shows a "vs" hint under the relevant save without changing the netted number', () => {
+      mockUseEffects.mockReturnValue({ effects: [{ id: 'e1', effectId: 'antidote' }], removeEffect: vi.fn() });
+      mockUseContent.mockReturnValue({
+        effects: [{ id: 'antidote', name: 'Antidote', modifiers: [{ stat: 'fort', kind: 'item', amount: 2, vs: 'poison' }] }],
+      });
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      // Hint text appears…
+      expect(screen.getByText(/vs poison/)).toBeInTheDocument();
+      expect(screen.getByText(/Antidote/)).toBeInTheDocument();
+      // …and the Reflex/Will lines get no spurious hint.
+      expect(screen.queryByText(/vs electricity/)).toBeNull();
+    });
+
+    it('shows no hint when there are no conditional modifiers', () => {
+      render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.queryByText(/ vs /)).toBeNull();
     });
   });
 });
