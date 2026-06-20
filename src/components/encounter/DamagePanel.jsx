@@ -1,5 +1,5 @@
 import React from 'react';
-import { riderEnabled, formatDamageBreakdown } from '../../utils/damage';
+import { riderEnabled, formatDamageBreakdown, damageHintParts } from '../../utils/damage';
 import './DamagePanel.css';
 
 /**
@@ -38,15 +38,17 @@ const DamagePanel = ({
   if (!profile || (!isSave && hitResults.length === 0)) return null;
 
   const anyCrit = hitResults.some((r) => r.degree === 'criticalSuccess');
+  const hintParts = damageHintParts(profile, riderState);
 
   return (
     <div className="dmg-panel">
       <div className="dmg-hint-row">
         <span className="dmg-hint-label">Damage</span>
-        {profile.expression && (
+        {hintParts.length > 0 && (
           <span className="dmg-expression">
-            {profile.expression}
-            {profile.typeLabel ? ` ${profile.typeLabel}` : ''}
+            {hintParts
+              .map((p) => `${p.dice}${p.typeLabel ? ` ${p.typeLabel}` : ''}`)
+              .join(' + ')}
           </span>
         )}
         <span className="dmg-hint-note">
@@ -90,6 +92,11 @@ const DamagePanel = ({
               />
               <span>
                 {rider.label}
+                {rider.dice && (
+                  <span className="dmg-rider-persistent">
+                    {' '}{rider.dice} {rider.type || ''}
+                  </span>
+                )}
                 {rider.persistent?.dice && (
                   <span className="dmg-rider-persistent">
                     {' '}{rider.persistent.dice} persistent {rider.persistent.type || ''}

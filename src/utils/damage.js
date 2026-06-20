@@ -414,13 +414,23 @@ export const buildDamageProfile = (ability, character, {
   const abilityRiders = (damageOverride?.riders ?? dd?.riders ?? ability.riders ?? [])
     .filter((r) => r.when?.actions == null || r.when.actions === chosenActions)
     .map((r) => {
-      if (!r.persistent?.dice) return r;
-      let dice = scaleDamageText(r.persistent.dice, level);
-      for (const bump of persistentBumps) {
-        dice = addExpressions(dice, bump.add, bump.times);
+      let next = r;
+      if (r.persistent?.dice) {
+        let dice = scaleDamageText(r.persistent.dice, level);
+        for (const bump of persistentBumps) {
+          dice = addExpressions(dice, bump.add, bump.times);
+        }
+        if (dice !== r.persistent.dice) {
+          next = { ...next, persistent: { ...next.persistent, dice } };
+        }
       }
-      if (dice === r.persistent.dice) return r;
-      return { ...r, persistent: { ...r.persistent, dice } };
+      // Immediate extra-dice rider (Gloaming Backstab's hidden precision):
+      // level-scaled dice the player rolls into the same hit when toggled on.
+      if (r.dice) {
+        const dice = scaleDamageText(r.dice, level);
+        if (dice !== r.dice) next = { ...next, dice };
+      }
+      return next;
     });
 
   const characterRiders = (character?.damageRiders ?? [])
@@ -433,4 +443,26 @@ export const buildDamageProfile = (ability, character, {
 
   if (!expression && !riders.length) return null;
   return { expression, typeLabel, riders };
+};
+
+/**
+ * The dice the player should physically roll: the base expression plus every
+ * enabled immediate extra-dice rider (Gloaming Backstab's hidden precision).
+ * These riders fold into the hint — the player rolls one combined total — and
+ * carry no numeric bonus in computeTargetDamage (the dice are already in the
+ * entered total). Returns `[{ dice, typeLabel }]` parts so the panel can show
+ * each with its own type ('6d6 void + 6d4 precision') rather than mashing
+ * mismatched types into one string.
+ */
+export const damageHintParts = (profile, riderState) => {
+  if (!profile) return [];
+  const parts = profile.expression
+    ? [{ dice: profile.expression, typeLabel: profile.typeLabel ?? null }]
+    : [];
+  for (const r of profile.riders || []) {
+    if (r.dice && riderEnabled(r, riderState)) {
+      parts.push({ dice: r.dice, typeLabel: r.type ?? null });
+    }
+  }
+  return parts;
 };
