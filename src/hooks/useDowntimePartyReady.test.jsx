@@ -107,6 +107,44 @@ describe('useDowntimePartyReady', () => {
     expect(result.current.readyCount).toBe(1);
   });
 
+  it('a project awaiting a finish decision holds its owner back even with days committed', () => {
+    const entry = { day: 'Crafting', night: null };
+    const { Wrapper } = makeWrapper(chars, {
+      a_downtime: dt([entry]),
+      a_craftprojects: { projects: [{ id: 'p', status: 'awaiting-decision' }] },
+      b_downtime: dt([entry]),
+      c_downtime: dt([entry]),
+    });
+    const { result } = renderHook(() => useDowntimePartyReady(1, PERIOD), { wrapper: Wrapper });
+    // a is paused on the decision; b and c are ready
+    expect(result.current.readyCount).toBe(2);
+    expect(result.current.allReady).toBe(false);
+  });
+
+  it('a reducing project does not pause readiness', () => {
+    const entry = { day: 'Crafting', night: null };
+    const { Wrapper } = makeWrapper([{ id: 'a' }], {
+      a_downtime: dt([entry]),
+      a_craftprojects: { projects: [{ id: 'p', status: 'reducing' }] },
+    });
+    const { result } = renderHook(() => useDowntimePartyReady(1, PERIOD), { wrapper: Wrapper });
+    expect(result.current.readyCount).toBe(1);
+  });
+
+  it('re-derives when a craftprojects subscription fires', () => {
+    const stateMap = {
+      a_downtime: dt([{ day: 'Crafting', night: null }]),
+      a_craftprojects: { projects: [{ id: 'p', status: 'awaiting-decision' }] },
+    };
+    const { Wrapper, notify } = makeWrapper([{ id: 'a' }], stateMap);
+    const { result } = renderHook(() => useDowntimePartyReady(1, PERIOD), { wrapper: Wrapper });
+    expect(result.current.readyCount).toBe(0); // paused
+
+    stateMap.a_craftprojects = { projects: [{ id: 'p', status: 'completed' }] };
+    act(() => notify('a', 'craftprojects'));
+    expect(result.current.readyCount).toBe(1); // decision resolved
+  });
+
   it('returns allReady:false and readyCount:0 when blockDays is 0 (no active block)', () => {
     // getDaysCommitted(ledger) >= 0 is trivially true without this guard
     const entries = Array(3).fill({ day: 'Research', night: null });

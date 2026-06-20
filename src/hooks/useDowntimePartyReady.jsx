@@ -20,7 +20,12 @@ export function useDowntimePartyReady(blockDays, startedAt) {
 
   useEffect(() => {
     const bump = () => setTick((t) => t + 1);
-    const unsubs = ids.map((id) => subscribe(id, 'downtime', bump));
+    // Re-derive on commits (downtime) and on craft-project changes — a project
+    // awaiting a finish decision pauses its owner's readiness.
+    const unsubs = ids.flatMap((id) => [
+      subscribe(id, 'downtime', bump),
+      subscribe(id, 'craftprojects', bump),
+    ]);
     return () => unsubs.forEach((u) => u());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, subscribe]);
@@ -31,7 +36,12 @@ export function useDowntimePartyReady(blockDays, startedAt) {
   const total = ids.length;
   const readyCount = days == null ? 0 : ids.filter((id) => {
     const dt = getState(id, 'downtime');
-    return getDaysCommitted(periodState(dt, startedAt).ledger) >= days;
+    const daysDone = getDaysCommitted(periodState(dt, startedAt).ledger) >= days;
+    // A project awaiting its finish decision holds the party — the player must
+    // choose to complete or keep working before time advances.
+    const cp = getState(id, 'craftprojects');
+    const awaiting = (cp?.projects || []).some((p) => p.status === 'awaiting-decision');
+    return daysDone && !awaiting;
   }).length;
 
   return { readyCount, total, allReady: days != null && total > 0 && readyCount === total };

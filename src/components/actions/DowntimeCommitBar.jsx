@@ -2,7 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimeFatigue } from '../../hooks/useDowntimeFatigue';
 import { getDaysCommitted, periodState, stampPeriod } from '../../utils/downtimeUtils';
+import { dailyReductionCp } from '../../utils/craftingOutcome';
+import { cpToGp } from '../../utils/earnIncome';
 import './DowntimeCommitBar.css';
+
+// Projects that accept committed crafting time: still banking setup hours
+// ('in-progress'), or working off their remaining cost ('reducing'). Projects
+// awaiting a finish decision or already completed are not allocation targets.
+const isAllocatable = (p) => {
+  const s = p.status || 'in-progress';
+  return s === 'in-progress' || s === 'reducing';
+};
 
 // Lets a player commit one day of downtime (8h) or work through the night (16h).
 // Each 8h block is assigned to one of the player's selected activities.
@@ -34,7 +44,7 @@ const DowntimeCommitBar = ({ character, block }) => {
   const dayActivity = selected.includes(dayChoice) ? dayChoice : (selected[0] ?? '');
   const nightActivity = selected.includes(nightChoice) ? nightChoice : (selected[0] ?? '');
 
-  const projects = craftProjects?.projects || [];
+  const projects = (craftProjects?.projects || []).filter(isAllocatable);
 
   const craftingHours =
     (dayActivity === 'Crafting' ? 8 : 0) +
@@ -42,7 +52,7 @@ const DowntimeCommitBar = ({ character, block }) => {
 
   // When craftingHours or the project set changes, reset allocations to defaults:
   // put all crafting hours on the furthest-along project.
-  const projectSig = projects.map(p => `${p.id}:${p.hours}`).join(',');
+  const projectSig = projects.map(p => `${p.id}:${p.hours}:${p.status || ''}`).join(',');
   useEffect(() => {
     if (craftingHours === 0 || projects.length === 0) {
       setProjectAllocations({});
@@ -83,11 +93,18 @@ const DowntimeCommitBar = ({ character, block }) => {
     });
     if (craftingHours > 0 && projects.length > 0) {
       setCraftProjects(prev => ({
-        projects: (prev?.projects || []).map(p =>
-          (projectAllocations[p.id] ?? 0) > 0
-            ? { ...p, hours: p.hours + (projectAllocations[p.id] ?? 0) }
-            : p
-        ),
+        projects: (prev?.projects || []).map(p => {
+          const alloc = projectAllocations[p.id] ?? 0;
+          if (alloc <= 0) return p;
+          // A 'reducing' project spends committed days working off its remaining
+          // cost (Earn Income per day); everything else banks setup hours.
+          if (p.status === 'reducing') {
+            const perDay = dailyReductionCp({ itemLevel: p.level, craftingRank: p.craftRank, degree: p.craftDegree });
+            const remainingCp = Math.max(0, (p.remainingCp || 0) - perDay * (alloc / 8));
+            return { ...p, remainingCp, status: remainingCp <= 0 ? 'completed' : 'reducing' };
+          }
+          return { ...p, hours: p.hours + alloc };
+        }),
       }));
     }
     if (workNight) {
@@ -156,7 +173,11 @@ const DowntimeCommitBar = ({ character, block }) => {
             <div key={p.id} className="dtcb-alloc-row">
               <div className="dtcb-alloc-info">
                 <span className="dtcb-alloc-name">{p.name}</span>
-                <span className="dtcb-alloc-progress">{p.hours}h / {p.threshold}h</span>
+                <span className="dtcb-alloc-progress">
+                  {p.status === 'reducing'
+                    ? `${cpToGp(p.remainingCp || 0)} gp left`
+                    : `${p.hours}h / ${p.threshold}h`}
+                </span>
               </div>
               <input
                 type="number"
