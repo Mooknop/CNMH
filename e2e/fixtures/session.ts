@@ -75,6 +75,9 @@ export async function mockSession(
     activeWs = ws;
     // Replay seeded state on (re)connect, exactly like the DO does.
     ws.send(JSON.stringify({ type: 'FULL_STATE', payload }));
+    // Mirror the DO handshake (#551): report Foundry present so the offline
+    // write-gate (#553) doesn't freeze synced writes in mocked specs.
+    ws.send(JSON.stringify({ type: 'PRESENCE', foundry: true }));
 
     ws.onMessage((raw) => {
       let msg: any;
