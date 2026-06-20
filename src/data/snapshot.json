@@ -8743,7 +8743,18 @@
       "id": "sanitizing-pin",
       "name": "Sanitizing Pin",
       "talisman": {
-        "affixTo": "armor"
+        "affixTo": "armor",
+        "activation": {
+          "cost": "reaction",
+          "trigger": "You attempt a save vs the initial exposure to poison or disease",
+          "effect": {
+            "kind": "save-bonus",
+            "save": "fortitude",
+            "bonus": 2,
+            "value": "status",
+            "critFailToFail": true
+          }
+        }
       },
       "price": 7,
       "weight": 0,
@@ -9222,7 +9233,17 @@
       "id": "wolf-fang",
       "name": "Wolf Fang",
       "talisman": {
-        "affixTo": "weapon"
+        "affixTo": "weapon",
+        "activation": {
+          "cost": "free",
+          "trigger": "You successfully Trip a creature",
+          "effect": {
+            "kind": "damage",
+            "amount": "str-mod",
+            "damageType": "bludgeoning",
+            "onManeuver": "trip"
+          }
+        }
       },
       "price": 3,
       "weight": 0,
