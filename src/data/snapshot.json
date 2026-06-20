@@ -8742,6 +8742,9 @@
     {
       "id": "sanitizing-pin",
       "name": "Sanitizing Pin",
+      "talisman": {
+        "affixTo": "armor"
+      },
       "price": 7,
       "weight": 0,
       "traits": [
@@ -9218,6 +9221,9 @@
     {
       "id": "wolf-fang",
       "name": "Wolf Fang",
+      "talisman": {
+        "affixTo": "weapon"
+      },
       "price": 3,
       "weight": 0,
       "traits": [
