@@ -99,6 +99,15 @@ export function applyItemEffect({ user, targetItem, itemName, meta, nowSecs, get
 }
 
 /**
+ * Remove an item effect by id, returning the next overlay. Used by the manual
+ * "remove" affordance on the item (oils with no timer, #339).
+ * @param {Array}  overlay
+ * @param {string} id
+ */
+export const removeItemEffect = (overlay, id) =>
+  (Array.isArray(overlay) ? overlay : []).filter((e) => e.id !== id);
+
+/**
  * Split an item-effect overlay into the entries still active vs. expired at the
  * given game time. Used by the clock-expiry sweep.
  * @returns {{ next: Array, expired: Array }}

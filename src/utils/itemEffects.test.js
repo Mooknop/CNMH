@@ -6,6 +6,7 @@ import {
   itemEffectLabel,
   stampItemEffects,
   applyItemEffect,
+  removeItemEffect,
   pruneExpiredItemEffects,
 } from './itemEffects';
 
@@ -82,6 +83,17 @@ describe('itemEffects (#339)', () => {
         nowSecs: 1000, getState: () => [], sendUpdate: vi.fn(), appendLog: vi.fn(),
       });
       expect(next[0].expireAtSecs).toBeUndefined();
+    });
+  });
+
+  describe('removeItemEffect', () => {
+    it('drops the entry with the matching id, leaving the rest', () => {
+      const overlay = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+      expect(removeItemEffect(overlay, 'b').map((e) => e.id)).toEqual(['a', 'c']);
+    });
+    it('is a safe no-op for an unknown id or non-array', () => {
+      expect(removeItemEffect([{ id: 'a' }], 'z')).toEqual([{ id: 'a' }]);
+      expect(removeItemEffect(null, 'a')).toEqual([]);
     });
   });
 

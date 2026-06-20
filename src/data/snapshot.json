@@ -8214,6 +8214,13 @@
     {
       "id": "anticorrosion-oil",
       "name": "Anticorrosion Oil",
+      "consumable": {
+        "kind": "effect",
+        "target": "item",
+        "label": "Anticorrosion",
+        "durationMinutes": 1440,
+        "note": "Half damage from acid/rust (24 hr)"
+      },
       "price": 6,
       "weight": 0.1,
       "traits": [

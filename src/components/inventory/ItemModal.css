@@ -69,6 +69,7 @@
 }
 
 .item-description h3,
+.item-effects h3,
 .item-actions h3,
 .item-reactions h3,
 .item-free-actions h3,
@@ -300,6 +301,7 @@
 }
 
 .item-description h3,
+.item-effects h3,
 .item-actions h3,
 .item-reactions h3,
 .item-free-actions h3,
@@ -309,6 +311,48 @@
 .shield-properties h3 {
   color: var(--color-theme, var(--theme-accent-mid));
   border-bottom-color: var(--shell-border, rgba(255, 255, 255, 0.07));
+}
+
+/* Active item-target effects (oils, #339) */
+.item-effects-list {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.item-effect-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.item-effect-label {
+  font-size: var(--text-sm, 0.9rem);
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.8));
+}
+
+.item-effect-source {
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.55));
+}
+
+.item-effect-remove {
+  background: none;
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.15));
+  border-radius: var(--radius-full, 999px);
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.6));
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.item-effect-remove:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .item-description p,
