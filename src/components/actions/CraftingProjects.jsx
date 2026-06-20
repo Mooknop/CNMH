@@ -139,16 +139,20 @@ const CraftingProjects = ({ character }) => {
   const recipePrice = selectedRecipe ? priceFor(selectedRecipe, recipeVariants, recipeLevel) : null;
   const catalogPrice = selectedCatalogItem ? priceFor(selectedCatalogItem, variants, catalogLevel) : null;
 
-  // Up-front cost preview (half the Price) + an over-budget warning. Insufficient
-  // gold warns but never blocks — the GM reconciles at the approval step.
+  const goldGp = Number(gold) || 0;
+  // The crafter must have the up-front half-cost on hand to start (#593).
+  const canAffordUpfront = (price) => cpToGp(halfCostCp(price)) <= goldGp;
+
+  // Up-front cost preview (half the Price). Over-budget is a hard block — the
+  // Start button disables — so the note marks the reason (#593).
   const upfrontNote = (price) => {
     if (price == null) return null;
     const upfront = cpToGp(halfCostCp(price));
     return (
       <span className="cp-cost-note">
         Up-front: {upfront} gp <span className="cp-cost-sub">(½ of {price} gp)</span>
-        {upfront > (Number(gold) || 0) && (
-          <span className="cp-cost-warn"> — over your {Number(gold) || 0} gp</span>
+        {upfront > goldGp && (
+          <span className="cp-cost-warn"> — over your {goldGp} gp</span>
         )}
       </span>
     );
@@ -174,6 +178,9 @@ const CraftingProjects = ({ character }) => {
             const checkValid = d20Num >= 1 && d20Num <= 20 && Number.isFinite(totalNum);
             const remainingGp = cpToGp(p.remainingCp || 0);
             const perDayGp = cpToGp(dailyReductionCp({ itemLevel: p.level, craftingRank: p.craftRank, degree: p.craftDegree }));
+            // Can't pay off the remainder right now → Complete-now is blocked;
+            // Continue (work it off) stays open (#593).
+            const canAffordRemaining = remainingGp <= (Number(gold) || 0);
             const isCheckStage = status === 'in-progress' && atThreshold;
             return (
               <li
@@ -240,9 +247,17 @@ const CraftingProjects = ({ character }) => {
                     <span className={`cp-degree cp-degree--${p.craftDegree}`}>{DEGREE_LABEL[p.craftDegree]}</span>
                     {(p.craftDegree === 'success' || p.craftDegree === 'criticalSuccess') && (
                       <>
-                        <span className="cp-project-meta">{remainingGp} gp to finish now, or work it off ({perDayGp} gp/day).</span>
+                        <span className="cp-project-meta">
+                          {remainingGp} gp to finish now, or work it off ({perDayGp} gp/day).
+                          {!canAffordRemaining && <span className="cp-cost-warn"> Can&rsquo;t afford to finish — keep working.</span>}
+                        </span>
                         <div className="cp-decision-actions">
-                          <button className="cp-complete-btn" onClick={() => completeNow(p)} aria-label={`Complete ${p.name} now`}>
+                          <button
+                            className="cp-complete-btn"
+                            disabled={!canAffordRemaining}
+                            onClick={() => completeNow(p)}
+                            aria-label={`Complete ${p.name} now`}
+                          >
                             Complete now ({remainingGp} gp)
                           </button>
                           <button className="cp-continue-btn" onClick={() => continueReducing(p)} aria-label={`Continue ${p.name}`}>
@@ -278,7 +293,12 @@ const CraftingProjects = ({ character }) => {
                       Working off the cost — {remainingGp} gp left, −{perDayGp} gp per crafting day committed.
                     </span>
                     <div className="cp-decision-actions">
-                      <button className="cp-complete-btn" onClick={() => completeNow(p)} aria-label={`Finish ${p.name} now`}>
+                      <button
+                        className="cp-complete-btn"
+                        disabled={!canAffordRemaining}
+                        onClick={() => completeNow(p)}
+                        aria-label={`Finish ${p.name} now`}
+                      >
                         Pay {remainingGp} gp &amp; finish
                       </button>
                     </div>
@@ -372,7 +392,7 @@ const CraftingProjects = ({ character }) => {
               <div className="cp-add-footer">
                 <button
                   className="cp-confirm-btn"
-                  disabled={!canStartFromRecipe}
+                  disabled={!canStartFromRecipe || !canAffordUpfront(recipePrice)}
                   onClick={() => {
                     const r = knownRecipes[recipeIdx];
                     const lvl = recipeLevel ? parseInt(recipeLevel, 10) : null;
@@ -428,7 +448,7 @@ const CraftingProjects = ({ character }) => {
               <div className="cp-add-footer">
                 <button
                   className="cp-confirm-btn"
-                  disabled={!canStartFromCatalog}
+                  disabled={!canStartFromCatalog || !canAffordUpfront(catalogPrice)}
                   onClick={() => {
                     const lvl = catalogLevel ? parseInt(catalogLevel, 10) : null;
                     const v = lvl != null ? variants.find(x => x.level === lvl) : null;
