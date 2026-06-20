@@ -465,6 +465,81 @@ describe('ChainedSpellSection — bloodline surface (#227)', () => {
   });
 });
 
+// Damage payload for a chained basic-save spell (#281): the section builds a
+// save-mode damage panel at its own cast rank and surfaces the entered total +
+// serialized rider snapshot through getResults(), so the parent's chained
+// addSaveRequest attaches `damage` the same way the direct path does.
+describe('ChainedSpellSection — save damage payload (#281)', () => {
+  const FIREBALL_SAVE = {
+    id: 'fireball', name: 'Fireball', actions: 'Two Actions', range: '500 feet',
+    level: 3, defense: 'Reflex', basic: true,
+    damageData: { base: '6d6', type: 'fire' },
+  };
+  const PLAIN_SAVE = {
+    id: 'fear', name: 'Fear', actions: 'Two Actions', range: '30 feet',
+    level: 1, defense: 'Will', basic: true, // no damageData → no panel
+  };
+  const VAR_SAVE = {
+    id: 'vsave', name: 'Variable Blast', actions: 'One to Three Actions', range: '60 feet',
+    level: 1, defense: 'Reflex', basic: true,
+    damageData: { base: '2d6', type: 'fire' }, // variable-action → deferred to #572
+  };
+  const saveEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { saves: { reflex: 8 } } }];
+
+  const renderSave = (spells, ref) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={{ ...character, spellcasting: { spells } }}
+      chain={harrowChain}
+      parentCost={1}
+      enemyTargets={saveEnemies}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => {
+    resolveActionRoll.mockReturnValue({ mode: 'target-save', bonus: null, dc: 22, defense: 'reflex' });
+  });
+
+  it('renders the save-mode damage panel for a damaging basic-save spell', () => {
+    renderSave([FIREBALL_SAVE]);
+    expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
+    expect(screen.getByText(/6d6/)).toBeInTheDocument(); // hint expression at cast rank
+  });
+
+  it('getResults carries the entered total, expression, type, and basic flag', () => {
+    const ref = createRef();
+    renderSave([FIREBALL_SAVE], ref);
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '21' } });
+    const res = ref.current.getResults();
+    expect(res.spellBasic).toBe(true);
+    expect(res.damage).toMatchObject({ entered: 21, expression: '6d6', typeLabel: 'fire', riders: [] });
+  });
+
+  it('reports no damage payload until the caster enters a total', () => {
+    const ref = createRef();
+    renderSave([FIREBALL_SAVE], ref);
+    expect(ref.current.getResults().damage).toBeNull();
+  });
+
+  it('non-damaging save spell renders no panel and carries no damage', () => {
+    const ref = createRef();
+    renderSave([PLAIN_SAVE], ref);
+    expect(screen.queryByLabelText('rolled damage total')).toBeNull();
+    const res = ref.current.getResults();
+    expect(res.damage).toBeNull();
+    expect(res.spellBasic).toBe(true);
+  });
+
+  it('variable-action save spell is deferred (no panel, no payload) — #572', () => {
+    const ref = createRef();
+    renderSave([VAR_SAVE], ref);
+    expect(screen.queryByLabelText('rolled damage total')).toBeNull();
+    expect(ref.current.getResults().damage).toBeNull();
+  });
+});
+
 describe('ChainedSpellSection — Split Shot (#227)', () => {
   const splitChain = { into: 'spell', cost: 'added', spellFilter: 'single-target-attack', splitShot: true };
 
