@@ -227,3 +227,26 @@
   padding-top: var(--space-2);
   border-top: 1px solid var(--shell-border);
 }
+
+/* Maneuver-triggered talisman activation (Wolf Fang on Trip, #254/#339) */
+.sam-talisman-btn {
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-outline);
+  background: transparent;
+  color: var(--accent-text);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.sam-talisman-btn:hover {
+  background: var(--accent-tint);
+}
+
+.sam-result--talisman {
+  margin-top: var(--space-2);
+}

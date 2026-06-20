@@ -417,3 +417,7 @@
   flex-wrap: wrap;
   gap: var(--space-2, 0.5rem);
 }
+
+.item-affix-activate {
+  margin-top: var(--space-2, 0.5rem);
+}

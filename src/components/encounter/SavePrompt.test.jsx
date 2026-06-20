@@ -23,7 +23,13 @@ vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: () => ({ appendLog: mockAppendLog }),
 }));
 
+// useCharacter resolves the inventory for the affixed save-bonus talisman (#254).
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: (c) => (c ? { inventory: c.__inventory || [] } : null),
+}));
+
 import { __reset, useSyncedState } from '../../hooks/useSyncedState';
+import { affixedKey } from '../../utils/affix';
 import SavePrompt from './SavePrompt';
 
 const prompt = { reqId: 'r1', save: 'reflex', dc: 18, effectName: 'Fireball', basic: true };
@@ -126,5 +132,71 @@ describe('SavePrompt', () => {
     act(() => setPrompt({ reqId: 'r-new', save: 'will', dc: 20, effectName: 'Mind Crush' }));
     expect(screen.queryByText('Success')).toBeNull();
     expect(screen.getByText('Mind Crush')).toBeInTheDocument();
+  });
+});
+
+describe('SavePrompt — Sanitizing Pin (#254/#339)', () => {
+  const pin = {
+    uid: 'pin1', name: 'Sanitizing Pin', traits: ['Talisman'],
+    talisman: { affixTo: 'armor', activation: { cost: 'reaction', trigger: 'A save vs an affliction', effect: { kind: 'save-bonus', save: 'fortitude', bonus: 2, value: 'status', critFailToFail: true } } },
+  };
+  const character = { id: 'Ashka', name: 'Ashka', __inventory: [pin, { uid: 'a1', name: 'Plate', armor: { ac: 6 } }] };
+  const fortSaves = { fortitude: 5, reflex: 8, will: 4 };
+
+  let setAff, setPromptF, affVal, conVal;
+  const Capture = ({ charId }) => {
+    const [a, sa] = useSyncedState(affixedKey(charId), {});
+    const [c] = useSyncedState(`cnmh_consumed_${charId}`, {});
+    const [, sp] = useSyncedState(`cnmh_saveprompt_${charId}`, null);
+    React.useEffect(() => { setAff = sa; setPromptF = sp; }, [sa, sp]);
+    affVal = a; conVal = c;
+    return null;
+  };
+
+  const setupPin = (save = 'fortitude') => {
+    render(<><Capture charId="Ashka" /><SavePrompt charId="Ashka" characterName="Ashka" saves={fortSaves} character={character} /></>);
+    act(() => setAff({ pin1: 'a1' }));
+    act(() => setPromptF({ reqId: 'p1', save, dc: 18, effectName: 'Giant Centipede Venom' }));
+  };
+
+  it('shows the +2 toggle for a Fortitude prompt, not for a Reflex one', () => {
+    setupPin('fortitude');
+    expect(screen.getByLabelText(/Sanitizing Pin/)).toBeInTheDocument();
+    // A reflex prompt: the pin (Fort-only) does not apply.
+    act(() => setPromptF({ reqId: 'p2', save: 'reflex', dc: 18 }));
+    expect(screen.queryByLabelText(/Sanitizing Pin/)).not.toBeInTheDocument();
+  });
+
+  it('toggling adds +2 to the total, flips the degree, and consumes the pin', () => {
+    setupPin('fortitude');
+    fireEvent.click(screen.getByLabelText(/Sanitizing Pin/));
+    // d20 11 + 5 + 2 = 18 ≥ DC 18 → success (would be 16 → failure without the pin).
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '11' } });
+    fireEvent.click(screen.getByLabelText('Submit Fortitude save'));
+    expect(screen.getByText('18')).toBeInTheDocument();
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(mockAppendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('(Sanitizing Pin)'),
+    }));
+    expect(conVal).toEqual({ 'Sanitizing Pin': 1 });
+    expect(affVal).toEqual({}); // unaffixed (consumed) on use
+  });
+
+  it('upgrades a critical failure to a failure when active', () => {
+    setupPin('fortitude');
+    fireEvent.click(screen.getByLabelText(/Sanitizing Pin/));
+    // d20 1 + 5 + 2 = 8 = DC-10 → critical failure, upgraded to Failure by the pin.
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '1' } });
+    fireEvent.click(screen.getByLabelText('Submit Fortitude save'));
+    expect(screen.getByText('Failure')).toBeInTheDocument();
+    expect(screen.queryByText('Critical Failure')).toBeNull();
+  });
+
+  it('does not consume the pin when the toggle is left off', () => {
+    setupPin('fortitude');
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '11' } });
+    fireEvent.click(screen.getByLabelText('Submit Fortitude save'));
+    expect(conVal).toEqual({});
+    expect(affVal).toEqual({ pin1: 'a1' });
   });
 });
