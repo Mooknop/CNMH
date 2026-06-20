@@ -6,6 +6,7 @@ import { resolveTake10 } from '../../utils/take10Resolve';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { usePartyGold } from '../../hooks/usePartyGold';
 import { useLore } from '../../contexts/LoreContext';
@@ -44,7 +45,7 @@ const PlayModeControl = () => {
   } = useTake10();
   const { characters } = useContext(CharacterContext) || {};
   const { sendUpdate, getState } = useSession();
-  const { formatClockTime, formatGameDate, getCurrentWeekday, advanceMinutes } = useGameDate();
+  const { formatClockTime, formatGameDate, getCurrentWeekday, advanceMinutes, gameDate, time } = useGameDate();
 
   // Campaign meta has no home in the content model, so the GM edits it inline
   // here, synced for every client. Party level is derived from the roster.
@@ -80,9 +81,13 @@ const PlayModeControl = () => {
   // races the writes. Reused by both the auto all-ready path and the GM
   // "Resolve now" override.
   const runTake10Resolution = useCallback(() => {
+    // Item-effect durations run from when the block FINISHES, so stamp expiry
+    // against block-end time (current clock + the advance we're about to apply).
+    const blockEndSecs = toGameSeconds({ ...gameDate, ...time }) + take10Minutes * 60;
     resolveTake10({
       characters,
       openedAt: take10OpenedAt,
+      nowSecs: blockEndSecs,
       getState,
       sendUpdate,
       appendLog: appendEvent,
@@ -91,7 +96,7 @@ const PlayModeControl = () => {
     appendEvent({ type: 'time', text: `Take 10 — advanced ${take10Minutes} min` });
     clearTake10();
   }, [
-    characters, take10OpenedAt, take10Minutes,
+    characters, take10OpenedAt, take10Minutes, gameDate, time,
     getState, sendUpdate, advanceMinutes, appendEvent, clearTake10,
   ]);
 

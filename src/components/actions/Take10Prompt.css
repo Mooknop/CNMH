@@ -146,6 +146,74 @@
   color: var(--t10-theme, var(--color-theme));
 }
 
+/* Item-derived activities (oils / talismans) are visually nudged apart from the
+   static catalog — a dashed edge signals "needs a target pick". */
+.t10-add--item {
+  border-style: dashed;
+}
+
+/* Inline target picker (which weapon/armor/item the activity applies to) */
+.t10-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border: 1px solid var(--t10-theme, var(--color-theme));
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  background: var(--accent-tint, rgba(255, 255, 255, 0.05));
+}
+
+.t10-picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.t10-picker-title {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.t10-picker-cancel {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  padding: 0;
+}
+
+.t10-picker-cancel:hover {
+  color: var(--theme-text, var(--shell-text));
+}
+
+.t10-picker-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.t10-picker-target {
+  border: 1px solid var(--accent-outline, var(--shell-border));
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text, var(--shell-text));
+  padding: var(--space-1) var(--space-3);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.t10-picker-target:hover {
+  border-color: var(--t10-theme, var(--color-theme));
+  background: var(--accent-tint, rgba(255, 255, 255, 0.08));
+}
+
 .t10-waiting {
   margin: 0;
   font-family: var(--font-ui);
