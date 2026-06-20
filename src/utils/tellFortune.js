@@ -68,3 +68,32 @@ export function tellFortuneImmunityEntry(casterId, nowSecs) {
     durationSecs: TELL_FORTUNE_IMMUNITY_SECS,
   });
 }
+
+// ── Caster-side immunity ledger ────────────────────────────────────────────
+// The caster owns one ledger (cnmh_tellfortune_<casterId>) mapping a target key
+// to the immunity entry they last stamped. This works uniformly for party PCs
+// (keyed by their id) and arbitrary GM-named creatures (keyed by name slug),
+// which have no effects store of their own. The gate reuses isTellFortuneImmune
+// on the single stored entry.
+
+/** Ledger key for a GM-named creature target. */
+export function creatureKey(name) {
+  return `creature:${String(name || '').trim().toLowerCase().replace(/\s+/g, '-')}`;
+}
+
+/** True if the caster's ledger blocks re-reading this target right now. */
+export function ledgerBlocks(ledger, targetKey, casterId, nowSecs) {
+  if (!targetKey) return false;
+  return isTellFortuneImmune([ledger?.[targetKey]].filter(Boolean), casterId, nowSecs);
+}
+
+/** Drop expired entries (housekeeping on each write). */
+export function pruneTellFortuneLedger(ledger, nowSecs) {
+  const out = {};
+  for (const [key, entry] of Object.entries(ledger || {})) {
+    if (entry && typeof entry.expireAtSecs === 'number' && entry.expireAtSecs > nowSecs) {
+      out[key] = entry;
+    }
+  }
+  return out;
+}
