@@ -13,6 +13,8 @@ vi.mock('../../contexts/ContentContext', () => ({
 }));
 
 const mockSetProjects = vi.fn();
+const mockSetGold = vi.fn();
+let goldValue = 100;
 
 const character = {
   id: 'char-1',
@@ -41,14 +43,20 @@ const catalogItems = [
   },
 ];
 
+// Key-aware: the gold key returns [goldValue, mockSetGold]; everything else is
+// the craftprojects state. (CraftingProjects reads its own gold to charge the
+// up-front half-cost on start.)
 const withProjects = (projects) =>
-  useSyncedState.mockReturnValue([
-    projects != null ? { projects } : null,
-    mockSetProjects,
-  ]);
+  useSyncedState.mockImplementation((key) => {
+    if (typeof key === 'string' && key.startsWith('cnmh_gold_')) {
+      return [goldValue, mockSetGold];
+    }
+    return [projects != null ? { projects } : null, mockSetProjects];
+  });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  goldValue = 100;
   withProjects(null);
   useContent.mockReturnValue({ items: catalogItems });
 });
@@ -248,6 +256,63 @@ describe('CraftingProjects', () => {
     render(<CraftingProjects character={{ id: 'char-1', crafting: [] }} />);
     fireEvent.click(screen.getByRole('button', { name: '+ New' }));
     expect(screen.getByText(/no known recipes/i)).toBeInTheDocument();
+  });
+
+  describe('start cost (half up front)', () => {
+    const startAntidoteModerate = () => {
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+      fireEvent.click(screen.getByTestId('cp-recipe-1')); // Antidote (has variants)
+      fireEvent.change(screen.getByLabelText('Recipe grade'), { target: { value: '6' } }); // price 35
+    };
+
+    it('previews the up-front half-cost once a priced grade is chosen', () => {
+      startAntidoteModerate();
+      expect(screen.getByText(/Up-front: 17\.5 gp/)).toBeInTheDocument();
+      expect(screen.getByText(/½ of 35 gp/)).toBeInTheDocument();
+    });
+
+    it('deducts the half-cost from personal gold on start', () => {
+      startAntidoteModerate();
+      fireEvent.click(screen.getByRole('button', { name: 'Start project' }));
+      expect(mockSetGold).toHaveBeenCalled();
+      // 35 gp → 1750 cp half → 17.5 gp off 100
+      expect(mockSetGold.mock.calls[0][0](100)).toBe(82.5);
+    });
+
+    it('stores cost + craft state on the project entry', () => {
+      startAntidoteModerate();
+      fireEvent.click(screen.getByRole('button', { name: 'Start project' }));
+      const result = mockSetProjects.mock.calls[0][0](null);
+      expect(result.projects[0]).toMatchObject({
+        ref: 'antidote', level: 6,
+        price: 35, costCp: 3500, paidCp: 1750, remainingCp: 1750,
+        craftRank: 0, status: 'in-progress',
+      });
+    });
+
+    it('warns but does not block when the up-front cost exceeds gold', () => {
+      goldValue = 10; // less than 17.5
+      startAntidoteModerate();
+      expect(screen.getByText(/over your 10 gp/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Start project' })).not.toBeDisabled();
+    });
+
+    it('does not touch gold for a price-less item', () => {
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+      fireEvent.click(screen.getByTestId('cp-recipe-0')); // Minor Elixir of Life — no price
+      fireEvent.click(screen.getByRole('button', { name: 'Start project' }));
+      expect(mockSetGold).not.toHaveBeenCalled();
+    });
+
+    it('shows remaining gold owed on an in-progress card', () => {
+      withProjects([
+        { id: 'p1', ref: 'antidote', level: 6, name: 'Antidote (Moderate)', source: 'recipe', threshold: 8, hours: 2, remainingCp: 1750 },
+      ]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByText(/17\.5 gp left/)).toBeInTheDocument();
+    });
   });
 
   describe('Item Completed flow', () => {
