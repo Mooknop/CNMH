@@ -15,6 +15,7 @@ import {
   formatDamageBreakdown,
   buildDamageProfile,
   damageHintParts,
+  traitGatedEntryIds,
 } from './damage';
 
 describe('parseDamageExpression', () => {
@@ -702,5 +703,62 @@ describe('damageHintParts', () => {
       riders: [{ id: 'flat', label: '+2', bonus: { flat: 2 }, defaultOn: true }],
     };
     expect(damageHintParts(p, {})).toEqual([{ dice: '2d6', typeLabel: 'fire' }]);
+  });
+});
+
+describe('trait-conditional riders (#548 Vitalizing)', () => {
+  const ghoul = { entryId: 'e-ghoul', bestiary: { traits: ['undead', 'medium'] } };
+  const goblin = { entryId: 'e-gob', bestiary: { traits: ['goblin', 'humanoid'] } };
+  const manual = { entryId: 'e-manual' }; // no bestiary → unknown traits
+
+  describe('traitGatedEntryIds', () => {
+    it('matches the trait, keeps unknown-trait targets, drops mismatches', () => {
+      expect(traitGatedEntryIds('undead', [ghoul, goblin, manual])).toEqual(['e-ghoul', 'e-manual']);
+    });
+    it('is case-insensitive on the trait slug', () => {
+      expect(traitGatedEntryIds('Undead', [ghoul])).toEqual(['e-ghoul']);
+    });
+  });
+
+  describe('buildDamageProfile resolves appliesVsTrait → appliesToEntryIds', () => {
+    const strike = {
+      name: 'Greataxe', attackMod: 10, damage: '1d12',
+      riders: [{
+        id: 'rune-vitalizing-persistent', label: 'Vitalizing (vs undead)',
+        persistent: { dice: '1d6', type: 'vitality' }, appliesVsTrait: 'undead',
+      }],
+    };
+    it('scopes the rider to the undead targets', () => {
+      const profile = buildDamageProfile(strike, { level: 5 }, { enemyEntries: [ghoul, goblin] });
+      const rider = profile.riders.find((r) => r.id === 'rune-vitalizing-persistent');
+      expect(rider.appliesToEntryIds).toEqual(['e-ghoul']);
+    });
+  });
+
+  describe('computeTargetDamage honors the allow-list for persistent + conditions', () => {
+    const riders = [
+      {
+        id: 'vit-p', label: 'Vitalizing (vs undead)',
+        persistent: { dice: '1d6', type: 'vitality' }, appliesToEntryIds: ['e-ghoul'],
+      },
+      {
+        id: 'vit-c', label: 'Vitalizing — enfeebled 1 (vs undead)',
+        condition: 'enfeebled 1', on: ['criticalSuccess'], appliesToEntryIds: ['e-ghoul'],
+      },
+    ];
+    it('applies persistent vitality on a hit vs the undead target', () => {
+      const out = computeTargetDamage({ entered: 12, degree: 'success', riders, entryId: 'e-ghoul' });
+      expect(out.persistent).toEqual([{ dice: '1d6', type: 'vitality', label: 'Vitalizing (vs undead)' }]);
+    });
+    it('suppresses everything vs a non-undead target', () => {
+      const out = computeTargetDamage({ entered: 12, degree: 'criticalSuccess', riders, entryId: 'e-gob' });
+      expect(out.persistent).toEqual([]);
+      expect(out.conditions).toEqual([]);
+    });
+    it('crit vs undead doubles the persistent dice and surfaces the condition', () => {
+      const out = computeTargetDamage({ entered: 12, degree: 'criticalSuccess', riders, entryId: 'e-ghoul' });
+      expect(out.persistent[0].dice).toBe('2d6');
+      expect(out.conditions).toEqual([{ label: 'Vitalizing — enfeebled 1 (vs undead)', condition: 'enfeebled 1' }]);
+    });
   });
 });

@@ -10,6 +10,7 @@ export const traits           = snapshot.trait      || [];
 export const calendarEvents   = snapshot.calendar   || [];
 export const images           = snapshot.image      || [];
 export const themeDocs        = snapshot.theme      || [];
+export const runes            = snapshot.rune       || [];
 
 // Preserve the { Factions: [...] } shape that contentUtils + ContentContext expect.
 export const reputation = { Factions: snapshot.faction || [] };

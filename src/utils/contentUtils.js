@@ -14,8 +14,10 @@ import {
   images as defaultImages,
   themeDocs as defaultThemeDocs,
   effects as snapshotEffects,
+  runes as snapshotRunes,
 } from '../data';
 import bootstrapEffects from '../data/pf2eEffects';
+import bootstrapRunes from '../data/pf2eRunes';
 
 export const slugify = (str) =>
   String(str || '')
@@ -134,6 +136,24 @@ export const normalizeEffects = (arr) =>
     id: e.id || slugify(e.name),
     modifiers: Array.isArray(e.modifiers) ? e.modifiers : [],
   }));
+
+// Property runes (#548 Slice 3) — id-keyed like effects, referenced from an
+// item's `runes.property` array.
+export const normalizeRunes = (arr) =>
+  (Array.isArray(arr) ? arr : []).map((r) => ({
+    ...r,
+    id: r.id || slugify(r.name),
+    type: r.type || 'property',
+  }));
+
+// id -> property-rune doc, for resolving an item's runes.property references.
+export const runeCatalogMap = (runes) => {
+  const map = new Map();
+  (Array.isArray(runes) ? runes : []).forEach((r) => {
+    if (r && r.id != null) map.set(String(r.id), r);
+  });
+  return map;
+};
 
 // id -> catalog spell, for resolving wand/scroll/staff spell references.
 export const spellCatalogMap = (spells) => {
@@ -270,7 +290,7 @@ const applyArtifactGating = (item, ownerLevel) => {
 // owner level FIRST (so a still-locked staff isn't spell-resolved), then inline
 // any wand/scroll/staff spell refs. Identity-preserving when nothing applies,
 // so legacy inline items pass through byte-for-byte.
-const finishItem = (item, spellMap, ownerLevel) => {
+const finishItem = (item, spellMap, ownerLevel, runeMap) => {
   if (!item || typeof item !== 'object') return item;
   let out = applyArtifactGating(item, ownerLevel);
   if (out.scroll) {
@@ -284,6 +304,16 @@ const finishItem = (item, spellMap, ownerLevel) => {
   if (out.staff) {
     const r = resolveStaffSpells(out.staff, spellMap);
     if (r !== out.staff) out = { ...out, staff: r };
+  }
+  // Inline a weapon's property-rune references (#548 Slice 3): runes.property
+  // is authored as an array of rune ids; resolve each against the catalog so
+  // weaponRunes/strikeUtils consume full rune docs (id strings that don't
+  // resolve are dropped; already-inlined objects pass through untouched).
+  if (runeMap && out.runes && Array.isArray(out.runes.property) && out.runes.property.length) {
+    const resolved = out.runes.property
+      .map((ref) => (typeof ref === 'string' ? runeMap.get(String(ref)) : ref))
+      .filter(Boolean);
+    out = { ...out, runes: { ...out.runes, property: resolved } };
   }
   return out;
 };
@@ -306,7 +336,7 @@ const finishItem = (item, spellMap, ownerLevel) => {
 // itemState.itemAbilitiesActive). It flows onto the effective entry for free:
 // the catalog spread below carries it, and buildEffectiveInventory spreads
 // the whole entry, so no special handling is needed here.
-export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel) => {
+export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, runeMap) => {
   if (!entry || typeof entry !== 'object') return entry;
 
   if (entry.ref == null) {
@@ -320,12 +350,13 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel) =>
                 entry.container.contents,
                 catalogMap,
                 spellMap,
-                ownerLevel
+                ownerLevel,
+                runeMap
               ),
             },
           }
         : entry;
-    return finishItem(inline, spellMap, ownerLevel);
+    return finishItem(inline, spellMap, ownerLevel, runeMap);
   }
 
   const quantity = entry.quantity != null ? entry.quantity : 1;
@@ -355,18 +386,19 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel) =>
         entry.container && entry.container.contents,
         catalogMap,
         spellMap,
-        ownerLevel
+        ownerLevel,
+        runeMap
       ),
     };
   }
   // Gate artifact abilities by owner level, then inline wand/scroll/staff
-  // spell refs — see finishItem.
-  return finishItem(resolved, spellMap, ownerLevel);
+  // spell refs and property-rune refs — see finishItem.
+  return finishItem(resolved, spellMap, ownerLevel, runeMap);
 };
 
-export const resolveInventory = (list, catalogMap, spellMap, ownerLevel) =>
+export const resolveInventory = (list, catalogMap, spellMap, ownerLevel, runeMap) =>
   (Array.isArray(list) ? list : []).map((e) =>
-    resolveInventoryItem(e, catalogMap, spellMap, ownerLevel)
+    resolveInventoryItem(e, catalogMap, spellMap, ownerLevel, runeMap)
   );
 
 // Resolve a character's crafting recipes against the item catalog.
@@ -375,7 +407,7 @@ export const resolveInventory = (list, catalogMap, spellMap, ownerLevel) =>
 // Duplicates (same ref) are collapsed to the first occurrence, making legacy
 // per-variant data render correctly without a migration. Inline entries (no
 // ref) pass through for back-compat.
-export const resolveCraftingRecipes = (crafting, catalogMap, spellMap, ownerLevel) => {
+export const resolveCraftingRecipes = (crafting, catalogMap, spellMap, ownerLevel, runeMap) => {
   const seen = new Set();
   const deduped = (Array.isArray(crafting) ? crafting : []).filter((e) => {
     if (!e || typeof e !== 'object' || e.ref == null) return true;
@@ -388,21 +420,23 @@ export const resolveCraftingRecipes = (crafting, catalogMap, spellMap, ownerLeve
     catalogMap,
     spellMap,
     ownerLevel,
+    runeMap,
   );
 };
 
 // Resolve a character's inventory (and crafting recipes) against the item
 // catalog. Characters with neither are returned untouched (shape preserved).
-export const resolveCharacterItems = (character, items, spells) => {
+export const resolveCharacterItems = (character, items, spells, runes) => {
   if (!character || typeof character !== 'object') return character;
   const catalogMap = itemCatalogMap(items);
   const spMap = spellCatalogMap(spells);
+  const runeMap = runeCatalogMap(runes);
   let out = character;
   if (Array.isArray(character.inventory)) {
-    out = { ...out, inventory: resolveInventory(out.inventory, catalogMap, spMap, character.level) };
+    out = { ...out, inventory: resolveInventory(out.inventory, catalogMap, spMap, character.level, runeMap) };
   }
   if (Array.isArray(character.crafting)) {
-    out = { ...out, crafting: resolveCraftingRecipes(out.crafting, catalogMap, spMap, character.level) };
+    out = { ...out, crafting: resolveCraftingRecipes(out.crafting, catalogMap, spMap, character.level, runeMap) };
   }
   return out;
 };
@@ -474,6 +508,9 @@ export const defaultContent = () => ({
   // Effects migrated to the DO (issue #263): the snapshot is canonical once it
   // carries an effect collection; pf2eEffects.js only bootstraps the first seed.
   effect: normalizeEffects(snapshotEffects.length ? snapshotEffects : bootstrapEffects),
+  // Property runes (#548): brand-new collection, bootstrap-seeded until the
+  // snapshot carries a `rune` array (same pattern as effects).
+  rune: normalizeRunes(snapshotRunes.length ? snapshotRunes : bootstrapRunes),
   image: normalizeImages(defaultImages || []),
   theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
   monster: [],

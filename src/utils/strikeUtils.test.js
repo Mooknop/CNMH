@@ -120,13 +120,13 @@ describe('getStrikes weapon runes (#548)', () => {
     expect(pick.source).toBe('+1 Striking Pick'); // derived display name
   });
 
-  test('property-rune riders are forwarded onto the strike', () => {
+  test('property-rune riders are translated onto the strike', () => {
     const rider = { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' };
     const char = {
       ...martialChar,
       inventory: [{
         id: 'i4', name: 'Greataxe',
-        runes: { potency: 2, striking: 'greater', property: [{ name: 'Vitalizing', price: 150, rider }] },
+        runes: { potency: 2, striking: 'greater', property: [{ id: 'vitalizing', name: 'Vitalizing', price: 150, rider }] },
         strikes: { name: 'Axe Strike', proficiency: 'martial', type: 'melee', damage: '1d12' },
       }],
     };
@@ -134,6 +134,13 @@ describe('getStrikes weapon runes (#548)', () => {
     expect(axe).toBeDefined();
     expect(axe.damage).toBe('3d12+2'); // 1d12 scaled +2 dice
     expect(axe.source).toBe('+2 Greater Striking Vitalizing Greataxe');
-    expect(axe.riders).toEqual([rider]);
+    expect(axe.riders).toEqual([
+      {
+        id: 'rune-vitalizing-persistent',
+        label: 'Vitalizing (vs undead)',
+        persistent: { dice: '1d6', type: 'vitality' },
+        appliesVsTrait: 'undead',
+      },
+    ]);
   });
 });

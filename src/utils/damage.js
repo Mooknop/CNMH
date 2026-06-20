@@ -103,6 +103,27 @@ export const riderAmount = (rider, { expression, character } = {}) => {
 
 const HIT_DEGREES = ['success', 'criticalSuccess'];
 
+// Entry ids whose creature traits include `trait` (case-insensitive). Targets
+// with NO trait data — manually-added enemies that never came from Foundry/the
+// bestiary — can't be disproven, so they stay in (GM keeps the call). Drives
+// `appliesVsTrait` riders such as Vitalizing's "vs undead" (#548).
+export const traitGatedEntryIds = (trait, enemyEntries) => {
+  const want = String(trait || '').toLowerCase();
+  return (enemyEntries || [])
+    .filter((e) => {
+      const traits = e?.bestiary?.traits;
+      if (!Array.isArray(traits) || !traits.length) return true;
+      return traits.some((t) => String(t).toLowerCase() === want);
+    })
+    .map((e) => e.entryId);
+};
+
+// A non-bonus rider with an `appliesToEntryIds` allow-list fires only for those
+// targets; without one it fires for every target (default-on). Distinct from
+// weakness riders, which are opt-in and require the list.
+const riderMatchesEntry = (rider, entryId) =>
+  !Array.isArray(rider.appliesToEntryIds) || rider.appliesToEntryIds.includes(entryId);
+
 // A rider is on unless the player unticked it (or it was authored defaultOn:false).
 export const riderEnabled = (rider, riderState) =>
   riderState?.[rider.id] ?? rider.defaultOn !== false;
@@ -149,7 +170,7 @@ export const computeTargetDamage = ({
   total += weaknessParts.reduce((sum, p) => sum + p.amount, 0);
 
   const persistent = enabled
-    .filter((r) => r.persistent?.dice)
+    .filter((r) => r.persistent?.dice && riderMatchesEntry(r, entryId))
     .map((r) => ({
       dice: isCrit ? doubleDice(r.persistent.dice) : r.persistent.dice,
       type: r.persistent.type || '',
@@ -160,7 +181,7 @@ export const computeTargetDamage = ({
   // number. They ride the same degree gating and surface in the breakdown/log
   // for the GM to apply — never doubled.
   const conditions = enabled
-    .filter((r) => r.condition)
+    .filter((r) => r.condition && riderMatchesEntry(r, entryId))
     .map((r) => ({ label: r.label, condition: r.condition }));
 
   return {
@@ -441,8 +462,17 @@ export const buildDamageProfile = (ability, character, {
   const exploitR = exploitRider(exploit, enemyEntries, order);
   if (exploitR) riders.push(exploitR);
 
-  if (!expression && !riders.length) return null;
-  return { expression, typeLabel, riders };
+  // Resolve trait-conditional riders (#548 — Vitalizing's "vs undead") against
+  // the actual targets' creature traits, into the per-target allow-list the
+  // damage step already understands.
+  const gatedRiders = riders.map((r) =>
+    r.appliesVsTrait
+      ? { ...r, appliesToEntryIds: traitGatedEntryIds(r.appliesVsTrait, enemyEntries) }
+      : r
+  );
+
+  if (!expression && !gatedRiders.length) return null;
+  return { expression, typeLabel, riders: gatedRiders };
 };
 
 /**
