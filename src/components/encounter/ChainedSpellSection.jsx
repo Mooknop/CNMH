@@ -8,12 +8,15 @@
 
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
 import TargetRollResolver from './TargetRollResolver';
+import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll } from '../../utils/rollResolution';
 import { useContent } from '../../contexts/ContentContext';
 import { useOmen } from '../../hooks/useOmen';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { isAttackAbility } from '../../utils/map';
+import { getVariableActionRange } from '../../utils/actionIconUtils';
+import { buildDamageProfile, serializeRidersForSave } from '../../utils/damage';
 import { HARROW_SUITS, HARROW_CAST_DC, harrowCastEffect } from '../../utils/harrow';
 
 // Same parser as UseAbilityModal — avoids a circular import.
@@ -50,6 +53,11 @@ const ChainedSpellSection = forwardRef(({
   // The parent's useCastingResources instance (#235). Optional: without it the
   // section has no rank picker and the parent falls back to native-rank spend.
   resources = null,
+  // The actor's active exploit weakness + full encounter order (#281) — needed
+  // to scope a chained save spell's damage profile the same way the direct path
+  // does. Mirrors the props ChainedStrikeSection already receives.
+  exploit = null,
+  order = [],
 }, ref) => {
   const { effects: effectCatalog } = useContent();
   const filteredSpells = useMemo(() => {
@@ -124,6 +132,26 @@ const ChainedSpellSection = forwardRef(({
 
   const saveTargets = rollProfile.mode === 'target-save' ? enemyTargets : [];
 
+  // Damage step (#281) — a basic-save spell chained through a Spellshape carries
+  // the caster's entered total + rider snapshot, same as a direct cast, so the
+  // GM's RequestedSaves derives per-degree totals. Built at the section's own
+  // cast rank, with the actor's exploit weakness scoped against the targets.
+  // Variable-action spells (Blazing Bolt) are deferred to #572: the section has
+  // no action-count picker, so the damage tier can't be pinned — they fall back
+  // to a bare save request (no panel) rather than emit a wrong tier.
+  const isVariableActionSpell = !!getVariableActionRange(selectedSpell);
+  const saveDamageProfile = (saveTargets.length > 0 && !isVariableActionSpell)
+    ? buildDamageProfile(selectedSpell, character, {
+        chosenActions: typeof spellCost === 'number' ? spellCost : null,
+        castRank,
+        exploit,
+        enemyEntries: saveTargets,
+        order,
+      })
+    : null;
+  const [saveDmgInput, setSaveDmgInput] = useState('');
+  const [saveRiderState, setSaveRiderState] = useState({});
+
   // Split Shot second target: default to the second selected enemy.
   const secondaryEntry = isSplitShot && resolverTargets.length >= 2
     ? (resolverTargets.find((e) => e.entryId === secondaryOverride) || resolverTargets[1])
@@ -142,6 +170,22 @@ const ChainedSpellSection = forwardRef(({
   useImperativeHandle(ref, () => ({
     getResults: () => {
       if (!selectedSpell) return null;
+      // Damage payload for a chained basic-save spell (#281) — the entered total
+      // plus the baked rider snapshot, attached only when the caster supplied a
+      // number or an enabled rider survives. Mirrors the direct path's shape.
+      let damage;
+      if (saveDamageProfile) {
+        const enteredNum = parseInt(saveDmgInput, 10);
+        const savedRiders = serializeRidersForSave(saveDamageProfile.riders, saveRiderState);
+        if (!Number.isNaN(enteredNum) || savedRiders.length > 0) {
+          damage = {
+            entered: Number.isNaN(enteredNum) ? null : enteredNum,
+            expression: saveDamageProfile.expression ?? null,
+            typeLabel: saveDamageProfile.typeLabel ?? null,
+            riders: savedRiders,
+          };
+        }
+      }
       return {
         spellId:     selectedSpell.id,
         spellName:   selectedSpell.name,
@@ -154,6 +198,8 @@ const ChainedSpellSection = forwardRef(({
         rollResults: resolverRef.current?.getResults() ?? null,
         saveTargets: saveTargets.length > 0 ? saveTargets : null,
         rollProfile,
+        spellBasic: selectedSpell.basic === true,
+        damage: damage ?? null,
         harrow: isHarrow ? {
           drawnSuit,
           omenSuit,
@@ -351,6 +397,17 @@ const ChainedSpellSection = forwardRef(({
             {saveTargets.map((e) => <li key={e.entryId}>{e.name}</li>)}
           </ul>
         </div>
+      )}
+
+      {saveDamageProfile && (
+        <DamagePanel
+          mode="save"
+          profile={saveDamageProfile}
+          entered={saveDmgInput}
+          onEntered={setSaveDmgInput}
+          riderState={saveRiderState}
+          onToggleRider={(id, on) => setSaveRiderState((cur) => ({ ...cur, [id]: on }))}
+        />
       )}
     </div>
   );

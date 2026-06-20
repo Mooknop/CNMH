@@ -1021,12 +1021,13 @@ const UseAbilityModal = ({
           abilityName: `${ability.name} → ${chainResults.spellName}`,
           save: chainResults.rollProfile.defense,
           dc: chainResults.rollProfile.dc,
-          basic: false,
+          basic: !!chainResults.spellBasic,
           rank: chainResults.castRank > 0 ? chainResults.castRank : undefined,
           targets: chainResults.saveTargets.map((e) => ({
             entryId: e.entryId, name: e.name,
             saveMod: e.defenses?.saves?.[chainResults.rollProfile.defense] ?? null,
           })),
+          ...(chainResults.damage && { damage: chainResults.damage }),
         });
       }
 
@@ -1716,6 +1717,8 @@ const UseAbilityModal = ({
                   onSpellChange={onChainSpellChange}
                   mapStep={mapStep}
                   resources={resources}
+                  exploit={exploitFor(character.id)}
+                  order={order}
                 />
               </>
             ) : (
