@@ -41,7 +41,7 @@ export function removeResult(results, id) {
   return (results || []).filter((r) => r.id !== id);
 }
 
-// Builds a pending result entry to append to the queue.
+// Builds a pending Earn Income result entry to append to the queue.
 export function buildEarnIncomeResult({
   charId, charName,
   taskLevel, dc,
@@ -51,6 +51,7 @@ export function buildEarnIncomeResult({
 }) {
   return {
     id: newEntryUid(),
+    kind: 'earn-income',
     charId,
     charName,
     taskLevel,
@@ -62,6 +63,31 @@ export function buildEarnIncomeResult({
     total,
     degree,
     payoutCp,
+    status: 'pending',
+    periodStartedAt: startedAt ?? null,
+    ts: Date.now(),
+  };
+}
+
+// Builds a pending Crafting completion entry. The GM confirm grants the item
+// into the character doc (applyCrafting.grantCraftedItem); the gold was already
+// spent player-side, so this entry is item-only.
+export function buildCraftingResult({
+  charId, charName,
+  ref, level, itemName,
+  degree, paidCp,
+  startedAt,
+}) {
+  return {
+    id: newEntryUid(),
+    kind: 'crafting',
+    charId,
+    charName,
+    ref,
+    level: level ?? null,
+    itemName,
+    degree,
+    paidCp,
     status: 'pending',
     periodStartedAt: startedAt ?? null,
     ts: Date.now(),
