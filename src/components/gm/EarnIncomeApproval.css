@@ -1,0 +1,68 @@
+.eia-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.eia-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-left-width: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.eia-row--success,
+.eia-row--criticalSuccess {
+  border-left-color: var(--color-success, #38a169);
+}
+
+.eia-row--failure,
+.eia-row--criticalFailure {
+  border-left-color: var(--color-danger, #e53e3e);
+}
+
+.eia-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.eia-name {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--theme-text, var(--shell-text));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eia-detail {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-variant-numeric: tabular-nums;
+}
+
+.eia-payout {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--theme-text, var(--shell-text));
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.eia-actions {
+  display: flex;
+  gap: var(--space-1);
+}
