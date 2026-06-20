@@ -68,6 +68,21 @@ export const stampItemEffects = (items, overlay) =>
  * @returns {Array} the next overlay
  */
 export function applyItemEffect({ user, targetItem, itemName, meta, nowSecs, getState, sendUpdate, appendLog }) {
+  // Transient (instantaneous) item consumables — e.g. Rust Scrub, which restores
+  // item HP rather than leaving an ongoing state. Until item HP is modeled
+  // (epic #539 / #543) the apply is log-only: it records which item was treated
+  // and the note (e.g. "Restore 2d4 HP"), but writes no tracked effect/badge.
+  if (meta?.transient) {
+    if (appendLog) {
+      appendLog({
+        type:   'action',
+        charId: user.id,
+        text:   `${user.name} applied ${itemName} to ${targetItem?.name || 'item'}${meta.note ? ` — ${meta.note}` : ''}`,
+      });
+    }
+    return getState ? (getState(user.id, 'itemeffects') || []) : [];
+  }
+
   const entry = {
     id:        newEntryUid(),
     itemId:    itemKeyOf(targetItem),

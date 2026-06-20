@@ -314,6 +314,28 @@ describe('item-target consumable (oil)', () => {
       text: 'Blu applied Oil of Weightlessness to Full Plate (60 min)',
     }));
   });
+
+  it('transient consumable (Rust Scrub) logs the application but writes no overlay', () => {
+    const rustScrub = {
+      id: 'rust-scrub',
+      name: 'Rust Scrub',
+      quantity: 1,
+      traits: ['Consumable'],
+      consumable: { kind: 'effect', target: 'item', transient: true, note: 'Restore 2d4 HP to rust damage (GM adjudicates)' },
+    };
+    mockCharData = { inventory: [{ id: 'plate-1', name: 'Full Plate' }, rustScrub] };
+    renderModal({ item: rustScrub });
+    fireEvent.click(screen.getByRole('button', { name: 'Full Plate' }));
+    // Rust Scrub isn't an oil, so the verb is "Use".
+    fireEvent.click(screen.getByRole('button', { name: 'Use' }));
+
+    expect(consumedState).toEqual({ 'Rust Scrub': 1 });
+    // No item-effect overlay write for an instantaneous consumable.
+    expect(mockSendUpdate).not.toHaveBeenCalledWith('c1', 'itemeffects', expect.anything());
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Blu applied Rust Scrub to Full Plate — Restore 2d4 HP to rust damage (GM adjudicates)',
+    }));
+  });
 });
 
 // ── Race guard ───────────────────────────────────────────────────────────────
