@@ -115,6 +115,7 @@ export function useTake10(charId = null) {
 
   return {
     active,
+    openedAt,
     minutes,
     myMinutes,
     activities,

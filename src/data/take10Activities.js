@@ -18,7 +18,7 @@ export const TAKE10_ACTIVITIES = [
     name: 'Refocus',
     minutes: 10,
     requiresAnyFlag: ['hasFocusSpells'],
-    note: 'Restore 1 Focus Point (up to your pool).',
+    note: 'Restore ALL your Focus Points.',
   },
   {
     id: 'treat-wounds',

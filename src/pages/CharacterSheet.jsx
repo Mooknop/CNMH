@@ -35,7 +35,6 @@ import { useCharacter } from '../hooks/useCharacter';
 import { useMinions } from '../hooks/useMinions';
 import { MINION_COMPANION, MINION_FAMILIAR } from '../utils/minionUtils';
 import { useSyncedState } from '../hooks/useSyncedState';
-import { useFocusReset } from '../hooks/useFocusReset';
 import { isCharTurn } from '../utils/encounterUtils';
 import { hydrateConditions } from '../data/pf2eConditions';
 import './CharacterSheet.css';
@@ -104,8 +103,9 @@ const CharacterSheet = () => {
   const { encounter } = useEncounter();
   const { mode } = usePlayMode();
 
-  // Outside Encounter mode, focus points refresh to full (replaces Refocus).
-  useFocusReset(character?.id);
+  // Focus recovery is no longer automatic out of combat: spent Focus Points
+  // persist between encounters, restored by a Take 10 Refocus (restores all) or
+  // a full rest / daily preparations. (#562)
 
   // Conditions are owned (written) by StatsBlock's ConditionModal via this same
   // synced key. We read it here — without touching useCharacter — so the
