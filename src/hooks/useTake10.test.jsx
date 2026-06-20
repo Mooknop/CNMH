@@ -38,11 +38,14 @@ const makeWrapper = (characters) =>
     );
   };
 
+const OPENED = 100;
 const setGlobal = (g) => { syncedValues['cnmh_take10_global'] = g; };
+const activate = () => setGlobal({ active: true, openedAt: OPENED, startedBy: 'a' });
 const setAlloc = (id, v) => {
   syncedValues[`cnmh_take10alloc_${id}`] = v;
   stateMap[`${id}:take10alloc`] = v;
 };
+const beat = (activities = [], ready = false) => ({ beatAt: OPENED, ready, activities });
 
 beforeEach(() => {
   syncedValues = {};
@@ -62,23 +65,33 @@ describe('useTake10', () => {
     });
     expect(result.current.active).toBe(false);
     expect(result.current.allReady).toBe(false);
-    expect(result.current.readyCount).toBe(0);
+    expect(result.current.minutes).toBe(10);
   });
 
-  it('is not all-ready while no one has stamped the current beat', () => {
-    setGlobal({ active: true, minutes: 10, openedAt: 100, startedBy: 'a' });
+  it('floors the block length at 10 minutes with no allocations', () => {
+    activate();
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }, { id: 'b' }]),
     });
-    expect(result.current.active).toBe(true);
-    expect(result.current.allReady).toBe(false);
+    expect(result.current.minutes).toBe(10);
     expect(result.current.readyCount).toBe(0);
   });
 
-  it('is all-ready when every PC stamps the current openedAt', () => {
-    setGlobal({ active: true, minutes: 10, openedAt: 100, startedBy: 'a' });
-    setAlloc('a', { readyAt: 100 });
-    setAlloc('b', { readyAt: 100 });
+  it('derives the block length as the party-max total allocation', () => {
+    activate();
+    setAlloc('a', beat([{ id: 'treat-wounds', label: 'Treat Wounds', minutes: 10 }]));
+    setAlloc('b', beat([{ id: 'learn-a-spell', label: 'Learn a Spell', minutes: 60 }]));
+    const { result } = renderHook(() => useTake10('a'), {
+      wrapper: makeWrapper([{ id: 'a' }, { id: 'b' }]),
+    });
+    expect(result.current.minutes).toBe(60);
+    expect(result.current.myMinutes).toBe(10);
+  });
+
+  it('is all-ready only when every PC is ready for the live beat', () => {
+    activate();
+    setAlloc('a', beat([], true));
+    setAlloc('b', beat([], true));
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }, { id: 'b' }]),
     });
@@ -87,15 +100,16 @@ describe('useTake10', () => {
     expect(result.current.ready).toBe(true);
   });
 
-  it('ignores a stale ready stamp from a prior beat', () => {
-    setGlobal({ active: true, minutes: 10, openedAt: 200, startedBy: 'a' });
-    setAlloc('a', { readyAt: 200 });
-    setAlloc('b', { readyAt: 100 }); // stale
+  it('ignores a stale-beat alloc for readiness and budget', () => {
+    activate();
+    setAlloc('a', beat([], true));
+    setAlloc('b', { beatAt: 1, ready: true, activities: [{ minutes: 30 }] }); // stale
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }, { id: 'b' }]),
     });
     expect(result.current.readyCount).toBe(1);
     expect(result.current.allReady).toBe(false);
+    expect(result.current.minutes).toBe(10); // stale 30 not counted
   });
 
   it('subscribes to each party PC alloc key', () => {
@@ -106,51 +120,87 @@ describe('useTake10', () => {
     expect(mockSubscribe).toHaveBeenCalledWith('b', 'take10alloc', expect.any(Function));
   });
 
-  it('recomputes readiness when a subscribed alloc changes', () => {
-    setGlobal({ active: true, minutes: 10, openedAt: 100, startedBy: 'a' });
-    setAlloc('a', { readyAt: 100 });
+  it('recomputes when a subscribed alloc changes', () => {
+    activate();
+    setAlloc('a', beat([], true));
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }, { id: 'b' }]),
     });
     expect(result.current.allReady).toBe(false);
-
     act(() => {
-      setAlloc('b', { readyAt: 100 });
+      setAlloc('b', beat([], true));
       subscribers.forEach((s) => s.cb());
     });
     expect(result.current.allReady).toBe(true);
   });
 
-  it('start() opens a beat with a fresh stamp and the given minutes', () => {
+  it('start() opens a beat with a fresh stamp', () => {
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }]),
     });
-    act(() => result.current.start(10));
+    act(() => result.current.start());
     const g = syncedValues['cnmh_take10_global'];
     expect(g.active).toBe(true);
-    expect(g.minutes).toBe(10);
     expect(g.startedBy).toBe('a');
     expect(typeof g.openedAt).toBe('number');
   });
 
   it('clear() closes the beat without wiping the stamp', () => {
-    setGlobal({ active: true, minutes: 10, openedAt: 100, startedBy: 'a' });
+    activate();
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }]),
     });
     act(() => result.current.clear());
     expect(syncedValues['cnmh_take10_global'].active).toBe(false);
-    expect(syncedValues['cnmh_take10_global'].openedAt).toBe(100);
+    expect(syncedValues['cnmh_take10_global'].openedAt).toBe(OPENED);
   });
 
-  it('setReady stamps and unstamps the current beat', () => {
-    setGlobal({ active: true, minutes: 10, openedAt: 100, startedBy: 'a' });
+  it('setReady stamps the live beat', () => {
+    activate();
     const { result } = renderHook(() => useTake10('a'), {
       wrapper: makeWrapper([{ id: 'a' }]),
     });
     act(() => result.current.setReady(true));
-    expect(syncedValues['cnmh_take10alloc_a'].readyAt).toBe(100);
-    act(() => result.current.setReady(false));
-    expect(syncedValues['cnmh_take10alloc_a'].readyAt).toBe(null);
+    expect(syncedValues['cnmh_take10alloc_a']).toEqual({
+      beatAt: OPENED, ready: true, activities: [],
+    });
+  });
+
+  it('addActivity appends to the beat-stamped stack', () => {
+    activate();
+    const { result } = renderHook(() => useTake10('a'), {
+      wrapper: makeWrapper([{ id: 'a' }]),
+    });
+    act(() => result.current.addActivity({ id: 'refocus', label: 'Refocus', minutes: 10 }));
+    act(() => result.current.addActivity({ id: 'refocus', label: 'Refocus', minutes: 10 }));
+    expect(syncedValues['cnmh_take10alloc_a'].activities).toHaveLength(2);
+  });
+
+  it('addActivity drops a stale prior-beat stack', () => {
+    activate();
+    setAlloc('a', { beatAt: 1, ready: true, activities: [{ id: 'old', label: 'Old', minutes: 30 }] });
+    const { result } = renderHook(() => useTake10('a'), {
+      wrapper: makeWrapper([{ id: 'a' }]),
+    });
+    act(() => result.current.addActivity({ id: 'refocus', label: 'Refocus', minutes: 10 }));
+    const a = syncedValues['cnmh_take10alloc_a'];
+    expect(a.beatAt).toBe(OPENED);
+    expect(a.ready).toBe(false);
+    expect(a.activities).toEqual([{ id: 'refocus', label: 'Refocus', minutes: 10 }]);
+  });
+
+  it('removeActivity removes by index', () => {
+    activate();
+    setAlloc('a', beat([
+      { id: 'x', label: 'X', minutes: 10 },
+      { id: 'y', label: 'Y', minutes: 10 },
+    ]));
+    const { result } = renderHook(() => useTake10('a'), {
+      wrapper: makeWrapper([{ id: 'a' }]),
+    });
+    act(() => result.current.removeActivity(0));
+    expect(syncedValues['cnmh_take10alloc_a'].activities).toEqual([
+      { id: 'y', label: 'Y', minutes: 10 },
+    ]);
   });
 });

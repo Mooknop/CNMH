@@ -30,11 +30,120 @@
   color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
 
-.t10-blurb {
+/* Budget meter — fill bar + label */
+.t10-budget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.t10-budget-bar {
+  height: 6px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--accent-tint, rgba(255, 255, 255, 0.08));
+  overflow: hidden;
+}
+
+.t10-budget-fill {
+  height: 100%;
+  background: var(--t10-theme, var(--color-theme));
+  transition: width 0.2s ease;
+}
+
+.t10-budget-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+/* Stacked allocation list */
+.t10-stack {
+  list-style: none;
   margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.t10-stack-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent-tint, rgba(255, 255, 255, 0.05));
+}
+
+.t10-stack-name {
+  flex: 1;
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   color: var(--theme-text, var(--shell-text));
+}
+
+.t10-stack-min {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.t10-remove {
+  border: none;
+  background: none;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  cursor: pointer;
+  font-size: var(--text-md);
+  line-height: 1;
+  padding: 0 var(--space-1);
+}
+
+.t10-remove:hover {
+  color: var(--color-danger, #d9534f);
+}
+
+/* Available activities to add */
+.t10-available {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.t10-empty {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.t10-add {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  border: 1px solid var(--accent-outline, var(--shell-border));
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  padding: var(--space-1) var(--space-3);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.t10-add:hover {
+  border-color: var(--t10-theme, var(--color-theme));
+  background: var(--accent-tint, rgba(255, 255, 255, 0.06));
+}
+
+.t10-add-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.t10-add-min {
+  font-size: var(--text-xs);
+  color: var(--t10-theme, var(--color-theme));
 }
 
 .t10-footer {

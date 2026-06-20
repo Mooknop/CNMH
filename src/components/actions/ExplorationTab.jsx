@@ -74,7 +74,7 @@ const ExplorationTab = ({ character, characterColor }) => {
 
       {!take10Active && (
         <div className="et-toggle-row">
-          <button className="et-toggle" onClick={() => startTake10(10)}>
+          <button className="et-toggle" onClick={() => startTake10()}>
             Take 10
           </button>
         </div>
