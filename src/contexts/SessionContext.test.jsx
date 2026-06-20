@@ -91,7 +91,7 @@ describe('SessionContext', () => {
   it('sendUpdate sends JSON when open and records state locally', () => {
     let api;
     render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
-    act(() => { MockWS.last._open(); });
+    act(() => { MockWS.last._open(); MockWS.last._msg({ type: 'PRESENCE', foundry: true }); });
     act(() => { api.sendUpdate('IzzyUncut', 'focus', 5); });
     expect(MockWS.last.sent).toHaveLength(1);
     expect(JSON.parse(MockWS.last.sent[0])).toEqual({
@@ -112,7 +112,7 @@ describe('SessionContext', () => {
         <Subscriber characterId="Pellias" type="loadout" />
       </SessionProvider>
     );
-    act(() => { MockWS.last._open(); });
+    act(() => { MockWS.last._open(); MockWS.last._msg({ type: 'PRESENCE', foundry: true }); });
     expect(screen.getByTestId('sub').textContent).toBe('none');
     act(() => { api.sendUpdate('Pellias', 'loadout', { x: 1 }); });
     expect(screen.getByTestId('sub').textContent).toBe('[object Object]');
@@ -163,6 +163,28 @@ describe('SessionContext', () => {
       MockWS.last._msg({ type: 'UPDATE', characterId: 'A', key: 'b', value: 9 });
     });
     expect(screen.getByTestId('u').textContent).toBe('none');
+  });
+
+  it('freezes sendUpdate in the offline sandbox (DO up, Foundry down)', () => {
+    let api;
+    render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+    act(() => { MockWS.last._open(); }); // connected=true, foundryConnected still false
+    act(() => { api.sendUpdate('IzzyUncut', 'focus', 5); });
+    // No socket write and no cached state change — the write is inert.
+    expect(MockWS.last.sent).toHaveLength(0);
+    expect(api.getState('IzzyUncut', 'focus')).toBeUndefined();
+  });
+
+  it('resumes sendUpdate once Foundry presence arrives', () => {
+    let api;
+    render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+    act(() => {
+      MockWS.last._open();
+      MockWS.last._msg({ type: 'PRESENCE', foundry: true });
+    });
+    act(() => { api.sendUpdate('IzzyUncut', 'focus', 5); });
+    expect(MockWS.last.sent).toHaveLength(1);
+    expect(api.getState('IzzyUncut', 'focus')).toBe(5);
   });
 
   it('foundryConnected defaults to false until a PRESENCE signal', () => {

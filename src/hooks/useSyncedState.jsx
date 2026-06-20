@@ -23,7 +23,7 @@ const writeLocal = (key, value) => {
 };
 
 export const useSyncedState = (key, initialValue) => {
-  const { getState, sendUpdate, subscribe } = useSession();
+  const { getState, sendUpdate, subscribe, connected, foundryConnected } = useSession();
 
   const match = typeof key === 'string' ? key.match(/^cnmh_([^_]+)_(.+)$/) : null;
   const synced = !!match;
@@ -67,12 +67,18 @@ export const useSyncedState = (key, initialValue) => {
   }, [synced, characterId, stateType, key, subscribe]);
 
   const setAndSync = useCallback((updater) => {
+    // Offline sandbox (#553): when the DO is up but Foundry isn't, synced
+    // (campaign) writes are fully inert — no local value change, no
+    // localStorage, no sync — so the UI freezes at the last-synced state and
+    // nothing gets consumed. Local-only keys (no character match) stay
+    // interactive so navigation/UI prefs keep working offline.
+    if (synced && connected && !foundryConnected) return;
     const next = typeof updater === 'function' ? updater(latest.current) : updater;
     latest.current = next;
     setValue(next);
     writeLocal(key, next);
     if (synced) sendUpdate(characterId, stateType, next);
-  }, [key, synced, characterId, stateType, sendUpdate]);
+  }, [key, synced, characterId, stateType, sendUpdate, connected, foundryConnected]);
 
   return [current, setAndSync];
 };

@@ -37,6 +37,12 @@ export const SessionProvider = ({ children }) => {
   // whenever this client's link to the DO drops.
   const [foundryConnected, setFoundryConnected] = useState(false);
 
+  // Offline sandbox (#553): the DO is up but Foundry isn't, so campaign-state
+  // writes must be inert. Mirror the derived flag into a ref the stable
+  // sendUpdate callback can read without churning its identity.
+  const sandboxRef = useRef(false);
+  sandboxRef.current = connected && !foundryConnected;
+
   const notify = (characterId, stateType, value) => {
     subscribers.current[characterId]?.[stateType]?.forEach((cb) => cb(value));
   };
@@ -123,6 +129,11 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   const sendUpdate = useCallback((characterId, stateType, value) => {
+    // Offline sandbox: freeze every campaign-state mutation (synced via
+    // useSyncedState or written directly by consumables/healing/GM tools) so
+    // nothing gets used up while the game isn't running. Suppress before
+    // touching the cache, the socket, or local subscribers.
+    if (sandboxRef.current) return;
     if (!serverState.current[characterId]) serverState.current[characterId] = {};
     serverState.current[characterId][stateType] = value;
     const socket = ws.current;
