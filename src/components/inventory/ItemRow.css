@@ -1,0 +1,50 @@
+/* Host item + its affixed talismans (#254/#339) */
+.item-row {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Indented child line for a talisman affixed to the item above it. */
+.affixed-talisman-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.4rem);
+  margin: 2px 0 0 var(--space-5, 1.75rem);
+  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+  background: none;
+  border: none;
+  border-left: 2px solid var(--shell-border, rgba(255, 255, 255, 0.12));
+  border-radius: 0;
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.75));
+  font-family: var(--font-ui);
+  font-size: var(--text-sm, 0.85rem);
+  cursor: pointer;
+  text-align: left;
+}
+
+.affixed-talisman-line:hover {
+  color: var(--shell-text-primary, #fff);
+  border-left-color: var(--accent-outline, var(--shell-border-strong));
+}
+
+.affixed-cue {
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.5));
+}
+
+.affixed-name {
+  font-weight: 600;
+}
+
+.affixed-tag {
+  font-size: var(--text-xs, 0.7rem);
+  letter-spacing: 0.02em;
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.5));
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.15));
+  border-radius: var(--radius-full, 999px);
+  padding: 0 6px;
+}
+
+.affixed-chevron {
+  margin-left: auto;
+  color: var(--shell-text-tertiary, rgba(255, 255, 255, 0.4));
+}

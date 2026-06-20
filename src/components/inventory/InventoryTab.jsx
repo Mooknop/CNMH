@@ -1,10 +1,11 @@
 import React from 'react';
 import './InventoryTab.css';
 import './ItemCard.css';
-import ItemCard from './ItemCard';
+import ItemRow from './ItemRow';
 import ContainersList from './ContainersList';
-import { formatBulk, getBulkStatus, applyConsumedOverlay } from '../../utils/InventoryUtils';
+import { formatBulk, getBulkStatus, applyConsumedOverlay, flattenInventory } from '../../utils/InventoryUtils';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
+import { affixedKey, affixedUidSet, affixedTalismansByHost, itemUidOf } from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 
@@ -27,10 +28,18 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   // Item-target effects overlay (oils, #339) — surfaced as a chip on the item.
   const [itemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
+  // Affixed-talisman overlay (#254/#339) — talisman uid → host uid.
+  const [affixed] = useSyncedState(affixedKey(character?.id), {});
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
   const { bulkLimit, encumberedThreshold } = bulkStats;
+
+  // Affixed talismans render as indented child lines under their host (not as
+  // their own line). Resolve over the FULL inventory so a talisman shows under
+  // its host wherever the talisman entry physically lives.
+  const affixedUids = affixedUidSet(affixed);
+  const talismansByHost = affixedTalismansByHost(affixed, flattenInventory(inventory));
 
   const { percentage: bulkPercentage, isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
 
@@ -47,6 +56,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // alphabetically. (Container contents get the same overlays inside
   // ContainerItem via the `consumed`/`itemEffects` props — #253/#339.)
   const sortedInventory = stampItemEffects(applyConsumedOverlay(inventory, consumed), itemEffects)
+    .filter((item) => !affixedUids.has(itemUidOf(item)))
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   return (
@@ -90,10 +100,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
       <div className="item-card-list">
         {sortedInventory.length > 0 ? (
           sortedInventory.map((item) => (
-            <ItemCard
+            <ItemRow
               key={item.id || `item-${item.name}`}
               item={item}
-              onClick={onItemClick}
+              affixedTalismans={talismansByHost[itemUidOf(item)] || []}
+              onItemClick={onItemClick}
             />
           ))
         ) : (
@@ -106,6 +117,8 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         inventory={sortedInventory}
         consumed={consumed}
         itemEffects={itemEffects}
+        affixedUids={affixedUids}
+        talismansByHost={talismansByHost}
         themeColor={characterColor}
         onItemClick={onItemClick}
       />

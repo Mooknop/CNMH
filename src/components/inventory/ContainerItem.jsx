@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import './ContainerItem.css';
 import './ItemCard.css';
-import ItemCard from './ItemCard';
+import ItemRow from './ItemRow';
 import {
   calculateContainerBulk,
   formatBulk,
   applyConsumedOverlay,
 } from '../../utils/InventoryUtils';
 import { stampItemEffects } from '../../utils/itemEffects';
+import { itemUidOf } from '../../utils/affix';
 
 /**
  * Container fold row: header (name + bulk summary) expands to a nested bulk bar
@@ -17,7 +18,7 @@ import { stampItemEffects } from '../../utils/itemEffects';
  * @param {string} props.themeColor - Theme color
  * @param {function} props.onItemClick - Handler for item clicks
  */
-const ContainerItem = ({ container, consumed, itemEffects, themeColor, onItemClick }) => {
+const ContainerItem = ({ container, consumed, itemEffects, affixedUids, talismansByHost, themeColor, onItemClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Bail early if not a container
@@ -45,7 +46,11 @@ const ContainerItem = ({ container, consumed, itemEffects, themeColor, onItemCli
   // then sort alphabetically. The bulk math above still uses the authored
   // contents, mirroring the top-level list where consumed items leave the card
   // list but don't change Bulk (#253).
+  // Affixed talismans show under their host (here or top-level), not as their own
+  // stowed line — filter them out of the contents list (#254/#339).
+  const affixedSet = affixedUids || new Set();
   const sortedContents = stampItemEffects(applyConsumedOverlay(contents, consumed), itemEffects)
+    .filter((it) => !affixedSet.has(itemUidOf(it)))
     .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
   return (
@@ -87,10 +92,11 @@ const ContainerItem = ({ container, consumed, itemEffects, themeColor, onItemCli
         <div className="container-contents">
           <div className="item-card-list">
             {sortedContents.map((item, index) => (
-              <ItemCard
+              <ItemRow
                 key={item.id || `container-item-${index}`}
                 item={item}
-                onClick={onItemClick}
+                affixedTalismans={(talismansByHost || {})[itemUidOf(item)] || []}
+                onItemClick={onItemClick}
               />
             ))}
           </div>

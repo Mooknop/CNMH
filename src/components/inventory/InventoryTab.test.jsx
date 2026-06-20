@@ -18,11 +18,16 @@ vi.mock('../../utils/InventoryUtils', async () => ({
   }),
 }));
 
-// Consumed-consumables overlay (cnmh_consumed_<charId>); gold key gets its default.
+// Consumed overlay (cnmh_consumed_<charId>) + affix overlay (cnmh_affixed_<id>);
+// gold key gets its default.
 let mockConsumed = {};
+let mockAffixed = {};
 vi.mock('../../hooks/useSyncedState', () => ({
-  useSyncedState: (key, initialValue) =>
-    key.startsWith('cnmh_consumed_') ? [mockConsumed, vi.fn()] : [initialValue, vi.fn()],
+  useSyncedState: (key, initialValue) => {
+    if (key.startsWith('cnmh_consumed_')) return [mockConsumed, vi.fn()];
+    if (key.startsWith('cnmh_affixed_')) return [mockAffixed, vi.fn()];
+    return [initialValue, vi.fn()];
+  },
 }));
 
 vi.mock('../../hooks/useCharacter', () => ({
@@ -58,6 +63,18 @@ vi.mock('../../hooks/useCharacter', () => ({
         bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
         totalBulk: character.id === 'over' ? 15 : 8,
         inventory: [{ uid: 'x', id: 'x', name: 'Anvil', weight: 8, state: 'worn' }],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
+    if (character.id === 'talisman') {
+      return {
+        id: 'talisman',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 1,
+        inventory: [
+          { uid: 'w1', id: 'w1', name: 'Longsword', weight: 1, state: 'held1', strikes: [{ damage: '1d8' }] },
+          { uid: 't1', id: 't1', name: 'Wolf Fang', weight: 0, state: 'worn', traits: ['Talisman'], talisman: { affixTo: 'weapon' } },
+        ],
         skillProficiencies: { crafting: 0 },
       };
     }
@@ -100,6 +117,28 @@ const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
 
 beforeEach(() => {
   mockConsumed = {};
+  mockAffixed = {};
+});
+
+describe('InventoryTab — affixed talismans (#254/#339)', () => {
+  it('shows an affixed talisman as an indented child line, not its own card', () => {
+    mockAffixed = { t1: 'w1' };
+    const { container } = render(<InventoryTab character={{ id: 'talisman' }} characterColor="#7E8C9A" />);
+    // Host still has its card; the talisman is no longer a standalone card.
+    expect(screen.getByTestId('item-card-w1')).toBeInTheDocument();
+    expect(screen.queryByTestId('item-card-t1')).not.toBeInTheDocument();
+    // It renders as the indented affixed line instead.
+    const line = container.querySelector('.affixed-talisman-line');
+    expect(line).toBeInTheDocument();
+    expect(line).toHaveTextContent('Wolf Fang');
+  });
+
+  it('shows the talisman as a normal card when not affixed', () => {
+    mockAffixed = {};
+    const { container } = render(<InventoryTab character={{ id: 'talisman' }} characterColor="#7E8C9A" />);
+    expect(screen.getByTestId('item-card-t1')).toBeInTheDocument();
+    expect(container.querySelector('.affixed-talisman-line')).toBeNull();
+  });
 });
 
 describe('InventoryTab', () => {
