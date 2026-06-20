@@ -30,6 +30,7 @@ const SUBNAV = {
     { id: 'items', label: 'Items', icon: 'bag', countKey: 'items' },
     { id: 'spells', label: 'Spells', icon: 'wand', countKey: 'spells' },
     { id: 'effects', label: 'Effects', icon: 'spark', countKey: 'effects' },
+    { id: 'runes', label: 'Runes', icon: 'rune', countKey: 'runes' },
     { id: 'images', label: 'Images', icon: 'image', countKey: 'images' },
     { id: 'monsters', label: 'Bestiary', icon: 'sword', countKey: 'monsters' },
     { id: 'traits', label: 'Traits', icon: 'tag', countKey: 'traits' },

@@ -35,6 +35,7 @@ import GmCharacters from './pages/gm/GmCharacters';
 import GmItems from './pages/gm/GmItems';
 import GmSpells from './pages/gm/GmSpells';
 import GmEffects from './pages/gm/GmEffects';
+import GmRunes from './pages/gm/GmRunes';
 import GmEncounter from './pages/gm/GmEncounter';
 import GmImages from './pages/gm/GmImages';
 import GmTheme from './pages/gm/GmTheme';
@@ -116,6 +117,7 @@ function App() {
                           <Route path="catalog/items" element={<GmItems />} />
                           <Route path="catalog/spells" element={<GmSpells />} />
                           <Route path="catalog/effects" element={<GmEffects />} />
+                          <Route path="catalog/runes" element={<GmRunes />} />
                           <Route path="catalog/images" element={<GmImages />} />
                           <Route path="catalog/monsters" element={<GmMonsters />} />
                           <Route path="catalog/traits" element={<GmTraits />} />
