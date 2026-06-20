@@ -8,6 +8,7 @@ const RECONNECT_MS = 3000;
 
 const NOOP_SESSION = {
   connected: false,
+  foundryConnected: false,
   getState: () => undefined,
   getAllState: () => undefined,
   sendUpdate: () => {},
@@ -31,6 +32,10 @@ export const SessionProvider = ({ children }) => {
   const reconnectTimer = useRef(null);
   const unmounted = useRef(false);
   const [connected, setConnected] = useState(false);
+  // Whether the Foundry bridge is present on the relay. Driven by PRESENCE
+  // messages from the DO; unknown (false) until the first signal, and reset
+  // whenever this client's link to the DO drops.
+  const [foundryConnected, setFoundryConnected] = useState(false);
 
   const notify = (characterId, stateType, value) => {
     subscribers.current[characterId]?.[stateType]?.forEach((cb) => cb(value));
@@ -56,6 +61,8 @@ export const SessionProvider = ({ children }) => {
       socket.onclose = () => {
         if (unmounted.current) return;
         setConnected(false);
+        // Lost the DO link — we can no longer trust the last presence signal.
+        setFoundryConnected(false);
         reconnectTimer.current = setTimeout(connect, RECONNECT_MS);
       };
 
@@ -86,6 +93,11 @@ export const SessionProvider = ({ children }) => {
           if (!serverState.current[characterId]) serverState.current[characterId] = {};
           serverState.current[characterId][key] = value;
           notify(characterId, key, value);
+          return;
+        }
+
+        if (msg.type === 'PRESENCE') {
+          setFoundryConnected(!!msg.foundry);
         }
       };
     };
@@ -136,7 +148,7 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   return (
-    <SessionContext.Provider value={{ connected, getState, getAllState, sendUpdate, subscribe }}>
+    <SessionContext.Provider value={{ connected, foundryConnected, getState, getAllState, sendUpdate, subscribe }}>
       {children}
     </SessionContext.Provider>
   );

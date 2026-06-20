@@ -34,13 +34,65 @@ export class CampaignSession {
     const client = pair[0];
     const server = pair[1];
 
+    // Tag the socket as the Foundry bridge or a player/GM app, derived from the
+    // request path the Worker forwarded (/bridge/… vs /session/…). Stash it via
+    // serializeAttachment so the kind survives DO hibernation and is readable in
+    // the message/close handlers below.
+    const kind = url.pathname.startsWith('/bridge/') ? 'bridge' : 'app';
+    server.serializeAttachment({ kind });
+
     // Hibernatable accept — handlers below are invoked by the runtime.
     this.state.acceptWebSocket(server);
 
     const sessionState = (await this.state.storage.get(STATE_KEY)) || {};
     server.send(JSON.stringify({ type: 'FULL_STATE', payload: sessionState }));
 
+    if (kind === 'bridge') {
+      // A bridge just arrived — tell every app peer Foundry is live.
+      this.broadcastPresence(true);
+    } else {
+      // Fresh app load: seed it with current Foundry presence so it knows
+      // immediately, even mid-session after a reload.
+      server.send(JSON.stringify({ type: 'PRESENCE', foundry: this.anyBridgeConnected() }));
+    }
+
     return new Response(null, { status: 101, webSocket: client });
+  }
+
+  // True if any currently-connected socket is a Foundry bridge. `exclude` skips
+  // a socket that is in the middle of closing (still present in getWebSockets()).
+  anyBridgeConnected(exclude) {
+    for (const peer of this.state.getWebSockets()) {
+      if (peer === exclude) continue;
+      let attachment;
+      try {
+        attachment = peer.deserializeAttachment();
+      } catch {
+        attachment = null;
+      }
+      if (attachment?.kind === 'bridge') return true;
+    }
+    return false;
+  }
+
+  // Fan a PRESENCE signal out to app peers only — bridge sockets don't care
+  // about their own presence.
+  broadcastPresence(foundry) {
+    const msg = JSON.stringify({ type: 'PRESENCE', foundry });
+    for (const peer of this.state.getWebSockets()) {
+      let attachment;
+      try {
+        attachment = peer.deserializeAttachment();
+      } catch {
+        attachment = null;
+      }
+      if (attachment?.kind === 'bridge') continue;
+      try {
+        peer.send(msg);
+      } catch {
+        /* peer is gone; runtime will clean it up */
+      }
+    }
   }
 
   async webSocketMessage(ws, raw) {
@@ -72,6 +124,7 @@ export class CampaignSession {
   }
 
   async webSocketClose(ws) {
+    this.handleDisconnect(ws);
     try {
       ws.close();
     } catch {
@@ -80,10 +133,25 @@ export class CampaignSession {
   }
 
   async webSocketError(ws) {
+    this.handleDisconnect(ws);
     try {
       ws.close();
     } catch {
       /* already closed */
     }
+  }
+
+  // When a bridge socket drops, re-derive Foundry presence (another bridge tab
+  // may still be connected) and notify app peers. The closing socket may still
+  // appear in getWebSockets(), so exclude it from the recount.
+  handleDisconnect(ws) {
+    let attachment;
+    try {
+      attachment = ws.deserializeAttachment();
+    } catch {
+      attachment = null;
+    }
+    if (attachment?.kind !== 'bridge') return;
+    this.broadcastPresence(this.anyBridgeConnected(ws));
   }
 }
