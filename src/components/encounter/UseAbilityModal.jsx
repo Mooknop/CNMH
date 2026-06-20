@@ -996,13 +996,20 @@ const UseAbilityModal = ({
         chainResults.rollResults.forEach((r) => {
           const degreeLabel = r.degree ? (chainDegreeMap[r.degree] || r.degree) : null;
           // Split Shot (#227): the designated second target takes half damage.
-          const splitSuffix = chainResults.splitShot?.secondaryEntryId === r.entryId
+          const isSplitSecondary = chainResults.splitShot?.secondaryEntryId === r.entryId;
+          const splitSuffix = isSplitSecondary
             ? ' · second target — half damage, no other effects'
+            : '';
+          // Damage step result (#571): per-target total with the rider breakdown.
+          // Suppressed on the Split Shot second target — its damage is halved and
+          // the note above already says so, so the full number would mislead.
+          const dmgSuffix = (r.damage?.final != null && !isSplitSecondary)
+            ? ` · damage ${formatDamageBreakdown(r.damage)}`
             : '';
           appendLog({
             type: 'action', charId: character.id,
             text: degreeLabel
-              ? `${character.name} ${effectiveVerb} ${ability.name} → ${label} vs ${r.name}: ${r.total} → ${degreeLabel}${splitSuffix}`
+              ? `${character.name} ${effectiveVerb} ${ability.name} → ${label} vs ${r.name}: ${r.total} → ${degreeLabel}${dmgSuffix}${splitSuffix}`
               : `${character.name} ${effectiveVerb} ${ability.name} → ${label}`,
           });
         });
