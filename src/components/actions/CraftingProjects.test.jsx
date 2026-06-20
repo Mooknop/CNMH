@@ -291,10 +291,16 @@ describe('CraftingProjects', () => {
       });
     });
 
-    it('warns but does not block when the up-front cost exceeds gold', () => {
+    it('blocks Start when the up-front cost exceeds gold (#593)', () => {
       goldValue = 10; // less than 17.5
       startAntidoteModerate();
       expect(screen.getByText(/over your 10 gp/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Start project' })).toBeDisabled();
+    });
+
+    it('allows Start once gold covers the up-front cost', () => {
+      goldValue = 20; // ≥ 17.5
+      startAntidoteModerate();
       expect(screen.getByRole('button', { name: 'Start project' })).not.toBeDisabled();
     });
 
@@ -369,6 +375,22 @@ describe('CraftingProjects', () => {
       expect(mockSetGold.mock.calls[0][0](100)).toBe(82.5); // 100 − 17.5 remaining
       const result = mockSetProjects.mock.calls[0][0]({ projects: [awaiting('success')] });
       expect(result.projects[0]).toMatchObject({ status: 'completed', remainingCp: 0 });
+    });
+
+    it('blocks Complete now when gold cannot cover the remaining cost, but leaves Continue (#593)', () => {
+      goldValue = 10; // remaining 17.5
+      withProjects([awaiting('success')]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByRole('button', { name: `Complete ${readyProject.name} now` })).toBeDisabled();
+      expect(screen.getByRole('button', { name: `Continue ${readyProject.name}` })).not.toBeDisabled();
+      expect(screen.getByText(/Can.t afford to finish/)).toBeInTheDocument();
+    });
+
+    it('blocks the reducing Pay-now button when gold cannot cover the remainder (#593)', () => {
+      goldValue = 10; // remaining 17.5
+      withProjects([{ ...readyProject, status: 'reducing', craftDegree: 'success' }]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByRole('button', { name: `Finish ${readyProject.name} now` })).toBeDisabled();
     });
 
     it('Continue switches the project to reducing (no gold spent yet)', () => {
