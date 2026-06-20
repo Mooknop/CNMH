@@ -8717,6 +8717,12 @@
     {
       "id": "rust-scrub",
       "name": "Rust Scrub",
+      "consumable": {
+        "kind": "effect",
+        "target": "item",
+        "transient": true,
+        "note": "Restore 2d4 HP to rust damage (GM adjudicates)"
+      },
       "price": 2,
       "weight": 0.1,
       "traits": [
