@@ -168,3 +168,37 @@ export const resolveWeapon = (base = {}, runes = {}) => {
     properties,
   };
 };
+
+// Whether an item carries a structured `runes` block (the base + runes model).
+const hasRuneBlock = (item) =>
+  !!(item && item.runes && typeof item.runes === 'object' && !Array.isArray(item.runes));
+
+/**
+ * The effective display name for an inventory weapon: the full derived runed
+ * name (#548) for a base + runes weapon, else the item's own name (legacy baked
+ * weapons and everything non-runed pass through unchanged). Display-only — the
+ * base `name` is what strike resolution derives from, so this never feeds back
+ * into the resolver.
+ */
+export const weaponDisplayName = (item) => {
+  if (!hasRuneBlock(item)) return item?.name;
+  return resolveWeapon(
+    { name: item.name, price: item.price, material: item.material, traits: item.traits },
+    item.runes,
+  ).name;
+};
+
+/**
+ * Short potency/striking summary for a runed weapon ("+2 Greater Striking"),
+ * or '' when neither is present. Property runes are listed separately.
+ */
+export const runeTierSummary = (runes) => {
+  if (!runes || typeof runes !== 'object') return '';
+  return buildWeaponName({ potency: POTENCY[runes.potency]?.bonus || 0, striking: runes.striking, base: '' });
+};
+
+/** Resolved property-rune docs on an item, in slot order ([] when none). */
+export const weaponPropertyRunes = (item) =>
+  hasRuneBlock(item) && Array.isArray(item.runes.property)
+    ? item.runes.property.filter((p) => p && typeof p === 'object')
+    : [];

@@ -841,3 +841,33 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     expect(screen.queryByTestId('item-action-activate')).not.toBeInTheDocument();
   });
 });
+
+describe('ItemModal weapon runes (#548 Slice 3c)', () => {
+  const runedAxe = {
+    name: 'Greataxe',
+    weight: 2,
+    runes: {
+      potency: 2,
+      striking: 'greater',
+      property: [{ id: 'vitalizing', name: 'Vitalizing', description: '1d6 persistent vitality vs undead.' }],
+    },
+  };
+
+  it('titles the modal with the full derived runed name', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={runedAxe} />);
+    expect(screen.getByText('+2 Greater Striking Vitalizing Greataxe')).toBeInTheDocument();
+  });
+
+  it('shows a Runes section with the tier summary and each property rune', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={runedAxe} />);
+    const runes = screen.getByTestId('item-modal-runes');
+    expect(runes).toHaveTextContent('+2 Greater Striking');
+    expect(runes).toHaveTextContent('Vitalizing');
+    expect(runes).toHaveTextContent('1d6 persistent vitality vs undead.');
+  });
+
+  it('omits the Runes section for a non-runed item', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={{ name: 'Rope', weight: 1 }} />);
+    expect(screen.queryByTestId('item-modal-runes')).not.toBeInTheDocument();
+  });
+});
