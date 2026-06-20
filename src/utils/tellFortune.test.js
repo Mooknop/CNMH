@@ -3,6 +3,9 @@ import {
   auguryOutcome,
   isTellFortuneImmune,
   tellFortuneImmunityEntry,
+  creatureKey,
+  ledgerBlocks,
+  pruneTellFortuneLedger,
   TELL_FORTUNE_ABILITY_KEY,
   TELL_FORTUNE_IMMUNITY_SECS,
 } from './tellFortune';
@@ -72,5 +75,31 @@ describe('Tell Fortune immunity', () => {
 
   it('is false when the target has no Tell Fortune immunity', () => {
     expect(isTellFortuneImmune([], 'jade', now)).toBe(false);
+  });
+});
+
+describe('caster-side ledger', () => {
+  const now = 1000;
+
+  it('slugs a creature name into a stable key', () => {
+    expect(creatureKey('Goblin  War Chief')).toBe('creature:goblin-war-chief');
+  });
+
+  it('ledgerBlocks reflects an unexpired entry for that target key', () => {
+    const ledger = { 'pc-1': tellFortuneImmunityEntry('jade', now) };
+    expect(ledgerBlocks(ledger, 'pc-1', 'jade', now + 100)).toBe(true);
+    expect(ledgerBlocks(ledger, 'pc-2', 'jade', now + 100)).toBe(false); // different target
+    expect(ledgerBlocks(ledger, 'pc-1', 'jade', now + TELL_FORTUNE_IMMUNITY_SECS + 1)).toBe(false); // expired
+    expect(ledgerBlocks({}, 'pc-1', 'jade', now)).toBe(false);
+    expect(ledgerBlocks(ledger, '', 'jade', now)).toBe(false); // no target chosen
+  });
+
+  it('pruneTellFortuneLedger keeps unexpired entries and drops the rest', () => {
+    const ledger = {
+      fresh: tellFortuneImmunityEntry('jade', now),
+      stale: { ...tellFortuneImmunityEntry('jade', now), expireAtSecs: now - 1 },
+    };
+    const pruned = pruneTellFortuneLedger(ledger, now);
+    expect(Object.keys(pruned)).toEqual(['fresh']);
   });
 });
