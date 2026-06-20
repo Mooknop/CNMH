@@ -566,11 +566,6 @@ describe('ChainedSpellSection — attack damage panel (#571)', () => {
     level: 1, traits: ['Attack'], targetDefense: 'ac',
     damageData: { base: '2d6', type: 'fire' }, // variable single-roll: profile via #572 picker
   };
-  const BLAZING_BOLT = {
-    id: 'bb', name: 'Blazing Bolt', actions: 'One to Three Actions', range: '60 feet',
-    level: 2, traits: ['Attack', 'Fire'], targetDefense: 'ac', rolls: 'per-action',
-    damageData: { base: '2d6', type: 'fire' }, // per-action multi-ray: still deferred
-  };
   const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
 
   const renderAttack = (spells) => render(
@@ -602,10 +597,66 @@ describe('ChainedSpellSection — attack damage panel (#571)', () => {
     renderAttack([VAR_ATTACK]);
     expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', '2d6');
   });
+});
 
-  it('still defers per-action multi-ray spells (Blazing Bolt) — chained multi-ray follow-up', () => {
-    renderAttack([BLAZING_BOLT]);
-    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', 'none');
+// Per-action multi-ray chained spells (#581, Blazing Bolt): one resolver row per
+// ray at the chosen action count, each carrying the variant damage tier. The
+// real MultiRayResolver renders here (only TargetRollResolver is mocked), so a
+// 3-action cast yields three mocked resolver rows.
+describe('ChainedSpellSection — per-action multi-ray (#581)', () => {
+  const BLAZING_BOLT = {
+    id: 'bb', name: 'Blazing Bolt', actions: 'One to Three Actions', range: '60 feet',
+    level: 2, traits: ['Attack', 'Fire'], targetDefense: 'ac', rolls: 'per-action',
+    variants: [
+      { actions: 1, note: '1 ray, 2d6 fire', damage: { base: '2d6', type: 'fire' } },
+      { actions: 2, note: '2 rays, 4d6 fire each', damage: { base: '4d6', type: 'fire' } },
+      { actions: 3, note: '3 rays, 4d6 fire each', damage: { base: '4d6', type: 'fire' } },
+    ],
+  };
+  const enemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+
+  const renderBolt = (ref) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={{ ...character, spellcasting: { spells: [BLAZING_BOLT] } }}
+      chain={reachChain}
+      parentCost={1}
+      enemyTargets={enemies}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, dc: null, defense: 'ac' });
+  });
+
+  it('renders one ray (1-action default) carrying the 1-action damage tier', () => {
+    renderBolt();
+    const rays = screen.getAllByTestId('spell-resolver');
+    expect(rays).toHaveLength(1);
+    expect(rays[0]).toHaveAttribute('data-damage', '2d6');
+  });
+
+  it('renders one ray per chosen action, at the higher damage tier', () => {
+    renderBolt();
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    const rays = screen.getAllByTestId('spell-resolver');
+    expect(rays).toHaveLength(3);
+    rays.forEach((row) => expect(row).toHaveAttribute('data-damage', '4d6')); // 3-action variant
+  });
+
+  it('getResults flags multiRay and returns grouped per-ray results', () => {
+    const ref = createRef();
+    renderBolt(ref);
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    const res = ref.current.getResults();
+    expect(res.multiRay).toBe(true);
+    expect(res.chosenActions).toBe(2);
+    // MultiRayResolver shape: [{ rayIndex, results: [...] }]
+    expect(res.rollResults).toHaveLength(2);
+    expect(res.rollResults[0]).toMatchObject({ rayIndex: 0 });
+    expect(res.rollResults[1]).toMatchObject({ rayIndex: 1 });
   });
 });
 

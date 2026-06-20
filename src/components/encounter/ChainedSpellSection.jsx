@@ -8,6 +8,7 @@
 
 import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
 import TargetRollResolver from './TargetRollResolver';
+import MultiRayResolver from './MultiRayResolver';
 import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
 import { resolveActionRoll } from '../../utils/rollResolution';
@@ -146,18 +147,21 @@ const ChainedSpellSection = forwardRef(({
 
   const saveTargets = rollProfile.mode === 'target-save' ? enemyTargets : [];
 
-  // Per-action multi-ray spells (Blazing Bolt's "one ray per action") still defer
-  // their damage panel: rendering N rays + normalising the multi-ray result for
-  // the chained log is a follow-up. Single-roll and save variable-action spells
-  // now get a real profile at the chosen tier (#572).
-  const isPerActionMultiRay = selectedSpell?.rolls === 'per-action';
+  // Per-action multi-ray spells (Blazing Bolt — "one spell-attack roll per ray,
+  // one ray per action") render one resolver row per ray (#581). rayCount is the
+  // chosen action count; each ray shares the same damage profile (the variant
+  // dice for the chosen tier) and its own d20/target, mirroring the direct path.
+  const isMultiRayCast = selectedSpell?.rolls === 'per-action'
+    && rollProfile.mode === 'actor-roll'
+    && resolverTargets.length > 0;
+  const rayCount = isMultiRayCast ? (chosenActions ?? 1) : 1;
 
   // Damage step (#281) — a basic-save spell chained through a Spellshape carries
   // the caster's entered total + rider snapshot, same as a direct cast, so the
   // GM's RequestedSaves derives per-degree totals. Built at the section's own
   // cast rank, with the actor's exploit weakness scoped against the targets. The
   // chosen action-count variant (#572) overrides the dice via damageOverride.
-  const saveDamageProfile = (saveTargets.length > 0 && !isPerActionMultiRay)
+  const saveDamageProfile = saveTargets.length > 0
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
         castRank,
@@ -170,13 +174,13 @@ const ChainedSpellSection = forwardRef(({
   const [saveDmgInput, setSaveDmgInput] = useState('');
   const [saveRiderState, setSaveRiderState] = useState({});
 
-  // Damage step (#571) — a spell-attack spell chained through a Spellshape gets
-  // the same damage panel a direct cast does: the resolver owns the panel + the
-  // per-target computeTargetDamage once a `damage` profile is passed. Built at
-  // the section's cast rank with the actor's exploit weakness scoped against the
-  // resolver targets; the chosen variant (#572) overrides the dice.
-  const attackDamageProfile = (resolverTargets.length > 0
-    && rollProfile.defense === 'ac' && !isPerActionMultiRay)
+  // Damage step (#571 single-roll, #581 multi-ray) — a spell-attack spell chained
+  // through a Spellshape gets the same damage panel a direct cast does: the
+  // resolver owns the panel + per-target computeTargetDamage once a `damage`
+  // profile is passed. Built at the section's cast rank with the actor's exploit
+  // weakness scoped against the resolver targets; the chosen variant (#572)
+  // overrides the dice (per-ray for Blazing Bolt).
+  const attackDamageProfile = (resolverTargets.length > 0 && rollProfile.defense === 'ac')
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
         castRank,
@@ -232,6 +236,9 @@ const ChainedSpellSection = forwardRef(({
         castRank,
         isAttackSpell: isAttackAbility(selectedSpell),
         rollResults: resolverRef.current?.getResults() ?? null,
+        // Multi-ray casts (#581) return grouped results [{rayIndex, results}];
+        // the flag tells the parent to normalise + ray-prefix the log.
+        multiRay: isMultiRayCast,
         saveTargets: saveTargets.length > 0 ? saveTargets : null,
         rollProfile,
         spellBasic: selectedSpell.basic === true,
@@ -442,14 +449,26 @@ const ChainedSpellSection = forwardRef(({
       </div>
 
       {resolverTargets.length > 0 && (
-        <TargetRollResolver
-          ref={resolverRef}
-          enemyTargets={resolverTargets}
-          targetDefense={rollProfile.defense || 'ac'}
-          rollBonus={rollProfile.bonus}
-          damage={attackDamageProfile}
-          degrees={selectedSpell?.degrees}
-        />
+        isMultiRayCast ? (
+          <MultiRayResolver
+            ref={resolverRef}
+            rayCount={rayCount}
+            enemyTargets={resolverTargets}
+            targetDefense={rollProfile.defense || 'ac'}
+            rollBonus={rollProfile.bonus}
+            damage={attackDamageProfile}
+            degrees={selectedSpell?.degrees}
+          />
+        ) : (
+          <TargetRollResolver
+            ref={resolverRef}
+            enemyTargets={resolverTargets}
+            targetDefense={rollProfile.defense || 'ac'}
+            rollBonus={rollProfile.bonus}
+            damage={attackDamageProfile}
+            degrees={selectedSpell?.degrees}
+          />
+        )
       )}
 
       {saveTargets.length > 0 && (
