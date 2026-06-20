@@ -66,7 +66,11 @@ vi.mock('../../hooks/useSyncedState', () => ({
 }));
 
 const mockClearTake10 = vi.fn();
-let mockTake10 = { allReady: false, minutes: 10, openedAt: 0, clear: mockClearTake10 };
+const idleTake10 = () => ({
+  active: false, allReady: false, minutes: 10, openedAt: 0,
+  readyCount: 0, ids: [], clear: mockClearTake10,
+});
+let mockTake10 = idleTake10();
 vi.mock('../../hooks/useTake10', () => ({
   __esModule: true,
   useTake10: () => mockTake10,
@@ -92,7 +96,7 @@ beforeEach(() => {
   mockState.gmMode = 'exploration';
   mockState.moveEnabled = false;
   mockAllChosen = true;
-  mockTake10 = { allReady: false, minutes: 10, openedAt: 0, clear: mockClearTake10 };
+  mockTake10 = idleTake10();
 });
 
 const renderDowntime = () => {
@@ -105,15 +109,15 @@ const renderDowntime = () => {
 };
 
 describe('PlayModeControl', () => {
+  const refocusAlloc = (id, key) => {
+    if (key === 'take10alloc') return { beatAt: 500, ready: true, activities: [{ id: 'refocus', label: 'Refocus', minutes: 10 }] };
+    if (key === 'focus') return 2;
+    return null;
+  };
+
   it('on all-ready: resolves allocations, advances the clock, and closes the beat', () => {
-    mockTake10 = { allReady: true, minutes: 20, openedAt: 500, clear: mockClearTake10 };
-    mockGetState.mockImplementation((id, key) => {
-      if (id === 'a' && key === 'take10alloc') {
-        return { beatAt: 500, ready: true, activities: [{ id: 'refocus', label: 'Refocus', minutes: 10 }] };
-      }
-      if (id === 'a' && key === 'focus') return 2;
-      return null;
-    });
+    mockTake10 = { ...idleTake10(), active: true, allReady: true, minutes: 20, openedAt: 500 };
+    mockGetState.mockImplementation((id, key) => (id === 'a' ? refocusAlloc(id, key) : null));
     renderWith([{ id: 'a', name: 'Ari' }]);
     expect(mockSendUpdate).toHaveBeenCalledWith('a', 'focus', 0);
     expect(mockAdvanceMinutes).toHaveBeenCalledWith(20);
@@ -122,6 +126,41 @@ describe('PlayModeControl', () => {
 
   it('does not advance the clock while the party is not all-ready', () => {
     renderWith([{ id: 'a', name: 'Ari' }]);
+    expect(mockAdvanceMinutes).not.toHaveBeenCalled();
+  });
+
+  it('GM "Resolve now" force-resolves with partial readiness', () => {
+    mockTake10 = {
+      ...idleTake10(), active: true, allReady: false, minutes: 20, openedAt: 500,
+      readyCount: 1, ids: ['a', 'b'],
+    };
+    mockGetState.mockImplementation((id, key) => (id === 'a' ? refocusAlloc(id, key) : null));
+    renderWith([{ id: 'a', name: 'Ari' }, { id: 'b', name: 'Bex' }]);
+    // Did not auto-resolve (not all-ready)…
+    expect(mockAdvanceMinutes).not.toHaveBeenCalled();
+    expect(screen.getByText('Take 10 · 1 / 2 ready')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resolve now' }));
+    expect(mockSendUpdate).toHaveBeenCalledWith('a', 'focus', 0);
+    expect(mockAdvanceMinutes).toHaveBeenCalledWith(20);
+    expect(mockClearTake10).toHaveBeenCalled();
+  });
+
+  it('GM "Cancel" closes the beat without advancing time', () => {
+    mockTake10 = {
+      ...idleTake10(), active: true, allReady: false, minutes: 20, openedAt: 500,
+      readyCount: 0, ids: ['a'],
+    };
+    renderWith([{ id: 'a', name: 'Ari' }]);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(mockClearTake10).toHaveBeenCalled();
+    expect(mockAdvanceMinutes).not.toHaveBeenCalled();
+  });
+
+  it('cancels an active Take 10 when an encounter interrupts it', () => {
+    mockState.mode = 'encounter';
+    mockTake10 = { ...idleTake10(), active: true, openedAt: 500 };
+    renderWith([{ id: 'a', name: 'Ari' }]);
+    expect(mockClearTake10).toHaveBeenCalled();
     expect(mockAdvanceMinutes).not.toHaveBeenCalled();
   });
 

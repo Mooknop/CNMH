@@ -37,6 +37,7 @@ beforeEach(() => {
     addActivity: mockAddActivity,
     removeActivity: mockRemoveActivity,
     readyCount: 1,
+    allReady: false,
     ids: ['a', 'b', 'c'],
   };
 });
@@ -68,6 +69,12 @@ describe('Take10Prompt', () => {
     expect(screen.getByText('10 / 10 min allocated')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Remove Refocus' }));
     expect(mockRemoveActivity).toHaveBeenCalledWith(0);
+  });
+
+  it('shows a waiting hint once everyone is ready', () => {
+    mockState.allReady = true;
+    render(<Take10Prompt character={character} />);
+    expect(screen.getByText(/waiting for the GM to resolve/i)).toBeInTheDocument();
   });
 
   it('toggles readiness on click', () => {

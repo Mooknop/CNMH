@@ -14,7 +14,7 @@ const Take10Prompt = ({ character, characterColor }) => {
   const charId = character?.id;
   const {
     active, minutes, myMinutes, activities, ready, setReady,
-    addActivity, removeActivity, readyCount, ids,
+    addActivity, removeActivity, readyCount, allReady, ids,
   } = useTake10(charId);
   const model = useCharacter(character);
 
@@ -84,6 +84,10 @@ const Take10Prompt = ({ character, characterColor }) => {
           ))
         )}
       </div>
+
+      {allReady && (
+        <p className="t10-waiting">Everyone's ready — waiting for the GM to resolve…</p>
+      )}
 
       <div className="t10-footer">
         <span className="t10-count" aria-label="players ready">

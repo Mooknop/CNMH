@@ -146,6 +146,14 @@
   color: var(--t10-theme, var(--color-theme));
 }
 
+.t10-waiting {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
 .t10-footer {
   display: flex;
   align-items: center;
