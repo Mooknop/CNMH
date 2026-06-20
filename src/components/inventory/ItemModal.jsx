@@ -11,6 +11,7 @@ import {
   affix, unaffix, affixedKey, itemUidOf, deactivateTalisman,
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
+import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -149,7 +150,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   ) : null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={item.name} themeColor={themeColor} maxWidth="500px" highZ>
+    <Modal isOpen={isOpen} onClose={onClose} title={weaponDisplayName(item)} themeColor={themeColor} maxWidth="500px" highZ>
       {item.image && (
         <img src={`/api/images/${item.image}`} alt="" className="entity-image" style={item.imagePosition ? { objectPosition: `${item.imagePosition.x}% ${item.imagePosition.y}%` } : undefined} />
       )}
@@ -313,6 +314,23 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               No valid {affixTargetType(item) || 'item'} to affix this to.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Weapon runes (#548): potency/striking tier summary + each property
+          rune's name and flavor. Hidden for non-runed / legacy baked items. */}
+      {(runeTierSummary(item.runes) || weaponPropertyRunes(item).length > 0) && (
+        <div className="item-runes" data-testid="item-modal-runes">
+          <h3>Runes</h3>
+          {runeTierSummary(item.runes) && (
+            <p className="item-rune-tier">{runeTierSummary(item.runes)}</p>
+          )}
+          {weaponPropertyRunes(item).map((rune) => (
+            <div key={rune.id} className="item-rune">
+              <span className="item-rune-name">{rune.name}</span>
+              {rune.description && <p className="item-rune-desc">{rune.description}</p>}
+            </div>
+          ))}
         </div>
       )}
 

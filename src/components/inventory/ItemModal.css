@@ -76,13 +76,35 @@
 .item-free-actions h3,
 .item-strikes h3,
 .item-scroll h3,
-.item-wand h3 {
+.item-wand h3,
+.item-runes h3 {
   color: var(--color-primary);
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   font-size: 1.1rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.25rem;
+}
+
+/* Weapon runes (#548) */
+.item-rune-tier {
+  font-weight: 600;
+  color: var(--color-primary);
+  margin: 0 0 0.5rem;
+}
+
+.item-rune {
+  margin: 0.5rem 0;
+}
+
+.item-rune-name {
+  font-weight: 600;
+}
+
+.item-rune-desc {
+  line-height: 1.5;
+  color: #333;
+  margin: 0.25rem 0 0;
 }
 
 .item-description p {

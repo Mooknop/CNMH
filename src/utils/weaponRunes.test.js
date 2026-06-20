@@ -3,6 +3,9 @@ import {
   buildWeaponName,
   resolveWeapon,
   translatePropertyRider,
+  weaponDisplayName,
+  runeTierSummary,
+  weaponPropertyRunes,
   POTENCY,
   STRIKING,
 } from './weaponRunes';
@@ -182,5 +185,41 @@ describe('translatePropertyRider', () => {
   test('no rider → empty', () => {
     expect(translatePropertyRider({ id: 'plain', name: 'Plain' })).toEqual([]);
     expect(translatePropertyRider(null)).toEqual([]);
+  });
+});
+
+describe('display helpers (#548 Slice 3c)', () => {
+  const runedAxe = {
+    name: 'Greataxe',
+    price: 35,
+    runes: { potency: 2, striking: 'greater', property: [{ id: 'vitalizing', name: 'Vitalizing', description: 'vs undead' }] },
+  };
+
+  describe('weaponDisplayName', () => {
+    test('derives the full runed name for a base + runes weapon', () => {
+      expect(weaponDisplayName(runedAxe)).toBe('+2 Greater Striking Vitalizing Greataxe');
+    });
+    test('passes legacy / non-runed items through unchanged', () => {
+      expect(weaponDisplayName({ name: '+1 Striking Pick', potency: 1 })).toBe('+1 Striking Pick');
+      expect(weaponDisplayName({ name: 'Rope' })).toBe('Rope');
+      expect(weaponDisplayName(undefined)).toBeUndefined();
+    });
+  });
+
+  describe('runeTierSummary', () => {
+    test('summarizes potency + striking only', () => {
+      expect(runeTierSummary(runedAxe.runes)).toBe('+2 Greater Striking');
+      expect(runeTierSummary({ potency: 1 })).toBe('+1');
+      expect(runeTierSummary({})).toBe('');
+      expect(runeTierSummary(undefined)).toBe('');
+    });
+  });
+
+  describe('weaponPropertyRunes', () => {
+    test('returns resolved property-rune docs, skipping unresolved id strings', () => {
+      expect(weaponPropertyRunes(runedAxe)).toEqual([{ id: 'vitalizing', name: 'Vitalizing', description: 'vs undead' }]);
+      expect(weaponPropertyRunes({ name: 'X', runes: { property: ['unresolved'] } })).toEqual([]);
+      expect(weaponPropertyRunes({ name: 'Rope' })).toEqual([]);
+    });
   });
 });

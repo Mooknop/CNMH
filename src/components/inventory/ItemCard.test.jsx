@@ -92,4 +92,13 @@ describe('ItemCard', () => {
     fireEvent.click(screen.getByTestId('item-card-u1'));
     expect(onClick).toHaveBeenCalledWith(item);
   });
+
+  it('shows the derived runed name for a base + runes weapon (#548)', () => {
+    renderCard({
+      uid: 'u2', name: 'Greataxe', weight: 2,
+      runes: { potency: 2, striking: 'greater', property: [{ id: 'vitalizing', name: 'Vitalizing' }] },
+    });
+    expect(screen.getByText('+2 Greater Striking Vitalizing Greataxe')).toBeInTheDocument();
+    expect(screen.queryByText('Greataxe')).not.toBeInTheDocument();
+  });
 });

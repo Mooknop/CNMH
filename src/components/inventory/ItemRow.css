@@ -4,8 +4,10 @@
   flex-direction: column;
 }
 
-/* Indented child line for a talisman affixed to the item above it. */
-.affixed-talisman-line {
+/* Indented child line for a talisman affixed to the item above it, or a
+   property rune on the weapon above it (#548) — shared layout. */
+.affixed-talisman-line,
+.weapon-rune-line {
   display: flex;
   align-items: center;
   gap: var(--space-2, 0.4rem);
@@ -22,7 +24,8 @@
   text-align: left;
 }
 
-.affixed-talisman-line:hover {
+.affixed-talisman-line:hover,
+.weapon-rune-line:hover {
   color: var(--shell-text-primary, #fff);
   border-left-color: var(--accent-outline, var(--shell-border-strong));
 }
