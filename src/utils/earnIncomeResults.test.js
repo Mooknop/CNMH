@@ -5,6 +5,7 @@ import {
   markConfirmed,
   removeResult,
   buildEarnIncomeResult,
+  buildCraftingResult,
 } from './earnIncomeResults';
 
 // gameDate-like period markers (objects, to prove value-compare).
@@ -101,5 +102,29 @@ describe('buildEarnIncomeResult', () => {
   it('defaults a missing period to null', () => {
     const entry = buildEarnIncomeResult({ charId: 'a' });
     expect(entry.periodStartedAt).toBeNull();
+  });
+
+  it('tags Earn Income entries with kind "earn-income"', () => {
+    expect(buildEarnIncomeResult({ charId: 'a' }).kind).toBe('earn-income');
+  });
+});
+
+describe('buildCraftingResult', () => {
+  it('builds a pending crafting entry tagged kind "crafting"', () => {
+    const entry = buildCraftingResult({
+      charId: 'c2', charName: 'Blu',
+      ref: 'shield', level: 5, itemName: 'Sturdy Shield',
+      degree: 'success', paidCp: 3000,
+    });
+    expect(entry).toMatchObject({
+      kind: 'crafting', charId: 'c2', charName: 'Blu',
+      ref: 'shield', level: 5, itemName: 'Sturdy Shield',
+      degree: 'success', paidCp: 3000, status: 'pending', periodStartedAt: null,
+    });
+    expect(typeof entry.id).toBe('string');
+  });
+
+  it('defaults a missing level to null', () => {
+    expect(buildCraftingResult({ charId: 'c2', ref: 'torch' }).level).toBeNull();
   });
 });

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
 import { getLevelBasedDc } from '../../utils/InventoryUtils';
 import { craftCostCp, halfCostCp, dailyReductionCp, critFailLossCp } from '../../utils/craftingOutcome';
 import { cpToGp } from '../../utils/earnIncome';
+import { buildCraftingResult } from '../../utils/earnIncomeResults';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import './CraftingProjects.css';
 
@@ -20,7 +21,9 @@ const CraftingProjects = ({ character }) => {
   const charId = character?.id || 'unknown';
   const [craftProjects, setCraftProjects] = useSyncedState(`cnmh_craftprojects_${charId}`, null);
   const [gold, setGold] = useSyncedState(`cnmh_gold_${charId}`, 0);
+  const [, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
   const { items } = useContent();
+  const submittedRef = useRef(new Set());
 
   const [adding, setAdding] = useState(false); // false | 'recipe' | 'catalog'
   const [recipeIdx, setRecipeIdx] = useState(null);
@@ -30,6 +33,38 @@ const CraftingProjects = ({ character }) => {
   const [checkInputs, setCheckInputs] = useState({}); // { [projectId]: { d20, total } }
 
   const projects = craftProjects?.projects || [];
+
+  // When a project reaches 'completed' (via Complete-now or working the cost to
+  // zero), submit it to the GM review queue as a pending crafting result and
+  // drop it from the player's list. submittedRef guards a double-fire (e.g.
+  // Strict Mode) before the removal lands.
+  const completedSig = projects.filter(p => p.status === 'completed').map(p => p.id).join(',');
+  useEffect(() => {
+    const completed = (craftProjects?.projects || []).filter(
+      p => p.status === 'completed' && !submittedRef.current.has(p.id),
+    );
+    if (completed.length === 0) return;
+    completed.forEach(p => submittedRef.current.add(p.id));
+    setResults(prev => ({
+      entries: [
+        ...(prev?.entries || []),
+        ...completed.map(p => buildCraftingResult({
+          charId,
+          charName: character?.name,
+          ref: p.ref,
+          level: p.level,
+          itemName: p.name,
+          degree: p.craftDegree,
+          paidCp: p.costCp,
+        })),
+      ],
+    }));
+    setCraftProjects(prev => ({
+      projects: (prev?.projects || []).filter(p => p.status !== 'completed'),
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedSig]);
+
   const knownRecipes = (character?.crafting || []).filter(r => r.name);
   const catalogItems = (items || []).slice().sort((a, b) => a.name.localeCompare(b.name));
   const selectedCatalogItem = catalogItems.find(i => i.id === catalogRef);
