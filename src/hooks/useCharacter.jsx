@@ -6,8 +6,10 @@
 import { useMemo } from 'react';
 
 import { useSyncedState } from './useSyncedState';
+import { useContent } from '../contexts/ContentContext';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { itemAbilitiesActive } from '../utils/itemState';
+import { itemCatalogMap, spellCatalogMap, resolveInventory } from '../utils/contentUtils';
 
 import {
   getAbilityModifier,
@@ -58,6 +60,22 @@ export const useCharacter = (character) => {
     () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
   );
   const [heroPoints, setHeroPoints] = useSyncedState(`cnmh_heropoints_${character?.id || 'none'}`, 0);
+
+  // Additive runtime inventory (crafted items, loot, purchases, GM grants).
+  // Authored `character.inventory` arrives already resolved; acquired entries
+  // are unresolved refs, so resolve them against the live catalog the same way
+  // before merging. An empty/absent overlay ⇒ effective tree unchanged.
+  const [acquired] = useSyncedState(`cnmh_acquired_${character?.id || 'none'}`, []);
+  const { items: catalogItems, spells: catalogSpells } = useContent();
+  const resolvedAcquired = useMemo(
+    () => resolveInventory(
+      Array.isArray(acquired) ? acquired : [],
+      itemCatalogMap(catalogItems || []),
+      spellCatalogMap(catalogSpells || []),
+      character?.level || 1,
+    ),
+    [acquired, catalogItems, catalogSpells, character?.level],
+  );
 
   const charMemo = useMemo(() => {
     if (!character) return null;
@@ -128,11 +146,12 @@ export const useCharacter = (character) => {
 
     // ── Effective inventory ─────────────────────────────────────────────────
     // The single source of truth for placement + state: authored (resolved)
-    // tree merged with the live loadout. Bulk and the inventory passthrough
-    // both read this so a dropped/retrieved/stowed item is consistent for
-    // everyone. With an empty loadout this equals the authored tree.
+    // tree plus the acquired overlay, merged with the live loadout. Bulk and the
+    // inventory passthrough both read this so a dropped/retrieved/stowed item is
+    // consistent for everyone. With an empty loadout + overlay this equals the
+    // authored tree.
     const effectiveInventory = buildEffectiveInventory(
-      character.inventory || [],
+      [...(character.inventory || []), ...resolvedAcquired],
       loadout
     );
 
@@ -300,7 +319,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout]);
+  }, [character, loadout, resolvedAcquired]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither
