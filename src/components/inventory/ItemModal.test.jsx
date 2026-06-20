@@ -31,18 +31,32 @@ vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: (c) => (c ? { inventory: c.__inventory || [] } : null),
 }));
 
-// Item-target effects overlay (#339) — controllable store for the modal.
+// Item-target effects (#339) + affix (#254) overlays — key-dispatched stores.
 let mockItemEffects = [];
+let mockAffixed = {};
 const mockSetItemEffects = vi.fn((next) => {
   mockItemEffects = typeof next === 'function' ? next(mockItemEffects) : next;
 });
+const mockSetAffixed = vi.fn((next) => {
+  mockAffixed = typeof next === 'function' ? next(mockAffixed) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
-  useSyncedState: () => [mockItemEffects, mockSetItemEffects],
+  useSyncedState: (key) => (String(key).startsWith('cnmh_affixed_')
+    ? [mockAffixed, mockSetAffixed]
+    : [mockItemEffects, mockSetItemEffects]),
+}));
+
+const mockAppendEvent = vi.fn();
+vi.mock('../../hooks/useSessionLog', () => ({
+  useSessionLog: () => ({ appendEvent: mockAppendEvent }),
 }));
 
 beforeEach(() => {
   mockItemEffects = [];
+  mockAffixed = {};
   mockSetItemEffects.mockClear();
+  mockSetAffixed.mockClear();
+  mockAppendEvent.mockClear();
 });
 
 const baseItem = {
@@ -755,5 +769,44 @@ describe('ItemModal — active item-target effects (#339)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Acid-protected' }));
     expect(mockSetItemEffects).toHaveBeenCalledTimes(1);
     expect(mockItemEffects.map((e) => e.id)).toEqual(['e2']);
+  });
+});
+
+describe('ItemModal — talisman affixing (#254/#339)', () => {
+  const wolfFang = { uid: 't1', name: 'Wolf Fang', traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'weapon' } };
+  const sword = { uid: 'w1', name: 'Longsword', strikes: [{ damage: '1d8' }] };
+  const plate = { uid: 'a1', name: 'Full Plate', armor: { ac: 6 } };
+  // useCharacter mock returns { inventory: char.__inventory }.
+  const character = { id: 'hero', name: 'Ashka', __inventory: [wolfFang, sword, plate] };
+  const open = (item = wolfFang, char = character) =>
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={char} />);
+
+  it('shows no Affix section for a non-talisman item', () => {
+    open(sword);
+    expect(screen.queryByText('Affix')).not.toBeInTheDocument();
+  });
+
+  it('offers only type-matching hosts (weapons for Wolf Fang) and affixes on pick', () => {
+    open();
+    expect(screen.getByRole('button', { name: 'Longsword' })).toBeInTheDocument();
+    // Armor is not a valid host for a weapon talisman.
+    expect(screen.queryByRole('button', { name: 'Full Plate' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Longsword' }));
+    expect(mockAffixed).toEqual({ t1: 'w1' });
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Ashka affixed Wolf Fang to Longsword (10-minute activity)',
+    }));
+  });
+
+  it('when affixed, shows the host and unaffixes', () => {
+    mockAffixed = { t1: 'w1' };
+    open();
+    expect(screen.getByText(/Affixed to/)).toHaveTextContent('Longsword');
+    fireEvent.click(screen.getByTestId('item-action-unaffix'));
+    expect(mockAffixed).toEqual({});
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: 'Ashka removed Wolf Fang from Longsword',
+    }));
   });
 });

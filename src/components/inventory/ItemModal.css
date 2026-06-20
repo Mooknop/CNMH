@@ -70,6 +70,7 @@
 
 .item-description h3,
 .item-effects h3,
+.item-affix h3,
 .item-actions h3,
 .item-reactions h3,
 .item-free-actions h3,
@@ -302,6 +303,7 @@
 
 .item-description h3,
 .item-effects h3,
+.item-affix h3,
 .item-actions h3,
 .item-reactions h3,
 .item-free-actions h3,
@@ -393,4 +395,25 @@
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.4);
   color: #fff;
+}
+/* Talisman affix section (#254/#339) */
+.item-affix-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 0.5rem);
+  font-size: var(--text-sm, 0.9rem);
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.8));
+}
+
+.item-affix-hint {
+  margin: 0.25rem 0;
+  font-size: var(--text-sm, 0.9rem);
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+.item-affix-hosts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
 }

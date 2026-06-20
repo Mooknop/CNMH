@@ -2,13 +2,18 @@
 import React from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import { formatBulk, normalizeShield, isContainer } from '../../utils/InventoryUtils';
+import { formatBulk, normalizeShield, isContainer, flattenInventory } from '../../utils/InventoryUtils';
 import { ITEM_STATE_LABEL, isHeldState } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
+import {
+  isTalisman, affixTargetType, validAffixHosts, affixedHostUid,
+  affix, unaffix, affixedKey, itemUidOf,
+} from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useSessionLog } from '../../hooks/useSessionLog';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
@@ -17,10 +22,33 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(character?.id);
   // Item-target effects (oils, #339) — read live so removal stays in sync.
   const [itemEffects, setItemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
+  // Affixed-talisman overlay (#254/#339).
+  const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
+  const { appendEvent } = useSessionLog();
 
   if (!isOpen || !item) return null;
 
   const activeItemEffects = itemEffectsFor(itemEffects, item);
+
+  // Talisman affixing (#254/#339). A talisman picks a valid host (by its affixTo
+  // type) via a 10-minute activity; affixing/unaffixing logs to the session log.
+  const talisman = isTalisman(item);
+  const flatInventory = flattenInventory(charData?.inventory);
+  const affixHosts = talisman ? validAffixHosts(flatInventory, item) : [];
+  const affixedTo = talisman
+    ? flatInventory.find((it) => itemUidOf(it) === affixedHostUid(affixed, itemUidOf(item)))
+    : null;
+
+  const doAffix = (host) => {
+    setAffixed((cur) => affix(cur, itemUidOf(item), itemUidOf(host)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} affixed ${item.name} to ${host.name} (10-minute activity)` });
+    onClose();
+  };
+  const doUnaffix = () => {
+    setAffixed((cur) => unaffix(cur, itemUidOf(item)));
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${item.name} from ${affixedTo?.name || 'its item'}` });
+    onClose();
+  };
 
   const themeColor = characterColor || 'var(--color-primary)';
   // Normalize so legacy { health, breakThreshold } and canonical
@@ -213,6 +241,49 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Talisman affixing (#254/#339) — affix to a valid host (10-min activity)
+          or, when affixed, show the host + Unaffix. */}
+      {talisman && (
+        <div className="item-affix">
+          <h3>Affix</h3>
+          {affixedTo ? (
+            <div className="item-affix-state">
+              <span>Affixed to <strong>{affixedTo.name}</strong></span>
+              <button
+                type="button"
+                className="btn-small btn-secondary"
+                data-testid="item-action-unaffix"
+                onClick={doUnaffix}
+              >
+                Unaffix
+              </button>
+            </div>
+          ) : affixHosts.length > 0 ? (
+            <>
+              <p className="item-affix-hint">
+                Affix to {affixTargetType(item) ? `a ${affixTargetType(item)}` : 'an item'} (10-minute activity):
+              </p>
+              <div className="item-affix-hosts">
+                {affixHosts.map((h) => (
+                  <button
+                    key={itemUidOf(h)}
+                    type="button"
+                    className="btn-small btn-secondary"
+                    onClick={() => doAffix(h)}
+                  >
+                    {h.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="item-affix-hint">
+              No valid {affixTargetType(item) || 'item'} to affix this to.
+            </p>
+          )}
         </div>
       )}
 
