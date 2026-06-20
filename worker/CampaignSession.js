@@ -62,6 +62,10 @@ export class CampaignSession {
   // True if any currently-connected socket is a Foundry bridge. `exclude` skips
   // a socket that is in the middle of closing (still present in getWebSockets()).
   anyBridgeConnected(exclude) {
+    // E2E/staging run the full stack with no real Foundry bridge. Report it
+    // present so the offline write-gate (#553) doesn't freeze the test suite —
+    // production (ENVIRONMENT unset) always reflects real bridge presence.
+    if (this.env?.ENVIRONMENT === 'e2e' || this.env?.ENVIRONMENT === 'staging') return true;
     for (const peer of this.state.getWebSockets()) {
       if (peer === exclude) continue;
       let attachment;

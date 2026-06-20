@@ -149,6 +149,15 @@ describe('CampaignSession presence', () => {
     expect(presenceMsgs(app2)).toHaveLength(0);
   });
 
+  test('reports Foundry present in e2e env even with no bridge (gate stays open)', async () => {
+    const state = makeState();
+    const session = new CampaignSession(state, { ENVIRONMENT: 'e2e' });
+
+    const app = await connect(session, state, '/session/camp');
+
+    expect(lastPresence(app)).toEqual({ type: 'PRESENCE', foundry: true });
+  });
+
   test('webSocketError on a bridge also re-broadcasts presence', async () => {
     const state = makeState();
     const session = new CampaignSession(state, {});

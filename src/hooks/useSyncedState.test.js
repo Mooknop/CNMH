@@ -61,6 +61,34 @@ describe('useSyncedState', () => {
     expect(JSON.parse(localStorage.getItem('cnmh_conditions_Pellias'))).toEqual([{ id: 'frightened' }]);
   });
 
+  it('freezes synced writes in the offline sandbox (DO up, Foundry down)', () => {
+    mockSession = { ...noopSession(), connected: true, foundryConnected: false };
+    localStorage.setItem('cnmh_focus_IzzyUncut', JSON.stringify(3));
+    const { result } = renderHook(() => useSyncedState('cnmh_focus_IzzyUncut', 0));
+    expect(result.current[0]).toBe(3);
+    act(() => { result.current[1](1); });
+    // Inert: value frozen, nothing persisted, nothing synced.
+    expect(result.current[0]).toBe(3);
+    expect(JSON.parse(localStorage.getItem('cnmh_focus_IzzyUncut'))).toBe(3);
+    expect(mockSession.sendUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still writes synced state when Foundry is connected (live)', () => {
+    mockSession = { ...noopSession(), connected: true, foundryConnected: true };
+    const { result } = renderHook(() => useSyncedState('cnmh_focus_IzzyUncut', 0));
+    act(() => { result.current[1](2); });
+    expect(result.current[0]).toBe(2);
+    expect(mockSession.sendUpdate).toHaveBeenCalledWith('IzzyUncut', 'focus', 2);
+  });
+
+  it('keeps local-only keys interactive in the sandbox', () => {
+    mockSession = { ...noopSession(), connected: true, foundryConnected: false };
+    const { result } = renderHook(() => useSyncedState('some_ui_pref', 'a'));
+    act(() => { result.current[1]('b'); });
+    expect(result.current[0]).toBe('b');
+    expect(JSON.parse(localStorage.getItem('some_ui_pref'))).toBe('b');
+  });
+
   it('non-matching keys behave as plain localStorage with no sync', () => {
     const { result } = renderHook(() => useSyncedState('some_other_key', 'init'));
     expect(mockSession.subscribe).not.toHaveBeenCalled();
