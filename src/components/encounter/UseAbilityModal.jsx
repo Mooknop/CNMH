@@ -993,24 +993,33 @@ const UseAbilityModal = ({
         const chainDegreeMap = chainResults.rollProfile?.defense === 'ac'
           ? { criticalSuccess: 'Critical Hit', success: 'Hit', failure: 'Miss', criticalFailure: 'Critical Miss' }
           : { criticalSuccess: 'Critical Success', success: 'Success', failure: 'Failure', criticalFailure: 'Critical Failure' };
-        chainResults.rollResults.forEach((r) => {
-          const degreeLabel = r.degree ? (chainDegreeMap[r.degree] || r.degree) : null;
-          // Split Shot (#227): the designated second target takes half damage.
-          const isSplitSecondary = chainResults.splitShot?.secondaryEntryId === r.entryId;
-          const splitSuffix = isSplitSecondary
-            ? ' · second target — half damage, no other effects'
-            : '';
-          // Damage step result (#571): per-target total with the rider breakdown.
-          // Suppressed on the Split Shot second target — its damage is halved and
-          // the note above already says so, so the full number would mislead.
-          const dmgSuffix = (r.damage?.final != null && !isSplitSecondary)
-            ? ` · damage ${formatDamageBreakdown(r.damage)}`
-            : '';
-          appendLog({
-            type: 'action', charId: character.id,
-            text: degreeLabel
-              ? `${character.name} ${effectiveVerb} ${ability.name} → ${label} vs ${r.name}: ${r.total} → ${degreeLabel}${dmgSuffix}${splitSuffix}`
-              : `${character.name} ${effectiveVerb} ${ability.name} → ${label}`,
+        // Multi-ray chained casts (#581, Blazing Bolt) return grouped results
+        // [{rayIndex, results}]; single-roll casts return a flat array. Normalise
+        // to ray groups so both share one logging path (mirrors the direct path).
+        const chainRayGroups = chainResults.multiRay
+          ? chainResults.rollResults
+          : [{ rayIndex: null, results: chainResults.rollResults }];
+        chainRayGroups.forEach((g) => {
+          const rayPrefix = g.rayIndex != null ? ` — ray ${g.rayIndex + 1}` : '';
+          g.results.forEach((r) => {
+            const degreeLabel = r.degree ? (chainDegreeMap[r.degree] || r.degree) : null;
+            // Split Shot (#227): the designated second target takes half damage.
+            const isSplitSecondary = chainResults.splitShot?.secondaryEntryId === r.entryId;
+            const splitSuffix = isSplitSecondary
+              ? ' · second target — half damage, no other effects'
+              : '';
+            // Damage step result (#571): per-target total with the rider breakdown.
+            // Suppressed on the Split Shot second target — its damage is halved and
+            // the note above already says so, so the full number would mislead.
+            const dmgSuffix = (r.damage?.final != null && !isSplitSecondary)
+              ? ` · damage ${formatDamageBreakdown(r.damage)}`
+              : '';
+            appendLog({
+              type: 'action', charId: character.id,
+              text: degreeLabel
+                ? `${character.name} ${effectiveVerb} ${ability.name} → ${label}${rayPrefix} vs ${r.name}: ${r.total} → ${degreeLabel}${dmgSuffix}${splitSuffix}`
+                : `${character.name} ${effectiveVerb} ${ability.name} → ${label}${rayPrefix}`,
+            });
           });
         });
       } else {
@@ -1147,7 +1156,9 @@ const UseAbilityModal = ({
     if (hasChainStrike && chainResults) {
       recordAttack(chainResults.mode === 'flurry' ? 2 : 1);
     } else if (hasChainSpell && chainResults?.isAttackSpell) {
-      recordAttack(1);
+      // Each Blazing Bolt ray is its own attack (#581) — a chained multi-ray
+      // cast raises MAP by the ray count; single-roll chained spells by 1.
+      recordAttack(chainResults.multiRay ? (chainResults.chosenActions ?? 1) : 1);
     } else if (isMultiRay && isAttack) {
       recordAttack(rayCount);
     } else if (isAttack) {
