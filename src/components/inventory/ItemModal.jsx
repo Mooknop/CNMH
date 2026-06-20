@@ -5,16 +5,22 @@ import TraitTag from '../shared/TraitTag';
 import { formatBulk, normalizeShield, isContainer } from '../../utils/InventoryUtils';
 import { ITEM_STATE_LABEL, isHeldState } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
+import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
   // Hooks must run unconditionally (before the early return).
   const charData = useCharacter(character);
   const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(character?.id);
+  // Item-target effects (oils, #339) — read live so removal stays in sync.
+  const [itemEffects, setItemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
 
   if (!isOpen || !item) return null;
+
+  const activeItemEffects = itemEffectsFor(itemEffects, item);
 
   const themeColor = characterColor || 'var(--color-primary)';
   // Normalize so legacy { health, breakThreshold } and canonical
@@ -181,6 +187,32 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <strong>Shield Rules:</strong> Raise this shield for +{shield.bonus || 0} AC.
             It has {shield.hardness || 0} Hardness and {shield.hp || 0} HP.
           </div>
+        </div>
+      )}
+
+      {/* Active item-target effects (oils, #339) — with manual removal for the
+          untimed ones (timed effects also clear on the game clock). */}
+      {activeItemEffects.length > 0 && (
+        <div className="item-effects">
+          <h3>Active Effects</h3>
+          <ul className="item-effects-list">
+            {activeItemEffects.map((e) => (
+              <li key={e.id} className="item-effect-row">
+                <span className="item-effect-label">
+                  ✨ {e.label}
+                  {e.source ? <span className="item-effect-source"> · {e.source}</span> : null}
+                </span>
+                <button
+                  type="button"
+                  className="item-effect-remove"
+                  aria-label={`Remove ${e.label}`}
+                  onClick={() => setItemEffects(removeItemEffect(itemEffects, e.id))}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

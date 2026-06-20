@@ -31,6 +31,20 @@ vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: (c) => (c ? { inventory: c.__inventory || [] } : null),
 }));
 
+// Item-target effects overlay (#339) — controllable store for the modal.
+let mockItemEffects = [];
+const mockSetItemEffects = vi.fn((next) => {
+  mockItemEffects = typeof next === 'function' ? next(mockItemEffects) : next;
+});
+vi.mock('../../hooks/useSyncedState', () => ({
+  useSyncedState: () => [mockItemEffects, mockSetItemEffects],
+}));
+
+beforeEach(() => {
+  mockItemEffects = [];
+  mockSetItemEffects.mockClear();
+});
+
 const baseItem = {
   name: 'Iron Sword',
   quantity: 1,
@@ -707,5 +721,39 @@ describe('ItemModal — loadout action footer', () => {
     expect(screen.queryByText('Move to Backpack')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Move to Pouch'));
     expect(mockLoadout.moveToContainer).toHaveBeenCalledWith('i4', 'po');
+  });
+});
+
+describe('ItemModal — active item-target effects (#339)', () => {
+  const character = { id: 'hero' };
+  const plate = { id: 'plate-1', name: 'Full Plate', weight: 4 };
+  const open = (item = plate, char = character) =>
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={char} />);
+
+  it('shows no Active Effects section when the item has none', () => {
+    mockItemEffects = [{ id: 'e1', itemId: 'other', label: 'Weightless' }];
+    open();
+    expect(screen.queryByText('Active Effects')).not.toBeInTheDocument();
+  });
+
+  it('lists the effects recorded against this item with their source', () => {
+    mockItemEffects = [
+      { id: 'e1', itemId: 'plate-1', label: 'Acid-protected', source: 'Anticorrosion Oil' },
+    ];
+    open();
+    expect(screen.getByText('Active Effects')).toBeInTheDocument();
+    expect(screen.getByText(/Acid-protected/)).toBeInTheDocument();
+    expect(screen.getByText(/Anticorrosion Oil/)).toBeInTheDocument();
+  });
+
+  it('removes an effect from the overlay on the × button', () => {
+    mockItemEffects = [
+      { id: 'e1', itemId: 'plate-1', label: 'Acid-protected', source: 'Anticorrosion Oil' },
+      { id: 'e2', itemId: 'plate-1', label: 'Weightless', source: 'Oil of Weightlessness' },
+    ];
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Acid-protected' }));
+    expect(mockSetItemEffects).toHaveBeenCalledTimes(1);
+    expect(mockItemEffects.map((e) => e.id)).toEqual(['e2']);
   });
 });
