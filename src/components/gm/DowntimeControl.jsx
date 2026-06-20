@@ -8,6 +8,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 import { periodState } from '../../utils/downtimeUtils';
 import { taskDc } from '../../utils/earnIncome';
+import EarnIncomeApproval from './EarnIncomeApproval';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
 // downtime days (`cnmh_downtimeblock_global`) that players allocate to activities.
@@ -169,6 +170,8 @@ const DowntimeControl = () => {
               );
             })}
           </div>
+
+          <EarnIncomeApproval />
         </>
       )}
 

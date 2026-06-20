@@ -24,6 +24,23 @@ export function pendingRollSlots({ results, charId, startedAt, committedRolls })
   return Math.max(0, (committedRolls || 0) - resolved);
 }
 
+// The entries still awaiting GM action, newest last.
+export function pendingResults(results) {
+  return (results || []).filter((r) => r.status === 'pending');
+}
+
+// Flips a queued entry to 'confirmed' (it stays in the queue as a resolved
+// record so the player's roll slot remains consumed and gold isn't re-credited).
+export function markConfirmed(results, id) {
+  return (results || []).map((r) => (r.id === id ? { ...r, status: 'confirmed' } : r));
+}
+
+// Drops a queued entry entirely. Used on Reject so the player's committed roll
+// frees up again (pendingRollSlots stops counting it) and they can re-submit.
+export function removeResult(results, id) {
+  return (results || []).filter((r) => r.id !== id);
+}
+
 // Builds a pending result entry to append to the queue.
 export function buildEarnIncomeResult({
   charId, charName,

@@ -15,6 +15,12 @@ vi.mock('../../contexts/SessionContext', () => ({
   useSession: vi.fn(() => ({ getState: vi.fn(() => null), sendUpdate: vi.fn() })),
 }));
 
+// DowntimeControl renders EarnIncomeApproval (uses the encounter log for the
+// gold-credit line); stub it so these tests don't need a real encounter.
+vi.mock('../../hooks/useEncounter', () => ({
+  useEncounter: vi.fn(() => ({ appendLog: vi.fn() })),
+}));
+
 const mockAdvanceHours = vi.fn();
 const mockAdvanceDays = vi.fn();
 const mockSetSpecificDate = vi.fn();
