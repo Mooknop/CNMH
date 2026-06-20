@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useCallback } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useExplorationReady } from '../../hooks/useExplorationReady';
 import { useTake10 } from '../../hooks/useTake10';
@@ -34,9 +34,12 @@ const PlayModeControl = () => {
   const { openLore } = useLore();
   const { allChosen } = useExplorationReady();
   const {
+    active: take10Active,
     allReady: take10AllReady,
     minutes: take10Minutes,
     openedAt: take10OpenedAt,
+    readyCount: take10ReadyCount,
+    ids: take10Ids,
     clear: clearTake10,
   } = useTake10();
   const { characters } = useContext(CharacterContext) || {};
@@ -69,14 +72,14 @@ const PlayModeControl = () => {
     }
   }, [mode, characters, sendUpdate, setMoveOverride]);
 
-  // Take 10 central advance + resolution (#560/#562): the GM client is the
-  // single writer of the shared clock. When every party PC is ready, resolve
-  // each player's allocation (Refocus restores all Focus Points; everything
-  // else is logged), advance time once by the block length, and close the beat.
-  // clearTake10 flips active→false, so allReady drops and this fires exactly
-  // once. PlayModeControl is GM-only-mounted, so no player tab races the writes.
-  useEffect(() => {
-    if (!take10AllReady) return;
+  // Take 10 resolution (#560/#562/#563): the GM client is the single writer of
+  // the shared clock. Resolve each player's allocation (Refocus restores all
+  // Focus Points; everything else is logged), advance time once by the block
+  // length, and close the beat. clearTake10 flips active→false so the all-ready
+  // effect can't re-fire. PlayModeControl is GM-only-mounted, so no player tab
+  // races the writes. Reused by both the auto all-ready path and the GM
+  // "Resolve now" override.
+  const runTake10Resolution = useCallback(() => {
     resolveTake10({
       characters,
       openedAt: take10OpenedAt,
@@ -88,9 +91,30 @@ const PlayModeControl = () => {
     appendEvent({ type: 'time', text: `Take 10 — advanced ${take10Minutes} min` });
     clearTake10();
   }, [
-    take10AllReady, take10Minutes, take10OpenedAt, characters,
+    characters, take10OpenedAt, take10Minutes,
     getState, sendUpdate, advanceMinutes, appendEvent, clearTake10,
   ]);
+
+  // Auto-resolve the moment every party PC is ready.
+  useEffect(() => {
+    if (take10AllReady) runTake10Resolution();
+  }, [take10AllReady, runTake10Resolution]);
+
+  // GM "Cancel" — close the beat with no time advance. The beat stamp means
+  // stale allocations auto-invalidate on the next start(), so no fan-out needed.
+  const cancelTake10 = useCallback(() => {
+    clearTake10();
+    appendEvent({ type: 'activity', text: 'Take 10 cancelled' });
+  }, [clearTake10, appendEvent]);
+
+  // Encounter interrupt (#563): if combat starts mid-Take 10, cancel the beat so
+  // it can't resurface stale when exploration resumes.
+  useEffect(() => {
+    if (isEncounter && take10Active) {
+      clearTake10();
+      appendEvent({ type: 'activity', text: 'Take 10 interrupted by encounter' });
+    }
+  }, [isEncounter, take10Active, clearTake10, appendEvent]);
 
   // Each downtime period starts with a clean slate of selected activities and
   // committed days. This is now handled declaratively: per-character downtime
@@ -214,6 +238,27 @@ const PlayModeControl = () => {
               </div>
 
               <ExplorationTimeControl />
+
+              {take10Active && (
+                <div className="pmc-row pmc-row--take10">
+                  <span className="pmc-take10-readout">
+                    Take 10 · {take10ReadyCount} / {take10Ids.length} ready
+                  </span>
+                  <div className="pmc-take10-actions">
+                    <button
+                      className="pmc-override-btn"
+                      onClick={runTake10Resolution}
+                      disabled={take10AllReady}
+                      title={take10AllReady ? 'Resolving…' : 'Resolve and advance time now, even if not everyone is ready'}
+                    >
+                      Resolve now
+                    </button>
+                    <button className="pmc-take10-cancel" onClick={cancelTake10}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {!allChosen && (
                 <div className="pmc-row pmc-row--override">
