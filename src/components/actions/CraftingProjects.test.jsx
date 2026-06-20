@@ -14,6 +14,7 @@ vi.mock('../../contexts/ContentContext', () => ({
 
 const mockSetProjects = vi.fn();
 const mockSetGold = vi.fn();
+const mockSetResults = vi.fn();
 let goldValue = 100;
 
 const character = {
@@ -43,13 +44,15 @@ const catalogItems = [
   },
 ];
 
-// Key-aware: the gold key returns [goldValue, mockSetGold]; everything else is
-// the craftprojects state. (CraftingProjects reads its own gold to charge the
-// up-front half-cost on start.)
+// Key-aware: gold → [goldValue, mockSetGold]; the global results queue →
+// [null, mockSetResults]; everything else is the craftprojects state.
 const withProjects = (projects) =>
   useSyncedState.mockImplementation((key) => {
     if (typeof key === 'string' && key.startsWith('cnmh_gold_')) {
       return [goldValue, mockSetGold];
+    }
+    if (key === 'cnmh_downtimeresults_global') {
+      return [null, mockSetResults];
     }
     return [projects != null ? { projects } : null, mockSetProjects];
   });
@@ -427,11 +430,18 @@ describe('CraftingProjects', () => {
       expect(screen.getByRole('button', { name: `Finish ${readyProject.name} now` })).toBeInTheDocument();
     });
 
-    it('a completed project shows the completed card', () => {
+    it('submits a completed project to the GM results queue and drops it from the list', () => {
       withProjects([{ ...readyProject, status: 'completed', craftDegree: 'success' }]);
       render(<CraftingProjects character={character} />);
-      expect(screen.getByText('✓ Completed')).toBeInTheDocument();
-      expect(screen.getByText(/awaiting GM grant/)).toBeInTheDocument();
+      // appended a pending crafting result…
+      expect(mockSetResults).toHaveBeenCalled();
+      const res = mockSetResults.mock.calls[0][0]({ entries: [] });
+      expect(res.entries[0]).toMatchObject({
+        kind: 'crafting', itemName: 'Antidote (Moderate)', degree: 'success', status: 'pending', ref: 'antidote',
+      });
+      // …and removed it from the player's project list
+      const proj = mockSetProjects.mock.calls[0][0]({ projects: [{ ...readyProject, status: 'completed' }] });
+      expect(proj.projects).toHaveLength(0);
     });
 
     it('an in-progress project below threshold still shows a progress bar', () => {
