@@ -15,7 +15,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { useOmen } from '../../hooks/useOmen';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { isAttackAbility } from '../../utils/map';
-import { getVariableActionRange } from '../../utils/actionIconUtils';
+import { getVariableActionRange, variantFor } from '../../utils/actionIconUtils';
 import { buildDamageProfile, serializeRidersForSave } from '../../utils/damage';
 import { HARROW_SUITS, HARROW_CAST_DC, harrowCastEffect } from '../../utils/harrow';
 
@@ -96,7 +96,21 @@ const ChainedSpellSection = forwardRef(({
   const selectedCastOption = castOptions[chainCastIdx ?? defaultCastIdx] || null;
   const castRank = selectedCastOption?.rank ?? (selectedSpell?.level ?? 0);
 
-  const spellCost = selectedSpell ? parseSpellCost(selectedSpell.actions) : 0;
+  // Variable-action chained spells (#572): a Spellshape can chain into a spell
+  // that costs a range of actions (Blazing Bolt, Force Barrage — "One to Three
+  // Actions"). The picker pins the count so both the added cost and the
+  // action-count-dependent damage tier (variantFor, #268) are right; without it
+  // the spell was locked to its minimum. null = fixed-cost spell.
+  const [chainActionOverride, setChainActionOverride] = useState(null);
+  const variableRange = getVariableActionRange(selectedSpell);
+  const chosenActions = variableRange
+    ? Math.min(Math.max(chainActionOverride ?? variableRange.min, variableRange.min), variableRange.max)
+    : null;
+  const variant = variableRange ? variantFor(selectedSpell, chosenActions) : null;
+
+  const spellCost = selectedSpell
+    ? (chosenActions ?? parseSpellCost(selectedSpell.actions))
+    : 0;
   const parentNum = typeof parentCost === 'number' ? parentCost : 1;
   const totalCost = typeof spellCost === 'number' ? parentNum + spellCost : parentCost;
 
@@ -132,21 +146,25 @@ const ChainedSpellSection = forwardRef(({
 
   const saveTargets = rollProfile.mode === 'target-save' ? enemyTargets : [];
 
+  // Per-action multi-ray spells (Blazing Bolt's "one ray per action") still defer
+  // their damage panel: rendering N rays + normalising the multi-ray result for
+  // the chained log is a follow-up. Single-roll and save variable-action spells
+  // now get a real profile at the chosen tier (#572).
+  const isPerActionMultiRay = selectedSpell?.rolls === 'per-action';
+
   // Damage step (#281) — a basic-save spell chained through a Spellshape carries
   // the caster's entered total + rider snapshot, same as a direct cast, so the
   // GM's RequestedSaves derives per-degree totals. Built at the section's own
-  // cast rank, with the actor's exploit weakness scoped against the targets.
-  // Variable-action spells (Blazing Bolt) are deferred to #572: the section has
-  // no action-count picker, so the damage tier can't be pinned — they fall back
-  // to a bare save request (no panel) rather than emit a wrong tier.
-  const isVariableActionSpell = !!getVariableActionRange(selectedSpell);
-  const saveDamageProfile = (saveTargets.length > 0 && !isVariableActionSpell)
+  // cast rank, with the actor's exploit weakness scoped against the targets. The
+  // chosen action-count variant (#572) overrides the dice via damageOverride.
+  const saveDamageProfile = (saveTargets.length > 0 && !isPerActionMultiRay)
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
         castRank,
         exploit,
         enemyEntries: saveTargets,
         order,
+        damageOverride: variant?.damage ?? null,
       })
     : null;
   const [saveDmgInput, setSaveDmgInput] = useState('');
@@ -156,16 +174,16 @@ const ChainedSpellSection = forwardRef(({
   // the same damage panel a direct cast does: the resolver owns the panel + the
   // per-target computeTargetDamage once a `damage` profile is passed. Built at
   // the section's cast rank with the actor's exploit weakness scoped against the
-  // resolver targets. Variable-action spells (Blazing Bolt's per-action scaling)
-  // are deferred to #572 — no action-count picker means no pinned tier.
+  // resolver targets; the chosen variant (#572) overrides the dice.
   const attackDamageProfile = (resolverTargets.length > 0
-    && rollProfile.defense === 'ac' && !isVariableActionSpell)
+    && rollProfile.defense === 'ac' && !isPerActionMultiRay)
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
         castRank,
         exploit,
         enemyEntries: resolverTargets,
         order,
+        damageOverride: variant?.damage ?? null,
       })
     : null;
 
@@ -207,6 +225,7 @@ const ChainedSpellSection = forwardRef(({
         spellId:     selectedSpell.id,
         spellName:   selectedSpell.name,
         spellCost,
+        chosenActions,
         totalCost,
         spellRank:     selectedSpell.level ?? 0,
         castOption:    selectedCastOption,
@@ -249,7 +268,7 @@ const ChainedSpellSection = forwardRef(({
       <select
         aria-label="spell picker"
         value={selectedSpellId}
-        onChange={(e) => { setSelectedSpellId(e.target.value); setChainCastIdx(null); }}
+        onChange={(e) => { setSelectedSpellId(e.target.value); setChainCastIdx(null); setChainActionOverride(null); }}
         style={{ width: '100%', fontSize: '0.85rem', marginBottom: '0.4rem' }}
       >
         {filteredSpells.map((s) => (
@@ -364,6 +383,30 @@ const ChainedSpellSection = forwardRef(({
             </>
           )}
         </div>
+      )}
+
+      {variableRange && variableRange.max > variableRange.min && (
+        <>
+          <div className="uam-actions-row" role="radiogroup" aria-label="Chained spell actions">
+            <span className="uam-actions-label">Actions</span>
+            {Array.from(
+              { length: variableRange.max - variableRange.min + 1 },
+              (_, k) => variableRange.min + k
+            ).map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`uam-actions-btn${chosenActions === n ? ' uam-actions-btn--active' : ''}`}
+                aria-pressed={chosenActions === n}
+                title={variantFor(selectedSpell, n)?.note || undefined}
+                onClick={() => setChainActionOverride(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          {variant?.note && <div className="uam-variant-note">{variant.note}</div>}
+        </>
       )}
 
       {castOptions.length > 1 && (

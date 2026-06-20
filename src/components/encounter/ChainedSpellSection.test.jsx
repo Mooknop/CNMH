@@ -488,7 +488,7 @@ describe('ChainedSpellSection — save damage payload (#281)', () => {
   const VAR_SAVE = {
     id: 'vsave', name: 'Variable Blast', actions: 'One to Three Actions', range: '60 feet',
     level: 1, defense: 'Reflex', basic: true,
-    damageData: { base: '2d6', type: 'fire' }, // variable-action → deferred to #572
+    damageData: { base: '2d6', type: 'fire' }, // variable-action: panel via the #572 picker
   };
   const saveEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { saves: { reflex: 8 } } }];
 
@@ -538,11 +538,12 @@ describe('ChainedSpellSection — save damage payload (#281)', () => {
     expect(res.spellBasic).toBe(true);
   });
 
-  it('variable-action save spell is deferred (no panel, no payload) — #572', () => {
+  it('variable-action save spell now renders the panel at the chosen tier (#572)', () => {
     const ref = createRef();
     renderSave([VAR_SAVE], ref);
-    expect(screen.queryByLabelText('rolled damage total')).toBeNull();
-    expect(ref.current.getResults().damage).toBeNull();
+    expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '7' } });
+    expect(ref.current.getResults().damage).toMatchObject({ entered: 7, expression: '2d6' });
   });
 });
 
@@ -563,7 +564,12 @@ describe('ChainedSpellSection — attack damage panel (#571)', () => {
   const VAR_ATTACK = {
     id: 'vbolt', name: 'Variable Bolt', actions: 'One to Three Actions', range: '60 feet',
     level: 1, traits: ['Attack'], targetDefense: 'ac',
-    damageData: { base: '2d6', type: 'fire' }, // variable-action → deferred to #572
+    damageData: { base: '2d6', type: 'fire' }, // variable single-roll: profile via #572 picker
+  };
+  const BLAZING_BOLT = {
+    id: 'bb', name: 'Blazing Bolt', actions: 'One to Three Actions', range: '60 feet',
+    level: 2, traits: ['Attack', 'Fire'], targetDefense: 'ac', rolls: 'per-action',
+    damageData: { base: '2d6', type: 'fire' }, // per-action multi-ray: still deferred
   };
   const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
 
@@ -592,9 +598,86 @@ describe('ChainedSpellSection — attack damage panel (#571)', () => {
     expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', 'none');
   });
 
-  it('defers variable-action attack spells (no profile) — #572', () => {
+  it('variable-action attack spell now forwards a profile at the chosen tier (#572)', () => {
     renderAttack([VAR_ATTACK]);
+    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', '2d6');
+  });
+
+  it('still defers per-action multi-ray spells (Blazing Bolt) — chained multi-ray follow-up', () => {
+    renderAttack([BLAZING_BOLT]);
     expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', 'none');
+  });
+});
+
+// Action-count picker for variable-action chained spells (#572): a Spellshape
+// can chain into a "One to Three Actions" spell; the picker pins the count so
+// the added cost and the action-count damage tier (variantFor) are right.
+describe('ChainedSpellSection — variable-action picker (#572)', () => {
+  const FORCE = {
+    id: 'force', name: 'Force Barrage', actions: 'One to Three Actions', range: '120 feet',
+    level: 1, traits: ['Force'], // auto-hit (mode none) — picker still drives cost
+  };
+  const TIERED_SAVE = {
+    id: 'tier', name: 'Tiered Blast', actions: 'One to Two Actions', range: '60 feet',
+    level: 1, defense: 'Reflex', basic: true,
+    damageData: { base: '2d6', type: 'fire' },
+    variants: [
+      { actions: 1, note: '1 action: 2d6', damage: { base: '2d6', type: 'fire' } },
+      { actions: 2, note: '2 actions: 4d6', damage: { base: '4d6', type: 'fire' } },
+    ],
+  };
+
+  const renderPicker = (spells, ref, enemyTargets = []) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={{ ...character, spellcasting: { spells } }}
+      chain={reachChain}
+      parentCost={1}
+      enemyTargets={enemyTargets}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  it('renders an action-count picker for a variable-action spell', () => {
+    renderPicker([FORCE]);
+    expect(screen.getByRole('radiogroup', { name: /chained spell actions/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '3' })).toBeInTheDocument();
+  });
+
+  it('shows no picker for a fixed-cost spell', () => {
+    renderPicker([LIGHT]); // Light is Two Actions, fixed
+    expect(screen.queryByRole('radiogroup', { name: /chained spell actions/i })).toBeNull();
+  });
+
+  it('total cost = parent + chosen action count, updating with the picker', () => {
+    renderPicker([FORCE]);
+    expect(screen.getByText(/Total: 2 action/)).toBeInTheDocument(); // 1 (parent) + 1 (min)
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    expect(screen.getByText(/Total: 4 action/)).toBeInTheDocument(); // 1 + 3
+  });
+
+  it('getResults reports the chosen action count; fixed spells report null', () => {
+    const ref = createRef();
+    renderPicker([FORCE], ref);
+    expect(ref.current.getResults().chosenActions).toBe(1);
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(ref.current.getResults().chosenActions).toBe(2);
+
+    const fixedRef = createRef();
+    renderPicker([LIGHT], fixedRef);
+    expect(fixedRef.current.getResults().chosenActions).toBeNull();
+  });
+
+  it('the chosen action-count variant overrides the damage tier', () => {
+    resolveActionRoll.mockReturnValue({ mode: 'target-save', bonus: null, dc: 20, defense: 'reflex' });
+    const ref = createRef();
+    renderPicker([TIERED_SAVE], ref, [{ entryId: 'e1', name: 'Goblin', defenses: { saves: { reflex: 8 } } }]);
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '7' } });
+    expect(ref.current.getResults().damage.expression).toBe('2d6'); // 1 action (default min)
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    expect(ref.current.getResults().damage.expression).toBe('4d6'); // 2 actions
   });
 });
 
