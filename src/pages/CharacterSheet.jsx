@@ -7,7 +7,7 @@ import { useEncounter } from '../hooks/useEncounter';
 import StatsBlock from '../components/character-sheet/StatsBlock';
 import ActionsList from '../components/actions/ActionsList';
 import ExplorationTab from '../components/actions/ExplorationTab';
-import PlayModeBadge from '../components/playmode/PlayModeBadge';
+import OfflineModeSwitcher from '../components/playmode/OfflineModeSwitcher';
 import { usePlayMode } from '../hooks/usePlayMode';
 import { PLAY_MODES } from '../data/playModes';
 import DowntimeSummaryModal from '../components/actions/DowntimeSummaryModal';
@@ -268,7 +268,7 @@ const CharacterSheet = () => {
             <div className="cs-info-content">
               <div className="cs-name-row">
                 <h1 className="cs-char-name">{character.name}</h1>
-                <PlayModeBadge />
+                <OfflineModeSwitcher />
               </div>
               <p className="cs-char-sub">
                 {[

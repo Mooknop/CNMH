@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { SessionProvider } from './contexts/SessionContext';
+import { PlayModeOverrideProvider } from './contexts/PlayModeOverrideContext';
 import { ContentProvider } from './contexts/ContentContext';
 import { CharacterProvider } from './contexts/CharacterContext';
 import { TraitProvider } from './contexts/TraitContext';
@@ -71,6 +72,7 @@ function StagingBanner() {
 function App() {
   return (
     <SessionProvider>
+      <PlayModeOverrideProvider>
       <ContentProvider>
         <ActorMapSync />
         <GameDateProvider>
@@ -146,6 +148,7 @@ function App() {
           </CharacterProvider>
         </GameDateProvider>
       </ContentProvider>
+      </PlayModeOverrideProvider>
     </SessionProvider>
   );
 }
