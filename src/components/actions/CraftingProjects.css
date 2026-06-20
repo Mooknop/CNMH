@@ -127,6 +127,22 @@
   color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
 
+/* Up-front cost preview in the add panel. */
+.cp-cost-note {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text, var(--shell-text));
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-cost-sub {
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.cp-cost-warn {
+  color: var(--color-danger, #e53e3e);
+}
+
 /* Completed banner — shown for ~3s after project completes */
 .cp-completed-banner {
   background: var(--theme-accent, var(--accent-bg));

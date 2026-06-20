@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
 import { getLevelBasedDc } from '../../utils/InventoryUtils';
+import { craftCostCp, halfCostCp } from '../../utils/craftingOutcome';
+import { cpToGp } from '../../utils/earnIncome';
 import './CraftingProjects.css';
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
@@ -9,6 +11,7 @@ const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).sl
 const CraftingProjects = ({ character }) => {
   const charId = character?.id || 'unknown';
   const [craftProjects, setCraftProjects] = useSyncedState(`cnmh_craftprojects_${charId}`, null);
+  const [gold, setGold] = useSyncedState(`cnmh_gold_${charId}`, 0);
   const { items } = useContent();
 
   const [adding, setAdding] = useState(false); // false | 'recipe' | 'catalog'
@@ -33,7 +36,14 @@ const CraftingProjects = ({ character }) => {
     setCatalogLevel('');
   };
 
-  const startProject = (ref, level, name, source) => {
+  const craftRank = character?.skills?.crafting?.proficiency || 0;
+
+  const startProject = (ref, level, name, source, price) => {
+    const costCp = craftCostCp(price);
+    const paidCp = halfCostCp(price);
+    const remainingCp = costCp - paidCp;
+    // Half the materials cost is paid up front from the crafter's personal gold.
+    if (paidCp > 0) setGold(g => (Number(g) || 0) - cpToGp(paidCp));
     setCraftProjects(prev => ({
       projects: [...(prev?.projects || []), {
         id: makeId(),
@@ -43,6 +53,12 @@ const CraftingProjects = ({ character }) => {
         source,
         threshold: source === 'recipe' ? 8 : 16,
         hours: 0,
+        price: price ?? null,
+        costCp,
+        paidCp,
+        remainingCp,
+        craftRank,
+        status: 'in-progress',
       }],
     }));
     cancelAdding();
@@ -69,6 +85,33 @@ const CraftingProjects = ({ character }) => {
   const recipeVariants = selectedRecipe?.variants || [];
   const canStartFromRecipe = recipeIdx !== null && (recipeVariants.length === 0 || !!recipeLevel);
   const canStartFromCatalog = !!catalogRef && (variants.length === 0 || !!catalogLevel);
+
+  // Resolve the chosen item's Price (decimal gp) for the up-front half-cost.
+  // Variants carry their own price; fall back to the base item when none.
+  const priceFor = (base, variantList, levelStr) => {
+    if (variantList.length > 0) {
+      const v = levelStr ? variantList.find(x => x.level === parseInt(levelStr, 10)) : null;
+      return v?.price ?? null;
+    }
+    return base?.price ?? null;
+  };
+  const recipePrice = selectedRecipe ? priceFor(selectedRecipe, recipeVariants, recipeLevel) : null;
+  const catalogPrice = selectedCatalogItem ? priceFor(selectedCatalogItem, variants, catalogLevel) : null;
+
+  // Up-front cost preview (half the Price) + an over-budget warning. Insufficient
+  // gold warns but never blocks — the GM reconciles at the approval step.
+  const upfrontNote = (price) => {
+    if (price == null) return null;
+    const upfront = cpToGp(halfCostCp(price));
+    return (
+      <span className="cp-cost-note">
+        Up-front: {upfront} gp <span className="cp-cost-sub">(½ of {price} gp)</span>
+        {upfront > (Number(gold) || 0) && (
+          <span className="cp-cost-warn"> — over your {Number(gold) || 0} gp</span>
+        )}
+      </span>
+    );
+  };
 
   return (
     <div className="cp-wrap">
@@ -147,6 +190,9 @@ const CraftingProjects = ({ character }) => {
                     {p.level != null && (
                       <span className="cp-project-meta">
                         Level {p.level} · DC {getLevelBasedDc(p.level)} · {p.source === 'recipe' ? '8h (recipe)' : '16h (item)'}
+                        {p.remainingCp != null && p.remainingCp > 0 && (
+                          <> · {cpToGp(p.remainingCp)} gp left</>
+                        )}
                       </span>
                     )}
                   </>
@@ -215,6 +261,7 @@ const CraftingProjects = ({ character }) => {
                   </select>
                 </label>
               )}
+              {canStartFromRecipe && upfrontNote(recipePrice)}
               <div className="cp-add-footer">
                 <button
                   className="cp-confirm-btn"
@@ -224,7 +271,7 @@ const CraftingProjects = ({ character }) => {
                     const lvl = recipeLevel ? parseInt(recipeLevel, 10) : null;
                     const v = lvl != null ? recipeVariants.find(x => x.level === lvl) : null;
                     const name = v ? `${r.name} (${v.label})` : r.name;
-                    startProject(r.ref || r.id, lvl, name, 'recipe');
+                    startProject(r.ref || r.id, lvl, name, 'recipe', recipePrice);
                   }}
                 >
                   Start project
@@ -270,6 +317,7 @@ const CraftingProjects = ({ character }) => {
                   </label>
                 )}
               </div>
+              {canStartFromCatalog && upfrontNote(catalogPrice)}
               <div className="cp-add-footer">
                 <button
                   className="cp-confirm-btn"
@@ -278,7 +326,7 @@ const CraftingProjects = ({ character }) => {
                     const lvl = catalogLevel ? parseInt(catalogLevel, 10) : null;
                     const v = lvl != null ? variants.find(x => x.level === lvl) : null;
                     const name = v ? `${selectedCatalogItem.name} (${v.label})` : selectedCatalogItem.name;
-                    startProject(selectedCatalogItem.id, lvl, name, 'catalog-item');
+                    startProject(selectedCatalogItem.id, lvl, name, 'catalog-item', catalogPrice);
                   }}
                 >
                   Start project
