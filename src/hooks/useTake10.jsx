@@ -3,36 +3,38 @@ import { CharacterContext } from '../contexts/CharacterContext';
 import { useSession } from '../contexts/SessionContext';
 import { useSyncedState } from './useSyncedState';
 
-// Coordination spine for the party "Take 10" flow (#560, epic #536).
+// Coordination spine for the party "Take 10" flow (epic #536).
 //
 // A Take 10 is broadcast over the session-level `cnmh_take10_global`:
-//   { active, minutes, openedAt, startedBy }
+//   { active, openedAt, startedBy }
 // `openedAt` is a monotonically-fresh stamp (Date.now()) identifying the
-// current beat. Each player marks themselves ready by stamping their own
-// `cnmh_take10alloc_<charId>` with `readyAt === openedAt` — the same
-// declarative-stamp idiom downtime uses, so starting a new beat invalidates
-// every prior ready without any cross-client fan-out write.
+// current beat. Each player's allocation lives on their own
+// `cnmh_take10alloc_<charId>`:
+//   { beatAt, ready, activities: [{ id, label, minutes }] }
+// `beatAt === openedAt` scopes the alloc to the live beat — the same
+// declarative-stamp idiom downtime uses, so opening a new beat invalidates
+// every prior ready/allocation without any cross-client fan-out write.
 //
-// All-ready is purely derived: every party PC's alloc carries the live stamp.
-// We subscribe to each PC's alloc key and recompute on any change (sendUpdate
-// notifies local subscribers too, so the toggling client reacts immediately).
+// The block length (`minutes`) is DERIVED — the party-max of everyone's total
+// allocation, floored at 10. Because every alloc is synced, all clients compute
+// the same value, so there is no second single-writer problem for the clock:
+// the GM advance (PlayModeControl) just reads this derived `minutes`.
 //
-// Returns:
-//   active     — a Take 10 is in progress
-//   minutes    — block length to advance on completion (fixed 10 in Slice 1)
-//   startedBy  — charId that launched it
-//   start(min) — open a Take 10 (fresh openedAt stamp)
-//   clear()    — close it (GM-side, on completion or cancel)
-//   ready      — this charId has stamped readiness for the current beat
-//   setReady(b)— stamp / unstamp this charId's readiness
-//   allReady   — active && every party PC is ready for the current beat
-//   ids        — party PC ids considered
+// All-ready is likewise derived: every party PC carries the live beat stamp and
+// `ready`. We subscribe to each PC's alloc key and recompute on any change.
+
+const MIN_BLOCK = 10;
+
+const minutesOf = (a, openedAt) =>
+  a && a.beatAt === openedAt
+    ? (a.activities || []).reduce((s, x) => s + (x.minutes || 0), 0)
+    : 0;
+
 export function useTake10(charId = null) {
   const { characters } = useContext(CharacterContext) || {};
   const { getState, subscribe } = useSession();
   const [global, setGlobal] = useSyncedState('cnmh_take10_global', {
     active: false,
-    minutes: 10,
     openedAt: 0,
     startedBy: null,
   });
@@ -51,34 +53,80 @@ export function useTake10(charId = null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, subscribe]);
 
-  const start = useCallback((minutes = 10) => {
-    setGlobal({ active: true, minutes, openedAt: Date.now(), startedBy: charId });
+  const start = useCallback(() => {
+    setGlobal({ active: true, openedAt: Date.now(), startedBy: charId });
   }, [setGlobal, charId]);
 
   const clear = useCallback(() => {
     setGlobal((prev) => ({ ...(prev || {}), active: false }));
   }, [setGlobal]);
 
-  const setReady = useCallback((isReady) => {
-    setAlloc((prev) => ({ ...(prev || {}), readyAt: isReady ? openedAt : null }));
-  }, [setAlloc, openedAt]);
+  // Return prev when it already belongs to the live beat, else a fresh
+  // beat-stamped shell — so the first edit of a new beat drops stale state.
+  const withBeat = useCallback(
+    (prev) =>
+      prev && prev.beatAt === openedAt
+        ? prev
+        : { beatAt: openedAt, ready: false, activities: [] },
+    [openedAt]
+  );
 
-  const ready = active && alloc?.readyAt === openedAt;
+  const setReady = useCallback(
+    (isReady) => setAlloc((prev) => ({ ...withBeat(prev), ready: !!isReady })),
+    [setAlloc, withBeat]
+  );
+
+  const addActivity = useCallback(
+    (activity) =>
+      setAlloc((prev) => {
+        const cur = withBeat(prev);
+        return { ...cur, activities: [...cur.activities, activity] };
+      }),
+    [setAlloc, withBeat]
+  );
+
+  const removeActivity = useCallback(
+    (index) =>
+      setAlloc((prev) => {
+        const cur = withBeat(prev);
+        return { ...cur, activities: cur.activities.filter((_, i) => i !== index) };
+      }),
+    [setAlloc, withBeat]
+  );
+
+  const myAlloc = alloc && alloc.beatAt === openedAt ? alloc : null;
+  const activities = myAlloc?.activities || [];
+  const myMinutes = activities.reduce((s, x) => s + (x.minutes || 0), 0);
+  const ready = active && !!myAlloc?.ready;
+
+  // Block length = party-max total allocation, floored at MIN_BLOCK.
+  const minutes = Math.max(
+    MIN_BLOCK,
+    ...ids.map((id) => minutesOf(getState(id, 'take10alloc'), openedAt))
+  );
+
   const readyCount = active
-    ? ids.filter((id) => getState(id, 'take10alloc')?.readyAt === openedAt).length
+    ? ids.filter((id) => {
+        const a = getState(id, 'take10alloc');
+        return a && a.beatAt === openedAt && a.ready;
+      }).length
     : 0;
   const allReady = active && ids.length > 0 && readyCount === ids.length;
 
   return {
     active,
-    minutes: global?.minutes ?? 10,
+    minutes,
+    myMinutes,
+    activities,
     startedBy: global?.startedBy ?? null,
     start,
     clear,
     ready,
     setReady,
-    allReady,
+    addActivity,
+    removeActivity,
     readyCount,
+    allReady,
     ids,
   };
 }
