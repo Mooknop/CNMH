@@ -40,7 +40,12 @@ afterEach(() => {
 const Probe = ({ onReady }) => {
   const session = useSession();
   useEffect(() => { if (onReady) onReady(session); }, [session, onReady]);
-  return <div data-testid="connected">{String(session.connected)}</div>;
+  return (
+    <>
+      <div data-testid="connected">{String(session.connected)}</div>
+      <div data-testid="foundry">{String(session.foundryConnected)}</div>
+    </>
+  );
 };
 
 const Subscriber = ({ characterId, type }) => {
@@ -158,6 +163,35 @@ describe('SessionContext', () => {
       MockWS.last._msg({ type: 'UPDATE', characterId: 'A', key: 'b', value: 9 });
     });
     expect(screen.getByTestId('u').textContent).toBe('none');
+  });
+
+  it('foundryConnected defaults to false until a PRESENCE signal', () => {
+    render(<SessionProvider><Probe /></SessionProvider>);
+    expect(screen.getByTestId('foundry').textContent).toBe('false');
+    act(() => { MockWS.last._open(); });
+    expect(screen.getByTestId('foundry').textContent).toBe('false');
+  });
+
+  it('PRESENCE flips foundryConnected on and off', () => {
+    render(<SessionProvider><Probe /></SessionProvider>);
+    act(() => {
+      MockWS.last._open();
+      MockWS.last._msg({ type: 'PRESENCE', foundry: true });
+    });
+    expect(screen.getByTestId('foundry').textContent).toBe('true');
+    act(() => { MockWS.last._msg({ type: 'PRESENCE', foundry: false }); });
+    expect(screen.getByTestId('foundry').textContent).toBe('false');
+  });
+
+  it('resets foundryConnected to false when the DO link drops', () => {
+    render(<SessionProvider><Probe /></SessionProvider>);
+    act(() => {
+      MockWS.last._open();
+      MockWS.last._msg({ type: 'PRESENCE', foundry: true });
+    });
+    expect(screen.getByTestId('foundry').textContent).toBe('true');
+    act(() => { MockWS.last._error(); }); // onerror -> close -> onclose
+    expect(screen.getByTestId('foundry').textContent).toBe('false');
   });
 
   it('reconnects after the socket closes', () => {
