@@ -3,10 +3,12 @@ import { usePlayMode } from '../../hooks/usePlayMode';
 import { useExplorationReady } from '../../hooks/useExplorationReady';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useExplorationEffect } from '../../hooks/useExplorationEffect';
+import { useTake10 } from '../../hooks/useTake10';
 import { EXPLORATION_ACTIVITIES } from '../../data/explorationActivities';
 import ExplorationList from './ExplorationList';
 import ExplorationMove from './ExplorationMove';
 import ExplorationDoors from './ExplorationDoors';
+import Take10Prompt from './Take10Prompt';
 import DowntimeTab from './DowntimeTab';
 import './ExplorationTab.css';
 
@@ -20,6 +22,7 @@ import './ExplorationTab.css';
 const ExplorationTab = ({ character, characterColor }) => {
   const { mode, moveEnabled } = usePlayMode();
   const { ready } = useExplorationReady();
+  const { active: take10Active, start: startTake10 } = useTake10(character?.id);
   const [peekActivity, setPeekActivity] = useState(false);
   const [moveDoneTs, setMoveDoneTs] = useState(null);
   const handleMoveDone = useCallback(() => setMoveDoneTs(Date.now()), []);
@@ -67,6 +70,16 @@ const ExplorationTab = ({ character, characterColor }) => {
 
   return (
     <div className="et-wrap">
+      <Take10Prompt character={character} characterColor={characterColor} />
+
+      {!take10Active && (
+        <div className="et-toggle-row">
+          <button className="et-toggle" onClick={() => startTake10(10)}>
+            Take 10
+          </button>
+        </div>
+      )}
+
       {ready && (
         <div className="et-toggle-row">
           <button

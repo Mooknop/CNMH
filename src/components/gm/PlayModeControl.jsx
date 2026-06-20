@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef } from 'react';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useExplorationReady } from '../../hooks/useExplorationReady';
+import { useTake10 } from '../../hooks/useTake10';
 import { CharacterContext } from '../../contexts/CharacterContext';
 import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
@@ -31,9 +32,10 @@ const PlayModeControl = () => {
   const { appendEvent } = useSessionLog();
   const { openLore } = useLore();
   const { allChosen } = useExplorationReady();
+  const { allReady: take10AllReady, minutes: take10Minutes, clear: clearTake10 } = useTake10();
   const { characters } = useContext(CharacterContext) || {};
   const { sendUpdate } = useSession();
-  const { formatClockTime, formatGameDate, getCurrentWeekday } = useGameDate();
+  const { formatClockTime, formatGameDate, getCurrentWeekday, advanceMinutes } = useGameDate();
 
   // Campaign meta has no home in the content model, so the GM edits it inline
   // here, synced for every client. Party level is derived from the roster.
@@ -60,6 +62,18 @@ const PlayModeControl = () => {
       (characters || []).forEach((c) => sendUpdate(c.id, 'exploration', null));
     }
   }, [mode, characters, sendUpdate, setMoveOverride]);
+
+  // Take 10 central advance (#560): the GM client is the single writer of the
+  // shared clock. When every party PC is ready, advance time once by the block
+  // length and close the beat. clearTake10 flips active→false, so allReady drops
+  // and this fires exactly once. PlayModeControl is GM-only-mounted, so no
+  // player tab races this write.
+  useEffect(() => {
+    if (!take10AllReady) return;
+    advanceMinutes(take10Minutes);
+    appendEvent({ type: 'time', text: `Take 10 — advanced ${take10Minutes} min` });
+    clearTake10();
+  }, [take10AllReady, take10Minutes, advanceMinutes, appendEvent, clearTake10]);
 
   // Each downtime period starts with a clean slate of selected activities and
   // committed days. This is now handled declaratively: per-character downtime
