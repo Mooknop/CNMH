@@ -79,3 +79,61 @@ describe('getStrikes stance tagging (#224)', () => {
     expect(claw.stance).toBeUndefined();
   });
 });
+
+describe('getStrikes weapon runes (#548)', () => {
+  const martialChar = {
+    ...minimalCharacter,
+    proficiencies: { weapons: { unarmed: { proficiency: 2 }, simple: { proficiency: 2 }, martial: { proficiency: 4 } } },
+  };
+
+  test('legacy flat-potency weapon resolves unchanged', () => {
+    const char = {
+      ...martialChar,
+      inventory: [{
+        id: 'i1', name: '+1 Striking Pick', potency: 1,
+        strikes: { name: 'Pick Strike', proficiency: 'martial', type: 'melee', damage: '2d6' },
+      }],
+    };
+    const pick = getStrikes(char).find((s) => s.name === 'Pick Strike');
+    expect(pick).toBeDefined();
+    expect(pick.damage).toBe('2d6+2'); // literal dice + Str mod (+2), no scaling
+    expect(pick.source).toBe('+1 Striking Pick');
+  });
+
+  test('new-model runes weapon scales dice and applies derived name + potency', () => {
+    const char = {
+      ...martialChar,
+      inventory: [{
+        id: 'i2', name: 'Pick', price: 0.1, runes: { potency: 1, striking: 'striking' },
+        strikes: { name: 'Pick Strike', proficiency: 'martial', type: 'melee', damage: '1d6' },
+      }],
+    };
+    const noRunes = getStrikes({
+      ...martialChar,
+      inventory: [{ id: 'i3', name: 'Pick', strikes: { name: 'Pick Strike', proficiency: 'martial', type: 'melee', damage: '1d6' } }],
+    }).find((s) => s.name === 'Pick Strike');
+
+    const pick = getStrikes(char).find((s) => s.name === 'Pick Strike');
+    expect(pick).toBeDefined();
+    expect(pick.damage).toBe('2d6+2'); // 1d6 scaled to 2d6 by striking, + Str mod
+    expect(pick.attackMod).toBe(noRunes.attackMod + 1); // +1 potency item bonus
+    expect(pick.source).toBe('+1 Striking Pick'); // derived display name
+  });
+
+  test('property-rune riders are forwarded onto the strike', () => {
+    const rider = { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' };
+    const char = {
+      ...martialChar,
+      inventory: [{
+        id: 'i4', name: 'Greataxe',
+        runes: { potency: 2, striking: 'greater', property: [{ name: 'Vitalizing', price: 150, rider }] },
+        strikes: { name: 'Axe Strike', proficiency: 'martial', type: 'melee', damage: '1d12' },
+      }],
+    };
+    const axe = getStrikes(char).find((s) => s.name === 'Axe Strike');
+    expect(axe).toBeDefined();
+    expect(axe.damage).toBe('3d12+2'); // 1d12 scaled +2 dice
+    expect(axe.source).toBe('+2 Greater Striking Vitalizing Greataxe');
+    expect(axe.riders).toEqual([rider]);
+  });
+});
