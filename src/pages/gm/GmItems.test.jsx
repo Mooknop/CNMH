@@ -831,5 +831,64 @@ describe('GmItems', () => {
       const form = screen.getByTestId('item-form-rope');
       expect(within(form).queryByTestId('item-runes')).not.toBeInTheDocument();
     });
+
+    it('potency gates property-rune slot count and saves picked ids', async () => {
+      useContent.mockReturnValue({
+        items: [legacyPick],
+        spells,
+        images: [],
+        runes: [
+          { id: 'vitalizing', type: 'property', name: 'Vitalizing', price: 150 },
+          { id: 'frost', type: 'property', name: 'Frost', price: 500 },
+        ],
+      });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      fireEvent.click(screen.getByText('+ New item'));
+      const form = screen.getByTestId('item-form-new');
+      fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Greataxe' } });
+      fireEvent.click(within(form).getByText('Add strike'));
+      fireEvent.change(within(form).getByLabelText('item-strike-0-damage'), { target: { value: '1d12' } });
+
+      // No potency → no property slots, just the unlock hint.
+      expect(within(form).queryByLabelText('rune-property-0')).not.toBeInTheDocument();
+      expect(within(form).getByTestId('item-rune-property')).toHaveTextContent(/Add potency to unlock/i);
+
+      // +2 potency → exactly two slots.
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '2' } });
+      expect(within(form).getByLabelText('rune-property-0')).toBeInTheDocument();
+      expect(within(form).getByLabelText('rune-property-1')).toBeInTheDocument();
+      expect(within(form).queryByLabelText('rune-property-2')).not.toBeInTheDocument();
+
+      fireEvent.change(within(form).getByLabelText('rune-property-0'), { target: { value: 'vitalizing' } });
+      expect(within(form).getByTestId('item-runes-preview')).toHaveTextContent('+2 Vitalizing Greataxe');
+
+      fireEvent.click(within(form).getByText('Create item'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].runes).toEqual({ potency: 2, property: ['vitalizing'] });
+    });
+
+    it('caps property runes at the potency tier when potency is lowered', async () => {
+      useContent.mockReturnValue({
+        items: [{
+          id: 'axe', name: 'Greataxe', strikes: { type: 'melee', damage: '1d12' },
+          runes: { potency: 2, property: ['vitalizing', 'frost'] },
+        }],
+        spells,
+        images: [],
+        runes: [
+          { id: 'vitalizing', type: 'property', name: 'Vitalizing', price: 150 },
+          { id: 'frost', type: 'property', name: 'Frost', price: 500 },
+        ],
+      });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Greataxe');
+      const form = screen.getByTestId('item-form-axe');
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '1' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].runes).toEqual({ potency: 1, property: ['vitalizing'] });
+    });
   });
 });
