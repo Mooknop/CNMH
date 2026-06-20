@@ -1,6 +1,9 @@
 import {
   resultsForCharPeriod,
   pendingRollSlots,
+  pendingResults,
+  markConfirmed,
+  removeResult,
   buildEarnIncomeResult,
 } from './earnIncomeResults';
 
@@ -48,6 +51,29 @@ describe('pendingRollSlots', () => {
 
   it('equals committed rolls when nothing submitted yet', () => {
     expect(pendingRollSlots({ results: [], charId: 'a', startedAt: P1, committedRolls: 2 })).toBe(2);
+  });
+});
+
+describe('pendingResults / markConfirmed / removeResult', () => {
+  const queue = [
+    { id: 'r1', status: 'pending' },
+    { id: 'r2', status: 'confirmed' },
+    { id: 'r3', status: 'pending' },
+  ];
+
+  it('pendingResults keeps only pending entries', () => {
+    expect(pendingResults(queue).map((r) => r.id)).toEqual(['r1', 'r3']);
+    expect(pendingResults(null)).toEqual([]);
+  });
+
+  it('markConfirmed flips just the matching entry', () => {
+    const next = markConfirmed(queue, 'r1');
+    expect(next.find((r) => r.id === 'r1').status).toBe('confirmed');
+    expect(next.find((r) => r.id === 'r3').status).toBe('pending');
+  });
+
+  it('removeResult drops the matching entry so its roll slot frees up', () => {
+    expect(removeResult(queue, 'r1').map((r) => r.id)).toEqual(['r2', 'r3']);
   });
 });
 
