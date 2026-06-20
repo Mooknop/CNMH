@@ -14,6 +14,7 @@ import {
   serializeRidersForSave,
   formatDamageBreakdown,
   buildDamageProfile,
+  damageHintParts,
 } from './damage';
 
 describe('parseDamageExpression', () => {
@@ -647,5 +648,59 @@ describe('buildDamageProfile', () => {
   it('plain dice expressions are never touched by scaling', () => {
     const profile = buildDamageProfile(strike, { ...character, level: 7 }, {});
     expect(profile.expression).toBe('2d6+4');
+  });
+
+  it('scales immediate extra-dice rider phrases (Gloaming Backstab hidden precision)', () => {
+    const gloaming = {
+      name: 'Gloaming Backstab',
+      damageData: {
+        base: '2d6 (+1d6 per level)', type: 'void',
+        riders: [{
+          id: 'gloaming-hidden-precision', label: 'Hidden',
+          dice: '2d4 (+1d4 per level)', type: 'precision', defaultOn: false,
+        }],
+      },
+    };
+    const profile = buildDamageProfile(gloaming, { id: 'c', level: 4 }, {});
+    expect(profile.expression).toBe('6d6');
+    expect(profile.riders[0].dice).toBe('6d4');
+    // No level → authored phrase passes through untouched.
+    expect(buildDamageProfile(gloaming, { id: 'c' }, {}).riders[0].dice)
+      .toBe('2d4 (+1d4 per level)');
+  });
+});
+
+describe('damageHintParts', () => {
+  const profile = {
+    expression: '6d6', typeLabel: 'void',
+    riders: [{
+      id: 'gloaming-hidden-precision', label: 'Hidden',
+      dice: '6d4', type: 'precision', defaultOn: false,
+    }],
+  };
+
+  it('returns null profile as an empty list', () => {
+    expect(damageHintParts(null, {})).toEqual([]);
+  });
+
+  it('omits a defaultOn:false extra-dice rider until it is toggled on', () => {
+    expect(damageHintParts(profile, {})).toEqual([
+      { dice: '6d6', typeLabel: 'void' },
+    ]);
+  });
+
+  it('folds an enabled extra-dice rider in with its own type', () => {
+    expect(damageHintParts(profile, { 'gloaming-hidden-precision': true })).toEqual([
+      { dice: '6d6', typeLabel: 'void' },
+      { dice: '6d4', typeLabel: 'precision' },
+    ]);
+  });
+
+  it('ignores riders without their own dice (flat/persistent)', () => {
+    const p = {
+      expression: '2d6', typeLabel: 'fire',
+      riders: [{ id: 'flat', label: '+2', bonus: { flat: 2 }, defaultOn: true }],
+    };
+    expect(damageHintParts(p, {})).toEqual([{ dice: '2d6', typeLabel: 'fire' }]);
   });
 });
