@@ -8,9 +8,25 @@
 //   requiresAnyFlag     — any one of these flags is true
 //   requiresTrainedInAny— Trained (rank >= 1) in any one of these skill ids
 //
-// Item-derived activities (apply a 10-minute oil, affix a talisman) are NOT
-// here — those surface from inventory in Slice 3 (#562), which also resolves
-// every activity's effect. Slice 2 only records the allocation.
+// Item-derived activities (apply a 10-minute oil, affix a talisman) are NOT in
+// this static catalog — they surface per-character from inventory via
+// `itemTake10Activities` (#566), and resolve through the existing item-effect
+// machinery (applyItemEffect / affix) in resolveTake10.
+
+import { flattenInventory, applyConsumedOverlay } from '../utils/InventoryUtils';
+import { consumableMeta } from '../utils/consumables';
+import { itemKeyOf } from '../utils/itemEffects';
+import {
+  isTalisman,
+  affixTargetType,
+  validAffixHosts,
+  affixedUidSet,
+  itemUidOf,
+} from '../utils/affix';
+
+// Applying an oil / affixing a talisman is a 10-minute activity (the effect's
+// own `durationMinutes` is separate — it runs from when the application finishes).
+const ITEM_ACTIVITY_MINUTES = 10;
 
 export const TAKE10_ACTIVITIES = [
   {
@@ -73,6 +89,69 @@ export function availableTake10Activities(model) {
     if (a.requiresTrainedInAny && !a.requiresTrainedInAny.some(isTrained)) return false;
     return true;
   });
+}
+
+/**
+ * Item-derived Take 10 activities for a character, surfaced from inventory (#566):
+ *   - 10-minute oils: item-target effect consumables with a timed duration
+ *     (`consumableMeta.target === 'item'` + `durationMinutes`), e.g. Oil of
+ *     Weightlessness. Excludes transient scrubs (no duration to stamp).
+ *   - unaffixed talismans: `isTalisman` items not already bound to a host.
+ *
+ * Each entry is "incomplete" — it carries a `targets` list and is finalized by
+ * the prompt's per-entry picker (which host/item to apply to) before it lands on
+ * the allocation. The entry snapshots everything the React-free resolver needs
+ * (it has no inventory access GM-side): `meta` for oils, identities for both.
+ *
+ * @param {Object} model - character model from useCharacter (inventory)
+ * @param {Object} [overlays]
+ * @param {Object} [overlays.consumed] - cnmh_consumed_<charId> ({ [name]: count })
+ * @param {Object} [overlays.affixed]  - cnmh_affixed_<charId> ({ [talismanUid]: hostUid })
+ * @returns {Array} pickable item activities, each `{ kind, id, label, minutes, targets, ... }`
+ */
+export function itemTake10Activities(model, { consumed = {}, affixed = {} } = {}) {
+  if (!model) return [];
+  const flat = applyConsumedOverlay(flattenInventory(model.inventory), consumed);
+  const affixedUids = affixedUidSet(affixed);
+  const out = [];
+
+  for (const it of flat) {
+    const meta = consumableMeta(it);
+    if (meta && meta.target === 'item' && meta.durationMinutes) {
+      const uid = itemKeyOf(it);
+      out.push({
+        kind: 'oil',
+        id: `oil:${uid}`,
+        label: `Apply ${it.name}`,
+        minutes: ITEM_ACTIVITY_MINUTES,
+        itemUid: uid,
+        itemName: it.name,
+        meta,
+        note: meta.note,
+        // Any other inventory item is a candidate (GM-trust, like UseConsumableModal).
+        targets: flat
+          .filter((t) => itemKeyOf(t) !== uid)
+          .map((t) => ({ uid: itemKeyOf(t), name: t.name })),
+      });
+    }
+  }
+
+  for (const it of flat) {
+    if (!isTalisman(it) || affixedUids.has(itemUidOf(it))) continue;
+    const uid = itemUidOf(it);
+    out.push({
+      kind: 'talisman',
+      id: `talisman:${uid}`,
+      label: `Affix ${it.name}`,
+      minutes: ITEM_ACTIVITY_MINUTES,
+      talismanUid: uid,
+      itemName: it.name,
+      affixTo: affixTargetType(it),
+      targets: validAffixHosts(flat, it).map((t) => ({ uid: itemUidOf(t), name: t.name })),
+    });
+  }
+
+  return out;
 }
 
 export default TAKE10_ACTIVITIES;

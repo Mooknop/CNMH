@@ -10,23 +10,28 @@ vi.mock('../../hooks/useTake10', () => ({
   useTake10: () => mockState,
 }));
 
-// Eligible-for-everything model so the catalog renders its full set.
+// Eligible-for-everything model so the catalog renders its full set; per-test
+// overridable so picker tests can inject inventory.
+let mockModel = {};
 vi.mock('../../hooks/useCharacter', () => ({
   __esModule: true,
-  useCharacter: () => ({
-    flags: { hasFocusSpells: true, hasSpellcasting: true },
-    skillProficiencies: { medicine: 1, crafting: 1, arcana: 1 },
-  }),
+  useCharacter: () => mockModel,
 }));
 
 import Take10Prompt from './Take10Prompt';
 
 const character = { id: 'a', name: 'Ari' };
 
+const baseModel = {
+  flags: { hasFocusSpells: true, hasSpellcasting: true },
+  skillProficiencies: { medicine: 1, crafting: 1, arcana: 1 },
+};
+
 beforeEach(() => {
   mockSetReady.mockClear();
   mockAddActivity.mockClear();
   mockRemoveActivity.mockClear();
+  mockModel = baseModel;
   mockState = {
     active: true,
     minutes: 10,
@@ -89,5 +94,49 @@ describe('Take10Prompt', () => {
     const btn = screen.getByRole('button', { name: /Ready/ });
     expect(btn).toHaveAttribute('aria-pressed', 'true');
     expect(btn).toHaveTextContent('✓ Ready');
+  });
+
+  describe('item-targeted consumables (#566)', () => {
+    const oil = {
+      id: 'oil-w', name: 'Oil of Weightlessness', traits: ['Consumable', 'Oil'],
+      consumable: { kind: 'effect', target: 'item', durationMinutes: 60, label: 'Weightless' },
+    };
+    const longsword = { id: 'longsword', name: 'Longsword', strikes: [{ name: 'Longsword' }] };
+
+    beforeEach(() => {
+      mockModel = { ...baseModel, inventory: [oil, longsword] };
+    });
+
+    it('surfaces an oil as a pick-needed activity (not added directly)', () => {
+      render(<Take10Prompt character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: /Apply Oil of Weightlessness/ }));
+      // Opening the picker must not allocate anything yet.
+      expect(mockAddActivity).not.toHaveBeenCalled();
+      expect(screen.getByText(/pick a target/i)).toBeInTheDocument();
+    });
+
+    it('allocates the oil against the chosen target', () => {
+      render(<Take10Prompt character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: /Apply Oil of Weightlessness/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Longsword' }));
+      expect(mockAddActivity).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: 'oil',
+          itemName: 'Oil of Weightlessness',
+          targetUid: 'longsword',
+          targetName: 'Longsword',
+          label: 'Apply Oil of Weightlessness → Longsword',
+          meta: expect.objectContaining({ durationMinutes: 60 }),
+        })
+      );
+    });
+
+    it('cancels the picker without allocating', () => {
+      render(<Take10Prompt character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: /Apply Oil of Weightlessness/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(mockAddActivity).not.toHaveBeenCalled();
+      expect(screen.getByRole('button', { name: /Apply Oil of Weightlessness/ })).toBeInTheDocument();
+    });
   });
 });
