@@ -151,6 +151,7 @@ const toForm = (it) => {
     consumableDuration:
       it.consumable?.durationMinutes != null ? String(it.consumable.durationMinutes) : '',
     consumableLabel: it.consumable?.label != null ? String(it.consumable.label) : '',
+    consumableTransient: !!it.consumable?.transient,
     consumableNote: it.consumable?.note != null ? String(it.consumable.note) : '',
     restJson: JSON.stringify(rest, null, 2),
   };
@@ -228,6 +229,7 @@ const itemFromForm = (f) => {
     out.consumable = {
       kind: f.consumableKind,
       ...(isItemTarget ? { target: 'item' } : {}),
+      ...(isItemTarget && f.consumableTransient ? { transient: true } : {}),
       ...(f.consumableKind === 'effect' && !isItemTarget ? { effectId } : {}),
       ...(isItemTarget && f.consumableLabel.trim() ? { label: f.consumableLabel.trim() } : {}),
       ...(f.consumableKind === 'effect' && !Number.isNaN(minutes) && minutes > 0
@@ -698,6 +700,19 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
               />
             </div>
           </div>
+          {e.consumableTarget === 'item' && (
+            <div className="form-group">
+              <label>
+                <input
+                  type="checkbox"
+                  aria-label="consumable-transient"
+                  checked={e.consumableTransient}
+                  onChange={(ev) => set({ consumableTransient: ev.target.checked })}
+                />
+                {' '}instantaneous (log-only, no tracked effect — e.g. Rust Scrub)
+              </label>
+            </div>
+          )}
         </>
       )}
       {e.consumableKind !== 'none' && (

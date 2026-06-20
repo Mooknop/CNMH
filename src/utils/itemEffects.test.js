@@ -84,6 +84,25 @@ describe('itemEffects (#339)', () => {
       });
       expect(next[0].expireAtSecs).toBeUndefined();
     });
+
+    it('transient consumables log only — no overlay write, no tracked entry', () => {
+      const sendUpdate = vi.fn();
+      const appendLog = vi.fn();
+      const getState = vi.fn(() => [{ id: 'existing', itemId: 'x' }]);
+      const meta = { kind: 'effect', target: 'item', transient: true, note: 'Restore 2d4 HP to rust damage' };
+
+      const next = applyItemEffect({
+        user, targetItem: target, itemName: 'Rust Scrub', meta,
+        nowSecs: 1000, getState, sendUpdate, appendLog,
+      });
+
+      // Overlay unchanged (returns current), nothing written.
+      expect(next).toEqual([{ id: 'existing', itemId: 'x' }]);
+      expect(sendUpdate).not.toHaveBeenCalled();
+      expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
+        text: 'Izzy applied Rust Scrub to Full Plate — Restore 2d4 HP to rust damage',
+      }));
+    });
   });
 
   describe('removeItemEffect', () => {
