@@ -32,10 +32,12 @@ vi.mock('./ExplorationTimeControl', () => ({ default: () => <div data-testid="ex
 
 const mockAdvanceHours = vi.fn();
 const mockAdvanceDays = vi.fn();
+const mockAdvanceMinutes = vi.fn();
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({
     advanceHours: mockAdvanceHours,
     advanceDays: mockAdvanceDays,
+    advanceMinutes: mockAdvanceMinutes,
     setSpecificDate: vi.fn(),
     formatGameDate: () => '5 Pharast, 4725 AR',
     formatClockTime: () => '08:00',
@@ -63,6 +65,13 @@ vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: vi.fn(() => [null, vi.fn()]),
 }));
 
+const mockClearTake10 = vi.fn();
+let mockTake10 = { allReady: false, minutes: 10, openedAt: 0, clear: mockClearTake10 };
+vi.mock('../../hooks/useTake10', () => ({
+  __esModule: true,
+  useTake10: () => mockTake10,
+}));
+
 import { useSyncedState } from '../../hooks/useSyncedState';
 
 const mockOpenLore = vi.fn();
@@ -83,6 +92,7 @@ beforeEach(() => {
   mockState.gmMode = 'exploration';
   mockState.moveEnabled = false;
   mockAllChosen = true;
+  mockTake10 = { allReady: false, minutes: 10, openedAt: 0, clear: mockClearTake10 };
 });
 
 const renderDowntime = () => {
@@ -95,6 +105,26 @@ const renderDowntime = () => {
 };
 
 describe('PlayModeControl', () => {
+  it('on all-ready: resolves allocations, advances the clock, and closes the beat', () => {
+    mockTake10 = { allReady: true, minutes: 20, openedAt: 500, clear: mockClearTake10 };
+    mockGetState.mockImplementation((id, key) => {
+      if (id === 'a' && key === 'take10alloc') {
+        return { beatAt: 500, ready: true, activities: [{ id: 'refocus', label: 'Refocus', minutes: 10 }] };
+      }
+      if (id === 'a' && key === 'focus') return 2;
+      return null;
+    });
+    renderWith([{ id: 'a', name: 'Ari' }]);
+    expect(mockSendUpdate).toHaveBeenCalledWith('a', 'focus', 0);
+    expect(mockAdvanceMinutes).toHaveBeenCalledWith(20);
+    expect(mockClearTake10).toHaveBeenCalled();
+  });
+
+  it('does not advance the clock while the party is not all-ready', () => {
+    renderWith([{ id: 'a', name: 'Ari' }]);
+    expect(mockAdvanceMinutes).not.toHaveBeenCalled();
+  });
+
   it('always shows all three mode pills; only Encounter is non-interactive', () => {
     renderWith();
     expect(screen.getByRole('button', { name: 'Exploration' })).toBeInTheDocument();
