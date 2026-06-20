@@ -31,19 +31,25 @@ vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: (c) => (c ? { inventory: c.__inventory || [] } : null),
 }));
 
-// Item-target effects (#339) + affix (#254) overlays — key-dispatched stores.
+// Item-target effects (#339) + affix + consumed (#254) overlays — key-dispatched.
 let mockItemEffects = [];
 let mockAffixed = {};
+let mockConsumed = {};
 const mockSetItemEffects = vi.fn((next) => {
   mockItemEffects = typeof next === 'function' ? next(mockItemEffects) : next;
 });
 const mockSetAffixed = vi.fn((next) => {
   mockAffixed = typeof next === 'function' ? next(mockAffixed) : next;
 });
+const mockSetConsumed = vi.fn((next) => {
+  mockConsumed = typeof next === 'function' ? next(mockConsumed) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
-  useSyncedState: (key) => (String(key).startsWith('cnmh_affixed_')
-    ? [mockAffixed, mockSetAffixed]
-    : [mockItemEffects, mockSetItemEffects]),
+  useSyncedState: (key) => {
+    if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
+    if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
+    return [mockItemEffects, mockSetItemEffects];
+  },
 }));
 
 const mockAppendEvent = vi.fn();
@@ -54,8 +60,10 @@ vi.mock('../../hooks/useSessionLog', () => ({
 beforeEach(() => {
   mockItemEffects = [];
   mockAffixed = {};
+  mockConsumed = {};
   mockSetItemEffects.mockClear();
   mockSetAffixed.mockClear();
+  mockSetConsumed.mockClear();
   mockAppendEvent.mockClear();
 });
 
@@ -808,5 +816,28 @@ describe('ItemModal — talisman affixing (#254/#339)', () => {
     expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
       text: 'Ashka removed Wolf Fang from Longsword',
     }));
+  });
+
+  it('activates an affixed talisman: consumes it (unaffix + consumed++) and logs', () => {
+    const wolfFangActive = {
+      ...wolfFang,
+      talisman: { affixTo: 'weapon', activation: { cost: 'free', trigger: 'You successfully Trip a creature', effect: { kind: 'damage', amount: 'str-mod', damageType: 'bludgeoning', onManeuver: 'trip' } } },
+    };
+    const char = { id: 'hero', name: 'Ashka', __inventory: [wolfFangActive, sword, plate] };
+    mockAffixed = { t1: 'w1' };
+    render(<ItemModal isOpen onClose={vi.fn()} item={wolfFangActive} character={char} />);
+
+    fireEvent.click(screen.getByTestId('item-action-activate'));
+    expect(mockConsumed).toEqual({ 'Wolf Fang': 1 });
+    expect(mockAffixed).toEqual({}); // unaffixed on activation
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('activated Wolf Fang'),
+    }));
+  });
+
+  it('shows no Activate button when the talisman has no activation block', () => {
+    mockAffixed = { t1: 'w1' };
+    open(); // base wolfFang has no activation
+    expect(screen.queryByTestId('item-action-activate')).not.toBeInTheDocument();
   });
 });

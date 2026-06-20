@@ -196,3 +196,14 @@
   border-color: var(--d-cf-border);
   color: var(--d-cf-fg);
 }
+
+/* Affixed save-bonus talisman toggle (Sanitizing Pin, #254/#339) */
+.save-prompt-talisman {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0.25rem 0;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.8));
+  cursor: pointer;
+}

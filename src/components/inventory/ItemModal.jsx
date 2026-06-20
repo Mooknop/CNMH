@@ -8,8 +8,9 @@ import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
 import {
   isTalisman, affixTargetType, validAffixHosts, affixedHostUid,
-  affix, unaffix, affixedKey, itemUidOf,
+  affix, unaffix, affixedKey, itemUidOf, deactivateTalisman,
 } from '../../utils/affix';
+import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useSyncedState } from '../../hooks/useSyncedState';
@@ -22,8 +23,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(character?.id);
   // Item-target effects (oils, #339) — read live so removal stays in sync.
   const [itemEffects, setItemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
-  // Affixed-talisman overlay (#254/#339).
+  // Affixed-talisman overlay (#254/#339) + consumed overlay for activation.
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
+  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   const { appendEvent } = useSessionLog();
 
   if (!isOpen || !item) return null;
@@ -47,6 +49,15 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const doUnaffix = () => {
     setAffixed((cur) => unaffix(cur, itemUidOf(item)));
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} removed ${item.name} from ${affixedTo?.name || 'its item'}` });
+    onClose();
+  };
+
+  // Activation — only for an affixed talisman that declares an activation. The
+  // generic surface: consume the talisman and log its (computed) effect (#254).
+  const activation = talisman && affixedTo ? activationOf(item) : null;
+  const doActivate = () => {
+    appendEvent({ type: 'action', text: `${character?.name || 'Someone'} activated ${item.name}: ${activationSummary(item, charData)}` });
+    deactivateTalisman({ talisman: item, setConsumed, setAffixed });
     onClose();
   };
 
@@ -250,17 +261,35 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         <div className="item-affix">
           <h3>Affix</h3>
           {affixedTo ? (
-            <div className="item-affix-state">
-              <span>Affixed to <strong>{affixedTo.name}</strong></span>
-              <button
-                type="button"
-                className="btn-small btn-secondary"
-                data-testid="item-action-unaffix"
-                onClick={doUnaffix}
-              >
-                Unaffix
-              </button>
-            </div>
+            <>
+              <div className="item-affix-state">
+                <span>Affixed to <strong>{affixedTo.name}</strong></span>
+                <button
+                  type="button"
+                  className="btn-small btn-secondary"
+                  data-testid="item-action-unaffix"
+                  onClick={doUnaffix}
+                >
+                  Unaffix
+                </button>
+              </div>
+              {activation && (
+                <div className="item-affix-activate">
+                  <p className="item-affix-hint">
+                    {activation.cost === 'reaction' ? 'Reaction' : activation.cost === 'free' ? 'Free action' : `${activation.cost} action`}
+                    {activation.trigger ? ` — ${activation.trigger}.` : ''}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-small btn-primary"
+                    data-testid="item-action-activate"
+                    onClick={doActivate}
+                  >
+                    Activate ({activationSummary(item, charData)})
+                  </button>
+                </div>
+              )}
+            </>
           ) : affixHosts.length > 0 ? (
             <>
               <p className="item-affix-hint">

@@ -33,6 +33,7 @@ vi.mock('../../utils/rollResolution', () => ({ resolveActionRoll: vi.fn() }));
 vi.mock('../../utils/CharacterUtils', () => ({
   getSkillModifier: (_c, s) => ({ athletics: 8, acrobatics: 5 }[s] ?? 0),
   getUnarmedAttackModifier: () => 9,
+  getAbilityModifier: (score) => Math.floor(((score ?? 10) - 10) / 2),
   hasFeat: (c, name) => (c?.feats || []).some((f) => f.name?.toLowerCase() === name.toLowerCase()),
 }));
 vi.mock('../../utils/gameTime', () => ({ toGameSeconds: () => 1000 }));
@@ -372,5 +373,59 @@ describe('SkillActionModal (Ashka feat augments, #223)', () => {
     expect(screen.queryByText('(incl. +2 circumstance)')).not.toBeInTheDocument();
     fireEvent.click(toggle);
     expect(screen.getByText('(incl. +2 circumstance)')).toBeInTheDocument();
+  });
+});
+
+describe('SkillActionModal (Wolf Fang on Trip, #254/#339)', () => {
+  const wolfFang = {
+    uid: 't1', name: 'Wolf Fang', traits: ['Talisman'],
+    talisman: { affixTo: 'weapon', activation: { cost: 'free', trigger: 'You successfully Trip a creature', effect: { kind: 'damage', amount: 'str-mod', damageType: 'bludgeoning', onManeuver: 'trip' } } },
+  };
+  const sword = { uid: 'w1', name: 'Longsword', strikes: [{ damage: '1d8' }] };
+  const tripChar = { id: 'izzy', name: 'Izzy', abilities: { strength: 18 } }; // +4
+  let consumed, affixed;
+
+  beforeEach(() => {
+    consumed = {};
+    affixed = { t1: 'w1' };
+    useCharacter.mockReturnValue({ flags: {}, inventory: [wolfFang, sword] });
+    useSyncedState.mockImplementation((key) => {
+      if (String(key).startsWith('cnmh_affixed_')) return [affixed, (fn) => { affixed = typeof fn === 'function' ? fn(affixed) : fn; }];
+      if (String(key).startsWith('cnmh_consumed_')) return [consumed, (fn) => { consumed = typeof fn === 'function' ? fn(consumed) : fn; }];
+      return [[], vi.fn()];
+    });
+  });
+
+  it('offers Wolf Fang activation on a successful Trip and consumes it on click', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={getSkillAction('trip')} character={tripChar} />);
+    pickGoblin(); // Reflex DC 14
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } }); // 15 → success
+    fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
+
+    const btn = screen.getByRole('button', { name: /Activate Wolf Fang/ });
+    expect(btn).toHaveTextContent('deal 4 bludgeoning');
+    fireEvent.click(btn);
+    expect(consumed).toEqual({ 'Wolf Fang': 1 });
+    expect(affixed).toEqual({});
+    expect(appendLog).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('activates Wolf Fang: 4 bludgeoning'),
+    }));
+  });
+
+  it('does not offer activation on a failed Trip', () => {
+    render(<SkillActionModal isOpen onClose={() => {}} action={getSkillAction('trip')} character={tripChar} />);
+    pickGoblin();
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '2' } }); // 7 → failure
+    fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
+    expect(screen.queryByRole('button', { name: /Activate Wolf Fang/ })).not.toBeInTheDocument();
+  });
+
+  it('does not offer activation without an affixed maneuver talisman', () => {
+    affixed = {}; // nothing affixed
+    render(<SkillActionModal isOpen onClose={() => {}} action={getSkillAction('trip')} character={tripChar} />);
+    pickGoblin();
+    fireEvent.change(screen.getByLabelText('d20 roll'), { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /Use Trip/ }));
+    expect(screen.queryByRole('button', { name: /Activate Wolf Fang/ })).not.toBeInTheDocument();
   });
 });

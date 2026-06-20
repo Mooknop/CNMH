@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { vi } from 'vitest';
 import {
   affixedKey, itemUidOf, isTalisman, affixTargetType, hostMatchesType,
   validAffixHosts, affixedHostUid, affix, unaffix, affixedUidSet, affixedTalismansByHost,
+  affixedTalismanItems, deactivateTalisman,
 } from './affix';
 
 const wolfFang = { uid: 't1', name: 'Wolf Fang', traits: ['Consumable', 'Talisman'], talisman: { affixTo: 'weapon' } };
@@ -85,6 +87,29 @@ describe('affix util (#254/#339)', () => {
     it('skips stale talisman uids that no longer resolve', () => {
       const out = affixedTalismansByHost({ gone: 'w1' }, [sword]);
       expect(out).toEqual({});
+    });
+  });
+
+  it('affixedTalismanItems resolves the affixed talismans as items', () => {
+    const flat = [wolfFang, pin, sword, plate];
+    expect(affixedTalismanItems({ t1: 'w1' }, flat).map((t) => t.name)).toEqual(['Wolf Fang']);
+    expect(affixedTalismanItems({}, flat)).toEqual([]);
+  });
+
+  describe('deactivateTalisman', () => {
+    it('bumps the consumed count (by name) and drops the affix binding (by uid)', () => {
+      let consumed = {};
+      let affixed = { t1: 'w1', t2: 'a1' };
+      const setConsumed = vi.fn((fn) => { consumed = fn(consumed); });
+      const setAffixed = vi.fn((fn) => { affixed = fn(affixed); });
+      deactivateTalisman({ talisman: wolfFang, setConsumed, setAffixed });
+      expect(consumed).toEqual({ 'Wolf Fang': 1 });
+      expect(affixed).toEqual({ t2: 'a1' });
+    });
+    it('is a no-op without a talisman', () => {
+      const setConsumed = vi.fn();
+      expect(() => deactivateTalisman({ talisman: null, setConsumed })).not.toThrow();
+      expect(setConsumed).not.toHaveBeenCalled();
     });
   });
 });

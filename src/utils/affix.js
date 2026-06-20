@@ -68,6 +68,30 @@ export const unaffix = (overlay, talismanUid) => {
 export const affixedUidSet = (overlay) =>
   new Set(Object.keys(overlay && typeof overlay === 'object' ? overlay : {}));
 
+/** The affixed talismans as resolved items, from a flat item list. */
+export const affixedTalismanItems = (overlay, flatItems) => {
+  const uids = affixedUidSet(overlay);
+  return (Array.isArray(flatItems) ? flatItems : []).filter((it) => uids.has(itemUidOf(it)));
+};
+
+/**
+ * Activate-and-consume a talisman: bump its consumed-overlay count (by name) and
+ * drop its affix binding (by uid). Both writers accept a functional updater. The
+ * shared path for all three activation surfaces (#254/#339).
+ * @param {Object}   talisman
+ * @param {Function} setConsumed  - setter for cnmh_consumed_<charId>
+ * @param {Function} setAffixed   - setter for cnmh_affixed_<charId>
+ */
+export const deactivateTalisman = ({ talisman, setConsumed, setAffixed }) => {
+  if (!talisman) return;
+  if (setConsumed) {
+    setConsumed((cur) => ({ ...(cur || {}), [talisman.name]: ((cur || {})[talisman.name] || 0) + 1 }));
+  }
+  if (setAffixed) {
+    setAffixed((cur) => unaffix(cur, itemUidOf(talisman)));
+  }
+};
+
 /**
  * Group affixed talismans by their host uid, resolving uids to items from a
  * flat item list: { [hostUid]: [talismanItem, …] }. Talismans whose uid no

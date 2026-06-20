@@ -145,7 +145,7 @@ const CharacterSheet = () => {
         if (mode === 'encounter') {
           return (
             <>
-              <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} />
+              <SavePrompt charId={character.id} characterName={character.name} saves={characterModel.saves} character={character} />
               <ReactionPrompt character={character} themeColor={characterColor} />
               <SkillPrompt charId={character.id} characterName={character.name} skillModifiers={characterModel.skillModifiers} />
               {encounter?.active ? (

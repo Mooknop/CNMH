@@ -19,6 +19,9 @@ import { immunityConfigFor } from '../../utils/immunity';
 import { isAttackAbility, mapStepFor, mapPenaltyFor } from '../../utils/map';
 import { getCondition } from '../../data/pf2eConditions';
 import { toGameSeconds } from '../../utils/gameTime';
+import { flattenInventory } from '../../utils/InventoryUtils';
+import { affixedKey, affixedTalismanItems, deactivateTalisman } from '../../utils/affix';
+import { maneuverDamageTalisman, computeAmount } from '../../utils/talismanActivation';
 import './SkillActionModal.css';
 
 const DEGREE_LABELS = {
@@ -49,6 +52,9 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
+  // Affixed-talisman + consumed overlays — for a Trip-triggered talisman (Wolf Fang).
+  const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
+  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   const { encounter, appendLog } = useEncounter();
   const { spendActions, recordAttack, turnState } = useTurnState(character?.id);
   const { applyCondition, stampImmunity, isImmune } = useEnemyEffects();
@@ -84,6 +90,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
   const [toggledIds, setToggledIds] = useState([]); // declared circumstance toggles, active
   const [circumstance, setCircumstance] = useState(''); // free-form "+N (reason)" entry
   const [resolved, setResolved] = useState(null); // locks the UI after confirm
+  const [talismanUsed, setTalismanUsed] = useState(false); // Wolf Fang activated this resolve
 
   const target = useMemo(
     () => order.find((e) => e.entryId === pickedId) || null,
@@ -274,6 +281,25 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     setResolved({ degree, total, resultStr, targetName: selfTarget ? character?.name : target.name });
   };
 
+  // A talisman that deals damage on a successful maneuver (Wolf Fang on Trip,
+  // #254). Offered after the maneuver succeeds; activating logs the computed
+  // damage and consumes the talisman (no enemy-HP model, so the line is a log).
+  const succeeded = resolved && (resolved.degree === 'success' || resolved.degree === 'criticalSuccess');
+  const maneuverTalisman = succeeded
+    ? maneuverDamageTalisman(affixedTalismanItems(affixed, flattenInventory(characterModel?.inventory)), action?.id)
+    : null;
+  const activateManeuverTalisman = () => {
+    const amount = computeAmount(maneuverTalisman.talisman.activation.effect, character);
+    const dmgType = maneuverTalisman.talisman.activation.effect.damageType || 'damage';
+    appendLog({
+      type: 'action',
+      charId: character?.id,
+      text: `${character?.name} activates ${maneuverTalisman.name}: ${amount} ${dmgType} to ${resolved.targetName}`,
+    });
+    deactivateTalisman({ talisman: maneuverTalisman, setConsumed, setAffixed });
+    setTalismanUsed(true);
+  };
+
   const handleClose = () => {
     setPickedId(null);
     setD20('');
@@ -283,6 +309,7 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
     setToggledIds([]);
     setCircumstance('');
     setResolved(null);
+    setTalismanUsed(false);
     onClose();
   };
 
@@ -473,9 +500,25 @@ const SkillActionModal = ({ isOpen, onClose, action, character, themeColor }) =>
 
             {/* Confirm / result */}
             {resolved ? (
-              <div className="sam-result">
-                ✓ {action.name}{selfTarget ? '' : ` vs ${resolved.targetName}`} — {resolved.resultStr}
-              </div>
+              <>
+                <div className="sam-result">
+                  ✓ {action.name}{selfTarget ? '' : ` vs ${resolved.targetName}`} — {resolved.resultStr}
+                </div>
+                {maneuverTalisman && !talismanUsed && (
+                  <button
+                    type="button"
+                    className="sam-talisman-btn"
+                    onClick={activateManeuverTalisman}
+                  >
+                    Activate {maneuverTalisman.name} (free): deal{' '}
+                    {computeAmount(maneuverTalisman.talisman.activation.effect, character)}{' '}
+                    {maneuverTalisman.talisman.activation.effect.damageType || 'damage'}
+                  </button>
+                )}
+                {talismanUsed && (
+                  <div className="sam-result sam-result--talisman">✓ {maneuverTalisman?.name} activated</div>
+                )}
+              </>
             ) : (
               <button
                 className="sam-confirm-btn"
