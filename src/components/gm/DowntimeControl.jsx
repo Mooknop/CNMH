@@ -7,6 +7,7 @@ import { usePlayMode } from '../../hooks/usePlayMode';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
 import { periodState } from '../../utils/downtimeUtils';
+import { taskDc } from '../../utils/earnIncome';
 
 // GM controls for Downtime mode. The period setter grants the party a budget of
 // downtime days (`cnmh_downtimeblock_global`) that players allocate to activities.
@@ -21,6 +22,7 @@ const DowntimeControl = () => {
   const { advanceHours, advanceDays, formatGameDate, formatClockTime, gameDate } = useGameDate();
   const [block, setBlock] = useSyncedState('cnmh_downtimeblock_global', null);
   const [, setSummary] = useSyncedState('cnmh_downtimesummary_global', null);
+  const [taskMap, setTaskMap] = useSyncedState('cnmh_earnincometask_global', null);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('hours');
   const [periodValue, setPeriodValue] = useState('');
@@ -91,6 +93,17 @@ const DowntimeControl = () => {
     setBlock({ ...block, active: false });
   };
 
+  // Earn Income task level assigned per PC. The level fixes both the check DC and
+  // the payout row; the player picks the skill (payout column) on their end.
+  const setTaskLevel = (charId, raw) => {
+    setTaskMap((prev) => {
+      const next = { ...(prev || {}) };
+      if (raw === '') delete next[charId];
+      else next[charId] = Math.max(0, Math.min(20, parseInt(raw, 10) || 0));
+      return next;
+    });
+  };
+
   return (
     <div className="pmc-downtime">
       <span className="pmc-label">Downtime Period</span>
@@ -130,6 +143,31 @@ const DowntimeControl = () => {
             <button className="pmc-btn pmc-btn--danger pmc-btn--sm" onClick={closeBlock}>
               Close block
             </button>
+          </div>
+
+          <span className="pmc-label">Earn Income Tasks</span>
+          <div className="pmc-downtime-tasks">
+            {(characters || []).map((c) => {
+              const level = taskMap?.[c.id];
+              return (
+                <div key={c.id} className="pmc-downtime-task-row">
+                  <span className="pmc-downtime-task-name">{c.name}</span>
+                  <input
+                    className="pmc-downtime-task-input"
+                    type="number"
+                    min="0"
+                    max="20"
+                    placeholder="Lvl"
+                    value={level ?? ''}
+                    onChange={(e) => setTaskLevel(c.id, e.target.value)}
+                    aria-label={`${c.name} Earn Income task level`}
+                  />
+                  <span className="pmc-downtime-task-dc">
+                    {level != null ? `DC ${taskDc(level)}` : '—'}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </>
       )}

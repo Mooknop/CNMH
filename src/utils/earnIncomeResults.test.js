@@ -1,0 +1,79 @@
+import {
+  resultsForCharPeriod,
+  pendingRollSlots,
+  buildEarnIncomeResult,
+} from './earnIncomeResults';
+
+// gameDate-like period markers (objects, to prove value-compare).
+const P1 = { year: 4710, day: 1 };
+const P2 = { year: 4710, day: 9 };
+
+const result = (charId, startedAt, extra = {}) => ({
+  charId, periodStartedAt: startedAt, ...extra,
+});
+
+describe('resultsForCharPeriod', () => {
+  const results = [
+    result('a', P1),
+    result('a', P1),
+    result('a', P2), // different period
+    result('b', P1), // different char
+  ];
+
+  it('matches char + period by value, not reference', () => {
+    const fresh = { year: 4710, day: 1 }; // new object, same value as P1
+    expect(resultsForCharPeriod(results, 'a', fresh)).toHaveLength(2);
+  });
+
+  it('isolates other periods and other characters', () => {
+    expect(resultsForCharPeriod(results, 'a', P2)).toHaveLength(1);
+    expect(resultsForCharPeriod(results, 'b', P1)).toHaveLength(1);
+  });
+
+  it('tolerates an empty/missing queue', () => {
+    expect(resultsForCharPeriod(undefined, 'a', P1)).toEqual([]);
+  });
+});
+
+describe('pendingRollSlots', () => {
+  it('is committed rolls minus already-submitted results', () => {
+    const results = [result('a', P1), result('a', P1)];
+    expect(pendingRollSlots({ results, charId: 'a', startedAt: P1, committedRolls: 3 })).toBe(1);
+  });
+
+  it('clamps to 0 when more results exist than committed rolls', () => {
+    const results = [result('a', P1), result('a', P1)];
+    expect(pendingRollSlots({ results, charId: 'a', startedAt: P1, committedRolls: 1 })).toBe(0);
+  });
+
+  it('equals committed rolls when nothing submitted yet', () => {
+    expect(pendingRollSlots({ results: [], charId: 'a', startedAt: P1, committedRolls: 2 })).toBe(2);
+  });
+});
+
+describe('buildEarnIncomeResult', () => {
+  it('stamps status pending, the period, an id and timestamp', () => {
+    const entry = buildEarnIncomeResult({
+      charId: 'a', charName: 'Ashka',
+      taskLevel: 8, dc: 24,
+      skillKey: 'crafting', skillLabel: 'Crafting', rank: 2,
+      d20: 15, total: 27, degree: 'success', payoutCp: 300,
+      startedAt: P1,
+    });
+    expect(entry).toMatchObject({
+      charId: 'a', charName: 'Ashka',
+      taskLevel: 8, dc: 24,
+      skillKey: 'crafting', skillLabel: 'Crafting', rank: 2,
+      d20: 15, total: 27, degree: 'success', payoutCp: 300,
+      status: 'pending',
+      periodStartedAt: P1,
+    });
+    expect(typeof entry.id).toBe('string');
+    expect(typeof entry.ts).toBe('number');
+  });
+
+  it('defaults a missing period to null', () => {
+    const entry = buildEarnIncomeResult({ charId: 'a' });
+    expect(entry.periodStartedAt).toBeNull();
+  });
+});
