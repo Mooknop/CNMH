@@ -315,87 +315,108 @@ describe('CraftingProjects', () => {
     });
   });
 
-  describe('Item Completed flow', () => {
+  describe('craft check + finish decision', () => {
+    // Level 6 → DC 22. craftRank 2 (expert) → lvl-6 expert Earn Income = 2 gp/day.
     const readyProject = {
-      id: 'p-ready',
-      ref: 'antidote',
-      level: 1,
-      name: 'Antidote (Lesser)',
-      source: 'recipe',
-      threshold: 8,
-      hours: 8,
+      id: 'p-ready', ref: 'antidote', level: 6, name: 'Antidote (Moderate)',
+      source: 'recipe', threshold: 8, hours: 8,
+      price: 35, costCp: 3500, paidCp: 1750, remainingCp: 1750, craftRank: 2, status: 'in-progress',
+    };
+    const awaiting = (degree) => ({ ...readyProject, status: 'awaiting-decision', craftDegree: degree });
+
+    const enterCheck = (d20, total) => {
+      fireEvent.change(screen.getByLabelText(`d20 die for ${readyProject.name}`), { target: { value: String(d20) } });
+      fireEvent.change(screen.getByLabelText(`check total for ${readyProject.name}`), { target: { value: String(total) } });
     };
 
-    it('shows Ready badge and d20 input when hours meet the threshold', () => {
+    it('prompts the Craft check (with DC) once setup hours are met', () => {
       withProjects([readyProject]);
       render(<CraftingProjects character={character} />);
-      expect(screen.getByText(/ready to complete/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(`d20 roll for ${readyProject.name}`)).toBeInTheDocument();
-    });
-
-    it('does not show progress bar for a ready project', () => {
-      withProjects([readyProject]);
-      render(<CraftingProjects character={character} />);
+      expect(screen.getByText(/make your Craft check \(DC 22\)/i)).toBeInTheDocument();
       expect(screen.queryByText('8h / 8h')).not.toBeInTheDocument();
     });
 
-    it('Complete button is disabled until a roll value is entered', () => {
+    it('Resolve is disabled until a valid d20 + total are entered', () => {
       withProjects([readyProject]);
       render(<CraftingProjects character={character} />);
-      expect(screen.getByRole('button', { name: `Complete ${readyProject.name}` })).toBeDisabled();
+      const btn = screen.getByRole('button', { name: `Resolve Craft check for ${readyProject.name}` });
+      expect(btn).toBeDisabled();
+      enterCheck(15, 25);
+      expect(btn).not.toBeDisabled();
     });
 
-    it('Complete button enables after entering a roll', () => {
+    it('resolving a passing check parks the project on its degree', () => {
       withProjects([readyProject]);
       render(<CraftingProjects character={character} />);
-      fireEvent.change(screen.getByLabelText(`d20 roll for ${readyProject.name}`), {
-        target: { value: '18' },
-      });
-      expect(screen.getByRole('button', { name: `Complete ${readyProject.name}` })).not.toBeDisabled();
+      enterCheck(15, 25); // total 25 ≥ DC 22 → success
+      fireEvent.click(screen.getByRole('button', { name: `Resolve Craft check for ${readyProject.name}` }));
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [readyProject] });
+      expect(result.projects[0]).toMatchObject({ status: 'awaiting-decision', craftDegree: 'success' });
     });
 
-    it('clicking Complete removes the project from state', () => {
-      withProjects([readyProject]);
+    it('a success offers Complete now and Continue', () => {
+      withProjects([awaiting('success')]);
       render(<CraftingProjects character={character} />);
-      fireEvent.change(screen.getByLabelText(`d20 roll for ${readyProject.name}`), {
-        target: { value: '15' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: `Complete ${readyProject.name}` }));
-      expect(mockSetProjects).toHaveBeenCalled();
-      const updater = mockSetProjects.mock.calls[0][0];
-      const result = updater({ projects: [readyProject] });
+      expect(screen.getByText('Success')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `Complete ${readyProject.name} now` })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `Continue ${readyProject.name}` })).toBeInTheDocument();
+    });
+
+    it('Complete now pays the remaining cost and marks completed', () => {
+      withProjects([awaiting('success')]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: `Complete ${readyProject.name} now` }));
+      expect(mockSetGold.mock.calls[0][0](100)).toBe(82.5); // 100 − 17.5 remaining
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [awaiting('success')] });
+      expect(result.projects[0]).toMatchObject({ status: 'completed', remainingCp: 0 });
+    });
+
+    it('Continue switches the project to reducing (no gold spent yet)', () => {
+      withProjects([awaiting('success')]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: `Continue ${readyProject.name}` }));
+      expect(mockSetGold).not.toHaveBeenCalled();
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [awaiting('success')] });
+      expect(result.projects[0].status).toBe('reducing');
+    });
+
+    it('a failure offers Keep working, which re-banks the setup', () => {
+      withProjects([awaiting('failure')]);
+      render(<CraftingProjects character={character} />);
+      fireEvent.click(screen.getByRole('button', { name: `Keep working ${readyProject.name}` }));
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [awaiting('failure')] });
+      expect(result.projects[0]).toMatchObject({ status: 'in-progress', hours: 0, craftDegree: null });
+    });
+
+    it('a critical failure ruins materials and discards on confirm', () => {
+      withProjects([awaiting('criticalFailure')]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByText(/Materials ruined — lose 3\.5 gp/)).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: `Discard ${readyProject.name}` }));
+      expect(mockSetGold.mock.calls[0][0](100)).toBe(96.5); // −3.5 gp ruined
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [awaiting('criticalFailure')] });
       expect(result.projects).toHaveLength(0);
     });
 
-    it('shows an Item Completed banner with the rolled number after completing', () => {
-      withProjects([readyProject]);
+    it('a reducing project shows remaining cost and a finish-now option', () => {
+      withProjects([{ ...readyProject, status: 'reducing', craftDegree: 'success' }]);
       render(<CraftingProjects character={character} />);
-      fireEvent.change(screen.getByLabelText(`d20 roll for ${readyProject.name}`), {
-        target: { value: '20' },
-      });
-      fireEvent.click(screen.getByRole('button', { name: `Complete ${readyProject.name}` }));
-      expect(screen.getByRole('status')).toHaveTextContent(/Item Completed/i);
-      expect(screen.getByRole('status')).toHaveTextContent('20');
-      expect(screen.getByRole('status')).toHaveTextContent(readyProject.name);
+      expect(screen.getByText(/17\.5 gp left, −2 gp per crafting day/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: `Finish ${readyProject.name} now` })).toBeInTheDocument();
     });
 
-    it('Abandon still works on a ready project', () => {
-      withProjects([readyProject]);
+    it('a completed project shows the completed card', () => {
+      withProjects([{ ...readyProject, status: 'completed', craftDegree: 'success' }]);
       render(<CraftingProjects character={character} />);
-      fireEvent.click(screen.getByRole('button', { name: `Abandon ${readyProject.name}` }));
-      expect(mockSetProjects).toHaveBeenCalled();
-      const updater = mockSetProjects.mock.calls[0][0];
-      const result = updater({ projects: [readyProject] });
-      expect(result.projects).toHaveLength(0);
+      expect(screen.getByText('✓ Completed')).toBeInTheDocument();
+      expect(screen.getByText(/awaiting GM grant/)).toBeInTheDocument();
     });
 
-    it('an in-progress project still shows a progress bar when threshold not yet met', () => {
-      withProjects([
-        { ...readyProject, hours: 4 },
-      ]);
+    it('an in-progress project below threshold still shows a progress bar', () => {
+      withProjects([{ ...readyProject, hours: 4 }]);
       render(<CraftingProjects character={character} />);
       expect(screen.getByText('4h / 8h')).toBeInTheDocument();
-      expect(screen.queryByText(/ready to complete/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/make your Craft check/i)).not.toBeInTheDocument();
     });
   });
 });

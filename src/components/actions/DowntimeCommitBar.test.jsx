@@ -310,5 +310,40 @@ describe('DowntimeCommitBar', () => {
       expect(screen.getByLabelText(`Hours for ${craftProject.name}`)).toHaveValue(16);
       expect(screen.getByText('16 / 16h allocated')).toBeInTheDocument();
     });
+
+    // Level 6, craftRank 2 (expert) → lvl-6 expert Earn Income = 2 gp/day = 200 cp.
+    const reducingProject = {
+      id: 'pr', name: 'Antidote (Moderate)', source: 'recipe', threshold: 8, hours: 8,
+      level: 6, craftRank: 2, craftDegree: 'success', remainingCp: 500, status: 'reducing',
+    };
+
+    it('a reducing project shows remaining cost and works it off on commit', () => {
+      withState({ selected: ['Crafting'], ledger: [] }, [reducingProject]);
+      render(<DowntimeCommitBar character={character} block={activeBlock} />);
+      expect(screen.getByText('5 gp left')).toBeInTheDocument(); // 500 cp
+      fireEvent.click(screen.getByRole('button', { name: 'Commit 8h day' }));
+      const cpResult = mockSetCraftProjects.mock.calls[0][0]({ projects: [reducingProject] });
+      // 500 − 200 (one 8h block) = 300 cp, still reducing
+      expect(cpResult.projects[0]).toMatchObject({ remainingCp: 300, status: 'reducing' });
+    });
+
+    it('working a reducing project to 0 marks it completed', () => {
+      const almost = { ...reducingProject, remainingCp: 150 };
+      withState({ selected: ['Crafting'], ledger: [] }, [almost]);
+      render(<DowntimeCommitBar character={character} block={activeBlock} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Commit 8h day' }));
+      const cpResult = mockSetCraftProjects.mock.calls[0][0]({ projects: [almost] });
+      expect(cpResult.projects[0]).toMatchObject({ remainingCp: 0, status: 'completed' });
+    });
+
+    it('excludes awaiting-decision and completed projects from allocation', () => {
+      withState({ selected: ['Crafting'], ledger: [] }, [
+        { id: 'a', name: 'Awaiting', source: 'recipe', threshold: 8, hours: 8, status: 'awaiting-decision' },
+        { id: 'c', name: 'Done', source: 'recipe', threshold: 8, hours: 8, status: 'completed' },
+      ]);
+      render(<DowntimeCommitBar character={character} block={activeBlock} />);
+      // No allocatable projects → no panel
+      expect(screen.queryByText(/allocate crafting hours/i)).not.toBeInTheDocument();
+    });
   });
 });

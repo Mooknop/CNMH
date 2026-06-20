@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useContent } from '../../contexts/ContentContext';
 import { getLevelBasedDc } from '../../utils/InventoryUtils';
-import { craftCostCp, halfCostCp } from '../../utils/craftingOutcome';
+import { craftCostCp, halfCostCp, dailyReductionCp, critFailLossCp } from '../../utils/craftingOutcome';
 import { cpToGp } from '../../utils/earnIncome';
+import { computeSaveDegree } from '../../utils/saveDegree';
 import './CraftingProjects.css';
+
+const DEGREE_LABEL = {
+  criticalSuccess: 'Critical Success',
+  success: 'Success',
+  failure: 'Failure',
+  criticalFailure: 'Critical Failure',
+};
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -19,8 +27,7 @@ const CraftingProjects = ({ character }) => {
   const [recipeLevel, setRecipeLevel] = useState('');
   const [catalogRef, setCatalogRef] = useState('');
   const [catalogLevel, setCatalogLevel] = useState('');
-  const [rollInputs, setRollInputs] = useState({}); // { [projectId]: string }
-  const [banners, setBanners] = useState({});        // { [projectId]: { roll, name } }
+  const [checkInputs, setCheckInputs] = useState({}); // { [projectId]: { d20, total } }
 
   const projects = craftProjects?.projects || [];
   const knownRecipes = (character?.crafting || []).filter(r => r.name);
@@ -70,16 +77,50 @@ const CraftingProjects = ({ character }) => {
     }));
   };
 
-  const completeProject = (p) => {
-    const roll = parseInt(rollInputs[p.id] || '0', 10);
-    setBanners(prev => ({ ...prev, [p.id]: { roll, name: p.name } }));
+  const updateProject = (id, patch) =>
     setCraftProjects(prev => ({
-      projects: (prev?.projects || []).filter(x => x.id !== p.id),
+      projects: (prev?.projects || []).map(p => (p.id === id ? { ...p, ...patch } : p)),
     }));
-    setTimeout(() => {
-      setBanners(prev => { const next = { ...prev }; delete next[p.id]; return next; });
-    }, 3000);
+
+  const spendGoldCp = (cp) => {
+    if (cp > 0) setGold(g => (Number(g) || 0) - cpToGp(cp));
   };
+
+  // Threshold met → resolve the Craft check vs the item DC; park the project on
+  // its degree so the player can decide how to finish.
+  const makeCraftCheck = (p) => {
+    const ci = checkInputs[p.id] || {};
+    const d20 = parseInt(ci.d20, 10);
+    const total = parseInt(ci.total, 10);
+    if (!(d20 >= 1 && d20 <= 20) || !Number.isFinite(total)) return;
+    const degree = computeSaveDegree({ d20, total, dc: getLevelBasedDc(p.level) });
+    updateProject(p.id, { status: 'awaiting-decision', craftD20: d20, craftTotal: total, craftDegree: degree });
+  };
+
+  // Finish now: pay the remaining materials cost and mark completed (item grant +
+  // GM confirm land in Slice E; until then a completed card shows the outcome).
+  const completeNow = (p) => {
+    spendGoldCp(p.remainingCp || 0);
+    updateProject(p.id, { remainingCp: 0, status: 'completed' });
+  };
+
+  // Keep working: each committed crafting day will whittle the remaining cost
+  // (handled in DowntimeCommitBar via dailyReductionCp).
+  const continueReducing = (p) => updateProject(p.id, { status: 'reducing' });
+
+  // Failed check: no progress toward finishing — re-bank the setup time and try
+  // again (reset hours, clear the prior check).
+  const keepWorking = (p) =>
+    updateProject(p.id, { status: 'in-progress', hours: 0, craftDegree: null, craftD20: null, craftTotal: null });
+
+  // Critical failure: ruin a slice of materials and scrap the project.
+  const discardRuined = (p) => {
+    spendGoldCp(critFailLossCp(p.price));
+    abandonProject(p.id);
+  };
+
+  const setCheck = (id, field, value) =>
+    setCheckInputs(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [field]: value } }));
 
   const selectedRecipe = recipeIdx !== null ? knownRecipes[recipeIdx] : null;
   const recipeVariants = selectedRecipe?.variants || [];
@@ -122,21 +163,22 @@ const CraftingProjects = ({ character }) => {
         )}
       </div>
 
-      {Object.entries(banners).map(([id, { roll, name }]) => (
-        <div key={id} className="cp-completed-banner" role="status" data-testid={`cp-banner-${id}`}>
-          Item Completed! <strong>{name}</strong> — rolled {roll}
-        </div>
-      ))}
-
       {projects.length > 0 && (
         <ul className="cp-list" aria-label="Crafting projects">
           {projects.map(p => {
-            const isReady = p.hours >= p.threshold;
-            const pct = Math.min(100, (p.hours / p.threshold) * 100);
+            const status = p.status || 'in-progress';
+            const atThreshold = p.hours >= p.threshold;
+            const ci = checkInputs[p.id] || {};
+            const d20Num = parseInt(ci.d20, 10);
+            const totalNum = parseInt(ci.total, 10);
+            const checkValid = d20Num >= 1 && d20Num <= 20 && Number.isFinite(totalNum);
+            const remainingGp = cpToGp(p.remainingCp || 0);
+            const perDayGp = cpToGp(dailyReductionCp({ itemLevel: p.level, craftingRank: p.craftRank, degree: p.craftDegree }));
+            const isCheckStage = status === 'in-progress' && atThreshold;
             return (
               <li
                 key={p.id}
-                className={`cp-project${isReady ? ' cp-project--ready' : ''}`}
+                className={`cp-project${(isCheckStage || status === 'awaiting-decision') ? ' cp-project--ready' : ''}`}
                 data-testid={`cp-project-${p.id}`}
               >
                 <div className="cp-project-header">
@@ -150,29 +192,94 @@ const CraftingProjects = ({ character }) => {
                   </button>
                 </div>
 
-                {isReady ? (
+                {status === 'completed' ? (
+                  <div className="cp-completed" role="status">
+                    <span className="cp-completed-badge">✓ Completed</span>
+                    <span className="cp-project-meta">{DEGREE_LABEL[p.craftDegree] || 'Done'} — awaiting GM grant</span>
+                  </div>
+                ) : isCheckStage ? (
                   <div className="cp-ready">
-                    <span className="cp-ready-badge">Ready to complete!</span>
+                    <span className="cp-ready-badge">Setup done — make your Craft check (DC {getLevelBasedDc(p.level)})</span>
                     <div className="cp-ready-row">
                       <label className="cp-ready-label">
-                        d20 total
+                        d20
                         <input
                           type="number"
                           className="cp-ready-input"
                           min={1}
-                          value={rollInputs[p.id] ?? ''}
-                          onChange={e => setRollInputs(prev => ({ ...prev, [p.id]: e.target.value }))}
-                          aria-label={`d20 roll for ${p.name}`}
+                          max={20}
+                          value={ci.d20 ?? ''}
+                          onChange={e => setCheck(p.id, 'd20', e.target.value)}
+                          aria-label={`d20 die for ${p.name}`}
+                          placeholder="—"
+                        />
+                      </label>
+                      <label className="cp-ready-label">
+                        total
+                        <input
+                          type="number"
+                          className="cp-ready-input"
+                          value={ci.total ?? ''}
+                          onChange={e => setCheck(p.id, 'total', e.target.value)}
+                          aria-label={`check total for ${p.name}`}
                           placeholder="—"
                         />
                       </label>
                       <button
                         className="cp-complete-btn"
-                        disabled={!rollInputs[p.id]}
-                        onClick={() => completeProject(p)}
-                        aria-label={`Complete ${p.name}`}
+                        disabled={!checkValid}
+                        onClick={() => makeCraftCheck(p)}
+                        aria-label={`Resolve Craft check for ${p.name}`}
                       >
-                        Complete item
+                        Resolve
+                      </button>
+                    </div>
+                  </div>
+                ) : status === 'awaiting-decision' ? (
+                  <div className="cp-decision">
+                    <span className={`cp-degree cp-degree--${p.craftDegree}`}>{DEGREE_LABEL[p.craftDegree]}</span>
+                    {(p.craftDegree === 'success' || p.craftDegree === 'criticalSuccess') && (
+                      <>
+                        <span className="cp-project-meta">{remainingGp} gp to finish now, or work it off ({perDayGp} gp/day).</span>
+                        <div className="cp-decision-actions">
+                          <button className="cp-complete-btn" onClick={() => completeNow(p)} aria-label={`Complete ${p.name} now`}>
+                            Complete now ({remainingGp} gp)
+                          </button>
+                          <button className="cp-continue-btn" onClick={() => continueReducing(p)} aria-label={`Continue ${p.name}`}>
+                            Continue ({perDayGp} gp/day)
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    {p.craftDegree === 'failure' && (
+                      <>
+                        <span className="cp-project-meta">No progress — re-bank the setup time and try again.</span>
+                        <div className="cp-decision-actions">
+                          <button className="cp-continue-btn" onClick={() => keepWorking(p)} aria-label={`Keep working ${p.name}`}>
+                            Keep working
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    {p.craftDegree === 'criticalFailure' && (
+                      <>
+                        <span className="cp-project-meta">Materials ruined — lose {cpToGp(critFailLossCp(p.price))} gp.</span>
+                        <div className="cp-decision-actions">
+                          <button className="cp-abandon-btn" onClick={() => discardRuined(p)} aria-label={`Discard ${p.name}`}>
+                            Discard (−{cpToGp(critFailLossCp(p.price))} gp)
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : status === 'reducing' ? (
+                  <div className="cp-decision">
+                    <span className="cp-project-meta">
+                      Working off the cost — {remainingGp} gp left, −{perDayGp} gp per crafting day committed.
+                    </span>
+                    <div className="cp-decision-actions">
+                      <button className="cp-complete-btn" onClick={() => completeNow(p)} aria-label={`Finish ${p.name} now`}>
+                        Pay {remainingGp} gp &amp; finish
                       </button>
                     </div>
                   </div>
@@ -182,7 +289,7 @@ const CraftingProjects = ({ character }) => {
                       <div className="cp-progress-track">
                         <div
                           className="cp-progress-fill"
-                          style={{ '--cp-fill': `${pct}%` }}
+                          style={{ '--cp-fill': `${Math.min(100, (p.hours / p.threshold) * 100)}%` }}
                         />
                       </div>
                       <span className="cp-progress-label">{p.hours}h / {p.threshold}h</span>
@@ -203,7 +310,7 @@ const CraftingProjects = ({ character }) => {
         </ul>
       )}
 
-      {!adding && projects.length === 0 && Object.keys(banners).length === 0 && (
+      {!adding && projects.length === 0 && (
         <p className="cp-empty">No active projects.</p>
       )}
 

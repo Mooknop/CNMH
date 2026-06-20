@@ -143,14 +143,64 @@
   color: var(--color-danger, #e53e3e);
 }
 
-/* Completed banner — shown for ~3s after project completes */
-.cp-completed-banner {
-  background: var(--theme-accent, var(--accent-bg));
-  border-radius: var(--radius-sm);
-  color: var(--theme-bg, #fff);
+/* Finish decision (awaiting-decision / reducing). */
+.cp-decision {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cp-decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.cp-degree {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
-  padding: var(--space-2) var(--space-3);
+  font-weight: 700;
+  color: var(--theme-text, var(--shell-text));
+}
+
+.cp-degree--success,
+.cp-degree--criticalSuccess {
+  color: var(--color-success, #38a169);
+}
+
+.cp-degree--failure,
+.cp-degree--criticalFailure {
+  color: var(--color-danger, #e53e3e);
+}
+
+.cp-continue-btn {
+  background: transparent;
+  border: 1px solid var(--theme-accent, var(--accent-bg));
+  border-radius: var(--radius-sm);
+  color: var(--theme-accent, var(--accent-bg));
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+}
+
+.cp-continue-btn:hover {
+  opacity: 0.85;
+}
+
+/* Completed project card. */
+.cp-completed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cp-completed-badge {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-success, #38a169);
 }
 
 /* Ready state — project has met its hour threshold */
