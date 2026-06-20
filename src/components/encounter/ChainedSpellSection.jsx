@@ -152,6 +152,23 @@ const ChainedSpellSection = forwardRef(({
   const [saveDmgInput, setSaveDmgInput] = useState('');
   const [saveRiderState, setSaveRiderState] = useState({});
 
+  // Damage step (#571) — a spell-attack spell chained through a Spellshape gets
+  // the same damage panel a direct cast does: the resolver owns the panel + the
+  // per-target computeTargetDamage once a `damage` profile is passed. Built at
+  // the section's cast rank with the actor's exploit weakness scoped against the
+  // resolver targets. Variable-action spells (Blazing Bolt's per-action scaling)
+  // are deferred to #572 — no action-count picker means no pinned tier.
+  const attackDamageProfile = (resolverTargets.length > 0
+    && rollProfile.defense === 'ac' && !isVariableActionSpell)
+    ? buildDamageProfile(selectedSpell, character, {
+        chosenActions: typeof spellCost === 'number' ? spellCost : null,
+        castRank,
+        exploit,
+        enemyEntries: resolverTargets,
+        order,
+      })
+    : null;
+
   // Split Shot second target: default to the second selected enemy.
   const secondaryEntry = isSplitShot && resolverTargets.length >= 2
     ? (resolverTargets.find((e) => e.entryId === secondaryOverride) || resolverTargets[1])
@@ -387,6 +404,8 @@ const ChainedSpellSection = forwardRef(({
           enemyTargets={resolverTargets}
           targetDefense={rollProfile.defense || 'ac'}
           rollBonus={rollProfile.bonus}
+          damage={attackDamageProfile}
+          degrees={selectedSpell?.degrees}
         />
       )}
 

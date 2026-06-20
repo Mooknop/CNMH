@@ -13,15 +13,21 @@ vi.mock('../../utils/defense', () => ({
 }));
 vi.mock('./TargetRollResolver', () => {
   const { forwardRef, useImperativeHandle } = require('react');
-   
-  return { default: forwardRef(({ enemyTargets, rollBonus }, ref) => {
+
+  return { default: forwardRef(({ enemyTargets, rollBonus, damage }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => enemyTargets.map((e) => ({
         entryId: e.entryId, name: e.name, dc: 15, total: (rollBonus || 0) + 10, degree: 'success',
       })),
     }));
     const React = require('react');
-    return React.createElement('div', { 'data-testid': 'spell-resolver' }, `bonus=${rollBonus}`);
+    // Echo the damage prop (#571) so tests can assert the section builds and
+    // forwards a profile for damaging attack spells.
+    return React.createElement(
+      'div',
+      { 'data-testid': 'spell-resolver', 'data-damage': damage ? damage.expression : 'none' },
+      `bonus=${rollBonus}`
+    );
   }) };
 });
 
@@ -537,6 +543,58 @@ describe('ChainedSpellSection — save damage payload (#281)', () => {
     renderSave([VAR_SAVE], ref);
     expect(screen.queryByLabelText('rolled damage total')).toBeNull();
     expect(ref.current.getResults().damage).toBeNull();
+  });
+});
+
+// Damage panel for a chained attack spell (#571): the section builds an
+// attack-mode profile at its own cast rank and forwards it to the resolver,
+// which owns the panel + per-target math. Variable-action spells are deferred
+// to #572 (no action-count picker → no pinned tier).
+describe('ChainedSpellSection — attack damage panel (#571)', () => {
+  const SCORCH = {
+    id: 'scorch', name: 'Scorching Ray', actions: 'Two Actions', range: '120 feet',
+    level: 3, traits: ['Attack', 'Fire'], targetDefense: 'ac',
+    damageData: { base: '6d6', type: 'fire' },
+  };
+  const PLAIN_ATTACK = {
+    id: 'ray', name: 'Telekinetic Bolt', actions: 'Two Actions', range: '60 feet',
+    level: 1, traits: ['Attack'], targetDefense: 'ac', // no damageData → no profile
+  };
+  const VAR_ATTACK = {
+    id: 'vbolt', name: 'Variable Bolt', actions: 'One to Three Actions', range: '60 feet',
+    level: 1, traits: ['Attack'], targetDefense: 'ac',
+    damageData: { base: '2d6', type: 'fire' }, // variable-action → deferred to #572
+  };
+  const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+
+  const renderAttack = (spells) => render(
+    <ChainedSpellSection
+      character={{ ...character, spellcasting: { spells } }}
+      chain={reachChain}
+      parentCost={1}
+      enemyTargets={attackEnemies}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, dc: null, defense: 'ac' });
+  });
+
+  it('forwards a damage profile to the resolver for a damaging attack spell', () => {
+    renderAttack([SCORCH]);
+    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', '6d6');
+  });
+
+  it('forwards no profile for a non-damaging attack spell', () => {
+    renderAttack([PLAIN_ATTACK]);
+    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', 'none');
+  });
+
+  it('defers variable-action attack spells (no profile) — #572', () => {
+    renderAttack([VAR_ATTACK]);
+    expect(screen.getByTestId('spell-resolver')).toHaveAttribute('data-damage', 'none');
   });
 });
 
