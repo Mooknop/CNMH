@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import DowntimeControl from './DowntimeControl';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useDowntimePartyReady } from '../../hooks/useDowntimePartyReady';
+import { CharacterContext } from '../../contexts/CharacterContext';
 
 // DowntimeControl now pulls setGmMode + character state for the summary
 const mockSetGmMode = vi.fn();
@@ -283,6 +284,52 @@ describe('DowntimeControl', () => {
       rerender(<DowntimeControl />);
       rerender(<DowntimeControl />); // extra render should not re-fire
       expect(mockAdvanceDays).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Earn Income task assignment', () => {
+    const characters = [{ id: 'c1', name: 'Ashka' }, { id: 'c2', name: 'Izzy' }];
+    const mockSetTaskMap = vi.fn();
+
+    const withActiveBlockAndTasks = (taskMap) => {
+      useSyncedState.mockImplementation((key) => {
+        if (key === 'cnmh_downtimeblock_global') {
+          return [{ days: 7, active: true, startedAt: mockGameDate }, mockSetBlock];
+        }
+        if (key === 'cnmh_earnincometask_global') return [taskMap, mockSetTaskMap];
+        return [null, vi.fn()];
+      });
+    };
+
+    const renderWithChars = () =>
+      render(
+        <CharacterContext.Provider value={{ characters }}>
+          <DowntimeControl />
+        </CharacterContext.Provider>
+      );
+
+    it('lists each PC with a task-level input while the block is active', () => {
+      withActiveBlockAndTasks(null);
+      renderWithChars();
+      expect(screen.getByLabelText('Ashka Earn Income task level')).toBeInTheDocument();
+      expect(screen.getByLabelText('Izzy Earn Income task level')).toBeInTheDocument();
+    });
+
+    it('shows the DC for an assigned level and clamps writes to 0–20', () => {
+      withActiveBlockAndTasks({ c1: 8 });
+      renderWithChars();
+      expect(screen.getByText('DC 24')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('Izzy Earn Income task level'), { target: { value: '25' } });
+      expect(mockSetTaskMap).toHaveBeenCalledWith(expect.any(Function));
+      expect(mockSetTaskMap.mock.calls[0][0]({ c1: 8 })).toEqual({ c1: 8, c2: 20 });
+    });
+
+    it('removes a PC from the task map when the level is cleared', () => {
+      withActiveBlockAndTasks({ c1: 8 });
+      renderWithChars();
+      fireEvent.change(screen.getByLabelText('Ashka Earn Income task level'), { target: { value: '' } });
+      expect(mockSetTaskMap.mock.calls[0][0]({ c1: 8 })).toEqual({});
     });
   });
 });

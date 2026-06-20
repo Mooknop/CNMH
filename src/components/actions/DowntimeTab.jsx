@@ -8,6 +8,7 @@ import CraftingModal from '../inventory/CraftingModal';
 import CraftingProjects from './CraftingProjects';
 import DowntimeList from './DowntimeList';
 import DowntimeCommitBar from './DowntimeCommitBar';
+import EarnIncomeResolver from './EarnIncomeResolver';
 import './DowntimeTab.css';
 
 // Player-facing Downtime view, shown in the mode-aware "play" slot when the GM
@@ -88,6 +89,10 @@ const DowntimeTab = ({ character, characterColor }) => {
 
       {block?.active && (
         <DowntimeCommitBar character={character} block={block} />
+      )}
+
+      {block?.active && (
+        <EarnIncomeResolver character={character} />
       )}
 
       {hasCrafting && (
