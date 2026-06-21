@@ -77,6 +77,7 @@
 .item-strikes h3,
 .item-scroll h3,
 .item-wand h3,
+.item-give h3,
 .item-runes h3 {
   color: var(--color-primary);
   margin-top: 1.5rem;
@@ -332,9 +333,16 @@
 .item-strikes h3,
 .item-scroll h3,
 .item-wand h3,
+.item-give h3,
 .shield-properties h3 {
   color: var(--color-theme, var(--theme-accent-mid));
   border-bottom-color: var(--shell-border, rgba(255, 255, 255, 0.07));
+}
+
+.item-give-recipients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
 }
 
 /* Active item-target effects (oils, #339) */

@@ -38,6 +38,15 @@ const setAcquired = (acquired) => {
   });
 };
 
+// Key-aware mock that supplies BOTH overlays (#656 removed + acquired).
+const setOverlays = ({ acquired = [], removed = [] }) => {
+  useSyncedState.mockImplementation((key, def) => {
+    if (key.startsWith('cnmh_acquired_')) return [acquired, vi.fn()];
+    if (key.startsWith('cnmh_removed_')) return [removed, vi.fn()];
+    return [typeof def === 'function' ? def() : def, vi.fn()];
+  });
+};
+
 const character = { id: 'c1', level: 5, maxHp: 30, abilities: {}, inventory: [] };
 
 beforeEach(() => {
@@ -75,6 +84,27 @@ describe('useCharacter — acquired inventory overlay', () => {
     const { result } = renderHook(() => useCharacter(authored));
     expect(result.current.inventory).toHaveLength(1);
     expect(result.current.inventory[0].name).toBe('Dagger');
+  });
+
+  it('masks a given-away authored item via the removed overlay (#656)', () => {
+    const authored = {
+      ...character,
+      inventory: [
+        { name: 'Dagger', weight: 0.1, uid: 'a1' },
+        { name: 'Shield', weight: 1, uid: 'a2' },
+      ],
+    };
+    setOverlays({ removed: ['a2'] });
+    const { result } = renderHook(() => useCharacter(authored));
+    const names = result.current.inventory.map((i) => i.name);
+    expect(names).toEqual(['Dagger']);
+    expect(result.current.totalBulk).toBeCloseTo(0.1); // shield no longer counts
+  });
+
+  it('masks a given-away acquired item too (#656)', () => {
+    setOverlays({ acquired: [{ ref: 'longsword', uid: 'u1' }], removed: ['u1'] });
+    const { result } = renderHook(() => useCharacter(character));
+    expect(result.current.inventory.find((i) => i.name === 'Longsword')).toBeUndefined();
   });
 
   it('selects the matching variant when an acquired entry carries a level', () => {

@@ -3,7 +3,7 @@ import React from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import { formatBulk, normalizeShield, isContainer, flattenInventory } from '../../utils/InventoryUtils';
-import { ITEM_STATE_LABEL, isHeldState } from '../../utils/itemState';
+import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
 import {
@@ -16,6 +16,9 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
+import { useGiveItem } from '../../hooks/useGiveItem';
+import { usePlayMode } from '../../hooks/usePlayMode';
+import { useContent } from '../../contexts/ContentContext';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
@@ -28,6 +31,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   const { appendEvent } = useSessionLog();
+  // Player-to-player item transfer (#656) — out of combat only.
+  const { give } = useGiveItem(character?.id);
+  const { mode } = usePlayMode();
+  const { characters } = useContent();
 
   if (!isOpen || !item) return null;
 
@@ -79,6 +86,32 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
+
+  // ── Give to another PC (#656) — exploration/downtime only ──
+  // S2 covers plain worn/stowed gear. Held/dropped items, containers,
+  // consumables (stack-splitting is S3), talismans, and any item hosting an
+  // affixed talisman are excluded to keep the transfer clean.
+  const canGive = mode === 'exploration' || mode === 'downtime';
+  const hostsAffixedTalisman = Object.values(affixed || {}).includes(uid);
+  const givable =
+    canGive &&
+    uid != null &&
+    (item.state === 'worn' || item.state === STOWED) &&
+    !isContainerItem &&
+    !consumableMeta(item) &&
+    !talisman &&
+    !hostsAffixedTalisman;
+  const recipients = (characters || []).filter((c) => c.id !== character?.id);
+
+  const doGive = (recipient) => {
+    if (give(recipient.id, item)) {
+      appendEvent({
+        type: 'action',
+        text: `${character?.name || 'Someone'} gave ${item.name} to ${recipient.name}`,
+      });
+    }
+    onClose();
+  };
 
   const renderActions = () => {
     if (!uid) return null;
@@ -533,6 +566,26 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <div className="wand-description">
               {item.wand.description}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Give to another PC (#656) — exploration/downtime only */}
+      {givable && recipients.length > 0 && (
+        <div className="item-give" data-testid="item-give">
+          <h3>Give to</h3>
+          <div className="item-give-recipients">
+            {recipients.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className="btn-small btn-secondary"
+                data-testid={`give-item-${r.id}`}
+                onClick={() => doGive(r)}
+              >
+                {r.name}
+              </button>
+            ))}
           </div>
         </div>
       )}
