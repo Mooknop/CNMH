@@ -1,0 +1,86 @@
+.dc-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--theme-surface, var(--shell-surface));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-left-width: 3px;
+  border-left-color: var(--theme-accent, var(--accent-bg));
+  border-radius: var(--radius-md);
+}
+
+.dc-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dc-title {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.dc-sub {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.dc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.dc-select,
+.dc-input {
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-sm);
+  color: var(--theme-text, var(--shell-text));
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  padding: var(--space-1) var(--space-2);
+}
+
+.dc-select:focus,
+.dc-input:focus {
+  outline: none;
+  border-color: var(--theme-accent, var(--accent-bg));
+}
+
+.dc-note {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+.dc-submit-btn {
+  align-self: flex-start;
+  background: var(--theme-accent, var(--accent-bg));
+  border: 1px solid var(--theme-accent, var(--accent-bg));
+  border-radius: var(--radius-sm);
+  color: var(--theme-bg, #fff);
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  padding: var(--space-2) var(--space-4);
+  transition: opacity 0.15s;
+}
+
+.dc-submit-btn:hover:not(:disabled) { opacity: 0.85; }
+.dc-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -11,6 +11,7 @@ import DowntimeCommitBar from './DowntimeCommitBar';
 import EarnIncomeResolver from './EarnIncomeResolver';
 import TellFortunePanel from './TellFortunePanel';
 import RepairShieldPanel from './RepairShieldPanel';
+import DowntimeCompletion from './DowntimeCompletion';
 import './DowntimeTab.css';
 
 // Player-facing Downtime view, shown in the mode-aware "play" slot when the GM
@@ -98,6 +99,18 @@ const DowntimeTab = ({ character, characterColor }) => {
       {block?.active && (
         <EarnIncomeResolver character={character} />
       )}
+
+      {block?.active && activityProgress
+        .filter((p) => p.type === 'accumulate' && (p.name === 'Retrain' || p.name === 'Research'))
+        .map((p) => (
+          <DowntimeCompletion
+            key={p.name}
+            character={character}
+            activity={p.name}
+            startedAt={block?.startedAt}
+            hoursBanked={p.hours}
+          />
+        ))}
 
       {hasTellFortune && (
         <TellFortunePanel character={character} />
