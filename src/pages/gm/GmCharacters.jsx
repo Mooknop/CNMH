@@ -11,7 +11,7 @@ import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
 import ItemEditModal from '../../components/gm/ItemEditModal';
 import EntryListEditor from '../../components/gm/EntryListEditor';
 import ImageField from '../../components/gm/ImageField';
-import ConsumablesCleanup from '../../components/gm/ConsumablesCleanup';
+import ReconciliationPanel from '../../components/gm/ReconciliationPanel';
 import EldAttunementControl from '../../components/gm/EldAttunementControl';
 import {
   strikeToForm,
@@ -1346,8 +1346,8 @@ const GmCharacters = () => {
         />
       ) : null}
 
-      {/* Live consumable usage + cleanup of fully-used items */}
-      <ConsumablesCleanup />
+      {/* Pending durable player changes → commit into the character doc (#557) */}
+      <ReconciliationPanel />
 
       {/* Eld attunement override (live synced state, not the character doc) */}
       <EldAttunementControl />
