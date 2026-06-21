@@ -6182,224 +6182,35 @@
         },
         "spells": [
           {
-            "id": "spell-3",
-            "description": "You cloud the target's mind and daze it with a mental jolt. The jolt deals 1d6 mental damage; the target must attempt a basic Will save. If the target critically fails the save, it is also stunned 1.",
-            "name": "Daze",
-            "actions": "Two Actions",
-            "range": "60 feet",
-            "targets": "1 creature",
-            "defense": "Will",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Manipulate",
-              "Mental",
-              "Nonlethal"
-            ]
+            "spellRef": "daze"
           },
           {
-            "id": "spell-4",
-            "description": "You ward an ally against the attacks and hostile spells from the target enemy. The target ally gains a +1 status bonus to Armor Class and saving throws against the target enemy's attacks, spells, and other effects.",
-            "name": "Forbidding Ward",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 ally and 1 enemy",
-            "duration": "Sustained up to 1 minute",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Manipulate"
-            ],
-            "heightened": {
-              "6th": "The status bonus increases to +2."
-            }
+            "spellRef": "forbidding-ward"
           },
           {
-            "id": "spell-5",
-            "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the duration ends. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, the target is then temporarily immune for 1 hour.",
-            "name": "Guidance",
-            "actions": "One Action",
-            "range": "30 feet",
-            "targets": "1 creature",
-            "duration": "Until the start of your next turn",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate"
-            ],
-            "immunity": {
-              "duration": {
-                "value": 1,
-                "unit": "hour"
-              },
-              "scope": "per-caster"
-            }
+            "spellRef": "guidance"
           },
           {
-            "id": "spell-6",
-            "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield. The shield has Hardness 5. You can use the spell's reaction to reduce damage from any spell or magical effect, even if it doesn't deal physical damage. After you use Shield Block, the spell ends and you can't cast it again for 10 minutes.",
-            "name": "Shield",
-            "actions": "One Action",
-            "duration": "Until the start of your next turn",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Force"
-            ],
-            "heightened": {
-              "+2": "The shields hardness increases by 5."
-            }
+            "spellRef": "shield"
           },
           {
-            "description": "You echo a jarring hymn that only creatures in the area can hear. The hymn deals 1d8 sonic damage, with a basic Fortitude save. If a target critically fails the save, it's also deafened for 1 minute.",
-            "name": "Haunting Hymn",
-            "actions": "Two Actions",
-            "area": "15-foot cone",
-            "defense": "Fortitude",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Auditory",
-              "Cantrip",
-              "Concentrate",
-              "Manipulate",
-              "Sonic"
-            ],
-            "heightened": {
-              "+2": "The damage increases by 1d8."
-            }
+            "spellRef": "haunting-hymn"
           },
           {
-            "id": "spell-7",
-            "signature": true,
-            "description": "You summon a creature that has the undead trait and whose level is –1 to fight for you.",
-            "name": "Summon Undead",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "duration": "Sustained up to 1 minute",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Manipulate",
-              "Summon"
-            ],
-            "heightened": {
-              "2nd": "The creature can be up to Level 1.",
-              "3rd": "The creature can be up to Level 2.",
-              "4th": "The creature can be up to Level 3.",
-              "5th": "The creature can be up to Level 5.",
-              "6th": "The creature can be up to Level 7.",
-              "7th": "The creature can be up to Level 9.",
-              "8th": "The creature can be up to Level 11.",
-              "9th": "The creature can be up to Level 13.",
-              "10th": "The creature can be up to Level 15."
-            }
+            "spellRef": "summon-undead",
+            "signature": true
           },
           {
-            "id": "spell-8",
-            "spellState": {
-              "kind": "emanation",
-              "start": 15,
-              "step": 10,
-              "unit": "ft"
-            },
-            "description": "Blessings from beyond help your companions strike true. You and your allies gain a +1 status bonus to attack rolls while within the emanation. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet. Bless can counteract bane.",
-            "name": "Bless",
-            "actions": "Two Actions",
-            "area": "15-foot emanation",
-            "duration": "1 minute",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Aura",
-              "Concentrate",
-              "Manipulate",
-              "Mental"
-            ]
+            "spellRef": "bless"
           },
           {
-            "id": "spell-9",
-            "description": "You plant fear in the target; it must attempt a Will save.",
-            "degrees": {
-              "Critical Success": "The target is unaffected.",
-              "Success": "The target is frightened 1.",
-              "Failure": "The target is frightened 2.",
-              "Critical Failure": "The target is frightened 3 and fleeing for 1 round."
-            },
-            "name": "Fear",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 creature",
-            "defense": "Will",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Emotion",
-              "Fear",
-              "Manipulate",
-              "Mental"
-            ],
-            "heightened": {
-              "3rd": "You can target up to five creatures."
-            }
+            "spellRef": "fear"
           },
           {
-            "id": "spell-11",
-            "description": "You speak on the virtue of charity, compelling the target to give away its possessions. The target must attempt a Will save. If the target has no items on its person, the spell fails.",
-            "degrees": {
-              "Critical Success": "The target is unaffected.",
-              "Success": "The target is stunned 1 as it wrestles with the urge.",
-              "Failure": "On its next turn, before it does anything else, the target must present the nearest creature with an item in its possession; the target chooses which item to give, and if the only item it has is one that it's currently using to defend itself, such as a weapon during a combat encounter, it can choose to be stunned for 1 round instead of giving up the item. This might require the target to Interact to retrieve an item or move to reach the nearest creature, and passing the item off requires an Interact action as normal.",
-              "Critical Failure": "As failure, except the duration is 4 rounds, and the target must repeat the effects of a failure on each of its turns. At the end of each of its turns, the target can attempt a new Will save to reduce the remaining duration by 1 round, ending the effects entirely on a critical success."
-            },
-            "name": "Charitable Urge",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 creature",
-            "defense": "Will",
-            "duration": "Varies",
-            "level": 2,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Incapacitation",
-              "Manipulate",
-              "Mental"
-            ]
+            "spellRef": "charitable-urge"
           },
           {
-            "id": "spell-12",
-            "description": "A cacophonous noise blasts out, dealing 2d10 sonic damage. Each creature must attempt a Fortitude save.",
-            "degrees": {
-              "Critical Success": "The target is unaffected.",
-              "Success": "The target takes half damage.",
-              "Failure": "The target takes full damage and is Deafened for 1 round  ",
-              "Critical Failure": "The creature takes double damage and is deafened for 1 minute, and stunned 1."
-            },
-            "name": "Noise Blast",
-            "actions": "Two Actions",
-            "range": "60 feet",
-            "area": "20-foot burst",
-            "defense": "Fortitude",
-            "level": 2,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Manipulate",
-              "Sonic"
-            ],
-            "heightened": {
-              "+1": "The damage increases by 1d10."
-            }
+            "spellRef": "noise-blast"
           }
         ]
       },
@@ -6999,403 +6810,50 @@
         },
         "spells": [
           {
-            "id": "spell-1",
-            "description": "You create an orb of light that sheds bright light in a 20-foot radius (and dim light for the next 20 feet) in a color you choose. If you create the light in the same space as a willing creature, you can attach the light to the creature, causing it to float near that creature as it moves. You can Sustain the spell to move the light up to 60 feet; you can attach or detach it from a creature as part of this movement. You can Dismiss the spell. If you Cast the Spell while you already have four light spells active, you must choose one of the existing spells to end.",
-            "name": "Light",
-            "actions": "Two Actions",
-            "range": "120 feet",
-            "duration": "Until the next time you make your daily preparations",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Light",
-              "Manipulate"
-            ],
-            "heightened": {
-              "4th": "The orb sheds light in a 60-foot radius (and dim light for the next 60 feet)."
-            }
+            "spellRef": "light"
           },
           {
-            "id": "spell-2",
-            "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save.",
-            "name": "Electric Arc",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 or 2 creatures",
-            "defense": "Reflex",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Electricity",
-              "Manipulate"
-            ],
-            "heightened": {
-              "+1": "The damage increases by 1d4."
-            }
+            "spellRef": "electric-arc"
           },
           {
-            "id": "spell-3",
-            "description": "You send out a pulse that registers the presence of magic. You receive no information beyond the presence or absence of magic. You can choose to ignore magic you're fully aware of, such as the magic items and ongoing spells of you and your allies. You detect illusion magic only if that magic's effect has a lower rank than the rank of your detect magic spell. However, items that have an illusion aura but aren't deceptive in appearance (such as an invisibility potion) typically are detected normally.",
-            "name": "Detect Magic",
-            "actions": "Two Actions",
-            "area": "30 feet",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Detection",
-              "Manipulate"
-            ],
-            "heightened": {
-              "3rd": "You learn the rank or level of the most powerful magical effect the spell detects, as determined by the GM.",
-              "4th": "As 3rd rank, but you also pinpoint the source of the highest-rank magic. Like for an imprecise sense, you don't learn the exact location, but can narrow down the source to within a 5-foot cube (or the nearest if larger than that)."
-            }
+            "spellRef": "detect-magic"
           },
           {
-            "id": "spell-4",
-            "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color. Prestidigitation can't deal damage or cause adverse conditions. Any actual change to an object (beyond what is noted above) persists only as long as you Sustain the spell.",
-            "name": "Prestidigitation",
-            "actions": "Two Actions",
-            "range": "10 feet",
-            "targets": "1 object (cook, clean, or color only)",
-            "duration": "Sustained",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Manipulate"
-            ]
+            "spellRef": "prestidigitation"
           },
           {
-            "id": "spell-5",
-            "description": "You create a floating, magical hand, either invisible or ghostlike, that grasps the target object and levitates it slowly up to 20 feet in any direction. When you Sustain the spell, you can move the object an additional 20 feet. If the object is in the air when the spell ends, the object falls.",
-            "name": "Telekinetic Hand",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 unattended object of Light Bulk or less",
-            "duration": "Sustained",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Cantrip",
-              "Concentrate",
-              "Manipulate"
-            ],
-            "heightened": {
-              "3rd": "You can target an unattended object with a Bulk of 1 or less.",
-              "5th": "The range increases to 60 feet, and you can target an unattended object with a Bulk of 1 or less.",
-              "7th": "The range increases to 60 feet, and you can target an unattended object with a Bulk of 2 or less."
-            }
+            "spellRef": "telekinetic-hand"
           },
           {
-            "id": "spell-6",
-            "description": "You blast an icy ray. Make a spell attack roll. The ray deals 2d4 cold damage.",
-            "degrees": {
-              "Critical Success": "The target takes double damage and takes a –10-foot status penalty to its Speeds for 1 round."
-            },
-            "name": "Ray of Frost",
-            "actions": "Two Actions",
-            "range": "120 feet",
-            "targets": "1 creature",
-            "defense": "AC",
-            "level": 0,
-            "baseLevel": 1,
-            "traits": [
-              "Attack",
-              "Cantrip",
-              "Cold",
-              "Evocation"
-            ],
-            "heightened": {
-              "+1": "The damage increases by 1d4."
-            },
-            "damageData": {
-              "base": "2d4",
-              "type": "cold",
-              "heightened": {
-                "+1": {
-                  "base": "1d4"
-                }
-              }
-            }
+            "spellRef": "ray-of-frost"
           },
           {
-            "id": "spell-7",
-            "signature": true,
-            "description": "You hurl a loose, unattended object that is within range and that has 1 Bulk or less at the target. Make a spell attack roll against the target's AC. If you hit, you deal bludgeoning, piercing, or slashing damage—as appropriate for the object you hurled—equal to 1d6 plus your spellcasting ability modifier.",
-            "degrees": {
-              "Critical Success": "Deal double damage."
-            },
-            "name": "Telekinetic Projectile",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 creature",
-            "defense": "AC",
-            "level": 1,
-            "baseLevel": 1,
-            "traits": [
-              "Attack",
-              "Cantrip",
-              "Concentrate",
-              "Manipulate"
-            ],
-            "heightened": {
-              "+1": "The damage increases by 1d6."
-            },
-            "damageData": {
-              "base": "1d6",
-              "type": "B/P/S (object)",
-              "heightened": {
-                "+1": {
-                  "base": "1d6"
-                }
-              },
-              "riders": [
-                {
-                  "id": "tk-projectile-mod",
-                  "label": "+ spellcasting modifier",
-                  "bonus": {
-                    "ability": "charisma"
-                  },
-                  "defaultOn": true
-                }
-              ]
-            }
+            "spellRef": "telekinetic-projectile",
+            "signature": true
           },
           {
-            "id": "spell-9",
-            "description": "You ward yourself with shimmering magical energy, gaining a +1 item bonus to AC and a maximum Dexterity modifier of +5. While wearing mystic armor, you use your unarmored proficiency to calculate your AC.",
-            "name": "Mystic Armor",
-            "actions": "Two Actions",
-            "targets": "Self",
-            "duration": "Until the next time you make your daily preparations",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Manipulate"
-            ],
-            "heightened": {
-              "4th": "You gain a +1 item bonus to saving throws.",
-              "6th": "The item bonus to AC increases to +2, and you gain a +1 item bonus to saving throws.",
-              "8th": "The item bonus to AC increases to +2, and you gain a +2 item bonus to saving throws.",
-              "10th": "The item bonus to AC increases to +3, and you gain a +3 item bonus to saving throws."
-            }
+            "spellRef": "mystic-armor"
           },
           {
-            "id": "spell-10",
-            "description": "You shout a command that's hard to ignore. You can command the target to approach you, run away, release what it's holding, fall prone, or stand in place. The creature must succeed at a Will save or follow your command on its next turn. Some commands might require the target to Seek to approach you.",
-            "degrees": {
-              "Success": "The creature is unaffected.",
-              "Failure": "The creature must spend the first action on its next turn to obey your command.",
-              "Critical Failure": "The target must use all its actions on its next turn to obey your command."
-            },
-            "name": "Command",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 creature",
-            "defense": "Will",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Auditory",
-              "Concentrate",
-              "Linguistic",
-              "Manipulate",
-              "Mental"
-            ],
-            "heightened": {
-              "5th": "You can target up to 10 creatures."
-            }
+            "spellRef": "command"
           },
           {
-            "id": "spell-11",
-            "bloodline": true,
-            "description": "You fire a shard of solidified magic toward a creature that you can see. It automatically hits and deals 1d4+1 force damage. For each additional action you use when Casting the Spell, increase the number of shards you shoot by one, to a maximum of three shards for 3 actions. You choose the target for each shard individually. If you shoot more than one shard at the same target, combine the damage before applying bonuses or penalties to damage, resistances, weaknesses, and so forth.",
-            "name": "Force Barrage",
-            "actions": "One to Three Actions",
-            "variants": [
-              {
-                "actions": 1,
-                "note": "1 shard (1d4+1 force)"
-              },
-              {
-                "actions": 2,
-                "note": "2 shards"
-              },
-              {
-                "actions": 3,
-                "note": "3 shards"
-              }
-            ],
-            "range": "120 feet",
-            "targets": "1 or more creatures",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Force",
-              "Manipulate"
-            ],
-            "heightened": {
-              "+2": "You fire one additional missile with each action you spend."
-            }
+            "spellRef": "force-barrage"
           },
           {
-            "id": "spell-12",
-            "description": "You shroud your hands in a crackling field of electricity. Make a melee spell attack roll. On a hit, the target takes 2d12 electricity damage. If the target is wearing metal armor or is made of metal, you gain a +1 circumstance bonus to your attack roll with shocking grasp, and the target also takes 1d4 persistent electricity damage on a hit.",
-            "name": "Shocking Grasp",
-            "actions": "Two Actions",
-            "range": "Touch",
-            "targets": "1 creature",
-            "defense": "AC",
-            "level": 1,
-            "baseLevel": 0,
-            "traits": [
-              "Attack",
-              "Electricity",
-              "Evocation"
-            ],
-            "heightened": {
-              "+1": "The damage increases by 1d12, and the persistent electricity damage increases by 1."
-            },
-            "damageData": {
-              "base": "2d12",
-              "type": "electricity",
-              "heightened": {
-                "+1": {
-                  "base": "1d12",
-                  "persistent": 1
-                }
-              },
-              "riders": [
-                {
-                  "id": "shocking-grasp-metal",
-                  "label": "Metal armor: persistent electricity",
-                  "persistent": {
-                    "dice": "1d4",
-                    "type": "electricity"
-                  },
-                  "defaultOn": false,
-                  "note": "Only if the target wears metal armor or is made of metal (you also get +1 on the attack roll)"
-                }
-              ]
-            }
+            "spellRef": "shocking-grasp"
           },
           {
-            "id": "spell-13",
-            "description": "You fire a ray of heat and flame. Make a spell attack roll against a single creature. On a hit, the target takes 2d6 fire damage, and on a critical hit, the target takes double damage. For each additional action you use when Casting the Spell, you can fire an additional ray at a different target, to a maximum of three rays targeting three different targets for 3 actions. These attacks each increase your multiple attack penalty, but you don't increase your multiple attack penalty until after you make all the spell attack rolls for blazing bolt. If you spend 2 or more actions Casting the Spell, the damage increases to 4d6 fire damage on a hit, and it still deals double damage on a critical hit.",
-            "name": "Blazing Bolt",
-            "actions": "One to Three Actions",
-            "rolls": "per-action",
-            "variants": [
-              {
-                "actions": 1,
-                "note": "1 ray, 2d6 fire",
-                "damage": {
-                  "base": "2d6",
-                  "type": "fire",
-                  "heightened": {
-                    "+1": {
-                      "base": "1d6"
-                    }
-                  }
-                }
-              },
-              {
-                "actions": 2,
-                "note": "2 rays, 4d6 fire each",
-                "damage": {
-                  "base": "4d6",
-                  "type": "fire",
-                  "heightened": {
-                    "+1": {
-                      "base": "2d6"
-                    }
-                  }
-                }
-              },
-              {
-                "actions": 3,
-                "note": "3 rays, 4d6 fire each",
-                "damage": {
-                  "base": "4d6",
-                  "type": "fire",
-                  "heightened": {
-                    "+1": {
-                      "base": "2d6"
-                    }
-                  }
-                }
-              }
-            ],
-            "range": "60 feet",
-            "targets": "1 or more creature",
-            "level": 2,
-            "baseLevel": 0,
-            "traits": [
-              "Attack",
-              "Concentrate",
-              "Fire",
-              "Manipulate"
-            ],
-            "heightened": {
-              "+1": "The damage to each target increases by 1d6 for the 1-action version, or by 2d6 for the 2- and 3-action versions."
-            }
+            "spellRef": "blazing-bolt"
           },
           {
-            "id": "spell-14",
-            "description": "You make the target easier to open. Knock grants a +4 status bonus to any creature that tries to open the target door, lock, or container with an Athletics or a Thievery check. You can attempt a Thievery check to open the target as part of casting knock, and you add your level even if you're untrained. Knock counteracts Lock.",
-            "name": "Knock",
-            "actions": "Two Actions",
-            "range": "30 feet",
-            "targets": "1 door, lock, or container",
-            "duration": "1 minute",
-            "level": 2,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Manipulate"
-            ]
+            "spellRef": "knock"
           },
           {
-            "id": "spell-15",
-            "bloodline": true,
-            "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail.",
-            "name": "Dispel Magic",
-            "actions": "Two Actions",
-            "range": "120 feet",
-            "targets": "1 spell effect or unattended magic item",
-            "level": 2,
-            "baseLevel": 0,
-            "traits": [
-              "Concentrate",
-              "Manipulate"
-            ]
+            "spellRef": "dispel-magic"
           },
           {
-            "id": "spell-16",
-            "description": "You call down a small bolt of lightning on the target, dealing 4d12 electricity damage.",
-            "name": "Sudden Bolt",
-            "actions": "Two Actions",
-            "range": "600 feet",
-            "targets": "1 creature or object",
-            "level": 2,
-            "baseLevel": 0,
-            "traits": [
-              "Uncommon",
-              "Electricity",
-              "Manipulate"
-            ],
-            "heightened": {
-              "+1": "The damage increases by 1d12."
-            }
+            "spellRef": "sudden-bolt"
           }
         ]
       },
