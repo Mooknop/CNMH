@@ -1,5 +1,5 @@
 // src/components/inventory/ItemModal.js
-import React from 'react';
+import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import { formatBulk, normalizeShield, isContainer, flattenInventory } from '../../utils/InventoryUtils';
@@ -31,10 +31,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const [affixed, setAffixed] = useSyncedState(affixedKey(character?.id), {});
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
   const { appendEvent } = useSessionLog();
-  // Player-to-player item transfer (#656) — out of combat only.
-  const { give } = useGiveItem(character?.id);
+  // Player-to-player item transfer (#656/#657) — out of combat only.
+  const { give, giveConsumable } = useGiveItem(character?.id);
   const { mode } = usePlayMode();
   const { characters } = useContent();
+  // Stack-split amount for giving a consumable (#657). Clamped to the remaining
+  // quantity at render so it can't exceed what's on hand.
+  const [giveCount, setGiveCount] = useState(1);
 
   if (!isOpen || !item) return null;
 
@@ -87,27 +90,35 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
 
-  // ── Give to another PC (#656) — exploration/downtime only ──
-  // S2 covers plain worn/stowed gear. Held/dropped items, containers,
-  // consumables (stack-splitting is S3), talismans, and any item hosting an
-  // affixed talisman are excluded to keep the transfer clean.
+  // ── Give to another PC (#656/#657) — exploration/downtime only ──
+  // Worn/stowed gear, containers (with their contents), and consumables (with
+  // stack-splitting) are all givable. Held/dropped items, talismans, and any
+  // item hosting an affixed talisman are excluded to keep the transfer clean.
   const canGive = mode === 'exploration' || mode === 'downtime';
   const hostsAffixedTalisman = Object.values(affixed || {}).includes(uid);
   const givable =
     canGive &&
     uid != null &&
     (item.state === 'worn' || item.state === STOWED) &&
-    !isContainerItem &&
-    !consumableMeta(item) &&
     !talisman &&
     !hostsAffixedTalisman;
   const recipients = (characters || []).filter((c) => c.id !== character?.id);
 
+  // Consumable stack-splitting (#657): offer a quantity picker when there's
+  // more than one to give. The split count is clamped to what remains.
+  const isGivableConsumable = !!consumableMeta(item);
+  const remainingQty = item.quantity ?? 1;
+  const giveQty = Math.min(Math.max(1, giveCount), remainingQty);
+
   const doGive = (recipient) => {
-    if (give(recipient.id, item)) {
+    const ok = isGivableConsumable
+      ? giveConsumable(recipient.id, item, giveQty)
+      : give(recipient.id, item);
+    if (ok) {
+      const label = isGivableConsumable && giveQty > 1 ? `${giveQty} ${item.name}` : item.name;
       appendEvent({
         type: 'action',
-        text: `${character?.name || 'Someone'} gave ${item.name} to ${recipient.name}`,
+        text: `${character?.name || 'Someone'} gave ${label} to ${recipient.name}`,
       });
     }
     onClose();
@@ -570,10 +581,25 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
-      {/* Give to another PC (#656) — exploration/downtime only */}
+      {/* Give to another PC (#656/#657) — exploration/downtime only */}
       {givable && recipients.length > 0 && (
         <div className="item-give" data-testid="item-give">
           <h3>Give to</h3>
+          {isGivableConsumable && remainingQty > 1 && (
+            <div className="item-give-qty">
+              <label htmlFor="give-qty">Quantity</label>
+              <input
+                id="give-qty"
+                type="number"
+                min="1"
+                max={remainingQty}
+                value={giveQty}
+                onChange={(e) => setGiveCount(Number(e.target.value) || 1)}
+                aria-label="Quantity to give"
+              />
+              <span className="item-give-qty-of">of {remainingQty}</span>
+            </div>
+          )}
           <div className="item-give-recipients">
             {recipients.map((r) => (
               <button
