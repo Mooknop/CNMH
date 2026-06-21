@@ -164,14 +164,15 @@ export const spellCatalogMap = (spells) => {
   return map;
 };
 
-// Resolve a focus/devotion/ki spell list. Each entry with a `spellRef` is
-// replaced by the catalog spell (+ entry-local overrides); entries without
-// `spellRef` pass through unchanged (inline back-compat). Same dangling-ref
+// Resolve a focus/devotion/ki spell list. Each entry references a catalog spell
+// by `spellRef` (epic #622 — no inline spells), replaced by the catalog spell
+// (+ entry-local overrides). A missing or dangling ref yields the same level-0
 // stub as resolveSpellBlock so organizeSpellsByRank / React keys never break.
 export const resolveFocusSpells = (arr, spellMap) => {
   if (!Array.isArray(arr)) return arr;
   return arr.map((entry) => {
-    if (!entry || typeof entry !== 'object' || entry.spellRef == null) return entry;
+    if (!entry || typeof entry !== 'object') return entry;
+    if (entry.spellRef == null) return { name: '(unknown spell)', level: 0 };
     const spell = spellMap && spellMap.get(String(entry.spellRef));
     if (!spell) return { name: `(unknown spell: ${entry.spellRef})`, level: 0 };
     const { spellRef, ...overrides } = entry;

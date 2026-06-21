@@ -704,19 +704,17 @@ describe('resolveFocusSpells', () => {
     expect(result[0]).toEqual({ name: '(unknown spell: nope)', level: 0 });
   });
 
-  it('passes through inline entries without spellRef unchanged (back-compat)', () => {
-    const inline = { id: 'fs1', name: 'Divine Lance', level: 1 };
-    const result = resolveFocusSpells([inline], focusMap);
-    expect(result[0]).toBe(inline);
+  it('yields a stub for an entry with no spellRef (no inline back-compat, #622)', () => {
+    const result = resolveFocusSpells([{ id: 'fs1', name: 'Divine Lance', level: 1 }], focusMap);
+    expect(result[0]).toEqual({ name: '(unknown spell)', level: 0 });
   });
 
-  it('handles mixed inline + ref arrays', () => {
-    const inline = { id: 'fs1', name: 'Divine Lance', level: 1 };
+  it('resolves a ref array; an entry with no spellRef stubs', () => {
     const result = resolveFocusSpells(
-      [inline, { spellRef: 'inspire-courage' }, { spellRef: 'nope' }],
+      [{ id: 'fs1', name: 'Divine Lance', level: 1 }, { spellRef: 'inspire-courage' }, { spellRef: 'nope' }],
       focusMap
     );
-    expect(result[0]).toBe(inline);
+    expect(result[0]).toEqual({ name: '(unknown spell)', level: 0 });
     expect(result[1].name).toBe('Inspire Courage');
     expect(result[2].name).toMatch(/unknown spell/);
   });
