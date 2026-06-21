@@ -57,6 +57,22 @@ vi.mock('../../hooks/useSessionLog', () => ({
   useSessionLog: () => ({ appendEvent: mockAppendEvent }),
 }));
 
+// Give-item flow (#656): the hook is exercised in useGiveItem.test.jsx; here we
+// just drive the modal's gating + wiring. Play mode controls visibility; the
+// roster supplies recipients.
+const mockGive = vi.fn(() => true);
+vi.mock('../../hooks/useGiveItem', () => ({
+  useGiveItem: () => ({ give: mockGive }),
+}));
+let mockMode = 'exploration';
+vi.mock('../../hooks/usePlayMode', () => ({
+  usePlayMode: () => ({ mode: mockMode }),
+}));
+let mockCharacters = [];
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ characters: mockCharacters }),
+}));
+
 beforeEach(() => {
   mockItemEffects = [];
   mockAffixed = {};
@@ -65,6 +81,10 @@ beforeEach(() => {
   mockSetAffixed.mockClear();
   mockSetConsumed.mockClear();
   mockAppendEvent.mockClear();
+  mockGive.mockClear();
+  mockGive.mockReturnValue(true);
+  mockMode = 'exploration';
+  mockCharacters = [];
 });
 
 const baseItem = {
@@ -869,5 +889,86 @@ describe('ItemModal weapon runes (#548 Slice 3c)', () => {
   it('omits the Runes section for a non-runed item', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={{ name: 'Rope', weight: 1 }} />);
     expect(screen.queryByTestId('item-modal-runes')).not.toBeInTheDocument();
+  });
+});
+
+// #656 — give a plain worn/stowed item to another PC, out of combat only.
+describe('ItemModal — give to another PC (#656)', () => {
+  const giver = { id: 'a', name: 'Ashka' };
+  const wornItem = { name: 'Iron Sword', uid: 'u1', state: 'worn', weight: 1, quantity: 1 };
+
+  const renderGive = (item = wornItem, props = {}) =>
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={giver} {...props} />);
+
+  beforeEach(() => {
+    mockCharacters = [
+      { id: 'a', name: 'Ashka' },
+      { id: 'b', name: 'Pellias' },
+      { id: 'c', name: 'Jade' },
+    ];
+  });
+
+  it('lists every party member except the giver as a recipient', () => {
+    renderGive();
+    expect(screen.getByTestId('item-give')).toBeInTheDocument();
+    expect(screen.getByTestId('give-item-b')).toHaveTextContent('Pellias');
+    expect(screen.getByTestId('give-item-c')).toHaveTextContent('Jade');
+    expect(screen.queryByTestId('give-item-a')).not.toBeInTheDocument();
+  });
+
+  it('gives, logs, and closes on tapping a recipient', () => {
+    const onClose = vi.fn();
+    renderGive(wornItem, { onClose });
+    fireEvent.click(screen.getByTestId('give-item-c'));
+    expect(mockGive).toHaveBeenCalledWith('c', wornItem);
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'action', text: 'Ashka gave Iron Sword to Jade' }),
+    );
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('does not log when the hook rejects the transfer', () => {
+    mockGive.mockReturnValue(false);
+    renderGive();
+    fireEvent.click(screen.getByTestId('give-item-b'));
+    expect(mockAppendEvent).not.toHaveBeenCalled();
+  });
+
+  it('gives a stowed item', () => {
+    renderGive({ ...wornItem, state: 'stowed' });
+    expect(screen.getByTestId('item-give')).toBeInTheDocument();
+  });
+
+  it('hides the section in encounter mode', () => {
+    mockMode = 'encounter';
+    renderGive();
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
+  it('hides the section for a held item', () => {
+    renderGive({ ...wornItem, state: 'held1' });
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
+  it('hides the section for a consumable', () => {
+    renderGive({ ...wornItem, consumable: { kind: 'healing' } });
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
+  it('hides the section for a container', () => {
+    renderGive({ ...wornItem, container: { capacity: 4, contents: [] } });
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
+  it('hides the section for an item hosting an affixed talisman', () => {
+    mockAffixed = { t9: 'u1' }; // a talisman affixed to this item's uid
+    renderGive();
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+
+  it('hides the section when the giver is the only party member', () => {
+    mockCharacters = [{ id: 'a', name: 'Ashka' }];
+    renderGive();
+    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
   });
 });

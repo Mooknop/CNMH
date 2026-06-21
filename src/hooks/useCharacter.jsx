@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import { useSyncedState } from './useSyncedState';
 import { useContent } from '../contexts/ContentContext';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
+import { applyRemovedOverlay } from '../utils/removedOverlay';
 import { itemAbilitiesActive } from '../utils/itemState';
 import { itemCatalogMap, spellCatalogMap, resolveInventory } from '../utils/contentUtils';
 
@@ -67,6 +68,9 @@ export const useCharacter = (character) => {
   // are unresolved refs, so resolve them against the live catalog the same way
   // before merging. An empty/absent overlay ⇒ effective tree unchanged.
   const [acquired] = useSyncedState(`cnmh_acquired_${character?.id || 'none'}`, []);
+  // Given-away overlay (#656) — uids handed to another PC, masked out of the
+  // effective tree + Bulk. Empty/absent ⇒ no effect.
+  const [removed] = useSyncedState(`cnmh_removed_${character?.id || 'none'}`, []);
   const { items: catalogItems, spells: catalogSpells } = useContent();
   const resolvedAcquired = useMemo(
     () => resolveInventory(
@@ -147,14 +151,15 @@ export const useCharacter = (character) => {
 
     // ── Effective inventory ─────────────────────────────────────────────────
     // The single source of truth for placement + state: authored (resolved)
-    // tree plus the acquired overlay, merged with the live loadout. Bulk and the
-    // inventory passthrough both read this so a dropped/retrieved/stowed item is
-    // consistent for everyone. With an empty loadout + overlay this equals the
-    // authored tree.
-    const effectiveInventory = buildEffectiveInventory(
+    // tree plus the acquired overlay, minus anything given away, merged with the
+    // live loadout. Bulk and the inventory passthrough both read this so a
+    // dropped/retrieved/stowed/given item is consistent for everyone. With empty
+    // overlays this equals the authored tree.
+    const present = applyRemovedOverlay(
       [...(character.inventory || []), ...resolvedAcquired],
-      loadout
+      removed,
     );
+    const effectiveInventory = buildEffectiveInventory(present, loadout);
 
     // Item-granted abilities (weapon strikes, item actions, scroll/wand/staff
     // spells) are gated on the item being held in a hand. The derivation utils
@@ -331,7 +336,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, resolvedAcquired]);
+  }, [character, loadout, resolvedAcquired, removed]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither
