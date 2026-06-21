@@ -4890,6 +4890,11 @@
                 "uid": "e-ehu3aa8fdbpx",
                 "ref": "torch",
                 "quantity": 5
+              },
+              {
+                "uid": "e-8ejpv8rjihyq",
+                "ref": "waterskin",
+                "quantity": 1
               }
             ]
           }
@@ -4927,6 +4932,31 @@
         {
           "uid": "e-v7zzpss30lde",
           "ref": "skeleton-key",
+          "quantity": 1
+        },
+        {
+          "uid": "e-upzich6yihxv",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-fewre97yihyp",
+          "ref": "holy-water",
+          "quantity": 2
+        },
+        {
+          "uid": "e-46mcarynihyp",
+          "ref": "padded-armor",
+          "quantity": 1
+        },
+        {
+          "uid": "e-zooar8g6ihyp",
+          "ref": "lesser-healing-potion",
+          "quantity": 1
+        },
+        {
+          "uid": "e-we1788s5ihyp",
+          "ref": "beacon-shot",
           "quantity": 1
         }
       ],
@@ -5299,7 +5329,7 @@
               {
                 "uid": "e-cgrpwml3ld5g",
                 "ref": "torch",
-                "quantity": 1
+                "quantity": 5
               },
               {
                 "uid": "e-0wyxv9ajld5g",
@@ -5338,7 +5368,7 @@
               {
                 "uid": "e-v96cygms62dh",
                 "ref": "moderate-drakeheart-mutagen",
-                "quantity": 1
+                "quantity": 2
               },
               {
                 "uid": "e-10wrhh4e62dh",
@@ -5391,6 +5421,26 @@
         {
           "uid": "e-zwl6xtqyld5g",
           "ref": "rust-scrub",
+          "quantity": 1
+        },
+        {
+          "uid": "e-ulnczl27ihyq",
+          "ref": "holy-water",
+          "quantity": 1
+        },
+        {
+          "uid": "e-2efbsdnfihyq",
+          "ref": "salve-of-antiparalysis",
+          "quantity": 1
+        },
+        {
+          "uid": "e-6v7kqy55ihyq",
+          "ref": "lesser-healing-potion",
+          "quantity": 1
+        },
+        {
+          "uid": "e-g54likfdihyq",
+          "ref": "shark-tooth-charm",
           "quantity": 1
         }
       ],
@@ -7379,7 +7429,7 @@
               {
                 "uid": "e-mhljykom07ns",
                 "ref": "torch",
-                "quantity": 1
+                "quantity": 5
               },
               {
                 "uid": "e-4xhlitm307ns",
@@ -7447,6 +7497,26 @@
         {
           "uid": "e-lcih3p1voezh",
           "ref": "scroll-of-dispel-magic",
+          "quantity": 1
+        },
+        {
+          "uid": "e-wjzu6n3fihyq",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-swx7yknxihyq",
+          "ref": "minor-healing-potion",
+          "quantity": 2
+        },
+        {
+          "uid": "e-89i4hd7gihyq",
+          "ref": "wand-of-fear",
+          "quantity": 1
+        },
+        {
+          "uid": "e-i96di93dihyq",
+          "ref": "lesser-healing-potion",
           "quantity": 1
         }
       ],
@@ -9547,6 +9617,94 @@
           "effect": "If the creature is petrified, it returns to normal, and for removing paralysis the salve's counteract modifier is +31 and its counteract rank is 6th."
         }
       ]
+    },
+    {
+      "id": "padded-armor",
+      "name": "Padded Armor",
+      "price": 0.2,
+      "weight": 0.1,
+      "traits": [
+        "Comfort"
+      ],
+      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor."
+    },
+    {
+      "id": "lesser-healing-potion",
+      "name": "Lesser Healing Potion",
+      "price": 12,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Potion",
+        "Vitality"
+      ],
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a lesser healing potion, it restores 2d8+5 Hit Points.",
+      "consumable": {
+        "kind": "healing",
+        "note": "Restores 2d8+5 HP"
+      }
+    },
+    {
+      "id": "wand-of-fear",
+      "name": "Wand of Fear",
+      "price": 60,
+      "weight": 0.1,
+      "traits": [
+        "Magical",
+        "Wand"
+      ],
+      "description": "A wand containing the spell Fear.",
+      "wand": {
+        "id": "spell-1",
+        "name": "Fear",
+        "level": 1,
+        "baseLevel": 1,
+        "range": "30 feet",
+        "duration": "varies",
+        "defense": "Will",
+        "targets": "1 creature",
+        "traits": [
+          "Concentrate",
+          "Emotion",
+          "Fear",
+          "Manipulate",
+          "Mental"
+        ],
+        "actions": "Two Actions",
+        "description": "You plant fear in the target; it must attempt a Will save. Critical Success The target is unaffected. Success The target is frightened 1. Failure The target is frightened 2. Critical Failure The target is frightened 3 and fleeing for 1 round. Heightened (3rd) You can target up to five creatures."
+      }
+    },
+    {
+      "id": "beacon-shot",
+      "name": "Beacon Shot",
+      "price": 10,
+      "weight": 0,
+      "traits": [
+        "Consumable",
+        "Magical"
+      ],
+      "description": "Ammunition (arrow or bolt); Activate (one-action, manipulate). The shaft of a beacon shot is studded with flecks of gemstones. When an activated beacon shot hits a target, it embeds itself into that target and spews sparks for 1 minute. If the target is invisible, it becomes merely hidden to creatures who would otherwise be unable to see it. The sparks also negate the concealed condition if the target was otherwise concealed. A creature can remove the arrow or bolt by using an Interact basic action and succeeding at a DC 20 Athletics check."
+    },
+    {
+      "id": "shark-tooth-charm",
+      "name": "Shark Tooth Charm",
+      "price": 23,
+      "weight": 0,
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Talisman"
+      ],
+      "description": "This dried-seaweed bracelet is lined with charms shaped like small shark teeth. When you activate the bracelet, attempt to Escape using Acrobatics with a +1 item bonus to the check. If you roll a success, you get a critical success instead (if you roll a critical failure, you get a failure instead). If you fail the Acrobatics check against a grabbing creature, the creature must either release you as a free action or take 2d8 piercing damage as shark's teeth momentarily emerge from your skin.",
+      "talisman": {
+        "affixTo": "armor",
+        "activation": {
+          "cost": 1,
+          "trigger": "You attempt to Escape — gain a +1 item bonus to the Acrobatics check; a success becomes a critical success"
+        }
+      }
     }
   ],
   "spell": [
