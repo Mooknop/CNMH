@@ -5166,6 +5166,9 @@
           "reflex": 9,
           "will": 7
         }
+      },
+      "spellcasting": {
+        "scrollAnyTradition": true
       }
     },
     {
