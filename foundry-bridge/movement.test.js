@@ -41,17 +41,34 @@ describe('handleMoveRequest', () => {
     expect(opts.blocked).toHaveLength(0);
   });
 
-  test("an ally's square is blocked as kind 'ally', not reachable", async () => {
-    // disposition FRIENDLY (1) → classified as an ally obstacle.
+  test("an ally's square is reachable as a pass-through, not blocked (#456)", async () => {
+    // disposition FRIENDLY (1) → steppable to move *through*, flagged passThrough.
     const ally = makeToken({ id: 'tok-ally', x: 600, y: 500, disposition: 1 }); // grid (6,5)
     setupPellias({ allies: [ally] });
 
     await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
     const { reachable, blocked } = send.mock.calls[0][2];
 
-    expect(blocked).toContainEqual({ col: 6, row: 5, kind: 'ally' });
-    expect(reachable).toHaveLength(7);
-    expect(reachable.find((s) => s.col === 6 && s.row === 5)).toBeUndefined();
+    expect(blocked.find((b) => b.col === 6 && b.row === 5)).toBeUndefined();
+    const cell = reachable.find((s) => s.col === 6 && s.row === 5);
+    expect(cell).toMatchObject({ col: 6, row: 5, passThrough: true });
+    expect(reachable).toHaveLength(8);
+  });
+
+  test('originOccupied is false when the token stands alone', async () => {
+    setupPellias();
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
+    expect(send.mock.calls[0][2].originOccupied).toBe(false);
+  });
+
+  test('originOccupied is true when the token shares its cell with an ally (#456)', async () => {
+    // Ally on Pellias' own square (5,5) — i.e. Pellias stepped through and is
+    // standing on top of an ally; the move must not be allowed to stop here.
+    const ally = makeToken({ id: 'tok-ally', x: 500, y: 500, disposition: 1 }); // grid (5,5)
+    setupPellias({ allies: [ally] });
+
+    await handleMoveRequest('Pellias', { moveType: 'step', ts: 1 });
+    expect(send.mock.calls[0][2].originOccupied).toBe(true);
   });
 
   test("a hostile token's square is blocked as kind 'enemy'", async () => {

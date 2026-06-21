@@ -113,6 +113,8 @@ const MoveActionSheet = ({ character, moveType = 'stride', themeColor, onClose }
             radius={1}
             stepMode
             cancelLabel="Done"
+            cancelDisabled={pickerOpts.originOccupied}
+            cancelHint="Step off your ally's square to stop."
             onSelect={confirmMove}
             onCancel={handleClose}
           />
