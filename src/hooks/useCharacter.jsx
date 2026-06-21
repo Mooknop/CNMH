@@ -189,17 +189,9 @@ export const useCharacter = (character) => {
     // ref/uid link IS the link — no fragile name matching, and artifact
     // gating may withhold it until the owner is high enough level). It is
     // castable only while that entry is held (or flagged noHandRequired).
-    // Legacy fallback: a top-level `character.staff` still works, linked by
-    // name as before, for any sheet not yet migrated to the catalog item.
     const staffItem   = effectiveInventory.find((e) => e && e.staff) || null;
-    const legacyStaff = character.staff || null;
-    const staff       = staffItem ? staffItem.staff : legacyStaff;
-    const staffEntry  = staffItem
-      ? staffItem
-      : legacyStaff?.name
-        ? effectiveInventory.find((e) => e && e.name === legacyStaff.name)
-        : null;
-    const staffActive = staff ? itemAbilitiesActive(staffEntry) : false;
+    const staff       = staffItem ? staffItem.staff : null;
+    const staffActive = staff ? itemAbilitiesActive(staffItem) : false;
     const staffSpells = (staff?.spells || []).map((s) => ({
       ...s,
       fromStaff: true,
