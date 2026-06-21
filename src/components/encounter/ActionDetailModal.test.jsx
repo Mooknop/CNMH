@@ -262,4 +262,21 @@ describe('ActionDetailModal', () => {
     render(<ActionDetailModal item={item} type="action" isOpen onClose={vi.fn()} />);
     expect(screen.getByTestId('action-icon')).toHaveTextContent(/1 to 3/);
   });
+
+  describe('rune source breakdown (#608)', () => {
+    it('renders the Runes line for a strike carrying a runeBreakdown', () => {
+      const item = {
+        ...baseItem,
+        source: '+1 Striking Pick',
+        runeBreakdown: { potencyBonus: 1, extraDice: 1, strikingLabel: 'Striking', properties: ['Vitalizing'] },
+      };
+      render(<ActionDetailModal item={item} type="action" isOpen onClose={vi.fn()} />);
+      expect(screen.getByTestId('adm-runes')).toHaveTextContent('Runes: +1 potency · +1 die (Striking) · Vitalizing');
+    });
+
+    it('omits the Runes line for a strike with no runeBreakdown', () => {
+      render(<ActionDetailModal item={baseItem} type="action" isOpen onClose={vi.fn()} />);
+      expect(screen.queryByTestId('adm-runes')).not.toBeInTheDocument();
+    });
+  });
 });

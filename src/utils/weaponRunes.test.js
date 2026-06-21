@@ -6,6 +6,8 @@ import {
   weaponDisplayName,
   runeTierSummary,
   weaponPropertyRunes,
+  buildRuneBreakdown,
+  formatRuneBreakdown,
   POTENCY,
   STRIKING,
 } from './weaponRunes';
@@ -220,6 +222,34 @@ describe('display helpers (#548 Slice 3c)', () => {
       expect(weaponPropertyRunes(runedAxe)).toEqual([{ id: 'vitalizing', name: 'Vitalizing', description: 'vs undead' }]);
       expect(weaponPropertyRunes({ name: 'X', runes: { property: ['unresolved'] } })).toEqual([]);
       expect(weaponPropertyRunes({ name: 'Rope' })).toEqual([]);
+    });
+  });
+
+  describe('buildRuneBreakdown / formatRuneBreakdown', () => {
+    test('captures potency, striking dice + label, and property names', () => {
+      const b = buildRuneBreakdown(runedAxe);
+      expect(b).toEqual({
+        potencyBonus: 2,
+        extraDice: 2,
+        strikingLabel: 'Greater Striking',
+        properties: ['Vitalizing'],
+      });
+      expect(formatRuneBreakdown(b)).toBe('+2 potency · +2 dice (Greater Striking) · Vitalizing');
+    });
+
+    test('singular "die" for +1 striking, no striking label when absent', () => {
+      const b = buildRuneBreakdown({ name: 'Pick', runes: { potency: 1, striking: 'striking' } });
+      expect(b).toMatchObject({ potencyBonus: 1, extraDice: 1, strikingLabel: 'Striking', properties: [] });
+      expect(formatRuneBreakdown(b)).toBe('+1 potency · +1 die (Striking)');
+
+      const potencyOnly = buildRuneBreakdown({ name: 'Mace', runes: { potency: 1 } });
+      expect(formatRuneBreakdown(potencyOnly)).toBe('+1 potency');
+    });
+
+    test('null for non-runed / empty-rune items; format("") for null', () => {
+      expect(buildRuneBreakdown({ name: 'Rope' })).toBeNull();
+      expect(buildRuneBreakdown({ name: 'Pick', runes: {} })).toBeNull();
+      expect(formatRuneBreakdown(null)).toBe('');
     });
   });
 });
