@@ -21,6 +21,7 @@ import {
   normalizeSpells,
   spellCatalogMap,
   resolveFocusSpells,
+  resolveRepertoireSpells,
   repointFocusSpells,
   resolveInventoryItem,
   resolveInventory,
@@ -759,6 +760,53 @@ describe('resolveFocusSpells', () => {
 
     const bluFocus = [{ spellRef: 'inner-upheaval' }];
     expect(resolveFocusSpells(bluFocus, bundledMap)[0].name).toBe('Inner Upheaval');
+  });
+});
+
+describe('resolveRepertoireSpells', () => {
+  const repMap = spellCatalogMap([
+    { id: 'fear', name: 'Fear', level: 1, traits: ['Emotion', 'Fear'] },
+    { id: 'summon-undead', name: 'Summon Undead', level: 1, traits: ['Summon'] },
+  ]);
+
+  it('resolves a spellRef entry to the full catalog spell', () => {
+    const result = resolveRepertoireSpells([{ spellRef: 'fear' }], repMap);
+    expect(result[0]).toMatchObject({ id: 'fear', name: 'Fear', level: 1 });
+  });
+
+  it('applies a per-character override (e.g. signature) over the catalog spell', () => {
+    const result = resolveRepertoireSpells([{ spellRef: 'summon-undead', signature: true }], repMap);
+    expect(result[0].name).toBe('Summon Undead');
+    expect(result[0].signature).toBe(true);
+  });
+
+  it('yields a visible level-0 stub for a dangling spellRef', () => {
+    expect(resolveRepertoireSpells([{ spellRef: 'nope' }], repMap)[0]).toEqual({
+      name: '(unknown spell: nope)',
+      level: 0,
+    });
+  });
+
+  it('passes an inline entry (no spellRef) through unchanged (infra back-compat)', () => {
+    const inline = { id: 'r1', name: 'Daze', level: 0 };
+    expect(resolveRepertoireSpells([inline], repMap)[0]).toBe(inline);
+  });
+
+  it('returns a non-array input unchanged', () => {
+    expect(resolveRepertoireSpells(null, repMap)).toBeNull();
+    expect(resolveRepertoireSpells(undefined, repMap)).toBeUndefined();
+  });
+
+  it('resolveCharacterItems resolves spellcasting.spells refs (and leaves other shape intact)', () => {
+    const sheet = {
+      id: 'caster',
+      level: 5,
+      spellcasting: { tradition: 'arcane', spells: [{ spellRef: 'fear' }, { spellRef: 'summon-undead', signature: true }] },
+    };
+    const out = resolveCharacterItems(sheet, [], [...repMap.values()]);
+    expect(out.spellcasting.tradition).toBe('arcane');
+    expect(out.spellcasting.spells[0]).toMatchObject({ id: 'fear', name: 'Fear' });
+    expect(out.spellcasting.spells[1]).toMatchObject({ name: 'Summon Undead', signature: true });
   });
 });
 
