@@ -38,7 +38,7 @@ const izzy = {
   spellcasting: {
     tradition: 'Occult', ability: 'charisma', proficiency: 1,
     focus: { max: 3, current: 1 }, spell_slots: { 1: 4 },
-    spells: [{ id: 'spell-3', name: 'Daze', level: 0, baseLevel: 1, traits: ['Cantrip'] }],
+    spells: [{ spellRef: 'daze' }],
   },
   inventory: [],
 };
@@ -59,10 +59,18 @@ const catalog = [
   },
 ];
 
+// Repertoire spells are catalog references (epic #622); the editor picks from
+// this shared spell catalog.
+const spellCatalog = [
+  { id: 'daze', name: 'Daze', level: 0, traits: ['Cantrip'] },
+  { id: 'heal', name: 'Heal', level: 1, traits: ['Healing'] },
+  { id: 'summon-undead', name: 'Summon Undead', level: 1, traits: ['Summon'] },
+];
+
 // GmCharacters edits the AUTHORED docs (rawCharacters) and reads the catalog
-// (items) for the picker.
+// (items + spells) for the pickers.
 const setContent = (chars = [pellias, izzy]) =>
-  useContent.mockReturnValue({ rawCharacters: chars, items: catalog, images: [] });
+  useContent.mockReturnValue({ rawCharacters: chars, items: catalog, spells: spellCatalog, images: [] });
 
 // Slice 1: every saved ref entry now carries a stable `uid` (preserved or
 // minted). Shape/lossless/repoint assertions below strip it so they stay
@@ -369,7 +377,7 @@ describe('GmCharacters', () => {
     expect(data.skills.lore).toBeUndefined();
   });
 
-  it('exercises spellcasting slot/spell/heightened handlers', async () => {
+  it('exercises spellcasting slot handlers and adds a spell via the catalog picker', async () => {
     setContent([izzy]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
@@ -381,115 +389,63 @@ describe('GmCharacters', () => {
     fireEvent.change(within(form).getByLabelText('slot-1-level'), { target: { value: '3' } });
     fireEvent.change(within(form).getByLabelText('slot-1-count'), { target: { value: '2' } });
     fireEvent.click(within(form).getAllByText('Remove')[2]); // drop the empty slot-2
+    // Add a spell: it's a catalog reference, not inline authoring.
     fireEvent.click(within(form).getByText('Add spell'));
     const spell1 = within(form).getByTestId('spell-1');
-    fireEvent.change(within(spell1).getByLabelText('spell-1-name'), { target: { value: 'Heal' } });
-    fireEvent.change(within(spell1).getByLabelText('spell-1-level'), { target: { value: '1' } });
-    fireEvent.change(within(spell1).getByLabelText('spell-1-traits'), { target: { value: 'Healing, Vitality' } });
-    fireEvent.change(within(spell1).getByLabelText('spell-1-description'), { target: { value: 'Restore HP.' } });
-    fireEvent.click(within(spell1).getByText('Add heightened'));
-    fireEvent.change(within(spell1).getByLabelText('spell-1-h-0-key'), { target: { value: '+1' } });
-    fireEvent.change(within(spell1).getByLabelText('spell-1-h-0-text'), { target: { value: '+8 HP' } });
-    fireEvent.click(within(spell1).getByText('Remove')); // heightened row remove (exact text)
+    fireEvent.change(within(spell1).getByLabelText('spell-1-ref'), { target: { value: 'heal' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const sc = saveDocument.mock.calls[0][2].spellcasting;
     expect(sc.spell_slots).toEqual({ 1: 4, 3: 2 });
-    expect(sc.spells[1]).toEqual(
-      expect.objectContaining({ name: 'Heal', level: 1, traits: ['Healing', 'Vitality'], description: 'Restore HP.' })
-    );
+    expect(sc.spells).toEqual([{ spellRef: 'daze' }, { spellRef: 'heal' }]);
   });
 
-  it('round-trips a spell description (shows the stored text, saves edits)', async () => {
-    const izzyDescribed = {
-      ...izzy,
-      spellcasting: {
-        ...izzy.spellcasting,
-        spells: [{ ...izzy.spellcasting.spells[0], description: 'Cloud the mind of a creature.' }],
-      },
-    };
-    setContent([izzyDescribed]);
-    saveDocument.mockResolvedValue({ ok: true });
-    render(<GmCharacters />);
-    const form = screen.getByTestId('character-form-izzy');
-    gotoTab(form, 'Spellcasting');
-    const spell0 = within(form).getByTestId('spell-0');
-    // The stored description must populate the textarea…
-    expect(within(spell0).getByLabelText('spell-0-description')).toHaveValue('Cloud the mind of a creature.');
-    // …and an edit to it must survive the save round-trip.
-    fireEvent.change(within(spell0).getByLabelText('spell-0-description'), {
-      target: { value: 'Dazzling lights cloud the mind.' },
-    });
-    fireEvent.click(within(form).getByText('Save'));
-    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-    const sc = saveDocument.mock.calls[0][2].spellcasting;
-    expect(sc.spells[0].description).toBe('Dazzling lights cloud the mind.');
-  });
-
-  it('round-trips spell frequencyRule + immunity through the spell row controls', async () => {
+  it('round-trips a repertoire spellRef and lets the GM re-point it', async () => {
     setContent([izzy]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-izzy');
     gotoTab(form, 'Spellcasting');
     const spell0 = within(form).getByTestId('spell-0');
-    fireEvent.change(within(spell0).getByLabelText('spell-0-frequency-per'), { target: { value: 'day' } });
-    fireEvent.change(within(spell0).getByLabelText('spell-0-frequency-uses'), { target: { value: '1' } });
-    fireEvent.change(within(spell0).getByLabelText('spell-0-immunity-unit'), { target: { value: 'hour' } });
-    fireEvent.change(within(spell0).getByLabelText('spell-0-immunity-value'), { target: { value: '1' } });
+    // The authored ref populates the picker + resolved-name preview.
+    expect(within(spell0).getByLabelText('spell-0-ref')).toHaveValue('daze');
+    expect(within(spell0).getByTestId('spell-0-ref-preview')).toHaveTextContent('→ Daze');
+    // Re-point to another catalog spell.
+    fireEvent.change(within(spell0).getByLabelText('spell-0-ref'), { target: { value: 'heal' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const sc = saveDocument.mock.calls[0][2].spellcasting;
-    expect(sc.spells[0].frequencyRule).toEqual({ per: 'day', uses: 1 });
-    expect(sc.spells[0].immunity).toEqual({ duration: { value: 1, unit: 'hour' } });
+    expect(sc.spells).toEqual([{ spellRef: 'heal' }]);
   });
 
-  it('round-trips spell action variants through the spell row control (#215)', async () => {
+  it('preserves a per-character signature flag on a repertoire ref', async () => {
+    const izzySig = {
+      ...izzy,
+      spellcasting: { ...izzy.spellcasting, spells: [{ spellRef: 'summon-undead', signature: true }] },
+    };
+    setContent([izzySig]);
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmCharacters />);
+    const form = screen.getByTestId('character-form-izzy');
+    gotoTab(form, 'Spellcasting');
+    expect(within(form).getByLabelText('spell-0-ref')).toHaveValue('summon-undead');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const sc = saveDocument.mock.calls[0][2].spellcasting;
+    expect(sc.spells).toEqual([{ signature: true, spellRef: 'summon-undead' }]);
+  });
+
+  it('drops an empty (unpicked) spell row on save', async () => {
     setContent([izzy]);
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-izzy');
     gotoTab(form, 'Spellcasting');
-    const spell0 = within(form).getByTestId('spell-0');
-    fireEvent.click(within(spell0).getByText('Add variant'));
-    fireEvent.change(within(spell0).getByLabelText('spell-0-variant-0-actions'), { target: { value: '2' } });
-    fireEvent.change(within(spell0).getByLabelText('spell-0-variant-0-note'), { target: { value: '2 shards' } });
-    fireEvent.change(within(spell0).getByLabelText('spell-0-variant-0-dc'), { target: { value: '-10' } });
+    fireEvent.click(within(form).getByText('Add spell')); // spell-1, left unpicked
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const sc = saveDocument.mock.calls[0][2].spellcasting;
-    expect(sc.spells[0].variants).toEqual([{ actions: 2, note: '2 shards', dcDelta: -10 }]);
-  });
-
-  it('clearing a spell frequencyRule removes the key (no resurrection via rest)', async () => {
-    const izzyTagged = {
-      ...izzy,
-      spellcasting: {
-        ...izzy.spellcasting,
-        spells: [{
-          ...izzy.spellcasting.spells[0],
-          frequencyRule: { per: 'day', uses: 1 },
-          immunity: { duration: { value: 1, unit: 'hour' } },
-        }],
-      },
-    };
-    setContent([izzyTagged]);
-    saveDocument.mockResolvedValue({ ok: true });
-    render(<GmCharacters />);
-    const form = screen.getByTestId('character-form-izzy');
-    gotoTab(form, 'Spellcasting');
-    const spell0 = within(form).getByTestId('spell-0');
-    // Loaded values show in the controls…
-    expect(within(spell0).getByLabelText('spell-0-frequency-per').value).toBe('day');
-    expect(within(spell0).getByLabelText('spell-0-immunity-unit').value).toBe('hour');
-    // …then clear both and save.
-    fireEvent.change(within(spell0).getByLabelText('spell-0-frequency-per'), { target: { value: '' } });
-    fireEvent.change(within(spell0).getByLabelText('spell-0-immunity-unit'), { target: { value: '' } });
-    fireEvent.click(within(form).getByText('Save'));
-    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-    const sc = saveDocument.mock.calls[0][2].spellcasting;
-    expect(sc.spells[0].frequencyRule).toBeUndefined();
-    expect(sc.spells[0].immunity).toBeUndefined();
+    expect(sc.spells).toEqual([{ spellRef: 'daze' }]); // the blank row is filtered out
   });
 
   it('removes an object section and adds another', async () => {

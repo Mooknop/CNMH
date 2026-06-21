@@ -220,12 +220,9 @@ test.describe('Character editor', () => {
     await form.getByLabel('slot-0-level').fill('3');
     await form.getByLabel('slot-0-count').fill('4');
 
-    // Add one spell
+    // Add one spell — a repertoire spell is a catalog reference (epic #622).
     await form.getByRole('button', { name: 'Add spell' }).click();
-    await form.getByLabel('spell-0-name').fill('Fireball');
-    await form.getByLabel('spell-0-level').fill('3');
-    await form.getByLabel('spell-0-range').fill('500 feet');
-    await form.getByLabel('spell-0-traits').fill('Fire, Evocation');
+    await form.getByLabel('spell-0-ref').selectOption('sleep');
 
     const id = await createChar(form, page, charName);
     const payload = await fetchContent(request);
@@ -238,9 +235,7 @@ test.describe('Character editor', () => {
       focus: { max: 2, current: 2 },
       spell_slots: { '3': 4 },
     });
-    const savedSpell = char.spellcasting.spells[0];
-    expect(savedSpell).toMatchObject({ name: 'Fireball', level: 3, range: '500 feet' });
-    expect(savedSpell.traits).toEqual(expect.arrayContaining(['Fire', 'Evocation']));
+    expect(char.spellcasting.spells).toEqual([{ spellRef: 'sleep' }]);
   });
 
   // -------------------------------------------------------------------------
