@@ -228,30 +228,32 @@ export const repointFocusSpells = (liveDoc, bundledDoc) => {
   return out;
 };
 
-// Resolve a wand/scroll spell block. With no `spellRef` it is a legacy inline
-// spell (back-compat) — returned untouched, exactly like an inline inventory
-// entry. With `spellRef` the catalog spell is spread FIRST so its full shape
-// (name/level/traits/heightened) survives, then any sibling keys on the block
-// (e.g. a wand overriding duration) overlay it. A dangling ref yields a
-// visible, level-0 stub so organizeSpellsByRank / React keys never break —
-// mirrors resolveInventoryItem's "(unknown item)" precedent.
+// Resolve a wand/scroll spell block. A spell exists ONLY as a catalog entry
+// referenced by `spellRef` (epic #622 — no inline spells): the catalog spell is
+// spread FIRST so its full shape (name/level/traits/heightened) survives, then
+// any sibling keys on the block (e.g. a wand overriding duration) overlay it. A
+// missing or dangling ref yields a visible, level-0 stub so organizeSpellsByRank
+// / React keys never break — mirrors resolveInventoryItem's "(unknown item)".
 const resolveSpellBlock = (block, spellMap) => {
-  if (!block || typeof block !== 'object' || block.spellRef == null) return block;
+  if (!block || typeof block !== 'object') return block;
+  if (block.spellRef == null) return { name: '(unknown spell)', level: 0 };
   const spell = spellMap && spellMap.get(String(block.spellRef));
   if (!spell) return { name: `(unknown spell: ${block.spellRef})`, level: 0 };
   const { spellRef, ...overrides } = block;
   return { ...spell, ...overrides };
 };
 
-// Resolve a staff's spell list. Each entry with a `ref` is replaced by the
-// catalog spell (+ entry-local overrides); entries with no `ref` pass through
-// (inline back-compat). Same dangling-ref stub as resolveSpellBlock.
+// Resolve a staff's spell list. Each entry references a catalog spell by `ref`
+// (epic #622 — no inline spells), replaced by the catalog spell (+ entry-local
+// overrides). A missing or dangling ref yields the same level-0 stub as
+// resolveSpellBlock.
 const resolveStaffSpells = (staff, spellMap) => {
   if (!staff || !Array.isArray(staff.spells)) return staff;
   return {
     ...staff,
     spells: staff.spells.map((s) => {
-      if (!s || typeof s !== 'object' || s.ref == null) return s;
+      if (!s || typeof s !== 'object') return s;
+      if (s.ref == null) return { name: '(unknown spell)', level: 0 };
       const spell = spellMap && spellMap.get(String(s.ref));
       if (!spell) return { name: `(unknown spell: ${s.ref})`, level: 0 };
       const { ref, ...overrides } = s;
