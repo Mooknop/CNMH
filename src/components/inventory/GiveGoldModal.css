@@ -1,0 +1,61 @@
+.give-gold-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.give-gold-balance {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--shell-text-secondary);
+}
+
+.give-gold-balance strong {
+  color: var(--theme-gold);
+}
+
+.give-gold-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+
+.give-gold-recipients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.give-gold-entry {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.give-gold-input {
+  width: 7rem;
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  text-align: right;
+  border-radius: var(--radius-sm);
+}
+
+.give-gold-gp {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--shell-text-tertiary);
+}
+
+.give-gold-submit {
+  align-self: flex-start;
+  margin-top: var(--space-2);
+}
+
+.give-gold-empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+}

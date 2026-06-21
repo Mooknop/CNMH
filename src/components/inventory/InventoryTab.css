@@ -18,10 +18,20 @@
   margin: 0;
 }
 
+.inventory-gold-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .inventory-gold {
   font-weight: 600;
   font-size: var(--text-sm);
   color: var(--theme-gold);
+  white-space: nowrap;
+}
+
+.inventory-give-btn {
   white-space: nowrap;
 }
 

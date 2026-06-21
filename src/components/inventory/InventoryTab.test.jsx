@@ -113,11 +113,24 @@ vi.mock('./ContainersList', () => ({
   }
 }));
 
+// Give-gold flow (#655): play mode drives whether the button shows; the modal
+// itself is exercised in GiveGoldModal.test.jsx, so stub it here.
+let mockMode = 'exploration';
+vi.mock('../../hooks/usePlayMode', () => ({
+  usePlayMode: () => ({ mode: mockMode }),
+}));
+vi.mock('./GiveGoldModal', () => ({
+  default: function DummyGiveGoldModal({ isOpen }) {
+    return isOpen ? <div data-testid="give-gold-modal">Give Gold</div> : null;
+  },
+}));
+
 const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
 
 beforeEach(() => {
   mockConsumed = {};
   mockAffixed = {};
+  mockMode = 'exploration';
 });
 
 describe('InventoryTab — affixed talismans (#254/#339)', () => {
@@ -192,6 +205,31 @@ describe('InventoryTab', () => {
   it('no longer renders a Crafting button (moved to the Downtime tab)', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
     expect(screen.queryByText('Crafting')).not.toBeInTheDocument();
+  });
+
+  // #655: give-gold is an out-of-combat affordance.
+  describe('Give gold button (#655)', () => {
+    it('shows the button in exploration and opens the modal on tap', () => {
+      mockMode = 'exploration';
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      const btn = screen.getByTestId('give-gold-open');
+      expect(btn).toBeInTheDocument();
+      expect(screen.queryByTestId('give-gold-modal')).not.toBeInTheDocument();
+      fireEvent.click(btn);
+      expect(screen.getByTestId('give-gold-modal')).toBeInTheDocument();
+    });
+
+    it('shows the button in downtime', () => {
+      mockMode = 'downtime';
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.getByTestId('give-gold-open')).toBeInTheDocument();
+    });
+
+    it('hides the button in encounter mode', () => {
+      mockMode = 'encounter';
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.queryByTestId('give-gold-open')).not.toBeInTheDocument();
+    });
   });
 
   it('renders the bulk progress bar at the correct width', () => {
