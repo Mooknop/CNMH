@@ -2,13 +2,16 @@ import React, { useMemo, useState } from 'react';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import ActionIcon from '../shared/ActionIcon';
+import Modal from '../shared/Modal';
 import './HandsPanel.css';
 
-// Encounter tab: just the two hand slots + a SWAP flow. Everything else
-// (drop / pick up / stow / retrieve / unhand / release) lives in the Inventory
-// tab. Hands are derived from the effective tree; SWAP writes the loadout
-// atomically via useLoadout().setHands. Source is the character's currently
-// Worn items; an item bumped out of a hand returns to Worn.
+// Encounter tab: a compact at-a-glance bar (the two hand slots) plus a SWAP
+// flow that opens in a slide-over flyout (#457) so the worn-item picker never
+// crowds the main sheet mid-encounter. Everything else (drop / pick up / stow /
+// retrieve / unhand / release) lives in the Inventory tab. Hands are derived
+// from the effective tree; SWAP writes the loadout atomically via
+// useLoadout().setHands. Source is the character's currently Worn items; an
+// item bumped out of a hand returns to Worn.
 
 const HandsPanel = ({ character, characterColor }) => {
   const charData = useCharacter(character);
@@ -74,6 +77,9 @@ const HandsPanel = ({ character, characterColor }) => {
     <section className="hands-panel" aria-label="hands">
       <div className="hands-header">
         <h3>Hands</h3>
+        <button className="btn-small btn-primary" data-testid="hands-swap" onClick={openSwap}>
+          Swap <ActionIcon actionText="One Action" size="small" showTooltip={false} />
+        </button>
       </div>
 
       <div className="hands-slots">
@@ -81,11 +87,15 @@ const HandsPanel = ({ character, characterColor }) => {
         <Slot n={2} item={slot2} />
       </div>
 
-      {!swapping ? (
-        <button className="btn-small btn-primary" data-testid="hands-swap" onClick={openSwap}>
-          Swap <ActionIcon actionText="One Action" size="small" showTooltip={false} />
-        </button>
-      ) : (
+      <Modal
+        isOpen={swapping}
+        onClose={cancel}
+        title="Manage Hands"
+        themeColor={characterColor}
+        placement="bottom"
+        maxWidth="420px"
+        highZ
+      >
         <div className="hands-swap" data-testid="hands-swap-panel">
           <div className="hands-pending">
             <div>
@@ -144,14 +154,14 @@ const HandsPanel = ({ character, characterColor }) => {
 
           <div className="hands-swap-actions">
             <button className="btn-small btn-primary" data-testid="hands-confirm" onClick={confirm}>
-              Confirm
+              Confirm <ActionIcon actionText="One Action" size="small" showTooltip={false} />
             </button>
             <button className="btn-small btn-secondary" data-testid="hands-cancel" onClick={cancel}>
               Cancel
             </button>
           </div>
         </div>
-      )}
+      </Modal>
     </section>
   );
 };
