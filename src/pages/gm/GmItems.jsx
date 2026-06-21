@@ -26,7 +26,8 @@ import './gm.css';
 // remaining rare mechanical blocks (shield/actions, an artifact's level-gated
 // `artifact` tiers / a staff's `staff` spell list) round-trip through a per-item
 // raw-JSON box, the same faithful pattern as the character editor. A scroll/wand
-// spell can be authored inline OR set to a `spellRef` into the shared catalog.
+// spell is a `spellRef` into the shared catalog only (epic #622 — no inline
+// spells); the staff `staff.spells` list is `ref`-based for the same reason.
 
 const toInt = (v) => {
   const n = parseInt(v, 10);

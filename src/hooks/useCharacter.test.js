@@ -311,10 +311,9 @@ describe('useCharacter', () => {
     expect(inv[1].container.contents[0].uid).toBe('effguy-2');
   });
 
-  // The staff now lives on a resolved inventory item's `.staff` block; it is
-  // castable only while that entry is held. Legacy top-level `character.staff`
-  // (linked by name) is still honored as a back-compat fallback. The util
-  // mocks above don't touch staff — useCharacter derives it directly.
+  // The staff lives on a resolved inventory item's `.staff` block; it is
+  // castable only while that entry is held. The util mocks above don't touch
+  // staff — useCharacter derives it directly.
   describe('staff hand gating (resolved catalog item)', () => {
     // Post-resolution shape: the staff block rides on the inventory entry,
     // linked by uid (no name matching).
@@ -356,20 +355,6 @@ describe('useCharacter', () => {
       expect(result.current.staffSpells[0].active).toBe(true);
     });
 
-    it('still honors a legacy top-level character.staff (by-name fallback)', () => {
-      const legacy = {
-        id: 'legacy',
-        name: 'Caster',
-        level: 1,
-        abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
-        feats: [],
-        inventory: [{ uid: 'legacy-0', name: 'Old Staff', weight: 1, quantity: 1 }],
-        staff: { name: 'Old Staff', spells: [{ id: 'ss1', name: 'Figment', level: 0 }] },
-      };
-      const { result } = renderHook(() => useCharacter(legacy));
-      expect(result.current.flags.hasStaff).toBe(true);
-      expect(result.current.staffSpells[0].name).toBe('Figment');
-    });
   });
 
   // Integration: the Hammer artifact's staff tier unlocks at level 4. Resolve
