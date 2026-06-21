@@ -202,3 +202,41 @@ export const weaponPropertyRunes = (item) =>
   hasRuneBlock(item) && Array.isArray(item.runes.property)
     ? item.runes.property.filter((p) => p && typeof p === 'object')
     : [];
+
+/**
+ * A source breakdown for a runed weapon's strike (#608): where the attack
+ * bonus, extra damage dice, and riders come from. Returns null when the item
+ * carries no rune contribution at all (so non-runed strikes stay untagged).
+ *
+ * @returns {null|{ potencyBonus, extraDice, strikingLabel, properties }}
+ */
+export const buildRuneBreakdown = (item) => {
+  if (!hasRuneBlock(item)) return null;
+  const r = resolveWeapon(
+    { name: item.name, price: item.price, material: item.material, traits: item.traits },
+    item.runes,
+  );
+  const properties = r.properties.map((p) => p?.name).filter(Boolean);
+  if (!r.potencyBonus && !r.extraDice && !properties.length) return null;
+  return {
+    potencyBonus: r.potencyBonus,
+    extraDice: r.extraDice,
+    strikingLabel: item.runes.striking && STRIKING[item.runes.striking]
+      ? STRIKING[item.runes.striking].label
+      : null,
+    properties,
+  };
+};
+
+/** Human-readable one-line breakdown: "+1 potency · +1 die (Striking) · Vitalizing". */
+export const formatRuneBreakdown = (breakdown) => {
+  if (!breakdown) return '';
+  const parts = [];
+  if (breakdown.potencyBonus) parts.push(`+${breakdown.potencyBonus} potency`);
+  if (breakdown.extraDice) {
+    const diceWord = breakdown.extraDice === 1 ? 'die' : 'dice';
+    parts.push(`+${breakdown.extraDice} ${diceWord}${breakdown.strikingLabel ? ` (${breakdown.strikingLabel})` : ''}`);
+  }
+  (breakdown.properties || []).forEach((p) => parts.push(p));
+  return parts.join(' · ');
+};

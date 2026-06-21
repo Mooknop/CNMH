@@ -120,6 +120,30 @@ describe('getStrikes weapon runes (#548)', () => {
     expect(pick.source).toBe('+1 Striking Pick'); // derived display name
   });
 
+  test('attaches a runeBreakdown to a runed strike (#608)', () => {
+    const char = {
+      ...martialChar,
+      inventory: [{
+        id: 'i5', name: 'Pick', runes: { potency: 1, striking: 'striking' },
+        strikes: { name: 'Pick Strike', proficiency: 'martial', type: 'melee', damage: '1d6' },
+      }],
+    };
+    const pick = getStrikes(char).find((s) => s.name === 'Pick Strike');
+    expect(pick.runeBreakdown).toEqual({
+      potencyBonus: 1, extraDice: 1, strikingLabel: 'Striking', properties: [],
+    });
+  });
+
+  test('non-runed strikes carry no runeBreakdown key', () => {
+    const char = {
+      ...martialChar,
+      inventory: [{ id: 'i6', name: 'Club', strikes: { name: 'Club Strike', proficiency: 'martial', type: 'melee', damage: '1d6' } }],
+    };
+    const club = getStrikes(char).find((s) => s.name === 'Club Strike');
+    expect(club).toBeDefined();
+    expect('runeBreakdown' in club).toBe(false);
+  });
+
   test('property-rune riders are translated onto the strike', () => {
     const rider = { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' };
     const char = {

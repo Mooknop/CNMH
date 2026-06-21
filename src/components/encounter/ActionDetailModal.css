@@ -126,6 +126,13 @@
   margin: 0;
 }
 
+/* Rune source breakdown (#608) */
+.adm-runes {
+  font-size: var(--text-xs);
+  color: var(--shell-text-secondary);
+  margin: var(--space-1) 0 0;
+}
+
 /* Footer */
 .adm-footer {
   display: flex;

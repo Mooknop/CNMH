@@ -4,7 +4,7 @@
 import { getAbilityModifier, getAttackBonusValue } from './CharacterUtils';
 import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
-import { resolveWeapon, scaleDamageDice } from './weaponRunes';
+import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
 
 /**
  * Compute the ability modifier, proficiency value, attack bonus, and damage string
@@ -155,6 +155,8 @@ export const getStrikes = (character) => {
           : null;
         const potencyBonus = resolved ? resolved.potencyBonus : (item.potency || 0);
         const sourceName = resolved ? resolved.name : item.name;
+        // Rune source breakdown (#608) — where the bonus/dice/riders come from.
+        const runeBreakdown = buildRuneBreakdown(item);
 
         const strikesArray = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
         return strikesArray.map(weaponStrike => {
@@ -185,6 +187,8 @@ export const getStrikes = (character) => {
             ...(weaponStrike.variants ? { variants: weaponStrike.variants } : {}),
             // Damage riders (#222 + #548 property runes) — carried through so the damage step sees them.
             ...(riders.length ? { riders } : {}),
+            // Rune source breakdown (#608) — present only for runed weapons.
+            ...(runeBreakdown ? { runeBreakdown } : {}),
             // Gated: a weapon's Strike is only usable while it is wielded
             // (held), unless the catalog flags it noHandRequired.
             active: itemAbilitiesActive(item),

@@ -6,6 +6,7 @@ import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
 import ActionIcon from '../shared/ActionIcon';
 import UseActionChip from '../shared/UseActionChip';
+import { formatRuneBreakdown } from '../../utils/weaponRunes';
 import './ActionDetailModal.css';
 
 // Degree label → CSS modifier
@@ -120,6 +121,14 @@ const ActionDetailModal = ({
         {/* Source attribution */}
         {item.source && (
           <p className="adm-source">From: {item.source}</p>
+        )}
+
+        {/* Rune source breakdown (#608) — where a runed strike's bonus, extra
+            dice, and riders come from. */}
+        {item.runeBreakdown && (
+          <p className="adm-runes" data-testid="adm-runes">
+            Runes: {formatRuneBreakdown(item.runeBreakdown)}
+          </p>
         )}
 
         {/* Inactive hint */}
