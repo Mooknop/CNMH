@@ -1,4 +1,5 @@
 import { getStrikes } from './strikeUtils';
+import { maneuverDamageTalisman } from './talismanActivation';
 
 const minimalCharacter = {
   id: 'char1',
@@ -142,6 +143,30 @@ describe('getStrikes weapon runes (#548)', () => {
     const club = getStrikes(char).find((s) => s.name === 'Club Strike');
     expect(club).toBeDefined();
     expect('runeBreakdown' in club).toBe(false);
+  });
+
+  test('rune riders and a talisman effect coexist on one weapon, both feeding the damage step (#609)', () => {
+    const vitalizingRider = { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' };
+    const axe = {
+      id: 'i7', name: 'Greataxe',
+      runes: { potency: 2, property: [{ id: 'vitalizing', name: 'Vitalizing', rider: vitalizingRider }] },
+      strikes: { name: 'Axe Strike', proficiency: 'martial', type: 'melee', damage: '1d12' },
+    };
+    // The talisman is a separate inventory item affixed to the same weapon.
+    const tripTalisman = {
+      uid: 't9', name: 'Fearful Pennant', traits: ['Talisman'],
+      talisman: { affixTo: 'weapon', activation: { effect: { kind: 'damage', amount: 3, damageType: 'mental', onManeuver: 'trip' } } },
+    };
+
+    // Rune source: the strike carries the translated property-rune rider.
+    const strike = getStrikes({ ...martialChar, inventory: [axe] }).find((s) => s.name === 'Axe Strike');
+    expect(strike.riders).toEqual([{
+      id: 'rune-vitalizing-persistent', label: 'Vitalizing (vs undead)',
+      persistent: { dice: '1d6', type: 'vitality' }, appliesVsTrait: 'undead',
+    }]);
+
+    // Talisman source: independently retrievable, untouched by the runes.
+    expect(maneuverDamageTalisman([tripTalisman], 'trip')).toBe(tripTalisman);
   });
 
   test('property-rune riders are translated onto the strike', () => {
