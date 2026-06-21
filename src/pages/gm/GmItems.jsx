@@ -223,7 +223,17 @@ const itemFromForm = (f) => {
   delete out.potency;
   const potencyTier = parseInt(f.runePotency, 10) || 0;
   const striking = f.runeStriking && f.runeStriking !== 'none' ? f.runeStriking : null;
-  const property = (f.runeProperty || []).filter(Boolean).slice(0, potencyTier);
+  // Property runes occupy slots equal to the potency value (#607). Over-slotting
+  // is rejected (not silently truncated) so the GM never loses a rune unawares;
+  // striking has no potency prerequisite.
+  const property = (f.runeProperty || []).filter(Boolean);
+  if (property.length > potencyTier) {
+    throw new Error(
+      potencyTier === 0
+        ? `Property runes need a potency rune to hold them. Add potency, or remove the property ${property.length === 1 ? 'rune' : 'runes'}.`
+        : `This weapon has ${property.length} property runes but its +${potencyTier} potency grants only ${potencyTier} slot${potencyTier === 1 ? '' : 's'}. Remove the extra ${property.length - potencyTier === 1 ? 'rune' : 'runes'} or raise potency.`
+    );
+  }
   if (potencyTier > 0 || striking || property.length || Object.keys(f.runeRest || {}).length) {
     out.runes = {
       ...(f.runeRest || {}),
@@ -532,9 +542,17 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     .slice()
     .sort((a, b) => String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase()));
   const runeById = new Map(propertyRuneCatalog.map((r) => [String(r.id), r]));
-  const propertySlots = e.runeProperty.slice(0, runePotencyTier);
-  const selectedPropertyRunes = propertySlots.map((id) => runeById.get(String(id))).filter(Boolean);
-  const hasRunes = runePotencyTier > 0 || !!runeStrikingKey || selectedPropertyRunes.length > 0;
+  // Property runes occupy slots equal to the potency value (#607); striking is
+  // potency-independent. `selectedProperty` is the dense list of picked ids;
+  // anything past the tier is over-slotted (potency was lowered, or stale data)
+  // and is surfaced + blocked on save rather than silently dropped.
+  const selectedProperty = e.runeProperty.filter(Boolean);
+  const propertyOverflow = selectedProperty.slice(runePotencyTier);
+  const selectedPropertyRunes = selectedProperty
+    .slice(0, runePotencyTier)
+    .map((id) => runeById.get(String(id)))
+    .filter(Boolean);
+  const hasRunes = runePotencyTier > 0 || !!runeStrikingKey || selectedProperty.length > 0;
   const runePreview = resolveWeapon(
     { name: e.name, price: e.price.trim() !== '' ? toNum(e.price) : 0 },
     {
@@ -545,14 +563,19 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
   const showRunes = !isSpellItem && (e.strikes.length > 0 || hasRunes || e.legacyPotency != null);
 
-  // Set one property slot (by index) to a rune id (or '' to clear it), keeping
-  // the array exactly potency-tier long so empty slots round-trip cleanly.
+  // Set one property slot (by index) within the dense id list — clearing a slot
+  // removes it, picking in an empty trailing slot appends. Overflow entries are
+  // preserved (not silently dropped) so the GM resolves them explicitly (#607).
   const setPropertySlot = (slotIdx, id) => {
-    const next = Array.from({ length: runePotencyTier }, (_, i) =>
-      i === slotIdx ? id : (e.runeProperty[i] || '')
-    );
-    set({ runeProperty: next.filter((v, i) => v || i < runePotencyTier) });
+    const cur = e.runeProperty.filter(Boolean);
+    let next;
+    if (!id) next = cur.filter((_, i) => i !== slotIdx);
+    else if (slotIdx < cur.length) next = cur.map((v, i) => (i === slotIdx ? id : v));
+    else next = [...cur, id];
+    set({ runeProperty: next });
   };
+  const removePropertyRune = (idx) =>
+    set({ runeProperty: e.runeProperty.filter(Boolean).filter((_, i) => i !== idx) });
 
   // Effect-consumable picker options (mirrors the scroll/wand spell-ref select,
   // including the dangling-ref option so a stale id can be repointed).
@@ -845,29 +868,59 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
             </div>
           </div>
 
-          {/* Property-rune slots (#548 Slice 3b): a weapon holds property runes
-              up to its potency value, so the slot count IS the potency tier. */}
+          {/* Property-rune slots (#548 Slice 3b / #607): a weapon holds property
+              runes up to its potency value, so the slot count IS the potency
+              tier. Over-slotted runes (potency lowered, or stale data) are shown
+              and removable rather than silently dropped. */}
           <div className="form-group" data-testid="item-rune-property">
             <label>property runes ({runePotencyTier} {runePotencyTier === 1 ? 'slot' : 'slots'})</label>
-            {runePotencyTier === 0 ? (
+            {runePotencyTier === 0 && propertyOverflow.length === 0 ? (
               <p className="gm-hint">Add potency to unlock property-rune slots.</p>
             ) : (
               Array.from({ length: runePotencyTier }, (_, i) => (
                 <select
                   key={i}
                   aria-label={`rune-property-${i}`}
-                  value={propertySlots[i] || ''}
+                  value={selectedProperty[i] || ''}
                   onChange={(ev) => setPropertySlot(i, ev.target.value)}
                 >
                   <option value="">— none —</option>
                   {propertyRuneCatalog.map((r) => (
                     <option key={r.id} value={r.id}>{r.name || r.id}</option>
                   ))}
-                  {propertySlots[i] && !runeById.has(String(propertySlots[i])) && (
-                    <option value={propertySlots[i]}>(unknown: {propertySlots[i]})</option>
+                  {selectedProperty[i] && !runeById.has(String(selectedProperty[i])) && (
+                    <option value={selectedProperty[i]}>(unknown: {selectedProperty[i]})</option>
                   )}
                 </select>
               ))
+            )}
+            {propertyOverflow.length > 0 && (
+              <div className="gm-warn" data-testid="item-rune-property-overflow">
+                <p>
+                  {propertyOverflow.length} property {propertyOverflow.length === 1 ? 'rune exceeds' : 'runes exceed'}{' '}
+                  {runePotencyTier === 0
+                    ? 'this weapon’s lack of a potency rune'
+                    : `the +${runePotencyTier} potency’s ${runePotencyTier} slot${runePotencyTier === 1 ? '' : 's'}`}
+                  {' '}— raise potency or remove {propertyOverflow.length === 1 ? 'it' : 'them'}. Saving is blocked until resolved.
+                </p>
+                {propertyOverflow.map((id, k) => {
+                  const idx = runePotencyTier + k;
+                  const r = runeById.get(String(id));
+                  return (
+                    <div key={idx} className="gm-row gm-rank-row">
+                      <span>{r ? (r.name || r.id) : `(unknown: ${id})`}</span>
+                      <button
+                        type="button"
+                        className="btn-small btn-danger"
+                        aria-label={`remove-overflow-property-${k}`}
+                        onClick={() => removePropertyRune(idx)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
