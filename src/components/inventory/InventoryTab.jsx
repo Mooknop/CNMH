@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './InventoryTab.css';
 import './ItemCard.css';
 import ItemRow from './ItemRow';
 import ContainersList from './ContainersList';
+import GiveGoldModal from './GiveGoldModal';
 import { formatBulk, getBulkStatus, applyConsumedOverlay, flattenInventory } from '../../utils/InventoryUtils';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, affixedTalismansByHost, itemUidOf } from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { usePlayMode } from '../../hooks/usePlayMode';
 
 /**
  * Component for displaying character inventory as item cards.
@@ -30,6 +32,11 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const [itemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
   // Affixed-talisman overlay (#254/#339) — talisman uid → host uid.
   const [affixed] = useSyncedState(affixedKey(character?.id), {});
+  // Player-to-player gold transfer (#655) — only out of combat (giving gold is
+  // an Interact action in an encounter, out of scope here).
+  const { mode } = usePlayMode();
+  const canGive = mode === 'exploration' || mode === 'downtime';
+  const [giveOpen, setGiveOpen] = useState(false);
   if (!charData) return null;
 
   const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
@@ -63,7 +70,19 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
     <div className="inventory-tab">
       <div className="inventory-header">
         <h2>Inventory</h2>
-        <span className="inventory-gold">💰 {gold} gp</span>
+        <div className="inventory-gold-group">
+          <span className="inventory-gold">💰 {gold} gp</span>
+          {canGive && (
+            <button
+              type="button"
+              className="btn-small btn-secondary inventory-give-btn"
+              data-testid="give-gold-open"
+              onClick={() => setGiveOpen(true)}
+            >
+              Give gold
+            </button>
+          )}
+        </div>
       </div>
       <div className="bulk-management">
         <div className="bulk-status">
@@ -121,6 +140,12 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         talismansByHost={talismansByHost}
         themeColor={characterColor}
         onItemClick={onItemClick}
+      />
+
+      <GiveGoldModal
+        isOpen={giveOpen}
+        onClose={() => setGiveOpen(false)}
+        character={character}
       />
     </div>
   );
