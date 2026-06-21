@@ -168,4 +168,60 @@ describe('MoveGridPicker', () => {
     );
     expect(screen.getByText('Done')).toBeInTheDocument();
   });
+
+  describe('pass-through cells (#456)', () => {
+    const props = {
+      origin: { col: 10, row: 10 },
+      reachable: [
+        { col: 11, row: 10, feet: 5, terrain: 'normal', passThrough: true },
+      ],
+      blocked: [],
+      maxFeet: 25,
+    };
+
+    it("renders an ally's square as a clickable pass-through button", () => {
+      const onSelect = vi.fn();
+      const { container } = render(
+        <MoveGridPicker {...props} onSelect={onSelect} onCancel={vi.fn()} />
+      );
+      const cell = screen.getByLabelText(/Move to 11,10 \(through ally\) — 5 ft/);
+      expect(cell.tagName).toBe('BUTTON');
+      expect(container.querySelector('.mgp-cell--passthrough')).toBeInTheDocument();
+      fireEvent.click(cell);
+      expect(onSelect).toHaveBeenCalledWith({ col: 11, row: 10 });
+    });
+
+    it('notes both pass-through and difficult terrain in the label', () => {
+      render(
+        <MoveGridPicker
+          {...props}
+          reachable={[{ col: 11, row: 10, feet: 10, terrain: 'difficult', passThrough: true }]}
+          onSelect={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      );
+      expect(
+        screen.getByLabelText(/Move to 11,10 \(through ally\) \(difficult terrain\) — 10 ft/)
+      ).toBeInTheDocument();
+    });
+
+    it('disables the dismiss button and shows a hint when cancelDisabled', () => {
+      const onCancel = vi.fn();
+      render(
+        <MoveGridPicker
+          {...props}
+          cancelLabel="Done"
+          cancelDisabled
+          cancelHint="Step off your ally's square to stop."
+          onSelect={vi.fn()}
+          onCancel={onCancel}
+        />
+      );
+      const done = screen.getByText('Done');
+      expect(done).toBeDisabled();
+      fireEvent.click(done);
+      expect(onCancel).not.toHaveBeenCalled();
+      expect(screen.getByText("Step off your ally's square to stop.")).toBeInTheDocument();
+    });
+  });
 });
