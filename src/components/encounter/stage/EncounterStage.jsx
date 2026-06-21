@@ -145,7 +145,7 @@ const EncounterStage = ({ character, characterColor }) => {
           onClose={close}
           ability={using.ability}
           cost="reaction"
-          verb={using.castSource ? 'Cast' : 'Use'}
+          verb={using.castSource || using.ability?.isSpell ? 'Cast' : 'Use'}
           castSource={using.castSource}
           character={character}
           themeColor={characterColor}
