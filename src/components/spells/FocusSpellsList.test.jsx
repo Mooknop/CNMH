@@ -11,9 +11,23 @@ vi.mock('../../contexts/ContentContext', () => ({
 }));
 
 import { useContent } from '../../contexts/ContentContext';
+
+// Focus spells are catalog references only (epic #622). The default catalog
+// carries the shared fixture spell so baseCharacter's `spellRef` resolves.
+const divineLanceCatalog = {
+  id: 'divine-lance',
+  name: 'Divine Lance',
+  level: 1,
+  baseLevel: 1,
+  description: 'You unleash divine energy.',
+  actions: '2',
+  traits: ['divine', 'evocation'],
+  range: '30 feet',
+};
+
 // Restore default before each test so clearAllMocks doesn't leave it undefined.
 beforeEach(() => {
-  useContent.mockReturnValue({ spells: [] });
+  useContent.mockReturnValue({ spells: [divineLanceCatalog] });
 });
 
 vi.mock('../../utils/SpellUtils', () => ({
@@ -49,16 +63,7 @@ vi.mock('../../utils/SpellUtils', () => ({
   },
 }));
 
-const baseFocusSpell = {
-  id: 'fs1',
-  name: 'Divine Lance',
-  level: 1,
-  baseLevel: 1,
-  description: 'You unleash divine energy.',
-  actions: '2',
-  traits: ['divine', 'evocation'],
-  range: '30 feet',
-};
+const baseFocusSpell = { spellRef: 'divine-lance' };
 
 const baseCharacter = {
   id: '1',
@@ -231,13 +236,14 @@ describe('FocusSpellsList — spellRef resolution', () => {
     expect(screen.getByText(/unknown spell: nonexistent-spell/i)).toBeInTheDocument();
   });
 
-  it('inline entries (no spellRef) still render unchanged — back-compat', () => {
+  it('renders a stub for an entry with no spellRef (no inline back-compat, #622)', () => {
     useContent.mockReturnValue({ spells: [] });
     const char = {
       id: '1', level: 3,
       focus_spells: [{ id: 'fs1', name: 'Divine Lance', level: 1 }],
     };
     render(<FocusSpellsList character={char} characterColor="#333" />);
-    expect(screen.getByText('Divine Lance')).toBeInTheDocument();
+    expect(screen.queryByText('Divine Lance')).not.toBeInTheDocument();
+    expect(screen.getByText(/unknown spell/i)).toBeInTheDocument();
   });
 });
