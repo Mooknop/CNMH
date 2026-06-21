@@ -83,3 +83,44 @@ describe('useCharacter — scroll/wand tradition gating', () => {
     expect(result.current.flags.hasWands).toBe(false);
   });
 });
+
+describe('useCharacter — staff tradition gating', () => {
+  // Inline staff with mixed-tradition spells; staff resolution is independent
+  // of the mocked SpellUtils extractors.
+  const staffChar = (spellcasting) => ({
+    ...baseChar(spellcasting),
+    inventory: [
+      {
+        uid: 'staff-0',
+        id: 'test-staff',
+        name: 'Test Staff',
+        quantity: 1,
+        staff: {
+          name: 'Test Staff',
+          spells: [
+            { name: 'Arcane Spell', level: 1, traditions: ['arcane'] },
+            { name: 'Divine Spell', level: 1, traditions: ['divine'] },
+          ],
+        },
+      },
+    ],
+  });
+
+  it('keeps only the matching-tradition staff spell', () => {
+    const { result } = renderHook(() => useCharacter(staffChar({ tradition: 'Arcane' })));
+    expect(names(result.current.staffSpells)).toEqual(['Arcane Spell']);
+    expect(result.current.flags.hasStaff).toBe(true);
+  });
+
+  it('hides the whole staff (no category button) when no spell matches', () => {
+    const { result } = renderHook(() => useCharacter(staffChar({ tradition: 'Primal' })));
+    expect(result.current.staffSpells).toEqual([]);
+    expect(result.current.flags.hasStaff).toBe(false);
+  });
+
+  it('hides the staff for a non-caster', () => {
+    const { result } = renderHook(() => useCharacter(staffChar(null)));
+    expect(result.current.staffSpells).toEqual([]);
+    expect(result.current.flags.hasStaff).toBe(false);
+  });
+});

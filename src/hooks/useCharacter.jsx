@@ -199,12 +199,18 @@ export const useCharacter = (character) => {
     const staffItem   = effectiveInventory.find((e) => e && e.staff) || null;
     const staff       = staffItem ? staffItem.staff : null;
     const staffActive = staff ? itemAbilitiesActive(staffItem) : false;
-    const staffSpells = (staff?.spells || []).map((s) => ({
-      ...s,
-      fromStaff: true,
-      staffName: staff?.name || staffItem?.name || 'Staff',
-      active: staffActive,
-    }));
+    // Tradition gating (epic #645, S4): cast a spell from a staff and you must
+    // share its tradition — non-matching staff spells are hidden, same as
+    // scrolls/wands. A staff whose spells are all off-tradition shows no
+    // category button (hasStaff derives from the gated list below).
+    const staffSpells = (staff?.spells || [])
+      .filter((s) => canActivateSpellItem(character, s, { itemType: 'staff' }))
+      .map((s) => ({
+        ...s,
+        fromStaff: true,
+        staffName: staff?.name || staffItem?.name || 'Staff',
+        active: staffActive,
+      }));
 
     const eldPowers   = spellcasting.eldPowers || [];
 
@@ -242,7 +248,7 @@ export const useCharacter = (character) => {
       // wands gets no category button (the list would be empty anyway).
       hasScrolls               : scrollSpells.length > 0,
       hasWands                 : wandSpells.length > 0,
-      hasStaff                 : !!staff,
+      hasStaff                 : staffSpells.length > 0,
       staffActive              : staffActive,
       hasEldPowers             : eldPowers.length > 0,
       isThaumaturge            : character.class === 'Thaumaturge' && !!character.thaumaturge,
