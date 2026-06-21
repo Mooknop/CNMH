@@ -121,6 +121,29 @@ describe('useReconciliation', () => {
     expect(result.current.totalActive).toBe(0);
   });
 
+  it('surfaces a gold divergence from the gold overlay (#558)', () => {
+    sessionState['c1:gold'] = 55; // doc has no gold field ⇒ baseline 0
+    const { result } = renderHook(() => useReconciliation());
+    expect(result.current.pendingByChar).toHaveLength(1);
+    expect(result.current.pendingByChar[0].changes[0]).toMatchObject({
+      overlay: 'gold',
+      detail: '0 → 55 gp',
+    });
+  });
+
+  it('sync writes gold onto the doc and does NOT clear the gold overlay', async () => {
+    sessionState['c1:gold'] = 55;
+    const { result } = renderHook(() => useReconciliation());
+
+    await act(async () => { await result.current.sync(); });
+
+    const [, , nextRaw] = mockSaveDocument.mock.calls[0];
+    expect(nextRaw.gold).toBe(55);
+    // gold overlay is the live source of truth — never written/cleared on sync
+    expect(mockSendUpdate).not.toHaveBeenCalledWith('c1', 'gold', expect.anything());
+    expect(result.current.canUndo).toBe(true);
+  });
+
   it('keeps the overlay and records the failure when the doc write fails', async () => {
     sessionState['c1:consumed'] = { 'Healing Potion': 2 };
     mockSaveDocument.mockRejectedValueOnce(new Error('boom'));

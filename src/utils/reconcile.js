@@ -113,11 +113,33 @@ const computeConsumed = (resolved, consumed) => {
     });
 };
 
+// Gold (#558). Gold lives only in the live `cnmh_gold_<id>` overlay today — the
+// doc carries no gold field — so the divergence is the live value vs the doc's
+// gold (absent ⇒ 0), and committing writes/updates `gold` on the doc. The
+// overlay is the live source of truth and stays put (not cleared on commit): it
+// already equals the value we wrote, so there's no further divergence.
+const computeGold = (resolved, raw, goldOverlay) => {
+  if (typeof goldOverlay !== 'number' || !Number.isFinite(goldOverlay)) return [];
+  const docGold = Number(raw.gold) || 0;
+  if (goldOverlay === docGold) return [];
+  return [{
+    kind: PENDING_KINDS.GOLD_SET,
+    charId: resolved.id,
+    overlay: 'gold',
+    overlayRef: 'gold',
+    label: 'Gold',
+    detail: `${docGold} → ${goldOverlay} gp`,
+    before: docGold,
+    after: goldOverlay,
+    apply: (rawDoc) => ({ ...rawDoc, gold: goldOverlay }),
+  }];
+};
+
 // overlay name -> computer. Stubs return [] until their sub-issue wires them, so
 // the engine + descriptor model are in place now (the kinds already exist).
 const COMPUTERS = {
   consumed: (resolved, _raw, overlay) => computeConsumed(resolved, overlay),
-  gold: () => [], // #558
+  gold: (resolved, raw, overlay) => computeGold(resolved, raw, overlay),
   loadout: () => [], // #559
   acquired: () => [], // #665
   removed: () => [], // #665

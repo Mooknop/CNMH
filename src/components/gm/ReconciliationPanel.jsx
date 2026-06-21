@@ -27,9 +27,9 @@ const ReconciliationPanel = () => {
     <section className="gm-recon" aria-label="Pending player changes">
       <h3 className="gm-recon-title">Pending player changes</h3>
       <p className="gm-recon-hint">
-        Durable changes players made this session (used consumables, …) that
-        haven&apos;t been written to the character doc yet. Sync to commit them so
-        they survive a reseed.
+        Durable changes players made this session (used consumables, gold spent
+        or received, …) that haven&apos;t been written to the character doc yet.
+        Sync to commit them so they survive a reseed.
       </p>
 
       {pendingByChar.length === 0 ? (
