@@ -39,12 +39,19 @@ const spellTraditions = (spell) =>
  *
  * @param {Object} character
  * @param {Object} spell - catalog-resolved spell (expects a `traditions` array)
- * @param {{ itemType?: 'scroll'|'wand'|'staff' }} [opts] - source kind; reserved
- *   for the scroll-only override (Ashka, S5 #650). Unused here.
+ * @param {{ itemType?: 'scroll'|'wand'|'staff' }} [opts] - source kind; drives
+ *   the scroll-only override below.
  * @returns {boolean}
  */
 export const canActivateSpellItem = (character, spell, opts = {}) => {
-  void opts; // itemType is consumed by the S5 override; accepted now for callers.
+  const { itemType } = opts;
+
+  // Scroll-of-any-tradition override (Ashka, #650): a character flagged with
+  // `spellcasting.scrollAnyTradition` activates scrolls regardless of tradition.
+  // SCROLLS ONLY — wands and staves remain gated by the normal check.
+  if (itemType === 'scroll' && character?.spellcasting?.scrollAnyTradition) {
+    return true;
+  }
 
   // Data fallback: a spell carrying no tradition data is allowed rather than
   // silently hidden. Post-S1 backfill every non-focus catalog spell has
