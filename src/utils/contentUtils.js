@@ -179,6 +179,22 @@ export const resolveFocusSpells = (arr, spellMap) => {
   });
 };
 
+// Resolve a character's prepared/known repertoire (`spellcasting.spells`). Each
+// entry references a catalog spell by `spellRef` (epic #622), replaced by the
+// catalog spell + entry-local overrides (e.g. a per-character `signature` flag).
+// During the migration this still passes a no-`spellRef` entry through as inline
+// back-compat; S3 lockdown drops that. Same dangling-ref stub as the others.
+export const resolveRepertoireSpells = (arr, spellMap) => {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map((entry) => {
+    if (!entry || typeof entry !== 'object' || entry.spellRef == null) return entry;
+    const spell = spellMap && spellMap.get(String(entry.spellRef));
+    if (!spell) return { name: `(unknown spell: ${entry.spellRef})`, level: 0 };
+    const { spellRef, ...overrides } = entry;
+    return { ...spell, ...overrides };
+  });
+};
+
 // All known locations of a focus/devotion/ki/bloodline spell list inside a
 // character document. Each path is an array of string keys (deep-get / deep-set).
 // Mirrors FocusSpellsList.getFocusSpells()'s priority order.
@@ -439,6 +455,16 @@ export const resolveCharacterItems = (character, items, spells, runes) => {
   }
   if (Array.isArray(character.crafting)) {
     out = { ...out, crafting: resolveCraftingRecipes(out.crafting, catalogMap, spMap, character.level, runeMap) };
+  }
+  // Repertoire (`spellcasting.spells`) entries are catalog refs (epic #622);
+  // resolve them here so every player-facing consumer (SpellsList, the cast
+  // flow, encounter) sees full spell data. The GM editor reads rawCharacters,
+  // so the authored refs are never clobbered.
+  if (out.spellcasting && Array.isArray(out.spellcasting.spells)) {
+    out = {
+      ...out,
+      spellcasting: { ...out.spellcasting, spells: resolveRepertoireSpells(out.spellcasting.spells, spMap) },
+    };
   }
   return out;
 };
