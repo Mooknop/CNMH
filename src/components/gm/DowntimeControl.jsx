@@ -24,6 +24,7 @@ const DowntimeControl = () => {
   const [block, setBlock] = useSyncedState('cnmh_downtimeblock_global', null);
   const [, setSummary] = useSyncedState('cnmh_downtimesummary_global', null);
   const [taskMap, setTaskMap] = useSyncedState('cnmh_earnincometask_global', null);
+  const [benchMap, setBenchMap] = useSyncedState('cnmh_downtimebench_global', null);
   const [customValue, setCustomValue] = useState('');
   const [customUnit, setCustomUnit] = useState('hours');
   const [periodValue, setPeriodValue] = useState('');
@@ -105,6 +106,20 @@ const DowntimeControl = () => {
     });
   };
 
+  // Per-PC Retrain/Research benchmark, entered in days (8h/day). Reaching it
+  // surfaces the player's completion prompt for that accumulate activity.
+  const setBenchmark = (charId, activity, raw) => {
+    setBenchMap((prev) => {
+      const next = { ...(prev || {}) };
+      const forChar = { ...(next[charId] || {}) };
+      if (raw === '') delete forChar[activity];
+      else forChar[activity] = Math.max(1, Math.min(99, parseInt(raw, 10) || 0));
+      if (Object.keys(forChar).length === 0) delete next[charId];
+      else next[charId] = forChar;
+      return next;
+    });
+  };
+
   return (
     <div className="pmc-downtime">
       <span className="pmc-label">Downtime Period</span>
@@ -166,6 +181,33 @@ const DowntimeControl = () => {
                   <span className="pmc-downtime-task-dc">
                     {level != null ? `DC ${taskDc(level)}` : '—'}
                   </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <span className="pmc-label">Retrain / Research Benchmarks (days)</span>
+          <div className="pmc-downtime-tasks">
+            {(characters || []).map((c) => {
+              const bench = benchMap?.[c.id] || {};
+              return (
+                <div key={c.id} className="pmc-downtime-bench-row">
+                  <span className="pmc-downtime-task-name">{c.name}</span>
+                  {['Retrain', 'Research'].map((activity) => (
+                    <label key={activity} className="pmc-downtime-bench-field">
+                      {activity[0]}
+                      <input
+                        className="pmc-downtime-task-input"
+                        type="number"
+                        min="1"
+                        max="99"
+                        placeholder="—"
+                        value={bench[activity] ?? ''}
+                        onChange={(e) => setBenchmark(c.id, activity, e.target.value)}
+                        aria-label={`${c.name} ${activity} benchmark days`}
+                      />
+                    </label>
+                  ))}
                 </div>
               );
             })}

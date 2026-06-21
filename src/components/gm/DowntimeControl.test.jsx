@@ -338,4 +338,47 @@ describe('DowntimeControl', () => {
       expect(mockSetTaskMap.mock.calls[0][0]({ c1: 8 })).toEqual({});
     });
   });
+
+  describe('Retrain / Research benchmarks', () => {
+    const characters = [{ id: 'c1', name: 'Ashka' }];
+    const mockSetBench = vi.fn();
+
+    const withActiveBlockAndBench = (benchMap) => {
+      useSyncedState.mockImplementation((key) => {
+        if (key === 'cnmh_downtimeblock_global') {
+          return [{ days: 7, active: true, startedAt: mockGameDate }, mockSetBlock];
+        }
+        if (key === 'cnmh_downtimebench_global') return [benchMap, mockSetBench];
+        return [null, vi.fn()];
+      });
+    };
+
+    const renderWithChars = () =>
+      render(
+        <CharacterContext.Provider value={{ characters }}>
+          <DowntimeControl />
+        </CharacterContext.Provider>
+      );
+
+    it('lists per-PC Retrain and Research day inputs', () => {
+      withActiveBlockAndBench(null);
+      renderWithChars();
+      expect(screen.getByLabelText('Ashka Retrain benchmark days')).toBeInTheDocument();
+      expect(screen.getByLabelText('Ashka Research benchmark days')).toBeInTheDocument();
+    });
+
+    it('writes a clamped per-activity benchmark', () => {
+      withActiveBlockAndBench(null);
+      renderWithChars();
+      fireEvent.change(screen.getByLabelText('Ashka Retrain benchmark days'), { target: { value: '7' } });
+      expect(mockSetBench.mock.calls[0][0]({})).toEqual({ c1: { Retrain: 7 } });
+    });
+
+    it('clears an activity (and the PC) when emptied', () => {
+      withActiveBlockAndBench({ c1: { Retrain: 7 } });
+      renderWithChars();
+      fireEvent.change(screen.getByLabelText('Ashka Retrain benchmark days'), { target: { value: '' } });
+      expect(mockSetBench.mock.calls[0][0]({ c1: { Retrain: 7 } })).toEqual({});
+    });
+  });
 });
