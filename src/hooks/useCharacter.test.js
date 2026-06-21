@@ -366,6 +366,10 @@ describe('useCharacter', () => {
       level,
       abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
       feats: [],
+      // Arcane tradition: the Hammer's 8 staff spells are all arcane/occult, so
+      // this caster sees them all once the artifact tier unlocks — isolating
+      // this suite to LEVEL gating, not tradition gating (#649).
+      spellcasting: { tradition: 'Arcane' },
       inventory: [{ uid: 'jadeish-0', ref: 'xanderghuls-flawless-hammer', quantity: 1 }],
     });
 
