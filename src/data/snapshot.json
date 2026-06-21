@@ -5459,23 +5459,7 @@
           "id": "feat-1",
           "innate": [
             {
-              "name": "Electric Arc",
-              "level": 0,
-              "baseLevel": 1,
-              "traits": [
-                "Cantrip",
-                "Concentrate",
-                "Electricity",
-                "Manipulate"
-              ],
-              "actions": "Two Actions",
-              "range": "30 feet",
-              "targets": "1 or 2 creatures",
-              "defense": "Reflex",
-              "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save.",
-              "heightened": {
-                "+1": "The damage increases by 1d4."
-              }
+              "spellRef": "electric-arc"
             }
           ],
           "name": "Dragon Spit",
@@ -7689,48 +7673,10 @@
           "id": "feat-13",
           "innate": [
             {
-              "id": "spell-3",
-              "name": "Guidance",
-              "level": 0,
-              "baseLevel": 1,
-              "traits": [
-                "Cantrip",
-                "Concentrate"
-              ],
-              "actions": "One Action",
-              "range": "30ft",
-              "description": "You ask for the guidance of supernatural entities, granting the target a +1 status bonus to one attack roll, Perception check, saving throw, or skill check the target attempts before the start of your next turn. The target chooses which roll to use the bonus on before rolling. If the target uses the bonus, the spell ends. Either way, they are immune to further Guidance for 1 hour.",
-              "immunityKey": "guidance",
-              "immunity": {
-                "duration": {
-                  "value": 1,
-                  "unit": "hour"
-                }
-              }
+              "spellRef": "guidance"
             },
             {
-              "id": "murmured-prayer-plus",
-              "name": "Murmured Prayer (+2 Guidance)",
-              "level": 0,
-              "baseLevel": 1,
-              "traits": [
-                "Cantrip",
-                "Concentrate"
-              ],
-              "actions": "One Action",
-              "range": "30ft",
-              "frequencyRule": {
-                "per": "day",
-                "uses": 1
-              },
-              "description": "You utter a prayer to a particularly relevant deity as part of casting Guidance: the target gains a +2 status bonus instead of +1 to one attack roll, Perception check, saving throw, or skill check before the start of your next turn. If the deity's goals do not align with your own, they may refuse to aid you. The target is immune to further Guidance for 1 hour either way.",
-              "immunityKey": "guidance",
-              "immunity": {
-                "duration": {
-                  "value": 1,
-                  "unit": "hour"
-                }
-              }
+              "spellRef": "murmured-prayer-plus"
             }
           ],
           "name": "Murmured Prayer",
