@@ -196,6 +196,22 @@ export const resolveRepertoireSpells = (arr, spellMap) => {
   });
 };
 
+// Resolve a feat/ancestry innate spell list (`feats[].innate`, `ancestry_spells`).
+// Each entry references a catalog spell by `spellRef` (epic #622), replaced by the
+// catalog spell + entry-local overrides (e.g. a once-per-day frequency variant).
+// During the migration this still passes a no-`spellRef` entry through as inline
+// back-compat; S4 lockdown drops that. Same dangling-ref stub as the others.
+export const resolveInnateSpells = (arr, spellMap) => {
+  if (!Array.isArray(arr)) return arr;
+  return arr.map((entry) => {
+    if (!entry || typeof entry !== 'object' || entry.spellRef == null) return entry;
+    const spell = spellMap && spellMap.get(String(entry.spellRef));
+    if (!spell) return { name: `(unknown spell: ${entry.spellRef})`, level: 0 };
+    const { spellRef, ...overrides } = entry;
+    return { ...spell, ...overrides };
+  });
+};
+
 // All known locations of a focus/devotion/ki/bloodline spell list inside a
 // character document. Each path is an array of string keys (deep-get / deep-set).
 // Mirrors FocusSpellsList.getFocusSpells()'s priority order.
@@ -466,6 +482,23 @@ export const resolveCharacterItems = (character, items, spells, runes) => {
       ...out,
       spellcasting: { ...out.spellcasting, spells: resolveRepertoireSpells(out.spellcasting.spells, spMap) },
     };
+  }
+  // Innate spells (feats[].innate and ancestry_spells) are catalog refs (epic
+  // #622); resolve them here so extractInnateSpells / InnateCastingList / the
+  // cast flow see full spell data. The GM editor reads rawCharacters, so the
+  // authored refs are never clobbered.
+  if (Array.isArray(out.feats)) {
+    out = {
+      ...out,
+      feats: out.feats.map((feat) =>
+        feat && Array.isArray(feat.innate)
+          ? { ...feat, innate: resolveInnateSpells(feat.innate, spMap) }
+          : feat,
+      ),
+    };
+  }
+  if (Array.isArray(out.ancestry_spells)) {
+    out = { ...out, ancestry_spells: resolveInnateSpells(out.ancestry_spells, spMap) };
   }
   return out;
 };

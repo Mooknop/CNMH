@@ -22,6 +22,7 @@ import {
   spellCatalogMap,
   resolveFocusSpells,
   resolveRepertoireSpells,
+  resolveInnateSpells,
   repointFocusSpells,
   resolveInventoryItem,
   resolveInventory,
@@ -809,6 +810,62 @@ describe('resolveRepertoireSpells', () => {
     expect(out.spellcasting.tradition).toBe('arcane');
     expect(out.spellcasting.spells[0]).toMatchObject({ id: 'fear', name: 'Fear' });
     expect(out.spellcasting.spells[1]).toMatchObject({ name: 'Summon Undead', signature: true });
+  });
+});
+
+describe('resolveInnateSpells', () => {
+  const innMap = spellCatalogMap([
+    { id: 'electric-arc', name: 'Electric Arc', level: 0, defense: 'Reflex' },
+    { id: 'guidance', name: 'Guidance', level: 0 },
+    { id: 'murmured-prayer-plus', name: 'Murmured Prayer (+2 Guidance)', level: 0 },
+  ]);
+
+  it('resolves a spellRef entry to the full catalog spell', () => {
+    const result = resolveInnateSpells([{ spellRef: 'electric-arc' }], innMap);
+    expect(result[0]).toMatchObject({ id: 'electric-arc', name: 'Electric Arc', defense: 'Reflex' });
+  });
+
+  it('applies an entry-local override (e.g. a frequency variant) over the catalog spell', () => {
+    const result = resolveInnateSpells(
+      [{ spellRef: 'murmured-prayer-plus', frequencyRule: { per: 'day', uses: 1 } }],
+      innMap,
+    );
+    expect(result[0].name).toBe('Murmured Prayer (+2 Guidance)');
+    expect(result[0].frequencyRule).toEqual({ per: 'day', uses: 1 });
+  });
+
+  it('yields a visible level-0 stub for a dangling spellRef', () => {
+    expect(resolveInnateSpells([{ spellRef: 'nope' }], innMap)[0]).toEqual({
+      name: '(unknown spell: nope)',
+      level: 0,
+    });
+  });
+
+  it('passes a no-spellRef inline entry through unchanged (back-compat until S4 lockdown)', () => {
+    const inline = { id: 'spell-3', name: 'Guidance', level: 0 };
+    expect(resolveInnateSpells([inline], innMap)[0]).toBe(inline);
+  });
+
+  it('returns a non-array input unchanged', () => {
+    expect(resolveInnateSpells(null, innMap)).toBeNull();
+    expect(resolveInnateSpells(undefined, innMap)).toBeUndefined();
+  });
+
+  it('resolveCharacterItems resolves feats[].innate and ancestry_spells refs', () => {
+    const sheet = {
+      id: 'caster',
+      level: 5,
+      feats: [
+        { id: 'feat-1', name: 'Dragon Spit', innate: [{ spellRef: 'electric-arc' }] },
+        { id: 'feat-2', name: 'No Spells Here' },
+      ],
+      ancestry_spells: [{ spellRef: 'guidance' }],
+    };
+    const out = resolveCharacterItems(sheet, [], [...innMap.values()]);
+    expect(out.feats[0].name).toBe('Dragon Spit'); // feat shape preserved
+    expect(out.feats[0].innate[0]).toMatchObject({ id: 'electric-arc', name: 'Electric Arc' });
+    expect(out.feats[1]).toEqual({ id: 'feat-2', name: 'No Spells Here' }); // innate-less feat untouched
+    expect(out.ancestry_spells[0]).toMatchObject({ id: 'guidance', name: 'Guidance' });
   });
 });
 
