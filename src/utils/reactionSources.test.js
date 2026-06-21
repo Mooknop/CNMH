@@ -33,6 +33,17 @@ describe('reactionSources', () => {
     expect(buildReactionSources({ reactions: null, staffSpells: null, focusSpells: null })).toEqual([]);
   });
 
+  it('tolerates a non-array focusSpells (e.g. a focus-point pool object)', () => {
+    // A sorcerer sheet may carry spellcasting.focus as a { max, current } pool;
+    // if that leaks in as focusSpells it must not crash the .filter (the bug
+    // that blacked out the encounter tab). The reactions still come through.
+    const reactions = [{ name: 'Nimble Dodge' }];
+    expect(() =>
+      buildReactionSources({ reactions, focusSpells: { max: 1, current: 1 } })
+    ).not.toThrow();
+    expect(buildReactionSources({ reactions, focusSpells: { max: 1, current: 1 } })).toEqual(reactions);
+  });
+
   it('castSourceOf maps the staff/focus flags', () => {
     expect(castSourceOf({ fromStaff: true })).toBe('staff');
     expect(castSourceOf({ fromFocus: true })).toBe('focus');

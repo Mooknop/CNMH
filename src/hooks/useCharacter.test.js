@@ -95,8 +95,32 @@ describe('useCharacter', () => {
     };
 
     const { result } = renderHook(() => useCharacter(character));
-    
+
     expect(result.current.abilityScores.strength).toBe(14);
+  });
+
+  it('focusSpells is the bloodline spell list, never the focus-point pool', () => {
+    // Sorcerer shape: spellcasting.focus is a { max, current } pool, while the
+    // actual bloodline focus spells live at spellcasting.bloodline.focus_spells.
+    // focusSpells must resolve to that array — a non-array pool object leaking
+    // through crashed the encounter tab's reaction assembly (.filter).
+    const character = {
+      id: 'jade',
+      name: 'Jade',
+      level: 5,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 18 },
+      inventory: [],
+      feats: [],
+      spellcasting: {
+        focus: { max: 1, current: 1 },
+        bloodline: { focus_spells: [{ spellRef: 'ancestral-memories', bloodline: true }] },
+      },
+    };
+
+    const { result } = renderHook(() => useCharacter(character));
+
+    expect(Array.isArray(result.current.focusSpells)).toBe(true);
+    expect(result.current.focusSpells).toEqual([{ spellRef: 'ancestral-memories', bloodline: true }]);
   });
 
   it('should memoize results when character data does not change', () => {
