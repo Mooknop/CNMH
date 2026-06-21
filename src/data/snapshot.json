@@ -4890,6 +4890,11 @@
                 "uid": "e-ehu3aa8fdbpx",
                 "ref": "torch",
                 "quantity": 5
+              },
+              {
+                "uid": "e-8ejpv8rjihyq",
+                "ref": "waterskin",
+                "quantity": 1
               }
             ]
           }
@@ -4927,6 +4932,36 @@
         {
           "uid": "e-v7zzpss30lde",
           "ref": "skeleton-key",
+          "quantity": 1
+        },
+        {
+          "uid": "e-upzich6yihxv",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-fewre97yihyp",
+          "ref": "holy-water",
+          "quantity": 2
+        },
+        {
+          "uid": "e-46mcarynihyp",
+          "ref": "padded-armor",
+          "quantity": 1
+        },
+        {
+          "uid": "e-zooar8g6ihyp",
+          "ref": "lesser-healing-potion",
+          "quantity": 1
+        },
+        {
+          "uid": "e-we1788s5ihyp",
+          "ref": "beacon-shot",
+          "quantity": 1
+        },
+        {
+          "uid": "e-28tm05msakrn",
+          "ref": "vangloris-tattoo",
           "quantity": 1
         }
       ],
@@ -5299,7 +5334,7 @@
               {
                 "uid": "e-cgrpwml3ld5g",
                 "ref": "torch",
-                "quantity": 1
+                "quantity": 5
               },
               {
                 "uid": "e-0wyxv9ajld5g",
@@ -5338,7 +5373,7 @@
               {
                 "uid": "e-v96cygms62dh",
                 "ref": "moderate-drakeheart-mutagen",
-                "quantity": 1
+                "quantity": 2
               },
               {
                 "uid": "e-10wrhh4e62dh",
@@ -5391,6 +5426,31 @@
         {
           "uid": "e-zwl6xtqyld5g",
           "ref": "rust-scrub",
+          "quantity": 1
+        },
+        {
+          "uid": "e-ulnczl27ihyq",
+          "ref": "holy-water",
+          "quantity": 1
+        },
+        {
+          "uid": "e-2efbsdnfihyq",
+          "ref": "salve-of-antiparalysis",
+          "quantity": 1
+        },
+        {
+          "uid": "e-6v7kqy55ihyq",
+          "ref": "lesser-healing-potion",
+          "quantity": 1
+        },
+        {
+          "uid": "e-g54likfdihyq",
+          "ref": "shark-tooth-charm",
+          "quantity": 1
+        },
+        {
+          "uid": "e-r5s7ua5zakrn",
+          "ref": "healers-gloves",
           "quantity": 1
         }
       ],
@@ -6384,6 +6444,11 @@
                 "uid": "e-fwwaylp8j3e7",
                 "ref": "waterskin",
                 "quantity": 1
+              },
+              {
+                "uid": "e-s9s9p0kmavu7",
+                "ref": "rations",
+                "quantity": 1
               }
             ]
           }
@@ -6444,6 +6509,31 @@
         {
           "uid": "e-d3n3r7qdj3e7",
           "ref": "horn-of-rust",
+          "quantity": 1
+        },
+        {
+          "uid": "e-aa8l5sitavu7",
+          "ref": "scroll-of-sleep",
+          "quantity": 1
+        },
+        {
+          "uid": "e-yzpz6v5yavu7",
+          "ref": "scroll-of-dispel-magic",
+          "quantity": 1
+        },
+        {
+          "uid": "e-8xq46prgavu7",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-ikikuamxavu7",
+          "ref": "salve-of-antiparalysis",
+          "quantity": 1
+        },
+        {
+          "uid": "e-l1qrunn0avu7",
+          "ref": "holy-water",
           "quantity": 1
         }
       ],
@@ -7349,7 +7439,7 @@
               {
                 "uid": "e-mhljykom07ns",
                 "ref": "torch",
-                "quantity": 1
+                "quantity": 5
               },
               {
                 "uid": "e-4xhlitm307ns",
@@ -7417,6 +7507,31 @@
         {
           "uid": "e-lcih3p1voezh",
           "ref": "scroll-of-dispel-magic",
+          "quantity": 1
+        },
+        {
+          "uid": "e-wjzu6n3fihyq",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-swx7yknxihyq",
+          "ref": "minor-healing-potion",
+          "quantity": 2
+        },
+        {
+          "uid": "e-89i4hd7gihyq",
+          "ref": "wand-of-fear",
+          "quantity": 1
+        },
+        {
+          "uid": "e-i96di93dihyq",
+          "ref": "lesser-healing-potion",
+          "quantity": 1
+        },
+        {
+          "uid": "e-ztotevemakrn",
+          "ref": "scroll-of-mind-games",
           "quantity": 1
         }
       ],
@@ -7806,6 +7921,31 @@
           "uid": "e-6yakvan8ry1f",
           "ref": "minor-elixir-of-life",
           "quantity": 1
+        },
+        {
+          "uid": "e-47653xtc1xrc",
+          "ref": "1-cold-iron-longsword",
+          "quantity": 1
+        },
+        {
+          "uid": "e-8t7654x51xrc",
+          "ref": "spoiling-buckler",
+          "quantity": 1
+        },
+        {
+          "uid": "e-dlfzhji81xrc",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-p5jbu0xf1xrc",
+          "ref": "holy-water",
+          "quantity": 2
+        },
+        {
+          "uid": "e-4y51zbvm1xrc",
+          "ref": "torch",
+          "quantity": 5
         }
       ],
       "feats": [
@@ -8236,7 +8376,10 @@
       "weight": 1,
       "runes": {
         "potency": 1,
-        "striking": "striking"
+        "striking": "striking",
+        "property": [
+          "vitalizing"
+        ]
       },
       "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
       "traits": [
@@ -9381,6 +9524,283 @@
             ]
           }
         ]
+      }
+    },
+    {
+      "id": "1-cold-iron-longsword",
+      "name": "Longsword",
+      "price": 41,
+      "material": "Cold Iron",
+      "runes": {
+        "potency": 1
+      },
+      "weight": 1,
+      "traits": [
+        "Versatile P"
+      ],
+      "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "strikes": {
+        "name": "Longsword Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "action": 1,
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Versatile P",
+          "Melee"
+        ]
+      }
+    },
+    {
+      "id": "holy-water",
+      "name": "Holy Water",
+      "price": 3,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Divine",
+        "Holy",
+        "Splash"
+      ],
+      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
+      "strikes": {
+        "name": "Holy Water",
+        "proficiency": "simple",
+        "type": "ranged",
+        "action": 1,
+        "damage": "1d6",
+        "range": "20ft",
+        "traits": [
+          "Attack",
+          "Thrown",
+          "Splash",
+          "Holy"
+        ]
+      }
+    },
+    {
+      "id": "spoiling-buckler",
+      "name": "Spoiling Buckler",
+      "price": 150,
+      "weight": 0.1,
+      "traits": [
+        "Magical"
+      ],
+      "description": "A wooden buckler made of magically preserved rotting wood. It smells foul, but is a token of friendship from the fey of Tickwood.\n\nSpoiling: Any food within 5 feet of it spoils at double the usual rate.\n\nBullet Guard: You gain resistance 5 against firearms and slings.",
+      "shield": {
+        "health": 6,
+        "breakThreshold": 3,
+        "hardness": 3,
+        "bonus": 1
+      },
+      "actions": [
+        {
+          "name": "Tumbling Tumbleweed",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate",
+            "Wood"
+          ],
+          "description": "Frequency once per day; Effect the buckler spawns a spherical wicker cage that tumbles at one creature within 30 feet. The creature must succeed at a DC 19 Reflex save or be carried 15 feet in a direction of your choice."
+        }
+      ]
+    },
+    {
+      "id": "salve-of-antiparalysis",
+      "name": "Salve of Antiparalysis",
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Oil"
+      ],
+      "description": "Applying this filmy salve to a creature helps it overcome magical paralysis. Activate (one-action, manipulate); held in 2 hands. The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22).",
+      "variants": [
+        {
+          "level": 6,
+          "label": "Salve of Antiparalysis",
+          "price": 40,
+          "effect": "The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22)."
+        },
+        {
+          "level": 12,
+          "label": "Greater",
+          "price": 325,
+          "effect": "If the creature is petrified, it returns to normal, and for removing paralysis the salve's counteract modifier is +31 and its counteract rank is 6th."
+        }
+      ]
+    },
+    {
+      "id": "padded-armor",
+      "name": "Padded Armor",
+      "price": 0.2,
+      "weight": 0.1,
+      "traits": [
+        "Comfort"
+      ],
+      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor."
+    },
+    {
+      "id": "lesser-healing-potion",
+      "name": "Lesser Healing Potion",
+      "price": 12,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Potion",
+        "Vitality"
+      ],
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a lesser healing potion, it restores 2d8+5 Hit Points.",
+      "consumable": {
+        "kind": "healing",
+        "note": "Restores 2d8+5 HP"
+      }
+    },
+    {
+      "id": "wand-of-fear",
+      "name": "Wand of Fear",
+      "price": 60,
+      "weight": 0.1,
+      "traits": [
+        "Magical",
+        "Wand"
+      ],
+      "description": "A wand containing the spell Fear.",
+      "wand": {
+        "id": "spell-1",
+        "name": "Fear",
+        "level": 1,
+        "baseLevel": 1,
+        "range": "30 feet",
+        "duration": "varies",
+        "defense": "Will",
+        "targets": "1 creature",
+        "traits": [
+          "Concentrate",
+          "Emotion",
+          "Fear",
+          "Manipulate",
+          "Mental"
+        ],
+        "actions": "Two Actions",
+        "description": "You plant fear in the target; it must attempt a Will save. Critical Success The target is unaffected. Success The target is frightened 1. Failure The target is frightened 2. Critical Failure The target is frightened 3 and fleeing for 1 round. Heightened (3rd) You can target up to five creatures."
+      }
+    },
+    {
+      "id": "beacon-shot",
+      "name": "Beacon Shot",
+      "price": 10,
+      "weight": 0,
+      "traits": [
+        "Consumable",
+        "Magical"
+      ],
+      "description": "Ammunition (arrow or bolt); Activate (one-action, manipulate). The shaft of a beacon shot is studded with flecks of gemstones. When an activated beacon shot hits a target, it embeds itself into that target and spews sparks for 1 minute. If the target is invisible, it becomes merely hidden to creatures who would otherwise be unable to see it. The sparks also negate the concealed condition if the target was otherwise concealed. A creature can remove the arrow or bolt by using an Interact basic action and succeeding at a DC 20 Athletics check."
+    },
+    {
+      "id": "shark-tooth-charm",
+      "name": "Shark Tooth Charm",
+      "price": 23,
+      "weight": 0,
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Talisman"
+      ],
+      "description": "This dried-seaweed bracelet is lined with charms shaped like small shark teeth. When you activate the bracelet, attempt to Escape using Acrobatics with a +1 item bonus to the check. If you roll a success, you get a critical success instead (if you roll a critical failure, you get a failure instead). If you fail the Acrobatics check against a grabbing creature, the creature must either release you as a free action or take 2d8 piercing damage as shark's teeth momentarily emerge from your skin.",
+      "talisman": {
+        "affixTo": "armor",
+        "activation": {
+          "cost": 1,
+          "trigger": "You attempt to Escape — gain a +1 item bonus to the Acrobatics check; a success becomes a critical success"
+        }
+      }
+    },
+    {
+      "id": "healers-gloves",
+      "name": "Healer's Gloves",
+      "price": 80,
+      "weight": 0.1,
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "description": "These clean, white gloves never show signs of blood, even after they're used to stitch up wounds or treat other ailments. They give you a +1 item bonus to Medicine checks.",
+      "actions": [
+        {
+          "name": "Healer's Touch",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Effect You soothe the wounds of a willing, living, adjacent creature, restoring 2d6+7 Hit Points to that creature. This is a healing vitality effect. You cannot harm undead with this healing."
+        }
+      ]
+    },
+    {
+      "id": "vangloris-tattoo",
+      "name": "Vangloris Tattoo",
+      "price": 60,
+      "weight": 0,
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
+      "actions": [
+        {
+          "name": "Cast Ventriloquism",
+          "actionCount": 2,
+          "traits": [
+            "Auditory",
+            "Concentrate",
+            "Illusion",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
+        }
+      ]
+    },
+    {
+      "id": "scroll-of-mind-games",
+      "name": "Scroll of Mind Games",
+      "price": 12,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Scroll"
+      ],
+      "description": "Single-use scroll",
+      "scroll": {
+        "id": "spell-1",
+        "name": "Mind Games",
+        "level": 2,
+        "baseLevel": 2,
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "duration": "sustained up to 1 minute",
+        "traits": [
+          "Uncommon",
+          "Enchantment",
+          "Mental"
+        ],
+        "actions": "Two Actions",
+        "description": "You lock minds with the target, trying to mentally subdue them. The target must attempt a Will save. Each time you Sustain this Spell, the target attempts another Will save.",
+        "degrees": {
+          "Critical Success": "You are stunned 1 and the spell ends.",
+          "Success": "The target is unaffected.",
+          "Failure": "The target is stunned 1.",
+          "Critical Failure": "The target is stunned 2."
+        }
       }
     }
   ],
