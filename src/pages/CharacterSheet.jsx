@@ -20,6 +20,7 @@ import HandsPanel from '../components/character-sheet/HandsPanel';
 import InitiativeEntry from '../components/encounter/InitiativeEntry';
 import TurnTrackerPanel from '../components/encounter/TurnTrackerPanel';
 import ActionDial from '../components/encounter/commandsheet/ActionDial';
+import ReadyActionButton from '../components/encounter/ReadyActionButton';
 import InitiativeStrip from '../components/encounter/commandsheet/InitiativeStrip';
 import FocusBanner from '../components/encounter/commandsheet/FocusBanner';
 import EncounterStage from '../components/encounter/stage/EncounterStage';
@@ -160,7 +161,10 @@ const CharacterSheet = () => {
                   {encounter.phase === 'in-progress' && !isCharTurn(encounter, character.id) ? (
                     <EncounterStage character={character} characterColor={characterColor} />
                   ) : (
-                    <ActionDial charId={character.id} characterName={character.name} character={character} />
+                    <>
+                      <ActionDial charId={character.id} characterName={character.name} character={character} />
+                      <ReadyActionButton charId={character.id} characterName={character.name} />
+                    </>
                   )}
                   <InitiativeStrip charId={character.id} />
                   <FocusBanner charId={character.id} />

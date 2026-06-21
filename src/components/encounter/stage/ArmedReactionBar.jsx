@@ -25,7 +25,9 @@ const ReactionButton = ({ reaction, live, liveReason, onUse }) => (
   >
     <span className="stage-react-top">
       <span className="stage-react-name">{reaction.name}</span>
-      <span className="stage-react-state">{live ? 'armed' : liveReason || 'unavailable'}</span>
+      <span className="stage-react-state">
+        {live ? (reaction.readied ? 'readied' : 'armed') : liveReason || 'unavailable'}
+      </span>
     </span>
     {triggerTextOf(reaction) && (
       <span className="stage-react-trigger">{triggerTextOf(reaction)}</span>
