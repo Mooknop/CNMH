@@ -10,6 +10,7 @@ import DowntimeList from './DowntimeList';
 import DowntimeCommitBar from './DowntimeCommitBar';
 import EarnIncomeResolver from './EarnIncomeResolver';
 import TellFortunePanel from './TellFortunePanel';
+import RepairShieldPanel from './RepairShieldPanel';
 import './DowntimeTab.css';
 
 // Player-facing Downtime view, shown in the mode-aware "play" slot when the GM
@@ -25,6 +26,7 @@ const DowntimeTab = ({ character, characterColor }) => {
 
   const hasCrafting = (charData?.skillProficiencies?.crafting || 0) > 0;
   const hasTellFortune = (charData?.feats || []).some((f) => f.name === 'Tell Fortune');
+  const hasShield = (charData?.inventory || []).some((e) => e?.shield);
   const days = block?.active ? block?.days : null;
   const { selected, ledger } = periodState(downtime, block?.startedAt);
   const daysCommitted = getDaysCommitted(ledger);
@@ -99,6 +101,10 @@ const DowntimeTab = ({ character, characterColor }) => {
 
       {hasTellFortune && (
         <TellFortunePanel character={character} />
+      )}
+
+      {hasShield && hasCrafting && (
+        <RepairShieldPanel character={character} />
       )}
 
       {hasCrafting && (
