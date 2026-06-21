@@ -841,9 +841,11 @@ describe('resolveInnateSpells', () => {
     });
   });
 
-  it('passes a no-spellRef inline entry through unchanged (back-compat until S4 lockdown)', () => {
-    const inline = { id: 'spell-3', name: 'Guidance', level: 0 };
-    expect(resolveInnateSpells([inline], innMap)[0]).toBe(inline);
+  it('yields a stub for an entry with no spellRef (no inline back-compat, #622)', () => {
+    expect(resolveInnateSpells([{ id: 'spell-3', name: 'Guidance', level: 0 }], innMap)[0]).toEqual({
+      name: '(unknown spell)',
+      level: 0,
+    });
   });
 
   it('returns a non-array input unchanged', () => {
