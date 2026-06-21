@@ -7,9 +7,11 @@ import { useShield } from '../../hooks/useShield';
 import { useAura } from '../../hooks/useAura';
 import { useSustains } from '../../hooks/useSustains';
 import { useSummons } from '../../hooks/useSummons';
+import { useReadiedAction } from '../../hooks/useReadiedAction';
 import { useSession } from '../../contexts/SessionContext';
 import { getFreeActions } from '../../utils/actionUtils';
 import { applyHymnTempHp } from '../../utils/hymnHealing';
+import { readiedExpireLog } from '../../utils/readiedAction';
 import BestiaryModal from './BestiaryModal';
 import ShieldBlockBar from './ShieldBlockBar';
 import './TurnTrackerPanel.css';
@@ -49,6 +51,11 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
   // Kinetic aura (#228) — Dismiss is one of the three ways the aura ends.
   // Unlike a raised shield it persists across turns, so no turn-start reset.
   const { active: auraActive, deactivate: deactivateAura } = useAura(charId);
+
+  // Readied action (#501) — declared on this PC's turn, fires off-turn. Cleared
+  // here on its two end conditions: the reaction is spent (it fired, or was used
+  // elsewhere so it can no longer fire) and the owner's next turn (lapsed).
+  const { readied, clear: clearReadied } = useReadiedAction(charId);
 
   // Sustained spells (#220) — Bless, Mirror Image, Summon Undead, … prompt the
   // caster to Sustain a Spell (1 action) at the start of each of their turns.
@@ -94,8 +101,23 @@ const TurnTrackerPanel = ({ charId, characterName, inventory = [], character = n
       // Gated on the persisted turn token (not a ref) so remounting mid-turn
       // never drops a shield the player raised this turn.
       if (raised) lowerShield();
+      // A readied action that never fired lapses at the start of the owner's
+      // next turn (#501). It's already null if it fired (the spent-reaction
+      // effect below clears it), so this only logs genuinely-unused ones.
+      if (readied) {
+        appendLog({ type: 'system', text: readiedExpireLog(readied, characterName) });
+        clearReadied();
+      }
     }
-  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, hasFamiliar, resetFamiliarTurn, raised, lowerShield]);
+  }, [isMyTurn, turnToken, phase, turnState, resetForNewTurn, hasCompanion, resetCompanionTurn, hasFamiliar, resetFamiliarTurn, raised, lowerShield, readied, clearReadied, appendLog, characterName]);
+
+  // The reaction backing a readied action is spent (it fired, or the player
+  // spent their reaction on something else) — either way it can no longer fire,
+  // so retire it silently. reactionSpent resets to false on the turn-begin
+  // effect above, so this never clears a fresh readied at turn start.
+  useEffect(() => {
+    if (readied && turnState?.reactionSpent) clearReadied();
+  }, [readied, turnState?.reactionSpent, clearReadied]);
 
   if (!encounter || encounter.phase === 'idle') return null;
 

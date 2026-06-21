@@ -36,6 +36,11 @@ vi.mock('./useSyncedState', () => ({
   useSyncedState: () => [mockAttuned, vi.fn()],
 }));
 
+let mockReadied;
+vi.mock('./useReadiedAction', () => ({
+  useReadiedAction: () => ({ readied: mockReadied, declare: vi.fn(), clear: vi.fn() }),
+}));
+
 vi.mock('../contexts/ContentContext', () => ({
   useContent: () => ({ spells: [] }),
 }));
@@ -54,6 +59,7 @@ beforeEach(() => {
   mockOptionsFor = vi.fn(() => [{ enabled: true }]);
   mockGateFor = vi.fn(() => ({ available: true }));
   mockAttuned = '';
+  mockReadied = null;
 });
 
 describe('useReactionOptions', () => {
@@ -235,6 +241,32 @@ describe('useReactionOptions', () => {
     mockChar.eldPowers = [
       { source: 'Storm', powers: [{ name: 'Eld Bulwark', actions: 'Reaction' }] },
     ];
+    const { result } = renderHook(() => useReactionOptions(character));
+    expect(result.current.options).toHaveLength(0);
+  });
+
+  it('arms a readied action as a player-initiated reaction (#501)', () => {
+    mockReadied = { actionName: 'Strike', trigger: 'enemy enters reach' };
+    const { result } = renderHook(() => useReactionOptions(character));
+    const opt = find(result.current.options, 'Strike');
+    // Readied actions resolve as a "Use" (no castSource / not a spell) and carry
+    // the trigger text + a readied marker for the bar.
+    expect(opt).toMatchObject({ castSource: undefined, live: true, liveReason: null });
+    expect(opt.reaction).toMatchObject({ readied: true, trigger: 'enemy enters reach' });
+  });
+
+  it('blocks a readied action once the reaction is spent', () => {
+    mockReadied = { actionName: 'Strike' };
+    mockTurnState = { ...mockTurnState, reactionSpent: true };
+    const { result } = renderHook(() => useReactionOptions(character));
+    expect(find(result.current.options, 'Strike')).toMatchObject({
+      live: false,
+      liveReason: 'reaction spent',
+    });
+  });
+
+  it('adds no readied option when none is declared', () => {
+    mockReadied = null;
     const { result } = renderHook(() => useReactionOptions(character));
     expect(result.current.options).toHaveLength(0);
   });
