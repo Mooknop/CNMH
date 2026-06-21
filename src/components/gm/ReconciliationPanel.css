@@ -1,0 +1,96 @@
+.gm-recon {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--shell-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+}
+
+.gm-recon-title {
+  margin: 0 0 0.25rem;
+}
+
+.gm-recon-hint {
+  margin: 0 0 0.75rem;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--shell-text-tertiary, var(--color-text-muted));
+}
+
+.gm-recon-empty {
+  margin: 0;
+  font-size: var(--text-sm, 0.85rem);
+  color: var(--shell-text-tertiary, var(--color-text-muted));
+}
+
+.gm-recon-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gm-recon-char {
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--shell-border, rgba(255, 255, 255, 0.08));
+}
+
+.gm-recon-char-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.gm-recon-char-name {
+  font-weight: 700;
+}
+
+.gm-recon-changes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gm-recon-change {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--text-sm, 0.85rem);
+}
+
+.gm-recon-change.is-discarded .gm-recon-change-label,
+.gm-recon-change.is-discarded .gm-recon-change-detail {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+.gm-recon-change-label {
+  font-weight: 600;
+}
+
+.gm-recon-change-detail {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--shell-text-tertiary, var(--color-text-muted));
+}
+
+.gm-recon-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.gm-recon-result {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-sm, 0.85rem);
+}
+
+.gm-recon-result-ok {
+  color: var(--color-success, #4caf50);
+}
+
+.gm-recon-result-fail {
+  color: var(--color-danger, #ef5350);
+}
