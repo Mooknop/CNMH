@@ -15,15 +15,36 @@ import { buildReactionSources, castSourceOf } from '../utils/reactionSources';
 
 export const useReactionOptions = (character) => {
   const charId = character?.id;
-  const { reactions, staffSpells, focusSpells, inventory } = useCharacter(character) || {};
+  const {
+    reactions,
+    staffSpells,
+    focusSpells,
+    inventory,
+    spellcasting,
+    innateSpells,
+    wandSpells,
+    scrollSpells,
+  } = useCharacter(character) || {};
   const { spells: catalogSpells } = useContent();
   const { turnState } = useTurnState(charId);
   const { raised, broken } = useShield(charId, inventory);
   const casting = useCastingResources(character);
 
+  const repertoireSpells = spellcasting?.spells;
+
   const sources = useMemo(
-    () => buildReactionSources({ reactions, staffSpells, focusSpells, catalogSpells }),
-    [reactions, staffSpells, focusSpells, catalogSpells]
+    () =>
+      buildReactionSources({
+        reactions,
+        staffSpells,
+        focusSpells,
+        catalogSpells,
+        repertoireSpells,
+        innateSpells,
+        wandSpells,
+        scrollSpells,
+      }),
+    [reactions, staffSpells, focusSpells, catalogSpells, repertoireSpells, innateSpells, wandSpells, scrollSpells]
   );
 
   const options = useMemo(() => {
@@ -47,14 +68,18 @@ export const useReactionOptions = (character) => {
           liveReason = 'raise a shield first';
         }
       } else if (reaction.active === false) {
-        // Item-sourced reaction whose item is stowed (e.g. a sheathed staff).
+        // Item-sourced reaction whose item is stowed (e.g. a sheathed staff,
+        // wand, or scroll).
         live = false;
         liveReason = 'not in hand';
-      } else if (castSource === 'staff' || castSource === 'focus') {
-        // Reaction-cost spell — gate on the actual pool via the canonical
-        // casting-resource logic (no duplicated cost math).
+      } else if (reaction.isSpell) {
+        // Reaction-cost spell from any cast list (staff/focus/repertoire/innate/
+        // wand/scroll) — gate on the actual pool via the canonical casting-
+        // resource logic (no duplicated cost math). An empty option set means an
+        // untracked pool (e.g. a repertoire rank with no slot tracking), which
+        // casts freely just like the on-turn path — don't block it.
         const opts = casting.optionsFor(reaction, castSource) || [];
-        if (!opts.some((o) => o.enabled)) {
+        if (opts.length && !opts.some((o) => o.enabled)) {
           live = false;
           liveReason = (opts.find((o) => o.reason) || {}).reason || 'no resource available';
         }

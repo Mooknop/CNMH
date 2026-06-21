@@ -35,16 +35,36 @@ const ReactionPrompt = ({ character, themeColor }) => {
   const [prompt, setPrompt] = useSyncedState(`cnmh_reactprompt_${charId}`, null);
   const { encounter } = useEncounter();
   const { turnState } = useTurnState(charId);
-  const { reactions, staffSpells, focusSpells, inventory } = useCharacter(character);
+  const {
+    reactions,
+    staffSpells,
+    focusSpells,
+    inventory,
+    spellcasting,
+    innateSpells,
+    wandSpells,
+    scrollSpells,
+  } = useCharacter(character);
   const { raised, broken } = useShield(charId, inventory);
   const { spells: catalogSpells } = useContent();
   const [usingReaction, setUsingReaction] = useState(null); // { ability, castSource? }
 
-  // Shared source list (character reactions + reaction-cost staff/focus spells),
-  // identical to the off-turn armed bar (#474) so the two never drift.
+  // Shared source list (character reactions + reaction-cost spells from every
+  // cast list), identical to the off-turn armed bar (#474) so the two never
+  // drift.
   const sources = useMemo(
-    () => buildReactionSources({ reactions, staffSpells, focusSpells, catalogSpells }),
-    [reactions, staffSpells, focusSpells, catalogSpells]
+    () =>
+      buildReactionSources({
+        reactions,
+        staffSpells,
+        focusSpells,
+        catalogSpells,
+        repertoireSpells: spellcasting?.spells,
+        innateSpells,
+        wandSpells,
+        scrollSpells,
+      }),
+    [reactions, staffSpells, focusSpells, catalogSpells, spellcasting, innateSpells, wandSpells, scrollSpells]
   );
 
   // The reaction was spent (via the modal, the block bar, or any other path) —
@@ -112,7 +132,7 @@ const ReactionPrompt = ({ character, themeColor }) => {
               }
               aria-label={`Use ${reaction.name}`}
             >
-              {reaction.fromStaff || reaction.fromFocus ? 'Cast ↩' : 'Use ↩'}
+              {reaction.isSpell ? 'Cast ↩' : 'Use ↩'}
             </button>
           )}
         </div>
@@ -132,7 +152,7 @@ const ReactionPrompt = ({ character, themeColor }) => {
           onClose={() => setUsingReaction(null)}
           ability={usingReaction.ability}
           cost="reaction"
-          verb={usingReaction.castSource ? 'Cast' : 'Use'}
+          verb={usingReaction.castSource || usingReaction.ability?.isSpell ? 'Cast' : 'Use'}
           castSource={usingReaction.castSource}
           character={character}
           themeColor={themeColor}
