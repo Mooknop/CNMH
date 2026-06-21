@@ -19,7 +19,8 @@ import './gm.css';
 
 // Spell catalog editor. Shape mirrors `src/data/spells.json` and the nested
 // spell sub-form already used by GmItems for scroll/wand items: managed
-// scalars + a `traits` CSV + a `heightened` rank→text list. Anything else
+// scalars + a `traits` CSV + a `traditions` checkbox set + a `heightened`
+// rank→text list. Anything else
 // (e.g. a `bloodline` flag on Dispel Magic) round-trips through a per-spell
 // raw-JSON box, the same faithful pattern as elsewhere in GM Tools.
 
@@ -30,10 +31,14 @@ const toInt = (v) => {
 
 const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration', 'description'];
 
+// The four magical traditions, in canonical order. A spell's `traditions` gate
+// scroll/wand/staff activation (epic #645); focus/innate spells stay empty.
+const TRADITIONS = ['arcane', 'divine', 'occult', 'primal'];
+
 const toForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
   const rest = { ...src };
-  ['id', ...SPELL_STR, 'level', 'traits', 'heightened', 'effects', 'roll', 'foundryEffect', 'chain', 'frequencyRule', 'immunity'].forEach((k) => delete rest[k]);
+  ['id', ...SPELL_STR, 'level', 'traits', 'traditions', 'heightened', 'effects', 'roll', 'foundryEffect', 'chain', 'frequencyRule', 'immunity'].forEach((k) => delete rest[k]);
   const str = {};
   SPELL_STR.forEach((k) => {
     str[k] = src[k] != null ? String(src[k]) : '';
@@ -48,6 +53,7 @@ const toForm = (s) => {
     str,
     level: src.level != null ? String(src.level) : '0',
     traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
+    traditions: Array.isArray(src.traditions) ? src.traditions : [],
     heightened,
     effects,
     roll: rollToForm(src.roll),
@@ -81,6 +87,10 @@ const fromForm = (f) => {
   out.level = toInt(f.level);
   const traits = toList(f.traits);
   if (traits.length) out.traits = traits;
+  // Emit in canonical order regardless of click order; omit when empty so
+  // focus/innate spells stay traditionless.
+  const traditions = TRADITIONS.filter((t) => (f.traditions || []).includes(t));
+  if (traditions.length) out.traditions = traditions;
   const h = {};
   f.heightened.forEach((r) => {
     if (r.key.trim()) h[r.key.trim()] = r.text;
@@ -110,6 +120,13 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 
   const setStr = (k, v) => setE((cur) => ({ ...cur, str: { ...cur.str, [k]: v } }));
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
+  const toggleTradition = (t) =>
+    setE((cur) => ({
+      ...cur,
+      traditions: cur.traditions.includes(t)
+        ? cur.traditions.filter((x) => x !== t)
+        : [...cur.traditions, t],
+    }));
   const setH = (i, patch) =>
     setE((cur) => ({
       ...cur,
@@ -193,6 +210,23 @@ const SpellForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           value={e.traits}
           onChange={(v) => set({ traits: v })}
         />
+      </div>
+      <div className="form-group">
+        <label>Traditions</label>
+        <div className="gm-row gm-tradition-row">
+          {TRADITIONS.map((t) => (
+            <label key={t} className="gm-checkbox">
+              <input
+                type="checkbox"
+                aria-label={`tradition-${t}`}
+                checked={e.traditions.includes(t)}
+                onChange={() => toggleTradition(t)}
+              />
+              {t}
+            </label>
+          ))}
+        </div>
+        <p className="gm-field-hint">Leave all unchecked for focus spells (traditionless).</p>
       </div>
       <div className="gm-row">
         {['actions', 'range', 'area', 'targets', 'defense', 'duration'].map((k) => (

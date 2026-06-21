@@ -186,6 +186,21 @@
 .gm-rank-row input[aria-label$="-effect"] { flex: 2; }
 .gm-rank-row input[aria-label$="-amount"] { flex: 0 0 70px; max-width: 70px; min-width: 0; }
 
+/* Tradition checkbox set (spell editor) */
+.gm-tradition-row { align-items: center; gap: 14px; flex-wrap: wrap; }
+.gm-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+.gm-field-hint {
+  margin: 4px 0 0;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
 /* ── Monospaced display ──────────────────────────────────── */
 .gm-json {
   font-family: var(--font-mono);

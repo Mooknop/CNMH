@@ -7619,6 +7619,32 @@
       ]
     },
     {
+      "id": "1-cold-iron-longsword",
+      "name": "Longsword",
+      "price": 41,
+      "material": "Cold Iron",
+      "runes": {
+        "potency": 1
+      },
+      "weight": 1,
+      "traits": [
+        "Versatile P"
+      ],
+      "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "strikes": {
+        "name": "Longsword Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "action": 1,
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Versatile P",
+          "Melee"
+        ]
+      }
+    },
+    {
       "id": "1-striking-pick",
       "name": "Pick",
       "price": 0.1,
@@ -7732,6 +7758,17 @@
         "capacity": 4,
         "ignored": 2
       }
+    },
+    {
+      "id": "beacon-shot",
+      "name": "Beacon Shot",
+      "price": 10,
+      "weight": 0,
+      "traits": [
+        "Consumable",
+        "Magical"
+      ],
+      "description": "Ammunition (arrow or bolt); Activate (one-action, manipulate). The shaft of a beacon shot is studded with flecks of gemstones. When an activated beacon shot hits a target, it embeds itself into that target and spews sparks for 1 minute. If the target is invisible, it becomes merely hidden to creatures who would otherwise be unable to see it. The sparks also negate the concealed condition if the target was otherwise concealed. A creature can remove the arrow or bolt by using an Interact basic action and succeeding at a DC 20 Athletics check."
     },
     {
       "id": "bedroll",
@@ -7922,11 +7959,59 @@
       }
     },
     {
+      "id": "healers-gloves",
+      "name": "Healer's Gloves",
+      "price": 80,
+      "weight": 0.1,
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "description": "These clean, white gloves never show signs of blood, even after they're used to stitch up wounds or treat other ailments. They give you a +1 item bonus to Medicine checks.",
+      "actions": [
+        {
+          "name": "Healer's Touch",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Effect You soothe the wounds of a willing, living, adjacent creature, restoring 2d6+7 Hit Points to that creature. This is a healing vitality effect. You cannot harm undead with this healing."
+        }
+      ]
+    },
+    {
       "id": "healers-toolkit",
       "name": "Healer's Toolkit",
       "price": 5,
       "weight": 1,
       "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
+    },
+    {
+      "id": "holy-water",
+      "name": "Holy Water",
+      "price": 3,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Divine",
+        "Holy",
+        "Splash"
+      ],
+      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
+      "strikes": {
+        "name": "Holy Water",
+        "proficiency": "simple",
+        "type": "ranged",
+        "action": 1,
+        "damage": "1d6",
+        "range": "20ft",
+        "traits": [
+          "Attack",
+          "Thrown",
+          "Splash",
+          "Holy"
+        ]
+      }
     },
     {
       "id": "horn-of-rust",
@@ -7951,6 +8036,24 @@
           "description": "Once per day, you can place the horn's bell against a diseased creature and then inhale into the mouthpiece rather than blow into it. The horn attempts to draw out the disease, casting Cleanse Affliction with a counteract modifier of +11. If the Horn of Rust succeeds at countering the disease, it gains a number of staff charges equal to half the disease's level rounded down. If it critically fails, not only is the disease not countered, but you are exposed to the disease and must attempt a saving throw against it to resist contracting the affliction yourself."
         }
       ]
+    },
+    {
+      "id": "lesser-healing-potion",
+      "name": "Lesser Healing Potion",
+      "price": 12,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Potion",
+        "Vitality"
+      ],
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a lesser healing potion, it restores 2d8+5 Hit Points.",
+      "consumable": {
+        "kind": "healing",
+        "note": "Restores 2d8+5 HP"
+      }
     },
     {
       "id": "longbow",
@@ -8099,6 +8202,16 @@
       "description": "You can spread this shimmering oil on an item of 1 Bulk or less to make it feel weightless. It has negligible Bulk for 1 hour."
     },
     {
+      "id": "padded-armor",
+      "name": "Padded Armor",
+      "price": 0.2,
+      "weight": 0.1,
+      "traits": [
+        "Comfort"
+      ],
+      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor."
+    },
+    {
       "id": "potion-of-waterbreathing",
       "name": "Potion of Waterbreathing",
       "consumable": {
@@ -8168,6 +8281,32 @@
       "weight": 5,
       "price": 30,
       "description": "Large red rubies you pried from a statue of Xar-Azmak."
+    },
+    {
+      "id": "salve-of-antiparalysis",
+      "name": "Salve of Antiparalysis",
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Oil"
+      ],
+      "description": "Applying this filmy salve to a creature helps it overcome magical paralysis. Activate (one-action, manipulate); held in 2 hands. The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22).",
+      "variants": [
+        {
+          "level": 6,
+          "label": "Salve of Antiparalysis",
+          "price": 40,
+          "effect": "The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22)."
+        },
+        {
+          "level": 12,
+          "label": "Greater",
+          "price": 325,
+          "effect": "If the creature is petrified, it returns to normal, and for removing paralysis the salve's counteract modifier is +31 and its counteract rank is 6th."
+        }
+      ]
     },
     {
       "id": "sanitizing-pin",
@@ -8242,6 +8381,21 @@
       }
     },
     {
+      "id": "scroll-of-mind-games",
+      "name": "Scroll of Mind Games",
+      "price": 12,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Scroll"
+      ],
+      "description": "Single-use scroll",
+      "scroll": {
+        "spellRef": "mind-games"
+      }
+    },
+    {
       "id": "scroll-of-pocket-library",
       "name": "Scroll of Pocket Library",
       "price": 4,
@@ -8284,6 +8438,25 @@
       "description": "Single-use scroll",
       "scroll": {
         "spellRef": "sleep"
+      }
+    },
+    {
+      "id": "shark-tooth-charm",
+      "name": "Shark Tooth Charm",
+      "price": 23,
+      "weight": 0,
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Talisman"
+      ],
+      "description": "This dried-seaweed bracelet is lined with charms shaped like small shark teeth. When you activate the bracelet, attempt to Escape using Acrobatics with a +1 item bonus to the check. If you roll a success, you get a critical success instead (if you roll a critical failure, you get a failure instead). If you fail the Acrobatics check against a grabbing creature, the creature must either release you as a free action or take 2d8 piercing damage as shark's teeth momentarily emerge from your skin.",
+      "talisman": {
+        "affixTo": "armor",
+        "activation": {
+          "cost": 1,
+          "trigger": "You attempt to Escape — gain a +1 item bonus to the Acrobatics check; a success becomes a critical success"
+        }
       }
     },
     {
@@ -8390,6 +8563,34 @@
       }
     },
     {
+      "id": "spoiling-buckler",
+      "name": "Spoiling Buckler",
+      "price": 150,
+      "weight": 0.1,
+      "traits": [
+        "Magical"
+      ],
+      "description": "A wooden buckler made of magically preserved rotting wood. It smells foul, but is a token of friendship from the fey of Tickwood.\n\nSpoiling: Any food within 5 feet of it spoils at double the usual rate.\n\nBullet Guard: You gain resistance 5 against firearms and slings.",
+      "shield": {
+        "health": 6,
+        "breakThreshold": 3,
+        "hardness": 3,
+        "bonus": 1
+      },
+      "actions": [
+        {
+          "name": "Tumbling Tumbleweed",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate",
+            "Wood"
+          ],
+          "description": "Frequency once per day; Effect the buckler spawns a spherical wicker cage that tumbles at one creature within 30 feet. The creature must succeed at a DC 19 Reflex save or be carried 15 feet in a direction of your choice."
+        }
+      ]
+    },
+    {
       "id": "sterling-artisans-tools-talismans",
       "name": "Sterling Artisan's Tools (Talismans)",
       "price": 50,
@@ -8416,6 +8617,32 @@
       "price": 0.01,
       "weight": 0.1,
       "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+    },
+    {
+      "id": "vangloris-tattoo",
+      "name": "Vangloris Tattoo",
+      "price": 60,
+      "weight": 0,
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
+      "actions": [
+        {
+          "name": "Cast Ventriloquism",
+          "actionCount": 2,
+          "traits": [
+            "Auditory",
+            "Concentrate",
+            "Illusion",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
+        }
+      ]
     },
     {
       "id": "vocoder-of-invisibility",
@@ -8493,6 +8720,20 @@
       "description": "A wand containing the spell Dizzying Colors",
       "wand": {
         "spellRef": "dizzying-colors"
+      }
+    },
+    {
+      "id": "wand-of-fear",
+      "name": "Wand of Fear",
+      "price": 60,
+      "weight": 0.1,
+      "traits": [
+        "Magical",
+        "Wand"
+      ],
+      "description": "A wand containing the spell Fear.",
+      "wand": {
+        "spellRef": "fear"
       }
     },
     {
@@ -8631,247 +8872,6 @@
           }
         ]
       }
-    },
-    {
-      "id": "1-cold-iron-longsword",
-      "name": "Longsword",
-      "price": 41,
-      "material": "Cold Iron",
-      "runes": {
-        "potency": 1
-      },
-      "weight": 1,
-      "traits": [
-        "Versatile P"
-      ],
-      "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
-      "strikes": {
-        "name": "Longsword Strike",
-        "proficiency": "martial",
-        "type": "melee",
-        "action": 1,
-        "damage": "1d8",
-        "traits": [
-          "Attack",
-          "Versatile P",
-          "Melee"
-        ]
-      }
-    },
-    {
-      "id": "holy-water",
-      "name": "Holy Water",
-      "price": 3,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Divine",
-        "Holy",
-        "Splash"
-      ],
-      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
-      "strikes": {
-        "name": "Holy Water",
-        "proficiency": "simple",
-        "type": "ranged",
-        "action": 1,
-        "damage": "1d6",
-        "range": "20ft",
-        "traits": [
-          "Attack",
-          "Thrown",
-          "Splash",
-          "Holy"
-        ]
-      }
-    },
-    {
-      "id": "spoiling-buckler",
-      "name": "Spoiling Buckler",
-      "price": 150,
-      "weight": 0.1,
-      "traits": [
-        "Magical"
-      ],
-      "description": "A wooden buckler made of magically preserved rotting wood. It smells foul, but is a token of friendship from the fey of Tickwood.\n\nSpoiling: Any food within 5 feet of it spoils at double the usual rate.\n\nBullet Guard: You gain resistance 5 against firearms and slings.",
-      "shield": {
-        "health": 6,
-        "breakThreshold": 3,
-        "hardness": 3,
-        "bonus": 1
-      },
-      "actions": [
-        {
-          "name": "Tumbling Tumbleweed",
-          "actionCount": 2,
-          "traits": [
-            "Concentrate",
-            "Manipulate",
-            "Wood"
-          ],
-          "description": "Frequency once per day; Effect the buckler spawns a spherical wicker cage that tumbles at one creature within 30 feet. The creature must succeed at a DC 19 Reflex save or be carried 15 feet in a direction of your choice."
-        }
-      ]
-    },
-    {
-      "id": "salve-of-antiparalysis",
-      "name": "Salve of Antiparalysis",
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Healing",
-        "Magical",
-        "Oil"
-      ],
-      "description": "Applying this filmy salve to a creature helps it overcome magical paralysis. Activate (one-action, manipulate); held in 2 hands. The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22).",
-      "variants": [
-        {
-          "level": 6,
-          "label": "Salve of Antiparalysis",
-          "price": 40,
-          "effect": "The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22)."
-        },
-        {
-          "level": 12,
-          "label": "Greater",
-          "price": 325,
-          "effect": "If the creature is petrified, it returns to normal, and for removing paralysis the salve's counteract modifier is +31 and its counteract rank is 6th."
-        }
-      ]
-    },
-    {
-      "id": "padded-armor",
-      "name": "Padded Armor",
-      "price": 0.2,
-      "weight": 0.1,
-      "traits": [
-        "Comfort"
-      ],
-      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor."
-    },
-    {
-      "id": "lesser-healing-potion",
-      "name": "Lesser Healing Potion",
-      "price": 12,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Healing",
-        "Magical",
-        "Potion",
-        "Vitality"
-      ],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a lesser healing potion, it restores 2d8+5 Hit Points.",
-      "consumable": {
-        "kind": "healing",
-        "note": "Restores 2d8+5 HP"
-      }
-    },
-    {
-      "id": "wand-of-fear",
-      "name": "Wand of Fear",
-      "price": 60,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Fear.",
-      "wand": {
-        "spellRef": "fear"
-      }
-    },
-    {
-      "id": "beacon-shot",
-      "name": "Beacon Shot",
-      "price": 10,
-      "weight": 0,
-      "traits": [
-        "Consumable",
-        "Magical"
-      ],
-      "description": "Ammunition (arrow or bolt); Activate (one-action, manipulate). The shaft of a beacon shot is studded with flecks of gemstones. When an activated beacon shot hits a target, it embeds itself into that target and spews sparks for 1 minute. If the target is invisible, it becomes merely hidden to creatures who would otherwise be unable to see it. The sparks also negate the concealed condition if the target was otherwise concealed. A creature can remove the arrow or bolt by using an Interact basic action and succeeding at a DC 20 Athletics check."
-    },
-    {
-      "id": "shark-tooth-charm",
-      "name": "Shark Tooth Charm",
-      "price": 23,
-      "weight": 0,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Talisman"
-      ],
-      "description": "This dried-seaweed bracelet is lined with charms shaped like small shark teeth. When you activate the bracelet, attempt to Escape using Acrobatics with a +1 item bonus to the check. If you roll a success, you get a critical success instead (if you roll a critical failure, you get a failure instead). If you fail the Acrobatics check against a grabbing creature, the creature must either release you as a free action or take 2d8 piercing damage as shark's teeth momentarily emerge from your skin.",
-      "talisman": {
-        "affixTo": "armor",
-        "activation": {
-          "cost": 1,
-          "trigger": "You attempt to Escape — gain a +1 item bonus to the Acrobatics check; a success becomes a critical success"
-        }
-      }
-    },
-    {
-      "id": "healers-gloves",
-      "name": "Healer's Gloves",
-      "price": 80,
-      "weight": 0.1,
-      "traits": [
-        "Invested",
-        "Magical"
-      ],
-      "description": "These clean, white gloves never show signs of blood, even after they're used to stitch up wounds or treat other ailments. They give you a +1 item bonus to Medicine checks.",
-      "actions": [
-        {
-          "name": "Healer's Touch",
-          "actionCount": 1,
-          "traits": [
-            "Manipulate"
-          ],
-          "description": "Frequency once per day; Effect You soothe the wounds of a willing, living, adjacent creature, restoring 2d6+7 Hit Points to that creature. This is a healing vitality effect. You cannot harm undead with this healing."
-        }
-      ]
-    },
-    {
-      "id": "vangloris-tattoo",
-      "name": "Vangloris Tattoo",
-      "price": 60,
-      "weight": 0,
-      "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Transmutation"
-      ],
-      "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
-      "actions": [
-        {
-          "name": "Cast Ventriloquism",
-          "actionCount": 2,
-          "traits": [
-            "Auditory",
-            "Concentrate",
-            "Illusion",
-            "Manipulate"
-          ],
-          "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
-        }
-      ]
-    },
-    {
-      "id": "scroll-of-mind-games",
-      "name": "Scroll of Mind Games",
-      "price": 12,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
-      "description": "Single-use scroll",
-      "scroll": {
-        "spellRef": "mind-games"
-      }
     }
   ],
   "spell": [
@@ -8952,6 +8952,10 @@
             }
           }
         }
+      ],
+      "traditions": [
+        "arcane",
+        "primal"
       ]
     },
     {
@@ -8974,7 +8978,11 @@
         "start": 15,
         "step": 10,
         "unit": "ft"
-      }
+      },
+      "traditions": [
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "breathe-fire",
@@ -8992,7 +9000,11 @@
       "description": "A gout of flame sprays from your mouth. You deal 2d6 fire damage to creatures in the area with a basic Reflex save.",
       "heightened": {
         "+1": "The damage increases by 2d6."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
     },
     {
       "id": "charitable-urge",
@@ -9016,7 +9028,12 @@
         "Success": "The target is stunned 1 as it wrestles with the urge.",
         "Failure": "On its next turn, before it does anything else, the target must present the nearest creature with an item in its possession; the target chooses which item to give, and if the only item it has is one that it's currently using to defend itself, such as a weapon during a combat encounter, it can choose to be stunned for 1 round instead of giving up the item. This might require the target to Interact to retrieve an item or move to reach the nearest creature, and passing the item off requires an Interact action as normal.",
         "Critical Failure": "As failure, except the duration is 4 rounds, and the target must repeat the effects of a failure on each of its turns. At the end of each of its turns, the target can attempt a new Will save to reduce the remaining duration by 1 round, ending the effects entirely on a critical success."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "cleanse-affliction",
@@ -9034,7 +9051,12 @@
       "heightened": {
         "3rd": "Attempt to counteract the affliction if it is a disease or poison.",
         "5th": "Attempt to counteract the affliction if it is a curse, disease, or poison."
-      }
+      },
+      "traditions": [
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "command",
@@ -9060,7 +9082,12 @@
       },
       "heightened": {
         "5th": "You can target up to 10 creatures."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "counter-performance",
@@ -9097,7 +9124,12 @@
         "4th": "You can feed 12 Medium creatures.",
         "6th": "You can feed 50 Medium creatures.",
         "8th": "You can feed 200 Medium creatures."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "primal"
+      ]
     },
     {
       "id": "daze",
@@ -9115,7 +9147,12 @@
       "range": "60 feet",
       "targets": "1 creature",
       "defense": "Will",
-      "description": "You cloud the target's mind and daze it with a mental jolt. The jolt deals 1d6 mental damage; the target must attempt a basic Will save. If the target critically fails the save, it is also stunned 1."
+      "description": "You cloud the target's mind and daze it with a mental jolt. The jolt deals 1d6 mental damage; the target must attempt a basic Will save. If the target critically fails the save, it is also stunned 1.",
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "detect-magic",
@@ -9134,7 +9171,13 @@
       "heightened": {
         "3rd": "You learn the rank or level of the most powerful magical effect the spell detects, as determined by the GM.",
         "4th": "As 3rd rank, but you also pinpoint the source of the highest-rank magic. Like for an imprecise sense, you don't learn the exact location, but can narrow down the source to within a 5-foot cube (or the nearest if larger than that)."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "dispel-magic",
@@ -9148,7 +9191,13 @@
       "range": "120 feet",
       "targets": "1 spell effect or unattended magic item",
       "bloodline": true,
-      "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail."
+      "description": "You unravel the magic behind a spell or effect. Attempt a counteract check against the target. If you successfully counteract a magic item, the item becomes a mundane item of its type for 10 minutes. This doesn't change the item's non-magical properties. If the target is an artifact or similar item, you automatically fail.",
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "dizzying-colors",
@@ -9172,7 +9221,11 @@
         "Success": "The creature is dazzled for 1 round.",
         "Failure": "The creature stunned 1, blinded for 1 round, and dazzled for 1 minute.",
         "Critical Failure": "The creature is stunned for 1 round and blinded for 1 minute."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "electric-arc",
@@ -9192,7 +9245,11 @@
       "description": "An arc of lightning leaps from one target to another. You deal 1d4+4 electricity damage to the target creatures. The targets must attempt a basic Reflex save.",
       "heightened": {
         "+1": "The damage increases by 1d4."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
     },
     {
       "id": "fashionista",
@@ -9208,7 +9265,11 @@
       "description": "The target's clothes are transformed into ostentatious attire that epitomizes high-end local fashion. No details of the target's appearance transform other than their clothes, so their weapons or armor remain unchanged in appearance. The target gains a +1 status bonus on Deception checks to Make a Distraction. You can Dismiss this spell. At the end of the spell's duration, the target's clothes revert to their original appearance.",
       "heightened": {
         "+2": "The status bonus increases by 1, to a maximum of +4 at 7th level."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "fear",
@@ -9235,7 +9296,13 @@
       },
       "heightened": {
         "3rd": "You can target up to five creatures."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "figment",
@@ -9253,7 +9320,12 @@
       "range": "30 feet",
       "duration": "Sustained",
       "defense": "Will",
-      "description": "You create a simple illusory sound or vision. A sound adds the auditory trait to the spell and the sound can't include intelligible words or elaborate music. A vision adds the visual trait, can be no larger than a 5-foot cube, and is clearly crude and undetailed if viewed from within 15 feet. When you Cast or Sustain the Spell, you can attempt to Create a Diversion with the illusion, gaining a +2 circumstance bonus to your Deception check. If the attempt fails against a creature, that creature disbelieves the figment."
+      "description": "You create a simple illusory sound or vision. A sound adds the auditory trait to the spell and the sound can't include intelligible words or elaborate music. A vision adds the visual trait, can be no larger than a 5-foot cube, and is clearly crude and undetailed if viewed from within 15 feet. When you Cast or Sustain the Spell, you can attempt to Create a Diversion with the illusion, gaining a +2 circumstance bonus to your Deception check. If the attempt fails against a creature, that creature disbelieves the figment.",
+      "traditions": [
+        "arcane",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "forbidding-ward",
@@ -9272,7 +9344,11 @@
       "description": "You ward an ally against the attacks and hostile spells from the target enemy. The target ally gains a +1 status bonus to Armor Class and saving throws against the target enemy's attacks, spells, and other effects.",
       "heightened": {
         "6th": "The status bonus increases to +2."
-      }
+      },
+      "traditions": [
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "force-barrage",
@@ -9305,6 +9381,10 @@
           "actions": 3,
           "note": "3 shards"
         }
+      ],
+      "traditions": [
+        "arcane",
+        "occult"
       ]
     },
     {
@@ -9318,7 +9398,11 @@
       "actions": "Two Actions",
       "range": "30 feet",
       "targets": "1 or 2 willing creatures",
-      "description": "You shoot out ephemeral, telekinetic strands that drag each target directly toward you, stopping in the closest unoccupied space to you in this path. This is forced movement."
+      "description": "You shoot out ephemeral, telekinetic strands that drag each target directly toward you, stopping in the closest unoccupied space to you in this path. This is forced movement.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "grease",
@@ -9334,7 +9418,11 @@
         "Manipulate"
       ],
       "actions": "Two Actions",
-      "description": "You conjure grease.  All solid ground in the area is covered with grease. Each creature standing on the greasy surface must succeed at a Reflex save or an Acrobatics check against your spell DC or fall prone. Creatures using an action to move onto the greasy surface during the spell's duration must attempt either a Reflex save or an Acrobatics check to Balance. A creature that Steps or Crawls doesn't have to attempt a check or save. Alternatively, if you Cast the Spell on an unattended object, anyone trying to pick up the object must succeed at an Acrobatics check or Reflex save against your spell DC to do so. If you target an attended object, the creature that has the object must attempt an Acrobatics check or Reflex save. On a failure, the holder or wielder takes a –2 circumstance penalty to all checks that involve using the object; on a critical failure, the holder or wielder releases the item. The object lands in an adjacent square of the GM's choice. If you Cast this Spell on a worn object, the wearer gains a +2 circumstance bonus to Fortitude saves against attempts to grapple them."
+      "description": "You conjure grease.  All solid ground in the area is covered with grease. Each creature standing on the greasy surface must succeed at a Reflex save or an Acrobatics check against your spell DC or fall prone. Creatures using an action to move onto the greasy surface during the spell's duration must attempt either a Reflex save or an Acrobatics check to Balance. A creature that Steps or Crawls doesn't have to attempt a check or save. Alternatively, if you Cast the Spell on an unattended object, anyone trying to pick up the object must succeed at an Acrobatics check or Reflex save against your spell DC to do so. If you target an attended object, the creature that has the object must attempt an Acrobatics check or Reflex save. On a failure, the holder or wielder takes a –2 circumstance penalty to all checks that involve using the object; on a critical failure, the holder or wielder releases the item. The object lands in an adjacent square of the GM's choice. If you Cast this Spell on a worn object, the wearer gains a +2 circumstance bonus to Fortitude saves against attempts to grapple them.",
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
     },
     {
       "id": "guidance",
@@ -9356,7 +9444,12 @@
           "unit": "hour"
         },
         "scope": "per-caster"
-      }
+      },
+      "traditions": [
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "haunting-hymn",
@@ -9376,7 +9469,10 @@
       "description": "You echo a jarring hymn that only creatures in the area can hear. The hymn deals 1d8 sonic damage, with a basic Fortitude save. If a target critically fails the save, it's also deafened for 1 minute.",
       "heightened": {
         "+2": "The damage increases by 1d8."
-      }
+      },
+      "traditions": [
+        "occult"
+      ]
     },
     {
       "id": "hymn-of-healing",
@@ -9419,7 +9515,11 @@
       "description": "You create an illusory image of a Large or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the image are ever farther than 500 feet apart, the spell ends. The image can't speak, but you can use your actions to speak through the creature, with the spell disguising your voice as appropriate. You might need to attempt a Deception or Performance check to mimic the creature, as determined by the GM. This is especially likely if you're trying to imitate a specific person and engage with someone that person knows. In combat, the illusion can use 2 actions per turn, which it uses when you Sustain the spell. It uses your spell attack modifier for attack rolls and your spell DC for its AC. Its saving throw modifiers are equal to your spell DC – 10. It is substantial enough that it can flank other creatures. If the image is hit by an attack or fails a save, the spell ends. The illusion can cause damage by making the target believe the illusion's attacks are real, but it cannot otherwise directly affect the physical world. If the illusory creature hits with a Strike, the target takes 3d4 mental damage. The illusion's Strikes are nonlethal. If the damage doesn't correspond to the image of the monster—for example, if an illusory Large dragon deals only 5 damage—the GM might allow the target to attempt an immediate Perception check to disbelieve the spell. Any relevant resistances and weaknesses apply if the target thinks they do, as judged by the GM. For example, if the illusion wields a warhammer and attacks a creature resistant to bludgeoning damage, the creature would take less mental damage. However, illusory damage does not deactivate regeneration or trigger other effects that require a certain damage type. The GM should track illusory damage dealt by the illusion. Any creature that touches the image or uses the Seek action to examine it can attempt to disbelieve your illusion. When a creature disbelieves the illusion, it recovers from half the damage it had taken from it (if any) and doesn't take any further damage from it.",
       "heightened": {
         "+1": "The damage of the image's Strikes increases by 1d4, and the maximum size of creature you can create increases by one (to a maximum of Gargantuan)."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "illusory-object",
@@ -9439,7 +9539,11 @@
       "heightened": {
         "2nd": "our image makes appropriate sounds, generates normal smells, and feels right to the touch. The spell gains the auditory and olfactory traits. The duration increases to 1 hour.",
         "5th": "As the 2nd-rank version, but the duration is unlimited."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "infectious-enthusiasm",
@@ -9453,7 +9557,11 @@
       ],
       "actions": "Two Actions",
       "duration": "1 round",
-      "description": "With enchanted gusto, you encourage yourself to get things done and share your motivation with your allies. You gain a +1 status bonus to your choice of attack rolls, Will saves, or Charisma-based skill checks. During the spell's duration, an ally who observed you Casting this Spell and was within 30 feet when you did so can take a single action, which has the concentrate trait, to gain the same bonus you chose until the start of its next turn. Using this spell to influence someone in a social situation is typically considered a faux pas, negating the benefit on Charisma-based skills if the subject of the check observed you casting the spell."
+      "description": "With enchanted gusto, you encourage yourself to get things done and share your motivation with your allies. You gain a +1 status bonus to your choice of attack rolls, Will saves, or Charisma-based skill checks. During the spell's duration, an ally who observed you Casting this Spell and was within 30 feet when you did so can take a single action, which has the concentrate trait, to gain the same bonus you chose until the start of its next turn. Using this spell to influence someone in a social situation is typically considered a faux pas, negating the benefit on Charisma-based skills if the subject of the check observed you casting the spell.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "inner-upheaval",
@@ -9529,7 +9637,11 @@
       "actions": "Two Actions",
       "area": "10-foot emanation",
       "duration": "10 minutes",
-      "description": "An illusory parade with dozens of participants and performers appears around you, following you as you move. The parade is lively and noisy, providing enough cover and distraction to hide among the crowd. You and other creatures can Hide and Sneak inside the crowd, though creatures that disbelieve the illusion still see creatures within as normal. You can choose to send the parade off with a 2-action activity, which has the concentrate trait. When you do so, the parade no longer follows you and instead continues traveling in the direction of your choice. The parade travels 100 feet over 1 round and then disappears as the spell is Dismissed. You can otherwise Dismiss the spell normally if you prefer."
+      "description": "An illusory parade with dozens of participants and performers appears around you, following you as you move. The parade is lively and noisy, providing enough cover and distraction to hide among the crowd. You and other creatures can Hide and Sneak inside the crowd, though creatures that disbelieve the illusion still see creatures within as normal. You can choose to send the parade off with a 2-action activity, which has the concentrate trait. When you do so, the parade no longer follows you and instead continues traveling in the direction of your choice. The parade travels 100 feet over 1 round and then disappears as the spell is Dismissed. You can otherwise Dismiss the spell normally if you prefer.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "knock",
@@ -9544,7 +9656,11 @@
       "range": "30 feet",
       "targets": "1 door, lock, or container",
       "duration": "1 minute",
-      "description": "You make the target easier to open. Knock grants a +4 status bonus to any creature that tries to open the target door, lock, or container with an Athletics or a Thievery check. You can attempt a Thievery check to open the target as part of casting knock, and you add your level even if you're untrained. Knock counteracts Lock."
+      "description": "You make the target easier to open. Knock grants a +4 status bonus to any creature that tries to open the target door, lock, or container with an Athletics or a Thievery check. You can attempt a Thievery check to open the target as part of casting knock, and you add your level even if you're untrained. Knock counteracts Lock.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "light",
@@ -9563,7 +9679,13 @@
       "description": "You create an orb of light that sheds bright light in a 20-foot radius (and dim light for the next 20 feet) in a color you choose. If you create the light in the same space as a willing creature, you can attach the light to the creature, causing it to float near that creature as it moves. You can Sustain the spell to move the light up to 60 feet; you can attach or detach it from a creature as part of this movement. You can Dismiss the spell. If you Cast the Spell while you already have four light spells active, you must choose one of the existing spells to end.",
       "heightened": {
         "4th": "The orb sheds light in a 60-foot radius (and dim light for the next 60 feet)."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "lingering-composition",
@@ -9606,7 +9728,11 @@
         "Success": "The target is unaffected.",
         "Failure": "The target is stunned 1.",
         "Critical Failure": "The target is stunned 2."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "mirror-image",
@@ -9618,7 +9744,11 @@
       ],
       "actions": "Two Actions",
       "duration": "1 minute",
-      "description": "Three illusory images of you swirl about your space, potentially causing those who attack you to hit one of the images instead of you. Any attack that would hit you has a random chance of hitting one of your images instead of you. If all three images remain, there is a 1 in 4 chance of hitting you (1 on 1d4). With two images remaining, there is a 1 in 3 chance of hitting you (1–2 on 1d6). With only one image, the chances are 1 in 2 (1–3 on 1d6). Once an image is hit, it is destroyed. If an attack roll fails to hit your AC but doesn't critically fail, it destroys an image but has no additional effect (even if the attack would normally have an effect on a failure). If an attack roll is a critical success and would hit one of the images, one of the images is destroyed and the attack roll becomes a success against you. Once all the images are destroyed, the spell ends."
+      "description": "Three illusory images of you swirl about your space, potentially causing those who attack you to hit one of the images instead of you. Any attack that would hit you has a random chance of hitting one of your images instead of you. If all three images remain, there is a 1 in 4 chance of hitting you (1 on 1d4). With two images remaining, there is a 1 in 3 chance of hitting you (1–2 on 1d6). With only one image, the chances are 1 in 2 (1–3 on 1d6). Once an image is hit, it is destroyed. If an attack roll fails to hit your AC but doesn't critically fail, it destroys an image but has no additional effect (even if the attack would normally have an effect on a failure). If an attack roll is a critical success and would hit one of the images, one of the images is destroyed and the attack roll becomes a success against you. Once all the images are destroyed, the spell ends.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "murmured-prayer-plus",
@@ -9642,7 +9772,10 @@
       "frequencyRule": {
         "per": "day",
         "uses": 1
-      }
+      },
+      "traditions": [
+        "divine"
+      ]
     },
     {
       "id": "mystic-armor",
@@ -9662,7 +9795,11 @@
         "6th": "The item bonus to AC increases to +2, and you gain a +1 item bonus to saving throws.",
         "8th": "The item bonus to AC increases to +2, and you gain a +2 item bonus to saving throws.",
         "10th": "The item bonus to AC increases to +3, and you gain a +3 item bonus to saving throws."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "noise-blast",
@@ -9687,7 +9824,12 @@
       },
       "heightened": {
         "+1": "The damage increases by 1d10."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "overselling-flourish",
@@ -9709,7 +9851,11 @@
         "Success": "The creature is thrown off by your display. The creature becomes dazzled until the start of your turn.",
         "Failure": "The creature fully believes your performance, leaving itself open. The creature becomes dazzled and flat-footed until the start of your turn.",
         "Critical Failure": "The creature is enraptured by the display. The creature uses its remaining actions to watch you in awe. It then remains dazzled and flat-footed until the start of your turn."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "pocket-library",
@@ -9729,7 +9875,11 @@
         "3rd": "The status bonus increases to +2 and you can reference your pocket library twice before the spell ends.",
         "6th": "The status bonus increases to +3 and you can reference your pocket library three times before the spell ends.",
         "9th": "The status bonus increases to +4 and you can reference your pocket library four times before the spell ends."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "prestidigitation",
@@ -9745,7 +9895,13 @@
       "range": "10 feet",
       "targets": "1 object (cook, clean, or color only)",
       "duration": "Sustained",
-      "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color. Prestidigitation can't deal damage or cause adverse conditions. Any actual change to an object (beyond what is noted above) persists only as long as you Sustain the spell."
+      "description": "The simplest magic does your bidding. You can perform simple magical effects for as long as you Sustain the Spell. Each time you Sustain the Spell, you can choose any one of four options: cook, lift, clean, or color. Prestidigitation can't deal damage or cause adverse conditions. Any actual change to an object (beyond what is noted above) persists only as long as you Sustain the spell.",
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "ray-of-frost",
@@ -9777,7 +9933,11 @@
             "base": "1d4"
           }
         }
-      }
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
     },
     {
       "id": "runic-body",
@@ -9799,7 +9959,13 @@
       "heightened": {
         "6th": "The unarmed attacks are +2 greater striking.",
         "9th": "The unarmed attacks are +3 major striking."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
     },
     {
       "id": "serrate",
@@ -9836,7 +10002,11 @@
       "description": "You raise a magical shield of force. This counts as using the Raise a Shield action, giving you a +1 circumstance bonus to AC until the start of your next turn, but it doesn't require a hand to use. While the spell is in effect, you can use the Shield Block reaction with your magical shield. The shield has Hardness 5. You can use the spell's reaction to reduce damage from any spell or magical effect, even if it doesn't deal physical damage. After you use Shield Block, the spell ends and you can't cast it again for 10 minutes.",
       "heightened": {
         "+2": "The shields hardness increases by 5."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "shields-of-the-spirit",
@@ -9897,7 +10067,11 @@
             "note": "Only if the target wears metal armor or is made of metal (you also get +1 on the attack roll)"
           }
         ]
-      }
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
     },
     {
       "id": "sleep",
@@ -9924,7 +10098,11 @@
       },
       "heightened": {
         "4th": "The creatures fall unconscious for 1 round on a failure or 1 minute on a critical failure. They fall prone and release what they're holding, and they can't attempt Perception checks to wake up. When the duration ends, the creature is sleeping normally instead of automatically waking up."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "sudden-bolt",
@@ -9942,7 +10120,11 @@
       "description": "You call down a small bolt of lightning on the target, dealing 4d12 electricity damage.",
       "heightened": {
         "+1": "The damage increases by 1d12."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
     },
     {
       "id": "summon-undead",
@@ -9968,7 +10150,12 @@
         "8th": "The creature can be up to Level 11.",
         "9th": "The creature can be up to Level 13.",
         "10th": "The creature can be up to Level 15."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
     },
     {
       "id": "telekinetic-hand",
@@ -9989,7 +10176,11 @@
         "3rd": "You can target an unattended object with a Bulk of 1 or less.",
         "5th": "The range increases to 60 feet, and you can target an unattended object with a Bulk of 1 or less.",
         "7th": "The range increases to 60 feet, and you can target an unattended object with a Bulk of 2 or less."
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "telekinetic-projectile",
@@ -10031,7 +10222,12 @@
             "defaultOn": true
           }
         ]
-      }
+      },
+      "traditions": [
+        "arcane",
+        "occult",
+        "primal"
+      ]
     }
   ],
   "effect": [
