@@ -38,17 +38,7 @@ import {
   animalCompanionFromForm,
   blankAnimalCompanion,
   AnimalCompanionSubform,
-  frequencyRuleToForm,
-  frequencyRuleFromForm,
-  FrequencyRuleControl,
-  immunityToForm,
-  immunityFromForm,
-  ImmunityControl,
-  variantsToForm,
-  variantsFromForm,
-  VariantsControl,
 } from '../../components/gm/AbilitySubforms';
-import TraitsField from '../../components/shared/TraitsField';
 import './gm.css';
 
 // 5a: identity/abilities/saves. 5b: skills + proficiencies. 5c: the top-level
@@ -66,8 +56,6 @@ const ARMOR = ['unarmored', 'light', 'medium', 'heavy'];
 const TIERS = [0, 1, 2, 3, 4];
 // Per-spell scalar fields the form manages explicitly; anything else on a spell
 // (id, etc.) is preserved verbatim.
-const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration', 'description'];
-const SPELL_NUM = ['level', 'baseLevel'];
 
 const toInt = (v) => {
   const n = parseInt(v, 10);
@@ -284,51 +272,18 @@ const itemFromForm = (f, index) => {
   return out;
 };
 
+// A repertoire spell is a catalog reference only (epic #622 — no inline spells):
+// the form holds just the `spellRef` plus any per-character keys (e.g. a
+// `signature` flag) preserved verbatim through `rest`.
 const spellToForm = (s) => {
-  const rest = { ...s };
-  SPELL_STR.forEach((k) => delete rest[k]);
-  SPELL_NUM.forEach((k) => delete rest[k]);
-  delete rest.traits;
-  delete rest.heightened;
-  delete rest.frequencyRule;
-  delete rest.immunity;
-  delete rest.variants;
-  const str = {};
-  SPELL_STR.forEach((k) => { str[k] = s[k] != null ? String(s[k]) : ''; });
-  const num = {};
-  SPELL_NUM.forEach((k) => { num[k] = s[k] != null ? String(s[k]) : '0'; });
-  const heightened = s.heightened && typeof s.heightened === 'object'
-    ? Object.entries(s.heightened).map(([key, text]) => ({ key, text: String(text) }))
-    : [];
-  return {
-    str,
-    num,
-    traits: Array.isArray(s.traits) ? s.traits.join(', ') : '',
-    heightened,
-    frequencyRule: frequencyRuleToForm(s.frequencyRule),
-    immunity: immunityToForm(s.immunity),
-    variants: variantsToForm(s.variants),
-    rest, // id + any unmanaged keys, preserved
-  };
+  const src = s && typeof s === 'object' ? s : {};
+  const { spellRef, ...rest } = src;
+  return { spellRef: spellRef != null ? String(spellRef) : '', rest };
 };
 
-const spellFromForm = (sf) => {
-  const out = { ...sf.rest };
-  SPELL_STR.forEach((k) => { const v = sf.str[k].trim(); if (v) out[k] = v; });
-  SPELL_NUM.forEach((k) => { out[k] = toInt(sf.num[k]); });
-  const traits = sf.traits.split(',').map((t) => t.trim()).filter(Boolean);
-  if (traits.length) out.traits = traits;
-  const h = {};
-  sf.heightened.forEach((r) => { if (r.key.trim()) h[r.key.trim()] = r.text; });
-  if (Object.keys(h).length) out.heightened = h;
-  const frequencyRule = frequencyRuleFromForm(sf.frequencyRule);
-  if (frequencyRule) out.frequencyRule = frequencyRule;
-  const immunity = immunityFromForm(sf.immunity);
-  if (immunity) out.immunity = immunity;
-  const variants = variantsFromForm(sf.variants);
-  if (variants) out.variants = variants;
-  return out;
-};
+// The catalog spell supplies every field at resolution time, so emit ONLY the
+// ref (+ any preserved rest). Empty-ref rows are dropped in scFromForm.
+const spellFromForm = (sf) => ({ ...sf.rest, spellRef: sf.spellRef.trim() });
 
 const scToForm = (sc) => {
   const src = sc && typeof sc === 'object' ? sc : {};
@@ -357,7 +312,7 @@ const scFromForm = (f) => {
   const slots = {};
   f.spellcasting.slots.forEach((r) => { if (r.level.trim()) slots[r.level.trim()] = toInt(r.count); });
   sc.spell_slots = slots;
-  sc.spells = f.spellcasting.spells.map(spellFromForm);
+  sc.spells = f.spellcasting.spells.map(spellFromForm).filter((s) => s.spellRef);
   return sc;
 };
 
@@ -461,71 +416,39 @@ const TierSelect = ({ label, name, value, onChange }) => (
   </div>
 );
 
-const SpellRow = ({ index, spell, onChange, onRemove }) => {
-  const setStr = (k, v) => onChange({ ...spell, str: { ...spell.str, [k]: v } });
-  const setNum = (k, v) => onChange({ ...spell, num: { ...spell.num, [k]: v } });
-  const setH = (i, patch) =>
-    onChange({ ...spell, heightened: spell.heightened.map((h, idx) => (idx === i ? { ...h, ...patch } : h)) });
-  const addH = () => onChange({ ...spell, heightened: [...spell.heightened, { key: '', text: '' }] });
-  const rmH = (i) => onChange({ ...spell, heightened: spell.heightened.filter((_, idx) => idx !== i) });
+// A repertoire spell is picked from the shared catalog (epic #622 — no inline
+// spells): the row is just a catalog ref select + a resolved-name preview.
+const SpellRow = ({ index, spell, spells, onChange, onRemove }) => {
+  const ref = (spell.spellRef || '').trim();
+  const sorted = (Array.isArray(spells) ? spells : [])
+    .slice()
+    .sort((a, b) =>
+      String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
+    );
+  const refMatch = ref ? sorted.find((s) => String(s.id) === ref) : null;
 
   return (
     <div className="gm-card" data-testid={`spell-${index}`}>
-      <div className="gm-row">
-        <div className="form-group">
-          <label>spell name</label>
-          <input aria-label={`spell-${index}-name`} value={spell.str.name} onChange={(e) => setStr('name', e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label>level</label>
-          <input aria-label={`spell-${index}-level`} type="number" value={spell.num.level} onChange={(e) => setNum('level', e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label>baseLevel</label>
-          <input aria-label={`spell-${index}-baseLevel`} type="number" value={spell.num.baseLevel} onChange={(e) => setNum('baseLevel', e.target.value)} />
-        </div>
-      </div>
-      <div className="gm-row">
-        {['actions', 'range', 'area', 'targets', 'defense', 'duration'].map((k) => (
-          <div className="form-group" key={k}>
-            <label>{k}</label>
-            <input aria-label={`spell-${index}-${k}`} value={spell.str[k]} onChange={(e) => setStr(k, e.target.value)} />
-          </div>
-        ))}
-      </div>
       <div className="form-group">
-        <label>traits</label>
-        <TraitsField ariaLabel={`spell-${index}-traits`} value={spell.traits} onChange={(v) => onChange({ ...spell, traits: v })} />
-      </div>
-      <FrequencyRuleControl
-        value={spell.frequencyRule || frequencyRuleToForm(null)}
-        idPrefix={`spell-${index}`}
-        onChange={(r) => onChange({ ...spell, frequencyRule: r })}
-      />
-      <ImmunityControl
-        value={spell.immunity || immunityToForm(null)}
-        idPrefix={`spell-${index}`}
-        onChange={(imm) => onChange({ ...spell, immunity: imm })}
-      />
-      <VariantsControl
-        value={spell.variants}
-        idPrefix={`spell-${index}`}
-        onChange={(v) => onChange({ ...spell, variants: v })}
-      />
-      <div className="form-group">
-        <label>description</label>
-        <textarea aria-label={`spell-${index}-description`} rows={3} value={spell.str.description || ''} onChange={(e) => setStr('description', e.target.value)} />
-      </div>
-      <div className="form-group">
-        <label>heightened</label>
-        {spell.heightened.map((h, i) => (
-          <div key={i} className="gm-row gm-rank-row">
-            <input aria-label={`spell-${index}-h-${i}-key`} placeholder="e.g. +1 / 3rd" value={h.key} onChange={(e) => setH(i, { key: e.target.value })} />
-            <input aria-label={`spell-${index}-h-${i}-text`} placeholder="effect" value={h.text} onChange={(e) => setH(i, { text: e.target.value })} />
-            <button className="btn-small btn-danger" onClick={() => rmH(i)}>Remove</button>
-          </div>
-        ))}
-        <button className="btn-small btn-secondary" onClick={addH}>Add heightened</button>
+        <label>spell</label>
+        <select
+          aria-label={`spell-${index}-ref`}
+          value={spell.spellRef || ''}
+          onChange={(e) => onChange({ ...spell, spellRef: e.target.value })}
+        >
+          <option value="">— (select a spell) —</option>
+          {sorted.map((s) => (
+            <option key={s.id} value={s.id}>{s.name || s.id}</option>
+          ))}
+          {ref && !refMatch && <option value={ref}>(unknown: {ref})</option>}
+        </select>
+        <p className="gm-hint" data-testid={`spell-${index}-ref-preview`}>
+          {ref
+            ? refMatch
+              ? `→ ${refMatch.name}`
+              : '→ (unknown spell — will show a stub until the id matches)'
+            : 'Pick a spell from the catalog.'}
+        </p>
       </div>
       <button className="btn-small btn-danger" onClick={onRemove}>Remove spell</button>
     </div>
@@ -583,7 +506,7 @@ const ItemRow = ({ item, tag, catalogList, onEdit, onRemove }) => {
   );
 };
 
-const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestored }) => {
+const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, onRestored }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -614,7 +537,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
   const addSlot = () => setSc({ slots: [...sc.slots, { level: '', count: '0' }] });
   const rmSlot = (i) => setSc({ slots: sc.slots.filter((_, idx) => idx !== i) });
   const setSpell = (i, next) => setSc({ spells: sc.spells.map((s, idx) => (idx === i ? next : s)) });
-  const addSpell = () => setSc({ spells: [...sc.spells, spellToForm({ name: '', level: 0, baseLevel: 1 })] });
+  const addSpell = () => setSc({ spells: [...sc.spells, spellToForm({})] });
   const rmSpell = (i) => setSc({ spells: sc.spells.filter((_, idx) => idx !== i) });
 
   // Inventory entries live at a path: [i] for a top-level row, [i, j] for the
@@ -1142,6 +1065,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
                     key={i}
                     index={i}
                     spell={s}
+                    spells={spells}
                     onChange={(next) => setSpell(i, next)}
                     onRemove={() => rmSpell(i)}
                   />
@@ -1337,7 +1261,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, onSaved, onRestor
 
 const GmCharacters = () => {
   // Edit the AUTHORED docs (catalog refs intact), never the resolved view.
-  const { rawCharacters, items } = useContent();
+  const { rawCharacters, items, spells } = useContent();
   const list = useMemo(
     () => (Array.isArray(rawCharacters) ? rawCharacters : []),
     [rawCharacters]
@@ -1405,6 +1329,7 @@ const GmCharacters = () => {
           isNew
           existingIds={existingIds}
           catalog={items}
+          spells={spells}
           onSaved={onSaved}
           onRestored={onRestored}
         />
@@ -1415,6 +1340,7 @@ const GmCharacters = () => {
           isNew={false}
           existingIds={existingIds}
           catalog={items}
+          spells={spells}
           onSaved={onSaved}
           onRestored={onRestored}
         />
