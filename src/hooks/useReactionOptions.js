@@ -13,9 +13,11 @@ import { useCastingResources } from './useCastingResources';
 import { useFrequency } from './useFrequency';
 import { useEncounter } from './useEncounter';
 import { useSyncedState } from './useSyncedState';
+import { useReadiedAction } from './useReadiedAction';
 import { useContent } from '../contexts/ContentContext';
 import { useGameDate } from '../contexts/GameDateContext';
 import { buildReactionSources, castSourceOf } from '../utils/reactionSources';
+import { readiedAbility } from '../utils/readiedAction';
 import { toGameSeconds, formatAvailableAt } from '../utils/gameTime';
 
 export const useReactionOptions = (character) => {
@@ -39,28 +41,33 @@ export const useReactionOptions = (character) => {
   const { gateFor } = useFrequency(charId);
   const { encounter } = useEncounter();
   const { gameDate, time } = useGameDate();
+  const { readied } = useReadiedAction(charId);
   // Attunement gates which eld source is usable today (read-only here).
   const [attunedSource] = useSyncedState(`cnmh_eldattune_${charId || 'unknown'}`, '');
 
   const repertoireSpells = spellcasting?.spells;
 
-  const sources = useMemo(
-    () =>
-      buildReactionSources({
-        reactions,
-        staffSpells,
-        focusSpells,
-        catalogSpells,
-        repertoireSpells,
-        innateSpells,
-        wandSpells,
-        scrollSpells,
-        eldPowers,
-        attunedSource,
-        characterLevel: level,
-      }),
-    [reactions, staffSpells, focusSpells, catalogSpells, repertoireSpells, innateSpells, wandSpells, scrollSpells, eldPowers, attunedSource, level]
-  );
+  const sources = useMemo(() => {
+    const base = buildReactionSources({
+      reactions,
+      staffSpells,
+      focusSpells,
+      catalogSpells,
+      repertoireSpells,
+      innateSpells,
+      wandSpells,
+      scrollSpells,
+      eldPowers,
+      attunedSource,
+      characterLevel: level,
+    });
+    // A readied action (#501) is a player-initiated, off-turn ability that isn't
+    // on the sheet. It rides the same gating as a reaction (consumes the
+    // reaction when it fires) but is private to this surface — never fed into
+    // buildReactionSources, so the GM-fired ReactionPrompt never offers it.
+    const ready = readiedAbility(readied);
+    return ready ? [...base, ready] : base;
+  }, [reactions, staffSpells, focusSpells, catalogSpells, repertoireSpells, innateSpells, wandSpells, scrollSpells, eldPowers, attunedSource, level, readied]);
 
   // Frequency context for cooldown gating, mirroring UseAbilityModal so the
   // armed-bar state and the modal's enforcement agree.
