@@ -61,8 +61,9 @@ vi.mock('../../hooks/useSessionLog', () => ({
 // just drive the modal's gating + wiring. Play mode controls visibility; the
 // roster supplies recipients.
 const mockGive = vi.fn(() => true);
+const mockGiveConsumable = vi.fn(() => true);
 vi.mock('../../hooks/useGiveItem', () => ({
-  useGiveItem: () => ({ give: mockGive }),
+  useGiveItem: () => ({ give: mockGive, giveConsumable: mockGiveConsumable }),
 }));
 let mockMode = 'exploration';
 vi.mock('../../hooks/usePlayMode', () => ({
@@ -83,6 +84,8 @@ beforeEach(() => {
   mockAppendEvent.mockClear();
   mockGive.mockClear();
   mockGive.mockReturnValue(true);
+  mockGiveConsumable.mockClear();
+  mockGiveConsumable.mockReturnValue(true);
   mockMode = 'exploration';
   mockCharacters = [];
 });
@@ -950,14 +953,17 @@ describe('ItemModal — give to another PC (#656)', () => {
     expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
   });
 
-  it('hides the section for a consumable', () => {
-    renderGive({ ...wornItem, consumable: { kind: 'healing' } });
-    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
-  });
-
-  it('hides the section for a container', () => {
-    renderGive({ ...wornItem, container: { capacity: 4, contents: [] } });
-    expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  it('gives a container (with its contents) via the whole-item path', () => {
+    const pack = {
+      ...wornItem,
+      name: 'Backpack',
+      container: { capacity: 4, contents: [{ uid: 'c1', name: 'Rope', weight: 1 }] },
+    };
+    renderGive(pack);
+    expect(screen.getByTestId('item-give')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('give-item-b'));
+    expect(mockGive).toHaveBeenCalledWith('b', pack);
+    expect(mockGiveConsumable).not.toHaveBeenCalled();
   });
 
   it('hides the section for an item hosting an affixed talisman', () => {
@@ -970,5 +976,74 @@ describe('ItemModal — give to another PC (#656)', () => {
     mockCharacters = [{ id: 'a', name: 'Ashka' }];
     renderGive();
     expect(screen.queryByTestId('item-give')).not.toBeInTheDocument();
+  });
+});
+
+// #657 — consumable stack-splitting.
+describe('ItemModal — give a consumable stack (#657)', () => {
+  const giver = { id: 'a', name: 'Ashka' };
+  const potion = {
+    name: 'Healing Potion',
+    uid: 'p1',
+    state: 'worn',
+    weight: 0.1,
+    quantity: 3,
+    consumable: { kind: 'healing' },
+  };
+
+  const renderGive = (item = potion, props = {}) =>
+    render(<ItemModal isOpen onClose={vi.fn()} item={item} character={giver} {...props} />);
+
+  beforeEach(() => {
+    mockCharacters = [
+      { id: 'a', name: 'Ashka' },
+      { id: 'b', name: 'Pellias' },
+    ];
+  });
+
+  it('offers a quantity picker for a stack of more than one', () => {
+    renderGive();
+    expect(screen.getByLabelText('Quantity to give')).toBeInTheDocument();
+    expect(screen.getByText('of 3')).toBeInTheDocument();
+  });
+
+  it('gives the chosen count through giveConsumable and logs the amount', () => {
+    renderGive();
+    fireEvent.change(screen.getByLabelText('Quantity to give'), { target: { value: '2' } });
+    fireEvent.click(screen.getByTestId('give-item-b'));
+    expect(mockGiveConsumable).toHaveBeenCalledWith('b', potion, 2);
+    expect(mockGive).not.toHaveBeenCalled();
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Ashka gave 2 Healing Potion to Pellias' }),
+    );
+  });
+
+  it('clamps the count to the remaining quantity', () => {
+    renderGive();
+    fireEvent.change(screen.getByLabelText('Quantity to give'), { target: { value: '99' } });
+    fireEvent.click(screen.getByTestId('give-item-b'));
+    expect(mockGiveConsumable).toHaveBeenCalledWith('b', potion, 3);
+  });
+
+  it('defaults to giving one and omits the count from the log', () => {
+    renderGive();
+    fireEvent.click(screen.getByTestId('give-item-b'));
+    expect(mockGiveConsumable).toHaveBeenCalledWith('b', potion, 1);
+    expect(mockAppendEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Ashka gave Healing Potion to Pellias' }),
+    );
+  });
+
+  it('shows no quantity picker for a single consumable', () => {
+    renderGive({ ...potion, quantity: 1 });
+    expect(screen.getByTestId('item-give')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Quantity to give')).not.toBeInTheDocument();
+  });
+
+  it('does not log when giveConsumable rejects', () => {
+    mockGiveConsumable.mockReturnValue(false);
+    renderGive();
+    fireEvent.click(screen.getByTestId('give-item-b'));
+    expect(mockAppendEvent).not.toHaveBeenCalled();
   });
 });
