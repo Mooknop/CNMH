@@ -6384,6 +6384,11 @@
                 "uid": "e-fwwaylp8j3e7",
                 "ref": "waterskin",
                 "quantity": 1
+              },
+              {
+                "uid": "e-s9s9p0kmavu7",
+                "ref": "rations",
+                "quantity": 1
               }
             ]
           }
@@ -6444,6 +6449,31 @@
         {
           "uid": "e-d3n3r7qdj3e7",
           "ref": "horn-of-rust",
+          "quantity": 1
+        },
+        {
+          "uid": "e-aa8l5sitavu7",
+          "ref": "scroll-of-sleep",
+          "quantity": 1
+        },
+        {
+          "uid": "e-yzpz6v5yavu7",
+          "ref": "scroll-of-dispel-magic",
+          "quantity": 1
+        },
+        {
+          "uid": "e-8xq46prgavu7",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-ikikuamxavu7",
+          "ref": "salve-of-antiparalysis",
+          "quantity": 1
+        },
+        {
+          "uid": "e-l1qrunn0avu7",
+          "ref": "holy-water",
           "quantity": 1
         }
       ],
@@ -7806,6 +7836,31 @@
           "uid": "e-6yakvan8ry1f",
           "ref": "minor-elixir-of-life",
           "quantity": 1
+        },
+        {
+          "uid": "e-47653xtc1xrc",
+          "ref": "1-cold-iron-longsword",
+          "quantity": 1
+        },
+        {
+          "uid": "e-8t7654x51xrc",
+          "ref": "spoiling-buckler",
+          "quantity": 1
+        },
+        {
+          "uid": "e-dlfzhji81xrc",
+          "ref": "antiplague",
+          "quantity": 1
+        },
+        {
+          "uid": "e-p5jbu0xf1xrc",
+          "ref": "holy-water",
+          "quantity": 2
+        },
+        {
+          "uid": "e-4y51zbvm1xrc",
+          "ref": "torch",
+          "quantity": 5
         }
       ],
       "feats": [
@@ -8236,7 +8291,10 @@
       "weight": 1,
       "runes": {
         "potency": 1,
-        "striking": "striking"
+        "striking": "striking",
+        "property": [
+          "vitalizing"
+        ]
       },
       "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
       "traits": [
@@ -9382,6 +9440,113 @@
           }
         ]
       }
+    },
+    {
+      "id": "1-cold-iron-longsword",
+      "name": "Longsword",
+      "price": 41,
+      "material": "Cold Iron",
+      "runes": {
+        "potency": 1
+      },
+      "weight": 1,
+      "traits": [
+        "Versatile P"
+      ],
+      "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "strikes": {
+        "name": "Longsword Strike",
+        "proficiency": "martial",
+        "type": "melee",
+        "action": 1,
+        "damage": "1d8",
+        "traits": [
+          "Attack",
+          "Versatile P",
+          "Melee"
+        ]
+      }
+    },
+    {
+      "id": "holy-water",
+      "name": "Holy Water",
+      "price": 3,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Divine",
+        "Holy",
+        "Splash"
+      ],
+      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
+      "strikes": {
+        "name": "Holy Water",
+        "proficiency": "simple",
+        "type": "ranged",
+        "action": 1,
+        "damage": "1d6",
+        "range": "20ft",
+        "traits": [
+          "Attack",
+          "Thrown",
+          "Splash",
+          "Holy"
+        ]
+      }
+    },
+    {
+      "id": "spoiling-buckler",
+      "name": "Spoiling Buckler",
+      "price": 150,
+      "weight": 0.1,
+      "traits": [
+        "Magical"
+      ],
+      "description": "A wooden buckler made of magically preserved rotting wood. It smells foul, but is a token of friendship from the fey of Tickwood.\n\nSpoiling: Any food within 5 feet of it spoils at double the usual rate.\n\nBullet Guard: You gain resistance 5 against firearms and slings.",
+      "shield": {
+        "health": 6,
+        "breakThreshold": 3,
+        "hardness": 3,
+        "bonus": 1
+      },
+      "actions": [
+        {
+          "name": "Tumbling Tumbleweed",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate",
+            "Wood"
+          ],
+          "description": "Frequency once per day; Effect the buckler spawns a spherical wicker cage that tumbles at one creature within 30 feet. The creature must succeed at a DC 19 Reflex save or be carried 15 feet in a direction of your choice."
+        }
+      ]
+    },
+    {
+      "id": "salve-of-antiparalysis",
+      "name": "Salve of Antiparalysis",
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Oil"
+      ],
+      "description": "Applying this filmy salve to a creature helps it overcome magical paralysis. Activate (one-action, manipulate); held in 2 hands. The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22).",
+      "variants": [
+        {
+          "level": 6,
+          "label": "Salve of Antiparalysis",
+          "price": 40,
+          "effect": "The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22)."
+        },
+        {
+          "level": 12,
+          "label": "Greater",
+          "price": 325,
+          "effect": "If the creature is petrified, it returns to normal, and for removing paralysis the salve's counteract modifier is +31 and its counteract rank is 6th."
+        }
+      ]
     }
   ],
   "spell": [
