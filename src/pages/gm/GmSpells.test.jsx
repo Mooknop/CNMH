@@ -346,4 +346,63 @@ describe('GmSpells', () => {
     expect(screen.getByLabelText('spell-frequency-per').value).toBe('day');
     expect(screen.getByLabelText('spell-immunity-unit').value).toBe('hour');
   });
+
+  it('saves checked traditions in canonical order regardless of click order', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    selectSpell('Guidance');
+    const form = screen.getByTestId('spell-form-guidance');
+    // Click occult before arcane — output must still be canonical-ordered.
+    fireEvent.click(within(form).getByLabelText('tradition-occult'));
+    fireEvent.click(within(form).getByLabelText('tradition-arcane'));
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.traditions).toEqual(['arcane', 'occult']);
+  });
+
+  it('omits the traditions key when none are checked (focus/innate spells)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmSpells />);
+    selectSpell('Guidance');
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.traditions).toBeUndefined();
+  });
+
+  it('loads existing traditions as checked and keeps them out of the raw-JSON box', () => {
+    const spellsWithTraditions = [
+      { ...spells[0], traditions: ['divine', 'occult', 'primal'] },
+    ];
+    useContent.mockReturnValue({ spells: spellsWithTraditions });
+    render(<GmSpells />);
+    selectSpell('Cleanse Affliction');
+    const form = screen.getByTestId('spell-form-cleanse-affliction');
+    expect(within(form).getByLabelText('tradition-divine')).toBeChecked();
+    expect(within(form).getByLabelText('tradition-occult')).toBeChecked();
+    expect(within(form).getByLabelText('tradition-primal')).toBeChecked();
+    expect(within(form).getByLabelText('tradition-arcane')).not.toBeChecked();
+    const parsed = JSON.parse(within(form).getByLabelText('rest-json').value);
+    expect(parsed.traditions).toBeUndefined();
+  });
+
+  it('unchecking a loaded tradition drops it from the saved payload', async () => {
+    saveDocument.mockResolvedValue({ ok: true });
+    const spellsWithTraditions = [
+      { ...spells[2], traditions: ['arcane', 'occult'] }, // Guidance
+    ];
+    useContent.mockReturnValue({ spells: spellsWithTraditions });
+    render(<GmSpells />);
+    selectSpell('Guidance');
+    const form = screen.getByTestId('spell-form-guidance');
+    fireEvent.click(within(form).getByLabelText('tradition-arcane')); // uncheck
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.traditions).toEqual(['occult']);
+  });
 });
