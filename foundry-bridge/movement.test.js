@@ -156,11 +156,43 @@ describe('handleMoveConfirm', () => {
       { x: 600, y: 500 },
       { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
     );
-    expect(send).toHaveBeenCalledWith('Pellias', 'movedone', {
+    expect(send).toHaveBeenCalledWith('Pellias', 'movedone', expect.objectContaining({
       newPosition: { col: 6, row: 5, x: 600, y: 500 },
       feetMoved: 5,
       reqTs: 42,
+    }));
+  });
+
+  test('piggybacks the destination cell options onto movedone (#451)', async () => {
+    setupPellias();
+    await handleMoveConfirm('Pellias', {
+      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 42,
     });
+
+    const { nextOpts } = send.mock.calls[0][2];
+    // Probed from the DESTINATION (6,5), not the old origin (5,5).
+    expect(nextOpts.origin).toEqual({ col: 6, row: 5 });
+    expect(nextOpts.reachable.length + nextOpts.blocked.length).toBe(8);
+    expect(nextOpts.speed).toBe(10);
+    // The old origin (5,5) is now an adjacent reachable cell of the destination.
+    expect(nextOpts.reachable).toContainEqual(
+      expect.objectContaining({ col: 5, row: 5 })
+    );
+  });
+
+  test('piggybacked options reflect obstacles around the destination, not the origin', async () => {
+    setupPellias();
+    // Wall blocks the cell at (7,5) — the destination's east neighbour. Measured
+    // center-to-center: destination (6,5) centre is (650,550), (7,5) is (750,550).
+    global.CONFIG.Canvas.polygonBackends.move.testCollision = (origin, dest) =>
+      dest.x === 750 && dest.y === 550;
+
+    await handleMoveConfirm('Pellias', {
+      destination: { col: 6, row: 5 }, moveType: 'stride', ts: 1,
+    });
+
+    const { nextOpts } = send.mock.calls[0][2];
+    expect(nextOpts.blocked).toContainEqual({ col: 7, row: 5, kind: 'wall' });
   });
 
   test('unmapped character → no move, no push', async () => {
@@ -231,10 +263,10 @@ describe('minion movement', () => {
       { x: 600, y: 500 },
       { [BRIDGE_SOURCE_FLAG]: 'app', animate: true },
     );
-    expect(send).toHaveBeenCalledWith('Ashka-companion', 'movedone', {
+    expect(send).toHaveBeenCalledWith('Ashka-companion', 'movedone', expect.objectContaining({
       newPosition: { col: 6, row: 5, x: 600, y: 500 },
       feetMoved: 5,
       reqTs: 9,
-    });
+    }));
   });
 });

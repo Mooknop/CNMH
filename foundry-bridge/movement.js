@@ -19,7 +19,10 @@
 //                  originOccupied = the token currently shares its cell with an
 //                    ally (it stepped through one) — the app forbids stopping here.
 //   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts }
-//   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved }
+//   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved, nextOpts }
+//                  nextOpts = the moveopts for the *destination* cell, computed
+//                    right after the move so chained steps skip a whole
+//                    movereq→moveopts round-trip (#451). Same shape as moveopts.
 //
 // All canvas/geometry calls go through pf2eAdapter.js.
 
@@ -135,10 +138,18 @@ export async function handleMoveConfirm(charId, value) {
 
   await moveToken(token, x, y);
 
+  // Piggyback the destination cell's step options so a chained move doesn't pay
+  // another movereq→moveopts round-trip (#451). Computed from the known
+  // destination, not by re-reading the token — token.x/y lag the animated move.
+  const nextOpts = await getStepNeighbors(token, {
+    col: destination.col, row: destination.row, x, y,
+  });
+
   _sendUpdate?.(charId, 'movedone', {
     newPosition: { col: destination.col, row: destination.row, x, y },
     feetMoved,
     reqTs: value?.ts ?? null,
+    nextOpts,
   });
 }
 
@@ -148,11 +159,17 @@ export async function handleMoveConfirm(charId, value) {
 // walls. No speed-radius scan and no cost cap: every direct neighbour is a legal
 // single step (terrain just tags it difficult). `speed` rides along so the app
 // can charge a Stride action per Speed of accumulated distance.
-async function getStepNeighbors(token) {
+//
+// `origin` (optional) overrides where the probe is centred — { col, row, x, y }
+// with x,y the cell's TOP-LEFT pixel. Used to probe the destination right after
+// a move (#451) without re-reading token.x/y, which lag the animated update.
+async function getStepNeighbors(token, origin) {
   const gridSize = getGridSize();
   const speed    = getSpeed(token.actor);
 
-  const { col: originCol, row: originRow } = getTokenGridPosition(token);
+  const tokenPos = origin ?? getTokenGridPosition(token);
+  const originCol = tokenPos.col;
+  const originRow = tokenPos.row;
   const occupied  = occupiedCells(token, gridSize);
   const reachable = [];
   const blocked   = [];
@@ -164,8 +181,12 @@ async function getStepNeighbors(token) {
   const { width: tW, height: tH } = getTokenDimensions(token);
   const offX = (tW * gridSize) / 2;
   const offY = (tH * gridSize) / 2;
-  const fromX = token.x + offX;
-  const fromY = token.y + offY;
+  // When probing the destination, token.x/y still hold the pre-move position, so
+  // use the supplied origin pixel; otherwise read the token's current corner.
+  const baseX = origin ? origin.x : token.x;
+  const baseY = origin ? origin.y : token.y;
+  const fromX = baseX + offX;
+  const fromY = baseY + offY;
 
   for (let dc = -1; dc <= 1; dc++) {
     for (let dr = -1; dr <= 1; dr++) {

@@ -23,6 +23,9 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
   const [pendingMoveType, setPendingMoveType] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const sessionTs = useRef(null);
+  // Step options the bridge piggybacked onto the last movedone (#451). When set,
+  // requestMoveRefresh adopts them instead of paying a movereq→moveopts round-trip.
+  const pendingNextOpts = useRef(null);
 
   const [moveOpts] = useSyncedState(`cnmh_moveopts_${charId}`, null);
   const [moveDone] = useSyncedState(`cnmh_movedone_${charId}`, null);
@@ -42,6 +45,9 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
   // setStage('awaiting-opts') is the last setter queued and wins the React batch.
   useEffect(() => {
     if (stage === 'awaiting-done' && moveDone && moveDone.reqTs === sessionTs.current) {
+      // Stash the piggybacked next-step opts (if any) before onMoveDone, so a
+      // requestMoveRefresh call inside it can adopt them without a round-trip.
+      pendingNextOpts.current = moveDone.nextOpts ?? null;
       setStage(null);
       onMoveDone?.(moveDone);
     }
@@ -50,16 +56,28 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
   const requestMove = (moveType) => {
     const ts = Date.now();
     sessionTs.current = ts;
+    pendingNextOpts.current = null; // a fresh probe supersedes any stale piggyback
     setPendingMoveType(moveType);
     setStage('awaiting-opts');
     sendUpdate(charId, 'movereq', { moveType, ts });
   };
 
-  // Keeps the picker visible while refreshing for a new origin (exploration chaining).
+  // Keeps the picker visible while refreshing for a new origin (exploration
+  // chaining). When the bridge piggybacked the next step's opts onto movedone
+  // (#451), adopt them immediately — no movereq→moveopts round-trip. Otherwise
+  // fall back to the round-trip probe (legacy bridge / first probe).
   const requestMoveRefresh = (moveType) => {
+    setPendingMoveType(moveType);
+    const next = pendingNextOpts.current;
+    if (next) {
+      pendingNextOpts.current = null;
+      setPickerOpts(next);
+      setIsRefreshing(false);
+      setStage('picking');
+      return;
+    }
     const ts = Date.now();
     sessionTs.current = ts;
-    setPendingMoveType(moveType);
     setIsRefreshing(true);
     setStage('awaiting-opts');
     sendUpdate(charId, 'movereq', { moveType, ts });
@@ -84,6 +102,7 @@ export function useTokenMovement(charId, { onMoveDone } = {}) {
     setPickerOpts(null);
     setPendingMoveType(null);
     setIsRefreshing(false);
+    pendingNextOpts.current = null;
   };
 
   return {
