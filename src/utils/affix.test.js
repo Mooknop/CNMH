@@ -55,6 +55,16 @@ describe('affix util (#254/#339)', () => {
     expect(validAffixHosts(items, pin).map((i) => i.uid)).toEqual(['a1']);      // armor only
   });
 
+  it('a base + runes weapon is a valid talisman host — runes and affix coexist (#609)', () => {
+    const runedAxe = {
+      uid: 'w2', name: 'Greataxe',
+      runes: { potency: 2, property: [{ id: 'vitalizing', name: 'Vitalizing' }] },
+      strikes: [{ damage: '1d12' }],
+    };
+    expect(hostMatchesType(runedAxe, 'weapon')).toBe(true); // matched by its strikes, runes are irrelevant here
+    expect(validAffixHosts([wolfFang, runedAxe], wolfFang).map((i) => i.uid)).toEqual(['w2']);
+  });
+
   describe('affix / unaffix / affixedHostUid', () => {
     it('binds and reads back the host uid immutably', () => {
       const o1 = affix({}, 't1', 'w1');

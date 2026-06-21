@@ -59,4 +59,32 @@ describe('ItemRow (#254/#339)', () => {
       expect(container.querySelector('.weapon-rune-line')).toBeNull();
     });
   });
+
+  describe('rune + talisman coexistence (#609)', () => {
+    const runedAxe = {
+      uid: 'w2', name: 'Greataxe',
+      runes: { potency: 1, property: [{ id: 'vitalizing', name: 'Vitalizing' }] },
+    };
+
+    it('renders rune lines before talisman lines under one weapon, in order', () => {
+      const { container } = render(
+        <ItemRow item={runedAxe} affixedTalismans={[fang]} onItemClick={vi.fn()} />
+      );
+      const lines = [...container.querySelectorAll('.weapon-rune-line, .affixed-talisman-line')];
+      expect(lines.map((l) => l.className)).toEqual(['weapon-rune-line', 'affixed-talisman-line']);
+      expect(lines[0]).toHaveTextContent('Vitalizing');
+      expect(lines[0]).toHaveTextContent('rune');
+      expect(lines[1]).toHaveTextContent('Wolf Fang');
+      expect(lines[1]).toHaveTextContent('affixed');
+    });
+
+    it('rune line opens the host weapon; talisman line opens the talisman', () => {
+      const onItemClick = vi.fn();
+      render(<ItemRow item={runedAxe} affixedTalismans={[fang]} onItemClick={onItemClick} />);
+      fireEvent.click(screen.getByRole('button', { name: /Vitalizing/ }));
+      expect(onItemClick).toHaveBeenLastCalledWith(runedAxe);
+      fireEvent.click(screen.getByRole('button', { name: /Wolf Fang/ }));
+      expect(onItemClick).toHaveBeenLastCalledWith(fang);
+    });
+  });
 });
