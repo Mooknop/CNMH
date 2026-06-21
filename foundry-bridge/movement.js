@@ -10,10 +10,14 @@
 //
 // Protocol (all modeled as cnmh_* keys so the session relay relays them):
 //   App → bridge:  cnmh_movereq_<charId>     = { moveType, ts }
-//   Bridge → app:  cnmh_moveopts_<charId>    = { origin, reachable[], blocked[], gridSize, speed }
-//                  reachable[] entries: { col, row, feet, terrain }
+//   Bridge → app:  cnmh_moveopts_<charId>    = { origin, reachable[], blocked[], gridSize, speed, originOccupied }
+//                  reachable[] entries: { col, row, feet, terrain, passThrough? }
+//                    passThrough: true → an ally's square; steppable to move
+//                    *through*, but the move may not END here (see originOccupied).
 //                  blocked[]   entries: { col, row, kind: 'wall' | 'ally' | 'enemy' }
 //                  speed = actor land Speed (ft), for action accounting
+//                  originOccupied = the token currently shares its cell with an
+//                    ally (it stepped through one) — the app forbids stopping here.
 //   App → bridge:  cnmh_moveconfirm_<charId> = { destination, moveType, actionCost, ts }
 //   Bridge → app:  cnmh_movedone_<charId>    = { newPosition, feetMoved }
 //
@@ -177,11 +181,12 @@ async function getStepNeighbors(token) {
         continue;
       }
 
-      // Can't end movement on another creature's square. kind is 'ally' or
-      // 'enemy' so the picker can color the obstacle accordingly.
+      // Occupancy (#456). You may move *through* an ally's square but can't end
+      // there; enemies stay blocked (Tumble Through / size rules are out of
+      // scope — see #614). kind is 'ally' or 'enemy' so the picker colors it.
       const occupant = occupied.get(`${col},${row}`);
-      if (occupant) {
-        blocked.push({ col, row, kind: occupant });
+      if (occupant === 'enemy') {
+        blocked.push({ col, row, kind: 'enemy' });
         continue;
       }
 
@@ -189,9 +194,21 @@ async function getStepNeighbors(token) {
       const cost = snapFeet(measureMoveCost(fromX, fromY, toX, toY));
       const straightFeet = Math.max(Math.abs(dc), Math.abs(dr)) * 5;
       const terrain = cost > straightFeet ? 'difficult' : 'normal';
-      reachable.push({ col, row, feet: cost, terrain });
+      // An ally's square is reachable as a pass-through (steppable, can't stop).
+      const cell = { col, row, feet: cost, terrain };
+      if (occupant === 'ally') cell.passThrough = true;
+      reachable.push(cell);
     }
   }
+
+  // The move may not END on an ally; flag it when the token already shares one
+  // of its footprint cells with another creature (it stepped through), so the
+  // app can disable "Done" until the player steps clear.
+  const originOccupied = Array.from({ length: tW }).some((_, c) =>
+    Array.from({ length: tH }).some((_, r) =>
+      occupied.has(`${originCol + c},${originRow + r}`)
+    )
+  );
 
   return {
     origin: { col: originCol, row: originRow },
@@ -199,5 +216,6 @@ async function getStepNeighbors(token) {
     blocked,
     gridSize,
     speed,
+    originOccupied,
   };
 }

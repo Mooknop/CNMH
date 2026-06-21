@@ -91,6 +91,8 @@ const ExplorationMove = ({ charId, onMoveDone }) => {
             radius={1}
             stepMode
             cancelLabel="Done"
+            cancelDisabled={pickerOpts.originOccupied}
+            cancelHint="Step off your ally's square to stop."
             onSelect={confirmMove}
             onCancel={handleDone}
           />

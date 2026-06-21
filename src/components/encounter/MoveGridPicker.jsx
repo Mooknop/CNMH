@@ -14,6 +14,9 @@ import './MoveGridPicker.css';
 //   stepMode    boolean  (optional; render a direction arrow per cell instead of
 //                         the feet cost, and a dot on the origin — a D-pad feel)
 //   cancelLabel string   (optional; label for the dismiss button, default Cancel)
+//   cancelDisabled boolean (optional; disable the dismiss button — used to forbid
+//                           stopping while standing on an ally's square, #456)
+//   cancelHint  string   (optional; shown when the dismiss button is disabled)
 //   onSelect    ({ col, row }) => void
 //   onCancel    () => void
 
@@ -43,6 +46,8 @@ const MoveGridPicker = ({
   radius: radiusProp,
   stepMode = false,
   cancelLabel = 'Cancel',
+  cancelDisabled = false,
+  cancelHint,
   onSelect,
   onCancel,
 }) => {
@@ -77,13 +82,21 @@ const MoveGridPicker = ({
       let status = 'out';
       let kind = null;
       if (isOrigin) status = 'origin';
-      else if (square) status = square.terrain === 'difficult' ? 'difficult' : 'reachable';
-      else if (blockKind) {
+      else if (square) {
+        // Pass-through (an ally's square) takes precedence over difficult so the
+        // "can't stop here" affordance is always visible; difficulty rides along.
+        if (square.passThrough) status = 'passthrough';
+        else status = square.terrain === 'difficult' ? 'difficult' : 'reachable';
+      } else if (blockKind) {
         status = `blocked-${blockKind}`;
         kind = blockKind;
       }
 
-      cells.push({ key: k, col, row, dc, dr, status, kind, feet: square?.feet });
+      cells.push({
+        key: k, col, row, dc, dr, status, kind,
+        feet: square?.feet,
+        difficult: square?.terrain === 'difficult',
+      });
     }
   }
 
@@ -94,12 +107,13 @@ const MoveGridPicker = ({
         style={{ gridTemplateColumns: `repeat(${span}, 1fr)` }}
       >
         {cells.map((c) => {
-          if (c.status === 'reachable' || c.status === 'difficult') {
+          if (c.status === 'reachable' || c.status === 'difficult' || c.status === 'passthrough') {
             const dir = stepMode ? DIR[`${c.dc},${c.dr}`] : null;
-            const difficult = c.status === 'difficult' ? ' (difficult terrain)' : '';
+            const difficult = c.difficult ? ' (difficult terrain)' : '';
+            const through = c.status === 'passthrough' ? ' (through ally)' : '';
             const label = dir
-              ? `Step ${dir.name}${difficult}`
-              : `Move to ${c.col},${c.row}${difficult} — ${c.feet} ft`;
+              ? `Step ${dir.name}${through}${difficult}`
+              : `Move to ${c.col},${c.row}${through}${difficult} — ${c.feet} ft`;
             return (
               <button
                 key={c.key}
@@ -130,15 +144,23 @@ const MoveGridPicker = ({
           <span className="mgp-swatch mgp-swatch--wall" aria-hidden="true" />Wall
         </li>
         <li className="mgp-legend-item">
-          <span className="mgp-swatch mgp-swatch--ally" aria-hidden="true" />Ally
+          <span className="mgp-swatch mgp-swatch--ally" aria-hidden="true" />Ally (pass-through)
         </li>
         <li className="mgp-legend-item">
           <span className="mgp-swatch mgp-swatch--enemy" aria-hidden="true" />Enemy
         </li>
       </ul>
-      <button type="button" className="btn-secondary mgp-cancel" onClick={onCancel}>
+      <button
+        type="button"
+        className="btn-secondary mgp-cancel"
+        onClick={onCancel}
+        disabled={cancelDisabled}
+      >
         {cancelLabel}
       </button>
+      {cancelDisabled && cancelHint && (
+        <p className="mgp-cancel-hint" role="status">{cancelHint}</p>
+      )}
     </div>
   );
 };
