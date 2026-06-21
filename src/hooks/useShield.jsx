@@ -37,7 +37,8 @@ export const useShield = (charId, inventory = []) => {
     {}
   );
 
-  // The shield currently in a hand. First held entry wins.
+  // The shield currently in a hand. First held entry wins. `maxHp` is the
+  // authored (full) HP — the cap the live overlay is restored toward.
   const heldShield = useMemo(() => {
     const entry = (inventory || []).find(
       (e) => e && e.shield && isHeldState(e.state)
@@ -47,7 +48,7 @@ export const useShield = (charId, inventory = []) => {
     // Overlay the session HP if a block has been recorded.
     const liveHp = shieldState?.[entry.uid]?.hp;
     const shield = liveHp !== undefined ? { ...base, hp: liveHp } : base;
-    return { uid: entry.uid, name: entry.name, shield };
+    return { uid: entry.uid, name: entry.name, shield, maxHp: base.hp };
   }, [inventory, shieldState]);
 
   const broken = heldShield ? isShieldBroken(heldShield.shield) : false;
@@ -89,6 +90,24 @@ export const useShield = (charId, inventory = []) => {
     [heldShield, setShieldState]
   );
 
+  // Repair (#579): restore HP to the held shield, capped at its full HP. A
+  // positive restore above the broken threshold clears the Broken state via the
+  // normal HP comparison (isShieldBroken). React-free callers pass the amount.
+  const repairShield = useCallback(
+    (amount) => {
+      if (!heldShield || !(amount > 0)) return null;
+      const max = heldShield.maxHp ?? heldShield.shield?.hp ?? 0;
+      const current = heldShield.shield?.hp ?? 0;
+      const next = Math.min(max, current + amount);
+      setShieldState((cur) => ({
+        ...(cur || {}),
+        [heldShield.uid]: { hp: next },
+      }));
+      return next;
+    },
+    [heldShield, setShieldState]
+  );
+
   const shieldEffect = useMemo(() => {
     if (!raised || !heldShield) return null;
     const bonus = heldShield.shield?.bonus || 0;
@@ -102,7 +121,7 @@ export const useShield = (charId, inventory = []) => {
     };
   }, [raised, heldShield]);
 
-  return { heldShield, raised, broken, raiseShield, lowerShield, applyBlock, shieldEffect };
+  return { heldShield, raised, broken, raiseShield, lowerShield, applyBlock, repairShield, shieldEffect };
 };
 
 export default useShield;

@@ -127,3 +127,35 @@ describe('useShield — applyBlock (app-local HP)', () => {
     expect(result.current.broken).toBe(true);
   });
 });
+
+describe('useShield — repairShield (#579)', () => {
+  // maxHp is the authored (full) HP; damage is the live overlay applyBlock writes.
+  it('exposes the authored HP as maxHp', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]));
+    expect(result.current.heldShield.maxHp).toBe(20);
+  });
+
+  it('restores HP and clears Broken once back above the threshold', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]));
+    act(() => result.current.applyBlock(17)); // 20 − (17 − 5 hardness) = 8 → Broken
+    expect(result.current.heldShield.shield.hp).toBe(8);
+    expect(result.current.broken).toBe(true);
+    act(() => result.current.repairShield(5));
+    expect(result.current.heldShield.shield.hp).toBe(13);
+    expect(result.current.broken).toBe(false);
+  });
+
+  it('caps the restore at the shield max HP', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]));
+    act(() => result.current.applyBlock(7)); // 20 − 2 = 18
+    act(() => result.current.repairShield(40));
+    expect(result.current.heldShield.shield.hp).toBe(20);
+  });
+
+  it('is a no-op for a non-positive amount', () => {
+    const { result } = renderHook(() => useShield('Pellias', [heldSteelShield]));
+    act(() => result.current.applyBlock(10)); // 20 − 5 = 15
+    act(() => result.current.repairShield(0));
+    expect(result.current.heldShield.shield.hp).toBe(15);
+  });
+});
