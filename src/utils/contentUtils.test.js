@@ -787,9 +787,11 @@ describe('resolveRepertoireSpells', () => {
     });
   });
 
-  it('passes an inline entry (no spellRef) through unchanged (infra back-compat)', () => {
-    const inline = { id: 'r1', name: 'Daze', level: 0 };
-    expect(resolveRepertoireSpells([inline], repMap)[0]).toBe(inline);
+  it('yields a stub for an entry with no spellRef (no inline back-compat, #622)', () => {
+    expect(resolveRepertoireSpells([{ id: 'r1', name: 'Daze', level: 0 }], repMap)[0]).toEqual({
+      name: '(unknown spell)',
+      level: 0,
+    });
   });
 
   it('returns a non-array input unchanged', () => {

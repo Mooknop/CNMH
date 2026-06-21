@@ -183,12 +183,12 @@ export const resolveFocusSpells = (arr, spellMap) => {
 // Resolve a character's prepared/known repertoire (`spellcasting.spells`). Each
 // entry references a catalog spell by `spellRef` (epic #622), replaced by the
 // catalog spell + entry-local overrides (e.g. a per-character `signature` flag).
-// During the migration this still passes a no-`spellRef` entry through as inline
-// back-compat; S3 lockdown drops that. Same dangling-ref stub as the others.
+// A missing or dangling ref yields the same level-0 stub as the other resolvers.
 export const resolveRepertoireSpells = (arr, spellMap) => {
   if (!Array.isArray(arr)) return arr;
   return arr.map((entry) => {
-    if (!entry || typeof entry !== 'object' || entry.spellRef == null) return entry;
+    if (!entry || typeof entry !== 'object') return entry;
+    if (entry.spellRef == null) return { name: '(unknown spell)', level: 0 };
     const spell = spellMap && spellMap.get(String(entry.spellRef));
     if (!spell) return { name: `(unknown spell: ${entry.spellRef})`, level: 0 };
     const { spellRef, ...overrides } = entry;
