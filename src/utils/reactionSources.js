@@ -25,7 +25,11 @@ export const buildReactionSources = ({
   catalogSpells = [],
 } = {}) => {
   const staffReactions = (staffSpells || []).filter(isReactionCost);
-  const focusReactions = resolveFocusSpells(focusSpells || [], spellCatalogMap(catalogSpells))
+  // resolveFocusSpells passes a non-array input straight through (its contract),
+  // so coerce before filtering — a sheet whose focus field is a points pool
+  // object rather than a spell list must not crash the encounter view.
+  const resolvedFocus = resolveFocusSpells(focusSpells || [], spellCatalogMap(catalogSpells));
+  const focusReactions = (Array.isArray(resolvedFocus) ? resolvedFocus : [])
     .filter(isReactionCost)
     .map((s) => ({ ...s, fromFocus: true, active: true }));
   return [...(reactions || []), ...staffReactions, ...focusReactions];

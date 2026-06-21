@@ -209,13 +209,18 @@ export const useCharacter = (character) => {
 
     const eldPowers   = spellcasting.eldPowers || [];
 
-    const focusSpells = (
-      character.focus_spells ||
-      spellcasting.focus ||
-      character.champion?.devotion_spells ||
-      character.monk?.ki_spells ||
-      []
-    );
+    // The focus/devotion/ki/bloodline spell LIST — never the focus-point pool.
+    // Some sheets store a pool at spellcasting.focus ({ max, current }); taking
+    // the first *array* among the known locations skips that object so it can't
+    // masquerade as a spell list downstream (a non-array here crashed
+    // buildReactionSources' .filter). Mirrors FOCUS_SPELL_PATHS' priority.
+    const focusSpells = [
+      character.focus_spells,
+      spellcasting.focus,
+      character.champion?.devotion_spells,
+      character.monk?.ki_spells,
+      spellcasting.bloodline?.focus_spells,
+    ].find(Array.isArray) || [];
 
     // ── Feature flags ────────────────────────────────────────────────────────
     // Centralises all "does this character have X?" checks so components
