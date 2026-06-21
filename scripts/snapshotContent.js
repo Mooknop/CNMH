@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_BASE = 'https://cnmh.mooknop.workers.dev';
-const COLLECTION_KEYS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'image', 'theme'];
+const COLLECTION_KEYS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme'];
 const REQUIRED_NON_EMPTY = ['character', 'quest'];
 
 const baseUrl = (process.argv[2] || process.env.CNMH_SNAPSHOT_URL || DEFAULT_BASE).replace(/\/$/, '');

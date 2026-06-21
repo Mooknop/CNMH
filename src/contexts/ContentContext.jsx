@@ -11,6 +11,7 @@ import {
   normalizeItems,
   normalizeSpells,
   normalizeEffects,
+  normalizeRunes,
   normalizeImages,
   normalizeTheme,
   resolveCharacterItems,
@@ -151,6 +152,7 @@ export const ContentProvider = ({ children }) => {
   const serverItems = serverList('item');
   const serverSpells = serverList('spell');
   const serverEffects = serverList('effect');
+  const serverRunes = serverList('rune');
   const serverImages = serverList('image');
   const serverTheme = serverList('theme');
   const serverMonsters = serverList('monster');
@@ -165,6 +167,7 @@ export const ContentProvider = ({ children }) => {
   // is the fallback path until a GM Spell collection lands).
   const spells = serverSpells.length ? normalizeSpells(serverSpells) : FALLBACK.spell;
   const effects = serverEffects.length ? normalizeEffects(serverEffects) : FALLBACK.effect;
+  const runes = serverRunes.length ? normalizeRunes(serverRunes) : FALLBACK.rune;
   const images = serverImages.length ? normalizeImages(serverImages) : FALLBACK.image;
   // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
   // editor must edit/save THAT, not the resolved view, or saving would inline
@@ -174,7 +177,7 @@ export const ContentProvider = ({ children }) => {
     ? normalizeCharacters(serverCharacters)
     : FALLBACK.character;
   const characters = rawCharacters.map((c) =>
-    resolveCharacterItems(c, items, spells)
+    resolveCharacterItems(c, items, spells, runes)
   );
 
   // Lore is split into two views: `allLoreEntries` (GM editors, the location
@@ -228,6 +231,7 @@ export const ContentProvider = ({ children }) => {
     items,
     spells,
     effects,
+    runes,
     images,
     theme,
     monsters: serverMonsters,
@@ -247,12 +251,13 @@ const NOOP_CONTENT = {
   allLoreEntries: FALLBACK.lore,
   traits: FALLBACK.trait,
   characters: FALLBACK.character.map((c) =>
-    resolveCharacterItems(c, FALLBACK.item, FALLBACK.spell)
+    resolveCharacterItems(c, FALLBACK.item, FALLBACK.spell, FALLBACK.rune)
   ),
   rawCharacters: FALLBACK.character,
   items: FALLBACK.item,
   spells: FALLBACK.spell,
   effects: FALLBACK.effect,
+  runes: FALLBACK.rune,
   images: FALLBACK.image,
   theme: FALLBACK.theme ? FALLBACK.theme[0] : undefined,
   monsters: [],

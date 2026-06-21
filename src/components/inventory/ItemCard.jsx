@@ -5,6 +5,7 @@
 import React from 'react';
 import { formatBulk, getItemRarity, isItemMagical } from '../../utils/InventoryUtils';
 import { isHeldState, ITEM_STATE_LABEL } from '../../utils/itemState';
+import { weaponDisplayName } from '../../utils/weaponRunes';
 import './ItemCard.css';
 
 const ItemCard = ({ item, onClick }) => {
@@ -32,7 +33,7 @@ const ItemCard = ({ item, onClick }) => {
     >
       <div className="item-card-main">
         <span className="item-card-name">
-          {item.name}
+          {weaponDisplayName(item)}
           {isContainerItem && (
             <span className="item-card-container-icon" role="img" aria-label="Container">📦</span>
           )}

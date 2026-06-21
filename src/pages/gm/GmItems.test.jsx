@@ -359,7 +359,7 @@ describe('GmItems', () => {
     selectItem('Minor Elixir of Life');
     const form = screen.getByTestId('item-form-minor-elixir-of-life');
     fireEvent.change(within(form).getByLabelText('rest-json'), {
-      target: { value: '{"potency": 1, "invested": false}' },
+      target: { value: '{"bonus": 1, "invested": false}' },
     });
     // `invested` is per-character and must still be rejected even alongside ok keys.
     fireEvent.click(within(form).getByText('Save'));
@@ -368,11 +368,25 @@ describe('GmItems', () => {
     );
 
     fireEvent.change(within(form).getByLabelText('rest-json'), {
+      target: { value: '{"bonus": 1}' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].bonus).toBe(1);
+  });
+
+  it('drops a potency pasted into the raw-JSON box (retired in favor of the runes dropdowns)', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    selectItem('Minor Elixir of Life');
+    const form = screen.getByTestId('item-form-minor-elixir-of-life');
+    fireEvent.change(within(form).getByLabelText('rest-json'), {
       target: { value: '{"potency": 1}' },
     });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-    expect(saveDocument.mock.calls[0][2].potency).toBe(1);
+    expect(saveDocument.mock.calls[0][2].potency).toBeUndefined();
   });
 
   it('reports invalid JSON in the raw-JSON box', async () => {
@@ -738,6 +752,143 @@ describe('GmItems', () => {
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(saveDocument.mock.calls[0][2].image).toBeUndefined();
+    });
+  });
+
+  describe('weapon runes (#548 Slice 2)', () => {
+    const legacyPick = {
+      id: '1-striking-pick',
+      name: '+1 Striking Pick',
+      price: 100.1,
+      potency: 1,
+      traits: ['Fatal 1d10'],
+      strikes: { proficiency: 'martial', type: 'melee', action: 1, damage: '2d6' },
+    };
+    const setRuneContent = (extra = []) =>
+      useContent.mockReturnValue({ items: [legacyPick, ...extra], spells, images: [] });
+
+    it('surfaces a legacy-baked notice and re-emits flat potency unchanged on save', async () => {
+      setRuneContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('+1 Striking Pick');
+      const form = screen.getByTestId('item-form-1-striking-pick');
+      expect(within(form).getByTestId('item-runes-legacy')).toHaveTextContent(/Legacy baked potency \(\+1\)/);
+      // Dropdowns start empty so an untouched save never re-derives the weapon.
+      expect(within(form).getByLabelText('rune-potency')).toHaveValue('0');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const data = saveDocument.mock.calls[0][2];
+      expect(data.potency).toBe(1);
+      expect(data.runes).toBeUndefined();
+    });
+
+    it('switching a legacy weapon to runes drops the flat potency', async () => {
+      setRuneContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('+1 Striking Pick');
+      const form = screen.getByTestId('item-form-1-striking-pick');
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '2' } });
+      fireEvent.change(within(form).getByLabelText('rune-striking'), { target: { value: 'greater' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const data = saveDocument.mock.calls[0][2];
+      expect(data.runes).toEqual({ potency: 2, striking: 'greater' });
+      expect(data.potency).toBeUndefined();
+    });
+
+    it('authors a base weapon with runes: derived-name preview, scaled-dice hint, structured save', async () => {
+      setRuneContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      fireEvent.click(screen.getByText('+ New item'));
+      const form = screen.getByTestId('item-form-new');
+      fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Pick' } });
+      fireEvent.change(within(form).getByLabelText('price'), { target: { value: '0.1' } });
+      fireEvent.click(within(form).getByText('Add strike'));
+      fireEvent.change(within(form).getByLabelText('item-strike-0-damage'), { target: { value: '1d6' } });
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '1' } });
+      fireEvent.change(within(form).getByLabelText('rune-striking'), { target: { value: 'striking' } });
+
+      expect(within(form).getByTestId('item-runes-preview')).toHaveTextContent('+1 Striking Pick');
+      expect(within(form).getByTestId('item-runes-preview')).toHaveTextContent('100.1 gp');
+      expect(within(form).getByTestId('item-strike-0-scaled')).toHaveTextContent('2d6');
+
+      fireEvent.click(within(form).getByText('Create item'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const data = saveDocument.mock.calls[0][2];
+      expect(data.name).toBe('Pick');
+      expect(data.price).toBe(0.1);
+      expect(data.runes).toEqual({ potency: 1, striking: 'striking' });
+      expect(data.potency).toBeUndefined();
+    });
+
+    it('hides the runes section for a non-weapon item', () => {
+      setRuneContent([{ id: 'rope', name: 'Rope', price: 0.1, description: '50 feet.' }]);
+      render(<GmItems />);
+      selectItem('Rope');
+      const form = screen.getByTestId('item-form-rope');
+      expect(within(form).queryByTestId('item-runes')).not.toBeInTheDocument();
+    });
+
+    it('potency gates property-rune slot count and saves picked ids', async () => {
+      useContent.mockReturnValue({
+        items: [legacyPick],
+        spells,
+        images: [],
+        runes: [
+          { id: 'vitalizing', type: 'property', name: 'Vitalizing', price: 150 },
+          { id: 'frost', type: 'property', name: 'Frost', price: 500 },
+        ],
+      });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      fireEvent.click(screen.getByText('+ New item'));
+      const form = screen.getByTestId('item-form-new');
+      fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Greataxe' } });
+      fireEvent.click(within(form).getByText('Add strike'));
+      fireEvent.change(within(form).getByLabelText('item-strike-0-damage'), { target: { value: '1d12' } });
+
+      // No potency → no property slots, just the unlock hint.
+      expect(within(form).queryByLabelText('rune-property-0')).not.toBeInTheDocument();
+      expect(within(form).getByTestId('item-rune-property')).toHaveTextContent(/Add potency to unlock/i);
+
+      // +2 potency → exactly two slots.
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '2' } });
+      expect(within(form).getByLabelText('rune-property-0')).toBeInTheDocument();
+      expect(within(form).getByLabelText('rune-property-1')).toBeInTheDocument();
+      expect(within(form).queryByLabelText('rune-property-2')).not.toBeInTheDocument();
+
+      fireEvent.change(within(form).getByLabelText('rune-property-0'), { target: { value: 'vitalizing' } });
+      expect(within(form).getByTestId('item-runes-preview')).toHaveTextContent('+2 Vitalizing Greataxe');
+
+      fireEvent.click(within(form).getByText('Create item'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].runes).toEqual({ potency: 2, property: ['vitalizing'] });
+    });
+
+    it('caps property runes at the potency tier when potency is lowered', async () => {
+      useContent.mockReturnValue({
+        items: [{
+          id: 'axe', name: 'Greataxe', strikes: { type: 'melee', damage: '1d12' },
+          runes: { potency: 2, property: ['vitalizing', 'frost'] },
+        }],
+        spells,
+        images: [],
+        runes: [
+          { id: 'vitalizing', type: 'property', name: 'Vitalizing', price: 150 },
+          { id: 'frost', type: 'property', name: 'Frost', price: 500 },
+        ],
+      });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Greataxe');
+      const form = screen.getByTestId('item-form-axe');
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '1' } });
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].runes).toEqual({ potency: 1, property: ['vitalizing'] });
     });
   });
 });

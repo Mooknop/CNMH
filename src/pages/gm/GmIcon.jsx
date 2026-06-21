@@ -85,6 +85,12 @@ const PATHS = {
       <circle cx="16.5" cy="7.5" r="1.2" />
     </>
   ),
+  rune: (
+    <>
+      <path d="M12 2 21 12l-9 10L3 12z" />
+      <path d="M12 7v10M9 10l3-3 3 3" />
+    </>
+  ),
 };
 
 const GmIcon = ({ name, className = '' }) => {

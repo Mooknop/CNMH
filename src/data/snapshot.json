@@ -5981,8 +5981,14 @@
                 "saveOutcomeEffect": {
                   "effectId": "shining-guidance",
                   "applyTo": "all-allies",
-                  "onDegrees": ["success", "failure", "criticalFailure"],
-                  "duration": { "until": "caster-turn-end" }
+                  "onDegrees": [
+                    "success",
+                    "failure",
+                    "criticalFailure"
+                  ],
+                  "duration": {
+                    "until": "caster-turn-end"
+                  }
                 },
                 "degrees": {
                   "Critical Success": "The creature resists entirely and is unaffected",
@@ -8183,9 +8189,12 @@
   "item": [
     {
       "id": "1-cold-iron-light-hammer",
-      "name": "+1 Cold Iron Light Hammer",
-      "price": 75.1,
-      "potency": 1,
+      "name": "Light Hammer",
+      "price": 40.1,
+      "material": "Cold Iron",
+      "runes": {
+        "potency": 1
+      },
       "weight": 1,
       "traits": [
         "Agile",
@@ -8222,10 +8231,13 @@
     },
     {
       "id": "1-striking-pick",
-      "name": "+1 Striking Pick",
-      "price": 100.1,
+      "name": "Pick",
+      "price": 0.1,
       "weight": 1,
-      "potency": 1,
+      "runes": {
+        "potency": 1,
+        "striking": "striking"
+      },
       "description": "A pick designed solely for combat has a sturdy wooden shaft and a heavy, pointed head to deliver devastating blows.",
       "traits": [
         "Fatal 1d10"
@@ -8234,7 +8246,7 @@
         "proficiency": "martial",
         "type": "melee",
         "action": 1,
-        "damage": "2d6"
+        "damage": "1d6"
       }
     },
     {
@@ -10138,19 +10150,6 @@
       "modifiers": []
     },
     {
-      "id": "shining-guidance",
-      "name": "Shining Guidance",
-      "description": "You and your allies gain a +1 circumstance bonus to attack rolls against the limned creature while it stays limned (Izzy's Shining Guidance, #225). Conditional ('vs limned target') — it surfaces as an opt-in toggle in the attack resolver, applied to the target you choose. Applied to the party automatically when Shining Guidance's save resolves to anything but a critical success; lasts until the end of your next turn (two rounds on a critical failure — re-apply if needed).",
-      "modifiers": [
-        {
-          "stat": "attacks",
-          "kind": "circumstance",
-          "amount": 1,
-          "vs": "limned target"
-        }
-      ]
-    },
-    {
       "id": "fly-spell",
       "name": "Fly (spell)",
       "description": "Character gains a fly Speed equal to their land Speed. Track manually.",
@@ -10421,53 +10420,6 @@
       ]
     },
     {
-      "id": "upstage",
-      "name": "Upstage",
-      "description": "+1 status bonus to attack rolls, Perception, saving throws, and skill checks until the end of your next turn.",
-      "modifiers": [
-        {
-          "stat": "meleeAttack",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "rangedAttack",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "spellAttack",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "perception",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "fort",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "reflex",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "will",
-          "kind": "status",
-          "amount": 1
-        },
-        {
-          "stat": "skills",
-          "kind": "status",
-          "amount": 1
-        }
-      ]
-    },
-    {
       "id": "inspire-courage-2",
       "name": "Inspire Courage (+2)",
       "description": "+2 status bonus to attack rolls (Maestro dedication or Lingering Composition).",
@@ -10526,6 +10478,19 @@
       ]
     },
     {
+      "id": "shining-guidance",
+      "name": "Shining Guidance",
+      "description": "You and your allies gain a +1 circumstance bonus to attack rolls against the limned creature while it stays limned (Izzy's Shining Guidance, #225). Conditional ('vs limned target') — it surfaces as an opt-in toggle in the attack resolver, applied to the target you choose. Applied to the party automatically when Shining Guidance's save resolves to anything but a critical success; lasts until the end of your next turn (two rounds on a critical failure — re-apply if needed).",
+      "modifiers": [
+        {
+          "stat": "attacks",
+          "kind": "circumstance",
+          "amount": 1,
+          "vs": "limned target"
+        }
+      ]
+    },
+    {
       "id": "treat-poison-resist",
       "name": "Treat Poison",
       "description": "+2 circumstance bonus to saving throws against the poison being treated.",
@@ -10544,10 +10509,108 @@
       "modifiers": []
     },
     {
+      "id": "upstage",
+      "name": "Upstage",
+      "description": "+1 status bonus to attack rolls, Perception, saving throws, and skill checks until the end of your next turn.",
+      "modifiers": [
+        {
+          "stat": "meleeAttack",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "spellAttack",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "perception",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "fort",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "status",
+          "amount": 1
+        },
+        {
+          "stat": "skills",
+          "kind": "status",
+          "amount": 1
+        }
+      ]
+    },
+    {
       "id": "waterbreathing",
       "name": "Waterbreathing",
       "description": "You can breathe underwater. Lasts 1 hour.",
       "modifiers": []
+    }
+  ],
+  "rune": [
+    {
+      "id": "vitalizing",
+      "type": "property",
+      "name": "Vitalizing",
+      "level": 5,
+      "price": 150,
+      "description": "A vitalizing rune draws on positive energy. Against undead, the weapon deals 1d6 persistent vitality damage, and a critical hit also leaves the target enfeebled 1 until the end of your next turn.",
+      "rider": {
+        "vsTrait": "undead",
+        "persistent": "1d6",
+        "damageType": "vitality",
+        "onCrit": {
+          "conditions": [
+            {
+              "name": "enfeebled",
+              "value": 1,
+              "duration": "end-of-next-turn"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "vitalizing-greater",
+      "type": "property",
+      "name": "Vitalizing (Greater)",
+      "level": 14,
+      "price": 4300,
+      "description": "A greater vitalizing rune deals 2d6 persistent vitality damage to undead, and a critical hit leaves the target enfeebled 1 and stupefied 1 while the persistent damage continues.",
+      "rider": {
+        "vsTrait": "undead",
+        "persistent": "2d6",
+        "damageType": "vitality",
+        "onCrit": {
+          "conditions": [
+            {
+              "name": "enfeebled",
+              "value": 1,
+              "duration": "while-persistent"
+            },
+            {
+              "name": "stupefied",
+              "value": 1,
+              "duration": "while-persistent"
+            }
+          ]
+        }
+      }
     }
   ],
   "image": [

@@ -14,6 +14,7 @@ import ImageField from '../../components/gm/ImageField';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import TraitsField from '../../components/shared/TraitsField';
 import { toList } from '../../utils/traitRefs';
+import { resolveWeapon, scaleDamageDice, STRIKING } from '../../utils/weaponRunes';
 import './gm.css';
 
 // Slice 2: the shared item catalog editor. Catalog items hold ONLY the shared
@@ -21,7 +22,8 @@ import './gm.css';
 // {capacity,ignored} (never its per-character contents), and a scroll/wand's
 // nested spell. Per-character data (quantity / invested / which container an
 // item sits in) lives on the reference in a character's inventory, never here.
-// Rare mechanical blocks (potency/shield/actions, and an artifact's level-gated
+// Weapon runes (potency/striking) have dedicated dropdowns (#548 Slice 2); the
+// remaining rare mechanical blocks (shield/actions, an artifact's level-gated
 // `artifact` tiers / a staff's `staff` spell list) round-trip through a per-item
 // raw-JSON box, the same faithful pattern as the character editor. A scroll/wand
 // spell can be authored inline OR set to a `spellRef` into the shared catalog.
@@ -114,9 +116,19 @@ const variantFromForm = (vf) => {
 
 const toForm = (it) => {
   const rest = { ...it };
-  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable'].forEach(
+  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable', 'runes', 'potency'].forEach(
     (k) => delete rest[k]
   );
+  // Weapon runes (#548 Slice 2): potency/striking are authored via dropdowns,
+  // not the raw-JSON box. A new `runes` block is the structured model; a legacy
+  // flat `potency` (no `runes`) is preserved untouched and surfaced as a notice
+  // so saving never re-derives a baked weapon's name/dice — migration is Slice 4.
+  const runes = it.runes && typeof it.runes === 'object' && !Array.isArray(it.runes) ? it.runes : null;
+  const RUNE_MANAGED = ['potency', 'striking', 'property'];
+  const runeRest = runes
+    ? Object.fromEntries(Object.entries(runes).filter(([k]) => !RUNE_MANAGED.includes(k)))
+    : {};
+  const legacyPotency = !runes && it.potency != null ? it.potency : null;
   // A weapon's `strikes` is usually an array, but a single-strike weapon
   // (e.g. "+1 Striking Pick") stores a lone object. Edit either as a list and
   // re-emit the same shape on save (see itemFromForm).
@@ -129,6 +141,13 @@ const toForm = (it) => {
   return {
     strikes: strikesSrc.map(strikeToForm),
     strikesWasObject,
+    runePotency: runes && runes.potency != null ? String(runes.potency) : '0',
+    runeStriking: runes && runes.striking ? runes.striking : 'none',
+    runeProperty: runes && Array.isArray(runes.property)
+      ? runes.property.map((p) => (typeof p === 'string' ? p : p?.id)).filter(Boolean)
+      : [],
+    runeRest,
+    legacyPotency,
     variants: (Array.isArray(it.variants) ? it.variants : []).map(variantToForm),
     id: it.id,
     name: it.name != null ? String(it.name) : '',
@@ -193,6 +212,28 @@ const itemFromForm = (f) => {
   delete out.variants;
   const variants = (f.variants || []).map(variantFromForm);
   if (variants.length) out.variants = variants;
+
+  // Weapon runes (#548 Slices 2–3b). The dropdowns/pickers are the single
+  // source of truth, so drop any `runes`/`potency` pasted into the raw-JSON box.
+  // When potency/striking/property is set we emit the structured `runes` block;
+  // property runes are stored as catalog ids and capped at the potency tier
+  // (PF2e: a weapon holds property runes up to its potency value). Otherwise an
+  // un-migrated legacy flat `potency` is re-emitted verbatim.
+  delete out.runes;
+  delete out.potency;
+  const potencyTier = parseInt(f.runePotency, 10) || 0;
+  const striking = f.runeStriking && f.runeStriking !== 'none' ? f.runeStriking : null;
+  const property = (f.runeProperty || []).filter(Boolean).slice(0, potencyTier);
+  if (potencyTier > 0 || striking || property.length || Object.keys(f.runeRest || {}).length) {
+    out.runes = {
+      ...(f.runeRest || {}),
+      ...(potencyTier > 0 ? { potency: potencyTier } : {}),
+      ...(striking ? { striking } : {}),
+      ...(property.length ? { property } : {}),
+    };
+  } else if (f.legacyPotency != null) {
+    out.potency = f.legacyPotency;
+  }
   if (f.description.trim()) out.description = f.description.trim();
   if (f.image) { out.image = f.image; out.imagePosition = f.imagePosition; }
   const traits = toList(f.traits);
@@ -438,7 +479,7 @@ const VariantSubform = ({ variant, idPrefix, onChange }) => (
 );
 
 const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
-  const { spells, effects } = useContent();
+  const { spells, effects, runes: runeCatalog } = useContent();
   const [e, setE] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -477,6 +518,41 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   // so a fresh spell pick updates the disabled Name input + the slug-derived id.
   const derivedName = derivedItemName(e, spells);
   const isSpellItem = e.spellKind === 'scroll' || e.spellKind === 'wand';
+
+  // Weapon-rune preview (#548 Slice 2). The runes block drives a derived display
+  // name + price and scales each strike's native dice; show what it resolves to
+  // so the GM authors base name/price and sees the effect before saving.
+  const runePotencyTier = parseInt(e.runePotency, 10) || 0;
+  const runeStrikingKey = e.runeStriking !== 'none' ? e.runeStriking : null;
+  const strikingDice = runeStrikingKey && STRIKING[runeStrikingKey] ? STRIKING[runeStrikingKey].extraDice : 0;
+  // Property runes (#548 Slice 3b): the available catalog, the rune docs picked
+  // for this weapon (capped at the potency tier), and slot count = potency.
+  const propertyRuneCatalog = (Array.isArray(runeCatalog) ? runeCatalog : [])
+    .filter((r) => (r.type || 'property') === 'property')
+    .slice()
+    .sort((a, b) => String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase()));
+  const runeById = new Map(propertyRuneCatalog.map((r) => [String(r.id), r]));
+  const propertySlots = e.runeProperty.slice(0, runePotencyTier);
+  const selectedPropertyRunes = propertySlots.map((id) => runeById.get(String(id))).filter(Boolean);
+  const hasRunes = runePotencyTier > 0 || !!runeStrikingKey || selectedPropertyRunes.length > 0;
+  const runePreview = resolveWeapon(
+    { name: e.name, price: e.price.trim() !== '' ? toNum(e.price) : 0 },
+    {
+      potency: runePotencyTier,
+      ...(runeStrikingKey ? { striking: runeStrikingKey } : {}),
+      ...(selectedPropertyRunes.length ? { property: selectedPropertyRunes } : {}),
+    }
+  );
+  const showRunes = !isSpellItem && (e.strikes.length > 0 || hasRunes || e.legacyPotency != null);
+
+  // Set one property slot (by index) to a rune id (or '' to clear it), keeping
+  // the array exactly potency-tier long so empty slots round-trip cleanly.
+  const setPropertySlot = (slotIdx, id) => {
+    const next = Array.from({ length: runePotencyTier }, (_, i) =>
+      i === slotIdx ? id : (e.runeProperty[i] || '')
+    );
+    set({ runeProperty: next.filter((v, i) => v || i < runePotencyTier) });
+  };
 
   // Effect-consumable picker options (mirrors the scroll/wand spell-ref select,
   // including the dangling-ref option so a stale id can be repointed).
@@ -726,6 +802,83 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         </div>
       )}
 
+      {/* Weapon runes (#548 Slices 2–3b): potency + striking dropdowns and the
+          potency-gated property-rune picker replace the raw-JSON `potency`
+          field. A legacy baked weapon keeps its flat field (notice below) until
+          the Slice 4 content migration. */}
+      {showRunes && (
+        <div className="form-group" data-testid="item-runes">
+          <label>Weapon runes</label>
+          {e.legacyPotency != null && !hasRunes && (
+            <p className="gm-warn" data-testid="item-runes-legacy">
+              Legacy baked potency (+{e.legacyPotency}) — its +N, dice, and price are fused
+              into this item. It keeps working as-is; re-authoring it as base + runes happens
+              in the Slice 4 content pass. Setting a rune below switches it to the new model.
+            </p>
+          )}
+          <div className="gm-row">
+            <div className="form-group">
+              <label>potency</label>
+              <select
+                aria-label="rune-potency"
+                value={e.runePotency}
+                onChange={(ev) => set({ runePotency: ev.target.value })}
+              >
+                <option value="0">none</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+                <option value="3">+3</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>striking</label>
+              <select
+                aria-label="rune-striking"
+                value={e.runeStriking}
+                onChange={(ev) => set({ runeStriking: ev.target.value })}
+              >
+                <option value="none">none</option>
+                <option value="striking">striking (+1 die)</option>
+                <option value="greater">greater (+2 dice)</option>
+                <option value="major">major (+3 dice)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Property-rune slots (#548 Slice 3b): a weapon holds property runes
+              up to its potency value, so the slot count IS the potency tier. */}
+          <div className="form-group" data-testid="item-rune-property">
+            <label>property runes ({runePotencyTier} {runePotencyTier === 1 ? 'slot' : 'slots'})</label>
+            {runePotencyTier === 0 ? (
+              <p className="gm-hint">Add potency to unlock property-rune slots.</p>
+            ) : (
+              Array.from({ length: runePotencyTier }, (_, i) => (
+                <select
+                  key={i}
+                  aria-label={`rune-property-${i}`}
+                  value={propertySlots[i] || ''}
+                  onChange={(ev) => setPropertySlot(i, ev.target.value)}
+                >
+                  <option value="">— none —</option>
+                  {propertyRuneCatalog.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name || r.id}</option>
+                  ))}
+                  {propertySlots[i] && !runeById.has(String(propertySlots[i])) && (
+                    <option value={propertySlots[i]}>(unknown: {propertySlots[i]})</option>
+                  )}
+                </select>
+              ))
+            )}
+          </div>
+
+          {hasRunes && (
+            <p className="gm-hint" data-testid="item-runes-preview">
+              Resolves to: <strong>{runePreview.name}</strong> · {runePreview.price} gp
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Neither scrolls nor wands have strikes — hide the editor entirely.
           itemFromForm already drops a stale `strikes` paste on save, so the
           catalog stays clean even if data once authored one. */}
@@ -739,6 +892,11 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
                 idPrefix={`item-strike-${i}`}
                 onChange={(next) => setStrike(i, next)}
               />
+              {strikingDice > 0 && s.str.damage.trim() && (
+                <p className="gm-hint" data-testid={`item-strike-${i}-scaled`}>
+                  With {STRIKING[runeStrikingKey].label}: {scaleDamageDice(s.str.damage, strikingDice)}
+                </p>
+              )}
               <button className="btn-small btn-danger" onClick={() => rmStrike(i)}>
                 Remove strike
               </button>
@@ -770,7 +928,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
       </div>
 
       <div className="form-group">
-        <label>extra fields — potency, shield, actions… (raw JSON)</label>
+        <label>extra fields — shield, actions… (raw JSON)</label>
         <textarea
           aria-label="rest-json"
           className="gm-json"

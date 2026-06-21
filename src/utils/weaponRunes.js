@@ -60,6 +60,65 @@ export const buildWeaponName = ({ potency = 0, striking, properties = [], materi
   return segments.join(' ');
 };
 
+// Human-readable duration suffix for a crit-triggered condition.
+const DURATION_TEXT = {
+  'end-of-next-turn': 'until the end of your next turn',
+  'while-persistent': 'while the persistent damage continues',
+};
+const conditionPhrase = (c) => {
+  const base = `${c.name}${c.value != null ? ` ${c.value}` : ''}`;
+  const dur = DURATION_TEXT[c.duration] || c.duration;
+  return dur ? `${base} (${dur})` : base;
+};
+
+/**
+ * Translate one property rune's rich `rider` schema into flat #222 damage-step
+ * riders. A rune yields up to: one persistent-damage rider (any hit) plus one
+ * rider per crit-triggered condition (criticalSuccess only). A `vsTrait` gate is
+ * carried as `appliesVsTrait` for the damage step to resolve against real target
+ * traits. Property entries that already carry a flat #222 rider (an inline
+ * `{ rider: { persistent: {dice,type} | condition | bonus } }`) pass through.
+ *
+ * @param {Object} rune - resolved property-rune doc ({ id, name, rider })
+ * @returns {Array} flat #222 riders
+ */
+export const translatePropertyRider = (rune) => {
+  const rider = rune?.rider;
+  if (!rider) return [];
+
+  // Already a flat #222 rider (Slice 1 inline shape / hand-authored): forward.
+  if (typeof rider.persistent === 'object' || rider.condition || rider.bonus) {
+    return [rider];
+  }
+
+  const baseId = `rune-${rune.id || (rune.name || 'property').toLowerCase()}`;
+  const vsTrait = rider.vsTrait || null;
+  const vsLabel = vsTrait ? ` (vs ${vsTrait})` : '';
+  const gate = vsTrait ? { appliesVsTrait: vsTrait } : {};
+  const out = [];
+
+  if (rider.persistent) {
+    out.push({
+      id: `${baseId}-persistent`,
+      label: `${rune.name}${vsLabel}`,
+      persistent: { dice: rider.persistent, type: rider.damageType || '' },
+      ...gate,
+    });
+  }
+
+  (rider.onCrit?.conditions || []).forEach((c) => {
+    out.push({
+      id: `${baseId}-crit-${c.name}`,
+      label: `${rune.name} — ${c.name}${c.value != null ? ` ${c.value}` : ''}${vsLabel}`,
+      condition: conditionPhrase(c),
+      on: ['criticalSuccess'],
+      ...gate,
+    });
+  });
+
+  return out;
+};
+
 /**
  * Resolve a base weapon plus a `runes` block into effective metadata.
  *
@@ -97,7 +156,7 @@ export const resolveWeapon = (base = {}, runes = {}) => {
     base: base.name,
   });
 
-  const riders = properties.map(p => p?.rider).filter(Boolean);
+  const riders = properties.flatMap(translatePropertyRider);
 
   return {
     name,
@@ -109,3 +168,37 @@ export const resolveWeapon = (base = {}, runes = {}) => {
     properties,
   };
 };
+
+// Whether an item carries a structured `runes` block (the base + runes model).
+const hasRuneBlock = (item) =>
+  !!(item && item.runes && typeof item.runes === 'object' && !Array.isArray(item.runes));
+
+/**
+ * The effective display name for an inventory weapon: the full derived runed
+ * name (#548) for a base + runes weapon, else the item's own name (legacy baked
+ * weapons and everything non-runed pass through unchanged). Display-only — the
+ * base `name` is what strike resolution derives from, so this never feeds back
+ * into the resolver.
+ */
+export const weaponDisplayName = (item) => {
+  if (!hasRuneBlock(item)) return item?.name;
+  return resolveWeapon(
+    { name: item.name, price: item.price, material: item.material, traits: item.traits },
+    item.runes,
+  ).name;
+};
+
+/**
+ * Short potency/striking summary for a runed weapon ("+2 Greater Striking"),
+ * or '' when neither is present. Property runes are listed separately.
+ */
+export const runeTierSummary = (runes) => {
+  if (!runes || typeof runes !== 'object') return '';
+  return buildWeaponName({ potency: POTENCY[runes.potency]?.bonus || 0, striking: runes.striking, base: '' });
+};
+
+/** Resolved property-rune docs on an item, in slot order ([] when none). */
+export const weaponPropertyRunes = (item) =>
+  hasRuneBlock(item) && Array.isArray(item.runes.property)
+    ? item.runes.property.filter((p) => p && typeof p === 'object')
+    : [];

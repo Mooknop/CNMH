@@ -1,4 +1,14 @@
-import { scaleDamageDice, buildWeaponName, resolveWeapon, POTENCY, STRIKING } from './weaponRunes';
+import {
+  scaleDamageDice,
+  buildWeaponName,
+  resolveWeapon,
+  translatePropertyRider,
+  weaponDisplayName,
+  runeTierSummary,
+  weaponPropertyRunes,
+  POTENCY,
+  STRIKING,
+} from './weaponRunes';
 
 describe('scaleDamageDice', () => {
   test('adds dice of the same size', () => {
@@ -70,8 +80,9 @@ describe('resolveWeapon', () => {
     expect(resolveWeapon(base, { striking: 'greater' }).damage).toBe('3d6');
   });
 
-  test('forwards property runes: name, price, and riders', () => {
+  test('folds property runes into name, price, and translated riders', () => {
     const vitalizing = {
+      id: 'vitalizing',
       name: 'Vitalizing',
       price: 150,
       rider: { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' },
@@ -82,7 +93,14 @@ describe('resolveWeapon', () => {
     );
     expect(r.name).toBe('+2 Greater Striking Vitalizing Cold Iron Greataxe');
     expect(r.price).toBeCloseTo(35 + POTENCY[2].price + STRIKING.greater.price + 150);
-    expect(r.riders).toEqual([vitalizing.rider]);
+    expect(r.riders).toEqual([
+      {
+        id: 'rune-vitalizing-persistent',
+        label: 'Vitalizing (vs undead)',
+        persistent: { dice: '1d6', type: 'vitality' },
+        appliesVsTrait: 'undead',
+      },
+    ]);
     expect(r.damage).toBe('3d12');
   });
 
@@ -100,5 +118,108 @@ describe('resolveWeapon', () => {
     const r = resolveWeapon({ name: 'Pick', price: 0.1 }, { striking: 'striking' });
     expect(r.damage).toBeUndefined();
     expect(r.extraDice).toBe(1);
+  });
+});
+
+describe('translatePropertyRider', () => {
+  const vitalizing = {
+    id: 'vitalizing',
+    name: 'Vitalizing',
+    rider: {
+      vsTrait: 'undead',
+      persistent: '1d6',
+      damageType: 'vitality',
+      onCrit: { conditions: [{ name: 'enfeebled', value: 1, duration: 'end-of-next-turn' }] },
+    },
+  };
+
+  test('emits a persistent rider plus one crit-condition rider, both vsTrait-gated', () => {
+    const out = translatePropertyRider(vitalizing);
+    expect(out).toEqual([
+      {
+        id: 'rune-vitalizing-persistent',
+        label: 'Vitalizing (vs undead)',
+        persistent: { dice: '1d6', type: 'vitality' },
+        appliesVsTrait: 'undead',
+      },
+      {
+        id: 'rune-vitalizing-crit-enfeebled',
+        label: 'Vitalizing — enfeebled 1 (vs undead)',
+        condition: 'enfeebled 1 (until the end of your next turn)',
+        on: ['criticalSuccess'],
+        appliesVsTrait: 'undead',
+      },
+    ]);
+  });
+
+  test('greater scaling: 2d6 persistent + two while-persistent crit conditions', () => {
+    const out = translatePropertyRider({
+      id: 'vitalizing-greater',
+      name: 'Vitalizing (Greater)',
+      rider: {
+        vsTrait: 'undead',
+        persistent: '2d6',
+        damageType: 'vitality',
+        onCrit: {
+          conditions: [
+            { name: 'enfeebled', value: 1, duration: 'while-persistent' },
+            { name: 'stupefied', value: 1, duration: 'while-persistent' },
+          ],
+        },
+      },
+    });
+    expect(out).toHaveLength(3);
+    expect(out[0].persistent).toEqual({ dice: '2d6', type: 'vitality' });
+    expect(out[1].condition).toBe('enfeebled 1 (while the persistent damage continues)');
+    expect(out[2].condition).toBe('stupefied 1 (while the persistent damage continues)');
+    expect(out.every((r) => r.appliesVsTrait === 'undead')).toBe(true);
+  });
+
+  test('passes a flat #222 rider through untouched', () => {
+    const flat = { rider: { persistent: { dice: '1d4', type: 'bleed' } } };
+    expect(translatePropertyRider(flat)).toEqual([flat.rider]);
+    const bonus = { rider: { id: 'x', label: 'Frost', bonus: { flat: 1 } } };
+    expect(translatePropertyRider(bonus)).toEqual([bonus.rider]);
+  });
+
+  test('no rider → empty', () => {
+    expect(translatePropertyRider({ id: 'plain', name: 'Plain' })).toEqual([]);
+    expect(translatePropertyRider(null)).toEqual([]);
+  });
+});
+
+describe('display helpers (#548 Slice 3c)', () => {
+  const runedAxe = {
+    name: 'Greataxe',
+    price: 35,
+    runes: { potency: 2, striking: 'greater', property: [{ id: 'vitalizing', name: 'Vitalizing', description: 'vs undead' }] },
+  };
+
+  describe('weaponDisplayName', () => {
+    test('derives the full runed name for a base + runes weapon', () => {
+      expect(weaponDisplayName(runedAxe)).toBe('+2 Greater Striking Vitalizing Greataxe');
+    });
+    test('passes legacy / non-runed items through unchanged', () => {
+      expect(weaponDisplayName({ name: '+1 Striking Pick', potency: 1 })).toBe('+1 Striking Pick');
+      expect(weaponDisplayName({ name: 'Rope' })).toBe('Rope');
+      expect(weaponDisplayName(undefined)).toBeUndefined();
+    });
+  });
+
+  describe('runeTierSummary', () => {
+    test('summarizes potency + striking only', () => {
+      expect(runeTierSummary(runedAxe.runes)).toBe('+2 Greater Striking');
+      expect(runeTierSummary({ potency: 1 })).toBe('+1');
+      expect(runeTierSummary({})).toBe('');
+      expect(runeTierSummary(undefined)).toBe('');
+    });
+  });
+
+  describe('weaponPropertyRunes', () => {
+    test('returns resolved property-rune docs, skipping unresolved id strings', () => {
+      expect(weaponPropertyRunes(runedAxe)).toEqual([{ id: 'vitalizing', name: 'Vitalizing', description: 'vs undead' }]);
+      expect(weaponPropertyRunes({ name: 'X', runes: { property: ['unresolved'] } })).toEqual([]);
+      expect(weaponPropertyRunes({ name: 'Rope' })).toEqual([]);
+    });
   });
 });

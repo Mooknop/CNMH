@@ -15,6 +15,8 @@ import {
   withItemId,
   normalizeItems,
   itemCatalogMap,
+  normalizeRunes,
+  runeCatalogMap,
   withSpellId,
   normalizeSpells,
   spellCatalogMap,
@@ -250,6 +252,18 @@ describe('contentUtils', () => {
       expect(dc.spell.every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
       expect(Array.isArray(buildSeedPayload().collections.spell)).toBe(true);
     });
+    it('bootstrap-seeds the property-rune catalog with Vitalizing (#548)', () => {
+      const dc = defaultContent();
+      expect(Array.isArray(dc.rune)).toBe(true);
+      expect(dc.rune.every((d) => typeof d.id === 'string' && d.id.length > 0)).toBe(true);
+      expect(dc.rune.find((r) => r.id === 'vitalizing')).toMatchObject({ type: 'property', name: 'Vitalizing' });
+      expect(Array.isArray(buildSeedPayload().collections.rune)).toBe(true);
+    });
+    it('normalizeRunes fills id + default type', () => {
+      const [r] = normalizeRunes([{ name: 'Frost', rider: { persistent: '1d6', damageType: 'cold' } }]);
+      expect(r.id).toBe('frost');
+      expect(r.type).toBe('property');
+    });
     it('includes the theme collection with the default campaign doc', () => {
       const dc = defaultContent();
       expect(Array.isArray(dc.theme)).toBe(true);
@@ -320,6 +334,28 @@ describe('contentUtils', () => {
       const out = resolveInventoryItem(inlineContainer, catalog);
       expect(out.container.contents[0].name).toBe('Minor Elixir of Life');
       expect(out.container.contents[0].quantity).toBe(2);
+    });
+
+    it('inlines runes.property ids against the rune catalog (#548)', () => {
+      const vit = {
+        id: 'vitalizing', name: 'Vitalizing', price: 150,
+        rider: { vsTrait: 'undead', persistent: '1d6', damageType: 'vitality' },
+      };
+      const runeMap = runeCatalogMap([vit]);
+      const weaponCatalog = itemCatalogMap([
+        { id: 'axe', name: 'Greataxe', price: 35, strikes: { type: 'melee', damage: '1d12' }, runes: { potency: 2, property: ['vitalizing'] } },
+      ]);
+      const out = resolveInventoryItem({ ref: 'axe', quantity: 1 }, weaponCatalog, undefined, undefined, runeMap);
+      expect(out.runes.property).toEqual([vit]);
+      expect(out.runes.potency).toBe(2); // other rune keys preserved
+    });
+
+    it('drops a dangling rune ref (#548)', () => {
+      const weaponCatalog = itemCatalogMap([
+        { id: 'axe', name: 'Greataxe', runes: { property: ['nope'] } },
+      ]);
+      const out = resolveInventoryItem({ ref: 'axe' }, weaponCatalog, undefined, undefined, runeCatalogMap([]));
+      expect(out.runes.property).toEqual([]);
     });
 
     it('merges a ref over its catalog definition with per-character scalars', () => {
