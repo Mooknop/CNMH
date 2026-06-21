@@ -4958,6 +4958,11 @@
           "uid": "e-we1788s5ihyp",
           "ref": "beacon-shot",
           "quantity": 1
+        },
+        {
+          "uid": "e-28tm05msakrn",
+          "ref": "vangloris-tattoo",
+          "quantity": 1
         }
       ],
       "feats": [
@@ -5441,6 +5446,11 @@
         {
           "uid": "e-g54likfdihyq",
           "ref": "shark-tooth-charm",
+          "quantity": 1
+        },
+        {
+          "uid": "e-r5s7ua5zakrn",
+          "ref": "healers-gloves",
           "quantity": 1
         }
       ],
@@ -7517,6 +7527,11 @@
         {
           "uid": "e-i96di93dihyq",
           "ref": "lesser-healing-potion",
+          "quantity": 1
+        },
+        {
+          "uid": "e-ztotevemakrn",
+          "ref": "scroll-of-mind-games",
           "quantity": 1
         }
       ],
@@ -9703,6 +9718,88 @@
         "activation": {
           "cost": 1,
           "trigger": "You attempt to Escape — gain a +1 item bonus to the Acrobatics check; a success becomes a critical success"
+        }
+      }
+    },
+    {
+      "id": "healers-gloves",
+      "name": "Healer's Gloves",
+      "price": 80,
+      "weight": 0.1,
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "description": "These clean, white gloves never show signs of blood, even after they're used to stitch up wounds or treat other ailments. They give you a +1 item bonus to Medicine checks.",
+      "actions": [
+        {
+          "name": "Healer's Touch",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Effect You soothe the wounds of a willing, living, adjacent creature, restoring 2d6+7 Hit Points to that creature. This is a healing vitality effect. You cannot harm undead with this healing."
+        }
+      ]
+    },
+    {
+      "id": "vangloris-tattoo",
+      "name": "Vangloris Tattoo",
+      "price": 60,
+      "weight": 0,
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
+      "actions": [
+        {
+          "name": "Cast Ventriloquism",
+          "actionCount": 2,
+          "traits": [
+            "Auditory",
+            "Concentrate",
+            "Illusion",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
+        }
+      ]
+    },
+    {
+      "id": "scroll-of-mind-games",
+      "name": "Scroll of Mind Games",
+      "price": 12,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Scroll"
+      ],
+      "description": "Single-use scroll",
+      "scroll": {
+        "id": "spell-1",
+        "name": "Mind Games",
+        "level": 2,
+        "baseLevel": 2,
+        "range": "30 feet",
+        "targets": "1 creature",
+        "defense": "Will",
+        "duration": "sustained up to 1 minute",
+        "traits": [
+          "Uncommon",
+          "Enchantment",
+          "Mental"
+        ],
+        "actions": "Two Actions",
+        "description": "You lock minds with the target, trying to mentally subdue them. The target must attempt a Will save. Each time you Sustain this Spell, the target attempts another Will save.",
+        "degrees": {
+          "Critical Success": "You are stunned 1 and the spell ends.",
+          "Success": "The target is unaffected.",
+          "Failure": "The target is stunned 1.",
+          "Critical Failure": "The target is stunned 2."
         }
       }
     }
