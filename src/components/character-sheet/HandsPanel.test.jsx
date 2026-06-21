@@ -131,6 +131,30 @@ describe('HandsPanel (slots + SWAP)', () => {
     expect(slot(1)).toMatch(/Empty/);
   });
 
+  it('keeps the swap editor in a flyout — hidden until Swap, closed on Confirm (#457)', () => {
+    render(<HandsPanel character={character()} />);
+    // Compact slots are always visible; the editor flyout is not mounted yet.
+    expect(screen.getByTestId('hands-slot-1')).toBeInTheDocument();
+    expect(screen.queryByTestId('hands-swap-panel')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    expect(screen.getByTestId('hands-swap-panel')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('pick-h-0-h1'));
+    fireEvent.click(screen.getByTestId('hands-confirm'));
+    // Confirm closes the flyout; the slot bar reflects the change.
+    expect(screen.queryByTestId('hands-swap-panel')).not.toBeInTheDocument();
+    expect(slot(1)).toMatch(/Longsword/);
+  });
+
+  it('Cancel closes the flyout (#457)', () => {
+    render(<HandsPanel character={character()} />);
+    fireEvent.click(screen.getByTestId('hands-swap'));
+    expect(screen.getByTestId('hands-swap-panel')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('hands-cancel'));
+    expect(screen.queryByTestId('hands-swap-panel')).not.toBeInTheDocument();
+  });
+
   it('no Reset / State / Location controls remain', () => {
     render(<HandsPanel character={character()} />);
     expect(screen.queryByTestId('hands-reset')).not.toBeInTheDocument();
