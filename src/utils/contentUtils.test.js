@@ -309,15 +309,19 @@ describe('contentUtils', () => {
         name: 'Scroll of Friendfetch',
         price: 4,
         weight: 0,
-        scroll: { name: 'Friendfetch', level: 1, traits: ['Force'], description: 'Pull a creature.' },
+        scroll: { spellRef: 'friendfetch' },
       },
       {
         id: 'wand-cleanse',
         name: 'Wand of Cleanse Affliction',
         price: 160,
         weight: 0.1,
-        wand: { name: 'Cleanse Affliction', level: 2, description: 'Reduce an affliction stage.' },
+        wand: { spellRef: 'cleanse-affliction' },
       },
+    ]);
+    const inventorySpellMap = spellCatalogMap([
+      { id: 'friendfetch', name: 'Friendfetch', level: 1, traits: ['Force'], description: 'Pull a creature.' },
+      { id: 'cleanse-affliction', name: 'Cleanse Affliction', level: 2, description: 'Reduce an affliction stage.' },
     ]);
 
     it('passes a legacy inline item through unchanged', () => {
@@ -405,8 +409,8 @@ describe('contentUtils', () => {
     });
 
     it('preserves nested scroll/wand spell blocks so SpellUtils still detects them', () => {
-      const scroll = resolveInventoryItem({ ref: 'scroll-friendfetch', quantity: 2 }, catalog);
-      const wand = resolveInventoryItem({ ref: 'wand-cleanse' }, catalog);
+      const scroll = resolveInventoryItem({ ref: 'scroll-friendfetch', quantity: 2 }, catalog, inventorySpellMap);
+      const wand = resolveInventoryItem({ ref: 'wand-cleanse' }, catalog, inventorySpellMap);
       expect(scroll.scroll.name).toBe('Friendfetch');
       expect(wand.wand.name).toBe('Cleanse Affliction');
 
@@ -526,20 +530,20 @@ describe('contentUtils', () => {
       expect(r.scroll).toEqual({ name: '(unknown spell: nope)', level: 0 });
     });
 
-    it('leaves an inline spell block (no spellRef) untouched (back-compat)', () => {
+    it('yields a stub for a scroll block with no spellRef (no inline back-compat, #622)', () => {
       const inlineCat = itemCatalogMap([
         { id: 'old', name: 'Old Scroll', weight: 0.1, scroll: { name: 'Heal', level: 1 } },
       ]);
       const r = resolveInventoryItem({ ref: 'old' }, inlineCat, spellMap);
-      expect(r.scroll).toEqual({ name: 'Heal', level: 1 });
+      expect(r.scroll).toEqual({ name: '(unknown spell)', level: 0 });
     });
 
-    it('resolves staff spell refs and passes inline staff spells through', () => {
+    it('resolves staff spell refs; an entry with no ref yields a stub (#622)', () => {
       const r = resolveInventoryItem({ ref: 'arti' }, catalog, spellMap, 10);
       expect(r.staff.spells).toHaveLength(3);
       expect(r.staff.spells[0]).toMatchObject({ id: 'figment', name: 'Figment' });
       expect(r.staff.spells[1]).toMatchObject({ id: 'sleep', name: 'Sleep' });
-      expect(r.staff.spells[2]).toEqual({ name: 'Inline', level: 3 });
+      expect(r.staff.spells[2]).toEqual({ name: '(unknown spell)', level: 0 });
     });
 
     it('gates artifact blocks by owner level (below / at / above tier)', () => {

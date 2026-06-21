@@ -35,15 +35,7 @@ const items = [
     price: 4,
     weight: 0,
     traits: ['Consumable', 'Scroll'],
-    scroll: {
-      name: 'Friendfetch',
-      level: 1,
-      traits: ['Uncommon', 'Force'],
-      actions: 'Two Actions',
-      range: '30 feet',
-      description: 'Drag a creature toward you.',
-      heightened: { '3rd': 'Two creatures.' },
-    },
+    scroll: { spellRef: 'friendfetch' },
   },
 ];
 
@@ -66,6 +58,7 @@ const spells = [
   { id: 'sleep', name: 'Sleep', level: 1 },
   { id: 'figment', name: 'Figment', level: 0 },
   { id: 'mirror-image', name: 'Mirror Image', level: 2 },
+  { id: 'friendfetch', name: 'Friendfetch', level: 1, traits: ['Uncommon', 'Force'] },
 ];
 
 const setContent = () => useContent.mockReturnValue({ items, spells, images: [] });
@@ -206,63 +199,25 @@ describe('GmItems', () => {
     expect(saveDocument.mock.calls[0][2].container).toEqual({ capacity: 2, ignored: 0 });
   });
 
-  it('round-trips a scroll nested spell and edits it', async () => {
+  it('round-trips a scroll spellRef and lets the GM re-point it', async () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
     render(<GmItems />);
     selectItem('Scroll of Friendfetch');
     const form = screen.getByTestId('item-form-scroll-friendfetch');
-    // Existing scroll prefilled the sub-form.
+    // Existing scroll prefilled the catalog reference.
     expect(within(form).getByLabelText('spell-kind')).toHaveValue('scroll');
-    expect(within(form).getByLabelText('spell-name')).toHaveValue('Friendfetch');
-    expect(within(form).getByLabelText('spell-level')).toHaveValue(1);
-
-    fireEvent.change(within(form).getByLabelText('spell-description'), {
-      target: { value: 'Drag up to two creatures toward you.' },
-    });
-    fireEvent.click(within(form).getByText('Add heightened'));
-    fireEvent.change(within(form).getByLabelText('spell-h-1-key'), { target: { value: '5th' } });
-    fireEvent.change(within(form).getByLabelText('spell-h-1-text'), {
-      target: { value: 'Three creatures.' },
-    });
+    expect(within(form).getByLabelText('spell-ref')).toHaveValue('friendfetch');
+    // Re-point to a different catalog spell.
+    fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
     fireEvent.click(within(form).getByText('Save'));
     await waitFor(() => expect(saveDocument).toHaveBeenCalled());
     const [, , data] = saveDocument.mock.calls[0];
     expect(data.wand).toBeUndefined();
-    expect(data.scroll).toMatchObject({
-      name: 'Friendfetch',
-      level: 1,
-      traits: ['Uncommon', 'Force'],
-      actions: 'Two Actions',
-      description: 'Drag up to two creatures toward you.',
-      heightened: { '3rd': 'Two creatures.', '5th': 'Three creatures.' },
-    });
-    expect(typeof data.scroll.level).toBe('number');
+    expect(data.scroll).toEqual({ spellRef: 'sleep' }); // ref only — no inline noise
   });
 
-  it('creates a wand item with a nested spell', async () => {
-    setContent();
-    saveDocument.mockResolvedValue({ ok: true });
-    render(<GmItems />);
-    fireEvent.click(screen.getByText('+ New item'));
-    const form = screen.getByTestId('item-form-new');
-    fireEvent.change(within(form).getByLabelText('name'), {
-      target: { value: 'Wand of Cleanse Affliction' },
-    });
-    fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'wand' } });
-    fireEvent.change(within(form).getByLabelText('spell-name'), {
-      target: { value: 'Cleanse Affliction' },
-    });
-    fireEvent.change(within(form).getByLabelText('spell-level'), { target: { value: '2' } });
-    fireEvent.click(within(form).getByText('Create item'));
-    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
-    const [, id, data] = saveDocument.mock.calls[0];
-    expect(id).toBe('wand-of-cleanse-affliction');
-    expect(data.scroll).toBeUndefined();
-    expect(data.wand).toMatchObject({ name: 'Cleanse Affliction', level: 2 });
-  });
-
-  it('blocks saving a scroll/wand with neither a spell name nor a ref', async () => {
+  it('blocks saving a scroll/wand with no catalog spell reference', async () => {
     setContent();
     render(<GmItems />);
     fireEvent.click(screen.getByText('+ New item'));
@@ -272,7 +227,7 @@ describe('GmItems', () => {
     fireEvent.click(within(form).getByText('Create item'));
     await waitFor(() =>
       expect(within(form).getByRole('alert')).toHaveTextContent(
-        /scroll spell on .* needs a spell reference or a name/i
+        /scroll on .* needs a catalog spell reference/i
       )
     );
     expect(saveDocument).not.toHaveBeenCalled();
@@ -422,8 +377,7 @@ describe('GmItems', () => {
     fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'wand' } });
     // Strikes section is gone, matching the scroll behaviour.
     expect(within(form).queryByTestId('item-strikes')).not.toBeInTheDocument();
-    // Inline spell fields are collapsed by default; picking a spell auto-names.
-    expect(within(form).getByTestId('spell-inline-details')).not.toHaveAttribute('open');
+    // Picking a catalog spell auto-names the item.
     fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
     const nameInput = within(form).getByLabelText('name');
     expect(nameInput).toHaveValue('Wand of Sleep');
@@ -436,24 +390,13 @@ describe('GmItems', () => {
     expect(data.wand).toEqual({ spellRef: 'sleep' });
   });
 
-  it('collapses the inline spell fields by default on a scroll', () => {
-    setContent();
-    render(<GmItems />);
-    selectItem('Scroll of Friendfetch');
-    const form = screen.getByTestId('item-form-scroll-friendfetch');
-    const details = within(form).getByTestId('spell-inline-details');
-    expect(details).not.toHaveAttribute('open');
-    // Inline fields are still in the DOM (RTL can drive them on demand).
-    expect(within(form).getByLabelText('spell-name')).toHaveValue('Friendfetch');
-  });
-
   it('auto-renames a scroll when the picked catalog spell changes', () => {
     setContent();
     render(<GmItems />);
     selectItem('Scroll of Friendfetch');
     const form = screen.getByTestId('item-form-scroll-friendfetch');
     const nameInput = within(form).getByLabelText('name');
-    // No ref initially; the fixture authored an inline spell name "Friendfetch".
+    // Name derives from the referenced catalog spell, and is locked.
     expect(nameInput).toHaveValue('Scroll of Friendfetch');
     expect(nameInput).toBeDisabled();
     fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });

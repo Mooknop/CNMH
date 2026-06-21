@@ -250,46 +250,6 @@ test.describe('Item catalog editor', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Inline scroll spell (no spellRef — authored manually inside the details)
-  // ---------------------------------------------------------------------------
-
-  test('inline scroll spell round-trips without a catalog ref', async ({
-    page,
-    request,
-  }) => {
-    const spellSuffix = Math.random().toString(36).slice(2, 8);
-    const inlineSpellName = `Custom Blast ${spellSuffix}`;
-    const scrollName = `Scroll of ${inlineSpellName}`;
-    const scrollId = slugify(scrollName);
-
-    await page.goto('/gm/items');
-
-    await page.getByRole('button', { name: '+ New item' }).click();
-    const form = page.getByTestId('item-form-new');
-    await form.getByLabel('spell-kind').selectOption('scroll');
-
-    // Expand inline details and fill spell name (no spellRef selected)
-    await form.locator('[data-testid="spell-inline-details"]').click(); // open <details>
-    const subform = form.locator('[data-testid="spell-subform"]');
-    await subform.getByLabel('spell-name').fill(inlineSpellName);
-    await subform.getByLabel('spell-level').fill('2');
-
-    // Auto-name derives from the inline spell name when no catalog ref
-    await expect(form.getByLabel('name', { exact: true })).toHaveValue(scrollName);
-
-    await form.getByRole('button', { name: 'Create item' }).click();
-    await expectSaved(page);
-
-    const payload = await fetchContent(request);
-    const entry = findInCollection(payload, 'item', scrollId);
-    expect(entry).toMatchObject({
-      name: scrollName,
-      scroll: { name: inlineSpellName, level: 2 },
-    });
-    expect(entry).not.toHaveProperty('spellRef');
-  });
-
-  // ---------------------------------------------------------------------------
   // Staff and Artifact: mechanical blocks via restJson raw-JSON textarea
   // ---------------------------------------------------------------------------
 

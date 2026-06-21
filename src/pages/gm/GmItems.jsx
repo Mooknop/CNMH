@@ -39,55 +39,21 @@ const toNum = (v) => {
   return Number.isNaN(n) ? 0 : n;
 };
 
-// Managed scalar fields on a scroll/wand's nested spell. Anything else on the
-// spell (id, etc.) is preserved verbatim through `rest`.
-const SPELL_STR = ['name', 'actions', 'range', 'area', 'targets', 'defense', 'duration', 'description'];
-
+// A scroll/wand spell is a catalog reference only (epic #622 — no inline spells):
+// the form holds just the `spellRef` plus any non-ref keys (`id`, wand charge
+// overrides) preserved verbatim through `rest`.
 const spellToForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
-  const rest = { ...src };
-  [...SPELL_STR, 'level', 'traits', 'heightened', 'spellRef'].forEach((k) => delete rest[k]);
-  const str = {};
-  SPELL_STR.forEach((k) => {
-    str[k] = src[k] != null ? String(src[k]) : '';
-  });
-  const heightened =
-    src.heightened && typeof src.heightened === 'object'
-      ? Object.entries(src.heightened).map(([key, text]) => ({ key, text: String(text) }))
-      : [];
+  const { spellRef, ...rest } = src;
   return {
-    str,
-    level: src.level != null ? String(src.level) : '0',
-    traits: Array.isArray(src.traits) ? src.traits.join(', ') : '',
-    heightened,
-    spellRef: src.spellRef != null ? String(src.spellRef) : '',
+    spellRef: spellRef != null ? String(spellRef) : '',
     rest, // id + any unmanaged keys, preserved
   };
 };
 
-const spellFromForm = (sf) => {
-  const rest = { ...sf.rest };
-  // A spell reference is the canonical form: the catalog spell supplies every
-  // field at resolution time, so emit ONLY the ref (+ any preserved rest) and
-  // skip the inline scalars entirely — no spurious empty/level-0 keys.
-  if (sf.spellRef && sf.spellRef.trim()) {
-    return { ...rest, spellRef: sf.spellRef.trim() };
-  }
-  const out = rest;
-  SPELL_STR.forEach((k) => {
-    const v = sf.str[k].trim();
-    if (v) out[k] = v;
-  });
-  out.level = toInt(sf.level);
-  const traits = toList(sf.traits);
-  if (traits.length) out.traits = traits;
-  const h = {};
-  sf.heightened.forEach((r) => {
-    if (r.key.trim()) h[r.key.trim()] = r.text;
-  });
-  if (Object.keys(h).length) out.heightened = h;
-  return out;
-};
+// The catalog spell supplies every field at resolution time, so emit ONLY the
+// ref (+ any preserved rest). Only called once a ref is present (validated).
+const spellFromForm = (sf) => ({ ...sf.rest, spellRef: sf.spellRef.trim() });
 
 // Keys that must never appear in the raw-JSON box: per-character data belongs
 // on the inventory reference, and containers / scroll / wand / variants /
@@ -259,10 +225,9 @@ const itemFromForm = (f) => {
   }
 
   if (f.spellKind === 'scroll' || f.spellKind === 'wand') {
-    const hasRef = !!(f.spell.spellRef && f.spell.spellRef.trim());
-    if (!hasRef && !f.spell.str.name.trim()) {
+    if (!(f.spell.spellRef && f.spell.spellRef.trim())) {
       throw new Error(
-        `The ${f.spellKind} spell on "${f.name}" needs a spell reference or a name.`
+        `The ${f.spellKind} on "${f.name}" needs a catalog spell reference.`
       );
     }
     out[f.spellKind] = spellFromForm(f.spell);
@@ -300,120 +265,29 @@ const scrollWandName = (kind, spellName) =>
 
 // The derived item-name for a scroll/wand, or null when no spell is selected
 // (a dangling unknown ref keeps the existing item name unchanged — the GM can
-// repoint without losing data). Slice 5b extends the auto-derive path to wand.
+// repoint without losing data).
 const derivedItemName = (e, spells) => {
   if (e.spellKind !== 'scroll' && e.spellKind !== 'wand') return null;
   const ref = (e.spell.spellRef || '').trim();
-  let spellName = '';
-  if (ref) {
-    const match = (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref);
-    if (match) spellName = String(match.name || '');
-  }
-  if (!spellName) spellName = e.spell.str.name.trim();
+  if (!ref) return null;
+  const match = (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref);
+  const spellName = match ? String(match.name || '') : '';
   return spellName ? scrollWandName(e.spellKind, spellName) : null;
 };
 
 const SpellSubform = ({ kind, spell, spells, onChange }) => {
-  const setStr = (k, v) => onChange({ ...spell, str: { ...spell.str, [k]: v } });
   const ref = (spell.spellRef || '').trim();
   const refMatch = ref
     ? (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref)
     : null;
-  const setH = (i, patch) =>
-    onChange({
-      ...spell,
-      heightened: spell.heightened.map((h, idx) => (idx === i ? { ...h, ...patch } : h)),
-    });
-  const addH = () => onChange({ ...spell, heightened: [...spell.heightened, { key: '', text: '' }] });
-  const rmH = (i) =>
-    onChange({ ...spell, heightened: spell.heightened.filter((_, idx) => idx !== i) });
 
-  // Slice 5a→5b: both scrolls and wands pick their spell from the catalog and
-  // tuck the inline authoring fields into a collapsed details block. The
-  // subform is only mounted for those two kinds, so the layout is unconditional.
+  // A scroll/wand spell is a catalog reference only (epic #622 — no inline
+  // spells): the GM picks the spell from the catalog and nothing else.
   const sortedSpells = (Array.isArray(spells) ? spells : [])
     .slice()
     .sort((a, b) =>
       String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
     );
-
-  const inlineFields = (
-    <>
-      <div className="gm-row">
-        <div className="form-group">
-          <label>spell name</label>
-          <input
-            aria-label="spell-name"
-            value={spell.str.name}
-            onChange={(e) => setStr('name', e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label>level</label>
-          <input
-            aria-label="spell-level"
-            type="number"
-            value={spell.level}
-            onChange={(e) => onChange({ ...spell, level: e.target.value })}
-          />
-        </div>
-      </div>
-      <div className="gm-row">
-        {['actions', 'range', 'area', 'targets', 'defense', 'duration'].map((k) => (
-          <div className="form-group" key={k}>
-            <label>{k}</label>
-            <input
-              aria-label={`spell-${k}`}
-              value={spell.str[k]}
-              onChange={(e) => setStr(k, e.target.value)}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="form-group">
-        <label>traits</label>
-        <TraitsField
-          ariaLabel="spell-traits"
-          value={spell.traits}
-          onChange={(v) => onChange({ ...spell, traits: v })}
-        />
-      </div>
-      <div className="form-group">
-        <label>description</label>
-        <textarea
-          aria-label="spell-description"
-          rows={3}
-          value={spell.str.description}
-          onChange={(e) => setStr('description', e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <label>heightened</label>
-        {spell.heightened.map((h, i) => (
-          <div key={i} className="gm-row gm-rank-row">
-            <input
-              aria-label={`spell-h-${i}-key`}
-              placeholder="e.g. 3rd / +1"
-              value={h.key}
-              onChange={(e) => setH(i, { key: e.target.value })}
-            />
-            <input
-              aria-label={`spell-h-${i}-text`}
-              placeholder="effect"
-              value={h.text}
-              onChange={(e) => setH(i, { text: e.target.value })}
-            />
-            <button className="btn-small btn-danger" onClick={() => rmH(i)}>
-              Remove
-            </button>
-          </div>
-        ))}
-        <button className="btn-small btn-secondary" onClick={addH}>
-          Add heightened
-        </button>
-      </div>
-    </>
-  );
 
   return (
     <div className="gm-card" data-testid="spell-subform">
@@ -425,7 +299,7 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
           value={spell.spellRef || ''}
           onChange={(ev) => onChange({ ...spell, spellRef: ev.target.value })}
         >
-          <option value="">— (author inline below) —</option>
+          <option value="">— (select a spell) —</option>
           {sortedSpells.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name || s.id}
@@ -438,13 +312,9 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
             ? refMatch
               ? `→ ${refMatch.name}`
               : '→ (unknown spell — will show a stub until the id matches)'
-            : 'Pick a spell from the catalog, or expand the inline editor below to author one.'}
+            : 'Pick a spell from the catalog.'}
         </p>
       </div>
-      <details className="gm-spell-inline" data-testid="spell-inline-details">
-        <summary>Edit inline spell fields</summary>
-        {inlineFields}
-      </details>
     </div>
   );
 };
