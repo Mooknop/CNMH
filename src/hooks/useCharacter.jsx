@@ -37,6 +37,7 @@ import {
   extractWandSpells,
   extractInnateSpells,
 } from '../utils/SpellUtils';
+import { canActivateSpellItem } from '../utils/traditionAccess';
 
 import { calculateItemsBulk } from '../utils/InventoryUtils';
 
@@ -177,11 +178,17 @@ export const useCharacter = (character) => {
     const spellcasting = character.spellcasting || {};
     const spellStats   = calculateSpellStats(character);
 
+    // Tradition gating (epic #645, S3): a scroll/wand spell is only castable if
+    // it shares a tradition with the caster — wrong-tradition copies are hidden
+    // from the castable lists entirely (the physical item still shows in
+    // inventory). Innate spells are exempt and never routed through here.
     const scrollItems  = findScrollItems(charEff);
-    const scrollSpells = extractScrollSpells(scrollItems);
+    const scrollSpells = extractScrollSpells(scrollItems)
+      .filter((sp) => canActivateSpellItem(character, sp, { itemType: 'scroll' }));
 
     const wandItems    = findWandItems(charEff);
-    const wandSpells   = extractWandSpells(wandItems);
+    const wandSpells   = extractWandSpells(wandItems)
+      .filter((sp) => canActivateSpellItem(character, sp, { itemType: 'wand' }));
 
     const innateSpells = extractInnateSpells(character) || [];
 
@@ -231,8 +238,10 @@ export const useCharacter = (character) => {
         (character.focus_spells && character.focus_spells.length > 0)
       ),
       hasInnateSpells          : innateSpells.length > 0,
-      hasScrolls               : scrollItems.length > 0,
-      hasWands                 : wandItems.length > 0,
+      // Gated by tradition: a character holding only wrong-tradition scrolls/
+      // wands gets no category button (the list would be empty anyway).
+      hasScrolls               : scrollSpells.length > 0,
+      hasWands                 : wandSpells.length > 0,
       hasStaff                 : !!staff,
       staffActive              : staffActive,
       hasEldPowers             : eldPowers.length > 0,
