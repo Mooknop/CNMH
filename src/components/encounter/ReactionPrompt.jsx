@@ -44,14 +44,17 @@ const ReactionPrompt = ({ character, themeColor }) => {
     innateSpells,
     wandSpells,
     scrollSpells,
+    eldPowers,
+    level,
   } = useCharacter(character);
   const { raised, broken } = useShield(charId, inventory);
   const { spells: catalogSpells } = useContent();
+  const [attunedSource] = useSyncedState(`cnmh_eldattune_${charId}`, '');
   const [usingReaction, setUsingReaction] = useState(null); // { ability, castSource? }
 
   // Shared source list (character reactions + reaction-cost spells from every
-  // cast list), identical to the off-turn armed bar (#474) so the two never
-  // drift.
+  // cast list + attuned eld powers), identical to the off-turn armed bar (#474)
+  // so the two never drift.
   const sources = useMemo(
     () =>
       buildReactionSources({
@@ -63,8 +66,11 @@ const ReactionPrompt = ({ character, themeColor }) => {
         innateSpells,
         wandSpells,
         scrollSpells,
+        eldPowers,
+        attunedSource,
+        characterLevel: level,
       }),
-    [reactions, staffSpells, focusSpells, catalogSpells, spellcasting, innateSpells, wandSpells, scrollSpells]
+    [reactions, staffSpells, focusSpells, catalogSpells, spellcasting, innateSpells, wandSpells, scrollSpells, eldPowers, attunedSource, level]
   );
 
   // The reaction was spent (via the modal, the block bar, or any other path) —

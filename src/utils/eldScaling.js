@@ -10,6 +10,12 @@
 //   "1d4 … per level you have"                → "4d4 …"
 //   "2 + half your level"                     → "4"
 
+// Eld Attunement: each power is usable once per hour. It's a class feature, so
+// the rule is injected at use-time rather than tagged on every authored power.
+// Shared by the EldPowers cards and the reaction surfaces (#482 S2) so the gate
+// and the ledger key stay identical.
+export const ELD_FREQUENCY_RULE = { per: 'hour', uses: 1 };
+
 // "NdX (+MdY per level[ + half your level])" — same die size combines into one
 // expression; mismatched sizes render as a sum.
 const PAREN_PER_LEVEL_RE =

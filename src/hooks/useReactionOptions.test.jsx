@@ -22,8 +22,26 @@ vi.mock('./useCastingResources', () => ({
   useCastingResources: () => ({ optionsFor: (...a) => mockOptionsFor(...a) }),
 }));
 
+let mockGateFor;
+vi.mock('./useFrequency', () => ({
+  useFrequency: () => ({ gateFor: (...a) => mockGateFor(...a) }),
+}));
+
+vi.mock('./useEncounter', () => ({
+  useEncounter: () => ({ encounter: { active: false, order: [] } }),
+}));
+
+let mockAttuned;
+vi.mock('./useSyncedState', () => ({
+  useSyncedState: () => [mockAttuned, vi.fn()],
+}));
+
 vi.mock('../contexts/ContentContext', () => ({
   useContent: () => ({ spells: [] }),
+}));
+
+vi.mock('../contexts/GameDateContext', () => ({
+  useGameDate: () => ({ gameDate: {}, time: {} }),
 }));
 
 const character = { id: 'p1', name: 'Kestrel' };
@@ -34,6 +52,8 @@ beforeEach(() => {
   mockTurnState = { hasStartedFirstTurn: true, reactionAvailable: true, reactionSpent: false };
   mockShield = { raised: false, broken: false };
   mockOptionsFor = vi.fn(() => [{ enabled: true }]);
+  mockGateFor = vi.fn(() => ({ available: true }));
+  mockAttuned = '';
 });
 
 describe('useReactionOptions', () => {
@@ -167,6 +187,54 @@ describe('useReactionOptions', () => {
     mockChar.spellcasting = { spells: [{ name: 'Fireball', actions: 'Two Actions', level: 3 }] };
     mockChar.innateSpells = [{ name: 'Detect Magic', actions: 'Two Actions', innate: true }];
     mockChar.wandSpells = [{ name: 'Heal', actions: 'Single Action', fromWand: true, active: true }];
+    const { result } = renderHook(() => useReactionOptions(character));
+    expect(result.current.options).toHaveLength(0);
+  });
+
+  it('arms a reaction-cost eld power from the attuned source (verb stays Use, not a cast)', () => {
+    mockAttuned = 'Storm';
+    mockChar.eldPowers = [
+      {
+        source: 'Storm',
+        powers: [{ name: 'Eld Bulwark', actions: 'Reaction', description: 'Ward an ally.' }],
+      },
+    ];
+    const { result } = renderHook(() => useReactionOptions(character));
+    const opt = find(result.current.options, 'Eld Bulwark');
+    // Eld powers are frequency-gated, not pool-gated: no castSource, not isSpell.
+    expect(opt).toMatchObject({ castSource: undefined, live: true, liveReason: null });
+    expect(opt.reaction.fromEld).toBe(true);
+    expect(opt.reaction.isSpell).toBeUndefined();
+    expect(opt.reaction.frequencyRule).toEqual({ per: 'hour', uses: 1 });
+  });
+
+  it('blocks an eld power that is on cooldown via the frequency gate', () => {
+    mockAttuned = 'Storm';
+    mockChar.eldPowers = [
+      { source: 'Storm', powers: [{ name: 'Eld Bulwark', actions: 'Reaction' }] },
+    ];
+    mockGateFor = vi.fn(() => ({ available: false, availableAtSecs: null }));
+    const { result } = renderHook(() => useReactionOptions(character));
+    expect(find(result.current.options, 'Eld Bulwark')).toMatchObject({
+      live: false,
+      liveReason: 'on cooldown',
+    });
+  });
+
+  it('excludes eld powers from a non-attuned source', () => {
+    mockAttuned = 'Storm';
+    mockChar.eldPowers = [
+      { source: 'Flame', powers: [{ name: 'Eld Flare', actions: 'Reaction' }] },
+    ];
+    const { result } = renderHook(() => useReactionOptions(character));
+    expect(find(result.current.options, 'Eld Flare')).toBeUndefined();
+  });
+
+  it('excludes all eld powers when nothing is attuned', () => {
+    mockAttuned = '';
+    mockChar.eldPowers = [
+      { source: 'Storm', powers: [{ name: 'Eld Bulwark', actions: 'Reaction' }] },
+    ];
     const { result } = renderHook(() => useReactionOptions(character));
     expect(result.current.options).toHaveLength(0);
   });

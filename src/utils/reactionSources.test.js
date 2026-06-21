@@ -87,6 +87,38 @@ describe('reactionSources', () => {
     expect(out[0].isSpell).toBeUndefined();
   });
 
+  it('includes reaction-cost eld powers from the attuned source only (#482 S2)', () => {
+    const eldPowers = [
+      {
+        source: 'Storm',
+        powers: [
+          { name: 'Eld Bulwark', actions: 'Reaction', description: '2d6 (+1d6 per level) damage' },
+          { name: 'Eld Surge', actions: 'Two Actions' },
+        ],
+      },
+      { source: 'Flame', powers: [{ name: 'Eld Flare', actions: 'Reaction' }] },
+    ];
+    const out = buildReactionSources({ eldPowers, attunedSource: 'Storm', characterLevel: 4 });
+    const names = out.map((r) => r.name);
+
+    expect(names).toContain('Eld Bulwark');
+    expect(names).not.toContain('Eld Surge'); // not a reaction cost
+    expect(names).not.toContain('Eld Flare'); // wrong (non-attuned) source
+
+    const bulwark = out.find((r) => r.name === 'Eld Bulwark');
+    // Frequency-gated, "Use" not "Cast": fromEld + frequencyRule, never isSpell.
+    expect(bulwark).toMatchObject({ fromEld: true, frequencyRule: { per: 'hour', uses: 1 } });
+    expect(bulwark.isSpell).toBeUndefined();
+    expect(castSourceOf(bulwark)).toBeUndefined();
+    // Level-scaled dice are rendered concretely (2d6 +1d6/level → 6d6 at L4).
+    expect(bulwark.description).toContain('6d6');
+  });
+
+  it('includes no eld powers when nothing is attuned', () => {
+    const eldPowers = [{ source: 'Storm', powers: [{ name: 'Eld Bulwark', actions: 'Reaction' }] }];
+    expect(buildReactionSources({ eldPowers, attunedSource: '' })).toEqual([]);
+  });
+
   it('castSourceOf maps every cast-list flag', () => {
     expect(castSourceOf({ fromStaff: true })).toBe('staff');
     expect(castSourceOf({ fromFocus: true })).toBe('focus');
