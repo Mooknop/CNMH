@@ -6,6 +6,9 @@ import {
   removeResult,
   buildEarnIncomeResult,
   buildCraftingResult,
+  buildRetrainResult,
+  buildResearchResult,
+  hasAccumulateResult,
 } from './earnIncomeResults';
 
 // gameDate-like period markers (objects, to prove value-compare).
@@ -126,5 +129,42 @@ describe('buildCraftingResult', () => {
 
   it('defaults a missing level to null', () => {
     expect(buildCraftingResult({ charId: 'c2', ref: 'torch' }).level).toBeNull();
+  });
+});
+
+describe('buildRetrainResult / buildResearchResult', () => {
+  it('builds a pending retrain entry with the structured swap', () => {
+    const entry = buildRetrainResult({
+      charId: 'c3', charName: 'Pellias',
+      retrainType: 'Feat', fromLabel: 'Toughness', toLabel: 'Fleet',
+      startedAt: P1,
+    });
+    expect(entry).toMatchObject({
+      kind: 'retrain', charId: 'c3', charName: 'Pellias',
+      retrainType: 'Feat', fromLabel: 'Toughness', toLabel: 'Fleet',
+      status: 'pending', periodStartedAt: P1,
+    });
+  });
+
+  it('builds a pending research entry with the topic', () => {
+    const entry = buildResearchResult({ charId: 'c3', charName: 'Pellias', topic: 'The Sealed Vault', startedAt: P1 });
+    expect(entry).toMatchObject({ kind: 'research', topic: 'The Sealed Vault', status: 'pending', periodStartedAt: P1 });
+  });
+});
+
+describe('hasAccumulateResult', () => {
+  const results = [
+    { charId: 'a', periodStartedAt: P1, kind: 'retrain' },
+    { charId: 'a', periodStartedAt: P2, kind: 'research' },
+  ];
+
+  it('is true when the PC submitted that kind in the active period', () => {
+    expect(hasAccumulateResult(results, 'a', P1, 'retrain')).toBe(true);
+  });
+
+  it('is false for a different kind, period, or PC', () => {
+    expect(hasAccumulateResult(results, 'a', P1, 'research')).toBe(false);
+    expect(hasAccumulateResult(results, 'a', P2, 'retrain')).toBe(false);
+    expect(hasAccumulateResult(results, 'b', P1, 'retrain')).toBe(false);
   });
 });

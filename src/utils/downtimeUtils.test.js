@@ -1,4 +1,5 @@
 import {
+  benchmarkReached,
   getHoursForActivity,
   getRollsForActivity,
   getDaysCommitted,
@@ -10,6 +11,20 @@ import {
 } from './downtimeUtils';
 
 describe('downtimeUtils', () => {
+  describe('benchmarkReached', () => {
+    it('is true once banked hours meet benchmark days × 8', () => {
+      expect(benchmarkReached(40, 5)).toBe(true); // 5 days = 40h
+      expect(benchmarkReached(48, 5)).toBe(true);
+    });
+    it('is false below the benchmark', () => {
+      expect(benchmarkReached(32, 5)).toBe(false);
+    });
+    it('is never reached for a zero/unset benchmark', () => {
+      expect(benchmarkReached(100, 0)).toBe(false);
+      expect(benchmarkReached(100, undefined)).toBe(false);
+    });
+  });
+
   describe('getDaysCommitted', () => {
     it('returns 0 for an empty ledger', () => {
       expect(getDaysCommitted([])).toBe(0);

@@ -93,3 +93,46 @@ export function buildCraftingResult({
     ts: Date.now(),
   };
 }
+
+// Builds a pending Retrain completion entry. Records the structured intent
+// (what is being swapped); the GM confirm just logs it — the actual sheet edit
+// stays a manual change.
+export function buildRetrainResult({
+  charId, charName,
+  retrainType, fromLabel, toLabel,
+  startedAt,
+}) {
+  return {
+    id: newEntryUid(),
+    kind: 'retrain',
+    charId,
+    charName,
+    retrainType,
+    fromLabel: fromLabel ?? null,
+    toLabel: toLabel ?? null,
+    status: 'pending',
+    periodStartedAt: startedAt ?? null,
+    ts: Date.now(),
+  };
+}
+
+// Builds a pending Research completion entry. The unlock content is resolved by
+// the GM (Research Topics, #206); this only records that the benchmark was met.
+export function buildResearchResult({ charId, charName, topic, startedAt }) {
+  return {
+    id: newEntryUid(),
+    kind: 'research',
+    charId,
+    charName,
+    topic,
+    status: 'pending',
+    periodStartedAt: startedAt ?? null,
+    ts: Date.now(),
+  };
+}
+
+// True if this PC already submitted a result of `kind` for the active period —
+// used to keep an accumulate-completion prompt from re-firing once submitted.
+export function hasAccumulateResult(results, charId, startedAt, kind) {
+  return resultsForCharPeriod(results, charId, startedAt).some((r) => r.kind === kind);
+}

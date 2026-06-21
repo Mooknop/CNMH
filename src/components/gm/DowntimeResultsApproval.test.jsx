@@ -28,6 +28,16 @@ const craftEntry = {
   ref: 'shield', level: null, itemName: 'Sturdy Shield', degree: 'success', paidCp: 3000, status: 'pending',
 };
 
+const retrainEntry = {
+  id: 'r3', kind: 'retrain', charId: 'c3', charName: 'Pellias',
+  retrainType: 'Feat', fromLabel: 'Toughness', toLabel: 'Fleet', status: 'pending',
+};
+
+const researchEntry = {
+  id: 'r4', kind: 'research', charId: 'c3', charName: 'Pellias',
+  topic: 'The Sealed Vault', status: 'pending',
+};
+
 const setup = (entries) => {
   useSyncedState.mockReturnValue([{ entries }, mockSetResults]);
 };
@@ -116,5 +126,32 @@ describe('DowntimeResultsApproval', () => {
     expect(saveDocument).not.toHaveBeenCalled();
     const next = mockSetResults.mock.calls[0][0]({ entries: [craftEntry] });
     expect(next.entries).toEqual([]);
+  });
+
+  it('lists a Retrain result with its structured swap and Confirm logs it', () => {
+    setup([retrainEntry]);
+    render(<DowntimeResultsApproval />);
+    expect(screen.getByText('Retrain: Feat — Toughness → Fleet')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /confirm pellias retrain/i }));
+
+    expect(mockSendUpdate).not.toHaveBeenCalled(); // no gold
+    expect(saveDocument).not.toHaveBeenCalled();   // no item
+    expect(mockAppendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ charId: 'c3', text: expect.stringContaining('retrained — Feat — Toughness → Fleet') }),
+    );
+    const next = mockSetResults.mock.calls[0][0]({ entries: [retrainEntry] });
+    expect(next.entries[0].status).toBe('confirmed');
+  });
+
+  it('lists a Research result handing off to #206 and Confirm logs it', () => {
+    setup([researchEntry]);
+    render(<DowntimeResultsApproval />);
+    expect(screen.getByText(/Research: The Sealed Vault — resolve via #206/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /confirm pellias research/i }));
+    expect(mockAppendLog).toHaveBeenCalledWith(
+      expect.objectContaining({ charId: 'c3', text: expect.stringContaining('completed research: The Sealed Vault') }),
+    );
+    const next = mockSetResults.mock.calls[0][0]({ entries: [researchEntry] });
+    expect(next.entries[0].status).toBe('confirmed');
   });
 });

@@ -46,6 +46,13 @@ const DowntimeResultsApproval = () => {
       }
       return;
     }
+    // Retrain / Research commit no resources — the GM applies the actual change
+    // (a sheet edit, or a Research unlock via #206); confirming just logs it.
+    if (entry.kind === 'retrain' || entry.kind === 'research') {
+      appendLog({ type: 'action', charId: entry.charId, text: confirmLog(entry) });
+      markDone(entry.id);
+      return;
+    }
     creditEarnIncome({ entry, getState, sendUpdate, appendLog });
     markDone(entry.id);
   };
@@ -53,17 +60,31 @@ const DowntimeResultsApproval = () => {
   const reject = (entry) =>
     setResults((prev) => ({ entries: removeResult(prev?.entries, entry.id) }));
 
+  const retrainSwap = (entry) =>
+    `${entry.retrainType}${entry.fromLabel ? ` — ${entry.fromLabel}` : ''}${entry.toLabel ? ` → ${entry.toLabel}` : ''}`;
+
   const detail = (entry) => {
     if (entry.kind === 'crafting') {
       return `Crafted ${entry.itemName} (${DEGREE_LABEL[entry.degree] || entry.degree})`;
     }
+    if (entry.kind === 'retrain') return `Retrain: ${retrainSwap(entry)}`;
+    if (entry.kind === 'research') return `Research: ${entry.topic} — resolve via #206`;
     return `${entry.skillLabel} · Lvl ${entry.taskLevel} DC ${entry.dc} · rolled ${entry.total} (${DEGREE_LABEL[entry.degree] || entry.degree})`;
   };
 
+  const confirmLog = (entry) =>
+    entry.kind === 'retrain'
+      ? `${entry.charName} retrained — ${retrainSwap(entry)}`
+      : `${entry.charName} completed research: ${entry.topic}`;
+
   const payout = (entry) => {
     if (entry.kind === 'crafting') return 'item';
+    if (entry.kind === 'retrain' || entry.kind === 'research') return '—';
     return entry.payoutCp > 0 ? `${cpToGp(entry.payoutCp)} gp` : '—';
   };
+
+  const KIND_LABEL = { crafting: 'craft', retrain: 'retrain', research: 'research' };
+  const kindLabel = (entry) => KIND_LABEL[entry.kind] || 'Earn Income';
 
   return (
     <>
@@ -81,7 +102,7 @@ const DowntimeResultsApproval = () => {
                 className="pmc-btn pmc-btn--primary pmc-btn--sm"
                 disabled={busy === entry.id}
                 onClick={() => confirm(entry)}
-                aria-label={`Confirm ${entry.charName} ${entry.kind === 'crafting' ? 'craft' : 'Earn Income'}`}
+                aria-label={`Confirm ${entry.charName} ${kindLabel(entry)}`}
               >
                 {busy === entry.id ? 'Granting…' : 'Confirm'}
               </button>
@@ -89,7 +110,7 @@ const DowntimeResultsApproval = () => {
                 className="pmc-btn pmc-btn--danger pmc-btn--sm"
                 disabled={busy === entry.id}
                 onClick={() => reject(entry)}
-                aria-label={`Reject ${entry.charName} ${entry.kind === 'crafting' ? 'craft' : 'Earn Income'}`}
+                aria-label={`Reject ${entry.charName} ${kindLabel(entry)}`}
               >
                 Reject
               </button>

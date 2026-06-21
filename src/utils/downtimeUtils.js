@@ -58,6 +58,14 @@ export function getRollsForActivity(ledger, name) {
   return countBlocksFor(ledger, name);
 }
 
+// True once banked hours meet the GM-set benchmark (entered in days; 8h/day).
+// A zero/unset benchmark is never "reached" — the GM hasn't assigned one yet.
+export function benchmarkReached(hoursBanked, benchmarkDays) {
+  const days = Number(benchmarkDays) || 0;
+  if (days <= 0) return false;
+  return (Number(hoursBanked) || 0) >= days * 8;
+}
+
 // Number of whole days committed (each ledger entry represents one day).
 export function getDaysCommitted(ledger) {
   return (ledger || []).length;
