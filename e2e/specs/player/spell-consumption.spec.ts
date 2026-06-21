@@ -117,14 +117,18 @@ test.describe('Spell consumption on player character sheet', () => {
 
   test('innate spells from feat appear in Innate view', async ({ page, seed }) => {
     await seed({
+      spell: [
+        { id: 'e2e-dancing-lights', name: 'E2E Dancing Lights', level: 0, range: '120 feet' },
+        { id: 'e2e-ghost-sound', name: 'E2E Ghost Sound', level: 0, range: '30 feet' },
+      ],
       character: [{
         ...BASE_CHAR,
         feats: [{
           name: 'Gnome Magic',
           level: 1,
           innate: [
-            { name: 'E2E Dancing Lights', level: 0, range: '120 feet' },
-            { name: 'E2E Ghost Sound', level: 0, range: '30 feet' },
+            { spellRef: 'e2e-dancing-lights' },
+            { spellRef: 'e2e-ghost-sound' },
           ],
         }],
       }],
