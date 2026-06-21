@@ -128,4 +128,50 @@ describe('useTokenMovement', () => {
 
     Date.now.mockRestore();
   });
+
+  // #451: when the bridge piggybacks the next step's opts onto movedone,
+  // requestMoveRefresh adopts them directly — no second movereq round-trip.
+  it('adopts piggybacked nextOpts on refresh without sending a movereq', () => {
+    let refreshFn;
+    const nextOpts = { origin: { col: 6, row: 5 }, reachable: [{ col: 7, row: 5, feet: 5, terrain: 'normal' }], blocked: [], speed: 30 };
+    const { result } = setup({ onMoveDone: () => { refreshFn?.('stride'); } });
+    refreshFn = result.current.requestMoveRefresh;
+
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+    act(() => result.current.confirmMove({ col: 6, row: 5 }));
+
+    const callsBefore = mockSendUpdate.mock.calls.length;
+    pushMoveDone({ newPosition: { col: 6, row: 5 }, feetMoved: 5, reqTs, nextOpts });
+
+    // Jumped straight to picking with the piggybacked opts; no extra movereq sent.
+    expect(result.current.stage).toBe('picking');
+    expect(result.current.isRefreshing).toBe(false);
+    expect(result.current.pickerOpts).toMatchObject({ origin: { col: 6, row: 5 } });
+    const newMovereqs = mockSendUpdate.mock.calls
+      .slice(callsBefore)
+      .filter((c) => c[1] === 'movereq');
+    expect(newMovereqs).toHaveLength(0);
+  });
+
+  // Legacy bridge (no nextOpts) → refresh falls back to a movereq round-trip.
+  it('falls back to a movereq round-trip when movedone carries no nextOpts', () => {
+    let tsCounter = 2000;
+    vi.spyOn(Date, 'now').mockImplementation(() => tsCounter++);
+    let refreshFn;
+    const { result } = setup({ onMoveDone: () => { refreshFn?.('stride'); } });
+    refreshFn = result.current.requestMoveRefresh;
+
+    act(() => result.current.requestMove('stride'));
+    const reqTs = mockSendUpdate.mock.calls[0][2].ts;
+    pushMoveOpts({ origin: { col: 5, row: 5 }, reachable: [], blocked: [], speed: 30, reqTs });
+    act(() => result.current.confirmMove({ col: 6, row: 5 }));
+    pushMoveDone({ newPosition: { col: 6, row: 5 }, feetMoved: 5, reqTs });
+
+    expect(result.current.stage).toBe('awaiting-opts');
+    expect(result.current.isRefreshing).toBe(true);
+    expect(mockSendUpdate).toHaveBeenLastCalledWith('char-1', 'movereq', expect.objectContaining({ moveType: 'stride' }));
+    Date.now.mockRestore();
+  });
 });

@@ -70,4 +70,64 @@ test.describe('Exploration token movement (bridge-driven)', () => {
     session.push('cnmh_movedone_e2e-mover', { reqTs: confirm.ts, feetMoved: 5 });
     await expect(page.getByLabel('Distance walked')).toContainText('5 ft');
   });
+
+  // #451: when movedone carries the next cell's options (nextOpts), a chained
+  // step refreshes the pad immediately without a second movereq round-trip.
+  test('movedone nextOpts refreshes the pad with no extra movereq round-trip', async ({
+    page,
+    reset,
+    seed,
+  }) => {
+    await reset();
+    await seed({ character: [{ id: 'e2e-mover', name: 'E2E Mover', level: 1 }] });
+
+    const session = await mockSession(page, {
+      seed: {
+        cnmh_playmode_global: 'exploration',
+        cnmh_exploremove_global: true,
+        cnmh_exploreoverride_global: true,
+      },
+    });
+
+    // Count movereqs; answer each with an eastward step from origin (5,5).
+    let movereqs = 0;
+    session.onSent('cnmh_movereq_e2e-mover', (req) => {
+      movereqs += 1;
+      session.push('cnmh_moveopts_e2e-mover', {
+        reqTs: req.ts,
+        origin: { col: 5, row: 5 },
+        reachable: [{ col: 6, row: 5, feet: 5 }],
+        blocked: [],
+      });
+    });
+
+    await page.goto('/character/e2e-mover');
+    await page
+      .getByRole('navigation', { name: 'Character sheet sections' })
+      .getByRole('button', { name: 'Exploration' })
+      .click();
+
+    const stepEast = page.getByRole('button', { name: 'Step east' });
+    await expect(stepEast).toBeVisible();
+    expect(movereqs).toBe(1); // the auto-fired probe on mount
+    await stepEast.click();
+
+    const confirm = await session.expectSent(
+      'cnmh_moveconfirm_e2e-mover',
+      (v) => v?.destination?.col === 6 && v?.destination?.row === 5,
+    );
+
+    // Piggyback the NEXT cell's options (a northward step from the new origin).
+    session.push('cnmh_movedone_e2e-mover', {
+      reqTs: confirm.ts,
+      feetMoved: 5,
+      nextOpts: { origin: { col: 6, row: 5 }, reachable: [{ col: 6, row: 4, feet: 5 }], blocked: [] },
+    });
+
+    // The pad re-renders straight from nextOpts — a north step is now offered —
+    // and the distance tally advances, all without another movereq.
+    await expect(page.getByRole('button', { name: 'Step north' })).toBeVisible();
+    await expect(page.getByLabel('Distance walked')).toContainText('5 ft');
+    expect(movereqs).toBe(1);
+  });
 });
