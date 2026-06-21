@@ -868,7 +868,7 @@ describe('GmItems', () => {
       expect(saveDocument.mock.calls[0][2].runes).toEqual({ potency: 2, property: ['vitalizing'] });
     });
 
-    it('caps property runes at the potency tier when potency is lowered', async () => {
+    it('flags over-slotted property runes and blocks save until resolved (#607)', async () => {
       useContent.mockReturnValue({
         items: [{
           id: 'axe', name: 'Greataxe', strikes: { type: 'melee', damage: '1d12' },
@@ -885,10 +885,61 @@ describe('GmItems', () => {
       render(<GmItems />);
       selectItem('Greataxe');
       const form = screen.getByTestId('item-form-axe');
+
+      // Lowering potency to +1 leaves 2 runes in 1 slot — surfaced, not dropped.
       fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '1' } });
+      const overflow = within(form).getByTestId('item-rune-property-overflow');
+      expect(overflow).toHaveTextContent(/1 property rune exceeds/i);
+      expect(overflow).toHaveTextContent('Frost');
+
+      // Save is blocked with a clear message — nothing is silently truncated.
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/2 property runes but its \+1 potency grants only 1 slot/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+
+      // Removing the overflow rune resolves it; save now succeeds.
+      fireEvent.click(within(form).getByLabelText('remove-overflow-property-0'));
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
       expect(saveDocument.mock.calls[0][2].runes).toEqual({ potency: 1, property: ['vitalizing'] });
+    });
+
+    it('blocks saving property runes with 0 potency (no slots) (#607)', async () => {
+      useContent.mockReturnValue({
+        items: [{
+          id: 'axe', name: 'Greataxe', strikes: { type: 'melee', damage: '1d12' },
+          runes: { property: ['vitalizing'] },
+        }],
+        spells,
+        images: [],
+        runes: [{ id: 'vitalizing', type: 'property', name: 'Vitalizing', price: 150 }],
+      });
+      render(<GmItems />);
+      selectItem('Greataxe');
+      const form = screen.getByTestId('item-form-axe');
+      expect(within(form).getByTestId('item-rune-property-overflow')).toHaveTextContent('Vitalizing');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/Property runes need a potency rune/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+
+    it('striking has no potency prerequisite — saves at potency 0 (#607)', async () => {
+      useContent.mockReturnValue({ items: [legacyPick], spells, images: [], runes: [] });
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      fireEvent.click(screen.getByText('+ New item'));
+      const form = screen.getByTestId('item-form-new');
+      fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Greatsword' } });
+      fireEvent.click(within(form).getByText('Add strike'));
+      fireEvent.change(within(form).getByLabelText('item-strike-0-damage'), { target: { value: '1d12' } });
+      fireEvent.change(within(form).getByLabelText('rune-striking'), { target: { value: 'striking' } });
+      fireEvent.click(within(form).getByText('Create item'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].runes).toEqual({ striking: 'striking' });
     });
   });
 });
