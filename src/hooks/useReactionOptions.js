@@ -10,8 +10,13 @@ import { useCharacter } from './useCharacter';
 import { useTurnState } from './useTurnState';
 import { useShield } from './useShield';
 import { useCastingResources } from './useCastingResources';
+import { useFrequency } from './useFrequency';
+import { useEncounter } from './useEncounter';
+import { useSyncedState } from './useSyncedState';
 import { useContent } from '../contexts/ContentContext';
+import { useGameDate } from '../contexts/GameDateContext';
 import { buildReactionSources, castSourceOf } from '../utils/reactionSources';
+import { toGameSeconds, formatAvailableAt } from '../utils/gameTime';
 
 export const useReactionOptions = (character) => {
   const charId = character?.id;
@@ -24,11 +29,18 @@ export const useReactionOptions = (character) => {
     innateSpells,
     wandSpells,
     scrollSpells,
+    eldPowers,
+    level,
   } = useCharacter(character) || {};
   const { spells: catalogSpells } = useContent();
   const { turnState } = useTurnState(charId);
   const { raised, broken } = useShield(charId, inventory);
   const casting = useCastingResources(character);
+  const { gateFor } = useFrequency(charId);
+  const { encounter } = useEncounter();
+  const { gameDate, time } = useGameDate();
+  // Attunement gates which eld source is usable today (read-only here).
+  const [attunedSource] = useSyncedState(`cnmh_eldattune_${charId || 'unknown'}`, '');
 
   const repertoireSpells = spellcasting?.spells;
 
@@ -43,9 +55,18 @@ export const useReactionOptions = (character) => {
         innateSpells,
         wandSpells,
         scrollSpells,
+        eldPowers,
+        attunedSource,
+        characterLevel: level,
       }),
-    [reactions, staffSpells, focusSpells, catalogSpells, repertoireSpells, innateSpells, wandSpells, scrollSpells]
+    [reactions, staffSpells, focusSpells, catalogSpells, repertoireSpells, innateSpells, wandSpells, scrollSpells, eldPowers, attunedSource, level]
   );
+
+  // Frequency context for cooldown gating, mirroring UseAbilityModal so the
+  // armed-bar state and the modal's enforcement agree.
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
+  const casterEntryId =
+    (encounter?.order || []).find((e) => e.kind === 'pc' && e.charId === charId)?.entryId || null;
 
   const options = useMemo(() => {
     const spent = !!turnState?.reactionSpent;
@@ -83,11 +104,23 @@ export const useReactionOptions = (character) => {
           live = false;
           liveReason = (opts.find((o) => o.reason) || {}).reason || 'no resource available';
         }
+      } else if (reaction.frequencyRule) {
+        // Frequency-gated reaction (eld powers — once per hour). The modal
+        // remains the enforcement point; this surfaces the cooldown so a spent
+        // power renders blocked rather than falsely armed.
+        const gate = gateFor(reaction, { nowSecs, encounter, casterEntryId });
+        if (gate && !gate.available) {
+          live = false;
+          liveReason =
+            gate.availableAtSecs != null
+              ? `on cooldown — ready at ${formatAvailableAt(gate.availableAtSecs, nowSecs)}`
+              : 'on cooldown';
+        }
       }
 
       return { reaction, castSource, live, liveReason };
     });
-  }, [sources, turnState, raised, broken, casting]);
+  }, [sources, turnState, raised, broken, casting, gateFor, nowSecs, encounter, casterEntryId]);
 
   return { options };
 };

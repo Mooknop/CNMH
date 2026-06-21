@@ -9,12 +9,8 @@ import { useFrequency } from '../../hooks/useFrequency';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { toGameSeconds, formatAvailableAt } from '../../utils/gameTime';
-import { scaleEldPower } from '../../utils/eldScaling';
+import { scaleEldPower, ELD_FREQUENCY_RULE } from '../../utils/eldScaling';
 import './EldPowers.css';
-
-// Eld Attunement: each power is usable once per hour (class feature, so the
-// rule is injected here rather than tagged on every power in content).
-const ELD_FREQUENCY_RULE = { per: 'hour', uses: 1 };
 
 // Degree label → shared degree-of-success palette class. The authored degree
 // keys are display strings ("Critical Success"), not the engine's camelCase.
