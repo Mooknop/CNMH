@@ -57,6 +57,10 @@ export const useCharacter = (character) => {
   // map (no SessionProvider, or untouched) ⇒ effective tree == authored tree,
   // so Bulk and inventory are byte-identical to before this layer existed.
   const [loadout]     = useSyncedState(`cnmh_loadout_${character?.id || 'none'}`, {});
+  // Per-weapon chamber state (epic #672) — drives the loaded-chamber gate on
+  // chambered ranged Strikes (Crescent Cross). Read-only here; useChambers
+  // (Reload/Fire) is the sole writer. Empty map ⇒ every chamber unloaded.
+  const [chambers]    = useSyncedState(`cnmh_chambers_${character?.id || 'none'}`, {});
   const [hp, setHp]   = useSyncedState(
     `cnmh_hp_${character?.id || 'none'}`,
     () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
@@ -174,7 +178,7 @@ export const useCharacter = (character) => {
     const totalBulk = calculateItemsBulk(effectiveInventory);
 
     // ── Combat ──────────────────────────────────────────────────────────────
-    const strikes     = getStrikes(charEff);
+    const strikes     = getStrikes(charEff, chambers);
     const actions     = getActions(charEff);
     const reactions   = getReactions(charEff);
     const freeActions = getFreeActions(charEff);
@@ -336,7 +340,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, resolvedAcquired, removed]);
+  }, [character, loadout, chambers, resolvedAcquired, removed]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

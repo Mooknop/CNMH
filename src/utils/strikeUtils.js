@@ -6,6 +6,7 @@ import { calculateSpellStats } from './SpellUtils';
 import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
+import { isCapacityWeapon, weaponCapacity, normalizeChamberState, loadedCount } from './ammunition';
 
 /**
  * Compute the ability modifier, proficiency value, attack bonus, and damage string
@@ -142,9 +143,12 @@ export const resolveItemStrikes = (item, character) => {
  * Get all strikes for the character, combining character-defined strikes,
  * feat strikes, and inventory weapon strikes.
  * @param {Object} character - Character data
+ * @param {Object} [chambersByUid={}] - Per-weapon chamber state keyed by the
+ *   inventory entry's uid (cnmh_chambers_<id> overlay, epic #672). Drives the
+ *   loaded-chamber gate on capacity/chambered ranged Strikes.
  * @returns {Array} - Array of strike objects with computed attack modifiers
  */
-export const getStrikes = (character) => {
+export const getStrikes = (character, chambersByUid = {}) => {
   let allStrikes = [];
 
   // Character-defined strikes
