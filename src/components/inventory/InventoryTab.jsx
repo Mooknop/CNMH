@@ -10,6 +10,7 @@ import { affixedKey, affixedUidSet, affixedTalismansByHost, itemUidOf } from '..
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { usePlayMode } from '../../hooks/usePlayMode';
+import { docGold } from '../../utils/gold';
 
 /**
  * Component for displaying character inventory as item cards.
@@ -23,8 +24,10 @@ import { usePlayMode } from '../../hooks/usePlayMode';
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
-  // Personal gold is GM-set and live-synced; shown here read-only.
-  const [gold] = useSyncedState(`cnmh_gold_${character?.id}`, 0);
+  // Personal gold is live-synced; shown here read-only. Default to the doc's
+  // gold so an unset overlay (fresh load / post-reseed) shows the committed
+  // value rather than 0 (#670).
+  const [gold] = useSyncedState(`cnmh_gold_${character?.id}`, docGold(character));
   // Consumed-consumables overlay — fully-used items disappear from the list
   // (the GM cleanup tool removes them from authored content later).
   const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
