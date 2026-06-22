@@ -16,12 +16,21 @@
 //     before,      // doc value before
 //     after,       // live value to commit
 //     apply(rawDoc) -> nextRaw   // pure; takes a FRESH raw doc, returns the next
+//     clearOverlay(overlayValue) -> nextOverlayValue   // optional; pure
 //   }
 //
 // `apply` deliberately takes the raw doc as an argument (rather than closing
 // over the compute-time doc) so #557 can re-read the freshest doc before
 // committing — guarding against clobbering a concurrent GM edit. It is
 // idempotent: re-applying an already-committed change is a no-op.
+//
+// `clearOverlay` is the dual of `apply` for the *live overlay*: once a change is
+// committed to the doc its slice of the overlay is stale and must be cleared so
+// it never re-surfaces. It is pure and overlay-shape-aware — `consumed` deletes
+// a key, `acquired`/`removed` filter an array — so the dashboard's sync/undo can
+// fold it generically without knowing any overlay's shape. A change with no
+// `clearOverlay` anchors its overlay (gold: the live value is the source of
+// truth and already equals what we wrote, so there is nothing to clear).
 
 import { isConsumable, remainingQuantity, flattenInventory } from './InventoryUtils';
 
@@ -74,6 +83,37 @@ const setEntryQuantity = (list, item, quantity) =>
     return e;
   });
 
+// Find a doc/inventory entry by stable uid, descending into container contents.
+const findByUid = (list, uid) => {
+  for (const e of Array.isArray(list) ? list : []) {
+    if (e && e.uid === uid) return e;
+    if (e && e.container && Array.isArray(e.container.contents)) {
+      const found = findByUid(e.container.contents, uid);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+
+const hasUid = (list, uid) => findByUid(list, uid) !== undefined;
+
+// ── Overlay-clearing helpers (clearOverlay duals) ────────────────────────────
+// Object overlay (consumed): drop one key, immutably.
+const dropKey = (map, key) => {
+  const next = { ...(map && typeof map === 'object' ? map : {}) };
+  delete next[key];
+  return next;
+};
+
+// Array-of-entries overlay (acquired): drop the entry, by identity or uid.
+const dropEntry = (list, entry) =>
+  (Array.isArray(list) ? list : []).filter(
+    (e) => e !== entry && !(e && entry && entry.uid != null && e.uid === entry.uid),
+  );
+
+// Array-of-uids overlay (removed): drop one uid.
+const dropUid = (list, uid) => (Array.isArray(list) ? list : []).filter((u) => u !== uid);
+
 // ── Per-overlay computers ────────────────────────────────────────────────────
 // Each returns PendingChange[] for one durable overlay. Only `consumed` is
 // implemented in this slice; the rest land in their sub-issues.
@@ -93,6 +133,7 @@ const computeConsumed = (resolved, consumed) => {
         overlayRef: item.name,
         label: item.name,
         before: authored,
+        clearOverlay: (ov) => dropKey(ov, item.name),
       };
       if (remaining <= 0) {
         return [{
@@ -135,14 +176,66 @@ const computeGold = (resolved, raw, goldOverlay) => {
   }];
 };
 
-// overlay name -> computer. Stubs return [] until their sub-issue wires them, so
-// the engine + descriptor model are in place now (the kinds already exist).
+// Acquired (#665). `cnmh_acquired_<id>` is an array of inline item entries the
+// player received from another PC. Gifts can carry per-instance data (runes,
+// affixed talismans, container contents), so we commit each entry *inline /
+// as-is* rather than reduce it to a catalog ref — a naive ref conversion would
+// silently drop that data. (Trade-off: a slightly larger doc; ref-conversion is
+// a possible later refinement.) One item-add per entry; apply appends it to the
+// doc inventory, guarding by uid so a re-apply is a no-op (idempotent). Clearing
+// drops the entry from the overlay array.
+const computeAcquired = (resolved, acquiredOverlay) =>
+  (Array.isArray(acquiredOverlay) ? acquiredOverlay : [])
+    .filter((entry) => entry && typeof entry === 'object')
+    .map((entry) => ({
+      kind: PENDING_KINDS.ITEM_ADD,
+      charId: resolved.id,
+      overlay: 'acquired',
+      overlayRef: entry.uid,
+      label: entry.name || 'Item',
+      detail: 'received',
+      before: null,
+      after: entry,
+      apply: (raw) => {
+        const inv = Array.isArray(raw.inventory) ? raw.inventory : [];
+        if (entry.uid != null && hasUid(inv, entry.uid)) return raw; // already committed
+        return { ...raw, inventory: [...inv, entry] };
+      },
+      clearOverlay: (ov) => dropEntry(ov, entry),
+    }));
+
+// Removed (#665). `cnmh_removed_<id>` is an array of authored entry uids the
+// player gave away. Authored inventory is immutable from the client, so the item
+// is only masked live; committing actually deletes it from the doc (recursively,
+// incl. container contents). One item-remove per uid that *still resolves* to a
+// doc entry — a uid already gone (e.g. a concurrent GM edit removed it) surfaces
+// nothing. The label is resolved from the doc entry, falling back to the
+// resolved item's display name when the doc entry is a bare catalog ref.
+const computeRemoved = (resolved, raw, removedOverlay) =>
+  (Array.isArray(removedOverlay) ? removedOverlay : [])
+    .map((uid) => ({ uid, entry: findByUid(raw.inventory, uid) }))
+    .filter(({ entry }) => entry != null)
+    .map(({ uid, entry }) => ({
+      kind: PENDING_KINDS.ITEM_REMOVE,
+      charId: resolved.id,
+      overlay: 'removed',
+      overlayRef: uid,
+      label: entry.name || findByUid(resolved.inventory, uid)?.name || entry.ref || 'Item',
+      detail: 'given away',
+      before: uid,
+      after: null,
+      apply: (rawDoc) => ({ ...rawDoc, inventory: removeEntry(rawDoc.inventory, { uid }) }),
+      clearOverlay: (ov) => dropUid(ov, uid),
+    }));
+
+// overlay name -> computer. `loadout` is still a stub (its sub-issue #559 wires
+// it); the kinds already exist so the descriptor model is in place.
 const COMPUTERS = {
   consumed: (resolved, _raw, overlay) => computeConsumed(resolved, overlay),
   gold: (resolved, raw, overlay) => computeGold(resolved, raw, overlay),
   loadout: () => [], // #559
-  acquired: () => [], // #665
-  removed: () => [], // #665
+  acquired: (resolved, _raw, overlay) => computeAcquired(resolved, overlay),
+  removed: (resolved, raw, overlay) => computeRemoved(resolved, raw, overlay),
 };
 
 /**

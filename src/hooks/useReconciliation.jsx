@@ -7,9 +7,10 @@ import { computePendingChanges } from '../utils/reconcile';
 // GM reconciliation orchestrator (#557, epic #555). Reads the durable live
 // overlays for every PC, asks the engine (#556) for the pending live↔doc
 // divergences, and exposes a single party-wide Sync (+ per-change/per-PC
-// Discard and an Undo). MVP coverage is the `consumed` overlay (consumables
-// parity); gold/loadout/acquired/removed land via their sub-issues once the
-// engine's stub computers are wired — this hook needs no change to pick them up.
+// Discard and an Undo). Coverage: `consumed` (consumables), `gold` (#558),
+// `acquired`/`removed` (gifted items, #665). Each change carries its own
+// `clearOverlay`, so the sync/undo fold overlay-clearing generically — a new
+// durable overlay needs no change here once its engine computer lands.
 
 // Stable id for a pending change (one per overlay slice on a character).
 export const reconChangeId = (c) => `${c.charId}:${c.overlay}:${c.overlayRef}`;
@@ -40,6 +41,21 @@ const readGold = (getState, id) => {
   }
 };
 
+// acquired (array of inline item entries) and removed (array of given-away
+// authored uids) overlays. Both default to [] — an absent overlay diverges
+// from nothing.
+const readArrayOverlay = (getState, id, type) => {
+  const server = getState(id, type);
+  if (Array.isArray(server)) return server;
+  try {
+    const raw = window.localStorage.getItem(`cnmh_${type}_${id}`);
+    const v = raw != null ? JSON.parse(raw) : null;
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+};
+
 export const useReconciliation = () => {
   const { characters, rawCharacters, refresh } = useContent();
   const { getState, sendUpdate, subscribe } = useSession();
@@ -55,17 +71,32 @@ export const useReconciliation = () => {
   const [goldById, setGoldById] = useState(() =>
     Object.fromEntries(ids.map((id) => [id, readGold(getState, id)])),
   );
+  const [acquiredById, setAcquiredById] = useState(() =>
+    Object.fromEntries(ids.map((id) => [id, readArrayOverlay(getState, id, 'acquired')])),
+  );
+  const [removedById, setRemovedById] = useState(() =>
+    Object.fromEntries(ids.map((id) => [id, readArrayOverlay(getState, id, 'removed')])),
+  );
 
   useEffect(() => {
     const list = idsKey ? idsKey.split(',') : [];
     setConsumedById(Object.fromEntries(list.map((id) => [id, readConsumed(getState, id)])));
     setGoldById(Object.fromEntries(list.map((id) => [id, readGold(getState, id)])));
+    setAcquiredById(Object.fromEntries(list.map((id) => [id, readArrayOverlay(getState, id, 'acquired')])));
+    setRemovedById(Object.fromEntries(list.map((id) => [id, readArrayOverlay(getState, id, 'removed')])));
+    const asArray = (val) => (Array.isArray(val) ? val : []);
     const unsubs = list.flatMap((id) => [
       subscribe(id, 'consumed', (val) =>
         setConsumedById((prev) => ({ ...prev, [id]: val && typeof val === 'object' ? val : {} })),
       ),
       subscribe(id, 'gold', (val) =>
         setGoldById((prev) => ({ ...prev, [id]: typeof val === 'number' ? val : Number(val) || 0 })),
+      ),
+      subscribe(id, 'acquired', (val) =>
+        setAcquiredById((prev) => ({ ...prev, [id]: asArray(val) })),
+      ),
+      subscribe(id, 'removed', (val) =>
+        setRemovedById((prev) => ({ ...prev, [id]: asArray(val) })),
       ),
     ]);
     return () => unsubs.forEach((u) => u());
@@ -87,10 +118,12 @@ export const useReconciliation = () => {
           changes: computePendingChanges(char, rawById[char.id], {
             consumed: consumedById[char.id],
             gold: goldById[char.id],
+            acquired: acquiredById[char.id],
+            removed: removedById[char.id],
           }),
         }))
         .filter((g) => g.changes.length > 0),
-    [characters, rawById, consumedById, goldById],
+    [characters, rawById, consumedById, goldById, acquiredById, removedById],
   );
 
   // ── Discard ────────────────────────────────────────────────────────────────
@@ -129,16 +162,25 @@ export const useReconciliation = () => {
   // ── Sync / Undo ──────────────────────────────────────────────────────────
   const [busy, setBusy] = useState(false);
   const [lastResult, setLastResult] = useState(null); // { synced: [id], failed: [{id, error}] }
-  const [undoBuffer, setUndoBuffer] = useState(null); // [{ charId, rawBefore, consumedBefore }]
+  const [undoBuffer, setUndoBuffer] = useState(null); // [{ charId, rawBefore, overlaysBefore }]
   const activeRef = useRef(activeByChar);
   activeRef.current = activeByChar;
-  const dataRef = useRef({ rawById, consumedById });
-  dataRef.current = { rawById, consumedById };
+  const dataRef = useRef({});
+  dataRef.current = { rawById, consumedById, goldById, acquiredById, removedById };
+
+  // Current value of one overlay for a PC, with each overlay's empty default.
+  const overlayValue = (data, type, charId) => {
+    if (type === 'consumed') return data.consumedById[charId] ?? {};
+    if (type === 'gold') return data.goldById[charId];
+    if (type === 'acquired') return data.acquiredById[charId] ?? [];
+    if (type === 'removed') return data.removedById[charId] ?? [];
+    return undefined;
+  };
 
   const sync = useCallback(async () => {
     if (busy) return;
     const groups = activeRef.current;
-    const { rawById: raws, consumedById: consumed } = dataRef.current;
+    const data = dataRef.current;
     if (groups.length === 0) return;
     setBusy(true);
     const buffer = [];
@@ -147,25 +189,34 @@ export const useReconciliation = () => {
     try {
       for (const g of groups) {
         const charId = g.char.id;
-        const rawBefore = raws[charId];
+        const rawBefore = data.rawById[charId];
         if (!rawBefore) continue;
-        const consumedBefore = consumed[charId] || {};
-        // Apply every change to a fresh copy of the doc, then clear the
-        // committed overlay slices.
+        // Apply every change to a fresh copy of the doc, then fold each change's
+        // clearOverlay into a working copy of its overlay (changes that anchor
+        // their overlay — e.g. gold — carry no clearOverlay and touch nothing).
         const nextRaw = g.changes.reduce((doc, ch) => ch.apply(doc), rawBefore);
-        const nextConsumed = { ...consumedBefore };
-        g.changes.forEach((ch) => {
-          if (ch.overlay === 'consumed') delete nextConsumed[ch.overlayRef];
-        });
+        const nextOverlays = {}; // type -> cleared value
+        for (const ch of g.changes) {
+          if (typeof ch.clearOverlay !== 'function') continue;
+          const cur = Object.prototype.hasOwnProperty.call(nextOverlays, ch.overlay)
+            ? nextOverlays[ch.overlay]
+            : overlayValue(data, ch.overlay, charId);
+          nextOverlays[ch.overlay] = ch.clearOverlay(cur);
+        }
         try {
           await saveDocument('character', charId, nextRaw);
         } catch (e) {
-          // Doc write failed — leave the overlay untouched so nothing is lost.
+          // Doc write failed — leave the overlays untouched so nothing is lost.
           failed.push({ id: charId, error: e?.message || String(e) });
           continue;
         }
-        sendUpdate(charId, 'consumed', nextConsumed);
-        buffer.push({ charId, rawBefore, consumedBefore });
+        // Commit the cleared overlays and capture their pre-sync values for undo.
+        const overlaysBefore = {};
+        for (const type of Object.keys(nextOverlays)) {
+          overlaysBefore[type] = overlayValue(data, type, charId);
+          sendUpdate(charId, type, nextOverlays[type]);
+        }
+        buffer.push({ charId, rawBefore, overlaysBefore });
         synced.push(charId);
       }
       setUndoBuffer(buffer.length ? buffer : null);
@@ -180,12 +231,14 @@ export const useReconciliation = () => {
     if (busy || !undoBuffer) return;
     setBusy(true);
     try {
-      for (const { charId, rawBefore, consumedBefore } of undoBuffer) {
+      for (const { charId, rawBefore, overlaysBefore } of undoBuffer) {
         try {
           await saveDocument('character', charId, rawBefore);
-          // Restore the overlay too — without this the player's change is
-          // silently dropped (doc reverted but the live delta gone).
-          sendUpdate(charId, 'consumed', consumedBefore);
+          // Restore every overlay we cleared — without this the player's change
+          // is silently dropped (doc reverted but the live delta gone).
+          Object.entries(overlaysBefore || {}).forEach(([type, val]) =>
+            sendUpdate(charId, type, val),
+          );
         } catch {
           /* best-effort restore */
         }

@@ -156,4 +156,53 @@ describe('useReconciliation', () => {
     expect(result.current.canUndo).toBe(false);
     expect(result.current.lastResult.failed).toEqual([{ id: 'c1', error: 'boom' }]);
   });
+
+  it('surfaces, syncs, and clears an acquired (gifted item) overlay (#665)', async () => {
+    const gift = { uid: 'g1', name: 'Flaming Longsword', quantity: 1 };
+    sessionState['c1:acquired'] = [gift];
+    const { result } = renderHook(() => useReconciliation());
+
+    expect(result.current.pendingByChar[0].changes[0]).toMatchObject({
+      overlay: 'acquired',
+      label: 'Flaming Longsword',
+    });
+
+    await act(async () => { await result.current.sync(); });
+
+    const [, , nextRaw] = mockSaveDocument.mock.calls[0];
+    expect(nextRaw.inventory.find((e) => e.uid === 'g1')).toMatchObject({ name: 'Flaming Longsword' });
+    // overlay slice cleared (entry removed from the array)
+    expect(mockSendUpdate).toHaveBeenCalledWith('c1', 'acquired', []);
+    expect(result.current.totalActive).toBe(0);
+  });
+
+  it('syncs a removed (given-away) overlay by deleting the doc entry (#665)', async () => {
+    sessionState['c1:removed'] = ['sw'];
+    const { result } = renderHook(() => useReconciliation());
+
+    expect(result.current.pendingByChar[0].changes[0]).toMatchObject({
+      overlay: 'removed',
+      label: 'Sword',
+    });
+
+    await act(async () => { await result.current.sync(); });
+
+    const [, , nextRaw] = mockSaveDocument.mock.calls[0];
+    expect(nextRaw.inventory.find((e) => e.uid === 'sw')).toBeUndefined();
+    expect(mockSendUpdate).toHaveBeenCalledWith('c1', 'removed', []);
+  });
+
+  it('undo restores every touched overlay slice (#665)', async () => {
+    sessionState['c1:acquired'] = [{ uid: 'g1', name: 'Flaming Longsword' }];
+    sessionState['c1:removed'] = ['sw'];
+    const { result } = renderHook(() => useReconciliation());
+    await act(async () => { await result.current.sync(); });
+    mockSendUpdate.mockClear();
+
+    await act(async () => { await result.current.undo(); });
+
+    expect(mockSendUpdate).toHaveBeenCalledWith('c1', 'acquired', [{ uid: 'g1', name: 'Flaming Longsword' }]);
+    expect(mockSendUpdate).toHaveBeenCalledWith('c1', 'removed', ['sw']);
+    expect(result.current.canUndo).toBe(false);
+  });
 });
