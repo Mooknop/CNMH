@@ -1,8 +1,8 @@
 ---
 id: korvosa
 summary: The eldest of Varisia's city-states, Korvosa was once part of Imperial Cheliax and retains strong Chelaxian traditions, built atop the ruins of an ancient Thassilonian city.
+parent: "[[Varisia]]"
 related:
-  - "[[Varisia]]"
   - "[[Runelord Sorshen]]"
   - "[[The Scarnetti Family]]"
 ---

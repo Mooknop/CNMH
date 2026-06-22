@@ -1,9 +1,9 @@
 ---
 id: broderts-house
 summary: The comfy, book-crammed Tower Street home of Sandpoint's most respected sage.
+parent: "[[Sandpoint]]"
 related:
   - "[[Brodert Quink]]"
-  - "[[Sandpoint]]"
   - "[[The Old Light]]"
 ---
 

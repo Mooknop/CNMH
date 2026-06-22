@@ -1,8 +1,8 @@
 ---
 id: sandpoint-theater
 summary: Sandpoint's crown jewel of culture — a proper playhouse that holds its own against Magnimar's finest, run by a man with a dramatic past and a devoted husband.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Cyrdak Drokkus]]"
   - "[[Jasper Korvaski]]"
 ---

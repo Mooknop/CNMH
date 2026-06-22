@@ -2,7 +2,7 @@ import React from 'react';
 import { useLore } from '../../contexts/LoreContext';
 import './LoreDiscoveryPanel.css';
 
-const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) => {
+const LoreDiscoveryPanel = ({ entry, connectionData, ancestors = [], containedEntries = [], onEntrySelect, onClose }) => {
   const { openLore } = useLore();
 
   if (!entry) return null;
@@ -16,6 +16,15 @@ const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) =
     <div className="lore-discovery-panel">
       <div className="discovery-panel-header">
         <div className="discovery-panel-title-area">
+          {ancestors.length > 0 && (
+            <nav className="discovery-breadcrumb" aria-label="Location hierarchy">
+              {ancestors.map(a => (
+                <button key={a.id} className="discovery-crumb" onClick={() => onEntrySelect(a.id)}>
+                  {a.title}
+                </button>
+              ))}
+            </nav>
+          )}
           <h3 className="discovery-panel-title">{entry.title}</h3>
           <span className="discovery-panel-category">{entry.category}</span>
         </div>
@@ -31,6 +40,23 @@ const LoreDiscoveryPanel = ({ entry, connectionData, onEntrySelect, onClose }) =
       <button className="discovery-full-link" onClick={() => openLore(entry.id)}>
         Open full entry →
       </button>
+
+      {containedEntries.length > 0 && (
+        <div className="discovery-section">
+          <p className="discovery-section-label">Contains</p>
+          <div className="discovery-entry-list">
+            {containedEntries.map(child => (
+              <button
+                key={child.id}
+                className="discovery-entry-btn"
+                onClick={() => onEntrySelect(child.id)}
+              >
+                {child.title}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {hasConnections ? (
         <>

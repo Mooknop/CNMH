@@ -95,6 +95,21 @@ describe('serializeDoc', () => {
     expect(markdown).not.toMatch(/ghost-id/);
   });
 
+  it('maps the parent id to a single title wikilink and drops a dead parent', () => {
+    const idToTitle = new Map([['sandpoint', 'Sandpoint']]);
+    const withParent = serializeDoc(
+      { id: 'cathedral', title: 'Cathedral', category: 'Location', content: '', parent: 'sandpoint' },
+      idToTitle
+    );
+    expect(withParent.markdown).toMatch(/^parent: "\[\[Sandpoint\]\]"$/m);
+
+    const deadParent = serializeDoc(
+      { id: 'cathedral', title: 'Cathedral', category: 'Location', content: '', parent: 'ghost-id' },
+      idToTitle
+    );
+    expect(deadParent.markdown).not.toMatch(/parent/);
+  });
+
   it('places the entry in a folder named for its category', () => {
     const { category, filename } = serializeDoc({ id: 'sandpoint', title: 'Sandpoint', category: 'Location', content: '' });
     expect(category).toBe('Location');
@@ -150,6 +165,19 @@ describe('round-trip (authored fields)', () => {
     expect(out.content).toBe(doc.content);
     // related is stored as title wikilinks; it comes back as resolution targets.
     expect(out.related).toEqual(['Abadar', 'Sandpoint']);
+  });
+
+  it('round-trips a parent edge as a resolution-target title', () => {
+    const doc = {
+      id: 'sandpoint-cathedral',
+      title: 'Sandpoint Cathedral',
+      category: 'Location',
+      summary: 's',
+      content: 'c',
+      parent: 'sandpoint',
+    };
+    const out = roundTrip(doc, idToTitle);
+    expect(out.parent).toBe('Sandpoint');
   });
 
   it('reproduces History dateAr fields', () => {

@@ -76,6 +76,12 @@ function serializeDoc(doc, idToTitle = new Map()) {
   if (doc.dateArStart != null) fm.dateArStart = doc.dateArStart;
   if (doc.dateArEnd != null) fm.dateArEnd = doc.dateArEnd;
 
+  // Containment hierarchy (#xxx): a single directed parent edge, emitted as one
+  // wikilink. An id with no known title (dead pointer) is dropped, same as
+  // `related` below.
+  const parentTitle = doc.parent ? idToTitle.get(doc.parent) : null;
+  if (parentTitle) fm.parent = `[[${parentTitle}]]`;
+
   const related = (Array.isArray(doc.related) ? doc.related : [])
     .map((id) => idToTitle.get(id))
     .filter(Boolean)
@@ -115,6 +121,8 @@ function parseFile(markdown, { category, filenameTitle } = {}) {
     content: String(body || '').trim(),
     related: (Array.isArray(data.related) ? data.related : []).map(parseWikilink),
   };
+  // Single parent wikilink -> resolution-target title; push maps title -> id.
+  if (data.parent) doc.parent = parseWikilink(data.parent);
   if (data.image) doc.image = data.image;
   if (data.imagePosition) doc.imagePosition = data.imagePosition;
   if (data.dateArStart != null) doc.dateArStart = data.dateArStart;

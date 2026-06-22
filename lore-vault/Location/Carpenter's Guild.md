@@ -1,8 +1,8 @@
 ---
 id: carpenters-guild
 summary: Festival Street's guildhall for builders — the place to go for a new home or honest repairs.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Sandpoint Lumber Mill]]"
 ---
 

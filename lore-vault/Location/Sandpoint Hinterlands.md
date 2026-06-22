@@ -1,9 +1,9 @@
 ---
 id: sandpoint-hinterlands
 summary: The wild and varied countryside surrounding Sandpoint — marshes, forests, moors, and rocky escarpments that conceal goblin tribes, ancient ruins, and stranger things.
+parent: "[[Varisia]]"
 related:
   - "[[Sandpoint]]"
-  - "[[The Tickwood]]"
   - "[[Akoni's Grove]]"
 ---
 

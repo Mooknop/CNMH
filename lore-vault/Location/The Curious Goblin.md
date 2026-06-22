@@ -1,8 +1,8 @@
 ---
 id: the-curious-goblin
 summary: Sandpoint's bookshop — crammed with tomes, overpriced for the locals, and run by an old scholar who cares more about the books than the business.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Chask Haladan]]"
 ---
 

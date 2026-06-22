@@ -1,8 +1,8 @@
 ---
 id: risas-place
 summary: A cozy Varisian tavern famous for its founder's dreamland stories — now run by her children, while Risa herself grows quietly, dangerously ill.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Risa Magravi]]"
 ---
 

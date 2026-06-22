@@ -1,8 +1,8 @@
 ---
 id: the-feathered-serpent
 summary: Sandpoint's curio shop — stocked with oddities, scrolls, and magical wares by a gregarious proprietor who always seems to know what you need before you do.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Vorvashali Voon]]"
 ---
 

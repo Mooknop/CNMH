@@ -1,8 +1,8 @@
 ---
 id: pillbugs-pantry
 summary: Sandpoint's alchemist shop — legitimate medicinal supplies on the shelves, and something considerably less legitimate in the back.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Aliver 'Pillbug' Podiker]]"
   - "[[The Bunyip Club]]"
 ---

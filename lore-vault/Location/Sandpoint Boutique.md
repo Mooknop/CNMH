@@ -1,9 +1,9 @@
 ---
 id: sandpoint-boutique
 summary: Market Street's everything-shop — art, books, toys, tools, and the odd salvaged treasure, under Hayliss Korvaski's exacting eye.
+parent: "[[Sandpoint]]"
 related:
   - "[[Hayliss Korvaski]]"
-  - "[[Sandpoint]]"
   - "[[Abadar]]"
 ---
 

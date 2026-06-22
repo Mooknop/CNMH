@@ -1,8 +1,8 @@
 ---
 id: the-hagfish
 summary: A dockside dive bar — home to tall tales, a legendary challenge involving a tank of hagfish slime, and the best excuse to stay drunk on the waterfront.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Jargie Quinn]]"
 ---
 

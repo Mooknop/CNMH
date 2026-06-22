@@ -1,10 +1,9 @@
 ---
 id: tickwood
 summary: A small forest just outside Sandpoint, popular with local hunters — though its fey lord Akoni and a recent redcap incursion make it less safe than it appears.
+parent: "[[Sandpoint Hinterlands]]"
 related:
-  - "[[Akoni's Grove]]"
   - "[[Akoni]]"
-  - "[[Sandpoint Hinterlands]]"
   - "[[The Scarnetti Family]]"
   - "[['Grandfather' Grustmier]]"
 ---

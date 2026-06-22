@@ -1,8 +1,8 @@
 ---
 id: the-pit
 summary: A fog-choked shaft sunk into Devil's Platter southeast of town — a byword for danger, and the grave of more than one adventuring company.
+parent: "[[Sandpoint Hinterlands]]"
 related:
-  - "[[Sandpoint Hinterlands]]"
   - "[[Brodert Quink]]"
   - "[[Arika Avertin]]"
   - "[[Sandpoint]]"

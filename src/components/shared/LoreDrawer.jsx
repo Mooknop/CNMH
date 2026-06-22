@@ -4,7 +4,7 @@ import { useLore } from '../../contexts/LoreContext';
 import { useContent } from '../../contexts/ContentContext';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { useGmAuth } from '../../hooks/useGmAuth';
-import { buildBacklinkMap, getConnectionData } from '../../utils/loreUtils';
+import { buildBacklinkMap, getConnectionData, buildChildrenMap, getAncestors, getChildren } from '../../utils/loreUtils';
 import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
 import { rkKeyFor } from '../../utils/recallKnowledge';
 import LoreMarkdown from './LoreMarkdown';
@@ -33,6 +33,13 @@ const LoreDrawer = () => {
     () => entry ? getConnectionData(entry, loreEntries, backlinkMap) : null,
     [entry, loreEntries, backlinkMap]
   );
+
+  // Containment hierarchy: ancestors (breadcrumb) + direct children ("Contains").
+  // `loreEntries` is already the visibility-gated list on player routes, so
+  // unrevealed ancestors/children simply don't appear.
+  const childrenMap = useMemo(() => buildChildrenMap(loreEntries), [loreEntries]);
+  const ancestors = useMemo(() => getAncestors(entry, loreEntries), [entry, loreEntries]);
+  const children = useMemo(() => getChildren(entry, childrenMap), [entry, childrenMap]);
 
   // Creatures the party has fought at this location (#334) — derived from the
   // captured monster docs' `locations` map, gated to the party's learned state.
@@ -73,6 +80,20 @@ const LoreDrawer = () => {
           <div className="lore-drawer-not-found">Entry not found.</div>
         ) : (
           <div className="lore-drawer-body">
+            {ancestors.length > 0 && (
+              <nav className="lore-drawer-breadcrumb" aria-label="Location hierarchy">
+                {ancestors.map(a => (
+                  <button
+                    key={a.id}
+                    className="lore-drawer-crumb"
+                    onClick={() => navigateTo(a.id)}
+                  >
+                    {a.title}
+                  </button>
+                ))}
+              </nav>
+            )}
+
             <div className="lore-drawer-title-area">
               <h2 className="lore-drawer-title">{entry.title}</h2>
               <span className="lore-drawer-category">{entry.category}</span>
@@ -89,6 +110,25 @@ const LoreDrawer = () => {
                 onNavigate={navigateTo}
               />
             </div>
+
+            {children.length > 0 && (
+              <div className="lore-drawer-connections">
+                <div className="lore-drawer-section">
+                  <p className="lore-drawer-section-label">Contains</p>
+                  <div className="lore-drawer-conn-list">
+                    {children.map(child => (
+                      <button
+                        key={child.id}
+                        className="lore-drawer-conn-btn"
+                        onClick={() => navigateTo(child.id)}
+                      >
+                        {child.title}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {hasConnections && (
               <div className="lore-drawer-connections">

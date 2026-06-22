@@ -1,8 +1,8 @@
 ---
 id: sandpoint-cathedral
 summary: A rare multi-faith cathedral at the heart of town — rebuilt after a devastating fire, and still carrying the weight of what burned.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Abstalar Zantus]]"
   - "[[Naffer Vosk]]"
   - "[[Sandpoint Boneyard]]"

@@ -28,14 +28,23 @@ export function buildBacklinkMap(entries) {
 export function getConnectionData(entry, allEntries, backlinkMap) {
   const byId = new Map(allEntries.map(e => [e.id, e]));
 
+  // Containment edges (the parent and direct children) render in their own
+  // breadcrumb / "Contains" sections, so keep them out of the generic relation
+  // buckets even if a residual `related` link still names one.
+  const excluded = new Set();
+  if (entry.parent) excluded.add(entry.parent);
+  for (const e of allEntries) if (e.parent === entry.id) excluded.add(e.id);
+
   const outgoing = (entry.related || [])
     .map(id => byId.get(id))
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(e => !excluded.has(e.id));
 
   const incomingIds = backlinkMap.get(entry.id) || [];
   const incoming = incomingIds
     .map(id => byId.get(id))
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(e => !excluded.has(e.id));
 
   const groupByCategory = (list) => {
     const result = {};
@@ -52,6 +61,46 @@ export function getConnectionData(entry, allEntries, backlinkMap) {
     outgoingByCategory: groupByCategory(outgoing),
     incomingByCategory: groupByCategory(incoming),
   };
+}
+
+// Containment hierarchy (single directed `parent` edge per entry).
+
+// Map parentId -> child entries (inverse of `parent`), each list title-sorted.
+export function buildChildrenMap(entries) {
+  const map = new Map();
+  for (const entry of entries || []) {
+    if (!entry.parent) continue;
+    if (!map.has(entry.parent)) map.set(entry.parent, []);
+    map.get(entry.parent).push(entry);
+  }
+  for (const list of map.values()) {
+    list.sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')));
+  }
+  return map;
+}
+
+// Direct children of an entry, title-sorted (empty array when none / no map).
+export function getChildren(entry, childrenMap) {
+  if (!entry || !childrenMap) return [];
+  return childrenMap.get(entry.id) || [];
+}
+
+// Ancestor breadcrumb, root-first, EXCLUDING the entry itself. `allEntries` may
+// be an array or a prebuilt id->entry Map. Cycle-guarded so bad data can't loop.
+export function getAncestors(entry, allEntries) {
+  if (!entry) return [];
+  const byId = allEntries instanceof Map
+    ? allEntries
+    : new Map((allEntries || []).map(e => [e.id, e]));
+  const chain = [];
+  const seen = new Set([entry.id]);
+  let cursor = entry.parent ? byId.get(entry.parent) : null;
+  while (cursor && !seen.has(cursor.id)) {
+    chain.unshift(cursor);
+    seen.add(cursor.id);
+    cursor = cursor.parent ? byId.get(cursor.parent) : null;
+  }
+  return chain;
 }
 
 // `[[Target]]` / `[[Target|alias]]` -> resolution target ("Target"). The link

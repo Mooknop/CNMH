@@ -1,8 +1,8 @@
 ---
 id: junkers-edge
 summary: The cliff at the edge of town where Sandpoint disposes of its refuse — and where Gorvi, the town's half-orc dung-sweeper, holds quiet authority.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Gorvi]]"
 ---
 

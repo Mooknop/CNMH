@@ -2,9 +2,6 @@
 id: kindred-coast
 summary: A stretch of coastline on an island in the Iron Archipelago, home to the twin towns of Osprey Cove and Iron Harbor — and to the shadow of the ancient Thassilonian ruin Rusthenge.
 related:
-  - "[[Osprey Cove]]"
-  - "[[Iron Harbor]]"
-  - "[[Rusthenge]]"
   - "[[New Thassilon]]"
   - "[[Runelord Belimarius]]"
 ---

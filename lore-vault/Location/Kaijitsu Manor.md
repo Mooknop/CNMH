@@ -1,8 +1,8 @@
 ---
 id: kaijitsu-manor
 summary: The Kaijitsu family estate — largely empty now, with its most famous resident an empress on the other side of the world.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[The Kaijitsu Family]]"
   - "[[Ameiko Kaijitsu]]"
   - "[[Sandpoint Glassworks]]"

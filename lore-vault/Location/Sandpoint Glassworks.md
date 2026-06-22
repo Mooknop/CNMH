@@ -1,8 +1,8 @@
 ---
 id: sandpoint-glassworks
 summary: Once the finest glassworks in the region — now closed, locked, and widely believed to be haunted.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[The Kaijitsu Family]]"
   - "[[Kaijitsu Manor]]"
   - "[[Ameiko Kaijitsu]]"

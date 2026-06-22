@@ -1,8 +1,8 @@
 ---
 id: cracktooths-tavern
 summary: A tavern that looks like a rough-and-tumble dive but occasionally hosts the sharpest political commentary in town.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Jesk 'Cracktooth' Berinni]]"
 ---
 

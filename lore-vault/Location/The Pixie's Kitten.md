@@ -1,8 +1,8 @@
 ---
 id: the-pixies-kitten
 summary: Sandpoint's brothel — a surprisingly tasteful establishment whose proprietor keeps it safer and quieter than its reputation suggests.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Kaye Tresarani]]"
 ---
 

@@ -1,8 +1,8 @@
 ---
 id: sandpoint-garrison
 summary: The seat of Sandpoint's law — home to the town watch and the sheriff who keeps this strange little town from coming apart at the seams.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Belor Hemlock]]"
 ---
 

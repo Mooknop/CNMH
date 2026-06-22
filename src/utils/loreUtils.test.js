@@ -8,6 +8,9 @@ import {
   parseWikiTarget,
   buildTitleToIdMap,
   resolveWikilink,
+  buildChildrenMap,
+  getChildren,
+  getAncestors,
 } from './loreUtils';
 
 const entry = (overrides = {}) => ({
@@ -144,6 +147,65 @@ describe('getConnectionData', () => {
     expect(result.incoming).toHaveLength(0);
     expect(result.outgoingByCategory).toEqual({});
     expect(result.incomingByCategory).toEqual({});
+  });
+
+  it('excludes the parent and direct children from the generic buckets', () => {
+    const entries = [
+      entry({ id: 'varisia', category: 'Location', related: [] }),
+      // A residual related[] link to both parent and child must not double-list.
+      entry({ id: 'sandpoint', category: 'Location', parent: 'varisia', related: ['varisia', 'cathedral'] }),
+      entry({ id: 'cathedral', category: 'Location', parent: 'sandpoint', related: [] }),
+    ];
+    const map = buildBacklinkMap(entries);
+    const result = getConnectionData(entries[1], entries, map);
+    expect(result.outgoing).toHaveLength(0); // varisia (parent) + cathedral (child) both stripped
+    expect(result.incoming).toHaveLength(0);
+  });
+});
+
+describe('buildChildrenMap / getChildren', () => {
+  const entries = [
+    entry({ id: 'sandpoint', title: 'Sandpoint' }),
+    entry({ id: 'cathedral', title: 'Cathedral', parent: 'sandpoint' }),
+    entry({ id: 'garrison', title: 'Garrison', parent: 'sandpoint' }),
+    entry({ id: 'magnimar', title: 'Magnimar' }),
+  ];
+
+  it('maps a parent id to its title-sorted children', () => {
+    const map = buildChildrenMap(entries);
+    expect(getChildren(entries[0], map).map((e) => e.id)).toEqual(['cathedral', 'garrison']);
+  });
+
+  it('returns an empty list for a childless entry or missing map', () => {
+    const map = buildChildrenMap(entries);
+    expect(getChildren(entries[3], map)).toEqual([]);
+    expect(getChildren(entries[0], null)).toEqual([]);
+  });
+});
+
+describe('getAncestors', () => {
+  const entries = [
+    entry({ id: 'varisia', title: 'Varisia' }),
+    entry({ id: 'sandpoint', title: 'Sandpoint', parent: 'varisia' }),
+    entry({ id: 'cathedral', title: 'Cathedral', parent: 'sandpoint' }),
+  ];
+
+  it('returns the root-first chain excluding the entry itself', () => {
+    const found = entries.find((e) => e.id === 'cathedral');
+    expect(getAncestors(found, entries).map((e) => e.id)).toEqual(['varisia', 'sandpoint']);
+  });
+
+  it('returns empty for a top-level entry', () => {
+    expect(getAncestors(entries[0], entries)).toEqual([]);
+  });
+
+  it('is cycle-guarded against bad data', () => {
+    const looped = [
+      entry({ id: 'a', parent: 'b' }),
+      entry({ id: 'b', parent: 'a' }),
+    ];
+    // Must terminate, not loop forever.
+    expect(getAncestors(looped[0], looped).map((e) => e.id)).toEqual(['b']);
   });
 });
 

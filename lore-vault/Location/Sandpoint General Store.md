@@ -1,8 +1,8 @@
 ---
 id: sandpoint-general-store
 summary: The Vinder family's general store — solid stock, a proprietor drinking himself apart in the cellar, and a wife holding things together by sheer will.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Ven Vinder]]"
   - "[[Solsta Vinder]]"
   - "[[Shayliss Vinder]]"

@@ -1,8 +1,8 @@
 ---
 id: valdemar-manor
 summary: The former seat of the Valdemar family — largely vacated now, after Sandpoint's fourth founding family drifted away.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[The Valdemar Family]]"
 ---
 

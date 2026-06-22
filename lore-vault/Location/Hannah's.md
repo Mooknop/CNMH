@@ -1,8 +1,8 @@
 ---
 id: hannahs
 summary: Sandpoint's herbalist and healer — primal spellcasting, fresh remedies, and an anonymous harassment campaign that its proprietor is trying to handle without involving the sheriff.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Hannah Velerin]]"
   - "[[Sandpoint Hinterlands]]"
 ---

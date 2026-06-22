@@ -1,8 +1,8 @@
 ---
 id: rusthenge
 summary: An Ancient Thassilonian ruin on an island of the Kindred Coast — a site of dangerous historical research that has become the source of a plot to resurrect a dead demon lord.
+parent: "[[The Kindred Coast]]"
 related:
-  - "[[The Kindred Coast]]"
   - "[[Iron Harbor]]"
   - "[[Meitremar]]"
   - "[[Vlorus]]"

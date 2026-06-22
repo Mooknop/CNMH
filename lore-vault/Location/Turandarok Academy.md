@@ -1,8 +1,8 @@
 ---
 id: turandarok-academy
 summary: Sandpoint's school and orphanage — and, in its locked basement, the private museum of a retired adventurer who has seen things the curriculum doesn't cover.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Ilsoari Gandethus]]"
 ---
 

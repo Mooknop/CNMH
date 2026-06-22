@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useLore } from '../../contexts/LoreContext';
 import { saveDocument } from '../../utils/gmApi';
-import { buildBacklinkMap, getConnectionData } from '../../utils/loreUtils';
+import { buildBacklinkMap, getConnectionData, buildChildrenMap, getAncestors, getChildren } from '../../utils/loreUtils';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import LoreMarkdown from '../../components/shared/LoreMarkdown';
 import LoreBulkPanel from './LoreBulkPanel';
@@ -51,6 +51,10 @@ const LoreDetail = ({ entry, allEntries, onSaved }) => {
   const hasConnections =
     Object.keys(outgoingByCategory).length > 0 || Object.keys(incomingByCategory).length > 0;
 
+  const ancestors = useMemo(() => getAncestors(entry, allEntries), [entry, allEntries]);
+  const childrenMap = useMemo(() => buildChildrenMap(allEntries), [allEntries]);
+  const children = getChildren(entry, childrenMap);
+
   const revealed = vis === 'revealed';
 
   // One-tap reveal/hide. Spread the full live doc and change ONLY visibility so
@@ -97,6 +101,24 @@ const LoreDetail = ({ entry, allEntries, onSaved }) => {
               : undefined
           }
         />
+      )}
+
+      {(ancestors.length > 0 || children.length > 0) && (
+        <p className="gm-lore-preview-conn-line">
+          {ancestors.length > 0 && (
+            <>
+              <span className="gm-lore-preview-conn-cat">In:</span>{' '}
+              {ancestors.map((a) => a.title).join(' › ')}
+            </>
+          )}
+          {ancestors.length > 0 && children.length > 0 && <br />}
+          {children.length > 0 && (
+            <>
+              <span className="gm-lore-preview-conn-cat">Contains:</span>{' '}
+              {children.map((c) => c.title).join(', ')}
+            </>
+          )}
+        </p>
       )}
 
       {entry.summary && <p className="gm-lore-preview-summary">{entry.summary}</p>}

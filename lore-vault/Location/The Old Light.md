@@ -1,8 +1,8 @@
 ---
 id: old-light
 summary: Sandpoint's ancient ruined lighthouse — a Thassilonian remnant that Brodert Quink insists was once a weapon capable of destroying anything within a mile.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Brodert Quink]]"
 ---
 

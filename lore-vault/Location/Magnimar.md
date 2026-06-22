@@ -1,9 +1,9 @@
 ---
 id: magnimar
 summary: One of Varisia's two great city-states, Magnimar is an ambitious metropolis that casts its political shadow over Sandpoint and much of the Lost Coast.
+parent: "[[Varisia]]"
 related:
   - "[[Sandpoint]]"
-  - "[[Varisia]]"
   - "[[Pathfinder Society]]"
   - "[[Sandpoint's Founding Families]]"
   - "[[The Scarnetti Family]]"
