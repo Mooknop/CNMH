@@ -2,6 +2,7 @@
 // Utilities for computing and categorizing character strikes.
 
 import { getAbilityModifier, getAttackBonusValue } from './CharacterUtils';
+import { calculateSpellStats } from './SpellUtils';
 import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
@@ -46,7 +47,21 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
     proficiencyValue = character.proficiencies?.weapons?.simple?.proficiency || 0;
   }
 
-  const attackBonus = getAttackBonusValue(abilityMod, proficiencyValue, character.level || 0);
+  let attackBonus = getAttackBonusValue(abilityMod, proficiencyValue, character.level || 0);
+
+  // Spell-attack weapons: a special weapon (e.g. Xanderghul's Flawless Hammer)
+  // attacks with the wielder's spell attack modifier, OR its normal
+  // martial-proficiency + Str attack — whichever is higher. Driven by the
+  // catalog strike flag `attackStat: 'spellAttackOrMartial'`.
+  if (strike.attackStat === 'spellAttackOrMartial') {
+    const { spellAttackMod } = calculateSpellStats(character);
+    const martialBonus = getAttackBonusValue(
+      strMod,
+      character.proficiencies?.weapons?.martial?.proficiency || 0,
+      character.level || 0,
+    );
+    attackBonus = Math.max(spellAttackMod, martialBonus);
+  }
 
   let damageString = strike.damage || defaultDamage;
   if ((isMelee || isThrown) && strMod !== 0 && !damageString.includes('+') && !damageString.includes('-')) {
