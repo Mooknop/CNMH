@@ -8818,6 +8818,7 @@
         "type": "melee",
         "action": 1,
         "damage": "1d12",
+        "attackStat": "spellAttackOrMartial",
         "traits": [
           "Attack",
           "Melee",
