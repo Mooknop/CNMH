@@ -9,12 +9,13 @@ import { deriveHands } from '../../utils/hands';
  * onto a bag to unhand it, or onto the other hand slot to move/grip it.
  */
 const DraggableHandTile = ({ item, onItemClick, glow }) => {
-  const { onPointerDown } = useDraggable({ item, onTap: onItemClick });
+  const { onPointerDown, onKeyDown } = useDraggable({ item, onTap: onItemClick });
   return (
     <button
       type="button"
       className="hands-strip-tile"
       onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
       data-testid={`hands-tile-${item.uid}`}
     >
       <IconTile item={item} size={48} glow={glow} />

@@ -10,12 +10,13 @@ import { ATTUNE_CAP } from '../../hooks/useInvested';
  * handler calls unattune) or use the modal's "Remove attunement" action.
  */
 const AttTile = ({ item, glow, onItemClick }) => {
-  const { onPointerDown } = useDraggable({ item, onTap: onItemClick });
+  const { onPointerDown, onKeyDown } = useDraggable({ item, onTap: onItemClick });
   return (
     <button
       type="button"
       className="att-slot is-filled"
       onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
       data-testid={item.uid ? `attuned-tile-${item.uid}` : undefined}
     >
       <IconTile item={item} size={48} glow={glow} />

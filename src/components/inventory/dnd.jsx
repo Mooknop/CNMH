@@ -198,8 +198,22 @@ export function useDraggable({ item, onTap, disabled }) {
     [item, onTap, disabled, dnd, cleanup]
   );
 
+  // Keyboard activation for a11y: the pointer path can't be reached by keyboard,
+  // so Enter / Space on the focused tile acts as a tap (opens the modal). Drag is
+  // pointer-only by nature.
+  const onKeyDown = useCallback(
+    (e) => {
+      if (disabled) return;
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        if (onTap) onTap(item);
+      }
+    },
+    [disabled, onTap, item]
+  );
+
   useEffect(() => cleanup, [cleanup]);
-  return { onPointerDown };
+  return { onPointerDown, onKeyDown };
 }
 
 // Drop zone wrapper. accepts(item)->bool, onDrop(item, zoneId)
