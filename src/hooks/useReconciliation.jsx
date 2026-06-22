@@ -26,6 +26,20 @@ const readConsumed = (getState, id) => {
   }
 };
 
+// Gold overlay is a plain number; `undefined` (no overlay at all) means "no
+// opinion" so the engine surfaces nothing for that PC.
+const readGold = (getState, id) => {
+  const server = getState(id, 'gold');
+  if (typeof server === 'number') return server;
+  try {
+    const raw = window.localStorage.getItem(`cnmh_gold_${id}`);
+    const v = raw != null ? JSON.parse(raw) : undefined;
+    return typeof v === 'number' ? v : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const useReconciliation = () => {
   const { characters, rawCharacters, refresh } = useContent();
   const { getState, sendUpdate, subscribe } = useSession();
@@ -33,20 +47,27 @@ export const useReconciliation = () => {
   const ids = (characters || []).map((c) => c.id);
   const idsKey = ids.join(',');
 
-  // Live consumed overlay per PC, seeded from the session + kept current via a
-  // per-character subscription (same primitive usePartyGold uses).
+  // Live durable overlays per PC, seeded from the session + kept current via
+  // per-character subscriptions (same primitive usePartyGold uses).
   const [consumedById, setConsumedById] = useState(() =>
     Object.fromEntries(ids.map((id) => [id, readConsumed(getState, id)])),
+  );
+  const [goldById, setGoldById] = useState(() =>
+    Object.fromEntries(ids.map((id) => [id, readGold(getState, id)])),
   );
 
   useEffect(() => {
     const list = idsKey ? idsKey.split(',') : [];
     setConsumedById(Object.fromEntries(list.map((id) => [id, readConsumed(getState, id)])));
-    const unsubs = list.map((id) =>
+    setGoldById(Object.fromEntries(list.map((id) => [id, readGold(getState, id)])));
+    const unsubs = list.flatMap((id) => [
       subscribe(id, 'consumed', (val) =>
         setConsumedById((prev) => ({ ...prev, [id]: val && typeof val === 'object' ? val : {} })),
       ),
-    );
+      subscribe(id, 'gold', (val) =>
+        setGoldById((prev) => ({ ...prev, [id]: typeof val === 'number' ? val : Number(val) || 0 })),
+      ),
+    ]);
     return () => unsubs.forEach((u) => u());
     // idsKey is the stable roster signature; getState/subscribe are stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,10 +84,13 @@ export const useReconciliation = () => {
       (characters || [])
         .map((char) => ({
           char,
-          changes: computePendingChanges(char, rawById[char.id], { consumed: consumedById[char.id] }),
+          changes: computePendingChanges(char, rawById[char.id], {
+            consumed: consumedById[char.id],
+            gold: goldById[char.id],
+          }),
         }))
         .filter((g) => g.changes.length > 0),
-    [characters, rawById, consumedById],
+    [characters, rawById, consumedById, goldById],
   );
 
   // ── Discard ────────────────────────────────────────────────────────────────
