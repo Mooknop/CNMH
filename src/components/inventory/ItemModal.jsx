@@ -13,6 +13,7 @@ import {
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
+import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
@@ -106,6 +107,24 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const isContainerItem = isContainer(item);
   const stowTargets = containers.filter((c) => c.uid !== uid);
   const moveTargets = containers.filter((c) => c.uid !== uid && c.uid !== parent?.uid);
+
+  // ── Loot-card presentation (#item-modal-loot-card) ──
+  // Rarity drives the foil/gem; material tint + charge state drive the hero
+  // art; the category eyebrow is derived from field presence (no stored type).
+  const rarity = itemRarity(item);                       // common|uncommon|rare|unique
+  const tint = itemTint(item);                           // ember|iron|verdant|arcane|gold|neutral
+  const charges = itemCharges(item);                     // { current, max } | null
+  const code = itemCode(item.name);
+  const category =
+    isContainerItem ? 'Container'
+    : item.strikes ? 'Weapon'
+    : item.shield ? 'Shield'
+    : item.staff ? 'Staff'
+    : item.wand ? 'Wand'
+    : item.scroll ? 'Scroll'
+    : consumableMeta(item) ? 'Consumable'
+    : 'Gear';
+  const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
@@ -218,10 +237,42 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   ) : null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={weaponDisplayName(item)} themeColor={themeColor} maxWidth="500px" highZ>
-      {item.image && (
-        <img src={`/api/images/${item.image}`} alt="" className="entity-image" style={item.imagePosition ? { objectPosition: `${item.imagePosition.x}% ${item.imagePosition.y}%` } : undefined} />
-      )}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={weaponDisplayName(item)}
+      themeColor={themeColor}
+      highZ
+      hideHeader
+      className={`modal--loot rar-${rarity}`}
+    >
+      <button className="loot-close" onClick={onClose} aria-label="Close">&times;</button>
+
+      {/* ── hero art: full-panel tile (real art or itemCode placeholder) ── */}
+      <div className="loot-art">
+        <span className={`loot-tile tint-${tint}${isGlowy(item) ? ' is-glow' : ''}`}>
+          {item.image
+            ? <img src={`/api/images/${item.image}`} alt="" style={item.imagePosition ? { objectPosition: `${item.imagePosition.x}% ${item.imagePosition.y}%` } : undefined} />
+            : <span className="loot-code">{code}</span>}
+        </span>
+        <span className="loot-gem" title={rarityLabel} />
+        {charges && (
+          <span className="loot-charges" title={`${charges.current} / ${charges.max} charges`}>
+            {Array.from({ length: Math.min(charges.max, 8) }).map((_, i) => (
+              <i key={i} className={i < charges.current ? 'on' : ''} />
+            ))}
+          </span>
+        )}
+      </div>
+
+      {/* ── name plate: rarity · category eyebrow + item name ── */}
+      <div className="loot-plate">
+        <div className="loot-rarity">{rarityLabel} · {category}</div>
+        <h2 className="loot-name">{weaponDisplayName(item)}</h2>
+      </div>
+
+      {/* ── scrollable body: every existing detail section ── */}
+      <div className="loot-scroll">
       {/* Display traits if they exist */}
       {item.traits && item.traits.length > 0 && (
         <div className="item-traits">
@@ -251,6 +302,18 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           </span>
         </div>
 
+        {charges && (
+          <div className="item-detail item-detail--charges">
+            <span className="item-detail-label">Charges</span>
+            <span className="item-detail-value">{charges.current}/{charges.max}</span>
+            <span className="charge-pips" aria-hidden="true">
+              {Array.from({ length: Math.min(charges.max, 6) }).map((_, i) => (
+                <i key={i} className={i < charges.current ? 'on' : ''} />
+              ))}
+            </span>
+          </div>
+        )}
+
         {item.state && (
           <div className="item-detail">
             <span className="item-detail-label">State</span>
@@ -272,7 +335,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       {shield && (
         <div className="shield-properties">
           <h3>Shield Properties</h3>
-          <div className="item-detail-grid">
+          <div className="item-detail-grid is-block">
             {shield.bonus !== undefined && (
               <div className="item-detail">
                 <span className="item-detail-label">AC Bonus</span>
@@ -647,7 +710,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
-      {/* Loadout actions — state-appropriate (drop / stow / retrieve / …) */}
+      </div>{/* /.loot-scroll */}
+
+      {/* Loadout actions — state-appropriate (drop / stow / retrieve / …),
+          pinned to the card footer outside the scroll region */}
       {(useButton || actions) && (
         <div className="item-modal-actions">{useButton}{actions}</div>
       )}
