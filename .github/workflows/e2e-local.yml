@@ -5,6 +5,12 @@ name: E2E (local stack)
 # booted as Playwright's webServer). Zero Cloudflare usage, no secrets, no label
 # gate — so it can run on every qualifying PR. Staging E2E (staging-e2e.yml) is
 # now an on-demand smoke for deploy verification only.
+#
+# Sharded across N runners (Track 1): the suite shares one DO/R2 singleton, so it
+# must run serially (workers:1) WITHIN a stack — but each shard is a separate
+# runner with its own wrangler-dev stack, so there's no cross-shard collision and
+# wall-clock drops to ~suite/N + boot. The per-shard checks are NOT required; the
+# `e2e` fan-in job below carries the required-check name.
 on:
   workflow_dispatch:
   pull_request:
@@ -25,11 +31,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  local:
-    name: E2E against local stack
+  shard:
+    # Keep this name distinct from the required check below — a matrix reports one
+    # check per leg ("… (1)", "… (2)"), which can't be a stable required context.
+    name: E2E shard ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
     # No CF DO budget to protect; this ceiling just caps a hung webServer/run.
     timeout-minutes: 20
+    strategy:
+      # One shard's failure shouldn't cancel the others — we want the full picture.
+      fail-fast: false
+      matrix:
+        # Keep the count in sync with the `/4` denominator in --shard below.
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v5
 
@@ -44,15 +58,66 @@ jobs:
         # chromium engine also backs the mobile-chromium (Pixel 7) project.
         run: npx playwright install --with-deps chromium
 
-      - name: Run E2E suite (local wrangler-dev stack)
+      - name: Run E2E shard (local wrangler-dev stack)
         # No E2E_BASE_URL / CF_ACCESS_* → playwright.config.ts boots
         # `wrangler dev --env e2e` as its webServer and uses GM_DEV_BYPASS.
-        run: npm run test:e2e:local
+        # blob reporter so the shards can be merged into one HTML report below.
+        run: npm run test:e2e:local -- --shard=${{ matrix.shard }}/4 --reporter=blob
 
-      - name: Upload Playwright report
-        if: failure()
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 14
+
+  report:
+    # Stitch the shard blobs into a single browsable HTML report. Non-required,
+    # best-effort — runs whenever the shards ran (pass or fail), skipped on cancel.
+    name: Merge E2E reports
+    needs: shard
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24.x
+          cache: npm
+
+      - run: npm ci
+
+      - name: Download shard blob reports
+        uses: actions/download-artifact@v5
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge into a single HTML report
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+
+      - name: Upload HTML report
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  e2e:
+    # Fan-in gate. This job's name is the REQUIRED status check in the main ruleset
+    # (16548767) and is mirrored by e2e-local-skip.yml for path-filtered PRs. Keep
+    # it EXACTLY "E2E against local stack" — renaming orphans the gate and PRs hang
+    # on "Expected — Waiting for status to be reported". It passes only if every
+    # shard passed.
+    name: E2E against local stack
+    needs: shard
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gate on shard results
+        run: |
+          echo "Aggregate shard result: ${{ needs.shard.result }}"
+          test "${{ needs.shard.result }}" = "success"
