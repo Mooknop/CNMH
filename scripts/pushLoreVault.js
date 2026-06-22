@@ -37,6 +37,7 @@ const AUTHORED_FIELDS = new Set([
   'summary',
   'content',
   'related',
+  'parent',
   'image',
   'imagePosition',
   'dateArStart',
@@ -95,7 +96,17 @@ function compileVault(files) {
         ids.push(id);
       }
     }
-    return { ...doc, related: ids };
+    // Single parent edge: resolve title -> id; a dead parent is a broken link.
+    let parent;
+    if (doc.parent) {
+      const parentId = titleToId.get(String(doc.parent).toLowerCase());
+      if (parentId) parent = parentId;
+      else unresolved.push({ id: doc.id, link: doc.parent });
+    }
+    const out = { ...doc, related: ids };
+    if (parent) out.parent = parent;
+    else delete out.parent;
+    return out;
   });
 
   return { docs, titleToId, unresolved };
@@ -130,6 +141,27 @@ function validateVault(docs, unresolved = []) {
 
   for (const { id, link } of unresolved) {
     errors.push(`Broken link: "${id}" → [[${link}]] resolves to no vault file.`);
+  }
+
+  // Hierarchy integrity: `parent` is a resolved id here. No self-parent, and no
+  // cycles (walk the ancestor chain; a revisit means a loop).
+  const parentById = new Map(docs.filter((d) => d.id).map((d) => [d.id, d.parent]));
+  for (const doc of docs) {
+    if (!doc.id || !doc.parent) continue;
+    if (doc.parent === doc.id) {
+      errors.push(`Self-parent: "${doc.id}" lists itself as parent.`);
+      continue;
+    }
+    const seen = new Set([doc.id]);
+    let cursor = doc.parent;
+    while (cursor) {
+      if (seen.has(cursor)) {
+        errors.push(`Parent cycle: "${doc.id}" is in a containment loop via "${cursor}".`);
+        break;
+      }
+      seen.add(cursor);
+      cursor = parentById.get(cursor);
+    }
   }
 
   return { errors, warnings };

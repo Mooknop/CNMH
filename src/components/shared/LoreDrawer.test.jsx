@@ -198,4 +198,38 @@ describe('LoreDrawer', () => {
       expect(navigateTo).toHaveBeenCalledWith('the-pit');
     });
   });
+
+  describe('containment hierarchy', () => {
+    const HIER = [
+      { id: 'varisia', title: 'Varisia', category: 'Location', content: 'Region.', related: [] },
+      { id: 'sandpoint', title: 'Sandpoint', category: 'Location', content: 'Town.', parent: 'varisia', related: [] },
+      { id: 'cathedral', title: 'Sandpoint Cathedral', category: 'Location', content: 'Church.', parent: 'sandpoint', related: [] },
+    ];
+
+    beforeEach(() => {
+      useContent.mockReturnValue({ loreEntries: HIER, allLoreEntries: HIER });
+    });
+
+    it('renders a root-first ancestor breadcrumb', () => {
+      useLore.mockReturnValue({ isOpen: true, currentEntryId: 'cathedral', closeLore, navigateTo, goBack, canGoBack: false });
+      renderDrawer();
+      const crumbs = document.querySelectorAll('.lore-drawer-crumb');
+      expect([...crumbs].map((c) => c.textContent)).toEqual(['Varisia', 'Sandpoint']);
+    });
+
+    it('navigates when a breadcrumb crumb is clicked', () => {
+      useLore.mockReturnValue({ isOpen: true, currentEntryId: 'cathedral', closeLore, navigateTo, goBack, canGoBack: false });
+      renderDrawer();
+      fireEvent.click(screen.getByRole('button', { name: 'Sandpoint' }));
+      expect(navigateTo).toHaveBeenCalledWith('sandpoint');
+    });
+
+    it('lists direct children under Contains', () => {
+      useLore.mockReturnValue({ isOpen: true, currentEntryId: 'sandpoint', closeLore, navigateTo, goBack, canGoBack: false });
+      renderDrawer();
+      expect(screen.getByText('Contains')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Sandpoint Cathedral' }));
+      expect(navigateTo).toHaveBeenCalledWith('cathedral');
+    });
+  });
 });

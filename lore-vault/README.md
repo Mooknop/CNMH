@@ -36,6 +36,7 @@ imagePosition:                # optional
   y: 50
 dateArStart: 4707             # History entries only (Absalom Reckoning year)
 dateArEnd: 4708               # optional
+parent: "[[Sandpoint]]"       # optional — the containing entry (see Hierarchy)
 related:
   - "[[Abadar]]"
   - "[[The Late Unpleasantness]]"
@@ -67,6 +68,22 @@ export and **fail the push** (a wikilink that resolves to no vault file is a har
 error). The old DO data had a number of dangling pointers; the export prints them
 when it runs.
 
+## Hierarchy (containment)
+
+`parent` is an **optional single wikilink** naming the entry that contains this
+one — e.g. a Sandpoint site points at `[[Sandpoint]]`, and `Sandpoint` itself
+points at `[[Varisia]]`. It's a generic field (any category may use it), though
+today only Locations do.
+
+- It's a **directed, single-parent** edge, so arbitrary depth works
+  (Region → City → Site) without any tier configuration.
+- The app derives the rest: an entry shows an **ancestor breadcrumb** and a
+  **"Contains"** list of its direct children. These render in their own sections,
+  separate from generic Connections — so don't also list a parent/child in
+  `related:` (it would be redundant; the app de-duplicates it anyway).
+- The push **fails** on a `parent` that resolves to no vault file, a self-parent,
+  or a containment cycle.
+
 ## Publishing edits (vault → DO)
 
 `npm run lore:push` parses the vault, validates it, diffs against the live DO, and
@@ -83,8 +100,9 @@ node scripts/pushLoreVault.js https://cnmh-staging.example.workers.dev --dry-run
 ```
 
 - **Validation** (aborts before any write): duplicate/missing `id`, missing
-  title/category, and broken wikilinks. `History` entries with no `dateArStart`
-  warn (they render as "Unknown Date") but don't block.
+  title/category, broken wikilinks, and bad `parent` edges (dead/self/cyclic).
+  `History` entries with no `dateArStart` warn (they render as "Unknown Date")
+  but don't block.
 - **`related[]`** is compiled from the `related:` frontmatter **and** inline
   `[[wikilinks]]` in the body, resolved title→id (case-insensitive).
 - **Deletions are opt-in.** Without `--allow-delete`, entries present live but

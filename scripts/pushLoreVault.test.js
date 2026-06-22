@@ -54,6 +54,21 @@ describe('compileVault', () => {
     const { unresolved } = compileVault(files);
     expect(unresolved).toEqual([{ id: 'sandpoint', link: 'Nowhere' }]);
   });
+
+  it('resolves a single parent wikilink to an id', () => {
+    const files = [
+      file('Location', 'Sandpoint', { id: 'sandpoint' }),
+      file('Location', 'Cathedral', { id: 'cathedral', parent: '"[[Sandpoint]]"' }),
+    ];
+    const { docs } = compileVault(files);
+    expect(docs.find((d) => d.id === 'cathedral').parent).toBe('sandpoint');
+  });
+
+  it('reports a parent that resolves to no vault file', () => {
+    const files = [file('Location', 'Cathedral', { id: 'cathedral', parent: '"[[Nowhere]]"' })];
+    const { unresolved } = compileVault(files);
+    expect(unresolved).toEqual([{ id: 'cathedral', link: 'Nowhere' }]);
+  });
 });
 
 describe('validateVault', () => {
@@ -90,6 +105,30 @@ describe('validateVault', () => {
     const docs = [{ id: 'x', title: 'X', category: '', related: [] }];
     const { errors } = validateVault(docs, []);
     expect(errors.some((e) => /Missing category/.test(e))).toBe(true);
+  });
+
+  it('flags a self-parent', () => {
+    const docs = [{ id: 'x', title: 'X', category: 'Location', related: [], parent: 'x' }];
+    const { errors } = validateVault(docs, []);
+    expect(errors.some((e) => /Self-parent/.test(e))).toBe(true);
+  });
+
+  it('flags a parent cycle', () => {
+    const docs = [
+      { id: 'a', title: 'A', category: 'Location', related: [], parent: 'b' },
+      { id: 'b', title: 'B', category: 'Location', related: [], parent: 'a' },
+    ];
+    const { errors } = validateVault(docs, []);
+    expect(errors.some((e) => /cycle/i.test(e))).toBe(true);
+  });
+
+  it('accepts a valid multi-level hierarchy', () => {
+    const docs = [
+      { id: 'varisia', title: 'Varisia', category: 'Location', related: [] },
+      { id: 'sandpoint', title: 'Sandpoint', category: 'Location', related: [], parent: 'varisia' },
+      { id: 'cathedral', title: 'Cathedral', category: 'Location', related: [], parent: 'sandpoint' },
+    ];
+    expect(validateVault(docs, []).errors).toEqual([]);
   });
 
   it('turns unresolved links into errors', () => {
