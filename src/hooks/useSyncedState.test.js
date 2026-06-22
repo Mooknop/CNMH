@@ -3,6 +3,9 @@ import { renderHook, act } from '@testing-library/react';
 let mockSession;
 vi.mock('../contexts/SessionContext', () => ({
   useSession: () => mockSession,
+  // Mirror the real allowlist: inventory-organization types stay writable in
+  // the offline sandbox.
+  isSandboxWritable: (t) => t === 'loadout' || t === 'invested',
 }));
 
 import { useSyncedState } from './useSyncedState';
@@ -87,6 +90,16 @@ describe('useSyncedState', () => {
     act(() => { result.current[1]('b'); });
     expect(result.current[0]).toBe('b');
     expect(JSON.parse(localStorage.getItem('some_ui_pref'))).toBe('b');
+  });
+
+  it('keeps inventory-organization writes interactive in the sandbox (#554)', () => {
+    mockSession = { ...noopSession(), connected: true, foundryConnected: false };
+    const { result } = renderHook(() => useSyncedState('cnmh_invested_Jade', {}));
+    act(() => { result.current[1]({ eye: true }); });
+    // Attuning works offline: value updates, persists, and syncs.
+    expect(result.current[0]).toEqual({ eye: true });
+    expect(JSON.parse(localStorage.getItem('cnmh_invested_Jade'))).toEqual({ eye: true });
+    expect(mockSession.sendUpdate).toHaveBeenCalledWith('Jade', 'invested', { eye: true });
   });
 
   it('non-matching keys behave as plain localStorage with no sync', () => {

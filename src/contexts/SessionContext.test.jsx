@@ -175,6 +175,22 @@ describe('SessionContext', () => {
     expect(api.getState('IzzyUncut', 'focus')).toBeUndefined();
   });
 
+  it('still allows inventory-organization writes in the sandbox (#554)', () => {
+    let api;
+    render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+    act(() => { MockWS.last._open(); }); // sandbox: connected, Foundry down
+    act(() => { api.sendUpdate('Jade', 'loadout', { uid1: { state: 'worn' } }); });
+    act(() => { api.sendUpdate('Jade', 'invested', { eye: true }); });
+    // Both go through — cached and broadcast — so a player can manage inventory.
+    expect(api.getState('Jade', 'loadout')).toEqual({ uid1: { state: 'worn' } });
+    expect(api.getState('Jade', 'invested')).toEqual({ eye: true });
+    expect(MockWS.last.sent).toHaveLength(2);
+    // …while a resource write stays frozen.
+    act(() => { api.sendUpdate('Jade', 'focus', 5); });
+    expect(api.getState('Jade', 'focus')).toBeUndefined();
+    expect(MockWS.last.sent).toHaveLength(2);
+  });
+
   it('resumes sendUpdate once Foundry presence arrives', () => {
     let api;
     render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
