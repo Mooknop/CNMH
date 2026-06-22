@@ -1,6 +1,7 @@
 ---
 id: hellstorm-catacombs
 summary: Ancient Thassilonian chambers beneath the cathedral and Boneyard — broken into by the goblin ghouls who stole Nualia's remains.
+parent: "[[Sandpoint]]"
 related:
   - "[[Sandpoint Cathedral]]"
   - "[[Sandpoint Boneyard]]"

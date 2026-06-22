@@ -1,9 +1,9 @@
 ---
 id: iron-harbor
 summary: The rougher, more militant sister-town of Osprey Cove — a garrison settlement devoted to Gorum whose Stonehome church-fortress has recently been infiltrated by a dangerous cult.
+parent: "[[The Kindred Coast]]"
 related:
   - "[[Osprey Cove]]"
-  - "[[The Kindred Coast]]"
   - "[[Rusthenge]]"
   - "[[Gorum]]"
   - "[[Runelord Belimarius]]"

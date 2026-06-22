@@ -1,8 +1,8 @@
 ---
 id: sandpoint-shipyard
 summary: Where Sandpoint's boats get built and repaired — a working industrial facility tied historically to the Valdemar family legacy.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[The Valdemar Family]]"
 ---
 

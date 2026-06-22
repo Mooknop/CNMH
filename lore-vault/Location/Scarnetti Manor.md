@@ -1,8 +1,8 @@
 ---
 id: scarnetti-manor
 summary: The Scarnetti family estate — recently rebuilt after giant-raid damage, and paid for with money from a source Titus would rather not discuss.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Titus Scarnetti]]"
   - "[[The Scarnetti Family]]"
 ---

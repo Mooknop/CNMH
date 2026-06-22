@@ -1,8 +1,8 @@
 ---
 id: valdemar-fish-market
 summary: The open-air fish market on Water Street, where the morning catch lands almost straight off the boats.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[The Valdemar Family]]"
   - "[[Sandpoint Shipyard]]"
 ---

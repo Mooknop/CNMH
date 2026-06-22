@@ -1,9 +1,9 @@
 ---
 id: osprey-cove
 summary: A laid-back coastal town of druids, farmers, and free spirits on the Kindred Coast — a world away from the grim militarism of its sister settlement Iron Harbor.
+parent: "[[The Kindred Coast]]"
 related:
   - "[[Iron Harbor]]"
-  - "[[The Kindred Coast]]"
   - "[[Rusthenge]]"
   - "[[Elder Ordwi]]"
   - "[[Cayden Cailean]]"

@@ -1,8 +1,8 @@
 ---
 id: sandpoint-lumber-mill
 summary: One of the Scarnettis' industrial holdings — a working mill with a haunted reputation and a manager whose nightmares are getting worse.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Ibor Thorn]]"
   - "[[The Scarnetti Consortium]]"
   - "[[The Scarnetti Family]]"

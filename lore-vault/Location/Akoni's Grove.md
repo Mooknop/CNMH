@@ -1,9 +1,9 @@
 ---
 id: akonis-grove
 summary: The ancient redwood heart of the Tickwood, where the dryad Akoni holds court over sprites, grigs, and other fey — though recent redcap meddling has left its power dynamics dangerously uncertain.
+parent: "[[The Tickwood]]"
 related:
   - "[[Akoni]]"
-  - "[[The Tickwood]]"
   - "[[Sandpoint Hinterlands]]"
   - "[['Grandfather' Grustmier]]"
   - "[[The Scarnetti Family]]"

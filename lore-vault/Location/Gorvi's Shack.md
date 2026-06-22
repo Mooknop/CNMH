@@ -1,9 +1,9 @@
 ---
 id: gorvis-shack
 summary: A dilapidated shack on Tower Street — home of Sandpoint's dungsweeper boss and his crew of useful troublemakers.
+parent: "[[Sandpoint]]"
 related:
   - "[[Gorvi]]"
-  - "[[Sandpoint]]"
   - "[[Junker's Edge]]"
 ---
 

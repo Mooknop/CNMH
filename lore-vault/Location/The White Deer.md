@@ -1,8 +1,8 @@
 ---
 id: the-white-deer
 summary: The newest building in town, capitalizing on the influx of flush pursed adventurers coming through town.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Garridan Viskalai]]"
   - "[[Belor Hemlock]]"
 ---

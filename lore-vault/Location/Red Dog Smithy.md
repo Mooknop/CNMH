@@ -1,8 +1,8 @@
 ---
 id: red-dog-smithy
 summary: Sandpoint's best smithy — extraordinary work, a terrifying owner, and several large red mastiffs who have better manners than their master.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Das Korvut]]"
 ---
 

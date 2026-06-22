@@ -1,10 +1,10 @@
 ---
 id: sandpoint-savories
 summary: The town's most beloved bakery — Alma Avertin's pastries are a civic institution on Main Street.
+parent: "[[Sandpoint]]"
 related:
   - "[[Alma Avertin]]"
   - "[[Arika Avertin]]"
-  - "[[Sandpoint]]"
 ---
 
 Sandpoint Savories is the town's most popular bakery, and mornings here smell like the best argument for living in Sandpoint. Alma Avertin has run it for decades, and her pastries and cookies are fixtures of every festival and most breakfasts.

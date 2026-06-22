@@ -1,8 +1,8 @@
 ---
 id: rings-and-things
 summary: A squat stone shop on Church Street dealing in jewelry, art, and quiet loans.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Abadar]]"
   - "[[Magnimar]]"
 ---

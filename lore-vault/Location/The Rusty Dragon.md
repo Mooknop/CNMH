@@ -1,8 +1,8 @@
 ---
 id: the-rusty-dragon
 summary: Sandpoint's most popular inn and tavern — warm, welcoming, and still carrying the legend of its famous former owner.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Bethana Corwin]]"
   - "[[Daviren Hosk]]"
   - "[[Ameiko Kaijitsu]]"

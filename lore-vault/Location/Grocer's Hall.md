@@ -1,8 +1,8 @@
 ---
 id: grocers-hall
 summary: An open-fronted hall on Festival Street — market stalls out front, farming supplies in the back.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Sandpoint Market]]"
   - "[[Sandpoint Hinterlands]]"
 ---

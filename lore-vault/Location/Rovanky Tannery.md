@@ -1,8 +1,8 @@
 ---
 id: rovanky-tannery
 summary: Sandpoint's tannery — excellent leather goods, long waits, and a perfectionist owner who keeps firing his help for not meeting his standards.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Larz Rovanky]]"
 ---
 

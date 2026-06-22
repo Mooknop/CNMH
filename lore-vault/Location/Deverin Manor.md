@@ -1,8 +1,8 @@
 ---
 id: deverin-manor
 summary: Home of Sandpoint's mayor and the loud, sprawling Deverin family — perpetually crowded, perpetually political.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Kendra Deverin]]"
   - "[[The Deverin Family]]"
 ---

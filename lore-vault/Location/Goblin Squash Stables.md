@@ -1,8 +1,8 @@
 ---
 id: goblin-squash-stables
 summary: Sandpoint's stables — named with the particular enthusiasm of a man who really, really hates goblins.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Daviren Hosk]]"
 ---
 

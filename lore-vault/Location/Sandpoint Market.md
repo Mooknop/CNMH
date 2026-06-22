@@ -1,8 +1,8 @@
 ---
 id: sandpoint-market
 summary: The open square where Festival, Market, and Water Streets meet — children's playground most days, twice a week the town's beating commercial heart.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Grocer's Hall]]"
   - "[[Magnimar]]"
 ---

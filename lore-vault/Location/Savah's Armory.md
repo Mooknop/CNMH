@@ -1,8 +1,8 @@
 ---
 id: savah-armory
 summary: Sandpoint's best source for weapons and armor — run by a merchant who has noticed, with mixed feelings, how good business has been since the adventurers started arriving.
+parent: "[[Sandpoint]]"
 related:
-  - "[[Sandpoint]]"
   - "[[Savah Bevaniky]]"
 ---
 
