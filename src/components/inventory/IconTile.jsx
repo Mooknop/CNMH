@@ -39,6 +39,15 @@ const IconTile = ({ item, size = 52, glow = true }) => {
       ) : (
         <span className="icon-tile-code">{itemCode(item?.name)}</span>
       )}
+      {item?.activeEffects?.length > 0 && (
+        <span
+          className="icon-tile-fx"
+          title={item.activeEffects.map((e) => e.label).join(', ')}
+          aria-label="Active effect"
+        >
+          ✨
+        </span>
+      )}
       {qty > 1 && <span className="icon-tile-qty">{qty}</span>}
       {charges && (
         <span

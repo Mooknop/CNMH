@@ -23,11 +23,13 @@ vi.mock('../../utils/InventoryUtils', async () => ({
 let mockConsumed = {};
 let mockAffixed = {};
 let mockInvested = {};
+let mockItemEffects = [];
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key, initialValue) => {
     if (key.startsWith('cnmh_consumed_')) return [mockConsumed, vi.fn()];
     if (key.startsWith('cnmh_affixed_')) return [mockAffixed, vi.fn()];
     if (key.startsWith('cnmh_invested_')) return [mockInvested, vi.fn()];
+    if (key.startsWith('cnmh_itemeffects_')) return [mockItemEffects, vi.fn()];
     return [initialValue, vi.fn()];
   },
 }));
@@ -148,6 +150,7 @@ beforeEach(() => {
   mockConsumed = {};
   mockAffixed = {};
   mockInvested = {};
+  mockItemEffects = [];
   mockMode = 'exploration';
 });
 
@@ -387,6 +390,61 @@ describe('InventoryTab', () => {
       // The held items still show, but the slots aren't registered drop zones.
       expect(screen.getByTestId('hands-tile-h1')).toBeInTheDocument();
       expect(screen.getByTestId('hands-strip-slot-1')).not.toHaveAttribute('data-dz');
+    });
+  });
+
+  // S5: Toolbar (search / auto-sort / filter chips) + oil-effect tile badge.
+  describe('Toolbar + polish (#toolbar)', () => {
+    it('filters the active bag by the search box', () => {
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      fireEvent.change(screen.getByTestId('inventory-search'), { target: { value: 'cloak' } });
+      expect(screen.getByTestId('grid-cell-u3')).toBeInTheDocument(); // Worn Cloak
+      expect(screen.queryByTestId('grid-cell-u1')).not.toBeInTheDocument(); // Longsword
+      expect(screen.queryByTestId('grid-cell-u2')).not.toBeInTheDocument(); // Leather Armor
+    });
+
+    it('shows the no-matches message when a search hides everything', () => {
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      fireEvent.change(screen.getByTestId('inventory-search'), { target: { value: 'zzz' } });
+      expect(screen.getByText('No matches in this bag.')).toBeInTheDocument();
+    });
+
+    it('filters the active bag by a filter chip', () => {
+      render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" />);
+      // Both present under "All"; the weapon chip keeps only the sword.
+      fireEvent.click(screen.getByTestId('inventory-filter-weapon'));
+      expect(screen.getByTestId('grid-cell-sword')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-cell-amulet')).not.toBeInTheDocument();
+      // The magic chip keeps only the (Magical) amulet.
+      fireEvent.click(screen.getByTestId('inventory-filter-magic'));
+      expect(screen.getByTestId('grid-cell-amulet')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-cell-sword')).not.toBeInTheDocument();
+    });
+
+    it('cycles the auto-sort label A–Z → Type → Bulk', () => {
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      const sort = screen.getByTestId('inventory-sort');
+      expect(sort).toHaveTextContent('A–Z');
+      fireEvent.click(sort);
+      expect(sort).toHaveTextContent('Type');
+      fireEvent.click(sort);
+      expect(sort).toHaveTextContent('Bulk');
+      fireEvent.click(sort);
+      expect(sort).toHaveTextContent('A–Z');
+    });
+
+    it('stamps a ✨ effect badge on a tile with an active item effect', () => {
+      mockItemEffects = [{ id: 'fx1', itemId: 'Worn Cloak', label: 'Weightless' }];
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      expect(screen.getByTestId('grid-cell-u3')).toHaveTextContent('✨');
+      expect(screen.queryByTestId('grid-cell-u1')).not.toHaveTextContent('✨');
+    });
+
+    it('opens the ItemModal on keyboard activation of a tile (a11y)', () => {
+      const onItemClick = vi.fn();
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" onItemClick={onItemClick} />);
+      fireEvent.keyDown(screen.getByTestId('grid-cell-u3'), { key: 'Enter' });
+      expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'u3' }));
     });
   });
 });

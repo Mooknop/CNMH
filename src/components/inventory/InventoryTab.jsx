@@ -10,6 +10,7 @@ import IconTile from './IconTile';
 import { DndProvider } from './dnd';
 import { getBulkStatus, applyConsumedOverlay, isContainer, flattenInventory } from '../../utils/InventoryUtils';
 import { isHeldState } from '../../utils/itemState';
+import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
@@ -43,6 +44,8 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Consumed-consumables overlay — fully-used items disappear from the grid
   // (the GM cleanup tool removes them from authored content later).
   const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
+  // Item-target effects overlay (oils, #339) — surfaced as a ✨ badge on the tile.
+  const [itemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
   // Affixed-talisman overlay (#254/#339) — talisman uid → host uid. Affixed
   // talismans don't get their own tile (they're attached to a host).
   const [affixed] = useSyncedState(affixedKey(character?.id), {});
@@ -59,24 +62,19 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const { isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
 
   // Apply the consumed overlay to the top level AND each container's contents so
-  // a stowed consumable shows its live count and disappears at 0 (#253), then
-  // drop affixed talismans from both levels — they render via their host, not as
+  // a stowed consumable shows its live count and disappears at 0 (#253); stamp
+  // any active item-target effects (oils, #339) for the ✨ tile badge; then drop
+  // affixed talismans from both levels — they render via their host, not as
   // their own tile.
   const affixedUids = affixedUidSet(affixed);
   const notAffixed = (item) => !affixedUids.has(itemUidOf(item));
-  const gridInventory = applyConsumedOverlay(inventory, consumed)
-    .filter(notAffixed)
-    .map((item) =>
-      isContainer(item)
-        ? {
-            ...item,
-            container: {
-              ...item.container,
-              contents: applyConsumedOverlay(item.container.contents, consumed).filter(notAffixed),
-            },
-          }
-        : item
-    );
+  const prep = (items) =>
+    stampItemEffects(applyConsumedOverlay(items, consumed).filter(notAffixed), itemEffects);
+  const gridInventory = prep(inventory).map((item) =>
+    isContainer(item)
+      ? { ...item, container: { ...item.container, contents: prep(item.container.contents) } }
+      : item
+  );
 
   // Invested items render in the Attuned area and held items in the Hands strip
   // (wherever they physically live), so pull both out of the bags. Invested wins
