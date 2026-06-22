@@ -11,6 +11,7 @@ import {
   remainingQuantity,
   applyConsumedOverlay,
   flattenInventory,
+  isInvestable,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -346,6 +347,20 @@ describe('InventoryUtils', () => {
     it('is false for plain items and null', () => {
       expect(isConsumable({ name: 'Sword' })).toBe(false);
       expect(isConsumable(null)).toBe(false);
+    });
+  });
+
+  describe('isInvestable', () => {
+    it('is true only when the Invested trait is present (case-insensitive)', () => {
+      expect(isInvestable({ traits: ['Magical', 'Invested'] })).toBe(true);
+      expect(isInvestable({ traits: ['invested'] })).toBe(true);
+    });
+
+    it('is false without the Invested trait, for containers, and for null', () => {
+      expect(isInvestable({ traits: ['Magical'] })).toBe(false);
+      expect(isInvestable({ name: 'Rope' })).toBe(false);
+      expect(isInvestable({ traits: ['Invested'], container: { contents: [] } })).toBe(false);
+      expect(isInvestable(null)).toBe(false);
     });
   });
 

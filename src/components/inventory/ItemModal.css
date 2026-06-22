@@ -471,3 +471,20 @@
 .item-affix-activate {
   margin-top: var(--space-2, 0.5rem);
 }
+
+/* Attunement status chip (#invest) */
+.item-invested {
+  margin: var(--space-2, 0.5rem) 0;
+}
+
+.item-invested-chip {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-full, 9999px);
+  font-size: var(--text-xs, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--arcane-light);
+  background: color-mix(in srgb, var(--arcane-light) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--arcane-light) 45%, transparent);
+}

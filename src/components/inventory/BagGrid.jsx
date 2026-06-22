@@ -50,10 +50,22 @@ const GridCell = ({ item, glow, onItemClick }) => {
  * @param {Function} worn      - useLoadout.worn(uid)
  * @param {Function} stow      - useLoadout.stow(uid, containerUid)
  * @param {Function} moveToContainer - useLoadout.moveToContainer(uid, containerUid)
+ * @param {Function} [unattune] - useInvested.unattune(uid) — invested items
+ *                                dropped onto a bag also lose attunement
+ * @param {Function} [isInvested] - (uid) => bool
  * @param {Function} onItemClick - (item) => void
  * @param {boolean}  [glow]
  */
-const BagGrid = ({ inventory = [], worn, stow, moveToContainer, onItemClick, glow = true }) => {
+const BagGrid = ({
+  inventory = [],
+  worn,
+  stow,
+  moveToContainer,
+  unattune,
+  isInvested,
+  onItemClick,
+  glow = true,
+}) => {
   const [activeBag, setActiveBag] = useState(WORN);
 
   const containers = inventory.filter(isContainer);
@@ -82,9 +94,12 @@ const BagGrid = ({ inventory = [], worn, stow, moveToContainer, onItemClick, glo
   );
 
   // Drop an item into a target bag. Worn is a plain re-home; a container either
-  // stows (from worn/held/dropped) or moves (already stowed elsewhere).
+  // stows (from worn/held/dropped) or moves (already stowed elsewhere). An
+  // invested item dropped back into a bag also loses its attunement (the
+  // counterpart of dragging onto the Attuned area).
   const placeIn = useCallback(
     (key, item) => {
+      if (isInvested && isInvested(item.uid)) unattune(item.uid);
       if (key === WORN) {
         worn(item.uid);
       } else if (item.state === 'stowed') {
@@ -93,7 +108,7 @@ const BagGrid = ({ inventory = [], worn, stow, moveToContainer, onItemClick, glo
         stow(item.uid, key);
       }
     },
-    [worn, stow, moveToContainer]
+    [worn, stow, moveToContainer, unattune, isInvested]
   );
 
   // Containers can't nest, so a container item is never a valid drop payload.

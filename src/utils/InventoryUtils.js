@@ -239,6 +239,16 @@ export const isItemMagical = (item) => {
 };
 
 /**
+ * Whether an item can be invested (attuned). PF2e gates this on the `Invested`
+ * trait — you may invest up to 10 such items to gain their magic. Containers are
+ * never investable. Case-insensitive.
+ */
+export const isInvestable = (item) =>
+  !!item &&
+  !isContainer(item) &&
+  ((item.traits) || []).some((t) => String(t).toLowerCase() === 'invested');
+
+/**
  * Whether an item is a tracked consumable — one whose copies are used up via
  * the player-writable `cnmh_consumed_<charId>` overlay (inventory itself is
  * GM-gated content). Scrolls qualify implicitly; other consumables (potions,
