@@ -96,23 +96,6 @@ vi.mock('../../hooks/useCharacter', () => ({
   }
 }));
 
-// ItemCard internals are tested separately; here we just verify the list wiring.
-vi.mock('./ItemCard', () => ({
-  default: function DummyItemCard({ item, onClick }) {
-    return (
-      <button data-testid={`item-card-${item.uid}`} onClick={() => onClick(item)}>
-        {item.name}
-      </button>
-    );
-  }
-}));
-
-vi.mock('./ContainersList', () => ({
-  default: function DummyContainersList() {
-    return <div data-testid="containers-list">Containers List</div>;
-  }
-}));
-
 // Give-gold flow (#655): play mode drives whether the button shows; the modal
 // itself is exercised in GiveGoldModal.test.jsx, so stub it here.
 let mockMode = 'exploration';
@@ -127,6 +110,13 @@ vi.mock('./GiveGoldModal', () => ({
 
 const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
 
+// Grid tiles are draggable buttons: a pointer-down with no movement followed by
+// a pointer-up is treated as a tap (opens the ItemModal).
+const tapTile = (el) => {
+  fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
+  window.dispatchEvent(new Event('pointerup'));
+};
+
 beforeEach(() => {
   mockConsumed = {};
   mockAffixed = {};
@@ -134,23 +124,19 @@ beforeEach(() => {
 });
 
 describe('InventoryTab — affixed talismans (#254/#339)', () => {
-  it('shows an affixed talisman as an indented child line, not its own card', () => {
+  it('hides an affixed talisman from the grid; its host keeps its tile', () => {
     mockAffixed = { t1: 'w1' };
-    const { container } = render(<InventoryTab character={{ id: 'talisman' }} characterColor="#7E8C9A" />);
-    // Host still has its card; the talisman is no longer a standalone card.
-    expect(screen.getByTestId('item-card-w1')).toBeInTheDocument();
-    expect(screen.queryByTestId('item-card-t1')).not.toBeInTheDocument();
-    // It renders as the indented affixed line instead.
-    const line = container.querySelector('.affixed-talisman-line');
-    expect(line).toBeInTheDocument();
-    expect(line).toHaveTextContent('Wolf Fang');
+    render(<InventoryTab character={{ id: 'talisman' }} characterColor="#7E8C9A" />);
+    // Host still has a tile; the affixed talisman gets no tile of its own (it's
+    // reachable via the host's ItemModal).
+    expect(screen.getByTestId('grid-cell-w1')).toBeInTheDocument();
+    expect(screen.queryByTestId('grid-cell-t1')).not.toBeInTheDocument();
   });
 
-  it('shows the talisman as a normal card when not affixed', () => {
+  it('shows the talisman as a normal tile when not affixed', () => {
     mockAffixed = {};
-    const { container } = render(<InventoryTab character={{ id: 'talisman' }} characterColor="#7E8C9A" />);
-    expect(screen.getByTestId('item-card-t1')).toBeInTheDocument();
-    expect(container.querySelector('.affixed-talisman-line')).toBeNull();
+    render(<InventoryTab character={{ id: 'talisman' }} characterColor="#7E8C9A" />);
+    expect(screen.getByTestId('grid-cell-t1')).toBeInTheDocument();
   });
 });
 
@@ -180,25 +166,27 @@ describe('InventoryTab', () => {
     expect(bar).toHaveTextContent('5/10'); // used / limit
   });
 
-  it('renders an item card for each inventory entry', () => {
+  it('renders a grid tile for each non-container item; containers are tabs', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByTestId('item-card-u1')).toBeInTheDocument();
-    expect(screen.getByTestId('item-card-u2')).toBeInTheDocument();
-    expect(screen.getByTestId('item-card-u3')).toBeInTheDocument();
-    expect(screen.getByTestId('item-card-u4')).toBeInTheDocument();
+    // Worn bag holds the worn / held / dropped items …
+    expect(screen.getByTestId('grid-cell-u1')).toBeInTheDocument();
+    expect(screen.getByTestId('grid-cell-u2')).toBeInTheDocument();
+    expect(screen.getByTestId('grid-cell-u3')).toBeInTheDocument();
+    // … while the container becomes a bag tab, not a tile.
+    expect(screen.getByTestId('bag-tab-u4')).toBeInTheDocument();
+    expect(screen.queryByTestId('grid-cell-u4')).not.toBeInTheDocument();
   });
 
-  it('sorts items alphabetically by name', () => {
+  it('sorts the active bag alphabetically by name', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    const cards = screen.getAllByTestId(/^item-card-/);
-    const names = cards.map((c) => c.textContent);
-    expect(names).toEqual(['Backpack', 'Leather Armor', 'Longsword', 'Worn Cloak']);
+    const names = screen.getAllByTestId(/^grid-cell-/).map((c) => c.querySelector('.cell-name').textContent);
+    expect(names).toEqual(['Leather Armor', 'Longsword', 'Worn Cloak']);
   });
 
-  it('calls onItemClick when an item card is tapped', () => {
+  it('calls onItemClick when a tile is tapped', () => {
     const onItemClick = vi.fn();
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" onItemClick={onItemClick} />);
-    fireEvent.click(screen.getByTestId('item-card-u3'));
+    tapTile(screen.getByTestId('grid-cell-u3'));
     expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'u3', name: 'Worn Cloak' }));
   });
 
@@ -240,9 +228,19 @@ describe('InventoryTab', () => {
     expect(fill.style.getPropertyValue('--bulk-fill-w')).toBe('50%');
   });
 
-  it('renders the ContainersList', () => {
+  it('renders a bag tab for each container, plus the Worn tab', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByTestId('containers-list')).toBeInTheDocument();
+    expect(screen.getByTestId('bag-tab-worn')).toBeInTheDocument();
+    const backpackTab = screen.getByTestId('bag-tab-u4');
+    expect(backpackTab).toHaveTextContent('Backpack');
+  });
+
+  it('switches to a container bag and shows its (empty) contents', () => {
+    render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+    fireEvent.click(screen.getByTestId('bag-tab-u4'));
+    // Worn items are no longer shown; the empty container reads as empty.
+    expect(screen.queryByTestId('grid-cell-u3')).not.toBeInTheDocument();
+    expect(screen.getByText('This bag is empty.')).toBeInTheDocument();
   });
 
   it('shows the empty message when inventory is empty', () => {
@@ -269,21 +267,21 @@ describe('InventoryTab', () => {
       mockConsumed = { 'Minor Healing Potion': 2 };
       const onItemClick = vi.fn();
       render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" onItemClick={onItemClick} />);
-      fireEvent.click(screen.getByTestId('item-card-p1'));
+      tapTile(screen.getByTestId('grid-cell-p1'));
       expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ name: 'Minor Healing Potion', quantity: 1 }));
     });
 
     it('hides a fully-consumed consumable but keeps other items', () => {
       mockConsumed = { 'Minor Healing Potion': 3 };
       render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" />);
-      expect(screen.queryByTestId('item-card-p1')).not.toBeInTheDocument();
-      expect(screen.getByTestId('item-card-s1')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-cell-p1')).not.toBeInTheDocument();
+      expect(screen.getByTestId('grid-cell-s1')).toBeInTheDocument();
     });
 
     it('leaves non-consumables untouched by the overlay', () => {
       mockConsumed = { Longsword: 1 };
       render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" />);
-      expect(screen.getByTestId('item-card-s1')).toBeInTheDocument();
+      expect(screen.getByTestId('grid-cell-s1')).toBeInTheDocument();
     });
   });
 });

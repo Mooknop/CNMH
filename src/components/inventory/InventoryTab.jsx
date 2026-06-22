@@ -1,41 +1,43 @@
 import React, { useState } from 'react';
 import './InventoryTab.css';
-import './ItemCard.css';
 import './InventoryGrid.css';
-import ItemRow from './ItemRow';
-import ContainersList from './ContainersList';
 import GiveGoldModal from './GiveGoldModal';
 import BulkBar from './BulkBar';
-import { getBulkStatus, applyConsumedOverlay, flattenInventory } from '../../utils/InventoryUtils';
-import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
-import { affixedKey, affixedUidSet, affixedTalismansByHost, itemUidOf } from '../../utils/affix';
+import BagGrid from './BagGrid';
+import IconTile from './IconTile';
+import { DndProvider } from './dnd';
+import { getBulkStatus, applyConsumedOverlay, isContainer } from '../../utils/InventoryUtils';
+import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useLoadout } from '../../hooks/useLoadout';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { docGold } from '../../utils/gold';
 
 /**
- * Component for displaying character inventory as item cards.
- * Loadout actions (drop/stow/etc.) live in the ItemModal opened on tap.
- * Crafting (the recipe browser) now lives in the Downtime tab.
+ * Inventory "Loadout Grid": gold header → Bulk bar → drag-and-drop bag grid.
+ * Placement reads from useCharacter (effective tree) and writes through
+ * useLoadout; tapping a tile opens the ItemModal (wired by the parent via
+ * onItemClick). Attuned area + Hands strip + toolbar land in later slices.
  * @param {Object} props
  * @param {Object} props.character - Character data
  * @param {string} props.characterColor - Theme color
- * @param {function} props.onItemClick - Handler for item clicks
+ * @param {function} props.onItemClick - Handler for item taps (opens ItemModal)
  */
 const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
+  // Loadout writer — the single source of placement mutations (#556).
+  const { worn, stow, moveToContainer } = useLoadout(character?.id);
   // Personal gold is live-synced; shown here read-only. Default to the doc's
   // gold so an unset overlay (fresh load / post-reseed) shows the committed
   // value rather than 0 (#670).
   const [gold] = useSyncedState(`cnmh_gold_${character?.id}`, docGold(character));
-  // Consumed-consumables overlay — fully-used items disappear from the list
+  // Consumed-consumables overlay — fully-used items disappear from the grid
   // (the GM cleanup tool removes them from authored content later).
   const [consumed] = useSyncedState(`cnmh_consumed_${character?.id}`, {});
-  // Item-target effects overlay (oils, #339) — surfaced as a chip on the item.
-  const [itemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
-  // Affixed-talisman overlay (#254/#339) — talisman uid → host uid.
+  // Affixed-talisman overlay (#254/#339) — talisman uid → host uid. Affixed
+  // talismans don't get their own tile (they're attached to a host).
   const [affixed] = useSyncedState(affixedKey(character?.id), {});
   // Player-to-player gold transfer (#655) — only out of combat (giving gold is
   // an Interact action in an encounter, out of scope here).
@@ -47,21 +49,27 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const { bulkStats, totalBulk: bulkUsed, inventory } = charData;
   const { bulkLimit, encumberedThreshold } = bulkStats;
 
-  // Affixed talismans render as indented child lines under their host (not as
-  // their own line). Resolve over the FULL inventory so a talisman shows under
-  // its host wherever the talisman entry physically lives.
-  const affixedUids = affixedUidSet(affixed);
-  const talismansByHost = affixedTalismansByHost(affixed, flattenInventory(inventory));
-
   const { isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
 
-  // Hide fully-consumed consumables; show live remaining counts on the rest, and
-  // stamp any active item-target effects (oils, #339) for the badge. Sort
-  // alphabetically. (Container contents get the same overlays inside
-  // ContainerItem via the `consumed`/`itemEffects` props — #253/#339.)
-  const sortedInventory = stampItemEffects(applyConsumedOverlay(inventory, consumed), itemEffects)
-    .filter((item) => !affixedUids.has(itemUidOf(item)))
-    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  // Apply the consumed overlay to the top level AND each container's contents so
+  // a stowed consumable shows its live count and disappears at 0 (#253), then
+  // drop affixed talismans from both levels — they render via their host, not as
+  // their own tile.
+  const affixedUids = affixedUidSet(affixed);
+  const notAffixed = (item) => !affixedUids.has(itemUidOf(item));
+  const gridInventory = applyConsumedOverlay(inventory, consumed)
+    .filter(notAffixed)
+    .map((item) =>
+      isContainer(item)
+        ? {
+            ...item,
+            container: {
+              ...item.container,
+              contents: applyConsumedOverlay(item.container.contents, consumed).filter(notAffixed),
+            },
+          }
+        : item
+    );
 
   return (
     <div className="inventory-tab">
@@ -81,51 +89,40 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
           )}
         </div>
       </div>
-      <div className="inventory-grid">
-        <BulkBar
-          bulkUsed={bulkUsed}
-          encumberedThreshold={encumberedThreshold}
-          bulkLimit={bulkLimit}
-        />
 
-        {isEncumbered && !isOverencumbered && (
-          <div className="bulk-warning">
-            Encumbered: -10 feet to Speed and your movements become clumsy and inexact. You take a -1 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
-          </div>
-        )}
+      <DndProvider renderGhost={(item) => <IconTile item={item} size={56} glow={false} />}>
+        <div className="inventory-grid">
+          <BulkBar
+            bulkUsed={bulkUsed}
+            encumberedThreshold={encumberedThreshold}
+            bulkLimit={bulkLimit}
+          />
 
-        {isOverencumbered && (
-          <div className="bulk-warning severe">
-            Overencumbered: -15 feet to Speed and your movements become clumsy and inexact. You take a -2 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
-          </div>
-        )}
-      </div>
+          {isEncumbered && !isOverencumbered && (
+            <div className="bulk-warning">
+              Encumbered: -10 feet to Speed and your movements become clumsy and inexact. You take a -1 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
+            </div>
+          )}
 
-      <div className="item-card-list">
-        {sortedInventory.length > 0 ? (
-          sortedInventory.map((item) => (
-            <ItemRow
-              key={item.id || `item-${item.name}`}
-              item={item}
-              affixedTalismans={talismansByHost[itemUidOf(item)] || []}
+          {isOverencumbered && (
+            <div className="bulk-warning severe">
+              Overencumbered: -15 feet to Speed and your movements become clumsy and inexact. You take a -2 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
+            </div>
+          )}
+
+          {inventory.length > 0 ? (
+            <BagGrid
+              inventory={gridInventory}
+              worn={worn}
+              stow={stow}
+              moveToContainer={moveToContainer}
               onItemClick={onItemClick}
             />
-          ))
-        ) : (
-          <div className="item-card-list--empty">No items in inventory</div>
-        )}
-      </div>
-
-      {/* Display containers section if character has any */}
-      <ContainersList
-        inventory={sortedInventory}
-        consumed={consumed}
-        itemEffects={itemEffects}
-        affixedUids={affixedUids}
-        talismansByHost={talismansByHost}
-        themeColor={characterColor}
-        onItemClick={onItemClick}
-      />
+          ) : (
+            <div className="inventory-grid-empty">No items in inventory</div>
+          )}
+        </div>
+      </DndProvider>
 
       <GiveGoldModal
         isOpen={giveOpen}
