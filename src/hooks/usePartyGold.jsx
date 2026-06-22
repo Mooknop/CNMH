@@ -1,48 +1,56 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '../contexts/SessionContext';
+import { docGold } from '../utils/gold';
 
 // Live sum of every character's gold (`cnmh_gold_<charId>`). Each PC's gold is a
 // plain synced number, but useSyncedState can't be called per-character in a loop
 // (rules of hooks), so we read/subscribe through the session directly — the same
 // primitives useSyncedState uses. Returns { goldById, total }.
 
+// localStorage value, or undefined on a miss (so the seed can distinguish "no
+// stored overlay" from a stored 0 and fall back to the doc gold — #670).
 const readLocalGold = (charId) => {
   try {
     const raw = window.localStorage.getItem(`cnmh_gold_${charId}`);
-    return raw !== null ? JSON.parse(raw) : 0;
+    const v = raw !== null ? JSON.parse(raw) : undefined;
+    return typeof v === 'number' ? v : undefined;
   } catch {
-    return 0;
+    return undefined;
   }
 };
 
-const seedGold = (ids, getState, prev = {}) => {
+const seedGold = (characters, getState, prev = {}) => {
   const out = {};
-  for (const id of ids) {
+  for (const c of characters) {
+    const id = c.id;
     const server = getState(id, 'gold');
     if (typeof server === 'number') out[id] = server;
     else if (typeof prev[id] === 'number') out[id] = prev[id];
-    else out[id] = readLocalGold(id);
+    else {
+      const local = readLocalGold(id);
+      out[id] = typeof local === 'number' ? local : docGold(c);
+    }
   }
   return out;
 };
 
 export const usePartyGold = (characters) => {
   const { getState, subscribe } = useSession();
-  const ids = (characters || []).map((c) => c.id);
-  const idsKey = ids.join(',');
+  const chars = characters || [];
+  const idsKey = chars.map((c) => c.id).join(',');
 
-  const [goldById, setGoldById] = useState(() => seedGold(ids, getState));
+  const [goldById, setGoldById] = useState(() => seedGold(chars, getState));
 
   useEffect(() => {
-    const list = idsKey ? idsKey.split(',') : [];
-    setGoldById((prev) => seedGold(list, getState, prev));
-    const unsubs = list.map((id) =>
-      subscribe(id, 'gold', (val) => {
-        setGoldById((prev) => ({ ...prev, [id]: typeof val === 'number' ? val : Number(val) || 0 }));
+    setGoldById((prev) => seedGold(chars, getState, prev));
+    const unsubs = chars.map((c) =>
+      subscribe(c.id, 'gold', (val) => {
+        setGoldById((prev) => ({ ...prev, [c.id]: typeof val === 'number' ? val : Number(val) || 0 }));
       }),
     );
     return () => unsubs.forEach((u) => u());
-    // idsKey is the stable signature of the roster; getState/subscribe are stable.
+    // idsKey is the stable signature of the roster; getState/subscribe are stable;
+    // `chars` is re-read inside on every roster change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey]);
 

@@ -3,13 +3,14 @@ import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { usePartyGold } from '../../hooks/usePartyGold';
+import { docGold } from '../../utils/gold';
 import './PartyGoldModal.css';
 
 // One editable row per character. Each row owns its own useSyncedState so the
 // per-character `cnmh_gold_<id>` keys can be edited without breaking rules of
 // hooks (no per-character hooks in a parent loop). Writes sync immediately.
 const GoldRow = ({ character }) => {
-  const [gold, setGold] = useSyncedState(`cnmh_gold_${character.id}`, 0);
+  const [gold, setGold] = useSyncedState(`cnmh_gold_${character.id}`, docGold(character));
 
   const handleChange = (e) => {
     const raw = e.target.value;

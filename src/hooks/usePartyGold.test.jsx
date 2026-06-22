@@ -50,6 +50,18 @@ describe('usePartyGold', () => {
     expect(result.current.total).toBe(0);
   });
 
+  it('falls back to the doc gold when there is no overlay (#670)', () => {
+    const { result } = renderHook(() => usePartyGold([{ id: 'a', gold: 75 }]));
+    expect(result.current.goldById.a).toBe(75);
+    expect(result.current.total).toBe(75);
+  });
+
+  it('prefers the live overlay over the doc gold', () => {
+    stateMap = { 'a:gold': 10 };
+    const { result } = renderHook(() => usePartyGold([{ id: 'a', gold: 75 }]));
+    expect(result.current.goldById.a).toBe(10);
+  });
+
   it('subscribes to each character gold key', () => {
     renderHook(() => usePartyGold([{ id: 'a' }, { id: 'b' }]));
     expect(mockSubscribe).toHaveBeenCalledWith('a', 'gold', expect.any(Function));
