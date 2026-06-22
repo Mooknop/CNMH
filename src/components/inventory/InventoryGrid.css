@@ -1,0 +1,96 @@
+/* ============================================================
+   InventoryGrid.css — the "Loadout Grid" inventory layout,
+   ported from the design handoff prototype (inv/inventory.css).
+
+   Token map (prototype → app):
+     --accent       → --color-theme        (per-character theme)
+     --accent-line  → --accent-outline
+     --text-3       → --shell-text-tertiary
+     --r-lg/md/full → --radius-lg/md/full
+   Everything is scoped under .inventory-grid so the prototype's
+   class names can't collide with global styles.
+   ============================================================ */
+
+.inventory-grid {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- BULK BAR ---------- */
+.inventory-grid .bulkbar {
+  margin: 0 0 12px;
+}
+.inventory-grid .bulkbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+.inventory-grid .bulkbar-label {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.inventory-grid .bulkbar-val {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-theme);
+}
+.inventory-grid .bulkbar.is-encumbered .bulkbar-val {
+  color: var(--gold-light);
+}
+.inventory-grid .bulkbar.is-over .bulkbar-val {
+  color: var(--peril-light);
+}
+.inventory-grid .bulkbar-sep {
+  color: var(--shell-text-tertiary);
+  margin: 0 1px;
+}
+.inventory-grid .bulkbar-flag {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--peril-light);
+  background: color-mix(in srgb, var(--peril-light) 18%, transparent);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  margin-left: 6px;
+}
+.inventory-grid .bulkbar-track {
+  position: relative;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.inventory-grid .bulkbar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  width: var(--bulk-fill-w, 0%);
+  background: var(--color-theme);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.inventory-grid .bulkbar.is-encumbered .bulkbar-fill {
+  background: var(--gold-light);
+}
+.inventory-grid .bulkbar.is-over .bulkbar-fill {
+  background: var(--peril-light);
+}
+.inventory-grid .bulkbar-tick {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateX(-1px);
+  left: var(--bulk-tick-x, 0%);
+}

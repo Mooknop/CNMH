@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import './InventoryTab.css';
 import './ItemCard.css';
+import './InventoryGrid.css';
 import ItemRow from './ItemRow';
 import ContainersList from './ContainersList';
 import GiveGoldModal from './GiveGoldModal';
-import { formatBulk, getBulkStatus, applyConsumedOverlay, flattenInventory } from '../../utils/InventoryUtils';
+import BulkBar from './BulkBar';
+import { getBulkStatus, applyConsumedOverlay, flattenInventory } from '../../utils/InventoryUtils';
 import { stampItemEffects, itemEffectsKey } from '../../utils/itemEffects';
 import { affixedKey, affixedUidSet, affixedTalismansByHost, itemUidOf } from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
@@ -51,15 +53,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   const affixedUids = affixedUidSet(affixed);
   const talismansByHost = affixedTalismansByHost(affixed, flattenInventory(inventory));
 
-  const { percentage: bulkPercentage, isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
-
-  // Determine the color of the bulk bar
-  const getBulkBarColor = () => {
-    if (isOverencumbered) return 'var(--color-danger)';
-    if (isEncumbered) return 'var(--color-warning)';
-    if (bulkPercentage > 75) return '#ffc107'; // Yellow when getting close
-    return characterColor; // Use character's color theme
-  };
+  const { isEncumbered, isOverencumbered } = getBulkStatus(bulkUsed, bulkLimit, encumberedThreshold);
 
   // Hide fully-consumed consumables; show live remaining counts on the rest, and
   // stamp any active item-target effects (oils, #339) for the badge. Sort
@@ -87,36 +81,24 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
           )}
         </div>
       </div>
-      <div className="bulk-management">
-        <div className="bulk-status">
-          <div className="bulk-labels">
-            <span>Bulk Used: <strong>{formatBulk(bulkUsed)}</strong></span>
-            <span>Encumbered at: <strong>{formatBulk(encumberedThreshold)}</strong></span>
-            <span>Maximum: <strong>{formatBulk(bulkLimit)}</strong></span>
+      <div className="inventory-grid">
+        <BulkBar
+          bulkUsed={bulkUsed}
+          encumberedThreshold={encumberedThreshold}
+          bulkLimit={bulkLimit}
+        />
+
+        {isEncumbered && !isOverencumbered && (
+          <div className="bulk-warning">
+            Encumbered: -10 feet to Speed and your movements become clumsy and inexact. You take a -1 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
           </div>
+        )}
 
-          <div className="bulk-progress-container">
-            <div
-              className="bulk-progress-bar"
-              style={{
-                width: `${Math.min(bulkPercentage, 100)}%`,
-                backgroundColor: getBulkBarColor()
-              }}
-            />
+        {isOverencumbered && (
+          <div className="bulk-warning severe">
+            Overencumbered: -15 feet to Speed and your movements become clumsy and inexact. You take a -2 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
           </div>
-
-          {isEncumbered && !isOverencumbered && (
-            <div className="bulk-warning">
-              Encumbered: -10 feet to Speed and your movements become clumsy and inexact. You take a -1 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
-            </div>
-          )}
-
-          {isOverencumbered && (
-            <div className="bulk-warning severe">
-              Overencumbered: -15 feet to Speed and your movements become clumsy and inexact. You take a -2 status penalty to Dexterity-based checks and DCs, including AC, Reflex saves, ranged attack rolls, and skill checks using Acrobatics, Stealth, and Thievery.
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="item-card-list">
