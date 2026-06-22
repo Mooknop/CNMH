@@ -6,6 +6,14 @@ import { CAMPAIGN_ID } from '../data/campaign';
 // no env var / CORS is needed in production; VITE_WS_URL overrides for dev.
 const RECONNECT_MS = 3000;
 
+// Inventory *organization* writes that stay interactive in the offline sandbox
+// (#554). Moving items, setting hands, and attuning don't consume anything, so a
+// player can manage their loadout while the live game isn't running. Resource
+// burns (consumed, itemeffects, focus, gold, …) stay frozen so nothing gets used
+// up. Keyed by the `cnmh_<type>_<id>` type segment.
+const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested']);
+export const isSandboxWritable = (stateType) => SANDBOX_WRITABLE_TYPES.has(stateType);
+
 const NOOP_SESSION = {
   connected: false,
   foundryConnected: false,
@@ -129,11 +137,12 @@ export const SessionProvider = ({ children }) => {
   }, []);
 
   const sendUpdate = useCallback((characterId, stateType, value) => {
-    // Offline sandbox: freeze every campaign-state mutation (synced via
-    // useSyncedState or written directly by consumables/healing/GM tools) so
-    // nothing gets used up while the game isn't running. Suppress before
-    // touching the cache, the socket, or local subscribers.
-    if (sandboxRef.current) return;
+    // Offline sandbox: freeze campaign-state mutations (synced via useSyncedState
+    // or written directly by consumables/healing/GM tools) so nothing gets used
+    // up while the game isn't running — except inventory-organization writes
+    // (loadout / invested), which a player may always manage (#554). Suppress
+    // before touching the cache, the socket, or local subscribers.
+    if (sandboxRef.current && !isSandboxWritable(stateType)) return;
     if (!serverState.current[characterId]) serverState.current[characterId] = {};
     serverState.current[characterId][stateType] = value;
     const socket = ws.current;

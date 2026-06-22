@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import { formatBulk, normalizeShield, isContainer, flattenInventory, isInvestable } from '../../utils/InventoryUtils';
+import { formatBulk, normalizeShield, isContainer, flattenInventory } from '../../utils/InventoryUtils';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
@@ -14,7 +14,7 @@ import { activationOf, activationSummary } from '../../utils/talismanActivation'
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
-import { useInvested, ATTUNE_CAP } from '../../hooks/useInvested';
+import { useInvested } from '../../hooks/useInvested';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useGiveItem } from '../../hooks/useGiveItem';
@@ -26,9 +26,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Hooks must run unconditionally (before the early return).
   const charData = useCharacter(character);
   const { drop, pickUp, stow, unhand, retrieve, moveToContainer } = useLoadout(character?.id);
-  // Attunement overlay (#invest) — Attune / Remove attunement, eligibility =
-  // the Invested trait, capped at 10.
-  const { isInvested, investedCount, attune, unattune } = useInvested(character?.id);
+  // Attunement overlay (#invest) — read-only here: attuning is done by dragging
+  // an item into one of the 10 Attuned slots (in a slot = invested). The modal
+  // just reflects the status as a chip.
+  const { isInvested } = useInvested(character?.id);
   // Item-target effects (oils, #339) — read live so removal stays in sync.
   const [itemEffects, setItemEffects] = useSyncedState(itemEffectsKey(character?.id), []);
   // Affixed-talisman overlay (#254/#339) + consumed overlay for activation.
@@ -94,31 +95,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
 
-  // ── Attunement (#invest) — invest an Invested-trait item (cap 10) ──
+  // Attunement is slot-driven (drag into the Attuned area); the modal only
+  // reflects the status as a chip.
   const invested = isInvested(uid);
-  const investable = isInvestable(item);
-  const attuneFull = investedCount >= ATTUNE_CAP;
-  const attuneButton = !uid
-    ? null
-    : invested ? (
-      <button
-        className="btn-small btn-secondary"
-        data-testid="item-action-unattune"
-        onClick={() => act(() => unattune(uid))}
-      >
-        Remove attunement
-      </button>
-    ) : investable ? (
-      <button
-        className="btn-small btn-secondary"
-        data-testid="item-action-attune"
-        disabled={attuneFull}
-        title={attuneFull ? `All ${ATTUNE_CAP} invested slots are full` : undefined}
-        onClick={() => act(() => attune(uid))}
-      >
-        {attuneFull ? `Attune (${investedCount}/${ATTUNE_CAP})` : 'Attune'}
-      </button>
-    ) : null;
 
   // ── Give to another PC (#656/#657) — exploration/downtime only ──
   // Worn/stowed gear, containers (with their contents), and consumables (with
@@ -653,10 +632,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
-      {/* Loadout actions — state-appropriate (drop / stow / retrieve / …) plus
-          Attune / Remove attunement for Invested-trait items. */}
-      {(useButton || actions || attuneButton) && (
-        <div className="item-modal-actions">{useButton}{actions}{attuneButton}</div>
+      {/* Loadout actions — state-appropriate (drop / stow / retrieve / …) */}
+      {(useButton || actions) && (
+        <div className="item-modal-actions">{useButton}{actions}</div>
       )}
     </Modal>
   );

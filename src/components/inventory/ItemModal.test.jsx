@@ -1055,40 +1055,27 @@ describe('ItemModal — give a consumable stack (#657)', () => {
   });
 });
 
-// S3: Attunement (cnmh_invested_<id>) — Attune / Remove attunement actions and
-// the Invested status chip, gated on the Invested trait.
+// Attunement is slot-driven (drag into the Attuned area) — the modal carries no
+// Attune/Remove button, only an Invested status chip.
 describe('ItemModal — attunement (#invest)', () => {
   const investable = { uid: 'amu', name: "Mother's Amulet", weight: 0.1, traits: ['Magical', 'Invested'] };
 
-  it('offers Attune for an eligible, un-invested item and writes the overlay', () => {
+  it('never renders an Attune / Remove attunement button', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
-    const btn = screen.getByTestId('item-action-attune');
-    expect(btn).toBeEnabled();
-    expect(screen.queryByTestId('item-invested-chip')).not.toBeInTheDocument();
-    fireEvent.click(btn);
-    expect(mockSetInvested).toHaveBeenCalled();
-    expect(mockInvested.amu).toBe(true);
-  });
-
-  it('offers Remove attunement and an Invested chip when already invested', () => {
-    mockInvested = { amu: true };
-    render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
-    expect(screen.getByTestId('item-invested-chip')).toBeInTheDocument();
-    expect(screen.queryByTestId('item-action-attune')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('item-action-unattune'));
-    expect(mockInvested.amu).toBeUndefined();
-  });
-
-  it('shows no attune action for an item without the Invested trait', () => {
-    const plain = { uid: 'sw', name: 'Longsword', weight: 1, traits: ['Magical'], strikes: [{ damage: '1d8' }] };
-    render(<ItemModal isOpen onClose={vi.fn()} item={plain} />);
     expect(screen.queryByTestId('item-action-attune')).not.toBeInTheDocument();
     expect(screen.queryByTestId('item-action-unattune')).not.toBeInTheDocument();
   });
 
-  it('disables Attune when all 10 invested slots are full', () => {
-    mockInvested = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`x${i}`, true]));
+  it('shows the Invested chip when the item is in an invested slot', () => {
+    mockInvested = { amu: true };
     render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
-    expect(screen.getByTestId('item-action-attune')).toBeDisabled();
+    expect(screen.getByTestId('item-invested-chip')).toBeInTheDocument();
+    // …and still no button.
+    expect(screen.queryByTestId('item-action-unattune')).not.toBeInTheDocument();
+  });
+
+  it('shows no Invested chip when the item is not invested', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
+    expect(screen.queryByTestId('item-invested-chip')).not.toBeInTheDocument();
   });
 });
