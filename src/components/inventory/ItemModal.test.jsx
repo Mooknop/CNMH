@@ -26,9 +26,11 @@ vi.mock('../../hooks/useLoadout', () => ({
   useLoadout: () => mockLoadout,
 }));
 
-// useCharacter only feeds the container list for stow/move targets here.
+// useCharacter feeds the container list for stow/move targets and (for weapons)
+// the stats strike resolution needs. Spread the passed character so tests can
+// supply abilities/proficiencies/level.
 vi.mock('../../hooks/useCharacter', () => ({
-  useCharacter: (c) => (c ? { inventory: c.__inventory || [] } : null),
+  useCharacter: (c) => (c ? { ...c, inventory: c.__inventory || [] } : null),
 }));
 
 // Item-target effects (#339) + affix + consumed (#254) overlays — key-dispatched.
@@ -505,10 +507,42 @@ describe('ItemModal', () => {
     expect(screen.queryByTestId('trait-tag')).toBeNull();
   });
 
-  it('renders "-" for bonus when strikes.bonus is absent (object)', () => {
+  it('renders "-" for bonus when strikes.bonus is absent and no character is given', () => {
     const item = { ...baseItem, strikes: { type: 'Melee', damage: '1d8' } };
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
     expect(screen.getAllByText('-')).toHaveLength(1);
+  });
+
+  it('computes the attack bonus and Str-laden damage from the character when no bonus is authored', () => {
+    const character = {
+      id: 'c1',
+      level: 3,
+      abilities: { strength: 18, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      proficiencies: { weapons: { simple: { proficiency: 1 }, martial: { proficiency: 1 } } },
+    };
+    const item = { ...baseItem, strikes: { proficiency: 'simple', type: 'melee', damage: '1d8' } };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} character={character} />);
+    // Str +4 + simple trained(2) + level 3 = +9; damage gains Str
+    expect(screen.getByText('+9')).toBeInTheDocument();
+    expect(screen.getByText('1d8+4')).toBeInTheDocument();
+  });
+
+  it('uses the spell attack modifier for a spellAttackOrMartial weapon (Flawless Hammer)', () => {
+    const character = {
+      id: 'jade',
+      level: 5,
+      abilities: { strength: 14, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 20 },
+      proficiencies: { weapons: { simple: { proficiency: 1 }, martial: { proficiency: 1 } } },
+      spellcasting: { ability: 'charisma', proficiency: 2 },
+    };
+    const item = {
+      ...baseItem,
+      name: "Xanderghul's Flawless Hammer",
+      strikes: { proficiency: 'simple', type: 'melee', damage: '1d12', attackStat: 'spellAttackOrMartial' },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} character={character} />);
+    // spell attack: Cha +5 + expert(4) + level 5 = +14 (beats martial +9)
+    expect(screen.getByText('+14')).toBeInTheDocument();
   });
 
   // --- scroll ---

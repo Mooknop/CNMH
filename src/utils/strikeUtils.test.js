@@ -1,4 +1,4 @@
-import { getStrikes } from './strikeUtils';
+import { getStrikes, resolveItemStrikes } from './strikeUtils';
 import { maneuverDamageTalisman } from './talismanActivation';
 
 const minimalCharacter = {
@@ -78,6 +78,53 @@ describe('getStrikes stance tagging (#224)', () => {
     const claw = getStrikes(char).find((s) => s.name === 'Ravager Claw');
     expect(claw).toBeDefined();
     expect(claw.stance).toBeUndefined();
+  });
+});
+
+describe('resolveItemStrikes (per-item resolution)', () => {
+  const char = {
+    ...minimalCharacter,
+    level: 3,
+    abilities: { ...minimalCharacter.abilities, strength: 18 },
+    proficiencies: { weapons: { simple: { proficiency: 1 }, martial: { proficiency: 1 } } },
+  };
+
+  test('computes attackMod and Str-laden damage for a single-strike item', () => {
+    const item = { id: 'i1', name: 'Club', strikes: { name: 'Club Strike', proficiency: 'simple', type: 'melee', damage: '1d6' } };
+    const [strike] = resolveItemStrikes(item, char);
+    // Str +4 + simple trained(2) + level 3 = +9
+    expect(strike.attackMod).toBe(9);
+    expect(strike.damage).toBe('1d6+4');
+    expect(strike.source).toBe('Club');
+  });
+
+  test('resolves an array of strikes in order', () => {
+    const item = {
+      id: 'i2', name: 'Combo',
+      strikes: [
+        { name: 'Ranged', proficiency: 'martial', type: 'ranged', damage: '1d6' },
+        { name: 'Melee', proficiency: 'martial', type: 'melee', damage: '1d4' },
+      ],
+    };
+    const strikes = resolveItemStrikes(item, char);
+    expect(strikes.map((s) => s.name)).toEqual(['Ranged', 'Melee']);
+  });
+
+  test('returns [] when item has no strikes or character is missing', () => {
+    expect(resolveItemStrikes({ id: 'x', name: 'Rock' }, char)).toEqual([]);
+    expect(resolveItemStrikes({ id: 'x', name: 'Club', strikes: {} }, null)).toEqual([]);
+  });
+
+  test('honors the spellAttackOrMartial flag', () => {
+    const spellChar = {
+      ...char,
+      abilities: { ...char.abilities, strength: 10, charisma: 20 },
+      spellcasting: { ability: 'charisma', proficiency: 2 },
+    };
+    const item = { id: 'h', name: "Xanderghul's Flawless Hammer", strikes: { name: 'Hammer', proficiency: 'simple', type: 'melee', damage: '1d12', attackStat: 'spellAttackOrMartial' } };
+    const [strike] = resolveItemStrikes(item, spellChar);
+    // spell attack: Cha +5 + expert(4) + level 3 = +12 (beats martial: Str 0 + trained(2) + 3 = +5)
+    expect(strike.attackMod).toBe(12);
   });
 });
 
