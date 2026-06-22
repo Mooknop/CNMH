@@ -380,6 +380,14 @@
   padding: 24px 0;
 }
 
+/* Whole-inventory empty state (no items at all). */
+.inventory-grid-empty {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--shell-text-tertiary);
+  font-size: var(--text-sm);
+}
+
 /* ---------- DRAG GHOST + DROPZONES ---------- */
 /* The provider wrapper is transparent for layout so the grid's flow is intact.
    It (and the ghost) sit outside .inventory-grid, so these stay unscoped. */

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import './InventoryTab.css';
-import './ItemCard.css';
 import './InventoryGrid.css';
 import GiveGoldModal from './GiveGoldModal';
 import BulkBar from './BulkBar';
@@ -120,7 +119,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
               onItemClick={onItemClick}
             />
           ) : (
-            <div className="item-card-list--empty">No items in inventory</div>
+            <div className="inventory-grid-empty">No items in inventory</div>
           )}
         </div>
       </DndProvider>
