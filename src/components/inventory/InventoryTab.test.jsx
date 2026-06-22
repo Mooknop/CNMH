@@ -50,7 +50,7 @@ vi.mock('../../hooks/useCharacter', () => ({
         bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
         totalBulk: 1,
         inventory: [
-          { uid: 's1', id: 's1', name: 'Longsword', weight: 1, state: 'held2' },
+          { uid: 's1', id: 's1', name: 'Longsword', weight: 1, state: 'worn' },
           {
             uid: 'p1', id: 'p1', name: 'Minor Healing Potion', weight: 0.1, quantity: 3,
             state: 'worn', consumable: { kind: 'healing' },
@@ -80,13 +80,26 @@ vi.mock('../../hooks/useCharacter', () => ({
         skillProficiencies: { crafting: 0 },
       };
     }
+    if (character.id === 'hands') {
+      return {
+        id: 'hands',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 2,
+        inventory: [
+          { uid: 'h1', id: 'h1', name: 'Longsword', weight: 1, state: 'held1', hand: 1, strikes: [{ damage: '1d8' }] },
+          { uid: 'sh', id: 'sh', name: 'Buckler', weight: 0.5, state: 'held1', hand: 2, shield: { bonus: 1 } },
+          { uid: 'wc', id: 'wc', name: 'Cloak', weight: 0.1, state: 'worn' },
+        ],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
     if (character.id === 'talisman') {
       return {
         id: 'talisman',
         bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
         totalBulk: 1,
         inventory: [
-          { uid: 'w1', id: 'w1', name: 'Longsword', weight: 1, state: 'held1', strikes: [{ damage: '1d8' }] },
+          { uid: 'w1', id: 'w1', name: 'Longsword', weight: 1, state: 'worn', strikes: [{ damage: '1d8' }] },
           { uid: 't1', id: 't1', name: 'Wolf Fang', weight: 0, state: 'worn', traits: ['Talisman'], talisman: { affixTo: 'weapon' } },
         ],
         skillProficiencies: { crafting: 0 },
@@ -97,7 +110,7 @@ vi.mock('../../hooks/useCharacter', () => ({
       bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
       totalBulk: 5,
       inventory: [
-        { uid: 'u1', id: '1', name: 'Longsword', weight: 1, state: 'held2' },
+        { uid: 'u1', id: '1', name: 'Longsword', weight: 1, state: 'worn' },
         { uid: 'u2', id: '2', name: 'Leather Armor', weight: 1, state: 'dropped' },
         { uid: 'u3', id: '3', name: 'Worn Cloak', weight: 0.5, state: 'worn' },
         {
@@ -334,6 +347,46 @@ describe('InventoryTab', () => {
       render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" onItemClick={onItemClick} />);
       tapTile(screen.getByTestId('attuned-tile-amulet'));
       expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'amulet', name: "Mother's Amulet" }));
+    });
+  });
+
+  // S4: Hands strip — held items render in the two hand slots, not the bags.
+  describe('Hands strip (#hands)', () => {
+    it('renders held items in the hand slots, keeping them out of the bag', () => {
+      render(<InventoryTab character={{ id: 'hands' }} characterColor="#7E8C9A" />);
+      expect(screen.getByTestId('hands-strip')).toBeInTheDocument();
+      // Hand 1 = Longsword, Hand 2 = Buckler (by their `hand` assignment).
+      expect(screen.getByTestId('hands-strip-slot-1')).toHaveTextContent('Longsword');
+      expect(screen.getByTestId('hands-strip-slot-2')).toHaveTextContent('Buckler');
+      // Held items are pulled out of the Worn bag…
+      expect(screen.queryByTestId('grid-cell-h1')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('grid-cell-sh')).not.toBeInTheDocument();
+      // …the worn cloak stays in the bag.
+      expect(screen.getByTestId('grid-cell-wc')).toBeInTheDocument();
+    });
+
+    it('opens the ItemModal when a hand tile is tapped', () => {
+      const onItemClick = vi.fn();
+      render(<InventoryTab character={{ id: 'hands' }} characterColor="#7E8C9A" onItemClick={onItemClick} />);
+      tapTile(screen.getByTestId('hands-tile-h1'));
+      expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'h1', name: 'Longsword' }));
+    });
+
+    it('renders empty hand slots when nothing is held', () => {
+      render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
+      const strip = screen.getByTestId('hands-strip');
+      expect(strip).toBeInTheDocument();
+      // No held items → no hand tiles, and the slots are still drop targets.
+      expect(strip.querySelectorAll('.hands-strip-empty')).toHaveLength(2);
+    });
+
+    it('is read-only in encounter mode (Swap hint, no drop zones)', () => {
+      mockMode = 'encounter';
+      render(<InventoryTab character={{ id: 'hands' }} characterColor="#7E8C9A" />);
+      expect(screen.getByText(/Use Swap in the Encounter tab/)).toBeInTheDocument();
+      // The held items still show, but the slots aren't registered drop zones.
+      expect(screen.getByTestId('hands-tile-h1')).toBeInTheDocument();
+      expect(screen.getByTestId('hands-strip-slot-1')).not.toHaveAttribute('data-dz');
     });
   });
 });

@@ -5,9 +5,11 @@ import GiveGoldModal from './GiveGoldModal';
 import BulkBar from './BulkBar';
 import BagGrid from './BagGrid';
 import AttunedArea from './AttunedArea';
+import HandsStrip from './HandsStrip';
 import IconTile from './IconTile';
 import { DndProvider } from './dnd';
 import { getBulkStatus, applyConsumedOverlay, isContainer, flattenInventory } from '../../utils/InventoryUtils';
+import { isHeldState } from '../../utils/itemState';
 import { affixedKey, affixedUidSet, itemUidOf } from '../../utils/affix';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
@@ -30,7 +32,7 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
   // Data layer — all character reads go through this hook
   const charData = useCharacter(character);
   // Loadout writer — the single source of placement mutations (#556).
-  const { worn, stow, moveToContainer } = useLoadout(character?.id);
+  const { worn, stow, moveToContainer, setHands } = useLoadout(character?.id);
   // Attunement overlay — invested items render in the Attuned area instead of
   // their bag (placement is untouched). Eligibility = the Invested trait.
   const { isInvested, attune, unattune } = useInvested(character?.id);
@@ -76,14 +78,18 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
         : item
     );
 
-  // Invested items render in the Attuned area (wherever they physically live),
-  // so pull them out of the bags. Containers are never invested and always stay.
-  const investedItems = flattenInventory(gridInventory).filter((it) => isInvested(it.uid));
-  const investedUidSet = new Set(investedItems.map((it) => it.uid));
-  const notInvested = (it) => !investedUidSet.has(it.uid);
-  const bagInventory = gridInventory.filter((it) => isContainer(it) || notInvested(it)).map((it) =>
+  // Invested items render in the Attuned area and held items in the Hands strip
+  // (wherever they physically live), so pull both out of the bags. Invested wins
+  // over held so an item never renders in two places. Containers are never
+  // invested/held and always stay.
+  const flatGrid = flattenInventory(gridInventory);
+  const investedItems = flatGrid.filter((it) => isInvested(it.uid));
+  const heldItems = flatGrid.filter((it) => isHeldState(it.state) && !isInvested(it.uid));
+  const elsewhere = new Set([...investedItems, ...heldItems].map((it) => it.uid));
+  const inBag = (it) => isContainer(it) || !elsewhere.has(it.uid);
+  const bagInventory = gridInventory.filter(inBag).map((it) =>
     isContainer(it)
-      ? { ...it, container: { ...it.container, contents: it.container.contents.filter(notInvested) } }
+      ? { ...it, container: { ...it.container, contents: it.container.contents.filter(inBag) } }
       : it
   );
 
@@ -131,6 +137,12 @@ const InventoryTab = ({ character, characterColor, onItemClick }) => {
               <AttunedArea
                 items={investedItems}
                 attune={attune}
+                onItemClick={onItemClick}
+              />
+              <HandsStrip
+                items={heldItems}
+                interactive={mode !== 'encounter'}
+                setHands={setHands}
                 onItemClick={onItemClick}
               />
               <BagGrid
