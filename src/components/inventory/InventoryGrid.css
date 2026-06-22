@@ -188,6 +188,112 @@
   outline-offset: 1px;
 }
 
+/* ---------- TOOLBAR ---------- */
+.inventory-grid .toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0 12px;
+}
+.inventory-grid .toolbar-top {
+  display: flex;
+  gap: 8px;
+}
+.inventory-grid .search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 0 10px;
+  height: 38px;
+}
+.inventory-grid .search:focus-within {
+  border-color: var(--accent-outline);
+}
+.inventory-grid .search-ico {
+  color: var(--shell-text-tertiary);
+  font-size: 1rem;
+}
+.inventory-grid .search input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--shell-text-primary);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  min-width: 0;
+}
+.inventory-grid .search input::placeholder {
+  color: var(--shell-text-tertiary);
+}
+.inventory-grid .search-clear {
+  background: none;
+  border: none;
+  color: var(--shell-text-tertiary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.inventory-grid .sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.inventory-grid .sort-btn:hover {
+  border-color: var(--shell-border-strong, rgba(255, 255, 255, 0.16));
+  color: var(--shell-text-primary);
+}
+.inventory-grid .sort-ico {
+  font-size: 0.95rem;
+}
+.inventory-grid .chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.inventory-grid .chips::-webkit-scrollbar {
+  display: none;
+}
+.inventory-grid .chip {
+  flex: none;
+  padding: 5px 13px;
+  border-radius: var(--radius-full);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.inventory-grid .chip:hover {
+  border-color: var(--shell-border-strong, rgba(255, 255, 255, 0.16));
+}
+.inventory-grid .chip.is-on {
+  background: var(--accent-tint);
+  border-color: var(--accent-outline);
+  color: var(--accent-text);
+}
+
 /* ---------- HANDS STRIP ---------- */
 .inventory-grid .hands-strip {
   margin-bottom: 12px;
@@ -323,6 +429,15 @@
   border-radius: 5px;
   padding: 0 4px;
   line-height: 1.4;
+}
+.inventory-grid .icon-tile-fx {
+  position: absolute;
+  top: 1px;
+  left: 2px;
+  font-size: calc(var(--tile) * 0.24);
+  line-height: 1;
+  filter: drop-shadow(0 0 3px var(--arcane-light));
+  pointer-events: none;
 }
 .inventory-grid .icon-tile-charges {
   position: absolute;

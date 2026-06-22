@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import IconTile from './IconTile';
+import Toolbar from './Toolbar';
 import { useDraggable, DropZone } from './dnd';
 import {
   isContainer,
@@ -8,6 +9,7 @@ import {
   calculateContainerBulk,
 } from '../../utils/InventoryUtils';
 import { ITEM_STATE_LABEL } from '../../utils/itemState';
+import { matchesFilter, matchesQuery, sortItems, nextSort } from '../../utils/inventoryFilter';
 
 const WORN = 'worn';
 
@@ -18,13 +20,14 @@ const WORN = 'worn';
  * they don't appear here.
  */
 const GridCell = ({ item, glow, onItemClick }) => {
-  const { onPointerDown } = useDraggable({ item, onTap: onItemClick });
+  const { onPointerDown, onKeyDown } = useDraggable({ item, onTap: onItemClick });
   const dropped = item.state === 'dropped';
   return (
     <button
       type="button"
       className={'cell' + (dropped ? ' cell--dropped' : '')}
       onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
       data-testid={item.uid ? `grid-cell-${item.uid}` : undefined}
     >
       <IconTile item={item} size={56} glow={glow} />
@@ -39,8 +42,8 @@ const GridCell = ({ item, glow, onItemClick }) => {
  * Placement writes flow through the loadout actions passed in:
  *   - drop on Worn  → worn(uid)
  *   - drop on a bag → stow(uid, bagUid) (or moveToContainer when already stowed)
- * Tap a tile to open its ItemModal. Filtering / sorting arrives with the toolbar
- * (S5); for now items show alphabetically.
+ * Tap a tile to open its ItemModal. The toolbar (search / auto-sort / filter
+ * chips) acts on the active bag's items.
  *
  * @param {Object[]} inventory - effective top-level inventory (worn/held/dropped
  *                               items + containers with their contents)
@@ -64,6 +67,10 @@ const BagGrid = ({
   glow = true,
 }) => {
   const [activeBag, setActiveBag] = useState(WORN);
+  // Toolbar state — local UI only, persists across bag switches.
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('name');
 
   const containers = inventory.filter(isContainer);
   // A selected container may have been emptied/removed since selection; fall back
@@ -72,16 +79,18 @@ const BagGrid = ({
     activeBag === WORN ? null : containers.find((c) => c.uid === activeBag);
   const bag = activeContainer ? activeBag : WORN;
 
-  const byName = (a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-
   // Worn bag = top-level non-container items; container bag = its contents.
   const bagItems = (key) =>
     key === WORN
       ? inventory.filter((it) => !isContainer(it))
       : (containers.find((c) => c.uid === key)?.container?.contents || []);
 
-  const active = [...bagItems(bag)].sort(byName);
+  // The active bag, after the search box + filter chip, sorted by the toolbar.
+  const allInBag = bagItems(bag);
+  const active = sortItems(
+    allInBag.filter((it) => matchesFilter(it, filter) && matchesQuery(it, query)),
+    sort
+  );
 
   // Pad to a tidy grid: a minimum cell count, then up to the next row of 4.
   const minCells = bag === WORN ? 8 : 6;
@@ -125,6 +134,15 @@ const BagGrid = ({
 
   return (
     <div className="bag-grid">
+      <Toolbar
+        query={query}
+        setQuery={setQuery}
+        sort={sort}
+        onCycleSort={() => setSort((s) => nextSort(s))}
+        filter={filter}
+        setFilter={setFilter}
+      />
+
       <div className="bag-tabs" data-scroll-x>
         {tabs.map((t) => {
           const used =
@@ -176,7 +194,11 @@ const BagGrid = ({
             <span key={`e${i}`} className="cell-empty" aria-hidden="true" />
           ))}
         </div>
-        {active.length === 0 && <p className="grid-none">This bag is empty.</p>}
+        {active.length === 0 && (
+          <p className="grid-none">
+            {allInBag.length === 0 ? 'This bag is empty.' : 'No matches in this bag.'}
+          </p>
+        )}
       </DropZone>
     </div>
   );
