@@ -12,6 +12,12 @@ vi.mock('../contexts/SessionContext', () => ({
   useSession: () => session,
 }));
 
+// Roster for doc-gold fallbacks (#670).
+let charactersFixture = [];
+vi.mock('../contexts/ContentContext', () => ({
+  useContent: () => ({ characters: charactersFixture }),
+}));
+
 // useSyncedState only ever fronts the giver's own gold key here. Back it with a
 // mutable value + a setter spy that records what the debit wrote.
 let giverGold = 0;
@@ -25,6 +31,7 @@ import { useGiveGold } from './useGiveGold';
 beforeEach(() => {
   stateMap = {};
   giverGold = 0;
+  charactersFixture = [{ id: 'a' }, { id: 'b' }];
   vi.clearAllMocks();
   mockGetState.mockImplementation((id, type) => stateMap[`${id}:${type}`]);
   session = {
@@ -65,11 +72,19 @@ describe('useGiveGold', () => {
     expect(creditOrder).toBeLessThan(debitOrder);
   });
 
-  it('treats a recipient with no prior gold as zero', () => {
+  it('treats a recipient with no prior gold and no doc gold as zero', () => {
     giverGold = 20;
     const { result } = renderHook(() => useGiveGold('a'));
     result.current.give('b', 8);
     expect(mockSendUpdate).toHaveBeenCalledWith('b', 'gold', 8);
+  });
+
+  it('credits an unset recipient from their doc gold (#670)', () => {
+    giverGold = 50;
+    charactersFixture = [{ id: 'a' }, { id: 'b', gold: 30 }]; // no overlay for b
+    const { result } = renderHook(() => useGiveGold('a'));
+    result.current.give('b', 5);
+    expect(mockSendUpdate).toHaveBeenCalledWith('b', 'gold', 35); // 30 doc + 5
   });
 
   it.each([
