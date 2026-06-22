@@ -22,10 +22,12 @@ vi.mock('../../utils/InventoryUtils', async () => ({
 // gold key gets its default.
 let mockConsumed = {};
 let mockAffixed = {};
+let mockInvested = {};
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key, initialValue) => {
     if (key.startsWith('cnmh_consumed_')) return [mockConsumed, vi.fn()];
     if (key.startsWith('cnmh_affixed_')) return [mockAffixed, vi.fn()];
+    if (key.startsWith('cnmh_invested_')) return [mockInvested, vi.fn()];
     return [initialValue, vi.fn()];
   },
 }));
@@ -63,6 +65,18 @@ vi.mock('../../hooks/useCharacter', () => ({
         bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
         totalBulk: character.id === 'over' ? 15 : 8,
         inventory: [{ uid: 'x', id: 'x', name: 'Anvil', weight: 8, state: 'worn' }],
+        skillProficiencies: { crafting: 0 },
+      };
+    }
+    if (character.id === 'attune') {
+      return {
+        id: 'attune',
+        bulkStats: { bulkLimit: 10, encumberedThreshold: 7 },
+        totalBulk: 1,
+        inventory: [
+          { uid: 'amulet', id: 'amulet', name: "Mother's Amulet", weight: 0.1, state: 'worn', traits: ['Magical', 'Invested'] },
+          { uid: 'sword', id: 'sword', name: 'Longsword', weight: 1, state: 'worn', strikes: [{ damage: '1d8' }] },
+        ],
         skillProficiencies: { crafting: 0 },
       };
     }
@@ -120,6 +134,7 @@ const tapTile = (el) => {
 beforeEach(() => {
   mockConsumed = {};
   mockAffixed = {};
+  mockInvested = {};
   mockMode = 'exploration';
 });
 
@@ -282,6 +297,43 @@ describe('InventoryTab', () => {
       mockConsumed = { Longsword: 1 };
       render(<InventoryTab character={{ id: 'potions' }} characterColor="#7E8C9A" />);
       expect(screen.getByTestId('grid-cell-s1')).toBeInTheDocument();
+    });
+  });
+
+  // S3: Attuned area (cnmh_invested_<id>) — invested items render in the Attuned
+  // area instead of their bag; eligibility is the Invested trait.
+  describe('Attuned area (#invest)', () => {
+    it('always renders the Attuned area with a count of invested / 10', () => {
+      render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" />);
+      const area = screen.getByTestId('attuned-area');
+      expect(area).toBeInTheDocument();
+      expect(area).toHaveTextContent('0 / 10 invested');
+    });
+
+    it('keeps an un-invested item in its bag', () => {
+      render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" />);
+      expect(screen.getByTestId('grid-cell-amulet')).toBeInTheDocument();
+      expect(screen.queryByTestId('attuned-tile-amulet')).not.toBeInTheDocument();
+    });
+
+    it('moves an invested item out of its bag and into the Attuned area', () => {
+      mockInvested = { amulet: true };
+      render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" />);
+      // Invested amulet shows as an attuned tile, not a bag tile…
+      expect(screen.getByTestId('attuned-tile-amulet')).toBeInTheDocument();
+      expect(screen.queryByTestId('grid-cell-amulet')).not.toBeInTheDocument();
+      // …the non-invested sword stays in the Worn bag…
+      expect(screen.getByTestId('grid-cell-sword')).toBeInTheDocument();
+      // …and the count reflects it.
+      expect(screen.getByTestId('attuned-area')).toHaveTextContent('1 / 10 invested');
+    });
+
+    it('opens the ItemModal when an attuned tile is tapped', () => {
+      mockInvested = { amulet: true };
+      const onItemClick = vi.fn();
+      render(<InventoryTab character={{ id: 'attune' }} characterColor="#7E8C9A" onItemClick={onItemClick} />);
+      tapTile(screen.getByTestId('attuned-tile-amulet'));
+      expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ uid: 'amulet', name: "Mother's Amulet" }));
     });
   });
 });

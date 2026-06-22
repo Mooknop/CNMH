@@ -44,10 +44,15 @@ const mockSetAffixed = vi.fn((next) => {
 const mockSetConsumed = vi.fn((next) => {
   mockConsumed = typeof next === 'function' ? next(mockConsumed) : next;
 });
+let mockInvested = {};
+const mockSetInvested = vi.fn((next) => {
+  mockInvested = typeof next === 'function' ? next(mockInvested) : next;
+});
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: (key) => {
     if (String(key).startsWith('cnmh_affixed_')) return [mockAffixed, mockSetAffixed];
     if (String(key).startsWith('cnmh_consumed_')) return [mockConsumed, mockSetConsumed];
+    if (String(key).startsWith('cnmh_invested_')) return [mockInvested, mockSetInvested];
     return [mockItemEffects, mockSetItemEffects];
   },
 }));
@@ -78,9 +83,11 @@ beforeEach(() => {
   mockItemEffects = [];
   mockAffixed = {};
   mockConsumed = {};
+  mockInvested = {};
   mockSetItemEffects.mockClear();
   mockSetAffixed.mockClear();
   mockSetConsumed.mockClear();
+  mockSetInvested.mockClear();
   mockAppendEvent.mockClear();
   mockGive.mockClear();
   mockGive.mockReturnValue(true);
@@ -1045,5 +1052,43 @@ describe('ItemModal — give a consumable stack (#657)', () => {
     renderGive();
     fireEvent.click(screen.getByTestId('give-item-b'));
     expect(mockAppendEvent).not.toHaveBeenCalled();
+  });
+});
+
+// S3: Attunement (cnmh_invested_<id>) — Attune / Remove attunement actions and
+// the Invested status chip, gated on the Invested trait.
+describe('ItemModal — attunement (#invest)', () => {
+  const investable = { uid: 'amu', name: "Mother's Amulet", weight: 0.1, traits: ['Magical', 'Invested'] };
+
+  it('offers Attune for an eligible, un-invested item and writes the overlay', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
+    const btn = screen.getByTestId('item-action-attune');
+    expect(btn).toBeEnabled();
+    expect(screen.queryByTestId('item-invested-chip')).not.toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(mockSetInvested).toHaveBeenCalled();
+    expect(mockInvested.amu).toBe(true);
+  });
+
+  it('offers Remove attunement and an Invested chip when already invested', () => {
+    mockInvested = { amu: true };
+    render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
+    expect(screen.getByTestId('item-invested-chip')).toBeInTheDocument();
+    expect(screen.queryByTestId('item-action-attune')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('item-action-unattune'));
+    expect(mockInvested.amu).toBeUndefined();
+  });
+
+  it('shows no attune action for an item without the Invested trait', () => {
+    const plain = { uid: 'sw', name: 'Longsword', weight: 1, traits: ['Magical'], strikes: [{ damage: '1d8' }] };
+    render(<ItemModal isOpen onClose={vi.fn()} item={plain} />);
+    expect(screen.queryByTestId('item-action-attune')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('item-action-unattune')).not.toBeInTheDocument();
+  });
+
+  it('disables Attune when all 10 invested slots are full', () => {
+    mockInvested = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`x${i}`, true]));
+    render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
+    expect(screen.getByTestId('item-action-attune')).toBeDisabled();
   });
 });
