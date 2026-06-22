@@ -642,7 +642,9 @@ describe('ItemModal', () => {
     );
     const modalContainer = container.querySelector('.modal-container');
     expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#ff0000');
-    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
+    // The loot card hides the shared header, so the theme rides on the
+    // container custom property rather than a themed header bar.
+    expect(container.querySelector('.modal--loot')).toBeInTheDocument();
   });
 
   it('uses default color when characterColor is absent', () => {
@@ -693,23 +695,26 @@ describe('ItemModal', () => {
     expect(screen.queryByText('State')).not.toBeInTheDocument();
   });
 
-  it('renders entity image when item.image is set', () => {
+  it('renders the hero art image when item.image is set', () => {
     const item = { ...baseItem, image: 'img_sword.jpg' };
     const { container } = render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
-    const img = container.querySelector('.entity-image');
+    const img = container.querySelector('.loot-art img');
     expect(img).not.toBeNull();
     expect(img).toHaveAttribute('src', '/api/images/img_sword.jpg');
+    // The monospace code placeholder is suppressed once real art is present.
+    expect(container.querySelector('.loot-code')).toBeNull();
   });
 
-  it('does not render entity image when item.image is absent', () => {
+  it('falls back to the itemCode placeholder when item.image is absent', () => {
     const { container } = render(<ItemModal isOpen={true} onClose={vi.fn()} item={baseItem} />);
-    expect(container.querySelector('.entity-image')).toBeNull();
+    expect(container.querySelector('.loot-art img')).toBeNull();
+    expect(container.querySelector('.loot-code')).not.toBeNull();
   });
 
-  it('applies object-position style when item.imagePosition is set', () => {
+  it('applies object-position style to the hero art when item.imagePosition is set', () => {
     const item = { ...baseItem, image: 'img_sword.jpg', imagePosition: { x: 25, y: 80 } };
     const { container } = render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
-    const img = container.querySelector('.entity-image');
+    const img = container.querySelector('.loot-art img');
     expect(img.style.objectPosition).toBe('25% 80%');
   });
 });
