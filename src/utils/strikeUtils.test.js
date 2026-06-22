@@ -81,6 +81,70 @@ describe('getStrikes stance tagging (#224)', () => {
   });
 });
 
+describe('getStrikes spell-attack weapon (attackStat: spellAttackOrMartial)', () => {
+  // Xanderghul's Flawless Hammer: a special weapon whose attack uses the
+  // wielder's spell attack modifier, or its martial-proficiency + Str attack,
+  // whichever is higher.
+  const hammerStrike = {
+    name: "Xanderghul's Flawless Hammer",
+    proficiency: 'simple',
+    type: 'melee',
+    damage: '1d12',
+    attackStat: 'spellAttackOrMartial',
+  };
+
+  const spellcaster = {
+    ...minimalCharacter,
+    level: 5,
+    abilities: { ...minimalCharacter.abilities, strength: 14, charisma: 20 },
+    proficiencies: { weapons: { simple: { proficiency: 1 }, martial: { proficiency: 1 } } },
+    spellcasting: { ability: 'charisma', proficiency: 2 },
+  };
+
+  test('uses the spell attack modifier when it is higher', () => {
+    const char = { ...spellcaster, inventory: [{ id: 'h1', name: "Xanderghul's Flawless Hammer", strikes: hammerStrike }] };
+    const hammer = getStrikes(char).find((s) => s.name === "Xanderghul's Flawless Hammer");
+    expect(hammer).toBeDefined();
+    // spell attack: Cha +5 + expert(4) + level 5 = +14; martial: Str +2 + trained(2) + level 5 = +9
+    expect(hammer.attackMod).toBe(14);
+  });
+
+  test('falls back to martial proficiency + Str when that is higher', () => {
+    const char = {
+      ...spellcaster,
+      abilities: { ...spellcaster.abilities, strength: 14, charisma: 10 },
+      spellcasting: { ability: 'charisma', proficiency: 0 },
+      inventory: [{ id: 'h2', name: "Xanderghul's Flawless Hammer", strikes: hammerStrike }],
+    };
+    const hammer = getStrikes(char).find((s) => s.name === "Xanderghul's Flawless Hammer");
+    // spell attack: Cha 0 + untrained(0) = 0; martial: Str +2 + trained(2) + level 5 = +9
+    expect(hammer.attackMod).toBe(9);
+  });
+
+  test('ignores the strike proficiency rank (uses martial, not simple)', () => {
+    const char = {
+      ...spellcaster,
+      abilities: { ...spellcaster.abilities, strength: 14, charisma: 10 },
+      spellcasting: { ability: 'charisma', proficiency: 0 },
+      proficiencies: { weapons: { simple: { proficiency: 4 }, martial: { proficiency: 1 } } },
+      inventory: [{ id: 'h3', name: "Xanderghul's Flawless Hammer", strikes: hammerStrike }],
+    };
+    const hammer = getStrikes(char).find((s) => s.name === "Xanderghul's Flawless Hammer");
+    // martial (trained) + Str +2 + level 5 = +9 — the high simple rank is not used
+    expect(hammer.attackMod).toBe(9);
+  });
+
+  test('strikes without the flag are unaffected', () => {
+    const char = {
+      ...spellcaster,
+      inventory: [{ id: 'p1', name: 'Plain Hammer', strikes: { name: 'Plain Hammer', proficiency: 'simple', type: 'melee', damage: '1d8' } }],
+    };
+    const plain = getStrikes(char).find((s) => s.name === 'Plain Hammer');
+    // normal path: Str +2 + simple trained(2) + level 5 = +9
+    expect(plain.attackMod).toBe(9);
+  });
+});
+
 describe('getStrikes weapon runes (#548)', () => {
   const martialChar = {
     ...minimalCharacter,
