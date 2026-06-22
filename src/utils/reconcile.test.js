@@ -157,13 +157,62 @@ describe('computePendingChanges — durable allowlist', () => {
     changes.forEach((c) => expect(EPHEMERAL_OVERLAYS).not.toContain(c.overlay));
   });
 
-  it('does not yet surface gold / loadout / acquired / removed (stub computers)', () => {
+  it('does not yet surface loadout / acquired / removed (stub computers)', () => {
     const changes = computePendingChanges(resolved(), raw(), {
-      gold: 999,
       loadout: { p1: { state: 'dropped' } },
       acquired: [{ ref: 'dagger', uid: 'x' }],
       removed: ['sw'],
     });
     expect(changes).toEqual([]);
+  });
+});
+
+describe('computePendingChanges — gold overlay (#558)', () => {
+  it('emits a gold-set when the live overlay differs from the doc', () => {
+    const doc = { ...raw(), gold: 40 };
+    const changes = computePendingChanges(resolved(), doc, { gold: 55 });
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toMatchObject({
+      kind: PENDING_KINDS.GOLD_SET,
+      charId: 'c1',
+      overlay: 'gold',
+      overlayRef: 'gold',
+      label: 'Gold',
+      before: 40,
+      after: 55,
+      detail: '40 → 55 gp',
+    });
+  });
+
+  it('treats a doc with no gold field as 0', () => {
+    const changes = computePendingChanges(resolved(), raw(), { gold: 30 });
+    expect(changes[0]).toMatchObject({ before: 0, after: 30 });
+  });
+
+  it('apply writes the live gold onto the doc', () => {
+    const change = computePendingChanges(resolved(), raw(), { gold: 30 })[0];
+    expect(change.apply(raw()).gold).toBe(30);
+  });
+
+  it('emits nothing when live gold already matches the doc', () => {
+    const doc = { ...raw(), gold: 25 };
+    expect(computePendingChanges(resolved(), doc, { gold: 25 })).toEqual([]);
+  });
+
+  it('emits nothing when there is no gold overlay (no opinion)', () => {
+    expect(computePendingChanges(resolved(), raw(), {})).toEqual([]);
+    expect(computePendingChanges(resolved(), raw(), { gold: undefined })).toEqual([]);
+    expect(computePendingChanges(resolved(), raw(), { gold: 'NaN' })).toEqual([]);
+  });
+
+  it('reconciles gold and consumables together in one list', () => {
+    const changes = computePendingChanges(resolved(), raw(), {
+      consumed: { 'Healing Potion': 3 },
+      gold: 12,
+    });
+    expect(changes.map((c) => c.kind)).toEqual([
+      PENDING_KINDS.CONSUMABLE_REMOVE, // consumed runs first in DURABLE_OVERLAYS
+      PENDING_KINDS.GOLD_SET,
+    ]);
   });
 });
