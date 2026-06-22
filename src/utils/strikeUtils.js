@@ -81,9 +81,11 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
  *
  * @param {Object} item      - Inventory item carrying a `strikes` block
  * @param {Object} character - Character data
+ * @param {Object} [chamberState=null] - This weapon's chamber state from the
+ *   cnmh_chambers_<id> overlay (epic #672), used to gate chambered ranged Strikes.
  * @returns {Array} - Resolved strike objects ({ name, attackMod, damage, … })
  */
-export const resolveItemStrikes = (item, character) => {
+export const resolveItemStrikes = (item, character, chamberState = null) => {
   if (!item || !item.strikes || !character) return [];
 
   // Weapon-rune resolution (#548): when an item carries a declarative `runes`
@@ -117,7 +119,7 @@ export const resolveItemStrikes = (item, character) => {
       ...(resolved ? resolved.riders : []),
     ];
 
-    return {
+    const strikeObj = {
       name: strikeName,
       type: weaponStrike.type || 'melee',
       actionCount: parseInt(weaponStrike.actionCount || weaponStrike.action) || 1,
@@ -136,6 +138,22 @@ export const resolveItemStrikes = (item, character) => {
       // (held), unless the catalog flags it noHandRequired.
       active: itemAbilitiesActive(item),
     };
+
+    // Chambered ranged weapons (#672, S2): the ranged Strike additionally
+    // requires ≥1 loaded chamber. Surface the load state (capacity + loaded
+    // count) so the action tile can render e.g. "0/3 loaded" and gate firing.
+    // The melee Blade strike on the same weapon is a non-capacity strike and is
+    // untouched.
+    if (isCapacityWeapon(weaponStrike)) {
+      const capacity = weaponCapacity(weaponStrike);
+      const loaded = loadedCount(normalizeChamberState(chamberState, capacity));
+      strikeObj.capacity = capacity;
+      strikeObj.chambersLoaded = loaded;
+      strikeObj.loaded = loaded > 0;
+      strikeObj.active = strikeObj.active && loaded > 0;
+    }
+
+    return strikeObj;
   });
 };
 
@@ -228,7 +246,7 @@ export const getStrikes = (character, chambersByUid = {}) => {
   if (character.inventory) {
     const weaponStrikes = character.inventory
       .filter(item => item.strikes)
-      .flatMap(item => resolveItemStrikes(item, character));
+      .flatMap(item => resolveItemStrikes(item, character, (chambersByUid || {})[item.uid]));
     allStrikes = [...allStrikes, ...weaponStrikes];
   }
 
