@@ -257,3 +257,57 @@ describe('getStrikes weapon runes (#548)', () => {
     ]);
   });
 });
+
+describe('chambered weapon gate (#672, S2)', () => {
+  // A Crescent Cross held in a hand: ranged Capacity-3 Bolt + melee Blade.
+  const heldCrescent = {
+    uid: 'e-crescent', id: 'crescent-cross', name: 'Crescent Cross', state: 'held1',
+    strikes: [
+      { name: 'Crescent Cross Bolt', proficiency: 'martial', type: 'ranged', damage: '1d6', capacity: 3, reload: 1, ammoType: 'bolt', traits: ['Attack', 'Capacity 3', 'Ranged'] },
+      { name: 'Crescent Cross Blade', proficiency: 'martial', type: 'melee', damage: '1d4', traits: ['Attack', 'Melee'] },
+    ],
+  };
+  const bolt = { name: 'Crescent Cross Bolt', default: true, infinite: true };
+  const loadedState = { chambers: [bolt, null, null], pointer: 0 };
+  const charWith = (chambers) =>
+    getStrikes({ ...minimalCharacter, inventory: [heldCrescent] }, chambers);
+
+  test('ranged Bolt is inactive with no loaded chamber, even while held', () => {
+    const ranged = charWith({}).find((s) => s.name === 'Crescent Cross Bolt');
+    expect(ranged.active).toBe(false);
+    expect(ranged.capacity).toBe(3);
+    expect(ranged.chambersLoaded).toBe(0);
+    expect(ranged.loaded).toBe(false);
+  });
+
+  test('ranged Bolt becomes active once a chamber is loaded', () => {
+    const ranged = charWith({ 'e-crescent': loadedState })
+      .find((s) => s.name === 'Crescent Cross Bolt');
+    expect(ranged.active).toBe(true);
+    expect(ranged.chambersLoaded).toBe(1);
+    expect(ranged.loaded).toBe(true);
+  });
+
+  test('the melee Blade is unaffected by chambers — active when held, no capacity fields', () => {
+    const blade = charWith({}).find((s) => s.name === 'Crescent Cross Blade');
+    expect(blade.active).toBe(true);
+    expect('capacity' in blade).toBe(false);
+    expect('loaded' in blade).toBe(false);
+  });
+
+  test('a loaded chamber does not un-gate the hold requirement', () => {
+    const worn = { ...heldCrescent, state: 'worn' };
+    const ranged = getStrikes({ ...minimalCharacter, inventory: [worn] }, { 'e-crescent': loadedState })
+      .find((s) => s.name === 'Crescent Cross Bolt');
+    expect(ranged.active).toBe(false); // loaded but not held
+  });
+
+  test('getStrikes routes chamber state to the weapon by its inventory uid', () => {
+    const off = charWith({}).find((s) => s.name === 'Crescent Cross Bolt');
+    expect(off.active).toBe(false);
+    const on = charWith({ 'e-crescent': loadedState })
+      .find((s) => s.name === 'Crescent Cross Bolt');
+    expect(on.active).toBe(true);
+    expect(on.chambersLoaded).toBe(1);
+  });
+});

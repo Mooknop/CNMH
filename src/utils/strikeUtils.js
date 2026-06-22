@@ -6,6 +6,7 @@ import { calculateSpellStats } from './SpellUtils';
 import { convertWordToNumber } from './actionIconUtils';
 import { itemAbilitiesActive } from './itemState';
 import { resolveWeapon, scaleDamageDice, buildRuneBreakdown } from './weaponRunes';
+import { isCapacityWeapon, weaponCapacity, normalizeChamberState, loadedCount } from './ammunition';
 
 /**
  * Compute the ability modifier, proficiency value, attack bonus, and damage string
@@ -75,9 +76,12 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
  * Get all strikes for the character, combining character-defined strikes,
  * feat strikes, and inventory weapon strikes.
  * @param {Object} character - Character data
+ * @param {Object} [chambersByUid={}] - Per-weapon chamber state keyed by the
+ *   inventory entry's uid (cnmh_chambers_<id> overlay, epic #672). Drives the
+ *   loaded-chamber gate on capacity/chambered ranged Strikes.
  * @returns {Array} - Array of strike objects with computed attack modifiers
  */
-export const getStrikes = (character) => {
+export const getStrikes = (character, chambersByUid = {}) => {
   let allStrikes = [];
 
   // Character-defined strikes
@@ -173,6 +177,9 @@ export const getStrikes = (character) => {
         // Rune source breakdown (#608) — where the bonus/dice/riders come from.
         const runeBreakdown = buildRuneBreakdown(item);
 
+        // Chambered ammunition (#672): the per-weapon load state for this item.
+        const chamberState = (chambersByUid || {})[item.uid];
+
         const strikesArray = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
         return strikesArray.map(weaponStrike => {
           const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character);
@@ -189,7 +196,7 @@ export const getStrikes = (character) => {
             ...(resolved ? resolved.riders : []),
           ];
 
-          return {
+          const strikeObj = {
             name: strikeName,
             type: weaponStrike.type || 'melee',
             actionCount: parseInt(weaponStrike.actionCount || weaponStrike.action) || 1,
@@ -208,6 +215,22 @@ export const getStrikes = (character) => {
             // (held), unless the catalog flags it noHandRequired.
             active: itemAbilitiesActive(item),
           };
+
+          // Chambered ranged weapons (#672, S2): the ranged Strike additionally
+          // requires ≥1 loaded chamber. Surface the load state (capacity +
+          // loaded count) so the action tile can render e.g. "0/3 loaded" and
+          // gate firing. The melee Blade strike on the same weapon is a
+          // non-capacity strike and is untouched.
+          if (isCapacityWeapon(weaponStrike)) {
+            const capacity = weaponCapacity(weaponStrike);
+            const loaded = loadedCount(normalizeChamberState(chamberState, capacity));
+            strikeObj.capacity = capacity;
+            strikeObj.chambersLoaded = loaded;
+            strikeObj.loaded = loaded > 0;
+            strikeObj.active = strikeObj.active && loaded > 0;
+          }
+
+          return strikeObj;
         });
       });
     allStrikes = [...allStrikes, ...weaponStrikes];

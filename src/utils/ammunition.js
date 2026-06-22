@@ -139,3 +139,72 @@ export function defaultAmmo(strike) {
     onHit: false,
   };
 }
+
+// ── Chamber state (epic #672, S2) ────────────────────────────────────────────
+//
+// The mutable per-weapon loading state lives in the synced overlay
+//   cnmh_chambers_<characterId> = { [weaponUid]: ChamberState }
+// where ChamberState = { chambers: Array<null | AmmoRef>, pointer: number }.
+// `chambers.length` equals the weapon's capacity (S1); `null` is an empty
+// chamber; `pointer` is the chamber the next fire defaults to (auto-advanced
+// after firing in S4). These helpers are pure — the useChambers hook owns the
+// writes, getStrikes reads the load state through them.
+
+/**
+ * A fresh, all-empty chamber state for a weapon of the given capacity.
+ * @param {number} capacity
+ * @returns {{ chambers: Array<null>, pointer: number }}
+ */
+export function emptyChamberState(capacity) {
+  const n = typeof capacity === 'number' && capacity > 0 ? Math.floor(capacity) : 0;
+  return { chambers: new Array(n).fill(null), pointer: 0 };
+}
+
+/**
+ * Coerce a possibly-absent or malformed stored chamber state into a well-formed
+ * one sized to `capacity`: extra chambers are dropped, missing chambers padded
+ * empty, and the pointer wrapped into range. Always returns a fresh object.
+ *
+ * @param {Object|null|undefined} state - stored ChamberState (may be partial)
+ * @param {number} capacity
+ * @returns {{ chambers: Array<null|Object>, pointer: number }}
+ */
+export function normalizeChamberState(state, capacity) {
+  const base = emptyChamberState(capacity);
+  const len = base.chambers.length;
+  if (state && Array.isArray(state.chambers)) {
+    for (let i = 0; i < len; i += 1) {
+      const c = state.chambers[i];
+      base.chambers[i] = c == null ? null : c;
+    }
+  }
+  if (len > 0 && Number.isInteger(state?.pointer)) {
+    base.pointer = ((state.pointer % len) + len) % len;
+  }
+  return base;
+}
+
+/** How many chambers hold ammo. */
+export function loadedCount(state) {
+  if (!state || !Array.isArray(state.chambers)) return 0;
+  return state.chambers.reduce((n, c) => (c != null ? n + 1 : n), 0);
+}
+
+/** Index of the first loaded chamber, or -1 when all are empty. */
+export function firstLoadedChamber(state) {
+  if (!state || !Array.isArray(state.chambers)) return -1;
+  return state.chambers.findIndex((c) => c != null);
+}
+
+/** Index of the first empty chamber, or -1 when every chamber is full. */
+export function nextEmptyChamber(state) {
+  if (!state || !Array.isArray(state.chambers)) return -1;
+  return state.chambers.findIndex((c) => c == null);
+}
+
+/** The ammo ref the pointer currently rests on (null when empty/out of range). */
+export function pointerChamber(state) {
+  if (!state || !Array.isArray(state.chambers)) return null;
+  const i = Number.isInteger(state.pointer) ? state.pointer : 0;
+  return state.chambers[i] ?? null;
+}
