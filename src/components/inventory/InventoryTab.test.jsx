@@ -175,9 +175,9 @@ describe('InventoryTab', () => {
 
   it('displays bulk information', () => {
     render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    expect(screen.getByText(/Bulk Used:/)).toBeInTheDocument();
-    expect(screen.getByText(/Encumbered at:/)).toBeInTheDocument();
-    expect(screen.getByText(/Maximum:/)).toBeInTheDocument();
+    const bar = screen.getByTestId('inventory-bulkbar');
+    expect(bar).toBeInTheDocument();
+    expect(bar).toHaveTextContent('5/10'); // used / limit
   });
 
   it('renders an item card for each inventory entry', () => {
@@ -232,11 +232,12 @@ describe('InventoryTab', () => {
     });
   });
 
-  it('renders the bulk progress bar at the correct width', () => {
+  it('renders the bulk fill at the correct width', () => {
     const { container } = render(<InventoryTab character={mockCharacter} characterColor="#7E8C9A" />);
-    const progressBar = container.querySelector('.bulk-progress-bar');
-    expect(progressBar).toBeInTheDocument();
-    expect(progressBar).toHaveStyle('width: 50%'); // 5 / 10
+    const fill = container.querySelector('.bulkbar-fill');
+    expect(fill).toBeInTheDocument();
+    // 5 / 10 = 50%, bridged through the CSS custom property.
+    expect(fill.style.getPropertyValue('--bulk-fill-w')).toBe('50%');
   });
 
   it('renders the ContainersList', () => {
@@ -249,20 +250,17 @@ describe('InventoryTab', () => {
     expect(screen.getByText('No items in inventory')).toBeInTheDocument();
   });
 
-  it('shows the encumbered warning and an amber bar when over the threshold', () => {
-    const { container } = render(<InventoryTab character={{ id: 'enc' }} characterColor="#7E8C9A" />);
+  it('shows the encumbered warning and flags the bar when over the threshold', () => {
+    render(<InventoryTab character={{ id: 'enc' }} characterColor="#7E8C9A" />);
     expect(screen.getByText(/^Encumbered:/)).toBeInTheDocument();
-    // Assert the inline CSS variable directly: happy-dom doesn't surface an
-    // unresolved var() through toHaveStyle (getComputedStyle), but preserves it
-    // on element.style — which is what we actually set.
-    expect(container.querySelector('.bulk-progress-bar').style.backgroundColor).toBe('var(--color-warning)');
+    expect(screen.getByTestId('inventory-bulkbar')).toHaveClass('is-encumbered');
   });
 
-  it('shows the overencumbered warning and a danger bar when over the limit', () => {
+  it('shows the overencumbered warning and flags the bar when over the limit', () => {
     const { container } = render(<InventoryTab character={{ id: 'over' }} characterColor="#7E8C9A" />);
     expect(screen.getByText(/^Overencumbered:/)).toBeInTheDocument();
     expect(container.querySelector('.bulk-warning.severe')).toBeInTheDocument();
-    expect(container.querySelector('.bulk-progress-bar').style.backgroundColor).toBe('var(--color-danger)');
+    expect(screen.getByTestId('inventory-bulkbar')).toHaveClass('is-over');
   });
 
   // #217: consumable-tagged items honor the consumed overlay like scrolls do.
