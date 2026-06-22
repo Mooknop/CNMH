@@ -73,6 +73,91 @@ const resolveStrikeMods = (strike, character, defaultDamage = '1d6') => {
 };
 
 /**
+ * Resolve the fully-computed strike(s) for a single inventory weapon — the same
+ * shape getStrikes produces for inventory items. Extracted so per-item consumers
+ * (e.g. the item detail modal) can compute a weapon's real attack bonus/damage
+ * without re-deriving the rune/potency/ability logic or relying on the strike
+ * appearing in the whole-character list (which skips containers).
+ *
+ * @param {Object} item      - Inventory item carrying a `strikes` block
+ * @param {Object} character - Character data
+ * @param {Object} [chamberState=null] - This weapon's chamber state from the
+ *   cnmh_chambers_<id> overlay (epic #672), used to gate chambered ranged Strikes.
+ * @returns {Array} - Resolved strike objects ({ name, attackMod, damage, … })
+ */
+export const resolveItemStrikes = (item, character, chamberState = null) => {
+  if (!item || !item.strikes || !character) return [];
+
+  // Weapon-rune resolution (#548): when an item carries a declarative `runes`
+  // block, fold it into attack bonus, scaled damage dice, derived display name,
+  // and forwarded property-rune riders. Items with a legacy flat `potency` (and
+  // no `runes`) keep the original back-compat path.
+  const resolved = item.runes
+    ? resolveWeapon(
+      { name: item.name, price: item.price, material: item.material, traits: item.traits },
+      item.runes,
+    )
+    : null;
+  const potencyBonus = resolved ? resolved.potencyBonus : (item.potency || 0);
+  const sourceName = resolved ? resolved.name : item.name;
+  // Rune source breakdown (#608) — where the bonus/dice/riders come from.
+  const runeBreakdown = buildRuneBreakdown(item);
+
+  const strikesArray = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
+  return strikesArray.map(weaponStrike => {
+    const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character);
+
+    const attackBonus = baseBonus + potencyBonus;
+    const damage = resolved ? scaleDamageDice(damageString, resolved.extraDice) : damageString;
+
+    const strikeName = weaponStrike.name ||
+      (weaponStrike.type === 'melee' ? `${sourceName} Melee Strike` : `${sourceName} Ranged Strike`);
+
+    // Merge strike-level riders (#222) with property-rune riders (#548).
+    const riders = [
+      ...(Array.isArray(weaponStrike.riders) ? weaponStrike.riders : []),
+      ...(resolved ? resolved.riders : []),
+    ];
+
+    const strikeObj = {
+      name: strikeName,
+      type: weaponStrike.type || 'melee',
+      actionCount: parseInt(weaponStrike.actionCount || weaponStrike.action) || 1,
+      traits: weaponStrike.traits || [],
+      attackMod: attackBonus,
+      damage,
+      description: weaponStrike.description || item.description || '',
+      source: sourceName,
+      range: weaponStrike.range,
+      ...(weaponStrike.variants ? { variants: weaponStrike.variants } : {}),
+      // Damage riders (#222 + #548 property runes) — carried through so the damage step sees them.
+      ...(riders.length ? { riders } : {}),
+      // Rune source breakdown (#608) — present only for runed weapons.
+      ...(runeBreakdown ? { runeBreakdown } : {}),
+      // Gated: a weapon's Strike is only usable while it is wielded
+      // (held), unless the catalog flags it noHandRequired.
+      active: itemAbilitiesActive(item),
+    };
+
+    // Chambered ranged weapons (#672, S2): the ranged Strike additionally
+    // requires ≥1 loaded chamber. Surface the load state (capacity + loaded
+    // count) so the action tile can render e.g. "0/3 loaded" and gate firing.
+    // The melee Blade strike on the same weapon is a non-capacity strike and is
+    // untouched.
+    if (isCapacityWeapon(weaponStrike)) {
+      const capacity = weaponCapacity(weaponStrike);
+      const loaded = loadedCount(normalizeChamberState(chamberState, capacity));
+      strikeObj.capacity = capacity;
+      strikeObj.chambersLoaded = loaded;
+      strikeObj.loaded = loaded > 0;
+      strikeObj.active = strikeObj.active && loaded > 0;
+    }
+
+    return strikeObj;
+  });
+};
+
+/**
  * Get all strikes for the character, combining character-defined strikes,
  * feat strikes, and inventory weapon strikes.
  * @param {Object} character - Character data
@@ -161,78 +246,7 @@ export const getStrikes = (character, chambersByUid = {}) => {
   if (character.inventory) {
     const weaponStrikes = character.inventory
       .filter(item => item.strikes)
-      .flatMap(item => {
-        // Weapon-rune resolution (#548): when an item carries a declarative
-        // `runes` block, fold it into attack bonus, scaled damage dice, derived
-        // display name, and forwarded property-rune riders. Items with a legacy
-        // flat `potency` (and no `runes`) keep the original back-compat path.
-        const resolved = item.runes
-          ? resolveWeapon(
-            { name: item.name, price: item.price, material: item.material, traits: item.traits },
-            item.runes,
-          )
-          : null;
-        const potencyBonus = resolved ? resolved.potencyBonus : (item.potency || 0);
-        const sourceName = resolved ? resolved.name : item.name;
-        // Rune source breakdown (#608) — where the bonus/dice/riders come from.
-        const runeBreakdown = buildRuneBreakdown(item);
-
-        // Chambered ammunition (#672): the per-weapon load state for this item.
-        const chamberState = (chambersByUid || {})[item.uid];
-
-        const strikesArray = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
-        return strikesArray.map(weaponStrike => {
-          const { attackBonus: baseBonus, damageString } = resolveStrikeMods(weaponStrike, character);
-
-          const attackBonus = baseBonus + potencyBonus;
-          const damage = resolved ? scaleDamageDice(damageString, resolved.extraDice) : damageString;
-
-          const strikeName = weaponStrike.name ||
-            (weaponStrike.type === 'melee' ? `${sourceName} Melee Strike` : `${sourceName} Ranged Strike`);
-
-          // Merge strike-level riders (#222) with property-rune riders (#548).
-          const riders = [
-            ...(Array.isArray(weaponStrike.riders) ? weaponStrike.riders : []),
-            ...(resolved ? resolved.riders : []),
-          ];
-
-          const strikeObj = {
-            name: strikeName,
-            type: weaponStrike.type || 'melee',
-            actionCount: parseInt(weaponStrike.actionCount || weaponStrike.action) || 1,
-            traits: weaponStrike.traits || [],
-            attackMod: attackBonus,
-            damage,
-            description: weaponStrike.description || item.description || '',
-            source: sourceName,
-            range: weaponStrike.range,
-            ...(weaponStrike.variants ? { variants: weaponStrike.variants } : {}),
-            // Damage riders (#222 + #548 property runes) — carried through so the damage step sees them.
-            ...(riders.length ? { riders } : {}),
-            // Rune source breakdown (#608) — present only for runed weapons.
-            ...(runeBreakdown ? { runeBreakdown } : {}),
-            // Gated: a weapon's Strike is only usable while it is wielded
-            // (held), unless the catalog flags it noHandRequired.
-            active: itemAbilitiesActive(item),
-          };
-
-          // Chambered ranged weapons (#672, S2): the ranged Strike additionally
-          // requires ≥1 loaded chamber. Surface the load state (capacity +
-          // loaded count) so the action tile can render e.g. "0/3 loaded" and
-          // gate firing. The melee Blade strike on the same weapon is a
-          // non-capacity strike and is untouched.
-          if (isCapacityWeapon(weaponStrike)) {
-            const capacity = weaponCapacity(weaponStrike);
-            const loaded = loadedCount(normalizeChamberState(chamberState, capacity));
-            strikeObj.capacity = capacity;
-            strikeObj.chambersLoaded = loaded;
-            strikeObj.loaded = loaded > 0;
-            strikeObj.active = strikeObj.active && loaded > 0;
-          }
-
-          return strikeObj;
-        });
-      });
+      .flatMap(item => resolveItemStrikes(item, character, (chambersByUid || {})[item.uid]));
     allStrikes = [...allStrikes, ...weaponStrikes];
   }
 

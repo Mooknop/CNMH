@@ -12,6 +12,8 @@ import {
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
+import { resolveItemStrikes } from '../../utils/strikeUtils';
+import { formatModifier } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
 import { useInvested } from '../../hooks/useInvested';
@@ -47,6 +49,19 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   if (!isOpen || !item) return null;
 
   const activeItemEffects = itemEffectsFor(itemEffects, item);
+
+  // Strike resolution (#691): the catalog strike has no stored attack bonus —
+  // it's derived from the wielder's stats (ability/proficiency, runes/potency,
+  // and special rules like the Flawless Hammer's spell-attack). Resolve per-item
+  // so the modal can show the real bonus/damage; fall back to any explicitly
+  // authored values (used by tests/synthetic items) or "-".
+  const resolvedStrikes = resolveItemStrikes(item, charData);
+  const strikeBonus = (raw, i) => {
+    const mod = resolvedStrikes[i]?.attackMod;
+    if (typeof mod === 'number') return formatModifier(mod);
+    return raw?.bonus ?? '-';
+  };
+  const strikeDamage = (raw, i) => resolvedStrikes[i]?.damage || raw?.damage || '-';
 
   // Talisman affixing (#254/#339). A talisman picks a valid host (by its affixTo
   // type) via a 10-minute activity; affixing/unaffixing logs to the session log.
@@ -502,8 +517,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               <span className="strike-detail-label">Attack Bonus</span>
               <span className="strike-detail-value">
                 {Array.isArray(item.strikes)
-                  ? item.strikes[0].bonus || "-"
-                  : item.strikes.bonus || "-"}
+                  ? strikeBonus(item.strikes[0], 0)
+                  : strikeBonus(item.strikes, 0)}
               </span>
             </div>
             <div className="strike-detail">
@@ -518,8 +533,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               <span className="strike-detail-label">Damage</span>
               <span className="strike-detail-value">
                 {Array.isArray(item.strikes)
-                  ? item.strikes[0].damage || "-"
-                  : item.strikes.damage || "-"}
+                  ? strikeDamage(item.strikes[0], 0)
+                  : strikeDamage(item.strikes, 0)}
               </span>
             </div>
             {Array.isArray(item.strikes) && item.strikes.length > 1 && (
@@ -529,7 +544,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
                   {item.strikes.slice(1).map((strike, index) => (
                     <div key={index} className="additional-strike">
                       <span className="strike-name">{strike.name}: </span>
-                      <span className="strike-damage">{strike.damage} {strike.type}</span>
+                      <span className="strike-damage">{strikeDamage(strike, index + 1)} {strike.type}</span>
                       {strike.range && (
                         <span className="strike-range"> (Range: {strike.range})</span>
                       )}
