@@ -4,8 +4,8 @@
  * Single test exercising the core SWAP → Held → Drop loop:
  *  - Encounter tab: SWAP a worn weapon into Hand 1, Confirm
  *  - Assert hands-slot-1 displays the weapon
- *  - Inventory tab: assert "Held in 1 Hand" badge appears on the weapon row
- *  - Click Drop → assert "(dropped)" badge appears
+ *  - Inventory tab: the weapon shows in the Hands strip (Hand 1)
+ *  - Open it → Release → it drops back into the Worn bag (Pick up offered)
  *
  * Runs on both desktop (chromium) and mobile (mobile-chromium) viewports
  * because the HandsPanel layout differs between phone and desktop.
@@ -80,18 +80,18 @@ test.describe('HandsPanel + InventoryTab', () => {
       .getByRole('navigation', { name: 'Character sheet sections' })
       .getByRole('button', { name: 'Inventory', exact: true })
       .click();
-    // In the Loadout Grid a held item stays in the Worn bag with a state chip
-    // (ITEM_STATE_LABEL.held1) until the dedicated Hands strip lands.
-    await expect(page.getByTestId(`grid-cell-${LONGSWORD_UID}`)).toContainText('Held in 1 Hand', {
+    // The held weapon now lives in the Hands strip (read-only in encounter), in
+    // Hand 1 — not in the Worn bag.
+    await expect(page.getByTestId('hands-strip-slot-1')).toContainText('E2E Longsword', {
       timeout: 10_000,
     });
 
     // --- Drop: loadout actions live in the ItemModal opened on tap ---
-    await page.getByTestId(`grid-cell-${LONGSWORD_UID}`).click();
+    await page.getByTestId(`hands-tile-${LONGSWORD_UID}`).click();
     // "Release" drops a held item.
     await page.getByTestId('item-action-release').click();
 
-    // Re-open the item: it's now dropped, so only "Pick up" is offered.
+    // Released → dropped, so it falls back into the Worn bag; re-open offers Pick up.
     await page.getByTestId(`grid-cell-${LONGSWORD_UID}`).click();
     await expect(page.getByTestId('item-action-pickup')).toBeVisible({ timeout: 10_000 });
   });

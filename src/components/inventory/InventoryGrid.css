@@ -188,6 +188,83 @@
   outline-offset: 1px;
 }
 
+/* ---------- HANDS STRIP ---------- */
+.inventory-grid .hands-strip {
+  margin-bottom: 12px;
+}
+.inventory-grid .hands-strip-slots {
+  display: flex;
+  gap: 8px;
+}
+.inventory-grid .hands-strip-slot {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 4px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--shell-border);
+  background: var(--surface-inset);
+  min-height: 92px;
+}
+.inventory-grid .hands-strip-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--shell-text-tertiary);
+}
+.inventory-grid .hands-strip-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+  font-family: var(--font-ui);
+}
+.inventory-grid .hands-strip-tile:active {
+  cursor: grabbing;
+}
+.inventory-grid .hands-strip-name {
+  font-size: 0.54rem;
+  line-height: 1.1;
+  color: var(--shell-text-secondary);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.inventory-grid .hands-strip-empty {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px dashed var(--shell-border-strong, rgba(255, 255, 255, 0.16));
+  background: rgba(0, 0, 0, 0.22);
+  display: grid;
+  place-items: center;
+}
+.inventory-grid .hands-strip-empty-mark {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+.inventory-grid .hands-strip-hint {
+  margin: 6px 0 0;
+  font-size: 0.62rem;
+  color: var(--shell-text-tertiary);
+  text-align: center;
+}
+
 /* ---------- ICON TILE ---------- */
 .inventory-grid .icon-tile {
   --tile: 52px;

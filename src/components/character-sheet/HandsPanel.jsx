@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useLoadout } from '../../hooks/useLoadout';
+import { deriveHands } from '../../utils/hands';
 import ActionIcon from '../shared/ActionIcon';
 import Modal from '../shared/Modal';
 import './HandsPanel.css';
@@ -23,17 +24,8 @@ const HandsPanel = ({ character, characterColor }) => {
     [charData]
   );
 
-  // Current hand occupants from the effective tree.
-  const { slot1, slot2 } = useMemo(() => {
-    const two = inventory.find((e) => e && e.state === 'held2');
-    if (two) return { slot1: two, slot2: two };
-    const ones = inventory.filter((e) => e && e.state === 'held1');
-    const byHand = (h) => ones.find((e) => e.hand === h);
-    return {
-      slot1: byHand(1) || ones.find((e) => e.hand == null) || null,
-      slot2: byHand(2) || ones.filter((e) => e.hand == null)[1] || null,
-    };
-  }, [inventory]);
+  // Current hand occupants from the effective tree (shared derivation).
+  const { slot1, slot2 } = useMemo(() => deriveHands(inventory), [inventory]);
 
   const wornItems = useMemo(
     () => inventory.filter((e) => e && e.state === 'worn'),

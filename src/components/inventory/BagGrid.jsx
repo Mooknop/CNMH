@@ -7,19 +7,18 @@ import {
   calculateItemsBulk,
   calculateContainerBulk,
 } from '../../utils/InventoryUtils';
-import { ITEM_STATE_LABEL, isHeldState } from '../../utils/itemState';
+import { ITEM_STATE_LABEL } from '../../utils/itemState';
 
 const WORN = 'worn';
 
 /**
  * A single draggable grid cell. Tapping opens the ItemModal; a long-press (touch)
- * or small drag (mouse) picks the item up. Shows a small state chip for held /
- * dropped items so nothing reads as a plain Worn item before the Hands strip
- * lands (S4).
+ * or small drag (mouse) picks the item up. Dropped items fade with a state chip;
+ * held items live in the Hands strip and invested items in the Attuned area, so
+ * they don't appear here.
  */
 const GridCell = ({ item, glow, onItemClick }) => {
   const { onPointerDown } = useDraggable({ item, onTap: onItemClick });
-  const held = isHeldState(item.state);
   const dropped = item.state === 'dropped';
   return (
     <button
@@ -30,9 +29,7 @@ const GridCell = ({ item, glow, onItemClick }) => {
     >
       <IconTile item={item} size={56} glow={glow} />
       <span className="cell-name">{item.name}</span>
-      {(held || dropped) && (
-        <span className="cell-state">{ITEM_STATE_LABEL[item.state]}</span>
-      )}
+      {dropped && <span className="cell-state">{ITEM_STATE_LABEL[item.state]}</span>}
     </button>
   );
 };
