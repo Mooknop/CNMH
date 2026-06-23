@@ -24,7 +24,7 @@ import './DowntimeTab.css';
 // recipe browser (moved here from Inventory).
 const DowntimeTab = ({ character, characterColor }) => {
   const { formatGameDate, formatClockTime, getCurrentWeekday } = useGameDate();
-  const { loreEntries } = useContent();
+  const { loreEntries, items } = useContent();
   const [block] = useSyncedState('cnmh_downtimeblock_global', null);
   const [downtime] = useSyncedState(`cnmh_downtime_${character?.id || 'unknown'}`, null);
   const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
@@ -175,6 +175,10 @@ const DowntimeTab = ({ character, characterColor }) => {
         isOpen={isShopOpen}
         onClose={() => setIsShopOpen(false)}
         shops={locationShops}
+        waresStore={shops}
+        items={items}
+        character={character}
+        characterColor={characterColor}
       />
     </div>
   );
