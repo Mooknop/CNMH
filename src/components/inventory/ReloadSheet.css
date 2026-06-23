@@ -1,0 +1,59 @@
+.rls-sub {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--shell-text-secondary);
+}
+
+.rls-picks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.rls-pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--shell-border-strong, var(--color-text-muted));
+  background: transparent;
+  color: var(--shell-text-secondary);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  text-align: left;
+}
+
+.rls-pick--active {
+  background: var(--accent-tint, rgba(255, 255, 255, 0.12));
+  border-color: var(--accent-outline, currentColor);
+  color: var(--accent-text, inherit);
+}
+
+.rls-pick-name {
+  font-weight: 700;
+}
+
+.rls-pick-meta {
+  font-size: var(--text-sm);
+  color: var(--shell-text-tertiary);
+  white-space: nowrap;
+}
+
+.rls-pick--active .rls-pick-meta {
+  color: inherit;
+}
+
+.rls-pick-activate {
+  font-style: italic;
+}
+
+.rls-footer {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}

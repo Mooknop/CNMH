@@ -140,6 +140,30 @@ export function defaultAmmo(strike) {
   };
 }
 
+/**
+ * The chamber ref stored when Reloading with a special-ammunition item (#675,
+ * S3). Captures just what fire (S4) needs: the display name, the inventory
+ * `item` name used to decrement the `cnmh_consumed_<id>` overlay on fire, the
+ * extra Activate cost, and the on-hit effect id. Special ammo is NOT consumed on
+ * load — an unfired reload can be unloaded without losing the item — so this is
+ * purely the descriptor written into the chamber slot.
+ *
+ * @param {Object} item - the special-ammunition inventory item
+ * @returns {{ name: string, item: string, default: false, infinite: false, activate: number, onHit: boolean, effectId: string|null }}
+ */
+export function loadedAmmoRef(item) {
+  const block = ammoBlock(item);
+  return {
+    name: item?.name || 'Ammunition',
+    item: item?.name || null,
+    default: false,
+    infinite: false,
+    activate: ammoActivateCost(item),
+    onHit: !!(block && block.onHit),
+    effectId: (block && block.effectId) || null,
+  };
+}
+
 // ── Chamber state (epic #672, S2) ────────────────────────────────────────────
 //
 // The mutable per-weapon loading state lives in the synced overlay

@@ -12,6 +12,7 @@ import EncounterDoors from '../encounter/EncounterDoors';
 import AnimalCompanionModal from '../character-sheet/AnimalCompanionModal';
 import FamiliarModal from '../character-sheet/FamiliarModal';
 import UseConsumableModal from '../inventory/UseConsumableModal';
+import ReloadSheet from '../inventory/ReloadSheet';
 import { skillActionsFor, augmentSkillAction } from '../../data/skillActions';
 import { consumableMeta } from '../../utils/consumables';
 import { useEffects } from '../../hooks/useEffects';
@@ -35,6 +36,7 @@ const ActionsList = ({ character, characterColor }) => {
   const [familiarOpen, setFamiliarOpen] = useState(false); // Command → familiar command surface (#391)
   const [moveAction, setMoveAction] = useState(null); // { moveType } while the movement sheet is open (#415), else null
   const [consumable, setConsumable] = useState(null); // { item, actionCost } while the consumable sheet is open (#428), else null
+  const [reload, setReload] = useState(null); // { reload, actionCost } while the Reload ammo sheet is open (#675), else null
   const [exploitOpen, setExploitOpen] = useState(false); // Exploit Vulnerability slide-up (#454)
 
   const { encounter, appendLog } = useEncounter();
@@ -145,6 +147,14 @@ const ActionsList = ({ character, characterColor }) => {
       // charges actions per the Stride/Step accounting.
       if (encounterMode && item.controller === 'move') {
         setMoveAction({ moveType: item.moveType || 'stride' });
+        return;
+      }
+
+      // Reload (#675) — a chambered weapon's Reload tile opens the ammo sheet
+      // (plain bolt vs. carried special ammo). The sheet performs the chamber
+      // write + action spend; `cost` is the weapon's Reload action cost.
+      if (item.kind === 'reload') {
+        setReload({ reload: item, actionCost: encounterMode ? cost : 0 });
         return;
       }
 
@@ -410,6 +420,17 @@ const ActionsList = ({ character, characterColor }) => {
           themeColor={themeColor}
           actionCost={consumable.actionCost}
           defaultTargetId={focusAlly?.charId}
+        />
+      )}
+
+      {reload && (
+        <ReloadSheet
+          isOpen
+          onClose={() => setReload(null)}
+          reload={reload.reload}
+          character={character}
+          themeColor={themeColor}
+          actionCost={reload.actionCost}
         />
       )}
     </div>

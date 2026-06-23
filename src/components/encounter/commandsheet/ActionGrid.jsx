@@ -12,6 +12,7 @@ import { useFocusTarget } from '../../../hooks/useFocusTarget';
 import { useTurnState } from '../../../hooks/useTurnState';
 import { useSyncedState } from '../../../hooks/useSyncedState';
 import { useAdjacency } from '../../../hooks/useAdjacency';
+import { useChambers } from '../../../hooks/useChambers';
 import { buildActionCatalog, filterTiles, categoriesPresent } from './buildActionCatalog';
 import { suggestNow } from './suggestNow';
 import './ActionGrid.css';
@@ -38,6 +39,9 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
   const { focusEnemy, focusAlly } = useFocusTarget(character.id);
   const { inReach } = useAdjacency(character.id);
   const { turnState } = useTurnState(character.id);
+  // Chamber overlay drives the Reload tile gating (#675) — read-only here, the
+  // ReloadSheet (via useChambers) is the writer.
+  const { chambers } = useChambers(character.id);
   const [hp] = useSyncedState(`cnmh_hp_${character.id}`, null);
   const hasFocus = !!focusEnemy;
   const allyFocused = !!focusAlly;
@@ -58,8 +62,8 @@ const ActionGrid = ({ character, themeColor, encounterMode, onUse, onMagicOpen }
     onUse?.(tile.raw, tile.variableActionCount ? tile.variableActionCount.min : tile.cost);
 
   const tiles = useMemo(
-    () => buildActionCatalog({ actions, strikes, reactions, freeActions, inventory }),
-    [actions, strikes, reactions, freeActions, inventory]
+    () => buildActionCatalog({ actions, strikes, reactions, freeActions, inventory, chambers }),
+    [actions, strikes, reactions, freeActions, inventory, chambers]
   );
 
   const chips = useMemo(() => {
