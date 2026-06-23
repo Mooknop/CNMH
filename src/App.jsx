@@ -31,6 +31,7 @@ import GmQuests from './pages/gm/GmQuests';
 import GmReputation from './pages/gm/GmReputation';
 import GmCalendar from './pages/gm/GmCalendar';
 import GmLore from './pages/gm/GmLore';
+import GmShops from './pages/gm/GmShops';
 import GmCharacters from './pages/gm/GmCharacters';
 import GmItems from './pages/gm/GmItems';
 import GmSpells from './pages/gm/GmSpells';
@@ -111,6 +112,7 @@ function App() {
                           <Route path="world/reputation" element={<GmReputation />} />
                           <Route path="world/calendar" element={<GmCalendar />} />
                           <Route path="world/lore" element={<GmLore />} />
+                          <Route path="world/shops" element={<GmShops />} />
 
                           {/* Catalog area */}
                           <Route path="catalog" element={<Navigate to="/gm/catalog/items" replace />} />
