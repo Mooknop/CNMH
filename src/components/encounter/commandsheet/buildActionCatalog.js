@@ -17,6 +17,14 @@ import {
 } from '../../../data/encounterActions';
 import { formatModifier } from '../../../utils/CharacterUtils';
 import { consumableMeta } from '../../../utils/consumables';
+import { itemAbilitiesActive } from '../../../utils/itemState';
+import {
+  isCapacityWeapon,
+  weaponCapacity,
+  reloadCost,
+  normalizeChamberState,
+  nextEmptyChamber,
+} from '../../../utils/ammunition';
 
 // Short labels for the maneuver "vs <defense>" stat line.
 const DEFENSE_SHORT = {
@@ -117,6 +125,43 @@ const makeConsumableTile = (item) => {
   };
 };
 
+// Reload tile for a chambered/capacity weapon (#675, S3). One tile per held
+// capacity weapon that still has an empty chamber; tapping opens the ammo sheet
+// (plain bolt vs. carried special ammo). The melee strike on the same weapon is
+// untouched. Cost is the weapon's Reload value (1 for the Crescent Cross). The
+// `raw` descriptor carries what the sheet needs (weapon uid + capacity + the
+// ranged strike) and `kind: 'reload'` so handleUse routes it to the picker.
+const makeReloadTile = (item, strike) => {
+  uid += 1;
+  const capacity = weaponCapacity(strike);
+  const cost = reloadCost(strike) ?? 1;
+  return {
+    id: `reload-${item.uid || item.name}-${uid}`,
+    name: `Reload ${item.name}`,
+    origin: 'reload',
+    kind: 'reload',
+    cost,
+    costGroup: String(Math.min(Math.max(cost, 1), 3)),
+    cat: 'attack',
+    traits: ['Manipulate'],
+    type: 'reload',
+    requiresTarget: false,
+    needsTarget: false,
+    supports: false,
+    inactive: false,
+    statLine: null,
+    raw: {
+      kind: 'reload',
+      weaponUid: item.uid || null,
+      weaponName: item.name,
+      capacity,
+      reloadCost: cost,
+      strike,
+      requiresTarget: false,
+    },
+  };
+};
+
 // costOverride: 'reaction' | 'free' for the Reactions & Free group (#424); those
 // tiles skip the numeric cost-group clamp and never gate on a focused foe.
 const makeTile = (item, cat, originType, costOverride) => {
@@ -150,9 +195,10 @@ const makeTile = (item, cat, originType, costOverride) => {
  * @param {Array}   input.reactions    - reactions (useCharacter().reactions)
  * @param {Array}   input.freeActions  - free actions (useCharacter().freeActions)
  * @param {Array}   input.inventory    - effective inventory (useCharacter().inventory)
+ * @param {Object}  input.chambers     - cnmh_chambers_<id> overlay map (#675), keyed by weapon uid
  * @returns {Array} tile objects
  */
-export function buildActionCatalog({ actions = [], strikes = [], reactions = [], freeActions = [], inventory = [] } = {}) {
+export function buildActionCatalog({ actions = [], strikes = [], reactions = [], freeActions = [], inventory = [], chambers = {} } = {}) {
   uid = 0;
   const tiles = [];
 
@@ -176,6 +222,20 @@ export function buildActionCatalog({ actions = [], strikes = [], reactions = [],
     if (item && consumableMeta(item) && item.state !== 'dropped') {
       tiles.push(makeConsumableTile(item));
     }
+  });
+
+  // Reload tiles (#675) — for each held capacity weapon with an empty chamber,
+  // a 1-action Reload that opens the ammo sheet. Gated on held (itemAbilitiesActive)
+  // so it disappears when the weapon is sheathed, and hidden when fully loaded.
+  inventory.forEach((item) => {
+    if (!item || !item.strikes || !itemAbilitiesActive(item)) return;
+    const strikeList = Array.isArray(item.strikes) ? item.strikes : [item.strikes];
+    const capStrike = strikeList.find((s) => isCapacityWeapon(s));
+    if (!capStrike) return;
+    const capacity = weaponCapacity(capStrike);
+    const state = normalizeChamberState((chambers || {})[item.uid], capacity);
+    if (nextEmptyChamber(state) < 0) return; // fully loaded
+    tiles.push(makeReloadTile(item, capStrike));
   });
 
   // Reactions & Free (#424) — one cost group ('rf'), filterable by their own

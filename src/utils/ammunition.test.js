@@ -8,6 +8,7 @@ import {
   isAmmoEligible,
   ammoActivateCost,
   defaultAmmo,
+  loadedAmmoRef,
   emptyChamberState,
   normalizeChamberState,
   loadedCount,
@@ -156,6 +157,32 @@ describe('defaultAmmo', () => {
       infinite: true,
       activate: 0,
       onHit: false,
+    });
+  });
+});
+
+describe('loadedAmmoRef', () => {
+  it('captures fire-relevant fields from a special-ammunition item', () => {
+    expect(loadedAmmoRef(beaconShot)).toEqual({
+      name: 'Beacon Shot',
+      item: 'Beacon Shot',
+      default: false,
+      infinite: false,
+      activate: 1,
+      onHit: true,
+      effectId: 'beacon-shot',
+    });
+  });
+
+  it('degrades gracefully for an item with no ammunition block', () => {
+    expect(loadedAmmoRef(elixir)).toEqual({
+      name: 'Eagle-eye Elixir',
+      item: 'Eagle-eye Elixir',
+      default: false,
+      infinite: false,
+      activate: 0,
+      onHit: false,
+      effectId: null,
     });
   });
 });

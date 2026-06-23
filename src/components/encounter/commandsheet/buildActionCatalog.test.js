@@ -193,6 +193,54 @@ describe('consumables (#428)', () => {
   });
 });
 
+describe('reload tiles (#675)', () => {
+  // A held Crescent Cross with a capacity ranged strike + an untouched melee strike.
+  const crescent = {
+    uid: 'cc-1',
+    name: 'Crescent Cross',
+    state: 'held1',
+    strikes: [
+      { name: 'Crescent Cross Blade', type: 'melee', actionCount: 1 },
+      { name: 'Crescent Cross Bolt', type: 'ranged', capacity: 3, reload: 1, ammoType: 'bolt', traits: ['Capacity 3'] },
+    ],
+  };
+
+  it('emits one 1-action Reload tile for a held capacity weapon with an empty chamber', () => {
+    const tiles = buildActionCatalog({ inventory: [crescent] });
+    const reload = tiles.filter((t) => t.kind === 'reload');
+    expect(reload).toHaveLength(1);
+    expect(reload[0].name).toBe('Reload Crescent Cross');
+    expect(reload[0].cost).toBe(1);
+    expect(reload[0].cat).toBe('attack');
+    expect(reload[0].needsTarget).toBe(false);
+    expect(reload[0].raw).toMatchObject({ kind: 'reload', weaponUid: 'cc-1', capacity: 3 });
+  });
+
+  it('hides the Reload tile when the weapon is not held', () => {
+    const tiles = buildActionCatalog({ inventory: [{ ...crescent, state: 'worn' }] });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(false);
+  });
+
+  it('hides the Reload tile when every chamber is loaded', () => {
+    const full = { chambers: [{ name: 'Bolt' }, { name: 'Bolt' }, { name: 'Bolt' }], pointer: 0 };
+    const tiles = buildActionCatalog({ inventory: [crescent], chambers: { 'cc-1': full } });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(false);
+  });
+
+  it('still offers Reload when only some chambers are loaded', () => {
+    const partial = { chambers: [{ name: 'Bolt' }, null, null], pointer: 0 };
+    const tiles = buildActionCatalog({ inventory: [crescent], chambers: { 'cc-1': partial } });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(true);
+  });
+
+  it('does not emit Reload for a non-capacity weapon', () => {
+    const tiles = buildActionCatalog({
+      inventory: [{ uid: 'sw', name: 'Longsword', state: 'held1', strikes: [{ name: 'Longsword', type: 'melee' }] }],
+    });
+    expect(tiles.some((t) => t.kind === 'reload')).toBe(false);
+  });
+});
+
 describe('ally-support flag (#429)', () => {
   it('flags Battle Medicine / Healing-trait actions as support; basics are not', () => {
     const tiles = buildActionCatalog({
