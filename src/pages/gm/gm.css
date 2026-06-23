@@ -186,6 +186,16 @@
 .gm-rank-row input[aria-label$="-effect"] { flex: 2; }
 .gm-rank-row input[aria-label$="-amount"] { flex: 0 0 70px; max-width: 70px; min-width: 0; }
 
+/* Shop wares editor (#696 S2) */
+.gm-shop-head { align-items: flex-start; justify-content: space-between; }
+.gm-shop-title { margin: 0 0 2px; }
+.gm-shop-badge { color: var(--gold-mid); font-size: 0.82em; }
+.gm-shop-wares { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gm-shop-ware-row { align-items: flex-end; gap: 10px; }
+.gm-shop-ware-name { flex: 1; min-width: 120px; font-weight: 600; align-self: center; }
+.gm-shop-ware-field { flex: 0 0 90px; min-width: 0; }
+.gm-shop-ware-field input { width: 100%; }
+
 /* Tradition checkbox set (spell editor) */
 .gm-tradition-row { align-items: center; gap: 14px; flex-wrap: wrap; }
 .gm-checkbox {
