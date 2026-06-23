@@ -24,6 +24,7 @@ import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
 import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
+import { useChambers } from '../../hooks/useChambers';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
@@ -112,7 +113,13 @@ const UseAbilityModal = ({
   // Opposed-reaction immunity (#226-C) — Disrupting Performance stamps a
   // self-expiring per-enemy immunity, keyed by encounter entryId. effectsFor
   // also feeds the off-guard attack toggle (#348).
-  const { stampImmunity, effectsFor } = useEnemyEffects();
+  const { stampImmunity, effectsFor, applyCondition: applyEnemyCondition } = useEnemyEffects();
+
+  // Chambered-weapon fire (#676, S4) — the live chamber overlay + the discharge
+  // writer. Special-ammo depletion reuses the consumed overlay (like consumables).
+  const { stateFor: chamberStateFor, fire: fireChamber } = useChambers(character?.id || 'nobody');
+  const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
+  const [fireChamberIdx, setFireChamberIdx] = useState(null);
 
   // Tracks the spell-chain total cost so the confirm button label stays accurate.
   const [spellChainTotalCost, setSpellChainTotalCost] = useState(null);
@@ -236,6 +243,31 @@ const UseAbilityModal = ({
   const effectiveCost = explicitCost !== undefined ? explicitCost : parseActionCost(ability.actions);
   const effectiveVerb = verb.toLowerCase();
 
+  // Chambered ranged fire (#676, S4): a capacity Strike carrying its inventory
+  // uid (resolveItemStrikes). Read the live chambers, list the loaded ones, and
+  // default the selection to the auto-advance pointer (else the first loaded).
+  const isChamberedFire = ability.capacity != null && ability.weaponUid != null;
+  const liveChamberState = isChamberedFire
+    ? chamberStateFor(ability.weaponUid, ability.capacity)
+    : null;
+  const loadedChambers = liveChamberState
+    ? liveChamberState.chambers
+        .map((ref, index) => (ref ? { index, ref } : null))
+        .filter(Boolean)
+    : [];
+  const pointerLoaded = liveChamberState && liveChamberState.chambers[liveChamberState.pointer]
+    ? liveChamberState.pointer
+    : (loadedChambers[0]?.index ?? -1);
+  const selectedFireIdx = (fireChamberIdx != null && loadedChambers.some((c) => c.index === fireChamberIdx))
+    ? fireChamberIdx
+    : pointerLoaded;
+  const selectedChamberRef = (isChamberedFire && selectedFireIdx >= 0)
+    ? liveChamberState.chambers[selectedFireIdx]
+    : null;
+  // Extra actions the chosen ammo costs to fire (Activate) — folded into the cost
+  // glyph + the action spend, mirroring the consumable 1 + drawCost model.
+  const fireExtra = (selectedChamberRef?.activate || 0);
+
   // Blood magic (#227): a bloodline-flagged spell — cast directly or as the
   // spell a Spellshape chains into — triggers the bloodline's rider.
   const bloodMagicActive = bloodMagicTriggered(
@@ -292,6 +324,10 @@ const UseAbilityModal = ({
     : (hasChainSpell && typeof confirmCost === 'number')
       ? String(confirmCost)
       : costToDisplay(ability, confirmCost);
+  // Chambered fire shows the combined Strike + Activate cost (#676).
+  const costDisplayFinal = (isChamberedFire && typeof effectiveCost === 'number')
+    ? String(effectiveCost + fireExtra)
+    : costDisplay;
 
   const casterEntry    = order.find((e) => e.kind === 'pc' && e.charId === character.id);
   const casterEntryId  = casterEntry?.entryId || null;
@@ -616,6 +652,30 @@ const UseAbilityModal = ({
         ? rawResults
         : (rawResults.length ? [{ rayIndex: null, results: rawResults }] : []);
 
+    // Chambered fire bookkeeping (#676, S4): empty the fired chamber + advance the
+    // pointer, decrement special ammo from inventory (plain bolts are infinite),
+    // and on a hit apply the ammo's on-hit effect to the struck enemies. Runs on
+    // every fire path — including a lost concealment flat check below (the bolt is
+    // still spent), where `hitEntryIds` is empty so no on-hit effect lands.
+    const commitChamberFire = (hitEntryIds) => {
+      if (!isChamberedFire || selectedFireIdx < 0) return;
+      const ref = selectedChamberRef;
+      fireChamber(ability.weaponUid, selectedFireIdx, ability.capacity);
+      if (ref && !ref.default && ref.item) {
+        setConsumed((cur) => ({ ...(cur || {}), [ref.item]: ((cur || {})[ref.item] || 0) + 1 }));
+      }
+      const appliedOnHit = !!(ref && ref.onHit && ref.effectId && hitEntryIds.length > 0);
+      if (appliedOnHit) {
+        hitEntryIds.forEach((eid) => applyEnemyCondition(eid, { id: ref.effectId, source: ref.name }));
+      }
+      appendLog({
+        type:   'action',
+        charId: character.id,
+        text:   `${character.name} fires the ${ability.source || ability.name} — ${ref?.name || 'bolt'}`
+          + ` (chamber ${selectedFireIdx + 1})${appliedOnHit ? ` · ${ref.name} effect applied` : ''}`,
+      });
+    };
+
     // Spend the casting resource (slot/focus/staff/wand/scroll). The empty-pool
     // override casts without decrementing — the manual pips stay the
     // remediation surface and pools never go negative.
@@ -693,8 +753,10 @@ const UseAbilityModal = ({
       if (castCost === 'reaction') {
         spendReaction(`${verb} ${ability.name}`);
       } else if (typeof castCost === 'number' && castCost > 0) {
-        spendActions(castCost, `${verb} ${ability.name}`);
+        spendActions(castCost + fireExtra, `${verb} ${ability.name}`);
       }
+      // The bolt is spent even on a lost flat check; no on-hit (the attack missed).
+      commitChamberFire([]);
       onClose();
       return;
     }
@@ -1147,7 +1209,19 @@ const UseAbilityModal = ({
     if (costToSpend === 'reaction') {
       spendReaction(`${verb} ${ability.name}`);
     } else if (costToSpend > 0) {
-      spendActions(costToSpend, `${verb} ${ability.name}`);
+      // Chambered fire adds the chosen ammo's Activate cost on top of the Strike (#676).
+      spendActions(costToSpend + fireExtra, `${verb} ${ability.name}`);
+    }
+
+    // Chambered fire (#676): discharge the chosen chamber + apply on-hit effects to
+    // the struck enemies (success / critical success on an AC attack).
+    if (isChamberedFire) {
+      const hitEntryIds = rayGroups.flatMap((g) =>
+        g.results
+          .filter((r) => r.degree === 'success' || r.degree === 'criticalSuccess')
+          .map((r) => r.entryId)
+      );
+      commitChamberFire(hitEntryIds);
     }
 
     // Count attacks for MAP. Multi-roll casts (flurry, multi-ray) increment once
@@ -1323,6 +1397,31 @@ const UseAbilityModal = ({
         )}
         {actionsSelector}
       </section>
+
+      {/* Chamber selection (#676) — which loaded chamber to fire. Defaults to the
+          auto-advance pointer; firing special ammo adds its Activate cost. */}
+      {isChamberedFire && loadedChambers.length > 0 && (
+        <>
+          <hr className="ct-divider" />
+          <section className="ct-section">
+            <h3 className="ct-section-title">Chamber</h3>
+            <div className="uam-cost-options" role="radiogroup" aria-label="Chamber to fire">
+              {loadedChambers.map(({ index, ref }) => (
+                <label key={index} className="uam-cost-option">
+                  <input
+                    type="radio"
+                    name="fire-chamber"
+                    checked={selectedFireIdx === index}
+                    onChange={() => setFireChamberIdx(index)}
+                  />
+                  Chamber {index + 1}: {ref.name}
+                  {ref.activate > 0 ? ` (+${ref.activate} to fire)` : ''}
+                </label>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
 
       {/* Frequency lock — derived from the synced ledger; GM can override or clear */}
       {freqRule && !freqGate.available && (
@@ -1757,7 +1856,7 @@ const UseAbilityModal = ({
           disabled={!confirmEnabled}
           aria-label="confirm-cast"
         >
-          {verb} ({costDisplay})
+          {verb} ({costDisplayFinal})
         </button>
       </div>
     </Modal>

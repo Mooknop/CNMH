@@ -9,6 +9,10 @@ vi.mock('../../hooks/useEnemyEffects', () => ({
   }),
 }));
 
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({ effects: [{ id: 'beacon-shot', name: 'Beacon Shot' }] }),
+}));
+
 import EnemyConditionBadge from './EnemyConditionBadge';
 
 const goblin = { entryId: 'e-gob', kind: 'enemy', name: 'Goblin' };
@@ -45,6 +49,12 @@ describe('EnemyConditionBadge', () => {
     render(<EnemyConditionBadge enemyEntry={goblin} />);
     expect(screen.getByText('Off-Guard to Ashka')).toBeInTheDocument();
     expect(screen.getByLabelText('Goblin is Off-Guard to Ashka')).toBeInTheDocument();
+  });
+
+  it('falls back to the effect catalog name for an on-hit ammo marker (#676)', () => {
+    recordByEntry['e-gob'] = { conditions: [{ id: 'beacon-shot', source: 'Beacon Shot' }], effects: [] };
+    render(<EnemyConditionBadge enemyEntry={goblin} />);
+    expect(screen.getByText('Beacon Shot')).toBeInTheDocument();
   });
 
   it('renders a generic and a scoped off-guard as distinct chips', () => {

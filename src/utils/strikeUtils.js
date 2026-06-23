@@ -151,6 +151,9 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
       strikeObj.chambersLoaded = loaded;
       strikeObj.loaded = loaded > 0;
       strikeObj.active = strikeObj.active && loaded > 0;
+      // Carry the inventory uid so the fire resolver (#676, S4) can read the live
+      // chamber overlay (refs + pointer) and write the discharge back.
+      strikeObj.weaponUid = item.uid || null;
     }
 
     return strikeObj;
