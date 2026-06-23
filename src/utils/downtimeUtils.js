@@ -87,11 +87,14 @@ export function periodState(downtime, startedAt) {
       plan,
       status: downtime.status || 'planning',
       paired: downtime.paired || {},
+      // craftApplied tracks the crafting hours already banked into each project
+      // this period, so re-locking an edited plan banks only the new delta.
+      craftApplied: downtime.craftApplied || {},
       selected: hasPlan ? planSelected(plan) : (downtime.selected || []),
       ledger: hasPlan ? planToLedger(plan) : (downtime.ledger || []),
     };
   }
-  return { plan: {}, status: 'planning', paired: {}, selected: [], ledger: [] };
+  return { plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [] };
 }
 
 // Builds the next stored value for a write, stamping the active period and
@@ -109,6 +112,7 @@ export function stampPeriod(downtime, startedAt, patch) {
     plan,
     status: merged.status || 'planning',
     paired: merged.paired || {},
+    craftApplied: merged.craftApplied || {},
     selected: hasPlan ? planSelected(plan) : (merged.selected || []),
     ledger: hasPlan ? planToLedger(plan) : (merged.ledger || []),
   };

@@ -106,6 +106,16 @@
   --peril-light:  #ef5350;
   --peril-pale:   #ffebee;
 
+  /* Activity hues — downtime/exploration allocation ribbons & sliders.
+     Shared chroma/lightness, varied hue; deliberately distinct from the
+     proficiency and degree-of-success palettes so a colored day-block never
+     reads as a rank or an outcome. */
+  --act-earn:     oklch(0.76 0.13 84);   /* gold   */
+  --act-craft:    oklch(0.67 0.14 46);   /* ember  */
+  --act-research: oklch(0.68 0.10 232);  /* azure  */
+  --act-retrain:  oklch(0.66 0.13 306);  /* violet */
+  --act-free:     rgba(255, 255, 255, 0.045);
+
 
   /* ————————————————————————————————————————————————————————
    * SEMANTIC COLOR ALIASES

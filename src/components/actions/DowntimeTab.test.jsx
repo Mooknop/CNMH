@@ -28,15 +28,21 @@ vi.mock('../shop/ShopModal', () => ({
   }
 }));
 
-vi.mock('./DowntimeList', () => ({
-  default: function DummyDowntimeList({ character: c }) {
-    return <div data-testid="downtime-list" data-charid={c?.id} />;
+vi.mock('./DowntimeAllocator', () => ({
+  default: function DummyDowntimeAllocator({ character: c, block }) {
+    return <div data-testid="downtime-allocator" data-charid={c?.id} data-days={block?.days} />;
   }
 }));
 
-vi.mock('./DowntimeCommitBar', () => ({
-  default: function DummyDowntimeCommitBar({ block }) {
-    return <div data-testid="downtime-commit-bar" data-days={block?.days} />;
+vi.mock('./EarnIncomeResolver', () => ({
+  default: function DummyEarnIncomeResolver({ character: c }) {
+    return <div data-testid="earn-income-resolver" data-charid={c?.id} />;
+  }
+}));
+
+vi.mock('./DowntimeCompletion', () => ({
+  default: function DummyDowntimeCompletion({ activity }) {
+    return <div data-testid="downtime-completion" data-activity={activity} />;
   }
 }));
 
@@ -123,85 +129,43 @@ describe('DowntimeTab', () => {
     expect(screen.getByText('Not started')).toBeInTheDocument();
   });
 
-  it('renders the DowntimeList for the character', () => {
-    render(<DowntimeTab character={character} />);
-    expect(screen.getByTestId('downtime-list')).toHaveAttribute('data-charid', 'char-1');
-  });
-
-  it('renders the DowntimeCommitBar when the block is active', () => {
+  it('renders the DowntimeAllocator for the character when the block is active', () => {
     withBlock({ days: 7, active: true });
     render(<DowntimeTab character={character} />);
-    expect(screen.getByTestId('downtime-commit-bar')).toBeInTheDocument();
-    expect(screen.getByTestId('downtime-commit-bar')).toHaveAttribute('data-days', '7');
+    const allocator = screen.getByTestId('downtime-allocator');
+    expect(allocator).toHaveAttribute('data-charid', 'char-1');
+    expect(allocator).toHaveAttribute('data-days', '7');
   });
 
-  it('hides the DowntimeCommitBar when no block is active', () => {
+  it('hides the DowntimeAllocator when no block is active', () => {
     render(<DowntimeTab character={character} />);
-    expect(screen.queryByTestId('downtime-commit-bar')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('downtime-allocator')).not.toBeInTheDocument();
   });
 
-  it('shows days-used sub-header once days have been committed', () => {
-    withBlock(
-      { days: 7, active: true },
-      { selected: ['Research'], ledger: [{ day: 'Research', night: null }] }
-    );
-    render(<DowntimeTab character={character} />);
-    expect(screen.getByText('1 of 7 days used')).toBeInTheDocument();
-  });
-
-  it('hides the days-used sub-header when ledger is empty', () => {
-    withBlock({ days: 7, active: true }, { selected: ['Research'], ledger: [] });
-    render(<DowntimeTab character={character} />);
-    expect(screen.queryByText(/days used/i)).not.toBeInTheDocument();
-  });
-
-  describe('progress readout', () => {
-    it('is hidden before any days are committed', () => {
-      withBlock({ days: 7, active: true }, { selected: ['Research'], ledger: [] });
+  describe('lock-gated resolution', () => {
+    it('hides the Earn Income resolver while the plan is still being planned', () => {
+      withBlock({ days: 7, active: true }, { plan: { 'Earn Income': 2 }, status: 'planning' });
       render(<DowntimeTab character={character} />);
-      expect(screen.queryByText('Progress')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('earn-income-resolver')).not.toBeInTheDocument();
     });
 
-    it('shows accumulate hours / benchmark for an accumulate activity', () => {
-      withBlock(
-        { days: 7, active: true },
-        {
-          selected: ['Research'],
-          ledger: [{ day: 'Research', night: 'Research' }],
-        }
-      );
+    it('shows the Earn Income resolver once the plan is locked in', () => {
+      withBlock({ days: 7, active: true }, { plan: { 'Earn Income': 2 }, status: 'ready' });
       render(<DowntimeTab character={character} />);
-      expect(screen.getByText('Progress')).toBeInTheDocument();
-      expect(screen.getByText('Research')).toBeInTheDocument();
-      expect(screen.getByText('16h / 8h')).toBeInTheDocument();
+      expect(screen.getByTestId('earn-income-resolver')).toHaveAttribute('data-charid', 'char-1');
     });
 
-    it('shows roll count for an instant activity', () => {
-      withBlock(
-        { days: 7, active: true },
-        {
-          selected: ['Earn Income'],
-          ledger: [
-            { day: 'Earn Income', night: null },
-            { day: 'Earn Income', night: 'Earn Income' },
-          ],
-        }
-      );
+    it('hides Retrain/Research completion while the plan is still being planned', () => {
+      withBlock({ days: 7, active: true }, { plan: { Research: 2 }, status: 'planning' });
       render(<DowntimeTab character={character} />);
-      expect(screen.getByText('3 rolls')).toBeInTheDocument();
+      expect(screen.queryByTestId('downtime-completion')).not.toBeInTheDocument();
     });
 
-    it('shows multiple activities in parallel', () => {
-      withBlock(
-        { days: 7, active: true },
-        {
-          selected: ['Research', 'Crafting'],
-          ledger: [{ day: 'Research', night: 'Crafting' }],
-        }
-      );
+    it('shows Research completion once the plan is locked in', () => {
+      withBlock({ days: 7, active: true }, { plan: { Research: 2 }, status: 'ready' });
       render(<DowntimeTab character={character} />);
-      expect(screen.getByText('Research')).toBeInTheDocument();
-      expect(screen.getByText('Crafting')).toBeInTheDocument();
+      const completion = screen.getByTestId('downtime-completion');
+      expect(completion).toHaveAttribute('data-activity', 'Research');
     });
   });
 
