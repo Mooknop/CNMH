@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import DowntimeTab from './DowntimeTab';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useContent } from '../../contexts/ContentContext';
+import { useShops } from '../../hooks/useShops';
 
 vi.mock('../../contexts/GameDateContext', () => ({
   useGameDate: () => ({
@@ -17,6 +19,14 @@ vi.mock('../../hooks/useSyncedState', () => ({
 }));
 
 vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
+vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
+vi.mock('../../hooks/useShops', () => ({ useShops: vi.fn() }));
+
+vi.mock('../shop/ShopModal', () => ({
+  default: function DummyShopModal({ isOpen, shops }) {
+    return isOpen ? <div data-testid="shop-modal" data-count={shops.length} /> : null;
+  }
+}));
 
 vi.mock('./DowntimeList', () => ({
   default: function DummyDowntimeList({ character: c }) {
@@ -57,10 +67,27 @@ const withBlock = (block, downtime = null) => {
     .mockReturnValueOnce([stampedDowntime, vi.fn()]); // cnmh_downtime_<charId>
 };
 
+// Put the party in a location with one shop child and stock that shop, so the
+// real getShopsForLocation resolves a non-empty list. Keyed by state name so it
+// stays stable across the re-render the Shop click triggers.
+const withShopLocation = () => {
+  useSyncedState.mockImplementation((key) =>
+    key === 'cnmh_campaign_global' ? [{ locationLoreId: 'sandpoint' }, vi.fn()] : [null, vi.fn()]
+  );
+  useContent.mockReturnValue({
+    loreEntries: [
+      { id: 'bottled-solutions', title: 'Bottled Solutions', category: 'Location', parent: 'sandpoint' },
+    ],
+  });
+  useShops.mockReturnValue({ shops: { 'bottled-solutions': { wares: [{ ref: 'antidote' }] } } });
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   useSyncedState.mockReturnValue([null, vi.fn()]);
   useCharacter.mockReturnValue({ skillProficiencies: { crafting: 0 } });
+  useContent.mockReturnValue({ loreEntries: [] });
+  useShops.mockReturnValue({ shops: {} });
 });
 
 describe('DowntimeTab', () => {
@@ -175,6 +202,24 @@ describe('DowntimeTab', () => {
       render(<DowntimeTab character={character} />);
       expect(screen.getByText('Research')).toBeInTheDocument();
       expect(screen.getByText('Crafting')).toBeInTheDocument();
+    });
+  });
+
+  describe('Shop launcher', () => {
+    it('is hidden when the current location has no shops', () => {
+      render(<DowntimeTab character={character} />);
+      expect(screen.queryByText('Shop')).not.toBeInTheDocument();
+    });
+
+    it('shows a Shop button (with shop count) and opens the modal when the location has shops', () => {
+      withShopLocation();
+      render(<DowntimeTab character={character} />);
+      const btn = screen.getByText('Shop');
+      expect(btn).toBeInTheDocument();
+      fireEvent.click(btn);
+      const modal = screen.getByTestId('shop-modal');
+      expect(modal).toBeInTheDocument();
+      expect(modal).toHaveAttribute('data-count', '1');
     });
   });
 

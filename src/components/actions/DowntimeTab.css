@@ -121,6 +121,22 @@
   justify-content: center;
 }
 
+/* Shop launcher — shown when the current location has shops (#696 S3). */
+.dt-shop-row {
+  display: flex;
+  justify-content: center;
+}
+
+.dt-shop-count {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  background: var(--theme-surface, var(--shell-surface));
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-2);
+}
+
 .dt-crafting-btn {
   display: inline-flex;
   align-items: center;
