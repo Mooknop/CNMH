@@ -59,6 +59,17 @@ describe('useChambers', () => {
     expect(result.current.stateFor(UID, CAP).pointer).toBe(1); // 4 % 3
   });
 
+  it('fire empties the discharged chamber and advances the pointer', () => {
+    const { result } = setup();
+    act(() => result.current.load(UID, 0, bolt, CAP));
+    act(() => result.current.load(UID, 1, bolt, CAP));
+    act(() => result.current.fire(UID, 0, CAP));
+    const st = result.current.stateFor(UID, CAP);
+    expect(st.chambers[0]).toBeNull();
+    expect(st.chambers[1]).toMatchObject({ default: true });
+    expect(st.pointer).toBe(1);
+  });
+
   it('keeps per-weapon state separate', () => {
     const { result } = setup();
     act(() => result.current.load(UID, 0, bolt, CAP));

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
-import { normalizeChamberState } from '../utils/ammunition';
+import { normalizeChamberState, fireChamberState } from '../utils/ammunition';
 
 // Single writer for the durable per-weapon chamber map
 //   cnmh_chambers_<characterId> = { [weaponUid]: { chambers: [null|ref], pointer } }.
@@ -81,7 +81,15 @@ export const useChambers = (characterId) => {
     [patch]
   );
 
-  return { chambers, stateFor, load, clear, setPointer, advance };
+  // Fire a chamber (#676, S4): empty the discharged chamber and auto-advance the
+  // pointer past it. Single mutator so the empty + advance land in one patch.
+  const fire = useCallback(
+    (uid, index, capacity) =>
+      patch(uid, capacity, (st) => fireChamberState(st, index, capacity)),
+    [patch]
+  );
+
+  return { chambers, stateFor, load, clear, setPointer, advance, fire };
 };
 
 export default useChambers;

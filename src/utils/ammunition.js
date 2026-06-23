@@ -232,3 +232,23 @@ export function pointerChamber(state) {
   const i = Number.isInteger(state.pointer) ? state.pointer : 0;
   return state.chambers[i] ?? null;
 }
+
+/**
+ * Apply a fire from `index` (#676, S4): the discharged chamber empties and the
+ * pointer auto-advances to the next chamber ("changes chambers automatically
+ * after you fire"). Returns a fresh normalized state; a no-op (clone) when the
+ * index is out of range. Pure — useChambers.fire writes the result.
+ *
+ * @param {Object} state    - stored/normalized ChamberState
+ * @param {number} index    - the chamber that was fired
+ * @param {number} capacity - the weapon's capacity (sizes the result)
+ * @returns {{ chambers: Array<null|Object>, pointer: number }}
+ */
+export function fireChamberState(state, index, capacity) {
+  const next = normalizeChamberState(state, capacity);
+  const len = next.chambers.length;
+  if (len === 0 || index < 0 || index >= len) return next;
+  next.chambers[index] = null;
+  next.pointer = (index + 1) % len;
+  return next;
+}
