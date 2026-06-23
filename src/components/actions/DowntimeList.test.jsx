@@ -123,7 +123,10 @@ describe('DowntimeList', () => {
     // The updater should add the tapped activity name to selected, stamped to
     // the active period.
     const updater = mockSetter.mock.calls[0][0];
-    expect(updater(null)).toEqual({ periodStartedAt: PERIOD, selected: ['Earn Income'], ledger: [] });
+    expect(updater(null)).toEqual({
+      periodStartedAt: PERIOD, plan: {}, status: 'planning', paired: {},
+      selected: ['Earn Income'], ledger: [],
+    });
   });
 
   it('removes an already-selected activity when toggled again', () => {
@@ -133,7 +136,10 @@ describe('DowntimeList', () => {
     fireEvent.click(screen.getByRole('button', { name: '✓ Active — Clear' }));
     const updater = mockSetter.mock.calls[0][0];
     expect(updater({ periodStartedAt: PERIOD, selected: ['Earn Income'] }))
-      .toEqual({ periodStartedAt: PERIOD, selected: [], ledger: [] });
+      .toEqual({
+        periodStartedAt: PERIOD, plan: {}, status: 'planning', paired: {},
+        selected: [], ledger: [],
+      });
   });
 
   it('renders the selected-activities banner with chips', () => {
