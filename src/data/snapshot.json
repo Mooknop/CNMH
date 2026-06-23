@@ -10363,6 +10363,12 @@
       "modifiers": []
     },
     {
+      "id": "beacon-shot",
+      "name": "Beacon Shot",
+      "description": "Embedded with a sparking beacon shot for 1 minute. An invisible creature becomes merely hidden to creatures who couldn't otherwise see it, and a concealed creature loses the concealed condition. Remove with an Interact action and a DC 20 Athletics check.",
+      "modifiers": []
+    },
+    {
       "id": "bless",
       "name": "Bless",
       "description": "+1 status bonus to attack rolls while within the emanation.",
