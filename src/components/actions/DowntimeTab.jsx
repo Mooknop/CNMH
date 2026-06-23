@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGameDate } from '../../contexts/GameDateContext';
+import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useShops } from '../../hooks/useShops';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { getHoursForActivity, getRollsForActivity, getDaysCommitted, periodState } from '../../utils/downtimeUtils';
+import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
+import ShopModal from '../shop/ShopModal';
 import CraftingProjects from './CraftingProjects';
 import DowntimeList from './DowntimeList';
 import DowntimeCommitBar from './DowntimeCommitBar';
@@ -20,10 +24,21 @@ import './DowntimeTab.css';
 // recipe browser (moved here from Inventory).
 const DowntimeTab = ({ character, characterColor }) => {
   const { formatGameDate, formatClockTime, getCurrentWeekday } = useGameDate();
+  const { loreEntries } = useContent();
   const [block] = useSyncedState('cnmh_downtimeblock_global', null);
   const [downtime] = useSyncedState(`cnmh_downtime_${character?.id || 'unknown'}`, null);
+  const [campaign] = useSyncedState('cnmh_campaign_global', { location: '', locationLoreId: '' });
+  const { shops } = useShops();
   const charData = useCharacter(character);
   const [isCraftingOpen, setIsCraftingOpen] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
+
+  // Shops the party can visit right now: the shop-flagged (revealed) children of
+  // the current location. Empty ⇒ no Shop button.
+  const locationShops = useMemo(
+    () => getShopsForLocation(campaign?.locationLoreId, loreEntries, shops),
+    [campaign?.locationLoreId, loreEntries, shops]
+  );
 
   const hasCrafting = (charData?.skillProficiencies?.crafting || 0) > 0;
   const hasTellFortune = (charData?.feats || []).some((f) => f.name === 'Tell Fortune');
@@ -120,6 +135,19 @@ const DowntimeTab = ({ character, characterColor }) => {
         <RepairShieldPanel character={character} />
       )}
 
+      {locationShops.length > 0 && (
+        <div className="dt-shop-row">
+          <button
+            className="dt-crafting-btn"
+            onClick={() => setIsShopOpen(true)}
+          >
+            <span role="img" aria-label="Shop">🛒</span>
+            Shop
+            <span className="dt-shop-count">{locationShops.length}</span>
+          </button>
+        </div>
+      )}
+
       {hasCrafting && (
         <CraftingProjects character={character} />
       )}
@@ -141,6 +169,12 @@ const DowntimeTab = ({ character, characterColor }) => {
         onClose={() => setIsCraftingOpen(false)}
         character={character}
         characterColor={characterColor}
+      />
+
+      <ShopModal
+        isOpen={isShopOpen}
+        onClose={() => setIsShopOpen(false)}
+        shops={locationShops}
       />
     </div>
   );
