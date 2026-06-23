@@ -18,6 +18,12 @@ vi.mock('../inventory/ItemModal', () => ({
     isOpen ? <div data-testid="item-modal">{item?.name}</div> : null,
 }));
 
+// Buyer gold comes from useGiveGold; default plenty, overridable per test.
+let myGold = 100;
+vi.mock('../../hooks/useGiveGold', () => ({
+  useGiveGold: () => ({ myGold, give: vi.fn() }),
+}));
+
 const shops = [
   { id: 'bottled-solutions', title: 'Bottled Solutions', summary: 'A cluttered alchemist.' },
   { id: 'curious-goblin', title: 'The Curious Goblin', summary: 'A bookshop.' },
@@ -46,6 +52,17 @@ const renderModal = (props = {}) =>
     />
   );
 
+// Draggable ware tiles open the detail modal on tap or keyboard activation
+// (Enter/Space). The pointer-drag gesture itself is pointer-only and covered by
+// e2e; here we exercise the same onTap via the keyboard path.
+const activateTile = (el) => fireEvent.keyDown(el, { key: 'Enter' });
+
+const openBottledSolutions = () => fireEvent.click(screen.getByText('Bottled Solutions'));
+
+beforeEach(() => {
+  myGold = 100;
+});
+
 describe('ShopModal', () => {
   it('renders nothing when closed', () => {
     renderModal({ isOpen: false });
@@ -66,13 +83,12 @@ describe('ShopModal', () => {
 
   it('lists the shop wares with resolved price (override + catalog) and stock', () => {
     renderModal();
-    fireEvent.click(screen.getByText('Bottled Solutions'));
+    openBottledSolutions();
     expect(screen.getByTestId('shop-window-bottled-solutions')).toBeInTheDocument();
-    expect(screen.getByText('Antidote')).toBeInTheDocument();
-    expect(screen.getByText('8 gp')).toBeInTheDocument();   // override
-    expect(screen.getByText('Spellbook')).toBeInTheDocument();
-    expect(screen.getByText('10 gp')).toBeInTheDocument();  // catalog fallback
-    expect(screen.getByText('2 in stock')).toBeInTheDocument();
+    expect(screen.getByTestId('ware-antidote')).toHaveTextContent('Antidote');
+    expect(screen.getByTestId('ware-antidote')).toHaveTextContent('8 gp');   // override
+    expect(screen.getByTestId('ware-spellbook')).toHaveTextContent('10 gp'); // catalog
+    expect(screen.getByTestId('ware-spellbook')).toHaveTextContent('2 in stock');
   });
 
   it('shows an empty-wares state for a shop with nothing for sale', () => {
@@ -81,13 +97,66 @@ describe('ShopModal', () => {
     expect(screen.getByText('This shop has nothing for sale right now.')).toBeInTheDocument();
   });
 
-  it('opens the item detail (ItemModal) when a ware is clicked', () => {
+  it('opens the item detail (ItemModal) when a ware is activated', () => {
     renderModal();
-    fireEvent.click(screen.getByText('Bottled Solutions'));
-    fireEvent.click(screen.getByText('Antidote'));
+    openBottledSolutions();
+    activateTile(screen.getByTestId('ware-antidote'));
     const detail = screen.getByTestId('item-modal');
     expect(detail).toBeInTheDocument();
     expect(detail).toHaveTextContent('Antidote');
+  });
+
+  describe('cart', () => {
+    it('starts empty with a disabled Confirm', () => {
+      renderModal();
+      openBottledSolutions();
+      expect(screen.getByText(/Drag items here/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Confirm purchase' })).toBeDisabled();
+    });
+
+    it('adds a ware to the cart via the Add button and totals it', () => {
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      expect(screen.getByLabelText('quantity antidote')).toHaveTextContent('1');
+      expect(screen.getByTestId('cart-total')).toHaveTextContent('8 gp');
+    });
+
+    it('increments the same ware instead of duplicating the line', () => {
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      expect(screen.getByLabelText('quantity antidote')).toHaveTextContent('2');
+      expect(screen.getByTestId('cart-total')).toHaveTextContent('16 gp');
+    });
+
+    it('enables Confirm when affordable', () => {
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      expect(screen.getByRole('button', { name: 'Confirm purchase' })).not.toBeDisabled();
+    });
+
+    it('blocks Confirm and warns when the cart exceeds the buyer gold', () => {
+      myGold = 5;
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote')); // 8 gp > 5
+      expect(screen.getByText('Not enough gold.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Confirm purchase' })).toBeDisabled();
+    });
+
+    it('clears the cart when switching shops', () => {
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      expect(screen.getByLabelText('quantity antidote')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('← All shops'));
+      openBottledSolutions();
+      expect(screen.queryByLabelText('quantity antidote')).not.toBeInTheDocument();
+      expect(screen.getByText(/Drag items here/)).toBeInTheDocument();
+    });
   });
 
   it('returns to the carousel from the shop window', () => {
