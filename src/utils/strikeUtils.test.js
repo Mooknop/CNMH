@@ -333,6 +333,8 @@ describe('chambered weapon gate (#672, S2)', () => {
     expect(ranged.active).toBe(true);
     expect(ranged.chambersLoaded).toBe(1);
     expect(ranged.loaded).toBe(true);
+    // Carries the inventory uid so the fire resolver can reach the overlay (#676).
+    expect(ranged.weaponUid).toBe('e-crescent');
   });
 
   test('the melee Blade is unaffected by chambers — active when held, no capacity fields', () => {

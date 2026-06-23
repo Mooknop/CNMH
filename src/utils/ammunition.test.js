@@ -15,6 +15,7 @@ import {
   firstLoadedChamber,
   nextEmptyChamber,
   pointerChamber,
+  fireChamberState,
 } from './ammunition';
 
 // The Crescent Cross ranged strike, as it will look after the S1 content edit:
@@ -251,5 +252,33 @@ describe('chamber selectors', () => {
   it('pointerChamber returns the ammo under the pointer, else null', () => {
     expect(pointerChamber(state)).toMatchObject({ default: true });
     expect(pointerChamber({ chambers: [null, null], pointer: 0 })).toBeNull();
+  });
+});
+
+describe('fireChamberState', () => {
+  it('empties the fired chamber and advances the pointer past it', () => {
+    const state = { chambers: [{ name: 'Bolt' }, { name: 'Beacon Shot' }, null], pointer: 0 };
+    const after = fireChamberState(state, 0, 3);
+    expect(after.chambers[0]).toBeNull();
+    expect(after.chambers[1]).toMatchObject({ name: 'Beacon Shot' });
+    expect(after.pointer).toBe(1);
+  });
+
+  it('wraps the pointer when the last chamber is fired', () => {
+    const state = { chambers: [{ name: 'Bolt' }, { name: 'Bolt' }, { name: 'Bolt' }], pointer: 2 };
+    expect(fireChamberState(state, 2, 3).pointer).toBe(0);
+  });
+
+  it('is a normalized no-op for an out-of-range index', () => {
+    const state = { chambers: [{ name: 'Bolt' }, null, null], pointer: 0 };
+    const after = fireChamberState(state, 5, 3);
+    expect(after.chambers[0]).toMatchObject({ name: 'Bolt' });
+    expect(after.pointer).toBe(0);
+  });
+
+  it('does not mutate the input state', () => {
+    const state = { chambers: [{ name: 'Bolt' }], pointer: 0 };
+    fireChamberState(state, 0, 1);
+    expect(state.chambers[0]).toMatchObject({ name: 'Bolt' });
   });
 });
