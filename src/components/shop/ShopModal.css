@@ -71,3 +71,63 @@
   font-size: var(--text-sm);
   color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
+
+/* Wares list inside a shop window (#696 S4). */
+.shop-wares {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.shop-ware {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  cursor: pointer;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-surface, var(--shell-surface));
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.shop-ware:hover {
+  border-color: var(--theme-accent, var(--accent-bg));
+  background: var(--theme-surface-inset-hover, var(--shell-surface-hover));
+}
+
+.shop-ware-name {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--theme-text, var(--shell-text));
+}
+
+.shop-ware-meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.shop-ware-price {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--gold-mid, var(--theme-arcane));
+}
+
+.shop-ware-stock {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
