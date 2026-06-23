@@ -6,10 +6,20 @@
 //   night — activity name assigned to the extra 8h night block, or null (= rest)
 //
 // Period scoping: per-character downtime state (cnmh_downtime_<id>) is
-// { periodStartedAt, selected, ledger }. A "period" is the active block, keyed
-// by block.startedAt. State only counts toward the current period when its
-// periodStartedAt matches — so stale state from a prior period reads as empty
-// (a lazy, declarative reset). All writers must re-stamp via stampPeriod.
+// { periodStartedAt, plan, status, paired, selected, ledger }. A "period" is the
+// active block, keyed by block.startedAt. State only counts toward the current
+// period when its periodStartedAt matches — so stale state from a prior period
+// reads as empty (a lazy, declarative reset). All writers must re-stamp via
+// stampPeriod.
+//
+// Allocation model (Party Ledger): `plan` is the source of truth —
+//   { [activityName]: days }, e.g. { Research: 3, 'Earn Income': 2 }.
+// `status` is 'planning' | 'ready' (explicit lock-in); `paired` is a
+// { [activityName]: true } map of Follow-the-Expert links. To keep every
+// downstream reader working unchanged, `selected`/`ledger` are *derived* from
+// `plan` whenever a plan is present (a plan of `d` days for activity X becomes
+// `d` ledger entries of { day: X, night: null }). State written by the legacy
+// picker/commit-bar (no `plan`) keeps its explicit `selected`/`ledger` instead.
 
 // Period identity is compared by value, not reference: block.startedAt is the
 // gameDate object, which round-trips through JSON (WebSocket/localStorage) and
@@ -22,20 +32,86 @@ export function isCurrentPeriod(downtime, startedAt) {
   return periodKey(downtime.periodStartedAt) === periodKey(startedAt);
 }
 
-// Period-scoped view of the stored state: the stored selected/ledger when they
-// belong to the active period, otherwise empty (the prior period is forgotten).
+// Total days allocated across a plan.
+export function planDays(plan) {
+  return Object.values(plan || {}).reduce((sum, d) => sum + (Number(d) || 0), 0);
+}
+
+// The activities a plan is pursuing — the derived `selected` list (keys with
+// at least one day), in the plan's own key order.
+export function planSelected(plan) {
+  return Object.keys(plan || {}).filter((name) => (Number(plan[name]) || 0) > 0);
+}
+
+// Expands a plan into a ledger: `d` whole-day entries per activity ({ day, night:
+// null }), so the hours/rolls/days derivations read it identically to a committed
+// ledger. Order follows the plan's keys (the allocator builds them in canonical
+// activity order); ledger consumers count blocks, so order is not significant.
+export function planToLedger(plan) {
+  const ledger = [];
+  for (const name of Object.keys(plan || {})) {
+    const days = Math.max(0, Math.floor(Number(plan[name]) || 0));
+    for (let i = 0; i < days; i++) ledger.push({ day: name, night: null });
+  }
+  return ledger;
+}
+
+// Clamps a plan so its total never exceeds `budget`: floors and drops
+// non-positive day-counts, then greedily fills in key order, truncating the
+// entry that would overflow and dropping everything past the budget.
+export function clampPlan(plan, budget) {
+  const cap = Math.max(0, Math.floor(Number(budget) || 0));
+  const out = {};
+  let used = 0;
+  for (const [name, raw] of Object.entries(plan || {})) {
+    const want = Math.max(0, Math.floor(Number(raw) || 0));
+    if (want <= 0) continue;
+    const give = Math.min(want, cap - used);
+    if (give <= 0) continue;
+    out[name] = give;
+    used += give;
+  }
+  return out;
+}
+
+// Period-scoped view of the stored state. For the active period this returns the
+// full allocation view — { plan, status, paired, selected, ledger } — deriving
+// selected/ledger from the plan when one is present, else falling back to the
+// legacy explicit selected/ledger. A stale (prior-period) or unstamped state
+// reads as empty (the prior period is forgotten).
 export function periodState(downtime, startedAt) {
   if (isCurrentPeriod(downtime, startedAt)) {
-    return { selected: downtime.selected || [], ledger: downtime.ledger || [] };
+    const plan = downtime.plan || {};
+    const hasPlan = Object.keys(plan).length > 0;
+    return {
+      plan,
+      status: downtime.status || 'planning',
+      paired: downtime.paired || {},
+      selected: hasPlan ? planSelected(plan) : (downtime.selected || []),
+      ledger: hasPlan ? planToLedger(plan) : (downtime.ledger || []),
+    };
   }
-  return { selected: [], ledger: [] };
+  return { plan: {}, status: 'planning', paired: {}, selected: [], ledger: [] };
 }
 
 // Builds the next stored value for a write, stamping the active period and
 // starting from a fresh base whenever the prior state is from another period.
+// When the result carries a plan, selected/ledger are re-derived from it so the
+// stored value stays internally consistent for every reader; legacy writes (no
+// plan) keep their explicit selected/ledger.
 export function stampPeriod(downtime, startedAt, patch) {
   const base = periodState(downtime, startedAt);
-  return { ...base, ...patch, periodStartedAt: startedAt ?? null };
+  const merged = { ...base, ...patch };
+  const plan = merged.plan || {};
+  const hasPlan = Object.keys(plan).length > 0;
+  return {
+    periodStartedAt: startedAt ?? null,
+    plan,
+    status: merged.status || 'planning',
+    paired: merged.paired || {},
+    selected: hasPlan ? planSelected(plan) : (merged.selected || []),
+    ledger: hasPlan ? planToLedger(plan) : (merged.ledger || []),
+  };
 }
 
 // Returns the total number of 8h blocks assigned to a named activity.

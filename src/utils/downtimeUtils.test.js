@@ -8,6 +8,10 @@ import {
   isCurrentPeriod,
   periodState,
   stampPeriod,
+  planDays,
+  planSelected,
+  planToLedger,
+  clampPlan,
 } from './downtimeUtils';
 
 describe('downtimeUtils', () => {
@@ -198,29 +202,71 @@ describe('downtimeUtils', () => {
     });
 
     describe('periodState', () => {
-      it('returns the stored selected/ledger for the current period', () => {
+      it('returns the legacy stored selected/ledger for the current period', () => {
         expect(periodState(dt, 'P1')).toEqual({
+          plan: {},
+          status: 'planning',
+          paired: {},
           selected: ['Research'],
           ledger: [{ day: 'Research', night: null }],
         });
       });
 
       it('returns empty for a stale (prior-period) state', () => {
-        expect(periodState(dt, 'P2')).toEqual({ selected: [], ledger: [] });
+        expect(periodState(dt, 'P2')).toEqual({
+          plan: {}, status: 'planning', paired: {}, selected: [], ledger: [],
+        });
       });
 
       it('returns empty for null/unstamped state', () => {
-        expect(periodState(null, 'P1')).toEqual({ selected: [], ledger: [] });
+        expect(periodState(null, 'P1')).toEqual({
+          plan: {}, status: 'planning', paired: {}, selected: [], ledger: [],
+        });
         expect(periodState({ selected: ['X'], ledger: [{ day: 'X', night: null }] }, 'P1'))
-          .toEqual({ selected: [], ledger: [] });
+          .toEqual({ plan: {}, status: 'planning', paired: {}, selected: [], ledger: [] });
+      });
+
+      it('derives selected/ledger from a plan when present', () => {
+        const planned = {
+          periodStartedAt: 'P1',
+          plan: { Research: 2, 'Earn Income': 1 },
+          status: 'ready',
+          paired: { Research: true },
+        };
+        expect(periodState(planned, 'P1')).toEqual({
+          plan: { Research: 2, 'Earn Income': 1 },
+          status: 'ready',
+          paired: { Research: true },
+          selected: ['Research', 'Earn Income'],
+          ledger: [
+            { day: 'Research', night: null },
+            { day: 'Research', night: null },
+            { day: 'Earn Income', night: null },
+          ],
+        });
+      });
+
+      it('ignores stale legacy selected/ledger once a plan exists', () => {
+        const planned = {
+          periodStartedAt: 'P1',
+          plan: { Crafting: 1 },
+          selected: ['Research'],
+          ledger: [{ day: 'Research', night: null }],
+        };
+        const out = periodState(planned, 'P1');
+        expect(out.selected).toEqual(['Crafting']);
+        expect(out.ledger).toEqual([{ day: 'Crafting', night: null }]);
       });
     });
 
     describe('stampPeriod', () => {
-      it('merges the patch onto the current-period base and stamps startedAt', () => {
+      it('merges a legacy patch onto the current-period base and stamps startedAt', () => {
         const next = stampPeriod(dt, 'P1', { selected: ['Research', 'Crafting'] });
         expect(next).toEqual({
           periodStartedAt: 'P1',
+          plan: {},
+          status: 'planning',
+          paired: {},
           selected: ['Research', 'Crafting'],
           ledger: [{ day: 'Research', night: null }],
         });
@@ -230,6 +276,9 @@ describe('downtimeUtils', () => {
         const next = stampPeriod(dt, 'P2', { ledger: [{ day: 'Crafting', night: null }] });
         expect(next).toEqual({
           periodStartedAt: 'P2',
+          plan: {},
+          status: 'planning',
+          paired: {},
           selected: [],
           ledger: [{ day: 'Crafting', night: null }],
         });
@@ -238,9 +287,110 @@ describe('downtimeUtils', () => {
       it('stamps null when there is no active period', () => {
         expect(stampPeriod(null, null, { selected: ['X'] })).toEqual({
           periodStartedAt: null,
+          plan: {},
+          status: 'planning',
+          paired: {},
           selected: ['X'],
           ledger: [],
         });
+      });
+
+      it('re-derives selected/ledger from a plan patch', () => {
+        const next = stampPeriod(dt, 'P1', {
+          plan: { Research: 3 }, status: 'ready', paired: { Research: true },
+        });
+        expect(next).toEqual({
+          periodStartedAt: 'P1',
+          plan: { Research: 3 },
+          status: 'ready',
+          paired: { Research: true },
+          selected: ['Research'],
+          ledger: [
+            { day: 'Research', night: null },
+            { day: 'Research', night: null },
+            { day: 'Research', night: null },
+          ],
+        });
+      });
+
+      it('carries an existing plan from the base forward when the patch omits it', () => {
+        const planned = { periodStartedAt: 'P1', plan: { Crafting: 2 } };
+        const next = stampPeriod(planned, 'P1', { status: 'ready' });
+        expect(next.plan).toEqual({ Crafting: 2 });
+        expect(next.status).toBe('ready');
+        expect(next.ledger).toHaveLength(2);
+      });
+    });
+  });
+
+  describe('plan helpers', () => {
+    describe('planDays', () => {
+      it('sums allocated days', () => {
+        expect(planDays({ Research: 3, 'Earn Income': 2 })).toBe(5);
+      });
+      it('returns 0 for empty/null', () => {
+        expect(planDays({})).toBe(0);
+        expect(planDays(null)).toBe(0);
+        expect(planDays(undefined)).toBe(0);
+      });
+      it('ignores non-numeric values', () => {
+        expect(planDays({ Research: 2, Crafting: undefined })).toBe(2);
+      });
+    });
+
+    describe('planSelected', () => {
+      it('returns activities with at least one day, in key order', () => {
+        expect(planSelected({ Research: 2, Crafting: 0, 'Earn Income': 1 }))
+          .toEqual(['Research', 'Earn Income']);
+      });
+      it('returns [] for empty/null', () => {
+        expect(planSelected({})).toEqual([]);
+        expect(planSelected(null)).toEqual([]);
+      });
+    });
+
+    describe('planToLedger', () => {
+      it('expands each activity into day-only entries', () => {
+        expect(planToLedger({ Research: 2, 'Earn Income': 1 })).toEqual([
+          { day: 'Research', night: null },
+          { day: 'Research', night: null },
+          { day: 'Earn Income', night: null },
+        ]);
+      });
+      it('drops zero/negative day-counts and floors fractions', () => {
+        expect(planToLedger({ Research: 0, Crafting: -1, Retrain: 2.9 })).toEqual([
+          { day: 'Retrain', night: null },
+          { day: 'Retrain', night: null },
+        ]);
+      });
+      it('returns [] for empty/null', () => {
+        expect(planToLedger({})).toEqual([]);
+        expect(planToLedger(null)).toEqual([]);
+      });
+      it('round-trips through the hours/rolls/days derivations', () => {
+        const ledger = planToLedger({ Research: 3, 'Earn Income': 2 });
+        expect(getHoursForActivity(ledger, 'Research')).toBe(24);
+        expect(getRollsForActivity(ledger, 'Earn Income')).toBe(2);
+        expect(getDaysCommitted(ledger)).toBe(5);
+      });
+    });
+
+    describe('clampPlan', () => {
+      it('leaves a plan within budget untouched', () => {
+        expect(clampPlan({ Research: 3, 'Earn Income': 2 }, 7))
+          .toEqual({ Research: 3, 'Earn Income': 2 });
+      });
+      it('greedily truncates the overflowing entry and drops the rest', () => {
+        expect(clampPlan({ Research: 5, Crafting: 4, Retrain: 1 }, 7))
+          .toEqual({ Research: 5, Crafting: 2 });
+      });
+      it('floors fractions and drops non-positive counts', () => {
+        expect(clampPlan({ Research: 2.8, Crafting: 0, Retrain: -3 }, 7))
+          .toEqual({ Research: 2 });
+      });
+      it('returns {} for a zero/falsy budget', () => {
+        expect(clampPlan({ Research: 3 }, 0)).toEqual({});
+        expect(clampPlan({ Research: 3 }, null)).toEqual({});
       });
     });
   });
