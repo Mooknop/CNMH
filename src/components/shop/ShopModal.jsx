@@ -5,7 +5,7 @@ import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import { itemCatalogMap } from '../../utils/contentUtils';
 import { resolveShopWares } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine } from '../../utils/shopCart';
-import { useGiveGold } from '../../hooks/useGiveGold';
+import { useBuyItems } from '../../hooks/useBuyItems';
 import ShopCart from './ShopCart';
 import './ShopModal.css';
 
@@ -35,21 +35,24 @@ const WareTile = ({ ware, onInspect }) => {
 // window listing wares with a drag-to-cart buy basket. `shops` is the resolved
 // list of shop lore entries; `waresStore` is the raw cnmh_shops_global. Clicking
 // a ware opens the read-only inventory ItemModal. The cart is local state; the
-// purchase itself (gold debit + acquired credit) is wired in S6 via onConfirm.
+// purchase itself (gold debit + acquired credit, #696 S6) runs through
+// useBuyItems on Confirm, leaving a receipt behind.
 const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, characterColor }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
   const [cart, setCart] = useState([]);
+  const [receipt, setReceipt] = useState(null);
 
-  const { myGold } = useGiveGold(character?.id);
+  const { myGold, buy } = useBuyItems(character?.id);
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
 
-  // Always reopen on the carousel with an empty cart.
+  // Always reopen on the carousel with an empty cart and no stale receipt.
   useEffect(() => {
     if (isOpen) {
       setSelectedId(null);
       setDetailItem(null);
       setCart([]);
+      setReceipt(null);
     }
   }, [isOpen]);
 
@@ -64,12 +67,29 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, chara
   const openShop = (id) => {
     setSelectedId(id);
     setCart([]);
+    setReceipt(null);
   };
 
-  const addWare = (ware) => setCart((c) => addToCart(c, ware));
+  const addWare = (ware) => {
+    setCart((c) => addToCart(c, ware));
+    setReceipt(null);
+  };
 
-  // S6 fills this in (debit gold + credit acquired + log). No-op for now.
-  const handleConfirm = () => {};
+  // Commit the cart: credit each line's full resolved ware (× qty) to the
+  // buyer's acquired overlay and debit the total from their gold. On success the
+  // cart clears and a receipt is shown; a rejected buy (over balance / offline)
+  // leaves everything as-is.
+  const handleConfirm = () => {
+    const wareById = new Map(wares.map((w) => [w.id, w]));
+    const purchases = cart
+      .map((l) => ({ item: wareById.get(l.id), qty: l.qty }))
+      .filter((p) => p.item);
+    const result = buy(purchases, selected?.title);
+    if (result) {
+      setCart([]);
+      setReceipt(result);
+    }
+  };
 
   return (
     <Modal
@@ -102,6 +122,12 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, chara
             ← All shops
           </button>
           {selected.summary && <p className="shop-window-summary">{selected.summary}</p>}
+
+          {receipt && (
+            <p className="shop-receipt" role="status" data-testid="shop-receipt">
+              Purchased {receipt.count} item{receipt.count === 1 ? '' : 's'} for {receipt.total} gp.
+            </p>
+          )}
 
           {wares.length === 0 ? (
             <p className="shop-empty">This shop has nothing for sale right now.</p>

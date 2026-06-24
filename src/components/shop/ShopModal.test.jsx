@@ -18,10 +18,12 @@ vi.mock('../inventory/ItemModal', () => ({
     isOpen ? <div data-testid="item-modal">{item?.name}</div> : null,
 }));
 
-// Buyer gold comes from useGiveGold; default plenty, overridable per test.
+// Buyer gold + purchase commit come from useBuyItems; gold defaults plenty,
+// overridable per test. `buy` is a spy that returns a receipt unless overridden.
 let myGold = 100;
-vi.mock('../../hooks/useGiveGold', () => ({
-  useGiveGold: () => ({ myGold, give: vi.fn() }),
+let mockBuy = vi.fn(() => ({ total: 8, count: 1 }));
+vi.mock('../../hooks/useBuyItems', () => ({
+  useBuyItems: () => ({ myGold, buy: mockBuy }),
 }));
 
 const shops = [
@@ -61,6 +63,7 @@ const openBottledSolutions = () => fireEvent.click(screen.getByText('Bottled Sol
 
 beforeEach(() => {
   myGold = 100;
+  mockBuy = vi.fn(() => ({ total: 8, count: 1 }));
 });
 
 describe('ShopModal', () => {
@@ -156,6 +159,50 @@ describe('ShopModal', () => {
       openBottledSolutions();
       expect(screen.queryByLabelText('quantity antidote')).not.toBeInTheDocument();
       expect(screen.getByText(/Drag items here/)).toBeInTheDocument();
+    });
+  });
+
+  describe('confirm purchase', () => {
+    it('commits the full resolved wares (× qty) with the shop name', () => {
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm purchase' }));
+      expect(mockBuy).toHaveBeenCalledWith(
+        [{ item: expect.objectContaining({ id: 'antidote', price: 8 }), qty: 2 }],
+        'Bottled Solutions',
+      );
+    });
+
+    it('clears the cart and shows a receipt on success', () => {
+      mockBuy = vi.fn(() => ({ total: 16, count: 2 }));
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm purchase' }));
+      expect(screen.queryByLabelText('quantity antidote')).not.toBeInTheDocument();
+      expect(screen.getByTestId('shop-receipt')).toHaveTextContent('Purchased 2 items for 16 gp.');
+    });
+
+    it('keeps the cart and shows no receipt when the buy is rejected', () => {
+      mockBuy = vi.fn(() => null);
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm purchase' }));
+      expect(screen.getByLabelText('quantity antidote')).toBeInTheDocument();
+      expect(screen.queryByTestId('shop-receipt')).not.toBeInTheDocument();
+    });
+
+    it('dismisses a prior receipt when a new ware is added', () => {
+      renderModal();
+      openBottledSolutions();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm purchase' }));
+      expect(screen.getByTestId('shop-receipt')).toBeInTheDocument();
+      fireEvent.click(screen.getByLabelText('add antidote'));
+      expect(screen.queryByTestId('shop-receipt')).not.toBeInTheDocument();
     });
   });
 
