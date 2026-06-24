@@ -3,9 +3,9 @@ import { renderHook, act } from '@testing-library/react';
 let mockSession;
 vi.mock('../contexts/SessionContext', () => ({
   useSession: () => mockSession,
-  // Mirror the real allowlist: inventory-organization types stay writable in
-  // the offline sandbox.
-  isSandboxWritable: (t) => t === 'loadout' || t === 'invested',
+  // Mirror the real allowlist: GM-authored `_global` state and inventory-
+  // organization types stay writable in the offline sandbox.
+  isSandboxWritable: (t, id) => id === 'global' || t === 'loadout' || t === 'invested',
 }));
 
 import { useSyncedState } from './useSyncedState';
@@ -90,6 +90,17 @@ describe('useSyncedState', () => {
     act(() => { result.current[1]('b'); });
     expect(result.current[0]).toBe('b');
     expect(JSON.parse(localStorage.getItem('some_ui_pref'))).toBe('b');
+  });
+
+  it('keeps GM-authored global writes interactive in the sandbox (always-on GM edits)', () => {
+    mockSession = { ...noopSession(), connected: true, foundryConnected: false };
+    const { result } = renderHook(() => useSyncedState('cnmh_shops_global', {}));
+    act(() => { result.current[1]({ 'red-dog-smithy': { wares: [{ ref: 'slick' }] } }); });
+    // GM world-setup persists and syncs even while Foundry is down.
+    expect(result.current[0]).toEqual({ 'red-dog-smithy': { wares: [{ ref: 'slick' }] } });
+    expect(mockSession.sendUpdate).toHaveBeenCalledWith(
+      'global', 'shops', { 'red-dog-smithy': { wares: [{ ref: 'slick' }] } }
+    );
   });
 
   it('keeps inventory-organization writes interactive in the sandbox (#554)', () => {

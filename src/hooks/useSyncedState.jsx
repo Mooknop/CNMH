@@ -70,10 +70,10 @@ export const useSyncedState = (key, initialValue) => {
     // Offline sandbox (#553): when the DO is up but Foundry isn't, synced
     // (campaign) writes are inert — no local value change, no localStorage, no
     // sync — so the UI freezes at the last-synced state and nothing gets
-    // consumed. Exceptions: local-only keys (no character match) and inventory-
-    // organization writes (loadout / invested), which a player may always manage
-    // offline (#554).
-    if (synced && connected && !foundryConnected && !isSandboxWritable(stateType)) return;
+    // consumed. Exceptions: local-only keys (no character match), GM-authored
+    // `_global` campaign state, and inventory-organization writes (loadout /
+    // invested) — see isSandboxWritable.
+    if (synced && connected && !foundryConnected && !isSandboxWritable(stateType, characterId)) return;
     const next = typeof updater === 'function' ? updater(latest.current) : updater;
     latest.current = next;
     setValue(next);
