@@ -29,17 +29,6 @@
   border-color: var(--color-theme, var(--theme-accent));
 }
 
-/* "Waiting for the party" hint under the Activity picker. */
-.et-waiting {
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-style: italic;
-  color: var(--theme-text-secondary, var(--shell-text-secondary));
-  text-align: center;
-  margin: 0;
-  padding: var(--space-2) var(--space-4) 0;
-}
-
 /* Movement-disabled placeholder (GM toggle off or door auto-off) */
 .et-move-disabled {
   display: flex;

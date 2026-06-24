@@ -6,6 +6,7 @@ import { useExplorationEffect } from '../../hooks/useExplorationEffect';
 import { useTake10 } from '../../hooks/useTake10';
 import { EXPLORATION_ACTIVITIES } from '../../data/explorationActivities';
 import ExplorationList from './ExplorationList';
+import ExplorationPartyBoard from './ExplorationPartyBoard';
 import ExplorationMove from './ExplorationMove';
 import ExplorationDoors from './ExplorationDoors';
 import Take10Prompt from './Take10Prompt';
@@ -93,10 +94,8 @@ const ExplorationTab = ({ character, characterColor }) => {
 
       {showActivity ? (
         <>
+          <ExplorationPartyBoard character={character} />
           <ExplorationList character={character} characterColor={characterColor} />
-          {!ready && (
-            <p className="et-waiting">Waiting for the party to choose activities…</p>
-          )}
         </>
       ) : (
         movementAllowed ? (
