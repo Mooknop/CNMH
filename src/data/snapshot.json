@@ -7793,6 +7793,27 @@
       "description": "A compact mat, not too comfy but suitable for long journeys."
     },
     {
+      "id": "blade-byrnie",
+      "name": "Blade Byrnie",
+      "price": 360,
+      "weight": 1,
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "description": "Instead of chain links, this +1 chain shirt is assembled from metal \"leaves\" that each resemble a small blade.\n\nUpgrading the runes on the blade byrnie makes the daggers pulled from it more powerful. The daggers have a +2 weapon potency rune if the armor has a +2 armor potency rune, or a +3 weapon potency rune if the armor has a +3 armor potency rune.",
+      "actions": [
+        {
+          "name": "Draw a Blade",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Effect You pull a link from the armor, which transforms into a +1 striking dagger. The dagger disappears and reappears as a link in the armor after you Strike with it, or at the end of this turn if you don't make a Strike. You can Activate the blade byrnie in place of an Interact action to draw a weapon for abilities such as the Quick Draw feat."
+        }
+      ]
+    },
+    {
       "id": "chalk",
       "name": "Chalk",
       "price": 0.001,
@@ -7856,6 +7877,32 @@
             "Melee",
             "Parry"
           ]
+        }
+      ]
+    },
+    {
+      "id": "dragon-turtle-plate",
+      "name": "Dragon Turtle Plate",
+      "price": 700,
+      "weight": 3,
+      "traits": [
+        "Aquadynamic",
+        "Invested",
+        "Magical"
+      ],
+      "speedPenalty": [
+        10,
+        5
+      ],
+      "description": "This harness of +1 resilient half plate is made from the shell plates of a dragon turtle and has the aquadynamic trait. To those who can craft with them, the dense organic plates on the dragon turtle's body are as valuable as the creature's hoard of gold.",
+      "reactions": [
+        {
+          "name": "Roll the Plates",
+          "traits": [
+            "Manipulate"
+          ],
+          "trigger": "A creature adjacent to you targets you with a melee attack.",
+          "description": "You roll the hefty plates of the dragon turtle armor toward the attacker to gain a +1 circumstance bonus to AC against the triggering attack."
         }
       ]
     },
@@ -8166,6 +8213,28 @@
         "Mutagen"
       ],
       "description": "Your skin grows scales like a drake, and your eyesight become sharp and your pupils slitted, but your mind and reflexes slow. You gain a +5 Item bonus to AC, a Dexterity cap of +2 (as usual, use your lowest Dexterity cap if you have more than one), and a +2 item bonus to Perception checks. If you're wearing armor, you still calculate your proficiency bonus to AC based on your proficiency in the armor you're wearing, even if the drakeheart mutagen has a higher item bonus. While under its effects, you take a –1 penalty to Will saves, Reflex saves, and all skill checks to Recall Knowledge. As a single action, you can burn through the remaining duration of the Mutagen to stride twice."
+    },
+    {
+      "id": "moonlit-chain",
+      "name": "Moonlit Chain",
+      "price": 360,
+      "weight": 1,
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "material": "Silver",
+      "description": "This +1 silver chain shirt has a collar adorned with stitched images of the phases of the moon. You can see in moonlight as though you had low-light vision.",
+      "actions": [
+        {
+          "name": "Dim Sight",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Effect You touch the stitched image of the new moon on the armor's collar and suppress the dazzled condition for 1 minute."
+        }
+      ]
     },
     {
       "id": "mothers-amulet",
@@ -8774,6 +8843,28 @@
       "price": 0.05,
       "weight": 0.1,
       "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+    },
+    {
+      "id": "wisp-chain",
+      "name": "Wisp Chain",
+      "price": 685,
+      "weight": 0,
+      "traits": [
+        "Air",
+        "Invested",
+        "Magical"
+      ],
+      "description": "This +1 resilient chain shirt is made of small, interlocking currents of wind carefully woven together. While the links of air don't jingle against each other like chain links might, the tiny cyclones nevertheless create a blustering howl akin to standing at the center of a storm. A creature that ends its turn adjacent to you must attempt a DC 23 Fortitude save. On a failure, it becomes deafened until it moves away from you.",
+      "actions": [
+        {
+          "name": "Slicing Links",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Frequency once per day; Effect You unbind the currents that form your armor and release them as cutting whorls of air that slice into creatures in a 60-foot cone. Creatures in the area take 6d6 slashing damage with a DC 25 basic Fortitude save. A creature that fails its save is also pushed 10 feet (or 20 feet on a critical failure). You lose the AC bonus of your armor until the end of your turn, when the air currents reform the wisp chain around you."
+        }
+      ]
     },
     {
       "id": "wolf-fang",
