@@ -1,12 +1,13 @@
 import { useContext, useEffect, useState } from 'react';
 import { CharacterContext } from '../contexts/CharacterContext';
 import { useSession } from '../contexts/SessionContext';
-import { getDaysCommitted, periodState } from '../utils/downtimeUtils';
+import { periodState } from '../utils/downtimeUtils';
 
-// Derives how many party PCs have committed all their granted downtime days.
-// Mirrors useExplorationReady: subscribes to each PC's cnmh_downtime_<id> key
-// so callers rerender on any commit. Only days committed in the active period
-// (matching startedAt) count — a prior period's ledger reads as empty.
+// Derives how many party PCs have locked in their downtime plan. Mirrors
+// useExplorationReady: subscribes to each PC's cnmh_downtime_<id> key so callers
+// rerender on any change. "Ready" is the explicit Party-Ledger lock-in
+// (status === 'ready') in the active period — a prior period's stamp reads as
+// 'planning'. A craft project awaiting its finish decision still holds its owner.
 //
 // Returns { readyCount, total, allReady }.
 export function useDowntimePartyReady(blockDays, startedAt) {
@@ -31,17 +32,16 @@ export function useDowntimePartyReady(blockDays, startedAt) {
   }, [idKey, subscribe]);
 
   // Guard: a zero/null blockDays means no active block — nobody is "ready".
-  // Without this, getDaysCommitted(ledger) >= 0 is trivially true for everyone.
   const days = blockDays != null && blockDays > 0 ? blockDays : null;
   const total = ids.length;
   const readyCount = days == null ? 0 : ids.filter((id) => {
     const dt = getState(id, 'downtime');
-    const daysDone = getDaysCommitted(periodState(dt, startedAt).ledger) >= days;
+    const locked = periodState(dt, startedAt).status === 'ready';
     // A project awaiting its finish decision holds the party — the player must
     // choose to complete or keep working before time advances.
     const cp = getState(id, 'craftprojects');
     const awaiting = (cp?.projects || []).some((p) => p.status === 'awaiting-decision');
-    return daysDone && !awaiting;
+    return locked && !awaiting;
   }).length;
 
   return { readyCount, total, allReady: days != null && total > 0 && readyCount === total };

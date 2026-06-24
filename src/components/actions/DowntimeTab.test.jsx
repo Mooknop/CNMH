@@ -34,6 +34,12 @@ vi.mock('./DowntimeAllocator', () => ({
   }
 }));
 
+vi.mock('./DowntimePartyLedger', () => ({
+  default: function DummyDowntimePartyLedger({ character: c, block }) {
+    return <div data-testid="downtime-party-ledger" data-charid={c?.id} data-days={block?.days} />;
+  }
+}));
+
 vi.mock('./EarnIncomeResolver', () => ({
   default: function DummyEarnIncomeResolver({ character: c }) {
     return <div data-testid="earn-income-resolver" data-charid={c?.id} />;

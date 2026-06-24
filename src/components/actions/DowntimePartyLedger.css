@@ -1,0 +1,112 @@
+/* Downtime Party Ledger — presence rail + per-PC ribbon schedule + legend.
+   Ported from the Party Ledger design (reference/downtime.css), prefixed `dpl-`
+   and routed through app tokens. Per-row `--c` is that PC's accent. */
+
+.dpl { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* ── presence rail ── */
+.dpl-presence { display: flex; align-items: center; gap: 9px; }
+.dpl-rail { display: flex; gap: 7px; flex: 1; flex-wrap: wrap; }
+.dpl-avatar {
+  position: relative; width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  color: color-mix(in srgb, var(--c) 70%, #fff 30%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 30%, #14110e), #100d0b);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.dpl-avatar.is-you {
+  box-shadow: inset 0 0 0 2px var(--c), 0 0 0 2px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.dpl-status {
+  position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px;
+  border-radius: 50%; border: 2px solid var(--theme-bg, var(--shell-bg, #12100e));
+}
+.dpl-status.ready { background: var(--verdant-mid, #4caf6a); box-shadow: 0 0 6px var(--verdant-mid, #4caf6a); }
+.dpl-status.planning { background: var(--gold-mid); animation: dpl-pulse 1.8s ease-in-out infinite; }
+@keyframes dpl-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.dpl-count { flex-shrink: 0; text-align: right; line-height: 1.15; }
+.dpl-count-n { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--theme-text, var(--shell-text)); }
+.dpl-count-n b { color: var(--verdant-mid, #4caf6a); }
+.dpl-count-l { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-text-secondary, var(--shell-text-secondary)); }
+
+/* ── ledger ── */
+.dpl-ledger-head { display: flex; align-items: baseline; justify-content: space-between; padding: 0 2px 8px; }
+.dpl-ttl {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+.dpl-hint { font-size: 11px; color: var(--text-faint, var(--theme-text-secondary)); font-style: italic; font-family: var(--font-body); }
+
+/* day ruler — aligned to the ribbon column (86px name gutter + 10px gap) */
+.dpl-ruler { display: flex; gap: 3px; padding: 0 0 5px; margin-left: 96px; }
+.dpl-tick {
+  flex: 1; text-align: center; font-size: 8px; letter-spacing: 0.04em;
+  color: var(--text-faint, var(--theme-text-secondary)); font-variant-numeric: tabular-nums;
+}
+
+.dpl-rows { display: flex; flex-direction: column; gap: 7px; }
+.dpl-row {
+  display: grid; grid-template-columns: 86px 1fr; align-items: center; gap: 10px;
+  padding: 7px 9px; border-radius: var(--radius-lg, 10px);
+  background: var(--surface-card, var(--shell-surface)); border: 1px solid var(--border, var(--shell-border));
+}
+.dpl-row.is-you {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 12%, var(--surface-card, var(--shell-surface))), var(--surface-card, var(--shell-surface)));
+  border-color: color-mix(in srgb, var(--c) 45%, var(--border, var(--shell-border)));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 22%, transparent), var(--shadow-md);
+}
+.dpl-who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dpl-mono {
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: color-mix(in srgb, var(--c) 75%, #fff 25%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 28%, #14110e), #100d0b);
+  box-shadow: inset 0 0 0 1.2px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.dpl-id { min-width: 0; line-height: 1.12; }
+.dpl-name {
+  font-size: 12px; font-weight: 600; color: var(--theme-text, var(--shell-text));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dpl-you-tag {
+  font-family: var(--font-ui); font-size: 8px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--c); filter: brightness(1.2); margin-left: 5px; text-transform: uppercase;
+}
+.dpl-meta { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint, var(--theme-text-secondary)); }
+
+/* ribbon */
+.dpl-ribbon { display: flex; gap: 3px; height: 30px; }
+.dpl-row.is-you .dpl-ribbon { height: 34px; }
+.dpl-seg {
+  position: relative; min-width: 0; border-radius: 3px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+.dpl-seg.free { background: var(--act-free); box-shadow: inset 0 0 0 1px var(--border, var(--shell-border)); }
+.dpl-seg.assigned::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.18));
+}
+.dpl-seg-lbl {
+  position: relative; z-index: 1; font-size: 8.5px; font-weight: 700; letter-spacing: 0.03em;
+  color: rgba(10, 8, 6, 0.82); white-space: nowrap; padding: 0 4px; text-overflow: ellipsis; overflow: hidden;
+}
+.dpl-seg-days { position: relative; z-index: 1; font-size: 8px; font-weight: 700; color: rgba(10, 8, 6, 0.6); margin-left: 3px; font-variant-numeric: tabular-nums; }
+.dpl-seg-days--solo { margin-left: 0; color: rgba(10, 8, 6, 0.7); }
+.dpl-seg.paired { box-shadow: inset 0 0 0 1.5px var(--gold-light), inset 0 1px 0 rgba(255, 255, 255, 0.2); }
+.dpl-seg-mark {
+  position: absolute; top: 1px; right: 2px; z-index: 2; font-size: 8px;
+  color: var(--gold-light); text-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+/* ── legend ── */
+.dpl-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 2px 2px 0; }
+.dpl-legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--theme-text-secondary, var(--shell-text-secondary)); }
+.dpl-legend-sw { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dpl-status.planning { animation: none; }
+}
