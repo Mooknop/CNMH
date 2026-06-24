@@ -7671,6 +7671,17 @@
       }
     },
     {
+      "id": "aim-aiding",
+      "name": "Aim-Aiding",
+      "price": 225,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "Armor etched with this rune aids in routing ranged attacks aimed at an enemy around you. You don't provide enemies cover against your allies' ranged attacks."
+    },
+    {
       "id": "anticorrosion-oil",
       "name": "Anticorrosion Oil",
       "consumable": {
@@ -7750,6 +7761,17 @@
           "effect": "You gain a +3 item bonus to Fortitude saving throws against diseases."
         }
       ]
+    },
+    {
+      "id": "armor-potency",
+      "name": "Armor Potency (+1)",
+      "price": 160,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "An armor potency rune grants a +1 item bonus to AC and adds one property rune slot to the armor."
     },
     {
       "id": "backpack",
@@ -7905,6 +7927,22 @@
           "description": "You roll the hefty plates of the dragon turtle armor toward the attacker to gain a +1 circumstance bonus to AC against the triggering attack."
         }
       ]
+    },
+    {
+      "id": "dread",
+      "name": "Dread (Lesser)",
+      "price": 225,
+      "weight": 0,
+      "traits": [
+        "Uncommon",
+        "Emotion",
+        "Fear",
+        "Magical",
+        "Mental",
+        "Visual"
+      ],
+      "armorRune": true,
+      "description": "Eerie symbols cover your armor, inspiring terror in your foes. Frightened enemies within 30 feet that can see you must attempt a DC 20 Will save at the end of their turn; on a failure, the value of their frightened condition doesn't decrease below 1 that turn."
     },
     {
       "id": "eagle-eye-elixir",
@@ -8317,11 +8355,43 @@
       "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour."
     },
     {
+      "id": "quenching",
+      "name": "Quenching",
+      "price": 250,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "This rune counters burning and corrosive agents. Armor with this rune reduces the DC of the flat check to end persistent acid or fire damage affecting you from 15 to 12 (7 with particularly effective assistance)."
+    },
+    {
       "id": "rations",
       "name": "Rations",
       "price": 0.04,
       "weight": 0.1,
       "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+    },
+    {
+      "id": "ready",
+      "name": "Ready",
+      "price": 200,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "A ready rune lets you don or remove the etched armor in only a few seconds rather than minutes.",
+      "actions": [
+        {
+          "name": "Don or Remove Armor",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Effect You don or remove the armor."
+        }
+      ]
     },
     {
       "id": "reinforced-tower-shield",
@@ -8336,6 +8406,17 @@
         "bonus": 2,
         "speedPenalty": 5
       }
+    },
+    {
+      "id": "resilient",
+      "name": "Resilient (+1)",
+      "price": 340,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "A resilient rune grants a +1 item bonus to saving throws."
     },
     {
       "id": "rope-50ft",
@@ -8528,6 +8609,17 @@
       }
     },
     {
+      "id": "shadow",
+      "name": "Shadow",
+      "price": 55,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "Shadow runes make armor lighter and softer. While wearing the etched armor, you gain a +1 item bonus to Stealth checks."
+    },
+    {
       "id": "shark-tooth-charm",
       "name": "Shark Tooth Charm",
       "price": 23,
@@ -8602,6 +8694,17 @@
         "weight": 0,
         "description": "A skull-topped metal shrieking key appears to be a skeleton key, useful in place of thieves' tools when attempting to Pick a Lock. A shrieking key has no activation, however. When you use it to Pick a Lock, the key emits a loud shriek audible for 500 feet despite ambient noise. Physical barriers still block or muffle the shriek as normal. You also take a –2 circumstance penalty to the Thievery check rather than enjoying a bonus. After you attempt such a check with the key the first time, it magically attaches to you, returning to your possession if discarded. To use another device to Pick a Lock, you must first succeed at a DC 20 Will save."
       }
+    },
+    {
+      "id": "slick",
+      "name": "Slick",
+      "price": 45,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "The defenses provided by this rune make it harder for foes to grab you. While wearing the etched armor, you gain a +1 item bonus to Acrobatics checks to Escape and to Squeeze."
     },
     {
       "id": "soap",
@@ -8690,6 +8793,39 @@
       "price": 3,
       "weight": 1,
       "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection."
+    },
+    {
+      "id": "swallow-spike",
+      "name": "Swallow-Spike",
+      "price": 200,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "armorRune": true,
+      "description": "Your armor responds to your desire to break free of a creature grabbing you by growing spikes. Attacks made by armor with the swallow-spike rune apply the multiple attack penalty as if you had made them with another weapon.",
+      "reactions": [
+        {
+          "name": "Grow Spikes",
+          "traits": [
+            "Attack",
+            "Concentrate"
+          ],
+          "trigger": "You become grabbed, restrained, or otherwise held immobilized in a creature's grasp, such as by being engulfed or swallowed.",
+          "description": "Your armor suddenly grows spikes, attacking the triggering creature. The armor makes a melee attack with an attack modifier of +14 that deals 2d6 piercing damage. If the creature is swallowing or engulfing you, the attack deals an additional 1d6 damage, and damage from this attack can cut you free if it equals or exceeds the Rupture value of the immobilizing ability. This attack gets an item bonus to the attack roll equal to the armor's item bonus to your AC and an item bonus to damage equal to double that amount."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Renewed Assault",
+          "actionCount": 1,
+          "traits": [
+            "Attack",
+            "Concentrate"
+          ],
+          "description": "Requirements You're being held immobilized as described in the rune's reaction; Effect Your armor attacks the creature immobilizing you. The armor makes a melee attack against the creature, as described in the rune's reaction."
+        }
+      ]
     },
     {
       "id": "thieves-toolkit",
