@@ -1306,25 +1306,27 @@
 
 /* ── Button overrides for dark panel surfaces ─────────────── */
 /* Global .btn-* rules use light-mode tokens (--color-text: #1a1612,
-   --color-border-medium: rgba(0,0,0,0.18)). Re-scope them inside the
-   dashboard where panels sit on dark --surface-card backgrounds. */
+   --color-border-medium: rgba(0,0,0,0.18)) that are near-invisible on the
+   dark GM shell. Re-scope to shell tokens at the .gm-shell level so EVERY
+   GM page (dashboard, shops, items, runes, lore, …) gets legible buttons —
+   not just the handful that were patched page-by-page. */
 
-.gm-dashboard .btn-secondary {
+.gm-shell .btn-secondary {
   color: var(--shell-text-primary);
   border-color: var(--shell-border-strong);
 }
 
-.gm-dashboard .btn-secondary:hover {
+.gm-shell .btn-secondary:hover {
   background-color: var(--surface-inset);
   border-color: var(--shell-text-tertiary);
 }
 
-.gm-dashboard .btn-danger {
+.gm-shell .btn-danger {
   color: var(--peril-light);
   border-color: var(--peril-light);
 }
 
-.gm-dashboard .btn-danger:hover {
+.gm-shell .btn-danger:hover {
   background-color: var(--peril-base);
   border-color: var(--peril-base);
   color: var(--shell-text-primary);
@@ -1710,18 +1712,8 @@
   color: var(--shell-text-primary);
 }
 
-/* ── Button overrides for GmTheme dark panels ──────────────── */
-/* Same issue as .gm-dashboard: global .btn-* uses light-mode tokens
-   that are invisible on --surface-card backgrounds. */
-.gm-theme .btn-secondary {
-  color: var(--shell-text-primary);
-  border-color: var(--shell-border-strong);
-}
-
-.gm-theme .btn-secondary:hover {
-  background-color: var(--surface-inset);
-  border-color: var(--shell-text-tertiary);
-}
+/* (GmTheme button overrides removed — the .gm-shell rules above now cover
+   every GM page, this one included.) */
 
 /* ── Focus rings (keyboard navigation) ────────────────────── */
 /* Use :focus-visible so mouse clicks don't show a ring. */
