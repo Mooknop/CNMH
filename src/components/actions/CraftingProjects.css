@@ -223,6 +223,12 @@
   color: var(--theme-accent, var(--accent-bg));
 }
 
+.cp-ready-bonus {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--gold-light);
+}
+
 .cp-ready-row {
   display: flex;
   align-items: flex-end;

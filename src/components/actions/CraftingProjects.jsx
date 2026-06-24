@@ -6,6 +6,7 @@ import { craftCostCp, halfCostCp, dailyReductionCp, critFailLossCp } from '../..
 import { cpToGp } from '../../utils/earnIncome';
 import { buildCraftingResult } from '../../utils/earnIncomeResults';
 import { computeSaveDegree } from '../../utils/saveDegree';
+import { periodState } from '../../utils/downtimeUtils';
 import './CraftingProjects.css';
 
 const DEGREE_LABEL = {
@@ -22,7 +23,15 @@ const CraftingProjects = ({ character }) => {
   const [craftProjects, setCraftProjects] = useSyncedState(`cnmh_craftprojects_${charId}`, null);
   const [gold, setGold] = useSyncedState(`cnmh_gold_${charId}`, 0);
   const [, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
+  const [block] = useSyncedState('cnmh_downtimeblock_global', null);
+  const [downtime] = useSyncedState(`cnmh_downtime_${charId}`, null);
   const { items } = useContent();
+
+  // Follow-the-Expert (downtime): a Crafting pairing this period grants +2
+  // circumstance to the Craft check. Kept in the period-scoped downtime `paired`
+  // map (not the cross-mode followexpert key) so the bonus can't leak into
+  // exploration. Cleared automatically when the period or pairing ends.
+  const craftCircumstance = periodState(downtime, block?.startedAt).paired?.Crafting ? 2 : 0;
   const submittedRef = useRef(new Set());
 
   const [adding, setAdding] = useState(false); // false | 'recipe' | 'catalog'
@@ -128,8 +137,10 @@ const CraftingProjects = ({ character }) => {
     const d20 = parseInt(ci.d20, 10);
     const total = parseInt(ci.total, 10);
     if (!(d20 >= 1 && d20 <= 20) || !Number.isFinite(total)) return;
-    const degree = computeSaveDegree({ d20, total, dc: getLevelBasedDc(p.level) });
-    updateProject(p.id, { status: 'awaiting-decision', craftD20: d20, craftTotal: total, craftDegree: degree });
+    // Add the Follow-the-Expert circumstance bonus (if any) to the entered total.
+    const effectiveTotal = total + craftCircumstance;
+    const degree = computeSaveDegree({ d20, total: effectiveTotal, dc: getLevelBasedDc(p.level) });
+    updateProject(p.id, { status: 'awaiting-decision', craftD20: d20, craftTotal: effectiveTotal, craftDegree: degree });
   };
 
   // Finish now: pay the remaining materials cost and mark completed (item grant +
@@ -242,6 +253,9 @@ const CraftingProjects = ({ character }) => {
                 ) : isCheckStage ? (
                   <div className="cp-ready">
                     <span className="cp-ready-badge">Setup done — make your Craft check (DC {getLevelBasedDc(p.level)})</span>
+                    {craftCircumstance > 0 && (
+                      <span className="cp-ready-bonus">✦ +{craftCircumstance} circumstance (Follow the Expert) added automatically — enter your raw total</span>
+                    )}
                     <div className="cp-ready-row">
                       <label className="cp-ready-label">
                         d20

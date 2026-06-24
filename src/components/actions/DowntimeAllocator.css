@@ -118,6 +118,30 @@
 }
 .dta-range input.dta-rng-native:active ~ .dta-rng-thumb { transform: translate(-50%, -50%) scale(1.12); }
 
+/* Follow-the-Expert pairing affordance */
+.dta-pair {
+  width: 100%; margin-top: 10px; display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--radius-md); text-align: left;
+  background: rgba(232, 190, 86, 0.06);
+  border: 1px dashed color-mix(in srgb, var(--gold-mid) 40%, transparent);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s, border-color 0.18s;
+}
+.dta-pair:hover { background: rgba(232, 190, 86, 0.1); border-color: color-mix(in srgb, var(--gold-mid) 60%, transparent); }
+.dta-pair.on { background: rgba(232, 190, 86, 0.13); border-style: solid; border-color: color-mix(in srgb, var(--gold-mid) 70%, transparent); }
+.dta-pair-star { font-size: 13px; color: var(--gold-light); filter: drop-shadow(0 0 4px rgba(232, 190, 86, 0.5)); }
+.dta-pair-txt { flex: 1; min-width: 0; line-height: 1.25; }
+.dta-pair-1 { font-size: 11.5px; color: var(--theme-text-secondary, var(--shell-text-secondary)); }
+.dta-pair-1 b { color: var(--gold-light); font-weight: 600; }
+.dta-pair-2 { font-size: 9.5px; color: var(--text-faint, var(--theme-text-secondary)); margin-top: 1px; }
+.dta-pair-check {
+  width: 19px; height: 19px; flex-shrink: 0; border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--gold-mid) 55%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--shell-bg, #12100e);
+}
+.dta-pair.on .dta-pair-check { background: var(--gold-light); border-color: var(--gold-light); }
+
 /* crafting hour-allocation sub-panel (ported from DowntimeCommitBar) */
 .dta-craft-alloc {
   margin-top: 11px; display: flex; flex-direction: column; gap: var(--space-1);

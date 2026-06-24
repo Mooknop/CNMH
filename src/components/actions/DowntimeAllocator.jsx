@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { usePartyDowntime } from '../../hooks/usePartyDowntime';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { periodState, stampPeriod, planDays } from '../../utils/downtimeUtils';
+import { downtimeExpertFor } from '../../utils/downtimeExperts';
 import { dailyReductionCp } from '../../utils/craftingOutcome';
 import { cpToGp } from '../../utils/earnIncome';
 import './DowntimeAllocator.css';
+
+const firstNameOf = (name) => (name || '?').split(' ')[0];
 
 // Projects that accept committed crafting time (ported from DowntimeCommitBar):
 // still banking setup hours ('in-progress') or working off remaining cost
@@ -34,7 +38,8 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
   const [bench] = useSyncedState('cnmh_downtimebench_global', null);
 
   const startedAt = block?.startedAt;
-  const { plan, status, craftApplied } = periodState(downtime, startedAt);
+  const { plan, status, craftApplied, paired } = periodState(downtime, startedAt);
+  const { party } = usePartyDowntime(startedAt, charId);
   const blockDays = block?.days ?? 0;
   const used = planDays(plan);
   const free = Math.max(0, blockDays - used);
@@ -94,10 +99,28 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
       const others = planDays(cur.plan) - (cur.plan[name] || 0);
       const capped = Math.max(minFor(name), Math.min(d, blockDays - others));
       const nextPlan = { ...cur.plan };
-      if (capped <= 0) delete nextPlan[name];
-      else nextPlan[name] = capped;
+      const nextPaired = { ...cur.paired };
+      if (capped <= 0) {
+        delete nextPlan[name];
+        delete nextPaired[name]; // dropping an activity drops any pairing on it
+      } else {
+        nextPlan[name] = capped;
+      }
       // Editing always reopens a locked plan.
-      return stampPeriod(prev, startedAt, { plan: nextPlan, status: 'planning' });
+      return stampPeriod(prev, startedAt, { plan: nextPlan, paired: nextPaired, status: 'planning' });
+    });
+  };
+
+  // Follow-the-Expert pairing: links this activity to the resident expert. Stored
+  // as paired[activity] = expertCharId (period-scoped) — drives the ✦ thread on
+  // the ledger and, for Crafting, the +2 circumstance on the Craft check.
+  const togglePair = (name, expertId) => {
+    setDowntime((prev) => {
+      const cur = periodState(prev, startedAt);
+      const nextPaired = { ...cur.paired };
+      if (nextPaired[name]) delete nextPaired[name];
+      else nextPaired[name] = expertId;
+      return stampPeriod(prev, startedAt, { paired: nextPaired, status: 'planning' });
     });
   };
 
@@ -173,6 +196,8 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
           const benchmark = Number(benchDays[a.name]) || 0;
           const met = accumulate && benchmark > 0 && days >= benchmark;
           const filln = max > min ? (days - min) / (max - min) : 0;
+          const expert = accumulate && days > 0 ? downtimeExpertFor(a.name, party, charId) : null;
+          const isPaired = !!paired[a.name];
           return (
             <div className="dta-act" key={a.name}>
               <div className="dta-act-top">
@@ -228,6 +253,29 @@ const DowntimeAllocator = ({ character, block, characterColor }) => {
                   +
                 </button>
               </div>
+
+              {expert && (
+                <button
+                  className={`dta-pair${isPaired ? ' on' : ''}`}
+                  onClick={() => togglePair(a.name, expert.char.id)}
+                >
+                  <span className="dta-pair-star">✦</span>
+                  <div className="dta-pair-txt">
+                    <div className="dta-pair-1">
+                      {a.name === 'Crafting' ? 'Assist' : 'Study under'}{' '}
+                      <b>{firstNameOf(expert.char.name)}</b>{a.name === 'Research' ? "’s research" : ''}
+                    </div>
+                    <div className="dta-pair-2">
+                      {isPaired
+                        ? (a.name === 'Crafting'
+                          ? `Following the expert — ✦ +2 circumstance to your Craft check`
+                          : `Following the expert — ✦ bonus while ${firstNameOf(expert.char.name)} succeeds`)
+                        : `${firstNameOf(expert.char.name)} is the party's ${a.name} expert this week`}
+                    </div>
+                  </div>
+                  <span className="dta-pair-check">{isPaired ? '✓' : ''}</span>
+                </button>
+              )}
 
               {a.name === 'Crafting' && availableToBank > 0 && projects.length > 0 && (
                 <div className="dta-craft-alloc">

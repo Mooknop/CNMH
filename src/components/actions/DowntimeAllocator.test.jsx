@@ -1,11 +1,13 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import DowntimeAllocator from './DowntimeAllocator';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
+import { usePartyDowntime } from '../../hooks/usePartyDowntime';
 
 vi.mock('../../hooks/useSyncedState', () => ({ useSyncedState: vi.fn() }));
 vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
+vi.mock('../../hooks/usePartyDowntime', () => ({ usePartyDowntime: vi.fn() }));
 
 const PERIOD = 'P1';
 const block = { days: 7, active: true, startedAt: PERIOD };
@@ -27,6 +29,7 @@ const setupSynced = ({ downtime = null, setDowntime = vi.fn(), craft = null, set
 beforeEach(() => {
   vi.clearAllMocks();
   useCharacter.mockReturnValue({ flags: {}, skillProficiencies: { crafting: 0 } });
+  usePartyDowntime.mockReturnValue({ party: [], readyCount: 0, total: 1 });
 });
 
 describe('DowntimeAllocator', () => {
@@ -144,6 +147,61 @@ describe('DowntimeAllocator', () => {
       fireEvent.change(screen.getByLabelText('Crafting days'), { target: { value: '0' } });
       const updater = setDowntime.mock.calls[0][0];
       expect(updater(stamp({ plan: { Crafting: 3 }, craftApplied: { p1: 16 } })).plan.Crafting).toBe(2);
+    });
+  });
+
+  describe('Follow-the-Expert pairing', () => {
+    // A teammate who is the party's Research expert and is researching this week.
+    const expertParty = [{
+      char: { id: 'ash', name: 'Ashka Gosh', skills: { occultism: { proficiency: 3 } } },
+      plan: { Research: 4 },
+    }];
+
+    it('offers a pairing affordance when an eligible expert is doing the activity', () => {
+      usePartyDowntime.mockReturnValue({ party: expertParty, readyCount: 0, total: 2 });
+      setupSynced({ downtime: stamp({ plan: { Research: 2 } }) });
+      const { container } = render(<DowntimeAllocator character={character} block={block} />);
+      const pair = container.querySelector('.dta-pair');
+      expect(pair).not.toBeNull();
+      expect(within(pair).getByText(/Study under/)).toBeInTheDocument();
+      expect(within(pair).getByText('Ashka')).toBeInTheDocument();
+    });
+
+    it('hides the affordance when you have no day on the activity', () => {
+      usePartyDowntime.mockReturnValue({ party: expertParty, readyCount: 0, total: 2 });
+      setupSynced({ downtime: stamp({ plan: { 'Earn Income': 2 } }) });
+      const { container } = render(<DowntimeAllocator character={character} block={block} />);
+      expect(container.querySelector('.dta-pair')).toBeNull();
+    });
+
+    it('hides the affordance when no teammate is an eligible expert', () => {
+      usePartyDowntime.mockReturnValue({ party: [], readyCount: 0, total: 1 });
+      setupSynced({ downtime: stamp({ plan: { Research: 2 } }) });
+      const { container } = render(<DowntimeAllocator character={character} block={block} />);
+      expect(container.querySelector('.dta-pair')).toBeNull();
+    });
+
+    it('toggles the pairing, recording the expert id and reopening to planning', () => {
+      usePartyDowntime.mockReturnValue({ party: expertParty, readyCount: 0, total: 2 });
+      const { setDowntime } = setupSynced({ downtime: stamp({ plan: { Research: 2 } }) });
+      const { container } = render(<DowntimeAllocator character={character} block={block} />);
+      fireEvent.click(container.querySelector('.dta-pair'));
+      const updater = setDowntime.mock.calls[0][0];
+      expect(updater(stamp({ plan: { Research: 2 } }))).toMatchObject({
+        paired: { Research: 'ash' },
+        status: 'planning',
+      });
+    });
+
+    it('clears the pairing when the activity is removed', () => {
+      usePartyDowntime.mockReturnValue({ party: expertParty, readyCount: 0, total: 2 });
+      const { setDowntime } = setupSynced({ downtime: stamp({ plan: { Research: 2 }, paired: { Research: 'ash' } }) });
+      render(<DowntimeAllocator character={character} block={block} />);
+      fireEvent.change(screen.getByLabelText('Research days'), { target: { value: '0' } });
+      const updater = setDowntime.mock.calls[0][0];
+      const next = updater(stamp({ plan: { Research: 2 }, paired: { Research: 'ash' } }));
+      expect(next.plan.Research).toBeUndefined();
+      expect(next.paired.Research).toBeUndefined();
     });
   });
 });
