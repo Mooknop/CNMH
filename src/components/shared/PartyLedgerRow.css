@@ -1,0 +1,33 @@
+/* Shared party-board row shell: 86px name gutter + flexible body slot.
+   Per-row `--c` is that PC's accent. */
+
+.plr {
+  display: grid; grid-template-columns: 86px 1fr; align-items: center; gap: 10px;
+  padding: 7px 9px; border-radius: var(--radius-lg, 10px);
+  background: var(--surface-card, var(--shell-surface)); border: 1px solid var(--border, var(--shell-border));
+}
+.plr.is-you {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 12%, var(--surface-card, var(--shell-surface))), var(--surface-card, var(--shell-surface)));
+  border-color: color-mix(in srgb, var(--c) 45%, var(--border, var(--shell-border)));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 22%, transparent), var(--shadow-md);
+}
+.plr-who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.plr-mono {
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 12px;
+  color: color-mix(in srgb, var(--c) 75%, #fff 25%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 28%, #14110e), #100d0b);
+  box-shadow: inset 0 0 0 1.2px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.plr-id { min-width: 0; line-height: 1.12; }
+.plr-name {
+  font-size: 12px; font-weight: 600; color: var(--theme-text, var(--shell-text));
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.plr-you-tag {
+  font-family: var(--font-ui); font-size: 8px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--c); filter: brightness(1.2); margin-left: 5px; text-transform: uppercase;
+}
+.plr-meta { font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint, var(--theme-text-secondary)); }
+.plr-body { min-width: 0; }

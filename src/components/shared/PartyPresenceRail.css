@@ -1,0 +1,32 @@
+/* Shared party presence rail — accent avatars + status dots + ready tally.
+   Per-avatar `--c` is that PC's accent. */
+
+.ppr { display: flex; align-items: center; gap: 9px; }
+.ppr-rail { display: flex; gap: 7px; flex: 1; flex-wrap: wrap; }
+.ppr-avatar {
+  position: relative; width: 38px; height: 38px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  color: color-mix(in srgb, var(--c) 70%, #fff 30%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 30%, #14110e), #100d0b);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 45%, transparent);
+}
+.ppr-avatar.is-you {
+  box-shadow: inset 0 0 0 2px var(--c), 0 0 0 2px color-mix(in srgb, var(--c) 30%, transparent);
+}
+.ppr-status {
+  position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px;
+  border-radius: 50%; border: 2px solid var(--theme-bg, var(--shell-bg, #12100e));
+}
+.ppr-status.ready { background: var(--verdant-mid, #4caf6a); box-shadow: 0 0 6px var(--verdant-mid, #4caf6a); }
+.ppr-status.planning { background: var(--gold-mid); animation: ppr-pulse 1.8s ease-in-out infinite; }
+@keyframes ppr-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.ppr-count { flex-shrink: 0; text-align: right; line-height: 1.15; }
+.ppr-count-n { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--theme-text, var(--shell-text)); }
+.ppr-count-n b { color: var(--verdant-mid, #4caf6a); }
+.ppr-count-l { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--theme-text-secondary, var(--shell-text-secondary)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ppr-status.planning { animation: none; }
+}
