@@ -4,7 +4,7 @@ import { useShops } from '../../hooks/useShops';
 import { itemCatalogMap } from '../../utils/contentUtils';
 import { isShop } from '../../utils/shopUtils';
 import PageEditorShell from '../../components/gm/PageEditorShell';
-import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
+import CatalogPicker from '../../components/gm/CatalogPicker';
 import './gm.css';
 
 // GM wares editor (#696 S2). Shops are app-managed, not vault content: each
@@ -75,11 +75,26 @@ const ShopWaresForm = ({ location, shops, items, catalogMap, setWares, onSaved }
         <button
           type="button"
           className="btn-small btn-secondary"
-          onClick={() => setPickerOpen(true)}
+          aria-expanded={pickerOpen}
+          onClick={() => setPickerOpen((o) => !o)}
         >
           + Add items
         </button>
       </div>
+
+      {pickerOpen && (
+        <div className="gm-shop-picker" data-testid="shop-picker">
+          <CatalogPicker
+            catalog={items}
+            multiSelect
+            onSelect={(picked) => {
+              addItems(picked);
+              setPickerOpen(false);
+            }}
+            onCancel={() => setPickerOpen(false)}
+          />
+        </div>
+      )}
 
       {rows.length > 0 && (
         <ul className="gm-shop-wares" aria-label="wares">
@@ -131,15 +146,6 @@ const ShopWaresForm = ({ location, shops, items, catalogMap, setWares, onSaved }
           Save wares
         </button>
       </div>
-
-      <CatalogPickerModal
-        isOpen={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        catalog={items}
-        multiSelect
-        title={`Add wares to ${location.title}`}
-        onSelect={addItems}
-      />
     </div>
   );
 };

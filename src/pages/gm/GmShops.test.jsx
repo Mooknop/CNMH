@@ -4,14 +4,14 @@ import GmShops from './GmShops';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useShops', () => ({ useShops: vi.fn() }));
-// Stub the catalog picker: when open, a button fires onSelect with a fixed item.
-vi.mock('../../components/gm/CatalogPickerModal', () => ({
-  default: ({ isOpen, onSelect }) =>
-    isOpen ? (
-      <button type="button" onClick={() => onSelect([{ id: 'spellbook', name: 'Spellbook', price: 10 }])}>
-        pick-spellbook
-      </button>
-    ) : null,
+// Stub the inline catalog picker: it only mounts when the GM opens it, and a
+// button fires onSelect with a fixed item.
+vi.mock('../../components/gm/CatalogPicker', () => ({
+  default: ({ onSelect }) => (
+    <button type="button" onClick={() => onSelect([{ id: 'spellbook', name: 'Spellbook', price: 10 }])}>
+      pick-spellbook
+    </button>
+  ),
 }));
 
 import { useContent } from '../../contexts/ContentContext';

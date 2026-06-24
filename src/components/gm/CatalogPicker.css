@@ -1,3 +1,8 @@
+/* Catalog item picker (shared by GM Shops inline + CatalogPickerModal).
+   Lives only inside the dark GM shell / dark modal, so it uses --shell-*
+   tokens — the old --color-* light-mode tokens rendered near-invisible on
+   the dark surface. */
+
 .catalog-picker {
   display: flex;
   gap: 16px;
@@ -14,10 +19,16 @@
 .catalog-picker-search {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--color-border-medium);
+  border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-sm);
   margin-bottom: 8px;
   font: inherit;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--shell-text-primary);
+}
+
+.catalog-picker-search::placeholder {
+  color: var(--shell-text-tertiary);
 }
 
 .catalog-picker-results {
@@ -26,7 +37,7 @@
   padding: 0;
   max-height: 320px;
   overflow-y: auto;
-  border: 1px solid var(--color-border-medium);
+  border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-sm);
 }
 
@@ -40,36 +51,38 @@
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--shell-border);
   padding: 8px 10px;
   font: inherit;
   cursor: pointer;
-  color: var(--color-text);
+  color: var(--shell-text-primary);
 }
 
 .catalog-picker-option:hover {
-  background: var(--color-bg-lighter);
+  background: var(--surface-inset);
 }
 
 .catalog-picker-option.active {
   background: var(--accent-tint, rgba(192, 68, 14, 0.14));
   border-color: var(--accent-outline, var(--color-primary));
-  color: var(--accent-text, var(--color-primary));
+  color: var(--accent-text, var(--ember-light, #f5803e));
 }
 
 .catalog-picker-preview {
   flex: 1 1 50%;
   min-width: 0;
-  border: 1px solid var(--color-border-medium);
+  border: 1px solid var(--shell-border-strong);
   border-radius: var(--radius-sm);
   padding: 12px;
-  background: var(--color-bg-lighter);
+  background: var(--surface-inset);
   overflow-y: auto;
   max-height: 360px;
+  color: var(--shell-text-secondary);
 }
 
 .catalog-preview h3 {
   margin: 0 0 8px;
+  color: var(--shell-text-primary);
 }
 
 .catalog-preview-empty {
@@ -82,7 +95,7 @@
   gap: 6px 12px;
   margin: 8px 0;
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--shell-text-tertiary);
 }
 
 .catalog-preview-desc {
