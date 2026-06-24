@@ -25,6 +25,12 @@ vi.mock('./ExplorationList', () => ({
   }
 }));
 
+vi.mock('./ExplorationPartyBoard', () => ({
+  default: function DummyExplorationPartyBoard({ character: c }) {
+    return <div data-testid="exploration-party-board" data-charid={c?.id} />;
+  }
+}));
+
 vi.mock('./ExplorationMove', () => ({
   default: function DummyExplorationMove({ charId }) {
     return <div data-testid="exploration-move" data-charid={charId} />;
@@ -68,10 +74,10 @@ describe('ExplorationTab', () => {
   });
 
   describe('Activity state (party not ready)', () => {
-    it('shows the Activity picker and a waiting hint', () => {
+    it('shows the Activity picker and the party board', () => {
       render(<ExplorationTab character={character} />);
       expect(screen.getByTestId('exploration-list')).toBeInTheDocument();
-      expect(screen.getByText(/waiting for the party/i)).toBeInTheDocument();
+      expect(screen.getByTestId('exploration-party-board')).toHaveAttribute('data-charid', 'char-1');
     });
 
     it('does not show Movement controls or the change-activity toggle', () => {
