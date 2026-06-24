@@ -191,6 +191,16 @@ describe('SessionContext', () => {
     expect(MockWS.last.sent).toHaveLength(2);
   });
 
+  it('still allows GM-authored global writes in the sandbox (always-on GM edits)', () => {
+    let api;
+    render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+    act(() => { MockWS.last._open(); }); // sandbox: connected, Foundry down
+    act(() => { api.sendUpdate('global', 'shops', { 'red-dog-smithy': { wares: [{ ref: 'slick' }] } }); });
+    // Campaign-level GM setup goes through — cached and broadcast — even offline.
+    expect(api.getState('global', 'shops')).toEqual({ 'red-dog-smithy': { wares: [{ ref: 'slick' }] } });
+    expect(MockWS.last.sent).toHaveLength(1);
+  });
+
   it('resumes sendUpdate once Foundry presence arrives', () => {
     let api;
     render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
