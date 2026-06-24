@@ -1,6 +1,8 @@
 import React from 'react';
 import { usePartyDowntime } from '../../hooks/usePartyDowntime';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
+import PartyPresenceRail from '../shared/PartyPresenceRail';
+import PartyLedgerRow from '../shared/PartyLedgerRow';
 import './DowntimePartyLedger.css';
 
 // Ordered activity-colored day-groups for one PC's week, then the trailing free
@@ -16,9 +18,6 @@ const segmentsFor = (plan, paired, blockDays) => {
   if (free > 0) groups.push({ name: null, days: free });
   return groups;
 };
-
-const firstNameOf = (name) => (name || '?').split(' ')[0];
-const initialOf = (name) => (name || '?').charAt(0).toUpperCase();
 
 // A single PC's week as a ribbon of grouped, activity-colored day-blocks.
 const Ribbon = ({ plan, paired, blockDays }) => {
@@ -56,25 +55,7 @@ const DowntimePartyLedger = ({ character, block }) => {
 
   return (
     <div className="dpl">
-      <div className="dpl-presence">
-        <div className="dpl-rail">
-          {party.map((p) => (
-            <div
-              key={p.char.id}
-              className={`dpl-avatar${p.isYou ? ' is-you' : ''}`}
-              style={{ '--c': p.color }}
-              title={`${p.char.name} — ${p.status === 'ready' ? 'locked in' : 'planning'}`}
-            >
-              {initialOf(p.char.name)}
-              <span className={`dpl-status ${p.status === 'ready' ? 'ready' : 'planning'}`} />
-            </div>
-          ))}
-        </div>
-        <div className="dpl-count">
-          <div className="dpl-count-n"><b>{readyCount}</b>/{total}</div>
-          <div className="dpl-count-l">locked in</div>
-        </div>
-      </div>
+      <PartyPresenceRail party={party} readyCount={readyCount} total={total} label="locked in" />
 
       <div className="dpl-ledger">
         <div className="dpl-ledger-head">
@@ -90,23 +71,15 @@ const DowntimePartyLedger = ({ character, block }) => {
 
         <div className="dpl-rows">
           {party.map((p) => (
-            <div
+            <PartyLedgerRow
               key={p.char.id}
-              className={`dpl-row${p.isYou ? ' is-you' : ''}`}
-              style={{ '--c': p.color }}
+              char={p.char}
+              color={p.color}
+              isYou={p.isYou}
+              meta={p.char.class}
             >
-              <div className="dpl-who">
-                <div className="dpl-mono">{initialOf(p.char.name)}</div>
-                <div className="dpl-id">
-                  <div className="dpl-name">
-                    {firstNameOf(p.char.name)}
-                    {p.isYou && <span className="dpl-you-tag">You</span>}
-                  </div>
-                  {p.char.class && <div className="dpl-meta">{p.char.class}</div>}
-                </div>
-              </div>
               <Ribbon plan={p.plan} paired={p.paired} blockDays={blockDays} />
-            </div>
+            </PartyLedgerRow>
           ))}
         </div>
       </div>
