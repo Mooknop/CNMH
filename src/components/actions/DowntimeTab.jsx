@@ -10,6 +10,7 @@ import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
 import ShopModal from '../shop/ShopModal';
 import CraftingProjects from './CraftingProjects';
+import DowntimePartyLedger from './DowntimePartyLedger';
 import DowntimeAllocator from './DowntimeAllocator';
 import EarnIncomeResolver from './EarnIncomeResolver';
 import TellFortunePanel from './TellFortunePanel';
@@ -78,6 +79,10 @@ const DowntimeTab = ({ character, characterColor }) => {
           <p className="dt-hint">The GM hasn&rsquo;t started a downtime period yet.</p>
         )}
       </div>
+
+      {block?.active && (
+        <DowntimePartyLedger character={character} block={block} />
+      )}
 
       {block?.active && (
         <DowntimeAllocator character={character} block={block} characterColor={characterColor} />
