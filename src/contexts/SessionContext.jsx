@@ -12,7 +12,18 @@ const RECONNECT_MS = 3000;
 // burns (consumed, itemeffects, focus, gold, …) stay frozen so nothing gets used
 // up. Keyed by the `cnmh_<type>_<id>` type segment.
 const SANDBOX_WRITABLE_TYPES = new Set(['loadout', 'invested']);
-export const isSandboxWritable = (stateType) => SANDBOX_WRITABLE_TYPES.has(stateType);
+
+// Whether a synced write may proceed while the live game is offline (DO up,
+// Foundry down). Two always-live categories survive the sandbox freeze:
+//   • Campaign-level (`_global`) state is GM-authored world setup — shops, play
+//     mode, clock, exploration toggles — not player resource consumption. GM
+//     edits must stay on regardless of mode, so the GM can prep while Foundry's
+//     down. (characterId is the literal "global" for these keys.)
+//   • Inventory organization (loadout / invested), which a player may always
+//     manage (#554).
+// Everything else — per-character resource burns — stays frozen.
+export const isSandboxWritable = (stateType, characterId) =>
+  characterId === 'global' || SANDBOX_WRITABLE_TYPES.has(stateType);
 
 const NOOP_SESSION = {
   connected: false,
@@ -138,11 +149,11 @@ export const SessionProvider = ({ children }) => {
 
   const sendUpdate = useCallback((characterId, stateType, value) => {
     // Offline sandbox: freeze campaign-state mutations (synced via useSyncedState
-    // or written directly by consumables/healing/GM tools) so nothing gets used
-    // up while the game isn't running — except inventory-organization writes
-    // (loadout / invested), which a player may always manage (#554). Suppress
-    // before touching the cache, the socket, or local subscribers.
-    if (sandboxRef.current && !isSandboxWritable(stateType)) return;
+    // or written directly by consumables/healing) so nothing gets used up while
+    // the game isn't running — except always-live writes (GM-authored `_global`
+    // state and inventory organization), see isSandboxWritable. Suppress before
+    // touching the cache, the socket, or local subscribers.
+    if (sandboxRef.current && !isSandboxWritable(stateType, characterId)) return;
     if (!serverState.current[characterId]) serverState.current[characterId] = {};
     serverState.current[characterId][stateType] = value;
     const socket = ws.current;
