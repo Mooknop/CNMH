@@ -72,6 +72,18 @@
   color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
 
+/* Brief confirmation after a purchase commits (#696 S6). */
+.shop-receipt {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--theme-accent, var(--accent-bg));
+  border-radius: var(--radius-md);
+  background: var(--theme-surface-inset-hover, var(--shell-surface-hover));
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--theme-text, var(--shell-text));
+}
+
 /* Shop window: wares column + cart column (#696 S4–S5). */
 .shop-window-body {
   display: flex;
