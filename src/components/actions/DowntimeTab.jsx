@@ -5,13 +5,12 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useShops } from '../../hooks/useShops';
 import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
-import { getHoursForActivity, getRollsForActivity, getDaysCommitted, periodState } from '../../utils/downtimeUtils';
+import { getHoursForActivity, getRollsForActivity, periodState } from '../../utils/downtimeUtils';
 import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
 import ShopModal from '../shop/ShopModal';
 import CraftingProjects from './CraftingProjects';
-import DowntimeList from './DowntimeList';
-import DowntimeCommitBar from './DowntimeCommitBar';
+import DowntimeAllocator from './DowntimeAllocator';
 import EarnIncomeResolver from './EarnIncomeResolver';
 import TellFortunePanel from './TellFortunePanel';
 import RepairShieldPanel from './RepairShieldPanel';
@@ -44,8 +43,8 @@ const DowntimeTab = ({ character, characterColor }) => {
   const hasTellFortune = (charData?.feats || []).some((f) => f.name === 'Tell Fortune');
   const hasShield = (charData?.inventory || []).some((e) => e?.shield);
   const days = block?.active ? block?.days : null;
-  const { selected, ledger } = periodState(downtime, block?.startedAt);
-  const daysCommitted = getDaysCommitted(ledger);
+  const { selected, ledger, status } = periodState(downtime, block?.startedAt);
+  const planLocked = status === 'ready';
 
   // Per-activity progress derived from the committed ledger.
   const activityProgress = selected.map((name) => {
@@ -61,8 +60,6 @@ const DowntimeTab = ({ character, characterColor }) => {
       benchmarkHours: def.benchmarkHours,
     };
   }).filter(Boolean);
-
-  const showProgress = block?.active && ledger.length > 0 && activityProgress.length > 0;
 
   return (
     <div className="dt-wrap">
@@ -80,42 +77,17 @@ const DowntimeTab = ({ character, characterColor }) => {
         {days == null && (
           <p className="dt-hint">The GM hasn&rsquo;t started a downtime period yet.</p>
         )}
-        {days != null && daysCommitted > 0 && (
-          <p className="dt-days-used">{daysCommitted} of {days} day{days === 1 ? '' : 's'} used</p>
-        )}
       </div>
 
-      <DowntimeList character={character} characterColor={characterColor} />
-
-      {showProgress && (
-        <div className="dt-progress">
-          <span className="dt-progress-heading">Progress</span>
-          {activityProgress.map((prog) => (
-            <div key={prog.name} className="dt-progress-row">
-              <span className="dt-progress-name">{prog.name}</span>
-              {prog.type === 'instant' ? (
-                <span className="dt-progress-value">
-                  {prog.rolls} roll{prog.rolls === 1 ? '' : 's'}
-                </span>
-              ) : (
-                <span className="dt-progress-value">
-                  {prog.hours}h / {prog.benchmarkHours}h
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
+      {block?.active && (
+        <DowntimeAllocator character={character} block={block} characterColor={characterColor} />
       )}
 
-      {block?.active && (
-        <DowntimeCommitBar character={character} block={block} />
-      )}
-
-      {block?.active && (
+      {block?.active && planLocked && (
         <EarnIncomeResolver character={character} />
       )}
 
-      {block?.active && activityProgress
+      {block?.active && planLocked && activityProgress
         .filter((p) => p.type === 'accumulate' && (p.name === 'Retrain' || p.name === 'Research'))
         .map((p) => (
           <DowntimeCompletion

@@ -140,7 +140,7 @@ const CraftingProjects = ({ character }) => {
   };
 
   // Keep working: each committed crafting day will whittle the remaining cost
-  // (handled in DowntimeCommitBar via dailyReductionCp).
+  // (handled in DowntimeAllocator via dailyReductionCp).
   const continueReducing = (p) => updateProject(p.id, { status: 'reducing' });
 
   // Failed check: no progress toward finishing — re-bank the setup time and try

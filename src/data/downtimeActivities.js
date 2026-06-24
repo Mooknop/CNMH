@@ -1,5 +1,5 @@
 // Downtime activities the party can pursue while the GM has set a downtime
-// period. Mirrors explorationActivities.js so DowntimeList can reuse the same
+// period. Mirrors explorationActivities.js so the allocator can reuse the same
 // filter/highlight helpers (requiresFlag / requiresAnyFlag / requiresTrainedInAny
 // / highlightSkills via explorationUtils).
 //
@@ -7,6 +7,9 @@
 //   'instant'    — one roll consumes a full 8-hour block in one go (Earn Income).
 //   'accumulate' — banks hours toward `benchmarkHours` across multiple blocks
 //                  (Retrain / Research / Crafting).
+//
+// hue: the activity-hue CSS token (pf2e-tokens.css) used to color this activity's
+//   day-blocks in the allocator/ledger. Array order is the canonical fill order.
 //
 // The *end results* of these activities (gold earned, finished item, retrained
 // option, research unlocked) are intentionally out of scope for now;
@@ -18,6 +21,7 @@ export const DOWNTIME_ACTIVITIES = [
   {
     name: 'Earn Income',
     type: 'instant',
+    hue: 'var(--act-earn)',
     traits: ['Downtime'],
     skill: 'Lore / Crafting (varies)',
     highlightSkills: ['crafting'],
@@ -30,6 +34,7 @@ export const DOWNTIME_ACTIVITIES = [
   {
     name: 'Retrain',
     type: 'accumulate',
+    hue: 'var(--act-retrain)',
     benchmarkHours: 8,
     traits: ['Downtime'],
     mechanics: {
@@ -41,6 +46,7 @@ export const DOWNTIME_ACTIVITIES = [
   {
     name: 'Research',
     type: 'accumulate',
+    hue: 'var(--act-research)',
     benchmarkHours: 8,
     traits: ['Downtime', 'Secret'],
     mechanics: {
@@ -52,6 +58,7 @@ export const DOWNTIME_ACTIVITIES = [
   {
     name: 'Crafting',
     type: 'accumulate',
+    hue: 'var(--act-craft)',
     benchmarkHours: 8,
     traits: ['Downtime', 'Manipulate'],
     skill: 'Crafting',

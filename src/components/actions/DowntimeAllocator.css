@@ -1,0 +1,184 @@
+/* Downtime allocator — per-activity day sliders + lock-in.
+   Ported from the Party Ledger design (reference/downtime.css), prefixed `dta-`
+   and routed through app tokens. `--c` is the character accent. */
+
+.dta {
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  background: linear-gradient(180deg, var(--shell-surface-raised), var(--shell-surface));
+  border: 1px solid var(--border-strong, var(--shell-border));
+  border-radius: var(--radius-xl, 14px);
+  box-shadow: var(--shadow-lg, 0 6px 22px rgba(0, 0, 0, 0.5));
+}
+
+.dta-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.dta-ttl {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--theme-text, var(--shell-text));
+}
+.dta-ttl .dta-you { color: var(--c); filter: brightness(1.2); }
+.dta-budget {
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-variant-numeric: tabular-nums;
+}
+.dta-budget b {
+  color: var(--gold-light);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+/* budget meter — one pip per day, colored by the activity that fills it */
+.dta-meter { display: flex; gap: 3px; margin: var(--space-3) 0 var(--space-4); }
+.dta-pip {
+  flex: 1;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--act-free);
+  box-shadow: inset 0 0 0 1px var(--border, var(--shell-border));
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+.dta-pip.full { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 6px -1px currentColor; }
+
+/* activity rows */
+.dta-list { display: flex; flex-direction: column; }
+.dta-act { padding: 11px 2px 13px; border-bottom: 1px solid var(--border, var(--shell-border)); }
+.dta-act:last-child { border-bottom: none; }
+.dta-act-top { display: flex; align-items: center; gap: 9px; margin-bottom: 11px; }
+.dta-sw {
+  width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3), 0 0 8px -2px currentColor;
+}
+.dta-act-id { flex: 1; min-width: 0; line-height: 1.2; }
+.dta-act-name { font-size: var(--text-sm); font-weight: 600; color: var(--theme-text, var(--shell-text)); }
+.dta-act-tag {
+  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-faint, var(--theme-text-secondary)); margin-top: 2px;
+}
+.dta-act-result { text-align: right; min-width: 64px; line-height: 1.15; }
+.dta-rv { font-family: var(--font-display); font-size: var(--text-md, 14px); font-weight: 700; color: var(--theme-text, var(--shell-text)); }
+.dta-rv.zero { color: var(--text-faint, var(--theme-text-secondary)); }
+.dta-rv-unit { font-size: 9px; font-weight: 400; color: var(--theme-text-secondary, var(--shell-text-secondary)); }
+.dta-rl { font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--theme-text-secondary, var(--shell-text-secondary)); margin-top: 1px; }
+.dta-rl.met { color: var(--verdant-light, #62c278); }
+
+/* overlay slider — visuals as elements, transparent native input on top */
+.dta-slider { display: flex; align-items: center; gap: 11px; }
+.dta-stepper {
+  width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--radius-md);
+  background: var(--surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--border, var(--shell-border));
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-size: 17px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+/* pad the hit area to ≥44px without growing the visual button */
+.dta-stepper::before { content: ''; position: absolute; inset: -8px; }
+.dta-stepper:hover:not(:disabled) {
+  background: var(--surface-inset-hover, var(--shell-surface-hover));
+  color: var(--theme-text, var(--shell-text));
+  border-color: var(--border-strong, var(--shell-border));
+}
+.dta-stepper:disabled { opacity: 0.3; cursor: default; }
+
+.dta-range { flex: 1; position: relative; height: 24px; }
+.dta-rng-track {
+  position: absolute; left: 0; right: 0; top: 7px; height: 10px; border-radius: 5px;
+  background: var(--act-free);
+  box-shadow: inset 0 0 0 1px var(--border, var(--shell-border)), inset 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.dta-rng-fill {
+  position: absolute; left: 0; top: 7px; height: 10px; border-radius: 5px;
+  width: calc(11px + (100% - 22px) * var(--filln, 0));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ac) 78%, #000), var(--ac));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 10px -3px var(--ac);
+  transition: width 0.12s ease;
+}
+.dta-rng-thumb {
+  position: absolute; top: 50%; left: calc(11px + (100% - 22px) * var(--filln, 0));
+  transform: translate(-50%, -50%);
+  width: 22px; height: 22px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 38% 32%, #fbf4e8, #d8c39a 55%, #9c7d3e);
+  border: 1.5px solid color-mix(in srgb, var(--ac) 70%, #2a1d08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  transition: left 0.12s ease, transform 0.12s ease;
+}
+.dta-range input.dta-rng-native {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+  opacity: 0; cursor: pointer; z-index: 2;
+}
+.dta-range input.dta-rng-native:active ~ .dta-rng-thumb { transform: translate(-50%, -50%) scale(1.12); }
+
+/* crafting hour-allocation sub-panel (ported from DowntimeCommitBar) */
+.dta-craft-alloc {
+  margin-top: 11px; display: flex; flex-direction: column; gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-inset, var(--shell-surface-inset));
+  border: 1px solid var(--border, var(--shell-border));
+  border-radius: var(--radius-sm);
+}
+.dta-craft-label {
+  font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+.dta-craft-row { display: flex; align-items: center; gap: var(--space-2); }
+.dta-craft-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dta-craft-name {
+  font-size: var(--text-sm); font-weight: 600; color: var(--theme-text, var(--shell-text));
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dta-craft-progress {
+  font-size: var(--text-xs); color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-variant-numeric: tabular-nums;
+}
+.dta-craft-input {
+  background: var(--theme-surface, var(--shell-surface));
+  border: 1px solid var(--border, var(--shell-border)); border-radius: var(--radius-sm);
+  color: var(--theme-text, var(--shell-text));
+  font-family: var(--font-ui); font-size: var(--text-sm); font-variant-numeric: tabular-nums;
+  padding: var(--space-1) var(--space-2); text-align: right; width: 52px;
+}
+.dta-craft-input:focus { outline: none; border-color: var(--c); }
+.dta-craft-total {
+  font-size: var(--text-xs); color: var(--theme-text-secondary, var(--shell-text-secondary));
+  font-variant-numeric: tabular-nums; margin-top: var(--space-1);
+}
+.dta-craft-total[data-valid="false"] { color: var(--color-danger, #e53e3e); }
+
+/* lock-in */
+.dta-foot { margin-top: var(--space-4); }
+.dta-lock {
+  width: 100%; height: 50px; border: none; border-radius: var(--radius-lg, 10px); cursor: pointer;
+  font-family: var(--font-ui); font-size: var(--text-md, 14px); font-weight: 600; letter-spacing: 0.04em;
+  display: flex; align-items: center; justify-content: center; gap: 9px; color: #fff;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 90%, #fff 10%), color-mix(in srgb, var(--c) 74%, #000 26%));
+  box-shadow: 0 6px 20px -5px color-mix(in srgb, var(--c) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.3s ease, filter 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.dta-lock:hover:not(:disabled) { transform: translateY(-1px); }
+.dta-lock:active:not(:disabled) { transform: translateY(0) scale(0.99); }
+.dta-lock:disabled { filter: grayscale(0.5) brightness(0.7); cursor: default; box-shadow: none; }
+.dta-seal { font-size: 16px; }
+.dta-lock.locked {
+  background: linear-gradient(180deg, #20452c, #16301e);
+  box-shadow: inset 0 0 0 1px rgba(108, 197, 135, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #8fd9a6;
+}
+.dta-note {
+  text-align: center; margin-top: 9px; font-family: var(--font-body);
+  font-style: italic; font-size: var(--text-sm); color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dta-rng-fill, .dta-rng-thumb, .dta-lock, .dta-pip, .dta-stepper { transition: none; }
+}

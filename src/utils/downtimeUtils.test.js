@@ -207,6 +207,7 @@ describe('downtimeUtils', () => {
           plan: {},
           status: 'planning',
           paired: {},
+          craftApplied: {},
           selected: ['Research'],
           ledger: [{ day: 'Research', night: null }],
         });
@@ -214,16 +215,16 @@ describe('downtimeUtils', () => {
 
       it('returns empty for a stale (prior-period) state', () => {
         expect(periodState(dt, 'P2')).toEqual({
-          plan: {}, status: 'planning', paired: {}, selected: [], ledger: [],
+          plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [],
         });
       });
 
       it('returns empty for null/unstamped state', () => {
         expect(periodState(null, 'P1')).toEqual({
-          plan: {}, status: 'planning', paired: {}, selected: [], ledger: [],
+          plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [],
         });
         expect(periodState({ selected: ['X'], ledger: [{ day: 'X', night: null }] }, 'P1'))
-          .toEqual({ plan: {}, status: 'planning', paired: {}, selected: [], ledger: [] });
+          .toEqual({ plan: {}, status: 'planning', paired: {}, craftApplied: {}, selected: [], ledger: [] });
       });
 
       it('derives selected/ledger from a plan when present', () => {
@@ -237,6 +238,7 @@ describe('downtimeUtils', () => {
           plan: { Research: 2, 'Earn Income': 1 },
           status: 'ready',
           paired: { Research: true },
+          craftApplied: {},
           selected: ['Research', 'Earn Income'],
           ledger: [
             { day: 'Research', night: null },
@@ -267,6 +269,7 @@ describe('downtimeUtils', () => {
           plan: {},
           status: 'planning',
           paired: {},
+          craftApplied: {},
           selected: ['Research', 'Crafting'],
           ledger: [{ day: 'Research', night: null }],
         });
@@ -279,6 +282,7 @@ describe('downtimeUtils', () => {
           plan: {},
           status: 'planning',
           paired: {},
+          craftApplied: {},
           selected: [],
           ledger: [{ day: 'Crafting', night: null }],
         });
@@ -290,6 +294,7 @@ describe('downtimeUtils', () => {
           plan: {},
           status: 'planning',
           paired: {},
+          craftApplied: {},
           selected: ['X'],
           ledger: [],
         });
@@ -304,6 +309,7 @@ describe('downtimeUtils', () => {
           plan: { Research: 3 },
           status: 'ready',
           paired: { Research: true },
+          craftApplied: {},
           selected: ['Research'],
           ledger: [
             { day: 'Research', night: null },
