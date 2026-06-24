@@ -16,6 +16,8 @@ const mockSetProjects = vi.fn();
 const mockSetGold = vi.fn();
 const mockSetResults = vi.fn();
 let goldValue = 100;
+let blockState = null;     // cnmh_downtimeblock_global
+let downtimeState = null;  // cnmh_downtime_<charId> (Follow-the-Expert pairing)
 
 const character = {
   id: 'char-1',
@@ -54,12 +56,20 @@ const withProjects = (projects) =>
     if (key === 'cnmh_downtimeresults_global') {
       return [null, mockSetResults];
     }
+    if (key === 'cnmh_downtimeblock_global') {
+      return [blockState, vi.fn()];
+    }
+    if (typeof key === 'string' && key.startsWith('cnmh_downtime_')) {
+      return [downtimeState, vi.fn()];
+    }
     return [projects != null ? { projects } : null, mockSetProjects];
   });
 
 beforeEach(() => {
   vi.clearAllMocks();
   goldValue = 100;
+  blockState = null;
+  downtimeState = null;
   withProjects(null);
   useContent.mockReturnValue({ items: catalogItems });
 });
@@ -361,6 +371,29 @@ describe('CraftingProjects', () => {
       fireEvent.click(screen.getByRole('button', { name: `Resolve Craft check for ${readyProject.name}` }));
       const result = mockSetProjects.mock.calls[0][0]({ projects: [readyProject] });
       expect(result.projects[0]).toMatchObject({ status: 'awaiting-decision', craftDegree: 'success' });
+    });
+
+    it('applies the Follow-the-Expert +2 circumstance to the Craft check when paired on Crafting', () => {
+      const PERIOD = 'P1';
+      blockState = { active: true, days: 7, startedAt: PERIOD };
+      downtimeState = { periodStartedAt: PERIOD, plan: { Crafting: 2 }, paired: { Crafting: 'expert-id' } };
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.getByText(/\+2 circumstance \(Follow the Expert\)/i)).toBeInTheDocument();
+      enterCheck(15, 21); // raw 21 < DC 22, but +2 ⇒ 23 ⇒ success
+      fireEvent.click(screen.getByRole('button', { name: `Resolve Craft check for ${readyProject.name}` }));
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [readyProject] });
+      expect(result.projects[0]).toMatchObject({ status: 'awaiting-decision', craftDegree: 'success', craftTotal: 23 });
+    });
+
+    it('applies no circumstance bonus without a Crafting pairing (raw total stands)', () => {
+      withProjects([readyProject]);
+      render(<CraftingProjects character={character} />);
+      expect(screen.queryByText(/Follow the Expert/i)).not.toBeInTheDocument();
+      enterCheck(15, 21); // 21 < DC 22 → failure
+      fireEvent.click(screen.getByRole('button', { name: `Resolve Craft check for ${readyProject.name}` }));
+      const result = mockSetProjects.mock.calls[0][0]({ projects: [readyProject] });
+      expect(result.projects[0]).toMatchObject({ craftDegree: 'failure', craftTotal: 21 });
     });
 
     it('a success offers Complete now and Continue', () => {
