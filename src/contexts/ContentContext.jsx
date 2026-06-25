@@ -12,6 +12,7 @@ import {
   normalizeSpells,
   normalizeEffects,
   normalizeRunes,
+  mergeArmorRunes,
   normalizeImages,
   normalizeTheme,
   resolveCharacterItems,
@@ -167,7 +168,9 @@ export const ContentProvider = ({ children }) => {
   // is the fallback path until a GM Spell collection lands).
   const spells = serverSpells.length ? normalizeSpells(serverSpells) : FALLBACK.spell;
   const effects = serverEffects.length ? normalizeEffects(serverEffects) : FALLBACK.effect;
-  const runes = serverRunes.length ? normalizeRunes(serverRunes) : FALLBACK.rune;
+  // Armor runes (#727) always merge in from the code seed (FALLBACK already
+  // carries them), so etched armor resolves whether or not the DO was reseeded.
+  const runes = mergeArmorRunes(serverRunes.length ? normalizeRunes(serverRunes) : FALLBACK.rune);
   const images = serverImages.length ? normalizeImages(serverImages) : FALLBACK.image;
   // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
   // editor must edit/save THAT, not the resolved view, or saving would inline

@@ -16,6 +16,7 @@ import {
   normalizeItems,
   itemCatalogMap,
   normalizeRunes,
+  mergeArmorRunes,
   runeCatalogMap,
   withSpellId,
   normalizeSpells,
@@ -268,6 +269,22 @@ describe('contentUtils', () => {
       const [r] = normalizeRunes([{ name: 'Frost', rider: { persistent: '1d6', damageType: 'cold' } }]);
       expect(r.id).toBe('frost');
       expect(r.type).toBe('property');
+    });
+    it('mergeArmorRunes folds the armor-rune seed into the rune list', () => {
+      const merged = mergeArmorRunes([{ id: 'vitalizing', type: 'property' }]);
+      const ids = merged.map((r) => r.id);
+      expect(ids).toContain('vitalizing'); // existing weapon rune kept
+      expect(ids).toContain('slick'); // armor seed merged in
+      expect(merged.find((r) => r.id === 'slick').armorRune).toBe(true);
+    });
+    it('mergeArmorRunes lets a DO-authored override win over the seed', () => {
+      const override = { id: 'slick', name: 'Custom Slick', armorRune: true };
+      const merged = mergeArmorRunes([override]);
+      expect(merged.filter((r) => r.id === 'slick')).toHaveLength(1);
+      expect(merged.find((r) => r.id === 'slick').name).toBe('Custom Slick');
+    });
+    it('defaultContent.rune carries the armor runes', () => {
+      expect(defaultContent().rune.some((r) => r.id === 'shadow' && r.armorRune)).toBe(true);
     });
     it('includes the theme collection with the default campaign doc', () => {
       const dc = defaultContent();

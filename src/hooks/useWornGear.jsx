@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useInvested } from './useInvested';
 import { isInvestable } from '../utils/InventoryUtils';
 import { DEFAULT_ITEM_STATE } from '../utils/itemState';
+import { hasArmorRuneBlock, resolveArmorItem } from '../utils/armorRunes';
 
 // Worn-Gear Effects (W1, #730) — the app-owned passive-bonus spine.
 //
@@ -34,6 +35,13 @@ const usableModifiers = (mods) =>
     (m) => m && SUPPORTED_STATS.has(m.stat) && typeof m.amount === 'number'
   );
 
+// The modifiers an item contributes. Armor with an etched `runes` block (#727)
+// derives its magic delta (potency AC + resilient saves + property-rune
+// modifiers) through the armor-rune resolver; everything else carries a flat
+// authored `modifiers` array.
+const itemModifiers = (e) =>
+  hasArmorRuneBlock(e) ? resolveArmorItem(e).modifiers : e.modifiers;
+
 /**
  * Synthesize always-on active-effect entries for the character's worn magic
  * gear. Returns one `{ entry, def }` per contributing item — the same shape
@@ -56,7 +64,7 @@ export const useWornGear = (charId, inventory = []) => {
     return (Array.isArray(inventory) ? inventory : [])
       .filter((e) => {
         if (!isWorn(e)) return false;
-        if (!usableModifiers(e.modifiers).length) return false;
+        if (!usableModifiers(itemModifiers(e)).length) return false;
         // Magic gear must be invested to grant its bonus; non-investable worn
         // gear contributes as soon as it's worn.
         if (isInvestable(e) && !isInvested(e.uid)) return false;
@@ -66,7 +74,7 @@ export const useWornGear = (charId, inventory = []) => {
         const id = `worn-${e.uid}`;
         return {
           entry: { id, effectId: id },
-          def: { id, name: e.name, modifiers: usableModifiers(e.modifiers) },
+          def: { id, name: e.name, modifiers: usableModifiers(itemModifiers(e)) },
         };
       });
   }, [inventory, isInvested]);

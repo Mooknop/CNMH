@@ -18,6 +18,7 @@ import {
 } from '../data';
 import bootstrapEffects from '../data/pf2eEffects';
 import bootstrapRunes from '../data/pf2eRunes';
+import bootstrapArmorRunes from '../data/armorRunes';
 
 export const slugify = (str) =>
   String(str || '')
@@ -145,6 +146,18 @@ export const normalizeRunes = (arr) =>
     id: r.id || slugify(r.name),
     type: r.type || 'property',
   }));
+
+// Armor property runes (#727) share the `rune` collection — flagged
+// armorRune:true — but ship as a code seed (src/data/armorRunes.js) rather than
+// the snapshot, so they resolve without a content reseed. Always fold the seed
+// into the rune list; an entry of the same id already present (a DO-authored
+// override from GmArmorRunes) wins, so the GM can still edit them.
+export const mergeArmorRunes = (runes) => {
+  const list = Array.isArray(runes) ? runes : [];
+  const present = new Set(list.map((r) => r && r.id).filter(Boolean));
+  const extras = bootstrapArmorRunes.filter((r) => !present.has(r.id));
+  return extras.length ? [...list, ...extras] : list;
+};
 
 // id -> property-rune doc, for resolving an item's runes.property references.
 export const runeCatalogMap = (runes) => {
@@ -572,7 +585,7 @@ export const defaultContent = () => ({
   effect: normalizeEffects(snapshotEffects.length ? snapshotEffects : bootstrapEffects),
   // Property runes (#548): brand-new collection, bootstrap-seeded until the
   // snapshot carries a `rune` array (same pattern as effects).
-  rune: normalizeRunes(snapshotRunes.length ? snapshotRunes : bootstrapRunes),
+  rune: mergeArmorRunes(normalizeRunes(snapshotRunes.length ? snapshotRunes : bootstrapRunes)),
   image: normalizeImages(defaultImages || []),
   theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
   monster: [],
