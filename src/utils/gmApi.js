@@ -238,3 +238,21 @@ export const sweepImages = (ids) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
   }).then(json);
+
+// Adopt (#757): list R2 objects with no catalog row, so a GM can register and
+// manage them in GM Tools → Images. Returns { unregistered: [{ id, size,
+// uploaded }], scannedAt }.
+export const listUnregisteredImages = () =>
+  fetch('/api/gm/images/unregistered', { credentials: 'include' }).then(json);
+
+// Adopt the given unregistered image ids — mints a default catalog entry for
+// each. Non-destructive + idempotent: the server re-validates each id is still
+// an unregistered R2 object, so an already-registered or missing-bytes id is
+// skipped. Returns { adopted: [...], skipped: [{ id, reason }] }.
+export const adoptImages = (ids) =>
+  fetch('/api/gm/images/adopt', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids }),
+  }).then(json);

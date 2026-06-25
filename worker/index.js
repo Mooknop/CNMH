@@ -7,7 +7,7 @@ import { CampaignSession } from './CampaignSession.js';
 import { CampaignContent } from './CampaignContent.js';
 import { verifyAccess } from './access.js';
 import { scanImageReferences } from './imageReferences.js';
-import { computeImageOrphans } from './imageOrphans.js';
+import { computeImageOrphans, computeUnregisteredImages } from './imageOrphans.js';
 
 export { CampaignSession, CampaignContent };
 
@@ -18,6 +18,15 @@ const CAMPAIGN_ID = 'osprey-covey';
 const IMAGE_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const IMAGE_EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
 const IMAGE_MAX_BYTES = 1.5 * 1024 * 1024;
+
+// Reverse of IMAGE_EXT: guess the mime type from an R2 key's extension. Used as
+// a fallback when adopting (#757) a stranded object whose R2 httpMetadata is
+// missing a contentType.
+const EXT_MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
+const mimeFromKey = (key) => {
+  const dot = String(key).lastIndexOf('.');
+  return dot === -1 ? '' : (EXT_MIME[key.slice(dot).toLowerCase()] || '');
+};
 
 // Image GC (#399): never reap an R2 object / catalog entry created within this
 // window, so an in-flight token capture whose monster doc hasn't persisted yet
@@ -57,6 +66,18 @@ async function imageAuditReport(env, origin) {
     now: Date.now(),
     graceMs: IMAGE_GC_GRACE_MS,
   });
+}
+
+// Adopt (#757): R2 objects with no `image` catalog row → [{ id, size, uploaded }].
+// Powers both the unregistered-listing GET and the re-validation in the adopt POST.
+async function listUnregisteredImages(env, origin) {
+  const snapRes = await contentStub(env).fetch(
+    new Request(`${origin}/api/content`, { method: 'GET' })
+  );
+  const snap = await snapRes.json();
+  const catalog = (snap.payload || {}).image || [];
+  const r2Objects = await listAllImages(env);
+  return computeUnregisteredImages({ r2Objects, catalog });
 }
 
 const contentStub = (env) =>
@@ -260,6 +281,59 @@ export default {
       }
 
       return Response.json({ reclaimed, skipped });
+    }
+
+    // Adopt listing: GET /api/gm/images/unregistered — Access-gated, READ-ONLY.
+    // R2 objects with no catalog row, so a GM can register ("adopt") them and
+    // manage them in GM Tools → Images like any uploaded image (#757).
+    if (request.method === 'GET' && url.pathname === '/api/gm/images/unregistered') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+
+      const unregistered = await listUnregisteredImages(env, url.origin);
+      return Response.json({ unregistered, scannedAt: Date.now() });
+    }
+
+    // Adopt: POST /api/gm/images/adopt — Access-gated. Body { ids: [...] }. Mints
+    // a default catalog entry for each id that is CURRENTLY an R2 object with no
+    // catalog row. Non-destructive + idempotent: an already-registered id or one
+    // whose bytes are gone is skipped, never overwritten (re-validated here so a
+    // stale client listing can't clobber an existing entry).
+    if (request.method === 'POST' && url.pathname === '/api/gm/images/adopt') {
+      const gm = await verifyAccess(request, env);
+      if (!gm) return new Response('Forbidden', { status: 403 });
+
+      let body;
+      try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400 }); }
+      const ids = Array.isArray(body?.ids) ? body.ids : null;
+      if (!ids) return new Response('Expected { ids: [...] }', { status: 400 });
+
+      const adoptable = new Set((await listUnregisteredImages(env, url.origin)).map((o) => o.id));
+
+      const adopted = [];
+      const skipped = [];
+      for (const id of ids) {
+        if (!adoptable.has(id)) { skipped.push({ id, reason: 'not-unregistered' }); continue; }
+        const head = await env.CAMPAIGN_IMAGES.head(id);
+        if (!head) { skipped.push({ id, reason: 'no-bytes' }); continue; }
+        const entry = {
+          id,
+          name: id,
+          folder: 'Unsorted',
+          mimeType: head.httpMetadata?.contentType || mimeFromKey(id),
+          createdAt: Date.now(),
+        };
+        await contentStub(env).fetch(
+          new Request(`${url.origin}/api/gm/image/${encodeURIComponent(id)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(entry),
+          })
+        );
+        adopted.push(entry);
+      }
+
+      return Response.json({ adopted, skipped });
     }
 
     // Foundry token import: POST /api/bridge/image?key=<secret> — gated by the
