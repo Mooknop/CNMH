@@ -97,9 +97,9 @@ describe('GmCalendar', () => {
     render(<GmCalendar />);
     const form = screen.getByTestId('event-form-blu-birthday');
     fireEvent.click(within(form).getByText('Delete'));
-    expect(within(form).getByText('Delete forever')).toBeDisabled();
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: "Blu's Birthday" } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    expect(screen.getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: "Blu's Birthday" } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('calendar', 'blu-birthday'));
   });
 
@@ -113,7 +113,7 @@ describe('GmCalendar', () => {
     fireEvent.change(within(form).getByLabelText('recurring'), { target: { value: 'every full moon' } });
     fireEvent.click(within(form).getByText('Create event'));
     expect(saveDocument).not.toHaveBeenCalled();
-    fireEvent.click(within(form).getByText('Overwrite'));
+    fireEvent.click(screen.getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('calendar', 'blu-birthday', expect.objectContaining({ id: 'blu-birthday' }))
     );

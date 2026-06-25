@@ -98,12 +98,12 @@ describe('GmQuests', () => {
     selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.click(within(form).getByText('Delete'));
-    const confirmBtn = within(form).getByText('Delete forever');
+    const confirmBtn = screen.getByText('Delete forever');
     expect(confirmBtn).toBeDisabled();
     fireEvent.click(confirmBtn);
     expect(deleteDocument).not.toHaveBeenCalled();
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Find the Orb' } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Find the Orb' } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('quest', 'find-orb'));
   });
 
@@ -113,8 +113,8 @@ describe('GmQuests', () => {
     selectQuest('Find the Orb');
     const form = screen.getByTestId('quest-form-find-orb');
     fireEvent.click(within(form).getByText('Delete'));
-    fireEvent.click(within(form).getByText('Cancel'));
-    expect(within(form).queryByLabelText('confirm-input')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.queryByLabelText('confirm-input')).not.toBeInTheDocument();
     expect(deleteDocument).not.toHaveBeenCalled();
   });
 
@@ -127,8 +127,8 @@ describe('GmQuests', () => {
     fireEvent.change(within(form).getByLabelText('title'), { target: { value: 'Find Orb' } });
     fireEvent.click(within(form).getByText('Create quest'));
     expect(saveDocument).not.toHaveBeenCalled();
-    expect(within(form).getByText(/already exists/i)).toBeInTheDocument();
-    fireEvent.click(within(form).getByText('Overwrite'));
+    expect(screen.getByText(/already exists/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('quest', 'find-orb', expect.objectContaining({ id: 'find-orb' }))
     );

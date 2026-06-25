@@ -98,9 +98,9 @@ describe('GmReputation', () => {
     selectFaction('The Bunyip Club');
     const form = screen.getByTestId('faction-form-bunyip-club');
     fireEvent.click(within(form).getByText('Delete'));
-    expect(within(form).getByText('Delete forever')).toBeDisabled();
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'The Bunyip Club' } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    expect(screen.getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'The Bunyip Club' } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('faction', 'bunyip-club'));
   });
 
@@ -113,7 +113,7 @@ describe('GmReputation', () => {
     fireEvent.change(within(form).getByLabelText('faction-name'), { target: { value: 'Bunyip Club' } });
     fireEvent.click(within(form).getByText('Create faction'));
     expect(saveDocument).not.toHaveBeenCalled();
-    fireEvent.click(within(form).getByText('Overwrite'));
+    fireEvent.click(screen.getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('faction', 'bunyip-club', expect.objectContaining({ id: 'bunyip-club' }))
     );

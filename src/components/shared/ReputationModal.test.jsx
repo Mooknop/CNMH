@@ -51,10 +51,10 @@ describe('ReputationModal', () => {
 
   it('calls onClose when overlay is clicked', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <ReputationModal isOpen={true} onClose={onClose} faction={mockFaction} />
     );
-    fireEvent.click(container.querySelector('.modal-overlay'));
+    fireEvent.click(document.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalled();
   });
 

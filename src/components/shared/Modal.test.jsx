@@ -11,6 +11,18 @@ describe('Modal', () => {
     expect(container.firstChild).toBeNull();
   });
 
+  it('portals the overlay to document.body, not the render container', () => {
+    const { container } = render(
+      <Modal isOpen onClose={() => {}} title="Portaled">body</Modal>
+    );
+    // The overlay must escape the React render tree so it is never trapped by an
+    // ancestor containing block (e.g. a GM card using backdrop-filter).
+    expect(container.querySelector('.modal-overlay')).toBeNull();
+    const overlay = document.querySelector('.modal-overlay');
+    expect(overlay).toBeInTheDocument();
+    expect(overlay.parentElement).toBe(document.body);
+  });
+
   it('renders centered by default (no bottom variant classes)', () => {
     render(<Modal isOpen onClose={() => {}} title="Centered">body</Modal>);
     expect(document.querySelector('.modal-overlay')).toBeInTheDocument();

@@ -143,9 +143,9 @@ describe('GmItems', () => {
     selectItem('Backpack');
     const form = screen.getByTestId('item-form-backpack');
     fireEvent.click(within(form).getByText('Delete'));
-    expect(within(form).getByText('Delete forever')).toBeDisabled();
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Backpack' } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    expect(screen.getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Backpack' } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('item', 'backpack'));
   });
 
@@ -158,7 +158,7 @@ describe('GmItems', () => {
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Backpack' } });
     fireEvent.click(within(form).getByText('Create item'));
     expect(saveDocument).not.toHaveBeenCalled();
-    fireEvent.click(within(form).getByText('Overwrite'));
+    fireEvent.click(screen.getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith(
         'item',

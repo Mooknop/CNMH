@@ -273,10 +273,10 @@ describe('ItemModal', () => {
       ...baseItem,
       actions: [{ name: 'Slash', actionCount: 2, description: 'Strike.' }],
     };
-    const { container } = render(
+    render(
       <ItemModal isOpen={true} onClose={vi.fn()} item={item} />
     );
-    const icons = container.querySelectorAll('.action-icon');
+    const icons = document.querySelectorAll('.action-icon');
     expect(icons).toHaveLength(2);
   });
 
@@ -285,10 +285,10 @@ describe('ItemModal', () => {
       ...baseItem,
       actions: [{ name: 'Slash', description: 'Strike.' }],
     };
-    const { container } = render(
+    render(
       <ItemModal isOpen={true} onClose={vi.fn()} item={item} />
     );
-    expect(container.querySelectorAll('.action-icon')).toHaveLength(0);
+    expect(document.querySelectorAll('.action-icon')).toHaveLength(0);
   });
 
   it('renders action traits when action.traits is non-empty', () => {
@@ -637,40 +637,40 @@ describe('ItemModal', () => {
 
   // --- theming ---
   it('uses characterColor when provided', () => {
-    const { container } = render(
+    render(
       <ItemModal isOpen={true} onClose={vi.fn()} item={baseItem} characterColor="#ff0000" />
     );
-    const modalContainer = container.querySelector('.modal-container');
+    const modalContainer = document.querySelector('.modal-container');
     expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#ff0000');
     // The loot card hides the shared header, so the theme rides on the
     // container custom property rather than a themed header bar.
-    expect(container.querySelector('.modal--loot')).toBeInTheDocument();
+    expect(document.querySelector('.modal--loot')).toBeInTheDocument();
   });
 
   it('uses default color when characterColor is absent', () => {
-    const { container } = render(
+    render(
       <ItemModal isOpen={true} onClose={vi.fn()} item={baseItem} />
     );
-    const modalContainer = container.querySelector('.modal-container');
+    const modalContainer = document.querySelector('.modal-container');
     expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('var(--color-primary)');
   });
 
   // --- close behaviour ---
   it('calls onClose when overlay is clicked', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <ItemModal isOpen={true} onClose={onClose} item={baseItem} />
     );
-    fireEvent.click(container.querySelector('.modal-overlay'));
+    fireEvent.click(document.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('does not call onClose when modal body is clicked', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <ItemModal isOpen={true} onClose={onClose} item={baseItem} />
     );
-    fireEvent.click(container.querySelector('.modal-container'));
+    fireEvent.click(document.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -697,24 +697,24 @@ describe('ItemModal', () => {
 
   it('renders the hero art image when item.image is set', () => {
     const item = { ...baseItem, image: 'img_sword.jpg' };
-    const { container } = render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
-    const img = container.querySelector('.loot-art img');
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    const img = document.querySelector('.loot-art img');
     expect(img).not.toBeNull();
     expect(img).toHaveAttribute('src', '/api/images/img_sword.jpg');
     // The monospace code placeholder is suppressed once real art is present.
-    expect(container.querySelector('.loot-code')).toBeNull();
+    expect(document.querySelector('.loot-code')).toBeNull();
   });
 
   it('falls back to the itemCode placeholder when item.image is absent', () => {
-    const { container } = render(<ItemModal isOpen={true} onClose={vi.fn()} item={baseItem} />);
-    expect(container.querySelector('.loot-art img')).toBeNull();
-    expect(container.querySelector('.loot-code')).not.toBeNull();
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={baseItem} />);
+    expect(document.querySelector('.loot-art img')).toBeNull();
+    expect(document.querySelector('.loot-code')).not.toBeNull();
   });
 
   it('applies object-position style to the hero art when item.imagePosition is set', () => {
     const item = { ...baseItem, image: 'img_sword.jpg', imagePosition: { x: 25, y: 80 } };
-    const { container } = render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
-    const img = container.querySelector('.loot-art img');
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    const img = document.querySelector('.loot-art img');
     expect(img.style.objectPosition).toBe('25% 80%');
   });
 });

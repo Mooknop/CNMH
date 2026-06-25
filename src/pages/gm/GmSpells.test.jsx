@@ -130,7 +130,7 @@ describe('GmSpells', () => {
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Guidance' } });
     fireEvent.click(within(form).getByText('Create spell'));
     expect(saveDocument).not.toHaveBeenCalled();
-    fireEvent.click(within(form).getByText('Overwrite'));
+    fireEvent.click(screen.getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith(
         'spell',
@@ -147,9 +147,9 @@ describe('GmSpells', () => {
     selectSpell('Guidance');
     const form = screen.getByTestId('spell-form-guidance');
     fireEvent.click(within(form).getByText('Delete'));
-    expect(within(form).getByText('Delete forever')).toBeDisabled();
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Guidance' } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    expect(screen.getByText('Delete forever')).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Guidance' } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('spell', 'guidance'));
   });
 
