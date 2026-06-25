@@ -9,11 +9,13 @@ vi.mock('../../utils/gmApi', () => ({
   deleteImage: vi.fn(),
   auditImages: vi.fn(() => new Promise(() => {})), // never resolves; modal stays in "scanning"
   sweepImages: vi.fn(),
+  listUnregisteredImages: vi.fn(() => Promise.resolve({ unregistered: [] })),
+  adoptImages: vi.fn(),
 }));
 vi.mock('../../utils/imageUpload', () => ({ resizeImageToBlob: vi.fn() }));
 
 import { useContent } from '../../contexts/ContentContext';
-import { saveDocument, uploadImage, deleteImage } from '../../utils/gmApi';
+import { saveDocument, uploadImage, deleteImage, listUnregisteredImages, adoptImages } from '../../utils/gmApi';
 import { resizeImageToBlob } from '../../utils/imageUpload';
 
 const portrait = {
@@ -33,6 +35,10 @@ const item = {
 
 const setContent = (images = [portrait, item]) =>
   useContent.mockReturnValue({ images });
+
+// mockReset (vite.config.js) wipes factory impls before each test; GmImages
+// fetches the unregistered listing on mount, so give it a resolving default.
+beforeEach(() => listUnregisteredImages.mockResolvedValue({ unregistered: [] }));
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -231,5 +237,71 @@ describe('GmImages', () => {
     render(<GmImages />);
     fireEvent.change(screen.getByLabelText('filter'), { target: { value: 'zzznomatch' } });
     expect(screen.getByText(/no images match/i)).toBeInTheDocument();
+  });
+
+  describe('stranded R2 images (#757)', () => {
+    const stranded = { id: 'tok_orphan.webp', size: 2048, uploaded: 1700000000000 };
+
+    it('surfaces stranded R2 objects as flagged tiles in the grid', async () => {
+      setContent([portrait]);
+      listUnregisteredImages.mockResolvedValue({ unregistered: [stranded] });
+      render(<GmImages />);
+      const tile = await screen.findByTestId('unregistered-tile-tok_orphan.webp');
+      expect(tile.querySelector('.gm-image-badge')).toHaveTextContent('Unregistered');
+      expect(screen.getByText(/1 unregistered/)).toBeInTheDocument();
+    });
+
+    it('adopts a single image and flashes', async () => {
+      setContent([portrait]);
+      listUnregisteredImages.mockResolvedValue({ unregistered: [stranded] });
+      adoptImages.mockResolvedValue({ adopted: [{ id: stranded.id }], skipped: [] });
+      render(<GmImages />);
+      const tile = await screen.findByTestId('unregistered-tile-tok_orphan.webp');
+      fireEvent.click(tile.querySelector('.gm-image-adopt'));
+      await waitFor(() => expect(adoptImages).toHaveBeenCalledWith(['tok_orphan.webp']));
+      expect(await screen.findByRole('status')).toHaveTextContent(/Adopted 1 image/);
+      // optimistically removed from the unregistered list
+      expect(screen.queryByTestId('unregistered-tile-tok_orphan.webp')).not.toBeInTheDocument();
+    });
+
+    it('"Adopt all" adopts every stranded id', async () => {
+      const stranded2 = { id: 'img_lost.png', size: 1, uploaded: 1 };
+      setContent([portrait]);
+      listUnregisteredImages.mockResolvedValue({ unregistered: [stranded, stranded2] });
+      adoptImages.mockResolvedValue({ adopted: [{ id: stranded.id }, { id: stranded2.id }], skipped: [] });
+      render(<GmImages />);
+      const btn = await screen.findByRole('button', { name: /Adopt all \(2\)/ });
+      fireEvent.click(btn);
+      await waitFor(() => expect(adoptImages).toHaveBeenCalledWith(['tok_orphan.webp', 'img_lost.png']));
+      expect(await screen.findByRole('status')).toHaveTextContent(/Adopted 2 images/);
+    });
+
+    it('the Unregistered tab shows only stranded tiles', async () => {
+      setContent([portrait]);
+      listUnregisteredImages.mockResolvedValue({ unregistered: [stranded] });
+      render(<GmImages />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Unregistered' }));
+      expect(screen.getByTestId('unregistered-tile-tok_orphan.webp')).toBeInTheDocument();
+      expect(screen.queryByTestId('image-tile-img_abc.jpg')).not.toBeInTheDocument();
+    });
+
+    it('shows an adopt error when the call fails', async () => {
+      setContent([portrait]);
+      listUnregisteredImages.mockResolvedValue({ unregistered: [stranded] });
+      adoptImages.mockRejectedValue(new Error('Adopt failed'));
+      render(<GmImages />);
+      const tile = await screen.findByTestId('unregistered-tile-tok_orphan.webp');
+      fireEvent.click(tile.querySelector('.gm-image-adopt'));
+      expect(await screen.findByRole('alert')).toHaveTextContent(/adopt failed/i);
+    });
+
+    it('no Adopt all button when there are no stranded images', async () => {
+      setContent([portrait]);
+      render(<GmImages />);
+      // listing resolves to [] (default); give the effect a tick
+      await waitFor(() => expect(listUnregisteredImages).toHaveBeenCalled());
+      expect(screen.queryByRole('button', { name: /Adopt all/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Unregistered' })).not.toBeInTheDocument();
+    });
   });
 });

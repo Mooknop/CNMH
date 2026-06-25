@@ -48,6 +48,30 @@
   background: var(--accent-tint);
 }
 
+/* Stranded R2 objects awaiting adoption into the catalog (#757). */
+.gm-image-tile--unregistered {
+  cursor: default;
+  border-color: var(--warn-outline, var(--shell-border-strong));
+  border-style: dashed;
+}
+
+.gm-image-tile--unregistered:hover {
+  border-color: var(--warn-outline, var(--shell-border-strong));
+}
+
+.gm-image-badge {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--shell-text-secondary);
+}
+
+.gm-image-adopt {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.7rem;
+}
+
 .gm-image-thumb {
   width: 90px;
   height: 90px;

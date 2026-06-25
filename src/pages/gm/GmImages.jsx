@@ -1,7 +1,7 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument } from '../../utils/gmApi';
-import { uploadImage, deleteImage } from '../../utils/gmApi';
+import { uploadImage, deleteImage, listUnregisteredImages, adoptImages } from '../../utils/gmApi';
 import { resizeImageToBlob } from '../../utils/imageUpload';
 import { existingIdSet } from '../../utils/contentUtils';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
@@ -11,6 +11,10 @@ import './gm.css';
 import './GmImages.css';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+// Pseudo-folder tab that surfaces stranded R2 objects (no catalog row) so they
+// can be adopted into the catalog (#757). Only shown when some exist.
+const UNREGISTERED_TAB = 'Unregistered';
 
 const folderOf = (img) => (img.folder && String(img.folder).trim()) || 'Uncategorized';
 
@@ -158,18 +162,35 @@ const GmImages = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [reclaimOpen, setReclaimOpen] = useState(false);
+  const [unregistered, setUnregistered] = useState([]); // stranded R2 objects, no catalog row
+  const [adopting, setAdopting] = useState(false);
   const fileRef = useRef(null);
 
+  // Stranded R2 bytes (no catalog row) are invisible in the catalog grid; list
+  // them so they can be adopted (#757). Best-effort — a listing failure must not
+  // block managing the catalog itself.
+  const refreshUnregistered = useCallback(() => {
+    listUnregisteredImages()
+      .then((res) => setUnregistered(Array.isArray(res?.unregistered) ? res.unregistered : []))
+      .catch(() => {});
+  }, []);
+  useEffect(() => { refreshUnregistered(); }, [refreshUnregistered]);
+
   const tabs = useMemo(
-    () => ['All', ...Array.from(new Set(catalog.map(folderOf))).sort()],
-    [catalog]
+    () => [
+      'All',
+      ...Array.from(new Set(catalog.map(folderOf))).sort(),
+      ...(unregistered.length ? [UNREGISTERED_TAB] : []),
+    ],
+    [catalog, unregistered.length]
   );
   const activeTab = tabs.includes(tab) ? tab : 'All';
+  const onUnregisteredTab = activeTab === 'All' || activeTab === UNREGISTERED_TAB;
 
-  const inTab = useMemo(
-    () => (activeTab === 'All' ? catalog : catalog.filter((img) => folderOf(img) === activeTab)),
-    [catalog, activeTab]
-  );
+  const inTab = useMemo(() => {
+    if (activeTab === UNREGISTERED_TAB) return [];
+    return activeTab === 'All' ? catalog : catalog.filter((img) => folderOf(img) === activeTab);
+  }, [catalog, activeTab]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -178,6 +199,31 @@ const GmImages = () => {
       [img.name, img.folder, img.id].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
     );
   }, [inTab, query]);
+
+  // Unregistered tiles show in "All" and the dedicated tab, filtered by id.
+  const filteredUnregistered = useMemo(() => {
+    if (!onUnregisteredTab) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return unregistered;
+    return unregistered.filter((o) => String(o.id).toLowerCase().includes(q));
+  }, [unregistered, onUnregisteredTab, query]);
+
+  const adopt = async (ids) => {
+    if (!ids.length) return;
+    setAdopting(true);
+    setUploadError(null);
+    try {
+      const res = await adoptImages(ids);
+      const n = Array.isArray(res?.adopted) ? res.adopted.length : 0;
+      // Optimistically drop adopted ids; the catalog live-updates via ContentContext.
+      setUnregistered((cur) => cur.filter((o) => !ids.includes(o.id)));
+      setFlash(`Adopted ${n} image${n !== 1 ? 's' : ''} into the catalog. Changes are live for every connected player.`);
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setAdopting(false);
+    }
+  };
 
   const onSaved = () => {
     setFlash('Saved. Changes are live for every connected player.');
@@ -242,6 +288,15 @@ const GmImages = () => {
         >
           {uploading ? 'Uploading…' : '+ Upload image'}
         </button>
+        {unregistered.length > 0 && (
+          <button
+            className="btn-secondary"
+            disabled={adopting}
+            onClick={() => adopt(unregistered.map((o) => o.id))}
+          >
+            {adopting ? 'Adopting…' : `Adopt all (${unregistered.length})`}
+          </button>
+        )}
         <button
           className="btn-secondary"
           onClick={() => setReclaimOpen(true)}
@@ -263,10 +318,16 @@ const GmImages = () => {
       <ImageReclaimModal
         isOpen={reclaimOpen}
         onClose={() => setReclaimOpen(false)}
-        onDone={() => setFlash('Reclaimed unused images. Changes are live for every connected player.')}
+        onDone={() => {
+          setFlash('Reclaimed unused images. Changes are live for every connected player.');
+          refreshUnregistered(); // a sweep can clear stranded bytes
+        }}
       />
 
-      <p className="gm-count">Showing {filtered.length} of {inTab.length}</p>
+      <p className="gm-count">
+        Showing {filtered.length} of {inTab.length}
+        {filteredUnregistered.length > 0 && ` · ${filteredUnregistered.length} unregistered`}
+      </p>
 
       <div className="gm-images-layout">
         <div className="gm-images-grid">
@@ -281,7 +342,27 @@ const GmImages = () => {
               <span className="gm-image-name">{img.name}</span>
             </button>
           ))}
-          {filtered.length === 0 && (
+
+          {filteredUnregistered.map((o) => (
+            <div
+              key={o.id}
+              className="gm-image-tile gm-image-tile--unregistered"
+              data-testid={`unregistered-tile-${o.id}`}
+            >
+              <img src={`/api/images/${o.id}`} alt={o.id} className="gm-image-thumb" />
+              <span className="gm-image-badge">Unregistered</span>
+              <span className="gm-image-name">{o.id}</span>
+              <button
+                className="btn-primary gm-image-adopt"
+                disabled={adopting}
+                onClick={() => adopt([o.id])}
+              >
+                Adopt
+              </button>
+            </div>
+          ))}
+
+          {filtered.length === 0 && filteredUnregistered.length === 0 && (
             <p className="gm-hint">
               {catalog.length === 0
                 ? 'No images yet — upload one to get started.'
