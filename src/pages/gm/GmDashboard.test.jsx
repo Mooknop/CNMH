@@ -12,6 +12,7 @@ vi.mock('../../utils/gmApi', () => ({
   seedMissing: vi.fn(),
   repointFocusSpellsToCatalog: vi.fn(),
   syncChainConfig: vi.fn(),
+  applyContentDiff: vi.fn(),
 }));
 vi.mock('../../utils/gmBackup', () => ({ downloadBackup: vi.fn(), restoreBackup: vi.fn() }));
 
@@ -37,7 +38,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
 import {
-  seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig,
+  seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig, applyContentDiff,
 } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 
@@ -261,6 +262,36 @@ describe('GmDashboard — Maintenance', () => {
     fireEvent.click(screen.getByText('Download backup'));
     await waitFor(() => expect(screen.getByText(/Backup downloaded/)).toBeInTheDocument());
     expect(downloadBackup).toHaveBeenCalled();
+  });
+
+  it('"Apply content update" runs the diff and summarizes the per-collection report', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    applyContentDiff.mockResolvedValue({
+      quest: { added: ['q2'], changed: [], unchanged: 3, liveOnly: ['old-quest'] },
+      item: { added: [], changed: ['i1'], unchanged: 0, liveOnly: [] },
+    });
+    renderDash();
+    fireEvent.click(screen.getByText(/Apply content update/i));
+    await waitFor(() => expect(applyContentDiff).toHaveBeenCalled());
+    expect(screen.getByText(/quest: \+1 added, 3 unchanged, 1 live-only/)).toBeInTheDocument();
+    expect(screen.getByText(/item: 1 changed/)).toBeInTheDocument();
+    expect(screen.getByText(/live-only .*: old-quest/)).toBeInTheDocument();
+  });
+
+  it('"Apply content update" reports nothing to apply when already up to date', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    applyContentDiff.mockResolvedValue({});
+    renderDash();
+    fireEvent.click(screen.getByText(/Apply content update/i));
+    await waitFor(() => expect(screen.getByText(/nothing to apply/i)).toBeInTheDocument());
+  });
+
+  it('"Apply content update" surfaces a failure', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    applyContentDiff.mockRejectedValue(new Error('read failed'));
+    renderDash();
+    fireEvent.click(screen.getByText(/Apply content update/i));
+    await waitFor(() => expect(screen.getByText(/Failed: read failed/)).toBeInTheDocument());
   });
 
   it('"Apply new defaults" runs all three migrations and shows combined result', async () => {

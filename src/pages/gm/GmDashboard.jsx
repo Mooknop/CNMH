@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
-import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig } from '../../utils/gmApi';
+import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig, applyContentDiff } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import PlayModeControl from '../../components/gm/PlayModeControl';
@@ -123,6 +123,26 @@ const InitiativePanel = ({ encounter, actorMap, setActorMap, characters }) => {
   );
 };
 
+// Render the applyContentDiff per-collection report as a readable summary.
+// Lists live-only ids explicitly so the GM can review/delete them manually —
+// the diff never deletes on its own.
+const summarizeDiff = (report) => {
+  const lines = [];
+  for (const [coll, r] of Object.entries(report || {})) {
+    const bits = [];
+    if (r.added.length) bits.push(`+${r.added.length} added`);
+    if (r.changed.length) bits.push(`${r.changed.length} changed`);
+    if (r.unchanged) bits.push(`${r.unchanged} unchanged`);
+    if (r.liveOnly.length) bits.push(`${r.liveOnly.length} live-only`);
+    if (!bits.length) continue;
+    lines.push(`${coll}: ${bits.join(', ')}`);
+    if (r.added.length) lines.push(`  added: ${r.added.join(', ')}`);
+    if (r.changed.length) lines.push(`  changed: ${r.changed.join(', ')}`);
+    if (r.liveOnly.length) lines.push(`  live-only (not in bundle — delete manually if intended): ${r.liveOnly.join(', ')}`);
+  }
+  return lines.length ? lines.join('\n') : 'Already up to date — nothing to apply.';
+};
+
 // ─────────────────────────────────────────────────────────────
 // Maintenance panel — collapsible; seed / backup / restore
 // Logic unchanged from the pre-refresh GmDashboard.
@@ -141,6 +161,19 @@ const MaintenancePanel = () => {
     try {
       const res = await seedDefaults(force);
       setMsg(`Done: ${JSON.stringify(res.seeded)}`);
+    } catch (e) {
+      setMsg(`Failed: ${e.message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const applyDiff = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const report = await applyContentDiff();
+      setMsg(summarizeDiff(report));
     } catch (e) {
       setMsg(`Failed: ${e.message}`);
     } finally {
@@ -222,7 +255,10 @@ const MaintenancePanel = () => {
         )}
 
         <div className="gm-actions">
-          <button className="btn-primary" disabled={busy} onClick={() => runSeed(false)}>
+          <button className="btn-primary" disabled={busy} onClick={applyDiff}>
+            Apply content update (diff)
+          </button>
+          <button className="btn-secondary" disabled={busy} onClick={() => runSeed(false)}>
             Import defaults (only empty collections)
           </button>
           <button className="btn-secondary" disabled={busy} onClick={applyNewDefaults}>
@@ -236,6 +272,14 @@ const MaintenancePanel = () => {
             Force reseed (overwrite)
           </button>
         </div>
+        <p className="gm-count">
+          The diff-based update above writes only the docs that are new or changed
+          (quests, items, spells, lore, traits, factions, calendar, effects, runes),
+          one at a time, archiving each prior version so every write is restorable. It
+          never deletes — docs only in the live store are reported, not removed.
+          Characters, theme, and images are left untouched. Prefer it over the
+          destructive reseed below for routine content drops.
+        </p>
 
         <h2>Backup &amp; restore</h2>
         <p className="gm-count">
