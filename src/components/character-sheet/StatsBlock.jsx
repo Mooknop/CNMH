@@ -126,9 +126,11 @@ const StatsBlock = ({ character, characterColor }) => {
   // display-only — the app never commits it back to the doc (the scalar stays
   // the authored fallback), so it sits outside the #555 reconciliation.
   const acBase = armorClass?.value ?? ac;
-  const acSourceLabel = armorClass?.derived
-    ? `Derived from ${armorClass.armorName || armorClass.category} (10 + proficiency + Dex + armor)`
-    : 'Synced Armor Class';
+  const acSourceLabel = !armorClass?.derived
+    ? 'Synced Armor Class'
+    : armorClass.armorName
+      ? `Derived from ${armorClass.armorName} (10 + proficiency + Dex + armor)`
+      : 'Derived (10 + unarmored proficiency + Dex)';
 
   const defaultProficiencies = {
     weapons: {

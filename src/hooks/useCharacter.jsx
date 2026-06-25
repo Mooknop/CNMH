@@ -193,31 +193,33 @@ export const useCharacter = (character) => {
     const charEff = { ...character, inventory: effectiveInventory };
 
     // ── Armor Class (AC3, #749 / AC4, #750) ───────────────────────────────────
-    // Derive base AC from the worn armor (10 + proficiency + capped Dex + armor
-    // item bonus) ONLY when a schema'd armor is actually equipped. Otherwise the
-    // authored `ac` scalar wins — it already bakes in the character's real base
-    // AC (unarmored proficiency, ability, items the app doesn't model), so
-    // deriving an unarmored 10+Dex+prof there would *lower* every armorless
-    // character. We only override the scalar when there's positive evidence (a
-    // backfilled worn armor); un-backfilled or no armor → scalar. Effect bonuses
-    // (Raise a Shield, conditions, the worn-gear magic layer) still layer on top
-    // downstream via the effect engine — this is only the base value.
+    // Derive base AC (10 + proficiency + capped Dex + armor item bonus) from the
+    // worn armor — or the unarmored proficiency when nothing is worn. This is
+    // accurate only when the character carries armor-proficiency data; without a
+    // `proficiencies.armor` block we can't compute the proficiency term, so we
+    // keep the authored `ac` scalar (deriving 10+Dex+0 there would understate a
+    // character's real AC). deriveArmorClass also returns null — i.e. scalar
+    // fallback — for a worn armor that hasn't been backfilled with the AC1
+    // schema. Effect bonuses (Raise a Shield, conditions, the worn-gear magic
+    // layer) still layer on top downstream; this is only the base value.
     const wornArmor = findWornArmor(effectiveInventory);
     const armorCategory = wornArmor
       ? normalizeArmor(wornArmor.armor)?.category || 'unarmored'
       : 'unarmored';
-    const derivedAc = wornArmor
+    const hasArmorProficiency = !!(character.proficiencies && character.proficiencies.armor);
+    const derivedAc = hasArmorProficiency
       ? deriveArmorClass({
-          armor: wornArmor.armor,
+          armor: wornArmor ? wornArmor.armor : null,
           dexMod: abilityModifiers.dexterity,
           proficiencyBonus: armorProficiencies[armorCategory]?.bonus || 0,
         })
       : null;
+    const acDerived = derivedAc != null;
     const armorClass = {
-      value: derivedAc != null ? derivedAc : ac,
-      derived: derivedAc != null,
-      source: derivedAc != null ? 'armor' : 'scalar',
-      category: wornArmor ? armorCategory : null,
+      value: acDerived ? derivedAc : ac,
+      derived: acDerived,
+      source: !acDerived ? 'scalar' : wornArmor ? 'armor' : 'unarmored',
+      category: acDerived ? armorCategory : null,
       armorName: wornArmor ? wornArmor.name : null,
     };
 

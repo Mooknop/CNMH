@@ -106,16 +106,34 @@ describe('useCharacter', () => {
     expect(r2.current.armorClass.source).toBe('scalar');
   });
 
-  it('keeps the authored scalar when no armor is worn — never derives unarmored (AC4)', () => {
-    // A character with no armor must NOT be re-derived to 10+Dex+prof; the
-    // authored ac scalar already captures their real base AC.
+  it('derives unarmored AC (10 + Dex + unarmored proficiency) when armorless but trained (AC4)', () => {
+    // No armor worn, but the character has unarmored proficiency data, so the
+    // app derives it accurately instead of falling back. getArmorProficiencyBonus
+    // is mocked to 0, so: 10 + 0 + Dex(2) = 12.
     const unarmored = {
+      id: '1', name: 'A', level: 4, ac: 99,
+      abilities: { strength: 10, dexterity: 14, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      proficiencies: { armor: { unarmored: { proficiency: 2 } } },
+      inventory: [{ uid: 't', name: 'Torch' }],
+      feats: [],
+    };
+    const { result } = renderHook(() => useCharacter(unarmored));
+    expect(result.current.armorClass.derived).toBe(true);
+    expect(result.current.armorClass.source).toBe('unarmored');
+    expect(result.current.armorClass.value).toBe(12);
+  });
+
+  it('keeps the authored scalar when the character has no armor-proficiency data (AC4)', () => {
+    // A character with no proficiencies.armor block can't be derived accurately
+    // (no proficiency term), so the authored ac scalar wins. Guards synthetic /
+    // legacy fixtures from being re-derived downward.
+    const noData = {
       id: '1', name: 'A', level: 5, ac: 22,
       abilities: { strength: 18, dexterity: 14, constitution: 16, intelligence: 10, wisdom: 12, charisma: 8 },
       inventory: [{ uid: 't', name: 'Torch' }],
       feats: [],
     };
-    const { result } = renderHook(() => useCharacter(unarmored));
+    const { result } = renderHook(() => useCharacter(noData));
     expect(result.current.armorClass.derived).toBe(false);
     expect(result.current.armorClass.value).toBe(22);
     expect(result.current.armorClass.source).toBe('scalar');
