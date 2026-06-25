@@ -7833,7 +7833,14 @@
           ],
           "description": "Effect You pull a link from the armor, which transforms into a +1 striking dagger. The dagger disappears and reappears as a link in the armor after you Strike with it, or at the end of this turn if you don't make a Strike. You can Activate the blade byrnie in place of an Interact action to draw a weapon for abilities such as the Quick Draw feat."
         }
-      ]
+      ],
+      "armor": {
+        "category": "light",
+        "acBonus": 2,
+        "dexCap": 3,
+        "strength": 12,
+        "group": "chain"
+      }
     },
     {
       "id": "chalk",
@@ -7926,7 +7933,14 @@
           "trigger": "A creature adjacent to you targets you with a melee attack.",
           "description": "You roll the hefty plates of the dragon turtle armor toward the attacker to gain a +1 circumstance bonus to AC against the triggering attack."
         }
-      ]
+      ],
+      "armor": {
+        "category": "heavy",
+        "acBonus": 5,
+        "dexCap": 1,
+        "strength": 16,
+        "group": "plate"
+      }
     },
     {
       "id": "dread",
@@ -8031,7 +8045,14 @@
         10,
         5
       ],
-      "description": "Plate mail consists of interlocking plates that encase nearly the entire body in a carapace of steel. It is costly and heavy, and the wearer often requires help to don it correctly, but it provides some of the best defense armor can supply. A suit of this armor comes with an undercoat of padded armor and a pair of gauntlets."
+      "description": "Plate mail consists of interlocking plates that encase nearly the entire body in a carapace of steel. It is costly and heavy, and the wearer often requires help to don it correctly, but it provides some of the best defense armor can supply. A suit of this armor comes with an undercoat of padded armor and a pair of gauntlets.",
+      "armor": {
+        "category": "heavy",
+        "acBonus": 6,
+        "dexCap": 0,
+        "strength": 18,
+        "group": "plate"
+      }
     },
     {
       "id": "gecko-potion",
@@ -8272,7 +8293,14 @@
           ],
           "description": "Frequency once per day; Effect You touch the stitched image of the new moon on the armor's collar and suppress the dazzled condition for 1 minute."
         }
-      ]
+      ],
+      "armor": {
+        "category": "light",
+        "acBonus": 2,
+        "dexCap": 3,
+        "strength": 12,
+        "group": "chain"
+      }
     },
     {
       "id": "mothers-amulet",
@@ -8334,7 +8362,14 @@
       "traits": [
         "Comfort"
       ],
-      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor."
+      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor.",
+      "armor": {
+        "category": "light",
+        "acBonus": 1,
+        "dexCap": 3,
+        "strength": 10,
+        "group": "cloth"
+      }
     },
     {
       "id": "potion-of-waterbreathing",
@@ -8792,7 +8827,14 @@
       "name": "Studded Leather Armor",
       "price": 3,
       "weight": 1,
-      "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection."
+      "description": "This leather armor is reinforced with metal studs and sometimes small metal plates, providing most of the flexibility of leather armor with more robust protection.",
+      "armor": {
+        "category": "light",
+        "acBonus": 2,
+        "dexCap": 3,
+        "strength": 12,
+        "group": "leather"
+      }
     },
     {
       "id": "swallow-spike",
@@ -9000,7 +9042,14 @@
           ],
           "description": "Frequency once per day; Effect You unbind the currents that form your armor and release them as cutting whorls of air that slice into creatures in a 60-foot cone. Creatures in the area take 6d6 slashing damage with a DC 25 basic Fortitude save. A creature that fails its save is also pushed 10 feet (or 20 feet on a critical failure). You lose the AC bonus of your armor until the end of your turn, when the air currents reform the wisp chain around you."
         }
-      ]
+      ],
+      "armor": {
+        "category": "light",
+        "acBonus": 2,
+        "dexCap": 3,
+        "strength": 12,
+        "group": "chain"
+      }
     },
     {
       "id": "wolf-fang",
