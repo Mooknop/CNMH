@@ -44,6 +44,8 @@ vi.mock('../utils/InventoryUtils', () => ({
   calculateItemsBulk: () => 5,
   formatBulk: (bulk) => bulk.toString(),
   ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
+  isArmor: (it) => !!it && !!it.armor,
+  normalizeArmor: (a) => (a && typeof a === 'object' ? a : null),
 }));
 
 const baseChar = (spellcasting) => ({
