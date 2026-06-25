@@ -17,6 +17,8 @@ import {
   getClassDC,
   calculateEnhancedBulkLimit,
   calculateTotalContainerIgnoredBulk,
+  getArmorProficiencyRank,
+  getArmorProficiencyBonus,
 } from './CharacterUtils';
 
 describe('CharacterUtils', () => {
@@ -125,7 +127,7 @@ describe('CharacterUtils', () => {
         level: 1
       };
       expect(getProficiencyBonus(0, 1, character)).toBe(0); // Below level 7
-      
+
       const character2 = {
         feats: [
           { name: 'Untrained Improvisation' }
@@ -133,6 +135,63 @@ describe('CharacterUtils', () => {
         level: 7
       };
       expect(getProficiencyBonus(0, 7, character2)).toBe(7); // Level 7+
+    });
+  });
+
+  describe('getArmorProficiencyRank', () => {
+    const character = {
+      level: 3,
+      proficiencies: {
+        armor: {
+          unarmored: { proficiency: 2, name: 'Expert' },
+          light: { proficiency: 1, name: 'Trained' },
+          heavy: { proficiency: 0, name: 'Untrained' },
+        },
+      },
+    };
+
+    it('reads the authored rank for a category', () => {
+      expect(getArmorProficiencyRank(character, 'unarmored')).toBe(2);
+      expect(getArmorProficiencyRank(character, 'light')).toBe(1);
+      expect(getArmorProficiencyRank(character, 'heavy')).toBe(0);
+    });
+
+    it('falls back to untrained (0) when the block or category is missing', () => {
+      expect(getArmorProficiencyRank(character, 'medium')).toBe(0);
+      expect(getArmorProficiencyRank({}, 'light')).toBe(0);
+      expect(getArmorProficiencyRank(null, 'light')).toBe(0);
+    });
+  });
+
+  describe('getArmorProficiencyBonus', () => {
+    const character = {
+      level: 3,
+      proficiencies: {
+        armor: {
+          unarmored: { proficiency: 2, name: 'Expert' },
+          light: { proficiency: 1, name: 'Trained' },
+          heavy: { proficiency: 0, name: 'Untrained' },
+        },
+      },
+    };
+
+    it('adds level + 2×rank for a trained-or-better category', () => {
+      expect(getArmorProficiencyBonus(character, 'light')).toBe(5); // 3 + 2
+      expect(getArmorProficiencyBonus(character, 'unarmored')).toBe(7); // 3 + 4
+    });
+
+    it('is 0 (no level added) when untrained in the category', () => {
+      expect(getArmorProficiencyBonus(character, 'heavy')).toBe(0);
+      expect(getArmorProficiencyBonus(character, 'medium')).toBe(0); // absent ⇒ untrained
+    });
+
+    it('does NOT apply Untrained Improvisation (skill-only) to armor', () => {
+      const c = {
+        level: 7,
+        feats: [{ name: 'Untrained Improvisation' }],
+        proficiencies: { armor: { heavy: { proficiency: 0 } } },
+      };
+      expect(getArmorProficiencyBonus(c, 'heavy')).toBe(0);
     });
   });
 

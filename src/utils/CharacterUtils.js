@@ -109,6 +109,32 @@ export const getProficiencyBonus = (proficiencyRank, level, character = null) =>
 };
 
 /**
+ * Resolve a character's armor proficiency rank (0–4) for a PF2e armor category
+ * (unarmored/light/medium/heavy). Reads the already-synced `proficiencies.armor`
+ * block on the character doc; absent/malformed data falls back to untrained (0).
+ * (AC2, #748 — the rank the AC recompute keys off the equipped armor's category.)
+ * @param {Object} character
+ * @param {string} category - unarmored|light|medium|heavy
+ * @returns {number} proficiency rank 0–4
+ */
+export const getArmorProficiencyRank = (character, category) => {
+  const block = character?.proficiencies?.armor?.[category];
+  return block && typeof block.proficiency === 'number' ? block.proficiency : 0;
+};
+
+/**
+ * The PF2e proficiency bonus a character adds to AC for an armor category:
+ * 0 when untrained (level is NOT added), else level + 2×rank. Untrained
+ * Improvisation is a skill-only feat, so it is intentionally not applied here
+ * (character is not threaded into getProficiencyBonus).
+ * @param {Object} character
+ * @param {string} category - unarmored|light|medium|heavy
+ * @returns {number} AC proficiency bonus
+ */
+export const getArmorProficiencyBonus = (character, category) =>
+  getProficiencyBonus(getArmorProficiencyRank(character, category), character?.level || 1);
+
+/**
  * Map of skills to their corresponding ability scores
  */
 export const SKILL_ABILITY_MAP = {

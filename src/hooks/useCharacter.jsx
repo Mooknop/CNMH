@@ -21,7 +21,11 @@ import {
   calculateEnhancedBulkLimit,
   hasFeat,
   FEAT_NAMES,
+  getArmorProficiencyRank,
+  getArmorProficiencyBonus,
 } from '../utils/CharacterUtils';
+
+import { ARMOR_CATEGORIES } from '../utils/InventoryUtils';
 
 import {
   getStrikes,
@@ -152,6 +156,20 @@ export const useCharacter = (character) => {
     // ── Proficiencies & DC ──────────────────────────────────────────────────
     const proficiencies = character.proficiencies || {};
     const classDC = calculateClassDC(character);
+
+    // Armor proficiency by category (AC2, #748): the rank + derived PF2e bonus
+    // (0 untrained, else level + 2×rank) the AC recompute (#749) reads for the
+    // equipped armor's category. Sourced from the already-synced
+    // proficiencies.armor block; a character missing it resolves to untrained.
+    const armorProficiencies = Object.fromEntries(
+      ARMOR_CATEGORIES.map((cat) => [
+        cat,
+        {
+          rank: getArmorProficiencyRank(character, cat),
+          bonus: getArmorProficiencyBonus(character, cat),
+        },
+      ])
+    );
 
     // ── Effective inventory ─────────────────────────────────────────────────
     // The single source of truth for placement + state: authored (resolved)
@@ -303,6 +321,7 @@ export const useCharacter = (character) => {
 
       // Proficiencies & DC
       proficiencies,
+      armorProficiencies,
       classDC,
 
       // Bulk

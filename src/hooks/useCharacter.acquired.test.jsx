@@ -18,6 +18,8 @@ vi.mock('../utils/CharacterUtils', () => ({
   calculateEnhancedBulkLimit: () => 10,
   hasFeat: () => false,
   FEAT_NAMES: {},
+  getArmorProficiencyRank: () => 0,
+  getArmorProficiencyBonus: () => 0,
 }));
 vi.mock('../utils/ActionsUtils', () => ({
   getStrikes: () => [], getActions: () => [], getReactions: () => [], getFreeActions: () => [],

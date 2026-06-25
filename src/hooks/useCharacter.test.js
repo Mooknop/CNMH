@@ -18,7 +18,9 @@ vi.mock('../utils/CharacterUtils', () => ({
   FEAT_NAMES: {
     FAMILIAR: 'Familiar',
     ANIMAL_COMPANION: 'Animal Companion'
-  }
+  },
+  getArmorProficiencyRank: vi.fn(() => 0),
+  getArmorProficiencyBonus: vi.fn(() => 0),
 }));
 
 vi.mock('../utils/ActionsUtils', () => ({
@@ -40,6 +42,7 @@ vi.mock('../utils/SpellUtils', () => ({
 vi.mock('../utils/InventoryUtils', () => ({
   calculateItemsBulk: () => 5,
   formatBulk: (bulk) => bulk.toString(),
+  ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
 }));
 
 describe('useCharacter', () => {
@@ -71,10 +74,26 @@ describe('useCharacter', () => {
     };
 
     const { result } = renderHook(() => useCharacter(character));
-    
+
     expect(result.current).not.toBeNull();
     expect(result.current.id).toBe('1');
     expect(result.current.name).toBe('Test Character');
+  });
+
+  it('exposes armorProficiencies for every armor category (AC2)', () => {
+    const character = {
+      id: '1',
+      name: 'Armored',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      inventory: [],
+      feats: [],
+    };
+    const { result } = renderHook(() => useCharacter(character));
+    expect(Object.keys(result.current.armorProficiencies)).toEqual([
+      'unarmored', 'light', 'medium', 'heavy',
+    ]);
+    expect(result.current.armorProficiencies.light).toEqual({ rank: 0, bonus: 0 });
   });
 
   it('should compute ability modifiers', () => {
