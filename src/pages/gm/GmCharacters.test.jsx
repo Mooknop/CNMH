@@ -108,13 +108,15 @@ const openRow = (form, key, i) =>
   fireEvent.click(within(form).getByTestId(`${key}-list-${i}`));
 const openItem = (form, i) =>
   fireEvent.click(within(form).getByTestId(`item-${i}`).querySelector('.gm-inv-main'));
-const closeEditor = (form) =>
-  fireEvent.click(within(form).getByRole('button', { name: 'Done' }));
+// The item editor and catalog picker render via the shared Modal, which portals
+// to document.body — so their controls live outside `form`; query them on screen.
+const closeEditor = () =>
+  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
 // A CatalogPickerModal is open: choose one or more catalog items by name and
 // submit them ("Add selected" has a stable aria-label across single/multi).
 const pickCatalog = (form, ...names) => {
-  names.forEach((n) => fireEvent.click(within(form).getByRole('button', { name: n })));
-  fireEvent.click(within(form).getByRole('button', { name: 'Add selected' }));
+  names.forEach((n) => fireEvent.click(screen.getByRole('button', { name: n })));
+  fireEvent.click(screen.getByRole('button', { name: 'Add selected' }));
 };
 
 afterEach(() => vi.restoreAllMocks());
@@ -477,11 +479,11 @@ describe('GmCharacters', () => {
     render(<GmCharacters />);
     const form = screen.getByTestId('character-form-pellias');
     fireEvent.click(within(form).getByText('Delete'));
-    expect(within(form).getByText('Delete forever')).toBeDisabled();
-    fireEvent.click(within(form).getByText('Delete forever'));
+    expect(screen.getByText('Delete forever')).toBeDisabled();
+    fireEvent.click(screen.getByText('Delete forever'));
     expect(deleteDocument).not.toHaveBeenCalled();
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Pellias' } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Pellias' } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('character', 'pellias'));
   });
 
@@ -494,7 +496,7 @@ describe('GmCharacters', () => {
     fireEvent.change(within(form).getByLabelText('name'), { target: { value: 'Pellias' } });
     fireEvent.click(within(form).getByText('Create character'));
     expect(saveDocument).not.toHaveBeenCalled();
-    fireEvent.click(within(form).getByText('Overwrite'));
+    fireEvent.click(screen.getByText('Overwrite'));
     await waitFor(() =>
       expect(saveDocument).toHaveBeenCalledWith('character', 'pellias', expect.objectContaining({ id: 'pellias' }))
     );
@@ -540,8 +542,8 @@ describe('GmCharacters', () => {
     fireEvent.click(within(screen.getByLabelText('characters')).getByText('Izzy'));
     const form = screen.getByTestId('character-form-izzy');
     fireEvent.click(within(form).getByText('Delete'));
-    fireEvent.change(within(form).getByLabelText('confirm-input'), { target: { value: 'Izzy' } });
-    fireEvent.click(within(form).getByText('Delete forever'));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'Izzy' } });
+    fireEvent.click(screen.getByText('Delete forever'));
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('character', 'izzy'));
     // Live sync removes Izzy; the view falls back to the remaining character.
     setContent([pellias]);
@@ -574,13 +576,13 @@ describe('GmCharacters', () => {
       // The ref row has no inline picker/qty controls — they live in the modal.
       expect(within(form).queryByLabelText('item-0-quantity')).not.toBeInTheDocument();
       openItem(form, 0);
-      expect(within(form).getByLabelText('item-0-quantity')).toHaveValue(2);
-      expect(within(form).getByLabelText('item-0-invested')).toBeChecked();
+      expect(screen.getByLabelText('item-0-quantity')).toHaveValue(2);
+      expect(screen.getByLabelText('item-0-invested')).toBeChecked();
       closeEditor(form);
       // The container row opens an editor that lists its nested contents.
       openItem(form, 1);
-      expect(within(form).getByTestId('item-1-contents')).toBeInTheDocument();
-      expect(within(form).getByLabelText('item-1-c-0-quantity')).toHaveValue(5);
+      expect(screen.getByTestId('item-1-contents')).toBeInTheDocument();
+      expect(screen.getByLabelText('item-1-c-0-quantity')).toHaveValue(5);
     });
 
     it('saves edited quantity/invested and preserves container contents (lossless)', async () => {
@@ -590,8 +592,8 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-refguy');
       gotoTab(form, 'Inventory');
       openItem(form, 0);
-      fireEvent.change(within(form).getByLabelText('item-0-quantity'), { target: { value: '5' } });
-      fireEvent.click(within(form).getByLabelText('item-0-invested')); // was true -> false
+      fireEvent.change(screen.getByLabelText('item-0-quantity'), { target: { value: '5' } });
+      fireEvent.click(screen.getByLabelText('item-0-invested')); // was true -> false
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -608,7 +610,7 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-refguy');
       gotoTab(form, 'Inventory');
       openItem(form, 1);
-      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Change catalog item' }));
       pickCatalog(form, 'Torch');
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
@@ -663,8 +665,8 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-pellias');
       gotoTab(form, 'Inventory');
       openItem(form, 0);
-      expect(within(form).getByTestId('item-0-legacy')).toBeInTheDocument();
-      fireEvent.change(within(form).getByLabelText('item-0-name'), { target: { value: 'Full Plate +1' } });
+      expect(screen.getByTestId('item-0-legacy')).toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('item-0-name'), { target: { value: 'Full Plate +1' } });
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
       await waitFor(() => expect(saveDocument).toHaveBeenCalled());
@@ -708,13 +710,13 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-packrat');
       gotoTab(form, 'Inventory');
       openItem(form, 0);
-      expect(within(form).getByLabelText('item-0-c-0-quantity')).toHaveValue(5);
-      expect(within(form).getByLabelText('item-0-c-1-quantity')).toHaveValue(1);
+      expect(screen.getByLabelText('item-0-c-0-quantity')).toHaveValue(5);
+      expect(screen.getByLabelText('item-0-c-1-quantity')).toHaveValue(1);
       closeEditor(form);
       // Empty container still shows the (empty) contents editor.
       openItem(form, 1);
-      expect(within(form).getByTestId('item-1-contents')).toBeInTheDocument();
-      expect(within(form).queryByLabelText('item-1-c-0-quantity')).not.toBeInTheDocument();
+      expect(screen.getByTestId('item-1-contents')).toBeInTheDocument();
+      expect(screen.queryByLabelText('item-1-c-0-quantity')).not.toBeInTheDocument();
     });
 
     it('round-trips a packed backpack unchanged on save (lossless)', async () => {
@@ -736,11 +738,11 @@ describe('GmCharacters', () => {
       gotoTab(form, 'Inventory');
       openItem(form, 0);
       // edit torch qty 5 -> 9
-      fireEvent.change(within(form).getByLabelText('item-0-c-0-quantity'), { target: { value: '9' } });
+      fireEvent.change(screen.getByLabelText('item-0-c-0-quantity'), { target: { value: '9' } });
       // remove rope (second content)
-      fireEvent.click(within(form).getByLabelText('remove item-0-c-1'));
+      fireEvent.click(screen.getByLabelText('remove item-0-c-1'));
       // add a new content via the shared picker
-      fireEvent.click(within(form).getByRole('button', { name: 'Add item to container' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Add item to container' }));
       pickCatalog(form, 'Minor Elixir of Life');
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
@@ -764,7 +766,7 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-packrat');
       gotoTab(form, 'Inventory');
       openItem(form, 0);
-      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Change catalog item' }));
       pickCatalog(form, 'Torch');
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
@@ -781,7 +783,7 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-packrat');
       gotoTab(form, 'Inventory');
       openItem(form, 0);
-      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Change catalog item' }));
       pickCatalog(form, 'Gourd Head');
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
@@ -845,7 +847,7 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-uidguy');
       gotoTab(form, 'Inventory');
       openItem(form, 0);
-      fireEvent.click(within(form).getByRole('button', { name: 'Change catalog item' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Change catalog item' }));
       pickCatalog(form, 'Torch');
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
@@ -864,7 +866,7 @@ describe('GmCharacters', () => {
       const form = screen.getByTestId('character-form-uidguy');
       gotoTab(form, 'Inventory');
       openItem(form, 1);
-      fireEvent.click(within(form).getByRole('button', { name: 'Add item to container' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Add item to container' }));
       pickCatalog(form, 'Rope (50 ft.)');
       closeEditor(form);
       fireEvent.click(within(form).getByText('Save'));
