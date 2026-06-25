@@ -2,7 +2,7 @@
 // cookie rides automatically; the Worker re-verifies it before the write
 // reaches the content Durable Object, which then broadcasts the change live.
 
-import { buildSeedPayload, defaultContent, repointFocusSpells } from './contentUtils';
+import { buildSeedPayload, defaultContent } from './contentUtils';
 
 const json = async (res) => {
   if (!res.ok) {
@@ -32,17 +32,6 @@ export const seedDefaults = (force = false) =>
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(buildSeedPayload(force)),
-  }).then(json);
-
-// Add bundled default documents that are absent from the DO without touching
-// existing ones. Safe to run on a populated world; idempotent. Reusable for
-// any future content drop.
-export const seedMissing = () =>
-  fetch('/api/gm/seed', {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mode: 'fill-missing', collections: defaultContent() }),
   }).then(json);
 
 // Authored-only collections that are safe to overwrite at the document level:
@@ -130,111 +119,66 @@ export const applyContentDiff = async () => {
   return report;
 };
 
-// For each bundled character whose focus-spell arrays were re-pointed to
-// spellRef form in Slice C, find the matching live document (by id) in
-// liveCharacters and patch it if needed. Uses a read-modify-write so all
-// other live fields (inventory, GM edits) are preserved.
-// Returns { repointed: [charId, ...] }.
-export const repointFocusSpellsToCatalog = async (liveCharacters) => {
-  const bundled = defaultContent().character;
+// Live (player-mutated) character-doc fields. These are preserved from the live
+// doc and NEVER overwritten by a content apply. Derived from the only app paths
+// that write a character doc from player state — the reconciliation engine
+// (consumed/gold/acquired/removed, utils/reconcile.js) and Quick Craft
+// (utils/applyCrafting.js): both touch only `inventory` and `gold`. Everything
+// else on a character doc is authored content and flows from the bundle.
+// (loadout #559 manifests as inventory-entry changes, already covered.)
+export const LIVE_CHARACTER_FIELDS = ['inventory', 'gold'];
+
+// Top-level field names where two character docs differ (deep), unioning keys
+// present in only one. Used to report which authored fields a merge changed.
+const changedFieldNames = (a, b) => {
+  const keys = new Set([...Object.keys(a || {}), ...Object.keys(b || {})]);
+  return [...keys].filter((k) => !deepEqual(a?.[k], b?.[k])).sort();
+};
+
+// Apply authored character content WITHOUT clobbering live player state — the
+// character counterpart of applyContentDiff (characters are excluded there
+// because a wholesale overwrite would revert live inventory/gold). For each
+// bundled character: one absent from the live store is added whole (no live
+// state to protect); an existing one is FIELD-MERGED — authored fields come
+// from the bundle, LIVE_CHARACTER_FIELDS are kept from the live doc. Each write
+// goes through saveDocument (archives the prior version → restorable) and is
+// idempotent (a no-op merge is skipped). Never deletes: characters only in the
+// live store are reported as `liveOnly`. Returns
+// { added: [id], changed: [{ id, fields }], liveOnly: [id] }.
+export const applyCharacterContentDiff = async (liveCharacters) => {
+  const bundled = defaultContent().character || [];
   const liveById = new Map(
     (Array.isArray(liveCharacters) ? liveCharacters : [])
       .filter((c) => c && c.id != null)
       .map((c) => [String(c.id), c])
   );
-  const repointed = [];
+  const bundledIds = new Set();
+  const added = [];
+  const changed = [];
   for (const bundledChar of bundled) {
     if (!bundledChar || bundledChar.id == null) continue;
-    const live = liveById.get(String(bundledChar.id));
-    if (!live) continue;
-    const patched = repointFocusSpells(live, bundledChar);
-    if (patched === live) continue;
-    await saveDocument('character', String(bundledChar.id), patched);
-    repointed.push(String(bundledChar.id));
-  }
-  return { repointed };
-};
-
-// Propagate `chain` config from the bundled defaults to the live (seeded) DO.
-// Covers:
-//   - spell docs: patch any bundled spell with a `chain` field whose live copy
-//     is missing or has a different `chain` value.
-//   - character docs: patch bundled feat actions AND top-level character actions
-//     that carry a `chain` field (matched by feat-id + action-name / action-name)
-//     onto the matching live character doc, preserving all other fields.
-// All patches are idempotent (JSON equality short-circuit) and non-destructive.
-// Returns { patched: ['spell:inner-upheaval', 'character:JadeInferno', ...] }.
-export const syncChainConfig = async (liveSpells, liveCharacters) => {
-  const bundled = defaultContent();
-  const patched = [];
-
-  // ── Spells ────────────────────────────────────────────────────────────────
-  const liveSpellById = new Map(
-    (Array.isArray(liveSpells) ? liveSpells : [])
-      .filter((s) => s && s.id != null)
-      .map((s) => [String(s.id), s])
-  );
-  for (const bundledSpell of (bundled.spell || [])) {
-    if (!bundledSpell?.id || !bundledSpell.chain) continue;
-    const live = liveSpellById.get(String(bundledSpell.id));
-    if (!live) continue;
-    if (JSON.stringify(live.chain) === JSON.stringify(bundledSpell.chain)) continue;
-    await saveDocument('spell', String(bundledSpell.id), { ...live, chain: bundledSpell.chain });
-    patched.push(`spell:${bundledSpell.id}`);
-  }
-
-  // ── Characters ────────────────────────────────────────────────────────────
-  const liveCharById = new Map(
-    (Array.isArray(liveCharacters) ? liveCharacters : [])
-      .filter((c) => c && c.id != null)
-      .map((c) => [String(c.id), c])
-  );
-
-  // Patch an array of actions against their bundled counterparts (matched by name).
-  const patchActionArray = (liveActions, bundledActions) => {
-    if (!Array.isArray(bundledActions) || !Array.isArray(liveActions)) return liveActions;
-    const next = liveActions.map((la) => {
-      const ba = bundledActions.find((a) => a.name === la.name);
-      if (!ba?.chain) return la;
-      if (JSON.stringify(la.chain) === JSON.stringify(ba.chain)) return la;
-      return { ...la, chain: ba.chain };
-    });
-    return JSON.stringify(next) === JSON.stringify(liveActions) ? liveActions : next;
-  };
-
-  for (const bundledChar of (bundled.character || [])) {
-    if (!bundledChar?.id) continue;
-    const live = liveCharById.get(String(bundledChar.id));
-    if (!live) continue;
-
-    let doc = live;
-
-    // Patch feat actions (e.g. Jade's Reach Spell, Harrow Casting).
-    if (Array.isArray(bundledChar.feats) && Array.isArray(doc.feats)) {
-      const patchedFeats = doc.feats.map((liveFeat) => {
-        const bf = bundledChar.feats.find((f) => f.id === liveFeat.id);
-        const next = patchActionArray(liveFeat.actions, bf?.actions);
-        return next === liveFeat.actions ? liveFeat : { ...liveFeat, actions: next };
-      });
-      if (JSON.stringify(patchedFeats) !== JSON.stringify(doc.feats)) {
-        doc = { ...doc, feats: patchedFeats };
-      }
+    const id = String(bundledChar.id);
+    bundledIds.add(id);
+    const live = liveById.get(id);
+    if (!live) {
+      await saveDocument('character', id, { ...bundledChar, id });
+      added.push(id);
+      continue;
     }
-
-    // Patch top-level character actions (e.g. Blu-Kakke's Flurry of Blows).
-    if (Array.isArray(bundledChar.actions) && Array.isArray(doc.actions)) {
-      const patchedActions = patchActionArray(doc.actions, bundledChar.actions);
-      if (patchedActions !== doc.actions) {
-        doc = { ...doc, actions: patchedActions };
-      }
+    // Authored fields from the bundle; live fields preserved from the live doc.
+    const merged = { ...bundledChar, id };
+    for (const f of LIVE_CHARACTER_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(live, f)) merged[f] = live[f];
+      else delete merged[f];
     }
-
-    if (doc === live) continue;
-    await saveDocument('character', String(bundledChar.id), doc);
-    patched.push(`character:${bundledChar.id}`);
+    const liveDoc = { ...live, id };
+    if (deepEqual(merged, liveDoc)) continue; // idempotent: nothing authored changed
+    const fields = changedFieldNames(merged, liveDoc).filter((f) => !LIVE_CHARACTER_FIELDS.includes(f));
+    await saveDocument('character', id, merged);
+    changed.push({ id, fields });
   }
-
-  return { patched };
+  const liveOnly = [...liveById.keys()].filter((id) => !bundledIds.has(id));
+  return { added, changed, liveOnly };
 };
 
 // Restore from a downloaded backup: a force reseed whose collections come from

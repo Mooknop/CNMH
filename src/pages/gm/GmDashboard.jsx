@@ -3,7 +3,7 @@ import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useReconciliation } from '../../hooks/useReconciliation';
-import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig, applyContentDiff } from '../../utils/gmApi';
+import { seedDefaults, applyContentDiff, applyCharacterContentDiff } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import PlayModeControl from '../../components/gm/PlayModeControl';
@@ -124,10 +124,10 @@ const InitiativePanel = ({ encounter, actorMap, setActorMap, characters }) => {
   );
 };
 
-// Render the applyContentDiff per-collection report as a readable summary.
-// Lists live-only ids explicitly so the GM can review/delete them manually —
-// the diff never deletes on its own.
-const summarizeDiff = (report) => {
+// Render the applyContentDiff (authored collections) + applyCharacterContentDiff
+// (field-merged characters) reports as one readable summary. Lists live-only ids
+// explicitly so the GM can review/delete them manually — the diff never deletes.
+const summarizeDiff = (report, charReport) => {
   const lines = [];
   for (const [coll, r] of Object.entries(report || {})) {
     const bits = [];
@@ -141,6 +141,20 @@ const summarizeDiff = (report) => {
     if (r.changed.length) lines.push(`  changed: ${r.changed.join(', ')}`);
     if (r.liveOnly.length) lines.push(`  live-only (not in bundle — delete manually if intended): ${r.liveOnly.join(', ')}`);
   }
+  if (charReport) {
+    const { added = [], changed = [], liveOnly = [] } = charReport;
+    const bits = [];
+    if (added.length) bits.push(`+${added.length} added`);
+    if (changed.length) bits.push(`${changed.length} changed`);
+    if (liveOnly.length) bits.push(`${liveOnly.length} live-only`);
+    if (bits.length) {
+      lines.push(`character: ${bits.join(', ')} (inventory + gold preserved)`);
+      if (added.length) lines.push(`  added: ${added.join(', ')}`);
+      changed.forEach(({ id, fields }) =>
+        lines.push(`  changed: ${id}${fields.length ? ` (${fields.join(', ')})` : ''}`));
+      if (liveOnly.length) lines.push(`  live-only (not in bundle): ${liveOnly.join(', ')}`);
+    }
+  }
   return lines.length ? lines.join('\n') : 'Already up to date — nothing to apply.';
 };
 
@@ -149,7 +163,7 @@ const summarizeDiff = (report) => {
 // Logic unchanged from the pre-refresh GmDashboard.
 // ─────────────────────────────────────────────────────────────
 const MaintenancePanel = () => {
-  const { source, rawCharacters, spells: rawSpells } = useContent();
+  const { source, rawCharacters } = useContent();
   // Pending durable player overlays (consumed/gold/acquired/removed) not yet
   // committed to the character docs. A force reseed reverts char docs, so these
   // must be Synced first or they're lost — surface a warning before reseeding.
@@ -186,34 +200,16 @@ const MaintenancePanel = () => {
     }
   };
 
+  // One safe content apply: authored collections via applyContentDiff, then
+  // characters via the field-level merge (preserves live inventory/gold). Both
+  // archive every write, so the whole drop is restorable.
   const applyDiff = async () => {
     setBusy(true);
     setMsg(null);
     try {
       const report = await applyContentDiff();
-      setMsg(summarizeDiff(report));
-    } catch (e) {
-      setMsg(`Failed: ${e.message}`);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const applyNewDefaults = async () => {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const seedRes    = await seedMissing();
-      const repointRes = await repointFocusSpellsToCatalog(rawCharacters);
-      const chainRes   = await syncChainConfig(rawSpells, rawCharacters);
-      const parts = [`Done: ${JSON.stringify(seedRes.seeded)}`];
-      parts.push(repointRes.repointed.length
-        ? `repointed focus spells: ${repointRes.repointed.join(', ')}`
-        : 'focus spells already up to date');
-      parts.push(chainRes.patched.length
-        ? `synced chain config: ${chainRes.patched.join(', ')}`
-        : 'chain config already up to date');
-      setMsg(parts.join('; '));
+      const charReport = await applyCharacterContentDiff(rawCharacters);
+      setMsg(summarizeDiff(report, charReport));
     } catch (e) {
       setMsg(`Failed: ${e.message}`);
     } finally {
@@ -279,9 +275,6 @@ const MaintenancePanel = () => {
           <button className="btn-secondary" disabled={busy} onClick={() => runSeed(false)}>
             Import defaults (only empty collections)
           </button>
-          <button className="btn-secondary" disabled={busy} onClick={applyNewDefaults}>
-            Apply new defaults (non-destructive)
-          </button>
           <button
             className="btn-danger"
             disabled={busy}
@@ -302,8 +295,10 @@ const MaintenancePanel = () => {
           (quests, items, spells, lore, traits, factions, calendar, effects, runes),
           one at a time, archiving each prior version so every write is restorable. It
           never deletes — docs only in the live store are reported, not removed.
-          Characters, theme, and images are left untouched. Prefer it over the
-          destructive reseed below for routine content drops.
+          Characters are field-merged: authored content (feats, spells, stats,
+          actions) is applied while live <strong>inventory and gold are preserved</strong>.
+          Theme and images are left untouched. Prefer it over the destructive reseed
+          below for routine content drops.
         </p>
 
         <h2>Backup &amp; restore</h2>
