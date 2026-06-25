@@ -101,4 +101,42 @@ describe('useWornGear', () => {
     expect(setup(undefined)).toEqual([]);
     expect(setup(null)).toEqual([]);
   });
+
+  describe('etched armor (runes block, #727)', () => {
+    // A worn invested armor with potency + resilient + a skill property rune.
+    const runedChain = (overrides = {}) => ({
+      uid: 'armor1',
+      name: 'Chain Shirt',
+      traits: ['Invested', 'Magical'],
+      runes: {
+        potency: 1,
+        resilient: 'resilient',
+        property: [{ id: 'slick', modifiers: [{ stat: 'acrobatics', kind: 'item', amount: 1 }] }],
+      },
+      ...overrides,
+    });
+
+    it('derives potency AC + resilient saves through the armor-rune resolver', () => {
+      investedSet.add('armor1');
+      const out = setup([runedChain()]);
+      expect(out).toHaveLength(1);
+      // Skill (acrobatics) is dropped until W2; the supported stats remain.
+      expect(out[0].def.modifiers).toEqual([
+        { stat: 'ac', kind: 'item', amount: 1 },
+        { stat: 'fort', kind: 'item', amount: 1 },
+        { stat: 'reflex', kind: 'item', amount: 1 },
+        { stat: 'will', kind: 'item', amount: 1 },
+      ]);
+    });
+
+    it('does not contribute a runed armor that is worn but not invested', () => {
+      expect(setup([runedChain()])).toEqual([]);
+    });
+
+    it('contributes nothing when the only rune yields unsupported stats (skills)', () => {
+      investedSet.add('armor1');
+      const out = setup([runedChain({ runes: { property: [{ id: 'slick', modifiers: [{ stat: 'acrobatics', kind: 'item', amount: 1 }] }] } })]);
+      expect(out).toEqual([]);
+    });
+  });
 });

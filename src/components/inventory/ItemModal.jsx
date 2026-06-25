@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
-import { formatBulk, normalizeShield, isContainer, flattenInventory } from '../../utils/InventoryUtils';
+import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
+import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
 import { consumableMeta, consumableVerb } from '../../utils/consumables';
 import { itemEffectsFor, removeItemEffect, itemEffectsKey } from '../../utils/itemEffects';
@@ -125,6 +126,9 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     : consumableMeta(item) ? 'Consumable'
     : 'Gear';
   const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+  // Runed display name: armor folds potency/resilient/property into its name
+  // (#727); weapons use their own rune resolver. Un-runed items pass through.
+  const displayName = isArmor(item) ? armorDisplayName(item) : weaponDisplayName(item);
 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
@@ -240,7 +244,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={weaponDisplayName(item)}
+      title={displayName}
       themeColor={themeColor}
       highZ
       hideHeader
@@ -268,7 +272,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
       {/* ── name plate: rarity · category eyebrow + item name ── */}
       <div className="loot-plate">
         <div className="loot-rarity">{rarityLabel} · {category}</div>
-        <h2 className="loot-name">{weaponDisplayName(item)}</h2>
+        <h2 className="loot-name">{displayName}</h2>
       </div>
 
       {/* ── scrollable body: every existing detail section ── */}
