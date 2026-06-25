@@ -106,6 +106,21 @@ describe('useCharacter', () => {
     expect(r2.current.armorClass.source).toBe('scalar');
   });
 
+  it('keeps the authored scalar when no armor is worn — never derives unarmored (AC4)', () => {
+    // A character with no armor must NOT be re-derived to 10+Dex+prof; the
+    // authored ac scalar already captures their real base AC.
+    const unarmored = {
+      id: '1', name: 'A', level: 5, ac: 22,
+      abilities: { strength: 18, dexterity: 14, constitution: 16, intelligence: 10, wisdom: 12, charisma: 8 },
+      inventory: [{ uid: 't', name: 'Torch' }],
+      feats: [],
+    };
+    const { result } = renderHook(() => useCharacter(unarmored));
+    expect(result.current.armorClass.derived).toBe(false);
+    expect(result.current.armorClass.value).toBe(22);
+    expect(result.current.armorClass.source).toBe('scalar');
+  });
+
   it('exposes armorProficiencies for every armor category (AC2)', () => {
     const character = {
       id: '1',

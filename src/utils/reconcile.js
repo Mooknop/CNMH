@@ -52,6 +52,14 @@ export const DURABLE_OVERLAYS = ['consumed', 'gold', 'loadout', 'acquired', 'rem
 // assert the engine never surfaces a change sourced from one of them.
 export const EPHEMERAL_OVERLAYS = ['hp', 'conditions', 'focus', 'slots', 'effects', 'heropoints'];
 
+// AC is intentionally absent from both lists. Since AC4 (#750) the sheet derives
+// Armor Class from the worn armor (10 + proficiency + capped Dex + armor item
+// bonus, useCharacter.armorClass); the authored `doc.ac` scalar is only a
+// display fallback when the worn armor isn't backfilled. The derived AC is never
+// committed — there is no `ac` overlay and nothing writes `doc.ac` from the app —
+// so it stays outside reconciliation entirely (cf. #726's "app owns these
+// bonuses, not also baked on the actor" convention).
+
 // Match a resolved item back to its authored doc entry: by stable per-entry uid
 // when both have one, else by name (legacy inline entries). Mirrors
 // ConsumablesCleanup's matchesRaw.

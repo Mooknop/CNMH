@@ -192,26 +192,32 @@ export const useCharacter = (character) => {
     // the live `state`/`hand`, so it is a drop-in replacement.
     const charEff = { ...character, inventory: effectiveInventory };
 
-    // ── Armor Class (AC3, #749) ───────────────────────────────────────────────
+    // ── Armor Class (AC3, #749 / AC4, #750) ───────────────────────────────────
     // Derive base AC from the worn armor (10 + proficiency + capped Dex + armor
-    // item bonus) instead of the flat Foundry scalar. Falls back to the scalar
-    // when the worn armor isn't backfilled with the AC1 schema. Effect bonuses
+    // item bonus) ONLY when a schema'd armor is actually equipped. Otherwise the
+    // authored `ac` scalar wins — it already bakes in the character's real base
+    // AC (unarmored proficiency, ability, items the app doesn't model), so
+    // deriving an unarmored 10+Dex+prof there would *lower* every armorless
+    // character. We only override the scalar when there's positive evidence (a
+    // backfilled worn armor); un-backfilled or no armor → scalar. Effect bonuses
     // (Raise a Shield, conditions, the worn-gear magic layer) still layer on top
     // downstream via the effect engine — this is only the base value.
     const wornArmor = findWornArmor(effectiveInventory);
     const armorCategory = wornArmor
       ? normalizeArmor(wornArmor.armor)?.category || 'unarmored'
       : 'unarmored';
-    const derivedAc = deriveArmorClass({
-      armor: wornArmor ? wornArmor.armor : null,
-      dexMod: abilityModifiers.dexterity,
-      proficiencyBonus: armorProficiencies[armorCategory]?.bonus || 0,
-    });
+    const derivedAc = wornArmor
+      ? deriveArmorClass({
+          armor: wornArmor.armor,
+          dexMod: abilityModifiers.dexterity,
+          proficiencyBonus: armorProficiencies[armorCategory]?.bonus || 0,
+        })
+      : null;
     const armorClass = {
       value: derivedAc != null ? derivedAc : ac,
       derived: derivedAc != null,
       source: derivedAc != null ? 'armor' : 'scalar',
-      category: armorCategory,
+      category: wornArmor ? armorCategory : null,
       armorName: wornArmor ? wornArmor.name : null,
     };
 

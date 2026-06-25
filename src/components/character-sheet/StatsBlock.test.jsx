@@ -45,6 +45,7 @@ const defaultCharData = {
   level: 1,
   maxHp: 8,
   ac: 16,
+  armorClass: { value: 16, derived: true, source: 'armor', category: 'light', armorName: 'Leather' },
   size: 'Medium',
   speed: 25,
   senses: 'Low-light vision'
@@ -198,6 +199,26 @@ describe('StatsBlock', () => {
     // HP shows as "current / max" — 8 appears in both spans when at full health
     expect(screen.getAllByText('8').length).toBeGreaterThan(0);
     expect(screen.getByText('16')).toBeInTheDocument(); // ac
+  });
+
+  it('shows the derived armorClass value, not the raw scalar (AC4)', () => {
+    // armorClass.value (18) wins over the legacy ac scalar (16).
+    mockUseCharacter.mockReturnValueOnce({
+      ...defaultCharData,
+      ac: 16,
+      armorClass: { value: 18, derived: true, source: 'armor', category: 'heavy', armorName: 'Full Plate' },
+    });
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('18')).toBeInTheDocument();
+    expect(screen.queryByText('16')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the ac scalar when armorClass is absent (AC4)', () => {
+    const noArmorClass = { ...defaultCharData };
+    delete noArmorClass.armorClass;
+    mockUseCharacter.mockReturnValueOnce(noArmorClass);
+    render(<StatsBlock character={mockCharacter} characterColor="#7E8C9A" />);
+    expect(screen.getByText('16')).toBeInTheDocument();
   });
 
   it('renders hero point pips reflecting the current value', () => {
