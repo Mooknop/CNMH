@@ -10,10 +10,8 @@ vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
 vi.mock('../../hooks/useReconciliation', () => ({ useReconciliation: vi.fn() }));
 vi.mock('../../utils/gmApi', () => ({
   seedDefaults: vi.fn(),
-  seedMissing: vi.fn(),
-  repointFocusSpellsToCatalog: vi.fn(),
-  syncChainConfig: vi.fn(),
   applyContentDiff: vi.fn(),
+  applyCharacterContentDiff: vi.fn(),
 }));
 vi.mock('../../utils/gmBackup', () => ({ downloadBackup: vi.fn(), restoreBackup: vi.fn() }));
 
@@ -40,7 +38,7 @@ import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useReconciliation } from '../../hooks/useReconciliation';
 import {
-  seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig, applyContentDiff,
+  seedDefaults, applyContentDiff, applyCharacterContentDiff,
 } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 
@@ -77,6 +75,7 @@ beforeEach(() => {
   usePlayMode.mockReturnValue(EXPLORATION_MODE);
   useEncounter.mockReturnValue({ encounter: null, actorMap: {}, setActorMap: vi.fn() });
   useReconciliation.mockReturnValue({ pendingByChar: [] });
+  applyCharacterContentDiff.mockResolvedValue({ added: [], changed: [], liveOnly: [] });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -310,17 +309,23 @@ describe('GmDashboard — Maintenance', () => {
     expect(downloadBackup).toHaveBeenCalled();
   });
 
-  it('"Apply content update" runs the diff and summarizes the per-collection report', async () => {
-    useContent.mockReturnValue({ source: 'server' });
+  it('"Apply content update" runs the collection + character diffs and summarizes both', async () => {
+    useContent.mockReturnValue({ source: 'server', rawCharacters: [{ id: 'Pellias' }] });
     applyContentDiff.mockResolvedValue({
       quest: { added: ['q2'], changed: [], unchanged: 3, liveOnly: ['old-quest'] },
       item: { added: [], changed: ['i1'], unchanged: 0, liveOnly: [] },
     });
+    applyCharacterContentDiff.mockResolvedValue({
+      added: [], changed: [{ id: 'Pellias', fields: ['feats'] }], liveOnly: [],
+    });
     renderDash();
     fireEvent.click(screen.getByText(/Apply content update/i));
     await waitFor(() => expect(applyContentDiff).toHaveBeenCalled());
+    expect(applyCharacterContentDiff).toHaveBeenCalledWith([{ id: 'Pellias' }]);
     expect(screen.getByText(/quest: \+1 added, 3 unchanged, 1 live-only/)).toBeInTheDocument();
     expect(screen.getByText(/item: 1 changed/)).toBeInTheDocument();
+    expect(screen.getByText(/character: 1 changed \(inventory \+ gold preserved\)/)).toBeInTheDocument();
+    expect(screen.getByText(/changed: Pellias \(feats\)/)).toBeInTheDocument();
     expect(screen.getByText(/live-only .*: old-quest/)).toBeInTheDocument();
   });
 
@@ -338,32 +343,6 @@ describe('GmDashboard — Maintenance', () => {
     renderDash();
     fireEvent.click(screen.getByText(/Apply content update/i));
     await waitFor(() => expect(screen.getByText(/Failed: read failed/)).toBeInTheDocument());
-  });
-
-  it('"Apply new defaults" runs all three migrations and shows combined result', async () => {
-    useContent.mockReturnValue({ source: 'server', rawCharacters: [{ id: 'Pellias' }], spells: [] });
-    seedMissing.mockResolvedValue({ ok: true, seeded: { spell: 'added 8 (skipped 10 existing)' } });
-    repointFocusSpellsToCatalog.mockResolvedValue({ repointed: ['Pellias'] });
-    syncChainConfig.mockResolvedValue({ patched: ['spell:inner-upheaval', 'character:JadeInferno'] });
-    renderDash();
-    fireEvent.click(screen.getByText(/Apply new defaults/i));
-    await waitFor(() => expect(screen.getByText(/added 8/)).toBeInTheDocument());
-    expect(seedMissing).toHaveBeenCalled();
-    expect(repointFocusSpellsToCatalog).toHaveBeenCalledWith([{ id: 'Pellias' }]);
-    expect(syncChainConfig).toHaveBeenCalledWith([], [{ id: 'Pellias' }]);
-    expect(screen.getByText(/repointed focus spells: Pellias/)).toBeInTheDocument();
-    expect(screen.getByText(/synced chain config: spell:inner-upheaval/)).toBeInTheDocument();
-  });
-
-  it('"Apply new defaults" reports all up to date when nothing to migrate', async () => {
-    useContent.mockReturnValue({ source: 'server', rawCharacters: [], spells: [] });
-    seedMissing.mockResolvedValue({ ok: true, seeded: {} });
-    repointFocusSpellsToCatalog.mockResolvedValue({ repointed: [] });
-    syncChainConfig.mockResolvedValue({ patched: [] });
-    renderDash();
-    fireEvent.click(screen.getByText(/Apply new defaults/i));
-    await waitFor(() => expect(screen.getByText(/already up to date/)).toBeInTheDocument());
-    expect(screen.getByText(/chain config already up to date/)).toBeInTheDocument();
   });
 
   it('restores from a backup file only after typing RESTORE', async () => {
