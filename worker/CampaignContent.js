@@ -214,7 +214,9 @@ export class CampaignContent {
 
     // GM seed: POST /api/gm/seed  { force?, mode?, collections: { quest: [...] } }
     //   mode:'fill-missing' — add only docs whose id is absent; never overwrites.
-    //   force:true          — delete-then-replace each collection (destructive).
+    //   force:true          — delete-then-replace each collection (destructive);
+    //                         archives prior versions first when overwriting a
+    //                         populated collection, so the reseed is restorable.
     //   default             — skip non-empty collections (idempotent safe seed).
     if (request.method === 'POST' && url.pathname === '/api/gm/seed') {
       let body;
@@ -245,11 +247,26 @@ export class CampaignContent {
           seeded[collection] = 'skipped (not empty)';
           continue;
         }
-        if (force) this.bumpUsage(this.state.storage.sql.exec('DELETE FROM documents WHERE collection = ?', collection).rowsWritten);
+        let archived = 0;
+        if (force) {
+          // Overwriting a POPULATED collection: archive every current doc into
+          // history first, so a force reseed is restorable (including docs the
+          // new seed drops). Bootstrapping an EMPTY collection skips this —
+          // nothing to archive, keeping the first seed cheap. This is the only
+          // write path where the bulk seed touches history at all.
+          const existing = this.idsIn(collection);
+          for (const id of existing) {
+            this.archive(collection, id);
+            archived += 1;
+          }
+          this.bumpUsage(this.state.storage.sql.exec('DELETE FROM documents WHERE collection = ?', collection).rowsWritten);
+        }
         for (const doc of docs) {
           if (doc && doc.id != null) this.upsert(collection, String(doc.id), doc);
         }
-        seeded[collection] = `seeded ${docs.length}`;
+        seeded[collection] = archived
+          ? `seeded ${docs.length} (archived ${archived})`
+          : `seeded ${docs.length}`;
       }
       this.broadcast({ type: 'FULL_CONTENT', payload: this.snapshot() });
       return Response.json({ ok: true, seeded });

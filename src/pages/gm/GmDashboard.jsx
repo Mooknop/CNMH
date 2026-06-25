@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useReconciliation } from '../../hooks/useReconciliation';
 import { seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig, applyContentDiff } from '../../utils/gmApi';
 import { downloadBackup, restoreBackup } from '../../utils/gmBackup';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
@@ -149,6 +150,11 @@ const summarizeDiff = (report) => {
 // ─────────────────────────────────────────────────────────────
 const MaintenancePanel = () => {
   const { source, rawCharacters, spells: rawSpells } = useContent();
+  // Pending durable player overlays (consumed/gold/acquired/removed) not yet
+  // committed to the character docs. A force reseed reverts char docs, so these
+  // must be Synced first or they're lost — surface a warning before reseeding.
+  const { pendingByChar } = useReconciliation();
+  const pendingCount = (pendingByChar || []).reduce((n, g) => n + g.changes.length, 0);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
   const [confirm, setConfirm] = useState(null);
@@ -159,8 +165,20 @@ const MaintenancePanel = () => {
     setBusy(true);
     setMsg(null);
     try {
+      // Never overwrite without a fresh backup on disk: a force reseed bypasses
+      // the live store's normal history, so the downloaded snapshot is the
+      // GM's restore point. If the backup fails, abort before any destructive
+      // write (the import-defaults path, force=false, is non-destructive).
+      if (force) {
+        try {
+          await downloadBackup();
+        } catch (e) {
+          setMsg(`Reseed aborted — backup failed, nothing was overwritten: ${e.message}`);
+          return;
+        }
+      }
       const res = await seedDefaults(force);
-      setMsg(`Done: ${JSON.stringify(res.seeded)}`);
+      setMsg(`${force ? 'Backup downloaded, then reseeded' : 'Done'}: ${JSON.stringify(res.seeded)}`);
     } catch (e) {
       setMsg(`Failed: ${e.message}`);
     } finally {
@@ -272,6 +290,13 @@ const MaintenancePanel = () => {
             Force reseed (overwrite)
           </button>
         </div>
+        {pendingCount > 0 && (
+          <p className="gm-warn" data-testid="reseed-pending-warning">
+            ⚠ {pendingCount} pending player change{pendingCount === 1 ? '' : 's'} not yet
+            synced to character docs. A reseed reverts those docs — Sync them first
+            (Characters → Pending player changes) or they&apos;ll be lost.
+          </p>
+        )}
         <p className="gm-count">
           The diff-based update above writes only the docs that are new or changed
           (quests, items, spells, lore, traits, factions, calendar, effects, runes),
@@ -310,8 +335,13 @@ const MaintenancePanel = () => {
 
         <ConfirmDialog
           isOpen={confirm?.kind === 'reseed'}
-          title="Force reseed"
-          message="This overwrites ALL stored content with the bundled defaults, discarding every GM edit. This cannot be undone."
+          title="Force reseed (disaster recovery)"
+          message={[
+            pendingCount > 0
+              ? `⚠ ${pendingCount} pending player change${pendingCount === 1 ? '' : 's'} have NOT been synced to character docs and will be lost. Cancel and Sync them first unless you're sure.`
+              : null,
+            'This downloads a backup, then overwrites ALL stored content with the bundled defaults. Prior versions are archived (restorable from history) and the backup is your full restore point — but live GM edits are reverted. Use this only for disaster recovery, not routine content drops.',
+          ].filter(Boolean).join('\n\n')}
           confirmLabel="Reseed"
           requireType="RESEED"
           onConfirm={() => runSeed(true)}
