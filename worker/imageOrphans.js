@@ -74,4 +74,16 @@ export function computeImageOrphans({
   };
 }
 
+// Adopt (#757): R2 objects that have no `image` catalog row. Unlike the reclaim
+// buckets above, this is NOT grace- or reference-gated — minting a catalog entry
+// only ADDS metadata, so adoption is always safe and we want every stranded
+// object shown (including a referenced-but-unregistered one left behind by a
+// failed catalog PUT). Returns [{ id, size, uploaded }] in R2 listing order.
+export function computeUnregisteredImages({ r2Objects = [], catalog = [] } = {}) {
+  const catalogIds = new Set(catalog.map((c) => c.id));
+  return r2Objects
+    .filter((o) => !catalogIds.has(o.key))
+    .map((o) => ({ id: o.key, size: o.size ?? null, uploaded: o.uploaded ?? null }));
+}
+
 export default computeImageOrphans;

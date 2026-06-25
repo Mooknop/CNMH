@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { computeImageOrphans } from './imageOrphans.js';
+import { computeImageOrphans, computeUnregisteredImages } from './imageOrphans.js';
 
 const NOW = 1_000_000_000_000;
 const DAY = 24 * 60 * 60 * 1000;
@@ -107,5 +107,51 @@ describe('computeImageOrphans (#399)', () => {
       unreferenced: [], catalogWithoutBytes: [], bytesWithoutCatalog: [],
       referencedCount: 0, totalR2: 0, totalCatalog: 0,
     });
+  });
+});
+
+describe('computeUnregisteredImages (#757)', () => {
+  test('returns R2 objects with no catalog row', () => {
+    const out = computeUnregisteredImages({
+      r2Objects: [
+        { key: 'img_a.png', uploaded: 10, size: 100 },  // registered
+        { key: 'tok_b.webp', uploaded: 20, size: 200 },  // stranded
+      ],
+      catalog: [{ id: 'img_a.png', name: 'A' }],
+    });
+    expect(out).toEqual([{ id: 'tok_b.webp', size: 200, uploaded: 20 }]);
+  });
+
+  test('is NOT grace- or reference-gated — adoption only adds metadata', () => {
+    // A fresh upload and a referenced-but-unregistered tok are both adoptable:
+    // there is no `referencedIds`/grace input here at all.
+    const out = computeUnregisteredImages({
+      r2Objects: [
+        { key: 'img_fresh.png', uploaded: Date.now(), size: 1 },
+        { key: 'tok_ref.webp', uploaded: 5, size: 2 },
+      ],
+      catalog: [],
+    });
+    expect(out.map((o) => o.id)).toEqual(['img_fresh.png', 'tok_ref.webp']);
+  });
+
+  test('handles both id formats and missing size/uploaded', () => {
+    const out = computeUnregisteredImages({
+      r2Objects: [{ key: 'tok_c.jpg' }],
+      catalog: [],
+    });
+    expect(out).toEqual([{ id: 'tok_c.jpg', size: null, uploaded: null }]);
+  });
+
+  test('empty when every R2 object is already catalogued', () => {
+    const out = computeUnregisteredImages({
+      r2Objects: [{ key: 'img_a.png', uploaded: 1, size: 1 }],
+      catalog: [{ id: 'img_a.png' }],
+    });
+    expect(out).toEqual([]);
+  });
+
+  test('tolerates empty input', () => {
+    expect(computeUnregisteredImages()).toEqual([]);
   });
 });
