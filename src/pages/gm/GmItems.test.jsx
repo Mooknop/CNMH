@@ -199,6 +199,67 @@ describe('GmItems', () => {
     expect(saveDocument.mock.calls[0][2].container).toEqual({ capacity: 2, ignored: 0 });
   });
 
+  it('round-trips an existing armor block as numbers (AC1, #747)', async () => {
+    const armorItem = {
+      id: 'full-plate',
+      name: 'Full Plate',
+      price: 30,
+      weight: 4,
+      armor: { category: 'heavy', acBonus: 6, dexCap: 0, strength: 18, group: 'plate' },
+    };
+    useContent.mockReturnValue({ items: [armorItem], spells, images: [] });
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    selectItem('Full Plate');
+    const form = screen.getByTestId('item-form-full-plate');
+    // Pre-filled from the existing armor block.
+    expect(within(form).getByLabelText('armor-category')).toHaveValue('heavy');
+    expect(within(form).getByLabelText('armor-ac-bonus')).toHaveValue(6);
+    expect(within(form).getByLabelText('armor-dex-cap')).toHaveValue(0);
+    fireEvent.change(within(form).getByLabelText('armor-ac-bonus'), { target: { value: '7' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].armor).toEqual({
+      category: 'heavy',
+      acBonus: 7,
+      dexCap: 0,
+      strength: 18,
+      group: 'plate',
+    });
+  });
+
+  it('turns a plain item into armor via the toggle, omitting blank stats (AC1)', async () => {
+    const plain = { id: 'leather', name: 'Leather', price: 2, weight: 1 };
+    useContent.mockReturnValue({ items: [plain], spells, images: [] });
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    selectItem('Leather');
+    const form = screen.getByTestId('item-form-leather');
+    expect(within(form).queryByLabelText('armor-category')).not.toBeInTheDocument();
+    fireEvent.click(within(form).getByLabelText('is-armor'));
+    fireEvent.change(within(form).getByLabelText('armor-category'), { target: { value: 'light' } });
+    fireEvent.change(within(form).getByLabelText('armor-ac-bonus'), { target: { value: '1' } });
+    fireEvent.change(within(form).getByLabelText('armor-dex-cap'), { target: { value: '4' } });
+    // strength + group left blank — they must not appear in the saved block.
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    expect(saveDocument.mock.calls[0][2].armor).toEqual({ category: 'light', acBonus: 1, dexCap: 4 });
+  });
+
+  it('rejects an `armor` block pasted into the raw-JSON box (AC1)', async () => {
+    const plain = { id: 'club', name: 'Club', price: 0, weight: 1 };
+    useContent.mockReturnValue({ items: [plain], spells, images: [] });
+    render(<GmItems />);
+    selectItem('Club');
+    const form = screen.getByTestId('item-form-club');
+    fireEvent.change(within(form).getByLabelText('rest-json'), {
+      target: { value: '{"armor":{"category":"heavy"}}' },
+    });
+    fireEvent.click(within(form).getByText('Save'));
+    expect(await within(form).findByRole('alert')).toHaveTextContent(/armor/);
+    expect(saveDocument).not.toHaveBeenCalled();
+  });
+
   it('round-trips a scroll spellRef and lets the GM re-point it', async () => {
     setContent();
     saveDocument.mockResolvedValue({ ok: true });
