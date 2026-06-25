@@ -15,6 +15,8 @@ vi.mock('../utils/CharacterUtils', () => ({
   calculateEnhancedBulkLimit: vi.fn(() => 10),
   hasFeat: vi.fn(() => false),
   FEAT_NAMES: { FAMILIAR: 'Familiar', ANIMAL_COMPANION: 'Animal Companion' },
+  getArmorProficiencyRank: vi.fn(() => 0),
+  getArmorProficiencyBonus: vi.fn(() => 0),
 }));
 
 vi.mock('../utils/ActionsUtils', () => ({
@@ -41,6 +43,7 @@ vi.mock('../utils/SpellUtils', () => ({
 vi.mock('../utils/InventoryUtils', () => ({
   calculateItemsBulk: () => 5,
   formatBulk: (bulk) => bulk.toString(),
+  ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
 }));
 
 const baseChar = (spellcasting) => ({
