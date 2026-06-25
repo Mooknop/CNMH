@@ -45,6 +45,91 @@ export const seedMissing = () =>
     body: JSON.stringify({ mode: 'fill-missing', collections: defaultContent() }),
   }).then(json);
 
+// Authored-only collections that are safe to overwrite at the document level:
+// pure content with no live player/GM-session state mixed in. Deliberately
+// EXCLUDES character (live inventory/gold/loadout — needs field-level merge),
+// theme (GM-customized via the theme editor), image (R2 upload/delete flow),
+// and monster (bestiary capture) — those have their own write paths and must
+// never be clobbered by a wholesale doc overwrite.
+export const DIFFABLE_COLLECTIONS = [
+  'quest', 'faction', 'calendar', 'lore', 'trait', 'item', 'spell', 'effect', 'rune',
+];
+
+// Order-insensitive structural equality — used only to decide whether a doc
+// actually changed. Avoids re-writing (and archiving) docs whose stored key
+// order merely differs from the freshly-built bundle, which would otherwise
+// burn writes and flood history with no real change.
+const deepEqual = (a, b) => {
+  if (a === b) return true;
+  if (a == null || b == null || typeof a !== typeof b) return false;
+  if (typeof a !== 'object') return a === b;
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((v, i) => deepEqual(v, b[i]));
+  }
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && deepEqual(a[k], b[k]));
+};
+
+// Apply a content drop the SAFE way: diff the bundled defaults against the
+// CURRENT live store and write ONLY the docs that are new or actually changed,
+// one PUT each. The PUT route archives the prior version before overwriting, so
+// every write is restorable from history — unlike a force reseed, which deletes
+// whole collections and bypasses history entirely.
+//
+// Never deletes: a live doc absent from the bundle is reported as `liveOnly`
+// for manual review, not removed. Scoped to DIFFABLE_COLLECTIONS so characters,
+// theme, images, and monsters are never touched.
+//
+// Cost: one /api/content read (off which the diff is computed against the most
+// current state, minimizing the drift window) plus one PUT per changed doc —
+// versus a force reseed's delete-and-replace of every collection. Returns a
+// per-collection report: { quest: { added, changed, unchanged, liveOnly } }.
+export const applyContentDiff = async () => {
+  const res = await fetch('/api/content', { credentials: 'include' });
+  if (!res.ok) throw new Error(`Couldn’t read live content (HTTP ${res.status}).`);
+  const body = await res.json();
+  const live = (body && body.payload && typeof body.payload === 'object' ? body.payload : body) || {};
+  const bundled = defaultContent();
+
+  const report = {};
+  for (const collection of DIFFABLE_COLLECTIONS) {
+    const bundledDocs = Array.isArray(bundled[collection]) ? bundled[collection] : [];
+    const liveDocs = Array.isArray(live[collection]) ? live[collection] : [];
+    const liveById = new Map(
+      liveDocs.filter((d) => d && d.id != null).map((d) => [String(d.id), d])
+    );
+    const bundledIds = new Set();
+    const added = [];
+    const changed = [];
+    let unchanged = 0;
+    for (const doc of bundledDocs) {
+      if (!doc || doc.id == null) continue;
+      const id = String(doc.id);
+      bundledIds.add(id);
+      const liveDoc = liveById.get(id);
+      if (!liveDoc) {
+        await saveDocument(collection, id, doc);
+        added.push(id);
+      } else if (!deepEqual({ ...doc, id }, { ...liveDoc, id })) {
+        await saveDocument(collection, id, doc);
+        changed.push(id);
+      } else {
+        unchanged += 1;
+      }
+    }
+    const liveOnly = liveDocs
+      .filter((d) => d && d.id != null && !bundledIds.has(String(d.id)))
+      .map((d) => String(d.id));
+    if (added.length || changed.length || unchanged || liveOnly.length) {
+      report[collection] = { added, changed, unchanged, liveOnly };
+    }
+  }
+  return report;
+};
+
 // For each bundled character whose focus-spell arrays were re-pointed to
 // spellRef form in Slice C, find the matching live document (by id) in
 // liveCharacters and patch it if needed. Uses a read-modify-write so all
