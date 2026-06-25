@@ -12,6 +12,9 @@ import {
   applyConsumedOverlay,
   flattenInventory,
   isInvestable,
+  ARMOR_CATEGORIES,
+  isArmor,
+  normalizeArmor,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -331,6 +334,45 @@ describe('InventoryUtils', () => {
       expect(out).not.toHaveProperty('health');
       expect(out).not.toHaveProperty('breakThreshold');
       expect(out).not.toHaveProperty('broken_threshold');
+    });
+  });
+
+  describe('ARMOR_CATEGORIES', () => {
+    it('is the four PF2e proficiency categories', () => {
+      expect(ARMOR_CATEGORIES).toEqual(['unarmored', 'light', 'medium', 'heavy']);
+    });
+  });
+
+  describe('isArmor', () => {
+    it('is true only for items carrying an armor object', () => {
+      expect(isArmor({ armor: { category: 'heavy' } })).toBe(true);
+      expect(isArmor({ name: 'Dagger' })).toBe(false);
+      expect(isArmor({ armor: null })).toBe(false);
+      expect(isArmor(null)).toBe(false);
+    });
+  });
+
+  describe('normalizeArmor', () => {
+    it('returns null for a non-armor block', () => {
+      expect(normalizeArmor(null)).toBeNull();
+      expect(normalizeArmor(undefined)).toBeNull();
+      expect(normalizeArmor('nope')).toBeNull();
+    });
+
+    it('keeps the canonical fields and preserves extras', () => {
+      const armor = { category: 'heavy', acBonus: 6, dexCap: 0, strength: 18, group: 'plate', x: 1 };
+      expect(normalizeArmor(armor)).toEqual(armor);
+    });
+
+    it('is idempotent', () => {
+      const armor = { category: 'light', acBonus: 1, dexCap: 4 };
+      expect(normalizeArmor(normalizeArmor(armor))).toEqual(armor);
+    });
+
+    it('omits keys that are absent (absent ≠ zero) and treats null dexCap as uncapped', () => {
+      const out = normalizeArmor({ category: 'unarmored', acBonus: 0, dexCap: null });
+      expect(out).toEqual({ category: 'unarmored', acBonus: 0 });
+      expect(out).not.toHaveProperty('dexCap');
     });
   });
 

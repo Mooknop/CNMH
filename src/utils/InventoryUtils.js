@@ -144,6 +144,45 @@ export const isShieldBroken = (shield) => {
 };
 
 /**
+ * The four PF2e armor proficiency categories. `unarmored` covers explorer's
+ * clothing / no armor (acBonus 0, no Dex cap); the rest scale Dex cap down as
+ * the armor gets heavier. The AC-recompute epic (#746) keys proficiency and the
+ * Dex-cap clamp off this category.
+ */
+export const ARMOR_CATEGORIES = ['unarmored', 'light', 'medium', 'heavy'];
+
+/**
+ * Whether an item carries an armor block (AC1, #747). Equipped armor with this
+ * block is what AC3 (#749) derives base AC from.
+ * @param {Object} item
+ * @returns {boolean}
+ */
+export const isArmor = (item) => !!item && !!item.armor && typeof item.armor === 'object';
+
+/**
+ * Normalize an armor block to its canonical shape:
+ *   { category, acBonus?, dexCap?, strength?, group?, ...extras }
+ *
+ * Mirrors normalizeShield: faithful (no defaults injected, so callers can tell
+ * "absent" from "zero"), preserves unknown extras, and is idempotent. `dexCap`
+ * of null is treated as absent (uncapped). Returns null for non-armor.
+ *
+ * @param {Object|null|undefined} armor - raw armor block
+ * @returns {Object|null} canonical armor block, or null
+ */
+export const normalizeArmor = (armor) => {
+  if (!armor || typeof armor !== 'object') return null;
+  const { acBonus, dexCap, category, strength, group, ...rest } = armor;
+  const out = { ...rest };
+  if (category !== undefined) out.category = category;
+  if (acBonus !== undefined) out.acBonus = acBonus;
+  if (dexCap !== undefined && dexCap !== null) out.dexCap = dexCap;
+  if (strength !== undefined) out.strength = strength;
+  if (group !== undefined) out.group = group;
+  return out;
+};
+
+/**
  * Format to a decimal place if needed
  * @param {number} value - Value to format
  * @returns {string} - Formatted value

@@ -15,6 +15,7 @@ import PageEditorShell from '../../components/gm/PageEditorShell';
 import TraitsField from '../../components/shared/TraitsField';
 import { toList } from '../../utils/traitRefs';
 import { resolveWeapon, scaleDamageDice, STRIKING } from '../../utils/weaponRunes';
+import { ARMOR_CATEGORIES } from '../../utils/InventoryUtils';
 import './gm.css';
 
 // Slice 2: the shared item catalog editor. Catalog items hold ONLY the shared
@@ -59,7 +60,7 @@ const spellFromForm = (sf) => ({ ...sf.rest, spellRef: sf.spellRef.trim() });
 // Keys that must never appear in the raw-JSON box: per-character data belongs
 // on the inventory reference, and containers / scroll / wand / variants /
 // consumable metadata have dedicated UI.
-const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand', 'variants', 'consumable'];
+const FORBIDDEN_REST = ['quantity', 'invested', 'contents', 'container', 'scroll', 'wand', 'variants', 'consumable', 'armor'];
 
 const variantToForm = (v) => ({
   level: v.level != null ? String(v.level) : '',
@@ -83,7 +84,7 @@ const variantFromForm = (vf) => {
 
 const toForm = (it) => {
   const rest = { ...it };
-  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable', 'runes', 'potency'].forEach(
+  ['id', 'name', 'price', 'weight', 'traits', 'description', 'container', 'scroll', 'wand', 'strikes', 'variants', 'consumable', 'runes', 'potency', 'armor'].forEach(
     (k) => delete rest[k]
   );
   // Weapon runes (#548 Slice 2): potency/striking are authored via dropdowns,
@@ -129,6 +130,15 @@ const toForm = (it) => {
       it.container && it.container.capacity != null ? String(it.container.capacity) : '',
     containerIgnored:
       it.container && it.container.ignored != null ? String(it.container.ignored) : '',
+    // Armor block (AC1, #747): structured defensive stats the AC-recompute epic
+    // derives base AC from. `category` defaults to light; an empty Dex cap means
+    // uncapped (heavy armor still authors one explicitly).
+    hasArmor: !!it.armor,
+    armorCategory: it.armor?.category || 'light',
+    armorAcBonus: it.armor?.acBonus != null ? String(it.armor.acBonus) : '',
+    armorDexCap: it.armor?.dexCap != null ? String(it.armor.dexCap) : '',
+    armorStrength: it.armor?.strength != null ? String(it.armor.strength) : '',
+    armorGroup: it.armor?.group != null ? String(it.armor.group) : '',
     spellKind: it.scroll ? 'scroll' : it.wand ? 'wand' : 'none',
     spell: spellToForm(it.scroll || it.wand || {}),
     consumableKind: it.consumable?.kind || 'none',
@@ -223,6 +233,20 @@ const itemFromForm = (f) => {
       capacity: toInt(f.containerCapacity),
       ignored: toInt(f.containerIgnored),
     };
+  }
+
+  // Armor block (AC1, #747). The dedicated fields are the single source of
+  // truth, so any `armor` pasted into the raw-JSON box is already rejected by
+  // FORBIDDEN_REST. `category` always emits; numeric stats omit when blank so
+  // the canonical shape stays sparse (absent ≠ 0). An empty Dex cap = uncapped.
+  delete out.armor;
+  if (f.hasArmor) {
+    const armor = { category: f.armorCategory };
+    if (f.armorAcBonus.trim() !== '') armor.acBonus = toInt(f.armorAcBonus);
+    if (f.armorDexCap.trim() !== '') armor.dexCap = toInt(f.armorDexCap);
+    if (f.armorStrength.trim() !== '') armor.strength = toInt(f.armorStrength);
+    if (f.armorGroup.trim() !== '') armor.group = f.armorGroup.trim();
+    out.armor = armor;
   }
 
   if (f.spellKind === 'scroll' || f.spellKind === 'wand') {
@@ -578,6 +602,76 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
               value={e.containerIgnored}
               onChange={(ev) => set({ containerIgnored: ev.target.value })}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Armor block (AC1, #747): structured defensive stats. AC derivation
+          (AC3) is a later slice — this slice only authors + round-trips the
+          data. Hidden behind a toggle so non-armor items stay clean. */}
+      <div className="form-group">
+        <label>
+          <input
+            type="checkbox"
+            aria-label="is-armor"
+            checked={e.hasArmor}
+            onChange={(ev) => set({ hasArmor: ev.target.checked })}
+          />{' '}
+          This item is armor
+        </label>
+      </div>
+      {e.hasArmor && (
+        <div data-testid="item-armor">
+          <div className="gm-row">
+            <div className="form-group">
+              <label>category</label>
+              <select
+                aria-label="armor-category"
+                value={e.armorCategory}
+                onChange={(ev) => set({ armorCategory: ev.target.value })}
+              >
+                {ARMOR_CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>AC bonus (item)</label>
+              <input
+                aria-label="armor-ac-bonus"
+                type="number"
+                value={e.armorAcBonus}
+                onChange={(ev) => set({ armorAcBonus: ev.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Dex cap (blank = uncapped)</label>
+              <input
+                aria-label="armor-dex-cap"
+                type="number"
+                value={e.armorDexCap}
+                onChange={(ev) => set({ armorDexCap: ev.target.value })}
+              />
+            </div>
+          </div>
+          <div className="gm-row">
+            <div className="form-group">
+              <label>strength (negates speed penalty)</label>
+              <input
+                aria-label="armor-strength"
+                type="number"
+                value={e.armorStrength}
+                onChange={(ev) => set({ armorStrength: ev.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>group (e.g. plate, leather)</label>
+              <input
+                aria-label="armor-group"
+                value={e.armorGroup}
+                onChange={(ev) => set({ armorGroup: ev.target.value })}
+              />
+            </div>
           </div>
         </div>
       )}
