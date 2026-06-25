@@ -164,10 +164,10 @@ describe('ConditionModal', () => {
     });
 
     it('valued active condition does NOT get --active class in browser', () => {
-      const { container } = render(
+      render(
         <ConditionModal {...defaultProps} activeConditions={valuedActive} />
       );
-      expect(container.querySelector('.ct-browser-card--active')).toBeNull();
+      expect(document.querySelector('.ct-browser-card--active')).toBeNull();
     });
   });
 
@@ -201,10 +201,10 @@ describe('ConditionModal', () => {
     });
 
     it('browser card for active toggle condition gets --active class', () => {
-      const { container } = render(
+      render(
         <ConditionModal {...defaultProps} activeConditions={toggleActive} />
       );
-      expect(container.querySelector('.ct-browser-card--active')).toBeInTheDocument();
+      expect(document.querySelector('.ct-browser-card--active')).toBeInTheDocument();
     });
   });
 

@@ -299,7 +299,7 @@ describe('AnimalCompanionModal', () => {
   });
 
   it('uses characterColor when provided', () => {
-    const { container } = render(
+    render(
       <AnimalCompanionModal
         isOpen={true}
         onClose={vi.fn()}
@@ -308,13 +308,13 @@ describe('AnimalCompanionModal', () => {
         characterColor="#cc0000"
       />
     );
-    const modalContainer = container.querySelector('.modal-container');
+    const modalContainer = document.querySelector('.modal-container');
     expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#cc0000');
-    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
+    expect(document.querySelector('.modal-header--themed')).toBeInTheDocument();
   });
 
   it('uses default color when characterColor is absent', () => {
-    const { container } = render(
+    render(
       <AnimalCompanionModal
         isOpen={true}
         onClose={vi.fn()}
@@ -322,13 +322,13 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    const modalContainer = container.querySelector('.modal-container');
+    const modalContainer = document.querySelector('.modal-container');
     expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('var(--color-primary)');
   });
 
   it('calls onClose when overlay is clicked', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <AnimalCompanionModal
         isOpen={true}
         onClose={onClose}
@@ -336,13 +336,13 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    fireEvent.click(container.querySelector('.modal-overlay'));
+    fireEvent.click(document.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('does not call onClose when modal body is clicked', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <AnimalCompanionModal
         isOpen={true}
         onClose={onClose}
@@ -350,7 +350,7 @@ describe('AnimalCompanionModal', () => {
         character={baseCharacter}
       />
     );
-    fireEvent.click(container.querySelector('.modal-container'));
+    fireEvent.click(document.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -410,18 +410,18 @@ describe('AnimalCompanionModal', () => {
 
   it('renders entity image when animalCompanion.image is set', () => {
     const companion = { ...baseCompanion, image: 'img_companion.jpg' };
-    const { container } = render(
+    render(
       <AnimalCompanionModal isOpen={true} onClose={vi.fn()} animalCompanion={companion} character={baseCharacter} />
     );
-    const img = container.querySelector('.entity-image');
+    const img = document.querySelector('.entity-image');
     expect(img).not.toBeNull();
     expect(img).toHaveAttribute('src', '/api/images/img_companion.jpg');
   });
 
   it('does not render entity image when animalCompanion.image is absent', () => {
-    const { container } = render(
+    render(
       <AnimalCompanionModal isOpen={true} onClose={vi.fn()} animalCompanion={baseCompanion} character={baseCharacter} />
     );
-    expect(container.querySelector('.entity-image')).toBeNull();
+    expect(document.querySelector('.entity-image')).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 // src/components/shared/Modal.js
 import React from 'react';
+import ReactDOM from 'react-dom';
 import './Modal.css';
 
 /**
@@ -38,7 +39,7 @@ const Modal = ({
     ...(themeColor ? { '--color-theme': themeColor } : {}),
   };
 
-  return (
+  const overlay = (
     <div className={overlayClass} onClick={onClose}>
       <div
         className={containerClass}
@@ -57,6 +58,12 @@ const Modal = ({
       </div>
     </div>
   );
+
+  // Portal to <body> so the fixed-position overlay always escapes ancestor
+  // containing blocks (e.g. GM containers with backdrop-filter, which would
+  // otherwise anchor position:fixed to themselves) and stacking contexts.
+  if (typeof document === 'undefined') return overlay;
+  return ReactDOM.createPortal(overlay, document.body);
 };
 
 export default Modal;

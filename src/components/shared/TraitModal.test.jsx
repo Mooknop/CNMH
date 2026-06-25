@@ -34,28 +34,28 @@ describe('TraitModal', () => {
 
   it('calls onClose when overlay is clicked', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <TraitModal isOpen={true} onClose={onClose} trait={mockTrait} />
     );
-    fireEvent.click(container.querySelector('.modal-overlay'));
+    fireEvent.click(document.querySelector('.modal-overlay'));
     expect(onClose).toHaveBeenCalled();
   });
 
   it('does not propagate click from inner modal content', () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <TraitModal isOpen={true} onClose={onClose} trait={mockTrait} />
     );
-    fireEvent.click(container.querySelector('.modal-container'));
+    fireEvent.click(document.querySelector('.modal-container'));
     expect(onClose).not.toHaveBeenCalled();
   });
 
   it('applies themeColor to header', () => {
-    const { container } = render(
+    render(
       <TraitModal isOpen={true} onClose={() => {}} trait={mockTrait} themeColor="#ff0000" />
     );
-    const modalContainer = container.querySelector('.modal-container');
+    const modalContainer = document.querySelector('.modal-container');
     expect(modalContainer.style.getPropertyValue('--color-theme')).toBe('#ff0000');
-    expect(container.querySelector('.modal-header--themed')).toBeInTheDocument();
+    expect(document.querySelector('.modal-header--themed')).toBeInTheDocument();
   });
 });
