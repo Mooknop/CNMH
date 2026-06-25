@@ -69,11 +69,14 @@ test.describe('Backup → reseed → restore', () => {
     await expectDashboardMsg(page, 'Backup downloaded.');
 
     // --- 3. Force reseed (overwrite) ---
+    // A force reseed now auto-downloads a safety backup first (S2), so this
+    // click also fires a download event (auto-accepted) and the status line
+    // reads "Backup downloaded, then reseeded:" rather than the old "Done:".
     await page.getByRole('button', { name: 'Force reseed (overwrite)' }).click();
     await expect(page.locator('.modal-container')).toBeVisible();
     await page.getByLabel('confirm-input').fill('RESEED');
     await page.getByRole('button', { name: 'Reseed', exact: true }).click();
-    await expectDashboardMsg(page, 'Done:');
+    await expectDashboardMsg(page, 'Backup downloaded, then reseeded:');
 
     // Our seeded entries should be gone (replaced by bundled defaults)
     let payload = await fetchContent(request);

@@ -7,6 +7,7 @@ import GmDashboard from './GmDashboard';
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/usePlayMode', () => ({ usePlayMode: vi.fn() }));
 vi.mock('../../hooks/useEncounter', () => ({ useEncounter: vi.fn() }));
+vi.mock('../../hooks/useReconciliation', () => ({ useReconciliation: vi.fn() }));
 vi.mock('../../utils/gmApi', () => ({
   seedDefaults: vi.fn(),
   seedMissing: vi.fn(),
@@ -37,6 +38,7 @@ vi.mock('../../components/character-sheet/EffectsModal', () => ({
 import { useContent } from '../../contexts/ContentContext';
 import { usePlayMode } from '../../hooks/usePlayMode';
 import { useEncounter } from '../../hooks/useEncounter';
+import { useReconciliation } from '../../hooks/useReconciliation';
 import {
   seedDefaults, seedMissing, repointFocusSpellsToCatalog, syncChainConfig, applyContentDiff,
 } from '../../utils/gmApi';
@@ -74,6 +76,7 @@ beforeEach(() => {
   useContent.mockReturnValue({ source: 'server', rawCharacters: [], spells: [], characters: [] });
   usePlayMode.mockReturnValue(EXPLORATION_MODE);
   useEncounter.mockReturnValue({ encounter: null, actorMap: {}, setActorMap: vi.fn() });
+  useReconciliation.mockReturnValue({ pendingByChar: [] });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -253,6 +256,49 @@ describe('GmDashboard — Maintenance', () => {
     renderDash();
     fireEvent.click(screen.getByText(/Import defaults/i));
     await waitFor(() => expect(screen.getByText(/Failed: boom/)).toBeInTheDocument());
+  });
+
+  it('force reseed downloads a backup before overwriting', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    downloadBackup.mockResolvedValue({});
+    seedDefaults.mockResolvedValue({ ok: true, seeded: { quest: 'seeded 5 (archived 5)' } });
+    renderDash();
+    fireEvent.click(screen.getByText(/Force reseed/i));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'RESEED' } });
+    fireEvent.click(screen.getByText('Reseed'));
+    await waitFor(() => expect(seedDefaults).toHaveBeenCalledWith(true));
+    expect(downloadBackup).toHaveBeenCalled();
+    // backup must precede the destructive seed
+    expect(downloadBackup.mock.invocationCallOrder[0])
+      .toBeLessThan(seedDefaults.mock.invocationCallOrder[0]);
+    await waitFor(() => expect(screen.getByText(/Backup downloaded, then reseeded/)).toBeInTheDocument());
+  });
+
+  it('aborts the reseed (no overwrite) when the pre-reseed backup fails', async () => {
+    useContent.mockReturnValue({ source: 'server' });
+    downloadBackup.mockRejectedValue(new Error('R2 down'));
+    renderDash();
+    fireEvent.click(screen.getByText(/Force reseed/i));
+    fireEvent.change(screen.getByLabelText('confirm-input'), { target: { value: 'RESEED' } });
+    fireEvent.click(screen.getByText('Reseed'));
+    await waitFor(() => expect(screen.getByText(/Reseed aborted — backup failed/)).toBeInTheDocument());
+    expect(seedDefaults).not.toHaveBeenCalled();
+  });
+
+  it('warns about unsynced player changes before a reseed', () => {
+    useContent.mockReturnValue({ source: 'server' });
+    useReconciliation.mockReturnValue({
+      pendingByChar: [
+        { char: { id: 'Pellias' }, changes: [{ id: 'a' }, { id: 'b' }] },
+        { char: { id: 'Jade' }, changes: [{ id: 'c' }] },
+      ],
+    });
+    renderDash();
+    // inline warning before opening the dialog
+    expect(screen.getByTestId('reseed-pending-warning')).toHaveTextContent(/3 pending player changes/);
+    // and inside the confirm dialog
+    fireEvent.click(screen.getByText(/Force reseed/i));
+    expect(screen.getByText(/3 pending player changes have NOT been synced/)).toBeInTheDocument();
   });
 
   it('downloads a backup', async () => {

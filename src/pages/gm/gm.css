@@ -242,7 +242,7 @@
 }
 
 /* ── Confirm dialog ──────────────────────────────────────── */
-.confirm-message { margin: 0 0 12px; line-height: 1.4; }
+.confirm-message { margin: 0 0 12px; line-height: 1.4; white-space: pre-line; }
 .confirm-actions { justify-content: flex-end; }
 .confirm-actions .btn-danger,
 .confirm-actions .btn-primary { min-width: 120px; }
