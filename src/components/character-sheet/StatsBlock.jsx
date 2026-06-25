@@ -92,6 +92,7 @@ const StatsBlock = ({ character, characterColor }) => {
     level,
     maxHp,
     ac,
+    armorClass,
     size,
     speed,
     senses,
@@ -117,6 +118,17 @@ const StatsBlock = ({ character, characterColor }) => {
   const themeColor = characterColor || 'var(--color-primary)';
   const strMod = abilityModifiers.strength;
   const dexMod = abilityModifiers.dexterity;
+
+  // AC base (AC4, #750): the worn-armor-derived value (10 + proficiency +
+  // capped Dex + armor item bonus) when available, else the synced scalar.
+  // Effect bonuses (Raise a Shield, conditions, the worn-gear magic layer)
+  // still layer on top via mod('ac') / bestOfKind below. The derived AC is
+  // display-only — the app never commits it back to the doc (the scalar stays
+  // the authored fallback), so it sits outside the #555 reconciliation.
+  const acBase = armorClass?.value ?? ac;
+  const acSourceLabel = armorClass?.derived
+    ? `Derived from ${armorClass.armorName || armorClass.category} (10 + proficiency + Dex + armor)`
+    : 'Synced Armor Class';
 
   const defaultProficiencies = {
     weapons: {
@@ -444,10 +456,10 @@ const StatsBlock = ({ character, characterColor }) => {
               </div>
             )}
           </div>
-          <div className="ac-box">
+          <div className="ac-box" title={acSourceLabel}>
             <div className="defense-name">AC</div>
             <div className="defense-value">
-              <PenaltyDisplay base={ac} penalty={mod('ac')} />
+              <PenaltyDisplay base={acBase} penalty={mod('ac')} />
             </div>
           </div>
           <button

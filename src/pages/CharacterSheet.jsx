@@ -347,7 +347,7 @@ const CharacterSheet = () => {
           </div>
           <div className="cs-vital">
             <span className="cs-vital-val" aria-label="Armor class">
-              {characterModel.ac ?? '—'}
+              {characterModel.armorClass?.value ?? characterModel.ac ?? '—'}
             </span>
             <span className="cs-vital-lbl">AC</span>
           </div>
