@@ -8,6 +8,7 @@ import ProficiencyPips from '../shared/ProficiencyPips';
 import { formatModifier, getProficiencyBonus } from '../../utils/CharacterUtils';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useShield } from '../../hooks/useShield';
+import { useWornGear } from '../../hooks/useWornGear';
 import { useAura } from '../../hooks/useAura';
 import { useOmen } from '../../hooks/useOmen';
 import { characterHasKineticAura } from '../../utils/kineticAura';
@@ -74,6 +75,11 @@ const StatsBlock = ({ character, characterColor }) => {
   // synthetic effect injected into the same computeEffectBonuses pipeline (so
   // stacking with Take Cover / the Shield cantrip is handled by bestOfKind).
   const { shieldEffect } = useShield(characterKey, charData?.inventory);
+
+  // Worn magic gear (#730) contributes always-on item/status/circumstance
+  // bonuses (potency AC, resilient saves, …) the same synthetic-effect way the
+  // raised shield does, so bestOfKind handles stacking with conditions/effects.
+  const { wornEffects } = useWornGear(characterKey, charData?.inventory);
 
   // Kinetic aura (#228) — badge + out-of-encounter Dismiss for kineticists.
   const { active: auraActive, deactivate: deactivateAura } = useAura(characterKey);
@@ -152,10 +158,19 @@ const StatsBlock = ({ character, characterColor }) => {
   // Compute condition penalties for every displayed stat
   const effects = computeConditionEffects(hydratedConditions, character?.keyAbility, level);
 
-  // Combine condition penalties with effect bonuses. A raised shield appends a
-  // synthetic active-effect entry + its dynamic catalog def (bonus = shield AC).
-  const effectsList = shieldEffect ? [...activeEffects, shieldEffect.entry] : activeEffects;
-  const catalogList = shieldEffect ? [...(effectCatalog || []), shieldEffect.def] : effectCatalog;
+  // Combine condition penalties with effect bonuses. A raised shield and each
+  // piece of worn magic gear append a synthetic active-effect entry + its
+  // dynamic catalog def (bonus = shield AC, potency, resilient, …).
+  const synthEffects = [
+    ...(shieldEffect ? [shieldEffect] : []),
+    ...wornEffects,
+  ];
+  const effectsList = synthEffects.length
+    ? [...activeEffects, ...synthEffects.map((s) => s.entry)]
+    : activeEffects;
+  const catalogList = synthEffects.length
+    ? [...(effectCatalog || []), ...synthEffects.map((s) => s.def)]
+    : effectCatalog;
   const bonuses = computeEffectBonuses(effectsList, catalogList);
   const mod = (stat) => combineModifiers(effects[stat], bonuses[stat]);
 

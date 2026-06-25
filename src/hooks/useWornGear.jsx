@@ -1,0 +1,77 @@
+import { useMemo } from 'react';
+import { useInvested } from './useInvested';
+import { isInvestable } from '../utils/InventoryUtils';
+import { DEFAULT_ITEM_STATE } from '../utils/itemState';
+
+// Worn-Gear Effects (W1, #730) — the app-owned passive-bonus spine.
+//
+// Generalizes the useShield synthetic-effect pattern: every worn item carrying
+// a `modifiers: [{ stat, kind, amount }]` block contributes an always-on active
+// effect (no manual toggle), folded into the same computeEffectBonuses pipeline
+// as conditions and the raised shield. This slice covers the stats the effect
+// engine already models — ac / fort / reflex / will (skills come in W2, #731).
+//
+// IMPORTANT — these app-catalog items are NOT also on the Foundry actor. AC and
+// saves are static scalars synced from Foundry; if a magic armor lived on the
+// actor too, its bonus would be double-counted. The bonus is owned here and
+// layered on top of the synced scalar / derived AC, so it stays outside the
+// #555 reconciliation overlay model (nothing here is committed back to the doc).
+//
+// Stacking note: an armor's *base* AC item bonus is baked into the derived AC
+// (utils/armorClass.js), OUTSIDE the effect engine. So `modifiers` must carry
+// only the *magic delta* (e.g. a +1 potency rune's item bonus), never an
+// armor's base acBonus — otherwise bestOfKind would collapse base + potency
+// into a single item bonus instead of summing them.
+
+// Stats the effect engine can currently model. Skills are excluded until W2
+// teaches computeEffectBonuses about them.
+const SUPPORTED_STATS = new Set(['ac', 'fort', 'reflex', 'will']);
+
+const isWorn = (e) => e?.state == null || e.state === DEFAULT_ITEM_STATE;
+
+const usableModifiers = (mods) =>
+  (Array.isArray(mods) ? mods : []).filter(
+    (m) => m && SUPPORTED_STATS.has(m.stat) && typeof m.amount === 'number'
+  );
+
+/**
+ * Synthesize always-on active-effect entries for the character's worn magic
+ * gear. Returns one `{ entry, def }` per contributing item — the same shape
+ * useShield emits for a raised shield — for the caller to append to the
+ * sheet's effects list + catalog.
+ *
+ * A worn item contributes its modifiers when it is worn AND, if it carries the
+ * Invested trait, currently invested. Base armor (worn, investment not
+ * required) is handled separately by the derived-AC path; this is the magic
+ * layer, which PF2e gates on investment.
+ *
+ * @param {string} charId
+ * @param {Array}  inventory - the character's effective (state-stamped) inventory
+ * @returns {{ wornEffects: Array<{ entry: object, def: object }> }}
+ */
+export const useWornGear = (charId, inventory = []) => {
+  const { isInvested } = useInvested(charId);
+
+  const wornEffects = useMemo(() => {
+    return (Array.isArray(inventory) ? inventory : [])
+      .filter((e) => {
+        if (!isWorn(e)) return false;
+        if (!usableModifiers(e.modifiers).length) return false;
+        // Magic gear must be invested to grant its bonus; non-investable worn
+        // gear contributes as soon as it's worn.
+        if (isInvestable(e) && !isInvested(e.uid)) return false;
+        return true;
+      })
+      .map((e) => {
+        const id = `worn-${e.uid}`;
+        return {
+          entry: { id, effectId: id },
+          def: { id, name: e.name, modifiers: usableModifiers(e.modifiers) },
+        };
+      });
+  }, [inventory, isInvested]);
+
+  return { wornEffects };
+};
+
+export default useWornGear;
