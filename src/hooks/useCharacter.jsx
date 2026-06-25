@@ -25,7 +25,8 @@ import {
   getArmorProficiencyBonus,
 } from '../utils/CharacterUtils';
 
-import { ARMOR_CATEGORIES } from '../utils/InventoryUtils';
+import { ARMOR_CATEGORIES, normalizeArmor } from '../utils/InventoryUtils';
+import { findWornArmor, deriveArmorClass } from '../utils/armorClass';
 
 import {
   getStrikes,
@@ -191,6 +192,29 @@ export const useCharacter = (character) => {
     // the live `state`/`hand`, so it is a drop-in replacement.
     const charEff = { ...character, inventory: effectiveInventory };
 
+    // ── Armor Class (AC3, #749) ───────────────────────────────────────────────
+    // Derive base AC from the worn armor (10 + proficiency + capped Dex + armor
+    // item bonus) instead of the flat Foundry scalar. Falls back to the scalar
+    // when the worn armor isn't backfilled with the AC1 schema. Effect bonuses
+    // (Raise a Shield, conditions, the worn-gear magic layer) still layer on top
+    // downstream via the effect engine — this is only the base value.
+    const wornArmor = findWornArmor(effectiveInventory);
+    const armorCategory = wornArmor
+      ? normalizeArmor(wornArmor.armor)?.category || 'unarmored'
+      : 'unarmored';
+    const derivedAc = deriveArmorClass({
+      armor: wornArmor ? wornArmor.armor : null,
+      dexMod: abilityModifiers.dexterity,
+      proficiencyBonus: armorProficiencies[armorCategory]?.bonus || 0,
+    });
+    const armorClass = {
+      value: derivedAc != null ? derivedAc : ac,
+      derived: derivedAc != null,
+      source: derivedAc != null ? 'armor' : 'scalar',
+      category: armorCategory,
+      armorName: wornArmor ? wornArmor.name : null,
+    };
+
     // ── Bulk ────────────────────────────────────────────────────────────────
     const bulkStats = calculateEnhancedBulkLimit(character);
     const totalBulk = calculateItemsBulk(effectiveInventory);
@@ -307,6 +331,7 @@ export const useCharacter = (character) => {
       senses,
       maxHp,
       ac,
+      armorClass,
       saves,
 
       // Abilities

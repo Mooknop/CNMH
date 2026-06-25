@@ -43,6 +43,8 @@ vi.mock('../utils/InventoryUtils', () => ({
   calculateItemsBulk: () => 5,
   formatBulk: (bulk) => bulk.toString(),
   ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
+  isArmor: (it) => !!it && !!it.armor,
+  normalizeArmor: (a) => (a && typeof a === 'object' ? a : null),
 }));
 
 describe('useCharacter', () => {
@@ -78,6 +80,30 @@ describe('useCharacter', () => {
     expect(result.current).not.toBeNull();
     expect(result.current.id).toBe('1');
     expect(result.current.name).toBe('Test Character');
+  });
+
+  it('derives armorClass from worn armor, scalar-fallback when un-backfilled (AC3)', () => {
+    const base = {
+      id: '1', name: 'A', level: 1, ac: 18,
+      abilities: { strength: 10, dexterity: 14, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      proficiencies: { armor: { light: { proficiency: 1 } } },
+      feats: [],
+    };
+
+    // Worn light armor with the AC1 schema → derived (10 + prof + min(dex,cap) + acBonus).
+    // getArmorProficiencyBonus is mocked to 0, so: 10 + 0 + min(2,3) + 2 = 14.
+    const armored = { ...base, inventory: [{ uid: 'a', name: 'Leather', armor: { category: 'light', acBonus: 2, dexCap: 3 } }] };
+    const { result: r1 } = renderHook(() => useCharacter(armored));
+    expect(r1.current.armorClass.derived).toBe(true);
+    expect(r1.current.armorClass.value).toBe(14);
+    expect(r1.current.armorClass.category).toBe('light');
+
+    // Worn armor missing the schema → fall back to the synced scalar.
+    const legacy = { ...base, inventory: [{ uid: 'b', name: 'Old Mail', armor: { group: 'chain' } }] };
+    const { result: r2 } = renderHook(() => useCharacter(legacy));
+    expect(r2.current.armorClass.derived).toBe(false);
+    expect(r2.current.armorClass.value).toBe(18);
+    expect(r2.current.armorClass.source).toBe('scalar');
   });
 
   it('exposes armorProficiencies for every armor category (AC2)', () => {
