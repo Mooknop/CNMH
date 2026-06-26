@@ -95,93 +95,12 @@
   gap: 10px;
 }
 
-.bm-img-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 4px;
-}
-
-.bm-creature-img {
-  width: 96px;
-  height: 96px;
-  object-fit: cover;
-  border-radius: var(--radius-lg, 8px);
-  border: 2px solid var(--shell-border-strong, rgba(255, 255, 255, 0.12));
-}
-
+/* The no-stat-block fallback still renders a plain name + notice. */
 .bm-detail-name {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.15rem;
   color: var(--shell-text-primary, #f5ede4);
-}
-
-.bm-level {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
-}
-
-/* ---------- Traits ---------- */
-.bm-traits {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-/* ---------- Recall Knowledge DC ---------- */
-.bm-rk-dc {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--accent-tint, rgba(192, 68, 14, 0.1));
-  border: 1px solid var(--accent-outline, var(--color-primary, #c0440e));
-  border-radius: var(--radius-sm, 4px);
-  padding: 6px 10px;
-}
-
-.bm-rk-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
-  flex: 1;
-}
-
-.bm-rk-value {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--accent-text, #e85d1a);
-}
-
-.bm-rarity-tag {
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.55));
-}
-
-/* ---------- Stats grid ---------- */
-.bm-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px 12px;
-}
-
-.bm-stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--shell-border, rgba(255, 255, 255, 0.05));
 }
 
 .bm-stat-label {
@@ -230,67 +149,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* ---------- Saves ---------- */
-.bm-saves {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.bm-saves-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
-}
-
-.bm-saves-row {
-  display: flex;
-  gap: 16px;
-}
-
-.bm-save-item {
-  display: flex;
-  gap: 4px;
-  align-items: baseline;
-}
-
-.bm-save-name {
-  font-size: 0.78rem;
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
-}
-
-/* ---------- IWR ---------- */
-.bm-iwr {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  font-size: 0.85rem;
-}
-
-.bm-iwr-label {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.5));
-  flex-shrink: 0;
-}
-
-.bm-iwr-values {
-  color: var(--shell-text-primary, #f5ede4);
-}
-
-/* ---------- Description ---------- */
-.bm-description {
-  margin: 4px 0 0;
-  line-height: 1.55;
-  font-size: 0.88rem;
-  color: var(--shell-text-secondary, rgba(255, 255, 255, 0.7));
-  white-space: pre-wrap;
 }
 
 /* ---------- Inkblot redaction ---------- */
@@ -442,8 +300,9 @@
     linear-gradient(168deg, #16130f, #100d0b 72%);
 }
 
-/* Brushed-metal bezel for the art frame. */
-.dex-mini .metal {
+/* Brushed-metal bezel for the art frame (shared by both dex surfaces). */
+.dex-mini .metal,
+.dex-full .metal {
   background: linear-gradient(150deg, var(--steel-hi), var(--steel) 22%, var(--steel-lo) 60%, #1b1e24);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
@@ -452,7 +311,8 @@
 }
 
 /* Static corner brackets (decorative device framing). */
-.dex-mini .brk {
+.dex-mini .brk,
+.dex-full .brk {
   position: absolute;
   width: 13px;
   height: 13px;
@@ -461,8 +321,12 @@
   pointer-events: none;
   z-index: 5;
 }
-.dex-mini .brk.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
-.dex-mini .brk.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+.dex-mini .brk.tl,
+.dex-full .brk.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.dex-full .brk.tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.dex-full .brk.bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.dex-mini .brk.br,
+.dex-full .brk.br { bottom: 0; right: 0; border-left: none; border-top: none; }
 
 .dex-mini-art {
   position: relative;
@@ -617,6 +481,267 @@
 .dex-mini .bm-exploit-badge {
   margin: 8px 0 0;
 }
+
+/* ============================================================
+   Specimen Dex — full vertical entry (#778)
+   The /bestiary detail pane + GM editor preview. Art-forward
+   device panel; `--acc` set per creature on the root.
+   ============================================================ */
+.dex-full {
+  --acc: var(--wisp);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  color: var(--shell-text-primary, #ede4d6);
+  font-family: var(--font-ui);
+  border: 1px solid #2c2924;
+  border-radius: var(--radius-lg, 10px);
+  overflow: hidden;
+  background:
+    radial-gradient(100% 70% at 50% -10%, color-mix(in srgb, var(--acc) 8%, transparent), transparent 60%),
+    linear-gradient(168deg, #16130f, #100d0b 72%);
+}
+
+/* Status bar */
+.dex-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #2c2924;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+}
+.dex-no {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.dex-no small { color: var(--acc); font-size: 0.7em; margin-right: 0.15em; }
+.dex-class {
+  font-family: var(--font-type);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  padding-left: 12px;
+  border-left: 1px solid #34302a;
+}
+
+/* Hero art viewport */
+.dex-hero {
+  position: relative;
+  margin: 14px;
+  padding: 7px;
+  border-radius: 8px;
+}
+.dex-hero-screen {
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+  min-height: 200px;
+}
+.dex-hero-img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+}
+.dex-hero-noart {
+  display: block;
+  width: 100%;
+  height: 240px;
+  background:
+    radial-gradient(70% 55% at 50% 44%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 70%),
+    linear-gradient(160deg, #15211f, #0a1110 70%);
+}
+.dex-hero-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 60px -10px color-mix(in srgb, var(--acc) 60%, transparent),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.dex-hero-scan {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.5;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 4px);
+}
+.dex-hero-rune {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 4;
+  font-family: var(--font-rune);
+  font-size: 1rem;
+  color: color-mix(in srgb, var(--acc) 70%, #fff 20%);
+  opacity: 0.55;
+}
+.dex-hero-tab {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 4;
+  font-family: var(--font-type);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(12, 10, 8, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 3px 8px;
+  border-radius: 3px;
+  backdrop-filter: blur(2px);
+}
+
+/* Identity */
+.dex-id { padding: 2px 18px 0; }
+.dex-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 2.1rem;
+  line-height: 1;
+  color: var(--shell-text-primary, #f6efe3);
+}
+.dex-level {
+  margin-top: 4px;
+  font-family: var(--font-type);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+.dex-traits {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+/* Readout grid */
+.dex-readout {
+  margin: 14px 18px 0;
+  border: 1px solid #2e2a24;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.025);
+}
+.dex-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+.dex-cell {
+  padding: 9px 6px;
+  text-align: center;
+  border-right: 1px solid #26221d;
+  border-bottom: 1px solid #26221d;
+}
+.dex-cell:nth-child(4n) { border-right: none; }
+.dex-cell:nth-last-child(-n + 4) { border-bottom: none; }
+.dex-cell .k {
+  font-family: var(--font-type);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+.dex-cell .v {
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: #f3eadc;
+}
+.dex-cell .v.dex-cell-sm { font-size: 0.84rem; }
+.dex-cell .v .bm-redacted { height: 0.9em; }
+
+/* Defenses line */
+.dex-defs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 10px 12px;
+  border-top: 1px solid #26221d;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+.dex-defs .l {
+  font-family: var(--font-type);
+  font-size: 0.52rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin-right: 0.45em;
+}
+.dex-defs .val { color: rgba(255, 255, 255, 0.82); }
+.dex-defs .wk { color: var(--acc); font-weight: 600; margin-right: 0.4em; }
+
+/* Lore */
+.dex-lore {
+  margin: 13px 18px 0;
+  font-family: var(--font-body);
+  font-size: 1.02rem;
+  line-height: 1.46;
+  color: rgba(255, 255, 255, 0.66);
+  white-space: pre-wrap;
+}
+.dex-full > .bm-redacted--block { margin: 13px 18px 0; }
+
+/* Footer — Recall DC device chip */
+.dex-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 16px 16px;
+}
+.dex-dc {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  padding: 7px 12px 7px 9px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(122, 84, 186, 0.16), rgba(122, 84, 186, 0.05));
+  border: 1px solid rgba(164, 125, 224, 0.4);
+}
+.dex-dc .glyph {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  font-family: var(--font-rune);
+  font-size: 0.9rem;
+  color: #efe6ff;
+  background: rgba(122, 84, 186, 0.35);
+  border: 1px solid rgba(164, 125, 224, 0.5);
+}
+.dex-dc .n {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.35rem;
+  line-height: 0.9;
+  color: #fff;
+}
+.dex-dc .l {
+  font-family: var(--font-type);
+  font-size: 0.46rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--arcane-pale, #d8c4f5);
+}
+
+.dex-full .bm-hp-list {
+  margin: 12px 18px 0;
+  border-bottom: none;
+}
+.dex-full .bm-exploit-badge { margin: 12px 18px 0; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
