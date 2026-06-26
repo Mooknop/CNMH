@@ -9060,6 +9060,12 @@
         "dexCap": 3,
         "strength": 12,
         "group": "chain"
+      },
+      "aura": {
+        "save": "fortitude",
+        "dc": 23,
+        "range": "adjacent",
+        "effect": "it becomes deafened until it moves away from you"
       }
     },
     {
