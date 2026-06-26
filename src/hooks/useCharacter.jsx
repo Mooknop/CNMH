@@ -6,6 +6,8 @@
 import { useMemo } from 'react';
 
 import { useSyncedState } from './useSyncedState';
+import { useEffects } from './useEffects';
+import { dexCapFor } from '../utils/EffectUtils';
 import { useContent } from '../contexts/ContentContext';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { applyRemovedOverlay } from '../utils/removedOverlay';
@@ -84,7 +86,12 @@ export const useCharacter = (character) => {
   // Given-away overlay (#656) — uids handed to another PC, masked out of the
   // effective tree + Bulk. Empty/absent ⇒ no effect.
   const [removed] = useSyncedState(`cnmh_removed_${character?.id || 'none'}`, []);
-  const { items: catalogItems, spells: catalogSpells } = useContent();
+  // Active effects (#507) — the merged app + Foundry buff list, the same source
+  // StatsBlock's effect engine reads. Used here only for the Dexterity-cap
+  // adjustment that feeds the AC derivation (caps can't ride the additive effect
+  // rail, so the value must be applied at the derivation site).
+  const { effects: activeEffects } = useEffects(character?.id || 'none');
+  const { items: catalogItems, spells: catalogSpells, effects: effectCatalog } = useContent();
   const resolvedAcquired = useMemo(
     () => resolveInventory(
       Array.isArray(acquired) ? acquired : [],
@@ -211,11 +218,15 @@ export const useCharacter = (character) => {
       ? normalizeArmor(wornArmor.armor)?.category || 'unarmored'
       : 'unarmored';
     const hasArmorProficiency = !!(character.proficiencies && character.proficiencies.armor);
+    // Effect-imposed Dexterity cap (#507, e.g. Drakeheart Mutagen "cap of +2") —
+    // composes with the worn armor's own cap (lowest wins) inside the derivation.
+    const effectDexCap = dexCapFor(activeEffects, effectCatalog);
     const derivedAc = hasArmorProficiency
       ? deriveArmorClass({
           armor: wornArmor ? wornArmor.armor : null,
           dexMod: abilityModifiers.dexterity,
           proficiencyBonus: armorProficiencies[armorCategory]?.bonus || 0,
+          effectDexCap,
         })
       : null;
     const acDerived = derivedAc != null;
@@ -398,7 +409,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, resolvedAcquired, removed]);
+  }, [character, loadout, chambers, blade, resolvedAcquired, removed, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

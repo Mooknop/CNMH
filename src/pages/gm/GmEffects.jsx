@@ -18,6 +18,7 @@ const STAT_OPTIONS = [
   'meleeAttack', 'rangedAttack', 'spellAttack',
   'attacks', // fans out to every attack stat (#274)
   'spellDC', 'classDC', 'perception', 'speed',
+  'dexCap', // raises/lowers the Dex cap on AC — a ceiling, not an additive bonus (#507)
   'skills', // fans out to every skill
   ...SKILL_KEYS,
 ];
