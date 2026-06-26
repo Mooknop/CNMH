@@ -99,8 +99,16 @@ const armorPropertyRunes = [
       'Frightened enemies within 30 feet that can see you must attempt a DC 20 ' +
       "Will save at the end of their turn; on a failure, the value of their " +
       "frightened condition doesn't decrease below 1 that turn.",
-    // Passive aura; the at-end-of-turn save automation is #728 E2.
-    riders: [{ id: 'dread-reminder', text: 'Frightened foes within 30 ft that can see you save DC 20 Will or stay frightened ≥1 (automation: #728 E2).' }],
+    riders: [{ id: 'dread-reminder', text: 'Frightened foes within 30 ft that can see you save DC 20 Will or stay frightened ≥1.' }],
+    // End-of-turn aura save reminder (#728 E2).
+    aura: {
+      save: 'will',
+      dc: 20,
+      range: 30,
+      requires: 'frightened',
+      sight: true,
+      effect: "the frightened value doesn't drop below 1 this turn",
+    },
   },
   {
     id: 'swallow-spike',
