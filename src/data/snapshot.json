@@ -4732,6 +4732,10 @@
         }
       ],
       "image": "img_7ff08743-6d95-4ecf-960d-210c7aca0192.jpg",
+      "imagePosition": {
+        "x": 43,
+        "y": 4
+      },
       "id": "AshkaBGosh",
       "name": "Ashka B'Gosh",
       "ancestry": "Fetchling",
@@ -4845,9 +4849,15 @@
           }
         }
       },
-      "imagePosition": {
-        "x": 43,
-        "y": 4
+      "spellcasting": {
+        "scrollAnyTradition": true,
+        "proficiency": 0,
+        "focus": {
+          "max": 0,
+          "current": 0
+        },
+        "spell_slots": {},
+        "spells": []
       },
       "inventory": [
         {
@@ -4916,7 +4926,8 @@
         },
         {
           "uid": "e-7ewsndsu0lde",
-          "ref": "minor-elixir-of-life",
+          "ref": "elixir-of-life",
+          "level": 1,
           "quantity": 2
         },
         {
@@ -4951,7 +4962,8 @@
         },
         {
           "uid": "e-zooar8g6ihyp",
-          "ref": "lesser-healing-potion",
+          "ref": "healing-potion",
+          "level": 3,
           "quantity": 1
         },
         {
@@ -4962,6 +4974,11 @@
         {
           "uid": "e-28tm05msakrn",
           "ref": "vangloris-tattoo",
+          "quantity": 1
+        },
+        {
+          "uid": "e-vmcoysa7bqgz",
+          "ref": "midnight-milk",
           "quantity": 1
         }
       ],
@@ -5166,9 +5183,6 @@
           "reflex": 9,
           "will": 7
         }
-      },
-      "spellcasting": {
-        "scrollAnyTradition": true
       }
     },
     {
@@ -5403,12 +5417,14 @@
         },
         {
           "uid": "e-g83tyv3sld5g",
-          "ref": "minor-healing-potion",
+          "ref": "healing-potion",
+          "level": 1,
           "quantity": 2
         },
         {
           "uid": "e-qk7nx0dmld5g",
-          "ref": "minor-elixir-of-life",
+          "ref": "elixir-of-life",
+          "level": 1,
           "quantity": 1
         },
         {
@@ -5443,7 +5459,8 @@
         },
         {
           "uid": "e-6v7kqy55ihyq",
-          "ref": "lesser-healing-potion",
+          "ref": "healing-potion",
+          "level": 3,
           "quantity": 1
         },
         {
@@ -6271,7 +6288,8 @@
         },
         {
           "uid": "e-4phd9lsbj3e7",
-          "ref": "minor-healing-potion",
+          "ref": "healing-potion",
+          "level": 1,
           "quantity": 1
         },
         {
@@ -6766,7 +6784,8 @@
         },
         {
           "uid": "e-5wt9oadpoezh",
-          "ref": "minor-elixir-of-life",
+          "ref": "elixir-of-life",
+          "level": 1,
           "quantity": 1
         },
         {
@@ -6806,7 +6825,8 @@
         },
         {
           "uid": "e-swx7yknxihyq",
-          "ref": "minor-healing-potion",
+          "ref": "healing-potion",
+          "level": 1,
           "quantity": 2
         },
         {
@@ -6816,7 +6836,8 @@
         },
         {
           "uid": "e-i96di93dihyq",
-          "ref": "lesser-healing-potion",
+          "ref": "healing-potion",
+          "level": 3,
           "quantity": 1
         },
         {
@@ -7209,7 +7230,8 @@
         },
         {
           "uid": "e-6yakvan8ry1f",
-          "ref": "minor-elixir-of-life",
+          "ref": "elixir-of-life",
+          "level": 1,
           "quantity": 1
         },
         {
@@ -7580,78 +7602,96 @@
   ],
   "item": [
     {
-      "id": "1-cold-iron-light-hammer",
-      "name": "Light Hammer",
-      "price": 40.1,
       "material": "Cold Iron",
-      "runes": {
-        "potency": 1
-      },
-      "weight": 1,
-      "traits": [
-        "Agile",
-        "Thrown 20ft"
-      ],
-      "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "name": "Light Hammer",
       "strikes": [
         {
           "name": "Light Hammer Strike",
           "proficiency": "martial",
           "type": "melee",
-          "action": 1,
           "damage": "1d6",
           "traits": [
             "Attack",
             "Agile",
             "Melee"
-          ]
+          ],
+          "actionCount": 1
         },
         {
           "name": "Hammer Throw",
           "proficiency": "martial",
           "type": "ranged",
-          "range": "20ft",
-          "action": 1,
           "damage": "1d6",
+          "range": "20ft",
           "traits": [
             "Attack",
             "Agile",
             "Thrown"
-          ]
+          ],
+          "actionCount": 1
         }
-      ]
-    },
-    {
-      "id": "1-cold-iron-longsword",
-      "name": "Longsword",
-      "price": 41,
-      "material": "Cold Iron",
+      ],
       "runes": {
         "potency": 1
       },
-      "weight": 1,
+      "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "image": "img_a54784ca-564e-401d-9ed0-a6b8b6184b93.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
-        "Versatile P"
+        "Agile",
+        "Thrown 20ft"
       ],
-      "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "price": 40.1,
+      "weight": 1,
+      "id": "1-cold-iron-light-hammer"
+    },
+    {
+      "material": "Cold Iron",
+      "name": "Longsword",
       "strikes": {
         "name": "Longsword Strike",
         "proficiency": "martial",
         "type": "melee",
-        "action": 1,
         "damage": "1d8",
         "traits": [
           "Attack",
           "Versatile P",
           "Melee"
-        ]
-      }
+        ],
+        "actionCount": 1
+      },
+      "runes": {
+        "potency": 1
+      },
+      "description": "Longswords can be one-edged or two-edged swords. Their blades are heavy and they're between 3 and 4 feet in length. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
+      "image": "img_e280eace-dd2b-4ada-a02a-72376788eaa8.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Versatile P"
+      ],
+      "price": 41,
+      "weight": 1,
+      "id": "1-cold-iron-longsword"
     },
     {
-      "id": "1-striking-pick",
+      "image": "img_f7a7101f-2261-4962-83f8-4e44e0162deb.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "name": "Pick",
-      "price": 0.1,
-      "weight": 1,
+      "strikes": {
+        "proficiency": "martial",
+        "type": "melee",
+        "damage": "1d6",
+        "actionCount": 1
+      },
       "runes": {
         "potency": 1,
         "striking": "striking",
@@ -7663,12 +7703,9 @@
       "traits": [
         "Fatal 1d10"
       ],
-      "strikes": {
-        "proficiency": "martial",
-        "type": "melee",
-        "action": 1,
-        "damage": "1d6"
-      }
+      "price": 0.1,
+      "weight": 1,
+      "id": "1-striking-pick"
     },
     {
       "id": "aim-aiding",
@@ -7831,12 +7868,9 @@
           "traits": [
             "Manipulate"
           ],
-          "controller": "blade-byrnie",
           "description": "Effect You pull a link from the armor, which transforms into a +1 striking dagger. The dagger disappears and reappears as a link in the armor after you Strike with it, or at the end of this turn if you don't make a Strike. You can Activate the blade byrnie in place of an Interact action to draw a weapon for abilities such as the Quick Draw feat."
         }
       ],
-      "noHandRequired": true,
-      "bladeByrnie": {},
       "armor": {
         "category": "light",
         "acBonus": 2,
@@ -7868,49 +7902,54 @@
       ]
     },
     {
-      "id": "crescent-cross",
       "name": "Crescent Cross",
-      "price": 4,
-      "traits": [
-        "Combination",
-        "Critical Fusion",
-        "Disarm",
-        "Parry"
-      ],
-      "weight": 0.1,
-      "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
       "strikes": [
         {
-          "name": "Crescent Cross Bolt",
-          "proficiency": "martial",
-          "type": "ranged",
-          "action": 1,
-          "damage": "1d6",
-          "range": "30ft",
           "capacity": 3,
           "reload": 1,
           "ammoType": "bolt",
+          "name": "Crescent Cross Bolt",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6",
+          "range": "30ft",
           "traits": [
             "Attack",
             "Capacity 3",
             "Parry",
             "Ranged"
-          ]
+          ],
+          "actionCount": 1
         },
         {
           "name": "Crescent Cross Blade",
           "proficiency": "martial",
           "type": "melee",
-          "action": 1,
           "damage": "1d4",
           "traits": [
             "Attack",
             "Disarm",
             "Melee",
             "Parry"
-          ]
+          ],
+          "actionCount": 1
         }
-      ]
+      ],
+      "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
+      "image": "img_d38a4b39-6a51-422d-bc95-cedc2260b6aa.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Combination",
+        "Critical Fusion",
+        "Disarm",
+        "Parry"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "id": "crescent-cross"
     },
     {
       "id": "dragon-turtle-plate",
@@ -8018,19 +8057,29 @@
         {
           "level": 1,
           "label": "Minor",
+          "name": "Minor Elixir of Life",
           "price": 3,
-          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
+          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 1d6 HP"
+          }
         },
         {
           "level": 5,
           "label": "Lesser",
+          "name": "Lesser Elixir of Life",
           "price": 30,
-          "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1."
+          "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 3d6+6 HP"
+          }
         }
       ],
       "consumable": {
         "kind": "healing",
-        "note": "Restores 1d6 HP (Minor) / 3d6+6 (Lesser) — enter your rolled total"
+        "note": "Restores HP — enter your rolled total"
       }
     },
     {
@@ -8176,9 +8225,8 @@
       ]
     },
     {
-      "id": "lesser-healing-potion",
-      "name": "Lesser Healing Potion",
-      "price": 12,
+      "id": "healing-potion",
+      "name": "Healing Potion",
       "weight": 0.1,
       "traits": [
         "Consumable",
@@ -8187,10 +8235,67 @@
         "Potion",
         "Vitality"
       ],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a lesser healing potion, it restores 2d8+5 Hit Points.",
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a healing potion, you regain the listed number of Hit Points.",
+      "variants": [
+        {
+          "level": 1,
+          "label": "Minor",
+          "name": "Minor Healing Potion",
+          "price": 4,
+          "effect": "The potion restores 1d8 Hit Points.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 1d8 HP"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Lesser",
+          "name": "Lesser Healing Potion",
+          "price": 12,
+          "effect": "The potion restores 2d8+5 Hit Points.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 2d8+5 HP"
+          }
+        },
+        {
+          "level": 6,
+          "label": "Moderate",
+          "name": "Moderate Healing Potion",
+          "price": 50,
+          "effect": "The potion restores 3d8+10 Hit Points.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 3d8+10 HP"
+          }
+        },
+        {
+          "level": 12,
+          "label": "Greater",
+          "name": "Greater Healing Potion",
+          "price": 400,
+          "effect": "The potion restores 6d8+20 Hit Points.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 6d8+20 HP"
+          }
+        },
+        {
+          "level": 18,
+          "label": "Major",
+          "name": "Major Healing Potion",
+          "price": 5000,
+          "effect": "The potion restores 8d8+30 Hit Points.",
+          "consumable": {
+            "kind": "healing",
+            "note": "Restores 8d8+30 HP"
+          }
+        }
+      ],
       "consumable": {
         "kind": "healing",
-        "note": "Restores 2d8+5 HP"
+        "note": "Restores HP — enter your rolled total"
       }
     },
     {
@@ -8220,10 +8325,13 @@
       ]
     },
     {
-      "id": "midnight-milk",
       "name": "Midnight Milk",
-      "weight": 0.1,
-      "price": 30,
+      "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands.",
+      "image": "img_34fe1aba-bbd1-4dc4-bfe7-57ff9d357e19.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Alchemical",
         "Consumable",
@@ -8232,42 +8340,9 @@
         "Poison",
         "Rare"
       ],
-      "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands."
-    },
-    {
-      "id": "minor-elixir-of-life",
-      "name": "Minor Elixir of Life",
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Elixir",
-        "Healing"
-      ],
-      "price": 3,
+      "price": 30,
       "weight": 0.1,
-      "description": "Elixirs of life accelerate a living creature's natural healing processes and immune system. Upon drinking this elixir, you regain 1d6 Hit Points and gain a +1 item bonus to saving throws against diseases and poisons for 10 minutes.",
-      "consumable": {
-        "kind": "healing",
-        "note": "Restores 1d6 HP"
-      }
-    },
-    {
-      "id": "minor-healing-potion",
-      "name": "Minor Healing Potion",
-      "price": 4,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Healing",
-        "Magical",
-        "Potion",
-        "Vitality"
-      ],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a minor healing potion, it restores 1d8 HP when consumed",
-      "consumable": {
-        "kind": "healing",
-        "note": "Restores 1d8 HP"
-      }
+      "id": "midnight-milk"
     },
     {
       "id": "moderate-drakeheart-mutagen",
@@ -10721,18 +10796,6 @@
       ]
     },
     {
-      "id": "dragon-turtle-guard",
-      "name": "Roll the Plates",
-      "description": "+1 circumstance bonus to AC against the triggering melee attack (Dragon Turtle Plate reaction).",
-      "modifiers": [
-        {
-          "stat": "ac",
-          "kind": "circumstance",
-          "amount": 1
-        }
-      ]
-    },
-    {
       "id": "devoted-guardian-tower",
       "name": "Devoted Guardian (Tower Shield)",
       "description": "+2 circumstance bonus to AC while your guardian stays adjacent with their tower shield raised.",
@@ -10749,6 +10812,18 @@
       "name": "Dirge of Doom",
       "description": "Enemies in range are Frightened 1 (no save). Manual — apply Frightened via conditions.",
       "modifiers": []
+    },
+    {
+      "id": "dragon-turtle-guard",
+      "name": "Roll the Plates",
+      "description": "+1 circumstance bonus to AC against the triggering melee attack (Dragon Turtle Plate reaction).",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "circumstance",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "drakeheart-mutagen",
@@ -11247,6 +11322,151 @@
   ],
   "rune": [
     {
+      "id": "aim-aiding",
+      "type": "property",
+      "armorRune": true,
+      "name": "Aim-Aiding",
+      "level": 6,
+      "price": 225,
+      "description": "Armor etched with this rune aids in routing ranged attacks aimed at an enemy around you. You don't provide enemies cover against your allies' ranged attacks.",
+      "riders": [
+        {
+          "id": "aim-aiding-reminder",
+          "text": "You don't grant enemies cover against your allies' ranged attacks."
+        }
+      ]
+    },
+    {
+      "id": "dread",
+      "type": "property",
+      "armorRune": true,
+      "name": "Dread (Lesser)",
+      "level": 6,
+      "price": 225,
+      "description": "Eerie symbols cover your armor, inspiring terror in your foes. Frightened enemies within 30 feet that can see you must attempt a DC 20 Will save at the end of their turn; on a failure, the value of their frightened condition doesn't decrease below 1 that turn.",
+      "riders": [
+        {
+          "id": "dread-reminder",
+          "text": "Frightened foes within 30 ft that can see you save DC 20 Will or stay frightened ≥1."
+        }
+      ],
+      "aura": {
+        "save": "will",
+        "dc": 20,
+        "range": 30,
+        "requires": "frightened",
+        "sight": true,
+        "effect": "the frightened value doesn't drop below 1 this turn"
+      }
+    },
+    {
+      "id": "quenching",
+      "type": "property",
+      "armorRune": true,
+      "name": "Quenching",
+      "level": 6,
+      "price": 250,
+      "description": "This rune counters burning and corrosive agents. Armor with this rune reduces the DC of the flat check to end persistent acid or fire damage affecting you from 15 to 12 (7 with particularly effective assistance).",
+      "riders": [
+        {
+          "id": "quenching-reminder",
+          "text": "Persistent acid/fire flat check DC 15 → 12 (7 with effective assistance)."
+        }
+      ]
+    },
+    {
+      "id": "ready",
+      "type": "property",
+      "armorRune": true,
+      "name": "Ready",
+      "level": 6,
+      "price": 200,
+      "description": "A ready rune lets you don or remove the etched armor in only a few seconds rather than minutes.",
+      "riders": [
+        {
+          "id": "ready-reminder",
+          "text": "Don or remove this armor as a single action (1 action) rather than minutes."
+        }
+      ]
+    },
+    {
+      "id": "shadow",
+      "type": "property",
+      "armorRune": true,
+      "name": "Shadow",
+      "level": 5,
+      "price": 55,
+      "description": "Shadow runes make armor lighter and softer. While wearing the etched armor, you gain a +1 item bonus to Stealth checks.",
+      "modifiers": [
+        {
+          "stat": "stealth",
+          "kind": "item",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "slick",
+      "type": "property",
+      "armorRune": true,
+      "name": "Slick",
+      "level": 5,
+      "price": 45,
+      "description": "The defenses provided by this rune make it harder for foes to grab you. While wearing the etched armor, you gain a +1 item bonus to Acrobatics checks to Escape and to Squeeze.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 1
+        }
+      ],
+      "riders": [
+        {
+          "id": "slick-reminder",
+          "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
+        }
+      ]
+    },
+    {
+      "id": "swallow-spike",
+      "type": "property",
+      "armorRune": true,
+      "name": "Swallow-Spike",
+      "level": 6,
+      "price": 200,
+      "description": "Your armor responds to your desire to break free of a creature grabbing you by growing spikes. Attacks made by armor with the swallow-spike rune apply the multiple attack penalty as if you had made them with another weapon.",
+      "riders": [
+        {
+          "id": "swallow-spike-reminder",
+          "text": "When grabbed/restrained, react to attack the grabber with armor spikes."
+        }
+      ],
+      "reactions": [
+        {
+          "name": "Grow Spikes",
+          "triggerType": "grabbed",
+          "traits": [
+            "Attack",
+            "Concentrate"
+          ],
+          "trigger": "You become grabbed, restrained, or otherwise immobilized in a creature's grasp (including being engulfed or swallowed).",
+          "description": "The armor attacks the immobilizing creature with a melee Strike: +14 (greater +22), dealing 2d6 piercing (greater 3d6), plus 1d6 extra if the creature is swallowing or engulfing you. Add an item bonus to the attack equal to the armor's AC item bonus, and an item bonus to damage equal to double that. This Strike applies (and increases) the multiple attack penalty as a separate weapon. If the damage equals or exceeds the immobilizing ability's Rupture value, you cut yourself free."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Renewed Assault",
+          "actions": "One Action",
+          "traits": [
+            "Attack",
+            "Concentrate"
+          ],
+          "trigger": "You're being held immobilized as described in the Grow Spikes reaction.",
+          "description": "The armor attacks the immobilizing creature again, as the Grow Spikes reaction."
+        }
+      ]
+    },
+    {
       "id": "vitalizing",
       "type": "property",
       "name": "Vitalizing",
@@ -11305,6 +11525,13 @@
       "createdAt": 1779771332058
     },
     {
+      "id": "img_34fe1aba-bbd1-4dc4-bfe7-57ff9d357e19.jpg",
+      "name": "midnight milk.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782506606990
+    },
+    {
       "id": "img_3f74e21b-b3c3-4323-ad07-d9b3cbadd7d8.jpg",
       "name": "lesh.png",
       "folder": "portraits",
@@ -11326,11 +11553,46 @@
       "createdAt": 1779771348099
     },
     {
+      "id": "img_9dc2e46d-1993-40b4-914b-d11cfb522f7a.jpg",
+      "name": "Pick_ItU.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782508231777
+    },
+    {
       "id": "img_a0b98fca-8ea2-4032-9d00-432c95c7a9b9.jpg",
       "name": "blu.png",
       "folder": "portraits",
       "mimeType": "image/jpeg",
       "createdAt": 1779771300327
+    },
+    {
+      "id": "img_a54784ca-564e-401d-9ed0-a6b8b6184b93.jpg",
+      "name": "lighthammer.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782448616143
+    },
+    {
+      "id": "img_d38a4b39-6a51-422d-bc95-cedc2260b6aa.jpg",
+      "name": "Crescent_Cross.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782448709117
+    },
+    {
+      "id": "img_e280eace-dd2b-4ada-a02a-72376788eaa8.jpg",
+      "name": "longsword.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782508485963
+    },
+    {
+      "id": "img_f7a7101f-2261-4962-83f8-4e44e0162deb.jpg",
+      "name": "pick.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782508403774
     }
   ],
   "theme": [
