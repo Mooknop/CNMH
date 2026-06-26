@@ -37,7 +37,7 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
 
   return (
     <>
-      <BestiaryEntry enemy={enemy} members={members} record={record} badge={exploitBadge} />
+      <BestiaryEntry enemy={enemy} members={members} record={record} badge={exploitBadge} variant="compact" />
 
       {/* Recall Knowledge + Exploit Vulnerability triggers */}
       <div className="bm-rk-section">

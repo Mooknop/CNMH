@@ -421,8 +421,214 @@
   margin: 0;
 }
 
+/* ============================================================
+   Specimen Dex — in-combat compact card (#777)
+   Art-forward horizontal device shown in the modal detail pane.
+   `--acc` is set per creature on the root.
+   ============================================================ */
+.dex-mini {
+  --acc: var(--wisp);
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding: 16px;
+  color: var(--shell-text-primary, #ede4d6);
+  font-family: var(--font-ui);
+  border: 1px solid #2c2924;
+  border-radius: var(--radius-md, 6px);
+  overflow: hidden;
+  background:
+    radial-gradient(100% 70% at 50% -10%, color-mix(in srgb, var(--acc) 8%, transparent), transparent 60%),
+    linear-gradient(168deg, #16130f, #100d0b 72%);
+}
+
+/* Brushed-metal bezel for the art frame. */
+.dex-mini .metal {
+  background: linear-gradient(150deg, var(--steel-hi), var(--steel) 22%, var(--steel-lo) 60%, #1b1e24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+/* Static corner brackets (decorative device framing). */
+.dex-mini .brk {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: 2px solid color-mix(in srgb, var(--acc) 80%, #fff 10%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 5;
+}
+.dex-mini .brk.tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.dex-mini .brk.br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+.dex-mini-art {
+  position: relative;
+  flex: none;
+  width: 128px;
+  align-self: flex-start;
+  padding: 5px;
+  border-radius: var(--radius-md, 6px);
+}
+
+.dex-mini-screen {
+  position: relative;
+  height: 128px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.dex-mini-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 28px -6px color-mix(in srgb, var(--acc) 60%, transparent);
+}
+
+.dex-mini-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Static fallback screen when a creature has no token art. */
+.dex-mini-noart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(70% 55% at 50% 44%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 70%),
+    linear-gradient(160deg, #15211f, #0a1110 70%);
+}
+
+.dex-mini-no {
+  position: absolute;
+  top: 6px;
+  left: 7px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.6rem;
+  color: #fff;
+  background: rgba(12, 10, 8, 0.7);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.dex-mini-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dex-mini-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 0.95;
+  color: var(--shell-text-primary, #f6efe3);
+}
+
+.dex-mini-sub {
+  margin-top: 3px;
+  font-family: var(--font-type);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--acc);
+}
+
+.dex-mini-traits {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* Derived weakness chip, tinted to the creature accent. */
+.dex-mini-weak {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.66rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm, 4px);
+  white-space: nowrap;
+  color: var(--acc);
+  background: color-mix(in srgb, var(--acc) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--acc) 40%, transparent);
+}
+
+.dex-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin-top: 12px;
+  border: 1px solid #2e2a24;
+  border-radius: var(--radius-md, 6px);
+  overflow: hidden;
+}
+
+.dex-mini-stats .st {
+  text-align: center;
+  padding: 6px 2px;
+  border-right: 1px solid #26221d;
+  background: rgba(255, 255, 255, 0.02);
+}
+.dex-mini-stats .st:last-child { border-right: none; }
+
+.dex-mini-stats .k {
+  font-family: var(--font-type);
+  font-size: 0.46rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dex-mini-stats .v {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: #f3eadc;
+  line-height: 1.1;
+}
+
+/* Keep the inkblot vertically centred inside a stat cell. */
+.dex-mini-stats .v .bm-redacted { height: 0.9em; }
+
+.dex-mini .bm-hp-list {
+  margin-top: 10px;
+  border-bottom: none;
+}
+
+.dex-mini-lore {
+  margin: 10px 0 0;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.66);
+  white-space: pre-wrap;
+}
+
+.dex-mini .bm-exploit-badge {
+  margin: 8px 0 0;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 600px) {
+  .dex-mini {
+    flex-direction: column;
+  }
+
+  .dex-mini-art {
+    width: 100%;
+    align-self: stretch;
+  }
+
   .bm-layout {
     flex-direction: column;
   }
