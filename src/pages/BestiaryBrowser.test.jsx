@@ -62,44 +62,72 @@ beforeEach(() => {
   mockIsGm = false;
 });
 
-describe('BestiaryBrowser (#334)', () => {
-  test('lists captured monsters and skips override-only docs', () => {
+describe('BestiaryBrowser (#334) — dex grid', () => {
+  test('grids captured monsters and skips override-only docs', () => {
     mockRecords = { 'goblin-warrior': { ...defaultRecord(), identity: true } };
     render(<BestiaryBrowser />);
-    const list = screen.getByRole('listbox', { name: 'Creature list' });
-    expect(within(list).getByText('Goblin Warrior')).toBeInTheDocument();
+    const grid = screen.getByTestId('dex-grid');
+    expect(within(grid).getByText('Goblin Warrior')).toBeInTheDocument();
     expect(screen.queryByText('Legacy')).not.toBeInTheDocument();
   });
 
   test('redacts unidentified creatures for players', () => {
     render(<BestiaryBrowser />); // no records → nothing identified
     expect(screen.queryByText('Goblin Warrior')).not.toBeInTheDocument();
-    expect(screen.getByRole('listbox', { name: 'Creature list' })).toBeInTheDocument();
+    expect(screen.getByTestId('dex-grid')).toBeInTheDocument();
+    // Both captured creatures show as unidentified silhouettes.
+    expect(screen.getAllByText('— unidentified —')).toHaveLength(2);
   });
 
   test('GM sees all names without learning', () => {
     mockIsGm = true;
     render(<BestiaryBrowser />);
-    const list = screen.getByRole('listbox', { name: 'Creature list' });
-    expect(within(list).getByText('Goblin Warrior')).toBeInTheDocument();
-    expect(within(list).getByText('Ogre')).toBeInTheDocument();
+    const grid = screen.getByTestId('dex-grid');
+    expect(within(grid).getByText('Goblin Warrior')).toBeInTheDocument();
+    expect(within(grid).getByText('Ogre')).toBeInTheDocument();
   });
 
   test('search filters by name (GM)', () => {
     mockIsGm = true;
     render(<BestiaryBrowser />);
     fireEvent.change(screen.getByLabelText('Search creatures by name'), { target: { value: 'ogre' } });
-    const list = screen.getByRole('listbox', { name: 'Creature list' });
-    expect(within(list).queryByText('Goblin Warrior')).not.toBeInTheDocument();
-    expect(within(list).getByText('Ogre')).toBeInTheDocument();
+    const grid = screen.getByTestId('dex-grid');
+    expect(within(grid).queryByText('Goblin Warrior')).not.toBeInTheDocument();
+    expect(within(grid).getByText('Ogre')).toBeInTheDocument();
   });
 
-  test('deep-link param focuses a creature', () => {
+  test('catalogued/unknown count is shown', () => {
+    mockRecords = { 'goblin-warrior': { ...defaultRecord(), identity: true } };
+    render(<BestiaryBrowser />);
+    expect(screen.getByText('1 catalogued · 1 unknown')).toBeInTheDocument();
+  });
+});
+
+describe('BestiaryBrowser — grid ⇄ entry', () => {
+  test('clicking a card opens its full entry', () => {
+    mockIsGm = true;
+    render(<BestiaryBrowser />);
+    fireEvent.click(screen.getByRole('button', { name: 'Goblin Warrior' }));
+    // Detail view: full entry shows the Goblin's AC, grid is gone.
+    expect(screen.getByText('16')).toBeInTheDocument();
+    expect(screen.queryByTestId('dex-grid')).not.toBeInTheDocument();
+  });
+
+  test('back button returns to the grid', () => {
+    mockIsGm = true;
+    render(<BestiaryBrowser />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ogre' }));
+    fireEvent.click(screen.getByRole('button', { name: /Bestiary/ }));
+    expect(screen.getByTestId('dex-grid')).toBeInTheDocument();
+  });
+
+  test('deep-link param opens the entry directly', () => {
     mockIsGm = true;
     mockParams = { creatureKey: 'ogre' };
     render(<BestiaryBrowser />);
-    // The focused detail pane shows the Ogre's AC.
+    // The focused entry shows the Ogre's AC.
     expect(screen.getByText('19')).toBeInTheDocument();
+    expect(screen.queryByTestId('dex-grid')).not.toBeInTheDocument();
   });
 
   test('renders out-of-combat Recall Knowledge for the focused creature (#396)', () => {
