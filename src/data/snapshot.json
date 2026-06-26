@@ -7831,9 +7831,12 @@
           "traits": [
             "Manipulate"
           ],
+          "controller": "blade-byrnie",
           "description": "Effect You pull a link from the armor, which transforms into a +1 striking dagger. The dagger disappears and reappears as a link in the armor after you Strike with it, or at the end of this turn if you don't make a Strike. You can Activate the blade byrnie in place of an Interact action to draw a weapon for abilities such as the Quick Draw feat."
         }
       ],
+      "noHandRequired": true,
+      "bladeByrnie": {},
       "armor": {
         "category": "light",
         "acBonus": 2,

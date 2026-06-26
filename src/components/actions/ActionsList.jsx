@@ -23,6 +23,7 @@ import { useCharacter } from '../../hooks/useCharacter';
 import { useFocusTarget } from '../../hooks/useFocusTarget';
 import { useGrantedActions } from '../../hooks/useGrantedActions';
 import { useStance } from '../../hooks/useStance';
+import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { minionTurnId, MINION_COMPANION, MINION_FAMILIAR } from '../../utils/minionUtils';
 import './ActionsList.css';
 
@@ -49,6 +50,7 @@ const ActionsList = ({ character, characterColor }) => {
     || flags.hasScrolls || flags.hasWands || flags.hasStaff || flags.hasEldPowers || flags.hasHarrowing;
   const { grantedActions, removeGrantedAction } = useGrantedActions(character.id);
   const { enter: enterStance } = useStance(character.id);
+  const { active: bladeActive, activate: activateBlade, returnToArmor: returnBlade } = useBladeByrnie(character.id);
   // Active effects + catalog feed conditional ('vs X') effect-modifier toggles
   // onto skill actions (#338) — surfaced as opt-in checkboxes in SkillActionModal.
   const { effects: activeEffects } = useEffects(character.id);
@@ -142,6 +144,18 @@ const ActionsList = ({ character, characterColor }) => {
         return;
       }
 
+      // Blade Byrnie (#738) — "Draw a Blade" spawns the transient +1 striking
+      // dagger (no roll, no target); the dagger Strike then appears in the list.
+      // Toggling while already drawn returns it to the armor.
+      if (item.controller === 'blade-byrnie') {
+        if (bladeActive) returnBlade();
+        else activateBlade();
+        const verb = bladeActive ? 'returned the Blade Byrnie dagger' : 'drew a Blade Byrnie dagger';
+        if (encounterMode) spendActions(cost, item.name);
+        appendLog({ type: 'action', charId: character.id, text: `${character.name} ${verb}${encounterMode ? ` (${cost} act)` : ''}` });
+        return;
+      }
+
       // Movement actions (Stride/Step) drive the Foundry token, not a roll (#415).
       // Open the movement sheet, which mounts useTokenMovement + MoveGridPicker and
       // charges actions per the Stride/Step accounting.
@@ -195,7 +209,7 @@ const ActionsList = ({ character, characterColor }) => {
         });
       }
     },
-    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode, enterStance]
+    [character.id, character.name, spendActions, spendReaction, appendLog, encounterMode, enterStance, bladeActive, activateBlade, returnBlade]
   );
 
   const handleUseGranted = useCallback(
