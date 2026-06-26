@@ -932,8 +932,13 @@ const UseAbilityModal = ({
           const dmgText = r.damage?.final != null
             ? ` · damage ${formatDamageBreakdown(r.damage)}`
             : ` · dmg ${chainResults.damage}`;
+          // Situational bonus reason (#511): note any applied circumstance toggles,
+          // mirroring the single-roll resolver's log suffix (#274).
+          const adjustSuffix = r.adjust
+            ? ` (incl. ${r.adjust > 0 ? '+' : ''}${r.adjust}: ${(r.adjustSources || []).join(', ')})`
+            : '';
           const resultText = degreeLabel
-            ? `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel}${dmgText}`
+            ? `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum} vs ${r.name} (AC ${r.dc}): ${r.total} → ${degreeLabel}${adjustSuffix}${dmgText}`
             : `${character.name} ${effectiveVerb} ${ability.name} — ${strikeLabel}${strikeNum}${dmgText}`;
           appendLog({ type: 'action', charId: character.id, text: resultText });
         });

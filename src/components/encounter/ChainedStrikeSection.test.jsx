@@ -8,13 +8,16 @@ import ChainedStrikeSection from './ChainedStrikeSection';
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: vi.fn(),
 }));
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: vi.fn(),
+}));
 vi.mock('../../utils/rollResolution', () => ({
   resolveActionRoll: vi.fn(),
 }));
 vi.mock('./TargetRollResolver', () => {
   const { forwardRef, useImperativeHandle } = require('react');
-   
-  return { default: forwardRef(({ enemyTargets, rollBonus, damage }, ref) => {
+
+  return { default: forwardRef(({ enemyTargets, rollBonus, damage, toggles = [] }, ref) => {
     useImperativeHandle(ref, () => ({
       getResults: () => enemyTargets.map((e) => ({
         entryId: e.entryId,
@@ -29,12 +32,21 @@ vi.mock('./TargetRollResolver', () => {
       'data-testid': `resolver-${enemyTargets.length}`,
       'data-damage-expression': damage ? damage.expression : '',
       'data-damage-riders': damage ? damage.riders.map((r) => r.id).join(',') : '',
+      'data-toggles': toggles.map((t) => t.label).join('|'),
     }, `bonus=${rollBonus}`);
   }) };
 });
 
 import { useCharacter } from '../../hooks/useCharacter';
+import { useContent } from '../../contexts/ContentContext';
 import { resolveActionRoll } from '../../utils/rollResolution';
+
+// Conditional ('vs X') effect-modifier catalog (#511) — a melee-attack and a
+// ranged-attack conditional, so a strike's type picks the right one.
+const EFFECT_CATALOG = [
+  { id: 'limned', name: 'Limned', modifiers: [{ stat: 'meleeAttack',  kind: 'circumstance', amount: 1, vs: 'limned target' }] },
+  { id: 'marked', name: 'Marked', modifiers: [{ stat: 'rangedAttack', kind: 'status',       amount: 1, vs: 'marked target' }] },
+];
 
 const UNARMED = { name: 'Unarmed Strike', type: 'melee', traits: ['Attack', 'Unarmed'], attackMod: 8, damage: '1d6+4' };
 const CLAW    = { name: 'Claw',           type: 'melee', traits: ['Attack', 'Unarmed', 'Agile'], attackMod: 6, damage: '1d4+4' };
@@ -47,6 +59,7 @@ const enemyTargets = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 
 
 beforeEach(() => {
   useCharacter.mockReturnValue({ strikes: [UNARMED, CLAW] });
+  useContent.mockReturnValue({ effects: EFFECT_CATALOG });
   resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8 });
 });
 afterEach(() => vi.clearAllMocks());
@@ -109,6 +122,57 @@ describe('ChainedStrikeSection — damage step (#222)', () => {
     for (const r of resolvers) {
       expect(r).toHaveAttribute('data-damage-expression', '1d6+4 + 1d6');
     }
+  });
+});
+
+describe('ChainedStrikeSection — conditional attack toggles (#511)', () => {
+  const limnedEffects = [{ effectId: 'limned' }, { effectId: 'marked' }];
+
+  it("passes the selected strike's matching vs-modifier as a toggle (melee → meleeAttack only)", () => {
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={strikeChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={limnedEffects}
+      />
+    );
+    // The melee strike sources meleeAttack conditionals — the ranged 'Marked' one
+    // must not leak in.
+    expect(screen.getByTestId('resolver-1'))
+      .toHaveAttribute('data-toggles', 'Limned (vs limned target)');
+  });
+
+  it('passes the toggles to both resolvers in flurry mode (independent rows)', () => {
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={{ ...strikeChain, modes: ['strike', 'flurry'] }}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={limnedEffects}
+      />
+    );
+    fireEvent.click(screen.getByLabelText('Flurry of Blows'));
+    const resolvers = screen.getAllByTestId('resolver-1');
+    expect(resolvers).toHaveLength(2);
+    for (const r of resolvers) {
+      expect(r).toHaveAttribute('data-toggles', 'Limned (vs limned target)');
+    }
+  });
+
+  it('passes no toggles when the actor has no conditional modifiers', () => {
+    render(
+      <ChainedStrikeSection
+        character={character}
+        chain={strikeChain}
+        enemyTargets={enemyTargets}
+        conditions={conditions}
+        effects={[]}
+      />
+    );
+    expect(screen.getByTestId('resolver-1')).toHaveAttribute('data-toggles', '');
   });
 });
 
