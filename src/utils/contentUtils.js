@@ -591,8 +591,14 @@ export const defaultContent = () => ({
   monster: [],
 });
 
+// Collections written at runtime by the app (persistent bestiary), never
+// bundled — the seed must never send them, or a force reseed would wipe the
+// captured creatures. The server also guards this, but we never ask (#760).
+export const CAPTURE_ONLY_COLLECTIONS = ['monster'];
+
 // Body for POST /api/gm/seed.
-export const buildSeedPayload = (force = false) => ({
-  force,
-  collections: defaultContent(),
-});
+export const buildSeedPayload = (force = false) => {
+  const collections = defaultContent();
+  for (const c of CAPTURE_ONLY_COLLECTIONS) delete collections[c];
+  return { force, collections };
+};

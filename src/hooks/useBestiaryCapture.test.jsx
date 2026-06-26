@@ -159,3 +159,31 @@ describe('useBestiaryCapture (#332)', () => {
     expect(doc.locations).toMatchObject({ thistletop: { name: 'Thistletop' } });
   });
 });
+
+describe('useBestiaryCapture hardening (#760 / #395)', () => {
+  test('does not write a null bestiary over a persisted entry before content loads', () => {
+    // Bridge omits the stat block this sighting and the content store has not
+    // hydrated yet (existing = {}) — writing would clobber a good entry.
+    mockMonsters = [];
+    mockEncounter = { active: true, order: [{ ...goblin, bestiary: null, defenses: null }] };
+    setup();
+    expect(mockSaveDocument).not.toHaveBeenCalled();
+  });
+
+  test('falls back to the loaded record when a sighting omits the stat block', () => {
+    mockMonsters = [{ id: 'goblin-warrior', name: 'Goblin Warrior', bestiary: goblin.bestiary, defenses: goblin.defenses }];
+    mockEncounter = { active: true, order: [{ ...goblin, bestiary: null, defenses: null }] };
+    setup();
+    expect(mockSaveDocument).toHaveBeenCalledTimes(1);
+    const [, , doc] = mockSaveDocument.mock.calls[0];
+    expect(doc.bestiary).toEqual(goblin.bestiary); // preserved, not nulled
+  });
+
+  test('captures via the bestiary-nested creatureKey when the top-level one is missing (#395)', () => {
+    const { creatureKey, ...rest } = goblin;
+    mockEncounter = { active: true, order: [{ ...rest, bestiary: { ...goblin.bestiary, creatureKey: 'goblin-warrior' } }] };
+    setup();
+    expect(mockSaveDocument).toHaveBeenCalledTimes(1);
+    expect(mockSaveDocument.mock.calls[0][1]).toBe('goblin-warrior');
+  });
+});

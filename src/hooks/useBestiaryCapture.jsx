@@ -38,19 +38,31 @@ export function useBestiaryCapture() {
     const locName = campaign?.location || '';
     for (const e of order) {
       if (e.kind !== 'enemy') continue;
-      const key = e.creatureKey;
+      // Prefer the top-level key, but fall back to the one nested on the
+      // bestiary blob — a stale bridge module sometimes omits the top-level
+      // copy (#395), which would otherwise drop the capture entirely.
+      const key = e.creatureKey || e.bestiary?.creatureKey;
       if (!key) continue; // manual/homebrew enemies have no stable key
       const guard = `${key}@${loreId}`;
       if (writtenRef.current.has(guard)) continue;
-      writtenRef.current.add(guard);
 
       const existing = monsters.find((m) => m.id === key) || {};
+      const bestiary = e.bestiary || existing.bestiary || null; // refresh each sighting
+      const defenses = e.defenses || existing.defenses || null;
+      // Don't clobber a persisted entry with nulls. If this sighting carries no
+      // stat block and we have nothing loaded to fall back on — the content
+      // store hasn't hydrated yet, or the bridge omitted `bestiary` — skip the
+      // write rather than overwrite a good entry with null. Leaving `guard`
+      // unmarked lets a later, complete sighting capture it (#760).
+      if (!bestiary) continue;
+      writtenRef.current.add(guard);
+
       const now = Date.now();
       const doc = {
         id: key,
         name: existing.name || e.name,
-        bestiary: e.bestiary || existing.bestiary || null, // refresh each sighting
-        defenses: e.defenses || existing.defenses || null,
+        bestiary,
+        defenses,
         capturedAt: existing.capturedAt || now, // first-seen timestamp is canonical
         lastSeenAt: now,
       };

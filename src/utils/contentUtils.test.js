@@ -245,6 +245,13 @@ describe('contentUtils', () => {
         expect(buildSeedPayload().collections[key].length).toBeGreaterThan(0);
       }
     });
+    it('never seeds capture-only collections — a force reseed must not wipe the bestiary (#760)', () => {
+      // defaultContent still exposes the shape, but the seed payload omits it so
+      // a force reseed never asks the DO to touch the runtime-captured monsters.
+      expect(defaultContent()).toHaveProperty('monster');
+      expect(buildSeedPayload().collections).not.toHaveProperty('monster');
+      expect(buildSeedPayload(true).collections).not.toHaveProperty('monster');
+    });
     it('exposes the item catalog (possibly empty pre-Slice-3) as an array of id-bearing docs', () => {
       const dc = defaultContent();
       expect(Array.isArray(dc.item)).toBe(true);
