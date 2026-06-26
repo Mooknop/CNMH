@@ -3,6 +3,7 @@ import { useInvested } from './useInvested';
 import { isInvestable } from '../utils/InventoryUtils';
 import { DEFAULT_ITEM_STATE } from '../utils/itemState';
 import { hasArmorRuneBlock, resolveArmorItem } from '../utils/armorRunes';
+import { SKILL_KEYS } from '../utils/EffectUtils';
 
 // Worn-Gear Effects (W1, #730) — the app-owned passive-bonus spine.
 //
@@ -24,9 +25,12 @@ import { hasArmorRuneBlock, resolveArmorItem } from '../utils/armorRunes';
 // armor's base acBonus — otherwise bestOfKind would collapse base + potency
 // into a single item bonus instead of summing them.
 
-// Stats the effect engine can currently model. Skills are excluded until W2
-// teaches computeEffectBonuses about them.
-const SUPPORTED_STATS = new Set(['ac', 'fort', 'reflex', 'will']);
+// Stats worn gear can grant — defensive stats plus every skill (W2, #731). The
+// effect engine already buckets these (computeEffectBonuses), and the skills
+// list nets effectBonuses[skill] with a source label, so a skill modifier
+// (Slick → Acrobatics, Shadow → Stealth) flows straight through once it's let
+// past this gate. Genuinely unknown/malformed stats are still dropped.
+const SUPPORTED_STATS = new Set(['ac', 'fort', 'reflex', 'will', ...SKILL_KEYS]);
 
 const isWorn = (e) => e?.state == null || e.state === DEFAULT_ITEM_STATE;
 

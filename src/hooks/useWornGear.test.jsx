@@ -77,23 +77,27 @@ describe('useWornGear', () => {
     expect(setup([acRune({ state: undefined })])).toHaveLength(1);
   });
 
-  it('drops unsupported stats (skills wait for W2) and keeps the rest', () => {
+  it('keeps skill stats (W2, #731) and drops genuinely-unknown ones', () => {
     investedSet.add('u1');
     const out = setup([
       acRune({
         modifiers: [
           { stat: 'ac', kind: 'item', amount: 1 },
           { stat: 'stealth', kind: 'item', amount: 1 },
+          { stat: 'made-up', kind: 'item', amount: 1 },
         ],
       }),
     ]);
-    expect(out[0].def.modifiers).toEqual([{ stat: 'ac', kind: 'item', amount: 1 }]);
+    expect(out[0].def.modifiers).toEqual([
+      { stat: 'ac', kind: 'item', amount: 1 },
+      { stat: 'stealth', kind: 'item', amount: 1 },
+    ]);
   });
 
   it('skips items whose modifiers are all unsupported or malformed', () => {
     investedSet.add('u1');
-    expect(setup([acRune({ modifiers: [{ stat: 'stealth', amount: 1 }] })])).toEqual([]);
-    expect(setup([acRune({ modifiers: [{ stat: 'ac', amount: 'x' }] })])).toEqual([]);
+    expect(setup([acRune({ modifiers: [{ stat: 'made-up', amount: 1 }] })])).toEqual([]);
+    expect(setup([acRune({ modifiers: [{ stat: 'stealth', amount: 'x' }] })])).toEqual([]);
     expect(setup([acRune({ modifiers: undefined })])).toEqual([]);
   });
 
@@ -116,16 +120,17 @@ describe('useWornGear', () => {
       ...overrides,
     });
 
-    it('derives potency AC + resilient saves through the armor-rune resolver', () => {
+    it('derives potency AC + resilient saves + the property skill bonus (W2)', () => {
       investedSet.add('armor1');
       const out = setup([runedChain()]);
       expect(out).toHaveLength(1);
-      // Skill (acrobatics) is dropped until W2; the supported stats remain.
+      // Slick's Acrobatics bonus now rides along with the fundamental-rune stats.
       expect(out[0].def.modifiers).toEqual([
         { stat: 'ac', kind: 'item', amount: 1 },
         { stat: 'fort', kind: 'item', amount: 1 },
         { stat: 'reflex', kind: 'item', amount: 1 },
         { stat: 'will', kind: 'item', amount: 1 },
+        { stat: 'acrobatics', kind: 'item', amount: 1 },
       ]);
     });
 
@@ -133,10 +138,11 @@ describe('useWornGear', () => {
       expect(setup([runedChain()])).toEqual([]);
     });
 
-    it('contributes nothing when the only rune yields unsupported stats (skills)', () => {
+    it('contributes a skill-only property rune (Shadow → Stealth) once invested (W2)', () => {
       investedSet.add('armor1');
-      const out = setup([runedChain({ runes: { property: [{ id: 'slick', modifiers: [{ stat: 'acrobatics', kind: 'item', amount: 1 }] }] } })]);
-      expect(out).toEqual([]);
+      const out = setup([runedChain({ runes: { property: [{ id: 'shadow', modifiers: [{ stat: 'stealth', kind: 'item', amount: 1 }] }] } })]);
+      expect(out).toHaveLength(1);
+      expect(out[0].def.modifiers).toEqual([{ stat: 'stealth', kind: 'item', amount: 1 }]);
     });
   });
 });
