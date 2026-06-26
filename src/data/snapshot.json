@@ -7931,9 +7931,20 @@
             "Manipulate"
           ],
           "trigger": "A creature adjacent to you targets you with a melee attack.",
-          "description": "You roll the hefty plates of the dragon turtle armor toward the attacker to gain a +1 circumstance bonus to AC against the triggering attack."
+          "description": "You roll the hefty plates of the dragon turtle armor toward the attacker to gain a +1 circumstance bonus to AC against the triggering attack.",
+          "triggerType": "attack-melee",
+          "effects": [
+            {
+              "effectId": "dragon-turtle-guard",
+              "applyTo": "self",
+              "duration": {
+                "until": "caster-turn-start"
+              }
+            }
+          ]
         }
       ],
+      "noHandRequired": true,
       "armor": {
         "category": "heavy",
         "acBonus": 5,
@@ -10682,6 +10693,18 @@
       "id": "devoted-guardian",
       "name": "Devoted Guardian",
       "description": "+1 circumstance bonus to AC while your guardian stays adjacent with their shield raised.",
+      "modifiers": [
+        {
+          "stat": "ac",
+          "kind": "circumstance",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "dragon-turtle-guard",
+      "name": "Roll the Plates",
+      "description": "+1 circumstance bonus to AC against the triggering melee attack (Dragon Turtle Plate reaction).",
       "modifiers": [
         {
           "stat": "ac",

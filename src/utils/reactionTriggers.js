@@ -9,6 +9,7 @@
 // GM ability editor; stored on the ability as `triggerType: <id>`.
 export const TRIGGER_TYPES = [
   { id: 'attack-ranged',     label: 'A ranged attack targets you' },
+  { id: 'attack-melee',      label: 'A melee attack targets you' },
   { id: 'attack-any',        label: 'Any attack targets you' },
   { id: 'damaged-self',      label: 'A creature damages you' },
   { id: 'damaged-ally',      label: 'An ally nearby is damaged' },
@@ -21,7 +22,7 @@ export const TRIGGER_TYPES = [
 // What the GM can fire. `matches` lists the triggerTypes the event wakes up.
 export const TRIGGER_EVENTS = [
   { id: 'ranged-attack',     label: 'Ranged attack incoming', matches: ['attack-ranged', 'attack-any'] },
-  { id: 'melee-attack',      label: 'Melee attack incoming',  matches: ['attack-any'] },
+  { id: 'melee-attack',      label: 'Melee attack incoming',  matches: ['attack-any', 'attack-melee'] },
   { id: 'damaged',           label: 'PC was damaged',         matches: ['damaged-self', 'damaged-any'] },
   { id: 'ally-damaged',      label: 'Ally damaged nearby',    matches: ['damaged-ally', 'damaged-any'] },
   { id: 'check-failed',      label: 'PC failed a check',      matches: ['self-check-failed'] },

@@ -9,6 +9,7 @@ import {
 
 const deflect    = { name: 'Deflect Projectile',  triggerType: 'attack-ranged' };
 const wing       = { name: 'Wing Deflection',     triggerType: 'attack-any' };
+const turtle     = { name: 'Dragon Turtle Plate', triggerType: 'attack-melee' };
 const oversell   = { name: 'Overselling Flourish', triggerType: 'damaged-self' };
 const retributive = { name: 'Retributive Strike', triggerType: 'damaged-ally' };
 const upstage    = { name: 'Upstage',             triggerType: 'enemy-skill-check' };
@@ -37,14 +38,14 @@ describe('reactionTriggers', () => {
   });
 
   describe('matchingReactions', () => {
-    const all = [deflect, wing, oversell, retributive, upstage, untyped];
+    const all = [deflect, wing, turtle, oversell, retributive, upstage, untyped];
 
-    it('ranged attack wakes both attack-ranged and attack-any', () => {
+    it('ranged attack wakes attack-ranged and attack-any, but not melee-only', () => {
       expect(matchingReactions(all, 'ranged-attack')).toEqual([deflect, wing]);
     });
 
-    it('melee attack wakes only attack-any', () => {
-      expect(matchingReactions(all, 'melee-attack')).toEqual([wing]);
+    it('melee attack wakes attack-any and attack-melee, but not ranged-only', () => {
+      expect(matchingReactions(all, 'melee-attack')).toEqual([wing, turtle]);
     });
 
     it('damaged / ally-damaged / enemy-skill-check map one-to-one', () => {
