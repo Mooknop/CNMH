@@ -53,6 +53,11 @@ vi.mock('../../hooks/useExploitVulnerability', () => ({
   }),
 }));
 
+let mockNotes = {};
+vi.mock('../../hooks/useBestiaryNotes', () => ({
+  useBestiaryNotes: () => ({ noteFor: (k) => mockNotes[k] || '', setNote: vi.fn() }),
+}));
+
 let mockIsGm = false;
 vi.mock('../../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ loading: false, isGm: mockIsGm, email: null }),
@@ -137,6 +142,7 @@ beforeEach(() => {
   mockExploit = {};
   mockIsGm   = false;
   mockMonsters = [];
+  mockNotes = {};
   mockClearLock.mockClear();
 });
 
@@ -628,6 +634,22 @@ describe('BestiaryModal — same-type dedupe', () => {
     // goblin/troll fixtures have no creatureKey → keyed by entryId, no collapse.
     renderModal({ enemies: [goblin, troll] });
     expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+});
+
+// ── Field note (read-only on the compact card) ───────────────────────────────
+
+describe('BestiaryModal — field note', () => {
+  test('shows a read-only party note on the compact card', () => {
+    const keyed = { ...goblin, creatureKey: 'gk1' };
+    mockNotes = { gk1: 'stab the eyes' };
+    renderModal({ enemies: [keyed] });
+    expect(screen.getByTestId('bm-detail')).toHaveTextContent('stab the eyes');
+  });
+
+  test('renders no note when none is saved', () => {
+    renderModal({ enemies: [goblin] });
+    expect(screen.queryByText(/field note/i)).not.toBeInTheDocument();
   });
 });
 

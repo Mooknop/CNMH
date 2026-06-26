@@ -22,6 +22,12 @@ vi.mock('../hooks/useRecallKnowledge', () => ({
   useRecallKnowledge: () => ({ recordFor: (k) => mockRecords[k] || defaultRecord() }),
 }));
 
+let mockNotes = {};
+const mockSetNote = vi.fn();
+vi.mock('../hooks/useBestiaryNotes', () => ({
+  useBestiaryNotes: () => ({ noteFor: (k) => mockNotes[k] || '', setNote: mockSetNote }),
+}));
+
 let mockIsGm = false;
 vi.mock('../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
@@ -59,6 +65,7 @@ beforeEach(() => {
   mockParams = {};
   mockMonsters = [goblin, ogre, overrideOnly];
   mockRecords = {};
+  mockNotes = {};
   mockIsGm = false;
 });
 
@@ -143,5 +150,25 @@ describe('BestiaryBrowser — grid ⇄ entry', () => {
     render(<BestiaryBrowser />);
     fireEvent.click(screen.getByRole('button', { name: 'Sandpoint' }));
     expect(mockOpenLore).toHaveBeenCalledWith('sandpoint');
+  });
+});
+
+describe('BestiaryBrowser — field notes', () => {
+  test('shows an existing party note on the entry', () => {
+    mockIsGm = true;
+    mockParams = { creatureKey: 'goblin-warrior' };
+    mockNotes = { 'goblin-warrior': 'stab the eyes' };
+    render(<BestiaryBrowser />);
+    expect(screen.getByText('stab the eyes')).toBeInTheDocument();
+  });
+
+  test('adding a note saves it keyed by the creature', () => {
+    mockIsGm = true;
+    mockParams = { creatureKey: 'goblin-warrior' };
+    render(<BestiaryBrowser />);
+    fireEvent.click(screen.getByRole('button', { name: /add field note/i }));
+    fireEvent.change(screen.getByLabelText('Field note'), { target: { value: 'zap = bigger' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(mockSetNote).toHaveBeenCalledWith('goblin-warrior', 'zap = bigger');
   });
 });

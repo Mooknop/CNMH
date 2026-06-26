@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../shared/Modal';
 import { rkKeyFor } from '../../utils/recallKnowledge';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
+import { useBestiaryNotes } from '../../hooks/useBestiaryNotes';
 import { useExploitVulnerability } from '../../hooks/useExploitVulnerability';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import BestiaryEntry from '../bestiary/BestiaryEntry';
@@ -11,6 +12,7 @@ import './BestiaryModal.css';
 const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, themeColor }) => {
   const rkKey = rkKeyFor(enemy);
   const { recordFor, clearLock } = useRecallKnowledge();
+  const { noteFor } = useBestiaryNotes();
   const { exploitFor } = useExploitVulnerability();
   const { isGm } = useGmAuth();
 
@@ -37,7 +39,14 @@ const EnemyDetail = ({ enemy, members = [enemy], actingCharId, actingCharName, t
 
   return (
     <>
-      <BestiaryEntry enemy={enemy} members={members} record={record} badge={exploitBadge} variant="compact" />
+      <BestiaryEntry
+        enemy={enemy}
+        members={members}
+        record={record}
+        badge={exploitBadge}
+        variant="compact"
+        note={noteFor(enemy.creatureKey)}
+      />
 
       {/* Recall Knowledge + Exploit Vulnerability triggers */}
       <div className="bm-rk-section">
