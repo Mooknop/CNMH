@@ -9,7 +9,7 @@
  */
 
 /* — Google Fonts ————————————————————————————————————————— */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&family=Special+Elite&family=Noto+Sans+Runic&display=swap');
 
 
 :root {
@@ -23,6 +23,11 @@
   --font-body:      'Crimson Pro', Georgia, serif;
   --font-ui:        'DM Sans', system-ui, sans-serif;
   --font-mono:      'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  /* Specimen Dex device voices (#776) */
+  --font-type:      'Special Elite', Consolas, monospace;   /* typewriter specimen labels + stat keys */
+  --font-hand:      'Caveat', ui-rounded, cursive;          /* handwritten party field notes          */
+  --font-rune:      'Noto Sans Runic', 'Segoe UI Historic', 'Segoe UI Symbol', serif;
 
   /* Font sizes */
   --text-xs:    0.625rem;   /* 10px */
@@ -115,6 +120,18 @@
   --act-research: oklch(0.68 0.10 232);  /* azure  */
   --act-retrain:  oklch(0.66 0.13 306);  /* violet */
   --act-free:     rgba(255, 255, 255, 0.045);
+
+  /* Specimen Dex — brushed-iron device chrome + spectral wisp accent (#776).
+     `--wisp` is the default per-creature accent fallback; later slices derive a
+     per-creature accent from the primary trait and override `--acc` locally. */
+  --steel:        #474d59;
+  --steel-hi:     #727a88;
+  --steel-lo:     #23272f;
+  --steel-deep:   #15171c;
+
+  --wisp:         #79e6cf;
+  --wisp-mid:     #37c6a6;
+  --wisp-deep:    #1c8a73;
 
 
   /* ————————————————————————————————————————————————————————
