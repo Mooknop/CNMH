@@ -3,6 +3,7 @@ import {
   combineModifiers,
   conditionalModifiersFor,
   conditionalTogglesFor,
+  dexCapFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
 } from './EffectUtils';
@@ -361,6 +362,55 @@ describe('computeEffectBonuses', () => {
       expect(conditionalTogglesFor([entry('limned')], 'will', cat)).toEqual([]);
       expect(conditionalTogglesFor([], 'meleeAttack', cat)).toEqual([]);
     });
+  });
+
+  describe('dexCap modifiers are not netted as additive bonuses (#507)', () => {
+    const dexCat = [
+      { id: 'drakeheart', name: 'Drakeheart Mutagen', modifiers: [{ stat: 'dexCap', amount: 2 }] },
+    ];
+    it('produces no spurious AC (or any) bonus from a dexCap modifier', () => {
+      const result = computeEffectBonuses([entry('drakeheart')], dexCat);
+      expect(result.ac).toEqual({ total: 0, sources: [] });
+    });
+  });
+});
+
+describe('dexCapFor (#507)', () => {
+  const cat = [
+    { id: 'drakeheart', name: 'Drakeheart Mutagen', modifiers: [{ stat: 'dexCap', amount: 2 }] },
+    { id: 'tighter', name: 'Tighter Cap', modifiers: [{ stat: 'dexCap', amount: 1 }] },
+    { id: 'mixed', name: 'Mixed', modifiers: [
+      { stat: 'ac', kind: 'item', amount: 1 },
+      { stat: 'dexCap', amount: 3 },
+    ] },
+    { id: 'scoped', name: 'Scoped', modifiers: [{ stat: 'dexCap', amount: 4, vs: 'while prone' }] },
+    { id: 'flat', name: 'Flat', modifiers: [{ stat: 'reflex', kind: 'status', amount: 1 }] },
+  ];
+
+  it('returns the absolute Dex cap from a matching effect', () => {
+    expect(dexCapFor([entry('drakeheart')], cat)).toBe(2);
+  });
+
+  it('reads the dexCap modifier even when bundled with other stats', () => {
+    expect(dexCapFor([entry('mixed')], cat)).toBe(3);
+  });
+
+  it('takes the lowest (most restrictive) when several apply — PF2e "use your lowest"', () => {
+    expect(dexCapFor([entry('drakeheart'), entry('tighter')], cat)).toBe(1);
+  });
+
+  it('ignores vs-scoped dexCap modifiers (a cap is not a roll-time toggle)', () => {
+    expect(dexCapFor([entry('scoped')], cat)).toBe(Infinity);
+  });
+
+  it('returns Infinity (no cap) when no dexCap modifier is present', () => {
+    expect(dexCapFor([entry('flat')], cat)).toBe(Infinity);
+  });
+
+  it('returns Infinity for empty / null / unknown effects', () => {
+    expect(dexCapFor([], cat)).toBe(Infinity);
+    expect(dexCapFor(null, cat)).toBe(Infinity);
+    expect(dexCapFor([entry('nope')], cat)).toBe(Infinity);
   });
 });
 

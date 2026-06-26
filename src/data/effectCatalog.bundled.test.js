@@ -22,7 +22,11 @@ describe('bundled effect catalog', () => {
       expect(Array.isArray(e.modifiers)).toBe(true);
       e.modifiers.forEach((m) => {
         expect(typeof m.stat).toBe('string');
-        expect(VALID_KINDS).toContain(m.kind);
+        // A `dexCap` modifier is an absolute Dex ceiling (#507), not an additive
+        // bonus — it carries no bonus `kind` and never nets through bestOfKind.
+        if (m.stat !== 'dexCap') {
+          expect(VALID_KINDS).toContain(m.kind);
+        }
         expect(typeof m.amount).toBe('number');
       });
     });
