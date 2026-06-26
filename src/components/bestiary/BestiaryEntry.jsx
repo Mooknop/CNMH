@@ -4,6 +4,7 @@ import { recallKnowledgeDC, defaultRecord } from '../../utils/recallKnowledge';
 import {
   revealFlags,
   traitToAccent,
+  classificationLabel,
   dexNumber,
   formatDexNo,
 } from '../../utils/bestiaryPresentation';
@@ -21,31 +22,9 @@ export const Redacted = ({ width = '4ch', label = 'redacted', block = false }) =
   />
 );
 
-export const StatRow = ({ label, value, revealed, redactWidth = '4ch' }) => {
-  if (!revealed) {
-    return (
-      <div className="bm-stat-row">
-        <span className="bm-stat-label">{label}</span>
-        <Redacted width={redactWidth} />
-      </div>
-    );
-  }
-  return value != null ? (
-    <div className="bm-stat-row">
-      <span className="bm-stat-label">{label}</span>
-      <span className="bm-stat-value">{value}</span>
-    </div>
-  ) : null;
-};
-
-export const SignedMod = ({ value, revealed }) => {
-  if (!revealed) return <Redacted width="3ch" />;
-  if (value == null) return <span className="bm-stat-value">—</span>;
-  return <span className="bm-stat-value">{value >= 0 ? `+${value}` : value}</span>;
-};
-
-// Reveal-gated creature stat block, shared verbatim by the in-combat BestiaryModal
-// and the out-of-combat /bestiary browser (#334) so both render identically.
+// Reveal-gated creature stat block, shared by the in-combat BestiaryModal
+// (variant="compact") and the out-of-combat /bestiary browser + GM editor
+// preview (variant="full") so the party's learned knowledge renders identically.
 //
 // Visibility is driven entirely by `record` (a Recall Knowledge record) with a
 // `revealAll` escape hatch — the browser passes `revealAll={isGm}` so the GM sees
@@ -101,7 +80,9 @@ const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, ba
   const anyWeaknessRevealed = weaknessesFullyRevealed || partialWeaknesses.length > 0;
 
   const accent = traitToAccent(bestiary?.traits);
-  const dexNo = formatDexNo(dexNumber(monsters, enemy.creatureKey));
+  const dexNum = dexNumber(monsters, enemy.creatureKey);
+  const dexNo = formatDexNo(dexNum);
+  const dexDigits = dexNum == null ? '0??' : String(dexNum).padStart(3, '0');
   const signed = (v) => (v == null ? '—' : v >= 0 ? `+${v}` : `${v}`);
   const shownWeaknesses = weaknessesFullyRevealed ? (defenses?.weaknesses || []) : partialWeaknesses;
 
@@ -215,168 +196,183 @@ const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, ba
     );
   }
 
+  // ── Full vertical dex device (the /bestiary entry + GM editor preview, #778) ──
   return (
-    <div className="bm-detail" data-testid="bm-detail">
-      {/* Image — always visible */}
-      {bestiary?.img && (
-        <div className="bm-img-wrap">
-          <img
-            className="bm-creature-img"
-            src={bestiary.img}
-            alt={name}
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        </div>
-      )}
+    <div className="dex-full" data-testid="bm-detail" style={{ '--acc': accent }}>
+      <span className="brk tl" aria-hidden="true" />
+      <span className="brk tr" aria-hidden="true" />
+      <span className="brk bl" aria-hidden="true" />
+      <span className="brk br" aria-hidden="true" />
 
-      {/* Name — redacted until identity revealed */}
-      <h3 className="bm-detail-name">
-        {identityRevealed ? name : <Redacted width="8ch" label={`${name} name redacted`} />}
-      </h3>
+      {/* Status bar — specimen index + classification */}
+      <div className="dex-bar">
+        <span className="dex-no"><small>№</small>{dexDigits}</span>
+        {identityRevealed && bestiary?.traits?.length > 0 && (
+          <span className="dex-class">{classificationLabel(bestiary.traits)}</span>
+        )}
+      </div>
 
-      {bestiary?.level != null && (
-        <div className="bm-level">
-          {identityRevealed ? `Creature ${bestiary.level}` : <Redacted width="6ch" />}
-        </div>
-      )}
-
-      {/* Traits */}
-      {bestiary?.traits?.length > 0 && (
-        <div className="bm-traits">
-          {identityRevealed
-            ? bestiary.traits.map((t) => <TraitTag key={t} trait={t} />)
-            : <Redacted width="10ch" />}
-        </div>
-      )}
-
-      {/* RK DC box — shown once identity is known */}
-      {rkDC != null && identityRevealed && (
-        <div className="bm-rk-dc" data-testid="bm-rk-dc">
-          <span className="bm-rk-label">Recall Knowledge DC</span>
-          <span className="bm-rk-value">{rkDC}</span>
-          {bestiary.rarity !== 'common' && (
-            <span className="bm-rarity-tag">{bestiary.rarity}</span>
+      {/* Hero art viewport — the creature art is the hero */}
+      <div className="dex-hero metal">
+        <div className="dex-hero-screen">
+          {bestiary?.img ? (
+            <img
+              className="dex-hero-img"
+              src={bestiary.img}
+              alt={identityRevealed ? name : 'Unidentified creature'}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          ) : (
+            <span className="dex-hero-noart" aria-hidden="true" />
           )}
+          <span className="dex-hero-scan" aria-hidden="true" />
+          <span className="dex-hero-glow" aria-hidden="true" />
+          {identityRevealed && <span className="dex-hero-rune" aria-hidden="true">ᚹ</span>}
+          <span className="dex-hero-tab">Specimen {dexNo}</span>
+        </div>
+      </div>
+
+      {/* Identity */}
+      <div className="dex-id">
+        <h3 className="dex-name">
+          {identityRevealed ? name : <Redacted width="8ch" label={`${name} name redacted`} />}
+        </h3>
+        {bestiary?.level != null && (
+          <div className="dex-level">
+            {identityRevealed ? `Creature ${bestiary.level}` : <Redacted width="6ch" />}
+          </div>
+        )}
+        {bestiary?.traits?.length > 0 && (
+          <div className="dex-traits">
+            {identityRevealed
+              ? bestiary.traits.map((t) => <TraitTag key={t} trait={t} />)
+              : <Redacted width="10ch" />}
+          </div>
+        )}
+      </div>
+
+      {/* Readout grid */}
+      <div className="dex-readout">
+        <div className="dex-grid">
+          <div className="dex-cell">
+            <div className="k">AC</div>
+            <div className="v">{acRevealed ? (defenses?.ac ?? '—') : <Redacted width="3ch" />}</div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">HP</div>
+            <div className="v">
+              {members.length > 1
+                ? '—'
+                : hpRevealed
+                  ? (bestiary?.hp ? `${bestiary.hp.current} / ${bestiary.hp.max}` : '—')
+                  : <Redacted width="3ch" />}
+            </div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">Perception</div>
+            <div className="v">
+              {perceptionRevealed
+                ? (bestiary?.perception != null ? signed(bestiary.perception) : '—')
+                : <Redacted width="3ch" />}
+            </div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">Speed</div>
+            <div className="v">
+              {speedRevealed
+                ? (bestiary?.speed != null ? bestiary.speed : '—')
+                : <Redacted width="3ch" />}
+            </div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">Fort</div>
+            <div className="v">{fortRevealed ? signed(defenses?.saves?.fortitude) : <Redacted width="3ch" />}</div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">Ref</div>
+            <div className="v">{refRevealed ? signed(defenses?.saves?.reflex) : <Redacted width="3ch" />}</div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">Will</div>
+            <div className="v">{willRevealed ? signed(defenses?.saves?.will) : <Redacted width="3ch" />}</div>
+          </div>
+          <div className="dex-cell">
+            <div className="k">Resist</div>
+            <div className="v dex-cell-sm">
+              {resistancesRevealed
+                ? (defenses?.resistances?.length
+                    ? defenses.resistances.map((r) => `${r.type} ${r.value}`).join(', ')
+                    : '—')
+                : <Redacted width="3ch" />}
+            </div>
+          </div>
+        </div>
+
+        {/* Defenses line — immunities + accent-coloured weakness */}
+        {(defenses?.immunities?.length > 0 || defenses?.weaknesses?.length > 0) && (
+          <div className="dex-defs">
+            {defenses?.immunities?.length > 0 && (
+              <span className="d">
+                <span className="l">Immunities</span>
+                {immunitiesRevealed
+                  ? <span className="val">{defenses.immunities.join(', ')}</span>
+                  : <Redacted width="8ch" />}
+              </span>
+            )}
+            {defenses?.weaknesses?.length > 0 && (
+              <span className="d">
+                <span className="l">Weakness</span>
+                {anyWeaknessRevealed
+                  ? shownWeaknesses.map((w) => (
+                      <span key={w.type} className="wk">{w.type} {w.value}</span>
+                    ))
+                  : <Redacted width="8ch" />}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Per-token HP — only when several same-type tokens share this entry. */}
+      {members.length > 1 && (
+        <div className="bm-hp-list" data-testid="bm-hp-list">
+          <span className="bm-stat-label">HP</span>
+          {hpRevealed ? (
+            <ul className="bm-hp-tokens">
+              {members.map((m) => (
+                <li key={m.entryId} className="bm-hp-token">
+                  <span className="bm-hp-token-name">{m.name}</span>
+                  <span className="bm-stat-value">
+                    {m.bestiary?.hp != null
+                      ? `${m.bestiary.hp.current} / ${m.bestiary.hp.max}`
+                      : '—'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <Redacted width="6ch" />
+          )}
+        </div>
+      )}
+
+      {/* Lore — content from override if present, else imported; visibility gated by RK */}
+      {descriptionRevealed
+        ? effectiveDescription && <p className="dex-lore">{effectiveDescription}</p>
+        : <Redacted block label="description redacted" />}
+
+      {/* Footer — Recall DC device chip (field-note scrap slot lands in S5) */}
+      {rkDC != null && identityRevealed && (
+        <div className="dex-foot">
+          <div className="dex-dc" data-testid="bm-rk-dc">
+            <span className="glyph" aria-hidden="true">ᛣ</span>
+            <span className="n">{rkDC}</span>
+            <span className="l">Recall<br />Knowledge</span>
+          </div>
         </div>
       )}
 
       {badge}
-
-      <div className="bm-stats-grid">
-        <StatRow label="AC"   value={defenses?.ac ?? null} revealed={acRevealed} redactWidth="3ch" />
-        {bestiary?.hp != null && members.length === 1 && (
-          <StatRow
-            label="HP"
-            value={`${bestiary.hp.current} / ${bestiary.hp.max}`}
-            revealed={hpRevealed}
-          />
-        )}
-        {/* Multiple same-type tokens: HP is per-token, so list each one. */}
-        {members.length > 1 && (
-          <div className="bm-hp-list" data-testid="bm-hp-list">
-            <span className="bm-stat-label">HP</span>
-            {hpRevealed ? (
-              <ul className="bm-hp-tokens">
-                {members.map((m) => (
-                  <li key={m.entryId} className="bm-hp-token">
-                    <span className="bm-hp-token-name">{m.name}</span>
-                    <span className="bm-stat-value">
-                      {m.bestiary?.hp != null
-                        ? `${m.bestiary.hp.current} / ${m.bestiary.hp.max}`
-                        : '—'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Redacted width="6ch" />
-            )}
-          </div>
-        )}
-        {bestiary?.perception != null && (
-          <div className="bm-stat-row">
-            <span className="bm-stat-label">Perception</span>
-            <SignedMod value={bestiary.perception} revealed={perceptionRevealed} />
-          </div>
-        )}
-        {bestiary?.speed != null && (
-          <StatRow label="Speed" value={`${bestiary.speed} ft.`} revealed={speedRevealed} />
-        )}
-      </div>
-
-      {/* Saves */}
-      {defenses?.saves && (
-        <div className="bm-saves">
-          <span className="bm-saves-label">Saves</span>
-          <div className="bm-saves-row">
-            <span className="bm-save-item">
-              <span className="bm-save-name">Fort</span>
-              <SignedMod value={defenses.saves.fortitude} revealed={fortRevealed} />
-            </span>
-            <span className="bm-save-item">
-              <span className="bm-save-name">Ref</span>
-              <SignedMod value={defenses.saves.reflex} revealed={refRevealed} />
-            </span>
-            <span className="bm-save-item">
-              <span className="bm-save-name">Will</span>
-              <SignedMod value={defenses.saves.will} revealed={willRevealed} />
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* IWR */}
-      {defenses?.immunities?.length > 0 && immunitiesRevealed && (
-        <div className="bm-iwr">
-          <span className="bm-iwr-label">Immunities</span>
-          <span className="bm-iwr-values">{defenses.immunities.join(', ')}</span>
-        </div>
-      )}
-      {defenses?.immunities?.length > 0 && !immunitiesRevealed && (
-        <div className="bm-iwr">
-          <span className="bm-iwr-label">Immunities</span>
-          <Redacted width="8ch" />
-        </div>
-      )}
-
-      {defenses?.resistances?.length > 0 && resistancesRevealed && (
-        <div className="bm-iwr">
-          <span className="bm-iwr-label">Resistances</span>
-          <span className="bm-iwr-values">
-            {defenses.resistances.map((r) => `${r.type} ${r.value}`).join(', ')}
-          </span>
-        </div>
-      )}
-      {defenses?.resistances?.length > 0 && !resistancesRevealed && (
-        <div className="bm-iwr">
-          <span className="bm-iwr-label">Resistances</span>
-          <Redacted width="8ch" />
-        </div>
-      )}
-
-      {/* Weaknesses — supports full reveal (iwr.weaknesses) or partial (weaknessesRevealed) */}
-      {defenses?.weaknesses?.length > 0 && (
-        <div className="bm-iwr">
-          <span className="bm-iwr-label">Weaknesses</span>
-          {anyWeaknessRevealed ? (
-            <span className="bm-iwr-values">
-              {weaknessesFullyRevealed
-                ? defenses.weaknesses.map((w) => `${w.type} ${w.value}`).join(', ')
-                : partialWeaknesses.map((w) => `${w.type} ${w.value}`).join(', ')}
-            </span>
-          ) : (
-            <Redacted width="8ch" />
-          )}
-        </div>
-      )}
-
-      {/* Description — content from override if present, else imported; visibility gated by RK */}
-      {descriptionRevealed
-        ? effectiveDescription && (
-            <p className="bm-description">{effectiveDescription}</p>
-          )
-        : <Redacted block label="description redacted" />
-      }
     </div>
   );
 };
