@@ -12,6 +12,7 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { formatModifier } from '../../utils/CharacterUtils';
 import { mapPenaltyFor } from '../../utils/map';
 import { buildDamageProfile } from '../../utils/damage';
+import { conditionalTogglesFor } from '../../utils/EffectUtils';
 
 const ChainedStrikeSection = forwardRef(({
   character,
@@ -69,6 +70,19 @@ const ChainedStrikeSection = forwardRef(({
   const augmentedDamage = selectedStrike
     ? (chain.damageBonus ? `${selectedStrike.damage} + ${chain.damageBonus}` : selectedStrike.damage)
     : '';
+
+  // Situational bonus toggles (#511): conditional ('vs X') effect modifiers on the
+  // selected strike's attack stat become opt-in toggles on each strike row, sourced
+  // the same way as the single-roll resolver (#274). Chained strikes always target
+  // AC, so the stat is melee/ranged-attack per the strike's type. Each
+  // TargetRollResolver owns its own toggle state, so flips stay independent across
+  // the flurry's two rows.
+  const attackStat = selectedStrike
+    ? (selectedStrike.type === 'ranged' ? 'rangedAttack' : 'meleeAttack')
+    : null;
+  const attackToggles = attackStat
+    ? conditionalTogglesFor(effects || [], attackStat, effectCatalog)
+    : [];
 
   // Damage step (#222): profile from the selected strike (rider scaling stays on
   // the strike's own dice), with the chain-augmented expression as the hint.
@@ -174,6 +188,7 @@ const ChainedStrikeSection = forwardRef(({
         targetDefense="ac"
         rollBonus={augmentedBonus}
         damage={damageProfile}
+        toggles={attackToggles}
       />
 
       {selectedMode === 'flurry' && (
@@ -187,6 +202,7 @@ const ChainedStrikeSection = forwardRef(({
             targetDefense="ac"
             rollBonus={strike2Bonus}
             damage={damageProfile}
+            toggles={attackToggles}
           />
         </div>
       )}

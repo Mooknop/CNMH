@@ -324,6 +324,31 @@ describe('UseAbilityModal — damage step (#222)', () => {
     expect(loggedLines()).toContainEqual(expect.stringContaining('· dmg 1d6+4 + 1d6'));
   });
 
+  it('notes an applied conditional circumstance on the chained-strike hit line (#511)', () => {
+    chainStrikeMock.results = {
+      mode: 'strike',
+      strikeName: 'Unarmed Strike',
+      attackBonus: 9,
+      damage: '1d6+4',
+      rolls: [
+        [{
+          entryId: 'e-gob', name: 'Goblin', dc: 15, total: 20, degree: 'success', damage: null,
+          adjust: 1, adjustSources: ['Limned (vs limned target)'],
+        }],
+      ],
+    };
+    const chainAbility = {
+      name: 'Inner Upheaval',
+      actions: 'Two Actions',
+      chain: { into: 'strike', modes: ['strike'] },
+    };
+    render(<UseAbilityModal {...props} ability={chainAbility} />);
+    confirm();
+    expect(loggedLines()).toContainEqual(
+      expect.stringContaining('20 → Hit (incl. +1: Limned (vs limned target))')
+    );
+  });
+
   it('the chosen action-count variant overrides the dice hint (#268, Blazing Bolt)', () => {
     mockCastOptions = [{ type: 'slot', rank: 3, enabled: true, label: 'Rank 3 slot' }];
     const blazingBolt = {
