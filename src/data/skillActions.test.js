@@ -7,6 +7,8 @@ import {
   augmentSkillAction,
   effectConditionalToggles,
 } from './skillActions';
+import { SKILL_KEYS } from '../utils/EffectUtils';
+import { defaultContent } from '../utils/contentUtils';
 
 describe('skillActions registry', () => {
   it('defines Demoralize with the expected resolution shape', () => {
@@ -193,41 +195,64 @@ describe('skillActions registry', () => {
     });
   });
 
-  describe('effectConditionalToggles (#338)', () => {
+  describe('effectConditionalToggles (#510 — scoped to the action vs-context)', () => {
     const cat = [
-      { id: 'climb-aid', name: 'Climbing Aid', modifiers: [{ stat: 'athletics', kind: 'item', amount: 1, vs: 'Climb' }] },
+      { id: 'gecko', name: 'Gecko Potion', modifiers: [
+        { stat: 'athletics', kind: 'item', amount: 1, vs: 'Climb' },
+        { stat: 'thievery',  kind: 'item', amount: 1, vs: 'Palm an Object' },
+      ] },
       { id: 'plain-buff', name: 'Plain', modifiers: [{ stat: 'athletics', kind: 'status', amount: 2 }] },
     ];
-    const effects = [{ id: 'e1', effectId: 'climb-aid' }, { id: 'e2', effectId: 'plain-buff' }];
-    const grapple = getSkillAction('grapple'); // athletics maneuver
+    const effects = [{ id: 'e1', effectId: 'gecko' }, { id: 'e2', effectId: 'plain-buff' }];
+    const climb = getSkillAction('climb');
+    const grapple = getSkillAction('grapple');
 
-    it('maps a conditional skill modifier to a toggle for a matching action', () => {
-      const toggles = effectConditionalToggles(grapple, effects, cat);
-      expect(toggles).toEqual([{ id: 'effect-Climbing Aid-Climb', label: 'Climbing Aid (vs Climb)', bonus: 1 }]);
+    it('offers the toggle on the action whose vs-context matches the modifier', () => {
+      const toggles = effectConditionalToggles(climb, effects, cat);
+      expect(toggles).toEqual([{ id: 'effect-Gecko Potion-Climb', label: 'Gecko Potion (vs Climb)', bonus: 1 }]);
+    });
+
+    it('does NOT offer a sibling-action toggle (the #510 fix) — Climb modifier never shows on Grapple', () => {
+      // Grapple shares the Athletics skill but declares no vsContexts, so the
+      // "+1 vs Climb" modifier must not leak onto it.
+      expect(effectConditionalToggles(grapple, effects, cat)).toEqual([]);
+    });
+
+    it('scopes by the action context, not just the skill (Palm an Object → thievery)', () => {
+      const palm = getSkillAction('palm-an-object');
+      expect(effectConditionalToggles(palm, effects, cat)).toEqual([
+        { id: 'effect-Gecko Potion-Palm an Object', label: 'Gecko Potion (vs Palm an Object)', bonus: 1 },
+      ]);
+    });
+
+    it('matches case-insensitively / trimming whitespace', () => {
+      const looseCat = [{ id: 'g2', name: 'Loose', modifiers: [{ stat: 'athletics', kind: 'item', amount: 1, vs: '  climb ' }] }];
+      const toggles = effectConditionalToggles(climb, [{ id: 'e', effectId: 'g2' }], looseCat);
+      expect(toggles).toHaveLength(1);
     });
 
     it('ignores unconditional skill modifiers (they already net into the roll)', () => {
-      const toggles = effectConditionalToggles(grapple, [{ id: 'e2', effectId: 'plain-buff' }], cat);
-      expect(toggles).toEqual([]);
+      expect(effectConditionalToggles(climb, [{ id: 'e2', effectId: 'plain-buff' }], cat)).toEqual([]);
     });
 
-    it('returns [] for an action whose skill nothing targets', () => {
+    it('returns [] for an action with no declared vsContexts', () => {
       expect(effectConditionalToggles(getSkillAction('demoralize'), effects, cat)).toEqual([]);
     });
 
     it('returns [] when there are no active effects', () => {
-      expect(effectConditionalToggles(grapple, [], cat)).toEqual([]);
-      expect(effectConditionalToggles(grapple, undefined, cat)).toEqual([]);
+      expect(effectConditionalToggles(climb, [], cat)).toEqual([]);
+      expect(effectConditionalToggles(climb, undefined, cat)).toEqual([]);
     });
 
     it('augmentSkillAction merges effect toggles alongside feat toggles', () => {
       const ranger = { name: 'A', feats: [{ name: 'Ranger Dedication' }] };
-      const aug = augmentSkillAction(ranger, getSkillAction('seek'), { effects, effectCatalog: cat });
-      // Seek rolls perception, not athletics → no effect toggle, only the feat one.
-      expect(aug.toggles).toEqual([{ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 }]);
+      // Seek rolls perception; the gecko cat has no perception 'find secret doors'
+      // modifier → no effect toggle, only the Hunt Prey feat one.
+      const augSeek = augmentSkillAction(ranger, getSkillAction('seek'), { effects, effectCatalog: cat });
+      expect(augSeek.toggles).toEqual([{ id: 'hunt-prey-seek', label: 'Hunt Prey vs prey', bonus: 2 }]);
 
-      const augG = augmentSkillAction(ranger, grapple, { effects, effectCatalog: cat });
-      expect(augG.toggles).toContainEqual({ id: 'effect-Climbing Aid-Climb', label: 'Climbing Aid (vs Climb)', bonus: 1 });
+      const augClimb = augmentSkillAction(ranger, climb, { effects, effectCatalog: cat });
+      expect(augClimb.toggles).toContainEqual({ id: 'effect-Gecko Potion-Climb', label: 'Gecko Potion (vs Climb)', bonus: 1 });
     });
   });
 
@@ -255,6 +280,51 @@ describe('skillActions registry', () => {
     it('returns nothing without a character', () => {
       expect(skillActionsFor(null, { encounterMode: true })).toEqual([]);
       expect(skillActionsFor(null, { explorationMode: true })).toEqual([]);
+    });
+
+    it('exposes Climb and Palm an Object in both surfaces (#510)', () => {
+      const enc = skillActionsFor(pc, { encounterMode: true }).map((a) => a.id);
+      const exp = skillActionsFor(pc, { explorationMode: true }).map((a) => a.id);
+      expect(enc).toEqual(expect.arrayContaining(['climb', 'palm-an-object']));
+      expect(exp).toEqual(expect.arrayContaining(['climb', 'palm-an-object']));
+    });
+  });
+
+  // Drift guard (#510): every conditional ('vs X') skill/perception modifier in
+  // the live content must either be hosted by a skill action that declares the
+  // matching vsContext, or be intentionally sheet-hint-only (no launchable
+  // action). Catches a content vs-string typo or a new conditional modifier that
+  // silently stops matching its action.
+  describe('content vs-contexts stay in sync with skill actions (#510)', () => {
+    const SKILL_STATS = new Set([...SKILL_KEYS, 'perception']);
+    // Contexts surfaced only as the passive sheet hint — Recall Knowledge spans
+    // 7 skills via a separate flow, with no single launchable action.
+    const SHEET_ONLY = new Set(['recall knowledge']);
+    const norm = (s) => String(s || '').trim().toLowerCase();
+
+    // skill id → set of normalized vs-contexts any action on that skill hosts.
+    const hostedContexts = new Map();
+    for (const a of SKILL_ACTIONS) {
+      for (const sk of [a.skill, ...(a.skillOptions || [])].filter(Boolean)) {
+        if (!hostedContexts.has(sk)) hostedContexts.set(sk, new Set());
+        for (const c of a.vsContexts || []) hostedContexts.get(sk).add(norm(c));
+      }
+    }
+
+    it('every conditional skill/perception modifier is hosted by an action or sheet-only', () => {
+      const effects = defaultContent().effect;
+      const uncovered = [];
+      for (const e of effects) {
+        for (const m of e.modifiers || []) {
+          if (!m.vs || !SKILL_STATS.has(m.stat)) continue;
+          const v = norm(m.vs);
+          if (SHEET_ONLY.has(v)) continue;
+          if (!hostedContexts.get(m.stat)?.has(v)) {
+            uncovered.push(`${e.id}: ${m.stat} vs "${m.vs}"`);
+          }
+        }
+      }
+      expect(uncovered).toEqual([]);
     });
   });
 });
