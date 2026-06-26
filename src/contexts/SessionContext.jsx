@@ -147,13 +147,16 @@ export const SessionProvider = ({ children }) => {
     return serverState.current[characterId];
   }, []);
 
-  const sendUpdate = useCallback((characterId, stateType, value) => {
+  const sendUpdate = useCallback((characterId, stateType, value, options) => {
     // Offline sandbox: freeze campaign-state mutations (synced via useSyncedState
     // or written directly by consumables/healing) so nothing gets used up while
     // the game isn't running — except always-live writes (GM-authored `_global`
     // state and inventory organization), see isSandboxWritable. Suppress before
-    // touching the cache, the socket, or local subscribers.
-    if (sandboxRef.current && !isSandboxWritable(stateType, characterId)) return;
+    // touching the cache, the socket, or local subscribers. `options.force` lets
+    // an authoritative GM write (e.g. setting party gold from the dashboard)
+    // survive the freeze even on a per-character `cnmh_gold_<id>` key — it's
+    // authoring, not a player resource burn.
+    if (sandboxRef.current && !options?.force && !isSandboxWritable(stateType, characterId)) return;
     if (!serverState.current[characterId]) serverState.current[characterId] = {};
     serverState.current[characterId][stateType] = value;
     const socket = ws.current;

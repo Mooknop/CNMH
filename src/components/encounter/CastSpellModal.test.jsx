@@ -501,7 +501,7 @@ describe('CastSpellModal', () => {
     it('spends the slot and logs the source on confirm', () => {
       render(<CastSpellModal {...defaultProps} character={casterChar} spell={healSpell} castSource="slot" />);
       fireEvent.click(screen.getByLabelText('confirm-cast'));
-      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 2: 1 }));
+      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 2: 1 }), { force: false });
       expect(mockAppendLog).toHaveBeenCalledWith(
         expect.objectContaining({ text: 'Pellias cast Heal (rank 2 slot)' })
       );
@@ -578,7 +578,7 @@ describe('CastSpellModal', () => {
       };
       render(<CastSpellModal {...defaultProps} character={chainCaster} spell={reachSpell} />);
       fireEvent.click(screen.getByLabelText('confirm-cast'));
-      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 3: 1 }));
+      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 3: 1 }), { force: false });
       const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
       expect(logCalls.some((t) => t.includes('Light') && t.includes('(rank 3 slot)'))).toBe(true);
     });
@@ -616,7 +616,7 @@ describe('CastSpellModal', () => {
       chainSpellMock.extraResults = { castOption: null, castRank: 2, spellRank: 2 };
       render(<CastSpellModal {...defaultProps} character={chainCaster} spell={reachSpell} />);
       fireEvent.click(screen.getByLabelText('confirm-cast'));
-      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 2: 1 }));
+      expect(mockSendUpdate).toHaveBeenCalledWith('char-a', 'slots', expect.objectContaining({ 2: 1 }), { force: false });
       const logCalls = mockAppendLog.mock.calls.map((c) => c[0].text);
       expect(logCalls.some((t) => t.includes('(rank 2 slot)'))).toBe(true);
     });

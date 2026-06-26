@@ -52,7 +52,7 @@ describe('useSyncedState', () => {
     act(() => { result.current[1]((p) => p + 1); });
     expect(result.current[0]).toBe(2);
     expect(JSON.parse(localStorage.getItem('cnmh_focus_IzzyUncut'))).toBe(2);
-    expect(mockSession.sendUpdate).toHaveBeenLastCalledWith('IzzyUncut', 'focus', 2);
+    expect(mockSession.sendUpdate).toHaveBeenLastCalledWith('IzzyUncut', 'focus', 2, { force: false });
   });
 
   it('applies incoming subscribed updates and caches them locally', () => {
@@ -81,7 +81,7 @@ describe('useSyncedState', () => {
     const { result } = renderHook(() => useSyncedState('cnmh_focus_IzzyUncut', 0));
     act(() => { result.current[1](2); });
     expect(result.current[0]).toBe(2);
-    expect(mockSession.sendUpdate).toHaveBeenCalledWith('IzzyUncut', 'focus', 2);
+    expect(mockSession.sendUpdate).toHaveBeenCalledWith('IzzyUncut', 'focus', 2, { force: false });
   });
 
   it('keeps local-only keys interactive in the sandbox', () => {
@@ -99,7 +99,7 @@ describe('useSyncedState', () => {
     // GM world-setup persists and syncs even while Foundry is down.
     expect(result.current[0]).toEqual({ 'red-dog-smithy': { wares: [{ ref: 'slick' }] } });
     expect(mockSession.sendUpdate).toHaveBeenCalledWith(
-      'global', 'shops', { 'red-dog-smithy': { wares: [{ ref: 'slick' }] } }
+      'global', 'shops', { 'red-dog-smithy': { wares: [{ ref: 'slick' }] } }, { force: false }
     );
   });
 
@@ -110,7 +110,20 @@ describe('useSyncedState', () => {
     // Attuning works offline: value updates, persists, and syncs.
     expect(result.current[0]).toEqual({ eye: true });
     expect(JSON.parse(localStorage.getItem('cnmh_invested_Jade'))).toEqual({ eye: true });
-    expect(mockSession.sendUpdate).toHaveBeenCalledWith('Jade', 'invested', { eye: true });
+    expect(mockSession.sendUpdate).toHaveBeenCalledWith('Jade', 'invested', { eye: true }, { force: false });
+  });
+
+  it('keeps an authoritative GM write interactive on a frozen per-character key', () => {
+    mockSession = { ...noopSession(), connected: true, foundryConnected: false };
+    const { result } = renderHook(() =>
+      useSyncedState('cnmh_gold_Thorn', 0, { authoritative: true })
+    );
+    // `gold` is a normally-frozen per-character resource key, but the GM dashboard
+    // sets party gold authoritatively — the input must stay editable offline.
+    act(() => { result.current[1](120); });
+    expect(result.current[0]).toBe(120);
+    expect(JSON.parse(localStorage.getItem('cnmh_gold_Thorn'))).toBe(120);
+    expect(mockSession.sendUpdate).toHaveBeenCalledWith('Thorn', 'gold', 120, { force: true });
   });
 
   it('non-matching keys behave as plain localStorage with no sync', () => {
