@@ -8,9 +8,14 @@ vi.mock('../../hooks/useShops', () => ({ useShops: vi.fn() }));
 // button fires onSelect with a fixed item.
 vi.mock('../../components/gm/CatalogPicker', () => ({
   default: ({ onSelect }) => (
-    <button type="button" onClick={() => onSelect([{ id: 'spellbook', name: 'Spellbook', price: 10 }])}>
-      pick-spellbook
-    </button>
+    <>
+      <button type="button" onClick={() => onSelect([{ id: 'spellbook', name: 'Spellbook', price: 10 }])}>
+        pick-spellbook
+      </button>
+      <button type="button" onClick={() => onSelect([{ id: 'tonic', name: 'Tonic' }])}>
+        pick-tonic
+      </button>
+    </>
   ),
 }));
 
@@ -20,6 +25,16 @@ import { useShops } from '../../hooks/useShops';
 const items = [
   { id: 'antidote', name: 'Antidote', price: 3, weight: 0 },
   { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1 },
+  // Multi-level item (#797 shape): variants carry their own name/price.
+  {
+    id: 'tonic',
+    name: 'Tonic',
+    weight: 0,
+    variants: [
+      { level: 1, label: 'Minor', name: 'Minor Tonic', price: 4 },
+      { level: 3, label: 'Lesser', name: 'Lesser Tonic', price: 12 },
+    ],
+  },
 ];
 
 const allLoreEntries = [
@@ -91,6 +106,52 @@ describe('GmShops', () => {
     fireEvent.change(screen.getByLabelText('stock-antidote'), { target: { value: '4' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save wares' }));
     expect(setWares).toHaveBeenCalledWith('bottled-solutions', [{ ref: 'antidote', price: 5, stock: 4 }]);
+  });
+
+  it('loads a pinned variant: variant name, selected level, variant price placeholder', () => {
+    setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 3 }] } });
+    render(<GmShops />);
+    select(/Bottled Solutions/);
+    const form = screen.getByTestId('shop-form-bottled-solutions');
+    expect(within(form).getByText('Lesser Tonic')).toBeInTheDocument();
+    expect(within(form).getByLabelText('level-tonic@3')).toHaveValue('3');
+    expect(within(form).getByLabelText('price-tonic@3')).toHaveAttribute('placeholder', '12');
+  });
+
+  it('pins a variant level on an unleveled row and saves it with level', () => {
+    setup({ 'bottled-solutions': { wares: [{ ref: 'tonic' }] } });
+    render(<GmShops />);
+    select(/Bottled Solutions/);
+    fireEvent.change(screen.getByLabelText('level-tonic'), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save wares' }));
+    expect(setWares).toHaveBeenCalledWith('bottled-solutions', [{ ref: 'tonic', level: 1 }]);
+  });
+
+  it('stocks two variants of one item as distinct rows', () => {
+    setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 1 }] } });
+    render(<GmShops />);
+    select(/Bottled Solutions/);
+    // Add the same item again → a second, unleveled row (its key 'tonic' is free).
+    fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
+    fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
+    // The new row's level select excludes 1 (taken by the first row); pick 3.
+    fireEvent.change(screen.getByLabelText('level-tonic'), { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save wares' }));
+    expect(setWares).toHaveBeenCalledWith('bottled-solutions', [
+      { ref: 'tonic', level: 1 },
+      { ref: 'tonic', level: 3 },
+    ]);
+  });
+
+  it('blocks re-adding an item that already has an unleveled row', () => {
+    setup();
+    render(<GmShops />);
+    select(/Town Hall/);
+    fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
+    fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
+    fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
+    expect(screen.getAllByLabelText('level-tonic')).toHaveLength(1);
   });
 
   it('removes a ware and saves the shorter list', () => {

@@ -14,21 +14,32 @@ import './gm.css';
 // catalog item picker drives "which items," with optional per-ware price override
 // and stock.
 
-// A ware row is local form state until Save: { ref, price (string), stock (string) }.
+// A ware row is local form state until Save: { ref, level (string), price
+// (string), stock (string) }. `level` pins a variant of a multi-level item
+// (#798); '' means none (a flat item, or the base of a variant item).
 const toRows = (wares) =>
   (Array.isArray(wares) ? wares : []).map((w) => ({
     ref: w.ref,
+    level: w.level != null ? String(w.level) : '',
     price: w.price != null ? String(w.price) : '',
     stock: w.stock != null ? String(w.stock) : '',
   }));
 
-// Form state → stored wares: drop blank overrides so resolveShopWares falls back
-// to the catalog price; keep stock only when a non-negative integer is given.
+// Stable per-row key, unique per (ref, level): the bare ref for an unleveled
+// row, `ref@level` for a pinned variant — mirrors resolveShopWares' wareKey so a
+// shop can stock two variants of the same item without colliding on its id.
+const rowKey = (r) => (r.level !== '' && r.level != null ? `${r.ref}@${r.level}` : String(r.ref));
+
+// Form state → stored wares: keep `level` when a variant is pinned; drop blank
+// overrides so resolveShopWares falls back to the variant/catalog price; keep
+// stock only when a non-negative integer is given.
 const fromRows = (rows) =>
   rows
     .filter((r) => r.ref)
     .map((r) => {
       const w = { ref: r.ref };
+      const level = parseInt(r.level, 10);
+      if (!Number.isNaN(level)) w.level = level;
       const price = parseFloat(r.price);
       if (!Number.isNaN(price)) w.price = price;
       const stock = parseInt(r.stock, 10);
@@ -45,13 +56,17 @@ const ShopWaresForm = ({ location, shops, items, catalogMap, setWares, onSaved }
     setRows((cur) => cur.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const removeRow = (i) => setRows((cur) => cur.filter((_, idx) => idx !== i));
 
-  // Append the picked catalog items as new ware rows, skipping refs already listed.
+  // Append the picked catalog items as new (unleveled) ware rows, skipping any
+  // whose row key already exists. A multi-level item is added at level '' — the
+  // GM then pins a variant via the row's level select; to stock a second variant
+  // they add the item again (its unleveled row key is free once the first is set).
   const addItems = (picked) => {
     setRows((cur) => {
-      const have = new Set(cur.map((r) => String(r.ref)));
+      const have = new Set(cur.map((r) => rowKey(r)));
       const adds = (picked || [])
-        .filter((it) => it && it.id != null && !have.has(String(it.id)))
-        .map((it) => ({ ref: it.id, price: '', stock: '' }));
+        .filter((it) => it && it.id != null)
+        .map((it) => ({ ref: it.id, level: '', price: '', stock: '' }))
+        .filter((r) => !have.has(rowKey(r)));
       return [...cur, ...adds];
     });
   };
@@ -100,26 +115,59 @@ const ShopWaresForm = ({ location, shops, items, catalogMap, setWares, onSaved }
         <ul className="gm-shop-wares" aria-label="wares">
           {rows.map((r, i) => {
             const item = catalogMap.get(String(r.ref));
+            const variants = Array.isArray(item?.variants) ? item.variants : [];
+            const variant = variants.find((v) => String(v.level) === String(r.level));
+            const key = rowKey(r);
+            // Variant name when a level is pinned, else the base item name.
+            const name = variant ? variant.name || item.name : item ? item.name : `(unknown: ${r.ref})`;
+            const placeholderPrice = variant ? variant.price : item?.price;
+            // Levels already claimed by OTHER rows of this same item — excluded
+            // from the select so the GM can't author a duplicate (ref, level).
+            const taken = new Set(
+              rows
+                .filter((x, idx) => idx !== i && x.ref === r.ref && x.level !== '')
+                .map((x) => String(x.level))
+            );
             return (
-              <li key={r.ref} className="gm-row gm-shop-ware-row">
-                <span className="gm-shop-ware-name">{item ? item.name : `(unknown: ${r.ref})`}</span>
+              <li key={key} className="gm-row gm-shop-ware-row">
+                <span className="gm-shop-ware-name">{name}</span>
+                {variants.length > 0 && (
+                  <div className="form-group gm-shop-ware-field">
+                    <label htmlFor={`level-${key}`}>variant</label>
+                    <select
+                      id={`level-${key}`}
+                      aria-label={`level-${key}`}
+                      value={r.level}
+                      onChange={(e) => setRow(i, { level: e.target.value })}
+                    >
+                      <option value="">— select —</option>
+                      {variants
+                        .filter((v) => String(v.level) === String(r.level) || !taken.has(String(v.level)))
+                        .map((v) => (
+                          <option key={v.level} value={String(v.level)}>
+                            {v.label || v.name || `Level ${v.level}`} (L{v.level})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
                 <div className="form-group gm-shop-ware-field">
-                  <label htmlFor={`price-${r.ref}`}>price (gp)</label>
+                  <label htmlFor={`price-${key}`}>price (gp)</label>
                   <input
-                    id={`price-${r.ref}`}
-                    aria-label={`price-${r.ref}`}
+                    id={`price-${key}`}
+                    aria-label={`price-${key}`}
                     type="number"
                     min="0"
-                    placeholder={item && item.price != null ? String(item.price) : 'catalog'}
+                    placeholder={placeholderPrice != null ? String(placeholderPrice) : 'catalog'}
                     value={r.price}
                     onChange={(e) => setRow(i, { price: e.target.value })}
                   />
                 </div>
                 <div className="form-group gm-shop-ware-field">
-                  <label htmlFor={`stock-${r.ref}`}>stock</label>
+                  <label htmlFor={`stock-${key}`}>stock</label>
                   <input
-                    id={`stock-${r.ref}`}
-                    aria-label={`stock-${r.ref}`}
+                    id={`stock-${key}`}
+                    aria-label={`stock-${key}`}
                     type="number"
                     min="0"
                     placeholder="∞"
@@ -130,7 +178,7 @@ const ShopWaresForm = ({ location, shops, items, catalogMap, setWares, onSaved }
                 <button
                   type="button"
                   className="btn-small btn-danger"
-                  aria-label={`remove-${r.ref}`}
+                  aria-label={`remove-${key}`}
                   onClick={() => removeRow(i)}
                 >
                   Remove
