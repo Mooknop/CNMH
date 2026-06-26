@@ -4,11 +4,12 @@ import { recallKnowledgeDC, defaultRecord } from '../../utils/recallKnowledge';
 import { useContent } from '../../contexts/ContentContext';
 import '../encounter/BestiaryModal.css';
 
-// A solid redacted bar in place of a hidden value.
-export const Redacted = ({ width = '4ch', label = 'redacted' }) => (
+// An inkblot stain in place of a hidden value. `block` renders the full-width
+// description variant (gentler stain edge); otherwise `width` sizes the blot.
+export const Redacted = ({ width = '4ch', label = 'redacted', block = false }) => (
   <span
-    className="bm-redacted"
-    style={{ width }}
+    className={`bm-redacted${block ? ' bm-redacted--block' : ''}`}
+    style={block ? undefined : { width }}
     aria-label={label}
     aria-hidden="true"
   />
@@ -253,7 +254,7 @@ const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, ba
         ? effectiveDescription && (
             <p className="bm-description">{effectiveDescription}</p>
           )
-        : <Redacted width="100%" label="description redacted" />
+        : <Redacted block label="description redacted" />
       }
     </div>
   );

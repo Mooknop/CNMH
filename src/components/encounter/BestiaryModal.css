@@ -293,18 +293,55 @@
   white-space: pre-wrap;
 }
 
-/* ---------- Redacted bars ---------- */
+/* ---------- Inkblot redaction ---------- */
+/* A bleeding ink stain that censors an unrecalled value, replacing the old
+   solid bar. Organic blotted edge + two splatter dots (em-sized so they scale
+   with the surrounding text). */
 .bm-redacted {
   display: inline-block;
-  height: 0.85em;
-  background: var(--shell-text-tertiary, rgba(255, 255, 255, 0.28));
-  border-radius: var(--radius-sm, 4px);
+  position: relative;
   vertical-align: middle;
-  min-width: 2ch;
+  height: 1.05em;
+  min-width: 2.5ch;
+  border-radius: 47% 53% 58% 42% / 55% 48% 52% 45%;
+  background: radial-gradient(circle at 38% 34%, #241a12, #0d0906 78%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+.bm-redacted::before,
+.bm-redacted::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: #100a06;
+}
+
+.bm-redacted::before {
+  width: 0.5em;
+  height: 0.5em;
+  left: -0.18em;
+  top: 0.18em;
+}
+
+.bm-redacted::after {
+  width: 0.34em;
+  height: 0.34em;
+  right: -0.12em;
+  bottom: -0.05em;
+  box-shadow: 0.5em -0.2em 0 -0.06em #160e08;
+}
+
+/* Inline list rows — a shorter stain. */
 .bm-redacted--inline {
-  height: 0.7em;
+  height: 0.8em;
+}
+
+/* Full-width description redaction — gentler block edge. */
+.bm-redacted--block {
+  display: block;
+  width: 100%;
+  height: 1.1em;
+  border-radius: 6px 40% 8px 36% / 40% 8px 44% 10px;
 }
 
 /* ---------- Recall Knowledge section ---------- */
