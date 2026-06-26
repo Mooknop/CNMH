@@ -22,7 +22,12 @@ const writeLocal = (key, value) => {
   }
 };
 
-export const useSyncedState = (key, initialValue) => {
+// `options.authoritative` marks a GM-authoring write that must survive the
+// offline-sandbox freeze even on a per-character resource key (e.g. setting
+// party gold from the GM dashboard while Foundry is offline). Player resource
+// burns on the same key stay frozen — only callers that opt in bypass.
+export const useSyncedState = (key, initialValue, options) => {
+  const authoritative = !!options?.authoritative;
   const { getState, sendUpdate, subscribe, connected, foundryConnected } = useSession();
 
   const match = typeof key === 'string' ? key.match(/^cnmh_([^_]+)_(.+)$/) : null;
@@ -73,13 +78,13 @@ export const useSyncedState = (key, initialValue) => {
     // consumed. Exceptions: local-only keys (no character match), GM-authored
     // `_global` campaign state, and inventory-organization writes (loadout /
     // invested) — see isSandboxWritable.
-    if (synced && connected && !foundryConnected && !isSandboxWritable(stateType, characterId)) return;
+    if (synced && connected && !foundryConnected && !authoritative && !isSandboxWritable(stateType, characterId)) return;
     const next = typeof updater === 'function' ? updater(latest.current) : updater;
     latest.current = next;
     setValue(next);
     writeLocal(key, next);
-    if (synced) sendUpdate(characterId, stateType, next);
-  }, [key, synced, characterId, stateType, sendUpdate, connected, foundryConnected]);
+    if (synced) sendUpdate(characterId, stateType, next, { force: authoritative });
+  }, [key, synced, characterId, stateType, sendUpdate, connected, foundryConnected, authoritative]);
 
   return [current, setAndSync];
 };

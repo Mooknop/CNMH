@@ -175,6 +175,17 @@ describe('SessionContext', () => {
     expect(api.getState('IzzyUncut', 'focus')).toBeUndefined();
   });
 
+  it('lets a forced write bypass the offline-sandbox freeze (authoritative GM write)', () => {
+    let api;
+    render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
+    act(() => { MockWS.last._open(); }); // sandbox: connected, Foundry down
+    // `gold` is a normally-frozen per-character key; force makes the GM party-gold
+    // write go through anyway — cached and broadcast.
+    act(() => { api.sendUpdate('Thorn', 'gold', 120, { force: true }); });
+    expect(api.getState('Thorn', 'gold')).toBe(120);
+    expect(MockWS.last.sent).toHaveLength(1);
+  });
+
   it('still allows inventory-organization writes in the sandbox (#554)', () => {
     let api;
     render(<SessionProvider><Probe onReady={(s) => { api = s; }} /></SessionProvider>);
