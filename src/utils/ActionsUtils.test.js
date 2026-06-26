@@ -815,6 +815,20 @@ describe('ActionsUtils', () => {
       };
       expect(getReactions(char)).toHaveLength(1);
     });
+
+    it('a worn (non-held) item reaction is active only with noHandRequired (#735)', () => {
+      // Dragon Turtle Plate: an armor reaction is usable while the armor is worn,
+      // which is not a held state — noHandRequired flips it active.
+      const armorReaction = { name: 'Roll the Plates', triggerType: 'attack-melee' };
+      const worn = { name: 'Dragon Turtle Plate', state: 'worn', reactions: [armorReaction] };
+
+      const withFlag = getReactions({ inventory: [{ ...worn, noHandRequired: true }] });
+      expect(withFlag).toHaveLength(1);
+      expect(withFlag[0]).toMatchObject({ source: 'Dragon Turtle Plate', active: true, triggerType: 'attack-melee' });
+
+      // Without the flag the worn armor's reaction stays inactive (not in hand).
+      expect(getReactions({ inventory: [worn] })[0].active).toBe(false);
+    });
   });
 
   describe('getFreeActions — additional branch coverage', () => {
