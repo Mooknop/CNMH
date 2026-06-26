@@ -22,8 +22,16 @@ export function getShopsForLocation(locationId, entries, shops) {
 }
 
 // Resolve a shop's wares into displayable items: each ware `ref` → catalog item,
-// with `price` overridden when the ware sets one (else the catalog price) and
-// `stock` carried through when present. Unresolved refs are dropped.
+// with `price` overridden when the ware sets one (else the variant/catalog price)
+// and `stock` carried through when present. Unresolved refs are dropped.
+//
+// A ware may pin a `level` to stock a specific variant of a multi-level item
+// (#798): the matching `variants[]` entry is merged over the base (name/price/
+// effect/consumable — same merge as resolveInventoryItem) and the `variants`
+// array is dropped from the resolved ware. Every resolved ware carries a
+// `wareKey` that is unique per stocked variant — the bare `ref` for a flat item,
+// `"${ref}@${level}"` for a variant — so the cart and React/test keys don't
+// collide when a shop stocks two variants of the same item (both share `id`).
 export function resolveShopWares(loreId, shops, catalogMap) {
   const wares = shops && loreId != null ? shops[loreId]?.wares : null;
   if (!Array.isArray(wares) || !catalogMap) return [];
@@ -32,8 +40,22 @@ export function resolveShopWares(loreId, shops, catalogMap) {
       if (!w || w.ref == null) return null;
       const item = catalogMap.get(String(w.ref));
       if (!item) return null;
-      const price = typeof w.price === 'number' && Number.isFinite(w.price) ? w.price : item.price;
-      const resolved = { ...item, price };
+
+      let resolved = { ...item };
+      let wareKey = String(w.ref);
+      if (w.level != null && Array.isArray(item.variants)) {
+        const variant = item.variants.find((v) => v.level === w.level);
+        if (variant) {
+          const { variants, ...base } = resolved;
+          resolved = { ...base, ...variant };
+          wareKey = `${w.ref}@${w.level}`;
+        }
+      }
+
+      const override = typeof w.price === 'number' && Number.isFinite(w.price) ? w.price : null;
+      const price = override != null ? override : resolved.price;
+      resolved.price = Number.isFinite(price) ? price : 0;
+      resolved.wareKey = wareKey;
       if (w.stock != null) resolved.stock = w.stock;
       return resolved;
     })

@@ -65,6 +65,21 @@ describe('useBuyItems', () => {
     ]);
   });
 
+  it('strips the shop-only wareKey and variants ladder from a bought variant', () => {
+    const tonic = {
+      id: 'tonic',
+      name: 'Lesser Tonic',
+      price: 12,
+      wareKey: 'tonic@3',
+      variants: [{ level: 1, name: 'Minor Tonic' }, { level: 3, name: 'Lesser Tonic' }],
+    };
+    const { result } = renderHook(() => useBuyItems('a'));
+    result.current.buy([{ item: tonic, qty: 1 }], 'Apothecary');
+    expect(mockSetAcquired).toHaveBeenCalledWith([
+      { id: 'tonic', name: 'Lesser Tonic', price: 12, uid: 'buy-1' },
+    ]);
+  });
+
   it('debits the cart total from gold', () => {
     const { result } = renderHook(() => useBuyItems('a'));
     result.current.buy([{ item: sword, qty: 2 }, { item: potion, qty: 3 }]);

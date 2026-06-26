@@ -20,7 +20,7 @@ const WareTile = ({ ware, onInspect }) => {
       className="shop-ware"
       onPointerDown={onPointerDown}
       onKeyDown={onKeyDown}
-      data-testid={`ware-${ware.id}`}
+      data-testid={`ware-${ware.wareKey}`}
     >
       <span className="shop-ware-name">{ware.name}</span>
       <span className="shop-ware-meta">
@@ -80,9 +80,9 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, chara
   // cart clears and a receipt is shown; a rejected buy (over balance / offline)
   // leaves everything as-is.
   const handleConfirm = () => {
-    const wareById = new Map(wares.map((w) => [w.id, w]));
+    const wareByKey = new Map(wares.map((w) => [w.wareKey, w]));
     const purchases = cart
-      .map((l) => ({ item: wareById.get(l.id), qty: l.qty }))
+      .map((l) => ({ item: wareByKey.get(l.id), qty: l.qty }))
       .filter((p) => p.item);
     const result = buy(purchases, selected?.title);
     if (result) {
@@ -136,12 +136,12 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, chara
               <div className="shop-window-body">
                 <ul className="shop-wares" aria-label="wares">
                   {wares.map((ware) => (
-                    <li key={ware.id} className="shop-ware-row">
+                    <li key={ware.wareKey} className="shop-ware-row">
                       <WareTile ware={ware} onInspect={setDetailItem} />
                       <button
                         type="button"
                         className="shop-ware-add"
-                        aria-label={`add ${ware.id}`}
+                        aria-label={`add ${ware.wareKey}`}
                         onClick={() => addWare(ware)}
                       >
                         ＋ Add
