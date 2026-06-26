@@ -256,3 +256,20 @@
     display: none;
   }
 }
+
+/* Conditional ('vs X') effect modifiers — reminder beneath the card header (#510),
+   mirroring StatsBlock's .defense-hint for saves. */
+.skill-conditional-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  color: var(--shell-text-secondary, var(--color-theme));
+}
+
+.skill-conditional-src {
+  opacity: 0.7;
+}
