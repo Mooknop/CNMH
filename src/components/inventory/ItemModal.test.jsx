@@ -717,6 +717,32 @@ describe('ItemModal', () => {
     const img = document.querySelector('.loot-art img');
     expect(img.style.objectPosition).toBe('25% 80%');
   });
+
+  // --- runestone (#800) ---
+  it('renders a runestone: held rune + inert reminder, no Use button', () => {
+    const runestone = {
+      name: 'Flaming Runestone',
+      quantity: 1,
+      weight: 0.1,
+      price: 503,
+      traits: ['Consumable', 'Magical', 'Fire'],
+      runestone: { runeRef: 'flaming', rune: { id: 'flaming', name: 'Flaming', level: 8, description: 'Burns the target.' } },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={runestone} onUse={vi.fn()} />);
+    const section = screen.getByTestId('item-modal-runestone');
+    expect(section).toHaveTextContent('Flaming');
+    expect(section).toHaveTextContent('Level 8');
+    expect(section).toHaveTextContent('Grants no effect while unattached');
+    expect(screen.getByText('Common · Runestone', { exact: false })).toBeInTheDocument();
+    // A runestone carries no `consumable` block → no Use/Drink action.
+    expect(screen.queryByTestId('item-action-use')).not.toBeInTheDocument();
+  });
+
+  it('renders an empty runestone (no rune held)', () => {
+    const blank = { name: 'Runestone', quantity: 1, weight: 0.1, price: 3, runestone: { runeRef: null, rune: null } };
+    render(<ItemModal isOpen onClose={vi.fn()} item={blank} />);
+    expect(screen.getByTestId('item-modal-runestone')).toHaveTextContent('empty etching stone');
+  });
 });
 
 describe('ItemModal — Use button (#217)', () => {

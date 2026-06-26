@@ -391,6 +391,22 @@ describe('contentUtils', () => {
       expect(out.runes.property).toEqual([]);
     });
 
+    it('routes a runestone ref through the rune catalog, inert (#800)', () => {
+      const runeMap = runeCatalogMap([{ id: 'flaming', name: 'Flaming', price: 500 }]);
+      const out = resolveInventoryItem(
+        { ref: 'runestone', runeRef: 'flaming', uid: 'u1', quantity: 1 },
+        itemCatalogMap([]), // not in the item catalog — resolved from the rune map
+        undefined,
+        undefined,
+        runeMap,
+      );
+      expect(out.name).toBe('Flaming Runestone');
+      expect(out.price).toBe(503);
+      expect(out.runestone.rune.id).toBe('flaming');
+      expect(out.strikes).toBeUndefined();
+      expect(out.runes).toBeUndefined();
+    });
+
     it('merges a ref over its catalog definition with per-character scalars', () => {
       const out = resolveInventoryItem({ ref: 'elixir', quantity: 2, invested: true }, catalog);
       expect(out).toMatchObject({

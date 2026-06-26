@@ -123,6 +123,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     : item.staff ? 'Staff'
     : item.wand ? 'Wand'
     : item.scroll ? 'Scroll'
+    : item.runestone ? 'Runestone'
     : consumableMeta(item) ? 'Consumable'
     : 'Gear';
   const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
@@ -473,6 +474,33 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
               {rune.description && <p className="item-rune-desc">{rune.description}</p>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Runestone (#800): the held rune + an inert reminder. A runestone grants
+          no mechanical effect until its rune is transferred onto a weapon. */}
+      {item.runestone && (
+        <div className="item-runestone" data-testid="item-modal-runestone">
+          <h3>Runestone</h3>
+          {item.runestone.rune ? (
+            <>
+              <div className="item-rune">
+                <span className="item-rune-name">{item.runestone.rune.name}</span>
+                {item.runestone.rune.level != null && (
+                  <span className="item-rune-level"> · Level {item.runestone.rune.level}</span>
+                )}
+                {item.runestone.rune.description && (
+                  <p className="item-rune-desc">{item.runestone.rune.description}</p>
+                )}
+              </div>
+              <p className="item-runestone-note">
+                Grants no effect while unattached — transfer the rune onto a weapon to
+                use it (the stone is destroyed).
+              </p>
+            </>
+          ) : (
+            <p className="item-runestone-note">An empty etching stone — it holds no rune yet.</p>
+          )}
         </div>
       )}
 

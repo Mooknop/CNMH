@@ -19,6 +19,7 @@ import {
 import bootstrapEffects from '../data/pf2eEffects';
 import bootstrapRunes from '../data/pf2eRunes';
 import bootstrapArmorRunes from '../data/armorRunes';
+import { isRunestoneEntry, resolveRunestone } from './runestone';
 
 export const slugify = (str) =>
   String(str || '')
@@ -406,6 +407,10 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
         : entry;
     return finishItem(inline, spellMap, ownerLevel, runeMap);
   }
+
+  // A runestone is an unattached rune (#800): resolve it from the rune catalog
+  // into an inert display item (no strikes/runes), bypassing the item catalog.
+  if (isRunestoneEntry(entry)) return resolveRunestone(entry, runeMap);
 
   const quantity = entry.quantity != null ? entry.quantity : 1;
   const cat = catalogMap.get(String(entry.ref));
