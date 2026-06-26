@@ -161,6 +161,40 @@ export function conditionalTogglesFor(activeEffects, stat, catalog = PF2E_EFFECT
 }
 
 /**
+ * Lowest Dexterity cap imposed by active effects (#507). A `dexCap` modifier
+ * declares an *absolute* ceiling on the Dexterity modifier that contributes to a
+ * derived stat — e.g. the Drakeheart Mutagen's "Dexterity cap of +2". It's a
+ * ceiling, NOT an additive bonus, so it deliberately does not flow through
+ * computeEffectBonuses / bestOfKind (`stat: 'dexCap'` isn't a bonus bucket and
+ * is dropped there). Per PF2e ("use your lowest Dexterity cap if you have more
+ * than one"), when several apply the LOWEST (most restrictive) wins, and it
+ * composes with the worn armor's own cap the same way. `vs`-scoped caps are
+ * ignored (a cap isn't a roll-time toggle). Returns `Infinity` when no effect
+ * imposes a cap — a no-op for the AC `min()`.
+ *
+ * Currently consumed by AC only (the sole Dex-derived stat; Reflex needs the
+ * save derivation tracked in #796).
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {number} the lowest effect-imposed Dex cap, or Infinity if none
+ */
+export function dexCapFor(activeEffects, catalog = PF2E_EFFECTS) {
+  if (!activeEffects || activeEffects.length === 0) return Infinity;
+  let cap = Infinity;
+  for (const entry of activeEffects) {
+    const def = catalog.find((e) => e.id === entry.effectId);
+    if (!def || !def.modifiers) continue;
+    for (const mod of def.modifiers) {
+      if (mod.stat !== 'dexCap' || mod.vs) continue;
+      const amount = typeof mod.amount === 'number' ? mod.amount : Infinity;
+      cap = Math.min(cap, amount);
+    }
+  }
+  return cap;
+}
+
+/**
  * True when an active effect should be dropped at encounter end: either it's
  * turn/round-bound (carries an `expireAt`) or its catalog entry is flagged
  * `encounterScoped` (e.g. eld-charged, #275). Used by both encounter-end sweeps.

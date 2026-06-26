@@ -52,16 +52,22 @@ export const findWornArmor = (inventory = []) => {
  * @param {Object|null} args.armor - the worn armor block (or null for unarmored)
  * @param {number} args.dexMod - the character's Dexterity modifier
  * @param {number} args.proficiencyBonus - AC proficiency bonus for the category
+ * @param {number} args.effectDexCap - an absolute Dex cap imposed by an effect
+ *                  (#507, e.g. Drakeheart Mutagen's "Dexterity cap of +2"). When
+ *                  several caps apply (this + the armor's) the lowest wins, per
+ *                  PF2e. Defaults to Infinity (no effect cap).
  * @returns {number|null} derived base AC, or null to fall back to the scalar
  */
-export const deriveArmorClass = ({ armor, dexMod = 0, proficiencyBonus = 0 }) => {
+export const deriveArmorClass = ({ armor, dexMod = 0, proficiencyBonus = 0, effectDexCap = Infinity }) => {
   const a = normalizeArmor(armor);
   if (!a) {
-    // Unarmored: no Dex cap, no armor item bonus.
-    return BASE_AC + proficiencyBonus + dexMod;
+    // Unarmored: no armor item bonus and no armor cap — but an effect Dex cap
+    // (#507) still clamps the Dex contribution (Infinity = uncapped, a no-op).
+    return BASE_AC + proficiencyBonus + Math.min(dexMod, effectDexCap);
   }
   // Worn armor that hasn't been backfilled with the AC1 schema — fall back.
   if (a.category === undefined || a.acBonus === undefined) return null;
-  const dexCap = a.dexCap !== undefined ? a.dexCap : Infinity;
-  return BASE_AC + proficiencyBonus + Math.min(dexMod, dexCap) + a.acBonus;
+  // Multiple Dex caps (the armor's own + any effect cap) → the lowest applies.
+  const armorCap = a.dexCap !== undefined ? a.dexCap : Infinity;
+  return BASE_AC + proficiencyBonus + Math.min(dexMod, armorCap, effectDexCap) + a.acBonus;
 };
