@@ -194,7 +194,8 @@
 .gm-shop-ware-row { align-items: flex-end; gap: 10px; }
 .gm-shop-ware-name { flex: 1; min-width: 120px; font-weight: 600; align-self: center; }
 .gm-shop-ware-field { flex: 0 0 90px; min-width: 0; }
-.gm-shop-ware-field input { width: 100%; }
+.gm-shop-ware-field input,
+.gm-shop-ware-field select { width: 100%; }
 /* Inline "+ Add items" picker — part of the page, not a floating modal (a
    backdrop-filtered .gm-card traps position:fixed, so an overlay would sit
    under the shell header). */
