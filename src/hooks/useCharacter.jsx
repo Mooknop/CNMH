@@ -34,6 +34,7 @@ import {
   getReactions,
   getFreeActions,
 } from '../utils/ActionsUtils';
+import { bladeStrikes } from '../utils/bladeByrnie';
 
 import {
   calculateSpellStats,
@@ -66,6 +67,9 @@ export const useCharacter = (character) => {
   // chambered ranged Strikes (Crescent Cross). Read-only here; useChambers
   // (Reload/Fire) is the sole writer. Empty map ⇒ every chamber unloaded.
   const [chambers]    = useSyncedState(`cnmh_chambers_${character?.id || 'none'}`, {});
+  // Blade Byrnie transient dagger (#728 E4): when active, a derived +1 striking
+  // dagger strike is injected. Read-only here; useBladeByrnie is the writer.
+  const [blade]       = useSyncedState(`cnmh_blade_${character?.id || 'none'}`, { active: false });
   const [hp, setHp]   = useSyncedState(
     `cnmh_hp_${character?.id || 'none'}`,
     () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
@@ -228,7 +232,9 @@ export const useCharacter = (character) => {
     const totalBulk = calculateItemsBulk(effectiveInventory);
 
     // ── Combat ──────────────────────────────────────────────────────────────
-    const strikes     = getStrikes(charEff, chambers);
+    const strikes     = blade?.active
+      ? [...getStrikes(charEff, chambers), ...bladeStrikes(charEff)]
+      : getStrikes(charEff, chambers);
     const actions     = getActions(charEff);
     const reactions   = getReactions(charEff);
     const freeActions = getFreeActions(charEff);
@@ -392,7 +398,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, resolvedAcquired, removed]);
+  }, [character, loadout, chambers, blade, resolvedAcquired, removed]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither
