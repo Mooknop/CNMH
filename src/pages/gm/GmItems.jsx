@@ -15,6 +15,7 @@ import PageEditorShell from '../../components/gm/PageEditorShell';
 import TraitsField from '../../components/shared/TraitsField';
 import { toList } from '../../utils/traitRefs';
 import { resolveWeapon, scaleDamageDice, STRIKING } from '../../utils/weaponRunes';
+import { resolveArmor } from '../../utils/armorRunes';
 import { ARMOR_CATEGORIES } from '../../utils/InventoryUtils';
 import './gm.css';
 
@@ -92,7 +93,7 @@ const toForm = (it) => {
   // flat `potency` (no `runes`) is preserved untouched and surfaced as a notice
   // so saving never re-derives a baked weapon's name/dice — migration is Slice 4.
   const runes = it.runes && typeof it.runes === 'object' && !Array.isArray(it.runes) ? it.runes : null;
-  const RUNE_MANAGED = ['potency', 'striking', 'property'];
+  const RUNE_MANAGED = ['potency', 'striking', 'resilient', 'property'];
   const runeRest = runes
     ? Object.fromEntries(Object.entries(runes).filter(([k]) => !RUNE_MANAGED.includes(k)))
     : {};
@@ -111,6 +112,8 @@ const toForm = (it) => {
     strikesWasObject,
     runePotency: runes && runes.potency != null ? String(runes.potency) : '0',
     runeStriking: runes && runes.striking ? runes.striking : 'none',
+    // Resilient is armor's second fundamental rune (the analogue of striking).
+    runeResilient: runes && runes.resilient ? runes.resilient : 'none',
     runeProperty: runes && Array.isArray(runes.property)
       ? runes.property.map((p) => (typeof p === 'string' ? p : p?.id)).filter(Boolean)
       : [],
@@ -199,23 +202,28 @@ const itemFromForm = (f) => {
   delete out.runes;
   delete out.potency;
   const potencyTier = parseInt(f.runePotency, 10) || 0;
-  const striking = f.runeStriking && f.runeStriking !== 'none' ? f.runeStriking : null;
-  // Property runes occupy slots equal to the potency value (#607). Over-slotting
-  // is rejected (not silently truncated) so the GM never loses a rune unawares;
-  // striking has no potency prerequisite.
+  // Armor's second fundamental is resilient; a weapon's is striking. Pick by the
+  // item's nature so an armor never carries striking (or vice versa).
+  const striking = !f.hasArmor && f.runeStriking && f.runeStriking !== 'none' ? f.runeStriking : null;
+  const resilient = f.hasArmor && f.runeResilient && f.runeResilient !== 'none' ? f.runeResilient : null;
+  // Property runes occupy slots equal to the potency value (#607), for armor and
+  // weapons alike. Over-slotting is rejected (not silently truncated) so the GM
+  // never loses a rune unawares; striking/resilient have no potency prerequisite.
   const property = (f.runeProperty || []).filter(Boolean);
   if (property.length > potencyTier) {
+    const noun = f.hasArmor ? 'armor' : 'weapon';
     throw new Error(
       potencyTier === 0
         ? `Property runes need a potency rune to hold them. Add potency, or remove the property ${property.length === 1 ? 'rune' : 'runes'}.`
-        : `This weapon has ${property.length} property runes but its +${potencyTier} potency grants only ${potencyTier} slot${potencyTier === 1 ? '' : 's'}. Remove the extra ${property.length - potencyTier === 1 ? 'rune' : 'runes'} or raise potency.`
+        : `This ${noun} has ${property.length} property runes but its +${potencyTier} potency grants only ${potencyTier} slot${potencyTier === 1 ? '' : 's'}. Remove the extra ${property.length - potencyTier === 1 ? 'rune' : 'runes'} or raise potency.`
     );
   }
-  if (potencyTier > 0 || striking || property.length || Object.keys(f.runeRest || {}).length) {
+  if (potencyTier > 0 || striking || resilient || property.length || Object.keys(f.runeRest || {}).length) {
     out.runes = {
       ...(f.runeRest || {}),
       ...(potencyTier > 0 ? { potency: potencyTier } : {}),
       ...(striking ? { striking } : {}),
+      ...(resilient ? { resilient } : {}),
       ...(property.length ? { property } : {}),
     };
   } else if (f.legacyPotency != null) {
@@ -427,13 +435,16 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   // Weapon-rune preview (#548 Slice 2). The runes block drives a derived display
   // name + price and scales each strike's native dice; show what it resolves to
   // so the GM authors base name/price and sees the effect before saving.
+  const isArmorRune = e.hasArmor;
   const runePotencyTier = parseInt(e.runePotency, 10) || 0;
-  const runeStrikingKey = e.runeStriking !== 'none' ? e.runeStriking : null;
+  const runeStrikingKey = !isArmorRune && e.runeStriking !== 'none' ? e.runeStriking : null;
+  const runeResilientKey = isArmorRune && e.runeResilient !== 'none' ? e.runeResilient : null;
   const strikingDice = runeStrikingKey && STRIKING[runeStrikingKey] ? STRIKING[runeStrikingKey].extraDice : 0;
-  // Property runes (#548 Slice 3b): the available catalog, the rune docs picked
-  // for this weapon (capped at the potency tier), and slot count = potency.
+  // Property runes (#548 Slice 3b / #727): armor and weapon property runes share
+  // the `rune` collection but are discriminated by `armorRune` — an armor item
+  // picks from armorRune runes, a weapon from the rest. Slot count = potency.
   const propertyRuneCatalog = (Array.isArray(runeCatalog) ? runeCatalog : [])
-    .filter((r) => (r.type || 'property') === 'property')
+    .filter((r) => (r.type || 'property') === 'property' && !!r.armorRune === isArmorRune)
     .slice()
     .sort((a, b) => String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase()));
   const runeById = new Map(propertyRuneCatalog.map((r) => [String(r.id), r]));
@@ -447,16 +458,21 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
     .slice(0, runePotencyTier)
     .map((id) => runeById.get(String(id)))
     .filter(Boolean);
-  const hasRunes = runePotencyTier > 0 || !!runeStrikingKey || selectedProperty.length > 0;
-  const runePreview = resolveWeapon(
-    { name: e.name, price: e.price.trim() !== '' ? toNum(e.price) : 0 },
-    {
-      potency: runePotencyTier,
-      ...(runeStrikingKey ? { striking: runeStrikingKey } : {}),
-      ...(selectedPropertyRunes.length ? { property: selectedPropertyRunes } : {}),
-    }
-  );
-  const showRunes = !isSpellItem && (e.strikes.length > 0 || hasRunes || e.legacyPotency != null);
+  const hasRunes = runePotencyTier > 0 || !!runeStrikingKey || !!runeResilientKey || selectedProperty.length > 0;
+  const runeBase = { name: e.name, price: e.price.trim() !== '' ? toNum(e.price) : 0 };
+  const runeProperties = selectedPropertyRunes.length ? { property: selectedPropertyRunes } : {};
+  const runePreview = isArmorRune
+    ? resolveArmor(runeBase, {
+        potency: runePotencyTier,
+        ...(runeResilientKey ? { resilient: runeResilientKey } : {}),
+        ...runeProperties,
+      })
+    : resolveWeapon(runeBase, {
+        potency: runePotencyTier,
+        ...(runeStrikingKey ? { striking: runeStrikingKey } : {}),
+        ...runeProperties,
+      });
+  const showRunes = !isSpellItem && (isArmorRune || e.strikes.length > 0 || hasRunes || e.legacyPotency != null);
 
   // Set one property slot (by index) within the dense id list — clearing a slot
   // removes it, picking in an empty trailing slot appends. Overflow entries are
@@ -796,7 +812,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
           the Slice 4 content migration. */}
       {showRunes && (
         <div className="form-group" data-testid="item-runes">
-          <label>Weapon runes</label>
+          <label>{isArmorRune ? 'Armor runes' : 'Weapon runes'}</label>
           {e.legacyPotency != null && !hasRunes && (
             <p className="gm-warn" data-testid="item-runes-legacy">
               Legacy baked potency (+{e.legacyPotency}) — its +N, dice, and price are fused
@@ -818,19 +834,35 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
                 <option value="3">+3</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>striking</label>
-              <select
-                aria-label="rune-striking"
-                value={e.runeStriking}
-                onChange={(ev) => set({ runeStriking: ev.target.value })}
-              >
-                <option value="none">none</option>
-                <option value="striking">striking (+1 die)</option>
-                <option value="greater">greater (+2 dice)</option>
-                <option value="major">major (+3 dice)</option>
-              </select>
-            </div>
+            {isArmorRune ? (
+              <div className="form-group">
+                <label>resilient</label>
+                <select
+                  aria-label="rune-resilient"
+                  value={e.runeResilient}
+                  onChange={(ev) => set({ runeResilient: ev.target.value })}
+                >
+                  <option value="none">none</option>
+                  <option value="resilient">resilient (+1 saves)</option>
+                  <option value="greater">greater (+2 saves)</option>
+                  <option value="major">major (+3 saves)</option>
+                </select>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>striking</label>
+                <select
+                  aria-label="rune-striking"
+                  value={e.runeStriking}
+                  onChange={(ev) => set({ runeStriking: ev.target.value })}
+                >
+                  <option value="none">none</option>
+                  <option value="striking">striking (+1 die)</option>
+                  <option value="greater">greater (+2 dice)</option>
+                  <option value="major">major (+3 dice)</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Property-rune slots (#548 Slice 3b / #607): a weapon holds property
@@ -864,7 +896,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
                 <p>
                   {propertyOverflow.length} property {propertyOverflow.length === 1 ? 'rune exceeds' : 'runes exceed'}{' '}
                   {runePotencyTier === 0
-                    ? 'this weapon’s lack of a potency rune'
+                    ? `this ${isArmorRune ? 'armor' : 'weapon'}’s lack of a potency rune`
                     : `the +${runePotencyTier} potency’s ${runePotencyTier} slot${runePotencyTier === 1 ? '' : 's'}`}
                   {' '}— raise potency or remove {propertyOverflow.length === 1 ? 'it' : 'them'}. Saving is blocked until resolved.
                 </p>
