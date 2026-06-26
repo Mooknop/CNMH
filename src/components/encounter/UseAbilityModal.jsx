@@ -25,6 +25,7 @@ import { useOmen } from '../../hooks/useOmen';
 import { useShield } from '../../hooks/useShield';
 import { useEnemyEffects, offGuardAppliesTo } from '../../hooks/useEnemyEffects';
 import { useChambers } from '../../hooks/useChambers';
+import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
@@ -118,6 +119,9 @@ const UseAbilityModal = ({
   // Chambered-weapon fire (#676, S4) — the live chamber overlay + the discharge
   // writer. Special-ammo depletion reuses the consumed overlay (like consumables).
   const { stateFor: chamberStateFor, fire: fireChamber } = useChambers(character?.id || 'nobody');
+  // Blade Byrnie (#738 E4 pt.2): a Strike with the transient dagger returns it to
+  // the armor. The dagger strike is tagged bladeByrnie:true (utils/bladeByrnie).
+  const { returnToArmor: returnBlade } = useBladeByrnie(character?.id || 'nobody');
   const [, setConsumed] = useSyncedState(`cnmh_consumed_${character?.id || ''}`, {});
   const [fireChamberIdx, setFireChamberIdx] = useState(null);
 
@@ -1238,6 +1242,10 @@ const UseAbilityModal = ({
     } else if (isAttack) {
       recordAttack(1);
     }
+
+    // Blade Byrnie (#738): Striking with the transient dagger returns it to the
+    // armor — clear the overlay so the injected strike disappears.
+    if (ability?.bladeByrnie) returnBlade();
 
     onClose();
   };
