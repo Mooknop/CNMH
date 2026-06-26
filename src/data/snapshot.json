@@ -10753,7 +10753,7 @@
     {
       "id": "drakeheart-mutagen",
       "name": "Drakeheart Mutagen (Moderate)",
-      "description": "+5 item bonus to AC and +2 item bonus to Perception, with a −1 item penalty to Will and Reflex saves (now netted). Still not modeled: the Dexterity cap of +2 (see issue #507) and the −1 penalty to Recall Knowledge checks. You can burn the remaining duration to Stride twice (1 action).",
+      "description": "+5 item bonus to AC and +2 item bonus to Perception, with a −1 item penalty to Will and Reflex saves and a Dexterity cap of +2 (all netted into the sheet; the cap composes with your armor's, lowest wins). Still not modeled: the −1 penalty to Recall Knowledge checks (see issue #510). You can burn the remaining duration to Stride twice (1 action).",
       "modifiers": [
         {
           "stat": "ac",
@@ -10774,6 +10774,10 @@
           "stat": "reflex",
           "kind": "item",
           "amount": -1
+        },
+        {
+          "stat": "dexCap",
+          "amount": 2
         }
       ]
     },
