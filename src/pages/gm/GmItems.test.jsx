@@ -946,4 +946,62 @@ describe('GmItems', () => {
       expect(saveDocument.mock.calls[0][2].runes).toEqual({ striking: 'striking' });
     });
   });
+
+  describe('armor runes (#727)', () => {
+    const chainShirt = {
+      id: 'chain-shirt',
+      name: 'Chain Shirt',
+      price: 5,
+      armor: { category: 'light', acBonus: 1, dexCap: 5 },
+    };
+    const armorRuneContent = (extra = []) =>
+      useContent.mockReturnValue({
+        items: [chainShirt, ...extra],
+        spells,
+        images: [],
+        runes: [
+          { id: 'slick', type: 'property', name: 'Slick', price: 45, armorRune: true,
+            modifiers: [{ stat: 'acrobatics', kind: 'item', amount: 1 }] },
+          // A weapon property rune — it must NOT appear in an armor's picker.
+          { id: 'vitalizing', type: 'property', name: 'Vitalizing', price: 150 },
+        ],
+      });
+
+    it('shows the runes section with resilient (not striking) and an armor-filtered picker', () => {
+      armorRuneContent();
+      render(<GmItems />);
+      selectItem('Chain Shirt');
+      const form = screen.getByTestId('item-form-chain-shirt');
+      expect(within(form).getByTestId('item-runes')).toHaveTextContent('Armor runes');
+      expect(within(form).getByLabelText('rune-resilient')).toBeInTheDocument();
+      expect(within(form).queryByLabelText('rune-striking')).not.toBeInTheDocument();
+
+      // +1 potency unlocks one property slot; only the armorRune is offered.
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '1' } });
+      const slot = within(form).getByLabelText('rune-property-0');
+      expect(within(slot).getByRole('option', { name: 'Slick' })).toBeInTheDocument();
+      expect(within(slot).queryByRole('option', { name: 'Vitalizing' })).not.toBeInTheDocument();
+    });
+
+    it('authors potency + resilient + property → resolved-name preview + structured save', async () => {
+      armorRuneContent();
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmItems />);
+      selectItem('Chain Shirt');
+      const form = screen.getByTestId('item-form-chain-shirt');
+      fireEvent.change(within(form).getByLabelText('rune-potency'), { target: { value: '1' } });
+      fireEvent.change(within(form).getByLabelText('rune-resilient'), { target: { value: 'resilient' } });
+      fireEvent.change(within(form).getByLabelText('rune-property-0'), { target: { value: 'slick' } });
+
+      expect(within(form).getByTestId('item-runes-preview')).toHaveTextContent('+1 Resilient Slick Chain Shirt');
+
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(saveDocument.mock.calls[0][2].runes).toEqual({
+        potency: 1,
+        resilient: 'resilient',
+        property: ['slick'],
+      });
+    });
+  });
 });
