@@ -2,79 +2,76 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
-import { DAMAGE_TYPES } from '../../utils/damage';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
-// Property-rune catalog editor (#548 Slice 3b). Rune shape (src/data/pf2eRunes.js):
-//   { id, type:'property', name, level, price, description,
-//     rider: { vsTrait?, persistent?, damageType?, onCrit?: { conditions: [{name,value,duration}] } } }
-// The rich rider is folded into the #222 damage step by
-// weaponRunes.translatePropertyRider — this editor authors it with structured
-// controls (no raw-JSON box). Potency/striking tiers are NOT runes here; they
-// live as fixed tables in weaponRunes.js and are authored per-weapon in GmItems.
+// Armor property-rune catalog editor (#727, R3). Armor runes share the `rune`
+// collection with weapon runes but are flagged armorRune:true — the etch
+// discriminator GmItems filters on, and the split that keeps these two editors
+// apart (GmRunes shows the rest). Rune shape (src/data/armorRunes.js):
+//   { id, type:'property', armorRune:true, name, level, price, description,
+//     modifiers?: [{ stat, kind, amount }], riders?: [{ id, text }] }
+// `modifiers` fold onto the sheet through useWornGear (#726); `riders` are
+// passive reminders with no engine side-effect. Potency/resilient are
+// fundamental runes (fixed tables in utils/armorRunes.js), authored per-armor in
+// GmItems — not catalog entries here.
 
-// Crit-condition durations the damage step phrases (weaponRunes.conditionPhrase).
-const DURATIONS = [
-  { value: '', label: '— (no duration)' },
-  { value: 'end-of-next-turn', label: 'until the end of your next turn' },
-  { value: 'while-persistent', label: 'while the persistent damage continues' },
+// Stats the worn-gear / effect engine can model. AC + saves apply today; skills
+// light up with W2 (#731). Authored as a dropdown so there's no raw-JSON box.
+const MODIFIER_STATS = [
+  'ac', 'fort', 'reflex', 'will', 'perception',
+  'acrobatics', 'arcana', 'athletics', 'crafting', 'deception', 'diplomacy',
+  'intimidation', 'medicine', 'nature', 'occultism', 'performance', 'religion',
+  'society', 'stealth', 'survival', 'thievery',
 ];
+const MODIFIER_KINDS = ['item', 'status', 'circumstance'];
 
 const toForm = (r) => {
   const src = r && typeof r === 'object' ? r : {};
-  const rd = src.rider && typeof src.rider === 'object' ? src.rider : {};
   return {
     id: src.id,
     name: src.name || '',
     level: src.level != null ? String(src.level) : '',
     price: src.price != null ? String(src.price) : '',
     description: src.description || '',
-    vsTrait: rd.vsTrait || '',
-    persistent: rd.persistent || '',
-    damageType: rd.damageType || '',
-    conditions: Array.isArray(rd.onCrit?.conditions)
-      ? rd.onCrit.conditions.map((c) => ({
-          name: c.name || '',
-          value: c.value != null ? String(c.value) : '',
-          duration: c.duration || '',
+    modifiers: Array.isArray(src.modifiers)
+      ? src.modifiers.map((m) => ({
+          stat: m.stat || 'ac',
+          kind: m.kind || 'item',
+          amount: m.amount != null ? String(m.amount) : '',
         }))
+      : [],
+    reminders: Array.isArray(src.riders)
+      ? src.riders.map((rd) => (typeof rd === 'string' ? rd : rd?.text || '')).filter(Boolean)
       : [],
   };
 };
 
 const blankRune = () => toForm({});
-const blankCondition = () => ({ name: '', value: '1', duration: 'end-of-next-turn' });
+const blankModifier = () => ({ stat: 'ac', kind: 'item', amount: '1' });
 
 const fromForm = (f) => {
   if (!f.name.trim()) throw new Error('Rune name is required.');
-
-  const rider = {};
-  if (f.vsTrait.trim()) rider.vsTrait = f.vsTrait.trim().toLowerCase();
-  if (f.persistent.trim()) {
-    rider.persistent = f.persistent.trim();
-    if (f.damageType.trim()) rider.damageType = f.damageType.trim();
-  }
-  const conditions = f.conditions
-    .filter((c) => c.name.trim())
-    .map((c) => {
-      const out = { name: c.name.trim() };
-      const v = parseInt(c.value, 10);
-      if (!Number.isNaN(v)) out.value = v;
-      if (c.duration.trim()) out.duration = c.duration.trim();
-      return out;
-    });
-  if (conditions.length) rider.onCrit = { conditions };
-
-  const out = { type: 'property', name: f.name.trim() };
+  const out = { type: 'property', armorRune: true, name: f.name.trim() };
   const level = parseInt(f.level, 10);
   if (!Number.isNaN(level)) out.level = level;
   const price = parseFloat(f.price);
   if (!Number.isNaN(price)) out.price = price;
   if (f.description.trim()) out.description = f.description.trim();
-  if (Object.keys(rider).length) out.rider = rider;
+
+  const modifiers = f.modifiers
+    .map((m) => ({ stat: m.stat, kind: m.kind, amount: parseInt(m.amount, 10) }))
+    .filter((m) => m.stat && m.kind && !Number.isNaN(m.amount));
+  if (modifiers.length) out.modifiers = modifiers;
+
+  const id = f.id || slugify(out.name);
+  const riders = f.reminders
+    .map((t) => String(t).trim())
+    .filter(Boolean)
+    .map((text, i) => ({ id: `${id}-reminder-${i}`, text }));
+  if (riders.length) out.riders = riders;
   return out;
 };
 
@@ -86,14 +83,19 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   const [showHistory, setShowHistory] = useState(false);
 
   const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
-  const setCond = (i, patch) =>
+  const setMod = (i, patch) =>
     setE((cur) => ({
       ...cur,
-      conditions: cur.conditions.map((c, idx) => (idx === i ? { ...c, ...patch } : c)),
+      modifiers: cur.modifiers.map((m, idx) => (idx === i ? { ...m, ...patch } : m)),
     }));
-  const addCond = () => setE((cur) => ({ ...cur, conditions: [...cur.conditions, blankCondition()] }));
-  const rmCond = (i) =>
-    setE((cur) => ({ ...cur, conditions: cur.conditions.filter((_, idx) => idx !== i) }));
+  const addMod = () => setE((cur) => ({ ...cur, modifiers: [...cur.modifiers, blankModifier()] }));
+  const rmMod = (i) =>
+    setE((cur) => ({ ...cur, modifiers: cur.modifiers.filter((_, idx) => idx !== i) }));
+  const setReminder = (i, text) =>
+    setE((cur) => ({ ...cur, reminders: cur.reminders.map((r, idx) => (idx === i ? text : r)) }));
+  const addReminder = () => setE((cur) => ({ ...cur, reminders: [...cur.reminders, ''] }));
+  const rmReminder = (i) =>
+    setE((cur) => ({ ...cur, reminders: cur.reminders.filter((_, idx) => idx !== i) }));
 
   const submit = async (id, payload) => {
     setConfirm(null);
@@ -141,7 +143,7 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   };
 
   return (
-    <div className="gm-card" data-testid={`rune-form-${e.id || 'new'}`}>
+    <div className="gm-card" data-testid={`armor-rune-form-${e.id || 'new'}`}>
       <div className="gm-row">
         <div className="form-group">
           <label>Name</label>
@@ -177,78 +179,54 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
         />
       </div>
 
-      <div className="gm-card" data-testid="rune-rider">
-        <p className="gm-count">Rider — folded into the damage step</p>
-        <div className="gm-row">
-          <div className="form-group">
-            <label>only vs trait (optional)</label>
-            <input
-              aria-label="rider-vsTrait"
-              placeholder="e.g. undead"
-              value={e.vsTrait}
-              onChange={(ev) => set({ vsTrait: ev.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>persistent damage (optional)</label>
-            <input
-              aria-label="rider-persistent"
-              placeholder="e.g. 1d6"
-              value={e.persistent}
-              onChange={(ev) => set({ persistent: ev.target.value })}
-            />
-          </div>
-          <div className="form-group">
-            <label>damage type</label>
+      <div className="gm-card" data-testid="armor-rune-modifiers">
+        <p className="gm-count">Modifiers — fold onto the sheet via worn gear (AC/saves now, skills with W2)</p>
+        {e.modifiers.map((m, i) => (
+          <div key={i} className="gm-row gm-rank-row">
             <select
-              aria-label="rider-damageType"
-              value={e.damageType}
-              disabled={!e.persistent.trim()}
-              onChange={(ev) => set({ damageType: ev.target.value })}
+              aria-label={`modifier-${i}-stat`}
+              value={m.stat}
+              onChange={(ev) => setMod(i, { stat: ev.target.value })}
             >
-              <option value="">—</option>
-              {DAMAGE_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+              {MODIFIER_STATS.map((s) => (
+                <option key={s} value={s}>{s}</option>
               ))}
             </select>
+            <select
+              aria-label={`modifier-${i}-kind`}
+              value={m.kind}
+              onChange={(ev) => setMod(i, { kind: ev.target.value })}
+            >
+              {MODIFIER_KINDS.map((k) => (
+                <option key={k} value={k}>{k}</option>
+              ))}
+            </select>
+            <input
+              aria-label={`modifier-${i}-amount`}
+              type="number"
+              placeholder="amount"
+              value={m.amount}
+              onChange={(ev) => setMod(i, { amount: ev.target.value })}
+            />
+            <button className="btn-small btn-danger" onClick={() => rmMod(i)}>Remove</button>
           </div>
-        </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addMod}>Add modifier</button>
+      </div>
 
-        <div className="form-group" data-testid="rune-crit-conditions">
-          <label>on critical hit — conditions</label>
-          {e.conditions.map((c, i) => (
-            <div key={i} className="gm-row gm-rank-row">
-              <input
-                aria-label={`condition-${i}-name`}
-                placeholder="condition (e.g. enfeebled)"
-                value={c.name}
-                onChange={(ev) => setCond(i, { name: ev.target.value })}
-              />
-              <input
-                aria-label={`condition-${i}-value`}
-                type="number"
-                placeholder="value"
-                value={c.value}
-                onChange={(ev) => setCond(i, { value: ev.target.value })}
-              />
-              <select
-                aria-label={`condition-${i}-duration`}
-                value={c.duration}
-                onChange={(ev) => setCond(i, { duration: ev.target.value })}
-              >
-                {DURATIONS.map((d) => (
-                  <option key={d.value} value={d.value}>{d.label}</option>
-                ))}
-              </select>
-              <button className="btn-small btn-danger" onClick={() => rmCond(i)}>
-                Remove
-              </button>
-            </div>
-          ))}
-          <button className="btn-small btn-secondary" onClick={addCond}>
-            Add crit condition
-          </button>
-        </div>
+      <div className="gm-card" data-testid="armor-rune-reminders">
+        <p className="gm-count">Reminders — passive notes, no engine effect</p>
+        {e.reminders.map((text, i) => (
+          <div key={i} className="gm-row gm-rank-row">
+            <input
+              aria-label={`reminder-${i}`}
+              value={text}
+              onChange={(ev) => setReminder(i, ev.target.value)}
+            />
+            <button className="btn-small btn-danger" onClick={() => rmReminder(i)}>Remove</button>
+          </div>
+        ))}
+        <button className="btn-small btn-secondary" onClick={addReminder}>Add reminder</button>
       </div>
 
       {error && <p className="gm-warn" role="alert">{error}</p>}
@@ -287,8 +265,8 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 
       <ConfirmDialog
         isOpen={confirm?.kind === 'delete'}
-        title="Delete rune"
-        message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
+        title="Delete armor rune"
+        message={`Permanently delete the rune "${e.name}". This cannot be undone. (A standard seeded rune will reappear from the bootstrap catalog.)`}
         confirmLabel="Delete forever"
         requireType={e.name}
         onConfirm={doRemove}
@@ -306,12 +284,11 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
 };
 
-const GmRunes = () => {
+const GmArmorRunes = () => {
   const { runes } = useContent();
-  // Weapon property runes only — armor runes (armorRune:true) have their own
-  // editor (GmArmorRunes); their rich rider schema differs from this form's.
+  // Only armor runes — weapon property runes live in GmRunes.
   const catalog = useMemo(
-    () => (Array.isArray(runes) ? runes : []).filter((r) => !(r && r.armorRune)),
+    () => (Array.isArray(runes) ? runes : []).filter((r) => r && r.armorRune),
     [runes]
   );
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);
@@ -327,12 +304,12 @@ const GmRunes = () => {
   );
 
   return (
-    <div className="gm-runes">
+    <div className="gm-armor-runes">
       <PageEditorShell
         entries={sorted}
         nameOf={(r) => r.name}
-        noun="rune"
-        addLabel="+ New rune"
+        noun="armor rune"
+        addLabel="+ New armor rune"
         filterEntry={(r, q) =>
           [r.name, r.id, r.description]
             .filter(Boolean)
@@ -351,4 +328,4 @@ const GmRunes = () => {
   );
 };
 
-export default GmRunes;
+export default GmArmorRunes;
