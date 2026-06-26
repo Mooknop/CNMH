@@ -11,6 +11,13 @@
 
 const COLLECTIONS = ['quest', 'faction', 'calendar', 'lore', 'trait', 'character', 'item', 'spell', 'effect', 'rune', 'image', 'theme', 'monster'];
 
+// Capture-only collections are written at runtime by the app (never bundled in
+// the seed) — the persistent bestiary is built up by `useBestiaryCapture` as the
+// party fights. The seed pipeline must never manage them: a force reseed ships
+// these as empty arrays, and the destructive force path would wipe every
+// captured creature. They are exempt from ALL seed modes here (#760).
+const CAPTURE_ONLY = ['monster'];
+
 // Versions kept per (collection, id). Deliberately small: character sheets are
 // 30-50 KB, so unbounded history would blow the free-tier SQLite budget for a
 // 5-player campaign. Only single-entity PUT/DELETE archive (never bulk seed).
@@ -231,6 +238,13 @@ export class CampaignContent {
       const seeded = {};
       for (const [collection, docs] of Object.entries(collections)) {
         if (!COLLECTIONS.includes(collection) || !Array.isArray(docs)) continue;
+        // Never let the seed touch capture-only collections — the persistent
+        // bestiary is runtime-captured, not bundled, so any seed write (esp. the
+        // destructive force path) would only destroy it (#760).
+        if (CAPTURE_ONLY.includes(collection)) {
+          seeded[collection] = 'skipped (capture-only, never seeded)';
+          continue;
+        }
         if (fillMissing) {
           const existing = this.idsIn(collection);
           let added = 0;

@@ -195,3 +195,26 @@ describe('CampaignContent force reseed archiving', () => {
     expect(historyIds(state, 'quest')).toEqual(['q1']);
   });
 });
+
+describe('CampaignContent capture-only collections (#760)', () => {
+  // The persistent bestiary (`monster`) is written at runtime, never bundled.
+  // A force reseed must leave it fully intact — the seed ships `monster: []`,
+  // and without the guard the destructive force path would wipe every creature.
+  const putMonster = (content, id, data) =>
+    content.fetch(makeReq('PUT', `/api/gm/monster/${id}`, { id, ...data }));
+
+  test('force reseed does not touch a runtime-captured monster collection', async () => {
+    const state = makeState();
+    const content = new CampaignContent(state, {});
+    // Capture a creature the way useBestiaryCapture does (single-doc PUT).
+    await putMonster(content, 'goblin-warrior', { name: 'Goblin Warrior', bestiary: { level: -1 } });
+
+    // A force reseed that ships an empty monster array (as the client would).
+    const res = await seed(content, { quest: [{ id: 'q1', title: 'A' }], monster: [] }, { force: true });
+    expect(res.payload.seeded.monster).toBe('skipped (capture-only, never seeded)');
+
+    const snap = await content.fetch(makeReq('GET', '/api/content'));
+    const ids = snap.payload.payload.monster.map((d) => d.id);
+    expect(ids).toEqual(['goblin-warrior']); // survived the reseed
+  });
+});
