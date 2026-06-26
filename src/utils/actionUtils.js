@@ -2,7 +2,26 @@
 // Utilities for extracting actions, reactions, and free actions from character data.
 
 import { convertWordToNumber, parseActionCount } from './actionIconUtils';
-import { itemAbilitiesActive } from './itemState';
+import { itemAbilitiesActive, isHeldState, DEFAULT_ITEM_STATE } from './itemState';
+
+// Etched property runes (#727) can carry active abilities of their own — e.g.
+// the Swallow-Spike rune's Grow Spikes reaction (#735). getActions/getReactions
+// only see top-level item abilities, so surface a host item's resolved
+// runes.property abilities here, sourced as "Item (Rune)" and active while the
+// host is equipped (worn armor / held weapon), not stowed or dropped.
+const isEquipped = (item) =>
+  item?.state == null || item.state === DEFAULT_ITEM_STATE || isHeldState(item.state);
+
+const runeAbilities = (item, key) => {
+  const runes = item && item.runes && item.runes.property;
+  if (!Array.isArray(runes)) return [];
+  const equipped = isEquipped(item);
+  return runes
+    .filter((r) => r && typeof r === 'object' && Array.isArray(r[key]) && r[key].length)
+    .flatMap((r) =>
+      r[key].map((a) => ({ ...a, source: `${item.name} (${r.name})`, active: equipped }))
+    );
+};
 
 /**
  * Normalise a single action object, resolving variable action counts and
@@ -55,7 +74,10 @@ export const getActions = (character) => {
           active: itemAbilitiesActive(item),
         }))
       );
-    allActions = [...allActions, ...inventoryActions];
+    const runeActions = character.inventory.flatMap((item) =>
+      runeAbilities(item, 'actions').map(processActionText)
+    );
+    allActions = [...allActions, ...inventoryActions, ...runeActions];
   }
 
   if (character.feats) {
@@ -97,7 +119,10 @@ export const getReactions = (character) => {
           active: itemAbilitiesActive(item),
         }))
       );
-    allReactions = [...allReactions, ...inventoryReactions];
+    const runeReactions = character.inventory.flatMap((item) =>
+      runeAbilities(item, 'reactions')
+    );
+    allReactions = [...allReactions, ...inventoryReactions, ...runeReactions];
   }
 
   if (character.feats) {

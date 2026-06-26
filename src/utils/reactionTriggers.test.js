@@ -69,6 +69,12 @@ describe('reactionTriggers', () => {
       expect(matchingReactions([counter], 'damaged')).toEqual([]);
     });
 
+    it('grabbed wakes a grab-triggered reaction (Swallow-Spike)', () => {
+      const spike = { name: 'Grow Spikes', triggerType: 'grabbed' };
+      expect(matchingReactions([spike], 'grabbed')).toEqual([spike]);
+      expect(matchingReactions([spike], 'melee-attack')).toEqual([]);
+    });
+
     it('check-failed wakes self-check-failed reactions', () => {
       // Avoid Dire Fate: you fail a check matching your harrow omen suit.
       const direFate = { name: 'Avoid Dire Fate', triggerType: 'self-check-failed' };
