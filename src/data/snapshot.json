@@ -8302,9 +8302,14 @@
           "traits": [
             "Manipulate"
           ],
+          "frequencyRule": {
+            "per": "day",
+            "uses": 1
+          },
           "description": "Frequency once per day; Effect You touch the stitched image of the new moon on the armor's collar and suppress the dazzled condition for 1 minute."
         }
       ],
+      "noHandRequired": true,
       "armor": {
         "category": "light",
         "acBonus": 2,
@@ -9051,15 +9056,26 @@
           "traits": [
             "Concentrate"
           ],
+          "frequencyRule": {
+            "per": "day",
+            "uses": 1
+          },
           "description": "Frequency once per day; Effect You unbind the currents that form your armor and release them as cutting whorls of air that slice into creatures in a 60-foot cone. Creatures in the area take 6d6 slashing damage with a DC 25 basic Fortitude save. A creature that fails its save is also pushed 10 feet (or 20 feet on a critical failure). You lose the AC bonus of your armor until the end of your turn, when the air currents reform the wisp chain around you."
         }
       ],
+      "noHandRequired": true,
       "armor": {
         "category": "light",
         "acBonus": 2,
         "dexCap": 3,
         "strength": 12,
         "group": "chain"
+      },
+      "aura": {
+        "save": "fortitude",
+        "dc": 23,
+        "range": "adjacent",
+        "effect": "it becomes deafened until it moves away from you"
       }
     },
     {

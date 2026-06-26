@@ -99,8 +99,16 @@ const armorPropertyRunes = [
       'Frightened enemies within 30 feet that can see you must attempt a DC 20 ' +
       "Will save at the end of their turn; on a failure, the value of their " +
       "frightened condition doesn't decrease below 1 that turn.",
-    // Passive aura; the at-end-of-turn save automation is #728 E2.
-    riders: [{ id: 'dread-reminder', text: 'Frightened foes within 30 ft that can see you save DC 20 Will or stay frightened ≥1 (automation: #728 E2).' }],
+    riders: [{ id: 'dread-reminder', text: 'Frightened foes within 30 ft that can see you save DC 20 Will or stay frightened ≥1.' }],
+    // End-of-turn aura save reminder (#728 E2).
+    aura: {
+      save: 'will',
+      dc: 20,
+      range: 30,
+      requires: 'frightened',
+      sight: true,
+      effect: "the frightened value doesn't drop below 1 this turn",
+    },
   },
   {
     id: 'swallow-spike',
@@ -113,8 +121,35 @@ const armorPropertyRunes = [
       'Your armor responds to your desire to break free of a creature grabbing ' +
       'you by growing spikes. Attacks made by armor with the swallow-spike rune ' +
       'apply the multiple attack penalty as if you had made them with another weapon.',
-    // Triggered Grow Spikes reaction + Renewed Assault action are #728 E1.
-    riders: [{ id: 'swallow-spike-reminder', text: 'When grabbed/restrained, react to attack the grabber with armor spikes (automation: #728 E1).' }],
+    riders: [{ id: 'swallow-spike-reminder', text: 'When grabbed/restrained, react to attack the grabber with armor spikes.' }],
+    // E1 (#735): the triggered Grow Spikes reaction + Renewed Assault action.
+    // "Guided manual" — the description states the formula for the player/GM to
+    // roll; the attack's item bonus is the armor's own AC item bonus (potency).
+    reactions: [
+      {
+        name: 'Grow Spikes',
+        triggerType: 'grabbed',
+        traits: ['Attack', 'Concentrate'],
+        trigger: "You become grabbed, restrained, or otherwise immobilized in a creature's grasp (including being engulfed or swallowed).",
+        description:
+          'The armor attacks the immobilizing creature with a melee Strike: +14 ' +
+          '(greater +22), dealing 2d6 piercing (greater 3d6), plus 1d6 extra if ' +
+          'the creature is swallowing or engulfing you. Add an item bonus to the ' +
+          "attack equal to the armor's AC item bonus, and an item bonus to damage " +
+          'equal to double that. This Strike applies (and increases) the multiple ' +
+          'attack penalty as a separate weapon. If the damage equals or exceeds the ' +
+          "immobilizing ability's Rupture value, you cut yourself free.",
+      },
+    ],
+    actions: [
+      {
+        name: 'Renewed Assault',
+        actions: 'One Action',
+        traits: ['Attack', 'Concentrate'],
+        trigger: "You're being held immobilized as described in the Grow Spikes reaction.",
+        description: 'The armor attacks the immobilizing creature again, as the Grow Spikes reaction.',
+      },
+    ],
   },
 ];
 

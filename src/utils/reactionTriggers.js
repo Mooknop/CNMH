@@ -17,6 +17,7 @@ export const TRIGGER_TYPES = [
   { id: 'self-check-failed', label: 'You fail a check' },
   { id: 'enemy-skill-check', label: 'An enemy attempts a skill check' },
   { id: 'auditory-visual-effect', label: 'You or an ally is affected by an auditory or visual effect' },
+  { id: 'grabbed',           label: 'You become grabbed, restrained, or immobilized' },
 ];
 
 // What the GM can fire. `matches` lists the triggerTypes the event wakes up.
@@ -28,6 +29,7 @@ export const TRIGGER_EVENTS = [
   { id: 'check-failed',      label: 'PC failed a check',      matches: ['self-check-failed'] },
   { id: 'enemy-skill-check', label: 'Enemy attempting a skill check', matches: ['enemy-skill-check'] },
   { id: 'auditory-visual-effect', label: 'Auditory/visual effect', matches: ['auditory-visual-effect'] },
+  { id: 'grabbed',           label: 'PC grabbed / restrained / immobilized', matches: ['grabbed'] },
 ];
 
 export const eventById = (eventId) =>

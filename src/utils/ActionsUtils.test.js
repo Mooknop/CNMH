@@ -856,6 +856,50 @@ describe('ActionsUtils', () => {
       expect(getFreeActions(char)).toHaveLength(1);
     });
   });
+
+  describe('etched-rune abilities (#735)', () => {
+    // A worn armor with the Swallow-Spike rune etched (resolved property doc).
+    const wornArmorWithSpike = (state = 'worn') => ({
+      name: 'Wisp Chain',
+      state,
+      runes: {
+        property: [
+          {
+            id: 'swallow-spike',
+            name: 'Swallow-Spike',
+            reactions: [{ name: 'Grow Spikes', triggerType: 'grabbed' }],
+            actions: [{ name: 'Renewed Assault', actions: 'One Action' }],
+          },
+        ],
+      },
+    });
+
+    it('surfaces a property rune reaction from a worn host, sourced as Item (Rune)', () => {
+      const out = getReactions({ inventory: [wornArmorWithSpike()] });
+      expect(out).toHaveLength(1);
+      expect(out[0]).toMatchObject({
+        name: 'Grow Spikes',
+        source: 'Wisp Chain (Swallow-Spike)',
+        active: true,
+        triggerType: 'grabbed',
+      });
+    });
+
+    it('surfaces a property rune action, processing its action count', () => {
+      const out = getActions({ inventory: [wornArmorWithSpike()] });
+      const ra = out.find((a) => a.name === 'Renewed Assault');
+      expect(ra).toMatchObject({ source: 'Wisp Chain (Swallow-Spike)', active: true, actionCount: 1 });
+    });
+
+    it('marks rune abilities inactive when the host is stowed or dropped', () => {
+      expect(getReactions({ inventory: [wornArmorWithSpike('dropped')] })[0].active).toBe(false);
+    });
+
+    it('ignores unresolved (string-id) property runes', () => {
+      const armor = { name: 'Wisp Chain', state: 'worn', runes: { property: ['swallow-spike'] } };
+      expect(getReactions({ inventory: [armor] })).toEqual([]);
+    });
+  });
 });
 
 describe('hand gating (active flag)', () => {
