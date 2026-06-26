@@ -1,5 +1,6 @@
 import React from 'react';
 import TraitTag from '../shared/TraitTag';
+import FieldNote from './FieldNote';
 import { recallKnowledgeDC, defaultRecord } from '../../utils/recallKnowledge';
 import {
   revealFlags,
@@ -31,7 +32,16 @@ export const Redacted = ({ width = '4ch', label = 'redacted', block = false }) =
 // everything; the modal leaves it false so combat behavior is unchanged. `badge`
 // is an optional node slotted after the RK-DC box (the modal passes its Exploit
 // Vulnerability badge there to preserve layout; the browser passes nothing).
-const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, badge = null, variant = 'full' }) => {
+const BestiaryEntry = ({
+  enemy,
+  members = [enemy],
+  record,
+  revealAll = false,
+  badge = null,
+  variant = 'full',
+  note = '',
+  onEditNote = null,
+}) => {
   const { bestiary, defenses, name } = enemy;
   const { monsters } = useContent();
   const rec = record || defaultRecord();
@@ -190,6 +200,12 @@ const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, ba
 
           {descriptionRevealed && effectiveDescription && (
             <p className="dex-mini-lore">{effectiveDescription}</p>
+          )}
+
+          {note && (
+            <div className="dex-mini-foot">
+              <FieldNote note={note} />
+            </div>
           )}
         </div>
       </div>
@@ -361,14 +377,17 @@ const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, ba
         ? effectiveDescription && <p className="dex-lore">{effectiveDescription}</p>
         : <Redacted block label="description redacted" />}
 
-      {/* Footer — Recall DC device chip (field-note scrap slot lands in S5) */}
-      {rkDC != null && identityRevealed && (
+      {/* Footer — Recall DC device chip + the party field-note scrap */}
+      {((rkDC != null && identityRevealed) || onEditNote || note) && (
         <div className="dex-foot">
-          <div className="dex-dc" data-testid="bm-rk-dc">
-            <span className="glyph" aria-hidden="true">ᛣ</span>
-            <span className="n">{rkDC}</span>
-            <span className="l">Recall<br />Knowledge</span>
-          </div>
+          {rkDC != null && identityRevealed && (
+            <div className="dex-dc" data-testid="bm-rk-dc">
+              <span className="glyph" aria-hidden="true">ᛣ</span>
+              <span className="n">{rkDC}</span>
+              <span className="l">Recall<br />Knowledge</span>
+            </div>
+          )}
+          <FieldNote note={note} editable={!!onEditNote} onSave={onEditNote} />
         </div>
       )}
 

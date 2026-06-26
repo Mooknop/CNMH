@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useContent } from '../contexts/ContentContext';
 import { useRecallKnowledge } from '../hooks/useRecallKnowledge';
+import { useBestiaryNotes } from '../hooks/useBestiaryNotes';
 import { useGmAuth } from '../hooks/useGmAuth';
 import { useLore } from '../contexts/LoreContext';
 import { rkKeyFor } from '../utils/recallKnowledge';
@@ -20,6 +21,7 @@ const BestiaryBrowser = () => {
   const { creatureKey } = useParams();
   const { monsters } = useContent();
   const { recordFor } = useRecallKnowledge();
+  const { noteFor, setNote } = useBestiaryNotes();
   const { isGm } = useGmAuth();
   const { openLore } = useLore();
 
@@ -88,7 +90,13 @@ const BestiaryBrowser = () => {
             >
               ← Bestiary
             </button>
-            <BestiaryEntry enemy={focused.enemy} record={focused.record} revealAll={isGm} />
+            <BestiaryEntry
+              enemy={focused.enemy}
+              record={focused.record}
+              revealAll={isGm}
+              note={noteFor(focused.doc.id)}
+              onEditNote={(text) => setNote(focused.doc.id, text)}
+            />
             <BestiaryRecallKnowledge key={focused.doc.id} enemy={focused.enemy} />
             <div className="bestiary-seen">
               <span className="bestiary-seen-label">Encountered at</span>
