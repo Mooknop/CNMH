@@ -94,6 +94,42 @@ describe('ShopModal', () => {
     expect(screen.getByTestId('ware-spellbook')).toHaveTextContent('2 in stock');
   });
 
+  it('stocks two variants of one item as distinct tiles and buys them separately (#798)', () => {
+    const tonic = {
+      id: 'tonic',
+      name: 'Tonic',
+      weight: 0,
+      variants: [
+        { level: 1, label: 'Minor', name: 'Minor Tonic', price: 4 },
+        { level: 3, label: 'Lesser', name: 'Lesser Tonic', price: 12 },
+      ],
+    };
+    render(
+      <ShopModal
+        isOpen
+        onClose={() => {}}
+        shops={[{ id: 'apothecary', title: 'Apothecary' }]}
+        waresStore={{ apothecary: { wares: [{ ref: 'tonic', level: 1 }, { ref: 'tonic', level: 3 }] } }}
+        items={[tonic]}
+        character={{ id: 'char-1', name: 'Pellias' }}
+      />
+    );
+    fireEvent.click(screen.getByText('Apothecary'));
+
+    // Two distinct tiles keyed by ref@level, not a single colliding 'ware-tonic'.
+    expect(screen.getByTestId('ware-tonic@1')).toHaveTextContent('Minor Tonic');
+    expect(screen.getByTestId('ware-tonic@3')).toHaveTextContent('Lesser Tonic');
+
+    fireEvent.click(screen.getByLabelText('add tonic@1'));
+    fireEvent.click(screen.getByLabelText('add tonic@3'));
+    expect(screen.getByTestId('cart-total')).toHaveTextContent('16 gp');
+
+    fireEvent.click(screen.getByRole('button', { name: /confirm purchase/i }));
+    const [purchases] = mockBuy.mock.calls[0];
+    expect(purchases.map((p) => p.item.name)).toEqual(['Minor Tonic', 'Lesser Tonic']);
+    expect(purchases.map((p) => p.qty)).toEqual([1, 1]);
+  });
+
   it('shows an empty-wares state for a shop with nothing for sale', () => {
     renderModal();
     fireEvent.click(screen.getByText('The Curious Goblin'));

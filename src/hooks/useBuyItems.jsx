@@ -20,9 +20,12 @@ import { newEntryUid } from '../utils/uid';
 // Deep-clone a ware into a clean inventory entry: strip live/loadout-only fields
 // and mint fresh uids throughout (including any container contents) so a bought
 // copy can't collide with an entry the buyer already owns. The buyer's effective
-// tree re-derives placement. Same shape as useGiveItem's reuid.
+// tree re-derives placement. Same shape as useGiveItem's reuid, plus the
+// shop-only `wareKey` and the multi-level `variants` ladder (#798) — a bought
+// variant already carries its own merged name/price/effect, so the ladder is
+// dead weight on the inventory entry.
 const reuid = (item) => {
-  const { state, hand, stock, ...rest } = item || {};
+  const { state, hand, stock, wareKey, variants, ...rest } = item || {};
   const next = { ...rest, uid: newEntryUid() };
   if (next.container && Array.isArray(next.container.contents)) {
     next.container = {

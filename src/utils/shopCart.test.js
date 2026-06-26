@@ -29,6 +29,17 @@ describe('addToCart', () => {
   it('coerces a missing price to 0 and carries stock', () => {
     expect(addToCart([], ware({ price: undefined, stock: 3 }))[0]).toMatchObject({ price: 0, stock: 3 });
   });
+
+  it('keys the line by wareKey, so two variants of one item are distinct lines', () => {
+    // Both variants share the catalog id 'tonic' but differ by wareKey.
+    const minor = { id: 'tonic', wareKey: 'tonic@1', name: 'Minor Tonic', price: 4 };
+    const lesser = { id: 'tonic', wareKey: 'tonic@3', name: 'Lesser Tonic', price: 12 };
+    let cart = addToCart([], minor);
+    cart = addToCart(cart, lesser);
+    cart = addToCart(cart, minor); // bumps the minor line, not the lesser one
+    expect(cart.map((l) => l.id)).toEqual(['tonic@1', 'tonic@3']);
+    expect(cart.map((l) => l.qty)).toEqual([2, 1]);
+  });
 });
 
 describe('setQty', () => {
