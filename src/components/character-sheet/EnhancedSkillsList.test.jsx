@@ -2,6 +2,8 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import EnhancedSkillsList from './EnhancedSkillsList';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 
 vi.mock('../shared/CollapsibleCard', () => ({ default: ({ header, children, className }) => (
   <div data-testid="skill-card" className={className}>
@@ -11,6 +13,8 @@ vi.mock('../shared/CollapsibleCard', () => ({ default: ({ header, children, clas
 ) }));
 
 vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
+vi.mock('../../hooks/useEffects', () => ({ useEffects: vi.fn(() => ({ effects: [] })) }));
+vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn(() => ({ effects: [] })) }));
 
 const fullCharModel = {
   skillModifiers: {
@@ -49,6 +53,8 @@ vi.mock('../../utils/CharacterUtils', () => ({
 describe('EnhancedSkillsList', () => {
   beforeEach(() => {
     useCharacter.mockReturnValue(fullCharModel);
+    useEffects.mockReturnValue({ effects: [] });
+    useContent.mockReturnValue({ effects: [] });
   });
 
   it('renders without crashing', () => {
@@ -117,6 +123,44 @@ describe('EnhancedSkillsList', () => {
     // Deception (+2) buffed to +3 (net bonus) with the Upstage source in the tooltip.
     expect(screen.getByText('Upstage')).toBeInTheDocument();
     expect(container.querySelector('.pd-bonus')).not.toBeNull();
+  });
+
+  describe('conditional skill/perception modifier hints (#510)', () => {
+    const hintTexts = (container) =>
+      [...container.querySelectorAll('.skill-conditional-hint')].map((h) => h.textContent);
+
+    it('renders a hint only on the skill(s) the vs-modifier targets', () => {
+      // Gecko Potion: +1 vs Climb (Athletics) and +1 vs Palm an Object (Thievery).
+      const gecko = { id: 'gecko', name: 'Gecko Potion', modifiers: [
+        { stat: 'athletics', kind: 'item', amount: 1, vs: 'Climb' },
+        { stat: 'thievery',  kind: 'item', amount: 1, vs: 'Palm an Object' },
+      ] };
+      useEffects.mockReturnValue({ effects: [{ effectId: 'gecko' }] });
+      useContent.mockReturnValue({ effects: [gecko] });
+      const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+      const hints = hintTexts(container);
+      // Exactly the two targeted skills get a hint — not every card.
+      expect(hints).toHaveLength(2);
+      expect(hints.some((t) => /\+1 vs Climb.*Gecko Potion/.test(t))).toBe(true);
+      expect(hints.some((t) => /\+1 vs Palm an Object.*Gecko Potion/.test(t))).toBe(true);
+    });
+
+    it('renders a conditional perception hint', () => {
+      const eagle = { id: 'eagle', name: 'Eagle-eye Elixir', modifiers: [
+        { stat: 'perception', kind: 'item', amount: 2, vs: 'find secret doors and traps' },
+      ] };
+      useEffects.mockReturnValue({ effects: [{ effectId: 'eagle' }] });
+      useContent.mockReturnValue({ effects: [eagle] });
+      const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+      const hints = hintTexts(container);
+      expect(hints).toHaveLength(1);
+      expect(hints[0]).toMatch(/\+2 vs find secret doors and traps.*Eagle-eye Elixir/);
+    });
+
+    it('renders no hint when the actor has no conditional modifiers', () => {
+      const { container } = render(<EnhancedSkillsList character={{ id: '1' }} />);
+      expect(container.querySelectorAll('.skill-conditional-hint')).toHaveLength(0);
+    });
   });
 });
 

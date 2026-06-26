@@ -10828,7 +10828,7 @@
     {
       "id": "drakeheart-mutagen",
       "name": "Drakeheart Mutagen (Moderate)",
-      "description": "+5 item bonus to AC and +2 item bonus to Perception, with a −1 item penalty to Will and Reflex saves and a Dexterity cap of +2 (all netted into the sheet; the cap composes with your armor's, lowest wins). Still not modeled: the −1 penalty to Recall Knowledge checks (see issue #510). You can burn the remaining duration to Stride twice (1 action).",
+      "description": "+5 item bonus to AC and +2 item bonus to Perception, with a −1 item penalty to Will and Reflex saves and a Dexterity cap of +2 (all netted into the sheet; the cap composes with your armor's, lowest wins). The −1 penalty to Recall Knowledge checks is shown as a reminder on each Recall-Knowledge skill. You can burn the remaining duration to Stride twice (1 action).",
       "modifiers": [
         {
           "stat": "ac",
@@ -10853,18 +10853,66 @@
         {
           "stat": "dexCap",
           "amount": 2
+        },
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
+        },
+        {
+          "stat": "medicine",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
+        },
+        {
+          "stat": "nature",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
+        },
+        {
+          "stat": "religion",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": -1,
+          "vs": "Recall Knowledge"
         }
       ]
     },
     {
       "id": "eagle-eye-elixir",
       "name": "Eagle-eye Elixir",
-      "description": "+1 item bonus to Perception (Lesser; Moderate elixir is +2). The greater +2/+3 bonus to find secret doors and traps is conditional and not netted here. Lasts 1 hour.",
+      "description": "+1 item bonus to Perception (Lesser; Moderate elixir is +2). The greater +2/+3 bonus to find secret doors and traps shows as a conditional reminder — an extra +1 on top of the netted Perception bonus. Lasts 1 hour.",
       "modifiers": [
         {
           "stat": "perception",
           "kind": "item",
           "amount": 1
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 1,
+          "vs": "find secret doors and traps"
         }
       ]
     },
@@ -10916,8 +10964,21 @@
     {
       "id": "gecko-potion",
       "name": "Gecko Potion",
-      "description": "+1 item bonus to Climb and to Palm an Object, and you can cling to surfaces. Skill bonuses are not netted automatically — applied as a tracked reminder. Lasts 5 minutes.",
-      "modifiers": []
+      "description": "+1 item bonus to Climb and to Palm an Object (shown as conditional reminders on the Athletics and Thievery cards), and you can cling to surfaces. Lasts 5 minutes.",
+      "modifiers": [
+        {
+          "stat": "athletics",
+          "kind": "item",
+          "amount": 1,
+          "vs": "Climb"
+        },
+        {
+          "stat": "thievery",
+          "kind": "item",
+          "amount": 1,
+          "vs": "Palm an Object"
+        }
+      ]
     },
     {
       "id": "harrow-key-ward",

@@ -4,9 +4,11 @@ import CollapsibleCard from '../shared/CollapsibleCard';
 import PenaltyDisplay from '../shared/PenaltyDisplay';
 import ProficiencyPips from '../shared/ProficiencyPips';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 import { computeConditionEffects } from '../../utils/ConditionUtils';
-import { combineModifiers } from '../../utils/EffectUtils';
-import { getLoreSkillModifier } from '../../utils/CharacterUtils';
+import { combineModifiers, conditionalModifiersFor } from '../../utils/EffectUtils';
+import { getLoreSkillModifier, formatModifier } from '../../utils/CharacterUtils';
 
 const EMPTY_MOD = { total: 0, sources: [] };
 
@@ -16,6 +18,15 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
 
   // Data layer — all character reads go through this hook
   const charModel = useCharacter(character);
+
+  // Active effects + catalog (#510): conditional ('vs X') effect modifiers can't
+  // net into the always-on skill/perception number (the app can't know a roll's
+  // sub-context), so they surface as a per-skill reminder hint — the same
+  // pattern StatsBlock uses for conditional save modifiers (#338). Read the same
+  // sources StatsBlock does.
+  const { effects: activeEffects } = useEffects(character?.id || '');
+  const { effects: effectCatalog } = useContent();
+
   const {
     skillModifiers,
     skillProficiencies,
@@ -255,6 +266,27 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
     return a.name.localeCompare(b.name);
   });
 
+  // Conditional ('vs X') effect modifiers for a skill/perception, shown as a
+  // small reminder beneath the card header (#510). The `vs` text names the
+  // sub-context the modifier applies to — e.g. "+1 vs Climb (Gecko Potion)",
+  // "−1 vs Recall Knowledge (Drakeheart Mutagen)" — so it reads faithfully on
+  // the exact roll it affects rather than the whole skill. Perception is one of
+  // the skill cards, so this covers it too. Returns null when none apply.
+  const renderConditionalHint = (skillId) => {
+    const mods = conditionalModifiersFor(activeEffects, skillId, effectCatalog);
+    if (!mods.length) return null;
+    return (
+      <div className="skill-conditional-hint" role="note">
+        {mods.map((m, i) => (
+          <span key={i} className="skill-conditional-item">
+            {formatModifier(m.amount)} vs {m.vs}{' '}
+            <span className="skill-conditional-src">({m.label})</span>
+          </span>
+        ))}
+      </div>
+    );
+  };
+
   
   return (
     <div className="enhanced-skills-list">
@@ -315,6 +347,7 @@ const EnhancedSkillsList = ({ character, characterColor, activeConditions = [], 
                   )}
                 </div>
               </div>
+              {renderConditionalHint(skill.id)}
             </div>
           );
           
