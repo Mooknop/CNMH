@@ -1,6 +1,12 @@
 import React from 'react';
 import TraitTag from '../shared/TraitTag';
 import { recallKnowledgeDC, defaultRecord } from '../../utils/recallKnowledge';
+import {
+  revealFlags,
+  traitToAccent,
+  dexNumber,
+  formatDexNo,
+} from '../../utils/bestiaryPresentation';
 import { useContent } from '../../contexts/ContentContext';
 import '../encounter/BestiaryModal.css';
 
@@ -46,7 +52,7 @@ export const SignedMod = ({ value, revealed }) => {
 // everything; the modal leaves it false so combat behavior is unchanged. `badge`
 // is an optional node slotted after the RK-DC box (the modal passes its Exploit
 // Vulnerability badge there to preserve layout; the browser passes nothing).
-const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, badge = null }) => {
+const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, badge = null, variant = 'full' }) => {
   const { bestiary, defenses, name } = enemy;
   const { monsters } = useContent();
   const rec = record || defaultRecord();
@@ -75,24 +81,139 @@ const BestiaryEntry = ({ enemy, members = [enemy], record, revealAll = false, ba
     : null;
 
   // Granular reveal flags — `revealAll` (GM in the browser) unlocks everything.
-  const identityRevealed     = revealAll || !!(rec.identity);
-  const descriptionRevealed  = revealAll || !!(rec.description);
-  const hpRevealed           = revealAll || !!(rec.hp);
-  const acRevealed           = revealAll || !!(rec.ac);
-  const perceptionRevealed   = revealAll || !!(rec.perception);
-  const speedRevealed        = revealAll || !!(rec.speed);
-  const fortRevealed         = revealAll || !!(rec.saves?.fortitude);
-  const refRevealed          = revealAll || !!(rec.saves?.reflex);
-  const willRevealed         = revealAll || !!(rec.saves?.will);
-  const immunitiesRevealed   = revealAll || !!(rec.iwr?.immunities);
-  const resistancesRevealed  = revealAll || !!(rec.iwr?.resistances);
-
-  // Partial weakness reveal from Exploit Vulnerability (per-type).
-  const weaknessesFullyRevealed = revealAll || !!(rec.iwr?.weaknesses);
+  const {
+    identity:    identityRevealed,
+    description: descriptionRevealed,
+    hp:          hpRevealed,
+    ac:          acRevealed,
+    perception:  perceptionRevealed,
+    speed:       speedRevealed,
+    fortitude:   fortRevealed,
+    reflex:      refRevealed,
+    will:        willRevealed,
+    immunities:  immunitiesRevealed,
+    resistances: resistancesRevealed,
+    weaknesses:  weaknessesFullyRevealed,
+  } = revealFlags(rec, revealAll);
   const partialWeaknesses = !weaknessesFullyRevealed
     ? (defenses?.weaknesses || []).filter((w) => rec.weaknessesRevealed?.[w.type])
     : [];
   const anyWeaknessRevealed = weaknessesFullyRevealed || partialWeaknesses.length > 0;
+
+  const accent = traitToAccent(bestiary?.traits);
+  const dexNo = formatDexNo(dexNumber(monsters, enemy.creatureKey));
+  const signed = (v) => (v == null ? '—' : v >= 0 ? `+${v}` : `${v}`);
+  const shownWeaknesses = weaknessesFullyRevealed ? (defenses?.weaknesses || []) : partialWeaknesses;
+
+  // ── Compact in-combat card (the Specimen Dex "mini" device, #777) ──────────
+  // Art-forward horizontal card: name + Recall DC, trait/weakness chips, and a
+  // 5-cell AC/HP/Fort/Ref/Will strip. Perception/Speed/immunities/resistances
+  // are intentionally dropped here — the full /bestiary entry carries them.
+  if (variant === 'compact') {
+    return (
+      <div className="dex-mini" data-testid="bm-detail" style={{ '--acc': accent }}>
+        <span className="brk tl" aria-hidden="true" />
+        <span className="brk br" aria-hidden="true" />
+
+        <div className="dex-mini-art metal">
+          <div className="dex-mini-screen">
+            <span className="dex-mini-no">{dexNo}</span>
+            {bestiary?.img ? (
+              <img
+                className="dex-mini-img"
+                src={bestiary.img}
+                alt={identityRevealed ? name : 'Unidentified creature'}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            ) : (
+              <span className="dex-mini-noart" aria-hidden="true" />
+            )}
+          </div>
+        </div>
+
+        <div className="dex-mini-body">
+          <div className="dex-mini-name">
+            {identityRevealed ? name : <Redacted width="8ch" label={`${name} name redacted`} />}
+          </div>
+          <div className="dex-mini-sub">
+            {bestiary?.level != null && (
+              identityRevealed ? `Creature ${bestiary.level}` : <Redacted width="6ch" />
+            )}
+            {rkDC != null && identityRevealed && (
+              <span data-testid="bm-rk-dc" className="dex-mini-dc"> · Recall DC {rkDC}</span>
+            )}
+          </div>
+
+          {badge}
+
+          {(identityRevealed || anyWeaknessRevealed) && (
+            <div className="dex-mini-traits">
+              {identityRevealed && (bestiary?.traits || []).map((t) => <TraitTag key={t} trait={t} />)}
+              {anyWeaknessRevealed && shownWeaknesses.map((w) => (
+                <span key={w.type} className="dex-mini-weak">weak {w.type} {w.value}</span>
+              ))}
+            </div>
+          )}
+
+          <div className="dex-mini-stats">
+            <div className="st">
+              <div className="k">AC</div>
+              <div className="v">{acRevealed ? (defenses?.ac ?? '—') : <Redacted width="3ch" />}</div>
+            </div>
+            <div className="st">
+              <div className="k">HP</div>
+              <div className="v">
+                {members.length > 1
+                  ? '—'
+                  : hpRevealed
+                    ? (bestiary?.hp ? `${bestiary.hp.current} / ${bestiary.hp.max}` : '—')
+                    : <Redacted width="3ch" />}
+              </div>
+            </div>
+            <div className="st">
+              <div className="k">Fort</div>
+              <div className="v">{fortRevealed ? signed(defenses?.saves?.fortitude) : <Redacted width="3ch" />}</div>
+            </div>
+            <div className="st">
+              <div className="k">Ref</div>
+              <div className="v">{refRevealed ? signed(defenses?.saves?.reflex) : <Redacted width="3ch" />}</div>
+            </div>
+            <div className="st">
+              <div className="k">Will</div>
+              <div className="v">{willRevealed ? signed(defenses?.saves?.will) : <Redacted width="3ch" />}</div>
+            </div>
+          </div>
+
+          {/* Multiple same-type tokens: HP is per-token, so list each one. */}
+          {members.length > 1 && (
+            <div className="bm-hp-list" data-testid="bm-hp-list">
+              <span className="bm-stat-label">HP</span>
+              {hpRevealed ? (
+                <ul className="bm-hp-tokens">
+                  {members.map((m) => (
+                    <li key={m.entryId} className="bm-hp-token">
+                      <span className="bm-hp-token-name">{m.name}</span>
+                      <span className="bm-stat-value">
+                        {m.bestiary?.hp != null
+                          ? `${m.bestiary.hp.current} / ${m.bestiary.hp.max}`
+                          : '—'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <Redacted width="6ch" />
+              )}
+            </div>
+          )}
+
+          {descriptionRevealed && effectiveDescription && (
+            <p className="dex-mini-lore">{effectiveDescription}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bm-detail" data-testid="bm-detail">
