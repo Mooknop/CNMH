@@ -1,9 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useShops } from '../../hooks/useShops';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
 import { isSetUp } from '../../utils/shopUtils';
-import PageEditorShell from '../../components/gm/PageEditorShell';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -14,8 +13,10 @@ import './gm.css';
 // (isSetUp). No saveDocument / no raw-JSON box (#248).
 //
 // S3 (#825) added the Workspace shell (set-up, meta, Save & publish). S4 (#826)
-// replaces the inline picker + ware list with the two-pane catalog→shelf surface
-// below. The Command finder that replaces this PageEditorShell list is S5 (#827).
+// added the two-pane catalog→shelf surface. S5 (#827) replaces the old
+// PageEditorShell location list with the Command finder (ShopFinder): an empty
+// canvas with a hero search + grouped results + "your shops" quick-chips. The
+// page is now finder ⇄ workspace, keyed on the selected location.
 
 // A ware row is local form state until Save: { ref, level (string), runeRef
 // (string), price (string), stock (string) }. `level` pins a variant of a
@@ -542,6 +543,127 @@ const Workspace = ({ location, shops, catalog, chips, catalogMap, runeMap, setSh
   );
 };
 
+// Geometric magnifier glyph (circle + handle) — no icon font in the app, so a
+// minimal inline SVG, matching the prototype.
+const Mag = ({ size = 16, className = '' }) => (
+  <svg
+    className={className}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    aria-hidden="true"
+  >
+    <circle cx="10.5" cy="10.5" r="6.5" />
+    <line x1="15.5" y1="15.5" x2="21" y2="21" />
+  </svg>
+);
+
+// Command finder (#822 S5): pick a location to author from an empty canvas. A
+// hero search whose results popover (shown only while the query is non-empty)
+// groups set-up Shops first, then Locations (capped at 8); plus "your shops"
+// quick-chips for one-click reopen. ⌘K / Ctrl+K focuses the search.
+const ShopFinder = ({ locations, shops, onSelect }) => {
+  const [query, setQuery] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const byTitle = (a, b) => String(a.title || '').localeCompare(String(b.title || ''));
+  const match = (l) =>
+    !q ||
+    [l.title, l.kind, l.summary].filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
+  const filtered = locations.filter(match);
+  const shopHits = filtered.filter((l) => isSetUp(l.id, shops)).sort(byTitle);
+  const rest = filtered.filter((l) => !isSetUp(l.id, shops)).sort(byTitle);
+  const allShops = locations.filter((l) => isSetUp(l.id, shops)).sort(byTitle);
+
+  const Option = (l) => (
+    <button key={l.id} type="button" role="option" className="gm-shop-opt" onClick={() => onSelect(l.id)}>
+      <span className="gm-shop-opt-name">
+        {l.title}
+        {isSetUp(l.id, shops) && <span className="gm-shop-badge gm-shop-opt-badge">Shop</span>}
+      </span>
+      {(l.kind || l.summary) && (
+        <span className="gm-shop-opt-sub">{[l.kind, l.summary].filter(Boolean).join(' · ')}</span>
+      )}
+    </button>
+  );
+
+  return (
+    <div className="gm-shop-finder">
+      <div className="gm-shop-finder-inner">
+        <div className="gm-shop-kicker">
+          GM Tools · Shops
+          <span className="gm-shop-live">{allShops.length} live</span>
+        </div>
+        <h2 className="gm-shop-finder-head">Which location are you stocking?</h2>
+        <p className="gm-shop-finder-sub">
+          Find any location by name. Pick one to set it up as a shop and author what it sells.
+        </p>
+
+        <div className="gm-shop-combo">
+          <Mag size={18} className="gm-shop-combo-mag" />
+          <input
+            ref={inputRef}
+            className="gm-shop-combo-input"
+            aria-label="location search"
+            placeholder={`Search ${locations.length} locations…`}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {q.length > 0 && (
+            <div className="gm-shop-pop" role="listbox" aria-label="search results">
+              {shopHits.length === 0 && rest.length === 0 && (
+                <div className="gm-shop-pop-empty">No location matches “{query}”.</div>
+              )}
+              {shopHits.length > 0 && <div className="gm-shop-pop-group">Shops</div>}
+              {shopHits.map(Option)}
+              {rest.length > 0 && <div className="gm-shop-pop-group">Locations</div>}
+              {rest.slice(0, 8).map(Option)}
+            </div>
+          )}
+        </div>
+
+        <div className="gm-shop-quick">
+          <div className="gm-shop-quick-h">Your shops</div>
+          <div className="gm-shop-chiprow">
+            {allShops.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                className="gm-shop-quickchip"
+                onClick={() => onSelect(l.id)}
+              >
+                <span className="gm-shop-quickchip-dot" aria-hidden="true" />
+                {l.title}
+              </button>
+            ))}
+            {allShops.length === 0 && (
+              <span className="gm-shop-finder-sub gm-shop-quick-empty">
+                No shops yet — search above to set the first one up.
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GmShops = () => {
   const { allLoreEntries, items, runes } = useContent();
   const { shops, setShop, removeShop } = useShops();
@@ -549,11 +671,9 @@ const GmShops = () => {
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
   const catalog = useMemo(() => buildCatalog(items, runes), [items, runes]);
   const chips = useMemo(() => traitsByFrequency(catalog), [catalog]);
+  const [selectedId, setSelectedId] = useState(null);
 
-  // Master list: every Location lore entry, title-sorted. Set-up shops get a
-  // "shop" badge via the name renderer so the GM can see at a glance which
-  // locations are shops (entry presence, not ware count — an empty-but-set-up
-  // shop still counts).
+  // Every Location lore entry, title-sorted — the finder's search/chip universe.
   const locations = useMemo(
     () =>
       (allLoreEntries || [])
@@ -563,25 +683,22 @@ const GmShops = () => {
     [allLoreEntries]
   );
 
+  const selected = useMemo(
+    () => locations.find((e) => e.id === selectedId) || null,
+    [locations, selectedId]
+  );
+
   return (
     <div className="gm-shops">
-      <PageEditorShell
-        entries={locations}
-        nameOf={(e) => (
-          <>
-            {e.title}
-            {isSetUp(e.id, shops) && <span className="gm-shop-badge"> · shop</span>}
-          </>
-        )}
-        noun="location"
-        allowNew={false}
-        emptyHint="Select a Location to set it up as a shop and author what it sells."
-        filterEntry={(e, q) =>
-          [e.title, e.summary].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
-        }
-        renderDetail={(entry) => (
+      {selected ? (
+        <>
+          <nav className="gm-shop-crumbs" aria-label="breadcrumb">
+            GM Tools <span aria-hidden="true">/</span> Shops <span aria-hidden="true">/</span>{' '}
+            <strong>{selected.title}</strong>
+          </nav>
           <Workspace
-            location={entry}
+            key={selected.id}
+            location={selected}
             shops={shops}
             catalog={catalog}
             chips={chips}
@@ -589,9 +706,12 @@ const GmShops = () => {
             runeMap={runeMap}
             setShop={setShop}
             removeShop={removeShop}
+            onBack={() => setSelectedId(null)}
           />
-        )}
-      />
+        </>
+      ) : (
+        <ShopFinder locations={locations} shops={shops} onSelect={setSelectedId} />
+      )}
     </div>
   );
 };
