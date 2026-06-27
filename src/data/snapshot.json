@@ -8198,57 +8198,6 @@
       "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
     },
     {
-      "id": "holy-water",
-      "name": "Holy Water",
-      "price": 3,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Divine",
-        "Holy",
-        "Splash"
-      ],
-      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
-      "strikes": {
-        "name": "Holy Water",
-        "proficiency": "simple",
-        "type": "ranged",
-        "action": 1,
-        "damage": "1d6",
-        "range": "20ft",
-        "traits": [
-          "Attack",
-          "Thrown",
-          "Splash",
-          "Holy"
-        ]
-      }
-    },
-    {
-      "id": "horn-of-rust",
-      "name": "Horn of Rust",
-      "weight": 2,
-      "traits": [
-        "Artifact",
-        "Unholy",
-        "Invested",
-        "Magical"
-      ],
-      "description": "This rusted, coiled iron horn is sizable, appearing similar in shape to a ram's horn but measuring nearly 2 feet in diameter. Flakes of rust constantly fall from it, and the item leaves hands with a rusty red stain that lingers. While the Horn of Rust's power has diminished over the ages since Xar-Azmak's death, those who carry it are still subject to its palpable chaotic influences. If you are not sanctified Unholy, you are Enfeebled 1 while carrying or using the Horn of Rust; if you are sanctified Holy, you are instead Enfeebled 2 and Stupefied 1. It can be prepared as a staff, granting four spells.",
-      "actions": [
-        {
-          "name": "Blow the Horn",
-          "actionCount": 2,
-          "description": "Once per hour, you can blow on the horn to unleash a swirling aura of jagged, rusty metal shards that orbit you in a 5-foot emanation for 1 minute. The shards grant you a +1 item bonus to AC. Creatures and objects that begin their turn in this area take 6d6 slashing damage from the shards (DC 19 basic Reflex save). A creature damaged by this aura is exposed to a poten form of Tetanus that is a Level 5 disease and has a DC 19 Fortitude Save. Worshippers of Xar-Azmak are immune to this effect."
-        },
-        {
-          "name": "Consume Corruption",
-          "actionCount": 2,
-          "description": "Once per day, you can place the horn's bell against a diseased creature and then inhale into the mouthpiece rather than blow into it. The horn attempts to draw out the disease, casting Cleanse Affliction with a counteract modifier of +11. If the Horn of Rust succeeds at countering the disease, it gains a number of staff charges equal to half the disease's level rounded down. If it critically fails, not only is the disease not countered, but you are exposed to the disease and must attempt a saving throw against it to resist contracting the affliction yourself."
-        }
-      ]
-    },
-    {
       "id": "healing-potion",
       "name": "Healing Potion",
       "weight": 0.1,
@@ -8321,6 +8270,57 @@
         "kind": "healing",
         "note": "Restores HP — enter your rolled total"
       }
+    },
+    {
+      "id": "holy-water",
+      "name": "Holy Water",
+      "price": 3,
+      "weight": 0.1,
+      "traits": [
+        "Consumable",
+        "Divine",
+        "Holy",
+        "Splash"
+      ],
+      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
+      "strikes": {
+        "name": "Holy Water",
+        "proficiency": "simple",
+        "type": "ranged",
+        "action": 1,
+        "damage": "1d6",
+        "range": "20ft",
+        "traits": [
+          "Attack",
+          "Thrown",
+          "Splash",
+          "Holy"
+        ]
+      }
+    },
+    {
+      "id": "horn-of-rust",
+      "name": "Horn of Rust",
+      "weight": 2,
+      "traits": [
+        "Artifact",
+        "Unholy",
+        "Invested",
+        "Magical"
+      ],
+      "description": "This rusted, coiled iron horn is sizable, appearing similar in shape to a ram's horn but measuring nearly 2 feet in diameter. Flakes of rust constantly fall from it, and the item leaves hands with a rusty red stain that lingers. While the Horn of Rust's power has diminished over the ages since Xar-Azmak's death, those who carry it are still subject to its palpable chaotic influences. If you are not sanctified Unholy, you are Enfeebled 1 while carrying or using the Horn of Rust; if you are sanctified Holy, you are instead Enfeebled 2 and Stupefied 1. It can be prepared as a staff, granting four spells.",
+      "actions": [
+        {
+          "name": "Blow the Horn",
+          "actionCount": 2,
+          "description": "Once per hour, you can blow on the horn to unleash a swirling aura of jagged, rusty metal shards that orbit you in a 5-foot emanation for 1 minute. The shards grant you a +1 item bonus to AC. Creatures and objects that begin their turn in this area take 6d6 slashing damage from the shards (DC 19 basic Reflex save). A creature damaged by this aura is exposed to a poten form of Tetanus that is a Level 5 disease and has a DC 19 Fortitude Save. Worshippers of Xar-Azmak are immune to this effect."
+        },
+        {
+          "name": "Consume Corruption",
+          "actionCount": 2,
+          "description": "Once per day, you can place the horn's bell against a diseased creature and then inhale into the mouthpiece rather than blow into it. The horn attempts to draw out the disease, casting Cleanse Affliction with a counteract modifier of +11. If the Horn of Rust succeeds at countering the disease, it gains a number of staff charges equal to half the disease's level rounded down. If it critically fails, not only is the disease not countered, but you are exposed to the disease and must attempt a saving throw against it to resist contracting the affliction yourself."
+        }
+      ]
     },
     {
       "id": "longbow",
