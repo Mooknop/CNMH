@@ -5,6 +5,9 @@ import {
   isShopOpen,
   getShopsForLocation,
   resolveShopWares,
+  isSpellItemWare,
+  spellItemOfferings,
+  eligibleSpellItems,
 } from './shopUtils';
 
 // Lore: Sandpoint (root) contains two shops + one plain location.
@@ -237,5 +240,117 @@ describe('resolveShopWares', () => {
     const s = { s: { wares: [{ ref: 'runestone', runeRef: 'flaming' }, { ref: 'runestone', runeRef: 'frost' }] } };
     const wares = resolveShopWares('s', s, catalogMap, map);
     expect(wares.map((w) => w.wareKey)).toEqual(['runestone@flaming', 'runestone@frost']);
+  });
+});
+
+// ── Generative spell-item offerings (#812 S6) ───────────────────────────────
+const spellCatalog = [
+  { id: 'sleep', name: 'Sleep', level: 1, traditions: ['arcane', 'occult'] },
+  { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
+  { id: 'blazing-bolt', name: 'Blazing Bolt', level: 2, traditions: ['arcane', 'primal'] },
+  { id: 'web', name: 'Web', level: 2, traditions: ['arcane'], traits: ['Uncommon'] },
+  { id: 'wish', name: 'Wish', level: 10, traditions: ['arcane'] },
+  { id: 'rare-thing', name: 'Rare Thing', level: 3, traditions: ['occult'], traits: ['Rare'] },
+  { id: 'lay-on-hands', name: 'Lay on Hands', level: 1, traits: ['Focus'] }, // no traditions → focus
+  { id: 'light', name: 'Light', level: 1, traditions: ['arcane', 'divine', 'occult', 'primal'], traits: ['Cantrip'] },
+];
+
+const keysOf = (list) => list.map((e) => e.wareKey).sort();
+
+describe('isSpellItemWare', () => {
+  it('detects scroll/wand offerings, not flat or runestone wares', () => {
+    expect(isSpellItemWare({ spellItem: 'scroll', maxRank: 3 })).toBe(true);
+    expect(isSpellItemWare({ spellItem: 'wand', maxRank: 5 })).toBe(true);
+    expect(isSpellItemWare({ ref: 'healing-potion' })).toBe(false);
+    expect(isSpellItemWare({ ref: 'runestone', runeRef: 'flaming' })).toBe(false);
+    expect(isSpellItemWare(null)).toBe(false);
+  });
+});
+
+describe('resolveShopWares ignores spell-item offerings', () => {
+  it('keeps flat wares and drops the generative offering from the main list', () => {
+    const s = { s: { wares: [{ ref: 'healing-potion' }, { spellItem: 'scroll', maxRank: 3 }] } };
+    const wares = resolveShopWares('s', s, catalogMap);
+    expect(wares).toHaveLength(1);
+    expect(wares[0].id).toBe('healing-potion');
+  });
+});
+
+describe('spellItemOfferings', () => {
+  it('returns only spell-item wares, each with a stable offeringKey', () => {
+    const s = { s: { wares: [
+      { ref: 'healing-potion' },
+      { spellItem: 'scroll', maxRank: 3 },
+      { spellItem: 'wand', maxRank: 5, traditions: ['arcane'] },
+    ] } };
+    const offerings = spellItemOfferings('s', s);
+    expect(offerings).toHaveLength(2);
+    expect(offerings.map((o) => o.spellItem)).toEqual(['scroll', 'wand']);
+    expect(new Set(offerings.map((o) => o.offeringKey)).size).toBe(2);
+  });
+
+  it('is empty for a missing shop or a shop with no offerings', () => {
+    expect(spellItemOfferings('nope', {})).toEqual([]);
+    expect(spellItemOfferings('s', { s: { wares: [{ ref: 'healing-potion' }] } })).toEqual([]);
+  });
+});
+
+describe('eligibleSpellItems', () => {
+  it('applies the rank cap and excludes uncommon/rare/focus/cantrips by default (common only)', () => {
+    const out = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3 }, spellCatalog);
+    // sleep(1), heal(1), blazing-bolt(2) — all common; web=uncommon, rare-thing=rare,
+    // wish=rank10>3, lay-on-hands=focus, light=cantrip are all excluded.
+    expect(keysOf(out)).toEqual(['scroll:blazing-bolt', 'scroll:heal', 'scroll:sleep']);
+  });
+
+  it('filters by tradition (intersection); multi-tradition spells match on any', () => {
+    const divine = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3, traditions: ['divine'] }, spellCatalog);
+    expect(keysOf(divine)).toEqual(['scroll:heal']);
+    const primal = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3, traditions: ['primal'] }, spellCatalog);
+    // heal (divine/primal) + blazing-bolt (arcane/primal) both share primal.
+    expect(keysOf(primal)).toEqual(['scroll:blazing-bolt', 'scroll:heal']);
+  });
+
+  it('opts into uncommon when rarities is set, stamping the rarity trait', () => {
+    const out = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3, rarities: ['common', 'uncommon'] }, spellCatalog);
+    expect(keysOf(out)).toContain('scroll:web');
+    const web = out.find((e) => e.wareKey === 'scroll:web');
+    expect(web.traits[0]).toBe('Uncommon'); // rarity stamped onto the item
+  });
+
+  it('caps a wand at rank 9 but a scroll at rank 10 (table maxima)', () => {
+    const scroll = eligibleSpellItems({ spellItem: 'scroll', maxRank: 10 }, spellCatalog);
+    expect(keysOf(scroll)).toContain('scroll:wish'); // rank-10 scroll is valid
+    const wand = eligibleSpellItems({ spellItem: 'wand', maxRank: 10 }, spellCatalog);
+    expect(keysOf(wand)).not.toContain('wand:wish'); // rank-10 wand is impossible
+  });
+
+  it('produces a minimal, re-resolvable entry with derived name/level/price', () => {
+    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxRank: 1 }, spellCatalog);
+    expect(sleep).toMatchObject({
+      id: 'scroll-of-sleep',
+      name: 'Scroll of Sleep',
+      level: 1,
+      price: 4,
+      weight: 0.1,
+      wareKey: 'scroll:sleep',
+      scroll: { spellRef: 'sleep' },
+    });
+    expect(sleep.traits).toEqual(['Consumable', 'Magical', 'Scroll']);
+  });
+
+  it('derives wand pricing/level from the cast rank', () => {
+    const [heal] = eligibleSpellItems({ spellItem: 'wand', maxRank: 1, traditions: ['divine'] }, spellCatalog);
+    expect(heal).toMatchObject({ id: 'wand-of-heal', name: 'Wand of Heal', level: 3, price: 60, wand: { spellRef: 'heal' } });
+  });
+
+  it('applies priceMod as a multiplier over the standard price', () => {
+    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxRank: 1, priceMod: 2 }, spellCatalog);
+    expect(sleep.price).toBe(8); // 4 × 2
+  });
+
+  it('returns [] for a non-offering ware or a zero/negative cap', () => {
+    expect(eligibleSpellItems({ ref: 'healing-potion' }, spellCatalog)).toEqual([]);
+    expect(eligibleSpellItems({ spellItem: 'scroll', maxRank: 0 }, spellCatalog)).toEqual([]);
   });
 });
