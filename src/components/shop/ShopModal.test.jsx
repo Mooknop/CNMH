@@ -229,6 +229,30 @@ describe('ShopModal', () => {
     expect(screen.queryByTestId('etch-weapon-w2')).not.toBeInTheDocument();
   });
 
+  it('read-only: browses wares but hides Add/Etch and the cart (#shops-from-lore)', () => {
+    const runes = [{ id: 'flaming', name: 'Flaming', price: 500 }];
+    render(
+      <ShopModal
+        isOpen
+        onClose={() => {}}
+        readOnly
+        shops={[{ id: 'etcher', title: 'The Etcher' }]}
+        waresStore={{ etcher: { wares: [{ ref: 'antidote', price: 8 }, { ref: 'runestone', runeRef: 'flaming' }] } }}
+        items={[{ id: 'antidote', name: 'Antidote', price: 3 }]}
+        runes={runes}
+        character={null}
+      />
+    );
+    fireEvent.click(screen.getByText('The Etcher'));
+    // Wares still browse-able...
+    expect(screen.getByTestId('ware-antidote')).toBeInTheDocument();
+    expect(screen.getByTestId('shop-readonly')).toBeInTheDocument();
+    // ...but no buy affordances or cart.
+    expect(screen.queryByLabelText('add antidote')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('etch runestone@flaming')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('shop-cart')).not.toBeInTheDocument();
+  });
+
   it('shows an empty-wares state for a shop with nothing for sale', () => {
     renderModal();
     fireEvent.click(screen.getByText('The Curious Goblin'));

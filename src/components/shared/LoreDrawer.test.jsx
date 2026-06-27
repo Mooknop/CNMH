@@ -30,6 +30,8 @@ const LORE = [
     summary: 'City at the center of the world.',
     related: [],
   },
+  { id: 'sandpoint', title: 'Sandpoint', category: 'Locations', content: 'A town.' },
+  { id: 'general-store', title: 'General Store', category: 'Locations', content: 'Wares.', parent: 'sandpoint' },
 ];
 
 vi.mock('../../contexts/LoreContext', () => ({
@@ -41,13 +43,28 @@ vi.mock('../../contexts/ContentContext', () => ({
 }));
 import { useContent } from '../../contexts/ContentContext';
 
+// Stub ShopModal — its own hooks (clock/session) are exercised elsewhere; here
+// we only assert the drawer opens it with the right shops + read-only flag.
+vi.mock('../shop/ShopModal', () => ({
+  default: ({ isOpen, readOnly, shops }) =>
+    isOpen ? (
+      <div data-testid="lore-shop-modal" data-readonly={String(readOnly)}>
+        {(shops || []).length} shops
+      </div>
+    ) : null,
+}));
+
+let mockShops = {};
+vi.mock('../../hooks/useShops', () => ({ useShops: () => ({ shops: mockShops }) }));
+
 const closeLore = vi.fn();
 const navigateTo = vi.fn();
 const goBack = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  useContent.mockReturnValue({ loreEntries: LORE, allLoreEntries: LORE });
+  mockShops = {};
+  useContent.mockReturnValue({ loreEntries: LORE, allLoreEntries: LORE, items: [], runes: [] });
   useLore.mockReturnValue({
     isOpen: true,
     currentEntryId: 'aroden',
@@ -125,6 +142,33 @@ describe('LoreDrawer', () => {
     const backBtn = screen.getByLabelText('Go back');
     fireEvent.click(backBtn);
     expect(goBack).toHaveBeenCalledTimes(1);
+  });
+
+  describe('shops', () => {
+    const openSandpoint = () =>
+      useLore.mockReturnValue({ isOpen: true, currentEntryId: 'sandpoint', closeLore, navigateTo, goBack, canGoBack: false });
+
+    it('shows no Shops button when the location has no shop children', () => {
+      renderDrawer(); // aroden — no shop children
+      expect(screen.queryByTestId('lore-shops-button')).not.toBeInTheDocument();
+    });
+
+    it('surfaces a Shops button for a location with revealed shop children', () => {
+      mockShops = { 'general-store': { wares: [{ ref: 'x' }] } };
+      openSandpoint();
+      renderDrawer();
+      expect(screen.getByTestId('lore-shops-button')).toHaveTextContent('Shops');
+    });
+
+    it('opens the shop browser read-only when the party isn’t in town', () => {
+      mockShops = { 'general-store': { wares: [{ ref: 'x' }] } };
+      openSandpoint();
+      renderDrawer();
+      fireEvent.click(screen.getByTestId('lore-shops-button'));
+      const modal = screen.getByTestId('lore-shop-modal');
+      expect(modal).toHaveAttribute('data-readonly', 'true');
+      expect(modal).toHaveTextContent('1 shops');
+    });
   });
 
   describe('visibility-aware resolution', () => {

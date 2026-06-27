@@ -261,6 +261,43 @@
   color: var(--color-theme, var(--theme-accent));
 }
 
+.lore-drawer-shops {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.25rem 0 1rem;
+}
+.lore-drawer-shop-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface-inset, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--shell-text-primary);
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.lore-drawer-shop-btn:hover {
+  border-color: var(--color-theme, var(--theme-accent));
+  color: var(--color-theme, var(--theme-accent));
+}
+.lore-drawer-shop-count {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--shell-border);
+  color: var(--shell-text-secondary);
+}
+.lore-drawer-shop-note {
+  font-size: 0.74rem;
+  color: var(--shell-text-tertiary);
+}
+
 .lore-drawer-not-found {
   padding: 2rem 1.25rem;
   color: var(--shell-text-tertiary);

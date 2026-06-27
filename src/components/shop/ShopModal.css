@@ -86,6 +86,17 @@
   color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
 
+.shop-readonly {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
+}
+
 .shop-empty {
   font-family: var(--font-ui);
   font-size: var(--text-sm);

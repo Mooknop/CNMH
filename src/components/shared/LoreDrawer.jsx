@@ -1,20 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLore } from '../../contexts/LoreContext';
 import { useContent } from '../../contexts/ContentContext';
+import { CharacterContext } from '../../contexts/CharacterContext';
 import { useRecallKnowledge } from '../../hooks/useRecallKnowledge';
 import { useGmAuth } from '../../hooks/useGmAuth';
+import { useShops } from '../../hooks/useShops';
+import { useSyncedState } from '../../hooks/useSyncedState';
 import { buildBacklinkMap, getConnectionData, buildChildrenMap, getAncestors, getChildren } from '../../utils/loreUtils';
+import { getShopsForLocation } from '../../utils/shopUtils';
 import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
 import { rkKeyFor } from '../../utils/recallKnowledge';
 import LoreMarkdown from './LoreMarkdown';
+import ShopModal from '../shop/ShopModal';
 import './LoreDrawer.css';
 
 const LoreDrawer = () => {
   const { isOpen, currentEntryId, closeLore, navigateTo, goBack, canGoBack } = useLore();
-  const { loreEntries: visibleEntries, allLoreEntries, monsters } = useContent();
+  const { loreEntries: visibleEntries, allLoreEntries, monsters, items, runes } = useContent();
   const { recordFor } = useRecallKnowledge();
   const { isGm } = useGmAuth();
+  const { shops } = useShops();
+  const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
+  const { activeCharacter, activeCharacterColor } = useContext(CharacterContext) || {};
+  const [shopOpen, setShopOpen] = useState(false);
   const navigate = useNavigate();
   // On GM pages (Access-gated at the edge) the drawer resolves unrevealed
   // entries too — e.g. the marquee's location link. Player routes only ever
@@ -40,6 +49,17 @@ const LoreDrawer = () => {
   const childrenMap = useMemo(() => buildChildrenMap(loreEntries), [loreEntries]);
   const ancestors = useMemo(() => getAncestors(entry, loreEntries), [entry, loreEntries]);
   const children = useMemo(() => getChildren(entry, childrenMap), [entry, childrenMap]);
+
+  // Shops located in this place: the revealed shop-children of the entry. The
+  // button browses them in ShopModal; purchasing is gated on the party actually
+  // being in this town (campaign location) with an active character, else the
+  // modal opens read-only.
+  const locationShops = useMemo(
+    () => (entry ? getShopsForLocation(entry.id, loreEntries, shops) : []),
+    [entry, loreEntries, shops]
+  );
+  const inTown = !!entry && campaign?.locationLoreId === entry.id;
+  const canBuy = inTown && !!activeCharacter;
 
   // Creatures the party has fought at this location (#334) — derived from the
   // captured monster docs' `locations` map, gated to the party's learned state.
@@ -98,6 +118,26 @@ const LoreDrawer = () => {
               <h2 className="lore-drawer-title">{entry.title}</h2>
               <span className="lore-drawer-category">{entry.category}</span>
             </div>
+
+            {locationShops.length > 0 && (
+              <div className="lore-drawer-shops">
+                <button
+                  type="button"
+                  className="lore-drawer-shop-btn"
+                  data-testid="lore-shops-button"
+                  onClick={() => setShopOpen(true)}
+                >
+                  <span role="img" aria-label="Shop">🛒</span>
+                  Shops
+                  <span className="lore-drawer-shop-count">{locationShops.length}</span>
+                </button>
+                {!canBuy && (
+                  <span className="lore-drawer-shop-note">
+                    {inTown ? 'Browse only' : 'Browse (party not here)'}
+                  </span>
+                )}
+              </div>
+            )}
 
             {entry.image && (
               <img src={`/api/images/${entry.image}`} alt="" className="entity-image" style={entry.imagePosition ? { objectPosition: `${entry.imagePosition.x}% ${entry.imagePosition.y}%` } : undefined} />
@@ -199,6 +239,18 @@ const LoreDrawer = () => {
           </div>
         )}
       </div>
+
+      <ShopModal
+        isOpen={shopOpen}
+        onClose={() => setShopOpen(false)}
+        shops={locationShops}
+        waresStore={shops}
+        items={items}
+        runes={runes}
+        character={canBuy ? activeCharacter : null}
+        characterColor={activeCharacterColor}
+        readOnly={!canBuy}
+      />
     </>
   );
 };
