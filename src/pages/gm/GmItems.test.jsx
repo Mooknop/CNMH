@@ -319,6 +319,17 @@ describe('GmItems', () => {
     expect(data.scroll).toEqual({ spellRef: 'sleep' }); // ref only — no level-0 noise
   });
 
+  it('derives the master-list name for a spellRef-only scroll (no authored name) (#812 S5)', () => {
+    useContent.mockReturnValue({
+      items: [{ id: 'scroll-of-sleep', scroll: { spellRef: 'sleep' } }],
+      spells,
+      images: [],
+    });
+    render(<GmItems />);
+    // The catalog entry has no `name`; the list derives "Scroll of Sleep".
+    expect(screen.getByRole('button', { name: 'Scroll of Sleep' })).toBeInTheDocument();
+  });
+
   it('shows the derived item preview (level/price/bulk/traits) for a selected scroll', async () => {
     setContent();
     render(<GmItems />);

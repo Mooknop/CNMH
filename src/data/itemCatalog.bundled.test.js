@@ -29,7 +29,12 @@ describe('bundled item catalog (Slice 3)', () => {
   it('has a non-empty catalog with unique, named, slug ids', () => {
     expect(items.length).toBeGreaterThan(0);
     expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
-    expect(items.every((i) => typeof i.id === 'string' && i.id && typeof i.name === 'string' && i.name)).toBe(true);
+    // Every item has a slug id and an authored name — except scrolls/wands,
+    // whose name is derived from the embedded spell (#812 S5).
+    expect(items.every((i) =>
+      typeof i.id === 'string' && i.id &&
+      ((typeof i.name === 'string' && i.name) || i.scroll || i.wand)
+    )).toBe(true);
     // Catalog holds shared definitions only — never per-character data.
     expect(
       items.some((i) => i.quantity != null || i.invested != null || (i.container && i.container.contents))

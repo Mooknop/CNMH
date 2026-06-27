@@ -325,6 +325,19 @@ const derivedItemName = (e, spells) => {
   return preview ? preview.name : null;
 };
 
+// Display name for a RAW catalog item in the master list / search. Scroll/wand
+// entries no longer author a `name` (#812 S5 — it's derived from the spell), so
+// derive it from the raw `{ spellRef, rank? }` block; everything else uses its
+// authored name.
+const catalogDisplayName = (it, spells) => {
+  if (it && (it.scroll || it.wand)) {
+    const kind = it.scroll ? 'scroll' : 'wand';
+    const preview = spellPreview(kind, it[kind] || {}, spells);
+    if (preview) return preview.name;
+  }
+  return it ? it.name : undefined;
+};
+
 const SpellSubform = ({ kind, spell, spells, onChange }) => {
   const ref = (spell.spellRef || '').trim();
   const refMatch = ref
@@ -1099,7 +1112,7 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 };
 
 const GmItems = () => {
-  const { items } = useContent();
+  const { items, spells } = useContent();
   const catalog = useMemo(() => (Array.isArray(items) ? items : []), [items]);
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);
 
@@ -1107,11 +1120,11 @@ const GmItems = () => {
     <div className="gm-items">
       <PageEditorShell
         entries={catalog}
-        nameOf={(it) => it.name}
+        nameOf={(it) => catalogDisplayName(it, spells) || it.id}
         noun="item"
         addLabel="+ New item"
         filterEntry={(it, q) =>
-          [it.name, it.id, ...(it.traits || [])]
+          [catalogDisplayName(it, spells), it.id, ...(it.traits || [])]
             .filter(Boolean)
             .some((v) => String(v).toLowerCase().includes(q))
         }

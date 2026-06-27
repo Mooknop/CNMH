@@ -8682,105 +8682,42 @@
     },
     {
       "id": "scroll-of-cleanse-affliction",
-      "name": "Scroll of Cleanse Affliction",
-      "price": 12,
-      "weight": 0.1,
-      "description": "A single-use scroll",
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
       "scroll": {
         "spellRef": "cleanse-affliction"
       }
     },
     {
       "id": "scroll-of-dispel-magic",
-      "name": "Scroll of Dispel Magic",
-      "price": 12,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
-      "description": "Single-use scroll",
       "scroll": {
         "spellRef": "dispel-magic"
       }
     },
     {
       "id": "scroll-of-friendfetch",
-      "name": "Scroll of Friendfetch",
-      "price": 4,
-      "weight": 0.1,
-      "description": "A single-use scroll",
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
       "scroll": {
         "spellRef": "friendfetch"
       }
     },
     {
       "id": "scroll-of-mind-games",
-      "name": "Scroll of Mind Games",
-      "price": 12,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
-      "description": "Single-use scroll",
       "scroll": {
         "spellRef": "mind-games"
       }
     },
     {
       "id": "scroll-of-pocket-library",
-      "name": "Scroll of Pocket Library",
-      "price": 4,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
-      "description": "Single-use scroll",
       "scroll": {
         "spellRef": "pocket-library"
       }
     },
     {
       "id": "scroll-of-runic-body",
-      "name": "Scroll of Runic Body",
-      "price": 4,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
-      "description": "Single-use scroll",
       "scroll": {
         "spellRef": "runic-body"
       }
     },
     {
       "id": "scroll-of-sleep",
-      "name": "Scroll of Sleep",
-      "price": 4,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Scroll"
-      ],
-      "description": "Single-use scroll",
       "scroll": {
         "spellRef": "sleep"
       }
@@ -9109,84 +9046,36 @@
     },
     {
       "id": "wand-of-breathe-fire",
-      "name": "Wand of Breathe Fire",
-      "price": 60,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Breathe Fire",
       "wand": {
         "spellRef": "breathe-fire"
       }
     },
     {
       "id": "wand-of-cleanse-affliction",
-      "name": "Wand of Cleanse Affliction",
-      "price": 60,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Cleanse Affliction",
       "wand": {
         "spellRef": "cleanse-affliction"
       }
     },
     {
       "id": "wand-of-create-food",
-      "name": "Wand of Create Food",
-      "price": 160,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Create Food",
       "wand": {
         "spellRef": "create-food"
       }
     },
     {
       "id": "wand-of-dizzying-colors",
-      "name": "Wand of Dizzying Colors",
-      "price": 60,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Dizzying Colors",
       "wand": {
         "spellRef": "dizzying-colors"
       }
     },
     {
       "id": "wand-of-fear",
-      "name": "Wand of Fear",
-      "price": 60,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Fear.",
       "wand": {
         "spellRef": "fear"
       }
     },
     {
       "id": "wand-of-grease",
-      "name": "Wand of Grease",
-      "price": 60,
-      "weight": 0.1,
-      "traits": [
-        "Magical",
-        "Wand"
-      ],
-      "description": "A wand containing the spell Grease.",
       "wand": {
         "spellRef": "grease"
       }
