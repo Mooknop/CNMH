@@ -58,10 +58,20 @@ const outPath = path.join(__dirname, '..', 'src', 'data', 'snapshot.json');
     }
   }
 
-  // Build output with a stable key order for clean diffs.
+  // Build output with a stable key order, and within each collection sort docs
+  // by `id`, so a no-op DO pull yields a zero diff (#632). The DO returns docs in
+  // storage order, which otherwise reshuffles the seed on every pull and drowns
+  // real drift in reorder noise. Sort is code-unit (locale-independent) for
+  // deterministic output across machines/CI; docs without an `id` sink to the end.
+  const byId = (a, b) => {
+    const x = a && a.id != null ? String(a.id) : '￿';
+    const y = b && b.id != null ? String(b.id) : '￿';
+    return x < y ? -1 : x > y ? 1 : 0;
+  };
   const out = {};
   for (const key of COLLECTION_KEYS) {
-    out[key] = Array.isArray(snapshot[key]) ? snapshot[key] : [];
+    const arr = Array.isArray(snapshot[key]) ? snapshot[key] : [];
+    out[key] = [...arr].sort(byId);
   }
 
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n');
