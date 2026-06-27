@@ -16,6 +16,7 @@ import TraitsField from '../../components/shared/TraitsField';
 import { toList } from '../../utils/traitRefs';
 import { resolveWeapon, scaleDamageDice, STRIKING } from '../../utils/weaponRunes';
 import { resolveArmor } from '../../utils/armorRunes';
+import { resolveScroll, resolveWand, castRank } from '../../utils/spellItems';
 import { ARMOR_CATEGORIES } from '../../utils/InventoryUtils';
 import './gm.css';
 
@@ -43,20 +44,30 @@ const toNum = (v) => {
 };
 
 // A scroll/wand spell is a catalog reference only (epic #622 — no inline spells):
-// the form holds just the `spellRef` plus any non-ref keys (`id`, wand charge
-// overrides) preserved verbatim through `rest`.
+// the form holds the `spellRef`, an optional cast-rank override (#812 S4 — for a
+// heightened scroll/wand), plus any other non-ref keys preserved through `rest`.
 const spellToForm = (s) => {
   const src = s && typeof s === 'object' ? s : {};
-  const { spellRef, ...rest } = src;
+  const { spellRef, rank, ...rest } = src;
   return {
     spellRef: spellRef != null ? String(spellRef) : '',
+    rank: rank != null ? String(rank) : '', // optional cast-rank override
     rest, // id + any unmanaged keys, preserved
   };
 };
 
 // The catalog spell supplies every field at resolution time, so emit ONLY the
-// ref (+ any preserved rest). Only called once a ref is present (validated).
-const spellFromForm = (sf) => ({ ...sf.rest, spellRef: sf.spellRef.trim() });
+// minimal block: the ref, the cast-rank override when set to a positive integer
+// (blank ⇒ the spell's own rank is used), and any preserved rest. Only called
+// once a ref is present (validated).
+const spellFromForm = (sf) => {
+  const rankNum = parseInt(sf.rank, 10);
+  return {
+    ...sf.rest,
+    spellRef: sf.spellRef.trim(),
+    ...(Number.isInteger(rankNum) && rankNum > 0 ? { rank: rankNum } : {}),
+  };
+};
 
 // Keys that must never appear in the raw-JSON box: per-character data belongs
 // on the inventory reference, and containers / scroll / wand / variants /
@@ -291,21 +302,27 @@ const itemFromForm = (f) => {
   return out;
 };
 
-// "Scroll of <Spell>" / "Wand of <Spell>" — the standard PF2e item-name shape.
-// Both slugify cleanly to scroll-of-x / wand-of-x for the new-item id default.
-const scrollWandName = (kind, spellName) =>
-  `${kind === 'scroll' ? 'Scroll' : 'Wand'} of ${spellName}`;
+// Build the resolved-block input the S1 resolver expects from the form: the
+// catalog spell plus the form's cast-rank override (the resolver reads
+// block.rank ?? spell.level). Returns null when no real catalog spell matches.
+const spellPreview = (kind, spellForm, spells) => {
+  const ref = (spellForm.spellRef || '').trim();
+  if (!ref) return null;
+  const match = (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref);
+  if (!match) return null;
+  const rankNum = parseInt(spellForm.rank, 10);
+  const block = { spellRef: ref, ...(Number.isInteger(rankNum) && rankNum > 0 ? { rank: rankNum } : {}) };
+  return (kind === 'scroll' ? resolveScroll : resolveWand)(match, block);
+};
 
 // The derived item-name for a scroll/wand, or null when no spell is selected
 // (a dangling unknown ref keeps the existing item name unchanged — the GM can
-// repoint without losing data).
+// repoint without losing data). Uses the resolver so a heightened override
+// surfaces its "(Rank N)" suffix here too.
 const derivedItemName = (e, spells) => {
   if (e.spellKind !== 'scroll' && e.spellKind !== 'wand') return null;
-  const ref = (e.spell.spellRef || '').trim();
-  if (!ref) return null;
-  const match = (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref);
-  const spellName = match ? String(match.name || '') : '';
-  return spellName ? scrollWandName(e.spellKind, spellName) : null;
+  const preview = spellPreview(e.spellKind, e.spell, spells);
+  return preview ? preview.name : null;
 };
 
 const SpellSubform = ({ kind, spell, spells, onChange }) => {
@@ -321,6 +338,13 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
     .sort((a, b) =>
       String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
     );
+
+  // Read-only derived preview (#812 S4): the base-template fields S1/S2 will
+  // generate from the spell's cast rank, so the GM sees the output without
+  // hand-typing it. The cast rank is the override (blank ⇒ the spell's own
+  // rank); a wand tops out at rank 9, a scroll at 10.
+  const preview = spellPreview(kind, spell, spells);
+  const effectiveRank = refMatch ? castRank(refMatch, { rank: parseInt(spell.rank, 10) || undefined }) : null;
 
   return (
     <div className="gm-card" data-testid="spell-subform">
@@ -348,6 +372,30 @@ const SpellSubform = ({ kind, spell, spells, onChange }) => {
             : 'Pick a spell from the catalog.'}
         </p>
       </div>
+      <div className="form-group">
+        <label>cast rank (optional)</label>
+        <input
+          aria-label="spell-rank"
+          type="number"
+          min="1"
+          max={kind === 'wand' ? 9 : 10}
+          placeholder={refMatch ? `default ${refMatch.level}` : 'spell rank'}
+          value={spell.rank || ''}
+          onChange={(ev) => onChange({ ...spell, rank: ev.target.value })}
+        />
+        <p className="gm-hint">
+          Leave blank to use the spell&rsquo;s own rank. Set higher for a heightened {kind}.
+        </p>
+      </div>
+      {preview && (
+        <p className="gm-hint" data-testid="spell-item-preview">
+          Resolves to: <strong>{preview.name}</strong>
+          {preview.level != null
+            ? ` · Item ${preview.level} · ${preview.price} gp · Bulk ${preview.bulk}`
+            : ` · rank ${effectiveRank ?? '?'} is out of range — no item level/price`}
+          {preview.traits && preview.traits.length > 0 && ` · ${preview.traits.join(', ')}`}
+        </p>
+      )}
     </div>
   );
 };
