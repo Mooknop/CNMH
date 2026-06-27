@@ -8917,6 +8917,40 @@
       "description": "An incredibly high-quality set of artisan tools, perfectly suited to creating Talismans. If you use them when you Craft a Talisman, you get a +1 item bonus to the check."
     },
     {
+      "id": "striking",
+      "name": "Striking",
+      "level": 4,
+      "price": 65,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "description": "A striking rune stores destructive magic in the weapon, adding extra weapon damage dice on a hit.",
+      "variants": [
+        {
+          "level": 4,
+          "label": "Striking",
+          "name": "Striking",
+          "price": 65,
+          "description": "This weapon adds one additional weapon damage die."
+        },
+        {
+          "level": 12,
+          "label": "Greater",
+          "name": "Striking (Greater)",
+          "price": 1065,
+          "description": "This weapon adds two additional weapon damage dice."
+        },
+        {
+          "level": 19,
+          "label": "Major",
+          "name": "Striking (Major)",
+          "price": 31065,
+          "description": "This weapon adds three additional weapon damage dice."
+        }
+      ]
+    },
+    {
       "id": "studded-leather-armor",
       "name": "Studded Leather Armor",
       "price": 3,
@@ -9115,6 +9149,40 @@
       "price": 0.05,
       "weight": 0.1,
       "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+    },
+    {
+      "id": "weapon-potency",
+      "name": "Weapon Potency",
+      "level": 2,
+      "price": 35,
+      "weight": 0,
+      "traits": [
+        "Magical"
+      ],
+      "description": "Magic deepens the weapon's lethality, increasing its item bonus to attack rolls. The weapon can be etched with property runes up to the potency's value.",
+      "variants": [
+        {
+          "level": 2,
+          "label": "+1",
+          "name": "Weapon Potency (+1)",
+          "price": 35,
+          "description": "Increase the weapon's item bonus to attack rolls by 1. The weapon can be etched with one property rune."
+        },
+        {
+          "level": 10,
+          "label": "+2",
+          "name": "Weapon Potency (+2)",
+          "price": 935,
+          "description": "Increase the weapon's item bonus to attack rolls by 2, and the weapon can be etched with two property runes."
+        },
+        {
+          "level": 16,
+          "label": "+3",
+          "name": "Weapon Potency (+3)",
+          "price": 8935,
+          "description": "Increase the weapon's item bonus to attack rolls by 3, and the weapon can be etched with three property runes."
+        }
+      ]
     },
     {
       "id": "wisp-chain",
