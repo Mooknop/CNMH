@@ -1,12 +1,14 @@
 import { useCallback } from 'react';
 import { useSyncedState } from './useSyncedState';
 
-// Single writer for the app-managed shop wares store (#696 S1).
-//   cnmh_shops_global = { [loreId]: { wares: [{ ref, price?, stock? }] } }
-// loreId = a Location lore entry id; ref = a catalog item id; price = optional gp
-// override (else the catalog price); stock = optional integer. The GM editor (S2)
-// writes through here; the player browse/buy flow (S3–S6) reads `shops` and runs
-// it through the selectors in utils/shopUtils.js. A global key, so unlike the
+// Single writer for the app-managed shop store (#696 S1).
+//   cnmh_shops_global = { [loreId]: { keeper?, open?, revealed?, wares: [...] } }
+// loreId = a Location lore entry id; a ware is { ref, level?, runeRef?, price?,
+// stock? }. The shop-level fields are additive (#822): `keeper` = shopkeeper
+// flavor, `open` = trading, `revealed` = visible to players; all optional and
+// back-compatible (absence = legacy defaults, see shopUtils). The GM editor
+// writes through here; the player browse/buy flow reads `shops` and runs it
+// through the selectors in utils/shopUtils.js. A global key, so unlike the
 // per-character overlays there is no owner id — every client shares one store.
 export const useShops = () => {
   const [shops, setShops] = useSyncedState('cnmh_shops_global', {});
@@ -23,7 +25,37 @@ export const useShops = () => {
     [setShops]
   );
 
-  return { shops, setWares };
+  // Shallow-merge a patch of shop fields (keeper/open/revealed/wares) onto the
+  // entry, creating it if absent (#822 S1). This is how the editor declares a
+  // shop ("Set up as shop" commits { keeper:'', open:true, revealed:false,
+  // wares:[] }) and saves meta + wares together. A `wares` key in the patch
+  // replaces the list wholesale; omitted fields are left untouched.
+  const setShop = useCallback(
+    (loreId, patch) => {
+      if (!loreId) return;
+      setShops((cur) => ({
+        ...(cur || {}),
+        [loreId]: { ...((cur || {})[loreId] || {}), ...(patch || {}) },
+      }));
+    },
+    [setShops]
+  );
+
+  // Delete a shop entry entirely ("Remove shop"). A no-op when absent.
+  const removeShop = useCallback(
+    (loreId) => {
+      if (!loreId) return;
+      setShops((cur) => {
+        if (!cur || !(loreId in cur)) return cur;
+        const next = { ...cur };
+        delete next[loreId];
+        return next;
+      });
+    },
+    [setShops]
+  );
+
+  return { shops, setWares, setShop, removeShop };
 };
 
 export default useShops;

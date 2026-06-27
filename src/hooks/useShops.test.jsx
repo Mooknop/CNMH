@@ -55,4 +55,69 @@ describe('useShops', () => {
     act(() => result.current.setWares('', [{ ref: 'x' }]));
     expect(mockSetShops).not.toHaveBeenCalled();
   });
+
+  it('setShop merges meta fields onto a fresh entry (Set up as shop)', () => {
+    const { result } = renderHook(() => useShops());
+    act(() => result.current.setShop('s', { keeper: '', open: true, revealed: false, wares: [] }));
+    expect(store.s).toEqual({ keeper: '', open: true, revealed: false, wares: [] });
+  });
+
+  it('setShop merges a partial patch without clobbering other fields or wares', () => {
+    store = { s: { keeper: 'Vorl', open: true, revealed: false, wares: [{ ref: 'antidote' }] } };
+    const { result } = renderHook(() => useShops());
+
+    act(() => result.current.setShop('s', { revealed: true }));
+
+    expect(store.s).toEqual({
+      keeper: 'Vorl',
+      open: true,
+      revealed: true,
+      wares: [{ ref: 'antidote' }],
+    });
+  });
+
+  it('setShop replaces wares wholesale when the patch carries them', () => {
+    store = { s: { keeper: 'Vorl', wares: [{ ref: 'old' }] } };
+    const { result } = renderHook(() => useShops());
+
+    act(() => result.current.setShop('s', { wares: [{ ref: 'new' }] }));
+
+    expect(store.s).toEqual({ keeper: 'Vorl', wares: [{ ref: 'new' }] });
+  });
+
+  it('setShop preserves sibling shops', () => {
+    store = { other: { wares: [{ ref: 'x' }] } };
+    const { result } = renderHook(() => useShops());
+    act(() => result.current.setShop('s', { keeper: 'Vorl' }));
+    expect(store.other).toEqual({ wares: [{ ref: 'x' }] });
+  });
+
+  it('setShop is a no-op without a loreId', () => {
+    const { result } = renderHook(() => useShops());
+    act(() => result.current.setShop('', { keeper: 'Vorl' }));
+    expect(mockSetShops).not.toHaveBeenCalled();
+  });
+
+  it('removeShop deletes the entry, preserving siblings', () => {
+    store = { s: { wares: [{ ref: 'x' }] }, other: { wares: [{ ref: 'y' }] } };
+    const { result } = renderHook(() => useShops());
+
+    act(() => result.current.removeShop('s'));
+
+    expect(store).toEqual({ other: { wares: [{ ref: 'y' }] } });
+  });
+
+  it('removeShop leaves the store unchanged for an absent entry', () => {
+    store = { s: { wares: [] } };
+    const { result } = renderHook(() => useShops());
+
+    act(() => result.current.removeShop('nope'));
+    expect(store).toEqual({ s: { wares: [] } });
+  });
+
+  it('removeShop is a no-op without a loreId', () => {
+    const { result } = renderHook(() => useShops());
+    act(() => result.current.removeShop(''));
+    expect(mockSetShops).not.toHaveBeenCalled();
+  });
 });
