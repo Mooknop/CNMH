@@ -208,6 +208,104 @@
   background: var(--surface-inset);
 }
 
+/* Shop authoring workspace (#822 S3) */
+.gm-shop-back { flex: 0 0 auto; align-self: flex-start; }
+.gm-shop-head-main { flex: 1; min-width: 0; }
+.gm-shop-title-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.gm-shop-kind { font-size: 0.78rem; color: var(--shell-text-secondary); text-transform: capitalize; }
+.gm-shop-summary { margin: 4px 0 0; font-size: 0.85rem; color: var(--shell-text-secondary); }
+.gm-shop-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 8px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: 999px;
+  color: var(--shell-text-secondary);
+}
+.gm-shop-status.is-shop {
+  color: var(--gold-mid);
+  border-color: var(--gold-mid);
+}
+
+/* "Not a shop yet" set-up empty state */
+.gm-shop-setup { text-align: center; padding: 28px 16px; }
+.gm-shop-setup-mark {
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--shell-text-secondary);
+  border: 2px dashed var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+}
+.gm-shop-setup-head { margin: 0 0 6px; font-size: 1rem; }
+.gm-shop-setup-sub {
+  margin: 0 auto 16px;
+  max-width: 420px;
+  font-size: 0.85rem;
+  color: var(--shell-text-secondary);
+}
+
+/* Shop meta strip: keeper flavor + reveal/open toggles */
+.gm-shop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 14px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--shell-border);
+  border-bottom: 1px solid var(--shell-border);
+}
+.gm-shop-meta-keeper { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 5px; }
+.gm-shop-meta-keeper textarea { width: 100%; resize: vertical; font: inherit; }
+.gm-shop-meta-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--shell-text-secondary);
+}
+.gm-shop-meta-toggles { display: flex; gap: 16px; flex-wrap: wrap; }
+.gm-shop-seg-group { display: flex; flex-direction: column; gap: 5px; }
+.gm-shop-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-inset);
+}
+.gm-shop-seg button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: calc(var(--radius-md) - 3px);
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--shell-text-secondary);
+}
+.gm-shop-seg button.is-on {
+  background: var(--surface-raised, rgba(255, 255, 255, 0.08));
+  color: var(--shell-text);
+}
+.gm-shop-seg button.is-on--good {
+  color: var(--verdant-mid);
+}
+
+.gm-shop-stock-head { align-items: center; justify-content: space-between; margin-top: 4px; }
+
+/* Pinned save footer */
+.gm-shop-foot { align-items: center; gap: 12px; margin-top: 14px; }
+.gm-shop-tally { margin-right: auto; }
+.gm-shop-saveflash { color: var(--verdant-mid); font-size: 0.82rem; font-weight: 600; }
+
 /* Tradition checkbox set (spell editor) */
 .gm-tradition-row { align-items: center; gap: 14px; flex-wrap: wrap; }
 .gm-checkbox {
