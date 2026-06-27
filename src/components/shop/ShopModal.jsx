@@ -3,7 +3,7 @@ import Modal from '../shared/Modal';
 import ItemModal from '../inventory/ItemModal';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
-import { resolveShopWares, isShopOpen } from '../../utils/shopUtils';
+import { resolveShopWares, isShopOpen, spellItemOfferings, spellOfferingSummary } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine } from '../../utils/shopCart';
 import { useBuyItems } from '../../hooks/useBuyItems';
 import { useRuneWork } from '../../hooks/useRuneWork';
@@ -44,13 +44,17 @@ const WareTile = ({ ware, onInspect }) => {
 // `readOnly` lets a shop be browsed without buying — e.g. opened from a Location
 // lore page when the party isn't in that town (#shops-from-lore). Wares + the
 // item detail still render; the Add/Etch affordances and the cart are hidden.
-const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character, characterColor, readOnly = false }) => {
+const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, spells, character, characterColor, readOnly = false }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
   const [cart, setCart] = useState([]);
   const [receipt, setReceipt] = useState(null);
   // The rune ware currently being etched onto a weapon (#802), or null.
   const [etchWare, setEtchWare] = useState(null);
+  // Which body tab is showing: 'wares' (flat items/runestones) or 'spells' (the
+  // generative scroll/wand offerings, #820). Only meaningful when the shop has a
+  // spell-item offering; otherwise the tab chrome is hidden entirely.
+  const [tab, setTab] = useState('wares');
 
   const { myGold, buy } = useBuyItems(character?.id);
   const { etch } = useRuneWork(character?.id);
@@ -72,6 +76,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
       setCart([]);
       setReceipt(null);
       setEtchWare(null);
+      setTab('wares');
     }
   }, [isOpen]);
 
@@ -85,6 +90,12 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
     () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap, runeMap) : []),
     [selected, waresStore, catalogMap, runeMap]
   );
+  // Generative scroll/wand offerings (#820), kept out of `wares` (S6). The
+  // Spellcasting Services tab only exists when there's at least one.
+  const offerings = useMemo(
+    () => (selected ? spellItemOfferings(selected.id, waresStore) : []),
+    [selected, waresStore]
+  );
 
   // Switching shops starts a fresh cart (a cart belongs to one shop).
   const openShop = (id) => {
@@ -92,6 +103,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
     setCart([]);
     setReceipt(null);
     setEtchWare(null);
+    setTab('wares');
   };
 
   // Pay to etch the active rune ware onto `weapon` (#802): the shop takes the
@@ -216,57 +228,104 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
                 </ul>
               )}
             </div>
-          ) : wares.length === 0 ? (
-            <p className="shop-empty">This shop has nothing for sale right now.</p>
           ) : (
-            <DndProvider renderGhost={(w) => <span className="shop-ghost">{w.name}</span>}>
-              <div className="shop-window-body">
-                <ul className="shop-wares" aria-label="wares">
-                  {wares.map((ware) => (
-                    <li key={ware.wareKey} className="shop-ware-row">
-                      <WareTile ware={ware} onInspect={setDetailItem} />
-                      {!readOnly && ware.runestone && (
-                        <button
-                          type="button"
-                          className="shop-ware-etch"
-                          aria-label={`etch ${ware.wareKey}`}
-                          onClick={() => setEtchWare(ware)}
-                        >
-                          ⚒ Etch
-                        </button>
-                      )}
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          className="shop-ware-add"
-                          aria-label={`add ${ware.wareKey}`}
-                          onClick={() => addWare(ware)}
-                        >
-                          ＋ Add
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-
-                {!readOnly && (
-                  <DropZone
-                    id="shop-cart"
-                    accepts={() => true}
-                    onDrop={(w) => addWare(w)}
-                    className="shop-cart-zone"
+            <>
+              {offerings.length > 0 && (
+                <div className="shop-tabs" role="tablist" aria-label="shop sections">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === 'wares'}
+                    className={`shop-tab${tab === 'wares' ? ' is-on' : ''}`}
+                    onClick={() => setTab('wares')}
                   >
-                    <ShopCart
-                      cart={cart}
-                      gold={myGold}
-                      onSetQty={(id, qty) => setCart((c) => setQty(c, id, qty))}
-                      onRemove={(id) => setCart((c) => removeLine(c, id))}
-                      onConfirm={handleConfirm}
-                    />
-                  </DropZone>
-                )}
-              </div>
-            </DndProvider>
+                    Wares
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === 'spells'}
+                    className={`shop-tab${tab === 'spells' ? ' is-on' : ''}`}
+                    onClick={() => setTab('spells')}
+                  >
+                    Spellcasting Services
+                  </button>
+                </div>
+              )}
+
+              {offerings.length > 0 && tab === 'spells' ? (
+                <div className="shop-spellservices" data-testid="shop-spellservices">
+                  <p className="shop-spellservices-intro">
+                    Scrolls and wands the keeper will scribe to order:
+                  </p>
+                  <ul className="shop-offerings" aria-label="spellcasting services">
+                    {offerings.map((o) => {
+                      const s = spellOfferingSummary(o, spells);
+                      return (
+                        <li
+                          key={o.offeringKey}
+                          className="shop-offering-row"
+                          data-testid={`offering-${o.offeringKey}`}
+                        >
+                          <span className="shop-offering-text">{s.text}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : wares.length === 0 ? (
+                <p className="shop-empty">This shop has nothing for sale right now.</p>
+              ) : (
+                <DndProvider renderGhost={(w) => <span className="shop-ghost">{w.name}</span>}>
+                  <div className="shop-window-body">
+                    <ul className="shop-wares" aria-label="wares">
+                      {wares.map((ware) => (
+                        <li key={ware.wareKey} className="shop-ware-row">
+                          <WareTile ware={ware} onInspect={setDetailItem} />
+                          {!readOnly && ware.runestone && (
+                            <button
+                              type="button"
+                              className="shop-ware-etch"
+                              aria-label={`etch ${ware.wareKey}`}
+                              onClick={() => setEtchWare(ware)}
+                            >
+                              ⚒ Etch
+                            </button>
+                          )}
+                          {!readOnly && (
+                            <button
+                              type="button"
+                              className="shop-ware-add"
+                              aria-label={`add ${ware.wareKey}`}
+                              onClick={() => addWare(ware)}
+                            >
+                              ＋ Add
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+
+                    {!readOnly && (
+                      <DropZone
+                        id="shop-cart"
+                        accepts={() => true}
+                        onDrop={(w) => addWare(w)}
+                        className="shop-cart-zone"
+                      >
+                        <ShopCart
+                          cart={cart}
+                          gold={myGold}
+                          onSetQty={(id, qty) => setCart((c) => setQty(c, id, qty))}
+                          onRemove={(id) => setCart((c) => removeLine(c, id))}
+                          onConfirm={handleConfirm}
+                        />
+                      </DropZone>
+                    )}
+                  </div>
+                </DndProvider>
+              )}
+            </>
           )}
         </div>
       )}

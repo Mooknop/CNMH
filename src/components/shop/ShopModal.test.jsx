@@ -404,6 +404,90 @@ describe('ShopModal', () => {
     });
   });
 
+  describe('Spellcasting Services tab (#820)', () => {
+    const spells = [
+      { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
+      { id: 'fireball', name: 'Fireball', level: 3, traditions: ['arcane', 'primal'] },
+      { id: 'haste', name: 'Haste', level: 3, traditions: ['arcane', 'occult', 'primal'] },
+      { id: 'chromatic-wall', name: 'Chromatic Wall', level: 5, traditions: ['arcane', 'occult'], traits: ['Uncommon'] },
+      { id: 'shield', name: 'Shield', level: 0, traditions: ['arcane', 'divine', 'occult'], traits: ['Cantrip'] },
+    ];
+    const oneShop = [{ id: 'bottled-solutions', title: 'Bottled Solutions' }];
+    const renderWith = (wares, props = {}) =>
+      render(
+        <ShopModal
+          isOpen
+          onClose={() => {}}
+          shops={oneShop}
+          waresStore={{ 'bottled-solutions': { wares } }}
+          items={items}
+          spells={spells}
+          character={{ id: 'char-1', name: 'Pellias' }}
+          {...props}
+        />
+      );
+
+    it('hides the tab chrome when the shop has no spell-item offering', () => {
+      renderWith([{ ref: 'antidote', price: 8 }]);
+      openBottledSolutions();
+      expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+      expect(screen.getByTestId('ware-antidote')).toBeInTheDocument();
+    });
+
+    it('shows both tabs when the shop has a spell-item offering', () => {
+      renderWith([{ ref: 'antidote', price: 8 }, { spellItem: 'scroll', maxRank: 3 }]);
+      openBottledSolutions();
+      expect(screen.getByRole('tab', { name: 'Wares' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Spellcasting Services' })).toBeInTheDocument();
+      // Wares tab is the default body.
+      expect(screen.getByTestId('ware-antidote')).toBeInTheDocument();
+      expect(screen.queryByTestId('shop-spellservices')).not.toBeInTheDocument();
+    });
+
+    it('switches the body to the offerings when the Spellcasting Services tab is picked', () => {
+      renderWith([{ ref: 'antidote', price: 8 }, { spellItem: 'scroll', maxRank: 3 }]);
+      openBottledSolutions();
+      fireEvent.click(screen.getByRole('tab', { name: 'Spellcasting Services' }));
+      expect(screen.getByTestId('shop-spellservices')).toBeInTheDocument();
+      expect(screen.queryByTestId('ware-antidote')).not.toBeInTheDocument();
+      // Back to wares.
+      fireEvent.click(screen.getByRole('tab', { name: 'Wares' }));
+      expect(screen.getByTestId('ware-antidote')).toBeInTheDocument();
+      expect(screen.queryByTestId('shop-spellservices')).not.toBeInTheDocument();
+    });
+
+    it('renders a read-only coverage summary with the live eligible count', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openBottledSolutions();
+      fireEvent.click(screen.getByRole('tab', { name: 'Spellcasting Services' }));
+      // Scrolls, all traditions, common only, rank ≤ 3: heal, fireball, haste.
+      expect(screen.getByLabelText('spellcasting services')).toHaveTextContent(
+        'Scrolls · all traditions · common · up to rank 3 · 3 eligible spells'
+      );
+      // No buy affordance yet — the picker is S9.
+      expect(screen.queryByLabelText(/^add scroll/)).not.toBeInTheDocument();
+    });
+
+    it('reflects tradition + rarity filters in the summary count', () => {
+      renderWith([
+        { spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'] },
+      ]);
+      openBottledSolutions();
+      fireEvent.click(screen.getByRole('tab', { name: 'Spellcasting Services' }));
+      // Wands, arcane/occult, common+uncommon, rank ≤ 5: fireball, haste, chromatic-wall.
+      expect(screen.getByLabelText('spellcasting services')).toHaveTextContent(
+        'Wands · arcane/occult · common+uncommon · up to rank 5 · 3 eligible spells'
+      );
+    });
+
+    it('still offers the tab for a spell-only shop, with an empty Wares body', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openBottledSolutions();
+      expect(screen.getByRole('tab', { name: 'Spellcasting Services' })).toBeInTheDocument();
+      expect(screen.getByText('This shop has nothing for sale right now.')).toBeInTheDocument();
+    });
+  });
+
   it('returns to the carousel from the shop window', () => {
     renderModal();
     fireEvent.click(screen.getByText('The Curious Goblin'));

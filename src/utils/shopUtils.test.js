@@ -8,6 +8,7 @@ import {
   isSpellItemWare,
   spellItemOfferings,
   eligibleSpellItems,
+  spellOfferingSummary,
 } from './shopUtils';
 
 // Lore: Sandpoint (root) contains two shops + one plain location.
@@ -352,5 +353,27 @@ describe('eligibleSpellItems', () => {
   it('returns [] for a non-offering ware or a zero/negative cap', () => {
     expect(eligibleSpellItems({ ref: 'healing-potion' }, spellCatalog)).toEqual([]);
     expect(eligibleSpellItems({ spellItem: 'scroll', maxRank: 0 }, spellCatalog)).toEqual([]);
+  });
+});
+
+describe('spellOfferingSummary', () => {
+  it('summarises the default (all traditions, common only) coverage + count', () => {
+    const s = spellOfferingSummary({ spellItem: 'scroll', maxRank: 3 }, spellCatalog);
+    // sleep, heal, blazing-bolt (web is uncommon; rare-thing rare; wish out of rank).
+    expect(s).toMatchObject({ kind: 'scroll', cap: 3, count: 3 });
+    expect(s.text).toBe('Scrolls · all traditions · common · up to rank 3 · 3 eligible spells');
+  });
+
+  it('reflects tradition + rarity filters and singularises one spell', () => {
+    const s = spellOfferingSummary(
+      { spellItem: 'wand', maxRank: 2, traditions: ['arcane'], rarities: ['common', 'uncommon'] },
+      spellCatalog
+    );
+    // arcane, common+uncommon, rank ≤ 2: sleep, blazing-bolt, web.
+    expect(s.text).toBe('Wands · arcane · common+uncommon · up to rank 2 · 3 eligible spells');
+  });
+
+  it('caps the displayed rank at the base-template max', () => {
+    expect(spellOfferingSummary({ spellItem: 'wand', maxRank: 99 }, spellCatalog).cap).toBe(9);
   });
 });

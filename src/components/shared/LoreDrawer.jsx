@@ -17,7 +17,7 @@ import './LoreDrawer.css';
 
 const LoreDrawer = () => {
   const { isOpen, currentEntryId, closeLore, navigateTo, goBack, canGoBack } = useLore();
-  const { loreEntries: visibleEntries, allLoreEntries, monsters, items, runes } = useContent();
+  const { loreEntries: visibleEntries, allLoreEntries, monsters, items, runes, spells } = useContent();
   const { recordFor } = useRecallKnowledge();
   const { isGm } = useGmAuth();
   const { shops } = useShops();
@@ -247,6 +247,7 @@ const LoreDrawer = () => {
         waresStore={shops}
         items={items}
         runes={runes}
+        spells={spells}
         character={canBuy ? activeCharacter : null}
         characterColor={activeCharacterColor}
         readOnly={!canBuy}
