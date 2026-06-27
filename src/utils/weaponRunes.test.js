@@ -8,6 +8,10 @@ import {
   weaponPropertyRunes,
   buildRuneBreakdown,
   formatRuneBreakdown,
+  propertySlotCapacity,
+  usedPropertySlots,
+  freePropertySlots,
+  hasFreePropertySlot,
   POTENCY,
   STRIKING,
 } from './weaponRunes';
@@ -250,6 +254,35 @@ describe('display helpers (#548 Slice 3c)', () => {
       expect(buildRuneBreakdown({ name: 'Rope' })).toBeNull();
       expect(buildRuneBreakdown({ name: 'Pick', runes: {} })).toBeNull();
       expect(formatRuneBreakdown(null)).toBe('');
+    });
+  });
+
+  describe('property-rune slots (#607, #804)', () => {
+    test('capacity equals the potency tier', () => {
+      expect(propertySlotCapacity({ potency: 0 })).toBe(0);
+      expect(propertySlotCapacity({ potency: 2 })).toBe(2);
+      expect(propertySlotCapacity(undefined)).toBe(0);
+    });
+
+    test('used slots count both string refs and resolved docs', () => {
+      expect(usedPropertySlots({ runes: { property: ['flaming', { id: 'frost' }] } })).toBe(2);
+      expect(usedPropertySlots({ runes: { property: [] } })).toBe(0);
+      expect(usedPropertySlots({ name: 'Club' })).toBe(0);
+    });
+
+    test('free slots = capacity − used, floored at 0', () => {
+      expect(freePropertySlots({ runes: { potency: 2, property: ['flaming'] } })).toBe(1);
+      expect(freePropertySlots({ runes: { potency: 1, property: ['flaming'] } })).toBe(0);
+      // Over-slotted (potency lowered under existing runes) never goes negative.
+      expect(freePropertySlots({ runes: { potency: 1, property: ['flaming', 'frost'] } })).toBe(0);
+      // Striking doesn't consume a property slot.
+      expect(freePropertySlots({ runes: { potency: 2, striking: 'greater', property: ['flaming'] } })).toBe(1);
+    });
+
+    test('hasFreePropertySlot reflects availability', () => {
+      expect(hasFreePropertySlot({ runes: { potency: 1 } })).toBe(true);
+      expect(hasFreePropertySlot({ runes: { potency: 1, property: ['flaming'] } })).toBe(false);
+      expect(hasFreePropertySlot({ name: 'Club' })).toBe(false); // no potency
     });
   });
 });

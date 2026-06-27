@@ -179,7 +179,8 @@ describe('ShopModal', () => {
           id: 'char-1',
           name: 'Pellias',
           __inventory: [
-            { uid: 'w1', name: 'Longsword', strikes: { damage: '1d8' } },
+            // A +1 weapon with a free property slot can be etched.
+            { uid: 'w1', name: 'Longsword', strikes: { damage: '1d8' }, runes: { potency: 1 } },
             { uid: 'p1', name: 'Potion' },
           ],
         }}
@@ -187,7 +188,7 @@ describe('ShopModal', () => {
     );
     fireEvent.click(screen.getByText('The Etcher'));
     fireEvent.click(screen.getByLabelText('etch runestone@flaming'));
-    // Weapon picker lists the weapon, not the potion.
+    // Weapon picker lists the weapon (with slot count), not the potion.
     expect(screen.getByTestId('etch-weapon-w1')).toBeInTheDocument();
     expect(screen.queryByTestId('etch-weapon-p1')).not.toBeInTheDocument();
 
@@ -198,6 +199,34 @@ describe('ShopModal', () => {
       'The Etcher'
     );
     expect(screen.getByTestId('shop-receipt')).toHaveTextContent('Left Longsword to be etched with Flaming');
+  });
+
+  it('steers to a Runestone when no weapon has a free property slot (#804)', () => {
+    const runes = [{ id: 'flaming', name: 'Flaming', price: 500 }];
+    render(
+      <ShopModal
+        isOpen
+        onClose={() => {}}
+        shops={[{ id: 'etcher', title: 'The Etcher' }]}
+        waresStore={{ etcher: { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } }}
+        items={[]}
+        runes={runes}
+        character={{
+          id: 'char-1',
+          name: 'Pellias',
+          __inventory: [
+            // Potency-0 (no slots) and a full +1 weapon — neither is etchable.
+            { uid: 'w1', name: 'Club', strikes: { damage: '1d6' } },
+            { uid: 'w2', name: 'Pick', strikes: { damage: '1d6' }, runes: { potency: 1, property: ['frost'] } },
+          ],
+        }}
+      />
+    );
+    fireEvent.click(screen.getByText('The Etcher'));
+    fireEvent.click(screen.getByLabelText('etch runestone@flaming'));
+    expect(screen.getByTestId('shop-etch-no-slot')).toBeInTheDocument();
+    expect(screen.queryByTestId('etch-weapon-w1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('etch-weapon-w2')).not.toBeInTheDocument();
   });
 
   it('shows an empty-wares state for a shop with nothing for sale', () => {

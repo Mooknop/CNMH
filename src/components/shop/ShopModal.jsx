@@ -9,6 +9,7 @@ import { useBuyItems } from '../../hooks/useBuyItems';
 import { useRuneWork } from '../../hooks/useRuneWork';
 import { useCharacter } from '../../hooks/useCharacter';
 import { eligibleWeapons } from '../../utils/runeWorkOrder';
+import { freePropertySlots, propertySlotCapacity, usedPropertySlots } from '../../utils/weaponRunes';
 import ShopCart from './ShopCart';
 import './ShopModal.css';
 
@@ -54,6 +55,11 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
   const weapons = useMemo(() => eligibleWeapons(charData?.inventory), [charData]);
+  // Etching adds a property rune, which needs a free potency-gated slot (#607,
+  // #804). A full or potency-0 weapon can't be etched at the shop — the player
+  // is steered to buy the Runestone and move it on with a Crafting check (R4),
+  // where the replace flow lives.
+  const etchable = useMemo(() => weapons.filter((w) => freePropertySlots(w) >= 1), [weapons]);
 
   // Always reopen on the carousel with an empty cart and no stale receipt.
   useEffect(() => {
@@ -179,9 +185,14 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
               </p>
               {weapons.length === 0 ? (
                 <p className="shop-empty">You have no weapon to etch a rune onto.</p>
+              ) : etchable.length === 0 ? (
+                <p className="shop-empty" data-testid="shop-etch-no-slot">
+                  No weapon has a free property-rune slot. Buy it as a Runestone and move
+                  it onto a weapon with a Crafting check (you can displace an existing rune).
+                </p>
               ) : (
                 <ul className="shop-etch-weapons" aria-label="weapons">
-                  {weapons.map((w) => (
+                  {etchable.map((w) => (
                     <li key={w.uid}>
                       <button
                         type="button"
@@ -189,7 +200,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
                         data-testid={`etch-weapon-${w.uid}`}
                         onClick={() => doEtch(w)}
                       >
-                        {w.name}
+                        {w.name} ({usedPropertySlots(w)}/{propertySlotCapacity(w.runes)} slots)
                       </button>
                     </li>
                   ))}

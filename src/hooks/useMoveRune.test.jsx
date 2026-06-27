@@ -104,6 +104,21 @@ describe('toWeapon (runestone → weapon)', () => {
     expect(setAcquired).not.toHaveBeenCalled();
   });
 
+  it('displaces an existing rune into a new runestone when replacing a full weapon', () => {
+    const fullWeapon = { uid: 'w3', name: 'Pick', strikes: { damage: '1d6' }, runes: { potency: 1, property: ['frost'] } };
+    const { result } = renderHook(() => useMoveRune('a'));
+    const res = result.current.move({
+      direction: 'toWeapon', weapon: fullWeapon, runestone, rune, replaceRuneId: 'frost', d20: 18, total: 40,
+    });
+    expect(res.outcome.moved).toBe(true);
+    // The weapon ends with the new rune only (frost displaced), plus a frost runestone.
+    expect(setAcquired).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Pick', runes: { potency: 1, property: ['flaming'] } }),
+      expect.objectContaining({ ref: 'runestone', runeRef: 'frost' }),
+    ]);
+    expect(removed).toEqual(expect.arrayContaining(['w3', 'rs1']));
+  });
+
   it('splices a bought (acquired) runestone instead of masking it', () => {
     acquired = [{ ref: 'runestone', runeRef: 'flaming', uid: 'rs1' }];
     const { result } = renderHook(() => useMoveRune('a'));

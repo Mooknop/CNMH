@@ -4,6 +4,9 @@ import { useMoveRune } from '../../hooks/useMoveRune';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { flattenInventory } from '../../utils/InventoryUtils';
 import { moveRuneDc, moveRuneCost, weaponMovableRunes, MOVE_RUNE_HOURS } from '../../utils/moveRune';
+import {
+  propertySlotCapacity, freePropertySlots, usedPropertySlots, weaponPropertyRunes,
+} from '../../utils/weaponRunes';
 import './MoveRunePanel.css';
 
 const DEGREE_LABEL = {
@@ -25,6 +28,7 @@ const MoveRunePanel = ({ character }) => {
 
   const [selectedKey, setSelectedKey] = useState('');
   const [targetUid, setTargetUid] = useState('');
+  const [replaceRuneId, setReplaceRuneId] = useState('');
   const [d20, setD20] = useState('');
   const [total, setTotal] = useState('');
   const [result, setResult] = useState(null);
@@ -60,9 +64,11 @@ const MoveRunePanel = ({ character }) => {
     return [...fromWeapons, ...fromRunestones];
   }, [flat]);
 
-  // Target weapons for applying a runestone: anything with Strike data + a uid.
+  // Target weapons for applying a runestone: a weapon can hold property runes
+  // only up to its potency (#607), so a potency-0 weapon is never a target. A
+  // full weapon stays selectable — applying then displaces one of its runes.
   const targets = useMemo(
-    () => flat.filter((it) => it && it.strikes && it.uid != null),
+    () => flat.filter((it) => it && it.strikes && it.uid != null && propertySlotCapacity(it.runes) >= 1),
     [flat],
   );
 
@@ -78,8 +84,13 @@ const MoveRunePanel = ({ character }) => {
   const rollValid = d20Num >= 1 && d20Num <= 20 && Number.isFinite(totalNum);
   const needsTarget = selected?.kind === 'fromRunestone';
   const target = needsTarget ? targets.find((t) => t.uid === targetUid) : null;
+  // A full target (no free slot) must displace one of its property runes.
+  const needsReplace = !!target && freePropertySlots(target) === 0;
+  const replaceableRunes = target ? weaponPropertyRunes(target) : [];
+  const replaceChosen = !needsReplace || !!replaceRuneId;
   const canMove =
-    craftRank >= 1 && !!selected && rollValid && (!needsTarget || !!target);
+    craftRank >= 1 && !!selected && rollValid &&
+    (!needsTarget || (!!target && replaceChosen));
 
   const resolve = () => {
     if (!canMove) return;
@@ -87,7 +98,11 @@ const MoveRunePanel = ({ character }) => {
     if (selected.kind === 'fromWeapon') {
       res = move({ direction: 'toRunestone', weapon: selected.weapon, rune, d20: d20Num, total: totalNum });
     } else {
-      res = move({ direction: 'toWeapon', weapon: target, runestone: selected.runestone, rune, d20: d20Num, total: totalNum });
+      res = move({
+        direction: 'toWeapon', weapon: target, runestone: selected.runestone, rune,
+        replaceRuneId: needsReplace ? replaceRuneId : undefined,
+        d20: d20Num, total: totalNum,
+      });
     }
     if (!res) {
       // Rejected (e.g. can't fund the success upkeep). Show the would-be degree.
@@ -96,6 +111,7 @@ const MoveRunePanel = ({ character }) => {
     } else {
       setResult(res);
     }
+    setReplaceRuneId('');
     setD20('');
     setTotal('');
   };
@@ -123,7 +139,7 @@ const MoveRunePanel = ({ character }) => {
             <select
               className="mr-select"
               value={selectedKey}
-              onChange={(e) => { setSelectedKey(e.target.value); setTargetUid(''); setResult(null); }}
+              onChange={(e) => { setSelectedKey(e.target.value); setTargetUid(''); setReplaceRuneId(''); setResult(null); }}
               aria-label="Rune to move"
             >
               <option value="">Select a rune…</option>
@@ -139,12 +155,39 @@ const MoveRunePanel = ({ character }) => {
               <select
                 className="mr-select"
                 value={targetUid}
-                onChange={(e) => setTargetUid(e.target.value)}
+                onChange={(e) => { setTargetUid(e.target.value); setReplaceRuneId(''); }}
                 aria-label="Target weapon"
               >
                 <option value="">Select a weapon…</option>
-                {targets.map((t) => (
-                  <option key={t.uid} value={t.uid}>{t.name}</option>
+                {targets.map((t) => {
+                  const free = freePropertySlots(t);
+                  const cap = propertySlotCapacity(t.runes);
+                  return (
+                    <option key={t.uid} value={t.uid}>
+                      {t.name} ({usedPropertySlots(t)}/{cap} slots{free ? '' : ' — full'})
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+          )}
+
+          {needsTarget && targets.length === 0 && (
+            <p className="mr-hint">No weapon with a potency rune to hold a property rune.</p>
+          )}
+
+          {needsReplace && (
+            <label className="mr-field mr-field--block">
+              Replace which rune?
+              <select
+                className="mr-select"
+                value={replaceRuneId}
+                onChange={(e) => setReplaceRuneId(e.target.value)}
+                aria-label="Rune to replace"
+              >
+                <option value="">Select a rune to displace…</option>
+                {replaceableRunes.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
               </select>
             </label>
@@ -154,6 +197,7 @@ const MoveRunePanel = ({ character }) => {
             <p className="mr-dc">
               Crafting vs <strong>DC {dc}</strong>. On a success you expend{' '}
               <strong>{upkeep} gp</strong>; on a critical failure the rune is destroyed.
+              {needsReplace && ' The displaced rune is moved to a new runestone.'}
             </p>
           )}
 
