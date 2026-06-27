@@ -214,3 +214,21 @@ export function eligibleSpellItems(ware, spells) {
   }
   return out;
 }
+
+// A human-readable coverage summary for one spell-item offering plus its live
+// eligible-spell count, shared by the GM authoring preview (#819) and the player
+// Spellcasting Services tab (#820). Mirrors the offering defaults exactly:
+// traditions empty = all four; rarities empty = common only.
+//   → { kind, cap, count, traditions[], rarities[], text }
+// where `text` is e.g. "Wands · arcane/occult · common+uncommon · up to rank 5
+// · 23 eligible spells".
+export function spellOfferingSummary(ware, spells) {
+  const kind = ware && ware.spellItem === 'wand' ? 'wand' : 'scroll';
+  const cap = Math.max(1, Math.min(Number(ware?.maxRank) || 1, SPELL_ITEM_MAX_RANK[kind]));
+  const traditions = offeringTraditions(ware || {});
+  const rarities = offeringRarities(ware || {});
+  const count = eligibleSpellItems(ware, spells).length;
+  const tradLabel = traditions.length === ALL_TRADITIONS.length ? 'all traditions' : traditions.join('/');
+  const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to rank ${cap} · ${count} eligible spell${count === 1 ? '' : 's'}`;
+  return { kind, cap, count, traditions, rarities, text };
+}
