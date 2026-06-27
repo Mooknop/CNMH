@@ -38,12 +38,19 @@ export function isShopOpen(loreId, shops) {
   return !!entry && entry.open !== false;
 }
 
-// Shop-flagged direct children of the current location, title-sorted (reuses the
-// containment `parent` edge via loreUtils). `entries` is the full lore list.
+// Shop-flagged direct children of the current location that players may see,
+// title-sorted (reuses the containment `parent` edge via loreUtils). `entries`
+// is the full lore list. A child is included only when it both has wares
+// (isShop) and is revealed (#822): an explicit `revealed:false` hides it; a
+// legacy shop with no `revealed` field stays visible. A closed shop is NOT
+// filtered here — it still appears, but as not-trading (see isShopOpen / the
+// ShopModal closed state).
 export function getShopsForLocation(locationId, entries, shops) {
   if (!locationId || !shops) return [];
   const childrenMap = buildChildrenMap(entries);
-  return getChildren({ id: locationId }, childrenMap).filter((e) => isShop(e.id, shops));
+  return getChildren({ id: locationId }, childrenMap).filter(
+    (e) => isShop(e.id, shops) && isShopRevealed(e.id, shops)
+  );
 }
 
 // Resolve a shop's wares into displayable items: each ware `ref` → catalog item,

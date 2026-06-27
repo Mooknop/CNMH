@@ -130,6 +130,23 @@ describe('getShopsForLocation', () => {
     expect(getShopsForLocation(null, entries, shops)).toEqual([]);
     expect(getShopsForLocation('sandpoint', entries, null)).toEqual([]);
   });
+
+  it('hides a revealed:false child but keeps legacy and revealed:true ones (#822)', () => {
+    const withReveal = {
+      'bottled-solutions': { revealed: false, wares: [{ ref: 'antidote' }] },     // explicitly hidden
+      'curious-goblin': { revealed: true, wares: [{ ref: 'spellbook' }] },         // shown
+      // town-hall: legacy (no revealed) shop — stays visible
+      'town-hall': { wares: [{ ref: 'gavel' }] },
+    };
+    const ids = getShopsForLocation('sandpoint', entries, withReveal).map((e) => e.id);
+    expect(ids).toEqual(['curious-goblin', 'town-hall']);
+  });
+
+  it('still lists a closed (but revealed) shop — closed is a trading state, not a hide', () => {
+    const closed = { 'bottled-solutions': { open: false, wares: [{ ref: 'antidote' }] } };
+    const ids = getShopsForLocation('sandpoint', entries, closed).map((e) => e.id);
+    expect(ids).toContain('bottled-solutions');
+  });
 });
 
 describe('resolveShopWares', () => {

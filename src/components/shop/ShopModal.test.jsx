@@ -312,6 +312,45 @@ describe('ShopModal', () => {
     });
   });
 
+  describe('closed shop (#822 S2)', () => {
+    const closedShops = [{ id: 'bottled-solutions', title: 'Bottled Solutions', summary: 'A cluttered alchemist.' }];
+    const closedStore = {
+      'bottled-solutions': { open: false, wares: [{ ref: 'antidote', price: 8 }] },
+    };
+    const renderClosed = () =>
+      render(
+        <ShopModal
+          isOpen
+          onClose={() => {}}
+          shops={closedShops}
+          waresStore={closedStore}
+          items={items}
+          character={{ id: 'char-1', name: 'Pellias' }}
+        />
+      );
+
+    it('tags a closed shop in the carousel', () => {
+      renderClosed();
+      expect(screen.getByText('Closed')).toBeInTheDocument();
+    });
+
+    it('shows a not-trading notice instead of wares and blocks buying', () => {
+      renderClosed();
+      openBottledSolutions();
+      expect(screen.getByTestId('shop-closed')).toHaveTextContent("isn’t trading right now");
+      expect(screen.queryByTestId('ware-antidote')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('add antidote')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Confirm purchase' })).not.toBeInTheDocument();
+    });
+
+    it('leaves an open (legacy, no open field) shop trading normally', () => {
+      renderModal(); // waresStore entries have no `open` field
+      openBottledSolutions();
+      expect(screen.queryByTestId('shop-closed')).not.toBeInTheDocument();
+      expect(screen.getByTestId('ware-antidote')).toBeInTheDocument();
+    });
+  });
+
   it('returns to the carousel from the shop window', () => {
     renderModal();
     fireEvent.click(screen.getByText('The Curious Goblin'));

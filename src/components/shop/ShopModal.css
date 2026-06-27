@@ -31,6 +31,26 @@
   font-weight: 700;
   font-size: var(--text-sm);
   color: var(--theme-text, var(--shell-text));
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* A revealed-but-closed shop (#822 S2): still listed, dimmed, tagged Closed. */
+.shop-card--closed {
+  opacity: 0.6;
+}
+
+.shop-card-tag {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-full, 999px);
+  color: var(--theme-text-secondary, var(--shell-text-secondary));
 }
 
 .shop-card-summary {
