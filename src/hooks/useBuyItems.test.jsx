@@ -96,6 +96,33 @@ describe('useBuyItems', () => {
     ]);
   });
 
+  it('credits a bought Scroll/Wand as a minimal re-resolvable ref entry (#812 S9)', () => {
+    buyerGold = 5000;
+    const scroll = {
+      id: 'scroll-of-heal',
+      name: 'Scroll of Heal',
+      level: 3,
+      price: 30,
+      weight: 0.1,
+      traits: ['Consumable', 'Magical', 'Scroll'],
+      wareKey: 'scroll:heal',
+      scroll: { spellRef: 'heal' },
+    };
+    const wand = {
+      id: 'wand-of-haste',
+      name: 'Wand of Haste',
+      price: 360,
+      wareKey: 'wand:haste',
+      wand: { spellRef: 'haste', rank: 4 },
+    };
+    const { result } = renderHook(() => useBuyItems('a'));
+    result.current.buy([{ item: scroll, qty: 1 }, { item: wand, qty: 1 }], 'Curious Goblin');
+    expect(mockSetAcquired).toHaveBeenCalledWith([
+      { scroll: { spellRef: 'heal' }, uid: 'buy-1' },
+      { wand: { spellRef: 'haste', rank: 4 }, uid: 'buy-2' },
+    ]);
+  });
+
   it('debits the cart total from gold', () => {
     const { result } = renderHook(() => useBuyItems('a'));
     result.current.buy([{ item: sword, qty: 2 }, { item: potion, qty: 3 }]);
