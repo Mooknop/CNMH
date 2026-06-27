@@ -3,7 +3,7 @@ import Modal from '../shared/Modal';
 import ItemModal from '../inventory/ItemModal';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
-import { resolveShopWares } from '../../utils/shopUtils';
+import { resolveShopWares, isShopOpen } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine } from '../../utils/shopCart';
 import { useBuyItems } from '../../hooks/useBuyItems';
 import { useRuneWork } from '../../hooks/useRuneWork';
@@ -68,6 +68,10 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
 
   const list = Array.isArray(shops) ? shops : [];
   const selected = list.find((s) => s.id === selectedId) || null;
+  // A revealed-but-closed shop (#822 S2) is still browsable in the carousel but
+  // not trading: it shows a notice instead of the wares/cart so nothing can be
+  // bought or etched while closed.
+  const closed = selected ? !isShopOpen(selected.id, waresStore) : false;
   const wares = useMemo(
     () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap, runeMap) : []),
     [selected, waresStore, catalogMap, runeMap]
@@ -126,17 +130,23 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
           {list.length === 0 ? (
             <p className="shop-empty">There are no shops here.</p>
           ) : (
-            list.map((shop) => (
-              <button
-                key={shop.id}
-                type="button"
-                className="shop-card"
-                onClick={() => openShop(shop.id)}
-              >
-                <span className="shop-card-name">{shop.title}</span>
-                {shop.summary && <span className="shop-card-summary">{shop.summary}</span>}
-              </button>
-            ))
+            list.map((shop) => {
+              const shopClosed = !isShopOpen(shop.id, waresStore);
+              return (
+                <button
+                  key={shop.id}
+                  type="button"
+                  className={`shop-card${shopClosed ? ' shop-card--closed' : ''}`}
+                  onClick={() => openShop(shop.id)}
+                >
+                  <span className="shop-card-name">
+                    {shop.title}
+                    {shopClosed && <span className="shop-card-tag">Closed</span>}
+                  </span>
+                  {shop.summary && <span className="shop-card-summary">{shop.summary}</span>}
+                </button>
+              );
+            })
           )}
         </div>
       ) : (
@@ -154,7 +164,11 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
             </p>
           )}
 
-          {etchWare ? (
+          {closed ? (
+            <p className="shop-empty" data-testid="shop-closed">
+              {selected.title} isn&rsquo;t trading right now.
+            </p>
+          ) : etchWare ? (
             <div className="shop-etch" data-testid="shop-etch-picker">
               <button type="button" className="shop-back" onClick={() => setEtchWare(null)}>
                 ← Back to wares
