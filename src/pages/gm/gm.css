@@ -409,6 +409,118 @@
   .gm-shop-shelf { flex: none; }
 }
 
+/* Command finder (#822 S5) */
+.gm-shop-crumbs { font-size: 0.78rem; color: var(--shell-text-secondary); margin-bottom: 10px; }
+.gm-shop-crumbs span { margin: 0 6px; opacity: 0.6; }
+.gm-shop-crumbs strong { color: var(--shell-text); }
+
+.gm-shop-finder { display: flex; justify-content: center; padding: 40px 16px; }
+.gm-shop-finder-inner { width: 100%; max-width: 620px; }
+.gm-shop-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-mid);
+}
+.gm-shop-live {
+  letter-spacing: 0.04em;
+  color: var(--shell-text-secondary);
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.gm-shop-finder-head { margin: 10px 0 4px; font-size: 1.4rem; }
+.gm-shop-finder-sub { margin: 0 0 18px; color: var(--shell-text-secondary); font-size: 0.9rem; }
+
+.gm-shop-combo { position: relative; }
+.gm-shop-combo-mag {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--shell-text-secondary);
+  pointer-events: none;
+}
+.gm-shop-combo-input { width: 100%; padding: 14px 16px 14px 44px; font-size: 0.95rem; }
+
+.gm-shop-pop {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  padding: 6px;
+  background: var(--shell-surface, var(--surface-inset));
+  border: 1px solid var(--shell-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.8);
+  max-height: 360px;
+  overflow-y: auto;
+}
+.gm-shop-pop-group {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--shell-text-secondary);
+  padding: 8px 8px 4px;
+}
+.gm-shop-pop-empty { padding: 14px 10px; color: var(--shell-text-secondary); }
+.gm-shop-opt {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 7px 9px;
+  cursor: pointer;
+  color: inherit;
+}
+.gm-shop-opt:hover { background: var(--surface-inset); border-left-color: var(--gold-mid); }
+.gm-shop-opt-name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.gm-shop-opt-badge { color: var(--gold-mid); font-size: 0.72rem; }
+.gm-shop-opt-sub { font-size: 0.74rem; color: var(--shell-text-secondary); }
+
+.gm-shop-quick { margin-top: 22px; }
+.gm-shop-quick-h {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--shell-text-secondary);
+  margin-bottom: 8px;
+}
+.gm-shop-chiprow { display: flex; flex-wrap: wrap; gap: 8px; }
+.gm-shop-quickchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--shell-border-strong);
+  background: var(--surface-inset);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: inherit;
+}
+.gm-shop-quickchip:hover { border-color: var(--gold-mid); }
+.gm-shop-quickchip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold-mid);
+  box-shadow: 0 0 6px var(--gold-mid);
+}
+.gm-shop-quick-empty { margin: 0; }
+
 /* Tradition checkbox set (spell editor) */
 .gm-tradition-row { align-items: center; gap: 14px; flex-wrap: wrap; }
 .gm-checkbox {
