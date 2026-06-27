@@ -921,18 +921,18 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "akonis-grove",
-      "title": "Akoni's Grove",
       "category": "Location",
-      "summary": "The ancient redwood heart of the Tickwood, where the dryad Akoni holds court over sprites, grigs, and other fey — though recent redcap meddling has left its power dynamics dangerously uncertain.",
       "content": "Akoni's Grove occupies the deepest part of the Tickwood, where the oldest and largest redwood trees stand. Here the dryad Akoni presides as lord of the wood's fey inhabitants, holding court over a retinue of sprites and grigs.\n\nA family of redcaps — led by their self-styled patriarch 'Grandfather' Grustmier — had moved into the Tickwood and begun quietly poisoning the great redwood tree to which Akoni is bound, weakening the dryad until he had no choice but to comply with their demands.\n\nNow chased off, the Grove is returning to normalcy, though Akoni still worries about what brought the redcaps to his woods in the first place...",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "akonis-grove",
+      "parent": "tickwood",
       "related": [
         "akoni",
-        "tickwood",
         "sandpoint-hinterlands",
         "grandfather-grustmier",
         "the-scarnettis"
       ],
+      "summary": "The ancient redwood heart of the Tickwood, where the dryad Akoni holds court over sprites, grigs, and other fey — though recent redcap meddling has left its power dynamics dangerously uncertain.",
       "tags": [
         "akoni's grove",
         "fey",
@@ -941,22 +941,21 @@
         "location",
         "hinterlands"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Akoni's Grove",
+      "visibility": "revealed"
     },
     {
-      "id": "aliver-pillbug-podiker",
-      "title": "Aliver 'Pillbug' Podiker",
       "category": "NPC",
-      "summary": "Sandpoint's alchemist — a poison dealer if you know how to ask hiding behind a respectable storefront.",
       "content": "An unassuming, if strange, alchemist. Just as likely to offer a healing poltice as a deadly poison, depending on his judgement of your needs.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "aliver-pillbug-podiker",
       "related": [
         "pillbugs-pantry",
         "sandpoint",
-        "midnight-dawn",
         "bunyip-club",
         "the-sczarni"
       ],
+      "summary": "Sandpoint's alchemist — a poison dealer if you know how to ask hiding behind a respectable storefront.",
       "tags": [
         "aliver pillbug podiker",
         "alchemist",
@@ -965,7 +964,7 @@
         "midnight dawn",
         "poison"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Aliver 'Pillbug' Podiker",
       "visibility": "gm"
     },
     {
@@ -1126,18 +1125,17 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "belor-hemlock",
-      "title": "Belor Hemlock",
       "category": "NPC",
-      "summary": "Sandpoint's Shoanti sheriff — he took the job on the worst night of the town's history and never gave it back.",
       "content": "Belor Hemlock changed his name from Viskalai — the Shoanti word for hemlock — as a gesture of belonging to the town that elected him in the aftermath of Chopper's rampage. His brother has never forgiven him for it.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "belor-hemlock",
       "related": [
         "sandpoint-garrison",
         "sandpoint",
-        "town-watch",
         "garridan-viskalai",
         "kaye-tresarani"
       ],
+      "summary": "Sandpoint's Shoanti sheriff — he took the job on the worst night of the town's history and never gave it back.",
       "tags": [
         "belor hemlock",
         "sheriff",
@@ -1146,7 +1144,7 @@
         "npc",
         "town watch"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Belor Hemlock",
       "visibility": "gm"
     },
     {
@@ -1180,37 +1178,34 @@
       "visibility": "revealed"
     },
     {
-      "id": "bottled-solutions",
-      "title": "Bottled Solutions",
       "category": "Location",
-      "summary": "A cluttered alchemist's shop on Raven Street — plentiful and varied stock, with quality that doesn't always match the label.",
       "content": "Nisk Tander's shop sells alchemical items and potions in impressive variety, piled on shelves in a system only Nisk understands. His prices are fair and his enthusiasm genuine; his quality control is another matter, and locals know that the occasional bottle from his shelves simply doesn't work. Those who want surer goods pay more at Pillbug's Pantry — and weigh that against the rumors about its owner.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "bottled-solutions",
+      "parent": "sandpoint",
       "related": [
-        "pillbugs-pantry",
-        "sandpoint"
+        "pillbugs-pantry"
       ],
+      "summary": "A cluttered alchemist's shop on Raven Street — plentiful and varied stock, with quality that doesn't always match the label.",
       "tags": [
         "alchemy",
         "shop",
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Bottled Solutions",
+      "visibility": "revealed"
     },
     {
-      "id": "brodert-quink",
-      "title": "Brodert Quink",
       "category": "NPC",
-      "summary": "Sandpoint's Thassilonian scholar — decades of study and no prestige to show for it, until recently when people started realizing he'd been right all along.",
       "content": "Brodert studied with dwarven engineers at Janderhoff and catalogued ruins at the Founder's Archive in Magnimar. He's spent years insisting the Old Light was a war machine. The town is only now catching up to him, and he has mixed feelings about being vindicated this way.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "brodert-quink",
       "related": [
         "old-light",
-        "sandpoint",
-        "ancient-thassilon",
-        "runewatchers",
-        "janderhoff"
+        "sandpoint"
       ],
+      "summary": "Sandpoint's Thassilonian scholar — decades of study and no prestige to show for it, until recently when people started realizing he'd been right all along.",
       "tags": [
         "brodert quink",
         "scholar",
@@ -1219,20 +1214,20 @@
         "npc",
         "runewatchers"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Brodert Quink",
       "visibility": "gm"
     },
     {
-      "id": "broderts-house",
-      "title": "Brodert's House",
       "category": "Location",
-      "summary": "The comfy, book-crammed Tower Street home of Sandpoint's most respected sage.",
       "content": "Brodert Quink's house is less a residence than a library with a bed in it. Sandpoint's foremost expert on Thassilonian lore — and self-appointed scholar of the Old Light — keeps decades of tomes, monographs, and half-finished theories here, and is always delighted by visitors who ask the right questions. Whether his advice is free depends on how much he likes you.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "broderts-house",
+      "parent": "sandpoint",
       "related": [
         "brodert-quink",
-        "sandpoint",
         "old-light"
       ],
+      "summary": "The comfy, book-crammed Tower Street home of Sandpoint's most respected sage.",
       "tags": [
         "brodert quink",
         "sage",
@@ -1241,8 +1236,8 @@
         "location",
         "thassilon"
       ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Brodert's House",
+      "visibility": "gm"
     },
     {
       "id": "brotherhood-of-the-platinum-band",
@@ -1300,23 +1295,23 @@
       "visibility": "gm"
     },
     {
-      "id": "carpenters-guild",
-      "title": "Carpenter's Guild",
       "category": "Location",
-      "summary": "Festival Street's guildhall for builders — the place to go for a new home or honest repairs.",
       "content": "The Carpenter's Guild handles Sandpoint's building and repair work, from storm-damaged roofs to whole new houses. The dwarf Aesrick Battlehorn leads it, and his standards are why Sandpoint's buildings outlast its weather.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "carpenters-guild",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "sandpoint-lumber-mill"
       ],
+      "summary": "Festival Street's guildhall for builders — the place to go for a new home or honest repairs.",
       "tags": [
         "carpenter",
         "guild",
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Carpenter's Guild",
+      "visibility": "revealed"
     },
     {
       "id": "casp-avertin",
@@ -1432,14 +1427,12 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "choppers-isle",
-      "title": "Chopper's Isle",
       "category": "Location",
-      "summary": "A rocky island just off the coast — where Sandpoint's most infamous killer lived, and where the ruins of his home still sit, untouched.",
       "content": "Chopper's Isle is the small rocky outcrop revealed to be the home of Sandpoint's infamous serial killer.Nobody goes there if they can help it. Children dare each other to swim out to it.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "choppers-isle",
+      "parent": "sandpoint",
+      "summary": "A rocky island just off the coast — where Sandpoint's most infamous killer lived, and where the ruins of his home still sit, untouched.",
       "tags": [
         "choppers isle",
         "sandpoint",
@@ -1447,19 +1440,19 @@
         "dark history",
         "chopper"
       ],
-      "visibility": "gm",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Chopper's Isle",
+      "visibility": "gm"
     },
     {
-      "id": "cracktooths-tavern",
-      "title": "Cracktooth's Tavern",
       "category": "Location",
-      "summary": "A tavern that looks like a rough-and-tumble dive but occasionally hosts the sharpest political commentary in town.",
       "content": "Cracktooth's is owned by Jesk 'Cracktooth' Berinni, who looks like a brawler and reads like a scholar. Nights when Jesk takes the stage to deliver his observations on Magnimar's politics are standing room only. The jagged teeth and thickset neck are somewhat misleading.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "cracktooths-tavern",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "jesk-cracktooth-berinni"
       ],
+      "summary": "A tavern that looks like a rough-and-tumble dive but occasionally hosts the sharpest political commentary in town.",
       "tags": [
         "cracktooths tavern",
         "tavern",
@@ -1467,7 +1460,7 @@
         "location",
         "entertainment"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Cracktooth's Tavern",
       "visibility": "revealed"
     },
     {
@@ -1534,17 +1527,16 @@
       "visibility": "gm"
     },
     {
-      "id": "daviren-hosk",
-      "title": "Daviren Hosk",
       "category": "NPC",
-      "summary": "Security and muscle at the Rusty Dragon — and the man in Sandpoint with the most personal reasons to hate goblins.",
       "content": "Daviren lost an eye to a goblin horsechopper during the Thistletop raid. He added eight goblin ears to his collection in the same fight. His feelings on the subject have not moderated since.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "daviren-hosk",
       "related": [
         "the-rusty-dragon",
         "sandpoint",
-        "ripnugget",
-        "thistletop"
+        "ripnugget"
       ],
+      "summary": "Security and muscle at the Rusty Dragon — and the man in Sandpoint with the most personal reasons to hate goblins.",
       "tags": [
         "daviren hosk",
         "rusty dragon",
@@ -1552,21 +1544,20 @@
         "npc",
         "goblins"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Daviren Hosk",
       "visibility": "gm"
     },
     {
-      "id": "desna",
-      "title": "Desna",
       "category": "Religion",
-      "summary": "The goddess of dreams, travelers, and freedom — one of the most widely worshipped deities in Varisia, with a particular significance to the Varisian people.",
       "content": "Desna is the goddess of dreams, travelers, and freedom. She is one of the most widely worshipped deities in Varisia, particularly among the Varisian people who see her as a patron of the road and of personal liberty. Her faith emphasizes joy, exploration, and the beauty of the night sky.\n\nThe inclusion of a Desnan temple in the Sandpoint Cathedral was a condition of the compromise reached with the Varisian Council after the Scarnetti founding raid — a gesture of respect for Varisian nomadic culture. Father Abstalar Zantus, while a devoted cleric of Desna, keeps the cathedral open to all faiths.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "desna",
       "related": [
         "sandpoint-cathedral",
         "abstalar-zantus",
-        "varisian-people",
         "sandpoint"
       ],
+      "summary": "The goddess of dreams, travelers, and freedom — one of the most widely worshipped deities in Varisia, with a particular significance to the Varisian people.",
       "tags": [
         "desna",
         "religion",
@@ -1574,20 +1565,20 @@
         "travelers",
         "varisian"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Desna",
+      "visibility": "revealed"
     },
     {
-      "id": "deverin-manor",
-      "title": "Deverin Manor",
       "category": "Location",
-      "summary": "Home of Sandpoint's mayor and the loud, sprawling Deverin family — perpetually crowded, perpetually political.",
       "content": "Deverin Manor houses Kendra Deverin alongside her brother's large and rambunctious family. Her sister-in-law Vana is a persistent presence who believes the family deserves more space, more luxury, and more acknowledgment than it currently receives. Kendra has been managing this with commendable patience.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "deverin-manor",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "kendra-deverin",
         "the-deverins"
       ],
+      "summary": "Home of Sandpoint's mayor and the loud, sprawling Deverin family — perpetually crowded, perpetually political.",
       "tags": [
         "deverin manor",
         "manor",
@@ -1595,7 +1586,7 @@
         "location",
         "deverins"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Deverin Manor",
       "visibility": "revealed"
     },
     {
@@ -1641,19 +1632,18 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "dispater",
-      "title": "Dispater",
       "category": "Religion",
-      "summary": "The Iron Lord — archdevil, greatest jailer and politician of Hell, ruler of Dis, and one of Asmodeus's oldest and most trusted allies. Calculating, patient, and absolutely merciless when provoked.",
       "content": "Dispater is Hell's greatest jailer and politician, ruling its second layer, Dis. Known as the Iron Lord, Father of Dis, and First King, he is one of the most active rulers of Hell and one of Asmodeus's closest and longest-standing allies. He appears as a majestic, towering figure with rust-red skin, four horns, and a burning crown that hovers above his head — a fallen angel whose black wings he keeps retracted within his body at almost all times.\n\nDispater is a master strategist and expert in intrigue. He prefers to use his commanding presence, charm, and political leverage to achieve his ends rather than direct violence — but when violence becomes necessary, he reminds everyone precisely why he is feared. His symbol of office is an artifact known as the Eclipsing Eye. His religious symbol is an iron spike driven into a golden ring with a red and purple crown.\n\nAlone among the lords of Hell, Dispater believes in the virtues of courtly love. He has taken three wives over his eons-long existence: the first is forgotten even by himself, her only memorial a shattered statue in his throne room. His second was Feronia, an elemental demigoddess, with whom he had a brief tempestuous relationship that produced the empyreal lord Ragathiel. His third and current wife is Erecura, a once-mortal demigoddess condemned to Hell for stealing the secret of eternal life from Pharasma — and whom Dispater sincerely loves.\n\nDispater's armies were responsible for the destruction of the demon lord Xar-Azmak, whose Abyssal realm Vlorus now lies unclaimed.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "dispater",
       "related": [
         "hell",
         "dis",
         "erecura",
         "asmodeus",
-        "vlorus",
-        "deity"
+        "vlorus"
       ],
+      "summary": "The Iron Lord — archdevil, greatest jailer and politician of Hell, ruler of Dis, and one of Asmodeus's oldest and most trusted allies. Calculating, patient, and absolutely merciless when provoked.",
       "tags": [
         "dispater",
         "archdevil",
@@ -1662,8 +1652,8 @@
         "npc",
         "iron lord"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Dispater",
+      "visibility": "revealed"
     },
     {
       "id": "elder-ordwi",
@@ -1754,21 +1744,19 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "fatmans-feedbag",
-      "title": "Fatman's Feedbag",
       "category": "Location",
-      "summary": "The roughest bar in Sandpoint — cheap drinks, no questions asked, and a clientele that prefers it that way.",
       "content": "Fatman's Feedbag is the Sandpoint establishment least interested in Sandpoint's reputation as a charming arts town. It caters to laborers, dockworkers, and anyone who wants to drink without being seen doing it.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "fatmans-feedbag",
+      "parent": "sandpoint",
+      "summary": "The roughest bar in Sandpoint — cheap drinks, no questions asked, and a clientele that prefers it that way.",
       "tags": [
         "fatmans feedbag",
         "tavern",
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Fatman's Feedbag",
       "visibility": "revealed"
     },
     {
@@ -1842,22 +1830,22 @@
       "visibility": "gm"
     },
     {
-      "id": "goblin-squash-stables",
-      "title": "Goblin Squash Stables",
       "category": "Location",
-      "summary": "Sandpoint's stables — named with the particular enthusiasm of a man who really, really hates goblins.",
       "content": "Sandpoint's main stabling facility is owned by Daviren Hosk, who named it with characteristic restraint. It functions as a fully operational stable and is well-maintained. Daviren's goblin ear collection is displayed near the entrance. Visitors are encouraged not to comment on it.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "goblin-squash-stables",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "daviren-hosk"
       ],
+      "summary": "Sandpoint's stables — named with the particular enthusiasm of a man who really, really hates goblins.",
       "tags": [
         "goblin squash stables",
         "stables",
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Goblin Squash Stables",
       "visibility": "revealed"
     },
     {
@@ -1902,24 +1890,24 @@
       "visibility": "gm"
     },
     {
-      "id": "gorvis-shack",
-      "title": "Gorvi's Shack",
       "category": "Location",
-      "summary": "A dilapidated shack on Tower Street — home of Sandpoint's dungsweeper boss and his crew of useful troublemakers.",
       "content": "Gorvi's shack looks one storm away from joining the refuse its owner manages. From it, the half-orc Gorvi runs Sandpoint's garbage collection with a crew of ruffians whose services — official and otherwise — are more valuable to the town than anyone likes to admit.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "gorvis-shack",
+      "parent": "sandpoint",
       "related": [
         "gorvi",
-        "sandpoint",
         "junkers-edge"
       ],
+      "summary": "A dilapidated shack on Tower Street — home of Sandpoint's dungsweeper boss and his crew of useful troublemakers.",
       "tags": [
         "gorvi",
         "dungsweepers",
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Gorvi's Shack",
+      "visibility": "revealed"
     },
     {
       "id": "gozreh",
@@ -1966,16 +1954,16 @@
       "visibility": "gm"
     },
     {
-      "id": "grocers-hall",
-      "title": "Grocer's Hall",
       "category": "Location",
-      "summary": "An open-fronted hall on Festival Street — market stalls out front, farming supplies in the back.",
       "content": "Grocer's Hall is where Sandpoint's food trade lives: an open facade hosting produce markets, with farming supplies sold in the back. The halfling grocer Olmur Danavakus runs it with unflappable good cheer and serves as the de facto link between the town and the hinterland farms.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "grocers-hall",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "sandpoint-market",
         "sandpoint-hinterlands"
       ],
+      "summary": "An open-fronted hall on Festival Street — market stalls out front, farming supplies in the back.",
       "tags": [
         "grocer",
         "market",
@@ -1984,21 +1972,20 @@
         "location",
         "food"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Grocer's Hall",
+      "visibility": "revealed"
     },
     {
-      "id": "hannah-velerin",
-      "title": "Hannah Velerin",
       "category": "NPC",
-      "summary": "Sandpoint's herbalist and healer — a town council member quietly dealing with a threatening situation she hasn't taken to the authorities yet.",
       "content": "Hannah is trusted by most of Sandpoint and sits on the town council. She handles the anonymous threats showing up at her door with the patience of someone who has dealt with worse, and the caution of someone who knows that patience has limits.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "hannah-velerin",
       "related": [
         "hannahs",
         "sandpoint",
-        "sandpoint-town-council",
         "gozreh"
       ],
+      "summary": "Sandpoint's herbalist and healer — a town council member quietly dealing with a threatening situation she hasn't taken to the authorities yet.",
       "tags": [
         "hannah velerin",
         "herbalist",
@@ -2007,20 +1994,20 @@
         "npc",
         "town council"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Hannah Velerin",
       "visibility": "gm"
     },
     {
-      "id": "hannahs",
-      "title": "Hannah's",
       "category": "Location",
-      "summary": "Sandpoint's herbalist and healer — primal spellcasting, fresh remedies, and an anonymous harassment campaign that its proprietor is trying to handle without involving the sheriff.",
       "content": "Hannah Velerin runs her shop and home as Sandpoint's primary source of herbal medicine and primal spellcasting. She spends her mornings in the hinterlands gathering ingredients and her afternoons treating patients.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "hannahs",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "hannah-velerin",
         "sandpoint-hinterlands"
       ],
+      "summary": "Sandpoint's herbalist and healer — primal spellcasting, fresh remedies, and an anonymous harassment campaign that its proprietor is trying to handle without involving the sheriff.",
       "tags": [
         "hannahs",
         "herbalist",
@@ -2029,7 +2016,7 @@
         "location",
         "primal"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Hannah's",
       "visibility": "revealed"
     },
     {
@@ -2077,11 +2064,11 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "hellstorm-catacombs",
-      "title": "Sandpoint Catacombs",
       "category": "Location",
-      "summary": "Ancient Thassilonian chambers beneath the cathedral and Boneyard — broken into by the goblin ghouls who stole Nualia's remains.",
       "content": "When Nualia's grave was found torn open, the tunnel beneath it led somewhere no one expected: a complex of worked-stone chambers far older than Sandpoint, dating to the age of ancient Thassilon. Goblin ghouls had nested in the upper halls, raising a bloody shrine to Kabriri on which they bundled Nualia's stolen skeleton.\n\nThe deeper chambers hold older mysteries — fire-blasted rooms, a shrine where an ancient flame still burns, and great slabs of rune-carved stone whose purpose not even the town's sages can yet name.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "hellstorm-catacombs",
+      "parent": "sandpoint",
       "related": [
         "sandpoint-cathedral",
         "sandpoint-boneyard",
@@ -2091,6 +2078,7 @@
         "hellstorm-focus",
         "abstalar-zantus"
       ],
+      "summary": "Ancient Thassilonian chambers beneath the cathedral and Boneyard — broken into by the goblin ghouls who stole Nualia's remains.",
       "tags": [
         "catacombs",
         "thassilon",
@@ -2098,8 +2086,8 @@
         "location",
         "dungeon"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Catacombs",
+      "visibility": "revealed"
     },
     {
       "id": "hellstorm-focus",
@@ -2137,22 +2125,19 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "house-of-blue-stones",
-      "title": "House of Blue Stones",
       "category": "Location",
-      "summary": "A monastery at the edge of town — home to Sabyl Sorn, a monk who keeps to herself but is worth knowing.",
       "content": "The House of Blue Stones sits quietly at the edge of Sandpoint's residential areas, a small monastery run by a single monk named Sabyl Sorn. It does not advertise. Those who seek it out generally find what they came for.",
-      "related": [
-        "sandpoint",
-        "jabyl-sorn"
-      ],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "house-of-blue-stones",
+      "parent": "sandpoint",
+      "summary": "A monastery at the edge of town — home to Sabyl Sorn, a monk who keeps to herself but is worth knowing.",
       "tags": [
         "house of blue stones",
         "monastery",
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "House of Blue Stones",
       "visibility": "revealed"
     },
     {
@@ -2175,16 +2160,15 @@
       "visibility": "gm"
     },
     {
-      "id": "ilsoari-gandethus",
-      "title": "Ilsoari Gandethus",
       "category": "NPC",
-      "summary": "Headmaster of Turandarok Academy — a retired adventurer who runs an orphanage and keeps a locked museum of the things he killed, with one notable regret.",
       "content": "Ilsoari is the kind of retired adventurer who chose to do something useful with his time. He runs the school and orphanage with genuine care. His basement collection is extraordinary. And there's a dungeon he never got to finish exploring — the Pit — that he's never quite gotten over.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "ilsoari-gandethus",
       "related": [
         "turandarok-academy",
-        "sandpoint",
-        "runewatchers"
+        "sandpoint"
       ],
+      "summary": "Headmaster of Turandarok Academy — a retired adventurer who runs an orphanage and keeps a locked museum of the things he killed, with one notable regret.",
       "tags": [
         "ilsoari gandethus",
         "turandarok academy",
@@ -2193,18 +2177,17 @@
         "wizard",
         "adventurer"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Ilsoari Gandethus",
       "visibility": "gm"
     },
     {
-      "id": "iron-harbor",
-      "title": "Iron Harbor",
       "category": "Location",
-      "summary": "The rougher, more militant sister-town of Osprey Cove — a garrison settlement devoted to Gorum whose Stonehome church-fortress has recently been infiltrated by a dangerous cult.",
-      "content": "Iron Harbor is the sister settlement to Osprey Cove, situated on the mainland beside the island that holds the Thassilonian ruin of Rusthenge. Where Osprey Cove is gentle and communal, Iron Harbor is gruff, militaristic, and fiercely devoted to Gorum, the Lord of Battle. The town's center of power is Stonehome, a structure that serves simultaneously as garrison and temple.\n\nRecently, Stonehome and Iron Harbor have been infiltrated and partially taken over by followers of the dead demon lord Xar-Azmak, operating under the direction of Meitremar — a scholar and operative who serves Runelord Belimarius's government in Xin-Edasseril. The loyal Gorumites who survived the takeover of Stonehome were handed over to Meitremar's sinspawn ally Azomi. ",
+      "content": "Iron Harbor is the sister settlement to Osprey Cove, situated on the mainland beside the island that holds the Thassilonian ruin of Rusthenge. Where Osprey Cove is gentle and communal, Iron Harbor is gruff, militaristic, and fiercely devoted to Gorum, the Lord of Battle. The town's center of power is Stonehome, a structure that serves simultaneously as garrison and temple.\n\nRecently, Stonehome and Iron Harbor have been infiltrated and partially taken over by followers of the dead demon lord Xar-Azmak, operating under the direction of Meitremar — a scholar and operative who serves Runelord Belimarius's government in Xin-Edasseril. The loyal Gorumites who survived the takeover of Stonehome were handed over to Meitremar's sinspawn ally Azomi.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "iron-harbor",
+      "parent": "kindred-coast",
       "related": [
         "osprey-cove",
-        "kindred-coast",
         "rusthenge",
         "gorum",
         "runelord-belimarius",
@@ -2213,6 +2196,7 @@
         "dis",
         "dispater"
       ],
+      "summary": "The rougher, more militant sister-town of Osprey Cove — a garrison settlement devoted to Gorum whose Stonehome church-fortress has recently been infiltrated by a dangerous cult.",
       "tags": [
         "iron harbor",
         "kindred coast",
@@ -2221,7 +2205,7 @@
         "gorum",
         "iron archipelago"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Iron Harbor",
       "visibility": "revealed"
     },
     {
@@ -2265,19 +2249,18 @@
       "visibility": "gm"
     },
     {
-      "id": "jasper-korvaski",
-      "title": "Jasper Korvaski",
       "category": "NPC",
-      "summary": "Sandpoint's town planner and retired paladin of Abadar — incorruptible in ways that make him both invaluable and occasionally inconvenient.",
       "content": "Jasper handles Sandpoint's planning, zoning, and property disputes with the same nigh-incorruptible character that once made him a paladin. The Scarnettis have tried to push him out of town. He has declined to leave.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "jasper-korvaski",
       "related": [
         "sandpoint-theater",
         "cyrdak-drokkus",
         "sandpoint",
-        "sandpoint-merchantile-league",
         "abadar",
         "hayliss-korvaski"
       ],
+      "summary": "Sandpoint's town planner and retired paladin of Abadar — incorruptible in ways that make him both invaluable and occasionally inconvenient.",
       "tags": [
         "jasper korvaski",
         "town planner",
@@ -2286,7 +2269,7 @@
         "npc",
         "paladin"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Jasper Korvaski",
       "visibility": "gm"
     },
     {
@@ -2354,15 +2337,15 @@
       "visibility": "gm"
     },
     {
-      "id": "junkers-edge",
-      "title": "Junker's Edge",
       "category": "Location",
-      "summary": "The cliff at the edge of town where Sandpoint disposes of its refuse — and where Gorvi, the town's half-orc dung-sweeper, holds quiet authority.",
       "content": "Junker's Edge is the waste disposal point for most of Sandpoint's refuse, a stretch of cliff from which garbage is dumped into the sea below. It is overseen by Gorvi, the town's half-orc dung-sweeper, who employs a small crew of youths and lives in a shack on Tower Street by choice rather than necessity.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "junkers-edge",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "gorvi"
       ],
+      "summary": "The cliff at the edge of town where Sandpoint disposes of its refuse — and where Gorvi, the town's half-orc dung-sweeper, holds quiet authority.",
       "tags": [
         "junkers edge",
         "sandpoint",
@@ -2370,7 +2353,7 @@
         "refuse",
         "cliffside"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Junker's Edge",
       "visibility": "revealed"
     },
     {
@@ -2395,17 +2378,17 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "kaijitsu-manor",
-      "title": "Kaijitsu Manor",
       "category": "Location",
-      "summary": "The Kaijitsu family estate — largely empty now, with its most famous resident an empress on the other side of the world.",
       "content": "Kaijitsu Manor stands as a monument to a family that made Sandpoint's glasswork famous and then departed for a far grander stage. With Ameiko Kaijitsu now Empress of Minkai, the manor is maintained but quiet, and the glassworks it once supported stand closed and rumored-haunted nearby.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "kaijitsu-manor",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "the-kaijitsus",
         "ameiko-kaijitsu",
         "sandpoint-glassworks"
       ],
+      "summary": "The Kaijitsu family estate — largely empty now, with its most famous resident an empress on the other side of the world.",
       "tags": [
         "kaijitsu manor",
         "manor",
@@ -2413,7 +2396,7 @@
         "location",
         "kaijitsu"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Kaijitsu Manor",
       "visibility": "revealed"
     },
     {
@@ -2437,17 +2420,16 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "kaye-tresarani",
-      "title": "Kaye Tresarani",
       "category": "NPC",
-      "summary": "Proprietor of the Pixie's Kitten — well-connected, quietly formidable, and in a long-running relationship with the sheriff that neither of them advertises.",
       "content": "Kaye runs her establishment with a shrewdness that extends well beyond the front door. She has a seat on the town council, a relationship with Belor Hemlock that the town politely pretends not to notice, and ears in places most people forget are listening.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "kaye-tresarani",
       "related": [
         "the-pixies-kitten",
         "sandpoint",
-        "belor-hemlock",
-        "sandpoint-town-council"
+        "belor-hemlock"
       ],
+      "summary": "Proprietor of the Pixie's Kitten — well-connected, quietly formidable, and in a long-running relationship with the sheriff that neither of them advertises.",
       "tags": [
         "kaye tresarani",
         "pixies kitten",
@@ -2455,22 +2437,21 @@
         "npc",
         "town council"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Kaye Tresarani",
       "visibility": "gm"
     },
     {
-      "id": "kendra-deverin",
-      "title": "Kendra Deverin",
       "category": "NPC",
-      "summary": "Sandpoint's mayor — fiery-haired, sharp-minded, and genuinely liked by the people she governs, which her rivals find deeply inconvenient.",
       "content": "Kendra didn't want to be mayor. She won anyway, and has been better at the job than most expected. She governs with a personal touch that the founding families find insufficiently aristocratic and the townspeople find refreshing.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "kendra-deverin",
       "related": [
         "sandpoint",
-        "sandpoint-town-council",
         "deverin-manor",
         "the-deverins",
         "titus-scarnetti"
       ],
+      "summary": "Sandpoint's mayor — fiery-haired, sharp-minded, and genuinely liked by the people she governs, which her rivals find deeply inconvenient.",
       "tags": [
         "kendra deverin",
         "mayor",
@@ -2478,51 +2459,46 @@
         "npc",
         "government"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Kendra Deverin",
       "visibility": "gm"
     },
     {
-      "id": "kindred-coast",
-      "title": "The Kindred Coast",
       "category": "Location",
-      "summary": "A stretch of coastline on an island in the Iron Archipelago, home to the twin towns of Osprey Cove and Iron Harbor — and to the shadow of the ancient Thassilonian ruin Rusthenge.",
       "content": "The Kindred Coast is the name for the coast of an island in the Iron Archipelago, a region that has come under the political umbrella of New Thassilon. It is home to the brother-towns of Osprey Cove and Iron Harbor, both founded by escaped slaves from the pirating hub of Riddleport who sought a new life free of the city's violence and exploitation.\n\nThe region is notable for its proximity to significant Ancient Thassilonian ruins, most notably Rusthenge. This has drawn the attention of Runelord Belimarius's government, which has begun extending its influence into the area through operatives like Meitremar.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "kindred-coast",
       "related": [
-        "osprey-cove",
-        "iron-harbor",
-        "rusthenge",
         "new-thassilon",
-        "runelord-belimarius",
-        "ancient-thassilon"
+        "runelord-belimarius"
       ],
+      "summary": "A stretch of coastline on an island in the Iron Archipelago, home to the twin towns of Osprey Cove and Iron Harbor — and to the shadow of the ancient Thassilonian ruin Rusthenge.",
       "tags": [
         "kindred coast",
         "iron archipelago",
         "location",
         "new thassilon"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Kindred Coast",
       "visibility": "gm"
     },
     {
-      "id": "korvosa",
-      "title": "Korvosa",
       "category": "Location",
-      "summary": "The eldest of Varisia's city-states, Korvosa was once part of Imperial Cheliax and retains strong Chelaxian traditions, built atop the ruins of an ancient Thassilonian city.",
       "content": "Korvosa is the eldest of Varisia's three city-states, once part of Imperial Cheliax but now independent. The settlement originally served as a defensive position for settlers entering Varisia, growing over time into a cosmopolitan center of trade. Korvosa is built upon the ruins of the Ancient Thassilonian city of Xin-Eurythnia, once the capital of the realm ruled by Runelord Sorshen, the Runelord of Lust.\n\nKorvosa maintains strong ties to Chelaxian tradition and culture, which puts it at odds with the more progressive Magnimar.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "korvosa",
+      "parent": "varisia",
       "related": [
-        "varisia",
-        "ancient-thassilon",
         "runelord-sorshen",
         "the-scarnettis"
       ],
+      "summary": "The eldest of Varisia's city-states, Korvosa was once part of Imperial Cheliax and retains strong Chelaxian traditions, built atop the ruins of an ancient Thassilonian city.",
       "tags": [
         "korvosa",
         "city-state",
         "varisia",
         "cheliax"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Korvosa",
       "visibility": "gm"
     },
     {
@@ -2589,25 +2565,25 @@
       "visibility": "gm"
     },
     {
-      "id": "magnimar",
-      "title": "Magnimar",
       "category": "Location",
-      "summary": "One of Varisia's two great city-states, Magnimar is an ambitious metropolis that casts its political shadow over Sandpoint and much of the Lost Coast.",
       "content": "Magnimar stands as one of the two major city-states of southern Varisia, sitting in the shadow of the most awe-inspiring ruins of Ancient Thassilon: the crumbled cyclopean bridge called the Irespan. The city is ambitious and cosmopolitan, governed by a Lord-Mayor and the Council of Ushers, with a third, less official body — the Varisian Council — representing the nomadic Varisian people.\n\nSandpoint is technically a holding of Magnimar, though its isolated location means the city's direct authority is limited. The four founding families of Sandpoint — the Deverins, Scarnettis, Kaijitsus, and Valdemars — all trace their origins to Magnimar's aristocracy.\n\nMagnimar is divided into numerous districts, from the wealthy Alabaster District to the criminal-ridden Underbridge slums. Criminal organizations such as the Night Scales and the Sczarni gangs operate in its shadows. The Pathfinder Society maintains a lodge here at Heidmarch Manor.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "magnimar",
+      "parent": "varisia",
       "related": [
         "sandpoint",
-        "varisia",
         "pathfinder-society",
         "founding-families",
         "the-scarnettis"
       ],
+      "summary": "One of Varisia's two great city-states, Magnimar is an ambitious metropolis that casts its political shadow over Sandpoint and much of the Lost Coast.",
       "tags": [
         "magnimar",
         "city-state",
         "varisia",
         "politics"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Magnimar",
       "visibility": "gm"
     },
     {
@@ -2637,17 +2613,11 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "midnight-milk",
-      "title": "Midnight Milk",
       "category": "Artifact",
-      "summary": "A pale, viscous substance rising up from the Darklands — those who drink it dream vividly and strangely, and some keep drinking.",
       "content": "A pale, viscous substance that has begun appearing in the deeper markets of Sekamina and, more recently, filtering up toward the surface. It has no taste. It barely has a smell — just something faintly mineral, faintly wrong.\n\nThose who drink it sleep. And while they sleep, they dream.\n\nThe dreams are vivid beyond natural dreaming — coherent, persistent, strange. Dreamers report the same recurring imagery: vast dark spaces, slow movement through tunnels, a distant sound like breathing. Some wake disturbed but unharmed. A few return to it. A smaller number keep returning until they can't stop.\n\nNo one with any credibility will confirm where it comes from, only that it originates somewhere in the Darklands — almost certainly Orv, given the routes it travels. Who produces it, what it actually is, and what extended use does to a person remain unanswered questions.\n\nIt is not widely available. Yet.",
-      "related": [
-        "darklands",
-        "orv",
-        "sekamina",
-        "dwimovel"
-      ],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "midnight-milk",
+      "summary": "A pale, viscous substance rising up from the Darklands — those who drink it dream vividly and strangely, and some keep drinking.",
       "tags": [
         "midnight milk",
         "artifact",
@@ -2657,19 +2627,16 @@
         "dreams",
         "mystery"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Midnight Milk",
       "visibility": "gm"
     },
     {
-      "id": "mvashti",
-      "title": "Mvashti's Place",
       "category": "Location",
-      "summary": "The home and business of Sandpoint's Varisian seer — a source of occult spellcasting and lodging, and an old woman who has been watching this town longer than most of it has existed.",
       "content": "Madame Mvashti is one of Sandpoint's oldest residents, a Varisian seer whose reputation for genuine insight has outlasted the skepticism of every newcomer who dismissed her. She offers occult spellcasting and maintains a spare room for travelers, but those who come looking for a novelty fortune-teller tend to leave unsettled in ways they didn't anticipate.",
-      "related": [
-        "sandpoint",
-        "niska-mvashti"
-      ],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "mvashti",
+      "parent": "sandpoint",
+      "summary": "The home and business of Sandpoint's Varisian seer — a source of occult spellcasting and lodging, and an old woman who has been watching this town longer than most of it has existed.",
       "tags": [
         "mvashti",
         "seer",
@@ -2679,7 +2646,7 @@
         "location",
         "lodging"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Mvashti's Place",
       "visibility": "revealed"
     },
     {
@@ -2704,26 +2671,25 @@
       "visibility": "gm"
     },
     {
-      "id": "new-thassilon",
-      "title": "New Thassilon",
       "category": "History",
-      "dateArStart": 4720,
-      "summary": "The recently returned Thassilonian civilization, formed by time-displaced peoples, is now split between the rule of Runelord Belimarius and the surprising reformer Runelord Sorshen.",
       "content": "New Thassilon is the returned civilization of Ancient Thassilonian peoples — survivors and time-displaced subjects of the old empire who have re-established a presence in Varisia. It is currently split between the rule of two Runelords: Runelord Belimarius (Runelord of Envy) and Runelord Sorshen (Runelord of Lust), who has taken a surprisingly different path from her former colleagues.\n\nThe return of New Thassilon has sparked renewed interest in Thassilonian history and ruins throughout Varisia. It has also created a new wave of worship for two long-lost gods: Lissala (goddess of runes, once the patron deity of Thassilon) and the Peacock Spirit (a mysterious god of success and prosperity).",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "dateArStart": 4720,
+      "id": "new-thassilon",
       "related": [
-        "ancient-thassilon",
         "runelord-sorshen",
         "varisia",
         "old-light",
         "brodert-quink"
       ],
+      "summary": "The recently returned Thassilonian civilization, formed by time-displaced peoples, is now split between the rule of Runelord Belimarius and the surprising reformer Runelord Sorshen.",
       "tags": [
         "new thassilon",
         "runelords",
         "history",
         "current events"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "New Thassilon",
       "visibility": "gm"
     },
     {
@@ -2752,17 +2718,15 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "old-light",
-      "title": "The Old Light",
       "category": "Location",
-      "summary": "Sandpoint's ancient ruined lighthouse — a Thassilonian remnant that Brodert Quink insists was once a weapon capable of destroying anything within a mile.",
       "content": "The Old Light is a ruined lighthouse that stretches above Sandpoint's coastal bluffs, a relic of the Thassilonian empire that predates the town by millennia. Most residents treat it as a landmark. Brodert Quink, the local Thassilonian scholar, has spent years arguing that it was never a lighthouse at all — that it was a war machine capable of projecting fire at range. Nobody believed him, for a long time. The return of New Thassilon and its Runelords has made people reconsider.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "old-light",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
-        "brodert-quink",
-        "ancient-thassilon",
-        "runewatchers"
+        "brodert-quink"
       ],
+      "summary": "Sandpoint's ancient ruined lighthouse — a Thassilonian remnant that Brodert Quink insists was once a weapon capable of destroying anything within a mile.",
       "tags": [
         "old light",
         "thassilon",
@@ -2771,21 +2735,20 @@
         "location",
         "lighthouse"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Old Light",
       "visibility": "revealed"
     },
     {
-      "id": "orb-of-blue-dragonkind",
-      "title": "Orb of Blue Dragonkind",
       "category": "Artifact",
-      "summary": "A mysterious crystalline orb streaked with blue light, currently in Blu-Kakke's possession — it pulses with electricity, feels disturbingly awake, and nobody knows what it fully does yet.",
       "content": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him.\n\nBlu found the orb before the events at Rusthenge, drawn toward some Ancient Thassilonian ruins where a patrol from Xin-Edasseril was cleaning out a trove of magical artifacts — the orb among them. What it was doing there, and why Xin-Edasseril's forces wanted it, remains unknown.\n\nJade determined it could be Activated, but attempting to do so backfired and discharged a bolt of electricity. The orb's full capabilities are not yet understood. It feels, in some hard-to-define way, awake — sometimes, when Blu holds it in quiet moments, he gets the distinct sense of being watched.\n\nGiven Blu's draconic lineage and his unusual connection to blue dragons specifically, the pull he feels toward the orb is unlikely to be coincidence.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "orb-of-blue-dragonkind",
       "related": [
         "blu-kakke",
-        "ancient-thassilon",
         "new-thassilon",
         "jade-inferno"
       ],
+      "summary": "A mysterious crystalline orb streaked with blue light, currently in Blu-Kakke's possession — it pulses with electricity, feels disturbingly awake, and nobody knows what it fully does yet.",
       "tags": [
         "orb of blue dragonkind",
         "artifact",
@@ -2795,18 +2758,17 @@
         "mystery",
         "thassilon"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Orb of Blue Dragonkind",
       "visibility": "gm"
     },
     {
-      "id": "osprey-cove",
-      "title": "Osprey Cove",
       "category": "Location",
-      "summary": "A laid-back coastal town of druids, farmers, and free spirits on the Kindred Coast — a world away from the grim militarism of its sister settlement Iron Harbor.",
       "content": "Osprey Cove is a small, community-minded town on the Kindred Coast of the Iron Archipelago, founded by escaped slaves from the pirate city of Riddleport. Its people have built a culture that prizes personal freedom, communal support, and a close relationship with the natural world. The town is generally full of worshippers of Cayden Cailean, and its druids and farmers set the tone for a settlement that is relaxed, egalitarian, and occasionally eccentric.\n\nOsprey Cove is governed informally by a council of Elders, currently including Milton Scarnetti and Elder Ordwi — a cleric of Cayden Cailean and a known friend of the natural world. The town stands in marked contrast to its sister settlement Iron Harbor across the water: where Iron Harbor is gruff, martial, and devoted to Gorum, Osprey Cove is gentle, communal, and welcoming to outsiders.\n\nThe Kindred Coast region lies close to significant Ancient Thassilonian ruins, most notably Rusthenge, which has drawn the attention of Runelord Belimarius's government in Xin-Edasseril.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "osprey-cove",
+      "parent": "kindred-coast",
       "related": [
         "iron-harbor",
-        "kindred-coast",
         "rusthenge",
         "elder-ordwi",
         "cayden-cailean",
@@ -2814,6 +2776,7 @@
         "new-thassilon",
         "runelord-belimarius"
       ],
+      "summary": "A laid-back coastal town of druids, farmers, and free spirits on the Kindred Coast — a world away from the grim militarism of its sister settlement Iron Harbor.",
       "tags": [
         "osprey cove",
         "kindred coast",
@@ -2822,27 +2785,26 @@
         "cayden cailean",
         "iron archipelago"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Osprey Cove",
       "visibility": "revealed"
     },
     {
-      "id": "pathfinder-society",
-      "title": "Pathfinder Society",
       "category": "Organization",
-      "summary": "A globe-spanning organization of explorers and chroniclers based in Absalom, with a significant presence in Magnimar through Heidmarch Manor.",
       "content": "The Pathfinder Society is a globe-spanning organization based out of Absalom, the City at the Center of the World. Its members — called Pathfinders — travel throughout Golarion to explore, delve, and document the lesser-seen parts of the world, sending journals back to their venture-captains. The most illuminating of these journals are compiled into the ongoing Pathfinder Chronicles series.\n\nIn Varisia, the Society operates out of Heidmarch Manor in Magnimar, run by Sheila and Canayven Heidmarch. They maintain ties with local scouts and take an active interest in Thassilonian ruins throughout the region.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "pathfinder-society",
       "related": [
-        "magnimar",
-        "ancient-thassilon"
+        "magnimar"
       ],
+      "summary": "A globe-spanning organization of explorers and chroniclers based in Absalom, with a significant presence in Magnimar through Heidmarch Manor.",
       "tags": [
         "pathfinder society",
         "organization",
         "magnimar",
         "explorers"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Pathfinder Society",
+      "visibility": "revealed"
     },
     {
       "id": "pazuzu",
@@ -2898,16 +2860,16 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "pillbugs-pantry",
-      "title": "Pillbug's Pantry",
       "category": "Location",
-      "summary": "Sandpoint's alchemist shop — legitimate medicinal supplies on the shelves, and something considerably less legitimate in the back.",
       "content": "Pillbug's Pantry operates as a perfectly respectable alchemy shop under the ownership of Aliver 'Pillbug' Podiker. It sells medicines and potions that the town genuinely needs. It also, for the right customers who know to ask the right question, sells poisons and other morally dubious alchemical concoctions.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "pillbugs-pantry",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "aliver-pillbug-podiker",
         "bunyip-club"
       ],
+      "summary": "Sandpoint's alchemist shop — legitimate medicinal supplies on the shelves, and something considerably less legitimate in the back.",
       "tags": [
         "pillbugs pantry",
         "alchemy",
@@ -2916,19 +2878,19 @@
         "location",
         "poison"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Pillbug's Pantry",
       "visibility": "revealed"
     },
     {
-      "id": "red-dog-smithy",
-      "title": "Red Dog Smithy",
       "category": "Location",
-      "summary": "Sandpoint's best smithy — extraordinary work, a terrifying owner, and several large red mastiffs who have better manners than their master.",
       "content": "Named for Das Korvut's beloved mastiffs, which lounge around the property at all times, the Red Dog Smithy produces excellent weapons and armor. Das has a foul temper, no patience for customers, and a habit of drunk midnight ranting that the town tolerates because the metalwork is genuinely superb. He's also illegally converted a vacant lot next door into a private cemetery for two mastiffs killed in the goblin raid, which has put the town planner in an awkward position.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "red-dog-smithy",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "das-korvut"
       ],
+      "summary": "Sandpoint's best smithy — extraordinary work, a terrifying owner, and several large red mastiffs who have better manners than their master.",
       "tags": [
         "red dog smithy",
         "smithy",
@@ -2936,7 +2898,7 @@
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Red Dog Smithy",
       "visibility": "revealed"
     },
     {
@@ -2957,16 +2919,16 @@
       "visibility": "gm"
     },
     {
-      "id": "rings-and-things",
-      "title": "Rings and Things",
       "category": "Location",
-      "summary": "A squat stone shop on Church Street dealing in jewelry, art, and quiet loans.",
       "content": "Maver Kesk's shop trades in jewelry and art objects, and provides Sandpoint's closest thing to formal moneylending. Every couple of months Maver organizes a guarded caravan south to Magnimar to make deposits at the Bank of Abadar — a regular bit of work for trustworthy blades.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "rings-and-things",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "abadar",
         "magnimar"
       ],
+      "summary": "A squat stone shop on Church Street dealing in jewelry, art, and quiet loans.",
       "tags": [
         "jewelry",
         "moneylending",
@@ -2974,8 +2936,8 @@
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Rings and Things",
+      "visibility": "revealed"
     },
     {
       "id": "ripnugget",
@@ -2995,19 +2957,15 @@
       "visibility": "gm"
     },
     {
-      "id": "risa-magravi",
-      "title": "Risa Magravi",
       "category": "NPC",
-      "summary": "Sandpoint's oldest innkeeper — a half-blind Varisian sorcerer whose tales of strange places are actually true, and who is quietly dying because she can no longer dream.",
       "content": "Risa built her tavern and her legend in equal measure. She travels the Dreamlands every night in her sleep — or she used to. Something is blocking her dreams now, and without them she believes she is fading.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "risa-magravi",
       "related": [
         "risas-place",
-        "sandpoint",
-        "dreamlands",
-        "besk-magravi",
-        "lanalee-magravi",
-        "vodger-magravi"
+        "sandpoint"
       ],
+      "summary": "Sandpoint's oldest innkeeper — a half-blind Varisian sorcerer whose tales of strange places are actually true, and who is quietly dying because she can no longer dream.",
       "tags": [
         "risa magravi",
         "varisian",
@@ -3017,22 +2975,19 @@
         "npc",
         "dreamlands"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Risa Magravi",
       "visibility": "gm"
     },
     {
-      "id": "risas-place",
-      "title": "Risa's Place",
       "category": "Location",
-      "summary": "A cozy Varisian tavern famous for its founder's dreamland stories — now run by her children, while Risa herself grows quietly, dangerously ill.",
       "content": "Risa's Place has been a Sandpoint fixture since the town's founding, built on the warmth and strange tales of its founder Risa Magravi, a Varisian sorcerer who spent her nights traveling the Dreamlands in her sleep. She's left day-to-day operations to her three children, Besk, Lanalee, and Vodger, but remains a fixture of the taproom. Lately she's been silent and listless — she hasn't been able to dream, and her appearances have become shorter and less frequent.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "risas-place",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
-        "risa-magravi",
-        "besk-magravi",
-        "lanalee-magravi",
-        "vodger-magravi"
+        "risa-magravi"
       ],
+      "summary": "A cozy Varisian tavern famous for its founder's dreamland stories — now run by her children, while Risa herself grows quietly, dangerously ill.",
       "tags": [
         "risas place",
         "tavern",
@@ -3041,7 +2996,7 @@
         "varisian",
         "dreamlands"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Risa's Place",
       "visibility": "revealed"
     },
     {
@@ -3062,15 +3017,15 @@
       "visibility": "gm"
     },
     {
-      "id": "rovanky-tannery",
-      "title": "Rovanky Tannery",
       "category": "Location",
-      "summary": "Sandpoint's tannery — excellent leather goods, long waits, and a perfectionist owner who keeps firing his help for not meeting his standards.",
       "content": "Rovanky Tannery sits at the edge of town, as tanneries do. Larz Rovanky runs it with a demanding efficiency that results in exceptional products and a perpetually thin staff, since Larz regularly fires workers who don't meet his standards and ends up doing most of the work himself.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "rovanky-tannery",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "larz-rovanky"
       ],
+      "summary": "Sandpoint's tannery — excellent leather goods, long waits, and a perfectionist owner who keeps firing his help for not meeting his standards.",
       "tags": [
         "rovanky tannery",
         "tannery",
@@ -3079,22 +3034,21 @@
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Rovanky Tannery",
       "visibility": "revealed"
     },
     {
-      "id": "runelord-belimarius",
-      "title": "Runelord Belimarius",
       "category": "NPC",
-      "summary": "The Runelord of Envy and ruler of half of New Thassilon — an ancient archmage who has reawakened from stasis and resumed command of her long-frozen capital Xin-Edasseril.",
       "content": "Belimarius was the tenth and final Runelord of Envy, ruler of the Ancient Thassilonian realm of Edasseril. She reigned from -5402 AR until the fall of Thassilon in -5293 AR, when she and the inhabitants of her capital Xin-Edasseril were preserved outside of normal time rather than destroyed by Earthfall.\n\nVery recently, adventurers freed Belimarius and the inhabitants of Xin-Edasseril from this state of captivity, and she has taken up the reins of leadership once again — now as co-ruler of the nation of New Thassilon alongside Runelord Sorshen. She wields Belimarius's Invidious Halberd, a weapon crafted by Xin himself for the previous Runelord of Envy.\n\nThe Runelord of Envy specializes in abjuration magic.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "runelord-belimarius",
       "related": [
         "new-thassilon",
-        "ancient-thassilon",
         "runelord-sorshen",
         "meitremar",
         "kindred-coast"
       ],
+      "summary": "The Runelord of Envy and ruler of half of New Thassilon — an ancient archmage who has reawakened from stasis and resumed command of her long-frozen capital Xin-Edasseril.",
       "tags": [
         "runelord",
         "envy",
@@ -3103,20 +3057,19 @@
         "new thassilon",
         "belimarius"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Runelord Belimarius",
       "visibility": "gm"
     },
     {
-      "id": "runelord-sorshen",
-      "title": "Runelord Sorshen",
       "category": "NPC",
-      "summary": "The ancient Runelord of Lust — unique among her peers for having chosen reform over conquest, and instrumental in opposing the return of more destructive runelords.",
       "content": "Runelord Sorshen was the Runelord of Lust in Ancient Thassilon, ruler of the realm of Eurythnia. Her ancient capital was Xin-Eurythnia, now the site of the modern city of Korvosa. Like her peers, she fled into magical stasis when Earthfall threatened the empire.\n\nIn recent years, Sorshen awakened and took a strikingly different path from the other returning Runelords — choosing to work against destructive forces rather than seek conquest. She was instrumental in empowering adventurers in their fight against the returning Runelord Alaznist, and invented the Runewaking Ritual, a crucial piece of magic for those hoping to permanently destroy Runelord Zutha.\n\nSorshen has been collecting the weapons of her fallen fellow Runelords, storing them in her personal demiplane, the Eye of Desire, to protect the world from their power. She now rules a portion of New Thassilon.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "runelord-sorshen",
       "related": [
-        "ancient-thassilon",
         "new-thassilon",
         "korvosa"
       ],
+      "summary": "The ancient Runelord of Lust — unique among her peers for having chosen reform over conquest, and instrumental in opposing the return of more destructive runelords.",
       "tags": [
         "runelord",
         "thassilon",
@@ -3124,19 +3077,18 @@
         "lust",
         "powerful"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Runelord Sorshen",
       "visibility": "gm"
     },
     {
-      "id": "runelord-xanderghul",
-      "title": "Runelord Xanderghul",
       "category": "NPC",
-      "summary": "The one and only Runelord of Pride — a master of illusion who secretly also posed as the god known as the Peacock Spirit, worshipped by rune magic scholars throughout Thassilon.",
       "content": "Runelord Xanderghul was the sole holder of the title of Runelord of Pride throughout all of Ancient Thassilon's history — there was only ever one. As the Runelord of Pride, he specialized in illusion magic, whose rune is the Crescent Scepter, and his sin's energy is violet.\n\nWhether Xanderghul survived Earthfall in magical stasis, as some of his peers did, remains unknown.\n\nPerhaps he was too prideful to run.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "runelord-xanderghul",
       "related": [
-        "ancient-thassilon",
         "new-thassilon"
       ],
+      "summary": "The one and only Runelord of Pride — a master of illusion who secretly also posed as the god known as the Peacock Spirit, worshipped by rune magic scholars throughout Thassilon.",
       "tags": [
         "runelord",
         "pride",
@@ -3146,24 +3098,23 @@
         "xanderghul",
         "peacock spirit"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Runelord Xanderghul",
       "visibility": "gm"
     },
     {
-      "id": "rusthenge",
-      "title": "Rusthenge",
       "category": "Location",
-      "summary": "An Ancient Thassilonian ruin on an island of the Kindred Coast — a site of dangerous historical research that has become the source of a plot to resurrect a dead demon lord.",
       "content": "Rusthenge is the most significant of the Ancient Thassilonian ruins near the Kindred Coast, situated on an island close to Iron Harbor. Like most Thassilonian ruins scattered across northwestern Avistan, it is a remnant of the empire that was destroyed by Earthfall ten thousand years ago.\n\nThe ruin has taken on new and sinister significance thanks to the scholar Meitremar, who has been using research found within Rusthenge to pursue the resurrection of the long-dead demon lord Xar-Azmak — the former ruler of the Abyssal realm of Vlorus. Meitremar operated under the political cover of Runelord Belimarius's government in Xin-Edasseril, lending the power of New Thassilon to his dangerous work.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "rusthenge",
+      "parent": "kindred-coast",
       "related": [
-        "kindred-coast",
         "iron-harbor",
         "meitremar",
         "vlorus",
         "runelord-belimarius",
-        "ancient-thassilon",
         "ferrumnestra"
       ],
+      "summary": "An Ancient Thassilonian ruin on an island of the Kindred Coast — a site of dangerous historical research that has become the source of a plot to resurrect a dead demon lord.",
       "tags": [
         "rusthenge",
         "ruins",
@@ -3172,42 +3123,16 @@
         "kindred coast",
         "xar-azmak"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Rusthenge",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint",
-      "title": "Sandpoint",
       "category": "Location",
-      "summary": "The Light of the Lost Coast — a small Varisian town with a long memory and a knack for attracting trouble far above its weight class.",
       "content": "Sandpoint sits in a natural cove along the cliff-lined Lost Coast of Varisia, roughly fifty miles northeast of Magnimar. It is Varisia's sixth-largest settlement and the only notable stop along this stretch of coast — a town that calls itself the Light of the Lost Coast and mostly believes it. Its reputation for arts, theater, and fine glasswork coexists uneasily with a history of serial murder, goblin raids, giant attacks, Runelord incursions, sinkholes into Thassilonian ruins, and tsunamis.\n\nThe town was founded in 4666 AR by four powerful families from Magnimar — the Kaijitsus, Valdemars, Scarnettis, and Deverins — who arrived to find Varisian travelers already using the land for their winter camps. The negotiations that followed went badly, though the resulting scandal was smoothed over, eventually, with a profit-sharing arrangement with the Varisian Council of Magnimar. That arrangement expires in 4726 AR. The town has not forgotten how it started.\n\nGovernment sits nominally with Mayor Kendra Deverin, a capable diplomat whose personal style of governance has earned her genuine affection. The Sandpoint Town Council shares power with the Mercantile League, the Cathedral, and the increasingly fractious interests of the remaining founding families. The sheriff is Belor Hemlock, a Shoanti man who took the job under terrible circumstances and has kept it well.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint",
+      "parent": "varisia",
       "related": [
-        "sandpoint-cathedral",
-        "sandpoint-garrison",
-        "sandpoint-theater",
-        "sandpoint-glassworks",
-        "the-rusty-dragon",
-        "the-white-deer",
-        "the-hagfish",
-        "cracktooths-tavern",
-        "risas-place",
-        "the-pixies-kitten",
-        "fatmans-feedbag",
-        "two-knight-brewing",
-        "the-feathered-serpent",
-        "the-curious-goblin",
-        "savah-armory",
-        "red-dog-smithy",
-        "pillbugs-pantry",
-        "turandarok-academy",
-        "sandpoint-boneyard",
-        "sandpoint-lumber-mill",
-        "old-light",
-        "choppers-isle",
-        "junkers-edge",
-        "house-of-blue-stones",
-        "mvashti",
-        "sandpoint-general-store",
         "kendra-deverin",
         "belor-hemlock",
         "titus-scarnetti",
@@ -3215,11 +3140,9 @@
         "the-deverins",
         "the-kaijitsus",
         "the-valdemars",
-        "sandpoint-merchantile-league",
-        "bunyip-club",
-        "runewatchers",
-        "town-watch"
+        "bunyip-club"
       ],
+      "summary": "The Light of the Lost Coast — a small Varisian town with a long memory and a knack for attracting trouble far above its weight class.",
       "tags": [
         "sandpoint",
         "lost coast",
@@ -3228,20 +3151,20 @@
         "location",
         "hub"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-boneyard",
-      "title": "Sandpoint Boneyard",
       "category": "Location",
-      "summary": "The town cemetery, attached to the Cathedral — well-kept, quietly sacred, and one of the few places in Sandpoint that has more answers than questions.",
       "content": "Sandpoint's graveyard adjoins the Cathedral grounds and is maintained by Naffer Vosk with meticulous care. It serves as both burial ground and a source of divine magic for those who know to ask. Quiet, orderly, and tended by a man who once lived on the wrong side of the law — it is, somehow, one of the more peaceful places in town.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-boneyard",
+      "parent": "sandpoint",
       "related": [
         "sandpoint-cathedral",
-        "naffer-vosk",
-        "sandpoint"
+        "naffer-vosk"
       ],
+      "summary": "The town cemetery, attached to the Cathedral — well-kept, quietly sacred, and one of the few places in Sandpoint that has more answers than questions.",
       "tags": [
         "sandpoint boneyard",
         "cemetery",
@@ -3249,20 +3172,20 @@
         "location",
         "divine"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Boneyard",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-boutique",
-      "title": "Sandpoint Boutique",
       "category": "Location",
-      "summary": "Market Street's everything-shop — art, books, toys, tools, and the odd salvaged treasure, under Hayliss Korvaski's exacting eye.",
       "content": "The Sandpoint Boutique stocks a little of everything: equipment, clothing, weapons, tools, books, toys, and art objects, much of it sold on consignment or salvaged from abandoned places. Hayliss Korvaski runs it with brisk Abadaran rectitude and also sells divine spellcasting services — healing chief among them.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "sandpoint-boutique",
+      "parent": "sandpoint",
       "related": [
         "hayliss-korvaski",
-        "sandpoint",
         "abadar"
       ],
+      "summary": "Market Street's everything-shop — art, books, toys, tools, and the odd salvaged treasure, under Hayliss Korvaski's exacting eye.",
       "tags": [
         "shop",
         "general goods",
@@ -3270,17 +3193,16 @@
         "location",
         "spellcasting"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Boutique",
+      "visibility": "revealed"
     },
     {
-      "id": "sandpoint-cathedral",
-      "title": "Sandpoint Cathedral",
       "category": "Location",
-      "summary": "A rare multi-faith cathedral at the heart of town — rebuilt after a devastating fire, and still carrying the weight of what burned.",
       "content": "Sandpoint Cathedral is the town's spiritual center and one of its most prominent buildings. It was rebuilt after the 4702 AR fire that destroyed the original chapel and killed Father Ezakien Tobyn — an event still referred to locally as part of 'the Late Unpleasantness.' The new cathedral honors six deities: Abadar, Desna, Erastil, Gozreh, Sarenrae, and Shelyn, reflecting the diverse beliefs of Sandpoint's population. The Desnan shrine was a condition of the town's founding agreement with the Varisian Council.\n\nFather Abstalar Zantus serves as high priest. Though personally a cleric of Desna, he ministers to followers of all faiths with genuine warmth. The cathedral offers healing magic, religious items, and divine scrolls, and serves as one of the town's two sources of divine spellcasting. The Sandpoint Boneyard is attached to the grounds.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-cathedral",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "abstalar-zantus",
         "naffer-vosk",
         "sandpoint-boneyard",
@@ -3291,6 +3213,7 @@
         "gozreh",
         "shelyn"
       ],
+      "summary": "A rare multi-faith cathedral at the heart of town — rebuilt after a devastating fire, and still carrying the weight of what burned.",
       "tags": [
         "sandpoint cathedral",
         "church",
@@ -3299,20 +3222,19 @@
         "location",
         "divine"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Cathedral",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-garrison",
-      "title": "Sandpoint Garrison",
       "category": "Location",
-      "summary": "The seat of Sandpoint's law — home to the town watch and the sheriff who keeps this strange little town from coming apart at the seams.",
       "content": "The Sandpoint Garrison houses the town watch and serves as the base of operations for Sheriff Belor Hemlock. It is a practical, solid structure befitting a town that has needed to defend itself more than once. Employment at the garrison is one of the more stable jobs in Sandpoint, and Belor runs a professional operation despite the budget constraints of a town this size.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-garrison",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
-        "belor-hemlock",
-        "town-watch"
+        "belor-hemlock"
       ],
+      "summary": "The seat of Sandpoint's law — home to the town watch and the sheriff who keeps this strange little town from coming apart at the seams.",
       "tags": [
         "sandpoint garrison",
         "law",
@@ -3320,21 +3242,21 @@
         "location",
         "sheriff"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Garrison",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-general-store",
-      "title": "Sandpoint General Store",
       "category": "Location",
-      "summary": "The Vinder family's general store — solid stock, a proprietor drinking himself apart in the cellar, and a wife holding things together by sheer will.",
       "content": "Sandpoint's general store is owned by Ven Vinder, who once took great pride in his business and his family. He's been spending most of his time in a cellar drinking hole since the murder of his eldest daughter. His wife Solsta runs the actual store and is increasingly worried about both her husband and their surviving daughter Shayliss, who has been coming home less and less.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-general-store",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "ven-vinder",
         "solsta-vinder",
         "shayliss-vinder"
       ],
+      "summary": "The Vinder family's general store — solid stock, a proprietor drinking himself apart in the cellar, and a wife holding things together by sheer will.",
       "tags": [
         "sandpoint general store",
         "shop",
@@ -3342,21 +3264,21 @@
         "location",
         "vinder"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint General Store",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-glassworks",
-      "title": "Sandpoint Glassworks",
       "category": "Location",
-      "summary": "Once the finest glassworks in the region — now closed, locked, and widely believed to be haunted.",
       "content": "The Sandpoint Glassworks was for decades one of the town's great economic engines, operated by the Kaijitsu family whose skill with glass was foundational to Sandpoint's cultural identity. After Ameiko Kaijitsu inherited the building and departed for Minkai, she closed the glassworks rather than deal with persistent rumors that it was haunted by victims of a prior tragedy. It stands empty now — the furnaces cold, the windows dark.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-glassworks",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "the-kaijitsus",
         "kaijitsu-manor",
         "ameiko-kaijitsu"
       ],
+      "summary": "Once the finest glassworks in the region — now closed, locked, and widely believed to be haunted.",
       "tags": [
         "sandpoint glassworks",
         "abandoned",
@@ -3365,20 +3287,20 @@
         "haunted",
         "kaijitsu"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Glassworks",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-hinterlands",
-      "title": "Sandpoint Hinterlands",
       "category": "Location",
-      "summary": "The wild and varied countryside surrounding Sandpoint — marshes, forests, moors, and rocky escarpments that conceal goblin tribes, ancient ruins, and stranger things.",
       "content": "The Sandpoint Hinterlands is the name for the area surrounding the town of Sandpoint. It encompasses a wide variety of terrain including Brinestump Marsh to the west, the Nettlewood and Mosswood forests, the Tickwood, the rocky Devil's Platter escarpment, the mysterious Turandarok River, and several areas of open moor. Multiple goblin tribes make their homes in the hinterlands.\n\nThe Turandarok River is said to lead, eventually, to the First World — an extraordinary claim that has driven many expeditions to madness. Closer to town, the Tickwood offers relatively safe hunting grounds for locals — when one accounts for its fey inhabitants.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-hinterlands",
+      "parent": "varisia",
       "related": [
         "sandpoint",
-        "tickwood",
         "akonis-grove"
       ],
+      "summary": "The wild and varied countryside surrounding Sandpoint — marshes, forests, moors, and rocky escarpments that conceal goblin tribes, ancient ruins, and stranger things.",
       "tags": [
         "hinterlands",
         "sandpoint",
@@ -3386,39 +3308,37 @@
         "geography",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Sandpoint Hinterlands",
+      "visibility": "revealed"
     },
     {
-      "id": "sandpoint-locksmith",
-      "title": "Sandpoint Locksmith",
       "category": "Location",
-      "summary": "Volioker Briskalberd's workshop on Tower Street — the source of nearly every lock in town.",
       "content": "Almost every lock in Sandpoint passed through the hands of Volioker Briskalberd, a dwarf locksmith of meticulous craft and long memory. He sells locks, fits them, and — for customers he trusts — discusses their weaknesses with professional candor.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "sandpoint-locksmith",
+      "parent": "sandpoint",
+      "summary": "Volioker Briskalberd's workshop on Tower Street — the source of nearly every lock in town.",
       "tags": [
         "locksmith",
         "shop",
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Locksmith",
+      "visibility": "revealed"
     },
     {
-      "id": "sandpoint-lumber-mill",
-      "title": "Sandpoint Lumber Mill",
       "category": "Location",
-      "summary": "One of the Scarnettis' industrial holdings — a working mill with a haunted reputation and a manager whose nightmares are getting worse.",
       "content": "The Sandpoint Lumber Mill is part of the Scarnetti family's commercial empire, operated under the thumb of its beleaguered manager Ibor Thorn. The mill functions, but Ibor has been suffering increasingly severe nightmares centered on the machinery, and his behavior has become erratic.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-lumber-mill",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "ibor-thorn",
         "scarnetti-consortium",
         "the-scarnettis"
       ],
+      "summary": "One of the Scarnettis' industrial holdings — a working mill with a haunted reputation and a manager whose nightmares are getting worse.",
       "tags": [
         "sandpoint lumber mill",
         "mill",
@@ -3426,38 +3346,36 @@
         "location",
         "scarnetti"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Lumber Mill",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-market",
-      "title": "Sandpoint Market",
       "category": "Location",
-      "summary": "The open square where Festival, Market, and Water Streets meet — children's playground most days, twice a week the town's beating commercial heart.",
       "content": "Most days the open marketplace belongs to children's games. On Moonday it fills with local farmers' stalls, and on Fireday it opens to traveling merchants from Magnimar, Galduria, and beyond — the one day a week Sandpoint can buy wares the town itself doesn't stock.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "sandpoint-market",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "grocers-hall",
         "magnimar"
       ],
+      "summary": "The open square where Festival, Market, and Water Streets meet — children's playground most days, twice a week the town's beating commercial heart.",
       "tags": [
         "market",
         "sandpoint",
         "location",
         "trade"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Market",
+      "visibility": "revealed"
     },
     {
-      "id": "sandpoint-meat-market",
-      "title": "Sandpoint Meat Market",
       "category": "Location",
-      "summary": "Market Street's butchery — slaughterhouse in one half, the day's cuts on display in the other.",
       "content": "Chod Bevuk's establishment is half slaughterhouse, half shopfront, with the day's meat displayed for sale a wall away from where it was dressed. Chod is friendly, loud, and generous with soup bones for regulars.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "sandpoint-meat-market",
+      "parent": "sandpoint",
+      "summary": "Market Street's butchery — slaughterhouse in one half, the day's cuts on display in the other.",
       "tags": [
         "butcher",
         "meat",
@@ -3466,39 +3384,39 @@
         "location",
         "food"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Meat Market",
+      "visibility": "revealed"
     },
     {
-      "id": "sandpoint-savories",
-      "title": "Sandpoint Savories",
       "category": "Location",
-      "summary": "The town's most beloved bakery — Alma Avertin's pastries are a civic institution on Main Street.",
       "content": "Sandpoint Savories is the town's most popular bakery, and mornings here smell like the best argument for living in Sandpoint. Alma Avertin has run it for decades, and her pastries and cookies are fixtures of every festival and most breakfasts.\n\nAlma herself carries more grief than her warm counter manner shows — she is the twin sister of the sheriff Chopper slew, and her daughter Arika left town for the adventuring life.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "sandpoint-savories",
+      "parent": "sandpoint",
       "related": [
         "alma-avertin",
-        "arika-avertin",
-        "sandpoint"
+        "arika-avertin"
       ],
+      "summary": "The town's most beloved bakery — Alma Avertin's pastries are a civic institution on Main Street.",
       "tags": [
         "bakery",
         "sandpoint",
         "location",
         "food"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Savories",
+      "visibility": "revealed"
     },
     {
-      "id": "sandpoint-shipyard",
-      "title": "Sandpoint Shipyard",
       "category": "Location",
-      "summary": "Where Sandpoint's boats get built and repaired — a working industrial facility tied historically to the Valdemar family legacy.",
       "content": "The Sandpoint Shipyard is one of the town's major employers and a legacy of the Valdemar family's original investment in the settlement. With the Valdemars largely departed, the shipyard operates independently, building and repairing vessels for the fishing fleet and occasional larger commissions.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-shipyard",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "the-valdemars"
       ],
+      "summary": "Where Sandpoint's boats get built and repaired — a working industrial facility tied historically to the Valdemar family legacy.",
       "tags": [
         "sandpoint shipyard",
         "shipyard",
@@ -3506,20 +3424,20 @@
         "location",
         "valdemar"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Shipyard",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-theater",
-      "title": "Sandpoint Theater",
       "category": "Location",
-      "summary": "Sandpoint's crown jewel of culture — a proper playhouse that holds its own against Magnimar's finest, run by a man with a dramatic past and a devoted husband.",
       "content": "The Sandpoint Theater is the town's most celebrated cultural institution and a point of genuine civic pride. Its proprietor, Cyrdak Drokkus, built it into something that can hold its own against the playhouses of Magnimar — a fact he takes great pleasure in, given that he was forced to flee Magnimar in 4700 AR under circumstances he enjoys hinting at without ever quite explaining.\n\nCyrdak is married to Jasper Korvaski, a retired paladin of Abadar and town planner whose involvement in the Mercantile League has shielded both men from the Scarnettis' persistent disapproval of their marriage.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "sandpoint-theater",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "cyrdak-drokkus",
         "jasper-korvaski"
       ],
+      "summary": "Sandpoint's crown jewel of culture — a proper playhouse that holds its own against Magnimar's finest, run by a man with a dramatic past and a devoted husband.",
       "tags": [
         "sandpoint theater",
         "culture",
@@ -3527,20 +3445,20 @@
         "location",
         "entertainment"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Sandpoint Theater",
       "visibility": "revealed"
     },
     {
-      "id": "sandpoint-town-hall",
-      "title": "Sandpoint Town Hall",
       "category": "Location",
-      "summary": "The two-story seat of Sandpoint's government on Main Street — meeting hall above, the town's vault below, and Shayliss Vinder keeping the whole thing running.",
       "content": "Sandpoint Town Hall hosts the town's public meetings and houses offices for its councilors, with a secure vault belowground that doubles as the town's bank. The councilors all have businesses and duties of their own, so in practice the building belongs to its clerk: Shayliss Vinder, who knows where every record, key, and favor in Sandpoint's government is kept.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "sandpoint-town-hall",
+      "parent": "sandpoint",
       "related": [
         "shayliss-vinder",
-        "kendra-deverin",
-        "sandpoint"
+        "kendra-deverin"
       ],
+      "summary": "The two-story seat of Sandpoint's government on Main Street — meeting hall above, the town's vault below, and Shayliss Vinder keeping the whole thing running.",
       "tags": [
         "town hall",
         "government",
@@ -3548,8 +3466,8 @@
         "location",
         "bank"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Sandpoint Town Hall",
+      "visibility": "revealed"
     },
     {
       "id": "sarenrae",
@@ -3575,15 +3493,15 @@
       "visibility": "gm"
     },
     {
-      "id": "savah-armory",
-      "title": "Savah's Armory",
       "category": "Location",
-      "summary": "Sandpoint's best source for weapons and armor — run by a merchant who has noticed, with mixed feelings, how good business has been since the adventurers started arriving.",
       "content": "Savah Bevaniky runs a well-stocked armory that has seen a notable uptick in business as Sandpoint's reputation as an adventuring hub has grown. She's glad for the coin. She is somewhat less glad about whatever keeps drawing all those adventurers here in the first place.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "savah-armory",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "savah-bevaniky"
       ],
+      "summary": "Sandpoint's best source for weapons and armor — run by a merchant who has noticed, with mixed feelings, how good business has been since the adventurers started arriving.",
       "tags": [
         "savah armory",
         "weapons",
@@ -3592,7 +3510,7 @@
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Savah's Armory",
       "visibility": "revealed"
     },
     {
@@ -3616,18 +3534,17 @@
       "visibility": "gm"
     },
     {
-      "id": "scarnetti-consortium",
-      "title": "The Scarnetti Consortium",
       "category": "Organization",
-      "summary": "An aggressive industrial conglomerate of mills and lumber concerns owned and controlled by Titus Scarnetti — widely regarded as Sandpoint's most unpleasant power broker.",
       "content": "The Scarnetti Consortium is a collection of industrial companies and concerns centered on Sandpoint's lumber and milling industries, all owned and directed by Titus Scarnetti, the head of the Scarnetti family. The Consortium controls the lumber supply that competing interests — especially the now-weakened Valdemars — depend on, and Titus leverages this dependency openly and without apology.\n\nThe Consortium has a deeply negative reputation with much of Sandpoint's population, particularly the Varisian community. Evidence of collusion with local criminal elements nearly surfaced publicly when Scarnetti Manor was damaged in a giant raid; Titus managed to suppress most of it, but enough leaked to cause lasting damage to the family's standing. Since then, the Consortium has been rebuilt through secret dealings with Korvosan interests.\n\nThe Consortium is distinct from the broader Sandpoint Mercantile League, which it participates in but frequently works against. Its influence rating in town is sharply negative.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "scarnetti-consortium",
       "related": [
         "the-scarnettis",
         "titus-scarnetti",
         "sandpoint",
-        "sandpoint-mercantile-league",
         "korvosa"
       ],
+      "summary": "An aggressive industrial conglomerate of mills and lumber concerns owned and controlled by Titus Scarnetti — widely regarded as Sandpoint's most unpleasant power broker.",
       "tags": [
         "scarnetti consortium",
         "organization",
@@ -3636,20 +3553,20 @@
         "lumber",
         "scarnetti"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "The Scarnetti Consortium",
+      "visibility": "revealed"
     },
     {
-      "id": "scarnetti-manor",
-      "title": "Scarnetti Manor",
       "category": "Location",
-      "summary": "The Scarnetti family estate — recently rebuilt after giant-raid damage, and paid for with money from a source Titus would rather not discuss.",
       "content": "Scarnetti Manor was damaged during a giant raid and spent several years in disrepair while the family's reputation suffered. Titus Scarnetti has since rebuilt both, and rumors abound about the sudden reversal of fortunes.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "scarnetti-manor",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "titus-scarnetti",
         "the-scarnettis"
       ],
+      "summary": "The Scarnetti family estate — recently rebuilt after giant-raid damage, and paid for with money from a source Titus would rather not discuss.",
       "tags": [
         "scarnetti manor",
         "manor",
@@ -3657,21 +3574,20 @@
         "location",
         "scarnetti"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Scarnetti Manor",
       "visibility": "revealed"
     },
     {
-      "id": "scarnetti-mill",
-      "title": "Scarnetti Mill",
       "category": "Location",
-      "summary": "The Scarnetti family's grain mill — one of their primary commercial operations, run by a man paid barely enough to stay and threatened enough not to leave.",
       "content": "Scarnetti Mill is one of the family's foundational commercial assets, managed by the perpetually anxious Courrin Whesterwill under conditions that might charitably be described as exploitative.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "scarnetti-mill",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "the-scarnettis",
-        "titus-scarnetti",
-        "courrin-whesterwill"
+        "titus-scarnetti"
       ],
+      "summary": "The Scarnetti family's grain mill — one of their primary commercial operations, run by a man paid barely enough to stay and threatened enough not to leave.",
       "tags": [
         "scarnetti mill",
         "mill",
@@ -3679,7 +3595,7 @@
         "location",
         "scarnetti"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Scarnetti Mill",
       "visibility": "revealed"
     },
     {
@@ -3751,15 +3667,15 @@
       "visibility": "gm"
     },
     {
-      "id": "the-curious-goblin",
-      "title": "The Curious Goblin",
       "category": "Location",
-      "summary": "Sandpoint's bookshop — crammed with tomes, overpriced for the locals, and run by an old scholar who cares more about the books than the business.",
       "content": "The Curious Goblin is a well-stocked bookshop whose prices reflect its proprietor's priorities — Chask Haladan values the books for their own sake, not for what they'll fetch. His adventuring youth gave him enough of a nest egg to run the shop on his own terms, which means most locals can't afford to shop there regularly. He also offers arcane spellcasting for those who ask.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "the-curious-goblin",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "chask-haladan"
       ],
+      "summary": "Sandpoint's bookshop — crammed with tomes, overpriced for the locals, and run by an old scholar who cares more about the books than the business.",
       "tags": [
         "curious goblin",
         "bookshop",
@@ -3767,7 +3683,7 @@
         "location",
         "arcane"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Curious Goblin",
       "visibility": "revealed"
     },
     {
@@ -3792,15 +3708,15 @@
       "visibility": "gm"
     },
     {
-      "id": "the-feathered-serpent",
-      "title": "The Feathered Serpent",
       "category": "Location",
-      "summary": "Sandpoint's curio shop — stocked with oddities, scrolls, and magical wares by a gregarious proprietor who always seems to know what you need before you do.",
       "content": "The Feathered Serpent is the kind of shop that rewards browsing. Vorvashali Voon fills it with curiosities and magical items that seem almost randomly assembled but have a way of being exactly relevant.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "the-feathered-serpent",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "vorvashali-voon"
       ],
+      "summary": "Sandpoint's curio shop — stocked with oddities, scrolls, and magical wares by a gregarious proprietor who always seems to know what you need before you do.",
       "tags": [
         "feathered serpent",
         "shop",
@@ -3809,19 +3725,19 @@
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Feathered Serpent",
       "visibility": "revealed"
     },
     {
-      "id": "the-hagfish",
-      "title": "The Hagfish",
       "category": "Location",
-      "summary": "A dockside dive bar — home to tall tales, a legendary challenge involving a tank of hagfish slime, and the best excuse to stay drunk on the waterfront.",
       "content": "The Hagfish is a rowdy waterfront tavern popular with sailors, fishers, and people who enjoy a challenge. The house challenge involves drinking from a tank of slime produced by the bar's resident hagfish, Norah. Those who manage it have their names written on the ceiling. The proprietor, Jargie Quinn, has a different story every night about how he lost his leg, and the yarning is half the draw.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "the-hagfish",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "jargie-quinn"
       ],
+      "summary": "A dockside dive bar — home to tall tales, a legendary challenge involving a tank of hagfish slime, and the best excuse to stay drunk on the waterfront.",
       "tags": [
         "hagfish",
         "tavern",
@@ -3830,7 +3746,7 @@
         "dockside",
         "challenge"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Hagfish",
       "visibility": "revealed"
     },
     {
@@ -3855,17 +3771,17 @@
       "visibility": "gm"
     },
     {
-      "id": "the-pit",
-      "title": "The Pit",
       "category": "Location",
-      "summary": "A fog-choked shaft sunk into Devil's Platter southeast of town — a byword for danger, and the grave of more than one adventuring company.",
       "content": "Every local has a story about the Pit, and most of them end badly. It is an open shaft in the heart of Devil's Platter, the rocky escarpment a couple of miles southeast of Sandpoint — perpetually fogged below its rim, ringed by jagged stone, and home (the stories insist) to the Sandpoint Devil itself.\n\nAdventurers used to try their luck in its caves semi-regularly. Few came back, and these days most seek their fortunes elsewhere; the most recent company to descend was wiped out, leaving a single survivor. Those who want more than tavern tales are usually pointed at the sage Brodert Quink and his shelves of old books.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "the-pit",
+      "parent": "sandpoint-hinterlands",
       "related": [
-        "sandpoint-hinterlands",
         "brodert-quink",
         "arika-avertin",
         "sandpoint"
       ],
+      "summary": "A fog-choked shaft sunk into Devil's Platter southeast of town — a byword for danger, and the grave of more than one adventuring company.",
       "tags": [
         "the pit",
         "devils platter",
@@ -3873,19 +3789,19 @@
         "danger",
         "sandpoint devil"
       ],
-      "visibility": "gm",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "The Pit",
+      "visibility": "gm"
     },
     {
-      "id": "the-pixies-kitten",
-      "title": "The Pixie's Kitten",
       "category": "Location",
-      "summary": "Sandpoint's brothel — a surprisingly tasteful establishment whose proprietor keeps it safer and quieter than its reputation suggests.",
       "content": "The Pixie's Kitten is Sandpoint's open secret — a brothel operated with a discretion that most of the town appreciates and none of the Scarnettis will acknowledge. It offers lodging as well as its primary services, and its proprietor, Kaye Tresarani, is a prominent enough figure in town that her establishment operates without serious harassment.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "the-pixies-kitten",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "kaye-tresarani"
       ],
+      "summary": "Sandpoint's brothel — a surprisingly tasteful establishment whose proprietor keeps it safer and quieter than its reputation suggests.",
       "tags": [
         "pixies kitten",
         "brothel",
@@ -3893,7 +3809,7 @@
         "location",
         "lodging"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Pixie's Kitten",
       "visibility": "revealed"
     },
     {
@@ -3921,17 +3837,17 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "the-rusty-dragon",
-      "title": "The Rusty Dragon",
       "category": "Location",
-      "summary": "Sandpoint's most popular inn and tavern — warm, welcoming, and still carrying the legend of its famous former owner.",
       "content": "The Rusty Dragon is the beating heart of Sandpoint's social life: the best food in town, a reputation for welcoming adventurers, and a history that includes its former proprietor Ameiko Kaijitsu ascending to become Empress of Minkai. The inn is now managed by Bethana Corwin, a halfling who handles the quieter side of the business, and Daviren Hosk, who handles security and heavy labor while nursing a profound and personal hatred of goblins.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "the-rusty-dragon",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "bethana-corwin",
         "daviren-hosk",
         "ameiko-kaijitsu"
       ],
+      "summary": "Sandpoint's most popular inn and tavern — warm, welcoming, and still carrying the legend of its famous former owner.",
       "tags": [
         "rusty dragon",
         "tavern",
@@ -3941,7 +3857,7 @@
         "food",
         "lodging"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Rusty Dragon",
       "visibility": "revealed"
     },
     {
@@ -4005,14 +3921,12 @@
       "visibility": "gm"
     },
     {
-      "id": "the-way-north",
-      "title": "The Way North",
       "category": "Location",
-      "summary": "A cozy map shop on Cliff Street — charts, cartography supplies, and a gnome who will talk routes as long as you let him.",
       "content": "The Way North sells local and regional maps, novelty treasure maps, and the supplies to make your own, all under the proprietorship of Veznutt Parooh — a gnome cartographer and wizard of modest but practical talent who also sells arcane spellcasting services. Veznutt is forever hungry for new maps of anywhere, and pays for good ones.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "the-way-north",
+      "parent": "sandpoint",
+      "summary": "A cozy map shop on Cliff Street — charts, cartography supplies, and a gnome who will talk routes as long as you let him.",
       "tags": [
         "maps",
         "cartography",
@@ -4021,20 +3935,20 @@
         "location",
         "spellcasting"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "The Way North",
+      "visibility": "revealed"
     },
     {
-      "id": "the-white-deer",
-      "title": "The White Deer",
       "category": "Location",
-      "summary": "The newest building in town, capitalizing on the influx of flush pursed adventurers coming through town.",
       "content": "The White Deer offers massive rooms for large parties, as well as the most luxurious accomodations. Its owner, Garridan Viskalai, keeps the place immaculate in an attempt to lure The Next Big Adventuring Party to get some of the spotlight that the Rusty Dragon enjoys. His gruff demeanor undercuts the effort somewhat, but the quality of the rooms speaks for itself. Garridan is the brother of Sheriff Belor Hemlock — a fact neither of them discusses without visible discomfort.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "the-white-deer",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "garridan-viskalai",
         "belor-hemlock"
       ],
+      "summary": "The newest building in town, capitalizing on the influx of flush pursed adventurers coming through town.",
       "tags": [
         "white deer",
         "inn",
@@ -4042,22 +3956,21 @@
         "location",
         "lodging"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The White Deer",
       "visibility": "revealed"
     },
     {
-      "id": "tickwood",
-      "title": "The Tickwood",
       "category": "Location",
-      "summary": "A small forest just outside Sandpoint, popular with local hunters — though its fey lord Akoni and a recent redcap incursion make it less safe than it appears.",
       "content": "The Tickwood is a relatively small forested area in the Sandpoint Hinterlands, located on the northern banks of the Turandarok River. It is less than two miles in length, separated from the coastal Shank's Wood to its north by the Lost Coast Road. To its west lie the Ravenroost hills, while Leb's Tors rise to the east.\n\nThe Tickwood is a favorite spot for local hunters, as it is thought to be free of goblin tribes, and is home to many deer, wild boars, and the occasional firepelt cougar. Stories in Sandpoint greatly exaggerate the size of the giant ticks that also dwell here, keeping many cautious citizens off the forest paths.\n\nAt the heart of the wood stands Akoni's Grove, the court of the dryad Akoni, who presides over the Tickwood's fey inhabitants. A troop of redcaps has recently moved into the area and though they will not establish permanent roots without the dryad's permission, they seem confident they can obtain it one way or another.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "tickwood",
+      "parent": "sandpoint-hinterlands",
       "related": [
-        "akonis-grove",
         "akoni",
-        "sandpoint-hinterlands",
         "the-scarnettis",
         "grandfather-grustmier"
       ],
+      "summary": "A small forest just outside Sandpoint, popular with local hunters — though its fey lord Akoni and a recent redcap incursion make it less safe than it appears.",
       "tags": [
         "tickwood",
         "forest",
@@ -4066,23 +3979,22 @@
         "fey",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "The Tickwood",
       "visibility": "gm"
     },
     {
-      "id": "titus-scarnetti",
-      "title": "Titus Scarnetti",
       "category": "NPC",
-      "summary": "Head of the Scarnetti family — a man who has rebuilt his fortune through means he'd prefer to keep quiet, and who hasn't forgiven Sandpoint for not being afraid of him.",
       "content": "Titus is the last significant patriarch of the Scarnetti line, operating Sandpoint's lumber industry and nursing grievances against the mayor, the Mercantile League, and the town's general failure to accord him the deference he considers his birthright.\n\nScarnetti is quite conservative and traditional in his thinking, which often puts him at odds with the other people in town. This disconnect has cost him the race for mayor every time he has run against the more likeable Kendra Deverin, and there is no love lost between the two.\n\nLately, there have been rumors that Titus has links to certain nefarious individuals in the Sandpoint area—including members of the Sczarni criminal gangs—which have greatly reduced his standing in town.3 The exits of fellow local nobles Ameiko Kaijitsu and the Valdemars have further eroded his influence, leading him to form the Scarnetti Consortium in an attempt to consolidate his power.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "titus-scarnetti",
       "related": [
         "scarnetti-manor",
         "sandpoint",
         "the-scarnettis",
         "scarnetti-consortium",
-        "sandpoint-town-council",
         "kendra-deverin"
       ],
+      "summary": "Head of the Scarnetti family — a man who has rebuilt his fortune through means he'd prefer to keep quiet, and who hasn't forgiven Sandpoint for not being afraid of him.",
       "tags": [
         "titus scarnetti",
         "scarnetti",
@@ -4090,19 +4002,19 @@
         "npc",
         "lumber"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Titus Scarnetti",
       "visibility": "gm"
     },
     {
-      "id": "turandarok-academy",
-      "title": "Turandarok Academy",
       "category": "Location",
-      "summary": "Sandpoint's school and orphanage — and, in its locked basement, the private museum of a retired adventurer who has seen things the curriculum doesn't cover.",
       "content": "Turandarok Academy serves as both school and orphanage, funded partly by the town and partly by the personal fortune of its headmaster, the retired adventurer Ilsoari Gandethus. Ilsoari teaches, manages the orphans, and maintains a locked basement full of exotic weapons, strange maps, and monster trophies that he's happy to show adults who ask. The children spin elaborate theories about what's down there. Most of them are wrong. One of them is startlingly close.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "turandarok-academy",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "ilsoari-gandethus"
       ],
+      "summary": "Sandpoint's school and orphanage — and, in its locked basement, the private museum of a retired adventurer who has seen things the curriculum doesn't cover.",
       "tags": [
         "turandarok academy",
         "school",
@@ -4110,21 +4022,16 @@
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Turandarok Academy",
       "visibility": "revealed"
     },
     {
-      "id": "two-knight-brewing",
-      "title": "Two Knight Brewing",
       "category": "Location",
-      "summary": "Sandpoint's brewery and taproom — good beer, honest prices, and the Alvertin family keeping things running despite some quiet personal grief.",
       "content": "Two Knight Brewing produces the ales and lagers that supply most of Sandpoint's taverns and serves them directly in its own taproom. The Alvertin family runs the brewery, and while the beer is reliable and well-regarded, the family has had a difficult few years.",
-      "related": [
-        "sandpoint",
-        "alma-alvertin",
-        "aneka-alvertin",
-        "arika-alvertin"
-      ],
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "two-knight-brewing",
+      "parent": "sandpoint",
+      "summary": "Sandpoint's brewery and taproom — good beer, honest prices, and the Alvertin family keeping things running despite some quiet personal grief.",
       "tags": [
         "two knight brewing",
         "brewery",
@@ -4132,20 +4039,20 @@
         "sandpoint",
         "location"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Two Knight Brewing",
       "visibility": "revealed"
     },
     {
-      "id": "valdemar-fish-market",
-      "title": "Valdemar Fish Market",
       "category": "Location",
-      "summary": "The open-air fish market on Water Street, where the morning catch lands almost straight off the boats.",
       "content": "The Valdemar Fish Market sells the local fleet's catch within sight of the water it came from. Turch Sterglus runs it for the Valdemar family with a fisherman's bluntness and a fair scale, and the market sets the rhythm of the waterfront's mornings.",
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "valdemar-fish-market",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "the-valdemars",
         "sandpoint-shipyard"
       ],
+      "summary": "The open-air fish market on Water Street, where the morning catch lands almost straight off the boats.",
       "tags": [
         "fish",
         "market",
@@ -4154,19 +4061,19 @@
         "food",
         "waterfront"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Valdemar Fish Market",
+      "visibility": "revealed"
     },
     {
-      "id": "valdemar-manor",
-      "title": "Valdemar Manor",
       "category": "Location",
-      "summary": "The former seat of the Valdemar family — largely vacated now, after Sandpoint's fourth founding family drifted away.",
       "content": "The Valdemars were one of Sandpoint's four founding families, their fortune built on shipbuilding and carpentry. The family has largely moved on from Sandpoint, and their manor reflects this departure — maintained but no longer a center of power. Their old seat on the town council sits vacant.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "valdemar-manor",
+      "parent": "sandpoint",
       "related": [
-        "sandpoint",
         "the-valdemars"
       ],
+      "summary": "The former seat of the Valdemar family — largely vacated now, after Sandpoint's fourth founding family drifted away.",
       "tags": [
         "valdemar manor",
         "manor",
@@ -4174,7 +4081,7 @@
         "location",
         "valdemar"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Valdemar Manor",
       "visibility": "revealed"
     },
     {
@@ -4201,28 +4108,22 @@
       "createdAt": "2025-01-01T00:00:00.000Z"
     },
     {
-      "id": "varisia",
-      "title": "Varisia",
       "category": "Location",
-      "summary": "A vast frontier nation on the western coast of Avistan, Varisia is home to ancient Thassilonian ruins, nomadic Varisian and Shoanti peoples, and three major city-states that compete for dominance.",
       "content": "Varisia has no central government. Its independent city-states — Magnimar, Korvosa, and the pirate haven of Riddleport — each hold sway over a small collection of towns and villages. The wilds beyond, including most of the Storval Plateau, are claimed by the Shoanti people. The neutral city of Kaer Maga is often discounted from political calculations altogether, and its inhabitants prefer it that way.\n\nThe human population is split between Varisians/Shoanti — tribes descended from Thassilon's enslaved workers who developed nomadic cultures of their own — and Chelaxian-descended settlers from the south. \n\nAncient Thassilonian ruins are scattered throughout Varisia, relics of an empire destroyed by the cataclysm known as Earthfall ten thousand years ago. These ruins have taken on new significance with the recent return of New Thassilon and The Runelords.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "varisia",
       "related": [
-        "magnimar",
-        "korvosa",
-        "ancient-thassilon",
-        "new-thassilon",
-        "sandpoint",
-        "shoanti",
-        "varisian-people"
+        "new-thassilon"
       ],
+      "summary": "A vast frontier nation on the western coast of Avistan, Varisia is home to ancient Thassilonian ruins, nomadic Varisian and Shoanti peoples, and three major city-states that compete for dominance.",
       "tags": [
         "varisia",
         "nation",
         "frontier",
         "avistan"
       ],
-      "visibility": "revealed",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      "title": "Varisia",
+      "visibility": "revealed"
     },
     {
       "id": "ven-vinder",
@@ -4246,14 +4147,12 @@
       "visibility": "gm"
     },
     {
-      "id": "vernahs-fine-clothing",
-      "title": "Vernah's Fine Clothing",
       "category": "Location",
-      "summary": "Sandpoint's tailor on Prickleback Lane — clothing of all styles, from festival finery to traveling leathers.",
       "content": "Rynshinn Povalli's shop caters to every style Sandpoint wears, and a few it doesn't know it wants yet. Alongside everyday and formal clothing, she fits non-metallic light armor for those whose work runs rougher than most.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "vernahs-fine-clothing",
+      "parent": "sandpoint",
+      "summary": "Sandpoint's tailor on Prickleback Lane — clothing of all styles, from festival finery to traveling leathers.",
       "tags": [
         "tailor",
         "clothing",
@@ -4261,8 +4160,8 @@
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Vernah's Fine Clothing",
+      "visibility": "revealed"
     },
     {
       "id": "vlorus",
@@ -4310,14 +4209,12 @@
       "visibility": "gm"
     },
     {
-      "id": "wheens-wagons",
-      "title": "Wheen's Wagons",
       "category": "Location",
-      "summary": "A wheelwright's shop on River Street, lately branching out into courier work.",
       "content": "Bilivar Wheen builds and repairs wagons and wheels, and has begun diversifying into a courier service for parcels and messages around town and along the Lost Coast Road. Honest work, honestly priced.",
-      "related": [
-        "sandpoint"
-      ],
+      "createdAt": "2026-06-09T00:00:00.000Z",
+      "id": "wheens-wagons",
+      "parent": "sandpoint",
+      "summary": "A wheelwright's shop on River Street, lately branching out into courier work.",
       "tags": [
         "wheelwright",
         "courier",
@@ -4325,8 +4222,8 @@
         "sandpoint",
         "location"
       ],
-      "visibility": "revealed",
-      "createdAt": "2026-06-09T00:00:00.000Z"
+      "title": "Wheen's Wagons",
+      "visibility": "revealed"
     },
     {
       "id": "whistlefangs",
@@ -4349,19 +4246,15 @@
       "createdAt": "2026-06-09T00:00:00.000Z"
     },
     {
-      "id": "xanderghuls-flawless-hammer",
-      "title": "Xanderghul's Flawless Hammer",
       "category": "Artifact",
-      "summary": "One of the seven Alara'quin forged by Emperor Xin — the symbol of office of Xanderghul, Runelord of Pride, now carried by Jade Inferno.",
       "content": "At the height of the Ancient Thassilonian Empire, Emperor Xin crafted seven Alara'quin: magical weapons of extraordinary power, each bound to one of his seven Runelords. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the sole and eternal Runelord of Pride.\n\nXanderghul's domain was illusion magic, and the Hammer reflects this — it is not merely a weapon but a psychic instrument, attuned to pride and the manipulation of emotion. Its most notable property is its reaction to emotional effects: when the wielder would be adversely affected by an emotion, the Hammer attempts to counteract it with a surge of intense pride.\n\nThe weapon is currently carried by Jade Inferno, who recovered it and has integrated it into both their spellcasting and their ongoing investigation into New Thassilon's ambitions. Given that Xanderghul himself may have survived Earthfall — no body was ever confirmed — the Hammer's provenance is a subject Jade keeps in mind.\n\nAs an Alara'quin, it is an artifact-class item. It cannot be destroyed by conventional means.",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "id": "xanderghuls-flawless-hammer",
       "related": [
         "jade-inferno",
-        "xanderghul",
-        "ancient-thassilon",
-        "new-thassilon",
-        "runelord-of-pride",
-        "peacock-spirit"
+        "new-thassilon"
       ],
+      "summary": "One of the seven Alara'quin forged by Emperor Xin — the symbol of office of Xanderghul, Runelord of Pride, now carried by Jade Inferno.",
       "tags": [
         "xanderghul's flawless hammer",
         "artifact",
@@ -4371,7 +4264,7 @@
         "illusion",
         "jade inferno"
       ],
-      "createdAt": "2025-01-01T00:00:00.000Z",
+      "title": "Xanderghul's Flawless Hammer",
       "visibility": "gm"
     }
   ],
