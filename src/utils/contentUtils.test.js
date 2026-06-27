@@ -603,6 +603,84 @@ describe('contentUtils', () => {
       expect(lvl0.staff).toBeUndefined();
     });
 
+    describe('scroll/wand base hydration (#814)', () => {
+      const hydrSpells = spellCatalogMap([
+        { id: 'sleep', name: 'Sleep', level: 1, traits: ['Mental'] },
+        { id: 'heal', name: 'Heal', level: 1, traits: ['Healing'] },
+        { id: 'wish', name: 'Wish', level: 10 },
+      ]);
+      const hydrCat = itemCatalogMap([
+        // Bare entries — nothing authored but the block.
+        { id: 'bare-scroll', scroll: { spellRef: 'sleep' } },
+        { id: 'bare-wand', wand: { spellRef: 'heal' } },
+        // Heightened cast rank baked into the block.
+        { id: 'heightened-scroll', scroll: { spellRef: 'heal', rank: 5 } },
+        // GM-priced / custom-named unique scroll: author values must win.
+        { id: 'unique-scroll', name: 'Pristine Scroll of Sleep', price: 99, level: 4, scroll: { spellRef: 'sleep' } },
+        // Out-of-range for a wand (rank 10): named but unpriced.
+        { id: 'wish-wand', wand: { spellRef: 'wish' } },
+        // Dangling ref: pass through, no hydration.
+        { id: 'dangling', scroll: { spellRef: 'nope' } },
+      ]);
+
+      it('hydrates a bare scroll to a fully-priced, leveled, named, traited item', () => {
+        const out = resolveInventoryItem({ ref: 'bare-scroll' }, hydrCat, hydrSpells);
+        expect(out.name).toBe('Scroll of Sleep');
+        expect(out.level).toBe(1);
+        expect(out.price).toBe(4);
+        expect(out.weight).toBe(0.1);
+        expect(out.traits).toEqual(['Consumable', 'Magical', 'Scroll']);
+        expect(out.usage).toBe('held in 1 hand');
+      });
+
+      it('hydrates a bare wand from the wand table', () => {
+        const out = resolveInventoryItem({ ref: 'bare-wand' }, hydrCat, hydrSpells);
+        expect(out.name).toBe('Wand of Heal');
+        expect(out.level).toBe(3);
+        expect(out.price).toBe(60);
+        expect(out.traits).toEqual(['Magical', 'Wand']);
+      });
+
+      it('prices a heightened scroll off the cast rank, not the base level', () => {
+        const out = resolveInventoryItem({ ref: 'heightened-scroll' }, hydrCat, hydrSpells);
+        expect(out.name).toBe('Scroll of Heal (Rank 5)');
+        expect(out.level).toBe(9);
+        expect(out.price).toBe(150);
+      });
+
+      it('author overrides win (custom name/price/level preserved)', () => {
+        const out = resolveInventoryItem({ ref: 'unique-scroll' }, hydrCat, hydrSpells);
+        expect(out.name).toBe('Pristine Scroll of Sleep');
+        expect(out.price).toBe(99);
+        expect(out.level).toBe(4);
+        // an unset field is still derived
+        expect(out.traits).toEqual(['Consumable', 'Magical', 'Scroll']);
+      });
+
+      it('out-of-range rank: names the item but leaves price/level unpriced', () => {
+        const out = resolveInventoryItem({ ref: 'wish-wand' }, hydrCat, hydrSpells);
+        expect(out.name).toBe('Wand of Wish');
+        expect(out.level).toBeUndefined();
+        expect(out.price).toBeUndefined();
+        expect(out.traits).toEqual(['Magical', 'Wand']);
+      });
+
+      it('dangling ref passes through with no hydration', () => {
+        const out = resolveInventoryItem({ ref: 'dangling' }, hydrCat, hydrSpells);
+        expect(out.scroll).toEqual({ name: '(unknown spell: nope)', level: 0 });
+        expect(out.name).toBeUndefined();
+        expect(out.price).toBeUndefined();
+        expect(out.traits).toBeUndefined();
+      });
+
+      it('non-scroll/wand items are untouched', () => {
+        const flatCat = itemCatalogMap([{ id: 'rope', name: 'Rope', weight: 1 }]);
+        const out = resolveInventoryItem({ ref: 'rope' }, flatCat, hydrSpells);
+        expect(out).toMatchObject({ name: 'Rope', weight: 1 });
+        expect(out.usage).toBeUndefined();
+      });
+    });
+
     describe('variant selection', () => {
       const antidoteCat = itemCatalogMap([{
         id: 'antidote',
