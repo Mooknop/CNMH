@@ -188,6 +188,7 @@
 
 /* Shop wares editor (#696 S2) */
 .gm-shop-head { align-items: flex-start; justify-content: space-between; }
+.gm-shop-head-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .gm-shop-title { margin: 0 0 2px; }
 .gm-shop-badge { color: var(--gold-mid); font-size: 0.82em; }
 .gm-shop-wares { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }

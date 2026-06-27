@@ -6,15 +6,16 @@ vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useShops', () => ({ useShops: vi.fn() }));
 // Stub the inline catalog picker: it only mounts when the GM opens it, and a
 // button fires onSelect with a fixed item.
+// Render a pick-<id> button per catalog entry, so the same stub serves both the
+// item picker (catalog = items) and the rune picker (catalog = runes).
 vi.mock('../../components/gm/CatalogPicker', () => ({
-  default: ({ onSelect }) => (
+  default: ({ catalog, onSelect }) => (
     <>
-      <button type="button" onClick={() => onSelect([{ id: 'spellbook', name: 'Spellbook', price: 10 }])}>
-        pick-spellbook
-      </button>
-      <button type="button" onClick={() => onSelect([{ id: 'tonic', name: 'Tonic' }])}>
-        pick-tonic
-      </button>
+      {(catalog || []).map((c) => (
+        <button key={c.id} type="button" onClick={() => onSelect([c])}>
+          pick-{c.id}
+        </button>
+      ))}
     </>
   ),
 }));
@@ -43,10 +44,12 @@ const allLoreEntries = [
   { id: 'brodert-quink', title: 'Brodert Quink', category: 'NPC' },
 ];
 
+const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500 }];
+
 let setWares;
 const setup = (shops = {}) => {
   setWares = vi.fn();
-  useContent.mockReturnValue({ allLoreEntries, items });
+  useContent.mockReturnValue({ allLoreEntries, items, runes });
   useShops.mockReturnValue({ shops, setWares });
 };
 
@@ -152,6 +155,26 @@ describe('GmShops', () => {
     fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
     fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
     expect(screen.getAllByLabelText('level-tonic')).toHaveLength(1);
+  });
+
+  it('stocks a rune as a Runestone ware via the rune picker (#801)', () => {
+    setup();
+    render(<GmShops />);
+    select(/Town Hall/);
+    fireEvent.click(screen.getByRole('button', { name: '+ Add rune' }));
+    fireEvent.click(screen.getByRole('button', { name: 'pick-flaming' }));
+    expect(screen.getByText('Flaming Runestone')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save wares' }));
+    expect(setWares).toHaveBeenCalledWith('town-hall', [{ ref: 'runestone', runeRef: 'flaming' }]);
+  });
+
+  it('loads a runestone ware: rune name + stone+rune price placeholder', () => {
+    setup({ 'bottled-solutions': { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } });
+    render(<GmShops />);
+    select(/Bottled Solutions/);
+    const form = screen.getByTestId('shop-form-bottled-solutions');
+    expect(within(form).getByText('Flaming Runestone')).toBeInTheDocument();
+    expect(within(form).getByLabelText('price-runestone@flaming')).toHaveAttribute('placeholder', '503');
   });
 
   it('removes a ware and saves the shorter list', () => {

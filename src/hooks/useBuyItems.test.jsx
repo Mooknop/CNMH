@@ -80,6 +80,22 @@ describe('useBuyItems', () => {
     ]);
   });
 
+  it('credits a bought Runestone as a clean ref entry, not a fat inline copy (#801)', () => {
+    buyerGold = 5000; // afford 2 × 503 gp
+    const runestone = {
+      name: 'Flaming Runestone',
+      price: 503,
+      wareKey: 'runestone@flaming',
+      runestone: { runeRef: 'flaming', rune: { id: 'flaming', name: 'Flaming', price: 500 } },
+    };
+    const { result } = renderHook(() => useBuyItems('a'));
+    result.current.buy([{ item: runestone, qty: 2 }], 'Etcher');
+    expect(mockSetAcquired).toHaveBeenCalledWith([
+      { ref: 'runestone', runeRef: 'flaming', uid: 'buy-1' },
+      { ref: 'runestone', runeRef: 'flaming', uid: 'buy-2' },
+    ]);
+  });
+
   it('debits the cart total from gold', () => {
     const { result } = renderHook(() => useBuyItems('a'));
     result.current.buy([{ item: sword, qty: 2 }, { item: potion, qty: 3 }]);
