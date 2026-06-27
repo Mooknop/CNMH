@@ -41,7 +41,10 @@ const WareTile = ({ ware, onInspect }) => {
 // a ware opens the read-only inventory ItemModal. The cart is local state; the
 // purchase itself (gold debit + acquired credit, #696 S6) runs through
 // useBuyItems on Confirm, leaving a receipt behind.
-const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character, characterColor }) => {
+// `readOnly` lets a shop be browsed without buying — e.g. opened from a Location
+// lore page when the party isn't in that town (#shops-from-lore). Wares + the
+// item detail still render; the Add/Etch affordances and the cart are hidden.
+const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character, characterColor, readOnly = false }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
   const [cart, setCart] = useState([]);
@@ -162,6 +165,12 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
           </button>
           {selected.summary && <p className="shop-window-summary">{selected.summary}</p>}
 
+          {readOnly && (
+            <p className="shop-readonly" role="note" data-testid="shop-readonly">
+              Browsing only — the party isn&rsquo;t here. Visit to buy.
+            </p>
+          )}
+
           {receipt && (
             <p className="shop-receipt" role="status" data-testid="shop-receipt">
               {receipt.etch
@@ -216,7 +225,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
                   {wares.map((ware) => (
                     <li key={ware.wareKey} className="shop-ware-row">
                       <WareTile ware={ware} onInspect={setDetailItem} />
-                      {ware.runestone && (
+                      {!readOnly && ware.runestone && (
                         <button
                           type="button"
                           className="shop-ware-etch"
@@ -226,32 +235,36 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
                           ⚒ Etch
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="shop-ware-add"
-                        aria-label={`add ${ware.wareKey}`}
-                        onClick={() => addWare(ware)}
-                      >
-                        ＋ Add
-                      </button>
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          className="shop-ware-add"
+                          aria-label={`add ${ware.wareKey}`}
+                          onClick={() => addWare(ware)}
+                        >
+                          ＋ Add
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>
 
-                <DropZone
-                  id="shop-cart"
-                  accepts={() => true}
-                  onDrop={(w) => addWare(w)}
-                  className="shop-cart-zone"
-                >
-                  <ShopCart
-                    cart={cart}
-                    gold={myGold}
-                    onSetQty={(id, qty) => setCart((c) => setQty(c, id, qty))}
-                    onRemove={(id) => setCart((c) => removeLine(c, id))}
-                    onConfirm={handleConfirm}
-                  />
-                </DropZone>
+                {!readOnly && (
+                  <DropZone
+                    id="shop-cart"
+                    accepts={() => true}
+                    onDrop={(w) => addWare(w)}
+                    className="shop-cart-zone"
+                  >
+                    <ShopCart
+                      cart={cart}
+                      gold={myGold}
+                      onSetQty={(id, qty) => setCart((c) => setQty(c, id, qty))}
+                      onRemove={(id) => setCart((c) => removeLine(c, id))}
+                      onConfirm={handleConfirm}
+                    />
+                  </DropZone>
+                )}
               </div>
             </DndProvider>
           )}
