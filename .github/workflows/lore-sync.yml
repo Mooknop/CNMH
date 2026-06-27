@@ -32,11 +32,11 @@ jobs:
       - run: npm ci
 
       - name: Push lore vault → CampaignContent DO
-        # The script defaults to production, reads these env vars, validates before
-        # any write (exits 1 on error), and skips deletions without --allow-delete.
+        # The script defaults to production, reads this token, validates before any
+        # write (exits 1 on error), and skips deletions without --allow-delete.
+        # GM_PUSH_TOKEN is the Worker's CI push secret (see worker/access.js).
         env:
-          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          GM_PUSH_TOKEN: ${{ secrets.GM_PUSH_TOKEN }}
         run: |
           node scripts/pushLoreVault.js 2>&1 | tee push.log
           status=${PIPESTATUS[0]}

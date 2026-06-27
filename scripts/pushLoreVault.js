@@ -14,8 +14,9 @@
  *   or: CNMH_SNAPSHOT_URL=https://... node scripts/pushLoreVault.js --dry-run
  *
  * Default base URL: https://cnmh.mooknop.workers.dev
- * Reads are public; writes need a Cloudflare Access service token:
- *   CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET  (same secrets as the E2E runner)
+ * Reads are public; writes need the CI push token (a per-environment Worker
+ * secret the Worker verifies directly — see worker/access.js):
+ *   GM_PUSH_TOKEN   (sent as `Authorization: Bearer <token>`)
  *
  * reveal state (`visibility`) is NEVER written — it's read from the live doc and
  * preserved on every PUT (new entries default to `gm`). See #285 decision 4.
@@ -282,15 +283,14 @@ async function fetchLiveLore(baseUrl) {
   return lore;
 }
 
-function accessHeaders() {
-  const id = process.env.CF_ACCESS_CLIENT_ID;
-  const secret = process.env.CF_ACCESS_CLIENT_SECRET;
-  if (!id || !secret) {
+function authHeaders() {
+  const token = process.env.GM_PUSH_TOKEN;
+  if (!token) {
     throw new Error(
-      'Writes need a Cloudflare Access service token: set CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (or use --dry-run).'
+      'Writes need GM_PUSH_TOKEN — the CI push token (a Worker secret; set it via `wrangler secret put GM_PUSH_TOKEN`). Or pass --dry-run to skip writes.'
     );
   }
-  return { 'CF-Access-Client-Id': id, 'CF-Access-Client-Secret': secret };
+  return { Authorization: `Bearer ${token}` };
 }
 
 async function putDoc(baseUrl, id, doc, headers) {
@@ -356,7 +356,7 @@ async function main() {
   }
 
   // 3. Push: PUT changed/new docs, then DELETE (only with --allow-delete).
-  const headers = accessHeaders();
+  const headers = authHeaders();
   for (const { id, doc } of writes) {
     await putDoc(baseUrl, id, doc, headers);
     console.log(`  ✓ PUT ${id}`);
