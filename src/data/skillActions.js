@@ -40,6 +40,13 @@
 //               as checkboxes on the roll (#260 AC4). The hook #223/#226 hang
 //               feat bonuses on (Threat Display, Hunt Prey vs prey, Squox +2);
 //               the modal also always offers a free-form "+N" circumstance entry
+//   vsContexts  optional sub-context labels this action represents, e.g. Climb's
+//               ['Climb'] (#510). A conditional ('vs X') effect modifier on this
+//               action's skill surfaces as a toggle ONLY when its `vs` matches
+//               one of these (normalized, case-insensitive) — so "+1 vs Climb"
+//               offers on Climb, not on Grapple/Trip/Shove. Absent ⇒ the action
+//               hosts no conditional effect toggles (the passive sheet hint in
+//               EnhancedSkillsList still shows them)
 //   surfaces    contexts the action appears in: 'encounter' (the combat Actions
 //               list) and/or 'exploration' (the Explore tab). Absent ⇒
 //               ['encounter'], so every combat action stays combat-only; Track
@@ -47,7 +54,7 @@
 //   availableTo 'all' for basic actions everyone has; future entries gate per
 //               character (feat-granted)
 import { hasFeat } from '../utils/CharacterUtils';
-import { conditionalTogglesFor } from '../utils/EffectUtils';
+import { conditionalModifiersFor } from '../utils/EffectUtils';
 
 export const SKILL_ACTIONS = [
   {
@@ -75,6 +82,10 @@ export const SKILL_ACTIONS = [
     actionCost: 1,
     traits: ['Concentrate', 'Secret'],
     defense: null,
+    // Seek covers "find secret doors and traps" — the context Eagle-eye Elixir's
+    // conditional Perception bonus targets (#510). The player flips it only when
+    // Seeking for traps/doors rather than a hidden creature.
+    vsContexts: ['find secret doors and traps'],
     outcomes: {
       criticalSuccess: { note: 'Pinpoint the creature (undetected → observed, hidden → observed)' },
       success:         { note: 'Locate the creature (undetected → hidden)' },
@@ -173,6 +184,48 @@ export const SKILL_ACTIONS = [
     outcomes: {
       criticalSuccess: { note: 'Item knocked to the ground' },
       success:         { note: 'Disarmed (−2 to attacks with that weapon until its turn ends)' },
+    },
+    availableTo: 'all',
+  },
+  // Climb (#510) — Athletics vs a GM-entered surface DC to move up/across.
+  // Movement check with no enemy target (selfTarget, GM DC) and GM-note
+  // outcomes; available in and out of combat. Hosts the "vs Climb" conditional
+  // toggle (Gecko Potion) so the bonus applies on the roll it actually affects.
+  {
+    id: 'climb',
+    name: 'Climb',
+    skill: 'athletics',
+    actionCost: 1,
+    traits: ['Move'],
+    defense: null,
+    selfTarget: true,
+    vsContexts: ['Climb'],
+    surfaces: ['encounter', 'exploration'],
+    outcomes: {
+      criticalSuccess: { note: 'Move up/across at full Speed (or 5 ft beyond)' },
+      success:         { note: 'Move up, across, or down 5 feet (plus 5 ft per 20 you beat the DC)' },
+      failure:         { note: 'No progress' },
+      criticalFailure: { note: 'You fall and take falling damage' },
+    },
+    availableTo: 'all',
+  },
+  // Palm an Object (#510) — Thievery vs observers' Perception DC to take a small
+  // object unnoticed. selfTarget (GM-entered DC), GM-note outcomes; available in
+  // and out of combat. Hosts the "vs Palm an Object" conditional toggle (Gecko).
+  {
+    id: 'palm-an-object',
+    name: 'Palm an Object',
+    skill: 'thievery',
+    actionCost: 1,
+    traits: ['Manipulate'],
+    defense: null,
+    selfTarget: true,
+    vsContexts: ['Palm an Object'],
+    surfaces: ['encounter', 'exploration'],
+    outcomes: {
+      success:         { note: 'You palm the object unnoticed' },
+      failure:         { note: 'You fail to palm the object' },
+      criticalFailure: { note: 'You palm the object but a creature notices' },
     },
     availableTo: 'all',
   },
@@ -279,12 +332,21 @@ export function skillActionFeatAugments(character, action) {
   return { toggles, hints };
 }
 
+// Normalize a sub-context label for matching: trim + lowercase, so the
+// modifier's `vs` ("Climb") and the action's vsContexts (['Climb']) match
+// regardless of casing/whitespace without any fuzzy/substring guessing.
+const normContext = (s) => String(s || '').trim().toLowerCase();
+
 /**
- * Conditional ('vs X') effect modifiers that target the skill(s) this action
- * could roll, mapped to the SkillActionModal toggle shape so the player can opt
- * the bonus/penalty in for the roll it applies to (#338). Unconditional skill
- * effects already net into the roll profile, so only `vs`-scoped ones surface
- * here. React-free; reads the character's active effects + the effect catalog.
+ * Conditional ('vs X') effect modifiers that apply to THIS action's sub-context,
+ * mapped to the SkillActionModal toggle shape so the player can opt the bonus in
+ * for the roll it actually affects (#510, refining #338). A modifier surfaces
+ * only when (a) it targets the action's skill and (b) its `vs` exactly matches
+ * one of the action's declared `vsContexts` (normalized) — so "+1 vs Climb"
+ * offers on Climb, not on Grapple/Trip/Shove. An action without `vsContexts`
+ * hosts no conditional toggles (the passive sheet hint still shows them).
+ * Unconditional skill effects already net into the roll profile, so only
+ * `vs`-scoped ones are considered. React-free.
  *
  * @param {object} action       a SKILL_ACTIONS entry
  * @param {Array}  effects       active effects (cnmh_effects_<id>)
@@ -293,14 +355,18 @@ export function skillActionFeatAugments(character, action) {
  */
 export function effectConditionalToggles(action, effects, effectCatalog) {
   if (!action || !effects || !effects.length) return [];
+  const contexts = new Set((action.vsContexts || []).map(normContext));
+  if (!contexts.size) return [];
   const skills = [action.skill, ...(action.skillOptions || [])].filter(Boolean);
   const toggles = [];
   const seen = new Set();
   for (const skill of skills) {
-    for (const t of conditionalTogglesFor(effects, skill, effectCatalog)) {
-      if (seen.has(t.id)) continue;
-      seen.add(t.id);
-      toggles.push(t);
+    for (const m of conditionalModifiersFor(effects, skill, effectCatalog)) {
+      if (!contexts.has(normContext(m.vs))) continue;
+      const id = `effect-${m.label}-${m.vs}`;
+      if (seen.has(id)) continue;
+      seen.add(id);
+      toggles.push({ id, label: `${m.label} (vs ${m.vs})`, bonus: m.amount });
     }
   }
   return toggles;
