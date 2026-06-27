@@ -191,22 +191,11 @@
 .gm-shop-head-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .gm-shop-title { margin: 0 0 2px; }
 .gm-shop-badge { color: var(--gold-mid); font-size: 0.82em; }
-.gm-shop-wares { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.gm-shop-ware-row { align-items: flex-end; gap: 10px; }
-.gm-shop-ware-name { flex: 1; min-width: 120px; font-weight: 600; align-self: center; }
+.gm-shop-wares { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gm-shop-ware-name { font-weight: 600; min-width: 120px; }
 .gm-shop-ware-field { flex: 0 0 90px; min-width: 0; }
 .gm-shop-ware-field input,
 .gm-shop-ware-field select { width: 100%; }
-/* Inline "+ Add items" picker — part of the page, not a floating modal (a
-   backdrop-filtered .gm-card traps position:fixed, so an overlay would sit
-   under the shell header). */
-.gm-shop-picker {
-  margin: 12px 0 0;
-  padding: 12px;
-  border: 1px solid var(--shell-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--surface-inset);
-}
 
 /* Shop authoring workspace (#822 S3) */
 .gm-shop-back { flex: 0 0 auto; align-self: flex-start; }
@@ -299,12 +288,126 @@
   color: var(--verdant-mid);
 }
 
-.gm-shop-stock-head { align-items: center; justify-content: space-between; margin-top: 4px; }
+/* Two-pane catalog → shelf (#822 S4). Catalog on the right (row-reverse);
+   each pane scrolls on its own; the shelf footer is pinned. */
+.gm-shop-panes {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 14px;
+  margin-top: 14px;
+  height: min(60vh, 560px);
+}
+.gm-shop-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+}
+.gm-shop-catalog { flex: 0 0 46%; }
+.gm-shop-shelf { flex: 1; background: var(--surface-inset); }
+.gm-shop-pane-head {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--shell-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gm-shop-pane-title { font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+.gm-shop-pane-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--shell-text-secondary);
+  background: var(--surface-inset);
+  border: 1px solid var(--shell-border);
+  border-radius: 999px;
+  padding: 0 7px;
+}
+.gm-shop-cat-search { width: 100%; }
+
+/* Trait filter chips (AND) */
+.gm-shop-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.gm-shop-chip {
+  border: 1px solid var(--shell-border-strong);
+  background: none;
+  color: var(--shell-text-secondary);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+.gm-shop-chip.is-on { border-color: var(--gold-mid); color: var(--shell-text); background: var(--surface-inset); }
+.gm-shop-chip-clear {
+  border: none;
+  background: none;
+  color: var(--shell-text-secondary);
+  text-decoration: underline;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+/* Catalog list */
+.gm-shop-cat-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1; }
+.gm-shop-cat-empty { padding: 16px 10px; }
+.gm-shop-cat-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 7px 9px;
+  cursor: pointer;
+  color: inherit;
+}
+.gm-shop-cat-item:hover:not(:disabled) { background: var(--surface-inset); border-color: var(--shell-border); }
+.gm-shop-cat-item.is-stocked { opacity: 0.55; cursor: default; }
+.gm-shop-cat-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gm-shop-cat-name { font-weight: 600; font-size: 0.85rem; }
+.gm-shop-cat-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--shell-text-secondary);
+}
+.gm-shop-cat-price { color: var(--gold-mid); }
+.gm-shop-cat-vtag { color: var(--arcane-mid, var(--shell-text-secondary)); }
+.gm-shop-cat-aff { flex: 0 0 auto; font-size: 0.74rem; color: var(--shell-text-secondary); }
+
+/* Shelf list + empty state */
+.gm-shop-shelf .gm-shop-wares { padding: 8px; overflow-y: auto; flex: 1; }
+.gm-shop-shelf-empty { padding: 24px 16px; text-align: center; color: var(--shell-text-secondary); flex: 1; }
+.gm-shop-shelf-empty-mark { font-size: 2rem; margin-bottom: 8px; }
+.gm-shop-ware-row { flex-direction: column; align-items: stretch; gap: 8px; border: 1px solid var(--shell-border); border-radius: var(--radius-md); padding: 9px 10px; background: var(--surface-raised, rgba(255, 255, 255, 0.04)); }
+.gm-shop-ware-top { display: flex; align-items: center; gap: 8px; }
+.gm-shop-ware-tr { font-size: 0.72rem; color: var(--shell-text-secondary); }
+.gm-shop-ware-x { margin-left: auto; flex: 0 0 auto; }
+.gm-shop-ware-fields { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.gm-shop-ware-fields .gm-shop-ware-field:first-child { flex: 1 1 140px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .gm-shop-shelf-row { animation: gm-shop-shelf-in 0.2s ease both; }
+  @keyframes gm-shop-shelf-in {
+    from { transform: translateY(-5px); }
+    to { transform: translateY(0); }
+  }
+}
 
 /* Pinned save footer */
-.gm-shop-foot { align-items: center; gap: 12px; margin-top: 14px; }
+.gm-shop-foot { align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid var(--shell-border); margin: 0; }
 .gm-shop-tally { margin-right: auto; }
 .gm-shop-saveflash { color: var(--verdant-mid); font-size: 0.82rem; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .gm-shop-panes { flex-direction: column; height: auto; }
+  .gm-shop-catalog { flex: none; max-height: 340px; }
+  .gm-shop-shelf { flex: none; }
+}
 
 /* Tradition checkbox set (spell editor) */
 .gm-tradition-row { align-items: center; gap: 14px; flex-wrap: wrap; }
