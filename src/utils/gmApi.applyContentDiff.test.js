@@ -15,6 +15,9 @@ vi.mock('./contentUtils', async () => {
       item: [{ id: 'i1', name: 'X', traits: ['a', 'b'] }], // diverged in live -> changed
       character: [{ id: 'Pellias', name: 'P', authored: true }], // excluded -> never written
       theme: [{ id: 'campaign', preset: 'ember' }], // excluded -> never written
+      // Stale seed lore (no parent/related) — excluded so it can't clobber the
+      // vault-owned edges on the live doc (#849).
+      lore: [{ id: 'sandpoint', title: 'Sandpoint' }],
     }),
   };
 });
@@ -29,6 +32,9 @@ const LIVE = {
   ],
   item: [{ name: 'X-changed', id: 'i1', traits: ['a', 'b'] }], // changed value
   character: [{ id: 'Pellias', name: 'P', liveInventory: ['sword'] }], // must survive untouched
+  // Vault-authored lore: parent/related exist only here, never in the seed. A
+  // content apply must not touch it or those edges would be wiped (#849).
+  lore: [{ id: 'sandpoint', title: 'Sandpoint', parent: 'varisia', related: ['red-dog-smithy'] }],
 };
 
 // fetch mock: GET /api/content returns the live snapshot (optionally enveloped);
@@ -85,12 +91,20 @@ describe('applyContentDiff', () => {
     expect(deletes).toHaveLength(0);
   });
 
-  it('never writes excluded collections (character, theme)', async () => {
+  it('never writes excluded collections (character, theme, lore)', async () => {
     const fn = installFetch();
     await applyContentDiff();
     const puts = putCalls(fn);
     expect(puts.some((u) => u.startsWith('/api/gm/character/'))).toBe(false);
     expect(puts.some((u) => u.startsWith('/api/gm/theme/'))).toBe(false);
+    // lore is vault-owned: a stale seed must never overwrite the live doc's
+    // parent/related edges (#849).
+    expect(puts.some((u) => u.startsWith('/api/gm/lore/'))).toBe(false);
+  });
+
+  it('omits excluded collections from the report (lore never appears)', async () => {
+    const report = (installFetch(), await applyContentDiff());
+    expect(report.lore).toBeUndefined();
   });
 
   it('treats key-order-only differences as unchanged (no write)', async () => {

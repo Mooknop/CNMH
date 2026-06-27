@@ -38,10 +38,18 @@ export const seedDefaults = (force = false) =>
 // pure content with no live player/GM-session state mixed in. Deliberately
 // EXCLUDES character (live inventory/gold/loadout — needs field-level merge),
 // theme (GM-customized via the theme editor), image (R2 upload/delete flow),
-// and monster (bestiary capture) — those have their own write paths and must
-// never be clobbered by a wholesale doc overwrite.
+// monster (bestiary capture), and lore — those have their own write paths and
+// must never be clobbered by a wholesale doc overwrite.
+//
+// lore is owned by the Obsidian vault: content (summary/body/parent/related/…)
+// is authored there and pushed by the lore-sync workflow, and the app only
+// toggles reveal `visibility`. The committed seed is a stale snapshot that owns
+// nothing on a lore doc, so a content apply overwriting it would wipe the
+// vault's parent/related edges (and silently revert any vault prose edit) — the
+// exact incident in #849. Lore still ships in the seed for INITIAL seeding
+// (/api/gm/seed); it's only the incremental apply that must leave it alone.
 export const DIFFABLE_COLLECTIONS = [
-  'quest', 'faction', 'calendar', 'lore', 'trait', 'item', 'spell', 'effect', 'rune',
+  'quest', 'faction', 'calendar', 'trait', 'item', 'spell', 'effect', 'rune',
 ];
 
 // Order-insensitive structural equality — used only to decide whether a doc
