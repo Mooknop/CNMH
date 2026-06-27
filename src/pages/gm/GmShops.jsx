@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useShops } from '../../hooks/useShops';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
-import { isSetUp } from '../../utils/shopUtils';
+import { isSetUp, isSpellItemWare, eligibleSpellItems } from '../../utils/shopUtils';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -23,13 +23,17 @@ import './gm.css';
 // multi-level item (#798); '' means none. A rune sold as a Runestone (#801) is
 // a row with ref 'runestone' + a `runeRef`.
 const toRows = (wares) =>
-  (Array.isArray(wares) ? wares : []).map((w) => ({
-    ref: w.ref,
-    level: w.level != null ? String(w.level) : '',
-    runeRef: w.runeRef != null ? String(w.runeRef) : '',
-    price: w.price != null ? String(w.price) : '',
-    stock: w.stock != null ? String(w.stock) : '',
-  }));
+  (Array.isArray(wares) ? wares : [])
+    // Generative spell-item offerings (#819) are authored in their own section
+    // (toOfferings), not as flat catalog rows — they carry no `ref`.
+    .filter((w) => !isSpellItemWare(w))
+    .map((w) => ({
+      ref: w.ref,
+      level: w.level != null ? String(w.level) : '',
+      runeRef: w.runeRef != null ? String(w.runeRef) : '',
+      price: w.price != null ? String(w.price) : '',
+      stock: w.stock != null ? String(w.stock) : '',
+    }));
 
 // Stable per-row key: `runestone@runeRef` for a rune ware, `ref@level` for a
 // pinned variant, else the bare ref — mirrors resolveShopWares' wareKey so a
@@ -57,6 +61,61 @@ const fromRows = (rows) =>
       if (!Number.isNaN(price)) w.price = price;
       const stock = parseInt(r.stock, 10);
       if (!Number.isNaN(stock) && stock >= 0) w.stock = stock;
+      return w;
+    });
+
+// ── Generative spell-item offerings (#819) ──────────────────────────────────
+// A shop can also sell Scrolls/Wands of ANY catalog spell up to a rank, filtered
+// by tradition + rarity (the S6 model in shopUtils). These are authored as a
+// separate ware shape — `{ spellItem, maxRank, traditions?, rarities?,
+// priceMod? }` — in their own "Spellcasting services" section, since they're a
+// generative spec rather than a single catalog ref.
+
+const ALL_TRADITIONS = ['arcane', 'divine', 'occult', 'primal'];
+const ALL_RARITIES = ['common', 'uncommon', 'rare'];
+// Base-template tables top out here (a rank-10 spell can't go in a wand).
+const SPELL_ITEM_MAX_RANK = { scroll: 10, wand: 9 };
+
+let OFFERING_SEQ = 0;
+const newOfferingKey = () => `off-${OFFERING_SEQ++}`;
+
+// Stored spell-item wares → local form rows. Each keeps a synthetic `key` so
+// React/inputs stay stable across add/remove (the spec carries no natural id).
+const toOfferings = (wares) =>
+  (Array.isArray(wares) ? wares : [])
+    .filter(isSpellItemWare)
+    .map((w) => ({
+      key: newOfferingKey(),
+      spellItem: w.spellItem,
+      maxRank: w.maxRank != null ? String(w.maxRank) : '',
+      traditions: Array.isArray(w.traditions) ? w.traditions.filter(Boolean) : [],
+      rarities: Array.isArray(w.rarities) ? w.rarities.filter(Boolean) : [],
+      priceMod: w.priceMod != null ? String(w.priceMod) : '',
+    }));
+
+// Form rows → minimal stored specs. Defaults are OMITTED so stored specs stay
+// clean and round-trip with the S6 selectors: traditions unset = all four
+// (so drop an empty OR all-four selection); rarities unset = common only (so
+// drop an empty OR exactly-common selection); priceMod unset = ×1.
+const fromOfferings = (offerings) =>
+  (Array.isArray(offerings) ? offerings : [])
+    .filter((o) => o.spellItem === 'scroll' || o.spellItem === 'wand')
+    .map((o) => {
+      const kind = o.spellItem;
+      const cap = SPELL_ITEM_MAX_RANK[kind];
+      let rank = parseInt(o.maxRank, 10);
+      if (Number.isNaN(rank)) rank = 1;
+      rank = Math.max(1, Math.min(cap, rank));
+      const w = { spellItem: kind, maxRank: rank };
+
+      const trads = (o.traditions || []).filter(Boolean);
+      if (trads.length > 0 && trads.length < ALL_TRADITIONS.length) w.traditions = trads;
+
+      const rars = (o.rarities || []).filter(Boolean);
+      if (!(rars.length === 0 || (rars.length === 1 && rars[0] === 'common'))) w.rarities = rars;
+
+      const mod = parseFloat(o.priceMod);
+      if (!Number.isNaN(mod) && mod > 0 && mod !== 1) w.priceMod = mod;
       return w;
     });
 
@@ -386,10 +445,182 @@ const ShelfPane = ({ rows, catalogMap, runeMap, setRow, removeRow, dirty, justSa
   );
 };
 
+// A labelled set of toggle chips (multiselect). `selected` is the current array;
+// toggling calls `onToggle(value)`. `hint` annotates what an empty selection
+// means (e.g. "all" / "common only") so the asymmetric defaults are legible.
+const ChipMulti = ({ label, options, selected, onToggle, idBase, hint }) => (
+  <div className="form-group gm-shop-offer-field">
+    <span className="gm-shop-offer-label">
+      {label}
+      {hint && <span className="gm-shop-offer-hint"> · {hint}</span>}
+    </span>
+    <div className="gm-shop-chips" role="group" aria-label={label}>
+      {options.map((opt) => {
+        const on = selected.includes(opt);
+        return (
+          <button
+            key={opt}
+            type="button"
+            className={`gm-shop-chip${on ? ' is-on' : ''}`}
+            aria-pressed={on}
+            aria-label={`${idBase}-${opt}`}
+            onClick={() => onToggle(opt)}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
+// One generative spell-item offering row. Live-resolves its eligible-spell count
+// + coverage summary off the S6 selector so the GM sees what the spec covers as
+// they tune it. `traditions` empty = all four; `rarities` empty = common only —
+// matching the stored-spec defaults exactly.
+const OfferingRow = ({ row, index, spells, onChange, onRemove }) => {
+  const kind = row.spellItem === 'wand' ? 'wand' : 'scroll';
+  const cap = SPELL_ITEM_MAX_RANK[kind];
+
+  const spec = useMemo(
+    () => ({
+      spellItem: kind,
+      maxRank: parseInt(row.maxRank, 10) || 0,
+      traditions: row.traditions,
+      rarities: row.rarities,
+      priceMod: parseFloat(row.priceMod) || undefined,
+    }),
+    [kind, row.maxRank, row.traditions, row.rarities, row.priceMod]
+  );
+  const eligible = useMemo(() => eligibleSpellItems(spec, spells), [spec, spells]);
+
+  const trads = row.traditions.length ? row.traditions : ALL_TRADITIONS;
+  const rars = row.rarities.length ? row.rarities : ['common'];
+  const cappedRank = Math.max(1, Math.min(cap, parseInt(row.maxRank, 10) || 1));
+  const tradLabel = trads.length === ALL_TRADITIONS.length ? 'all traditions' : [...trads].join('/');
+  const summary = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${[...rars].join('+')} · up to rank ${cappedRank} · ${eligible.length} eligible spell${eligible.length === 1 ? '' : 's'}`;
+
+  const toggleIn = (field, value) => {
+    const cur = row[field];
+    onChange({ [field]: cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value] });
+  };
+
+  return (
+    <li className="gm-row gm-shop-ware-row gm-shop-offer-row">
+      <div className="gm-shop-ware-top">
+        <div className="form-group gm-shop-offer-kind">
+          <label htmlFor={`offering-kind-${index}`}>type</label>
+          <select
+            id={`offering-kind-${index}`}
+            aria-label={`offering-kind-${index}`}
+            value={kind}
+            onChange={(e) => onChange({ spellItem: e.target.value })}
+          >
+            <option value="scroll">Scrolls</option>
+            <option value="wand">Wands</option>
+          </select>
+        </div>
+        <div className="form-group gm-shop-offer-rank">
+          <label htmlFor={`offering-maxrank-${index}`}>max rank</label>
+          <input
+            id={`offering-maxrank-${index}`}
+            aria-label={`offering-maxrank-${index}`}
+            type="number"
+            min="1"
+            max={String(cap)}
+            value={row.maxRank}
+            onChange={(e) => onChange({ maxRank: e.target.value })}
+          />
+        </div>
+        <button
+          type="button"
+          className="btn-small btn-danger gm-shop-ware-x"
+          aria-label={`remove-offering-${index}`}
+          onClick={onRemove}
+        >
+          ✕
+        </button>
+      </div>
+      <div className="gm-shop-offer-filters">
+        <ChipMulti
+          label="traditions"
+          options={ALL_TRADITIONS}
+          selected={row.traditions}
+          onToggle={(v) => toggleIn('traditions', v)}
+          idBase={`offering-${index}-trad`}
+          hint="none = all"
+        />
+        <ChipMulti
+          label="rarities"
+          options={ALL_RARITIES}
+          selected={row.rarities}
+          onToggle={(v) => toggleIn('rarities', v)}
+          idBase={`offering-${index}-rarity`}
+          hint="none = common only"
+        />
+        <div className="form-group gm-shop-offer-field gm-shop-offer-mod">
+          <label htmlFor={`offering-pricemod-${index}`}>price ×</label>
+          <input
+            id={`offering-pricemod-${index}`}
+            aria-label={`offering-pricemod-${index}`}
+            type="number"
+            min="0"
+            step="0.05"
+            placeholder="1"
+            value={row.priceMod}
+            onChange={(e) => onChange({ priceMod: e.target.value })}
+          />
+        </div>
+      </div>
+      <p className="gm-shop-offer-summary" data-testid={`offering-summary-${index}`}>
+        {summary}
+      </p>
+    </li>
+  );
+};
+
+// The "Spellcasting services" section: generative scroll/wand offerings, each a
+// rank/tradition/rarity spec rather than a single catalog item.
+const OfferingsSection = ({ offerings, spells, addOffering, setOffering, removeOffering }) => (
+  <div className="gm-shop-offers" data-testid="shop-offerings">
+    <div className="gm-shop-offers-head">
+      <div className="gm-shop-pane-title">
+        Spellcasting services<span className="gm-shop-pane-count">{offerings.length}</span>
+      </div>
+      <button
+        type="button"
+        className="btn-small btn-secondary"
+        onClick={addOffering}
+      >
+        Add spell-item offering
+      </button>
+    </div>
+    {offerings.length === 0 ? (
+      <p className="gm-count gm-shop-offers-empty">
+        No scroll or wand offerings. Add one to sell Scrolls/Wands of any catalog spell up to a
+        rank, filtered by tradition and rarity.
+      </p>
+    ) : (
+      <ul className="gm-shop-wares" aria-label="spell-item offerings">
+        {offerings.map((o, i) => (
+          <OfferingRow
+            key={o.key}
+            row={o}
+            index={i}
+            spells={spells}
+            onChange={(patch) => setOffering(i, patch)}
+            onRemove={() => removeOffering(i)}
+          />
+        ))}
+      </ul>
+    )}
+  </div>
+);
+
 // The per-location authoring surface. `onBack` is supplied only by finders that
 // hide the list (the Command finder, S5); inside PageEditorShell the list stays
 // visible, so no back button renders.
-const Workspace = ({ location, shops, catalog, chips, catalogMap, runeMap, setShop, removeShop, onBack }) => {
+const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMap, setShop, removeShop, onBack }) => {
   const loreId = location.id;
   const entry = shops[loreId];
   const [setUp, setSetUp] = useState(() => isSetUp(loreId, shops));
@@ -397,6 +628,7 @@ const Workspace = ({ location, shops, catalog, chips, catalogMap, runeMap, setSh
   const [revealed, setRevealed] = useState(() => !!entry?.revealed);
   const [open, setOpen] = useState(() => entry?.open !== false);
   const [rows, setRows] = useState(() => toRows(entry?.wares));
+  const [offerings, setOfferings] = useState(() => toOfferings(entry?.wares));
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
@@ -410,6 +642,22 @@ const Workspace = ({ location, shops, catalog, chips, catalogMap, runeMap, setSh
   };
   const removeRow = (i) => {
     setRows((cur) => cur.filter((_, idx) => idx !== i));
+    touch();
+  };
+
+  const addOffering = () => {
+    setOfferings((cur) => [
+      ...cur,
+      { key: newOfferingKey(), spellItem: 'scroll', maxRank: '1', traditions: [], rarities: [], priceMod: '' },
+    ]);
+    touch();
+  };
+  const setOffering = (i, patch) => {
+    setOfferings((cur) => cur.map((o, idx) => (idx === i ? { ...o, ...patch } : o)));
+    touch();
+  };
+  const removeOffering = (i) => {
+    setOfferings((cur) => cur.filter((_, idx) => idx !== i));
     touch();
   };
 
@@ -434,12 +682,18 @@ const Workspace = ({ location, shops, catalog, chips, catalogMap, runeMap, setSh
     setRevealed(false);
     setOpen(true);
     setRows([]);
+    setOfferings([]);
     setDirty(false);
     setJustSaved(false);
   };
 
   const save = () => {
-    setShop(loreId, { keeper, open, revealed, wares: fromRows(rows) });
+    setShop(loreId, {
+      keeper,
+      open,
+      revealed,
+      wares: [...fromRows(rows), ...fromOfferings(offerings)],
+    });
     setDirty(false);
     setJustSaved(true);
   };
@@ -537,6 +791,14 @@ const Workspace = ({ location, shops, catalog, chips, catalogMap, runeMap, setSh
               onSave={save}
             />
           </div>
+
+          <OfferingsSection
+            offerings={offerings}
+            spells={spells}
+            addOffering={addOffering}
+            setOffering={setOffering}
+            removeOffering={removeOffering}
+          />
         </>
       )}
     </div>
@@ -665,7 +927,7 @@ const ShopFinder = ({ locations, shops, onSelect }) => {
 };
 
 const GmShops = () => {
-  const { allLoreEntries, items, runes } = useContent();
+  const { allLoreEntries, items, runes, spells } = useContent();
   const { shops, setShop, removeShop } = useShops();
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
@@ -700,6 +962,7 @@ const GmShops = () => {
             key={selected.id}
             location={selected}
             shops={shops}
+            spells={spells}
             catalog={catalog}
             chips={chips}
             catalogMap={catalogMap}

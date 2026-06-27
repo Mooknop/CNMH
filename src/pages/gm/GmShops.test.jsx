@@ -31,6 +31,16 @@ const allLoreEntries = [
 
 const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500 }];
 
+// Spell catalog for the generative scroll/wand offerings (#819). Rarity rides on
+// a trait (getItemRarity); a Cantrip is excluded from scroll/wand pricing.
+const spells = [
+  { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
+  { id: 'fireball', name: 'Fireball', level: 3, traditions: ['arcane', 'primal'] },
+  { id: 'haste', name: 'Haste', level: 3, traditions: ['arcane', 'occult', 'primal'] },
+  { id: 'chromatic-wall', name: 'Chromatic Wall', level: 5, traditions: ['arcane', 'occult'], traits: ['Uncommon'] },
+  { id: 'shield', name: 'Shield', level: 0, traditions: ['arcane', 'divine', 'occult'], traits: ['Cantrip'] },
+];
+
 // Default meta a legacy/blank entry serializes back with.
 const META = { keeper: '', open: true, revealed: false };
 
@@ -39,7 +49,7 @@ let removeShop;
 const setup = (shops = {}) => {
   setShop = vi.fn();
   removeShop = vi.fn();
-  useContent.mockReturnValue({ allLoreEntries, items, runes });
+  useContent.mockReturnValue({ allLoreEntries, items, runes, spells });
   useShops.mockReturnValue({ shops, setShop, removeShop });
 };
 
@@ -315,6 +325,106 @@ describe('GmShops', () => {
       render(<GmShops />);
       select('Town Hall');
       expect(screen.getByText(/Nothing stocked yet/)).toBeInTheDocument();
+    });
+  });
+
+  describe('spell-item offerings (#819)', () => {
+    const open = (shops = { 'town-hall': { wares: [] } }) => {
+      setup(shops);
+      render(<GmShops />);
+      select('Town Hall');
+    };
+    const addOffering = () =>
+      fireEvent.click(screen.getByRole('button', { name: 'Add spell-item offering' }));
+    const lastWares = () => lastSave()[1].wares;
+
+    it('shows the empty offerings prompt until one is added', () => {
+      open();
+      expect(screen.getByTestId('shop-offerings')).toBeInTheDocument();
+      expect(screen.getByText(/No scroll or wand offerings/)).toBeInTheDocument();
+    });
+
+    it('authors an offering and persists the minimal spec (defaults omitted)', () => {
+      open();
+      addOffering();
+      fireEvent.change(screen.getByLabelText('offering-maxrank-0'), { target: { value: '3' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([{ spellItem: 'scroll', maxRank: 3 }]);
+    });
+
+    it('persists tradition + rarity subsets and a price modifier', () => {
+      open();
+      addOffering();
+      fireEvent.change(screen.getByLabelText('offering-kind-0'), { target: { value: 'wand' } });
+      fireEvent.change(screen.getByLabelText('offering-maxrank-0'), { target: { value: '5' } });
+      fireEvent.click(screen.getByLabelText('offering-0-trad-arcane'));
+      fireEvent.click(screen.getByLabelText('offering-0-trad-occult'));
+      fireEvent.click(screen.getByLabelText('offering-0-rarity-common'));
+      fireEvent.click(screen.getByLabelText('offering-0-rarity-uncommon'));
+      fireEvent.change(screen.getByLabelText('offering-pricemod-0'), { target: { value: '1.2' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([
+        { spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'], priceMod: 1.2 },
+      ]);
+    });
+
+    it('omits traditions when all four are selected (means all)', () => {
+      open();
+      addOffering();
+      ['arcane', 'divine', 'occult', 'primal'].forEach((t) =>
+        fireEvent.click(screen.getByLabelText(`offering-0-trad-${t}`))
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([{ spellItem: 'scroll', maxRank: 1 }]);
+    });
+
+    it('summarises coverage with a live eligible-spell count', () => {
+      open();
+      addOffering();
+      fireEvent.change(screen.getByLabelText('offering-maxrank-0'), { target: { value: '3' } });
+      // Scrolls, all traditions, common only, rank ≤ 3: heal, fireball, haste.
+      expect(screen.getByTestId('offering-summary-0')).toHaveTextContent(
+        'Scrolls · all traditions · common · up to rank 3 · 3 eligible spells'
+      );
+      // Raise the cap and opt into common+uncommon → the rank-5 uncommon spell
+      // joins (an explicit rarity set replaces the common-only default, so common
+      // must be re-selected to keep it).
+      fireEvent.change(screen.getByLabelText('offering-maxrank-0'), { target: { value: '5' } });
+      fireEvent.click(screen.getByLabelText('offering-0-rarity-common'));
+      fireEvent.click(screen.getByLabelText('offering-0-rarity-uncommon'));
+      expect(screen.getByTestId('offering-summary-0')).toHaveTextContent(
+        'common+uncommon · up to rank 5 · 4 eligible spells'
+      );
+    });
+
+    it('loads stored offerings alongside flat wares, leaving flat rows intact', () => {
+      open({
+        'town-hall': {
+          wares: [
+            { ref: 'antidote' },
+            { spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'] },
+          ],
+        },
+      });
+      // Flat ware still on the shelf; spell-item ware is not a broken shelf row.
+      expect(within(shelf()).getByText('Antidote')).toBeInTheDocument();
+      const offers = screen.getByLabelText('spell-item offerings');
+      expect(within(offers).getByLabelText('offering-kind-0')).toHaveValue('wand');
+      expect(within(offers).getByLabelText('offering-maxrank-0')).toHaveValue(5);
+      expect(within(offers).getByLabelText('offering-0-trad-arcane')).toHaveAttribute('aria-pressed', 'true');
+      expect(within(offers).getByLabelText('offering-0-trad-divine')).toHaveAttribute('aria-pressed', 'false');
+      expect(within(offers).getByLabelText('offering-0-rarity-uncommon')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('removes an offering and republishes the flat ware alone', () => {
+      open({
+        'town-hall': {
+          wares: [{ ref: 'antidote' }, { spellItem: 'scroll', maxRank: 3 }],
+        },
+      });
+      fireEvent.click(screen.getByLabelText('remove-offering-0'));
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual(['town-hall', { ...META, wares: [{ ref: 'antidote' }] }]);
     });
   });
 

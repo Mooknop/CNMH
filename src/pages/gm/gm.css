@@ -403,6 +403,33 @@
 .gm-shop-tally { margin-right: auto; }
 .gm-shop-saveflash { color: var(--verdant-mid); font-size: 0.82rem; font-weight: 600; }
 
+/* Spellcasting services — generative scroll/wand offerings (#819) */
+.gm-shop-offers {
+  margin-top: 18px;
+  border: 1px solid var(--shell-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.gm-shop-offers-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.gm-shop-offers-head .gm-shop-pane-title { margin-right: auto; }
+.gm-shop-offers-empty { padding: 6px 2px; }
+.gm-shop-offers .gm-shop-wares { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.gm-shop-offer-row { gap: 10px; }
+.gm-shop-offer-kind, .gm-shop-offer-rank { display: flex; flex-direction: column; gap: 3px; }
+.gm-shop-offer-kind select, .gm-shop-offer-rank input { min-width: 0; }
+.gm-shop-offer-rank input { width: 5rem; }
+.gm-shop-offer-filters { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.gm-shop-offer-field { display: flex; flex-direction: column; gap: 4px; }
+.gm-shop-offer-label { font-size: 0.76rem; color: var(--shell-text-secondary); font-weight: 600; }
+.gm-shop-offer-hint { font-weight: 400; opacity: 0.75; }
+.gm-shop-offer-mod input { width: 5rem; }
+.gm-shop-offer-summary {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--gold-mid);
+  font-weight: 600;
+}
+
 @media (max-width: 760px) {
   .gm-shop-panes { flex-direction: column; height: auto; }
   .gm-shop-catalog { flex: none; max-height: 340px; }
