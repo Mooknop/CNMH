@@ -1,4 +1,11 @@
-import { isShop, getShopsForLocation, resolveShopWares } from './shopUtils';
+import {
+  isShop,
+  isSetUp,
+  isShopRevealed,
+  isShopOpen,
+  getShopsForLocation,
+  resolveShopWares,
+} from './shopUtils';
 
 // Lore: Sandpoint (root) contains two shops + one plain location.
 const entries = [
@@ -52,6 +59,55 @@ describe('isShop', () => {
   it('is false for missing args', () => {
     expect(isShop(null, shops)).toBe(false);
     expect(isShop('bottled-solutions', null)).toBe(false);
+  });
+});
+
+describe('isSetUp', () => {
+  it('is true for any present entry, even one with no wares', () => {
+    expect(isSetUp('bottled-solutions', shops)).toBe(true);
+    expect(isSetUp('empty-shop', shops)).toBe(true);
+  });
+
+  it('is false for an id absent from the store or missing args', () => {
+    expect(isSetUp('town-hall', shops)).toBe(false);
+    expect(isSetUp(null, shops)).toBe(false);
+    expect(isSetUp('bottled-solutions', null)).toBe(false);
+  });
+});
+
+describe('isShopRevealed', () => {
+  it('defaults a legacy entry (no revealed field) to visible', () => {
+    expect(isShopRevealed('bottled-solutions', shops)).toBe(true);
+  });
+
+  it('honors an explicit revealed flag', () => {
+    const s = { hidden: { revealed: false, wares: [] }, shown: { revealed: true, wares: [] } };
+    expect(isShopRevealed('hidden', s)).toBe(false);
+    expect(isShopRevealed('shown', s)).toBe(true);
+  });
+
+  it('is false for an absent entry or missing args', () => {
+    expect(isShopRevealed('town-hall', shops)).toBe(false);
+    expect(isShopRevealed(null, shops)).toBe(false);
+    expect(isShopRevealed('bottled-solutions', null)).toBe(false);
+  });
+});
+
+describe('isShopOpen', () => {
+  it('defaults a legacy entry (no open field) to open', () => {
+    expect(isShopOpen('bottled-solutions', shops)).toBe(true);
+  });
+
+  it('honors an explicit open flag', () => {
+    const s = { closed: { open: false, wares: [] }, trading: { open: true, wares: [] } };
+    expect(isShopOpen('closed', s)).toBe(false);
+    expect(isShopOpen('trading', s)).toBe(true);
+  });
+
+  it('is false for an absent entry or missing args', () => {
+    expect(isShopOpen('town-hall', shops)).toBe(false);
+    expect(isShopOpen(null, shops)).toBe(false);
+    expect(isShopOpen('bottled-solutions', null)).toBe(false);
   });
 });
 
