@@ -6,6 +6,9 @@ import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
 import { resolveShopWares } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine } from '../../utils/shopCart';
 import { useBuyItems } from '../../hooks/useBuyItems';
+import { useRuneWork } from '../../hooks/useRuneWork';
+import { useCharacter } from '../../hooks/useCharacter';
+import { eligibleWeapons } from '../../utils/runeWorkOrder';
 import ShopCart from './ShopCart';
 import './ShopModal.css';
 
@@ -42,10 +45,15 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
   const [detailItem, setDetailItem] = useState(null);
   const [cart, setCart] = useState([]);
   const [receipt, setReceipt] = useState(null);
+  // The rune ware currently being etched onto a weapon (#802), or null.
+  const [etchWare, setEtchWare] = useState(null);
 
   const { myGold, buy } = useBuyItems(character?.id);
+  const { etch } = useRuneWork(character?.id);
+  const charData = useCharacter(character);
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
+  const weapons = useMemo(() => eligibleWeapons(charData?.inventory), [charData]);
 
   // Always reopen on the carousel with an empty cart and no stale receipt.
   useEffect(() => {
@@ -54,6 +62,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
       setDetailItem(null);
       setCart([]);
       setReceipt(null);
+      setEtchWare(null);
     }
   }, [isOpen]);
 
@@ -69,6 +78,19 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
     setSelectedId(id);
     setCart([]);
     setReceipt(null);
+    setEtchWare(null);
+  };
+
+  // Pay to etch the active rune ware onto `weapon` (#802): the shop takes the
+  // weapon and returns it runed after the turnaround. Leaves a receipt line.
+  const doEtch = (weapon) => {
+    const rune = etchWare && runeMap.get(String(etchWare.runestone?.runeRef));
+    if (!rune) return;
+    const order = etch(weapon, rune, selected?.title);
+    setEtchWare(null);
+    if (order) {
+      setReceipt({ etch: true, weapon: weapon.name, rune: rune.name, total: rune.price });
+    }
   };
 
   const addWare = (ware) => {
@@ -126,11 +148,41 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
 
           {receipt && (
             <p className="shop-receipt" role="status" data-testid="shop-receipt">
-              Purchased {receipt.count} item{receipt.count === 1 ? '' : 's'} for {receipt.total} gp.
+              {receipt.etch
+                ? `Left ${receipt.weapon} to be etched with ${receipt.rune} for ${receipt.total} gp — collect it once it's done.`
+                : `Purchased ${receipt.count} item${receipt.count === 1 ? '' : 's'} for ${receipt.total} gp.`}
             </p>
           )}
 
-          {wares.length === 0 ? (
+          {etchWare ? (
+            <div className="shop-etch" data-testid="shop-etch-picker">
+              <button type="button" className="shop-back" onClick={() => setEtchWare(null)}>
+                ← Back to wares
+              </button>
+              <p className="shop-etch-prompt">
+                Etch <strong>{etchWare.runestone?.rune?.name || 'this rune'}</strong> onto which weapon?
+                The shop keeps it and returns it runed after the turnaround.
+              </p>
+              {weapons.length === 0 ? (
+                <p className="shop-empty">You have no weapon to etch a rune onto.</p>
+              ) : (
+                <ul className="shop-etch-weapons" aria-label="weapons">
+                  {weapons.map((w) => (
+                    <li key={w.uid}>
+                      <button
+                        type="button"
+                        className="btn-small btn-secondary"
+                        data-testid={`etch-weapon-${w.uid}`}
+                        onClick={() => doEtch(w)}
+                      >
+                        {w.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : wares.length === 0 ? (
             <p className="shop-empty">This shop has nothing for sale right now.</p>
           ) : (
             <DndProvider renderGhost={(w) => <span className="shop-ghost">{w.name}</span>}>
@@ -139,6 +191,16 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character
                   {wares.map((ware) => (
                     <li key={ware.wareKey} className="shop-ware-row">
                       <WareTile ware={ware} onInspect={setDetailItem} />
+                      {ware.runestone && (
+                        <button
+                          type="button"
+                          className="shop-ware-etch"
+                          aria-label={`etch ${ware.wareKey}`}
+                          onClick={() => setEtchWare(ware)}
+                        >
+                          ⚒ Etch
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="shop-ware-add"

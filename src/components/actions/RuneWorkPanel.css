@@ -1,0 +1,42 @@
+/* "At the smith" rune work-order panel (#802). */
+.rune-work {
+  margin: 0.75rem 0;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-surface-card, rgba(28, 24, 18, 0.82));
+  padding: 0.6rem 0.75rem;
+}
+.rune-work-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.rune-work-title {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+}
+.rune-work-count {
+  margin-left: auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: var(--color-text-tertiary, rgba(255, 255, 255, 0.45));
+}
+.rune-work-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.rune-work-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-surface, rgba(26, 22, 18, 0.6));
+}
+.rune-work-info { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
+.rune-work-weapon { font-weight: 600; color: var(--color-text, #f5ede4); }
+.rune-work-rune { font-size: 0.8rem; color: var(--color-arcane, #7a54ba); }
+.rune-work-status { font-size: 0.74rem; color: var(--color-text-tertiary, rgba(255, 255, 255, 0.55)); }
+.rune-work-status.is-ready { color: var(--color-verdant, #3d9458); font-weight: 600; }
+.rune-work-collect { flex-shrink: 0; }
