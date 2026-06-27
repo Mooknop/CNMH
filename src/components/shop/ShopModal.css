@@ -145,6 +145,30 @@
   background: var(--theme-surface-inset-hover, var(--shell-surface-hover));
 }
 
+/* Etch-onto-weapon affordance on rune wares (#802), styled like Add. */
+.shop-ware-etch {
+  flex: 0 0 auto;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--theme-border, var(--shell-border));
+  border-radius: var(--radius-md);
+  background: var(--theme-surface-inset, var(--shell-surface-inset));
+  color: var(--theme-text, var(--shell-text));
+  transition: background 0.15s, border-color 0.15s;
+}
+.shop-ware-etch:hover {
+  border-color: var(--theme-accent, var(--accent-bg));
+  background: var(--theme-surface-inset-hover, var(--shell-surface-hover));
+}
+
+.shop-etch { display: flex; flex-direction: column; gap: var(--space-3); }
+.shop-etch-prompt { color: var(--theme-text-secondary, var(--shell-text-secondary)); margin: 0; }
+.shop-etch-weapons { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
 .shop-ware:hover {
   border-color: var(--theme-accent, var(--accent-bg));
   background: var(--theme-surface-inset-hover, var(--shell-surface-hover));

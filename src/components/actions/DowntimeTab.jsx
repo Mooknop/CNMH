@@ -10,6 +10,7 @@ import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
 import ShopModal from '../shop/ShopModal';
 import CraftingProjects from './CraftingProjects';
+import RuneWorkPanel from './RuneWorkPanel';
 import DowntimePartyLedger from './DowntimePartyLedger';
 import DowntimeAllocator from './DowntimeAllocator';
 import EarnIncomeResolver from './EarnIncomeResolver';
@@ -124,6 +125,8 @@ const DowntimeTab = ({ character, characterColor }) => {
           </button>
         </div>
       )}
+
+      <RuneWorkPanel character={character} />
 
       {hasCrafting && (
         <CraftingProjects character={character} />

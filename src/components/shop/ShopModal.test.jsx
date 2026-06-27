@@ -26,6 +26,16 @@ vi.mock('../../hooks/useBuyItems', () => ({
   useBuyItems: () => ({ myGold, buy: mockBuy }),
 }));
 
+// Rune work orders (#802): etch is a spy returning a fresh order. useCharacter
+// supplies the buyer's weapons for the etch picker (from character.__inventory).
+let mockEtch = vi.fn(() => ({ id: 'order-1' }));
+vi.mock('../../hooks/useRuneWork', () => ({
+  useRuneWork: () => ({ orders: [], etch: mockEtch, collect: vi.fn(), nowSeconds: 0, locationId: '' }),
+}));
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: (c) => (c ? { ...c, inventory: c.__inventory || [] } : null),
+}));
+
 const shops = [
   { id: 'bottled-solutions', title: 'Bottled Solutions', summary: 'A cluttered alchemist.' },
   { id: 'curious-goblin', title: 'The Curious Goblin', summary: 'A bookshop.' },
@@ -64,6 +74,7 @@ const openBottledSolutions = () => fireEvent.click(screen.getByText('Bottled Sol
 beforeEach(() => {
   myGold = 100;
   mockBuy = vi.fn(() => ({ total: 8, count: 1 }));
+  mockEtch = vi.fn(() => ({ id: 'order-1' }));
 });
 
 describe('ShopModal', () => {
@@ -152,6 +163,41 @@ describe('ShopModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /confirm purchase/i }));
     const [purchases] = mockBuy.mock.calls[0];
     expect(purchases[0].item).toMatchObject({ name: 'Flaming Runestone', runestone: { runeRef: 'flaming' } });
+  });
+
+  it('etches a rune onto a chosen weapon, creating a work order (#802)', () => {
+    const runes = [{ id: 'flaming', name: 'Flaming', price: 500 }];
+    render(
+      <ShopModal
+        isOpen
+        onClose={() => {}}
+        shops={[{ id: 'etcher', title: 'The Etcher' }]}
+        waresStore={{ etcher: { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } }}
+        items={[]}
+        runes={runes}
+        character={{
+          id: 'char-1',
+          name: 'Pellias',
+          __inventory: [
+            { uid: 'w1', name: 'Longsword', strikes: { damage: '1d8' } },
+            { uid: 'p1', name: 'Potion' },
+          ],
+        }}
+      />
+    );
+    fireEvent.click(screen.getByText('The Etcher'));
+    fireEvent.click(screen.getByLabelText('etch runestone@flaming'));
+    // Weapon picker lists the weapon, not the potion.
+    expect(screen.getByTestId('etch-weapon-w1')).toBeInTheDocument();
+    expect(screen.queryByTestId('etch-weapon-p1')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('etch-weapon-w1'));
+    expect(mockEtch).toHaveBeenCalledWith(
+      expect.objectContaining({ uid: 'w1' }),
+      expect.objectContaining({ id: 'flaming' }),
+      'The Etcher'
+    );
+    expect(screen.getByTestId('shop-receipt')).toHaveTextContent('Left Longsword to be etched with Flaming');
   });
 
   it('shows an empty-wares state for a shop with nothing for sale', () => {
