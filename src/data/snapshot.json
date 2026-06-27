@@ -7801,14 +7801,38 @@
     },
     {
       "id": "armor-potency",
-      "name": "Armor Potency (+1)",
+      "name": "Armor Potency",
+      "level": 5,
       "price": 160,
       "weight": 0,
       "traits": [
         "Magical"
       ],
       "armorRune": true,
-      "description": "An armor potency rune grants a +1 item bonus to AC and adds one property rune slot to the armor."
+      "description": "Magic wards deflect attacks, increasing the armor's item bonus to AC. The armor can be etched with property runes up to the potency's value.",
+      "variants": [
+        {
+          "level": 5,
+          "label": "+1",
+          "name": "Armor Potency (+1)",
+          "price": 160,
+          "description": "Increase the armor's item bonus to AC by 1. The armor can be etched with one property rune."
+        },
+        {
+          "level": 11,
+          "label": "+2",
+          "name": "Armor Potency (+2)",
+          "price": 1060,
+          "description": "Increase the armor's item bonus to AC by 2, and the armor can be etched with two property runes."
+        },
+        {
+          "level": 18,
+          "label": "+3",
+          "name": "Armor Potency (+3)",
+          "price": 20560,
+          "description": "Increase the armor's item bonus to AC by 3, and the armor can be etched with three property runes."
+        }
+      ]
     },
     {
       "id": "backpack",
@@ -8538,14 +8562,38 @@
     },
     {
       "id": "resilient",
-      "name": "Resilient (+1)",
+      "name": "Resilient",
+      "level": 8,
       "price": 340,
       "weight": 0,
       "traits": [
         "Magical"
       ],
       "armorRune": true,
-      "description": "A resilient rune grants a +1 item bonus to saving throws."
+      "description": "Resilient runes imbue armor with additional protective magic, granting the wearer an item bonus to saving throws.",
+      "variants": [
+        {
+          "level": 8,
+          "label": "Resilient",
+          "name": "Resilient",
+          "price": 340,
+          "description": "This grants the wearer a +1 item bonus to saving throws."
+        },
+        {
+          "level": 14,
+          "label": "Greater",
+          "name": "Resilient (Greater)",
+          "price": 3440,
+          "description": "The armor grants a +2 item bonus to saving throws."
+        },
+        {
+          "level": 20,
+          "label": "Major",
+          "name": "Resilient (Major)",
+          "price": 49440,
+          "description": "The armor grants a +3 item bonus to saving throws."
+        }
+      ]
     },
     {
       "id": "rope-50ft",
