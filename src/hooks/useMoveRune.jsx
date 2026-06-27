@@ -38,11 +38,13 @@ export const useMoveRune = (charId) => {
   const who = byId[charId]?.name || 'Someone';
 
   // Resolve and apply a move. `direction` is 'toWeapon' (runestone→weapon) or
-  // 'toRunestone' (weapon→runestone). Returns { degree, outcome } on a resolved
-  // roll (even a no-op failure), or null when the move is rejected outright
-  // (offline, bad input, or not enough gold for the success upkeep).
+  // 'toRunestone' (weapon→runestone). `replaceRuneId` (toWeapon only) names a
+  // property rune already on the weapon to displace when no slot is free — the
+  // displaced rune is minted as a fresh runestone (#804). Returns { degree,
+  // outcome } on a resolved roll (even a no-op failure), or null when the move is
+  // rejected outright (offline, bad input, or not enough gold for the upkeep).
   const move = useCallback(
-    ({ direction, weapon, runestone, rune, d20, total }) => {
+    ({ direction, weapon, runestone, rune, replaceRuneId, d20, total }) => {
       if (offline || !charId) return null;
       if (!weapon || weapon.uid == null || !rune || rune.id == null) return null;
       if (direction === 'toWeapon' && (!runestone || runestone.uid == null)) return null;
@@ -64,7 +66,11 @@ export const useMoveRune = (charId) => {
       if (direction === 'toWeapon') {
         if (outcome.moved) {
           pull(weapon.uid);
-          credit.push(foldRuneIntoWeapon(weapon, runeRef));
+          // Displace an existing rune first when replacing (no free slot); the
+          // displaced rune is re-housed in a fresh runestone.
+          const base = replaceRuneId ? removeRuneFromWeapon(weapon, replaceRuneId) : weapon;
+          credit.push(foldRuneIntoWeapon(base, runeRef));
+          if (replaceRuneId) credit.push(runestoneEntryFor(replaceRuneId));
           pull(runestone.uid); // the stone cracks on transfer
         } else if (outcome.destroyed) {
           pull(runestone.uid); // consumed; the rune is lost with it

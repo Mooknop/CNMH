@@ -11,8 +11,14 @@ const character = { id: 'blu' };
 const mockMove = vi.fn();
 
 const flaming = { id: 'flaming', name: 'Flaming', level: 8, price: 500 };
+const frost = { id: 'frost', name: 'Frost', level: 8, price: 500 };
 const longsword = { uid: 'w1', name: 'Longsword', strikes: { damage: '1d8' }, runes: { property: [flaming] } };
-const dagger = { uid: 'w2', name: 'Dagger', strikes: { damage: '1d4' } };
+// A +1 weapon with one free property slot — a valid apply target.
+const dagger = { uid: 'w2', name: 'Dagger', strikes: { damage: '1d4' }, runes: { potency: 1 } };
+// A +1 weapon whose single slot is full — applying requires displacing a rune.
+const fullPick = { uid: 'w3', name: 'Pick', strikes: { damage: '1d6' }, runes: { potency: 1, property: [frost] } };
+// A potency-0 weapon can hold no property runes — never an apply target.
+const club = { uid: 'w4', name: 'Club', strikes: { damage: '1d6' } };
 const runestone = { uid: 'rs1', name: 'Flaming Runestone', runestone: { runeRef: 'flaming', rune: flaming } };
 
 const setChar = (inventory, rank = 2) =>
@@ -71,6 +77,31 @@ describe('MoveRunePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Move rune' }));
     expect(mockMove).toHaveBeenCalledWith(expect.objectContaining({
       direction: 'toWeapon', weapon: dagger, runestone, rune: flaming,
+    }));
+  });
+
+  it('excludes potency-0 weapons (no property slots) from apply targets', () => {
+    setChar([runestone, club]);
+    render(<MoveRunePanel character={character} />);
+    fireEvent.change(screen.getByLabelText('Rune to move'), { target: { value: 'r:rs1' } });
+    expect(screen.getByText(/no weapon with a potency rune/i)).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Club/ })).not.toBeInTheDocument();
+  });
+
+  it('requires displacing a rune when the target weapon is full', () => {
+    setChar([runestone, fullPick]);
+    render(<MoveRunePanel character={character} />);
+    fireEvent.change(screen.getByLabelText('Rune to move'), { target: { value: 'r:rs1' } });
+    fireEvent.change(screen.getByLabelText('Target weapon'), { target: { value: 'w3' } });
+    fireEvent.change(screen.getByLabelText('Raw d20 die'), { target: { value: '18' } });
+    fireEvent.change(screen.getByLabelText('Check total'), { target: { value: '40' } });
+    // Full weapon → must pick a rune to displace before moving.
+    expect(screen.getByRole('button', { name: 'Move rune' })).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText('Rune to replace'), { target: { value: 'frost' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Move rune' }));
+    expect(mockMove).toHaveBeenCalledWith(expect.objectContaining({
+      direction: 'toWeapon', weapon: fullPick, runestone, rune: flaming, replaceRuneId: 'frost',
     }));
   });
 

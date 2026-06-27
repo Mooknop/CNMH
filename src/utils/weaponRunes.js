@@ -203,6 +203,29 @@ export const weaponPropertyRunes = (item) =>
     ? item.runes.property.filter((p) => p && typeof p === 'object')
     : [];
 
+// ── Property-rune slots (#607, #804) ──────────────────────────────────────────
+// A weapon holds property runes up to its potency value: +1 potency = 1 slot,
+// +2 = 2, +3 = 3; no potency = no slots. Striking is its own (potency-independent)
+// slot and never competes with property runes. These pure helpers back the apply
+// and move-rune pickers so a player can't over-slot a weapon.
+
+/** Property-rune slot capacity for a weapon's `runes` block (= potency tier). */
+export const propertySlotCapacity = (runes) =>
+  (runes && typeof runes === 'object' && runes.potency) || 0;
+
+/** Property-rune slots currently filled on an item (counts string + doc refs). */
+export const usedPropertySlots = (item) =>
+  hasRuneBlock(item) && Array.isArray(item.runes.property)
+    ? item.runes.property.filter(Boolean).length
+    : 0;
+
+/** Free property-rune slots on an item (capacity − used, floored at 0). */
+export const freePropertySlots = (item) =>
+  Math.max(0, propertySlotCapacity(item && item.runes) - usedPropertySlots(item));
+
+/** Whether a weapon can take another property rune without displacing one. */
+export const hasFreePropertySlot = (item) => freePropertySlots(item) > 0;
+
 /**
  * A source breakdown for a runed weapon's strike (#608): where the attack
  * bonus, extra damage dice, and riders come from. Returns null when the item
