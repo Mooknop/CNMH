@@ -20,6 +20,15 @@ const b64urlToBytes = (s) => {
 
 const b64urlToJson = (s) => JSON.parse(new TextDecoder().decode(b64urlToBytes(s)));
 
+// Length-aware constant-time string compare for the CI push token, so a valid
+// token can't be discovered by timing the response.
+const tokensMatch = (a, b) => {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+};
+
 // Module-level JWKS cache (per isolate); short TTL so key rotation is picked up.
 let certsCache = { domain: null, keys: null, expires: 0 };
 
@@ -39,6 +48,18 @@ const getKeys = async (teamDomain) => {
 export async function verifyAccess(request, env) {
   if (env.GM_DEV_BYPASS === 'true') {
     return { email: env.GM_EMAIL || 'dev@localhost' };
+  }
+
+  // Machine-to-machine auth for the GM write API (the lore-sync vault push). The
+  // request carries `Authorization: Bearer <GM_PUSH_TOKEN>` and is verified here
+  // directly — this path needs NO Cloudflare Access application in front of
+  // /api/gm/* (a service token's CF-Access-Client-* headers only become a JWT
+  // when an Access app fronts the path, which ours does not). The token is a
+  // per-environment Worker secret. Human logins still use the Access JWT/cookie
+  // verified below.
+  const bearer = (request.headers.get('Authorization') || '').match(/^Bearer\s+(.+)$/i);
+  if (bearer && env.GM_PUSH_TOKEN && tokensMatch(bearer[1], env.GM_PUSH_TOKEN)) {
+    return { email: 'lore-sync@ci' };
   }
 
   const teamDomain = env.CF_ACCESS_TEAM_DOMAIN;
