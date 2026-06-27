@@ -20,6 +20,7 @@ import bootstrapEffects from '../data/pf2eEffects';
 import bootstrapRunes from '../data/pf2eRunes';
 import bootstrapArmorRunes from '../data/armorRunes';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
+import { resolveScroll, resolveWand } from './spellItems';
 
 export const slugify = (str) =>
   String(str || '')
@@ -335,20 +336,54 @@ const applyArtifactGating = (item, ownerLevel) => {
   return out;
 };
 
+// Bulk L (a scroll/wand) is stored as 0.1 weight units (formatBulk renders any
+// 0 < weight < 1 as "L").
+const BULK_L_WEIGHT = 0.1;
+
+// A resolved scroll/wand block is a real catalog spell unless it's the
+// '(unknown spell…)' stub resolveSpellBlock emits for a missing/dangling ref.
+const isResolvedSpell = (block) =>
+  !!(block && typeof block === 'object' && typeof block.name === 'string'
+    && !block.name.startsWith('(unknown'));
+
+// Overlay the S1 base-template fields (#812) derived from the embedded spell's
+// cast rank onto a scroll/wand item. AUTHOR OVERRIDES WIN: each field is filled
+// only when the authored item/catalog entry left it unset, so a GM-priced
+// unique scroll or a custom-named item keeps its values. A null-priced
+// (out-of-range) derivation leaves price/level untouched rather than nulling an
+// authored value. No-ops when the block didn't resolve to a real spell.
+const hydrateSpellItem = (item, kind, resolveFn) => {
+  const block = item[kind];
+  if (!isResolvedSpell(block)) return item;
+  const derived = resolveFn(block, block);
+  const out = { ...item };
+  if (out.name == null) out.name = derived.name;
+  if (out.level == null && derived.level != null) out.level = derived.level;
+  if (out.price == null && derived.price != null) out.price = derived.price;
+  if (out.weight == null) out.weight = BULK_L_WEIGHT;
+  if (out.traits == null) out.traits = derived.traits;
+  if (out.usage == null) out.usage = derived.usage;
+  if (out.source == null) out.source = derived.source;
+  return out;
+};
+
 // Final shaping shared by both resolution branches: gate artifact abilities by
 // owner level FIRST (so a still-locked staff isn't spell-resolved), then inline
-// any wand/scroll/staff spell refs. Identity-preserving when nothing applies,
-// so legacy inline items pass through byte-for-byte.
+// any wand/scroll/staff spell refs and hydrate scroll/wand base-template fields.
+// Identity-preserving when nothing applies, so legacy inline items pass through
+// byte-for-byte.
 const finishItem = (item, spellMap, ownerLevel, runeMap) => {
   if (!item || typeof item !== 'object') return item;
   let out = applyArtifactGating(item, ownerLevel);
   if (out.scroll) {
     const r = resolveSpellBlock(out.scroll, spellMap);
     if (r !== out.scroll) out = { ...out, scroll: r };
+    out = hydrateSpellItem(out, 'scroll', resolveScroll);
   }
   if (out.wand) {
     const r = resolveSpellBlock(out.wand, spellMap);
     if (r !== out.wand) out = { ...out, wand: r };
+    out = hydrateSpellItem(out, 'wand', resolveWand);
   }
   if (out.staff) {
     const r = resolveStaffSpells(out.staff, spellMap);
