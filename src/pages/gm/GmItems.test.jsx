@@ -319,6 +319,43 @@ describe('GmItems', () => {
     expect(data.scroll).toEqual({ spellRef: 'sleep' }); // ref only — no level-0 noise
   });
 
+  it('shows the derived item preview (level/price/bulk/traits) for a selected scroll', async () => {
+    setContent();
+    render(<GmItems />);
+    fireEvent.click(screen.getByText('+ New item'));
+    const form = screen.getByTestId('item-form-new');
+    fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'scroll' } });
+    fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
+    // Sleep is rank 1 → Scroll item level 1, 4 gp, Bulk L, scroll traits.
+    const preview = within(form).getByTestId('spell-item-preview');
+    expect(preview).toHaveTextContent('Scroll of Sleep');
+    expect(preview).toHaveTextContent('Item 1');
+    expect(preview).toHaveTextContent('4 gp');
+    expect(preview).toHaveTextContent('Bulk L');
+    expect(preview).toHaveTextContent('Consumable, Magical, Scroll');
+  });
+
+  it('persists a cast-rank override (heightened scroll) as the minimal block', async () => {
+    setContent();
+    saveDocument.mockResolvedValue({ ok: true });
+    render(<GmItems />);
+    fireEvent.click(screen.getByText('+ New item'));
+    const form = screen.getByTestId('item-form-new');
+    fireEvent.change(within(form).getByLabelText('spell-kind'), { target: { value: 'scroll' } });
+    fireEvent.change(within(form).getByLabelText('spell-ref'), { target: { value: 'sleep' } });
+    // Heighten Sleep (rank 1) to rank 5: name suffix + reprice to item 9 / 150 gp.
+    fireEvent.change(within(form).getByLabelText('spell-rank'), { target: { value: '5' } });
+    expect(within(form).getByLabelText('name')).toHaveValue('Scroll of Sleep (Rank 5)');
+    expect(within(form).getByTestId('spell-item-preview')).toHaveTextContent('Item 9');
+    expect(within(form).getByTestId('spell-item-preview')).toHaveTextContent('150 gp');
+    fireEvent.click(within(form).getByText('Create item'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [, , data] = saveDocument.mock.calls[0];
+    expect(data.scroll).toEqual({ spellRef: 'sleep', rank: 5 }); // minimal — no derived fields
+    expect(data.level).toBeUndefined();
+    expect(data.price).toBeUndefined();
+  });
+
   it('round-trips an existing scroll spellRef and shows an unknown-ref warning', async () => {
     useContent.mockReturnValue({
       items: [
