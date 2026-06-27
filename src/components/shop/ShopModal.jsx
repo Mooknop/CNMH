@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../shared/Modal';
 import ItemModal from '../inventory/ItemModal';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
-import { itemCatalogMap } from '../../utils/contentUtils';
+import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
 import { resolveShopWares } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine } from '../../utils/shopCart';
 import { useBuyItems } from '../../hooks/useBuyItems';
@@ -37,7 +37,7 @@ const WareTile = ({ ware, onInspect }) => {
 // a ware opens the read-only inventory ItemModal. The cart is local state; the
 // purchase itself (gold debit + acquired credit, #696 S6) runs through
 // useBuyItems on Confirm, leaving a receipt behind.
-const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, characterColor }) => {
+const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, character, characterColor }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
   const [cart, setCart] = useState([]);
@@ -45,6 +45,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, chara
 
   const { myGold, buy } = useBuyItems(character?.id);
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
+  const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
 
   // Always reopen on the carousel with an empty cart and no stale receipt.
   useEffect(() => {
@@ -59,8 +60,8 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, character, chara
   const list = Array.isArray(shops) ? shops : [];
   const selected = list.find((s) => s.id === selectedId) || null;
   const wares = useMemo(
-    () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap) : []),
-    [selected, waresStore, catalogMap]
+    () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap, runeMap) : []),
+    [selected, waresStore, catalogMap, runeMap]
   );
 
   // Switching shops starts a fresh cart (a cart belongs to one shop).

@@ -25,6 +25,14 @@ import { newEntryUid } from '../utils/uid';
 // variant already carries its own merged name/price/effect, so the ladder is
 // dead weight on the inventory entry.
 const reuid = (item) => {
+  // A bought Runestone (#801) lands as a clean ref entry, not a fat inline copy:
+  // resolveInventoryItem re-derives its name/value from the rune catalog (R1),
+  // and the ref shape is what R4's move-rune flow operates on.
+  if (item && item.runestone) {
+    const stone = { ref: 'runestone', uid: newEntryUid() };
+    if (item.runestone.runeRef != null) stone.runeRef = item.runestone.runeRef;
+    return stone;
+  }
   const { state, hand, stock, wareKey, variants, ...rest } = item || {};
   const next = { ...rest, uid: newEntryUid() };
   if (next.container && Array.isArray(next.container.contents)) {

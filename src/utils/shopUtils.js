@@ -1,4 +1,5 @@
 import { buildChildrenMap, getChildren } from './loreUtils';
+import { isRunestoneEntry, resolveRunestone } from './runestone';
 
 // Shop selectors over the app-managed wares store `cnmh_shops_global` (#696 S1).
 //
@@ -32,12 +33,26 @@ export function getShopsForLocation(locationId, entries, shops) {
 // `wareKey` that is unique per stocked variant — the bare `ref` for a flat item,
 // `"${ref}@${level}"` for a variant — so the cart and React/test keys don't
 // collide when a shop stocks two variants of the same item (both share `id`).
-export function resolveShopWares(loreId, shops, catalogMap) {
+//
+// A rune sold as a Runestone (#801) is a `{ ref: 'runestone', runeRef }` ware:
+// resolved from the rune catalog (`runeMap`) via R1's resolveRunestone into a
+// runestone display item (name/value = stone + rune), with a per-rune wareKey.
+export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
   const wares = shops && loreId != null ? shops[loreId]?.wares : null;
   if (!Array.isArray(wares) || !catalogMap) return [];
   return wares
     .map((w) => {
       if (!w || w.ref == null) return null;
+
+      if (isRunestoneEntry(w)) {
+        const resolved = resolveRunestone({ ref: 'runestone', runeRef: w.runeRef }, runeMap);
+        const override = typeof w.price === 'number' && Number.isFinite(w.price) ? w.price : null;
+        if (override != null) resolved.price = override;
+        resolved.wareKey = w.runeRef != null ? `runestone@${w.runeRef}` : 'runestone';
+        if (w.stock != null) resolved.stock = w.stock;
+        return resolved;
+      }
+
       const item = catalogMap.get(String(w.ref));
       if (!item) return null;
 

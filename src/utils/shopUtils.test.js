@@ -32,6 +32,10 @@ const catalogMap = new Map([
   ['tonic', potionLadder],
 ]);
 
+const runeMap = new Map([
+  ['flaming', { id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: ['Fire', 'Magical'] }],
+]);
+
 describe('isShop', () => {
   it('is true for a lore id with ≥1 ware', () => {
     expect(isShop('bottled-solutions', shops)).toBe(true);
@@ -137,5 +141,28 @@ describe('resolveShopWares', () => {
     const map = new Map([['p', { id: 'p', name: 'P', variants: [{ level: 1, price: 5 }] }]]);
     const s = { s: { wares: [{ ref: 'p' }] } }; // no level → no variant → no price
     expect(resolveShopWares('s', s, map)[0].price).toBe(0);
+  });
+
+  it('resolves a runestone ware from the rune catalog (value = stone + rune) (#801)', () => {
+    const s = { s: { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } };
+    const [w] = resolveShopWares('s', s, catalogMap, runeMap);
+    expect(w).toMatchObject({ name: 'Flaming Runestone', price: 503, wareKey: 'runestone@flaming' });
+    expect(w.runestone.rune.id).toBe('flaming');
+    expect(w.strikes).toBeUndefined();
+  });
+
+  it('honors a price override and stock on a runestone ware', () => {
+    const s = { s: { wares: [{ ref: 'runestone', runeRef: 'flaming', price: 400, stock: 2 }] } };
+    expect(resolveShopWares('s', s, catalogMap, runeMap)[0]).toMatchObject({ price: 400, stock: 2 });
+  });
+
+  it('stocks two different rune runestones as distinct, non-colliding wares', () => {
+    const map = new Map([
+      ['flaming', { id: 'flaming', name: 'Flaming', price: 500 }],
+      ['frost', { id: 'frost', name: 'Frost', price: 500 }],
+    ]);
+    const s = { s: { wares: [{ ref: 'runestone', runeRef: 'flaming' }, { ref: 'runestone', runeRef: 'frost' }] } };
+    const wares = resolveShopWares('s', s, catalogMap, map);
+    expect(wares.map((w) => w.wareKey)).toEqual(['runestone@flaming', 'runestone@frost']);
   });
 });

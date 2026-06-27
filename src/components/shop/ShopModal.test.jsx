@@ -130,6 +130,30 @@ describe('ShopModal', () => {
     expect(purchases.map((p) => p.qty)).toEqual([1, 1]);
   });
 
+  it('stocks and buys a rune as a Runestone (#801)', () => {
+    myGold = 1000; // afford the 503 gp runestone
+    const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500 }];
+    render(
+      <ShopModal
+        isOpen
+        onClose={() => {}}
+        shops={[{ id: 'etcher', title: 'The Etcher' }]}
+        waresStore={{ etcher: { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } }}
+        items={[]}
+        runes={runes}
+        character={{ id: 'char-1', name: 'Pellias' }}
+      />
+    );
+    fireEvent.click(screen.getByText('The Etcher'));
+    expect(screen.getByTestId('ware-runestone@flaming')).toHaveTextContent('Flaming Runestone');
+    expect(screen.getByTestId('ware-runestone@flaming')).toHaveTextContent('503 gp'); // 3 + 500
+
+    fireEvent.click(screen.getByLabelText('add runestone@flaming'));
+    fireEvent.click(screen.getByRole('button', { name: /confirm purchase/i }));
+    const [purchases] = mockBuy.mock.calls[0];
+    expect(purchases[0].item).toMatchObject({ name: 'Flaming Runestone', runestone: { runeRef: 'flaming' } });
+  });
+
   it('shows an empty-wares state for a shop with nothing for sale', () => {
     renderModal();
     fireEvent.click(screen.getByText('The Curious Goblin'));
