@@ -4,28 +4,13 @@ import GmShops from './GmShops';
 
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useShops', () => ({ useShops: vi.fn() }));
-// Stub the inline catalog picker: it only mounts when the GM opens it, and a
-// button fires onSelect with a fixed item.
-// Render a pick-<id> button per catalog entry, so the same stub serves both the
-// item picker (catalog = items) and the rune picker (catalog = runes).
-vi.mock('../../components/gm/CatalogPicker', () => ({
-  default: ({ catalog, onSelect }) => (
-    <>
-      {(catalog || []).map((c) => (
-        <button key={c.id} type="button" onClick={() => onSelect([c])}>
-          pick-{c.id}
-        </button>
-      ))}
-    </>
-  ),
-}));
 
 import { useContent } from '../../contexts/ContentContext';
 import { useShops } from '../../hooks/useShops';
 
 const items = [
-  { id: 'antidote', name: 'Antidote', price: 3, weight: 0 },
-  { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1 },
+  { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Healing'] },
+  { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1, traits: ['Magical'] },
   // Multi-level item (#797 shape): variants carry their own name/price.
   {
     id: 'tonic',
@@ -46,8 +31,7 @@ const allLoreEntries = [
 
 const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500 }];
 
-// Default meta a legacy/blank entry serializes back with (keeper read as '',
-// revealed undefined → false, open undefined → true).
+// Default meta a legacy/blank entry serializes back with.
 const META = { keeper: '', open: true, revealed: false };
 
 let setShop;
@@ -61,46 +45,84 @@ const setup = (shops = {}) => {
 
 afterEach(() => vi.restoreAllMocks());
 
-const select = (name) => fireEvent.click(screen.getByRole('button', { name }));
+// The Command finder has no persistent list: pick a location by searching for it
+// and clicking the result option.
+const select = (title) => {
+  fireEvent.change(screen.getByLabelText('location search'), { target: { value: title } });
+  fireEvent.click(screen.getByRole('option', { name: new RegExp(title) }));
+};
 const lastSave = () => setShop.mock.calls[setShop.mock.calls.length - 1];
+const shelf = () => screen.getByLabelText('wares');
 
 describe('GmShops', () => {
-  it('lists only Location entries, title-sorted', () => {
-    setup();
-    render(<GmShops />);
-    expect(screen.getByRole('button', { name: /Bottled Solutions/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Town Hall/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Brodert Quink/ })).not.toBeInTheDocument();
-    expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
-  });
+  describe('finder', () => {
+    it('searches Location entries; NPCs never appear', () => {
+      setup();
+      render(<GmShops />);
+      fireEvent.change(screen.getByLabelText('location search'), { target: { value: 'Brodert' } });
+      expect(screen.queryByRole('option')).not.toBeInTheDocument();
+      fireEvent.change(screen.getByLabelText('location search'), { target: { value: 'Town' } });
+      expect(screen.getByRole('option', { name: /Town Hall/ })).toBeInTheDocument();
+    });
 
-  it('badges set-up locations (entry presence, even with no wares)', () => {
-    setup({ 'bottled-solutions': { wares: [] } });
-    render(<GmShops />);
-    expect(screen.getByRole('button', { name: /Bottled Solutions · shop/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Town Hall$/ })).toBeInTheDocument();
+    it('groups set-up shops first and badges them', () => {
+      setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
+      render(<GmShops />);
+      fireEvent.change(screen.getByLabelText('location search'), { target: { value: 'o' } });
+      const results = screen.getByLabelText('search results');
+      expect(within(results).getByText('Shops')).toBeInTheDocument();
+      expect(within(results).getByRole('option', { name: /Bottled Solutions Shop/ })).toBeInTheDocument();
+    });
+
+    it('lists set-up shops as quick-chips and opens one on click', () => {
+      setup({ 'bottled-solutions': { wares: [] } });
+      render(<GmShops />);
+      fireEvent.click(screen.getByRole('button', { name: /Bottled Solutions/ }));
+      expect(screen.getByTestId('shop-workspace-bottled-solutions')).toBeInTheDocument();
+    });
+
+    it('shows the empty copy when no shops are set up', () => {
+      setup();
+      render(<GmShops />);
+      expect(screen.getByText(/No shops yet/)).toBeInTheDocument();
+    });
+
+    it('counts set-up shops in the live pill', () => {
+      setup({ 'bottled-solutions': { wares: [] } });
+      render(<GmShops />);
+      expect(screen.getByText('1 live')).toBeInTheDocument();
+    });
+
+    it('⌘K focuses the search input', () => {
+      setup();
+      render(<GmShops />);
+      const input = screen.getByLabelText('location search');
+      expect(input).not.toHaveFocus();
+      fireEvent.keyDown(window, { key: 'k', metaKey: true });
+      expect(input).toHaveFocus();
+    });
   });
 
   describe('not a shop yet', () => {
     it('shows the set-up empty state, not the authoring surface', () => {
       setup();
       render(<GmShops />);
-      select(/Town Hall/);
+      select('Town Hall');
       expect(screen.getByTestId('shop-setup')).toBeInTheDocument();
       expect(screen.getByText('Not a shop')).toBeInTheDocument();
       expect(screen.queryByLabelText('keeper')).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: '+ Add items' })).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('catalog')).not.toBeInTheDocument();
     });
 
-    it('Set up as shop commits defaults and reveals the authoring surface', () => {
+    it('Set up as shop commits defaults and reveals the two-pane surface', () => {
       setup();
       render(<GmShops />);
-      select(/Town Hall/);
+      select('Town Hall');
       fireEvent.click(screen.getByRole('button', { name: 'Set up as shop' }));
       expect(setShop).toHaveBeenCalledWith('town-hall', { keeper: '', open: true, revealed: false, wares: [] });
-      // Authoring surface now visible.
       expect(screen.getByLabelText('keeper')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: '+ Add items' })).toBeInTheDocument();
+      expect(screen.getByLabelText('catalog')).toBeInTheDocument();
+      expect(screen.getByText(/Nothing stocked yet/)).toBeInTheDocument();
       expect(screen.getByText('Shop')).toBeInTheDocument();
     });
   });
@@ -109,7 +131,7 @@ describe('GmShops', () => {
     it('loads keeper/revealed/open from the stored entry', () => {
       setup({ 'bottled-solutions': { keeper: 'Vorl', open: false, revealed: true, wares: [] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
+      select('Bottled Solutions');
       expect(screen.getByLabelText('keeper')).toHaveValue('Vorl');
       expect(screen.getByRole('button', { name: 'Revealed' })).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByRole('button', { name: 'Closed' })).toHaveAttribute('aria-pressed', 'true');
@@ -118,7 +140,7 @@ describe('GmShops', () => {
     it('edits meta and publishes it alongside wares', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
+      select('Bottled Solutions');
       fireEvent.change(screen.getByLabelText('keeper'), { target: { value: 'Vorl the brewer' } });
       fireEvent.click(screen.getByRole('button', { name: 'Revealed' }));
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
@@ -133,7 +155,7 @@ describe('GmShops', () => {
     it('is disabled (reads "Saved") on a freshly loaded shop and enables on edit', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
+      select('Bottled Solutions');
       expect(screen.getByRole('button', { name: 'Saved' })).toBeDisabled();
       fireEvent.change(screen.getByLabelText('price-antidote'), { target: { value: '5' } });
       expect(screen.getByRole('button', { name: 'Save & publish' })).not.toBeDisabled();
@@ -142,7 +164,7 @@ describe('GmShops', () => {
     it('flashes a live confirmation after saving', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
+      select('Bottled Solutions');
       fireEvent.change(screen.getByLabelText('price-antidote'), { target: { value: '5' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(screen.getByText('Saved — live for players')).toBeInTheDocument();
@@ -150,30 +172,67 @@ describe('GmShops', () => {
     });
   });
 
+  describe('catalog pane', () => {
+    const open = (shops = { 'town-hall': { wares: [] } }) => {
+      setup(shops);
+      render(<GmShops />);
+      select('Town Hall');
+    };
+
+    it('lists items and runes (runes as Runestones)', () => {
+      open();
+      const cat = screen.getByLabelText('catalog');
+      expect(within(cat).getByTestId('cat-antidote')).toBeInTheDocument();
+      expect(within(cat).getByTestId('cat-spellbook')).toBeInTheDocument();
+      expect(within(cat).getByTestId('cat-runestone@flaming')).toHaveTextContent('Flaming Runestone');
+    });
+
+    it('filters by search', () => {
+      open();
+      fireEvent.change(screen.getByLabelText('catalog search'), { target: { value: 'antid' } });
+      const cat = screen.getByLabelText('catalog');
+      expect(within(cat).getByTestId('cat-antidote')).toBeInTheDocument();
+      expect(within(cat).queryByTestId('cat-spellbook')).not.toBeInTheDocument();
+    });
+
+    it('AND-filters by trait chips', () => {
+      open();
+      fireEvent.click(screen.getByRole('button', { name: 'Magical' }));
+      const cat = screen.getByLabelText('catalog');
+      expect(within(cat).getByTestId('cat-spellbook')).toBeInTheDocument();
+      expect(within(cat).queryByTestId('cat-antidote')).not.toBeInTheDocument();
+    });
+
+    it('dims and disables an already-stocked item', () => {
+      open({ 'town-hall': { wares: [{ ref: 'antidote' }] } });
+      const cat = screen.getByLabelText('catalog');
+      expect(within(cat).getByTestId('cat-antidote')).toBeDisabled();
+      expect(within(cat).getByTestId('cat-antidote')).toHaveTextContent('In shop');
+    });
+  });
+
   describe('stocking', () => {
-    it('loads a shop\'s wares into rows with name + price override', () => {
+    it('loads a shop\'s wares into shelf rows with name + price override', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote', price: 8 }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
-      const ws = screen.getByTestId('shop-workspace-bottled-solutions');
-      expect(within(ws).getByText('Antidote')).toBeInTheDocument();
-      expect(within(ws).getByLabelText('price-antidote')).toHaveValue(8);
+      select('Bottled Solutions');
+      expect(within(shelf()).getByText('Antidote')).toBeInTheDocument();
+      expect(within(shelf()).getByLabelText('price-antidote')).toHaveValue(8);
     });
 
     it('shows the catalog price as the placeholder when no override is set', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
-      expect(screen.getByLabelText('price-antidote')).toHaveAttribute('placeholder', '3');
+      select('Bottled Solutions');
+      expect(within(shelf()).getByLabelText('price-antidote')).toHaveAttribute('placeholder', '3');
     });
 
-    it('adds an item via the picker and publishes it (no override → no price field)', () => {
-      setup({ 'town-hall': { wares: [] } }); // already set up so the surface is shown
+    it('shelves a catalog item and publishes it (no override → no price field)', () => {
+      setup({ 'town-hall': { wares: [] } });
       render(<GmShops />);
-      select(/Town Hall/);
-      fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
-      fireEvent.click(screen.getByRole('button', { name: 'pick-spellbook' }));
-      expect(screen.getByText('Spellbook')).toBeInTheDocument();
+      select('Town Hall');
+      fireEvent.click(screen.getByTestId('cat-spellbook'));
+      expect(within(shelf()).getByText('Spellbook')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual(['town-hall', { ...META, wares: [{ ref: 'spellbook' }] }]);
     });
@@ -181,7 +240,7 @@ describe('GmShops', () => {
     it('saves a price override and stock as numbers', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
+      select('Bottled Solutions');
       fireEvent.change(screen.getByLabelText('price-antidote'), { target: { value: '5' } });
       fireEvent.change(screen.getByLabelText('stock-antidote'), { target: { value: '4' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
@@ -194,17 +253,16 @@ describe('GmShops', () => {
     it('loads a pinned variant: variant name, selected level, variant price placeholder', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 3 }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
-      const ws = screen.getByTestId('shop-workspace-bottled-solutions');
-      expect(within(ws).getByText('Lesser Tonic')).toBeInTheDocument();
-      expect(within(ws).getByLabelText('level-tonic@3')).toHaveValue('3');
-      expect(within(ws).getByLabelText('price-tonic@3')).toHaveAttribute('placeholder', '12');
+      select('Bottled Solutions');
+      expect(within(shelf()).getByText('Lesser Tonic')).toBeInTheDocument();
+      expect(within(shelf()).getByLabelText('level-tonic@3')).toHaveValue('3');
+      expect(within(shelf()).getByLabelText('price-tonic@3')).toHaveAttribute('placeholder', '12');
     });
 
     it('pins a variant level on an unleveled row and saves it with level', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'tonic' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
+      select('Bottled Solutions');
       fireEvent.change(screen.getByLabelText('level-tonic'), { target: { value: '1' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'tonic', level: 1 }] }]);
@@ -213,11 +271,10 @@ describe('GmShops', () => {
     it('stocks two variants of one item as distinct rows', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 1 }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
-      // Add the same item again → a second, unleveled row (its key 'tonic' is free).
-      fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
-      fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
-      // The new row's level select excludes 1 (taken by the first row); pick 3.
+      select('Bottled Solutions');
+      // The base 'tonic' key is free (only tonic@1 stocked), so the catalog row
+      // is clickable → adds a second, unleveled row; pin it to level 3.
+      fireEvent.click(screen.getByTestId('cat-tonic'));
       fireEvent.change(screen.getByLabelText('level-tonic'), { target: { value: '3' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual([
@@ -226,24 +283,12 @@ describe('GmShops', () => {
       ]);
     });
 
-    it('blocks re-adding an item that already has an unleveled row', () => {
+    it('shelves a rune as a Runestone ware (#801)', () => {
       setup({ 'town-hall': { wares: [] } });
       render(<GmShops />);
-      select(/Town Hall/);
-      fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
-      fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
-      fireEvent.click(screen.getByRole('button', { name: '+ Add items' }));
-      fireEvent.click(screen.getByRole('button', { name: 'pick-tonic' }));
-      expect(screen.getAllByLabelText('level-tonic')).toHaveLength(1);
-    });
-
-    it('stocks a rune as a Runestone ware via the rune picker (#801)', () => {
-      setup({ 'town-hall': { wares: [] } });
-      render(<GmShops />);
-      select(/Town Hall/);
-      fireEvent.click(screen.getByRole('button', { name: '+ Add rune' }));
-      fireEvent.click(screen.getByRole('button', { name: 'pick-flaming' }));
-      expect(screen.getByText('Flaming Runestone')).toBeInTheDocument();
+      select('Town Hall');
+      fireEvent.click(screen.getByTestId('cat-runestone@flaming'));
+      expect(within(shelf()).getByText('Flaming Runestone')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual(['town-hall', { ...META, wares: [{ ref: 'runestone', runeRef: 'flaming' }] }]);
     });
@@ -251,28 +296,45 @@ describe('GmShops', () => {
     it('loads a runestone ware: rune name + stone+rune price placeholder', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
-      const ws = screen.getByTestId('shop-workspace-bottled-solutions');
-      expect(within(ws).getByText('Flaming Runestone')).toBeInTheDocument();
-      expect(within(ws).getByLabelText('price-runestone@flaming')).toHaveAttribute('placeholder', '503');
+      select('Bottled Solutions');
+      expect(within(shelf()).getByText('Flaming Runestone')).toBeInTheDocument();
+      expect(within(shelf()).getByLabelText('price-runestone@flaming')).toHaveAttribute('placeholder', '503');
     });
 
     it('removes a ware and publishes the shorter list', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }, { ref: 'spellbook' }] } });
       render(<GmShops />);
-      select(/Bottled Solutions/);
-      fireEvent.click(screen.getByRole('button', { name: 'remove-antidote' }));
+      select('Bottled Solutions');
+      fireEvent.click(screen.getByLabelText('remove-antidote'));
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'spellbook' }] }]);
     });
+
+    it('shows the empty-shelf prompt when nothing is stocked', () => {
+      setup({ 'town-hall': { wares: [] } });
+      render(<GmShops />);
+      select('Town Hall');
+      expect(screen.getByText(/Nothing stocked yet/)).toBeInTheDocument();
+    });
   });
 
-  it('Remove shop deletes the entry and returns to the not-a-shop state', () => {
-    setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
-    render(<GmShops />);
-    select(/Bottled Solutions/);
-    fireEvent.click(screen.getByRole('button', { name: 'Remove shop' }));
-    expect(removeShop).toHaveBeenCalledWith('bottled-solutions');
-    expect(screen.getByTestId('shop-setup')).toBeInTheDocument();
+  describe('navigation', () => {
+    it('the back button returns to the finder', () => {
+      setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      expect(screen.getByTestId('shop-workspace-bottled-solutions')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      expect(screen.getByText('Which location are you stocking?')).toBeInTheDocument();
+    });
+
+    it('Remove shop deletes the entry and returns to the finder', () => {
+      setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      fireEvent.click(screen.getByRole('button', { name: 'Remove shop' }));
+      expect(removeShop).toHaveBeenCalledWith('bottled-solutions');
+      expect(screen.getByText('Which location are you stocking?')).toBeInTheDocument();
+    });
   });
 });
