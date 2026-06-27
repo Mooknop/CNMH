@@ -6,6 +6,7 @@ import {
     getProficiencyBonus
   } from './CharacterUtils';
 import { itemAbilitiesActive } from './itemState';
+import { spellItemDisplayName } from './spellItems';
   
   /**
    * Calculate spell attack modifier and DC based on character data
@@ -181,7 +182,7 @@ import { itemAbilitiesActive } from './itemState';
         return {
           ...item.scroll,
           fromScroll: true,
-          scrollName: item.name,
+          scrollName: spellItemDisplayName(item),
           // Gated: a scroll's spell is castable only while the scroll is
           // held (or the catalog flags it noHandRequired).
           active: itemAbilitiesActive(item)
@@ -197,9 +198,11 @@ import { itemAbilitiesActive } from './itemState';
  * @returns {Array} - Array of wand items with spells
  */
 export const findWandItems = (character) => {
+  // Key on the `wand` block, not the name string: derived names (#812 S3) make
+  // an `item.name.includes('wand')` heuristic fragile and unnecessary — the
+  // block's presence is the source of truth (and matches findScrollItems).
   return character.inventory
-    ? character.inventory.filter(item => 
-        item.name.toLowerCase().includes('wand') && item.wand)
+    ? character.inventory.filter(item => item.wand)
     : [];
 };
 
@@ -215,7 +218,7 @@ export const extractWandSpells = (wandItems) => {
       return {
         ...item.wand,
         fromWand: true,
-        wandName: item.name,
+        wandName: spellItemDisplayName(item),
         // Gated: a wand's spell is castable only while the wand is held
         // (or the catalog flags it noHandRequired).
         active: itemAbilitiesActive(item)

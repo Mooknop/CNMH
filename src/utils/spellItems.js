@@ -120,3 +120,27 @@ export const resolveScroll = (spell, block) => resolve(SCROLL_BASE, spell, block
  * @returns {{ kind, name, rank, level, price, bulk, traits, usage, source, activate, craftRequirements }}
  */
 export const resolveWand = (spell, block) => resolve(WAND_BASE, spell, block);
+
+// A scroll/wand block resolved to a real catalog spell (post-#622 inlining), as
+// opposed to the '(unknown spell…)' stub a dangling ref leaves behind.
+const isResolvedSpellBlock = (block) =>
+  !!(block && typeof block === 'object' && typeof block.name === 'string'
+    && !block.name.startsWith('(unknown'));
+
+/**
+ * Display-only name for a resolved scroll/wand inventory item: "Scroll of X" /
+ * "Wand of X" (with a "(Rank N)" suffix for a heightened casting), analogous to
+ * weaponRunes.weaponDisplayName. An authored/already-hydrated `item.name` wins
+ * (author overrides win, per finishItem); only a nameless item derives from its
+ * embedded spell block. Falls through to `item.name` for non-spell items or a
+ * block that didn't resolve. Never feeds back into resolution.
+ * @param {Object} item - A resolved inventory item (scroll/wand block inlined)
+ * @returns {string|undefined}
+ */
+export const spellItemDisplayName = (item) => {
+  if (!item || typeof item !== 'object') return item?.name;
+  if (item.name) return item.name;
+  if (isResolvedSpellBlock(item.scroll)) return resolveScroll(item.scroll, item.scroll).name;
+  if (isResolvedSpellBlock(item.wand)) return resolveWand(item.wand, item.wand).name;
+  return item.name;
+};

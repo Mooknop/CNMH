@@ -13,6 +13,7 @@ import {
 } from '../../utils/affix';
 import { activationOf, activationSummary } from '../../utils/talismanActivation';
 import { weaponDisplayName, runeTierSummary, weaponPropertyRunes } from '../../utils/weaponRunes';
+import { spellItemDisplayName, castRank } from '../../utils/spellItems';
 import { resolveItemStrikes } from '../../utils/strikeUtils';
 import { itemTint, itemCharges, itemCode, isGlowy, itemRarity } from '../../utils/inventoryTile';
 import { formatModifier } from '../../utils/CharacterUtils';
@@ -129,7 +130,10 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
   // Runed display name: armor folds potency/resilient/property into its name
   // (#727); weapons use their own rune resolver. Un-runed items pass through.
-  const displayName = isArmor(item) ? armorDisplayName(item) : weaponDisplayName(item);
+  const displayName =
+    isArmor(item) ? armorDisplayName(item)
+    : (item.scroll || item.wand) ? spellItemDisplayName(item)
+    : weaponDisplayName(item);
 
   // Run a loadout mutation then close so the refreshed list is visible.
   const act = (fn) => { fn(); onClose(); };
@@ -325,6 +329,13 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
             <span className="item-detail-value">
               {ITEM_STATE_LABEL[item.state] || ITEM_STATE_LABEL.worn}
             </span>
+          </div>
+        )}
+
+        {item.level != null && (
+          <div className="item-detail">
+            <span className="item-detail-label">Level</span>
+            <span className="item-detail-value">{item.level}</span>
           </div>
         )}
 
@@ -668,7 +679,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           <div className="scroll-details">
             <div className="scroll-header">
               <span className="scroll-name">{item.scroll.name}</span>
-              <span className="scroll-level">Level {item.scroll.level}</span>
+              <span className="scroll-level">Rank {castRank(item.scroll, item.scroll) ?? item.scroll.level}</span>
             </div>
             {item.scroll.traits && item.scroll.traits.length > 0 && (
               <div className="scroll-traits">
@@ -691,7 +702,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           <div className="wand-details">
             <div className="wand-header">
               <span className="wand-name">{item.wand.name}</span>
-              <span className="wand-level">Level {item.wand.level}</span>
+              <span className="wand-level">Rank {castRank(item.wand, item.wand) ?? item.wand.level}</span>
             </div>
             {item.wand.traits && item.wand.traits.length > 0 && (
               <div className="wand-traits">
