@@ -144,6 +144,37 @@ describe('ItemModal', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
+  // --- scroll / wand derived display (#812 S3) ---
+  it('shows the derived "Scroll of X" name + item level/price for a nameless scroll', () => {
+    const item = {
+      // name omitted: the modal derives it from the resolved scroll block
+      level: 9,
+      price: 150,
+      weight: 0.1,
+      scroll: { name: 'Heal', level: 1, rank: 5, traits: ['Healing'] },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.getByText('Scroll of Heal (Rank 5)')).toBeInTheDocument();
+    expect(screen.getByText('150 gp')).toBeInTheDocument();
+    // item-level detail row reflects the derived level
+    expect(screen.getByText('Level')).toBeInTheDocument();
+    expect(screen.getByText('9')).toBeInTheDocument();
+    // the spell section shows the cast rank, not the spell's base level
+    expect(screen.getByText('Rank 5')).toBeInTheDocument();
+  });
+
+  it('shows the derived "Wand of X" name for a nameless wand', () => {
+    const item = {
+      level: 3,
+      price: 60,
+      weight: 0.1,
+      wand: { name: 'Heal', level: 1, traits: ['Healing'] },
+    };
+    render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
+    expect(screen.getByText('Wand of Heal')).toBeInTheDocument();
+    expect(screen.getByText('60 gp')).toBeInTheDocument();
+  });
+
   // --- traits ---
   it('renders traits when item.traits is non-empty', () => {
     const item = { ...baseItem, traits: ['Magical', 'Finesse'] };
@@ -554,7 +585,7 @@ describe('ItemModal', () => {
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
     expect(screen.getByText('Scroll Spell')).toBeInTheDocument();
     expect(screen.getByText('Fireball')).toBeInTheDocument();
-    expect(screen.getByText('Level 3')).toBeInTheDocument();
+    expect(screen.getByText('Rank 3')).toBeInTheDocument();
   });
 
   it('does not render scroll section when item.scroll is absent', () => {
@@ -600,7 +631,7 @@ describe('ItemModal', () => {
     render(<ItemModal isOpen={true} onClose={vi.fn()} item={item} />);
     expect(screen.getByText('Wand Spell')).toBeInTheDocument();
     expect(screen.getByText('Magic Missile')).toBeInTheDocument();
-    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByText('Rank 1')).toBeInTheDocument();
   });
 
   it('does not render wand section when item.wand is absent', () => {

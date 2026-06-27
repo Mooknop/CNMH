@@ -4,6 +4,7 @@ import {
   castRank,
   resolveScroll,
   resolveWand,
+  spellItemDisplayName,
 } from './spellItems';
 
 const sleep = { name: 'Sleep', level: 1, traditions: ['arcane', 'occult'] };
@@ -132,5 +133,39 @@ describe('fallbacks (no throw)', () => {
     expect(out.level).toBeNull();
     expect(out.price).toBeNull();
     expect(out.traits).toEqual(['Consumable', 'Magical', 'Scroll']);
+  });
+});
+
+describe('spellItemDisplayName', () => {
+  test('derives "Scroll of X" for a nameless resolved scroll item', () => {
+    expect(spellItemDisplayName({ scroll: { ...sleep } })).toBe('Scroll of Sleep');
+  });
+
+  test('derives "Wand of X" for a nameless resolved wand item', () => {
+    expect(spellItemDisplayName({ wand: { ...heal } })).toBe('Wand of Heal');
+  });
+
+  test('suffixes the cast rank for a heightened nameless scroll', () => {
+    expect(spellItemDisplayName({ scroll: { ...heal, rank: 5 } }))
+      .toBe('Scroll of Heal (Rank 5)');
+  });
+
+  test('an authored/hydrated name wins (author overrides)', () => {
+    expect(spellItemDisplayName({ name: 'Custom Scroll', scroll: { ...sleep } }))
+      .toBe('Custom Scroll');
+  });
+
+  test('falls through to item.name for non-spell items', () => {
+    expect(spellItemDisplayName({ name: 'Longsword' })).toBe('Longsword');
+  });
+
+  test('a dangling/unknown block falls through to item.name', () => {
+    expect(spellItemDisplayName({ name: undefined, scroll: { name: '(unknown spell: gone)' } }))
+      .toBeUndefined();
+  });
+
+  test('null-safe', () => {
+    expect(spellItemDisplayName(null)).toBeUndefined();
+    expect(spellItemDisplayName(undefined)).toBeUndefined();
   });
 });

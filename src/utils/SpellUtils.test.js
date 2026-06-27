@@ -341,6 +341,13 @@ describe('SpellUtils', () => {
       expect(result[0].scrollName).toBe('Scroll of Fireball');
     });
 
+    it('derives scrollName from the spell when the item is nameless (#812 S3)', () => {
+      const result = extractScrollSpells([
+        { scroll: { name: 'Fireball', level: 3, traditions: ['arcane'] } },
+      ]);
+      expect(result[0].scrollName).toBe('Scroll of Fireball');
+    });
+
     it('gates the spell on the scroll being held', () => {
       const spell = { name: 'Fireball', level: 3 };
       expect(extractScrollSpells([{ name: 'S', state: 'worn', scroll: spell }])[0].active).toBe(false);
@@ -364,6 +371,15 @@ describe('SpellUtils', () => {
     it('returns empty array when no inventory', () => {
       expect(findWandItems({})).toHaveLength(0);
     });
+
+    it('finds a wand whose name does not contain "wand" (keys on the block, not the name)', () => {
+      const char = {
+        inventory: [
+          { name: 'Crackling Branch', wand: { name: 'Lightning Bolt', level: 3 } },
+        ],
+      };
+      expect(findWandItems(char)).toHaveLength(1);
+    });
   });
 
   describe('extractWandSpells', () => {
@@ -373,6 +389,13 @@ describe('SpellUtils', () => {
       ];
       const result = extractWandSpells(wandItems);
       expect(result[0].fromWand).toBe(true);
+      expect(result[0].wandName).toBe('Wand of Fireball');
+    });
+
+    it('derives wandName from the spell when the item is nameless (#812 S3)', () => {
+      const result = extractWandSpells([
+        { wand: { name: 'Fireball', level: 3, traditions: ['arcane'] } },
+      ]);
       expect(result[0].wandName).toBe('Wand of Fireball');
     });
 
