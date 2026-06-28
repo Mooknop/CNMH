@@ -193,12 +193,30 @@
   list-style: none; margin: 0; padding: 15px;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-3);
 }
-.ps-tile {
+.ps-tile { position: relative; list-style: none; }
+.ps-tile-main {
   width: 100%; display: flex; flex-direction: column; cursor: pointer; overflow: hidden;
   border: 1px solid var(--ps-line); border-radius: 11px; background: var(--ps-screen);
   color: inherit; text-align: left; transition: border-color 0.15s, transform 0.14s;
 }
-.ps-tile:hover { border-color: var(--ps-a-line); transform: translateY(-1px); }
+.ps-tile-main:hover { border-color: var(--ps-a-line); transform: translateY(-1px); }
+/* Quick add / in-cart badge on a single-form tile (town mode). */
+.ps-tile-add,
+.ps-tile-incart {
+  position: absolute; top: 6px; right: 6px;
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; line-height: 1;
+  border-radius: var(--radius-md); padding: 4px 7px;
+}
+.ps-tile-add {
+  cursor: pointer; border: 1px solid var(--ps-a-line);
+  background: var(--ps-a-soft); color: var(--ps-ink);
+}
+.ps-tile-add:disabled { opacity: 0.4; cursor: default; }
+.ps-tile-incart {
+  border: 1px solid color-mix(in srgb, var(--verdant-mid) 55%, transparent);
+  background: color-mix(in srgb, var(--verdant-mid) 18%, transparent);
+  color: var(--verdant-light);
+}
 .ps-tile-case {
   height: 54px; display: grid; place-items: center;
   font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; color: var(--ps-ink);
@@ -261,10 +279,119 @@
 }
 .ps-soon-mark { font-size: 1.8rem; color: var(--ps-a-line); }
 
+/* ── Per-form add in the takeover preview (town mode) ─────────────────────── */
+.ps-preview-form-add {
+  cursor: pointer; font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  padding: 5px 11px; border-radius: 9px;
+  border: 1px solid var(--ps-a-line); background: var(--ps-a-soft); color: var(--ps-ink);
+}
+.ps-preview-form-add:disabled { opacity: 0.4; cursor: default; }
+.ps-preview-form-incart {
+  font-size: 11px; font-weight: 700; color: var(--verdant-light);
+}
+
+/* ── Cart bar + pull-up tray (town mode) ──────────────────────────────────── */
+/* DndProvider wraps the body + cart so a drag from the grid can drop on the bar;
+   its .dnd-root becomes the flex/positioning context for the scroll body, the
+   pinned bar and the pop-up tray. */
+.ps-frame .dnd-root {
+  position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column;
+}
+
+.ps-cartbar {
+  flex: 0 0 auto; border-top: 1px solid var(--ps-a-line);
+  background: linear-gradient(0deg, var(--ps-a-soft), transparent), var(--ps-void);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.ps-cartbar.dz-over {
+  background: var(--ps-a-soft);
+  box-shadow: inset 0 0 0 2px var(--ps-a-line);
+}
+.ps-cartbar-btn {
+  width: 100%; display: flex; align-items: center; gap: var(--space-3);
+  padding: 12px 15px; background: none; border: none; cursor: pointer; color: inherit;
+}
+.ps-cartbar-grip { position: relative; font-size: 1.2rem; }
+.ps-cartbar-badge {
+  position: absolute; top: -6px; right: -8px; min-width: 16px; height: 16px; padding: 0 4px;
+  display: grid; place-items: center; border-radius: var(--radius-full);
+  background: var(--ps-accent); color: #fff; font-family: var(--font-ui);
+  font-size: 9px; font-weight: 700; line-height: 1;
+}
+.ps-cartbar-mid { flex: 1; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.ps-cartbar-hint { font-size: 11px; color: var(--ps-ink2); }
+.ps-cartbar-total { font-family: var(--font-display); font-weight: 700; font-size: 16px; color: var(--gold-light); }
+.ps-cartbar-gp { font-size: 0.7em; opacity: 0.85; }
+.ps-cartbar-chev { font-size: 1rem; color: var(--ps-ink2); transition: transform 0.2s; }
+.ps-cartbar-chev.is-open { transform: rotate(180deg); }
+
+.ps-tray {
+  position: absolute; left: 0; right: 0; bottom: 56px; z-index: 5;
+  max-height: 62vh; display: flex; flex-direction: column;
+  border-top: 1px solid var(--ps-line); border-bottom: 1px solid var(--ps-line);
+  background: var(--ps-void);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.5);
+  animation: ps-rise 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ps-tray-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-3) 15px; border-bottom: 1px solid var(--ps-line-soft);
+}
+.ps-tray-title { font-family: var(--font-display); font-weight: 700; }
+.ps-tray-clear {
+  background: none; border: none; cursor: pointer; text-decoration: underline;
+  font-size: 11px; color: var(--ps-ink2);
+}
+.ps-tray-clear:hover { color: var(--peril-light); }
+.ps-tray-lines { list-style: none; margin: 0; padding: var(--space-2) 15px; overflow-y: auto; }
+.ps-tray-line {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0; border-bottom: 1px solid var(--ps-line-soft);
+}
+.ps-tray-line-name { font-weight: 600; font-size: 12.5px; grid-column: 1; }
+.ps-tray-line-unit { grid-column: 1; font-size: 10px; color: var(--ps-ink3); }
+.ps-tray-step { grid-row: 1 / span 2; grid-column: 2; display: flex; align-items: center; gap: var(--space-2); }
+.ps-tray-step button {
+  width: 24px; height: 24px; line-height: 1; cursor: pointer;
+  border: 1px solid var(--ps-line); border-radius: var(--radius-sm);
+  background: var(--ps-screen); color: var(--ps-ink);
+}
+.ps-tray-step button:disabled { opacity: 0.4; cursor: default; }
+.ps-tray-step-val { min-width: 18px; text-align: center; font-variant-numeric: tabular-nums; }
+.ps-tray-line-sub { grid-row: 1 / span 2; grid-column: 3; font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ps-tray-foot { padding: var(--space-3) 15px; border-top: 1px solid var(--ps-line); display: flex; flex-direction: column; gap: var(--space-2); }
+.ps-tray-total { display: flex; justify-content: space-between; font-family: var(--font-display); font-weight: 700; font-size: 18px; }
+.ps-tray-after { font-size: 11px; color: var(--ps-ink2); }
+.ps-tray-after.is-over { color: var(--peril-light); font-weight: 700; }
+.ps-checkout {
+  min-height: 48px; cursor: pointer; border: none; border-radius: var(--radius-lg);
+  font-family: var(--font-ui); font-weight: 700; font-size: 14px;
+  background: linear-gradient(135deg, var(--ps-accent), color-mix(in srgb, var(--ps-accent) 60%, #000));
+  color: #fff; transition: transform 0.14s;
+}
+.ps-checkout:hover:not(:disabled) { transform: translateY(-1px); }
+.ps-checkout:disabled { filter: grayscale(0.6); opacity: 0.5; cursor: default; }
+
+/* ── Drag ghost + confirmation toast ──────────────────────────────────────── */
+.ps-ghost {
+  padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm);
+  border: 1px solid var(--ps-a-line); background: var(--ps-screen); color: var(--ps-ink);
+  font-size: 11px; font-weight: 700;
+}
+.ps-toast {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 20;
+  max-width: 90%; padding: 9px 14px; border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--verdant-mid) 55%, transparent);
+  background: color-mix(in srgb, var(--verdant-mid) 22%, var(--ps-void));
+  color: var(--verdant-light); font-size: 12px; font-weight: 600;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45); animation: ps-fade 0.3s ease;
+}
+
 @keyframes ps-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ps-rise { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .ps-tile, .ps-back { transition: none; }
-  .ps-takeover { animation: none; }
-  .ps-tile:hover { transform: none; }
+  .ps-tile-main, .ps-back, .ps-cartbar-chev, .ps-checkout { transition: none; }
+  .ps-takeover, .ps-tray, .ps-toast { animation: none; }
+  .ps-tile-main:hover, .ps-checkout:hover:not(:disabled) { transform: none; }
 }
