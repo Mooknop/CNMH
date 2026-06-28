@@ -11,6 +11,8 @@ import {
   spellItemOfferings,
   eligibleSpellItems,
   spellOfferingSummary,
+  groupWares,
+  traitAccent,
 } from './shopUtils';
 
 // Lore: Sandpoint (root) contains two shops + one plain location.
@@ -429,5 +431,94 @@ describe('spellOfferingSummary', () => {
 
   it('caps the displayed rank at the base-template max', () => {
     expect(spellOfferingSummary({ spellItem: 'wand', maxRank: 99 }, spellCatalog).cap).toBe(9);
+  });
+});
+
+// ── Player browse grouping (#857 S2) ────────────────────────────────────────
+describe('groupWares', () => {
+  it('collapses variants of one item into a single cheapest-first group', () => {
+    const wares = resolveShopWares(
+      's',
+      { s: { wares: [{ ref: 'tonic', level: 3 }, { ref: 'tonic', level: 1 }] } },
+      catalogMap
+    );
+    const groups = groupWares(wares);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ ref: 'tonic', name: 'Minor Tonic', from: 4, formCount: 2 });
+    expect(groups[0].forms.map((f) => f.wareKey)).toEqual(['tonic@1', 'tonic@3']); // cheapest-first
+    expect(groups[0].forms.map((f) => f.price)).toEqual([4, 12]);
+  });
+
+  it('keeps a single-variant item as a one-form group', () => {
+    const groups = groupWares(resolveShopWares('curious-goblin', shops, catalogMap));
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({ ref: 'spellbook', name: 'Spellbook', from: 10, formCount: 1 });
+  });
+
+  it('preserves first-appearance group order across distinct items', () => {
+    const groups = groupWares(resolveShopWares('bottled-solutions', shops, catalogMap));
+    expect(groups.map((g) => g.ref)).toEqual(['healing-potion', 'antidote']);
+  });
+
+  it('does NOT merge distinct runestones (each rune is its own group)', () => {
+    const runes = new Map([
+      ['flaming', { id: 'flaming', name: 'Flaming', price: 500 }],
+      ['frost', { id: 'frost', name: 'Frost', price: 400 }],
+    ]);
+    const s = { s: { wares: [
+      { ref: 'runestone', runeRef: 'flaming' },
+      { ref: 'runestone', runeRef: 'frost' },
+    ] } };
+    const groups = groupWares(resolveShopWares('s', s, catalogMap, runes));
+    expect(groups.map((g) => g.ref)).toEqual(['runestone-flaming', 'runestone-frost']); // first-appearance order
+    expect(groups.every((g) => g.formCount === 1)).toBe(true);
+  });
+
+  it('carries traits/description from the cheapest form and keeps form wareKeys', () => {
+    const map = new Map([
+      ['p', { id: 'p', name: 'P', description: 'desc', traits: ['Magical'],
+        variants: [{ level: 1, price: 9 }, { level: 2, price: 3 }] }],
+    ]);
+    const groups = groupWares(resolveShopWares('s', { s: { wares: [
+      { ref: 'p', level: 1 }, { ref: 'p', level: 2 },
+    ] } }, map));
+    expect(groups[0]).toMatchObject({ traits: ['Magical'], description: 'desc', from: 3 });
+    expect(groups[0].forms.map((f) => f.wareKey)).toEqual(['p@2', 'p@1']);
+  });
+
+  it('ignores idless entries and non-array input', () => {
+    expect(groupWares([{ name: 'no id' }, null])).toEqual([]);
+    expect(groupWares(null)).toEqual([]);
+  });
+});
+
+describe('traitAccent', () => {
+  it('maps Scroll/Wand/Magical to arcane', () => {
+    expect(traitAccent({ traits: ['Scroll', 'Consumable'] })).toBe('arcane');
+    expect(traitAccent({ traits: ['Wand'] })).toBe('arcane');
+    expect(traitAccent({ traits: ['Magical'] })).toBe('arcane');
+  });
+
+  it('maps Healing and Alchemical to verdant', () => {
+    expect(traitAccent({ traits: ['Healing'] })).toBe('verdant');
+    expect(traitAccent({ traits: ['Alchemical'] })).toBe('verdant');
+  });
+
+  it('maps Weapon/Armor/Shield to iron', () => {
+    expect(traitAccent({ traits: ['Weapon'] })).toBe('iron');
+    expect(traitAccent({ traits: ['Armor'] })).toBe('iron');
+    expect(traitAccent({ traits: ['Shield'] })).toBe('iron');
+  });
+
+  it('honors precedence: Magical beats Healing; Weapon beats Alchemical; Healing beats iron', () => {
+    expect(traitAccent({ traits: ['Healing', 'Magical'] })).toBe('arcane');
+    expect(traitAccent({ traits: ['Weapon', 'Alchemical'] })).toBe('iron');
+    expect(traitAccent({ traits: ['Healing', 'Armor'] })).toBe('verdant');
+  });
+
+  it('falls back to gold for anything else or missing traits', () => {
+    expect(traitAccent({ traits: ['Adventuring Gear'] })).toBe('gold');
+    expect(traitAccent({})).toBe('gold');
+    expect(traitAccent(null)).toBe('gold');
   });
 });
