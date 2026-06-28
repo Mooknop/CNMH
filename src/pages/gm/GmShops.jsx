@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useShops } from '../../hooks/useShops';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
-import { isSetUp, isSpellItemWare, eligibleSpellItems } from '../../utils/shopUtils';
+import { isSetUp, isSpellItemWare, eligibleSpellItems, shopOffersSpellcasting, shopOffersRunes } from '../../utils/shopUtils';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -627,6 +627,11 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
   const [keeper, setKeeper] = useState(() => entry?.keeper || '');
   const [revealed, setRevealed] = useState(() => !!entry?.revealed);
   const [open, setOpen] = useState(() => entry?.open !== false);
+  // Service offerings (#857 S1) — initialise to the EFFECTIVE value so the
+  // toggle shows what players see (explicit flag, else derived from stock); the
+  // first save freezes it explicit. See shopOffers* in shopUtils.
+  const [offersSpellcasting, setOffersSpellcasting] = useState(() => shopOffersSpellcasting(loreId, shops));
+  const [offersRunes, setOffersRunes] = useState(() => shopOffersRunes(loreId, shops));
   const [rows, setRows] = useState(() => toRows(entry?.wares));
   const [offerings, setOfferings] = useState(() => toOfferings(entry?.wares));
   const [dirty, setDirty] = useState(false);
@@ -683,6 +688,8 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
     setOpen(true);
     setRows([]);
     setOfferings([]);
+    setOffersSpellcasting(false);
+    setOffersRunes(false);
     setDirty(false);
     setJustSaved(false);
   };
@@ -692,6 +699,8 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
       keeper,
       open,
       revealed,
+      offersSpellcasting,
+      offersRunes,
       wares: [...fromRows(rows), ...fromOfferings(offerings)],
     });
     setDirty(false);
@@ -774,6 +783,20 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
                 onChange={editMeta(setOpen)}
                 onLabel="Open"
                 offLabel="Closed"
+              />
+              <Segmented
+                label="Spellcasting"
+                value={offersSpellcasting}
+                onChange={editMeta(setOffersSpellcasting)}
+                onLabel="Offered"
+                offLabel="None"
+              />
+              <Segmented
+                label="Runesmithing"
+                value={offersRunes}
+                onChange={editMeta(setOffersRunes)}
+                onLabel="Offered"
+                offLabel="None"
               />
             </div>
           </div>
