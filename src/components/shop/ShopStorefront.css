@@ -1,0 +1,270 @@
+/* Player Shop redesign (#857 S3). A full-screen, phone-shaped storefront layered
+   on the app's dark game-menu tokens. The handoff's bare token names map to the
+   scaled palette (--screen→--void-deep, --ink→--theme-text, etc.); the per-tab
+   accent rides on --ps-accent (set inline per active tab) with color-mix soft/
+   line/glow derived from it. */
+
+.ps-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+  background: rgba(0, 0, 0, 0.66);
+}
+
+.ps-frame {
+  /* local token bridge → app palette */
+  --ps-screen: var(--void-deep);
+  --ps-void: #100d0a;
+  --ps-line: rgba(255, 255, 255, 0.12);
+  --ps-line-soft: rgba(255, 255, 255, 0.07);
+  --ps-raised: rgba(255, 255, 255, 0.05);
+  --ps-ink: var(--theme-text);
+  --ps-ink2: var(--theme-text-secondary);
+  --ps-ink3: var(--theme-text-tertiary);
+  --ps-accent: var(--ember-base);
+  --ps-a-soft: color-mix(in srgb, var(--ps-accent) 16%, transparent);
+  --ps-a-line: color-mix(in srgb, var(--ps-accent) 55%, transparent);
+  --ps-a-glow: color-mix(in srgb, var(--ps-accent) 50%, transparent);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 430px);
+  height: min(100%, 860px);
+  overflow: hidden;
+  border: 1px solid var(--ps-line);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(135deg, var(--ps-a-soft), transparent 42%),
+    var(--void-deepest);
+  color: var(--ps-ink);
+  font-family: var(--font-ui);
+}
+
+/* ── Picker (multiple shops at one location) ─────────────────────────────── */
+.ps-picker { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
+.ps-picker-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--ps-line-soft);
+}
+.ps-picker-head h2 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
+.ps-close {
+  width: 34px; height: 34px; flex: 0 0 auto;
+  border: 1px solid var(--ps-line); border-radius: var(--radius-lg);
+  background: var(--ps-raised); color: var(--ps-ink2); cursor: pointer;
+}
+.ps-picker-list { list-style: none; margin: 0; padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+.ps-picker-card {
+  width: 100%; display: flex; align-items: center; gap: var(--space-3); text-align: left; cursor: pointer;
+  padding: var(--space-3); border: 1px solid var(--ps-line); border-radius: var(--radius-lg);
+  background: var(--ps-screen); color: inherit; transition: border-color 0.15s, background 0.15s;
+}
+.ps-picker-card:hover { border-color: var(--ps-a-line); background: var(--ps-a-soft); }
+.ps-picker-card.is-closed { opacity: 0.6; }
+.ps-picker-crest {
+  flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700;
+  border: 1px solid var(--ps-a-line); border-radius: var(--radius-lg); background: var(--ps-a-soft);
+}
+.ps-picker-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ps-picker-name { font-weight: 700; display: flex; align-items: center; gap: var(--space-2); }
+.ps-picker-sum { font-family: var(--font-body); font-size: 0.85rem; color: var(--ps-ink2); }
+.ps-picker-tag {
+  font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0 var(--space-2); border: 1px solid var(--ps-line); border-radius: var(--radius-full); color: var(--ps-ink2);
+}
+
+/* ── Header band ──────────────────────────────────────────────────────────── */
+.ps-header {
+  display: flex; align-items: center; gap: 11px;
+  padding: 13px 14px 12px;
+  border-bottom: 1px solid var(--ps-line);
+  background: linear-gradient(135deg, var(--ps-a-soft), transparent 60%);
+}
+.ps-back {
+  width: 34px; height: 34px; flex: 0 0 auto;
+  border: 1px solid var(--ps-line); border-radius: var(--radius-lg);
+  background: var(--ps-raised); color: var(--ps-ink2); cursor: pointer;
+  font-size: 1.2rem; line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ps-back:hover { color: var(--ps-ink); border-color: var(--ps-a-line); }
+.ps-crest {
+  flex: 0 0 auto; width: 40px; height: 40px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.1rem;
+  border: 1px solid var(--ps-a-line); border-radius: 11px;
+  background: var(--ps-a-soft); color: var(--ps-ink);
+}
+.ps-ident { flex: 1; min-width: 0; }
+.ps-name { font-family: var(--font-display); font-weight: 700; font-size: 17px; line-height: 1.1; }
+.ps-metaline { display: flex; align-items: center; gap: var(--space-2); margin-top: 2px; }
+.ps-kind {
+  font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+  color: color-mix(in srgb, var(--ps-accent) 75%, var(--ps-ink));
+}
+.ps-purse {
+  flex: 0 0 auto; padding: 7px 11px; border-radius: 11px;
+  border: 1px solid color-mix(in srgb, var(--gold-mid) 40%, transparent);
+  background: color-mix(in srgb, var(--gold-mid) 10%, transparent);
+  font-family: var(--font-display); font-weight: 700; font-size: 13.5px;
+  font-variant-numeric: tabular-nums; color: var(--gold-light);
+}
+.ps-purse-gp { font-size: 0.7em; opacity: 0.85; }
+
+/* ── Keeper line / banners ────────────────────────────────────────────────── */
+.ps-keeper {
+  margin: 0; padding: 9px 15px;
+  background: rgba(0, 0, 0, 0.18);
+  font-family: var(--font-body); font-style: italic; font-size: 12.5px; line-height: 1.4;
+  color: var(--ps-ink2);
+}
+.ps-keeper-quote {
+  font-family: var(--font-display); font-style: normal; font-size: 1.4em; font-weight: 700;
+  color: color-mix(in srgb, var(--ps-accent) 70%, transparent); margin-right: 3px;
+}
+.ps-lorebanner {
+  padding: 8px 15px;
+  background: rgba(122, 84, 186, 0.12);
+  border-top: 1px solid rgba(122, 84, 186, 0.3);
+  border-bottom: 1px solid rgba(122, 84, 186, 0.3);
+  font-size: 10.5px; line-height: 1.4; color: #c3aee6;
+}
+.ps-closed {
+  padding: 8px 15px; background: rgba(0, 0, 0, 0.25);
+  font-size: 11px; color: var(--ps-ink2);
+}
+
+/* ── Tab bar ──────────────────────────────────────────────────────────────── */
+.ps-tabs { display: flex; border-bottom: 1px solid var(--ps-line); }
+.ps-tab {
+  flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 11px 4px 10px; border: none; background: none; cursor: pointer; color: var(--ps-ink3);
+}
+.ps-tab-label { font-weight: 600; font-size: 11.5px; }
+.ps-tab-sub { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+.ps-tab.is-on { color: var(--ps-ink); }
+.ps-tab.is-on .ps-tab-sub { color: color-mix(in srgb, var(--ps-tab-accent) 80%, var(--ps-ink)); }
+.ps-tab.is-on::after {
+  content: ''; position: absolute; left: 14px; right: 14px; bottom: -1px; height: 2.5px;
+  border-radius: 3px; background: var(--ps-tab-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ps-tab-accent) 50%, transparent);
+}
+
+/* ── Body (the one scroll region) ─────────────────────────────────────────── */
+.ps-body { position: relative; flex: 1; min-height: 0; overflow-y: auto; }
+.ps-empty { padding: var(--space-4); font-size: 0.85rem; color: var(--ps-ink2); }
+
+/* Wares: tools row + grid */
+.ps-wares { display: flex; flex-direction: column; }
+.ps-tools {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3) 15px;
+  background: var(--void-deepest);
+  border-bottom: 1px solid var(--ps-line-soft);
+}
+.ps-search { position: relative; display: flex; align-items: center; }
+.ps-search-ico { position: absolute; left: 10px; color: var(--ps-ink3); font-size: 1rem; }
+.ps-search input {
+  width: 100%; min-height: 38px; padding: 0 10px 0 30px;
+  border: 1px solid var(--ps-line); border-radius: 9px; background: var(--ps-screen);
+  color: var(--ps-ink); font: inherit;
+}
+.ps-search input:focus {
+  outline: none; border-color: var(--ps-a-line);
+  box-shadow: 0 0 0 3px var(--ps-a-soft);
+}
+.ps-chips { display: flex; gap: var(--space-2); overflow-x: auto; padding-bottom: 2px; }
+.ps-chip {
+  flex: 0 0 auto; padding: 4px 10px; border-radius: 20px; cursor: pointer;
+  border: 1px solid var(--ps-line); background: transparent; color: var(--ps-ink2);
+  font-size: 10px; font-weight: 600;
+}
+.ps-chip.is-on { border-color: var(--ps-a-line); background: var(--ps-a-soft); color: var(--ps-ink); }
+
+.ps-grid {
+  list-style: none; margin: 0; padding: 15px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--space-3);
+}
+.ps-tile {
+  width: 100%; display: flex; flex-direction: column; cursor: pointer; overflow: hidden;
+  border: 1px solid var(--ps-line); border-radius: 11px; background: var(--ps-screen);
+  color: inherit; text-align: left; transition: border-color 0.15s, transform 0.14s;
+}
+.ps-tile:hover { border-color: var(--ps-a-line); transform: translateY(-1px); }
+.ps-tile-case {
+  height: 54px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; color: var(--ps-ink);
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 6px, transparent 6px 12px),
+    linear-gradient(135deg, color-mix(in srgb, var(--ps-ware-accent, var(--gold-mid)) 30%, transparent), transparent);
+  border-bottom: 1px solid var(--ps-line-soft);
+}
+.ps-tile-name {
+  padding: var(--space-2) var(--space-2) 0; font-weight: 600; font-size: 12.5px; line-height: 1.2;
+}
+.ps-tile-foot {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2);
+  padding: 4px var(--space-2) var(--space-2);
+}
+.ps-tile-price { font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--gold-light); }
+.ps-tile-forms { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ps-ink3); }
+
+/* ── Takeover preview ─────────────────────────────────────────────────────── */
+.ps-takeover {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column;
+  background: var(--void-deepest);
+  animation: ps-fade 0.18s ease;
+}
+.ps-takeover-back {
+  align-self: flex-start; margin: var(--space-3) 0 0 var(--space-3);
+  padding: 6px 10px; border: 1px solid var(--ps-line); border-radius: 9px;
+  background: var(--ps-raised); color: var(--ps-ink2); cursor: pointer; font-weight: 600;
+}
+.ps-preview {
+  flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-4) 15px;
+  display: flex; flex-direction: column; gap: var(--space-3);
+}
+.ps-preview-crest {
+  width: 64px; height: 64px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 1.8rem;
+  border-radius: 12px; border: 1px solid var(--ps-a-line);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--ps-ware-accent, var(--gold-mid)) 30%, transparent), transparent);
+}
+.ps-preview-name { margin: 0; font-family: var(--font-display); font-size: 18px; }
+.ps-preview-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ps-preview-lvl, .ps-preview-trait {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 2px 7px; border-radius: 20px; border: 1px solid var(--ps-line); color: var(--ps-ink2);
+}
+.ps-preview-desc { margin: 0; font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--ps-ink2); }
+.ps-preview-forms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.ps-preview-form {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); border: 1px solid var(--ps-line); border-radius: 10px; background: var(--ps-screen);
+}
+.ps-preview-form-label { font-weight: 600; font-size: 12.5px; }
+.ps-preview-form-price { font-family: var(--font-display); font-weight: 700; color: var(--gold-light); }
+.ps-preview-note { margin: 0; font-family: var(--font-body); font-style: italic; font-size: 12px; color: var(--ps-ink3); }
+
+/* ── Coming-soon placeholder (Spellcasting S5 / Runes S6) ─────────────────── */
+.ps-soon {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+  padding: var(--space-6) var(--space-4); text-align: center; color: var(--ps-ink2);
+}
+.ps-soon-mark { font-size: 1.8rem; color: var(--ps-a-line); }
+
+@keyframes ps-fade { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-tile, .ps-back { transition: none; }
+  .ps-takeover { animation: none; }
+  .ps-tile:hover { transform: none; }
+}
