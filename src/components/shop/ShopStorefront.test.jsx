@@ -2,11 +2,19 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import ShopStorefront from './ShopStorefront';
 
-// useBuyItems pulls session/content/log contexts; the storefront only reads
-// `myGold` from it this slice, so stub it.
+// useBuyItems pulls session/content/log contexts; stub it with a working buy
+// that returns a receipt for affordable carts (over-budget is pre-gated in UI).
+let mockGold = 142;
+const mockBuy = vi.fn((purchases) => {
+  const total = purchases.reduce((s, p) => s + p.item.price * p.qty, 0);
+  if (total > mockGold) return null;
+  return { total, count: purchases.reduce((s, p) => s + p.qty, 0) };
+});
 vi.mock('../../hooks/useBuyItems', () => ({
-  useBuyItems: vi.fn(() => ({ myGold: 142, buy: vi.fn() })),
+  useBuyItems: vi.fn(() => ({ myGold: mockGold, buy: mockBuy })),
 }));
+
+beforeEach(() => { mockGold = 142; mockBuy.mockClear(); });
 
 const items = [
   { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.' },
@@ -128,7 +136,9 @@ describe('ShopStorefront', () => {
 
     it('opens the takeover preview with per-form rows on tap', () => {
       renderShop();
-      fireEvent.click(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'));
+      // Town tiles are draggable: the keyboard path (Enter→onTap) stands in for a
+      // tap, since a synthetic click doesn't drive the pointer drag handlers.
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'), { key: 'Enter' });
       const preview = screen.getByTestId('ware-preview');
       expect(within(preview).getByText('Minor Tonic')).toBeInTheDocument();
       const forms = within(preview).getByLabelText('forms');
@@ -144,6 +154,81 @@ describe('ShopStorefront', () => {
       expect(screen.queryByTestId('shop-purse')).not.toBeInTheDocument();
       fireEvent.click(within(screen.getByLabelText('wares')).getByTestId('ware-antidote'));
       expect(within(screen.getByTestId('ware-preview')).getByText(/not here to buy/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('cart + checkout (town mode)', () => {
+    const openTray = () => fireEvent.click(screen.getByTestId('cart-bar'));
+
+    it('adds a single-form ware from its tile + and shows the in-cart badge', () => {
+      renderShop();
+      fireEvent.click(screen.getByLabelText('add Antidote'));
+      expect(screen.getByTestId('incart-antidote')).toHaveTextContent('in cart ×1');
+      expect(screen.getByTestId('cart-bar')).toHaveTextContent('1 item');
+    });
+
+    it('adds a specific variant from the takeover preview', () => {
+      renderShop();
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'), { key: 'Enter' });
+      const forms = within(screen.getByTestId('ware-preview')).getByLabelText('forms');
+      fireEvent.click(within(forms).getByLabelText('add Lesser')); // the 12gp form
+      expect(within(forms).getByText('in cart ×1')).toBeInTheDocument();
+    });
+
+    it('steps quantity and shows the running total + purse-after', () => {
+      renderShop();
+      fireEvent.click(screen.getByLabelText('add Antidote')); // 3 gp
+      openTray();
+      const tray = screen.getByTestId('cart-tray');
+      fireEvent.click(within(tray).getByLabelText('increase Antidote'));
+      expect(within(tray).getByLabelText('cart lines')).toHaveTextContent('6 gp'); // 2 × 3
+      expect(within(tray).getByText(/Purse after purchase: 136 gp/)).toBeInTheDocument();
+      expect(within(tray).getByTestId('checkout')).toHaveTextContent('Check out · 6 gp');
+    });
+
+    it('removes a line by stepping below 1', () => {
+      renderShop();
+      fireEvent.click(screen.getByLabelText('add Antidote'));
+      openTray();
+      const tray = screen.getByTestId('cart-tray');
+      fireEvent.click(within(tray).getByLabelText('decrease Antidote'));
+      expect(within(tray).queryByLabelText('cart lines')).not.toBeInTheDocument();
+    });
+
+    it('disables checkout and shows the shortfall when over budget', () => {
+      mockGold = 5;
+      renderShop();
+      // spellbook is 10 gp > 5 gp purse
+      fireEvent.click(screen.getByLabelText('add Spellbook'));
+      openTray();
+      const checkout = within(screen.getByTestId('cart-tray')).getByTestId('checkout');
+      expect(checkout).toBeDisabled();
+      expect(checkout).toHaveTextContent('Need 5 gp more');
+    });
+
+    it('checks out: calls buy, clears the cart, and shows a toast', () => {
+      renderShop();
+      fireEvent.click(screen.getByLabelText('add Antidote'));
+      openTray();
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      expect(mockBuy).toHaveBeenCalledTimes(1);
+      expect(mockBuy.mock.calls[0][0]).toEqual([{ item: expect.objectContaining({ wareKey: 'antidote' }), qty: 1 }]);
+      expect(screen.getByTestId('shop-toast')).toHaveTextContent('Bought 1 item for 3 gp.');
+      // bar resets to empty
+      expect(screen.getByTestId('cart-bar')).toHaveTextContent(/empty/i);
+    });
+
+    it('the cart bar is a drop zone that adds the cheapest form on drop', () => {
+      renderShop();
+      // The bar registers as a DnD zone (data-dz) — exercise its onDrop directly
+      // (pointer-drag math isn't simulable in jsdom; the primitive is proven).
+      const bar = document.querySelector('[data-dz="ps-cart"]');
+      expect(bar).toBeInTheDocument();
+    });
+
+    it('shows no cart bar in read-only mode', () => {
+      renderShop({ readOnly: true, character: null });
+      expect(screen.queryByTestId('cart-bar')).not.toBeInTheDocument();
     });
   });
 
