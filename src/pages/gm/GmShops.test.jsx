@@ -41,8 +41,10 @@ const spells = [
   { id: 'shield', name: 'Shield', level: 0, traditions: ['arcane', 'divine', 'occult'], traits: ['Cantrip'] },
 ];
 
-// Default meta a legacy/blank entry serializes back with.
-const META = { keeper: '', open: true, revealed: false };
+// Default meta a legacy/blank entry serializes back with. Offers default to
+// false: a blank shop stocks no runestones/spell-items, so the derived service
+// detection (#857 S1) is false and the first save freezes that explicit.
+const META = { keeper: '', open: true, revealed: false, offersSpellcasting: false, offersRunes: false };
 
 let setShop;
 let removeShop;
@@ -156,7 +158,7 @@ describe('GmShops', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual([
         'bottled-solutions',
-        { keeper: 'Vorl the brewer', open: true, revealed: true, wares: [{ ref: 'antidote' }] },
+        { keeper: 'Vorl the brewer', open: true, revealed: true, offersSpellcasting: false, offersRunes: false, wares: [{ ref: 'antidote' }] },
       ]);
     });
   });
@@ -424,7 +426,64 @@ describe('GmShops', () => {
       });
       fireEvent.click(screen.getByLabelText('remove-offering-0'));
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
-      expect(lastSave()).toEqual(['town-hall', { ...META, wares: [{ ref: 'antidote' }] }]);
+      // The scroll offering made Spellcasting derive ON at mount (#857 S1); the
+      // service flag is independent of whether any scroll stays stocked (a
+      // spellcasting shop can show just the locked teaser), so it persists ON.
+      expect(lastSave()).toEqual([
+        'town-hall',
+        { ...META, offersSpellcasting: true, wares: [{ ref: 'antidote' }] },
+      ]);
+    });
+  });
+
+  describe('service offerings (#857 S1)', () => {
+    // The Spellcasting/Runesmithing toggles share "Offered"/"None" button text,
+    // so scope each lookup to its labelled group.
+    const seg = (group, btn) =>
+      within(screen.getByRole('group', { name: group })).getByRole('button', { name: btn });
+
+    it('derives the toggles from stock when no explicit flag is stored', () => {
+      // A runestone ware ⇒ Runesmithing on; no scroll/wand offering ⇒ Spellcasting off.
+      setup({ 'bottled-solutions': { wares: [{ ref: 'runestone', runeRef: 'flaming' }] } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      expect(seg('Runesmithing', 'Offered')).toHaveAttribute('aria-pressed', 'true');
+      expect(seg('Spellcasting', 'None')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('derives Spellcasting on from a stored spell-item offering', () => {
+      setup({ 'bottled-solutions': { wares: [{ spellItem: 'scroll', maxRank: 3 }] } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      expect(seg('Spellcasting', 'Offered')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('honors an explicit flag over the derived stock value', () => {
+      // offersRunes:false beats a stocked runestone; offersSpellcasting:true with no offering.
+      setup({
+        'bottled-solutions': {
+          offersRunes: false,
+          offersSpellcasting: true,
+          wares: [{ ref: 'runestone', runeRef: 'flaming' }],
+        },
+      });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      expect(seg('Runesmithing', 'None')).toHaveAttribute('aria-pressed', 'true');
+      expect(seg('Spellcasting', 'Offered')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('toggles and publishes the explicit service flags', () => {
+      setup({ 'bottled-solutions': { wares: [{ ref: 'antidote' }] } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      fireEvent.click(seg('Spellcasting', 'Offered'));
+      fireEvent.click(seg('Runesmithing', 'Offered'));
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual([
+        'bottled-solutions',
+        { ...META, offersSpellcasting: true, offersRunes: true, wares: [{ ref: 'antidote' }] },
+      ]);
     });
   });
 

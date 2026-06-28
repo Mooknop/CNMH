@@ -3,6 +3,8 @@ import {
   isSetUp,
   isShopRevealed,
   isShopOpen,
+  shopOffersSpellcasting,
+  shopOffersRunes,
   getShopsForLocation,
   resolveShopWares,
   isSpellItemWare,
@@ -112,6 +114,58 @@ describe('isShopOpen', () => {
     expect(isShopOpen('town-hall', shops)).toBe(false);
     expect(isShopOpen(null, shops)).toBe(false);
     expect(isShopOpen('bottled-solutions', null)).toBe(false);
+  });
+});
+
+describe('shopOffersSpellcasting (#857 S1)', () => {
+  it('honors an explicit flag in either direction', () => {
+    const s = {
+      on: { offersSpellcasting: true, wares: [] },
+      off: { offersSpellcasting: false, wares: [{ spellItem: 'scroll', maxRank: 3 }] },
+    };
+    expect(shopOffersSpellcasting('on', s)).toBe(true);
+    expect(shopOffersSpellcasting('off', s)).toBe(false); // explicit false beats a stocked offering
+  });
+
+  it('derives from a stocked spell-item offering when no flag is set', () => {
+    const s = {
+      arcana: { wares: [{ ref: 'antidote' }, { spellItem: 'wand', maxRank: 5 }] },
+      plain: { wares: [{ ref: 'antidote' }] },
+    };
+    expect(shopOffersSpellcasting('arcana', s)).toBe(true);
+    expect(shopOffersSpellcasting('plain', s)).toBe(false);
+  });
+
+  it('is false for an absent entry or missing args', () => {
+    expect(shopOffersSpellcasting('town-hall', shops)).toBe(false);
+    expect(shopOffersSpellcasting(null, shops)).toBe(false);
+    expect(shopOffersSpellcasting('bottled-solutions', null)).toBe(false);
+  });
+});
+
+describe('shopOffersRunes (#857 S1)', () => {
+  it('honors an explicit flag in either direction', () => {
+    const s = {
+      on: { offersRunes: true, wares: [] },
+      off: { offersRunes: false, wares: [{ ref: 'runestone', runeRef: 'flaming' }] },
+    };
+    expect(shopOffersRunes('on', s)).toBe(true);
+    expect(shopOffersRunes('off', s)).toBe(false); // explicit false beats a stocked runestone
+  });
+
+  it('derives from a stocked Runestone ware when no flag is set', () => {
+    const s = {
+      smith: { wares: [{ ref: 'antidote' }, { ref: 'runestone', runeRef: 'flaming' }] },
+      plain: { wares: [{ ref: 'antidote' }] },
+    };
+    expect(shopOffersRunes('smith', s)).toBe(true);
+    expect(shopOffersRunes('plain', s)).toBe(false);
+  });
+
+  it('is false for an absent entry or missing args', () => {
+    expect(shopOffersRunes('town-hall', shops)).toBe(false);
+    expect(shopOffersRunes(null, shops)).toBe(false);
+    expect(shopOffersRunes('bottled-solutions', null)).toBe(false);
   });
 });
 

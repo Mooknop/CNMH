@@ -40,6 +40,34 @@ export function isShopOpen(loreId, shops) {
   return !!entry && entry.open !== false;
 }
 
+// True when the shop offers spellcasting services — gating the player
+// Spellcasting tab (#857 S1). An explicit boolean `offersSpellcasting` wins;
+// when the key is absent it DERIVES from stock — a shop with ≥1 generative
+// scroll/wand offering (#812) is treated as offering spellcasting, so shops that
+// already stock arcana surface the tab without re-authoring. Unlike the static
+// revealed/open defaults, the fallback is computed, not a fixed value. Once a GM
+// saves a shop in the post-S1 editor the flag is written explicitly and owns the
+// answer; the derived fallback only covers pre-S1 entries that are never re-saved.
+export function shopOffersSpellcasting(loreId, shops) {
+  const entry = shops && loreId != null ? shops[loreId] : null;
+  if (!entry) return false;
+  if (typeof entry.offersSpellcasting === 'boolean') return entry.offersSpellcasting;
+  return spellItemOfferings(loreId, shops).length > 0;
+}
+
+// True when the shop offers runesmithing — gating the player Runesmithing tab
+// (#857 S1). An explicit boolean `offersRunes` wins; when absent it DERIVES from
+// stock — a shop with ≥1 Runestone ware (#801) is treated as offering runes, so
+// existing rune-stocking shops keep the feature. Same explicit-wins-else-derived
+// shape as shopOffersSpellcasting.
+export function shopOffersRunes(loreId, shops) {
+  const entry = shops && loreId != null ? shops[loreId] : null;
+  if (!entry) return false;
+  if (typeof entry.offersRunes === 'boolean') return entry.offersRunes;
+  const wares = Array.isArray(entry.wares) ? entry.wares : [];
+  return wares.some(isRunestoneEntry);
+}
+
 // Shop-flagged direct children of the current location that players may see,
 // title-sorted (reuses the containment `parent` edge via loreUtils). `entries`
 // is the full lore list. A child is included only when it both has wares
