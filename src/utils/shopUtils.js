@@ -260,3 +260,63 @@ export function spellOfferingSummary(ware, spells) {
   const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to rank ${cap} · ${count} eligible spell${count === 1 ? '' : 's'}`;
   return { kind, cap, count, traditions, rarities, text };
 }
+
+// ── Player browse grouping (#857 S2) ────────────────────────────────────────
+// Collapse resolved wares (resolveShopWares output) that share one catalog item
+// into a single browse entry, so a multi-variant item (e.g. Healing Potion
+// Minor/Lesser/Moderate) shows once with an add button per stocked form. The
+// grouping key is the resolved `id`: variants of one item share it (tonic@1 and
+// tonic@3 are both id 'tonic'), while a Runestone (id 'runestone-<rune>', #801)
+// and a generative scroll/wand (id '<kind>-of-<spell>', #812) each carry a
+// distinct id and so stay their own single-form group. Group order follows first
+// appearance; forms sort cheapest-first to match the headline `from` price.
+//
+// Each form is the untouched resolved ware — it keeps its `wareKey`, so
+// shopCart/useBuyItems add and price it exactly as the flat list does. The group
+// `name`/`traits`/`description` are taken from the cheapest form: production
+// resolveShopWares merges a variant's own name in, so a renamed ladder shows its
+// cheapest variant's name (the per-form label/level disambiguates in the UI).
+export function groupWares(resolvedWares) {
+  const order = [];
+  const byId = new Map();
+  (Array.isArray(resolvedWares) ? resolvedWares : []).forEach((ware) => {
+    if (!ware || ware.id == null) return;
+    const key = String(ware.id);
+    if (!byId.has(key)) {
+      byId.set(key, []);
+      order.push(key);
+    }
+    byId.get(key).push(ware);
+  });
+  return order.map((key) => {
+    const forms = byId
+      .get(key)
+      .slice()
+      .sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+    const head = forms[0];
+    return {
+      ref: key,
+      name: head.name,
+      traits: Array.isArray(head.traits) ? head.traits : [],
+      description: head.description,
+      forms,
+      from: Number(head.price) || 0,
+      formCount: forms.length,
+    };
+  });
+}
+
+// Map an item's traits to its chip-accent token (#857 S2), matching the design
+// handoff's accentFor precedence exactly: Scroll/Wand/Magical → arcane; Healing
+// → verdant; Weapon/Armor/Shield → iron; Alchemical → verdant; else gold. (Order
+// matters — Healing beats the iron group, Alchemical loses to it.) Returns the
+// bare token name; callers theme with `var(--${name})`.
+export function traitAccent(item) {
+  const traits = item && Array.isArray(item.traits) ? item.traits : [];
+  const has = (t) => traits.includes(t);
+  if (has('Scroll') || has('Wand') || has('Magical')) return 'arcane';
+  if (has('Healing')) return 'verdant';
+  if (has('Weapon') || has('Armor') || has('Shield')) return 'iron';
+  if (has('Alchemical')) return 'verdant';
+  return 'gold';
+}
