@@ -488,6 +488,123 @@ describe('ShopModal', () => {
     });
   });
 
+  describe('spell-counter picker (#812 S9)', () => {
+    const spells = [
+      { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
+      { id: 'fireball', name: 'Fireball', level: 3, traditions: ['arcane', 'primal'] },
+      { id: 'haste', name: 'Haste', level: 3, traditions: ['arcane', 'occult', 'primal'] },
+      { id: 'chromatic-wall', name: 'Chromatic Wall', level: 5, traditions: ['arcane', 'occult'], traits: ['Uncommon'] },
+      { id: 'shield', name: 'Shield', level: 0, traditions: ['arcane', 'divine', 'occult'], traits: ['Cantrip'] },
+    ];
+    const oneShop = [{ id: 'curious-goblin', title: 'The Curious Goblin' }];
+    const renderWith = (wares, props = {}) =>
+      render(
+        <ShopModal
+          isOpen
+          onClose={() => {}}
+          shops={oneShop}
+          waresStore={{ 'curious-goblin': { wares } }}
+          items={items}
+          spells={spells}
+          character={{ id: 'char-1', name: 'Pellias' }}
+          {...props}
+        />
+      );
+    // Open the shop → Spellcasting Services tab → the offering's picker.
+    const openPicker = (browseLabel) => {
+      fireEvent.click(screen.getByText('The Curious Goblin'));
+      fireEvent.click(screen.getByRole('tab', { name: 'Spellcasting Services' }));
+      fireEvent.click(screen.getByLabelText(browseLabel));
+    };
+
+    it('lists only the eligible spells as derived scroll/wand rows', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openPicker('browse scrolls up to rank 3');
+      expect(screen.getByTestId('shop-spell-picker')).toBeInTheDocument();
+      // heal/fireball/haste are in; chromatic-wall (rank 5, uncommon) + the
+      // cantrip are not.
+      expect(screen.getByTestId('pick-scroll:heal')).toHaveTextContent('Scroll of Heal');
+      expect(screen.getByTestId('pick-scroll:fireball')).toBeInTheDocument();
+      expect(screen.getByTestId('pick-scroll:haste')).toBeInTheDocument();
+      expect(screen.queryByTestId('pick-scroll:chromatic-wall')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('pick-scroll:shield')).not.toBeInTheDocument();
+    });
+
+    it('shows the derived level, price, and rarity on each row', () => {
+      renderWith([{ spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'] }]);
+      openPicker('browse wands up to rank 5');
+      // Wand of Chromatic Wall: cast rank 5 → level 11, 1400 gp, Uncommon.
+      const row = screen.getByTestId('pick-wand:chromatic-wall');
+      expect(row).toHaveTextContent('Wand of Chromatic Wall');
+      expect(row).toHaveTextContent('L11');
+      expect(row).toHaveTextContent('1400 gp');
+      expect(row).toHaveTextContent('Uncommon');
+    });
+
+    it('narrows the list by spell-name search', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openPicker('browse scrolls up to rank 3');
+      fireEvent.change(screen.getByLabelText('spell search'), { target: { value: 'heal' } });
+      expect(screen.getByTestId('pick-scroll:heal')).toBeInTheDocument();
+      expect(screen.queryByTestId('pick-scroll:fireball')).not.toBeInTheDocument();
+    });
+
+    it('filters by rank and by tradition', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openPicker('browse scrolls up to rank 3');
+      // Rank 3 → fireball + haste, not heal (rank 1).
+      fireEvent.change(screen.getByLabelText('filter rank'), { target: { value: '3' } });
+      expect(screen.queryByTestId('pick-scroll:heal')).not.toBeInTheDocument();
+      expect(screen.getByTestId('pick-scroll:fireball')).toBeInTheDocument();
+      // Reset rank, then filter tradition divine → only heal.
+      fireEvent.change(screen.getByLabelText('filter rank'), { target: { value: '' } });
+      fireEvent.change(screen.getByLabelText('filter tradition'), { target: { value: 'divine' } });
+      expect(screen.getByTestId('pick-scroll:heal')).toBeInTheDocument();
+      expect(screen.queryByTestId('pick-scroll:fireball')).not.toBeInTheDocument();
+    });
+
+    it('filters by rarity within what the offering allows', () => {
+      renderWith([{ spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'] }]);
+      openPicker('browse wands up to rank 5');
+      fireEvent.change(screen.getByLabelText('filter rarity'), { target: { value: 'uncommon' } });
+      expect(screen.getByTestId('pick-wand:chromatic-wall')).toBeInTheDocument();
+      expect(screen.queryByTestId('pick-wand:fireball')).not.toBeInTheDocument();
+    });
+
+    it('adds a picked spell to the cart and buys it through useBuyItems', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openPicker('browse scrolls up to rank 3');
+      fireEvent.click(screen.getByLabelText('add scroll:heal'));
+      // The cart now has the scroll line (keyed by wareKey) and totals its price.
+      expect(screen.getByLabelText('quantity scroll:heal')).toHaveTextContent('1');
+      expect(screen.getByTestId('cart-total')).toHaveTextContent('4 gp');
+
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm purchase' }));
+      const [purchases, shopName] = mockBuy.mock.calls[0];
+      expect(purchases).toEqual([
+        { item: expect.objectContaining({ wareKey: 'scroll:heal', scroll: { spellRef: 'heal' } }), qty: 1 },
+      ]);
+      expect(shopName).toBe('The Curious Goblin');
+      expect(screen.getByTestId('shop-receipt')).toBeInTheDocument();
+    });
+
+    it('returns to the offering list via Back', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }]);
+      openPicker('browse scrolls up to rank 3');
+      fireEvent.click(screen.getByText('← Back to services'));
+      expect(screen.queryByTestId('shop-spell-picker')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('browse scrolls up to rank 3')).toBeInTheDocument();
+    });
+
+    it('read-only: browses the picker but hides Add and the cart', () => {
+      renderWith([{ spellItem: 'scroll', maxRank: 3 }], { readOnly: true, character: null });
+      openPicker('browse scrolls up to rank 3');
+      expect(screen.getByTestId('pick-scroll:heal')).toBeInTheDocument();
+      expect(screen.queryByLabelText('add scroll:heal')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('shop-cart')).not.toBeInTheDocument();
+    });
+  });
+
   it('returns to the carousel from the shop window', () => {
     renderModal();
     fireEvent.click(screen.getByText('The Curious Goblin'));

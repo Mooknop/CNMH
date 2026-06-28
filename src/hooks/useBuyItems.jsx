@@ -33,6 +33,18 @@ const reuid = (item) => {
     if (item.runestone.runeRef != null) stone.runeRef = item.runestone.runeRef;
     return stone;
   }
+  // A bought Scroll/Wand (#812 S9) lands as a minimal, re-resolvable ref entry,
+  // not a fat inline copy: finishItem re-derives its name/level/price/traits from
+  // the embedded spell on resolution (S2), so only the spell ref (+ any cast-rank
+  // override) needs to persist — mirroring the Runestone treatment above.
+  if (item && (item.scroll || item.wand)) {
+    const kind = item.scroll ? 'scroll' : 'wand';
+    const block = item[kind] || {};
+    const entry = { uid: newEntryUid(), [kind]: {} };
+    if (block.spellRef != null) entry[kind].spellRef = block.spellRef;
+    if (block.rank != null) entry[kind].rank = block.rank;
+    return entry;
+  }
   const { state, hand, stock, wareKey, variants, ...rest } = item || {};
   const next = { ...rest, uid: newEntryUid() };
   if (next.container && Array.isArray(next.container.contents)) {
