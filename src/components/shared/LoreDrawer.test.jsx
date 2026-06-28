@@ -43,12 +43,18 @@ vi.mock('../../contexts/ContentContext', () => ({
 }));
 import { useContent } from '../../contexts/ContentContext';
 
-// Stub ShopModal — its own hooks (clock/session) are exercised elsewhere; here
-// we only assert the drawer opens it with the right shops + read-only flag.
+// Stub the two shop surfaces — their own hooks (clock/session) are exercised
+// elsewhere. The drawer routes in-town buying to ShopModal and read-only (lore)
+// browsing to ShopStorefront (#857 S3); here we only assert which one opens with
+// the right shops.
 vi.mock('../shop/ShopModal', () => ({
+  default: ({ isOpen, shops }) =>
+    isOpen ? <div data-testid="lore-shop-modal">{(shops || []).length} shops</div> : null,
+}));
+vi.mock('../shop/ShopStorefront', () => ({
   default: ({ isOpen, readOnly, shops }) =>
     isOpen ? (
-      <div data-testid="lore-shop-modal" data-readonly={String(readOnly)}>
+      <div data-testid="lore-storefront" data-readonly={String(readOnly)}>
         {(shops || []).length} shops
       </div>
     ) : null,
@@ -165,9 +171,11 @@ describe('LoreDrawer', () => {
       openSandpoint();
       renderDrawer();
       fireEvent.click(screen.getByTestId('lore-shops-button'));
-      const modal = screen.getByTestId('lore-shop-modal');
-      expect(modal).toHaveAttribute('data-readonly', 'true');
-      expect(modal).toHaveTextContent('1 shops');
+      // Not in town ⇒ read-only storefront, not the buying modal.
+      const storefront = screen.getByTestId('lore-storefront');
+      expect(storefront).toHaveAttribute('data-readonly', 'true');
+      expect(storefront).toHaveTextContent('1 shops');
+      expect(screen.queryByTestId('lore-shop-modal')).not.toBeInTheDocument();
     });
   });
 

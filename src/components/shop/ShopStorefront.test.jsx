@@ -1,0 +1,172 @@
+import React from 'react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
+import ShopStorefront from './ShopStorefront';
+
+// useBuyItems pulls session/content/log contexts; the storefront only reads
+// `myGold` from it this slice, so stub it.
+vi.mock('../../hooks/useBuyItems', () => ({
+  useBuyItems: vi.fn(() => ({ myGold: 142, buy: vi.fn() })),
+}));
+
+const items = [
+  { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.' },
+  { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1, traits: ['Magical'] },
+  {
+    id: 'tonic',
+    name: 'Tonic',
+    weight: 0,
+    traits: ['Healing', 'Consumable'],
+    variants: [
+      { level: 1, label: 'Minor', name: 'Minor Tonic', price: 4 },
+      { level: 3, label: 'Lesser', name: 'Lesser Tonic', price: 12 },
+    ],
+  },
+];
+const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: ['Fire'] }];
+
+// One shop at a location: general wares + a runestone (⇒ Runesmithing derives on)
+// + a spell-item offering (⇒ Spellcasting derives on).
+const fullStore = {
+  rings: {
+    keeper: 'Maver calls you treasure.',
+    wares: [
+      { ref: 'antidote', level: 1 },
+      { ref: 'tonic', level: 1 },
+      { ref: 'tonic', level: 3 },
+      { ref: 'spellbook' },
+      { ref: 'runestone', runeRef: 'flaming' },
+      { spellItem: 'scroll', maxRank: 3 },
+    ],
+  },
+};
+const ringsShop = { id: 'rings', title: 'Rings & Things', kind: 'Curios', summary: 'Trinkets.' };
+
+const renderShop = (props = {}) =>
+  render(
+    <ShopStorefront
+      isOpen
+      onClose={vi.fn()}
+      shops={[ringsShop]}
+      waresStore={fullStore}
+      items={items}
+      runes={runes}
+      character={{ id: 'pellias', name: 'Pellias' }}
+      {...props}
+    />
+  );
+
+describe('ShopStorefront', () => {
+  it('renders nothing when closed', () => {
+    const { container } = render(
+      <ShopStorefront isOpen={false} onClose={vi.fn()} shops={[ringsShop]} waresStore={fullStore} items={items} runes={runes} />
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('auto-opens a lone shop with its header, keeper line and gold purse', () => {
+    renderShop();
+    expect(screen.getByText('Rings & Things')).toBeInTheDocument();
+    expect(screen.getByText(/Maver calls you treasure/)).toBeInTheDocument();
+    expect(screen.getByTestId('shop-purse')).toHaveTextContent('142');
+  });
+
+  describe('tab computation (#857 S1 selectors)', () => {
+    it('shows Wares plus the derived Spellcasting and Runes tabs', () => {
+      renderShop();
+      expect(screen.getByRole('tab', { name: /Wares/ })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Spells/ })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Runes/ })).toBeInTheDocument();
+    });
+
+    it('omits Spellcasting/Runes when the shop offers neither', () => {
+      render(
+        <ShopStorefront
+          isOpen
+          onClose={vi.fn()}
+          shops={[ringsShop]}
+          waresStore={{ rings: { wares: [{ ref: 'antidote' }] } }}
+          items={items}
+          runes={runes}
+          character={{ id: 'p', name: 'P' }}
+        />
+      );
+      expect(screen.getByRole('tab', { name: /Wares/ })).toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: /Spells/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: /Runes/ })).not.toBeInTheDocument();
+    });
+
+    it('the not-yet-built tabs show a coming-soon placeholder', () => {
+      renderShop();
+      fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+      expect(screen.getByTestId('ps-coming-soon')).toBeInTheDocument();
+    });
+  });
+
+  describe('wares grid', () => {
+    it('collapses item variants into one tile and shows a "from" price', () => {
+      renderShop();
+      const grid = screen.getByLabelText('wares');
+      // tonic@1 + tonic@3 → one tile; spellbook + antidote also present.
+      const tonic = within(grid).getByTestId('ware-tonic');
+      expect(tonic).toHaveTextContent('from 4 gp');
+      expect(tonic).toHaveTextContent('2 forms');
+      expect(within(grid).getByTestId('ware-antidote')).toHaveTextContent('3 gp');
+    });
+
+    it('filters by search and by a trait chip', () => {
+      renderShop();
+      fireEvent.change(screen.getByLabelText('search wares'), { target: { value: 'tonic' } });
+      const grid = screen.getByLabelText('wares');
+      expect(within(grid).getByTestId('ware-tonic')).toBeInTheDocument();
+      expect(within(grid).queryByTestId('ware-antidote')).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByLabelText('search wares'), { target: { value: '' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Magical' }));
+      expect(within(screen.getByLabelText('wares')).getByTestId('ware-spellbook')).toBeInTheDocument();
+      expect(within(screen.getByLabelText('wares')).queryByTestId('ware-tonic')).not.toBeInTheDocument();
+    });
+
+    it('opens the takeover preview with per-form rows on tap', () => {
+      renderShop();
+      fireEvent.click(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'));
+      const preview = screen.getByTestId('ware-preview');
+      expect(within(preview).getByText('Minor Tonic')).toBeInTheDocument();
+      const forms = within(preview).getByLabelText('forms');
+      expect(within(forms).getByText('Minor')).toBeInTheDocument();
+      expect(within(forms).getByText('Lesser')).toBeInTheDocument();
+    });
+  });
+
+  describe('read-only (lore) mode', () => {
+    it('shows the lore banner, no gold purse, and a not-here-to-buy preview note', () => {
+      renderShop({ readOnly: true, character: null });
+      expect(screen.getByTestId('ps-lore-banner')).toBeInTheDocument();
+      expect(screen.queryByTestId('shop-purse')).not.toBeInTheDocument();
+      fireEvent.click(within(screen.getByLabelText('wares')).getByTestId('ware-antidote'));
+      expect(within(screen.getByTestId('ware-preview')).getByText(/not here to buy/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('multi-shop picker', () => {
+    const second = { id: 'forge', title: 'The Forge', kind: 'Smithy' };
+    it('lists shops and opens one, with Back returning to the picker', () => {
+      render(
+        <ShopStorefront
+          isOpen
+          onClose={vi.fn()}
+          shops={[ringsShop, second]}
+          waresStore={{ ...fullStore, forge: { wares: [{ ref: 'antidote' }] } }}
+          items={items}
+          runes={runes}
+          character={{ id: 'p', name: 'P' }}
+        />
+      );
+      // picker first (two shops)
+      expect(screen.getByLabelText('shops')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Rings & Things/ }));
+      expect(screen.getByRole('tab', { name: /Wares/ })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+      expect(screen.getByLabelText('shops')).toBeInTheDocument();
+    });
+  });
+});

@@ -13,6 +13,7 @@ import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
 import { rkKeyFor } from '../../utils/recallKnowledge';
 import LoreMarkdown from './LoreMarkdown';
 import ShopModal from '../shop/ShopModal';
+import ShopStorefront from '../shop/ShopStorefront';
 import './LoreDrawer.css';
 
 const LoreDrawer = () => {
@@ -240,18 +241,33 @@ const LoreDrawer = () => {
         )}
       </div>
 
-      <ShopModal
-        isOpen={shopOpen}
-        onClose={() => setShopOpen(false)}
-        shops={locationShops}
-        waresStore={shops}
-        items={items}
-        runes={runes}
-        spells={spells}
-        character={canBuy ? activeCharacter : null}
-        characterColor={activeCharacterColor}
-        readOnly={!canBuy}
-      />
+      {/* Read-only (not in town) lore browsing uses the redesigned full-screen
+          storefront (#857 S3). In-town buying via a lore page keeps ShopModal
+          until S4 brings the cart over to the new surface. */}
+      {canBuy ? (
+        <ShopModal
+          isOpen={shopOpen}
+          onClose={() => setShopOpen(false)}
+          shops={locationShops}
+          waresStore={shops}
+          items={items}
+          runes={runes}
+          spells={spells}
+          character={activeCharacter}
+          characterColor={activeCharacterColor}
+        />
+      ) : (
+        <ShopStorefront
+          isOpen={shopOpen}
+          onClose={() => setShopOpen(false)}
+          shops={locationShops}
+          waresStore={shops}
+          items={items}
+          runes={runes}
+          character={null}
+          readOnly
+        />
+      )}
     </>
   );
 };
