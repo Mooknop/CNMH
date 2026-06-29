@@ -494,6 +494,22 @@ describe('groupWares', () => {
     expect(groups[0].forms.map((f) => f.wareKey)).toEqual(['p@2', 'p@1']);
   });
 
+  it('carries the cheapest form image/imagePosition onto the group (#881)', () => {
+    const map = new Map([
+      ['p', { id: 'p', name: 'P', image: 'p.png', imagePosition: { x: 10, y: 90 },
+        variants: [{ level: 1, price: 9 }, { level: 2, price: 3 }] }],
+    ]);
+    const [group] = groupWares(resolveShopWares('s', { s: { wares: [
+      { ref: 'p', level: 1 }, { ref: 'p', level: 2 },
+    ] } }, map));
+    expect(group).toMatchObject({ image: 'p.png', imagePosition: { x: 10, y: 90 } });
+  });
+
+  it('leaves group.image undefined when the item has no image', () => {
+    const groups = groupWares(resolveShopWares('curious-goblin', shops, catalogMap));
+    expect(groups[0].image).toBeUndefined();
+  });
+
   it('ignores idless entries and non-array input', () => {
     expect(groupWares([{ name: 'no id' }, null])).toEqual([]);
     expect(groupWares(null)).toEqual([]);

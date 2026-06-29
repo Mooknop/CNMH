@@ -59,10 +59,25 @@ const topTraits = (groups, limit = 8) => {
     .map(([t]) => t);
 };
 
+// Ware crest: the item's R2 image when it has one (mirrors the inventory
+// ItemModal art tile), else the typographic first-letter fallback (#881).
+const WareCrest = ({ group, imgClass, caseClass }) =>
+  group.image ? (
+    <img
+      className={imgClass}
+      src={`/api/images/${group.image}`}
+      alt=""
+      aria-hidden="true"
+      style={group.imagePosition ? { objectPosition: `${group.imagePosition.x}% ${group.imagePosition.y}%` } : undefined}
+    />
+  ) : (
+    <span className={caseClass} aria-hidden="true">{firstLetter(group.name)}</span>
+  );
+
 // Tile inner content, shared by the draggable (town) and static (read-only) tiles.
 const TileInner = ({ group }) => (
   <>
-    <span className="ps-tile-case" aria-hidden="true">{firstLetter(group.name)}</span>
+    <WareCrest group={group} imgClass="ps-tile-img" caseClass="ps-tile-case" />
     <span className="ps-tile-name">{group.name}</span>
     <span className="ps-tile-foot">
       <span className="ps-tile-price">{group.formCount > 1 ? `from ${group.from}` : group.from} gp</span>
@@ -221,7 +236,7 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
     <div className="ps-takeover" data-testid="ware-preview">
       <button type="button" className="ps-takeover-back" onClick={onBack}>‹ Back</button>
       <div className="ps-preview" style={{ '--ps-ware-accent': wareAccentVar(group) }}>
-        <div className="ps-preview-crest" aria-hidden="true">{firstLetter(group.name)}</div>
+        <WareCrest group={group} imgClass="ps-preview-img" caseClass="ps-preview-crest" />
         <h2 className="ps-preview-name">{group.name}</h2>
         <div className="ps-preview-tags">
           {head.level != null && head.level > 0 && <span className="ps-preview-lvl">Level {head.level}</span>}

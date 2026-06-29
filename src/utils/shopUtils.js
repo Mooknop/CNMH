@@ -305,6 +305,10 @@ export function groupWares(resolvedWares) {
       name,
       traits: Array.isArray(head.traits) ? head.traits : [],
       description: head.description,
+      // The cheapest form's R2 image (#881) — variants of one item share the
+      // base item's art, so the headline crest renders it when present.
+      image: head.image,
+      imagePosition: head.imagePosition,
       forms,
       from: Number(head.price) || 0,
       formCount: forms.length,
