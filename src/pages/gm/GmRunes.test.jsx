@@ -47,6 +47,19 @@ describe('GmRunes', () => {
     expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
   });
 
+  it('excludes armor property runes and fundamentals from the count (#885)', () => {
+    useContent.mockReturnValue({ runes: [
+      ...runes,
+      { id: 'slick', type: 'property', armorRune: true, name: 'Slick' },
+      { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', name: '+1 Weapon Potency' },
+    ] });
+    render(<GmRunes />);
+    // still only the two weapon property runes — armor + fundamental filtered out.
+    expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Slick' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Weapon Potency/ })).not.toBeInTheDocument();
+  });
+
   it('loads an existing rune into the structured rider fields', () => {
     setContent();
     render(<GmRunes />);

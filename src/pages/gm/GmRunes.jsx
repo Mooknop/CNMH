@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
+import { runeTarget } from '../../utils/runeClassify';
 import { DAMAGE_TYPES } from '../../utils/damage';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
@@ -308,10 +309,12 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 
 const GmRunes = () => {
   const { runes } = useContent();
-  // Weapon property runes only — armor runes (armorRune:true) have their own
-  // editor (GmArmorRunes); their rich rider schema differs from this form's.
+  // Weapon PROPERTY runes only (#885): armor property runes have their own editor
+  // (GmArmorRunes), and the fundamentals (potency/striking, type:'fundamental')
+  // are table-derived — not authored here. Classify by target, not the raw
+  // armorRune flag, so the count is right and ring/accessory kinds slot in later.
   const catalog = useMemo(
-    () => (Array.isArray(runes) ? runes : []).filter((r) => !(r && r.armorRune)),
+    () => (Array.isArray(runes) ? runes : []).filter((r) => r && r.type === 'property' && runeTarget(r) === 'weapon'),
     [runes]
   );
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);

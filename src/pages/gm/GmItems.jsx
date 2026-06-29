@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
+import { isRuneItem } from '../../utils/runeClassify';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import {
@@ -1112,9 +1113,17 @@ const ItemForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 };
 
 const GmItems = () => {
-  const { items, spells } = useContent();
-  const catalog = useMemo(() => (Array.isArray(items) ? items : []), [items]);
-  const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);
+  const { items, spells, runes } = useContent();
+  // Runes (armor/weapon property + fundamental item entries) belong to the
+  // dedicated rune editors, not the general items list (#885). Exclude them.
+  const runeIds = useMemo(() => new Set((Array.isArray(runes) ? runes : []).map((r) => String(r.id))), [runes]);
+  const catalog = useMemo(
+    () => (Array.isArray(items) ? items : []).filter((it) => !isRuneItem(it, runeIds)),
+    [items, runeIds]
+  );
+  // Collision check spans ALL item ids (incl. the hidden rune items), so a new
+  // item can't reuse a rune-item id.
+  const existingIds = useMemo(() => existingIdSet(items), [items]);
 
   return (
     <div className="gm-items">

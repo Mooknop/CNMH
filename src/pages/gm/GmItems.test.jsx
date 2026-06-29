@@ -80,6 +80,22 @@ describe('GmItems', () => {
     expect(screen.getByText(/Showing 3 of 3/)).toBeInTheDocument();
   });
 
+  it('hides rune item entries from the general list (#885)', () => {
+    useContent.mockReturnValue({
+      items: [
+        ...items,
+        { id: 'slick', name: 'Slick', price: 45, armorRune: true, traits: ['Magical'] },
+        { id: 'weapon-potency', name: 'Weapon Potency', price: 35, traits: ['Magical'] },
+      ],
+      spells, images: [],
+      runes: [{ id: 'slick', type: 'property', armorRune: true }],
+    });
+    render(<GmItems />);
+    expect(screen.getByText(/Showing 3 of 3/)).toBeInTheDocument(); // runes excluded
+    expect(screen.queryByRole('button', { name: 'Slick' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Weapon Potency' })).not.toBeInTheDocument();
+  });
+
   it('filters the list by name, trait or id', () => {
     setContent();
     render(<GmItems />);
