@@ -7,6 +7,7 @@ import { cpToGp } from '../../utils/earnIncome';
 import { buildCraftingResult } from '../../utils/earnIncomeResults';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { periodState } from '../../utils/downtimeUtils';
+import { catalogItemName } from '../../utils/spellItems';
 import './CraftingProjects.css';
 
 const DEGREE_LABEL = {
@@ -25,7 +26,7 @@ const CraftingProjects = ({ character }) => {
   const [, setResults] = useSyncedState('cnmh_downtimeresults_global', null);
   const [block] = useSyncedState('cnmh_downtimeblock_global', null);
   const [downtime] = useSyncedState(`cnmh_downtime_${charId}`, null);
-  const { items } = useContent();
+  const { items, spells } = useContent();
 
   // Follow-the-Expert (downtime): a Crafting pairing this period grants +2
   // circumstance to the Craft check. Kept in the period-scoped downtime `paired`
@@ -75,7 +76,12 @@ const CraftingProjects = ({ character }) => {
   }, [completedSig]);
 
   const knownRecipes = (character?.crafting || []).filter(r => r.name);
-  const catalogItems = (items || []).slice().sort((a, b) => a.name.localeCompare(b.name));
+  // Scroll/wand catalog entries author no `name` (#812 — it's derived from the
+  // spell), so resolve a display name for each before sorting/listing or they'd
+  // render as blank rows (and the sort would throw on undefined).
+  const catalogItems = (items || [])
+    .map((it) => ({ ...it, displayName: catalogItemName(it, spells) }))
+    .sort((a, b) => String(a.displayName || '').localeCompare(String(b.displayName || '')));
   const selectedCatalogItem = catalogItems.find(i => i.id === catalogRef);
   const variants = selectedCatalogItem?.variants || [];
 
@@ -470,7 +476,7 @@ const CraftingProjects = ({ character }) => {
                   >
                     <option value="">— select item —</option>
                     {catalogItems.map(i => (
-                      <option key={i.id} value={i.id}>{i.name}</option>
+                      <option key={i.id} value={i.id}>{i.displayName}</option>
                     ))}
                   </select>
                 </label>
@@ -501,7 +507,7 @@ const CraftingProjects = ({ character }) => {
                   onClick={() => {
                     const lvl = catalogLevel ? parseInt(catalogLevel, 10) : null;
                     const v = lvl != null ? variants.find(x => x.level === lvl) : null;
-                    const name = v ? `${selectedCatalogItem.name} (${v.label})` : selectedCatalogItem.name;
+                    const name = v ? `${selectedCatalogItem.displayName} (${v.label})` : selectedCatalogItem.displayName;
                     startProject(selectedCatalogItem.id, lvl, name, 'catalog-item', catalogPrice);
                   }}
                 >

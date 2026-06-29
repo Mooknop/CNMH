@@ -144,3 +144,27 @@ export const spellItemDisplayName = (item) => {
   if (isResolvedSpellBlock(item.wand)) return resolveWand(item.wand, item.wand).name;
   return item.name;
 };
+
+/**
+ * Display name for a RAW (un-hydrated) catalog item: scroll/wand entries author
+ * no `name` (#812 S5 — it's derived from the spell), so resolve the embedded
+ * `{ spellRef, rank? }` block against the spell catalog. An authored name wins
+ * (author override), and non-spell items just use their stored `name`. A
+ * dangling ref still yields a "(unknown spell)" stub rather than undefined, so
+ * callers can sort/key/display without guarding.
+ * @param {Object} item   - A raw catalog item ({ scroll|wand: { spellRef, rank? } } | named item)
+ * @param {Array}  spells - The spell catalog ({ id, name, level, ... }[])
+ * @returns {string|undefined}
+ */
+export const catalogItemName = (item, spells) => {
+  if (!item || typeof item !== 'object') return item?.name;
+  if (item.name) return item.name;
+  const kind = item.scroll ? 'scroll' : item.wand ? 'wand' : null;
+  if (!kind) return item.name;
+  const block = item[kind] || {};
+  const ref = String(block.spellRef || '').trim();
+  const spell = ref
+    ? (Array.isArray(spells) ? spells : []).find((s) => String(s.id) === ref)
+    : null;
+  return (kind === 'scroll' ? resolveScroll : resolveWand)(spell, block).name;
+};
