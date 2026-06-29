@@ -4820,8 +4820,8 @@
         {
           "uid": "e-7ewsndsu0lde",
           "ref": "elixir-of-life",
-          "level": 1,
-          "quantity": 2
+          "quantity": 2,
+          "level": 1
         },
         {
           "uid": "e-3jg6hbfd0lde",
@@ -4856,8 +4856,8 @@
         {
           "uid": "e-zooar8g6ihyp",
           "ref": "healing-potion",
-          "level": 3,
-          "quantity": 1
+          "quantity": 1,
+          "level": 3
         },
         {
           "uid": "e-we1788s5ihyp",
@@ -5311,14 +5311,14 @@
         {
           "uid": "e-g83tyv3sld5g",
           "ref": "healing-potion",
-          "level": 1,
-          "quantity": 2
+          "quantity": 2,
+          "level": 1
         },
         {
           "uid": "e-qk7nx0dmld5g",
           "ref": "elixir-of-life",
-          "level": 1,
-          "quantity": 1
+          "quantity": 1,
+          "level": 1
         },
         {
           "uid": "e-y5smsmcmld5g",
@@ -5353,8 +5353,8 @@
         {
           "uid": "e-6v7kqy55ihyq",
           "ref": "healing-potion",
-          "level": 3,
-          "quantity": 1
+          "quantity": 1,
+          "level": 3
         },
         {
           "uid": "e-g54likfdihyq",
@@ -6182,8 +6182,8 @@
         {
           "uid": "e-4phd9lsbj3e7",
           "ref": "healing-potion",
-          "level": 1,
-          "quantity": 1
+          "quantity": 1,
+          "level": 1
         },
         {
           "uid": "e-yn2rxy6mj3e7",
@@ -6678,8 +6678,8 @@
         {
           "uid": "e-5wt9oadpoezh",
           "ref": "elixir-of-life",
-          "level": 1,
-          "quantity": 1
+          "quantity": 1,
+          "level": 1
         },
         {
           "uid": "e-06de2xugoezh",
@@ -6719,8 +6719,8 @@
         {
           "uid": "e-swx7yknxihyq",
           "ref": "healing-potion",
-          "level": 1,
-          "quantity": 2
+          "quantity": 2,
+          "level": 1
         },
         {
           "uid": "e-89i4hd7gihyq",
@@ -6730,8 +6730,8 @@
         {
           "uid": "e-i96di93dihyq",
           "ref": "healing-potion",
-          "level": 3,
-          "quantity": 1
+          "quantity": 1,
+          "level": 3
         },
         {
           "uid": "e-ztotevemakrn",
@@ -7124,8 +7124,8 @@
         {
           "uid": "e-6yakvan8ry1f",
           "ref": "elixir-of-life",
-          "level": 1,
-          "quantity": 1
+          "quantity": 1,
+          "level": 1
         },
         {
           "uid": "e-47653xtc1xrc",
@@ -7496,6 +7496,11 @@
   "item": [
     {
       "material": "Cold Iron",
+      "image": "img_a3dc32ca-cf16-493f-9654-ba1ca5fee738.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "name": "Light Hammer",
       "strikes": [
         {
@@ -7528,11 +7533,6 @@
         "potency": 1
       },
       "description": "This smaller version of the warhammer has a wooden or metal shaft ending in a metal head. Unlike its heavier cousin, it is light enough to throw. Cold iron weapons deal additional damage to creatures with weakness to cold iron, like demons and fey.",
-      "image": "img_a54784ca-564e-401d-9ed0-a6b8b6184b93.jpg",
-      "imagePosition": {
-        "x": 50,
-        "y": 50
-      },
       "traits": [
         "Agile",
         "Thrown 20ft"
@@ -7612,8 +7612,20 @@
       "description": "Armor etched with this rune aids in routing ranged attacks aimed at an enemy around you. You don't provide enemies cover against your allies' ranged attacks."
     },
     {
-      "id": "anticorrosion-oil",
       "name": "Anticorrosion Oil",
+      "description": "You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae.",
+      "image": "img_3f9d87d1-6113-4f77-9bbd-781784b514e9.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Oil"
+      ],
+      "price": 6,
+      "weight": 0.1,
       "consumable": {
         "kind": "effect",
         "target": "item",
@@ -7621,31 +7633,10 @@
         "durationMinutes": 1440,
         "note": "Half damage from acid/rust (24 hr)"
       },
-      "price": 6,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Oil"
-      ],
-      "description": "You can coat objects of 6 Bulk or less with anticorrosion oil. For 24 hours, the object takes half damage from acid and from all effects that specifically cause it to rust or corrode, such as contact with a rust monster's antennae."
+      "id": "anticorrosion-oil"
     },
     {
-      "id": "antidote",
       "name": "Antidote",
-      "consumable": {
-        "kind": "effect",
-        "effectId": "antidote",
-        "durationMinutes": 360,
-        "note": "+2 item Fort vs poison (6 hr)"
-      },
-      "weight": 0.1,
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Elixir"
-      ],
-      "description": "An antidote protects you against toxins. Upon drinking an antidote, you gain an item bonus to Fortitude saving throws against poisons for 6 hours.",
       "variants": [
         {
           "level": 1,
@@ -7659,24 +7650,29 @@
           "price": 35,
           "effect": "You gain a +3 item bonus to Fortitude saving throws against poisons."
         }
-      ]
-    },
-    {
-      "id": "antiplague",
-      "name": "Antiplague",
-      "consumable": {
-        "kind": "effect",
-        "effectId": "antiplague",
-        "durationMinutes": 1440,
-        "note": "+2 item Fort vs disease (24 hr)"
+      ],
+      "description": "An antidote protects you against toxins. Upon drinking an antidote, you gain an item bonus to Fortitude saving throws against poisons for 6 hours.",
+      "image": "img_38b8ac54-ff42-465f-8bdc-34e19419de38.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
       },
-      "weight": 0.1,
       "traits": [
         "Alchemical",
         "Consumable",
         "Elixir"
       ],
-      "description": "Antiplague can fortify the body defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease progression.",
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "antidote",
+        "durationMinutes": 360,
+        "note": "+2 item Fort vs poison (6 hr)"
+      },
+      "id": "antidote"
+    },
+    {
+      "name": "Antiplague",
       "variants": [
         {
           "level": 1,
@@ -7690,7 +7686,26 @@
           "price": 35,
           "effect": "You gain a +3 item bonus to Fortitude saving throws against diseases."
         }
-      ]
+      ],
+      "description": "Antiplague can fortify the body defenses against diseases. Upon drinking an antiplague, you gain an item bonus to Fortitude saving throws against diseases for 24 hours; this applies to your daily save against a disease progression.",
+      "image": "img_75ec05a0-b47f-4aa0-8dfe-d6161cd3a757.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir"
+      ],
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "antiplague",
+        "durationMinutes": 1440,
+        "note": "+2 item Fort vs disease (24 hr)"
+      },
+      "id": "antiplague"
     },
     {
       "id": "armor-potency",
@@ -7728,25 +7743,22 @@
       ]
     },
     {
-      "id": "backpack",
       "name": "Backpack",
+      "description": "A backpack for holding your gear",
+      "image": "img_b740b700-2ba1-42c7-a60a-930b6b36996c.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.1,
       "weight": 0.1,
-      "description": "A backpack for holding your gear",
       "container": {
         "capacity": 4,
         "ignored": 2
-      }
+      },
+      "id": "backpack"
     },
     {
-      "id": "beacon-shot",
-      "name": "Beacon Shot",
-      "price": 10,
-      "weight": 0,
-      "traits": [
-        "Consumable",
-        "Magical"
-      ],
       "ammunition": {
         "types": [
           "arrow",
@@ -7759,25 +7771,34 @@
         "effectId": "beacon-shot",
         "onHit": true
       },
-      "description": "Ammunition (arrow or bolt); Activate (one-action, manipulate). The shaft of a beacon shot is studded with flecks of gemstones. When an activated beacon shot hits a target, it embeds itself into that target and spews sparks for 1 minute. If the target is invisible, it becomes merely hidden to creatures who would otherwise be unable to see it. The sparks also negate the concealed condition if the target was otherwise concealed. A creature can remove the arrow or bolt by using an Interact basic action and succeeding at a DC 20 Athletics check."
-    },
-    {
-      "id": "bedroll",
-      "name": "Bedroll",
-      "price": 0.02,
-      "weight": 0.1,
-      "description": "A compact mat, not too comfy but suitable for long journeys."
-    },
-    {
-      "id": "blade-byrnie",
-      "name": "Blade Byrnie",
-      "price": 360,
-      "weight": 1,
+      "name": "Beacon Shot",
+      "description": "Ammunition (arrow or bolt); Activate (one-action, manipulate). The shaft of a beacon shot is studded with flecks of gemstones. When an activated beacon shot hits a target, it embeds itself into that target and spews sparks for 1 minute. If the target is invisible, it becomes merely hidden to creatures who would otherwise be unable to see it. The sparks also negate the concealed condition if the target was otherwise concealed. A creature can remove the arrow or bolt by using an Interact basic action and succeeding at a DC 20 Athletics check.",
+      "image": "img_117d9b98-0345-4e1d-bc16-fd3f7aeee8e6.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
-        "Invested",
+        "Consumable",
         "Magical"
       ],
-      "description": "Instead of chain links, this +1 chain shirt is assembled from metal \"leaves\" that each resemble a small blade.\n\nUpgrading the runes on the blade byrnie makes the daggers pulled from it more powerful. The daggers have a +2 weapon potency rune if the armor has a +2 armor potency rune, or a +3 weapon potency rune if the armor has a +3 armor potency rune.",
+      "price": 10,
+      "weight": 0,
+      "id": "beacon-shot"
+    },
+    {
+      "name": "Bedroll",
+      "description": "A compact mat, not too comfy but suitable for long journeys.",
+      "image": "img_1c322d27-2d95-427a-adaf-8404c6151029.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "price": 0.02,
+      "weight": 0.1,
+      "id": "bedroll"
+    },
+    {
       "actions": [
         {
           "name": "Draw a Blade",
@@ -7788,35 +7809,59 @@
           "description": "Effect You pull a link from the armor, which transforms into a +1 striking dagger. The dagger disappears and reappears as a link in the armor after you Strike with it, or at the end of this turn if you don't make a Strike. You can Activate the blade byrnie in place of an Interact action to draw a weapon for abilities such as the Quick Draw feat."
         }
       ],
+      "name": "Blade Byrnie",
+      "description": "Instead of chain links, this +1 chain shirt is assembled from metal \"leaves\" that each resemble a small blade.\n\nUpgrading the runes on the blade byrnie makes the daggers pulled from it more powerful. The daggers have a +2 weapon potency rune if the armor has a +2 armor potency rune, or a +3 weapon potency rune if the armor has a +3 armor potency rune.",
+      "image": "img_d339ae79-1333-4820-a31b-cb0f5cef3b66.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "price": 360,
+      "weight": 1,
       "armor": {
         "category": "light",
         "acBonus": 2,
         "dexCap": 3,
         "strength": 12,
         "group": "chain"
-      }
+      },
+      "id": "blade-byrnie"
     },
     {
-      "id": "chalk",
       "name": "Chalk",
+      "description": "Suitable for marking hard surfaces temporarily.",
+      "image": "img_8f6168fb-f26b-4711-87fa-6f60c12c0172.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.001,
       "weight": 0,
-      "description": "Suitable for marking hard surfaces temporarily."
+      "id": "chalk"
     },
     {
-      "id": "crafters-eyepiece",
+      "bonus": [
+        "crafting",
+        1
+      ],
       "name": "Crafter's Eyepiece",
-      "price": 60,
-      "weight": 0,
+      "description": "This rugged metal eyepiece etched with square patterns is designed to be worn over a single eye. Twisting the lens reveals a faint three-dimensional outline of an item you plan to build or repair, with helpful labels on the component parts. You gain a +1 item bonus to Crafting checks. When you Repair an item, increase the Hit Points restored to 10 + 10 per proficiency rank on a success or 15 + 15 per proficiency rank on a critical success.",
+      "image": "img_69c400d5-f260-48c2-b88f-f389e734a185.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Invested",
         "Magical"
       ],
-      "description": "This rugged metal eyepiece etched with square patterns is designed to be worn over a single eye. Twisting the lens reveals a faint three-dimensional outline of an item you plan to build or repair, with helpful labels on the component parts. You gain a +1 item bonus to Crafting checks. When you Repair an item, increase the Hit Points restored to 10 + 10 per proficiency rank on a success or 15 + 15 per proficiency rank on a critical success.",
-      "bonus": [
-        "crafting",
-        1
-      ]
+      "price": 60,
+      "weight": 0,
+      "id": "crafters-eyepiece"
     },
     {
       "name": "Crescent Cross",
@@ -7869,20 +7914,10 @@
       "id": "crescent-cross"
     },
     {
-      "id": "dragon-turtle-plate",
-      "name": "Dragon Turtle Plate",
-      "price": 700,
-      "weight": 3,
-      "traits": [
-        "Aquadynamic",
-        "Invested",
-        "Magical"
-      ],
       "speedPenalty": [
         10,
         5
       ],
-      "description": "This harness of +1 resilient half plate is made from the shell plates of a dragon turtle and has the aquadynamic trait. To those who can craft with them, the dense organic plates on the dragon turtle's body are as valuable as the creature's hoard of gold.",
       "reactions": [
         {
           "name": "Roll the Plates",
@@ -7904,13 +7939,28 @@
         }
       ],
       "noHandRequired": true,
+      "name": "Dragon Turtle Plate",
+      "description": "This harness of +1 resilient half plate is made from the shell plates of a dragon turtle and has the aquadynamic trait. To those who can craft with them, the dense organic plates on the dragon turtle's body are as valuable as the creature's hoard of gold.",
+      "image": "img_21cda87e-9b8f-4b82-aae8-1991a4ee4c81.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Aquadynamic",
+        "Invested",
+        "Magical"
+      ],
+      "price": 700,
+      "weight": 3,
       "armor": {
         "category": "heavy",
         "acBonus": 5,
         "dexCap": 1,
         "strength": 16,
         "group": "plate"
-      }
+      },
+      "id": "dragon-turtle-plate"
     },
     {
       "id": "dread",
@@ -7929,21 +7979,7 @@
       "description": "Eerie symbols cover your armor, inspiring terror in your foes. Frightened enemies within 30 feet that can see you must attempt a DC 20 Will save at the end of their turn; on a failure, the value of their frightened condition doesn't decrease below 1 that turn."
     },
     {
-      "id": "eagle-eye-elixir",
       "name": "Eagle-eye Elixir",
-      "consumable": {
-        "kind": "effect",
-        "effectId": "eagle-eye-elixir",
-        "durationMinutes": 60,
-        "note": "+1 item Perception (1 hr)"
-      },
-      "weight": 0.1,
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Elixir"
-      ],
-      "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that is greater when attempting to find secret doors and traps.",
       "variants": [
         {
           "level": 1,
@@ -7957,121 +7993,151 @@
           "price": 27,
           "effect": "The bonus is +2, or +3 to find secret doors and traps."
         }
-      ]
+      ],
+      "description": "After you drink this elixir, you notice subtle visual details. For the next hour, you gain an item bonus to Perception checks that is greater when attempting to find secret doors and traps.",
+      "image": "img_0d2f9669-5df8-4505-888a-070fc5ab1b9e.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir"
+      ],
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "eagle-eye-elixir",
+        "durationMinutes": 60,
+        "note": "+1 item Perception (1 hr)"
+      },
+      "id": "eagle-eye-elixir"
     },
     {
-      "id": "elixir-of-life",
       "name": "Elixir of Life",
-      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Minor",
+          "price": 3,
+          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1."
+        },
+        {
+          "level": 5,
+          "label": "Lesser",
+          "price": 30,
+          "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1."
+        }
+      ],
+      "description": "Elixirs of life accelerate a living creature natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
+      "image": "img_364bb0cc-3407-41ab-ab38-aa54b205d3e0.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Alchemical",
         "Consumable",
         "Elixir",
         "Healing"
       ],
-      "description": "Elixirs of life accelerate a living creature natural healing processes and immune system. Upon drinking this elixir, you regain the listed number of Hit Points and gain an item bonus to saving throws against diseases and poisons for 10 minutes.",
-      "variants": [
-        {
-          "level": 1,
-          "label": "Minor",
-          "name": "Minor Elixir of Life",
-          "price": 3,
-          "effect": "The elixir restores 1d6 Hit Points, and the bonus is +1.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 1d6 HP"
-          }
-        },
-        {
-          "level": 5,
-          "label": "Lesser",
-          "name": "Lesser Elixir of Life",
-          "price": 30,
-          "effect": "The elixir restores 3d6+6 Hit Points, and the bonus is +1.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 3d6+6 HP"
-          }
-        }
-      ],
+      "weight": 0.1,
       "consumable": {
         "kind": "healing",
         "note": "Restores HP — enter your rolled total"
-      }
+      },
+      "id": "elixir-of-life"
     },
     {
-      "id": "eye-garnets",
       "name": "Eye Garnets",
-      "weight": 0,
+      "description": "Large red rubies you pried from a statue of Xar-Azmak.",
+      "image": "img_6f901c3d-945d-4592-b25f-08f42f8a1231.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 50,
-      "description": "Large red rubies you pried from a statue of Xar-Azmak."
+      "weight": 0,
+      "id": "eye-garnets"
     },
     {
-      "id": "flint-steel",
       "name": "Flint & Steel",
+      "description": "A camper's classic for starting fires.",
+      "image": "img_f2d51800-1178-4ded-9676-30b7df2ecbcb.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.05,
       "weight": 0,
-      "description": "A camper's classic for starting fires."
+      "id": "flint-steel"
     },
     {
-      "id": "full-plate",
-      "name": "Full Plate",
-      "price": 30,
-      "traits": [
-        "Bulwark"
-      ],
-      "weight": 4,
       "speedPenalty": [
         10,
         5
       ],
+      "name": "Full Plate",
       "description": "Plate mail consists of interlocking plates that encase nearly the entire body in a carapace of steel. It is costly and heavy, and the wearer often requires help to don it correctly, but it provides some of the best defense armor can supply. A suit of this armor comes with an undercoat of padded armor and a pair of gauntlets.",
+      "image": "img_ae433566-e02e-4886-99e7-d3800ae23d38.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Bulwark"
+      ],
+      "price": 30,
+      "weight": 4,
       "armor": {
         "category": "heavy",
         "acBonus": 6,
         "dexCap": 0,
         "strength": 18,
         "group": "plate"
-      }
+      },
+      "id": "full-plate"
     },
     {
-      "id": "gecko-potion",
       "name": "Gecko Potion",
+      "description": "A gecko potion is a sticky, tawny brown liquid with flecks of sand suspended in it. For 5 minutes after drinking this potion, your fingertips sprout thousands of microscopic, bristled hairs that cling to objects, granting you a +1 item bonus to Climb and Palm an Object, and to your Reflex DC against Disarm attempts.",
+      "image": "img_0cdef245-0b76-4455-b68b-f8e7057165af.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Potion"
+      ],
+      "price": 3,
+      "weight": 0.1,
       "consumable": {
         "kind": "effect",
         "effectId": "gecko-potion",
         "durationMinutes": 5,
         "note": "Climb/Palm (5 min)"
       },
-      "price": 3,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Potion"
-      ],
-      "description": "A gecko potion is a sticky, tawny brown liquid with flecks of sand suspended in it. For 5 minutes after drinking this potion, your fingertips sprout thousands of microscopic, bristled hairs that cling to objects, granting you a +1 item bonus to Climb and Palm an Object, and to your Reflex DC against Disarm attempts."
+      "id": "gecko-potion"
     },
     {
-      "id": "gourd-head",
       "name": "Gourd Head",
-      "weight": 0,
       "description": "You have a large gourd for a skull, and since you don't have a physical brain, you can use the space inside your head. You can store a collection of up to 1 Bulk of objects within your head. The DC of checks to Steal objects from inside your head increases by 4. Additionally, if you store only one object within your head, you can draw it effortlessly into your hand as part of another action to use the object. Drawing the item grants this other action the manipulate trait.",
+      "image": "img_e8056ecd-8058-42d5-960e-456d36afa4e4.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "weight": 0,
       "container": {
         "capacity": 1,
         "ignored": 0
-      }
+      },
+      "id": "gourd-head"
     },
     {
-      "id": "healers-gloves",
-      "name": "Healer's Gloves",
-      "price": 80,
-      "weight": 0.1,
-      "traits": [
-        "Invested",
-        "Magical"
-      ],
-      "description": "These clean, white gloves never show signs of blood, even after they're used to stitch up wounds or treat other ailments. They give you a +1 item bonus to Medicine checks.",
       "actions": [
         {
           "name": "Healer's Touch",
@@ -8081,19 +8147,74 @@
           ],
           "description": "Frequency once per day; Effect You soothe the wounds of a willing, living, adjacent creature, restoring 2d6+7 Hit Points to that creature. This is a healing vitality effect. You cannot harm undead with this healing."
         }
-      ]
+      ],
+      "name": "Healer's Gloves",
+      "description": "These clean, white gloves never show signs of blood, even after they're used to stitch up wounds or treat other ailments. They give you a +1 item bonus to Medicine checks.",
+      "image": "img_bf9779ab-8778-4fc5-bdba-f173adee6b42.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "price": 80,
+      "weight": 0.1,
+      "id": "healers-gloves"
     },
     {
-      "id": "healers-toolkit",
       "name": "Healer's Toolkit",
+      "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them.",
+      "image": "img_634d15fc-49e6-4f75-b204-96bfdfc7b18f.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 5,
       "weight": 1,
-      "description": "This kit of bandages, herbs, and suturing tools is necessary for Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds. If you wear your healer's toolkit, you can draw and replace them as part of the action that uses them."
+      "id": "healers-toolkit"
     },
     {
-      "id": "healing-potion",
       "name": "Healing Potion",
-      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Minor",
+          "price": 4,
+          "effect": "The potion restores 1d8 Hit Points."
+        },
+        {
+          "level": 3,
+          "label": "Lesser",
+          "price": 12,
+          "effect": "The potion restores 2d8+5 Hit Points."
+        },
+        {
+          "level": 6,
+          "label": "Moderate",
+          "price": 50,
+          "effect": "The potion restores 3d8+10 Hit Points."
+        },
+        {
+          "level": 12,
+          "label": "Greater",
+          "price": 400,
+          "effect": "The potion restores 6d8+20 Hit Points."
+        },
+        {
+          "level": 18,
+          "label": "Major",
+          "price": 5000,
+          "effect": "The potion restores 8d8+30 Hit Points."
+        }
+      ],
+      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a healing potion, you regain the listed number of Hit Points.",
+      "image": "img_0f8bd76e-6508-47aa-a56b-4798497f931f.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Consumable",
         "Healing",
@@ -8101,86 +8222,19 @@
         "Potion",
         "Vitality"
       ],
-      "description": "A healing potion is a vial of a ruby-red liquid that imparts a tingling sensation as the drinker's wounds heal rapidly. When you drink a healing potion, you regain the listed number of Hit Points.",
-      "variants": [
-        {
-          "level": 1,
-          "label": "Minor",
-          "name": "Minor Healing Potion",
-          "price": 4,
-          "effect": "The potion restores 1d8 Hit Points.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 1d8 HP"
-          }
-        },
-        {
-          "level": 3,
-          "label": "Lesser",
-          "name": "Lesser Healing Potion",
-          "price": 12,
-          "effect": "The potion restores 2d8+5 Hit Points.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 2d8+5 HP"
-          }
-        },
-        {
-          "level": 6,
-          "label": "Moderate",
-          "name": "Moderate Healing Potion",
-          "price": 50,
-          "effect": "The potion restores 3d8+10 Hit Points.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 3d8+10 HP"
-          }
-        },
-        {
-          "level": 12,
-          "label": "Greater",
-          "name": "Greater Healing Potion",
-          "price": 400,
-          "effect": "The potion restores 6d8+20 Hit Points.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 6d8+20 HP"
-          }
-        },
-        {
-          "level": 18,
-          "label": "Major",
-          "name": "Major Healing Potion",
-          "price": 5000,
-          "effect": "The potion restores 8d8+30 Hit Points.",
-          "consumable": {
-            "kind": "healing",
-            "note": "Restores 8d8+30 HP"
-          }
-        }
-      ],
+      "weight": 0.1,
       "consumable": {
         "kind": "healing",
         "note": "Restores HP — enter your rolled total"
-      }
+      },
+      "id": "healing-potion"
     },
     {
-      "id": "holy-water",
       "name": "Holy Water",
-      "price": 3,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Divine",
-        "Holy",
-        "Splash"
-      ],
-      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
       "strikes": {
         "name": "Holy Water",
         "proficiency": "simple",
         "type": "ranged",
-        "action": 1,
         "damage": "1d6",
         "range": "20ft",
         "traits": [
@@ -8188,20 +8242,26 @@
           "Thrown",
           "Splash",
           "Holy"
-        ]
-      }
+        ],
+        "actionCount": 1
+      },
+      "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
+      "image": "img_1fe88669-d3ed-4caa-becf-b8554069292b.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Consumable",
+        "Divine",
+        "Holy",
+        "Splash"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "id": "holy-water"
     },
     {
-      "id": "horn-of-rust",
-      "name": "Horn of Rust",
-      "weight": 2,
-      "traits": [
-        "Artifact",
-        "Unholy",
-        "Invested",
-        "Magical"
-      ],
-      "description": "This rusted, coiled iron horn is sizable, appearing similar in shape to a ram's horn but measuring nearly 2 feet in diameter. Flakes of rust constantly fall from it, and the item leaves hands with a rusty red stain that lingers. While the Horn of Rust's power has diminished over the ages since Xar-Azmak's death, those who carry it are still subject to its palpable chaotic influences. If you are not sanctified Unholy, you are Enfeebled 1 while carrying or using the Horn of Rust; if you are sanctified Holy, you are instead Enfeebled 2 and Stupefied 1. It can be prepared as a staff, granting four spells.",
       "actions": [
         {
           "name": "Blow the Horn",
@@ -8213,23 +8273,29 @@
           "actionCount": 2,
           "description": "Once per day, you can place the horn's bell against a diseased creature and then inhale into the mouthpiece rather than blow into it. The horn attempts to draw out the disease, casting Cleanse Affliction with a counteract modifier of +11. If the Horn of Rust succeeds at countering the disease, it gains a number of staff charges equal to half the disease's level rounded down. If it critically fails, not only is the disease not countered, but you are exposed to the disease and must attempt a saving throw against it to resist contracting the affliction yourself."
         }
-      ]
-    },
-    {
-      "id": "longbow",
-      "name": "Longbow",
-      "price": 6,
+      ],
+      "name": "Horn of Rust",
+      "description": "This rusted, coiled iron horn is sizable, appearing similar in shape to a ram's horn but measuring nearly 2 feet in diameter. Flakes of rust constantly fall from it, and the item leaves hands with a rusty red stain that lingers. While the Horn of Rust's power has diminished over the ages since Xar-Azmak's death, those who carry it are still subject to its palpable chaotic influences. If you are not sanctified Unholy, you are Enfeebled 1 while carrying or using the Horn of Rust; if you are sanctified Holy, you are instead Enfeebled 2 and Stupefied 1. It can be prepared as a staff, granting four spells.",
+      "image": "img_c346ba55-4fd1-4c42-8e22-e124522ad6fd.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
-        "Deadly D10",
-        "Volley 30ft"
+        "Artifact",
+        "Unholy",
+        "Invested",
+        "Magical"
       ],
       "weight": 2,
-      "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted. Because it's made for long range, you take a -2 penalty to attacks on creatures within 30ft with it.",
+      "id": "horn-of-rust"
+    },
+    {
+      "name": "Longbow",
       "strikes": [
         {
           "proficiency": "martial",
           "type": "ranged",
-          "action": 1,
           "damage": "1d8",
           "range": "100 feet",
           "traits": [
@@ -8237,9 +8303,23 @@
             "Deadly D10",
             "Ranged",
             "Volley 30ft"
-          ]
+          ],
+          "actionCount": 1
         }
-      ]
+      ],
+      "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted. Because it's made for long range, you take a -2 penalty to attacks on creatures within 30ft with it.",
+      "image": "img_6f8e450b-1737-4136-847f-4bca3b7e5084.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Deadly D10",
+        "Volley 30ft"
+      ],
+      "price": 6,
+      "weight": 2,
+      "id": "longbow"
     },
     {
       "name": "Midnight Milk",
@@ -8262,22 +8342,27 @@
       "id": "midnight-milk"
     },
     {
-      "id": "moderate-drakeheart-mutagen",
       "name": "Moderate Drakeheart Mutagen",
-      "consumable": {
-        "kind": "effect",
-        "effectId": "drakeheart-mutagen",
-        "note": "+5 item AC, +2 item Perception; Dex cap +2 & −1 Will/Reflex/RK penalties (see effect)"
+      "description": "Your skin grows scales like a drake, and your eyesight become sharp and your pupils slitted, but your mind and reflexes slow. You gain a +5 Item bonus to AC, a Dexterity cap of +2 (as usual, use your lowest Dexterity cap if you have more than one), and a +2 item bonus to Perception checks. If you're wearing armor, you still calculate your proficiency bonus to AC based on your proficiency in the armor you're wearing, even if the drakeheart mutagen has a higher item bonus. While under its effects, you take a –1 penalty to Will saves, Reflex saves, and all skill checks to Recall Knowledge. As a single action, you can burn through the remaining duration of the Mutagen to stride twice.",
+      "image": "img_692e549a-23cb-488a-a975-960cc22b1b82.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
       },
-      "price": 12,
-      "weight": 0.1,
       "traits": [
         "Alchemical",
         "Consumable",
         "Elixir",
         "Mutagen"
       ],
-      "description": "Your skin grows scales like a drake, and your eyesight become sharp and your pupils slitted, but your mind and reflexes slow. You gain a +5 Item bonus to AC, a Dexterity cap of +2 (as usual, use your lowest Dexterity cap if you have more than one), and a +2 item bonus to Perception checks. If you're wearing armor, you still calculate your proficiency bonus to AC based on your proficiency in the armor you're wearing, even if the drakeheart mutagen has a higher item bonus. While under its effects, you take a –1 penalty to Will saves, Reflex saves, and all skill checks to Recall Knowledge. As a single action, you can burn through the remaining duration of the Mutagen to stride twice."
+      "price": 12,
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "drakeheart-mutagen",
+        "note": "+5 item AC, +2 item Perception; Dex cap +2 & −1 Will/Reflex/RK penalties (see effect)"
+      },
+      "id": "moderate-drakeheart-mutagen"
     },
     {
       "id": "moonlit-chain",
@@ -8314,13 +8399,6 @@
       }
     },
     {
-      "id": "mothers-amulet",
-      "name": "Mother's Amulet",
-      "traits": [
-        "Implement"
-      ],
-      "weight": 0.1,
-      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you.",
       "reactions": [
         {
           "name": "Amulet's Abeyance",
@@ -8331,24 +8409,53 @@
           "triggerType": "damaged-any",
           "description": "You forcefully present your amulet to turn away harm. You or a target ally within 15 feet gain resistance to all damage against the triggering damage. The resistance is equal to 2 + your level."
         }
-      ]
+      ],
+      "image": "img_adfd743f-17dc-4fb5-8c22-567c82c22403.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "name": "Mother's Amulet",
+      "description": "A blood-red ruby set in irridescent metal, the last gift your mother gave you.",
+      "traits": [
+        "Implement"
+      ],
+      "weight": 0.1,
+      "id": "mothers-amulet"
     },
     {
-      "id": "mysterious-blue-orb",
+      "artifact": {
+        "tiers": []
+      },
       "name": "Mysterious Blue Orb",
-      "weight": 1,
+      "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him.",
+      "image": "img_65c9c4e5-38f1-4c0c-be77-51b688826e0a.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Artifact",
         "Magical"
       ],
-      "description": "Streaks of blue shimmer within the smoky depths of this perfect crystalline sphere. Both the scintillating shade and emanations of an indefinable power suggest that something slumbers within. When all is quiet, Blu can feel it pulling at him.",
-      "artifact": {
-        "tiers": []
-      }
+      "weight": 1,
+      "id": "mysterious-blue-orb"
     },
     {
-      "id": "oil-of-weightlessness",
       "name": "Oil of Weightlessness",
+      "description": "You can spread this shimmering oil on an item of 1 Bulk or less to make it feel weightless. It has negligible Bulk for 1 hour.",
+      "image": "img_7dd506e9-f3bb-41ba-85a8-bf5711d28aa2.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Oil"
+      ],
+      "price": 6,
+      "weight": 0.1,
       "consumable": {
         "kind": "effect",
         "target": "item",
@@ -8356,49 +8463,52 @@
         "durationMinutes": 60,
         "note": "Negligible Bulk (1 hr)"
       },
-      "price": 6,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Oil"
-      ],
-      "description": "You can spread this shimmering oil on an item of 1 Bulk or less to make it feel weightless. It has negligible Bulk for 1 hour."
+      "id": "oil-of-weightlessness"
     },
     {
-      "id": "padded-armor",
       "name": "Padded Armor",
-      "price": 0.2,
-      "weight": 0.1,
+      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor.",
+      "image": "img_08af988c-26b0-4047-942b-0505497f1e66.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Comfort"
       ],
-      "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor.",
+      "price": 0.2,
+      "weight": 0.1,
       "armor": {
         "category": "light",
         "acBonus": 1,
         "dexCap": 3,
         "strength": 10,
         "group": "cloth"
-      }
+      },
+      "id": "padded-armor"
     },
     {
-      "id": "potion-of-waterbreathing",
       "name": "Potion of Waterbreathing",
+      "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour.",
+      "image": "img_4d7a8046-ce24-444d-abac-9856fc4a99a5.jpg",
+      "imagePosition": {
+        "x": 73,
+        "y": 34
+      },
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Potion"
+      ],
+      "price": 11,
+      "weight": 0.1,
       "consumable": {
         "kind": "effect",
         "effectId": "waterbreathing",
         "durationMinutes": 60,
         "note": "Breathe underwater (1 hr)"
       },
-      "price": 11,
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Potion"
-      ],
-      "description": "This filmy, gray potion reeks of ocean detritus and tastes even worse. After drinking this potion, you gain the ability to breathe underwater for 1 hour."
+      "id": "potion-of-waterbreathing"
     },
     {
       "id": "quenching",
@@ -8412,11 +8522,16 @@
       "description": "This rune counters burning and corrosive agents. Armor with this rune reduces the DC of the flat check to end persistent acid or fire damage affecting you from 15 to 12 (7 with particularly effective assistance)."
     },
     {
-      "id": "rations",
       "name": "Rations",
+      "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day.",
+      "image": "img_13576d45-892f-40bc-920b-aea37a84403c.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.04,
       "weight": 0.1,
-      "description": "While they don't taste amazing, rations offer enough nutrition to keep you from starving. Each pack can feed a single person for a day."
+      "id": "rations"
     },
     {
       "id": "ready",
@@ -8440,18 +8555,23 @@
       ]
     },
     {
-      "id": "reinforced-tower-shield",
-      "name": "Reinforced Tower Shield",
-      "price": 85,
-      "weight": 4,
-      "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
       "shield": {
         "health": 64,
         "breakThreshold": 32,
         "hardness": 8,
         "bonus": 2,
         "speedPenalty": 5
-      }
+      },
+      "name": "Reinforced Tower Shield",
+      "description": "These massive shields can be used to provide cover to nearly the entire body. Due to their size, they are typically made of wood reinforced with metal. You provide cover for allies behind you when you raise a tower shield, and can increase the bonus to AC from +2 to +4 by Taking Cover after Raising the shield.",
+      "image": "img_40c749e4-daa7-4f0b-8ac7-19499d6555b6.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "price": 85,
+      "weight": 4,
+      "id": "reinforced-tower-shield"
     },
     {
       "id": "resilient",
@@ -8489,29 +8609,39 @@
       ]
     },
     {
-      "id": "rope-50ft",
       "name": "Rope (50ft)",
+      "description": "Sturdy rope for tying something (or someone) down.",
+      "image": "img_9cd233ed-b3ef-4277-9983-bca097b37b14.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.05,
       "weight": 0.1,
-      "description": "Sturdy rope for tying something (or someone) down."
+      "id": "rope-50ft"
     },
     {
-      "id": "rust-scrub",
       "name": "Rust Scrub",
+      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known.",
+      "image": "img_55200abc-e1cc-404f-81ab-2b0e729d19a7.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Uncommon"
+      ],
+      "price": 2,
+      "weight": 0.1,
       "consumable": {
         "kind": "effect",
         "target": "item",
         "transient": true,
         "note": "Restore 2d4 HP to rust damage (GM adjudicates)"
       },
-      "price": 2,
-      "weight": 0.1,
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Uncommon"
-      ],
-      "description": "This salt scrub is infused with citron juice and alchemical ingredients that allow it to fight rust on metallic equipment. One application can be used to restore 2d4 Hit Points to an item that has been damaged by rust. The GM determines what portion of damage to an item was caused by rust if that value isn't known."
+      "id": "rust-scrub"
     },
     {
       "id": "rusty-broken-full-plate-armor",
@@ -8521,16 +8651,7 @@
       "description": "Large red rubies you pried from a statue of Xar-Azmak."
     },
     {
-      "id": "salve-of-antiparalysis",
       "name": "Salve of Antiparalysis",
-      "weight": 0.1,
-      "traits": [
-        "Consumable",
-        "Healing",
-        "Magical",
-        "Oil"
-      ],
-      "description": "Applying this filmy salve to a creature helps it overcome magical paralysis. Activate (one-action, manipulate); held in 2 hands. The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22).",
       "variants": [
         {
           "level": 6,
@@ -8544,11 +8665,23 @@
           "price": 325,
           "effect": "If the creature is petrified, it returns to normal, and for removing paralysis the salve's counteract modifier is +31 and its counteract rank is 6th."
         }
-      ]
+      ],
+      "description": "Applying this filmy salve to a creature helps it overcome magical paralysis. Activate (one-action, manipulate); held in 2 hands. The salve attempts to counteract the paralysis (counteract rank 3rd, counteract modifier +22).",
+      "image": "img_a54fd3b2-256e-4484-a79a-8b5e3325861a.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Consumable",
+        "Healing",
+        "Magical",
+        "Oil"
+      ],
+      "weight": 0.1,
+      "id": "salve-of-antiparalysis"
     },
     {
-      "id": "sanitizing-pin",
-      "name": "Sanitizing Pin",
       "talisman": {
         "affixTo": "armor",
         "activation": {
@@ -8563,15 +8696,22 @@
           }
         }
       },
-      "price": 7,
-      "weight": 0,
+      "name": "Sanitizing Pin",
+      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead.",
+      "image": "img_bc9cb59f-2455-4072-91db-3ecefd1ede4f.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Consumable",
         "Magical",
         "Talisman",
         "Uncommon"
       ],
-      "description": "This pin includes a piece of gauze wrapped around a dried herbal poultice. When you activate the sanitizing pin, the poultice dissolves and bolsters your body's defense against poison or disease. You gain a +2 status bonus on your Fortitude save against the initial exposure to the affliction. If you roll a critical failure on the triggering attempt, you get a failure instead."
+      "price": 7,
+      "weight": 0,
+      "id": "sanitizing-pin"
     },
     {
       "id": "scroll-of-cleanse-affliction",
@@ -8627,40 +8767,34 @@
       "description": "Shadow runes make armor lighter and softer. While wearing the etched armor, you gain a +1 item bonus to Stealth checks."
     },
     {
-      "id": "shark-tooth-charm",
-      "name": "Shark Tooth Charm",
-      "price": 23,
-      "weight": 0,
-      "traits": [
-        "Consumable",
-        "Magical",
-        "Talisman"
-      ],
-      "description": "This dried-seaweed bracelet is lined with charms shaped like small shark teeth. When you activate the bracelet, attempt to Escape using Acrobatics with a +1 item bonus to the check. If you roll a success, you get a critical success instead (if you roll a critical failure, you get a failure instead). If you fail the Acrobatics check against a grabbing creature, the creature must either release you as a free action or take 2d8 piercing damage as shark's teeth momentarily emerge from your skin.",
       "talisman": {
         "affixTo": "armor",
         "activation": {
           "cost": 1,
           "trigger": "You attempt to Escape — gain a +1 item bonus to the Acrobatics check; a success becomes a critical success"
         }
-      }
+      },
+      "name": "Shark Tooth Charm",
+      "description": "This dried-seaweed bracelet is lined with charms shaped like small shark teeth. When you activate the bracelet, attempt to Escape using Acrobatics with a +1 item bonus to the check. If you roll a success, you get a critical success instead (if you roll a critical failure, you get a failure instead). If you fail the Acrobatics check against a grabbing creature, the creature must either release you as a free action or take 2d8 piercing damage as shark's teeth momentarily emerge from your skin.",
+      "image": "img_7e023385-5fb5-4909-85a1-54556264ea3c.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Talisman"
+      ],
+      "price": 23,
+      "weight": 0,
+      "id": "shark-tooth-charm"
     },
     {
-      "id": "shuriken",
       "name": "Shuriken",
-      "price": 2,
-      "weight": 0,
-      "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
-      "traits": [
-        "Agile",
-        "Monk",
-        "Thrown",
-        "Uncommon"
-      ],
       "strikes": {
         "proficiency": "simple",
         "type": "ranged",
-        "action": 1,
         "damage": "1d4",
         "range": "20ft",
         "traits": [
@@ -8668,18 +8802,26 @@
           "Agile",
           "Monk",
           "Thrown"
-        ]
-      }
+        ],
+        "actionCount": 1
+      },
+      "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
+      "image": "img_42445a59-85ec-4017-96c6-68be682b8807.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Agile",
+        "Monk",
+        "Thrown",
+        "Uncommon"
+      ],
+      "price": 2,
+      "weight": 0,
+      "id": "shuriken"
     },
     {
-      "id": "skeleton-key",
-      "name": "Skeleton Key",
-      "price": 125,
-      "traits": [
-        "Magical"
-      ],
-      "weight": 0,
-      "description": "A grinning skull tops the bow of this macabre key. This key can be used in place of a thieves' toolkit when attempting to Pick a Lock, and it grants a +1 item bonus to the Thievery check. If the skeleton key becomes broken due to a critical failure on the check, it works as a normal thieves' toolkit and loses its benefits until repaired.",
       "freeActions": [
         {
           "name": "Loosen Lock",
@@ -8700,7 +8842,20 @@
         "quantity": 1,
         "weight": 0,
         "description": "A skull-topped metal shrieking key appears to be a skeleton key, useful in place of thieves' tools when attempting to Pick a Lock. A shrieking key has no activation, however. When you use it to Pick a Lock, the key emits a loud shriek audible for 500 feet despite ambient noise. Physical barriers still block or muffle the shriek as normal. You also take a –2 circumstance penalty to the Thievery check rather than enjoying a bonus. After you attempt such a check with the key the first time, it magically attaches to you, returning to your possession if discarded. To use another device to Pick a Lock, you must first succeed at a DC 20 Will save."
-      }
+      },
+      "name": "Skeleton Key",
+      "description": "A grinning skull tops the bow of this macabre key. This key can be used in place of a thieves' toolkit when attempting to Pick a Lock, and it grants a +1 item bonus to the Thievery check. If the skeleton key becomes broken due to a critical failure on the check, it works as a normal thieves' toolkit and loses its benefits until repaired.",
+      "image": "img_80fd6fb1-0fe6-4999-98bb-b458aa47e795.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Magical"
+      ],
+      "price": 125,
+      "weight": 0,
+      "id": "skeleton-key"
     },
     {
       "id": "slick",
@@ -8714,26 +8869,36 @@
       "description": "The defenses provided by this rune make it harder for foes to grab you. While wearing the etched armor, you gain a +1 item bonus to Acrobatics checks to Escape and to Squeeze."
     },
     {
-      "id": "soap",
       "name": "Soap",
+      "description": "Scrub a dub dub",
+      "image": "img_9593c3f4-28d3-4b6a-ba2b-22f1e50ee08c.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.02,
       "weight": 0,
-      "description": "Scrub a dub dub"
+      "id": "soap"
     },
     {
-      "id": "spacious-pouch",
       "name": "Spacious Pouch",
-      "price": 75,
-      "weight": 1,
+      "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
+      "image": "img_a0202de2-469b-4cfe-8d1b-8d1e9ea71df6.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Extradimensional",
         "Magical"
       ],
-      "description": "Though it appears to be a cloth bag decorated with panels of richly colored silk or stylish embroidery, a spacious pouch opens into a magical space larger than its outside dimensions. The Bulk held inside the bag doesn't change the Bulk of the spacious pouch itself. The amount of Bulk the bag's extradimensional space can hold depends on its type. You can Interact with the spacious pouch to stow items in it or remove them just like a mundane sack. Though the bag can hold a great amount of material, an object still needs to be able to fit through the opening of the sack to be stored inside. If the bag is overloaded or broken, it ruptures and is ruined, causing the items inside to be lost forever. If it's turned inside out, the items inside spill out unharmed, but the bag must be put right before it can be used again. A living creature placed inside the bag has enough air for 10 minutes before it begins to suffocate, and it can attempt to Escape against a DC of 13. An item inside the bag provides no benefits unless it's retrieved first. An item in the bag can't be detected by magic that detects only things on the same plane.",
+      "price": 75,
+      "weight": 1,
       "container": {
         "capacity": 25,
         "ignored": 25
-      }
+      },
+      "id": "spacious-pouch"
     },
     {
       "id": "spiked-steel-shield",
@@ -8876,31 +9041,30 @@
       ]
     },
     {
-      "id": "thieves-toolkit",
       "name": "Thieves' Toolkit",
+      "description": "You need a thieves' toolkit to Pick Locks or Disable Devices (of some types) using the Thievery skill. If your thieves' toolkit is broken, you can repair it by replacing the lock picks with replacement picks appropriate to your toolkit; this doesn't require using the Repair action. If you wear your thieves' toolkit, you can draw and replace it as part of the action that uses it.",
+      "image": "img_f51a3a26-ba3d-4d1c-abf9-804bd840e350.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 3,
       "weight": 0.1,
-      "description": "You need a thieves' toolkit to Pick Locks or Disable Devices (of some types) using the Thievery skill. If your thieves' toolkit is broken, you can repair it by replacing the lock picks with replacement picks appropriate to your toolkit; this doesn't require using the Repair action. If you wear your thieves' toolkit, you can draw and replace it as part of the action that uses it."
+      "id": "thieves-toolkit"
     },
     {
-      "id": "torch",
       "name": "Torch",
+      "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit.",
+      "image": "img_f9d51ca7-1eb7-45da-97d3-90b86dc37b51.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.01,
       "weight": 0.1,
-      "description": "A torch sheds bright light in a 20-foot radius (and dim light to the next 20 feet) for 1 hour. It can be used as an improvised weapon that deals 1d4 bludgeoning damage plus 1 fire damage when lit."
+      "id": "torch"
     },
     {
-      "id": "vangloris-tattoo",
-      "name": "Vangloris Tattoo",
-      "price": 60,
-      "weight": 0,
-      "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Transmutation"
-      ],
-      "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
       "actions": [
         {
           "name": "Cast Ventriloquism",
@@ -8913,17 +9077,25 @@
           ],
           "description": "Frequency once per day; Duration 10 minutes. Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion."
         }
-      ]
+      ],
+      "name": "Vangloris Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is associated with divination and insight. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Ventriloquism once per day. (Usage: tattooed on the body.)",
+      "image": "img_b7a8c519-1f0b-4b8f-a67f-d6c59334b2a1.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "vangloris-tattoo"
     },
     {
-      "id": "vocoder-of-invisibility",
-      "name": "Vocoder of Invisibility",
-      "price": 50,
-      "weight": 1,
-      "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
-      "traits": [
-        "Magical"
-      ],
       "actions": [
         {
           "name": "Unseen Din",
@@ -8935,7 +9107,20 @@
           ],
           "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
         }
-      ]
+      ],
+      "name": "Vocoder of Invisibility",
+      "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
+      "image": "img_27e90a4f-7446-4ff9-a02c-a10d2c5798de.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
+      "traits": [
+        "Magical"
+      ],
+      "price": 50,
+      "weight": 1,
+      "id": "vocoder-of-invisibility"
     },
     {
       "id": "wand-of-breathe-fire",
@@ -8974,11 +9159,16 @@
       }
     },
     {
-      "id": "waterskin",
       "name": "Waterskin",
+      "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature.",
+      "image": "img_6524db6d-a735-468d-9ae1-c384ed3085ac.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "price": 0.05,
       "weight": 0.1,
-      "description": "When it's full, a waterskin contains roughly 1 day's worth of water for a Small or Medium creature."
+      "id": "waterskin"
     },
     {
       "id": "weapon-potency",
@@ -9055,8 +9245,6 @@
       }
     },
     {
-      "id": "wolf-fang",
-      "name": "Wolf Fang",
       "talisman": {
         "affixTo": "weapon",
         "activation": {
@@ -9070,41 +9258,23 @@
           }
         }
       },
-      "price": 3,
-      "weight": 0,
+      "name": "Wolf Fang",
+      "description": "This wolf canine is bound in a strip of leather and tied to a buckle or strap on a suit of armor. When the fang is affixed to a weapon and you succesfully trip a foe, you can activate it to deal bludgeoning damage equal to your Strength modifier to the target of your Trip.",
+      "image": "img_b96abb8d-09ce-4b86-9017-40b0b52a96dc.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
         "Consumable",
         "Magical",
         "Talisman"
       ],
-      "description": "This wolf canine is bound in a strip of leather and tied to a buckle or strap on a suit of armor. When the fang is affixed to a weapon and you succesfully trip a foe, you can activate it to deal bludgeoning damage equal to your Strength modifier to the target of your Trip."
+      "price": 3,
+      "weight": 0,
+      "id": "wolf-fang"
     },
     {
-      "id": "xanderghuls-flawless-hammer",
-      "name": "Xanderghul's Flawless Hammer",
-      "weight": 2,
-      "traits": [
-        "Artifact",
-        "Staff",
-        "Unique",
-        "Magical",
-        "Reach",
-        "Shove"
-      ],
-      "description": "At the height of the ancient Thassilonian Empire Emperor Xin crafted seven Alara'quin, magical weapons of extraordinary power. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the Runelord of Pride.",
-      "strikes": {
-        "proficiency": "simple",
-        "type": "melee",
-        "action": 1,
-        "damage": "1d12",
-        "attackStat": "spellAttackOrMartial",
-        "traits": [
-          "Attack",
-          "Melee",
-          "Reach",
-          "Shove"
-        ]
-      },
       "reactions": [
         {
           "name": "Dominant Emotion (Pride)",
@@ -9169,7 +9339,37 @@
             ]
           }
         ]
-      }
+      },
+      "name": "Xanderghul's Flawless Hammer",
+      "strikes": {
+        "attackStat": "spellAttackOrMartial",
+        "proficiency": "simple",
+        "type": "melee",
+        "damage": "1d12",
+        "traits": [
+          "Attack",
+          "Melee",
+          "Reach",
+          "Shove"
+        ],
+        "actionCount": 1
+      },
+      "description": "At the height of the ancient Thassilonian Empire Emperor Xin crafted seven Alara'quin, magical weapons of extraordinary power. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the Runelord of Pride.",
+      "image": "img_79b82e52-92b8-4492-b74f-8f618abb4cdd.jpg",
+      "imagePosition": {
+        "x": 34,
+        "y": 7
+      },
+      "traits": [
+        "Artifact",
+        "Staff",
+        "Unique",
+        "Magical",
+        "Reach",
+        "Shove"
+      ],
+      "weight": 2,
+      "id": "xanderghuls-flawless-hammer"
     }
   ],
   "spell": [
@@ -11477,11 +11677,88 @@
   ],
   "image": [
     {
+      "id": "img_08af988c-26b0-4047-942b-0505497f1e66.jpg",
+      "name": "paddedArmor.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662850010
+    },
+    {
+      "id": "img_0cdef245-0b76-4455-b68b-f8e7057165af.jpg",
+      "name": "geckopotion.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662645865
+    },
+    {
+      "id": "img_0d2f9669-5df8-4505-888a-070fc5ab1b9e.jpg",
+      "name": "eagleeyeelixir.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662108693
+    },
+    {
       "id": "img_0f2cd2ea-d783-46dc-9cea-364591eb2de3.jpg",
       "name": "jade.png",
       "folder": "portraits",
       "mimeType": "image/jpeg",
       "createdAt": 1779771332058
+    },
+    {
+      "id": "img_0f8bd76e-6508-47aa-a56b-4798497f931f.jpg",
+      "name": "Healing_Potion.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782624093457
+    },
+    {
+      "id": "img_117d9b98-0345-4e1d-bc16-fd3f7aeee8e6.jpg",
+      "name": "beaconshot.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782660844853
+    },
+    {
+      "id": "img_13576d45-892f-40bc-920b-aea37a84403c.jpg",
+      "name": "rations.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782664530354
+    },
+    {
+      "id": "img_1c322d27-2d95-427a-adaf-8404c6151029.jpg",
+      "name": "bedrool.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662565856
+    },
+    {
+      "id": "img_1fe88669-d3ed-4caa-becf-b8554069292b.jpg",
+      "name": "holywater.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782659863114
+    },
+    {
+      "id": "img_21cda87e-9b8f-4b82-aae8-1991a4ee4c81.jpg",
+      "name": "dragon-turtle-plate.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782659549860
+    },
+    {
+      "id": "img_27e90a4f-7446-4ff9-a02c-a10d2c5798de.jpg",
+      "name": "minimoog.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782686528548
+    },
+    {
+      "id": "img_34daeecc-7d8d-4c4f-b939-4726fb4ca655.jpg",
+      "name": "chalk.jpg",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662576996
     },
     {
       "id": "img_34fe1aba-bbd1-4dc4-bfe7-57ff9d357e19.jpg",
@@ -11491,11 +11768,60 @@
       "createdAt": 1782506606990
     },
     {
+      "id": "img_364bb0cc-3407-41ab-ab38-aa54b205d3e0.jpg",
+      "name": "Elixir_of_Life.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782624173031
+    },
+    {
+      "id": "img_38b8ac54-ff42-465f-8bdc-34e19419de38.jpg",
+      "name": "antidote.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782660363603
+    },
+    {
       "id": "img_3f74e21b-b3c3-4323-ad07-d9b3cbadd7d8.jpg",
       "name": "lesh.png",
       "folder": "portraits",
       "mimeType": "image/jpeg",
       "createdAt": 1779771267973
+    },
+    {
+      "id": "img_3f9d87d1-6113-4f77-9bbd-781784b514e9.jpg",
+      "name": "anticorrosion.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782660226192
+    },
+    {
+      "id": "img_40c749e4-daa7-4f0b-8ac7-19499d6555b6.jpg",
+      "name": "Tower_Shield.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662920851
+    },
+    {
+      "id": "img_42445a59-85ec-4017-96c6-68be682b8807.jpg",
+      "name": "shuriken-icon.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782686572996
+    },
+    {
+      "id": "img_4d7a8046-ce24-444d-abac-9856fc4a99a5.jpg",
+      "name": "waterbreathingpotion.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782623954941
+    },
+    {
+      "id": "img_55200abc-e1cc-404f-81ab-2b0e729d19a7.jpg",
+      "name": "saltscrub.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782687356620
     },
     {
       "id": "img_5efb6fe3-c69e-4ec2-82c9-c04c6a24ec7f.jpg",
@@ -11505,11 +11831,116 @@
       "createdAt": 1779771360957
     },
     {
+      "id": "img_634d15fc-49e6-4f75-b204-96bfdfc7b18f.jpg",
+      "name": "healerstoolkit.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662658820
+    },
+    {
+      "id": "img_6524db6d-a735-468d-9ae1-c384ed3085ac.jpg",
+      "name": "Waterskin.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782685901801
+    },
+    {
+      "id": "img_65c9c4e5-38f1-4c0c-be77-51b688826e0a.jpg",
+      "name": "Dragon_ORBS_test.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782663008986
+    },
+    {
+      "id": "img_692e549a-23cb-488a-a975-960cc22b1b82.jpg",
+      "name": "drakeheart.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782664207831
+    },
+    {
+      "id": "img_69c400d5-f260-48c2-b88f-f389e734a185.jpg",
+      "name": "crafters-eyepiece.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782661182540
+    },
+    {
+      "id": "img_6f8e450b-1737-4136-847f-4bca3b7e5084.jpg",
+      "name": "longbow.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782685675952
+    },
+    {
+      "id": "img_6f901c3d-945d-4592-b25f-08f42f8a1231.jpg",
+      "name": "EyeGarnets.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662124050
+    },
+    {
+      "id": "img_75ec05a0-b47f-4aa0-8dfe-d6161cd3a757.jpg",
+      "name": "antiplague.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782660535351
+    },
+    {
+      "id": "img_79b82e52-92b8-4492-b74f-8f618abb4cdd.jpg",
+      "name": "xfh.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782624614148
+    },
+    {
+      "id": "img_7dd506e9-f3bb-41ba-85a8-bf5711d28aa2.jpg",
+      "name": "oow.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782659892018
+    },
+    {
+      "id": "img_7e023385-5fb5-4909-85a1-54556264ea3c.jpg",
+      "name": "shark-tooth.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782687475566
+    },
+    {
       "id": "img_7ff08743-6d95-4ecf-960d-210c7aca0192.jpg",
       "name": "fetch.png",
       "folder": "portraits",
       "mimeType": "image/jpeg",
       "createdAt": 1779771348099
+    },
+    {
+      "id": "img_80fd6fb1-0fe6-4999-98bb-b458aa47e795.jpg",
+      "name": "Skeleton_Key.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782663487667
+    },
+    {
+      "id": "img_8f6168fb-f26b-4711-87fa-6f60c12c0172.jpg",
+      "name": "chalk.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782662628156
+    },
+    {
+      "id": "img_9593c3f4-28d3-4b6a-ba2b-22f1e50ee08c.jpg",
+      "name": "soap.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782685891648
+    },
+    {
+      "id": "img_9cd233ed-b3ef-4277-9983-bca097b37b14.jpg",
+      "name": "rope.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782664565037
     },
     {
       "id": "img_9dc2e46d-1993-40b4-914b-d11cfb522f7a.jpg",
@@ -11519,6 +11950,20 @@
       "createdAt": 1782508231777
     },
     {
+      "id": "img_9f6a4d26-faad-4b77-a5ae-e04c22f46b1e.jpg",
+      "name": "amulet.jpg",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782629258927
+    },
+    {
+      "id": "img_a0202de2-469b-4cfe-8d1b-8d1e9ea71df6.jpg",
+      "name": "spaciousPouch.jpg",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782629028029
+    },
+    {
       "id": "img_a0b98fca-8ea2-4032-9d00-432c95c7a9b9.jpg",
       "name": "blu.png",
       "folder": "portraits",
@@ -11526,11 +11971,88 @@
       "createdAt": 1779771300327
     },
     {
+      "id": "img_a3dc32ca-cf16-493f-9654-ba1ca5fee738.jpg",
+      "name": "lighthammer.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782623987743
+    },
+    {
       "id": "img_a54784ca-564e-401d-9ed0-a6b8b6184b93.jpg",
       "name": "lighthammer.png",
       "folder": "",
       "mimeType": "image/jpeg",
       "createdAt": 1782448616143
+    },
+    {
+      "id": "img_a54fd3b2-256e-4484-a79a-8b5e3325861a.jpg",
+      "name": "antiparalysis.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782663160414
+    },
+    {
+      "id": "img_adfd743f-17dc-4fb5-8c22-567c82c22403.jpg",
+      "name": "amulett.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782663629108
+    },
+    {
+      "id": "img_ae433566-e02e-4886-99e7-d3800ae23d38.jpg",
+      "name": "fullPlate.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782624929017
+    },
+    {
+      "id": "img_b740b700-2ba1-42c7-a60a-930b6b36996c.jpg",
+      "name": "backpack.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782660860880
+    },
+    {
+      "id": "img_b7a8c519-1f0b-4b8f-a67f-d6c59334b2a1.jpg",
+      "name": "vangloris.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782685447861
+    },
+    {
+      "id": "img_b96abb8d-09ce-4b86-9017-40b0b52a96dc.jpg",
+      "name": "Wolf_Fang.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782624673433
+    },
+    {
+      "id": "img_bc9cb59f-2455-4072-91db-3ecefd1ede4f.jpg",
+      "name": "sanitizingpin.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782687289675
+    },
+    {
+      "id": "img_bf9779ab-8778-4fc5-bdba-f173adee6b42.jpg",
+      "name": "healers-gloves.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782661100030
+    },
+    {
+      "id": "img_c346ba55-4fd1-4c42-8e22-e124522ad6fd.jpg",
+      "name": "horn-of-rust.jpg",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782629312187
+    },
+    {
+      "id": "img_d339ae79-1333-4820-a31b-cb0f5cef3b66.jpg",
+      "name": "Blade_Byrnie.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782629569991
     },
     {
       "id": "img_d38a4b39-6a51-422d-bc95-cedc2260b6aa.jpg",
@@ -11547,11 +12069,46 @@
       "createdAt": 1782508485963
     },
     {
+      "id": "img_e8056ecd-8058-42d5-960e-456d36afa4e4.jpg",
+      "name": "gourd.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782663927655
+    },
+    {
+      "id": "img_f2d51800-1178-4ded-9676-30b7df2ecbcb.jpg",
+      "name": "flintsteel.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782664001300
+    },
+    {
+      "id": "img_f51a3a26-ba3d-4d1c-abf9-804bd840e350.jpg",
+      "name": "Thievestoolkit.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782686513790
+    },
+    {
+      "id": "img_f66ec320-521e-4afc-937f-994f5abe1b21.jpg",
+      "name": "lighthammer.webp",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782623832154
+    },
+    {
       "id": "img_f7a7101f-2261-4962-83f8-4e44e0162deb.jpg",
       "name": "pick.webp",
       "folder": "",
       "mimeType": "image/jpeg",
       "createdAt": 1782508403774
+    },
+    {
+      "id": "img_f9d51ca7-1eb7-45da-97d3-90b86dc37b51.jpg",
+      "name": "torch.png",
+      "folder": "",
+      "mimeType": "image/jpeg",
+      "createdAt": 1782664546701
     }
   ],
   "theme": [
