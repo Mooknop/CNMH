@@ -8336,14 +8336,26 @@
           "label": "Greater",
           "name": "Cloak of Repute (Greater)",
           "price": 1300,
-          "effect": "The item bonus is +2. You can activate the cloak twice per day."
+          "effect": "The item bonus is +2. You can activate the cloak twice per day.",
+          "overrides": {
+            "bonus": [
+              "diplomacy",
+              2
+            ]
+          }
         },
         {
           "level": 17,
           "label": "Major",
           "name": "Cloak of Repute (Major)",
           "price": 21750,
-          "effect": "The item bonus is +3. You can activate the cloak three times per day. If you roll a critical failure on your Diplomacy check when you activate the cloak, you get a failure instead."
+          "effect": "The item bonus is +3. You can activate the cloak three times per day. If you roll a critical failure on your Diplomacy check when you activate the cloak, you get a failure instead.",
+          "overrides": {
+            "bonus": [
+              "diplomacy",
+              3
+            ]
+          }
         }
       ],
       "id": "cloak-of-repute"
