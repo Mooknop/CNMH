@@ -140,10 +140,14 @@ vi.mock('./GiveGoldModal', () => ({
 const mockCharacter = { id: '1', name: 'Test Character', level: 1 };
 
 // Grid tiles are draggable buttons: a pointer-down with no movement followed by
-// a pointer-up is treated as a tap (opens the ItemModal).
+// a pointer-up is treated as a tap (opens the ItemModal). A real tap also emits
+// a trailing synthetic click, which the dnd hook swallows so it can't pass
+// through to the freshly-opened modal (#871) — simulate the full gesture so the
+// one-shot suppressor is consumed and never leaks into the next interaction.
 const tapTile = (el) => {
   fireEvent.pointerDown(el, { clientX: 0, clientY: 0 });
   window.dispatchEvent(new Event('pointerup'));
+  el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 };
 
 beforeEach(() => {

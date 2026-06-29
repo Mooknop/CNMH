@@ -113,6 +113,32 @@ function edgeScroll(x, y, root) {
   else if (y > r.bottom - pad) sc.scrollTop += Math.max(2, (y - (r.bottom - pad)) / 4);
 }
 
+// Swallow the one synthetic `click` a tap generates after we open something on
+// `pointerup`. Without this, a tile tap that opens the ItemModal lets the same
+// physical gesture's trailing click fall through onto whatever modal button has
+// just mounted under the finger (accidental Drop/Give). We arm a one-shot,
+// capture-phase listener that eats the next click, with a timeout fallback so a
+// tap that never produced a click can't leave the swallow armed forever. A new
+// arm supersedes a stale one, so a previous tap's suppressor can never outlive
+// the next gesture.
+let disarmClickSwallow = null;
+function suppressNextClick() {
+  if (disarmClickSwallow) disarmClickSwallow();
+  const swallow = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    done();
+  };
+  const done = () => {
+    clearTimeout(timer);
+    document.removeEventListener('click', swallow, true);
+    disarmClickSwallow = null;
+  };
+  const timer = setTimeout(done, 700);
+  document.addEventListener('click', swallow, true);
+  disarmClickSwallow = done;
+}
+
 // Hook for a draggable item. opts: { item, onTap, disabled }
 export function useDraggable({ item, onTap, disabled }) {
   const dnd = useDnd();
@@ -180,7 +206,14 @@ export function useDraggable({ item, onTap, disabled }) {
         const wasDragging = s.dragging;
         const moved = Math.hypot(s.x - s.x0, s.y - s.y0);
         if (wasDragging) dnd.finish();
-        else if (!moved || moved < 6) onTap && onTap(item);
+        else if (!moved || moved < 6) {
+          // A tap opens the modal on pointerup; swallow this gesture's trailing
+          // synthetic click so it can't pass through onto a modal button.
+          if (onTap) {
+            suppressNextClick();
+            onTap(item);
+          }
+        }
         cleanup();
       };
 
