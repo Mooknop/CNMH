@@ -210,10 +210,10 @@ describe('getShopsForLocation', () => {
 });
 
 describe('resolveShopWares', () => {
-  it('resolves each ware ref to its catalog item, stamping a wareKey', () => {
+  it('resolves each ware ref to its catalog item, stamping a wareKey and baseName', () => {
     const wares = resolveShopWares('curious-goblin', shops, catalogMap);
     expect(wares).toEqual([
-      { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1, wareKey: 'spellbook' },
+      { id: 'spellbook', name: 'Spellbook', baseName: 'Spellbook', price: 10, weight: 1, wareKey: 'spellbook' },
     ]);
   });
 
@@ -436,7 +436,7 @@ describe('spellOfferingSummary', () => {
 
 // ── Player browse grouping (#857 S2) ────────────────────────────────────────
 describe('groupWares', () => {
-  it('collapses variants of one item into a single cheapest-first group', () => {
+  it('collapses variants of one item into a single cheapest-first group, headlined by base name (#880)', () => {
     const wares = resolveShopWares(
       's',
       { s: { wares: [{ ref: 'tonic', level: 3 }, { ref: 'tonic', level: 1 }] } },
@@ -444,15 +444,23 @@ describe('groupWares', () => {
     );
     const groups = groupWares(wares);
     expect(groups).toHaveLength(1);
-    expect(groups[0]).toMatchObject({ ref: 'tonic', name: 'Minor Tonic', from: 4, formCount: 2 });
+    // Multi-form group headlines the catalog base name ("Tonic"), not the
+    // cheapest variant's merged name ("Minor Tonic").
+    expect(groups[0]).toMatchObject({ ref: 'tonic', name: 'Tonic', from: 4, formCount: 2 });
     expect(groups[0].forms.map((f) => f.wareKey)).toEqual(['tonic@1', 'tonic@3']); // cheapest-first
     expect(groups[0].forms.map((f) => f.price)).toEqual([4, 12]);
   });
 
-  it('keeps a single-variant item as a one-form group', () => {
+  it('keeps a single-variant item as a one-form group, headlined by its own name', () => {
     const groups = groupWares(resolveShopWares('curious-goblin', shops, catalogMap));
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({ ref: 'spellbook', name: 'Spellbook', from: 10, formCount: 1 });
+  });
+
+  it('headlines a single stocked variant by its own name, not the base name (#880)', () => {
+    // One form only → the per-variant name ("Lesser Tonic") is the useful label.
+    const groups = groupWares(resolveShopWares('s', { s: { wares: [{ ref: 'tonic', level: 3 }] } }, catalogMap));
+    expect(groups[0]).toMatchObject({ ref: 'tonic', name: 'Lesser Tonic', formCount: 1 });
   });
 
   it('preserves first-appearance group order across distinct items', () => {

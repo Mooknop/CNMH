@@ -132,6 +132,10 @@ export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
         }
       }
 
+      // Keep the catalog item's own name as `baseName` so groupWares can
+      // headline a multi-form ladder by its base ("Tonic") rather than the
+      // cheapest variant's merged name ("Minor Tonic") (#880).
+      resolved.baseName = item.name;
       const override = typeof w.price === 'number' && Number.isFinite(w.price) ? w.price : null;
       const price = override != null ? override : resolved.price;
       resolved.price = Number.isFinite(price) ? price : 0;
@@ -273,9 +277,10 @@ export function spellOfferingSummary(ware, spells) {
 //
 // Each form is the untouched resolved ware — it keeps its `wareKey`, so
 // shopCart/useBuyItems add and price it exactly as the flat list does. The group
-// `name`/`traits`/`description` are taken from the cheapest form: production
-// resolveShopWares merges a variant's own name in, so a renamed ladder shows its
-// cheapest variant's name (the per-form label/level disambiguates in the UI).
+// `traits`/`description` are taken from the cheapest form. The headline `name`
+// is the catalog item's `baseName` for a multi-form group (so a renamed Tonic
+// ladder reads "Tonic", not "Minor Tonic" — #880) and the cheapest form's own
+// name for a single-form group (the per-form label/level disambiguates in the UI).
 export function groupWares(resolvedWares) {
   const order = [];
   const byId = new Map();
@@ -294,9 +299,10 @@ export function groupWares(resolvedWares) {
       .slice()
       .sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
     const head = forms[0];
+    const name = forms.length > 1 && head.baseName ? head.baseName : head.name;
     return {
       ref: key,
-      name: head.name,
+      name,
       traits: Array.isArray(head.traits) ? head.traits : [],
       description: head.description,
       forms,
