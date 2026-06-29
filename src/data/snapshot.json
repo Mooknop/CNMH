@@ -8173,6 +8173,15 @@
       },
       "price": 5,
       "weight": 1,
+      "variants": [
+        {
+          "level": 3,
+          "label": "Expanded",
+          "name": "Healer's Toolkit (Expanded)",
+          "price": 50,
+          "effect": "Expanded healer's toolkits provide a +1 item bonus to Medicine checks to Administer First Aid, Treat Disease, Treat Poison, or Treat Wounds."
+        }
+      ],
       "id": "healers-toolkit"
     },
     {
@@ -9094,6 +9103,151 @@
       "price": 60,
       "weight": 0,
       "id": "vangloris-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Tailwind",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Duration 1 hour. The wind at your back pushes you to find new horizons. You gain a +10-foot status bonus to your Speed."
+        }
+      ],
+      "name": "Avaria Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Tailwind once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "avaria-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Vanishing Tracks",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Area 20-foot emanation; Duration 1 hour. The DC of checks to Track you and up to 10 creatures of your choice in the area gains a +4 status bonus, or is equal to your spell DC, whichever results in a higher DC."
+        }
+      ],
+      "name": "Avidais Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Vanishing Tracks once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Abjuration"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "avidais-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Liberating Command",
+          "actionCount": 1,
+          "traits": [
+            "Auditory",
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Range 60 feet; Targets 1 creature. You call out a liberating cry, urging an ally to break free of an effect that holds them in place. If the target is grabbed, immobilized, or restrained, it can immediately use a reaction to attempt to Escape."
+        }
+      ],
+      "name": "Carnasia Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Liberating Command once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Enchantment"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "carnasia-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Thoughtful Gift",
+          "actionCount": 1,
+          "traits": [
+            "Conjuration",
+            "Teleportation"
+          ],
+          "description": "Frequency once per day; Range 120 feet; Targets 1 willing creature. You teleport one object of light or negligible Bulk held in your hand to the target. The object appears in the target's hand if they have a free hand, or at their feet if they don't. The spell fails if the target is unconscious, refuses your gift, or if the spell would teleport a creature."
+        }
+      ],
+      "name": "Idolis Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Thoughtful Gift once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Conjuration"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "idolis-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Concordant Choir",
+          "actionCount": "One to Three",
+          "traits": [
+            "Concentrate",
+            "Sonic"
+          ],
+          "description": "Frequency once per day; Range 30 feet; Saving Throw basic Fortitude. You unleash a dangerous consonance of reverberating sound. 1 action: 1d4 sonic damage to a single enemy. 2 actions (manipulate): 2d4 sonic damage to all creatures in a 10-foot burst. 3 actions (manipulate): 2d4 sonic damage to all creatures in a 30-foot emanation."
+        }
+      ],
+      "name": "Ragario Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Concordant Choir once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Evocation"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "ragario-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Cleanse Cuisine",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day. You transform all food and beverages in the area into delicious fare, changing water into wine or another fine beverage, or enhancing the food's taste to make it a gourmet treat. You can also choose to remove all toxins and contaminations from the food. This spell doesn't prevent future contamination, natural decay, or spoilage, nor does it make the food any more nutritious."
+        }
+      ],
+      "name": "Voratalo Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Cleanse Cuisine once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "voratalo-tattoo"
     },
     {
       "actions": [
