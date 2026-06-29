@@ -150,3 +150,23 @@ export const armorRuneTierSummary = (runes) => {
   if (!runes || typeof runes !== 'object') return '';
   return buildArmorName({ potency: ARMOR_POTENCY[runes.potency]?.bonus || 0, resilient: runes.resilient, base: '' });
 };
+
+// ── Property-rune slots (#857 S6a) ────────────────────────────────────────────
+// The armor mirror of weaponRunes' property-slot helpers: armor holds property
+// runes up to its potency value (+1 = 1 slot, +2 = 2, +3 = 3; no potency = none).
+// Resilient is its own (potency-independent) fundamental slot and never competes.
+// These back the rune-socket derivation + apply guard (utils/runeSockets.js).
+
+/** Property-rune slot capacity for an armor's `runes` block (= potency tier). */
+export const armorPropertySlotCapacity = (runes) =>
+  (runes && typeof runes === 'object' && runes.potency) || 0;
+
+/** Property-rune slots currently filled on an armor (counts string + doc refs). */
+export const usedArmorPropertySlots = (item) =>
+  hasRuneBlock(item) && Array.isArray(item.runes.property)
+    ? item.runes.property.filter(Boolean).length
+    : 0;
+
+/** Free property-rune slots on an armor (capacity − used, floored at 0). */
+export const freeArmorPropertySlots = (item) =>
+  Math.max(0, armorPropertySlotCapacity(item && item.runes) - usedArmorPropertySlots(item));

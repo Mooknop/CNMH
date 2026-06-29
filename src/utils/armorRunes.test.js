@@ -8,6 +8,9 @@ import {
   armorPropertyRunes,
   armorRuneTierSummary,
   hasArmorRuneBlock,
+  armorPropertySlotCapacity,
+  usedArmorPropertySlots,
+  freeArmorPropertySlots,
 } from './armorRunes';
 
 const CHAIN_SHIRT = { name: 'Chain Shirt', price: 5 };
@@ -132,5 +135,21 @@ describe('item helpers', () => {
     expect(armorRuneTierSummary({ potency: 1, resilient: 'resilient' })).toBe('+1 Resilient');
     expect(armorRuneTierSummary({})).toBe('');
     expect(armorRuneTierSummary(null)).toBe('');
+  });
+
+  describe('property-rune slots (#857 S6a)', () => {
+    it('capacity equals the potency tier (0 when un-potent)', () => {
+      expect(armorPropertySlotCapacity({ potency: 2 })).toBe(2);
+      expect(armorPropertySlotCapacity({})).toBe(0);
+      expect(armorPropertySlotCapacity(null)).toBe(0);
+    });
+
+    it('counts used slots and derives free = capacity − used', () => {
+      const armor = { name: 'Plate', runes: { potency: 2, property: ['slick'] } };
+      expect(usedArmorPropertySlots(armor)).toBe(1);
+      expect(freeArmorPropertySlots(armor)).toBe(1);
+      expect(freeArmorPropertySlots({ name: 'Plate', runes: { potency: 1, property: ['slick'] } })).toBe(0);
+      expect(freeArmorPropertySlots({ name: 'Plate' })).toBe(0);
+    });
   });
 });
