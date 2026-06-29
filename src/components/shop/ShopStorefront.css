@@ -383,6 +383,11 @@
   border: 1px solid color-mix(in srgb, var(--gold-mid) 50%, transparent);
   background: color-mix(in srgb, var(--gold-mid) 12%, transparent); color: var(--gold-light);
 }
+/* A filled fundamental that can be upgraded to a higher tier in stock (#879). */
+.ps-socket.is-filled.is-upgradable { cursor: pointer; }
+.ps-socket.is-filled.is-upgradable:hover { border-color: var(--gold-light); background: color-mix(in srgb, var(--gold-mid) 20%, transparent); }
+.ps-socket.is-filled.is-upgradable.is-active { border-style: solid; box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold-mid) 22%, transparent); }
+.ps-socket-up { font-size: 8px; line-height: 1; color: var(--gold-light); }
 .ps-socket.is-empty { border: 1px dashed var(--ps-line); background: var(--ps-void); color: var(--ps-ink3); }
 .ps-socket.is-open { cursor: pointer; border: 1px dashed var(--ps-line); background: var(--ps-void); color: var(--ps-ink2); }
 .ps-socket.is-open:hover { border-color: var(--ps-a-line); background: var(--ps-a-soft); color: var(--ps-ink); }

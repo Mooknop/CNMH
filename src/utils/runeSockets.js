@@ -65,6 +65,25 @@ export const gearSockets = (item) => {
 };
 
 /**
+ * Project a piece of gear as if its staged FUNDAMENTAL runes were already
+ * applied, so the socket board reflects in-progress staging (#879): staging +1
+ * potency on a +0 item opens, in the same visit, the property slot that tier
+ * unlocks. `stagedRunes` is the `socketKey → rune` map for one gear (fundamental
+ * keys are `potency`/`striking`/`resilient`). Staged PROPERTY runes are
+ * deliberately not folded in — they render against the projected sockets via the
+ * caller's staged map, keeping property-socket indices aligned. A staged rune
+ * that won't apply (e.g. a non-upgrade) is skipped. Returns the gear unchanged
+ * when nothing applies.
+ */
+export const projectStagedGear = (gear, stagedRunes) => {
+  if (!gear || !stagedRunes || typeof stagedRunes !== 'object') return gear;
+  return ['potency', 'striking', 'resilient'].reduce((g, key) => {
+    const rune = stagedRunes[key];
+    return rune ? applyRune(g, rune) || g : g;
+  }, gear);
+};
+
+/**
  * The runes in `stock` that can fill `socketType` on `item`: same target, and —
  * for a fundamental socket — the matching fundamental kind. A potency rune only
  * qualifies if it raises the current tier (an upgrade, never a side- or down-

@@ -1,4 +1,4 @@
-import { gearTarget, runeTarget, gearSockets, compatibleRunes, applyRune } from './runeSockets';
+import { gearTarget, runeTarget, gearSockets, compatibleRunes, applyRune, projectStagedGear } from './runeSockets';
 
 // Fixtures — minimal gear + rune docs.
 const weapon = (runes) => ({ uid: 'w1', name: 'Longsword', strikes: [{}], runes });
@@ -69,6 +69,34 @@ describe('compatibleRunes', () => {
   it('striking/resilient socket offers the matching fundamental for the target', () => {
     expect(compatibleRunes(weapon({}), 'striking', stock).map((r) => r.id)).toEqual(['striking']);
     expect(compatibleRunes(armor({}), 'resilient', stock).map((r) => r.id)).toEqual(['resilient']);
+  });
+});
+
+describe('projectStagedGear (#879)', () => {
+  it('applies a staged potency rune, opening the property slot it unlocks', () => {
+    const projected = projectStagedGear(weapon({}), { potency: wPot1 });
+    expect(projected.runes.potency).toBe(1);
+    // +0 → no property sockets; +1 projection → one open property socket.
+    expect(gearSockets(weapon({})).map((s) => s.type)).toEqual(['potency', 'striking']);
+    expect(gearSockets(projected).map((s) => s.type)).toEqual(['potency', 'striking', 'property']);
+  });
+
+  it('applies staged striking (weapon) / resilient (armor) fundamentals', () => {
+    expect(projectStagedGear(weapon({}), { striking }).runes.striking).toBe('striking');
+    expect(projectStagedGear(armor({}), { resilient }).runes.resilient).toBe('resilient');
+  });
+
+  it('does NOT fold in staged property runes (kept for index-aligned staged render)', () => {
+    const projected = projectStagedGear(weapon({ potency: 1 }), { potency: wPot2, 'property:0': vitalizing });
+    expect(projected.runes.potency).toBe(2);
+    expect(projected.runes.property || []).toEqual([]); // property untouched
+  });
+
+  it('skips a staged rune that will not apply, and is a no-op without staging', () => {
+    expect(projectStagedGear(weapon({ potency: 2 }), { potency: wPot1 }).runes.potency).toBe(2); // non-upgrade skipped
+    const gear = weapon({ potency: 1 });
+    expect(projectStagedGear(gear, {})).toBe(gear);
+    expect(projectStagedGear(gear, null)).toBe(gear);
   });
 });
 
