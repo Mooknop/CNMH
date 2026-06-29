@@ -7,6 +7,8 @@ import {
   isShopOpen,
   shopOffersSpellcasting,
   shopOffersRunes,
+  spellItemOfferings,
+  eligibleSpellItems,
 } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
 import { useBuyItems } from '../../hooks/useBuyItems';
@@ -29,6 +31,17 @@ import './ShopStorefront.css';
 const TAB_ACCENT = { wares: 'var(--ember-base)', spellcasting: 'var(--arcane-mid)', runes: 'var(--gold-mid)' };
 const TAB_LABEL = { wares: 'Wares', spellcasting: 'Spells', runes: 'Runes' };
 const TAB_SUB = { wares: 'goods', spellcasting: 'scrolls', runes: 'smithing' };
+
+// The locked Spellcasting Services teaser (#857 S5) — display-only; hiring the
+// keeper to cast/identify/restore is a future feature.
+const SPELL_SERVICES = [
+  { id: 'svc-cast', glyph: '✦', name: 'Cast a spell for you',
+    desc: 'Hire the keeper to cast a spell from their repertoire on your behalf — buffs, divinations, or a door you can’t open.' },
+  { id: 'svc-identify', glyph: '◈', name: 'Identify magic',
+    desc: 'Leave an unknown item overnight and learn what it does, and how to wield it.' },
+  { id: 'svc-restore', glyph: '✚', name: 'Restoration & remedies',
+    desc: 'Pay to mend drained abilities, lift afflictions, or be raised after a very bad day.' },
+];
 
 const wareAccentVar = (group) => `var(--${traitAccent(group)}-mid)`;
 const firstLetter = (s) => String(s || '?').trim().charAt(0).toUpperCase() || '?';
@@ -74,9 +87,32 @@ const StaticTile = ({ group, onSelect }) => (
   </button>
 );
 
-// Wares tab: search + trait-chip filter over the grouped grid. In town a
+// The grouped grid, shared by the Wares and Spellcasting tabs. In town a
 // single-form tile carries a quick + (or "×N in cart"); multi-form items add per
 // form from the takeover preview.
+const WareGrid = ({ groups, label, town, qtyByKey, onSelect, onAdd }) => (
+  <ul className="ps-grid" aria-label={label}>
+    {groups.map((g) => {
+      const single = g.formCount === 1;
+      const qty = single ? qtyByKey[g.forms[0].wareKey] || 0 : 0;
+      return (
+        <li key={g.ref} className="ps-tile">
+          {town ? <DraggableTile group={g} onSelect={onSelect} /> : <StaticTile group={g} onSelect={onSelect} />}
+          {town && single && (
+            qty > 0 ? (
+              <span className="ps-tile-incart" data-testid={`incart-${g.ref}`}>in cart ×{qty}</span>
+            ) : (
+              <button type="button" className="ps-tile-add" aria-label={`add ${g.name}`}
+                disabled={atStockCap(g.forms[0], qty)} onClick={() => onAdd(g.forms[0])}>＋</button>
+            )
+          )}
+        </li>
+      );
+    })}
+  </ul>
+);
+
+// Wares tab: search + trait-chip filter over the grouped grid.
 const WaresTab = ({ groups, town, qtyByKey, onSelect, onAdd }) => {
   const [query, setQuery] = useState('');
   const [trait, setTrait] = useState(null);
@@ -114,26 +150,63 @@ const WaresTab = ({ groups, town, qtyByKey, onSelect, onAdd }) => {
       {shown.length === 0 ? (
         <p className="ps-empty">Nothing on the shelves matches.</p>
       ) : (
-        <ul className="ps-grid" aria-label="wares">
-          {shown.map((g) => {
-            const single = g.formCount === 1;
-            const qty = single ? qtyByKey[g.forms[0].wareKey] || 0 : 0;
-            return (
-              <li key={g.ref} className="ps-tile">
-                {town ? <DraggableTile group={g} onSelect={onSelect} /> : <StaticTile group={g} onSelect={onSelect} />}
-                {town && single && (
-                  qty > 0 ? (
-                    <span className="ps-tile-incart" data-testid={`incart-${g.ref}`}>in cart ×{qty}</span>
-                  ) : (
-                    <button type="button" className="ps-tile-add" aria-label={`add ${g.name}`}
-                      disabled={atStockCap(g.forms[0], qty)} onClick={() => onAdd(g.forms[0])}>＋</button>
-                  )
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <WareGrid groups={shown} label="wares" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
       )}
+    </div>
+  );
+};
+
+// Spellcasting tab (#857 S5): buyable Scrolls & Wands (the generative #812
+// offerings expanded via eligibleSpellItems, grouped + searchable) above the
+// locked "Spellcasting Services" teaser — display-only, a future feature.
+const SpellcastingTab = ({ groups, town, qtyByKey, onSelect, onAdd }) => {
+  const [query, setQuery] = useState('');
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? groups.filter((g) => g.name.toLowerCase().includes(q)) : groups;
+  }, [groups, query]);
+
+  return (
+    <div className="ps-spellcasting">
+      <div className="ps-section">
+        <span className="ps-section-label">Scrolls &amp; Wands</span>
+        <span className="ps-section-count">{groups.length}</span>
+      </div>
+      {groups.length === 0 ? (
+        <p className="ps-empty">The keeper scribes nothing to order right now.</p>
+      ) : (
+        <>
+          <div className="ps-tools">
+            <div className="ps-search">
+              <span className="ps-search-ico" aria-hidden="true">⌕</span>
+              <input type="text" aria-label="search scrolls and wands" placeholder="Search spells by name…"
+                value={query} onChange={(e) => setQuery(e.target.value)} />
+            </div>
+          </div>
+          {shown.length === 0 ? (
+            <p className="ps-empty">No spells match that search.</p>
+          ) : (
+            <WareGrid groups={shown} label="scrolls and wands" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
+          )}
+        </>
+      )}
+
+      <div className="ps-section ps-section--svc">
+        <span className="ps-section-label">Spellcasting Services</span>
+        <span className="ps-soon-pill" aria-hidden="true">🔒 Soon</span>
+      </div>
+      <ul className="ps-svc-list" aria-label="spellcasting services">
+        {SPELL_SERVICES.map((s) => (
+          <li key={s.id} className="ps-svc">
+            <span className="ps-svc-glyph" aria-hidden="true">{s.glyph}</span>
+            <div className="ps-svc-body">
+              <span className="ps-svc-name">{s.name}</span>
+              <span className="ps-svc-desc">{s.desc}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <p className="ps-svc-note">Hiring the keeper to cast for you is coming in a future update.</p>
     </div>
   );
 };
@@ -232,7 +305,7 @@ const ComingSoon = ({ children }) => (
   </div>
 );
 
-const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, character, readOnly = false }) => {
+const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spells, character, readOnly = false }) => {
   const list = Array.isArray(shops) ? shops : [];
   const [selectedId, setSelectedId] = useState(null);
   const [activeTab, setActiveTab] = useState('wares');
@@ -270,13 +343,29 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, char
     () => (selected ? groupWares(resolveShopWares(selected.id, waresStore, catalogMap, runeMap)) : []),
     [selected, waresStore, catalogMap, runeMap]
   );
-  // Every stocked form by wareKey — to resolve cart lines back to full wares at
-  // checkout (a cart line only carries the wareKey/price/qty).
+  // Buyable scrolls/wands for the Spellcasting tab (#812 generative offerings
+  // expanded + deduped by wareKey, then grouped like any ware).
+  const spellGroups = useMemo(() => {
+    if (!selected) return [];
+    const seen = new Set();
+    const out = [];
+    spellItemOfferings(selected.id, waresStore).forEach((o) =>
+      eligibleSpellItems(o, spells).forEach((it) => {
+        if (seen.has(it.wareKey)) return;
+        seen.add(it.wareKey);
+        out.push(it);
+      })
+    );
+    return groupWares(out);
+  }, [selected, waresStore, spells]);
+
+  // Every stocked form by wareKey (wares + scrolls/wands) — to resolve cart lines
+  // back to full wares at checkout (a cart line only carries the wareKey/price/qty).
   const formsByKey = useMemo(() => {
     const m = new Map();
-    groups.forEach((g) => g.forms.forEach((f) => m.set(f.wareKey, f)));
+    [...groups, ...spellGroups].forEach((g) => g.forms.forEach((f) => m.set(f.wareKey, f)));
     return m;
-  }, [groups]);
+  }, [groups, spellGroups]);
   const qtyByKey = useMemo(() => Object.fromEntries(cart.map((l) => [l.id, l.qty])), [cart]);
 
   const closed = selected ? !isShopOpen(selected.id, waresStore) : false;
@@ -331,7 +420,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, char
           <WaresTab groups={groups} town={town} qtyByKey={qtyByKey} onSelect={setSelectedGroup} onAdd={addForm} />
         ))}
       {activeTab === 'spellcasting' && (
-        <ComingSoon>Scrolls, wands &amp; spellcasting services arrive in a coming update.</ComingSoon>
+        <SpellcastingTab groups={spellGroups} town={town} qtyByKey={qtyByKey} onSelect={setSelectedGroup} onAdd={addForm} />
       )}
       {activeTab === 'runes' && (
         <ComingSoon>The runesmith&rsquo;s bench arrives in a coming update.</ComingSoon>
