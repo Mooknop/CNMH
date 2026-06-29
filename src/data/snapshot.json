@@ -8312,6 +8312,335 @@
       "id": "healers-toolkit"
     },
     {
+      "name": "Doubling Rings",
+      "description": "This item consists of two magically linked rings: an intricate, gleaming golden ring with a square-cut ruby, and a thick, plain iron ring. When you wield a melee weapon in the hand wearing the golden ring, the weapon's fundamental runes (weapon potency and striking) are replicated onto any melee weapon you wield in the hand wearing the iron ring; any fundamental runes on the iron-ring weapon are suppressed. The replication functions only while you wear both rings and wield a melee weapon in each hand, so it doesn't apply to thrown attacks or two-handed weapons held in one hand.",
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0,
+      "price": 50,
+      "variants": [
+        {
+          "level": 3,
+          "label": "Standard",
+          "name": "Doubling Rings",
+          "price": 50,
+          "effect": "Replicates the fundamental runes (potency and striking) from the gold-ring weapon onto the iron-ring weapon."
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Doubling Rings (Greater)",
+          "price": 1300,
+          "effect": "The rings also replicate property runes from the gold-ring weapon, so long as the iron-ring weapon meets all the prerequisites for a given rune and is not a specific weapon. All the iron-ring weapon's own runes are suppressed. When you invest the rings, you can elect to transfer only fundamental runes, functioning as standard doubling rings."
+        }
+      ],
+      "id": "doubling-rings"
+    },
+    {
+      "name": "Channel Protection Amulet",
+      "description": "This nugget of polished tektite is trapped in a cage of braided wire and hangs from a silken cord. When wearing this amulet, you gain resistance 5 against damage from harm spells if you're living, or against heal spells if you're undead.",
+      "traits": [
+        "Uncommon",
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0,
+      "price": 56,
+      "id": "channel-protection-amulet"
+    },
+    {
+      "actions": [
+        {
+          "name": "Diplomat's Bearing",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Frequency once per day; Effect Attempt a DC 20 check to Recall Knowledge about people of a human ethnicity, a non-human ancestry, or some other type of creature (the GM determines your options). If you succeed, the badge's bonus increases to +2 for Diplomacy checks with creatures of that group for the rest of the day."
+        }
+      ],
+      "name": "Diplomat's Badge",
+      "description": "When displayed prominently, this brass badge makes creatures find you more agreeable. You gain a +1 item bonus to Diplomacy checks.",
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0,
+      "price": 125,
+      "bonus": [
+        "diplomacy",
+        1
+      ],
+      "id": "diplomats-badge"
+    },
+    {
+      "actions": [
+        {
+          "name": "Ram's Blast",
+          "actionCount": "One to Three",
+          "traits": [
+            "Evocation",
+            "Force"
+          ],
+          "description": "Frequency once per minute; Effect A ram-shaped blast of force slams into one foe you can see within 60 feet. The number of actions spent (1 to 3) determines the intensity: the blow deals 2d6 force damage per action spent and pushes the target 5 feet per action spent, with a DC 22 Fortitude save. Critical Success unaffected; Success half damage and pushed half the distance; Failure full damage and pushed the full distance; Critical Failure double damage and pushed twice the distance."
+        }
+      ],
+      "name": "Ring of the Ram",
+      "description": "This heavy iron ring is shaped to look like the head of a ram, with curling horns.",
+      "traits": [
+        "Evocation",
+        "Force",
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0,
+      "price": 220,
+      "variants": [
+        {
+          "level": 6,
+          "label": "Standard",
+          "name": "Ring of the Ram",
+          "price": 220,
+          "effect": "2d6 force damage per action spent; DC 22 Fortitude save."
+        },
+        {
+          "level": 13,
+          "label": "Greater",
+          "name": "Ring of the Ram (Greater)",
+          "price": 2700,
+          "effect": "The ring deals 3d6 force damage per action spent and the save DC is 32. When activated with 3 actions, you can disperse the force into multiple rams, targeting all creatures in a 30-foot cone instead of one target within 60 feet."
+        }
+      ],
+      "id": "ring-of-the-ram"
+    },
+    {
+      "reactions": [
+        {
+          "name": "Drain Reversal",
+          "traits": [
+            "Divine"
+          ],
+          "trigger": "You gain the drained condition from an undead.",
+          "description": "Frequency once per day; Effect Reduce the drained value by 1, and the triggering undead takes 2d6 vitality damage."
+        }
+      ],
+      "name": "Grim Ring",
+      "description": "While wearing this ring, you can detect the presence of undead during exploration (without pinpointing locations). The ring can't detect undead whose appearance is masked by an illusion spell of 2nd rank or higher. If an undead is hiding or disguised, the GM rolls a secret Perception check for you against the undead's Stealth or Deception DC, with a +2 item bonus.",
+      "traits": [
+        "Uncommon",
+        "Detection",
+        "Divination",
+        "Divine",
+        "Invested"
+      ],
+      "weight": 0,
+      "price": 150,
+      "id": "grim-ring"
+    },
+    {
+      "actions": [
+        {
+          "name": "Track Sigil",
+          "actionCount": 1,
+          "traits": [
+            "Arcane",
+            "Detection"
+          ],
+          "description": "Frequency once per 10 minutes; Effect You detect the general direction toward the most recent sigil you created using the ring. This fails if the sigil is more than 5 miles away or if there's lead or running water between you and the sigil."
+        },
+        {
+          "name": "Cast Sigil",
+          "actionCount": 1,
+          "traits": [
+            "Arcane",
+            "Cantrip"
+          ],
+          "description": "You cast sigil as an arcane innate cantrip, leaving your personal mark."
+        }
+      ],
+      "name": "Ring of Sigils",
+      "description": "This silver band is carved with the personal sigils of different individuals, adding one to represent you when you invest it. It lets you cast sigil as an arcane innate cantrip.",
+      "traits": [
+        "Arcane",
+        "Invested"
+      ],
+      "weight": 0,
+      "price": 20,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Standard",
+          "name": "Ring of Sigils",
+          "price": 20,
+          "effect": "Track Sigil has a maximum range of 5 miles."
+        },
+        {
+          "level": 6,
+          "label": "Greater",
+          "name": "Ring of Sigils (Greater)",
+          "price": 225,
+          "effect": "Track Sigil's maximum range is 100 miles. If the sigil was placed on a living creature, you also determine whether the creature is alive, its distance from you, and any conditions affecting it."
+        }
+      ],
+      "id": "ring-of-sigils"
+    },
+    {
+      "name": "Stalwart's Ring",
+      "description": "This fairly simple ring has no gemstone inlaid, but the band is cast to resemble a fanged wolf's head. Once per day, during your daily preparations, you can meditate on this ring to grant yourself 5 temporary Hit Points. These last until your next daily preparation, as long as you are wearing the ring.",
+      "traits": [
+        "Uncommon",
+        "Invested",
+        "Necromancy"
+      ],
+      "weight": 0,
+      "price": 160,
+      "id": "stalwarts-ring"
+    },
+    {
+      "freeActions": [
+        {
+          "name": "Warrior's Insight",
+          "traits": [
+            "Divination"
+          ],
+          "trigger": "You make an attack with a weapon in which you're untrained.",
+          "description": "Frequency once per day; Effect You gain a +2 circumstance bonus to the attack roll. If you are an expert in any weapon, you instead gain a +4 circumstance bonus to the attack roll."
+        }
+      ],
+      "name": "Warrior's Training Ring",
+      "description": "This ring is utilitarian in design, indicating its martial use, with a simple, sharp-edged sculpture at the band's center. While wearing this ring, you add your level to your attack rolls with all weapons in which you're untrained.",
+      "traits": [
+        "Uncommon",
+        "Divination",
+        "Invested"
+      ],
+      "weight": 0,
+      "price": 160,
+      "id": "warriors-training-ring"
+    },
+    {
+      "actions": [
+        {
+          "name": "Jangling Dash",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Frequency once per day; Effect You gain a +10-foot status bonus to your Speed for 1 minute."
+        }
+      ],
+      "name": "Bracelet of Dashing",
+      "description": "This jangling, silvery bracelet makes you lighter on your feet, giving you a +1 item bonus to Acrobatics checks.",
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0.1,
+      "price": 58,
+      "bonus": [
+        "acrobatics",
+        1
+      ],
+      "id": "bracelet-of-dashing"
+    },
+    {
+      "actions": [
+        {
+          "name": "Shield the Companion",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Effect You bow to an ally within 30 feet, casting shield other targeting the ally; the link remains even if you later move more than 30 feet away. At the end of the spell's duration, your ally recovers 4d8 Hit Points and you recover half of what they recover."
+        }
+      ],
+      "name": "Crown of the Companion",
+      "description": "This regal crown links you to an ally you protect. While wearing it, you gain a +1 item bonus to Diplomacy checks.",
+      "traits": [
+        "Uncommon",
+        "Healing",
+        "Invested",
+        "Magical",
+        "Necromancy",
+        "Vitality"
+      ],
+      "weight": 0.1,
+      "price": 250,
+      "bonus": [
+        "diplomacy",
+        1
+      ],
+      "id": "crown-of-the-companion"
+    },
+    {
+      "actions": [
+        {
+          "name": "Recall Name",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Effect You stare at another creature and instantly remember their name if you've met and exchanged names. The glasses rely on your latent memories, so they don't penetrate a disguised identity."
+        }
+      ],
+      "name": "Glasses of Sociability",
+      "description": "These wire-rim glasses with large, circular lenses grant you a +1 item bonus to Diplomacy checks.",
+      "traits": [
+        "Divination",
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0.1,
+      "price": 60,
+      "bonus": [
+        "diplomacy",
+        1
+      ],
+      "id": "glasses-of-sociability"
+    },
+    {
+      "actions": [
+        {
+          "name": "Comprehend Writing",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Frequency once per day; Effect Unfolding the spectacles onto the bridge of your nose, you gain the effects of 2nd-rank comprehend language for 1 hour, except that it applies to all languages you see rather than a single language, and it does not apply to language you hear."
+        }
+      ],
+      "name": "Spectacles of Understanding",
+      "description": "While wearing the spectacles, you gain the listed item bonus to checks to Decipher Writing.",
+      "traits": [
+        "Uncommon",
+        "Divination",
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0,
+      "price": 130,
+      "variants": [
+        {
+          "level": 5,
+          "label": "Standard",
+          "name": "Spectacles of Understanding",
+          "price": 130,
+          "effect": "+1 item bonus to Decipher Writing; the comprehend language effect lasts 1 hour."
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Spectacles of Understanding (Greater)",
+          "price": 1200,
+          "effect": "+2 item bonus to Decipher Writing; the comprehension lasts until you fold up the spectacles or the item is no longer invested by you, rather than 1 hour."
+        }
+      ],
+      "id": "spectacles-of-understanding"
+    },
+    {
       "name": "Healing Potion",
       "variants": [
         {
