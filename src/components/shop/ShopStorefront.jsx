@@ -11,7 +11,7 @@ import {
   eligibleSpellItems,
 } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
-import { gearTarget, gearSockets, compatibleRunes } from '../../utils/runeSockets';
+import { gearTarget, gearSockets, compatibleRunes, projectStagedGear } from '../../utils/runeSockets';
 import { isRuneItem } from '../../utils/runeClassify';
 import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
@@ -358,16 +358,25 @@ const filledLabel = (s, runeMap) => {
 const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, onUnstage, readOnly }) => {
   const [openKey, setOpenKey] = useState(null);
   const target = gearTarget(gear);
-  const sockets = gearSockets(gear);
+  // Derive the socket board from a staged projection (#879): staged fundamentals
+  // are applied first, so staging +1 potency reveals the property slot it unlocks
+  // in the same visit.
+  const projected = projectStagedGear(gear, stagedFor);
+  const sockets = gearSockets(projected);
   const stagedEntries = Object.entries(stagedFor);
   const stagedIds = new Set(stagedEntries.map(([, r]) => r.id));
   const stagedCost = stagedEntries.reduce((sum, [, r]) => sum + (Number(r.price) || 0), 0);
   const openCount = sockets.filter((s) => !s.filled && !stagedFor[socketKey(s)]).length;
+  // Runes (excluding what's already staged) that could fill/upgrade a socket.
+  const optionsFor = (socketType) =>
+    compatibleRunes(projected, socketType, shopRunes).filter((r) => !stagedIds.has(r.id));
+  // A filled fundamental socket (potency/striking/resilient) can re-open for an
+  // upgrade when a higher tier is in stock (#879) — potency +1→+2→+3 et al.
+  const isUpgradable = (s) =>
+    !readOnly && s.filled && s.type !== 'property' && optionsFor(s.type).length > 0;
 
   const openSocket = openKey ? sockets.find((s) => socketKey(s) === openKey) : null;
-  const options = openSocket
-    ? compatibleRunes(gear, openSocket.type, shopRunes).filter((r) => !stagedIds.has(r.id))
-    : [];
+  const options = openSocket ? optionsFor(openSocket.type) : [];
 
   return (
     <div className="ps-gear" data-testid={`gear-${gear.uid}`}>
@@ -392,6 +401,17 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
             );
           }
           if (s.filled) {
+            if (isUpgradable(s)) {
+              return (
+                <button key={key} type="button"
+                  className={`ps-socket is-filled is-upgradable${openKey === key ? ' is-active' : ''}`}
+                  aria-label={`upgrade ${SOCKET_LABEL[s.type]} on ${gear.name}`}
+                  onClick={() => setOpenKey(openKey === key ? null : key)}>
+                  {glyph}<span className="ps-socket-name">{filledLabel(s, runeMap)}</span>
+                  <span className="ps-socket-up" aria-hidden="true">▲</span>
+                </button>
+              );
+            }
             return (
               <div key={key} className="ps-socket is-filled">
                 {glyph}<span className="ps-socket-name">{filledLabel(s, runeMap)}</span>

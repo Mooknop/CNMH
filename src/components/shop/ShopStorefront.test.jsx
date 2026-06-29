@@ -388,6 +388,58 @@ describe('ShopStorefront', () => {
       expect(within(gear).getAllByRole('button', { name: /^fill .* slot/i }).length).toBeGreaterThanOrEqual(2);
     });
 
+    // #879: a filled fundamental re-opens for an upgrade when a higher tier is
+    // in stock; staging potency reveals the property slot it unlocks live.
+    const wPot2 = { id: 'wpot2', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 2, name: 'Greater Potency', price: 935 };
+    const wPot1 = { id: 'wpot1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: 'Potency', price: 35 };
+    const renderRunesWith = ({ inv, runeDocs, refs }) => {
+      mockInventory = inv;
+      render(
+        <ShopStorefront
+          isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { keeper: '', wares: refs.map((r) => ({ ref: 'runestone', runeRef: r })) } }}
+          items={items} runes={runeDocs} spells={spells} character={{ id: 'p', name: 'P' }}
+        />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+    };
+
+    it('re-opens a filled potency socket to upgrade it when a higher tier is in stock (#879)', () => {
+      renderRunesWith({
+        inv: [{ uid: 'w1', name: 'Longsword', strikes: [{}], runes: { potency: 1 } }],
+        runeDocs: [wPot2], refs: ['wpot2'],
+      });
+      const gear = screen.getByTestId('gear-w1');
+      // The +1 potency socket is now a tappable upgrade control.
+      const upgrade = within(gear).getByLabelText('upgrade Potency on Longsword');
+      expect(upgrade).toHaveTextContent('+1');
+      fireEvent.click(upgrade);
+      const picker = screen.getByTestId('picker-w1');
+      expect(within(picker).getByText('Greater Potency')).toBeInTheDocument();
+      fireEvent.click(within(picker).getByRole('button', { name: /Greater Potency/ }));
+      expect(within(gear).getByLabelText('un-stage Greater Potency')).toBeInTheDocument();
+    });
+
+    it('staging potency on a +0 weapon reveals the property slot it unlocks in the same visit (#879)', () => {
+      renderRunesWith({
+        inv: [{ uid: 'w1', name: 'Longsword', strikes: [{}], runes: {} }],
+        runeDocs: [wPot1, { id: 'flaming', type: 'property', name: 'Flaming', price: 500 }],
+        refs: ['wpot1', 'flaming'],
+      });
+      const gear = screen.getByTestId('gear-w1');
+      // +0 weapon: a potency + striking socket, no property socket yet.
+      expect(within(gear).queryByLabelText(/fill Property slot/i)).not.toBeInTheDocument();
+      // Stage +1 potency through the empty potency socket.
+      fireEvent.click(within(gear).getByLabelText(/fill Potency slot/i));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Potency/ }));
+      // The unlocked property socket is now present and tappable.
+      const propSocket = within(gear).getByLabelText(/fill Property slot/i);
+      fireEvent.click(propSocket);
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Flaming/ }));
+      // Both runes staged, priced as runestones (each + the 3 gp stone base).
+      expect(within(gear).getByTestId('staged-w1')).toHaveTextContent('541 gp');
+    });
+
     it('moves runestones out of Wares and into the Runesmithing "for sale" section', () => {
       renderRunes();
       const forSale = screen.getByLabelText('runes for sale');
