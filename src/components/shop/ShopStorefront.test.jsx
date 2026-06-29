@@ -160,7 +160,8 @@ describe('ShopStorefront', () => {
       // tap, since a synthetic click doesn't drive the pointer drag handlers.
       fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-tonic'), { key: 'Enter' });
       const preview = screen.getByTestId('ware-preview');
-      expect(within(preview).getByText('Minor Tonic')).toBeInTheDocument();
+      // Multi-form group headlines the base name; the variant labels disambiguate below (#880).
+      expect(within(preview).getByRole('heading', { name: 'Tonic' })).toBeInTheDocument();
       const forms = within(preview).getByLabelText('forms');
       expect(within(forms).getByText('Minor')).toBeInTheDocument();
       expect(within(forms).getByText('Lesser')).toBeInTheDocument();
