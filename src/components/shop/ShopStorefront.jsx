@@ -15,9 +15,8 @@ import { gearTarget, gearSockets, compatibleRunes } from '../../utils/runeSocket
 import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
 import { formatAvailableAt } from '../../utils/gameTime';
-import { useBuyItems } from '../../hooks/useBuyItems';
+import { useShopCheckout } from '../../hooks/useShopCheckout';
 import { useCharacter } from '../../hooks/useCharacter';
-import { useRuneWork } from '../../hooks/useRuneWork';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import './ShopStorefront.css';
 
@@ -255,11 +254,14 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
   );
 };
 
-// Pull-up tray: ware lines (stepper + subtotal), total, purse-after, checkout.
-const CartTray = ({ cart, gold, onSetQty, onRemove, onClear, onCheckout }) => {
-  const total = cartTotal(cart);
+// Pull-up tray: ware lines (stepper + subtotal) + rune handoff lines (#878), one
+// combined total, purse-after, and a single checkout that commits both.
+const CartTray = ({ cart, handoffs, gold, onSetQty, onRemove, onClear, onUnstageGear, onCheckout }) => {
+  const wareTotal = cartTotal(cart);
+  const handoffTotal = handoffs.reduce((s, h) => s + h.cost, 0);
+  const total = wareTotal + handoffTotal;
   const after = gold - total;
-  const empty = cart.length === 0;
+  const empty = cart.length === 0 && handoffs.length === 0;
   const over = total > gold;
   return (
     <div className="ps-tray" data-testid="cart-tray">
@@ -284,6 +286,17 @@ const CartTray = ({ cart, gold, onSetQty, onRemove, onClear, onCheckout }) => {
               <span className="ps-tray-line-sub">{l.price * l.qty} gp</span>
             </li>
           ))}
+          {handoffs.map((h) => (
+            <li key={`handoff-${h.gear.uid}`} className="ps-tray-line ps-tray-line--handoff" data-testid={`handoff-line-${h.gear.uid}`}>
+              <span className="ps-tray-line-name">
+                <span className="ps-handoff-wrench" aria-hidden="true">⚒</span>{h.gear.name}
+                <span className="ps-handoff-pill">🕐 24h handoff</span>
+              </span>
+              <span className="ps-tray-line-unit">{h.runes.map((r) => r.name).join(', ')}</span>
+              <button type="button" className="ps-handoff-x" aria-label={`remove handoff ${h.gear.name}`} onClick={() => onUnstageGear(h.gear.uid)}>✕</button>
+              <span className="ps-tray-line-sub">{h.cost} gp</span>
+            </li>
+          ))}
         </ul>
       )}
       <div className="ps-tray-foot">
@@ -291,6 +304,9 @@ const CartTray = ({ cart, gold, onSetQty, onRemove, onClear, onCheckout }) => {
         <div className={`ps-tray-after${after < 0 ? ' is-over' : ''}`}>
           Purse after purchase: {after} gp
         </div>
+        {handoffs.length > 0 && (
+          <p className="ps-tray-handoff-note">Checking out pays the smith and leaves your gear for 24h.</p>
+        )}
         <button type="button" className="ps-checkout" data-testid="checkout"
           disabled={empty || over} onClick={onCheckout}>
           {empty ? 'Cart is empty' : over ? `Need ${total - gold} gp more` : `Check out · ${total} gp`}
@@ -424,12 +440,12 @@ const BenchedTicket = ({ order, nowSeconds }) => (
   </div>
 );
 
-// Runesmithing tab: stage runes into gear sockets, hand them over (S7a), and buy
-// loose runestones. Shown when the shop offersRunes (S1).
+// Runesmithing tab: stage runes into gear sockets (they appear as handoff lines
+// in the cart, committed at checkout, #878) + buy loose runestones. Shown when
+// the shop offersRunes (S1).
 const RunesmithingTab = ({
   gearList, shopRunes, runeMap, runestoneGroups, stagedFor, keeperName, town, qtyByKey,
-  onStage, onUnstage, onSelect, onAdd, readOnly,
-  orders, nowSeconds, handoffTotal, canHandOff, affordHandoff, onHandOver,
+  onStage, onUnstage, onSelect, onAdd, readOnly, orders, nowSeconds,
 }) => {
   const benched = (Array.isArray(orders) ? orders : []);
   return (
@@ -450,14 +466,6 @@ const RunesmithingTab = ({
               onStage={onStage} onUnstage={onUnstage} readOnly={readOnly} />
           ))}
           {benched.map((o) => <BenchedTicket key={o.id} order={o} nowSeconds={nowSeconds} />)}
-        </div>
-      )}
-      {town && canHandOff && (
-        <div className="ps-handoff-bar">
-          <button type="button" className="ps-handoff-btn" data-testid="hand-over"
-            disabled={!affordHandoff} onClick={onHandOver}>
-            Hand over · {handoffTotal} gp{affordHandoff ? '' : ' — not enough gold'}
-          </button>
         </div>
       )}
       <div className="ps-section ps-section--svc">
@@ -486,8 +494,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   // (S7) — this is the pending state the gear cards render.
   const [staged, setStaged] = useState({});
 
-  const { myGold, buy } = useBuyItems(character?.id);
-  const { orders, commitHandoff, nowSeconds, locationId } = useRuneWork(character?.id);
+  const { myGold, orders, nowSeconds, checkout: commitCheckout } = useShopCheckout(character?.id);
   const charData = useCharacter(character);
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
@@ -557,7 +564,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   }, [wareGroups, spellGroups, runestoneGroups]);
   const qtyByKey = useMemo(() => Object.fromEntries(cart.map((l) => [l.id, l.qty])), [cart]);
 
-  // Staged runes grouped per gear → the handoff payload for commitHandoff (S7a).
+  // Staged runes grouped per gear → handoff cart lines (#878): { gear, runes, cost }.
   const stagedHandoffs = useMemo(() => {
     const byGear = {};
     Object.entries(staged).forEach(([k, rune]) => {
@@ -565,13 +572,9 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       (byGear[uid] = byGear[uid] || []).push(rune);
     });
     return Object.entries(byGear)
-      .map(([uid, r]) => ({ gear: gearList.find((g) => String(g.uid) === uid), runes: r }))
+      .map(([uid, r]) => ({ gear: gearList.find((g) => String(g.uid) === uid), runes: r, cost: r.reduce((x, rune) => x + (Number(rune.price) || 0), 0) }))
       .filter((h) => h.gear);
   }, [staged, gearList]);
-  const handoffTotal = useMemo(
-    () => stagedHandoffs.reduce((sum, h) => sum + h.runes.reduce((x, r) => x + (Number(r.price) || 0), 0), 0),
-    [stagedHandoffs]
-  );
 
   const closed = selected ? !isShopOpen(selected.id, waresStore) : false;
 
@@ -608,6 +611,9 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     setStaged((s) => ({ ...s, [`${gearUid}::${sKey}`]: rune }));
   const unstageRune = (gearUid, sKey) =>
     setStaged((s) => { const next = { ...s }; delete next[`${gearUid}::${sKey}`]; return next; });
+  // Remove a whole gear's staging (the handoff cart line's ✕).
+  const unstageGear = (gearUid) =>
+    setStaged((s) => Object.fromEntries(Object.entries(s).filter(([k]) => !k.startsWith(`${gearUid}::`))));
   // The socketKey→rune map staged on one gear.
   const stagedFor = (gearUid) => {
     const prefix = `${gearUid}::`;
@@ -616,23 +622,20 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     );
   };
 
-  // Hand staged gear to the smith — its own transaction (separate from the ware
-  // cart, so the two never co-write the gold/acquired overlays in one handler).
-  const handOver = () => {
-    const result = commitHandoff(stagedHandoffs, selected?.title);
-    if (result) {
-      setStaged({});
-      setToast(`Left ${result.length} item${result.length === 1 ? '' : 's'} with ${selected?.title || 'the smith'} — back in 24h.`);
-    }
-  };
-
+  // One checkout commits wares + rune handoffs together (#878) through the single
+  // useShopCheckout transaction — debits gold once, credits wares, records the
+  // work orders, pulls the handed-over gear.
   const checkout = () => {
     const purchases = cart.map((l) => ({ item: formsByKey.get(l.id), qty: l.qty })).filter((p) => p.item);
-    const result = buy(purchases, selected?.title);
+    const result = commitCheckout({ purchases, handoffs: stagedHandoffs, shopTitle: selected?.title });
     if (result) {
       setCart([]);
+      setStaged({});
       setCartOpen(false);
-      setToast(`Bought ${result.count} item${result.count === 1 ? '' : 's'} for ${result.total} gp.`);
+      const bits = [];
+      if (result.wareCount) bits.push(`${result.wareCount} item${result.wareCount === 1 ? '' : 's'}`);
+      if (result.handoffCount) bits.push(`${result.handoffCount} handoff${result.handoffCount === 1 ? '' : 's'}`);
+      setToast(`Checked out ${bits.join(' + ')} for ${result.total} gp.`);
     }
   };
 
@@ -667,30 +670,29 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
           readOnly={readOnly}
           orders={orders}
           nowSeconds={nowSeconds}
-          locationId={locationId}
-          handoffTotal={handoffTotal}
-          canHandOff={stagedHandoffs.length > 0}
-          affordHandoff={handoffTotal <= myGold}
-          onHandOver={handOver}
         />
       )}
     </div>
   );
+
+  // Cart bar count/total span wares + rune handoffs (#878).
+  const barCount = cartCount(cart) + stagedHandoffs.length;
+  const barTotal = cartTotal(cart) + stagedHandoffs.reduce((s, h) => s + h.cost, 0);
 
   const cartBar = showCart && (
     <DropZone id="ps-cart" accepts={() => true} onDrop={(g) => addForm(g.forms[0])} className="ps-cartbar">
       <button type="button" className="ps-cartbar-btn" data-testid="cart-bar" aria-expanded={cartOpen}
         onClick={() => setCartOpen((v) => !v)}>
         <span className="ps-cartbar-grip" aria-hidden="true">🛒
-          {cartCount(cart) > 0 && <span className="ps-cartbar-badge">{cartCount(cart)}</span>}
+          {barCount > 0 && <span className="ps-cartbar-badge">{barCount}</span>}
         </span>
         <span className="ps-cartbar-mid">
-          {cart.length === 0 ? (
+          {barCount === 0 ? (
             <span className="ps-cartbar-hint">Your cart is empty — drag wares here</span>
           ) : (
             <>
-              <span className="ps-cartbar-hint">{cartCount(cart)} item{cartCount(cart) === 1 ? '' : 's'} · tap to review</span>
-              <span className="ps-cartbar-total">{cartTotal(cart)} <span className="ps-cartbar-gp">gp</span></span>
+              <span className="ps-cartbar-hint">{barCount} item{barCount === 1 ? '' : 's'} · tap to review</span>
+              <span className="ps-cartbar-total">{barTotal} <span className="ps-cartbar-gp">gp</span></span>
             </>
           )}
         </span>
@@ -777,10 +779,11 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
               <DndProvider renderGhost={(g) => <span className="ps-ghost">{g.name}</span>}>
                 {body}
                 {cartOpen && (
-                  <CartTray cart={cart} gold={myGold}
+                  <CartTray cart={cart} handoffs={stagedHandoffs} gold={myGold}
                     onSetQty={(id, qty) => setCart((c) => setQty(c, id, qty))}
                     onRemove={(id) => setCart((c) => removeLine(c, id))}
-                    onClear={() => setCart([])}
+                    onClear={() => { setCart([]); setStaged({}); }}
+                    onUnstageGear={unstageGear}
                     onCheckout={checkout} />
                 )}
                 {cartBar}
