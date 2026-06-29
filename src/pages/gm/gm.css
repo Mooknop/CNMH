@@ -390,6 +390,13 @@
 .gm-shop-ware-fields { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
 .gm-shop-ware-fields .gm-shop-ware-field:first-child { flex: 1 1 140px; }
 
+/* Variant multi-select + per-variant price/stock (#889). */
+.gm-shop-ware-variants { display: flex; flex-direction: column; gap: 8px; }
+.gm-shop-ware-vopts { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.gm-shop-ware-vopt { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; }
+.gm-shop-ware-form { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; }
+.gm-shop-ware-form-name { flex: 1 1 140px; font-size: 0.82rem; font-weight: 600; align-self: center; }
+
 @media (prefers-reduced-motion: no-preference) {
   .gm-shop-shelf-row { animation: gm-shop-shelf-in 0.2s ease both; }
   @keyframes gm-shop-shelf-in {

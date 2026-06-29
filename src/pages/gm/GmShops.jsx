@@ -18,51 +18,75 @@ import './gm.css';
 // canvas with a hero search + grouped results + "your shops" quick-chips. The
 // page is now finder ⇄ workspace, keyed on the selected location.
 
-// A ware row is local form state until Save: { ref, level (string), runeRef
-// (string), price (string), stock (string) }. `level` pins a variant of a
-// multi-level item (#798); '' means none. A rune sold as a Runestone (#801) is
-// a row with ref 'runestone' + a `runeRef`.
-const toRows = (wares) =>
-  (Array.isArray(wares) ? wares : [])
-    // Generative spell-item offerings (#819) are authored in their own section
-    // (toOfferings), not as flat catalog rows — they carry no `ref`.
-    .filter((w) => !isSpellItemWare(w))
-    .map((w) => ({
-      ref: w.ref,
-      level: w.level != null ? String(w.level) : '',
-      runeRef: w.runeRef != null ? String(w.runeRef) : '',
-      price: w.price != null ? String(w.price) : '',
-      stock: w.stock != null ? String(w.stock) : '',
-    }));
+// A ware row is local form state until Save. Three shapes:
+//   • flat item:     { ref, price, stock }
+//   • runestone:     { ref:'runestone', runeRef, price, stock }   (#801)
+//   • variant item:  { ref, forms: [{ level, price, stock }] }    (#889)
+// A multi-level item (#798) is authored as ONE row whose `forms` hold the chosen
+// variants (a sub-row per selected level). Strings throughout (form inputs);
+// blanks mean "fall back to the catalog/variant price / unlimited stock".
+const str = (v) => (v != null ? String(v) : '');
 
-// Stable per-row key: `runestone@runeRef` for a rune ware, `ref@level` for a
-// pinned variant, else the bare ref — mirrors resolveShopWares' wareKey so a
-// shop can stock several variants/runes of the same ref without colliding.
-const rowKey = (r) => {
-  if (r.ref === 'runestone') return r.runeRef ? `runestone@${r.runeRef}` : 'runestone';
-  return r.level !== '' && r.level != null ? `${r.ref}@${r.level}` : String(r.ref);
+const toRows = (wares) => {
+  // Generative spell-item offerings (#819) are authored in their own section
+  // (toOfferings), not as catalog rows — they carry no `ref`.
+  const list = (Array.isArray(wares) ? wares : []).filter((w) => !isSpellItemWare(w));
+  const rows = [];
+  const variantRow = new Map(); // ref -> the collapsed variant row
+  list.forEach((w) => {
+    if (w.ref === 'runestone') {
+      rows.push({ ref: 'runestone', runeRef: str(w.runeRef), price: str(w.price), stock: str(w.stock) });
+    } else if (w.level != null) {
+      let row = variantRow.get(w.ref);
+      if (!row) { row = { ref: w.ref, forms: [] }; variantRow.set(w.ref, row); rows.push(row); }
+      row.forms.push({ level: str(w.level), price: str(w.price), stock: str(w.stock) });
+    } else {
+      rows.push({ ref: w.ref, price: str(w.price), stock: str(w.stock) });
+    }
+  });
+  return rows;
 };
 
-// Form state → stored wares: keep `level` (variant) or `runeRef` (runestone);
-// drop blank overrides so resolveShopWares falls back to the variant/catalog/
-// rune price; keep stock only when a non-negative integer is given.
-const fromRows = (rows) =>
-  rows
-    .filter((r) => r.ref)
-    .map((r) => {
-      const w = { ref: r.ref };
-      if (r.ref === 'runestone') {
-        if (r.runeRef) w.runeRef = r.runeRef;
-      } else {
-        const level = parseInt(r.level, 10);
+// Stable per-row key: `runestone@runeRef` for a rune ware, else the bare ref —
+// one row per item now (variants live in `forms`), so the ref is unique.
+const rowKey = (r) => {
+  if (r.ref === 'runestone') return r.runeRef ? `runestone@${r.runeRef}` : 'runestone';
+  return String(r.ref);
+};
+
+// Set price/stock on a stored ware from form strings (drop blanks; stock must be
+// a non-negative integer).
+const applyPriceStock = (w, price, stock) => {
+  const p = parseFloat(price);
+  if (!Number.isNaN(p)) w.price = p;
+  const s = parseInt(stock, 10);
+  if (!Number.isNaN(s) && s >= 0) w.stock = s;
+  return w;
+};
+
+// Form rows → stored wares. A variant row EXPANDS to one `{ ref, level }` per
+// selected form (so resolveShopWares + the storage shape are unchanged, #889);
+// an empty variant row (no forms chosen) stocks nothing.
+const fromRows = (rows) => {
+  const out = [];
+  rows.filter((r) => r.ref).forEach((r) => {
+    if (r.ref === 'runestone') {
+      const w = { ref: 'runestone' };
+      if (r.runeRef) w.runeRef = r.runeRef;
+      out.push(applyPriceStock(w, r.price, r.stock));
+    } else if (Array.isArray(r.forms)) {
+      r.forms.forEach((f) => {
+        const w = { ref: r.ref };
+        const level = parseInt(f.level, 10);
         if (!Number.isNaN(level)) w.level = level;
-      }
-      const price = parseFloat(r.price);
-      if (!Number.isNaN(price)) w.price = price;
-      const stock = parseInt(r.stock, 10);
-      if (!Number.isNaN(stock) && stock >= 0) w.stock = stock;
-      return w;
-    });
+        out.push(applyPriceStock(w, f.price, f.stock));
+      });
+    } else {
+      out.push(applyPriceStock({ ref: r.ref }, r.price, r.stock));
+    }
+  });
+  return out;
+};
 
 // ── Generative spell-item offerings (#819) ──────────────────────────────────
 // A shop can also sell Scrolls/Wands of ANY catalog spell up to a rank, filtered
@@ -302,32 +326,51 @@ const CatalogPane = ({ catalog, chips, stockedKeys, onAdd }) => {
   );
 };
 
-// One stocked ware. Resolves its display name / variant options / placeholder
-// price from the catalog by kind (runestone vs item/variant). A future
-// spell-item offering (#819) adds a branch here.
-const ShelfRow = ({ row, index, rows, catalogMap, runeMap, onChange, onRemove }) => {
+// Compact price + stock inputs, keyed by `idKey` (the row ref, or `ref@level`
+// for a variant sub-row). `placeholderPrice` is the catalog/variant fallback.
+const PriceStock = ({ idKey, price, stock, placeholderPrice, onChange }) => (
+  <>
+    <div className="form-group gm-shop-ware-field">
+      <label htmlFor={`price-${idKey}`}>price (gp)</label>
+      <input id={`price-${idKey}`} aria-label={`price-${idKey}`} type="number" min="0"
+        placeholder={placeholderPrice != null ? String(placeholderPrice) : 'catalog'}
+        value={price} onChange={(e) => onChange({ price: e.target.value })} />
+    </div>
+    <div className="form-group gm-shop-ware-field">
+      <label htmlFor={`stock-${idKey}`}>stock</label>
+      <input id={`stock-${idKey}`} aria-label={`stock-${idKey}`} type="number" min="0"
+        placeholder="∞" value={stock} onChange={(e) => onChange({ stock: e.target.value })} />
+    </div>
+  </>
+);
+
+// One stocked ware row. A variant item (#889) is a single row: the catalog item
+// picked once, with a checkbox per variant choosing which forms it sells and a
+// price/stock line for each chosen form. Flat items + runestones keep a single
+// price/stock.
+const ShelfRow = ({ row, catalogMap, runeMap, onChange, onRemove }) => {
   const isRune = row.ref === 'runestone';
   const rune = isRune && row.runeRef ? runeMap.get(String(row.runeRef)) : null;
   const item = !isRune ? catalogMap.get(String(row.ref)) : null;
   const variants = Array.isArray(item?.variants) ? item.variants : [];
-  const variant = variants.find((v) => String(v.level) === String(row.level));
+  const isVariantItem = !isRune && variants.length > 0;
   const key = rowKey(row);
   const name = isRune
     ? rune ? `${rune.name} Runestone` : `Runestone (unknown: ${row.runeRef})`
-    : variant ? variant.name || item.name : item ? item.name : `(unknown: ${row.ref})`;
-  const placeholderPrice = isRune
-    ? rune ? 3 + (Number(rune.price) || 0) : 3
-    : variant ? variant.price : item?.price;
+    : item ? item.name : `(unknown: ${row.ref})`;
   const traits = isRune
     ? [...(Array.isArray(rune?.traits) ? rune.traits : []), 'Rune']
     : Array.isArray(item?.traits) ? item.traits : [];
-  // Levels claimed by OTHER rows of this same item — excluded from the select so
-  // the GM can't author a duplicate (ref, level).
-  const taken = new Set(
-    rows
-      .filter((x, idx) => idx !== index && x.ref === row.ref && x.level !== '')
-      .map((x) => String(x.level))
-  );
+
+  const forms = Array.isArray(row.forms) ? row.forms : [];
+  const selected = new Set(forms.map((f) => String(f.level)));
+  const toggleVariant = (v) => {
+    const lvl = String(v.level);
+    if (selected.has(lvl)) onChange({ forms: forms.filter((f) => String(f.level) !== lvl) });
+    else onChange({ forms: [...forms, { level: lvl, price: '', stock: '' }] });
+  };
+  const setForm = (lvl, patch) =>
+    onChange({ forms: forms.map((f) => (String(f.level) === String(lvl) ? { ...f, ...patch } : f)) });
 
   return (
     <li className="gm-row gm-shop-ware-row gm-shop-shelf-row">
@@ -336,68 +379,56 @@ const ShelfRow = ({ row, index, rows, catalogMap, runeMap, onChange, onRemove })
         {traits.slice(0, 3).length > 0 && (
           <span className="gm-shop-ware-tr">{traits.slice(0, 3).join(' · ').toLowerCase()}</span>
         )}
-        <button
-          type="button"
-          className="btn-small btn-danger gm-shop-ware-x"
-          aria-label={`remove-${key}`}
-          onClick={onRemove}
-        >
-          ✕
-        </button>
+        <button type="button" className="btn-small btn-danger gm-shop-ware-x"
+          aria-label={`remove-${key}`} onClick={onRemove}>✕</button>
       </div>
-      <div className="gm-shop-ware-fields">
-        {variants.length > 0 && (
-          <div className="form-group gm-shop-ware-field">
-            <label htmlFor={`level-${key}`}>variant</label>
-            <select
-              id={`level-${key}`}
-              aria-label={`level-${key}`}
-              value={row.level}
-              onChange={(e) => onChange({ level: e.target.value })}
-            >
-              <option value="">— select —</option>
-              {variants
-                .filter((v) => String(v.level) === String(row.level) || !taken.has(String(v.level)))
-                .map((v) => (
-                  <option key={v.level} value={String(v.level)}>
-                    {v.label || v.name || `Level ${v.level}`} (L{v.level})
-                  </option>
-                ))}
-            </select>
+
+      {isVariantItem ? (
+        <div className="gm-shop-ware-variants">
+          <span className="gm-shop-meta-label">Variants sold</span>
+          <div className="gm-shop-ware-vopts" role="group" aria-label={`variants-${key}`}>
+            {variants.map((v) => {
+              const lvl = String(v.level);
+              return (
+                <label key={lvl} className="gm-shop-ware-vopt">
+                  <input type="checkbox" aria-label={`variant-${row.ref}@${lvl}`}
+                    checked={selected.has(lvl)} onChange={() => toggleVariant(v)} />
+                  {v.label || v.name || `Level ${v.level}`} (L{v.level})
+                </label>
+              );
+            })}
           </div>
-        )}
-        <div className="form-group gm-shop-ware-field">
-          <label htmlFor={`price-${key}`}>price (gp)</label>
-          <input
-            id={`price-${key}`}
-            aria-label={`price-${key}`}
-            type="number"
-            min="0"
-            placeholder={placeholderPrice != null ? String(placeholderPrice) : 'catalog'}
-            value={row.price}
-            onChange={(e) => onChange({ price: e.target.value })}
-          />
+          {forms.map((f) => {
+            const v = variants.find((x) => String(x.level) === String(f.level));
+            return (
+              <div key={f.level} className="gm-shop-ware-form">
+                <span className="gm-shop-ware-form-name">{v ? v.label || v.name || `L${f.level}` : `L${f.level}`}</span>
+                <div className="gm-shop-ware-fields">
+                  <PriceStock idKey={`${row.ref}@${f.level}`} price={f.price} stock={f.stock}
+                    placeholderPrice={v?.price} onChange={(patch) => setForm(f.level, patch)} />
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div className="form-group gm-shop-ware-field">
-          <label htmlFor={`stock-${key}`}>stock</label>
-          <input
-            id={`stock-${key}`}
-            aria-label={`stock-${key}`}
-            type="number"
-            min="0"
-            placeholder="∞"
-            value={row.stock}
-            onChange={(e) => onChange({ stock: e.target.value })}
-          />
+      ) : (
+        <div className="gm-shop-ware-fields">
+          <PriceStock idKey={key} price={row.price} stock={row.stock}
+            placeholderPrice={isRune ? (rune ? 3 + (Number(rune.price) || 0) : 3) : item?.price}
+            onChange={onChange} />
         </div>
-      </div>
+      )}
     </li>
   );
 };
 
 // Shelf (stock) pane: the stocked wares + the pinned Save & publish footer.
 const ShelfPane = ({ rows, catalogMap, runeMap, setRow, removeRow, dirty, justSaved, onSave }) => {
-  const limited = rows.filter((r) => r.stock !== '' && r.stock != null).length;
+  const hasStock = (s) => s !== '' && s != null;
+  const limited = rows.reduce(
+    (n, r) => n + (Array.isArray(r.forms) ? r.forms.filter((f) => hasStock(f.stock)).length : (hasStock(r.stock) ? 1 : 0)),
+    0
+  );
   return (
     <div className="gm-shop-pane gm-shop-shelf">
       <div className="gm-shop-pane-head">
@@ -419,8 +450,6 @@ const ShelfPane = ({ rows, catalogMap, runeMap, setRow, removeRow, dirty, justSa
             <ShelfRow
               key={rowKey(r)}
               row={r}
-              index={i}
-              rows={rows}
               catalogMap={catalogMap}
               runeMap={runeMap}
               onChange={(patch) => setRow(i, patch)}
@@ -666,14 +695,19 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
     touch();
   };
 
-  // Shelve a catalog card, skipping a kind+ref that's already stocked under the
-  // same key. Items shelve unleveled (the GM pins a variant via the row select,
-  // which keeps the bare ref free so a second variant can be shelved); runes
-  // shelve as a Runestone of that rune (#801).
+  // Shelve a catalog card as ONE row, skipping a ref/rune already on the shelf.
+  // A multi-variant item (#889) shelves with its first variant pre-selected (the
+  // GM toggles the rest); a flat item / runestone is a single-form row.
   const addCard = (card) => {
-    const make = card.kind === 'rune'
-      ? { ref: 'runestone', level: '', runeRef: card.id, price: '', stock: '' }
-      : { ref: card.id, level: '', runeRef: '', price: '', stock: '' };
+    let make;
+    if (card.kind === 'rune') {
+      make = { ref: 'runestone', runeRef: card.id, price: '', stock: '' };
+    } else {
+      const variants = catalogMap.get(String(card.id))?.variants;
+      make = Array.isArray(variants) && variants.length
+        ? { ref: card.id, forms: [{ level: String(variants[0].level), price: '', stock: '' }] }
+        : { ref: card.id, price: '', stock: '' };
+    }
     setRows((cur) => (cur.some((r) => rowKey(r) === rowKey(make)) ? cur : [...cur, make]));
     touch();
   };
