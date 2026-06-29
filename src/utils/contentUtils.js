@@ -414,6 +414,22 @@ const finishItem = (item, spellMap, ownerLevel, runeMap) => {
   return out;
 };
 
+// #907 S1: merge a matched variant onto the resolved item. Descriptive fields
+// (name/price/label/effect) overwrite the base as before. A variant may also
+// carry an `overrides` object holding variant-specific *mechanical* values —
+// currently just `bonus` — that replace the base item's so non-base tiers read
+// correctly downstream (e.g. getItemBonus sees the Greater tier's higher bonus).
+// The `overrides` key itself is dropped from the resolved item; the authored
+// allowlist of mergeable keys is enforced by the itemCatalog.bundled test.
+export const applyVariant = (resolved, variant) => {
+  Object.assign(resolved, variant);
+  if (variant.overrides && typeof variant.overrides === 'object') {
+    Object.assign(resolved, variant.overrides);
+    delete resolved.overrides;
+  }
+  return resolved;
+};
+
 // Resolve one inventory entry into a fully-shaped item.
 //
 // An entry with no `ref` is a legacy inline item (back-compat): returned
@@ -477,7 +493,7 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
   // item. A dangling level (no variant matches) leaves the base item intact.
   if (entry.level != null && Array.isArray(cat.variants) && cat.variants.length > 0) {
     const variant = cat.variants.find((v) => v.level === entry.level);
-    if (variant) Object.assign(resolved, variant);
+    if (variant) applyVariant(resolved, variant);
   }
   if (cat.container) {
     resolved.container = {

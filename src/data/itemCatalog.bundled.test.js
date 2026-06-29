@@ -10,6 +10,7 @@ import {
   extractScrollSpells,
   extractWandSpells,
 } from '../utils/SpellUtils';
+import { getItemBonus } from '../utils/CharacterUtils';
 
 const catalogMap = itemCatalogMap(items);
 
@@ -121,6 +122,40 @@ describe('bundled item catalog (Slice 3)', () => {
     // Spot-check the four recipe items added in the crafting initiative.
     const ids = multiLevel.map((i) => i.id);
     expect(ids).toEqual(expect.arrayContaining(['antidote', 'antiplague', 'eagle-eye-elixir', 'elixir-of-life']));
+  });
+
+  // #907 S1: a variant may carry `overrides` with variant-specific mechanical
+  // fields. Only allowlisted keys are permitted; widen this list as later slices
+  // make more fields variant-aware (S2 container/frequency, S3 resistance).
+  const OVERRIDE_ALLOWLIST = ['bonus'];
+  it('variant overrides use only allowlisted, well-formed keys', () => {
+    items.forEach((item) => {
+      (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
+        if (v.overrides == null) return;
+        expect(typeof v.overrides).toBe('object');
+        Object.keys(v.overrides).forEach((k) => expect(OVERRIDE_ALLOWLIST).toContain(k));
+        if (v.overrides.bonus !== undefined) {
+          expect(Array.isArray(v.overrides.bonus)).toBe(true);
+          expect(typeof v.overrides.bonus[0]).toBe('string');
+          expect(typeof v.overrides.bonus[1]).toBe('number');
+        }
+      });
+    });
+  });
+
+  it('Cloak of Repute tiers resolve to the override bonus and drop the overrides key', () => {
+    const owner = { id: 'tester', level: 20, inventory: [{ ref: 'cloak-of-repute', level: 9 }] };
+    const resolvedGreater = resolveCharacterItems(owner, items, spells);
+    const greater = resolvedGreater.inventory[0];
+    expect(greater.bonus).toEqual(['diplomacy', 2]);
+    expect(greater.overrides).toBeUndefined();
+    // End-to-end: the sheet's skill bonus reads the override (+2, not the base +1).
+    expect(getItemBonus(resolvedGreater, 'diplomacy')).toBe(2);
+    // Standard tier keeps the base +1 bonus.
+    const std = resolveCharacterItems(
+      { ...owner, inventory: [{ ref: 'cloak-of-repute', level: 4 }] }, items, spells
+    ).inventory[0];
+    expect(std.bonus).toEqual(['diplomacy', 1]);
   });
 
   it('Blu\'s orb is tagged Artifact but mechanically inert', () => {

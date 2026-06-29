@@ -25,6 +25,7 @@ import {
   resolveRepertoireSpells,
   resolveInnateSpells,
   repointFocusSpells,
+  applyVariant,
   resolveInventoryItem,
   resolveInventory,
   resolveCraftingRecipes,
@@ -525,6 +526,52 @@ describe('contentUtils', () => {
       ];
       const resolved = resolveCharacterItems({ inventory: refInventory }, items).inventory;
       expect(calculateItemsBulk(resolved)).toBe(calculateItemsBulk(inlineInventory));
+    });
+  });
+
+  describe('applyVariant — variant overrides (#907 S1)', () => {
+    it('merges descriptive fields and replaces base mechanics from overrides, dropping the overrides key', () => {
+      const resolved = { name: 'Base', price: 90, bonus: ['diplomacy', 1] };
+      applyVariant(resolved, {
+        level: 9,
+        label: 'Greater',
+        name: 'Base (Greater)',
+        price: 1300,
+        effect: 'The item bonus is +2.',
+        overrides: { bonus: ['diplomacy', 2] },
+      });
+      expect(resolved.name).toBe('Base (Greater)');
+      expect(resolved.price).toBe(1300);
+      expect(resolved.bonus).toEqual(['diplomacy', 2]);
+      expect(resolved.overrides).toBeUndefined();
+    });
+
+    it('is a no-op on mechanics when the variant has no overrides', () => {
+      const resolved = { name: 'Base', bonus: ['diplomacy', 1] };
+      applyVariant(resolved, { level: 4, label: 'Standard', name: 'Base', price: 90 });
+      expect(resolved.bonus).toEqual(['diplomacy', 1]);
+    });
+
+    it('resolveInventoryItem applies a level-selected variant override without mutating the base catalog', () => {
+      const catalog = [
+        {
+          id: 'cloak',
+          name: 'Cloak',
+          bonus: ['diplomacy', 1],
+          variants: [
+            { level: 4, label: 'Standard', name: 'Cloak', price: 90 },
+            { level: 9, label: 'Greater', name: 'Cloak (Greater)', price: 1300, overrides: { bonus: ['diplomacy', 2] } },
+          ],
+        },
+      ];
+      const map = itemCatalogMap(catalog);
+      const greater = resolveInventoryItem({ ref: 'cloak', level: 9 }, map);
+      expect(greater.bonus).toEqual(['diplomacy', 2]);
+      expect(greater.overrides).toBeUndefined();
+      // Base level keeps the base bonus; the catalog item itself is untouched.
+      const standard = resolveInventoryItem({ ref: 'cloak', level: 4 }, map);
+      expect(standard.bonus).toEqual(['diplomacy', 1]);
+      expect(catalog[0].bonus).toEqual(['diplomacy', 1]);
     });
   });
 
