@@ -87,8 +87,28 @@ export const collectFromResults = (rayGroups, chainResults) => {
 const describe = (inst) =>
   `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`;
 
-export const formatReminder = (name, inst) =>
-  `${name}: ${describe(inst)} — DC 15 flat check to end`;
+// Recovery flat-check DCs. The standard DC to end persistent damage is 15; an
+// effect that eases it "as if aided" (Blood Booster, #900) drops it to 10.
+export const RECOVERY_DC = 15;
+export const EASED_RECOVERY_DC = 10;
+
+// The resistance descriptor a persistent instance is matched against — the
+// damage type prefixed `persistent-` (e.g. 'persistent-bleed'). Resistance `vs`
+// lists use these tokens so persistent and direct damage of the same type are
+// distinguishable.
+export const persistentVsType = (inst) => `persistent-${inst?.type || ''}`;
+
+// Resistance context for one instance, as resolved by the caller from the
+// target's active effects (resistanceFor / flatCheckEasedFor in EffectUtils):
+//   { amount, easeFlatCheck }
+// `amount` reduces each tick's rolled damage (min 0 — the table rolls the dice,
+// so the reminder states the reduction); `easeFlatCheck` lowers the recovery DC.
+export const recoveryDc = (res) => (res?.easeFlatCheck ? EASED_RECOVERY_DC : RECOVERY_DC);
+
+export const formatReminder = (name, inst, res = null) => {
+  const resNote = res?.amount ? `, resistance ${res.amount} (reduce, min 0)` : '';
+  return `${name}: ${describe(inst)}${resNote} — DC ${recoveryDc(res)} flat check to end`;
+};
 
 export const formatClearance = (name, inst, how) =>
   `${name}: ${describe(inst)} ended (${how === 'healed' ? 'healed' : 'flat check'})`;

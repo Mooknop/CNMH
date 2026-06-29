@@ -12,6 +12,27 @@ vi.mock('../../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
 }));
 
+// useEffects backs the resistance/flat-check lookup (#900); keyed by charId.
+let mockEffectsByChar = {}; // { [charId]: effects[] }
+vi.mock('../../hooks/useEffects', () => ({
+  useEffects: (charId) => ({ effects: mockEffectsByChar[charId] || [] }),
+}));
+
+// Resolve the catalog the resistance readers use against the test effects.
+vi.mock('../../utils/EffectUtils', async (importOriginal) => {
+  const actual = await importOriginal();
+  const catalog = [
+    { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
+      { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+    ] },
+  ];
+  return {
+    ...actual,
+    resistanceFor: (effects, vsType) => actual.resistanceFor(effects, vsType, catalog),
+    flatCheckEasedFor: (effects, vsType) => actual.flatCheckEasedFor(effects, vsType, catalog),
+  };
+});
+
 // Key-aware synced-state mock backed by real state so removals re-render.
 const syncedMock = vi.hoisted(() => ({ initialMap: {}, setSpy: null }));
 vi.mock('../../hooks/useSyncedState', () => {
@@ -40,6 +61,7 @@ beforeEach(() => {
   syncedMock.initialMap = {};
   syncedMock.setSpy = null;
   mockIsGm = false;
+  mockEffectsByChar = {};
 });
 
 describe('PersistentChip (#272)', () => {
@@ -87,6 +109,31 @@ describe('PersistentChip (#272)', () => {
       type: 'system',
       text: 'Goblin: 2d4 persistent electricity ended (healed)',
     });
+  });
+
+  it('annotates resistance per row and eases the footer DC for a matching effect (#900)', () => {
+    mockEffectsByChar = { 'char-a': [{ id: 'u1', effectId: 'blood-booster-greater' }] };
+    seed({
+      'e-pc': [
+        { id: 'pd-1', dice: '1d6', type: 'bleed', sourceName: 'Wound' },
+        { id: 'pd-2', dice: '1d6', type: 'fire', sourceName: 'Torch' },
+      ],
+    });
+    render(<PersistentChip entry={ashka} viewerCharId="char-a" />);
+    fireEvent.click(screen.getByRole('button', { name: /Ashka/ }));
+    expect(screen.getByText(/1d6 persistent bleed − resistance 20/)).toBeInTheDocument();
+    // fire is not covered — no resistance annotation
+    expect(screen.getByText(/1d6 persistent fire/).textContent).not.toMatch(/resistance/);
+    // bleed is eased, so the footer reads DC 10
+    expect(screen.getByText(/Damage at end of turn, then DC 10 flat check to end/)).toBeInTheDocument();
+  });
+
+  it('keeps the DC-15 footer and no annotation for an enemy with no effects (#900)', () => {
+    seed({ 'e-gob': [{ id: 'pd-1', dice: '1d4', type: 'bleed', sourceName: 'x' }] });
+    render(<PersistentChip entry={goblin} />);
+    fireEvent.click(screen.getByRole('button', { name: /Goblin/ }));
+    expect(screen.getByText(/Damage at end of turn, then DC 15 flat check to end/)).toBeInTheDocument();
+    expect(screen.getByText(/1d4 persistent bleed/).textContent).not.toMatch(/resistance/);
   });
 
   it('clears only the targeted instance when several are tracked', () => {

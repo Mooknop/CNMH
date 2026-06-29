@@ -195,6 +195,67 @@ export function dexCapFor(activeEffects, catalog = PF2E_EFFECTS) {
 }
 
 /**
+ * Highest damage resistance an active effect grants against a damage descriptor
+ * (#900). A `resistance` modifier is a special, non-bonus modifier — like
+ * `dexCap` it carries no bonus `kind` and never nets through
+ * computeEffectBonuses (`stat: 'resistance'` isn't a bonus bucket). Its `vs`
+ * field is a comma-separated list of descriptors it applies to (e.g.
+ * `'persistent-bleed,persistent-poison'`); `vsType` is matched exactly against
+ * one of those tokens. Per PF2e, resistance does NOT stack — the single highest
+ * matching amount wins. Returns 0 when nothing matches.
+ *
+ * Generic over the descriptor so the persistent-tick path (`persistent-bleed`)
+ * and a future general incoming-damage path (`fire`) share one reader.
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {string} vsType        - damage descriptor (e.g. 'persistent-bleed')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {number} the highest matching resistance, or 0 if none
+ */
+export function resistanceFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
+  if (!activeEffects || activeEffects.length === 0 || !vsType) return 0;
+  let best = 0;
+  for (const entry of activeEffects) {
+    const def = catalog.find((e) => e.id === entry.effectId);
+    if (!def || !def.modifiers) continue;
+    for (const mod of def.modifiers) {
+      if (mod.stat !== 'resistance' || !mod.vs) continue;
+      const types = String(mod.vs).split(',').map((t) => t.trim());
+      if (!types.includes(vsType)) continue;
+      const amount = typeof mod.amount === 'number' ? mod.amount : 0;
+      if (amount > best) best = amount;
+    }
+  }
+  return best;
+}
+
+/**
+ * True when an active `resistance` effect against `vsType` carries the
+ * `flatCheckEase` flag (#900) — Blood Booster lowers the recovery flat-check DC
+ * for persistent bleed/poison "as if you received particularly appropriate aid"
+ * (DC 10 instead of 15). Independent of `resistanceFor` so the apply site can
+ * ease the DC even where the matching resistance amount is 0.
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {string} vsType        - damage descriptor (e.g. 'persistent-bleed')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {boolean}
+ */
+export function flatCheckEasedFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
+  if (!activeEffects || activeEffects.length === 0 || !vsType) return false;
+  for (const entry of activeEffects) {
+    const def = catalog.find((e) => e.id === entry.effectId);
+    if (!def || !def.modifiers) continue;
+    for (const mod of def.modifiers) {
+      if (mod.stat !== 'resistance' || !mod.flatCheckEase || !mod.vs) continue;
+      const types = String(mod.vs).split(',').map((t) => t.trim());
+      if (types.includes(vsType)) return true;
+    }
+  }
+  return false;
+}
+
+/**
  * True when an active effect should be dropped at encounter end: either it's
  * turn/round-bound (carries an `expireAt`) or its catalog entry is flagged
  * `encounterScoped` (e.g. eld-charged, #275). Used by both encounter-end sweeps.

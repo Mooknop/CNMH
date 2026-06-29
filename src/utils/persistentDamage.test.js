@@ -11,6 +11,8 @@ import {
   collectFromResults,
   formatReminder,
   formatClearance,
+  persistentVsType,
+  recoveryDc,
 } from './persistentDamage';
 
 describe('newPersistentId', () => {
@@ -137,6 +139,27 @@ describe('formatters', () => {
     );
   });
 
+  it('annotates resistance and the eased recovery DC when a context is passed (#900)', () => {
+    expect(
+      formatReminder('Ashka', { dice: '1d8', type: 'bleed' }, { amount: 5, easeFlatCheck: true })
+    ).toBe('Ashka: 1d8 persistent bleed, resistance 5 (reduce, min 0) — DC 10 flat check to end');
+  });
+
+  it('keeps DC 15 and omits the note when the resistance context is zero/null (#900)', () => {
+    expect(formatReminder('Ashka', { dice: '1d8', type: 'bleed' }, { amount: 0, easeFlatCheck: false })).toBe(
+      'Ashka: 1d8 persistent bleed — DC 15 flat check to end'
+    );
+    expect(formatReminder('Ashka', { dice: '1d8', type: 'bleed' }, null)).toBe(
+      'Ashka: 1d8 persistent bleed — DC 15 flat check to end'
+    );
+  });
+
+  it('eases the DC even when the matching resistance amount is 0 (#900)', () => {
+    expect(formatReminder('Ashka', { dice: '1d8', type: 'bleed' }, { amount: 0, easeFlatCheck: true })).toBe(
+      'Ashka: 1d8 persistent bleed — DC 10 flat check to end'
+    );
+  });
+
   it('formats clearance for both paths', () => {
     expect(formatClearance('Goblin', { dice: '1d4', type: 'bleed' }, 'flat-check')).toBe(
       'Goblin: 1d4 persistent bleed ended (flat check)'
@@ -144,5 +167,20 @@ describe('formatters', () => {
     expect(formatClearance('Goblin', { dice: '1d4', type: 'bleed' }, 'healed')).toBe(
       'Goblin: 1d4 persistent bleed ended (healed)'
     );
+  });
+});
+
+describe('resistance helpers (#900)', () => {
+  it('builds the persistent- prefixed resistance descriptor from an instance type', () => {
+    expect(persistentVsType({ type: 'bleed' })).toBe('persistent-bleed');
+    expect(persistentVsType({ type: 'poison' })).toBe('persistent-poison');
+    expect(persistentVsType({})).toBe('persistent-');
+    expect(persistentVsType(null)).toBe('persistent-');
+  });
+
+  it('eases the recovery DC only when the context flags it', () => {
+    expect(recoveryDc({ easeFlatCheck: true })).toBe(10);
+    expect(recoveryDc({ easeFlatCheck: false })).toBe(15);
+    expect(recoveryDc(null)).toBe(15);
   });
 });

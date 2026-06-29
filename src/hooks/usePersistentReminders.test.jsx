@@ -13,6 +13,30 @@ vi.mock('./useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
 }));
 
+// useSession: getState backs the per-combatant effect lookup (#900). Default
+// returns nothing (no resistance); tests override mockEffects to inject buffs.
+let mockEffects = {}; // { [charId]: { effects?: [], foundryeffects?: [] } }
+vi.mock('../contexts/SessionContext', () => ({
+  useSession: () => ({
+    getState: (charId, stateType) => mockEffects[charId]?.[stateType],
+  }),
+}));
+
+// Catalog the resistance reader resolves effectIds against.
+vi.mock('../utils/EffectUtils', async (importOriginal) => {
+  const actual = await importOriginal();
+  const catalog = [
+    { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
+      { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+    ] },
+  ];
+  return {
+    ...actual,
+    resistanceFor: (effects, vsType) => actual.resistanceFor(effects, vsType, catalog),
+    flatCheckEasedFor: (effects, vsType) => actual.flatCheckEasedFor(effects, vsType, catalog),
+  };
+});
+
 // useSyncedState: plain useState, with the setter spied for write assertions.
 const syncedMock = vi.hoisted(() => ({ setSpy: null }));
 vi.mock('./useSyncedState', () => {
@@ -54,6 +78,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   syncedMock.setSpy = null;
   mockIsGm = true;
+  mockEffects = {};
   mockEncounter = { active: false, phase: 'idle', round: 0, currentTurnIndex: 0, order: [] };
 });
 
@@ -82,6 +107,33 @@ describe('usePersistentReminders (#272)', () => {
       'Ashka: 1d4 persistent bleed — DC 15 flat check to end',
       'Ashka: 2d6 persistent fire — DC 15 flat check to end',
     ]);
+  });
+
+  it("annotates a PC's resistance and eases the recovery DC from an active effect (#900)", () => {
+    mockEffects = { 'char-a': { effects: [{ id: 'u1', effectId: 'blood-booster-greater' }] } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0)); // Ashka's turn underway
+    seedMap(hook, {
+      'e-pc': [
+        { id: 'pd-1', dice: '1d6', type: 'bleed', sourceName: 'Wound' },
+        { id: 'pd-2', dice: '1d6', type: 'fire', sourceName: 'Torch' },
+      ],
+    });
+    setEncounter(hook, inProgress(1, 1)); // Ashka's turn ends
+    expect(reminderTexts()).toEqual([
+      'Ashka: 1d6 persistent bleed, resistance 20 (reduce, min 0) — DC 10 flat check to end',
+      // fire is not covered by Blood Booster — standard line
+      'Ashka: 1d6 persistent fire — DC 15 flat check to end',
+    ]);
+  });
+
+  it('leaves enemies (no charId) with the standard DC-15 line (#900)', () => {
+    mockEffects = { 'char-a': { effects: [{ id: 'u1', effectId: 'blood-booster-greater' }] } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 1)); // Goblin's turn underway
+    seedMap(hook, { 'e-gob': [{ id: 'pd-1', dice: '1d4', type: 'bleed' }] });
+    setEncounter(hook, inProgress(2, 0));
+    expect(reminderTexts()).toContain('Goblin: 1d4 persistent bleed — DC 15 flat check to end');
   });
 
   it('does not remind on first observation of an in-progress encounter (mid-combat mount)', () => {
