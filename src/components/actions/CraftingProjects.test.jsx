@@ -80,6 +80,28 @@ describe('CraftingProjects', () => {
     expect(screen.getByText(/no active projects/i)).toBeInTheDocument();
   });
 
+  it('renders without crashing when a catalog item has no name', () => {
+    // A nameless catalog entry must not throw in the alphabetical sort
+    // (regression: undefined.localeCompare blanked the whole Downtime tab).
+    useContent.mockReturnValue({ items: [{ id: 'mystery' }, ...catalogItems] });
+    expect(() => render(<CraftingProjects character={character} />)).not.toThrow();
+    expect(screen.getByText(/no active projects/i)).toBeInTheDocument();
+  });
+
+  it('derives a display name for nameless scroll/wand catalog entries (#812)', () => {
+    // Scroll/wand entries author no `name` — it's resolved from the spell ref.
+    useContent.mockReturnValue({
+      items: [{ id: 'scroll-of-sleep', scroll: { spellRef: 'sleep' } }],
+      spells: [{ id: 'sleep', name: 'Sleep', level: 1 }],
+    });
+    render(<CraftingProjects character={character} />);
+    fireEvent.click(screen.getByRole('button', { name: '+ New' }));
+    fireEvent.click(screen.getByText(/from catalog/i));
+    expect(
+      screen.getByRole('option', { name: 'Scroll of Sleep' })
+    ).toBeInTheDocument();
+  });
+
   it('renders in-progress projects with progress labels', () => {
     withProjects([
       { id: 'p1', ref: 'antidote', level: 1, name: 'Antidote (Lesser)', source: 'recipe', threshold: 8, hours: 4 },

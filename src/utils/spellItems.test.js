@@ -5,6 +5,7 @@ import {
   resolveScroll,
   resolveWand,
   spellItemDisplayName,
+  catalogItemName,
 } from './spellItems';
 
 const sleep = { name: 'Sleep', level: 1, traditions: ['arcane', 'occult'] };
@@ -167,5 +168,41 @@ describe('spellItemDisplayName', () => {
   test('null-safe', () => {
     expect(spellItemDisplayName(null)).toBeUndefined();
     expect(spellItemDisplayName(undefined)).toBeUndefined();
+  });
+});
+
+describe('catalogItemName', () => {
+  const spells = [
+    { id: 'sleep', name: 'Sleep', level: 1 },
+    { id: 'heal', name: 'Heal', level: 1 },
+  ];
+
+  test('resolves a raw scroll entry by spellRef', () => {
+    expect(catalogItemName({ id: 'scroll-of-sleep', scroll: { spellRef: 'sleep' } }, spells))
+      .toBe('Scroll of Sleep');
+  });
+
+  test('resolves a raw wand entry by spellRef', () => {
+    expect(catalogItemName({ id: 'wand-of-heal', wand: { spellRef: 'heal' } }, spells))
+      .toBe('Wand of Heal');
+  });
+
+  test('suffixes a heightened cast rank', () => {
+    expect(catalogItemName({ scroll: { spellRef: 'heal', rank: 5 } }, spells))
+      .toBe('Scroll of Heal (Rank 5)');
+  });
+
+  test('an authored name wins over derivation', () => {
+    expect(catalogItemName({ name: 'Longsword' }, spells)).toBe('Longsword');
+  });
+
+  test('a dangling spellRef still yields a stub name (never undefined)', () => {
+    expect(catalogItemName({ scroll: { spellRef: 'gone' } }, spells))
+      .toBe('Scroll of (unknown spell)');
+  });
+
+  test('null-safe and spells-optional', () => {
+    expect(catalogItemName(null)).toBeUndefined();
+    expect(catalogItemName({ name: 'Torch' })).toBe('Torch');
   });
 });
