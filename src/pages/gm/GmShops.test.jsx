@@ -262,37 +262,46 @@ describe('GmShops', () => {
       ]);
     });
 
-    it('loads a pinned variant: variant name, selected level, variant price placeholder', () => {
+    it('loads stored variants into one row: variant checked + variant price placeholder (#889)', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 3 }] } });
       render(<GmShops />);
       select('Bottled Solutions');
-      expect(within(shelf()).getByText('Lesser Tonic')).toBeInTheDocument();
-      expect(within(shelf()).getByLabelText('level-tonic@3')).toHaveValue('3');
+      // one row for Tonic, the Lesser (L3) variant checked, its price line present.
+      expect(within(shelf()).getByText('Tonic')).toBeInTheDocument();
+      expect(within(shelf()).getByLabelText('variant-tonic@3')).toBeChecked();
+      expect(within(shelf()).getByLabelText('variant-tonic@1')).not.toBeChecked();
       expect(within(shelf()).getByLabelText('price-tonic@3')).toHaveAttribute('placeholder', '12');
     });
 
-    it('pins a variant level on an unleveled row and saves it with level', () => {
-      setup({ 'bottled-solutions': { wares: [{ ref: 'tonic' }] } });
+    it('selects a variant on a freshly shelved item and saves it with level (#889)', () => {
+      setup({ 'town-hall': { wares: [] } });
       render(<GmShops />);
-      select('Bottled Solutions');
-      fireEvent.change(screen.getByLabelText('level-tonic'), { target: { value: '1' } });
+      select('Town Hall');
+      fireEvent.click(screen.getByTestId('cat-tonic')); // shelves Tonic, first variant (L1) pre-checked
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
-      expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'tonic', level: 1 }] }]);
+      expect(lastSave()).toEqual(['town-hall', { ...META, wares: [{ ref: 'tonic', level: 1 }] }]);
     });
 
-    it('stocks two variants of one item as distinct rows', () => {
+    it('picks multiple variants from one row and saves an entry per variant (#889)', () => {
       setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 1 }] } });
       render(<GmShops />);
       select('Bottled Solutions');
-      // The base 'tonic' key is free (only tonic@1 stocked), so the catalog row
-      // is clickable → adds a second, unleveled row; pin it to level 3.
-      fireEvent.click(screen.getByTestId('cat-tonic'));
-      fireEvent.change(screen.getByLabelText('level-tonic'), { target: { value: '3' } });
+      // one Tonic row with L1 checked; also check L3 → saves both.
+      fireEvent.click(within(shelf()).getByLabelText('variant-tonic@3'));
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastSave()).toEqual([
         'bottled-solutions',
         { ...META, wares: [{ ref: 'tonic', level: 1 }, { ref: 'tonic', level: 3 }] },
       ]);
+    });
+
+    it('unchecking a variant drops it from the saved wares (#889)', () => {
+      setup({ 'bottled-solutions': { wares: [{ ref: 'tonic', level: 1 }, { ref: 'tonic', level: 3 }] } });
+      render(<GmShops />);
+      select('Bottled Solutions');
+      fireEvent.click(within(shelf()).getByLabelText('variant-tonic@1')); // uncheck Minor
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastSave()).toEqual(['bottled-solutions', { ...META, wares: [{ ref: 'tonic', level: 3 }] }]);
     });
 
     it('shelves a rune as a Runestone ware (#801)', () => {
