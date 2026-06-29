@@ -3,6 +3,7 @@ import { useEncounter } from './useEncounter';
 import { useGmAuth } from './useGmAuth';
 import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
+import { useContent } from '../contexts/ContentContext';
 import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '../utils/persistentDamage';
 import { resistanceFor, flatCheckEasedFor } from '../utils/EffectUtils';
 
@@ -25,6 +26,9 @@ export function usePersistentReminders() {
   const { encounter, appendLog } = useEncounter();
   const { isGm } = useGmAuth();
   const { getState } = useSession();
+  // Live (DO) effect catalog — Blood Booster's resistance modifier lives here,
+  // not in the bundled bootstrap, so the readers must resolve against it (#900).
+  const { effects: catalog } = useContent();
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   // { token, entry } for the combatant whose turn is underway.
@@ -45,10 +49,10 @@ export function usePersistentReminders() {
     if (!effects.length) return null;
     const vsType = persistentVsType(inst);
     return {
-      amount: resistanceFor(effects, vsType),
-      easeFlatCheck: flatCheckEasedFor(effects, vsType),
+      amount: resistanceFor(effects, vsType, catalog),
+      easeFlatCheck: flatCheckEasedFor(effects, vsType, catalog),
     };
-  }, [getState]);
+  }, [getState, catalog]);
 
   useEffect(() => {
     const active = encounter?.active ?? false;

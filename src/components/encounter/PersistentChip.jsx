@@ -3,6 +3,7 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useGmAuth } from '../../hooks/useGmAuth';
 import { useEffects } from '../../hooks/useEffects';
+import { useContent } from '../../contexts/ContentContext';
 import {
   PERSISTENT_KEY,
   removeInstance,
@@ -28,8 +29,11 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
   const { appendLog } = useEncounter();
   const { isGm } = useGmAuth();
   // The combatant's active effects drive resistance/flat-check easing (#900).
-  // Enemies (no charId) read an empty store; resolves to no resistance.
+  // Enemies (no charId) read an empty store; resolves to no resistance. The
+  // catalog is the live (DO) effect collection — Blood Booster lives there, not
+  // in the bundled bootstrap, so the readers must resolve against it.
   const { effects } = useEffects(entry.charId);
+  const { effects: catalog } = useContent();
   const [open, setOpen] = useState(false);
 
   const instances = persistentMap?.[entry.entryId] || [];
@@ -42,7 +46,7 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
     appendLog({ type: 'system', text: formatClearance(entry.name, inst, how) });
   };
 
-  const resistanceOf = (inst) => resistanceFor(effects, persistentVsType(inst));
+  const resistanceOf = (inst) => resistanceFor(effects, persistentVsType(inst), catalog);
   const describe = (inst) => {
     const res = resistanceOf(inst);
     return `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}${
@@ -53,7 +57,7 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
 
   // Eased recovery DC if any tracked instance's type is eased (Blood Booster
   // eases both bleed and poison, so a mix is rare); the footer states it.
-  const eased = instances.some((inst) => flatCheckEasedFor(effects, persistentVsType(inst)));
+  const eased = instances.some((inst) => flatCheckEasedFor(effects, persistentVsType(inst), catalog));
   const noteDc = recoveryDc({ easeFlatCheck: eased });
 
   return (

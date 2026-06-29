@@ -37,6 +37,16 @@
   text-transform: capitalize;
 }
 
+/* Resistance preview beside the damage-type picker (#900). */
+.adj-hp-resist-note {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--shell-text-secondary);
+}
+
 .adj-hp-status {
   display: flex;
   align-items: baseline;
