@@ -89,38 +89,39 @@ const fromRows = (rows) => {
 };
 
 // ── Generative spell-item offerings (#819) ──────────────────────────────────
-// A shop can also sell Scrolls/Wands of ANY catalog spell up to a rank, filtered
-// by tradition + rarity (the S6 model in shopUtils). These are authored as a
-// separate ware shape — `{ spellItem, maxRank, traditions?, rarities?,
+// A shop can also sell Scrolls/Wands of ANY catalog spell up to an ITEM LEVEL,
+// filtered by tradition + rarity (the S6 model in shopUtils). These are authored
+// as a separate ware shape — `{ spellItem, maxLevel, traditions?, rarities?,
 // priceMod? }` — in their own "Spellcasting services" section, since they're a
-// generative spec rather than a single catalog ref.
+// generative spec rather than a single catalog ref. The cap is the item level
+// (not the spell rank) so it prices consistently across scrolls and wands.
 
 const ALL_TRADITIONS = ['arcane', 'divine', 'occult', 'primal'];
 const ALL_RARITIES = ['common', 'uncommon', 'rare'];
-// Base-template tables top out here (a rank-10 spell can't go in a wand).
-const SPELL_ITEM_MAX_RANK = { scroll: 10, wand: 9 };
+// Scroll/wand base-template tables top out at item level 19 (rank 10 / rank 9).
+const SPELL_ITEM_MAX_LEVEL = 19;
 
 // Stored spell-item wares → the unified by-tradition config (#884). One config
 // drives BOTH scrolls and wands rather than a row per kind (#819). Existing
 // per-kind offerings collapse into it — kinds present, traditions/rarities
-// unioned, maxRank the max, first priceMod — which is the in-app backfill for
+// unioned, maxLevel the max, first priceMod — which is the in-app backfill for
 // shops set up under the old model (no migration; re-saving normalises them).
 const toSpellConfig = (wares) => {
   const offerings = (Array.isArray(wares) ? wares : []).filter(isSpellItemWare);
-  const config = { scroll: false, wand: false, maxRank: '1', traditions: [], rarities: [], priceMod: '' };
-  let maxRank = 0;
+  const config = { scroll: false, wand: false, maxLevel: '1', traditions: [], rarities: [], priceMod: '' };
+  let maxLevel = 0;
   const trads = new Set();
   const rars = new Set();
   offerings.forEach((o) => {
     if (o.spellItem === 'scroll') config.scroll = true;
     if (o.spellItem === 'wand') config.wand = true;
-    const r = parseInt(o.maxRank, 10);
-    if (!Number.isNaN(r)) maxRank = Math.max(maxRank, r);
+    const lvl = parseInt(o.maxLevel, 10);
+    if (!Number.isNaN(lvl)) maxLevel = Math.max(maxLevel, lvl);
     (Array.isArray(o.traditions) ? o.traditions : []).filter(Boolean).forEach((t) => trads.add(t));
     (Array.isArray(o.rarities) ? o.rarities : []).filter(Boolean).forEach((x) => rars.add(x));
     if (config.priceMod === '' && o.priceMod != null) config.priceMod = String(o.priceMod);
   });
-  if (maxRank > 0) config.maxRank = String(maxRank);
+  if (maxLevel > 0) config.maxLevel = String(maxLevel);
   config.traditions = [...trads];
   config.rarities = [...rars];
   return config;
@@ -130,11 +131,10 @@ const toSpellConfig = (wares) => {
 // and round-trip with the S6 selectors: traditions unset = all four; rarities
 // unset = common only; priceMod unset = ×1.
 const offeringWare = (kind, config) => {
-  const cap = SPELL_ITEM_MAX_RANK[kind];
-  let rank = parseInt(config.maxRank, 10);
-  if (Number.isNaN(rank)) rank = 1;
-  rank = Math.max(1, Math.min(cap, rank));
-  const w = { spellItem: kind, maxRank: rank };
+  let level = parseInt(config.maxLevel, 10);
+  if (Number.isNaN(level)) level = 1;
+  level = Math.max(1, Math.min(SPELL_ITEM_MAX_LEVEL, level));
+  const w = { spellItem: kind, maxLevel: level };
   const trads = (config.traditions || []).filter(Boolean);
   if (trads.length > 0 && trads.length < ALL_TRADITIONS.length) w.traditions = trads;
   const rars = (config.rarities || []).filter(Boolean);
@@ -514,9 +514,10 @@ const ChipMulti = ({ label, options, selected, onToggle, idBase, hint }) => (
 
 // The "Spellcasting services" section (#884): ONE by-tradition config driving
 // both scrolls and wands, instead of a row per kind. The GM picks which kinds to
-// sell + the shared tradition/rarity/rank/price filters; a live summary per
-// enabled kind shows coverage (off the S6 selector). `traditions` empty = all
-// four; `rarities` empty = common only — matching the stored-spec defaults.
+// sell + the shared tradition/rarity/level/price filters; a live summary per
+// enabled kind shows coverage (off the S6 selector). The cap is an ITEM LEVEL, so
+// each kind derives its own top rank (a rank-2 wand is item level 5 but a rank-2
+// scroll only 3). `traditions` empty = all four; `rarities` empty = common only.
 const SpellcastingSection = ({ config, spells, onChange }) => {
   const setField = (patch) => onChange({ ...config, ...patch });
   const toggleIn = (field, value) => {
@@ -531,7 +532,7 @@ const SpellcastingSection = ({ config, spells, onChange }) => {
         <div className="gm-shop-pane-title">Spellcasting services</div>
       </div>
       <p className="gm-count gm-shop-offers-intro">
-        Scribe Scrolls/Wands of any catalog spell up to a rank, by tradition and rarity.
+        Scribe Scrolls/Wands of any catalog spell up to an item level, by tradition and rarity.
       </p>
       <div className="gm-shop-offer-filters">
         <div className="form-group gm-shop-offer-field">
@@ -552,15 +553,15 @@ const SpellcastingSection = ({ config, spells, onChange }) => {
           </div>
         </div>
         <div className="form-group gm-shop-offer-rank">
-          <label htmlFor="spell-maxrank">max rank</label>
+          <label htmlFor="spell-maxlevel">max item level</label>
           <input
-            id="spell-maxrank"
-            aria-label="spell-maxrank"
+            id="spell-maxlevel"
+            aria-label="spell-maxlevel"
             type="number"
             min="1"
-            max="10"
-            value={config.maxRank}
-            onChange={(e) => setField({ maxRank: e.target.value })}
+            max="19"
+            value={config.maxLevel}
+            onChange={(e) => setField({ maxLevel: e.target.value })}
           />
         </div>
         <ChipMulti
@@ -600,7 +601,7 @@ const SpellcastingSection = ({ config, spells, onChange }) => {
       ) : (
         enabled.map(([k]) => {
           const s = spellOfferingSummary(
-            { spellItem: k, maxRank: parseInt(config.maxRank, 10) || 1, traditions: config.traditions, rarities: config.rarities },
+            { spellItem: k, maxLevel: parseInt(config.maxLevel, 10) || 1, traditions: config.traditions, rarities: config.rarities },
             spells
           );
           return (

@@ -123,7 +123,7 @@ describe('shopOffersSpellcasting (#857 S1)', () => {
   it('honors an explicit flag in either direction', () => {
     const s = {
       on: { offersSpellcasting: true, wares: [] },
-      off: { offersSpellcasting: false, wares: [{ spellItem: 'scroll', maxRank: 3 }] },
+      off: { offersSpellcasting: false, wares: [{ spellItem: 'scroll', maxLevel: 3 }] },
     };
     expect(shopOffersSpellcasting('on', s)).toBe(true);
     expect(shopOffersSpellcasting('off', s)).toBe(false); // explicit false beats a stocked offering
@@ -131,7 +131,7 @@ describe('shopOffersSpellcasting (#857 S1)', () => {
 
   it('derives from a stocked spell-item offering when no flag is set', () => {
     const s = {
-      arcana: { wares: [{ ref: 'antidote' }, { spellItem: 'wand', maxRank: 5 }] },
+      arcana: { wares: [{ ref: 'antidote' }, { spellItem: 'wand', maxLevel: 5 }] },
       plain: { wares: [{ ref: 'antidote' }] },
     };
     expect(shopOffersSpellcasting('arcana', s)).toBe(true);
@@ -316,8 +316,8 @@ const keysOf = (list) => list.map((e) => e.wareKey).sort();
 
 describe('isSpellItemWare', () => {
   it('detects scroll/wand offerings, not flat or runestone wares', () => {
-    expect(isSpellItemWare({ spellItem: 'scroll', maxRank: 3 })).toBe(true);
-    expect(isSpellItemWare({ spellItem: 'wand', maxRank: 5 })).toBe(true);
+    expect(isSpellItemWare({ spellItem: 'scroll', maxLevel: 3 })).toBe(true);
+    expect(isSpellItemWare({ spellItem: 'wand', maxLevel: 5 })).toBe(true);
     expect(isSpellItemWare({ ref: 'healing-potion' })).toBe(false);
     expect(isSpellItemWare({ ref: 'runestone', runeRef: 'flaming' })).toBe(false);
     expect(isSpellItemWare(null)).toBe(false);
@@ -326,7 +326,7 @@ describe('isSpellItemWare', () => {
 
 describe('resolveShopWares ignores spell-item offerings', () => {
   it('keeps flat wares and drops the generative offering from the main list', () => {
-    const s = { s: { wares: [{ ref: 'healing-potion' }, { spellItem: 'scroll', maxRank: 3 }] } };
+    const s = { s: { wares: [{ ref: 'healing-potion' }, { spellItem: 'scroll', maxLevel: 3 }] } };
     const wares = resolveShopWares('s', s, catalogMap);
     expect(wares).toHaveLength(1);
     expect(wares[0].id).toBe('healing-potion');
@@ -337,8 +337,8 @@ describe('spellItemOfferings', () => {
   it('returns only spell-item wares, each with a stable offeringKey', () => {
     const s = { s: { wares: [
       { ref: 'healing-potion' },
-      { spellItem: 'scroll', maxRank: 3 },
-      { spellItem: 'wand', maxRank: 5, traditions: ['arcane'] },
+      { spellItem: 'scroll', maxLevel: 3 },
+      { spellItem: 'wand', maxLevel: 5, traditions: ['arcane'] },
     ] } };
     const offerings = spellItemOfferings('s', s);
     expect(offerings).toHaveLength(2);
@@ -353,37 +353,48 @@ describe('spellItemOfferings', () => {
 });
 
 describe('eligibleSpellItems', () => {
-  it('applies the rank cap and excludes uncommon/rare/focus/cantrips by default (common only)', () => {
-    const out = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3 }, spellCatalog);
-    // sleep(1), heal(1), blazing-bolt(2) — all common; web=uncommon, rare-thing=rare,
-    // wish=rank10>3, lay-on-hands=focus, light=cantrip are all excluded.
+  it('applies the item-level cap and excludes uncommon/rare/focus/cantrips by default (common only)', () => {
+    // maxLevel 3 ⇒ scrolls up to rank 2 (item level 3): sleep(1), heal(1),
+    // blazing-bolt(2) — all common; web=uncommon, rare-thing=rare, wish=lvl19,
+    // lay-on-hands=focus, light=cantrip are all excluded.
+    const out = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog);
     expect(keysOf(out)).toEqual(['scroll:blazing-bolt', 'scroll:heal', 'scroll:sleep']);
   });
 
   it('filters by tradition (intersection); multi-tradition spells match on any', () => {
-    const divine = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3, traditions: ['divine'] }, spellCatalog);
+    const divine = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3, traditions: ['divine'] }, spellCatalog);
     expect(keysOf(divine)).toEqual(['scroll:heal']);
-    const primal = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3, traditions: ['primal'] }, spellCatalog);
+    const primal = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3, traditions: ['primal'] }, spellCatalog);
     // heal (divine/primal) + blazing-bolt (arcane/primal) both share primal.
     expect(keysOf(primal)).toEqual(['scroll:blazing-bolt', 'scroll:heal']);
   });
 
   it('opts into uncommon when rarities is set, stamping the rarity trait', () => {
-    const out = eligibleSpellItems({ spellItem: 'scroll', maxRank: 3, rarities: ['common', 'uncommon'] }, spellCatalog);
+    const out = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3, rarities: ['common', 'uncommon'] }, spellCatalog);
     expect(keysOf(out)).toContain('scroll:web');
     const web = out.find((e) => e.wareKey === 'scroll:web');
     expect(web.traits[0]).toBe('Uncommon'); // rarity stamped onto the item
   });
 
-  it('caps a wand at rank 9 but a scroll at rank 10 (table maxima)', () => {
-    const scroll = eligibleSpellItems({ spellItem: 'scroll', maxRank: 10 }, spellCatalog);
-    expect(keysOf(scroll)).toContain('scroll:wish'); // rank-10 scroll is valid
-    const wand = eligibleSpellItems({ spellItem: 'wand', maxRank: 10 }, spellCatalog);
+  it('caps a wand at rank 9 but a scroll at rank 10 (table maxima at item level 19)', () => {
+    const scroll = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 19 }, spellCatalog);
+    expect(keysOf(scroll)).toContain('scroll:wish'); // rank-10 scroll (lvl 19) is valid
+    const wand = eligibleSpellItems({ spellItem: 'wand', maxLevel: 19 }, spellCatalog);
     expect(keysOf(wand)).not.toContain('wand:wish'); // rank-10 wand is impossible
   });
 
+  it('gates by derived item level, not rank — a rank-2 wand (lvl 5) needs a higher cap than a rank-2 scroll (lvl 3)', () => {
+    // maxLevel 3: scrolls reach rank 2 (lvl 3) but wands only rank 0 (rank-1 wand
+    // is already lvl 3 → included; rank-2 wand is lvl 5 → out).
+    const scroll = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog);
+    expect(keysOf(scroll)).toContain('scroll:blazing-bolt'); // rank-2 scroll, lvl 3
+    const wand = eligibleSpellItems({ spellItem: 'wand', maxLevel: 3 }, spellCatalog);
+    expect(keysOf(wand)).not.toContain('wand:blazing-bolt'); // rank-2 wand is lvl 5
+    expect(keysOf(wand)).toContain('wand:sleep'); // rank-1 wand is lvl 3
+  });
+
   it('produces a minimal, re-resolvable entry with derived name/level/price', () => {
-    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxRank: 1 }, spellCatalog);
+    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1 }, spellCatalog);
     expect(sleep).toMatchObject({
       id: 'scroll-of-sleep',
       name: 'Scroll of Sleep',
@@ -397,40 +408,43 @@ describe('eligibleSpellItems', () => {
   });
 
   it('derives wand pricing/level from the cast rank', () => {
-    const [heal] = eligibleSpellItems({ spellItem: 'wand', maxRank: 1, traditions: ['divine'] }, spellCatalog);
+    const [heal] = eligibleSpellItems({ spellItem: 'wand', maxLevel: 3, traditions: ['divine'] }, spellCatalog);
     expect(heal).toMatchObject({ id: 'wand-of-heal', name: 'Wand of Heal', level: 3, price: 60, wand: { spellRef: 'heal' } });
   });
 
   it('applies priceMod as a multiplier over the standard price', () => {
-    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxRank: 1, priceMod: 2 }, spellCatalog);
+    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1, priceMod: 2 }, spellCatalog);
     expect(sleep.price).toBe(8); // 4 × 2
   });
 
-  it('returns [] for a non-offering ware or a zero/negative cap', () => {
+  it('returns [] for a non-offering ware, a zero cap, or a level below the kind floor', () => {
     expect(eligibleSpellItems({ ref: 'healing-potion' }, spellCatalog)).toEqual([]);
-    expect(eligibleSpellItems({ spellItem: 'scroll', maxRank: 0 }, spellCatalog)).toEqual([]);
+    expect(eligibleSpellItems({ spellItem: 'scroll', maxLevel: 0 }, spellCatalog)).toEqual([]);
+    // A wand's cheapest item is level 3, so maxLevel 2 stocks none.
+    expect(eligibleSpellItems({ spellItem: 'wand', maxLevel: 2 }, spellCatalog)).toEqual([]);
   });
 });
 
 describe('spellOfferingSummary', () => {
   it('summarises the default (all traditions, common only) coverage + count', () => {
-    const s = spellOfferingSummary({ spellItem: 'scroll', maxRank: 3 }, spellCatalog);
-    // sleep, heal, blazing-bolt (web is uncommon; rare-thing rare; wish out of rank).
-    expect(s).toMatchObject({ kind: 'scroll', cap: 3, count: 3 });
-    expect(s.text).toBe('Scrolls · all traditions · common · up to rank 3 · 3 eligible spells');
+    const s = spellOfferingSummary({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog);
+    // sleep, heal, blazing-bolt (web is uncommon; rare-thing rare; wish out of level).
+    // Item level 3 ⇒ scrolls up to rank 2 (the derived cap).
+    expect(s).toMatchObject({ kind: 'scroll', maxLevel: 3, cap: 2, count: 3 });
+    expect(s.text).toBe('Scrolls · all traditions · common · up to item level 3 · 3 eligible spells');
   });
 
   it('reflects tradition + rarity filters and singularises one spell', () => {
     const s = spellOfferingSummary(
-      { spellItem: 'wand', maxRank: 2, traditions: ['arcane'], rarities: ['common', 'uncommon'] },
+      { spellItem: 'wand', maxLevel: 5, traditions: ['arcane'], rarities: ['common', 'uncommon'] },
       spellCatalog
     );
-    // arcane, common+uncommon, rank ≤ 2: sleep, blazing-bolt, web.
-    expect(s.text).toBe('Wands · arcane · common+uncommon · up to rank 2 · 3 eligible spells');
+    // arcane, common+uncommon, item level ≤ 5 (wand rank ≤ 2): sleep, blazing-bolt, web.
+    expect(s.text).toBe('Wands · arcane · common+uncommon · up to item level 5 · 3 eligible spells');
   });
 
-  it('caps the displayed rank at the base-template max', () => {
-    expect(spellOfferingSummary({ spellItem: 'wand', maxRank: 99 }, spellCatalog).cap).toBe(9);
+  it('derives the cap rank from the level, bounded by the base-template max', () => {
+    expect(spellOfferingSummary({ spellItem: 'wand', maxLevel: 99 }, spellCatalog).cap).toBe(9);
   });
 });
 
