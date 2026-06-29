@@ -14,8 +14,10 @@ import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils
 import { gearTarget, gearSockets, compatibleRunes } from '../../utils/runeSockets';
 import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
+import { formatAvailableAt } from '../../utils/gameTime';
 import { useBuyItems } from '../../hooks/useBuyItems';
 import { useCharacter } from '../../hooks/useCharacter';
+import { useRuneWork } from '../../hooks/useRuneWork';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import './ShopStorefront.css';
 
@@ -410,38 +412,70 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
   );
 };
 
-// Runesmithing tab: stage runes into gear sockets (handed over at checkout, S7)
-// + buy loose runestones. Shown when the shop offersRunes (S1).
-const RunesmithingTab = ({ gearList, shopRunes, runeMap, runestoneGroups, stagedFor, keeperName, town, qtyByKey, onStage, onUnstage, onSelect, onAdd, readOnly }) => (
-  <div className="ps-runesmithing">
-    <p className="ps-rs-intro">
-      {town
-        ? `Stage runes into your gear's open slots, then hand it over — it's yours again 24 hours after you check out.`
-        : `Recalled from a lore entry — visit in town to have your gear etched.`}
-    </p>
-    <div className="ps-section"><span className="ps-section-label">Your Gear</span></div>
-    {gearList.length === 0 ? (
-      <p className="ps-empty">{town ? 'No weapon or armor to etch.' : '—'}</p>
-    ) : (
-      <div className="ps-gear-list">
-        {gearList.map((g) => (
-          <GearCard key={g.uid} gear={g} shopRunes={shopRunes} runeMap={runeMap}
-            stagedFor={stagedFor(g.uid)} keeperName={keeperName}
-            onStage={onStage} onUnstage={onUnstage} readOnly={readOnly} />
-        ))}
-      </div>
-    )}
-    <div className="ps-section ps-section--svc">
-      <span className="ps-section-label">Runestones for sale</span>
-      <span className="ps-section-count">{runestoneGroups.length}</span>
+// A piece of gear already at the smith (#857 S7a) — rendered from a pending work
+// order (the gear itself has been pulled from inventory), until it's collected
+// in Downtime. Gold-tinted ticket with the etch list, what was paid, and when
+// it's ready.
+const BenchedTicket = ({ order, nowSeconds }) => (
+  <div className="ps-bench" data-testid={`bench-${order.id}`}>
+    <span className="ps-bench-stamp" aria-hidden="true">⚒</span>
+    <div className="ps-bench-body">
+      <div className="ps-bench-name">{order.weaponName}</div>
+      <div className="ps-bench-etch">Etching {order.runeName}</div>
+      <div className="ps-bench-paid">At the smith. Paid {order.price} gp.</div>
     </div>
-    {runestoneGroups.length === 0 ? (
-      <p className="ps-empty">No loose runestones for sale.</p>
-    ) : (
-      <WareGrid groups={runestoneGroups} label="runestones" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
-    )}
+    <div className="ps-bench-ready">Ready<br /><strong>{formatAvailableAt(order.readyAtSeconds, nowSeconds)}</strong></div>
   </div>
 );
+
+// Runesmithing tab: stage runes into gear sockets, hand them over (S7a), and buy
+// loose runestones. Shown when the shop offersRunes (S1).
+const RunesmithingTab = ({
+  gearList, shopRunes, runeMap, runestoneGroups, stagedFor, keeperName, town, qtyByKey,
+  onStage, onUnstage, onSelect, onAdd, readOnly,
+  orders, nowSeconds, handoffTotal, canHandOff, affordHandoff, onHandOver,
+}) => {
+  const benched = (Array.isArray(orders) ? orders : []);
+  return (
+    <div className="ps-runesmithing">
+      <p className="ps-rs-intro">
+        {town
+          ? `Stage runes into your gear's open slots, then hand it over — it's yours again 24 hours later.`
+          : `Recalled from a lore entry — visit in town to have your gear etched.`}
+      </p>
+      <div className="ps-section"><span className="ps-section-label">Your Gear</span></div>
+      {gearList.length === 0 && benched.length === 0 ? (
+        <p className="ps-empty">{town ? 'No weapon or armor to etch.' : '—'}</p>
+      ) : (
+        <div className="ps-gear-list">
+          {gearList.map((g) => (
+            <GearCard key={g.uid} gear={g} shopRunes={shopRunes} runeMap={runeMap}
+              stagedFor={stagedFor(g.uid)} keeperName={keeperName}
+              onStage={onStage} onUnstage={onUnstage} readOnly={readOnly} />
+          ))}
+          {benched.map((o) => <BenchedTicket key={o.id} order={o} nowSeconds={nowSeconds} />)}
+        </div>
+      )}
+      {town && canHandOff && (
+        <div className="ps-handoff-bar">
+          <button type="button" className="ps-handoff-btn" data-testid="hand-over"
+            disabled={!affordHandoff} onClick={onHandOver}>
+            Hand over · {handoffTotal} gp{affordHandoff ? '' : ' — not enough gold'}
+          </button>
+        </div>
+      )}
+      <div className="ps-section ps-section--svc">
+        <span className="ps-section-label">Runestones for sale</span>
+        <span className="ps-section-count">{runestoneGroups.length}</span>
+      </div>
+      {runestoneGroups.length === 0 ? (
+        <p className="ps-empty">No loose runestones for sale.</p>
+      ) : (
+        <WareGrid groups={runestoneGroups} label="runestones" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
+      )}
+    </div>
+  );
+};
 
 const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spells, character, readOnly = false }) => {
   const list = Array.isArray(shops) ? shops : [];
@@ -457,6 +491,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   const [staged, setStaged] = useState({});
 
   const { myGold, buy } = useBuyItems(character?.id);
+  const { orders, commitHandoff, nowSeconds, locationId } = useRuneWork(character?.id);
   const charData = useCharacter(character);
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
@@ -526,6 +561,22 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   }, [wareGroups, spellGroups, runestoneGroups]);
   const qtyByKey = useMemo(() => Object.fromEntries(cart.map((l) => [l.id, l.qty])), [cart]);
 
+  // Staged runes grouped per gear → the handoff payload for commitHandoff (S7a).
+  const stagedHandoffs = useMemo(() => {
+    const byGear = {};
+    Object.entries(staged).forEach(([k, rune]) => {
+      const uid = k.slice(0, k.indexOf('::'));
+      (byGear[uid] = byGear[uid] || []).push(rune);
+    });
+    return Object.entries(byGear)
+      .map(([uid, r]) => ({ gear: gearList.find((g) => String(g.uid) === uid), runes: r }))
+      .filter((h) => h.gear);
+  }, [staged, gearList]);
+  const handoffTotal = useMemo(
+    () => stagedHandoffs.reduce((sum, h) => sum + h.runes.reduce((x, r) => x + (Number(r.price) || 0), 0), 0),
+    [stagedHandoffs]
+  );
+
   const closed = selected ? !isShopOpen(selected.id, waresStore) : false;
 
   useEffect(() => {
@@ -569,6 +620,16 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     );
   };
 
+  // Hand staged gear to the smith — its own transaction (separate from the ware
+  // cart, so the two never co-write the gold/acquired overlays in one handler).
+  const handOver = () => {
+    const result = commitHandoff(stagedHandoffs, selected?.title);
+    if (result) {
+      setStaged({});
+      setToast(`Left ${result.length} item${result.length === 1 ? '' : 's'} with ${selected?.title || 'the smith'} — back in 24h.`);
+    }
+  };
+
   const checkout = () => {
     const purchases = cart.map((l) => ({ item: formsByKey.get(l.id), qty: l.qty })).filter((p) => p.item);
     const result = buy(purchases, selected?.title);
@@ -608,6 +669,13 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
           onSelect={setSelectedGroup}
           onAdd={addForm}
           readOnly={readOnly}
+          orders={orders}
+          nowSeconds={nowSeconds}
+          locationId={locationId}
+          handoffTotal={handoffTotal}
+          canHandOff={stagedHandoffs.length > 0}
+          affordHandoff={handoffTotal <= myGold}
+          onHandOver={handOver}
         />
       )}
     </div>

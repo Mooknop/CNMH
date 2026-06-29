@@ -9,6 +9,7 @@
 
 import { toGameSeconds } from './gameTime';
 import { newEntryUid } from './uid';
+import { applyRune } from './runeSockets';
 
 export const TURNAROUND_HOURS = 24;
 
@@ -53,6 +54,41 @@ export const orderStatus = (order, nowSeconds, locationId) => {
 // is deferred to R5 (#804).
 export const eligibleWeapons = (inventory) =>
   (Array.isArray(inventory) ? inventory : []).filter((it) => it && it.strikes && it.uid != null);
+
+// Order staged runes so fundamentals land before property runes — applying
+// potency first opens the property-slot capacity a property rune needs.
+const runeApplyOrder = (r) => (r && r.type === 'fundamental' ? (r.fundamental === 'potency' ? 0 : 1) : 2);
+
+// Apply a whole staged-rune array to a gear snapshot (#857 S7a), returning the
+// fresh-uid runed entry to credit back. Each rune folds via the S6a applyRune
+// (fundamentals set a tier, property runes append); an incompatible rune is
+// skipped (applyRune → null) rather than aborting the rest.
+export const applyRunesToGear = (gear, runes) => {
+  const ordered = [...(Array.isArray(runes) ? runes : [])].sort((a, b) => runeApplyOrder(a) - runeApplyOrder(b));
+  return ordered.reduce((g, r) => applyRune(g, r) || g, gear);
+};
+
+// Build a handoff work order from a staged gear (#857 S7a): one order holding the
+// gear snapshot + the staged rune array, runed on collect via applyRunesToGear.
+// `runeName` is a joined summary + `weaponName` the gear name, so RuneWorkPanel
+// renders a multi-rune order unchanged; `price` sums the staged runes.
+export const createHandoffOrder = ({ gear, runes, shopTitle, locationId, now }) => {
+  const list = Array.isArray(runes) ? runes : [];
+  const paid = toGameSeconds(now || {});
+  return {
+    id: newEntryUid(),
+    weaponUid: gear && gear.uid != null ? gear.uid : null,
+    weaponName: gear && gear.name ? gear.name : 'gear',
+    weapon: gear,
+    runes: list,
+    runeName: list.map((r) => r && r.name).filter(Boolean).join(', ') || 'runes',
+    paidAtSeconds: paid,
+    readyAtSeconds: paid + TURNAROUND_HOURS * 3600,
+    readyLocationId: locationId != null ? locationId : null,
+    shopTitle: shopTitle || null,
+    price: list.reduce((sum, r) => sum + (Number(r && r.price) || 0), 0),
+  };
+};
 
 // Fold a property rune onto a weapon snapshot, returning a fresh-uid inline
 // entry to credit back to the owner. Property runes only for now (#802);

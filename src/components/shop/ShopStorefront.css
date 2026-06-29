@@ -354,6 +354,32 @@
 .ps-runepicker-cancel { background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 11px; color: var(--ps-ink2); }
 .ps-staged-note { margin: var(--space-3) 0 0; font-family: var(--font-body); font-size: 11.5px; line-height: 1.4; color: var(--gold-light); }
 
+/* Hand-over action (S7a) — its own transaction, separate from the ware cart. */
+.ps-handoff-bar { padding: var(--space-3) 15px 0; }
+.ps-handoff-btn {
+  width: 100%; min-height: 44px; cursor: pointer; border: none; border-radius: var(--radius-lg);
+  font-family: var(--font-ui); font-weight: 700; font-size: 13px;
+  background: linear-gradient(135deg, var(--gold-mid), color-mix(in srgb, var(--gold-mid) 60%, #000)); color: #1a1208;
+}
+.ps-handoff-btn:disabled { filter: grayscale(0.6); opacity: 0.55; cursor: default; }
+
+/* Benched ticket (S7a) — gear currently at the smith, rendered from a work order. */
+.ps-bench {
+  display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--gold-mid) 50%, transparent); border-radius: 13px;
+  background: color-mix(in srgb, var(--gold-mid) 12%, var(--ps-screen));
+}
+.ps-bench-stamp {
+  flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; font-size: 1.1rem;
+  border-radius: var(--radius-md); border: 1px solid color-mix(in srgb, var(--gold-mid) 50%, transparent); color: var(--gold-light);
+}
+.ps-bench-body { flex: 1; min-width: 0; }
+.ps-bench-name { font-family: var(--font-display); font-weight: 700; font-size: 14px; }
+.ps-bench-etch { font-size: 11px; color: var(--gold-light); }
+.ps-bench-paid { font-size: 10px; color: var(--ps-ink3); }
+.ps-bench-ready { flex: 0 0 auto; text-align: right; font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ps-ink3); }
+.ps-bench-ready strong { font-family: var(--font-display); font-size: 11px; color: var(--ps-ink2); text-transform: none; letter-spacing: 0; }
+
 /* ── Coming-soon placeholder (unused after S6b; kept for any future tab) ───── */
 .ps-soon {
   display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
