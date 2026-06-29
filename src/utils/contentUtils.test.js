@@ -552,6 +552,31 @@ describe('contentUtils', () => {
       expect(resolved.bonus).toEqual(['diplomacy', 1]);
     });
 
+    it('replaces a container override and keeps it after contents resolution', () => {
+      const catalog = [
+        { id: 'rope', name: 'Rope', weight: 1 },
+        {
+          id: 'sleeves',
+          name: 'Sleeves',
+          container: { capacity: 10, ignored: 10 },
+          variants: [
+            { level: 4, label: 'Standard', name: 'Sleeves', price: 100 },
+            { level: 9, label: 'Greater', name: 'Sleeves (Greater)', price: 600, overrides: { container: { capacity: 40, ignored: 40 } } },
+          ],
+        },
+      ];
+      const map = itemCatalogMap(catalog);
+      const greater = resolveInventoryItem(
+        { ref: 'sleeves', level: 9, container: { contents: [{ ref: 'rope' }] } }, map
+      );
+      expect(greater.container.capacity).toBe(40);
+      expect(greater.container.ignored).toBe(40);
+      expect(greater.container.contents[0].name).toBe('Rope');
+      expect(greater.overrides).toBeUndefined();
+      // Base catalog container object is untouched.
+      expect(catalog[1].container).toEqual({ capacity: 10, ignored: 10 });
+    });
+
     it('resolveInventoryItem applies a level-selected variant override without mutating the base catalog', () => {
       const catalog = [
         {

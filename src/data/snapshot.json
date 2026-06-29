@@ -9941,7 +9941,13 @@
           "label": "Greater",
           "name": "Sleeves of Storage (Greater)",
           "price": 600,
-          "effect": "Each sleeve can hold up to 20 Bulk of items (40 Bulk total), and a familiar can survive within a sleeve for up to 4 hours."
+          "effect": "Each sleeve can hold up to 20 Bulk of items (40 Bulk total), and a familiar can survive within a sleeve for up to 4 hours.",
+          "overrides": {
+            "container": {
+              "capacity": 40,
+              "ignored": 40
+            }
+          }
         }
       ],
       "id": "sleeves-of-storage"

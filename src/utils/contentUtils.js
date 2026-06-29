@@ -495,9 +495,12 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
     const variant = cat.variants.find((v) => v.level === entry.level);
     if (variant) applyVariant(resolved, variant);
   }
-  if (cat.container) {
+  // Read `resolved.container` (not `cat.container`) so a variant's
+  // `overrides.container` (#907 S2 — e.g. Sleeves of Storage Greater's larger
+  // capacity) is honored; it equals the catalog's container when no override.
+  if (resolved.container) {
     resolved.container = {
-      ...cat.container,
+      ...resolved.container,
       contents: resolveInventory(
         entry.container && entry.container.contents,
         catalogMap,
