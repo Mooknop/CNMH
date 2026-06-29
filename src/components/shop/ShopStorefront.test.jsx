@@ -2,6 +2,14 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import ShopStorefront from './ShopStorefront';
 
+// The preview's item activations (#882) render TraitTag, which pulls
+// TraitContext; stub it to the bare trait label.
+vi.mock('../shared/TraitTag', () => ({
+  default: function DummyTraitTag({ trait }) {
+    return <span data-testid="trait-tag">{typeof trait === 'string' ? trait : trait?.name || 'trait'}</span>;
+  },
+}));
+
 // useShopCheckout owns the whole transaction (#878); stub it with a checkout that
 // returns a receipt for an affordable combined cart (over-budget is UI-gated).
 let mockGold = 142;
@@ -30,7 +38,8 @@ beforeEach(() => {
 
 const items = [
   { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.',
-    image: 'antidote.png', imagePosition: { x: 50, y: 25 } },
+    image: 'antidote.png', imagePosition: { x: 50, y: 25 },
+    actions: [{ name: 'Drink Antidote', actionCount: 1, traits: ['Manipulate'], description: 'Gain a bonus against poison.' }] },
   { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1, traits: ['Magical'] },
   {
     id: 'tonic',
@@ -172,6 +181,19 @@ describe('ShopStorefront', () => {
       fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-antidote'), { key: 'Enter' });
       const preview = screen.getByTestId('ware-preview');
       expect(preview.querySelector('img.ps-preview-img')).toHaveAttribute('src', '/api/images/antidote.png');
+    });
+
+    it('surfaces item activations in the takeover preview (#882)', () => {
+      renderShop();
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-antidote'), { key: 'Enter' });
+      const preview = screen.getByTestId('ware-preview');
+      expect(within(preview).getByText('Actions')).toBeInTheDocument();
+      expect(within(preview).getByText('Drink Antidote')).toBeInTheDocument();
+      expect(within(preview).getByText('Gain a bonus against poison.')).toBeInTheDocument();
+      // An item with no activations shows no Actions heading.
+      fireEvent.click(within(preview).getByText('‹ Back'));
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-spellbook'), { key: 'Enter' });
+      expect(within(screen.getByTestId('ware-preview')).queryByText('Actions')).toBeNull();
     });
 
     it('opens the takeover preview with per-form rows on tap', () => {

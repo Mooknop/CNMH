@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
+import ItemActivations from '../shared/ItemActivations';
 import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
 import { ITEM_STATE_LABEL, isHeldState, STOWED } from '../../utils/itemState';
@@ -523,96 +524,8 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
         </div>
       )}
 
-      {/* Actions */}
-      {item.actions && item.actions.length > 0 && (
-        <div className="item-actions">
-          <h3>Actions</h3>
-          <div className="item-actions-list">
-            {item.actions.map((action, index) => (
-              <div key={index} className="item-action">
-                <div className="action-header">
-                  <span className="action-name">{action.name}</span>
-                  <div className="action-count">
-                    {action.actionCount && Array.from({ length: action.actionCount }, (_, i) => (
-                      <span key={i} className="action-icon">⚬</span>
-                    ))}
-                  </div>
-                </div>
-                {action.traits && action.traits.length > 0 && (
-                  <div className="action-traits">
-                    {action.traits.map((trait, i) => (
-                      <TraitTag key={i} trait={trait} />
-                    ))}
-                  </div>
-                )}
-                <p className="action-description">{action.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Reactions */}
-      {item.reactions && item.reactions.length > 0 && (
-        <div className="item-reactions">
-          <h3>Reactions</h3>
-          <div className="item-reactions-list">
-            {item.reactions.map((reaction, index) => (
-              <div key={index} className="item-reaction">
-                <div className="reaction-header">
-                  <span className="reaction-name">{reaction.name}</span>
-                  <div className="reaction-icon">⟳</div>
-                </div>
-                {reaction.traits && reaction.traits.length > 0 && (
-                  <div className="reaction-traits">
-                    {reaction.traits.map((trait, i) => (
-                      <TraitTag key={i} trait={trait} />
-                    ))}
-                  </div>
-                )}
-                {reaction.trigger && (
-                  <div className="reaction-trigger">
-                    <span className="trigger-label">Trigger</span>
-                    <span className="trigger-text">{reaction.trigger}</span>
-                  </div>
-                )}
-                <p className="reaction-description">{reaction.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Free Actions */}
-      {item.freeActions && item.freeActions.length > 0 && (
-        <div className="item-free-actions">
-          <h3>Free Actions</h3>
-          <div className="item-free-actions-list">
-            {item.freeActions.map((freeAction, index) => (
-              <div key={index} className="item-free-action">
-                <div className="free-action-header">
-                  <span className="free-action-name">{freeAction.name}</span>
-                  <div className="free-action-icon">◆</div>
-                </div>
-                {freeAction.traits && freeAction.traits.length > 0 && (
-                  <div className="free-action-traits">
-                    {freeAction.traits.map((trait, i) => (
-                      <TraitTag key={i} trait={trait} />
-                    ))}
-                  </div>
-                )}
-                {freeAction.trigger && (
-                  <div className="free-action-trigger">
-                    <span className="trigger-label">Trigger</span>
-                    <span className="trigger-text">{freeAction.trigger}</span>
-                  </div>
-                )}
-                <p className="free-action-description">{freeAction.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Actions / Reactions / Free Actions (shared with the shop preview, #882) */}
+      <ItemActivations item={item} />
 
       {/* Strikes */}
       {item.strikes && (
