@@ -22,8 +22,8 @@ vi.mock('../../hooks/useCharacter', () => ({ useCharacter: vi.fn() }));
 vi.mock('../../contexts/ContentContext', () => ({ useContent: vi.fn() }));
 vi.mock('../../hooks/useShops', () => ({ useShops: vi.fn() }));
 
-vi.mock('../shop/ShopModal', () => ({
-  default: function DummyShopModal({ isOpen, shops }) {
+vi.mock('../shop/ShopStorefront', () => ({
+  default: function DummyShopStorefront({ isOpen, shops }) {
     return isOpen ? <div data-testid="shop-modal" data-count={shops.length} /> : null;
   }
 }));

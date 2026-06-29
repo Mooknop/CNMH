@@ -55,43 +55,15 @@ beforeEach(() => {
   session = { connected: true, foundryConnected: true };
 });
 
-describe('etch', () => {
-  it('records an order, masks an authored weapon, and debits the rune price', () => {
-    const { result } = renderHook(() => useRuneWork('a'));
-    const order = result.current.etch(weapon, rune, 'The Etcher');
-    expect(order).toMatchObject({ runeRef: 'flaming', readyLocationId: 'sandpoint', price: 500 });
-    expect(setOrders).toHaveBeenCalledWith([expect.objectContaining({ weaponUid: 'w1' })]);
-    expect(setRemoved).toHaveBeenCalled();
-    expect(removed).toContain('w1');
-    expect(setGold).toHaveBeenCalledWith(500); // 1000 - 500
-  });
-
-  it('splices a bought (acquired) weapon instead of masking it', () => {
-    acquired = [{ uid: 'w1', name: 'Longsword', strikes: {} }];
-    const { result } = renderHook(() => useRuneWork('a'));
-    result.current.etch(acquired[0], rune, 'The Etcher');
-    expect(setAcquired).toHaveBeenCalledWith([]); // spliced out
-    expect(removed).not.toContain('w1');
-  });
-
-  it('rejects when the rune costs more than the buyer’s gold (no writes)', () => {
-    gold = 100;
-    const { result } = renderHook(() => useRuneWork('a'));
-    expect(result.current.etch(weapon, rune, 'The Etcher')).toBeNull();
-    expect(setOrders).not.toHaveBeenCalled();
-    expect(setGold).not.toHaveBeenCalled();
-  });
+describe('commitHandoff (#857 S7a)', () => {
+  const potency = { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: '+1 Weapon Potency', price: 35 };
+  const flaming = { id: 'flaming', type: 'property', name: 'Flaming', price: 500 };
 
   it('freezes in the offline sandbox', () => {
     session = { connected: true, foundryConnected: false };
     const { result } = renderHook(() => useRuneWork('a'));
-    expect(result.current.etch(weapon, rune, 'The Etcher')).toBeNull();
+    expect(result.current.commitHandoff([{ gear: weapon, runes: [flaming] }], 'The Etcher')).toBeNull();
   });
-});
-
-describe('commitHandoff (#857 S7a)', () => {
-  const potency = { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: '+1 Weapon Potency', price: 35 };
-  const flaming = { id: 'flaming', type: 'property', name: 'Flaming', price: 500 };
 
   it('records one order per gear, pulls each, and debits the combined total once', () => {
     const { result } = renderHook(() => useRuneWork('a'));

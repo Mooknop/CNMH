@@ -6,7 +6,7 @@ import { useGameDate } from '../contexts/GameDateContext';
 import { useSessionLog } from './useSessionLog';
 import { docGold } from '../utils/gold';
 import { toGameSeconds } from '../utils/gameTime';
-import { createWorkOrder, createHandoffOrder, isOrderReady, foldRuneIntoWeapon, applyRunesToGear } from '../utils/runeWorkOrder';
+import { createHandoffOrder, isOrderReady, foldRuneIntoWeapon, applyRunesToGear } from '../utils/runeWorkOrder';
 
 // Rune work orders (#802). "Etch" pays the rune's price, takes the weapon from
 // the owner (an authored entry is masked via `cnmh_removed_`, a bought one is
@@ -36,45 +36,6 @@ export const useRuneWork = (charId) => {
   const locationId = campaign?.locationLoreId || '';
 
   const list = useMemo(() => (Array.isArray(orders) ? orders : []), [orders]);
-
-  // Pay to etch `rune` onto `weapon`. Records the order first (holding the
-  // weapon snapshot), then pulls the weapon and debits gold — so a mid-flight
-  // failure can only duplicate (recoverable), never strand the weapon with no
-  // order. Returns the new order, or null when rejected.
-  const etch = useCallback(
-    (weapon, rune, shopTitle) => {
-      if (offline || !charId) return null;
-      const price = Number(rune?.price) || 0;
-      if (!weapon || weapon.uid == null || !rune || rune.id == null) return null;
-      if (price > gold) return null;
-
-      const order = createWorkOrder({ weapon, rune, shopTitle, locationId, now: { ...gameDate, ...time }, price });
-      setOrders([...list, order]);
-
-      // Pull the weapon: splice it if it's a bought (acquired) entry, else mask
-      // the authored uid via the removed overlay.
-      const mine = Array.isArray(acquired) ? acquired : [];
-      const isAcquired = mine.some((e) => e && e.uid === weapon.uid);
-      if (isAcquired) {
-        setAcquired(mine.filter((e) => !(e && e.uid === weapon.uid)));
-      } else {
-        setRemoved((cur) => {
-          const set = Array.isArray(cur) ? cur : [];
-          return set.includes(weapon.uid) ? set : [...set, weapon.uid];
-        });
-      }
-
-      setGold(gold - price);
-      appendEvent({
-        type: 'action',
-        text: `${byId[charId]?.name || 'Someone'} left ${weapon.name || 'a weapon'} with ${
-          shopTitle || 'a shop'
-        } to etch ${rune.name} for ${price} gp`,
-      });
-      return order;
-    },
-    [offline, charId, gold, locationId, gameDate, time, list, acquired, setOrders, setAcquired, setRemoved, setGold, appendEvent, byId],
-  );
 
   // Hand staged gear to the smith (#857 S7a). `handoffs` = [{ gear, runes }];
   // commits all in one transaction — N orders recorded, each gear pulled
@@ -148,7 +109,7 @@ export const useRuneWork = (charId) => {
     [offline, charId, list, nowSeconds, locationId, acquired, setAcquired, setOrders, appendEvent, byId],
   );
 
-  return { orders: list, etch, commitHandoff, collect, nowSeconds, locationId };
+  return { orders: list, commitHandoff, collect, nowSeconds, locationId };
 };
 
 export default useRuneWork;

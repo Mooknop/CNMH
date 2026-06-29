@@ -74,7 +74,7 @@ export function shopOffersRunes(loreId, shops) {
 // (isShop) and is revealed (#822): an explicit `revealed:false` hides it; a
 // legacy shop with no `revealed` field stays visible. A closed shop is NOT
 // filtered here — it still appears, but as not-trading (see isShopOpen / the
-// ShopModal closed state).
+// storefront closed state).
 export function getShopsForLocation(locationId, entries, shops) {
   if (!locationId || !shops) return [];
   const childrenMap = buildChildrenMap(entries);

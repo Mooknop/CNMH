@@ -21,18 +21,14 @@ import { useRuneWork } from '../../hooks/useRuneWork';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import './ShopStorefront.css';
 
-// Player Shop redesign (#857). A full-screen, phone-shaped storefront that
-// replaces the Modal-wrapped ShopModal window: header band · keeper line · lore
-// banner (read-only) · computed tab bar · scrolling body · cart bar + pull-up
-// tray. S3 (#860) shipped the shell + Wares browse; S4 (#861) adds the town cart
-// (per-form add, drag-to-cart, pull-up tray, checkout via useBuyItems, toast).
-// The Spellcasting (S5) and Runesmithing (S6/S7) tabs are still placeholders.
+// Player Shop redesign (#857). The single full-screen, phone-shaped shop surface
+// (it replaced the old Modal-wrapped ShopModal, retired in S7b): header band ·
+// keeper line · lore banner (read-only) · computed tab bar · scrolling body ·
+// cart bar + pull-up tray. Tabs: Wares (S3/S4), Spellcasting (S5), Runesmithing
+// (S6/S7). Reached in-town from Downtime + a Location lore page (full: buy, cast,
+// etch); out of town from a lore page it opens read-only.
 //
-// Cart/buying render only in town (!readOnly). Until the storefront reaches
-// feature parity (spells S5, runes S6/S7), in-town buying still goes through
-// ShopModal — the DowntimeTab cut-over + ShopModal retirement land in S7. So no
-// production entry point routes a buyer here yet; the town path is fully tested
-// and is the seam S7 flips over.
+// Cart/buying + rune staging render only in town (!readOnly).
 
 const TAB_ACCENT = { wares: 'var(--ember-base)', spellcasting: 'var(--arcane-mid)', runes: 'var(--gold-mid)' };
 const TAB_LABEL = { wares: 'Wares', spellcasting: 'Spells', runes: 'Runes' };

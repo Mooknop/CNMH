@@ -43,14 +43,9 @@ vi.mock('../../contexts/ContentContext', () => ({
 }));
 import { useContent } from '../../contexts/ContentContext';
 
-// Stub the two shop surfaces — their own hooks (clock/session) are exercised
-// elsewhere. The drawer routes in-town buying to ShopModal and read-only (lore)
-// browsing to ShopStorefront (#857 S3); here we only assert which one opens with
-// the right shops.
-vi.mock('../shop/ShopModal', () => ({
-  default: ({ isOpen, shops }) =>
-    isOpen ? <div data-testid="lore-shop-modal">{(shops || []).length} shops</div> : null,
-}));
+// Stub the storefront — its own hooks (clock/session) are exercised elsewhere;
+// here we only assert the drawer opens it with the right shops + read-only flag
+// (#857: it's the single shop surface, read-only out of town).
 vi.mock('../shop/ShopStorefront', () => ({
   default: ({ isOpen, readOnly, shops }) =>
     isOpen ? (
@@ -175,7 +170,6 @@ describe('LoreDrawer', () => {
       const storefront = screen.getByTestId('lore-storefront');
       expect(storefront).toHaveAttribute('data-readonly', 'true');
       expect(storefront).toHaveTextContent('1 shops');
-      expect(screen.queryByTestId('lore-shop-modal')).not.toBeInTheDocument();
     });
   });
 
