@@ -53,7 +53,7 @@ const items = [
   },
 ];
 const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: ['Fire'] }];
-// Common, low-rank spells so the scroll offering (maxRank 3, all traditions,
+// Common, low-rank spells so the scroll offering (maxLevel 3, all traditions,
 // common) expands to buyable scroll items.
 const spells = [
   { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
@@ -71,7 +71,7 @@ const fullStore = {
       { ref: 'tonic', level: 3 },
       { ref: 'spellbook' },
       { ref: 'runestone', runeRef: 'flaming' },
-      { spellItem: 'scroll', maxRank: 3 },
+      { spellItem: 'scroll', maxLevel: 3 },
     ],
   },
 };

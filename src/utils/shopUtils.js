@@ -1,6 +1,6 @@
 import { buildChildrenMap, getChildren } from './loreUtils';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
-import { resolveScroll, resolveWand, castRank } from './spellItems';
+import { resolveScroll, resolveWand, castRank, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity } from './InventoryUtils';
 
 // Shop selectors over the app-managed wares store `cnmh_shops_global` (#696 S1).
@@ -147,18 +147,35 @@ export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
 }
 
 // ── Generative spell-item offerings (#812 S6) ───────────────────────────────
-// A shop can sell a Scroll/Wand of ANY catalog spell up to a rank, filtered by
-// tradition and rarity — priced from the base-template resolver (spellItems.js)
+// A shop can sell a Scroll/Wand of ANY catalog spell up to an ITEM LEVEL, filtered
+// by tradition and rarity — priced from the base-template resolver (spellItems.js)
 // rather than enumerating one catalog item per spell. The authored ware is the
-// compact spec `{ spellItem:'scroll'|'wand', maxRank, traditions?, rarities?,
-// priceMod? }`; selectors below expand it on demand. The buyer's own tradition
-// access is NOT a filter here — that stays the cast-time check; the shop simply
-// decides what it stocks.
+// compact spec `{ spellItem:'scroll'|'wand', maxLevel, traditions?, rarities?,
+// priceMod? }`; selectors below expand it on demand. The cap is the derived item
+// level (not the spell rank), so a single cap is fair across kinds: a rank-2 wand
+// (item level 5) is gated higher than a rank-2 scroll (item level 3). The buyer's
+// own tradition access is NOT a filter here — that stays the cast-time check; the
+// shop simply decides what it stocks.
 
 const ALL_TRADITIONS = ['arcane', 'divine', 'occult', 'primal'];
-// The base-template tables top out here (a rank-10 spell can't go in a wand).
-const SPELL_ITEM_MAX_RANK = { scroll: 10, wand: 9 };
+const SPELL_ITEM_TABLE = { scroll: SCROLL_BY_RANK, wand: WAND_BY_RANK };
 const BULK_L_WEIGHT = 0.1; // Bulk L, as finishItem stores it.
+
+// The highest cast rank whose derived scroll/wand item level is ≤ maxLevel, for a
+// kind. 0 when even the rank-1 item exceeds maxLevel (a wand needs item level ≥ 3,
+// so maxLevel 1–2 yields no wands — the asymmetry that makes a level cap fairer
+// than a rank cap). Inherently bounded by the table maxima (scroll 10 / wand 9),
+// since it only considers ranks the base-template table actually prices.
+export function maxRankForLevel(kind, maxLevel) {
+  const table = SPELL_ITEM_TABLE[kind];
+  const lvl = Number(maxLevel);
+  if (!table || !Number.isFinite(lvl)) return 0;
+  let best = 0;
+  for (const [rank, row] of Object.entries(table)) {
+    if (row.level <= lvl) best = Math.max(best, Number(rank));
+  }
+  return best;
+}
 
 // A ware is a generative spell-item offering (not a flat item/runestone ref).
 export function isSpellItemWare(w) {
@@ -191,14 +208,14 @@ export function spellItemOfferings(loreId, shops) {
   if (!Array.isArray(wares)) return [];
   return wares.filter(isSpellItemWare).map((w) => ({
     ...w,
-    offeringKey: `${w.spellItem}:${Number(w.maxRank) || 0}:${offeringTraditions(w).join('+')}:${offeringRarities(w).join('+')}`,
+    offeringKey: `${w.spellItem}:${Number(w.maxLevel) || 0}:${offeringTraditions(w).join('+')}:${offeringRarities(w).join('+')}`,
   }));
 }
 
 // Expand one offering into the list of purchasable, resolved scroll/wand items
-// it covers. A spell is kept when ALL hold: its cast rank ∈ [1 .. maxRank]
-// (capped at the table max), it shares ≥1 tradition with the filter, its rarity
-// is allowed, and it is neither a focus spell (no traditions) nor a cantrip.
+// it covers. A spell is kept when ALL hold: its derived item level ≤ maxLevel
+// (i.e. its cast rank ∈ [1 .. maxRankForLevel]), it shares ≥1 tradition with the
+// filter, its rarity is allowed, and it is neither a focus spell nor a cantrip.
 // Each entry is a minimal, re-resolvable item ({ scroll|wand: { spellRef } } +
 // S1/S2-derived name/level/price/bulk/traits, the spell's rarity stamped on)
 // with a stable distinct `wareKey`, so the cart + useBuyItems treat it like any
@@ -206,7 +223,7 @@ export function spellItemOfferings(loreId, shops) {
 export function eligibleSpellItems(ware, spells) {
   if (!isSpellItemWare(ware)) return [];
   const kind = ware.spellItem;
-  const cap = Math.min(Number(ware.maxRank) || 0, SPELL_ITEM_MAX_RANK[kind]);
+  const cap = maxRankForLevel(kind, ware.maxLevel);
   if (cap < 1) return [];
 
   const trads = offeringTraditions(ware);
@@ -251,18 +268,19 @@ export function eligibleSpellItems(ware, spells) {
 // eligible-spell count, shared by the GM authoring preview (#819) and the player
 // Spellcasting Services tab (#820). Mirrors the offering defaults exactly:
 // traditions empty = all four; rarities empty = common only.
-//   → { kind, cap, count, traditions[], rarities[], text }
-// where `text` is e.g. "Wands · arcane/occult · common+uncommon · up to rank 5
-// · 23 eligible spells".
+//   → { kind, maxLevel, cap, count, traditions[], rarities[], text }
+// where `cap` is the derived top cast rank and `text` is e.g. "Wands ·
+// arcane/occult · common+uncommon · up to item level 11 · 23 eligible spells".
 export function spellOfferingSummary(ware, spells) {
   const kind = ware && ware.spellItem === 'wand' ? 'wand' : 'scroll';
-  const cap = Math.max(1, Math.min(Number(ware?.maxRank) || 1, SPELL_ITEM_MAX_RANK[kind]));
+  const maxLevel = Math.max(1, Number(ware?.maxLevel) || 1);
+  const cap = maxRankForLevel(kind, maxLevel);
   const traditions = offeringTraditions(ware || {});
   const rarities = offeringRarities(ware || {});
   const count = eligibleSpellItems(ware, spells).length;
   const tradLabel = traditions.length === ALL_TRADITIONS.length ? 'all traditions' : traditions.join('/');
-  const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to rank ${cap} · ${count} eligible spell${count === 1 ? '' : 's'}`;
-  return { kind, cap, count, traditions, rarities, text };
+  const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to item level ${maxLevel} · ${count} eligible spell${count === 1 ? '' : 's'}`;
+  return { kind, maxLevel, cap, count, traditions, rarities, text };
 }
 
 // ── Player browse grouping (#857 S2) ────────────────────────────────────────

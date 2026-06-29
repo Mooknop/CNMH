@@ -357,27 +357,27 @@ describe('GmShops', () => {
     it('authors scrolls and persists the minimal spec (defaults omitted)', () => {
       open();
       fireEvent.click(screen.getByLabelText('spell-kind-scroll'));
-      fireEvent.change(screen.getByLabelText('spell-maxrank'), { target: { value: '3' } });
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '3' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
-      expect(lastWares()).toEqual([{ spellItem: 'scroll', maxRank: 3 }]);
+      expect(lastWares()).toEqual([{ spellItem: 'scroll', maxLevel: 3 }]);
     });
 
     it('one config drives BOTH scrolls and wands', () => {
       open();
       fireEvent.click(screen.getByLabelText('spell-kind-scroll'));
       fireEvent.click(screen.getByLabelText('spell-kind-wand'));
-      fireEvent.change(screen.getByLabelText('spell-maxrank'), { target: { value: '5' } });
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '5' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastWares()).toEqual([
-        { spellItem: 'scroll', maxRank: 5 },
-        { spellItem: 'wand', maxRank: 5 },
+        { spellItem: 'scroll', maxLevel: 5 },
+        { spellItem: 'wand', maxLevel: 5 },
       ]);
     });
 
     it('shares tradition + rarity subsets and a price modifier across kinds', () => {
       open();
       fireEvent.click(screen.getByLabelText('spell-kind-wand'));
-      fireEvent.change(screen.getByLabelText('spell-maxrank'), { target: { value: '5' } });
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '5' } });
       fireEvent.click(screen.getByLabelText('spell-trad-arcane'));
       fireEvent.click(screen.getByLabelText('spell-trad-occult'));
       fireEvent.click(screen.getByLabelText('spell-rarity-common'));
@@ -385,7 +385,7 @@ describe('GmShops', () => {
       fireEvent.change(screen.getByLabelText('spell-pricemod'), { target: { value: '1.2' } });
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       expect(lastWares()).toEqual([
-        { spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'], priceMod: 1.2 },
+        { spellItem: 'wand', maxLevel: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'], priceMod: 1.2 },
       ]);
     });
 
@@ -396,22 +396,24 @@ describe('GmShops', () => {
         fireEvent.click(screen.getByLabelText(`spell-trad-${t}`))
       );
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
-      expect(lastWares()).toEqual([{ spellItem: 'scroll', maxRank: 1 }]);
+      expect(lastWares()).toEqual([{ spellItem: 'scroll', maxLevel: 1 }]);
     });
 
     it('summarises coverage per enabled kind with a live count', () => {
       open();
       fireEvent.click(screen.getByLabelText('spell-kind-scroll'));
-      fireEvent.change(screen.getByLabelText('spell-maxrank'), { target: { value: '3' } });
-      // Scrolls, all traditions, common only, rank ≤ 3: heal, fireball, haste.
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '5' } });
+      // Scrolls, all traditions, common only, item level ≤ 5 (rank ≤ 3):
+      // heal(1), fireball(5), haste(5).
       expect(screen.getByTestId('spell-summary-scroll')).toHaveTextContent(
-        'Scrolls · all traditions · common · up to rank 3 · 3 eligible spells'
+        'Scrolls · all traditions · common · up to item level 5 · 3 eligible spells'
       );
-      fireEvent.change(screen.getByLabelText('spell-maxrank'), { target: { value: '5' } });
+      fireEvent.change(screen.getByLabelText('spell-maxlevel'), { target: { value: '9' } });
       fireEvent.click(screen.getByLabelText('spell-rarity-common'));
       fireEvent.click(screen.getByLabelText('spell-rarity-uncommon'));
+      // chromatic-wall (rank 5, uncommon) is scroll item level 9 — now included.
       expect(screen.getByTestId('spell-summary-scroll')).toHaveTextContent(
-        'common+uncommon · up to rank 5 · 4 eligible spells'
+        'common+uncommon · up to item level 9 · 4 eligible spells'
       );
     });
 
@@ -420,7 +422,7 @@ describe('GmShops', () => {
         'town-hall': {
           wares: [
             { ref: 'antidote' },
-            { spellItem: 'wand', maxRank: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'] },
+            { spellItem: 'wand', maxLevel: 5, traditions: ['arcane', 'occult'], rarities: ['common', 'uncommon'] },
           ],
         },
       });
@@ -428,14 +430,14 @@ describe('GmShops', () => {
       expect(within(shelf()).getByText('Antidote')).toBeInTheDocument();
       expect(within(offers()).getByLabelText('spell-kind-wand')).toHaveAttribute('aria-pressed', 'true');
       expect(within(offers()).getByLabelText('spell-kind-scroll')).toHaveAttribute('aria-pressed', 'false');
-      expect(within(offers()).getByLabelText('spell-maxrank')).toHaveValue(5);
+      expect(within(offers()).getByLabelText('spell-maxlevel')).toHaveValue(5);
       expect(within(offers()).getByLabelText('spell-trad-arcane')).toHaveAttribute('aria-pressed', 'true');
       expect(within(offers()).getByLabelText('spell-trad-divine')).toHaveAttribute('aria-pressed', 'false');
       expect(within(offers()).getByLabelText('spell-rarity-uncommon')).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('disabling all kinds republishes the flat ware alone', () => {
-      open({ 'town-hall': { wares: [{ ref: 'antidote' }, { spellItem: 'scroll', maxRank: 3 }] } });
+      open({ 'town-hall': { wares: [{ ref: 'antidote' }, { spellItem: 'scroll', maxLevel: 3 }] } });
       fireEvent.click(screen.getByLabelText('spell-kind-scroll')); // turn scrolls off
       fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
       // The scroll offering made Spellcasting derive ON at mount (#857 S1); the
@@ -463,7 +465,7 @@ describe('GmShops', () => {
     });
 
     it('derives Spellcasting on from a stored spell-item offering', () => {
-      setup({ 'bottled-solutions': { wares: [{ spellItem: 'scroll', maxRank: 3 }] } });
+      setup({ 'bottled-solutions': { wares: [{ spellItem: 'scroll', maxLevel: 3 }] } });
       render(<GmShops />);
       select('Bottled Solutions');
       expect(seg('Spellcasting', 'Offered')).toHaveAttribute('aria-pressed', 'true');
