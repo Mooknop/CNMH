@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
 import {
   resolveShopWares,
@@ -12,6 +12,7 @@ import {
 } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
 import { gearTarget, gearSockets, compatibleRunes } from '../../utils/runeSockets';
+import { isRuneItem } from '../../utils/runeClassify';
 import { STRIKING } from '../../utils/weaponRunes';
 import { RESILIENT } from '../../utils/armorRunes';
 import { formatAvailableAt } from '../../utils/gameTime';
@@ -444,7 +445,7 @@ const BenchedTicket = ({ order, nowSeconds }) => (
 // in the cart, committed at checkout, #878) + buy loose runestones. Shown when
 // the shop offersRunes (S1).
 const RunesmithingTab = ({
-  gearList, shopRunes, runeMap, runestoneGroups, stagedFor, keeperName, town, qtyByKey,
+  gearList, shopRunes, runeMap, runeGroups, stagedFor, keeperName, town, qtyByKey,
   onStage, onUnstage, onSelect, onAdd, readOnly, orders, nowSeconds,
 }) => {
   const benched = (Array.isArray(orders) ? orders : []);
@@ -469,13 +470,13 @@ const RunesmithingTab = ({
         </div>
       )}
       <div className="ps-section ps-section--svc">
-        <span className="ps-section-label">Runestones for sale</span>
-        <span className="ps-section-count">{runestoneGroups.length}</span>
+        <span className="ps-section-label">Runes for sale</span>
+        <span className="ps-section-count">{runeGroups.length}</span>
       </div>
-      {runestoneGroups.length === 0 ? (
-        <p className="ps-empty">No loose runestones for sale.</p>
+      {runeGroups.length === 0 ? (
+        <p className="ps-empty">No runes for sale.</p>
       ) : (
-        <WareGrid groups={runestoneGroups} label="runestones" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
+        <WareGrid groups={runeGroups} label="runes for sale" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
       )}
     </div>
   );
@@ -511,23 +512,31 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   const selected = list.find((s) => s.id === selectedId) || null;
   const town = !readOnly;
 
+  // Resolve once, then split: general wares (Wares tab) vs RUNES — runestones and
+  // rune item entries (armor/weapon potency, resilient, striking, slick, …) —
+  // which both move to the Runesmithing tab's "Runes for sale" (#883, was S6b's
+  // runestone-only split). A rune is a `{ref:'runestone'}` resolved ware OR a
+  // rune item entry (isRuneItem); the canonical signal from #885.
+  const resolved = useMemo(
+    () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap, runeMap) : []),
+    [selected, waresStore, catalogMap, runeMap]
+  );
+  const runeIds = useMemo(() => new Set(runeMap.keys()), [runeMap]);
+  const isRuneWare = useCallback((w) => !!w.runestone || isRuneItem(w, runeIds), [runeIds]);
+  const wareGroups = useMemo(() => groupWares(resolved.filter((w) => !isRuneWare(w))), [resolved, isRuneWare]);
+  const runeGroups = useMemo(() => groupWares(resolved.filter(isRuneWare)), [resolved, isRuneWare]);
+
+  // Tab set: Wares always; Spellcasting when the shop offers it (S1); Runesmithing
+  // when it offers runes OR simply stocks any (so rune wares always have a home,
+  // #883 — they're filtered out of Wares above).
   const tabs = useMemo(() => {
     if (!selected) return [];
     return [
       'wares',
       ...(shopOffersSpellcasting(selected.id, waresStore) ? ['spellcasting'] : []),
-      ...(shopOffersRunes(selected.id, waresStore) ? ['runes'] : []),
+      ...(shopOffersRunes(selected.id, waresStore) || runeGroups.length > 0 ? ['runes'] : []),
     ];
-  }, [selected, waresStore]);
-
-  // Resolve once, then split: general wares (Wares tab) vs runestones (which move
-  // to the Runesmithing tab's "Runestones for sale", #857 S6b).
-  const resolved = useMemo(
-    () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap, runeMap) : []),
-    [selected, waresStore, catalogMap, runeMap]
-  );
-  const wareGroups = useMemo(() => groupWares(resolved.filter((w) => !w.runestone)), [resolved]);
-  const runestoneGroups = useMemo(() => groupWares(resolved.filter((w) => w.runestone)), [resolved]);
+  }, [selected, waresStore, runeGroups]);
   // Rune docs the shop stocks (with the runestone's price), for the socket picker.
   const shopRunes = useMemo(
     () => resolved.filter((w) => w.runestone && w.runestone.rune)
@@ -559,9 +568,9 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   // back to full wares at checkout (a cart line only carries the wareKey/price/qty).
   const formsByKey = useMemo(() => {
     const m = new Map();
-    [...wareGroups, ...spellGroups, ...runestoneGroups].forEach((g) => g.forms.forEach((f) => m.set(f.wareKey, f)));
+    [...wareGroups, ...spellGroups, ...runeGroups].forEach((g) => g.forms.forEach((f) => m.set(f.wareKey, f)));
     return m;
-  }, [wareGroups, spellGroups, runestoneGroups]);
+  }, [wareGroups, spellGroups, runeGroups]);
   const qtyByKey = useMemo(() => Object.fromEntries(cart.map((l) => [l.id, l.qty])), [cart]);
 
   // Staged runes grouped per gear → handoff cart lines (#878): { gear, runes, cost }.
@@ -658,7 +667,7 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
           gearList={gearList}
           shopRunes={shopRunes}
           runeMap={runeMap}
-          runestoneGroups={runestoneGroups}
+          runeGroups={runeGroups}
           stagedFor={stagedFor}
           keeperName={null}
           town={town}

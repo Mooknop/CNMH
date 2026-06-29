@@ -122,11 +122,11 @@ describe('ShopStorefront', () => {
       expect(screen.queryByRole('tab', { name: /Runes/ })).not.toBeInTheDocument();
     });
 
-    it('the Runes tab shows the gear section + runestones-for-sale', () => {
+    it('the Runes tab shows the gear section + runes-for-sale', () => {
       renderShop();
       fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
       expect(screen.getByText('Your Gear')).toBeInTheDocument();
-      expect(screen.getByText('Runestones for sale')).toBeInTheDocument();
+      expect(screen.getByText('Runes for sale')).toBeInTheDocument();
     });
   });
 
@@ -347,12 +347,48 @@ describe('ShopStorefront', () => {
 
     it('moves runestones out of Wares and into the Runesmithing "for sale" section', () => {
       renderRunes();
-      const forSale = screen.getByLabelText('runestones');
+      const forSale = screen.getByLabelText('runes for sale');
       expect(within(forSale).getByTestId('ware-runestone-flaming')).toBeInTheDocument();
       // not in the Wares grid
       fireEvent.click(screen.getByRole('tab', { name: /Wares/ }));
       expect(screen.queryByLabelText('wares')).not.toBeInTheDocument(); // no general wares stocked
       expect(screen.queryByTestId('ware-runestone-flaming')).not.toBeInTheDocument();
+    });
+
+    it('routes rune ITEM entries to Runes-for-sale, not Wares (#883)', () => {
+      // A shop stocking a general ware + an armor-rune item + a weapon-potency item.
+      const store = { rings: { offersRunes: true, wares: [
+        { ref: 'antidote' }, { ref: 'armor-potency' }, { ref: 'weapon-potency' },
+      ] } };
+      const cat = [
+        ...items,
+        { id: 'armor-potency', name: 'Armor Potency', price: 160, armorRune: true, traits: ['Magical'] },
+        { id: 'weapon-potency', name: 'Weapon Potency', price: 35, traits: ['Magical'] },
+      ];
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[ringsShop]} waresStore={store}
+          items={cat} runes={[]} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+      // Wares tab has only the general ware
+      const wares = screen.getByLabelText('wares');
+      expect(within(wares).getByTestId('ware-antidote')).toBeInTheDocument();
+      expect(within(wares).queryByTestId('ware-armor-potency')).not.toBeInTheDocument();
+      expect(within(wares).queryByTestId('ware-weapon-potency')).not.toBeInTheDocument();
+      // Runes-for-sale has both rune items
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+      const forSale = screen.getByLabelText('runes for sale');
+      expect(within(forSale).getByTestId('ware-armor-potency')).toBeInTheDocument();
+      expect(within(forSale).getByTestId('ware-weapon-potency')).toBeInTheDocument();
+    });
+
+    it('shows the Runes tab for a shop that only stocks rune items (no runestones/flag)', () => {
+      const store = { rings: { wares: [{ ref: 'armor-potency' }] } };
+      const cat = [...items, { id: 'armor-potency', name: 'Armor Potency', price: 160, armorRune: true }];
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[ringsShop]} waresStore={store}
+          items={cat} runes={[]} spells={spells} character={{ id: 'p', name: 'P' }} />
+      );
+      expect(screen.getByRole('tab', { name: /Runes/ })).toBeInTheDocument();
     });
 
     it('stages a compatible property rune into an open socket, with a pending summary', () => {
