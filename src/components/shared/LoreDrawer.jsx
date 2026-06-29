@@ -12,7 +12,6 @@ import { getShopsForLocation } from '../../utils/shopUtils';
 import { monstersAtLocation, monsterToEnemy } from '../../utils/bestiary';
 import { rkKeyFor } from '../../utils/recallKnowledge';
 import LoreMarkdown from './LoreMarkdown';
-import ShopModal from '../shop/ShopModal';
 import ShopStorefront from '../shop/ShopStorefront';
 import './LoreDrawer.css';
 
@@ -23,7 +22,7 @@ const LoreDrawer = () => {
   const { isGm } = useGmAuth();
   const { shops } = useShops();
   const [campaign] = useSyncedState('cnmh_campaign_global', { locationLoreId: '' });
-  const { activeCharacter, activeCharacterColor } = useContext(CharacterContext) || {};
+  const { activeCharacter } = useContext(CharacterContext) || {};
   const [shopOpen, setShopOpen] = useState(false);
   const navigate = useNavigate();
   // On GM pages (Access-gated at the edge) the drawer resolves unrevealed
@@ -52,7 +51,7 @@ const LoreDrawer = () => {
   const children = useMemo(() => getChildren(entry, childrenMap), [entry, childrenMap]);
 
   // Shops located in this place: the revealed shop-children of the entry. The
-  // button browses them in ShopModal; purchasing is gated on the party actually
+  // button browses them in the storefront; purchasing is gated on the party actually
   // being in this town (campaign location) with an active character, else the
   // modal opens read-only.
   const locationShops = useMemo(
@@ -241,34 +240,19 @@ const LoreDrawer = () => {
         )}
       </div>
 
-      {/* Read-only (not in town) lore browsing uses the redesigned full-screen
-          storefront (#857 S3). In-town buying via a lore page keeps ShopModal
-          until S4 brings the cart over to the new surface. */}
-      {canBuy ? (
-        <ShopModal
-          isOpen={shopOpen}
-          onClose={() => setShopOpen(false)}
-          shops={locationShops}
-          waresStore={shops}
-          items={items}
-          runes={runes}
-          spells={spells}
-          character={activeCharacter}
-          characterColor={activeCharacterColor}
-        />
-      ) : (
-        <ShopStorefront
-          isOpen={shopOpen}
-          onClose={() => setShopOpen(false)}
-          shops={locationShops}
-          waresStore={shops}
-          items={items}
-          runes={runes}
-          spells={spells}
-          character={null}
-          readOnly
-        />
-      )}
+      {/* The redesigned full-screen storefront (#857) is the one shop surface:
+          in-town it buys + etches; from a lore page out of town it's read-only. */}
+      <ShopStorefront
+        isOpen={shopOpen}
+        onClose={() => setShopOpen(false)}
+        shops={locationShops}
+        waresStore={shops}
+        items={items}
+        runes={runes}
+        spells={spells}
+        character={canBuy ? activeCharacter : null}
+        readOnly={!canBuy}
+      />
     </>
   );
 };

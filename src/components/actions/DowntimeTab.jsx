@@ -8,7 +8,7 @@ import { DOWNTIME_ACTIVITIES } from '../../data/downtimeActivities';
 import { getHoursForActivity, getRollsForActivity, periodState } from '../../utils/downtimeUtils';
 import { getShopsForLocation } from '../../utils/shopUtils';
 import CraftingModal from '../inventory/CraftingModal';
-import ShopModal from '../shop/ShopModal';
+import ShopStorefront from '../shop/ShopStorefront';
 import CraftingProjects from './CraftingProjects';
 import RuneWorkPanel from './RuneWorkPanel';
 import MoveRunePanel from './MoveRunePanel';
@@ -156,7 +156,7 @@ const DowntimeTab = ({ character, characterColor }) => {
         characterColor={characterColor}
       />
 
-      <ShopModal
+      <ShopStorefront
         isOpen={isShopOpen}
         onClose={() => setIsShopOpen(false)}
         shops={locationShops}
@@ -165,7 +165,6 @@ const DowntimeTab = ({ character, characterColor }) => {
         runes={runes}
         spells={spells}
         character={character}
-        characterColor={characterColor}
       />
     </div>
   );
