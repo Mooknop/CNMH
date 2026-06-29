@@ -18,6 +18,11 @@ import { newEntryUid } from './uid';
 import { isArmor } from './InventoryUtils';
 import { propertySlotCapacity } from './weaponRunes';
 import { armorPropertySlotCapacity } from './armorRunes';
+import { runeTarget } from './runeClassify';
+
+// runeTarget is the canonical rune classifier (#885); re-exported here so the
+// socket helpers + their callers keep importing it from one place.
+export { runeTarget };
 
 /** What a piece of gear is for rune purposes: 'weapon' (has Strikes), 'armor'
  *  (has an armor block), else null (not runesmithable). */
@@ -26,14 +31,6 @@ export const gearTarget = (item) => {
   if (item.strikes) return 'weapon';
   if (isArmor(item)) return 'armor';
   return null;
-};
-
-/** What a rune can be applied to: fundamentals carry an explicit `target`;
- *  property runes use the `armorRune` flag (armor) else weapon. */
-export const runeTarget = (rune) => {
-  if (!rune || typeof rune !== 'object') return null;
-  if (rune.type === 'fundamental') return rune.target || null;
-  return rune.armorRune ? 'armor' : 'weapon';
 };
 
 const runesOf = (item) => (item && item.runes && typeof item.runes === 'object' ? item.runes : {});

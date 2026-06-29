@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { saveDocument, deleteDocument } from '../../utils/gmApi';
 import { slugify, existingIdSet } from '../../utils/contentUtils';
+import { runeTarget } from '../../utils/runeClassify';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import PageEditorShell from '../../components/gm/PageEditorShell';
@@ -286,9 +287,11 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
 
 const GmArmorRunes = () => {
   const { runes } = useContent();
-  // Only armor runes — weapon property runes live in GmRunes.
+  // Armor PROPERTY runes only (#885): weapon property runes live in GmRunes, and
+  // the fundamentals (armor potency/resilient, type:'fundamental') are table-
+  // derived — not authored here. Classify by target so the count is right.
   const catalog = useMemo(
-    () => (Array.isArray(runes) ? runes : []).filter((r) => r && r.armorRune),
+    () => (Array.isArray(runes) ? runes : []).filter((r) => r && r.type === 'property' && runeTarget(r) === 'armor'),
     [runes]
   );
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);

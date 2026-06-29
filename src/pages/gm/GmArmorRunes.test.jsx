@@ -46,6 +46,17 @@ describe('GmArmorRunes', () => {
     expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
   });
 
+  it('excludes armor fundamentals (potency/resilient) from the count (#885)', () => {
+    useContent.mockReturnValue({ runes: [
+      ...runes,
+      { id: 'armor-potency-1', type: 'fundamental', fundamental: 'potency', target: 'armor', name: '+1 Armor Potency' },
+      { id: 'resilient', type: 'fundamental', fundamental: 'resilient', target: 'armor', name: 'Resilient' },
+    ] });
+    render(<GmArmorRunes />);
+    expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument(); // fundamentals filtered out
+    expect(screen.queryByRole('button', { name: /Armor Potency/ })).not.toBeInTheDocument();
+  });
+
   it('loads an existing rune into the modifier rows', () => {
     setContent();
     render(<GmArmorRunes />);
