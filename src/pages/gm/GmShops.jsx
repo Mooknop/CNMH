@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useShops } from '../../hooks/useShops';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
-import { isSetUp, isSpellItemWare, eligibleSpellItems, shopOffersSpellcasting, shopOffersRunes } from '../../utils/shopUtils';
+import { isSetUp, isSpellItemWare, spellOfferingSummary, shopOffersSpellcasting, shopOffersRunes } from '../../utils/shopUtils';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -100,48 +100,57 @@ const ALL_RARITIES = ['common', 'uncommon', 'rare'];
 // Base-template tables top out here (a rank-10 spell can't go in a wand).
 const SPELL_ITEM_MAX_RANK = { scroll: 10, wand: 9 };
 
-let OFFERING_SEQ = 0;
-const newOfferingKey = () => `off-${OFFERING_SEQ++}`;
+// Stored spell-item wares → the unified by-tradition config (#884). One config
+// drives BOTH scrolls and wands rather than a row per kind (#819). Existing
+// per-kind offerings collapse into it — kinds present, traditions/rarities
+// unioned, maxRank the max, first priceMod — which is the in-app backfill for
+// shops set up under the old model (no migration; re-saving normalises them).
+const toSpellConfig = (wares) => {
+  const offerings = (Array.isArray(wares) ? wares : []).filter(isSpellItemWare);
+  const config = { scroll: false, wand: false, maxRank: '1', traditions: [], rarities: [], priceMod: '' };
+  let maxRank = 0;
+  const trads = new Set();
+  const rars = new Set();
+  offerings.forEach((o) => {
+    if (o.spellItem === 'scroll') config.scroll = true;
+    if (o.spellItem === 'wand') config.wand = true;
+    const r = parseInt(o.maxRank, 10);
+    if (!Number.isNaN(r)) maxRank = Math.max(maxRank, r);
+    (Array.isArray(o.traditions) ? o.traditions : []).filter(Boolean).forEach((t) => trads.add(t));
+    (Array.isArray(o.rarities) ? o.rarities : []).filter(Boolean).forEach((x) => rars.add(x));
+    if (config.priceMod === '' && o.priceMod != null) config.priceMod = String(o.priceMod);
+  });
+  if (maxRank > 0) config.maxRank = String(maxRank);
+  config.traditions = [...trads];
+  config.rarities = [...rars];
+  return config;
+};
 
-// Stored spell-item wares → local form rows. Each keeps a synthetic `key` so
-// React/inputs stay stable across add/remove (the spec carries no natural id).
-const toOfferings = (wares) =>
-  (Array.isArray(wares) ? wares : [])
-    .filter(isSpellItemWare)
-    .map((w) => ({
-      key: newOfferingKey(),
-      spellItem: w.spellItem,
-      maxRank: w.maxRank != null ? String(w.maxRank) : '',
-      traditions: Array.isArray(w.traditions) ? w.traditions.filter(Boolean) : [],
-      rarities: Array.isArray(w.rarities) ? w.rarities.filter(Boolean) : [],
-      priceMod: w.priceMod != null ? String(w.priceMod) : '',
-    }));
+// One config + a kind → its stored spec. Defaults are OMITTED so specs stay clean
+// and round-trip with the S6 selectors: traditions unset = all four; rarities
+// unset = common only; priceMod unset = ×1.
+const offeringWare = (kind, config) => {
+  const cap = SPELL_ITEM_MAX_RANK[kind];
+  let rank = parseInt(config.maxRank, 10);
+  if (Number.isNaN(rank)) rank = 1;
+  rank = Math.max(1, Math.min(cap, rank));
+  const w = { spellItem: kind, maxRank: rank };
+  const trads = (config.traditions || []).filter(Boolean);
+  if (trads.length > 0 && trads.length < ALL_TRADITIONS.length) w.traditions = trads;
+  const rars = (config.rarities || []).filter(Boolean);
+  if (!(rars.length === 0 || (rars.length === 1 && rars[0] === 'common'))) w.rarities = rars;
+  const mod = parseFloat(config.priceMod);
+  if (!Number.isNaN(mod) && mod > 0 && mod !== 1) w.priceMod = mod;
+  return w;
+};
 
-// Form rows → minimal stored specs. Defaults are OMITTED so stored specs stay
-// clean and round-trip with the S6 selectors: traditions unset = all four
-// (so drop an empty OR all-four selection); rarities unset = common only (so
-// drop an empty OR exactly-common selection); priceMod unset = ×1.
-const fromOfferings = (offerings) =>
-  (Array.isArray(offerings) ? offerings : [])
-    .filter((o) => o.spellItem === 'scroll' || o.spellItem === 'wand')
-    .map((o) => {
-      const kind = o.spellItem;
-      const cap = SPELL_ITEM_MAX_RANK[kind];
-      let rank = parseInt(o.maxRank, 10);
-      if (Number.isNaN(rank)) rank = 1;
-      rank = Math.max(1, Math.min(cap, rank));
-      const w = { spellItem: kind, maxRank: rank };
-
-      const trads = (o.traditions || []).filter(Boolean);
-      if (trads.length > 0 && trads.length < ALL_TRADITIONS.length) w.traditions = trads;
-
-      const rars = (o.rarities || []).filter(Boolean);
-      if (!(rars.length === 0 || (rars.length === 1 && rars[0] === 'common'))) w.rarities = rars;
-
-      const mod = parseFloat(o.priceMod);
-      if (!Number.isNaN(mod) && mod > 0 && mod !== 1) w.priceMod = mod;
-      return w;
-    });
+// Unified config → stored spell-item wares: one per enabled kind (#884).
+const fromSpellConfig = (config) => {
+  const out = [];
+  if (config.scroll) out.push(offeringWare('scroll', config));
+  if (config.wand) out.push(offeringWare('wand', config));
+  return out;
+};
 
 // Unified catalog of shelvable things: every item + every rune (as a Runestone).
 // Each card carries the shape the catalog/shelf need plus the `kind` that the
@@ -503,148 +512,105 @@ const ChipMulti = ({ label, options, selected, onToggle, idBase, hint }) => (
   </div>
 );
 
-// One generative spell-item offering row. Live-resolves its eligible-spell count
-// + coverage summary off the S6 selector so the GM sees what the spec covers as
-// they tune it. `traditions` empty = all four; `rarities` empty = common only —
-// matching the stored-spec defaults exactly.
-const OfferingRow = ({ row, index, spells, onChange, onRemove }) => {
-  const kind = row.spellItem === 'wand' ? 'wand' : 'scroll';
-  const cap = SPELL_ITEM_MAX_RANK[kind];
-
-  const spec = useMemo(
-    () => ({
-      spellItem: kind,
-      maxRank: parseInt(row.maxRank, 10) || 0,
-      traditions: row.traditions,
-      rarities: row.rarities,
-      priceMod: parseFloat(row.priceMod) || undefined,
-    }),
-    [kind, row.maxRank, row.traditions, row.rarities, row.priceMod]
-  );
-  const eligible = useMemo(() => eligibleSpellItems(spec, spells), [spec, spells]);
-
-  const trads = row.traditions.length ? row.traditions : ALL_TRADITIONS;
-  const rars = row.rarities.length ? row.rarities : ['common'];
-  const cappedRank = Math.max(1, Math.min(cap, parseInt(row.maxRank, 10) || 1));
-  const tradLabel = trads.length === ALL_TRADITIONS.length ? 'all traditions' : [...trads].join('/');
-  const summary = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${[...rars].join('+')} · up to rank ${cappedRank} · ${eligible.length} eligible spell${eligible.length === 1 ? '' : 's'}`;
-
+// The "Spellcasting services" section (#884): ONE by-tradition config driving
+// both scrolls and wands, instead of a row per kind. The GM picks which kinds to
+// sell + the shared tradition/rarity/rank/price filters; a live summary per
+// enabled kind shows coverage (off the S6 selector). `traditions` empty = all
+// four; `rarities` empty = common only — matching the stored-spec defaults.
+const SpellcastingSection = ({ config, spells, onChange }) => {
+  const setField = (patch) => onChange({ ...config, ...patch });
   const toggleIn = (field, value) => {
-    const cur = row[field];
-    onChange({ [field]: cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value] });
+    const cur = config[field] || [];
+    setField({ [field]: cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value] });
   };
+  const enabled = [['scroll', 'Scrolls'], ['wand', 'Wands']].filter(([k]) => config[k]);
 
   return (
-    <li className="gm-row gm-shop-ware-row gm-shop-offer-row">
-      <div className="gm-shop-ware-top">
-        <div className="form-group gm-shop-offer-kind">
-          <label htmlFor={`offering-kind-${index}`}>type</label>
-          <select
-            id={`offering-kind-${index}`}
-            aria-label={`offering-kind-${index}`}
-            value={kind}
-            onChange={(e) => onChange({ spellItem: e.target.value })}
-          >
-            <option value="scroll">Scrolls</option>
-            <option value="wand">Wands</option>
-          </select>
+    <div className="gm-shop-offers" data-testid="shop-offerings">
+      <div className="gm-shop-offers-head">
+        <div className="gm-shop-pane-title">Spellcasting services</div>
+      </div>
+      <p className="gm-count gm-shop-offers-intro">
+        Scribe Scrolls/Wands of any catalog spell up to a rank, by tradition and rarity.
+      </p>
+      <div className="gm-shop-offer-filters">
+        <div className="form-group gm-shop-offer-field">
+          <span className="gm-shop-offer-label">sells</span>
+          <div className="gm-shop-chips" role="group" aria-label="sells">
+            {[['scroll', 'Scrolls'], ['wand', 'Wands']].map(([k, lbl]) => (
+              <button
+                key={k}
+                type="button"
+                className={`gm-shop-chip${config[k] ? ' is-on' : ''}`}
+                aria-pressed={!!config[k]}
+                aria-label={`spell-kind-${k}`}
+                onClick={() => setField({ [k]: !config[k] })}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="form-group gm-shop-offer-rank">
-          <label htmlFor={`offering-maxrank-${index}`}>max rank</label>
+          <label htmlFor="spell-maxrank">max rank</label>
           <input
-            id={`offering-maxrank-${index}`}
-            aria-label={`offering-maxrank-${index}`}
+            id="spell-maxrank"
+            aria-label="spell-maxrank"
             type="number"
             min="1"
-            max={String(cap)}
-            value={row.maxRank}
-            onChange={(e) => onChange({ maxRank: e.target.value })}
+            max="10"
+            value={config.maxRank}
+            onChange={(e) => setField({ maxRank: e.target.value })}
           />
         </div>
-        <button
-          type="button"
-          className="btn-small btn-danger gm-shop-ware-x"
-          aria-label={`remove-offering-${index}`}
-          onClick={onRemove}
-        >
-          ✕
-        </button>
-      </div>
-      <div className="gm-shop-offer-filters">
         <ChipMulti
           label="traditions"
           options={ALL_TRADITIONS}
-          selected={row.traditions}
+          selected={config.traditions}
           onToggle={(v) => toggleIn('traditions', v)}
-          idBase={`offering-${index}-trad`}
+          idBase="spell-trad"
           hint="none = all"
         />
         <ChipMulti
           label="rarities"
           options={ALL_RARITIES}
-          selected={row.rarities}
+          selected={config.rarities}
           onToggle={(v) => toggleIn('rarities', v)}
-          idBase={`offering-${index}-rarity`}
+          idBase="spell-rarity"
           hint="none = common only"
         />
         <div className="form-group gm-shop-offer-field gm-shop-offer-mod">
-          <label htmlFor={`offering-pricemod-${index}`}>price ×</label>
+          <label htmlFor="spell-pricemod">price ×</label>
           <input
-            id={`offering-pricemod-${index}`}
-            aria-label={`offering-pricemod-${index}`}
+            id="spell-pricemod"
+            aria-label="spell-pricemod"
             type="number"
             min="0"
             step="0.05"
             placeholder="1"
-            value={row.priceMod}
-            onChange={(e) => onChange({ priceMod: e.target.value })}
+            value={config.priceMod}
+            onChange={(e) => setField({ priceMod: e.target.value })}
           />
         </div>
       </div>
-      <p className="gm-shop-offer-summary" data-testid={`offering-summary-${index}`}>
-        {summary}
-      </p>
-    </li>
+      {enabled.length === 0 ? (
+        <p className="gm-count gm-shop-offers-empty">
+          Not selling scrolls or wands. Choose Scrolls or Wands above to offer spellcasting services.
+        </p>
+      ) : (
+        enabled.map(([k]) => {
+          const s = spellOfferingSummary(
+            { spellItem: k, maxRank: parseInt(config.maxRank, 10) || 1, traditions: config.traditions, rarities: config.rarities },
+            spells
+          );
+          return (
+            <p key={k} className="gm-shop-offer-summary" data-testid={`spell-summary-${k}`}>{s.text}</p>
+          );
+        })
+      )}
+    </div>
   );
 };
-
-// The "Spellcasting services" section: generative scroll/wand offerings, each a
-// rank/tradition/rarity spec rather than a single catalog item.
-const OfferingsSection = ({ offerings, spells, addOffering, setOffering, removeOffering }) => (
-  <div className="gm-shop-offers" data-testid="shop-offerings">
-    <div className="gm-shop-offers-head">
-      <div className="gm-shop-pane-title">
-        Spellcasting services<span className="gm-shop-pane-count">{offerings.length}</span>
-      </div>
-      <button
-        type="button"
-        className="btn-small btn-secondary"
-        onClick={addOffering}
-      >
-        Add spell-item offering
-      </button>
-    </div>
-    {offerings.length === 0 ? (
-      <p className="gm-count gm-shop-offers-empty">
-        No scroll or wand offerings. Add one to sell Scrolls/Wands of any catalog spell up to a
-        rank, filtered by tradition and rarity.
-      </p>
-    ) : (
-      <ul className="gm-shop-wares" aria-label="spell-item offerings">
-        {offerings.map((o, i) => (
-          <OfferingRow
-            key={o.key}
-            row={o}
-            index={i}
-            spells={spells}
-            onChange={(patch) => setOffering(i, patch)}
-            onRemove={() => removeOffering(i)}
-          />
-        ))}
-      </ul>
-    )}
-  </div>
-);
 
 // The per-location authoring surface. `onBack` is supplied only by finders that
 // hide the list (the Command finder, S5); inside PageEditorShell the list stays
@@ -662,7 +628,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
   const [offersSpellcasting, setOffersSpellcasting] = useState(() => shopOffersSpellcasting(loreId, shops));
   const [offersRunes, setOffersRunes] = useState(() => shopOffersRunes(loreId, shops));
   const [rows, setRows] = useState(() => toRows(entry?.wares));
-  const [offerings, setOfferings] = useState(() => toOfferings(entry?.wares));
+  const [spellConfig, setSpellConfig] = useState(() => toSpellConfig(entry?.wares));
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
@@ -679,21 +645,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
     touch();
   };
 
-  const addOffering = () => {
-    setOfferings((cur) => [
-      ...cur,
-      { key: newOfferingKey(), spellItem: 'scroll', maxRank: '1', traditions: [], rarities: [], priceMod: '' },
-    ]);
-    touch();
-  };
-  const setOffering = (i, patch) => {
-    setOfferings((cur) => cur.map((o, idx) => (idx === i ? { ...o, ...patch } : o)));
-    touch();
-  };
-  const removeOffering = (i) => {
-    setOfferings((cur) => cur.filter((_, idx) => idx !== i));
-    touch();
-  };
+  const editSpellConfig = (next) => { setSpellConfig(next); touch(); };
 
   // Shelve a catalog card as ONE row, skipping a ref/rune already on the shelf.
   // A multi-variant item (#889) shelves with its first variant pre-selected (the
@@ -721,7 +673,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
     setRevealed(false);
     setOpen(true);
     setRows([]);
-    setOfferings([]);
+    setSpellConfig(toSpellConfig([]));
     setOffersSpellcasting(false);
     setOffersRunes(false);
     setDirty(false);
@@ -735,7 +687,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
       revealed,
       offersSpellcasting,
       offersRunes,
-      wares: [...fromRows(rows), ...fromOfferings(offerings)],
+      wares: [...fromRows(rows), ...fromSpellConfig(spellConfig)],
     });
     setDirty(false);
     setJustSaved(true);
@@ -849,12 +801,10 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
             />
           </div>
 
-          <OfferingsSection
-            offerings={offerings}
+          <SpellcastingSection
+            config={spellConfig}
             spells={spells}
-            addOffering={addOffering}
-            setOffering={setOffering}
-            removeOffering={removeOffering}
+            onChange={editSpellConfig}
           />
         </>
       )}
