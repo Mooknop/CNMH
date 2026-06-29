@@ -475,7 +475,7 @@ const ShopModal = ({ isOpen, onClose, shops, waresStore, items, runes, spells, c
                       {wares.map((ware) => (
                         <li key={ware.wareKey} className="shop-ware-row">
                           <WareTile ware={ware} onInspect={setDetailItem} />
-                          {!readOnly && ware.runestone && (
+                          {!readOnly && ware.runestone && ware.runestone.rune?.type !== 'fundamental' && (
                             <button
                               type="button"
                               className="shop-ware-etch"

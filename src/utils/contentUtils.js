@@ -19,6 +19,7 @@ import {
 import bootstrapEffects from '../data/pf2eEffects';
 import bootstrapRunes from '../data/pf2eRunes';
 import bootstrapArmorRunes from '../data/armorRunes';
+import { FUNDAMENTAL_RUNES } from '../data/fundamentalRunes';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { resolveScroll, resolveWand } from './spellItems';
 
@@ -158,6 +159,17 @@ export const mergeArmorRunes = (runes) => {
   const list = Array.isArray(runes) ? runes : [];
   const present = new Set(list.map((r) => r && r.id).filter(Boolean));
   const extras = bootstrapArmorRunes.filter((r) => !present.has(r.id));
+  return extras.length ? [...list, ...extras] : list;
+};
+
+// Merge the code-seeded fundamental runes (#857 S6a) into a rune list, skipping
+// ids already present. Like mergeArmorRunes, these always merge in so the
+// runesmith can stock + apply Potency/Striking/Resilient regardless of the DO —
+// the rune catalog itself only carries property runes.
+export const mergeFundamentalRunes = (runes) => {
+  const list = Array.isArray(runes) ? runes : [];
+  const present = new Set(list.map((r) => r && r.id).filter(Boolean));
+  const extras = FUNDAMENTAL_RUNES.filter((r) => !present.has(r.id));
   return extras.length ? [...list, ...extras] : list;
 };
 
@@ -625,7 +637,7 @@ export const defaultContent = () => ({
   effect: normalizeEffects(snapshotEffects.length ? snapshotEffects : bootstrapEffects),
   // Property runes (#548): brand-new collection, bootstrap-seeded until the
   // snapshot carries a `rune` array (same pattern as effects).
-  rune: mergeArmorRunes(normalizeRunes(snapshotRunes.length ? snapshotRunes : bootstrapRunes)),
+  rune: mergeFundamentalRunes(mergeArmorRunes(normalizeRunes(snapshotRunes.length ? snapshotRunes : bootstrapRunes))),
   image: normalizeImages(defaultImages || []),
   theme: (defaultThemeDocs && defaultThemeDocs.length) ? defaultThemeDocs : [DEFAULT_THEME],
   monster: [],

@@ -14,7 +14,14 @@ vi.mock('../../hooks/useBuyItems', () => ({
   useBuyItems: vi.fn(() => ({ myGold: mockGold, buy: mockBuy })),
 }));
 
-beforeEach(() => { mockGold = 142; mockBuy.mockClear(); });
+// useCharacter pulls character/content contexts; stub it with the inventory the
+// Runesmithing gear list reads.
+let mockInventory = [];
+vi.mock('../../hooks/useCharacter', () => ({
+  useCharacter: vi.fn(() => ({ inventory: mockInventory })),
+}));
+
+beforeEach(() => { mockGold = 142; mockBuy.mockClear(); mockInventory = []; });
 
 const items = [
   { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.' },
@@ -110,10 +117,11 @@ describe('ShopStorefront', () => {
       expect(screen.queryByRole('tab', { name: /Runes/ })).not.toBeInTheDocument();
     });
 
-    it('the not-yet-built Runes tab shows a coming-soon placeholder', () => {
+    it('the Runes tab shows the gear section + runestones-for-sale', () => {
       renderShop();
       fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
-      expect(screen.getByTestId('ps-coming-soon')).toBeInTheDocument();
+      expect(screen.getByText('Your Gear')).toBeInTheDocument();
+      expect(screen.getByText('Runestones for sale')).toBeInTheDocument();
     });
   });
 
@@ -298,6 +306,85 @@ describe('ShopStorefront', () => {
       fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
       expect(screen.getByText(/scribes nothing to order/i)).toBeInTheDocument();
       expect(screen.getByLabelText('spellcasting services')).toBeInTheDocument();
+    });
+  });
+
+  describe('runesmithing tab (#857 S6b)', () => {
+    // A weapon at +1 (one open property slot + an empty striking socket); the shop
+    // stocks a weapon property rune + a striking fundamental as runestones.
+    const rsRunes = [
+      { id: 'flaming', type: 'property', name: 'Flaming', price: 500 },
+      { id: 'striking', type: 'fundamental', fundamental: 'striking', target: 'weapon', tierKey: 'striking', name: 'Striking', price: 65 },
+    ];
+    const rsStore = { rings: { keeper: '', wares: [
+      { ref: 'runestone', runeRef: 'flaming' },
+      { ref: 'runestone', runeRef: 'striking' },
+    ] } };
+    const renderRunes = (props = {}) => {
+      mockInventory = [{ uid: 'w1', name: 'Longsword', strikes: [{}], runes: { potency: 1 } }];
+      render(
+        <ShopStorefront
+          isOpen onClose={vi.fn()} shops={[ringsShop]} waresStore={rsStore}
+          items={items} runes={rsRunes} spells={spells} character={{ id: 'p', name: 'P' }} {...props}
+        />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+    };
+
+    it('renders a gear card with derived sockets', () => {
+      renderRunes();
+      const gear = screen.getByTestId('gear-w1');
+      expect(gear).toHaveTextContent('Longsword');
+      expect(gear).toHaveTextContent('+1'); // filled potency socket
+      // open striking + property sockets are tappable
+      expect(within(gear).getAllByRole('button', { name: /^fill .* slot/i }).length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('moves runestones out of Wares and into the Runesmithing "for sale" section', () => {
+      renderRunes();
+      const forSale = screen.getByLabelText('runestones');
+      expect(within(forSale).getByTestId('ware-runestone-flaming')).toBeInTheDocument();
+      // not in the Wares grid
+      fireEvent.click(screen.getByRole('tab', { name: /Wares/ }));
+      expect(screen.queryByLabelText('wares')).not.toBeInTheDocument(); // no general wares stocked
+      expect(screen.queryByTestId('ware-runestone-flaming')).not.toBeInTheDocument();
+    });
+
+    it('stages a compatible property rune into an open socket, with a pending summary', () => {
+      renderRunes();
+      const gear = screen.getByTestId('gear-w1');
+      // open the property-socket picker (the striking socket lists Striking; the
+      // property socket lists Flaming). Fill the property slot:
+      fireEvent.click(within(gear).getByLabelText(/fill Property slot/i));
+      const picker = screen.getByTestId('picker-w1');
+      expect(within(picker).getByText('Flaming')).toBeInTheDocument();
+      expect(within(picker).queryByText('Striking')).not.toBeInTheDocument(); // wrong socket
+      fireEvent.click(within(picker).getByRole('button', { name: /Flaming/ }));
+      // staged: socket shows the rune + a pending note (runestone price 3+500)
+      expect(within(gear).getByTestId('staged-w1')).toHaveTextContent('503 gp');
+      expect(within(gear).getByLabelText('un-stage Flaming')).toBeInTheDocument();
+    });
+
+    it('un-stages a rune by tapping the staged socket', () => {
+      renderRunes();
+      const gear = screen.getByTestId('gear-w1');
+      fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
+      expect(within(gear).getByLabelText('un-stage Striking')).toBeInTheDocument();
+      fireEvent.click(within(gear).getByLabelText('un-stage Striking'));
+      expect(within(gear).queryByTestId('staged-w1')).not.toBeInTheDocument();
+    });
+
+    it('read-only mode shows "—" sockets and no picker', () => {
+      mockInventory = [{ uid: 'w1', name: 'Longsword', strikes: [{}], runes: { potency: 1 } }];
+      render(
+        <ShopStorefront isOpen onClose={vi.fn()} shops={[ringsShop]} waresStore={rsStore}
+          items={items} runes={rsRunes} spells={spells} character={null} readOnly />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+      // Sockets render as "—" (no fill buttons, no picker) when not in town.
+      expect(screen.queryByLabelText(/^fill .* slot/i)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('picker-w1')).not.toBeInTheDocument();
     });
   });
 
