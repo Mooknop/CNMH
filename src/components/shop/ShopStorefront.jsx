@@ -11,7 +11,11 @@ import {
   eligibleSpellItems,
 } from '../../utils/shopUtils';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
+import { gearTarget, gearSockets, compatibleRunes } from '../../utils/runeSockets';
+import { STRIKING } from '../../utils/weaponRunes';
+import { RESILIENT } from '../../utils/armorRunes';
 import { useBuyItems } from '../../hooks/useBuyItems';
+import { useCharacter } from '../../hooks/useCharacter';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import './ShopStorefront.css';
 
@@ -298,10 +302,144 @@ const CartTray = ({ cart, gold, onSetQty, onRemove, onClear, onCheckout }) => {
   );
 };
 
-const ComingSoon = ({ children }) => (
-  <div className="ps-soon" data-testid="ps-coming-soon">
-    <div className="ps-soon-mark" aria-hidden="true">✦</div>
-    <p>{children}</p>
+// ── Runesmithing (#857 S6b) ──────────────────────────────────────────────────
+const SOCKET_GLYPH = { potency: 'ᚠ', striking: 'ᛋ', resilient: 'ᛞ', property: '◇' };
+const SOCKET_LABEL = { potency: 'Potency', striking: 'Striking', resilient: 'Resilient', property: 'Property' };
+// A socket's stable key within a gear card (fundamentals are singletons; a
+// property socket is keyed by its index).
+const socketKey = (s) => (s.type === 'property' ? `property:${s.index}` : s.type);
+// What an already-equipped socket shows.
+const filledLabel = (s, runeMap) => {
+  if (s.type === 'potency') return `+${s.value}`;
+  if (s.type === 'striking') return STRIKING[s.value]?.label || 'Striking';
+  if (s.type === 'resilient') return RESILIENT[s.value]?.label || 'Resilient';
+  const ref = typeof s.rune === 'string' ? s.rune : s.rune && s.rune.id;
+  return runeMap.get(String(ref))?.name || 'Rune';
+};
+
+// One piece of gear with its rune sockets. Staging is local to the storefront
+// (lifted to ShopStorefront); this card reads `stagedFor` (socketKey→rune) and a
+// per-socket picker stages/un-stages. No gold moves and nothing is handed over
+// until checkout (S7) — staged runes show here as a pending summary.
+const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, onUnstage, readOnly }) => {
+  const [openKey, setOpenKey] = useState(null);
+  const target = gearTarget(gear);
+  const sockets = gearSockets(gear);
+  const stagedEntries = Object.entries(stagedFor);
+  const stagedIds = new Set(stagedEntries.map(([, r]) => r.id));
+  const stagedCost = stagedEntries.reduce((sum, [, r]) => sum + (Number(r.price) || 0), 0);
+  const openCount = sockets.filter((s) => !s.filled && !stagedFor[socketKey(s)]).length;
+
+  const openSocket = openKey ? sockets.find((s) => socketKey(s) === openKey) : null;
+  const options = openSocket
+    ? compatibleRunes(gear, openSocket.type, shopRunes).filter((r) => !stagedIds.has(r.id))
+    : [];
+
+  return (
+    <div className="ps-gear" data-testid={`gear-${gear.uid}`}>
+      <div className="ps-gear-head">
+        <span className="ps-gear-icon" aria-hidden="true">{target === 'armor' ? '🛡' : '⚔'}</span>
+        <div className="ps-gear-id">
+          <div className="ps-gear-name">{gear.name}</div>
+          <div className="ps-gear-sub">{openCount} open slot{openCount === 1 ? '' : 's'} · {target}</div>
+        </div>
+      </div>
+      <div className="ps-sockets" aria-label={`${gear.name} sockets`}>
+        {sockets.map((s) => {
+          const key = socketKey(s);
+          const staged = stagedFor[key];
+          const glyph = <span className="ps-socket-glyph" aria-hidden="true">{SOCKET_GLYPH[s.type]}</span>;
+          if (staged) {
+            return (
+              <button key={key} type="button" className="ps-socket is-staged"
+                aria-label={`un-stage ${staged.name}`} onClick={() => onUnstage(gear.uid, key)}>
+                {glyph}<span className="ps-socket-name">{staged.name}</span><span className="ps-socket-x" aria-hidden="true">✕</span>
+              </button>
+            );
+          }
+          if (s.filled) {
+            return (
+              <div key={key} className="ps-socket is-filled">
+                {glyph}<span className="ps-socket-name">{filledLabel(s, runeMap)}</span>
+              </div>
+            );
+          }
+          if (readOnly) {
+            return <div key={key} className="ps-socket is-empty">{glyph}<span className="ps-socket-name">—</span></div>;
+          }
+          return (
+            <button key={key} type="button"
+              className={`ps-socket is-open${openKey === key ? ' is-active' : ''}`}
+              aria-label={`fill ${SOCKET_LABEL[s.type]} slot on ${gear.name}`}
+              onClick={() => setOpenKey(openKey === key ? null : key)}>
+              {glyph}<span className="ps-socket-name">Tap to fill</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {openSocket && !readOnly && (
+        <div className="ps-runepicker" data-testid={`picker-${gear.uid}`}>
+          <div className="ps-runepicker-head">{SOCKET_LABEL[openSocket.type]} runes {keeperName ? `${keeperName} can etch` : 'available'}</div>
+          {options.length === 0 ? (
+            <p className="ps-empty">None in stock here for this slot.</p>
+          ) : (
+            <ul className="ps-runeopts" aria-label="rune options">
+              {options.map((r) => (
+                <li key={r.wareKey || r.id}>
+                  <button type="button" className="ps-runeopt"
+                    onClick={() => { onStage(gear.uid, openKey, r); setOpenKey(null); }}>
+                    <span className="ps-runeopt-name">{r.name}</span>
+                    <span className="ps-runeopt-price">{r.price} gp</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" className="ps-runepicker-cancel" onClick={() => setOpenKey(null)}>Cancel</button>
+        </div>
+      )}
+
+      {stagedEntries.length > 0 && (
+        <p className="ps-staged-note" data-testid={`staged-${gear.uid}`}>
+          🕐 <strong>{stagedEntries.length} rune{stagedEntries.length === 1 ? '' : 's'}</strong> staged ·{' '}
+          <strong>{stagedCost} gp</strong> — {keeperName || 'the smith'} keeps your {gear.name} for 24h once you check out.
+        </p>
+      )}
+    </div>
+  );
+};
+
+// Runesmithing tab: stage runes into gear sockets (handed over at checkout, S7)
+// + buy loose runestones. Shown when the shop offersRunes (S1).
+const RunesmithingTab = ({ gearList, shopRunes, runeMap, runestoneGroups, stagedFor, keeperName, town, qtyByKey, onStage, onUnstage, onSelect, onAdd, readOnly }) => (
+  <div className="ps-runesmithing">
+    <p className="ps-rs-intro">
+      {town
+        ? `Stage runes into your gear's open slots, then hand it over — it's yours again 24 hours after you check out.`
+        : `Recalled from a lore entry — visit in town to have your gear etched.`}
+    </p>
+    <div className="ps-section"><span className="ps-section-label">Your Gear</span></div>
+    {gearList.length === 0 ? (
+      <p className="ps-empty">{town ? 'No weapon or armor to etch.' : '—'}</p>
+    ) : (
+      <div className="ps-gear-list">
+        {gearList.map((g) => (
+          <GearCard key={g.uid} gear={g} shopRunes={shopRunes} runeMap={runeMap}
+            stagedFor={stagedFor(g.uid)} keeperName={keeperName}
+            onStage={onStage} onUnstage={onUnstage} readOnly={readOnly} />
+        ))}
+      </div>
+    )}
+    <div className="ps-section ps-section--svc">
+      <span className="ps-section-label">Runestones for sale</span>
+      <span className="ps-section-count">{runestoneGroups.length}</span>
+    </div>
+    {runestoneGroups.length === 0 ? (
+      <p className="ps-empty">No loose runestones for sale.</p>
+    ) : (
+      <WareGrid groups={runestoneGroups} label="runestones" town={town} qtyByKey={qtyByKey} onSelect={onSelect} onAdd={onAdd} />
+    )}
   </div>
 );
 
@@ -313,12 +451,17 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  // Runesmithing staging (#857 S6b): a flat `${gearUid}::${socketKey}` → rune map
+  // of runes staged into sockets. Nothing is paid or handed over until checkout
+  // (S7) — this is the pending state the gear cards render.
+  const [staged, setStaged] = useState({});
 
   const { myGold, buy } = useBuyItems(character?.id);
+  const charData = useCharacter(character);
   const catalogMap = useMemo(() => itemCatalogMap(items), [items]);
   const runeMap = useMemo(() => runeCatalogMap(runes), [runes]);
 
-  const resetView = () => { setActiveTab('wares'); setSelectedGroup(null); setCart([]); setCartOpen(false); setToast(null); };
+  const resetView = () => { setActiveTab('wares'); setSelectedGroup(null); setCart([]); setCartOpen(false); setToast(null); setStaged({}); };
 
   useEffect(() => {
     if (!isOpen) return;
@@ -339,9 +482,24 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     ];
   }, [selected, waresStore]);
 
-  const groups = useMemo(
-    () => (selected ? groupWares(resolveShopWares(selected.id, waresStore, catalogMap, runeMap)) : []),
+  // Resolve once, then split: general wares (Wares tab) vs runestones (which move
+  // to the Runesmithing tab's "Runestones for sale", #857 S6b).
+  const resolved = useMemo(
+    () => (selected ? resolveShopWares(selected.id, waresStore, catalogMap, runeMap) : []),
     [selected, waresStore, catalogMap, runeMap]
+  );
+  const wareGroups = useMemo(() => groupWares(resolved.filter((w) => !w.runestone)), [resolved]);
+  const runestoneGroups = useMemo(() => groupWares(resolved.filter((w) => w.runestone)), [resolved]);
+  // Rune docs the shop stocks (with the runestone's price), for the socket picker.
+  const shopRunes = useMemo(
+    () => resolved.filter((w) => w.runestone && w.runestone.rune)
+      .map((w) => ({ ...w.runestone.rune, price: w.price, wareKey: w.wareKey })),
+    [resolved]
+  );
+  // The active character's runesmithable gear (weapons + armor), for the sockets.
+  const gearList = useMemo(
+    () => (Array.isArray(charData?.inventory) ? charData.inventory.filter((it) => gearTarget(it)) : []),
+    [charData]
   );
   // Buyable scrolls/wands for the Spellcasting tab (#812 generative offerings
   // expanded + deduped by wareKey, then grouped like any ware).
@@ -363,9 +521,9 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   // back to full wares at checkout (a cart line only carries the wareKey/price/qty).
   const formsByKey = useMemo(() => {
     const m = new Map();
-    [...groups, ...spellGroups].forEach((g) => g.forms.forEach((f) => m.set(f.wareKey, f)));
+    [...wareGroups, ...spellGroups, ...runestoneGroups].forEach((g) => g.forms.forEach((f) => m.set(f.wareKey, f)));
     return m;
-  }, [groups, spellGroups]);
+  }, [wareGroups, spellGroups, runestoneGroups]);
   const qtyByKey = useMemo(() => Object.fromEntries(cart.map((l) => [l.id, l.qty])), [cart]);
 
   const closed = selected ? !isShopOpen(selected.id, waresStore) : false;
@@ -398,6 +556,19 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
 
   const addForm = (form) => { setCart((c) => addToCart(c, form)); setToast(null); };
 
+  // Stage / un-stage a rune into a gear socket (pending until checkout, S7).
+  const stageRune = (gearUid, sKey, rune) =>
+    setStaged((s) => ({ ...s, [`${gearUid}::${sKey}`]: rune }));
+  const unstageRune = (gearUid, sKey) =>
+    setStaged((s) => { const next = { ...s }; delete next[`${gearUid}::${sKey}`]; return next; });
+  // The socketKey→rune map staged on one gear.
+  const stagedFor = (gearUid) => {
+    const prefix = `${gearUid}::`;
+    return Object.fromEntries(
+      Object.entries(staged).filter(([k]) => k.startsWith(prefix)).map(([k, r]) => [k.slice(prefix.length), r])
+    );
+  };
+
   const checkout = () => {
     const purchases = cart.map((l) => ({ item: formsByKey.get(l.id), qty: l.qty })).filter((p) => p.item);
     const result = buy(purchases, selected?.title);
@@ -414,16 +585,30 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   const body = (
     <div className="ps-body">
       {activeTab === 'wares' &&
-        (groups.length === 0 ? (
+        (wareGroups.length === 0 ? (
           <p className="ps-empty">This shop has nothing for sale right now.</p>
         ) : (
-          <WaresTab groups={groups} town={town} qtyByKey={qtyByKey} onSelect={setSelectedGroup} onAdd={addForm} />
+          <WaresTab groups={wareGroups} town={town} qtyByKey={qtyByKey} onSelect={setSelectedGroup} onAdd={addForm} />
         ))}
       {activeTab === 'spellcasting' && (
         <SpellcastingTab groups={spellGroups} town={town} qtyByKey={qtyByKey} onSelect={setSelectedGroup} onAdd={addForm} />
       )}
       {activeTab === 'runes' && (
-        <ComingSoon>The runesmith&rsquo;s bench arrives in a coming update.</ComingSoon>
+        <RunesmithingTab
+          gearList={gearList}
+          shopRunes={shopRunes}
+          runeMap={runeMap}
+          runestoneGroups={runestoneGroups}
+          stagedFor={stagedFor}
+          keeperName={null}
+          town={town}
+          qtyByKey={qtyByKey}
+          onStage={stageRune}
+          onUnstage={unstageRune}
+          onSelect={setSelectedGroup}
+          onAdd={addForm}
+          readOnly={readOnly}
+        />
       )}
     </div>
   );

@@ -306,7 +306,55 @@
 .ps-svc-desc { font-family: var(--font-body); font-size: 12px; line-height: 1.4; color: var(--ps-ink2); }
 .ps-svc-note { margin: var(--space-3) 15px 0; font-family: var(--font-body); font-style: italic; font-size: 11px; color: var(--ps-ink3); }
 
-/* ── Coming-soon placeholder (Runes S6) ───────────────────────────────────── */
+/* ── Runesmithing tab (#857 S6b) ──────────────────────────────────────────── */
+.ps-runesmithing { padding-bottom: var(--space-4); }
+.ps-rs-intro { margin: 0; padding: var(--space-3) 15px 0; font-family: var(--font-body); font-size: 12.5px; line-height: 1.4; color: var(--ps-ink2); }
+.ps-gear-list { display: flex; flex-direction: column; gap: var(--space-3); padding: 0 15px; }
+.ps-gear { border: 1px solid var(--ps-line); border-radius: 13px; background: var(--ps-screen); padding: var(--space-3); }
+.ps-gear-head { display: flex; align-items: center; gap: var(--space-3); }
+.ps-gear-icon {
+  flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; font-size: 1.1rem;
+  border-radius: var(--radius-md); border: 1px solid var(--ps-line); background: var(--ps-void); color: var(--iron-light);
+}
+.ps-gear-name { font-family: var(--font-display); font-size: 14.5px; font-weight: 700; }
+.ps-gear-sub { font-size: 10px; text-transform: capitalize; color: var(--ps-ink3); }
+.ps-sockets { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.ps-socket {
+  flex: 1 1 0; min-width: 84px; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: var(--space-2); border-radius: var(--radius-lg); text-align: center; font: inherit; color: inherit;
+}
+.ps-socket-glyph { font-family: var(--font-rune, var(--font-display)); font-size: 1.1rem; }
+.ps-socket-name { font-size: 10px; }
+.ps-socket-x { font-size: 9px; color: var(--ps-ink3); }
+.ps-socket.is-filled {
+  border: 1px solid color-mix(in srgb, var(--gold-mid) 50%, transparent);
+  background: color-mix(in srgb, var(--gold-mid) 12%, transparent); color: var(--gold-light);
+}
+.ps-socket.is-empty { border: 1px dashed var(--ps-line); background: var(--ps-void); color: var(--ps-ink3); }
+.ps-socket.is-open { cursor: pointer; border: 1px dashed var(--ps-line); background: var(--ps-void); color: var(--ps-ink2); }
+.ps-socket.is-open:hover { border-color: var(--ps-a-line); background: var(--ps-a-soft); color: var(--ps-ink); }
+.ps-socket.is-open.is-active { border-style: solid; border-color: var(--ps-a-line); box-shadow: 0 0 0 3px var(--ps-a-soft); }
+.ps-socket.is-staged {
+  cursor: pointer; position: relative;
+  border: 1px dashed color-mix(in srgb, var(--gold-mid) 60%, transparent);
+  background: color-mix(in srgb, var(--gold-mid) 14%, transparent); color: var(--gold-light);
+}
+
+.ps-runepicker { margin-top: var(--space-3); padding: var(--space-3); border: 1px solid var(--ps-line); border-radius: var(--radius-lg); background: var(--ps-void); }
+.ps-runepicker-head { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ps-ink3); margin-bottom: var(--space-2); }
+.ps-runeopts { list-style: none; margin: 0 0 var(--space-2); padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.ps-runeopt {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-2) var(--space-3); cursor: pointer; color: inherit;
+  border: 1px solid var(--ps-line); border-radius: var(--radius-md); background: var(--ps-screen);
+}
+.ps-runeopt:hover { border-color: var(--ps-a-line); background: var(--ps-a-soft); }
+.ps-runeopt-name { font-weight: 600; font-size: 12.5px; }
+.ps-runeopt-price { font-family: var(--font-display); font-weight: 700; color: var(--gold-light); }
+.ps-runepicker-cancel { background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 11px; color: var(--ps-ink2); }
+.ps-staged-note { margin: var(--space-3) 0 0; font-family: var(--font-body); font-size: 11.5px; line-height: 1.4; color: var(--gold-light); }
+
+/* ── Coming-soon placeholder (unused after S6b; kept for any future tab) ───── */
 .ps-soon {
   display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
   padding: var(--space-6) var(--space-4); text-align: center; color: var(--ps-ink2);

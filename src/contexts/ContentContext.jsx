@@ -13,6 +13,7 @@ import {
   normalizeEffects,
   normalizeRunes,
   mergeArmorRunes,
+  mergeFundamentalRunes,
   normalizeImages,
   normalizeTheme,
   resolveCharacterItems,
@@ -170,7 +171,7 @@ export const ContentProvider = ({ children }) => {
   const effects = serverEffects.length ? normalizeEffects(serverEffects) : FALLBACK.effect;
   // Armor runes (#727) always merge in from the code seed (FALLBACK already
   // carries them), so etched armor resolves whether or not the DO was reseeded.
-  const runes = mergeArmorRunes(serverRunes.length ? normalizeRunes(serverRunes) : FALLBACK.rune);
+  const runes = mergeFundamentalRunes(mergeArmorRunes(serverRunes.length ? normalizeRunes(serverRunes) : FALLBACK.rune));
   const images = serverImages.length ? normalizeImages(serverImages) : FALLBACK.image;
   // `rawCharacters` keeps inventory as authored (catalog refs intact) — the GM
   // editor must edit/save THAT, not the resolved view, or saving would inline
