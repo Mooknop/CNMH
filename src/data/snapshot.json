@@ -7791,6 +7791,34 @@
       "id": "avidais-tattoo"
     },
     {
+      "name": "Backfire Mantle",
+      "description": "This vivid red cloak of sturdy fabric is favored by aggressive battle alchemists and mages, as well as those cautious warriors who need to advance into the fray ahead of the blast-happy back line. The mantle interposes to protect you from your own and allies' magic, granting you a circumstance bonus to Reflex saves against your own spells, as well as those of your allies. You also gain resistance to splash damage from your own alchemical items and those of your allies.",
+      "traits": [
+        "Abjuration",
+        "Invested",
+        "Magical"
+      ],
+      "price": 45,
+      "weight": 1,
+      "variants": [
+        {
+          "level": 3,
+          "label": "Standard",
+          "name": "Backfire Mantle",
+          "price": 45,
+          "effect": "The mantle grants a +1 circumstance bonus to Reflex saves against your own and allies' spells, and resistance 3 to splash damage from your own and allies' alchemical items."
+        },
+        {
+          "level": 8,
+          "label": "Greater",
+          "name": "Backfire Mantle (Greater)",
+          "price": 430,
+          "effect": "The mantle grants a +2 circumstance bonus to Reflex saves against your own and allies' spells, and resistance 10 to splash damage from your own and allies' alchemical items."
+        }
+      ],
+      "id": "backfire-mantle"
+    },
+    {
       "name": "Backpack",
       "description": "A backpack for holding your gear",
       "image": "img_b740b700-2ba1-42c7-a60a-930b6b36996c.jpg",
@@ -8006,6 +8034,66 @@
       "weight": 0,
       "price": 56,
       "id": "channel-protection-amulet"
+    },
+    {
+      "name": "Cloak of Feline Rest",
+      "description": "This black velvet cloak is featureless and very soft to the touch. Upon wearing it for the first time, you're momentarily overwhelmed with a sense of comfort and coziness. While wearing this cloak you can comfortably rest in any space, so long as it's not wet or particularly hazardous. While sleeping in this cloak you only take a –2 status penalty to auditory Perception checks, rather than a –4 status penalty.",
+      "traits": [
+        "Enchantment",
+        "Invested",
+        "Magical"
+      ],
+      "price": 20,
+      "weight": 0.1,
+      "id": "cloak-of-feline-rest"
+    },
+    {
+      "name": "Cloak of Repute",
+      "description": "This gaudy and extravagant cloak is adorned with brilliant gems and a fur trim. While wearing the cloak, you gain instant fame and notoriety, granting you a +1 item bonus to Diplomacy checks to Make an Impression. Creatures attempting to learn about you gain the same bonus to Gather Information about you.",
+      "traits": [
+        "Enchantment",
+        "Invested",
+        "Magical"
+      ],
+      "price": 90,
+      "weight": 1,
+      "bonus": [
+        "diplomacy",
+        1
+      ],
+      "actions": [
+        {
+          "name": "Make a Request",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Activate command; Frequency once per day; Effect You wield your great stature to make a Request of a creature. If you roll a success on the check, you get a critical success instead."
+        }
+      ],
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Cloak of Repute",
+          "price": 90
+        },
+        {
+          "level": 9,
+          "label": "Greater",
+          "name": "Cloak of Repute (Greater)",
+          "price": 1300,
+          "effect": "The item bonus is +2. You can activate the cloak twice per day."
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Cloak of Repute (Major)",
+          "price": 21750,
+          "effect": "The item bonus is +3. You can activate the cloak three times per day. If you roll a critical failure on your Diplomacy check when you activate the cloak, you get a failure instead."
+        }
+      ],
+      "id": "cloak-of-repute"
     },
     {
       "bonus": [
@@ -8225,6 +8313,28 @@
       "description": "Eerie symbols cover your armor, inspiring terror in your foes. Frightened enemies within 30 feet that can see you must attempt a DC 20 Will save at the end of their turn; on a failure, the value of their frightened condition doesn't decrease below 1 that turn."
     },
     {
+      "name": "Dweomerweave Robe",
+      "description": "This robe is made from dweomerweave, a magical fabric created by spinning minor illusions into the threads of ether spider silk. Dweomerweave is naturally hazy and translucent. It can take on the illusory appearances of other fabrics and garments, and dweomerweave robes are coveted by adventurers who want to travel light without compromising on fashion.",
+      "traits": [
+        "Uncommon",
+        "Illusion",
+        "Invested",
+        "Magical"
+      ],
+      "price": 25,
+      "weight": 0.1,
+      "actions": [
+        {
+          "name": "Change Appearance",
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Activate 1 minute (Interact); Frequency once per day; Effect You gain the effects of a 1st-level illusory disguise, except that the illusion only alters the appearance of the dweomerweave robe, changing it into another garment with an appearance of your choice. The spell persists until the next activation. You can Dismiss the activation."
+        }
+      ],
+      "id": "dweomerweave-robe"
+    },
+    {
       "name": "Eagle-eye Elixir",
       "variants": [
         {
@@ -8294,6 +8404,60 @@
         "note": "Restores HP — enter your rolled total"
       },
       "id": "elixir-of-life"
+    },
+    {
+      "name": "Energy Robe",
+      "description": "This brightly colored linen robe is covered in delicate embroidery depicting creatures and natural phenomena suiting its aligned energy, such as a living thunderclap, pools of acid, roaring flames, or dancing marids. The robe grants you resistance to its aligned energy type, and can be activated to call on that energy for a burst of magical mobility.",
+      "traits": [
+        "Uncommon",
+        "Invested",
+        "Magical",
+        "Transmutation"
+      ],
+      "price": 320,
+      "weight": 0.1,
+      "actions": [
+        {
+          "name": "Channel Energy",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Activate command, Interact; Frequency once per day; Effect You speak a command word and the embroidered threads in the robe glow vividly. The benefit you receive depends on the robe's energy type (see variants)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 7,
+          "label": "Fire",
+          "name": "Energy Robe (Fire)",
+          "price": 320,
+          "effect": "You gain resistance 5 to fire. When the robe is activated, you gain a +30-foot status bonus to Speed for 1 minute as flames shoot out behind you to speed you up."
+        },
+        {
+          "level": 8,
+          "label": "Cold",
+          "name": "Energy Robe (Cold)",
+          "price": 450,
+          "effect": "You gain resistance 5 to cold. When the robe is activated, you gain the effects of water walk for 1 minute, as you momentarily flash freeze the surface of water as you walk across it."
+        },
+        {
+          "level": 9,
+          "label": "Acid",
+          "name": "Energy Robe (Acid)",
+          "price": 575,
+          "effect": "You gain resistance 5 to acid. When the robe is activated, you gain a climb Speed equal to your Speed, as the acid on your hands grants you easier handholds."
+        },
+        {
+          "level": 10,
+          "label": "Electricity",
+          "name": "Energy Robe (Electricity)",
+          "price": 900,
+          "effect": "You gain resistance 5 to electricity. When the robe is activated, you gain a fly Speed equal to your Speed for 1 minute."
+        }
+      ],
+      "id": "energy-robe"
     },
     {
       "name": "Eye Garnets",
@@ -9328,6 +9492,37 @@
       "price": 55,
       "weight": 0.1,
       "id": "skinstitch-salve"
+    },
+    {
+      "name": "Sleeves of Storage",
+      "description": "This loose robe has wide, voluminous sleeves that each contain an extradimensional space. These spaces each function as a spacious pouch that can hold up to 5 Bulk of items (for a total of 10 Bulk), though no individual item can be of more than 1 Bulk; the sleeves grow slightly heavy as you reach maximum capacity. You can add or remove an item from a sleeve with a single hand free as an Interact action.\n\nIf a sleeve is completely empty, you can place your own familiar into that extradimensional space. It can survive comfortably in your sleeve for up to 1 hour, after which it begins to suffocate. While in your sleeve, it can't be affected or targeted by any effects, but you don't benefit from any master abilities. A familiar can exit the sleeve of its own volition with a single action that has the manipulate and move traits. You can't place any other creature into your sleeves, nor can you place your familiar in a sleeve if it's larger than Tiny. If your familiar is in your sleeve, you can't place any items in the sleeve.",
+      "traits": [
+        "Extradimensional",
+        "Invested",
+        "Magical"
+      ],
+      "price": 100,
+      "weight": 0.1,
+      "container": {
+        "capacity": 10,
+        "ignored": 10
+      },
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Sleeves of Storage",
+          "price": 100
+        },
+        {
+          "level": 9,
+          "label": "Greater",
+          "name": "Sleeves of Storage (Greater)",
+          "price": 600,
+          "effect": "Each sleeve can hold up to 20 Bulk of items (40 Bulk total), and a familiar can survive within a sleeve for up to 4 hours."
+        }
+      ],
+      "id": "sleeves-of-storage"
     },
     {
       "id": "slick",
