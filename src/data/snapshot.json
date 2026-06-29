@@ -8185,6 +8185,159 @@
       "id": "healers-toolkit"
     },
     {
+      "name": "Blood Booster",
+      "description": "This elixir bolsters your body's natural defenses and ability to resist maladies that travel through or affect blood. For 10 minutes you receive the listed resistance to persistent bleed and persistent poison damage, and you lower the DC for any flat checks to end persistent bleed or persistent poison damage as if you received particularly appropriate aid. At the GM's discretion, blood booster elixirs can also automatically counteract non-magical effects that specifically rely on thinning the drinker's blood. Activate (1 action, manipulate).",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Healing"
+      ],
+      "price": 9,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 3,
+          "label": "Lesser",
+          "name": "Blood Booster (Lesser)",
+          "price": 9,
+          "effect": "The resistance is 5.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "blood-booster-lesser",
+            "durationMinutes": 10,
+            "note": "Resistance 5 to persistent bleed & poison (10 min)"
+          }
+        },
+        {
+          "level": 11,
+          "label": "Moderate",
+          "name": "Blood Booster (Moderate)",
+          "price": 225,
+          "effect": "The resistance is 10.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "blood-booster-moderate",
+            "durationMinutes": 10,
+            "note": "Resistance 10 to persistent bleed & poison (10 min)"
+          }
+        },
+        {
+          "level": 18,
+          "label": "Greater",
+          "name": "Blood Booster (Greater)",
+          "price": 3400,
+          "effect": "The resistance is 20.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "blood-booster-greater",
+            "durationMinutes": 10,
+            "note": "Resistance 20 to persistent bleed & poison (10 min)"
+          }
+        }
+      ],
+      "id": "blood-booster"
+    },
+    {
+      "name": "Soothing Tonic",
+      "description": "This pleasantly savory concoction speeds your natural healing, so your wounds recover faster over time. You gain fast healing for 1 minute in an amount depending on the tonic's type. Activate (1 action, manipulate).",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Healing"
+      ],
+      "price": 7,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 2,
+          "label": "Lesser",
+          "name": "Soothing Tonic (Lesser)",
+          "price": 7,
+          "effect": "You gain fast healing 1.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-lesser",
+            "durationMinutes": 1,
+            "note": "Fast Healing 1 (1 min)"
+          }
+        },
+        {
+          "level": 5,
+          "label": "Moderate",
+          "name": "Soothing Tonic (Moderate)",
+          "price": 28,
+          "effect": "You gain fast healing 3.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-moderate",
+            "durationMinutes": 1,
+            "note": "Fast Healing 3 (1 min)"
+          }
+        },
+        {
+          "level": 10,
+          "label": "Greater",
+          "name": "Soothing Tonic (Greater)",
+          "price": 185,
+          "effect": "You gain fast healing 5.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-greater",
+            "durationMinutes": 1,
+            "note": "Fast Healing 5 (1 min)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Soothing Tonic (Major)",
+          "price": 2700,
+          "effect": "You gain fast healing 10.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-major",
+            "durationMinutes": 1,
+            "note": "Fast Healing 10 (1 min)"
+          }
+        }
+      ],
+      "id": "soothing-tonic"
+    },
+    {
+      "actions": [
+        {
+          "name": "Administer Stitch",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "You Administer First Aid without requiring healer's tools. You can either gain a +2 item bonus to the Medicine check or use the salve's Medicine modifier of +13 instead of your own."
+        }
+      ],
+      "freeActions": [
+        {
+          "name": "Stitch Wounds",
+          "traits": [
+            "Manipulate"
+          ],
+          "trigger": "You Treat Wounds or use Battle Medicine.",
+          "description": "You gain a +2 item bonus to the triggering Medicine check. If you roll a success on the Medicine check, you get a critical success instead."
+        }
+      ],
+      "name": "Skinstitch Salve",
+      "description": "This sticky salve stubbornly holds wounds closed and encourages swift natural healing.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Healing"
+      ],
+      "price": 55,
+      "weight": 0.1,
+      "id": "skinstitch-salve"
+    },
+    {
       "name": "Healing Potion",
       "variants": [
         {
@@ -10975,6 +11128,48 @@
           "vs": "poison"
         }
       ]
+    },
+    {
+      "id": "blood-booster-lesser",
+      "name": "Blood Booster (Lesser)",
+      "description": "Resistance 5 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+      "modifiers": []
+    },
+    {
+      "id": "blood-booster-moderate",
+      "name": "Blood Booster (Moderate)",
+      "description": "Resistance 10 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+      "modifiers": []
+    },
+    {
+      "id": "blood-booster-greater",
+      "name": "Blood Booster (Greater)",
+      "description": "Resistance 20 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-lesser",
+      "name": "Soothing Tonic (Lesser)",
+      "description": "Fast Healing 1 for 1 minute.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-moderate",
+      "name": "Soothing Tonic (Moderate)",
+      "description": "Fast Healing 3 for 1 minute.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-greater",
+      "name": "Soothing Tonic (Greater)",
+      "description": "Fast Healing 5 for 1 minute.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-major",
+      "name": "Soothing Tonic (Major)",
+      "description": "Fast Healing 10 for 1 minute.",
+      "modifiers": []
     },
     {
       "id": "antiplague",
