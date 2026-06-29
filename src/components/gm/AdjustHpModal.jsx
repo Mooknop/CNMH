@@ -7,7 +7,7 @@ import { useSummons } from '../../hooks/useSummons';
 import { useEncounter } from '../../hooks/useEncounter';
 import { minionRoster } from '../../utils/minionUtils';
 import { DAMAGE_TYPES } from '../../utils/damage';
-import { clearsOnDamageType } from '../../utils/EffectUtils';
+import { clearsOnDamageType, resistanceFor } from '../../utils/EffectUtils';
 import PF2E_EFFECTS from '../../data/pf2eEffects';
 import './AdjustHpModal.css';
 
@@ -31,7 +31,7 @@ const parseSelection = (value) => {
 };
 
 const AdjustHpModal = ({ isOpen, onClose }) => {
-  const { characters } = useContent();
+  const { characters, effects: effectCatalog } = useContent();
   const { appendLog } = useEncounter();
   const [selectedId, setSelectedId] = useState('');
   const [amount, setAmount] = useState('');
@@ -65,6 +65,16 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
     : sel?.kind === 'summon' ? { ...getSummonHp(sel.entryId), temp: 0 }
     : charHp;
 
+  // Preview of the resistance that will mitigate the entered typed damage (#900),
+  // surfaced beside the damage-type picker. PCs only — minions/summons carry no
+  // effects here.
+  const previewResistance = useMemo(
+    () => (sel?.kind === 'char' && mode === 'damage' && damageType
+      ? resistanceFor(charEffects, damageType, effectCatalog)
+      : 0),
+    [sel?.kind, mode, damageType, charEffects, effectCatalog],
+  );
+
   const handleApply = () => {
     const n = parseInt(amount, 10);
     if (!sel || !n || n < 1 || !hp) return;
@@ -78,12 +88,22 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
         : { current: Math.max(0, hp.current - n), max: hp.max };
       setSummonHp(sel.entryId, next);
     } else {
+      // General typed resistance on incoming damage (#900 stretch). The highest
+      // applicable `resistance` effect for this damage type reduces the hit
+      // before temp HP absorbs it (resistance doesn't stack; floors at 0).
+      // Reads app-owned effects only, like the #275 clear below.
+      const resisted =
+        mode === 'damage' && damageType
+          ? resistanceFor(charEffects, damageType, effectCatalog)
+          : 0;
+      const incoming = Math.max(0, n - resisted);
+
       let newHp;
       if (mode === 'heal') {
         newHp = { ...hp, current: Math.min(hp.max, hp.current + n) };
       } else {
-        const tempAbsorb = Math.min(hp.temp || 0, n);
-        const remainder = n - tempAbsorb;
+        const tempAbsorb = Math.min(hp.temp || 0, incoming);
+        const remainder = incoming - tempAbsorb;
         newHp = {
           ...hp,
           temp: (hp.temp || 0) - tempAbsorb,
@@ -91,6 +111,15 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
         };
       }
       setCharHp(newHp);
+
+      if (resisted > 0) {
+        const charName = (characters || []).find((c) => c.id === sel.id)?.name || 'Character';
+        appendLog({
+          type: 'action',
+          charId: sel.id,
+          text: `${charName} resisted ${damageType} damage — ${n} → ${incoming} (resistance ${resisted})`,
+        });
+      }
 
       // Typed damage clears effects that end on it — e.g. eld-charged on
       // electricity (#275). Applies even when temp HP absorbs the hit (taking
@@ -206,6 +235,11 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
+                {previewResistance > 0 && (
+                  <span className="adj-hp-resist-note" aria-label="resistance preview">
+                    resistance {previewResistance}
+                  </span>
+                )}
               </div>
             )}
 

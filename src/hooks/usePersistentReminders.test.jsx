@@ -22,20 +22,17 @@ vi.mock('../contexts/SessionContext', () => ({
   }),
 }));
 
-// Catalog the resistance reader resolves effectIds against.
-vi.mock('../utils/EffectUtils', async (importOriginal) => {
-  const actual = await importOriginal();
-  const catalog = [
-    { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
-      { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
-    ] },
-  ];
-  return {
-    ...actual,
-    resistanceFor: (effects, vsType) => actual.resistanceFor(effects, vsType, catalog),
-    flatCheckEasedFor: (effects, vsType) => actual.flatCheckEasedFor(effects, vsType, catalog),
-  };
-});
+// The live (DO) effect catalog the reader resolves effectIds against (#900) — the
+// real reader runs against it, verifying the content catalog is threaded in.
+vi.mock('../contexts/ContentContext', () => ({
+  useContent: () => ({
+    effects: [
+      { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
+        { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+      ] },
+    ],
+  }),
+}));
 
 // useSyncedState: plain useState, with the setter spied for write assertions.
 const syncedMock = vi.hoisted(() => ({ setSpy: null }));

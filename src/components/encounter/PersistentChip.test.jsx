@@ -18,20 +18,17 @@ vi.mock('../../hooks/useEffects', () => ({
   useEffects: (charId) => ({ effects: mockEffectsByChar[charId] || [] }),
 }));
 
-// Resolve the catalog the resistance readers use against the test effects.
-vi.mock('../../utils/EffectUtils', async (importOriginal) => {
-  const actual = await importOriginal();
-  const catalog = [
-    { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
-      { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
-    ] },
-  ];
-  return {
-    ...actual,
-    resistanceFor: (effects, vsType) => actual.resistanceFor(effects, vsType, catalog),
-    flatCheckEasedFor: (effects, vsType) => actual.flatCheckEasedFor(effects, vsType, catalog),
-  };
-});
+// The live (DO) effect catalog the chip resolves resistance against (#900) — the
+// readers run for real against it, verifying the content catalog is threaded in.
+vi.mock('../../contexts/ContentContext', () => ({
+  useContent: () => ({
+    effects: [
+      { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
+        { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+      ] },
+    ],
+  }),
+}));
 
 // Key-aware synced-state mock backed by real state so removals re-render.
 const syncedMock = vi.hoisted(() => ({ initialMap: {}, setSpy: null }));
