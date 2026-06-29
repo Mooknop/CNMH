@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useGmAuth } from '../../hooks/useGmAuth';
-import { PERSISTENT_KEY, removeInstance, formatClearance } from '../../utils/persistentDamage';
+import { useEffects } from '../../hooks/useEffects';
+import {
+  PERSISTENT_KEY,
+  removeInstance,
+  formatClearance,
+  persistentVsType,
+  recoveryDc,
+} from '../../utils/persistentDamage';
+import { resistanceFor, flatCheckEasedFor } from '../../utils/EffectUtils';
 import './PersistentChip.css';
 
 /**
@@ -19,6 +27,9 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
   const { appendLog } = useEncounter();
   const { isGm } = useGmAuth();
+  // The combatant's active effects drive resistance/flat-check easing (#900).
+  // Enemies (no charId) read an empty store; resolves to no resistance.
+  const { effects } = useEffects(entry.charId);
   const [open, setOpen] = useState(false);
 
   const instances = persistentMap?.[entry.entryId] || [];
@@ -31,8 +42,19 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
     appendLog({ type: 'system', text: formatClearance(entry.name, inst, how) });
   };
 
-  const describe = (inst) => `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`;
+  const resistanceOf = (inst) => resistanceFor(effects, persistentVsType(inst));
+  const describe = (inst) => {
+    const res = resistanceOf(inst);
+    return `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}${
+      res ? ` − resistance ${res}` : ''
+    }`;
+  };
   const summary = instances.map(describe).join(', ');
+
+  // Eased recovery DC if any tracked instance's type is eased (Blood Booster
+  // eases both bleed and poison, so a mix is rare); the footer states it.
+  const eased = instances.some((inst) => flatCheckEasedFor(effects, persistentVsType(inst)));
+  const noteDc = recoveryDc({ easeFlatCheck: eased });
 
   return (
     <span className="pdc-wrap">
@@ -66,7 +88,7 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
               )}
             </div>
           ))}
-          <div className="pdc-note">Damage at end of turn, then DC 15 flat check to end</div>
+          <div className="pdc-note">Damage at end of turn, then DC {noteDc} flat check to end</div>
         </div>
       )}
     </span>

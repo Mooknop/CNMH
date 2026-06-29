@@ -4,6 +4,8 @@ import {
   conditionalModifiersFor,
   conditionalTogglesFor,
   dexCapFor,
+  resistanceFor,
+  flatCheckEasedFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
 } from './EffectUtils';
@@ -411,6 +413,53 @@ describe('dexCapFor (#507)', () => {
     expect(dexCapFor([], cat)).toBe(Infinity);
     expect(dexCapFor(null, cat)).toBe(Infinity);
     expect(dexCapFor([entry('nope')], cat)).toBe(Infinity);
+  });
+});
+
+describe('resistanceFor / flatCheckEasedFor (#900)', () => {
+  const cat = [
+    { id: 'bb-lesser', name: 'Blood Booster (Lesser)', modifiers: [
+      { stat: 'resistance', amount: 5, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+    ] },
+    { id: 'bb-greater', name: 'Blood Booster (Greater)', modifiers: [
+      { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+    ] },
+    { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 10, vs: 'fire' }] },
+    { id: 'no-vs', name: 'Bad Resistance', modifiers: [{ stat: 'resistance', amount: 99 }] },
+    { id: 'bonus', name: 'Bless', modifiers: [{ stat: 'meleeAttack', kind: 'status', amount: 1 }] },
+  ];
+
+  it('returns the matching resistance amount for a descriptor in the vs list', () => {
+    expect(resistanceFor([entry('bb-lesser')], 'persistent-bleed', cat)).toBe(5);
+    expect(resistanceFor([entry('bb-lesser')], 'persistent-poison', cat)).toBe(5);
+  });
+
+  it('does not stack — highest matching amount wins', () => {
+    expect(resistanceFor([entry('bb-lesser'), entry('bb-greater')], 'persistent-bleed', cat)).toBe(20);
+  });
+
+  it('distinguishes persistent from direct damage of the same type', () => {
+    expect(resistanceFor([entry('fire-ward')], 'fire', cat)).toBe(10);
+    expect(resistanceFor([entry('fire-ward')], 'persistent-fire', cat)).toBe(0);
+    expect(resistanceFor([entry('bb-lesser')], 'bleed', cat)).toBe(0);
+  });
+
+  it('returns 0 for non-matching, vs-less, empty, null, or unknown effects', () => {
+    expect(resistanceFor([entry('bb-lesser')], 'fire', cat)).toBe(0);
+    expect(resistanceFor([entry('no-vs')], 'persistent-bleed', cat)).toBe(0);
+    expect(resistanceFor([entry('bonus')], 'persistent-bleed', cat)).toBe(0);
+    expect(resistanceFor([], 'persistent-bleed', cat)).toBe(0);
+    expect(resistanceFor(null, 'persistent-bleed', cat)).toBe(0);
+    expect(resistanceFor([entry('nope')], 'persistent-bleed', cat)).toBe(0);
+    expect(resistanceFor([entry('bb-lesser')], '', cat)).toBe(0);
+  });
+
+  it('flatCheckEasedFor is true only for a matching resistance carrying the flag', () => {
+    expect(flatCheckEasedFor([entry('bb-lesser')], 'persistent-bleed', cat)).toBe(true);
+    expect(flatCheckEasedFor([entry('fire-ward')], 'fire', cat)).toBe(false);
+    expect(flatCheckEasedFor([entry('bb-lesser')], 'fire', cat)).toBe(false);
+    expect(flatCheckEasedFor([], 'persistent-bleed', cat)).toBe(false);
+    expect(flatCheckEasedFor(null, 'persistent-bleed', cat)).toBe(false);
   });
 });
 

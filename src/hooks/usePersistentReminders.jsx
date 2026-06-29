@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useEncounter } from './useEncounter';
 import { useGmAuth } from './useGmAuth';
 import { useSyncedState } from './useSyncedState';
-import { PERSISTENT_KEY, pruneOrphans, formatReminder } from '../utils/persistentDamage';
+import { useSession } from '../contexts/SessionContext';
+import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '../utils/persistentDamage';
+import { resistanceFor, flatCheckEasedFor } from '../utils/EffectUtils';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
 // turn transitions instead of hooking advanceTurn, so reminders fire for
@@ -22,11 +24,31 @@ import { PERSISTENT_KEY, pruneOrphans, formatReminder } from '../utils/persisten
 export function usePersistentReminders() {
   const { encounter, appendLog } = useEncounter();
   const { isGm } = useGmAuth();
+  const { getState } = useSession();
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   // { token, entry } for the combatant whose turn is underway.
   const prevTurnRef = useRef({ token: null, entry: null });
   const prevActiveRef = useRef(false);
+
+  // Resistance/flat-check context for one instance, read from the combatant's
+  // active effects (#900). PC entries carry a charId whose cnmh_effects_<id> +
+  // cnmh_foundryeffects_<id> hold the buffs (Blood Booster lives there). Read
+  // synchronously off the session cache at turn-end — no reactive subscription
+  // needed for a one-shot log line. Enemies (no charId) resolve to no resistance.
+  const resolveResistance = useCallback((entry, inst) => {
+    if (!entry?.charId) return null;
+    const effects = [
+      ...(getState(entry.charId, 'effects') || []),
+      ...(getState(entry.charId, 'foundryeffects') || []),
+    ];
+    if (!effects.length) return null;
+    const vsType = persistentVsType(inst);
+    return {
+      amount: resistanceFor(effects, vsType),
+      easeFlatCheck: flatCheckEasedFor(effects, vsType),
+    };
+  }, [getState]);
 
   useEffect(() => {
     const active = encounter?.active ?? false;
@@ -59,13 +81,18 @@ export function usePersistentReminders() {
       // outgoing combatant's tracked instances.
       if (isGm && prev.token !== null && prev.entry) {
         (map[prev.entry.entryId] || []).forEach((inst) =>
-          appendLog({ type: 'system', text: formatReminder(prev.entry.name, inst) })
+          appendLog({
+            type: 'system',
+            text: formatReminder(prev.entry.name, inst, resolveResistance(prev.entry, inst)),
+          })
         );
       }
       const current = order[encounter.currentTurnIndex || 0] || null;
       prevTurnRef.current = {
         token,
-        entry: current ? { entryId: current.entryId, name: current.name } : null,
+        entry: current
+          ? { entryId: current.entryId, name: current.name, charId: current.charId }
+          : null,
       };
     }
   }, [
@@ -78,6 +105,7 @@ export function usePersistentReminders() {
     isGm,
     appendLog,
     setPersistentMap,
+    resolveResistance,
   ]);
 }
 

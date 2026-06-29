@@ -12173,19 +12173,40 @@
       "id": "blood-booster-greater",
       "name": "Blood Booster (Greater)",
       "description": "Resistance 20 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
-      "modifiers": []
+      "modifiers": [
+        {
+          "stat": "resistance",
+          "amount": 20,
+          "vs": "persistent-bleed,persistent-poison",
+          "flatCheckEase": true
+        }
+      ]
     },
     {
       "id": "blood-booster-lesser",
       "name": "Blood Booster (Lesser)",
       "description": "Resistance 5 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
-      "modifiers": []
+      "modifiers": [
+        {
+          "stat": "resistance",
+          "amount": 5,
+          "vs": "persistent-bleed,persistent-poison",
+          "flatCheckEase": true
+        }
+      ]
     },
     {
       "id": "blood-booster-moderate",
       "name": "Blood Booster (Moderate)",
       "description": "Resistance 10 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
-      "modifiers": []
+      "modifiers": [
+        {
+          "stat": "resistance",
+          "amount": 10,
+          "vs": "persistent-bleed,persistent-poison",
+          "flatCheckEase": true
+        }
+      ]
     },
     {
       "id": "defend",
