@@ -31,6 +31,12 @@ const items = [
   },
 ];
 const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: ['Fire'] }];
+// Common, low-rank spells so the scroll offering (maxRank 3, all traditions,
+// common) expands to buyable scroll items.
+const spells = [
+  { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
+  { id: 'sleep', name: 'Sleep', level: 1, traditions: ['arcane', 'occult'] },
+];
 
 // One shop at a location: general wares + a runestone (⇒ Runesmithing derives on)
 // + a spell-item offering (⇒ Spellcasting derives on).
@@ -58,6 +64,7 @@ const renderShop = (props = {}) =>
       waresStore={fullStore}
       items={items}
       runes={runes}
+      spells={spells}
       character={{ id: 'pellias', name: 'Pellias' }}
       {...props}
     />
@@ -103,9 +110,9 @@ describe('ShopStorefront', () => {
       expect(screen.queryByRole('tab', { name: /Runes/ })).not.toBeInTheDocument();
     });
 
-    it('the not-yet-built tabs show a coming-soon placeholder', () => {
+    it('the not-yet-built Runes tab shows a coming-soon placeholder', () => {
       renderShop();
-      fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
       expect(screen.getByTestId('ps-coming-soon')).toBeInTheDocument();
     });
   });
@@ -229,6 +236,68 @@ describe('ShopStorefront', () => {
     it('shows no cart bar in read-only mode', () => {
       renderShop({ readOnly: true, character: null });
       expect(screen.queryByTestId('cart-bar')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('spellcasting tab (#857 S5)', () => {
+    const openSpells = () => fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+
+    it('lists buyable scrolls/wands with a count and the locked services teaser', () => {
+      renderShop();
+      openSpells();
+      expect(screen.getByText('Scrolls & Wands')).toBeInTheDocument();
+      const grid = screen.getByLabelText('scrolls and wands');
+      expect(within(grid).getByTestId('ware-scroll-of-heal')).toBeInTheDocument();
+      expect(within(grid).getByTestId('ware-scroll-of-sleep')).toBeInTheDocument();
+      // teaser cards render, display-only
+      const svc = screen.getByLabelText('spellcasting services');
+      expect(within(svc).getByText('Cast a spell for you')).toBeInTheDocument();
+      expect(screen.getByText(/coming in a future update/i)).toBeInTheDocument();
+    });
+
+    it('searches the scroll/wand list by spell name', () => {
+      renderShop();
+      openSpells();
+      fireEvent.change(screen.getByLabelText('search scrolls and wands'), { target: { value: 'heal' } });
+      const grid = screen.getByLabelText('scrolls and wands');
+      expect(within(grid).getByTestId('ware-scroll-of-heal')).toBeInTheDocument();
+      expect(within(grid).queryByTestId('ware-scroll-of-sleep')).not.toBeInTheDocument();
+    });
+
+    it('buys a scroll through the shared cart + checkout', () => {
+      renderShop();
+      openSpells();
+      fireEvent.click(screen.getByLabelText('add Scroll of Heal'));
+      expect(screen.getByTestId('incart-scroll-of-heal')).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
+      expect(mockBuy.mock.calls[0][0]).toEqual([
+        { item: expect.objectContaining({ wareKey: 'scroll:heal' }), qty: 1 },
+      ]);
+      expect(screen.getByTestId('shop-toast')).toBeInTheDocument();
+    });
+
+    it('read-only mode shows the scrolls as browse-only (no add) plus the teaser', () => {
+      renderShop({ readOnly: true, character: null });
+      fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+      const grid = screen.getByLabelText('scrolls and wands');
+      expect(within(grid).getByTestId('ware-scroll-of-heal')).toBeInTheDocument();
+      expect(screen.queryByLabelText('add Scroll of Heal')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('spellcasting services')).toBeInTheDocument();
+    });
+
+    it('shows the empty-scribe message but still the teaser when nothing is eligible', () => {
+      // offersSpellcasting explicit, but no offering ⇒ no eligible scrolls.
+      render(
+        <ShopStorefront
+          isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { offersSpellcasting: true, wares: [{ ref: 'antidote' }] } }}
+          items={items} runes={runes} spells={spells} character={{ id: 'p', name: 'P' }}
+        />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Spells/ }));
+      expect(screen.getByText(/scribes nothing to order/i)).toBeInTheDocument();
+      expect(screen.getByLabelText('spellcasting services')).toBeInTheDocument();
     });
   });
 

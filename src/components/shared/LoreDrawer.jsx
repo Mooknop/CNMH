@@ -264,6 +264,7 @@ const LoreDrawer = () => {
           waresStore={shops}
           items={items}
           runes={runes}
+          spells={spells}
           character={null}
           readOnly
         />
