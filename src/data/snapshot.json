@@ -7743,6 +7743,54 @@
       ]
     },
     {
+      "actions": [
+        {
+          "name": "Cast Tailwind",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Duration 1 hour. The wind at your back pushes you to find new horizons. You gain a +10-foot status bonus to your Speed."
+        }
+      ],
+      "name": "Avaria Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Tailwind once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Transmutation"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "avaria-tattoo"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Vanishing Tracks",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Area 20-foot emanation; Duration 1 hour. The DC of checks to Track you and up to 10 creatures of your choice in the area gains a +4 status bonus, or is equal to your spell DC, whichever results in a higher DC."
+        }
+      ],
+      "name": "Avidais Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Vanishing Tracks once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Abjuration"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "avidais-tattoo"
+    },
+    {
       "name": "Backpack",
       "description": "A backpack for holding your gear",
       "image": "img_b740b700-2ba1-42c7-a60a-930b6b36996c.jpg",
@@ -7830,6 +7878,85 @@
         "group": "chain"
       },
       "id": "blade-byrnie"
+    },
+    {
+      "name": "Blood Booster",
+      "description": "This elixir bolsters your body's natural defenses and ability to resist maladies that travel through or affect blood. For 10 minutes you receive the listed resistance to persistent bleed and persistent poison damage, and you lower the DC for any flat checks to end persistent bleed or persistent poison damage as if you received particularly appropriate aid. At the GM's discretion, blood booster elixirs can also automatically counteract non-magical effects that specifically rely on thinning the drinker's blood. Activate (1 action, manipulate).",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Healing"
+      ],
+      "price": 9,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 3,
+          "label": "Lesser",
+          "name": "Blood Booster (Lesser)",
+          "price": 9,
+          "effect": "The resistance is 5.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "blood-booster-lesser",
+            "durationMinutes": 10,
+            "note": "Resistance 5 to persistent bleed & poison (10 min)"
+          }
+        },
+        {
+          "level": 11,
+          "label": "Moderate",
+          "name": "Blood Booster (Moderate)",
+          "price": 225,
+          "effect": "The resistance is 10.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "blood-booster-moderate",
+            "durationMinutes": 10,
+            "note": "Resistance 10 to persistent bleed & poison (10 min)"
+          }
+        },
+        {
+          "level": 18,
+          "label": "Greater",
+          "name": "Blood Booster (Greater)",
+          "price": 3400,
+          "effect": "The resistance is 20.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "blood-booster-greater",
+            "durationMinutes": 10,
+            "note": "Resistance 20 to persistent bleed & poison (10 min)"
+          }
+        }
+      ],
+      "id": "blood-booster"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Liberating Command",
+          "actionCount": 1,
+          "traits": [
+            "Auditory",
+            "Concentrate",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Range 60 feet; Targets 1 creature. You call out a liberating cry, urging an ally to break free of an effect that holds them in place. If the target is grabbed, immobilized, or restrained, it can immediately use a reaction to attempt to Escape."
+        }
+      ],
+      "name": "Carnasia Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Liberating Command once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Enchantment"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "carnasia-tattoo"
     },
     {
       "name": "Chalk",
@@ -8185,159 +8312,6 @@
       "id": "healers-toolkit"
     },
     {
-      "name": "Blood Booster",
-      "description": "This elixir bolsters your body's natural defenses and ability to resist maladies that travel through or affect blood. For 10 minutes you receive the listed resistance to persistent bleed and persistent poison damage, and you lower the DC for any flat checks to end persistent bleed or persistent poison damage as if you received particularly appropriate aid. At the GM's discretion, blood booster elixirs can also automatically counteract non-magical effects that specifically rely on thinning the drinker's blood. Activate (1 action, manipulate).",
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Elixir",
-        "Healing"
-      ],
-      "price": 9,
-      "weight": 0.1,
-      "variants": [
-        {
-          "level": 3,
-          "label": "Lesser",
-          "name": "Blood Booster (Lesser)",
-          "price": 9,
-          "effect": "The resistance is 5.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "blood-booster-lesser",
-            "durationMinutes": 10,
-            "note": "Resistance 5 to persistent bleed & poison (10 min)"
-          }
-        },
-        {
-          "level": 11,
-          "label": "Moderate",
-          "name": "Blood Booster (Moderate)",
-          "price": 225,
-          "effect": "The resistance is 10.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "blood-booster-moderate",
-            "durationMinutes": 10,
-            "note": "Resistance 10 to persistent bleed & poison (10 min)"
-          }
-        },
-        {
-          "level": 18,
-          "label": "Greater",
-          "name": "Blood Booster (Greater)",
-          "price": 3400,
-          "effect": "The resistance is 20.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "blood-booster-greater",
-            "durationMinutes": 10,
-            "note": "Resistance 20 to persistent bleed & poison (10 min)"
-          }
-        }
-      ],
-      "id": "blood-booster"
-    },
-    {
-      "name": "Soothing Tonic",
-      "description": "This pleasantly savory concoction speeds your natural healing, so your wounds recover faster over time. You gain fast healing for 1 minute in an amount depending on the tonic's type. Activate (1 action, manipulate).",
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Elixir",
-        "Healing"
-      ],
-      "price": 7,
-      "weight": 0.1,
-      "variants": [
-        {
-          "level": 2,
-          "label": "Lesser",
-          "name": "Soothing Tonic (Lesser)",
-          "price": 7,
-          "effect": "You gain fast healing 1.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "soothing-tonic-lesser",
-            "durationMinutes": 1,
-            "note": "Fast Healing 1 (1 min)"
-          }
-        },
-        {
-          "level": 5,
-          "label": "Moderate",
-          "name": "Soothing Tonic (Moderate)",
-          "price": 28,
-          "effect": "You gain fast healing 3.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "soothing-tonic-moderate",
-            "durationMinutes": 1,
-            "note": "Fast Healing 3 (1 min)"
-          }
-        },
-        {
-          "level": 10,
-          "label": "Greater",
-          "name": "Soothing Tonic (Greater)",
-          "price": 185,
-          "effect": "You gain fast healing 5.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "soothing-tonic-greater",
-            "durationMinutes": 1,
-            "note": "Fast Healing 5 (1 min)"
-          }
-        },
-        {
-          "level": 17,
-          "label": "Major",
-          "name": "Soothing Tonic (Major)",
-          "price": 2700,
-          "effect": "You gain fast healing 10.",
-          "consumable": {
-            "kind": "effect",
-            "effectId": "soothing-tonic-major",
-            "durationMinutes": 1,
-            "note": "Fast Healing 10 (1 min)"
-          }
-        }
-      ],
-      "id": "soothing-tonic"
-    },
-    {
-      "actions": [
-        {
-          "name": "Administer Stitch",
-          "actionCount": 1,
-          "traits": [
-            "Manipulate"
-          ],
-          "description": "You Administer First Aid without requiring healer's tools. You can either gain a +2 item bonus to the Medicine check or use the salve's Medicine modifier of +13 instead of your own."
-        }
-      ],
-      "freeActions": [
-        {
-          "name": "Stitch Wounds",
-          "traits": [
-            "Manipulate"
-          ],
-          "trigger": "You Treat Wounds or use Battle Medicine.",
-          "description": "You gain a +2 item bonus to the triggering Medicine check. If you roll a success on the Medicine check, you get a critical success instead."
-        }
-      ],
-      "name": "Skinstitch Salve",
-      "description": "This sticky salve stubbornly holds wounds closed and encourages swift natural healing.",
-      "traits": [
-        "Alchemical",
-        "Consumable",
-        "Healing"
-      ],
-      "price": 55,
-      "weight": 0.1,
-      "id": "skinstitch-salve"
-    },
-    {
       "name": "Healing Potion",
       "variants": [
         {
@@ -8451,6 +8425,30 @@
       ],
       "weight": 2,
       "id": "horn-of-rust"
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Thoughtful Gift",
+          "actionCount": 1,
+          "traits": [
+            "Conjuration",
+            "Teleportation"
+          ],
+          "description": "Frequency once per day; Range 120 feet; Targets 1 willing creature. You teleport one object of light or negligible Bulk held in your hand to the target. The object appears in the target's hand if they have a free hand, or at their feet if they don't. The spell fails if the target is unconscious, refuses your gift, or if the spell would teleport a creature."
+        }
+      ],
+      "name": "Idolis Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Thoughtful Gift once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Conjuration"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "idolis-tattoo"
     },
     {
       "name": "Longbow",
@@ -8682,6 +8680,30 @@
       ],
       "armorRune": true,
       "description": "This rune counters burning and corrosive agents. Armor with this rune reduces the DC of the flat check to end persistent acid or fire damage affecting you from 15 to 12 (7 with particularly effective assistance)."
+    },
+    {
+      "actions": [
+        {
+          "name": "Cast Concordant Choir",
+          "actionCount": "One to Three",
+          "traits": [
+            "Concentrate",
+            "Sonic"
+          ],
+          "description": "Frequency once per day; Range 30 feet; Saving Throw basic Fortitude. You unleash a dangerous consonance of reverberating sound. 1 action: 1d4 sonic damage to a single enemy. 2 actions (manipulate): 2d4 sonic damage to all creatures in a 10-foot burst. 3 actions (manipulate): 2d4 sonic damage to all creatures in a 30-foot emanation."
+        }
+      ],
+      "name": "Ragario Tattoo",
+      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Concordant Choir once per day. (Usage: tattooed on the body.)",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Tattoo",
+        "Evocation"
+      ],
+      "price": 60,
+      "weight": 0,
+      "id": "ragario-tattoo"
     },
     {
       "name": "Rations",
@@ -9020,6 +9042,38 @@
       "id": "skeleton-key"
     },
     {
+      "actions": [
+        {
+          "name": "Administer Stitch",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "You Administer First Aid without requiring healer's tools. You can either gain a +2 item bonus to the Medicine check or use the salve's Medicine modifier of +13 instead of your own."
+        }
+      ],
+      "freeActions": [
+        {
+          "name": "Stitch Wounds",
+          "traits": [
+            "Manipulate"
+          ],
+          "trigger": "You Treat Wounds or use Battle Medicine.",
+          "description": "You gain a +2 item bonus to the triggering Medicine check. If you roll a success on the Medicine check, you get a critical success instead."
+        }
+      ],
+      "name": "Skinstitch Salve",
+      "description": "This sticky salve stubbornly holds wounds closed and encourages swift natural healing.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Healing"
+      ],
+      "price": 55,
+      "weight": 0.1,
+      "id": "skinstitch-salve"
+    },
+    {
       "id": "slick",
       "name": "Slick",
       "price": 45,
@@ -9041,6 +9095,73 @@
       "price": 0.02,
       "weight": 0,
       "id": "soap"
+    },
+    {
+      "name": "Soothing Tonic",
+      "description": "This pleasantly savory concoction speeds your natural healing, so your wounds recover faster over time. You gain fast healing for 1 minute in an amount depending on the tonic's type. Activate (1 action, manipulate).",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Healing"
+      ],
+      "price": 7,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 2,
+          "label": "Lesser",
+          "name": "Soothing Tonic (Lesser)",
+          "price": 7,
+          "effect": "You gain fast healing 1.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-lesser",
+            "durationMinutes": 1,
+            "note": "Fast Healing 1 (1 min)"
+          }
+        },
+        {
+          "level": 5,
+          "label": "Moderate",
+          "name": "Soothing Tonic (Moderate)",
+          "price": 28,
+          "effect": "You gain fast healing 3.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-moderate",
+            "durationMinutes": 1,
+            "note": "Fast Healing 3 (1 min)"
+          }
+        },
+        {
+          "level": 10,
+          "label": "Greater",
+          "name": "Soothing Tonic (Greater)",
+          "price": 185,
+          "effect": "You gain fast healing 5.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-greater",
+            "durationMinutes": 1,
+            "note": "Fast Healing 5 (1 min)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Soothing Tonic (Major)",
+          "price": 2700,
+          "effect": "You gain fast healing 10.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "soothing-tonic-major",
+            "durationMinutes": 1,
+            "note": "Fast Healing 10 (1 min)"
+          }
+        }
+      ],
+      "id": "soothing-tonic"
     },
     {
       "name": "Spacious Pouch",
@@ -9260,123 +9381,29 @@
     {
       "actions": [
         {
-          "name": "Cast Tailwind",
-          "actionCount": 2,
-          "traits": [
-            "Concentrate",
-            "Manipulate"
-          ],
-          "description": "Frequency once per day; Duration 1 hour. The wind at your back pushes you to find new horizons. You gain a +10-foot status bonus to your Speed."
-        }
-      ],
-      "name": "Avaria Tattoo",
-      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Tailwind once per day. (Usage: tattooed on the body.)",
-      "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Transmutation"
-      ],
-      "price": 60,
-      "weight": 0,
-      "id": "avaria-tattoo"
-    },
-    {
-      "actions": [
-        {
-          "name": "Cast Vanishing Tracks",
-          "actionCount": 2,
-          "traits": [
-            "Concentrate",
-            "Manipulate"
-          ],
-          "description": "Frequency once per day; Area 20-foot emanation; Duration 1 hour. The DC of checks to Track you and up to 10 creatures of your choice in the area gains a +4 status bonus, or is equal to your spell DC, whichever results in a higher DC."
-        }
-      ],
-      "name": "Avidais Tattoo",
-      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Vanishing Tracks once per day. (Usage: tattooed on the body.)",
-      "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Abjuration"
-      ],
-      "price": 60,
-      "weight": 0,
-      "id": "avidais-tattoo"
-    },
-    {
-      "actions": [
-        {
-          "name": "Cast Liberating Command",
+          "name": "Unseen Din",
           "actionCount": 1,
           "traits": [
-            "Auditory",
-            "Concentrate",
-            "Manipulate"
-          ],
-          "description": "Frequency once per day; Range 60 feet; Targets 1 creature. You call out a liberating cry, urging an ally to break free of an effect that holds them in place. If the target is grabbed, immobilized, or restrained, it can immediately use a reaction to attempt to Escape."
-        }
-      ],
-      "name": "Carnasia Tattoo",
-      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Liberating Command once per day. (Usage: tattooed on the body.)",
-      "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Enchantment"
-      ],
-      "price": 60,
-      "weight": 0,
-      "id": "carnasia-tattoo"
-    },
-    {
-      "actions": [
-        {
-          "name": "Cast Thoughtful Gift",
-          "actionCount": 1,
-          "traits": [
-            "Conjuration",
-            "Teleportation"
-          ],
-          "description": "Frequency once per day; Range 120 feet; Targets 1 willing creature. You teleport one object of light or negligible Bulk held in your hand to the target. The object appears in the target's hand if they have a free hand, or at their feet if they don't. The spell fails if the target is unconscious, refuses your gift, or if the spell would teleport a creature."
-        }
-      ],
-      "name": "Idolis Tattoo",
-      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Thoughtful Gift once per day. (Usage: tattooed on the body.)",
-      "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Conjuration"
-      ],
-      "price": 60,
-      "weight": 0,
-      "id": "idolis-tattoo"
-    },
-    {
-      "actions": [
-        {
-          "name": "Cast Concordant Choir",
-          "actionCount": "One to Three",
-          "traits": [
-            "Concentrate",
+            "Illusion",
+            "Manipulate",
             "Sonic"
           ],
-          "description": "Frequency once per day; Range 30 feet; Saving Throw basic Fortitude. You unleash a dangerous consonance of reverberating sound. 1 action: 1d4 sonic damage to a single enemy. 2 actions (manipulate): 2d4 sonic damage to all creatures in a 10-foot burst. 3 actions (manipulate): 2d4 sonic damage to all creatures in a 30-foot emanation."
+          "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
         }
       ],
-      "name": "Ragario Tattoo",
-      "description": "This tattoo features traditional Varisian geometry and is part of an astrological set of symbol tattoos. Having one provides you with a +1 to Diplomacy checks when speaking to native Varisians, and allows you to cast Concordant Choir once per day. (Usage: tattooed on the body.)",
+      "name": "Vocoder of Invisibility",
+      "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
+      "image": "img_27e90a4f-7446-4ff9-a02c-a10d2c5798de.jpg",
+      "imagePosition": {
+        "x": 50,
+        "y": 50
+      },
       "traits": [
-        "Invested",
-        "Magical",
-        "Tattoo",
-        "Evocation"
+        "Magical"
       ],
-      "price": 60,
-      "weight": 0,
-      "id": "ragario-tattoo"
+      "price": 50,
+      "weight": 1,
+      "id": "vocoder-of-invisibility"
     },
     {
       "actions": [
@@ -9401,33 +9428,6 @@
       "price": 60,
       "weight": 0,
       "id": "voratalo-tattoo"
-    },
-    {
-      "actions": [
-        {
-          "name": "Unseen Din",
-          "actionCount": 1,
-          "traits": [
-            "Illusion",
-            "Manipulate",
-            "Sonic"
-          ],
-          "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
-        }
-      ],
-      "name": "Vocoder of Invisibility",
-      "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
-      "image": "img_27e90a4f-7446-4ff9-a02c-a10d2c5798de.jpg",
-      "imagePosition": {
-        "x": 50,
-        "y": 50
-      },
-      "traits": [
-        "Magical"
-      ],
-      "price": 50,
-      "weight": 1,
-      "id": "vocoder-of-invisibility"
     },
     {
       "id": "wand-of-breathe-fire",
@@ -11130,48 +11130,6 @@
       ]
     },
     {
-      "id": "blood-booster-lesser",
-      "name": "Blood Booster (Lesser)",
-      "description": "Resistance 5 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
-      "modifiers": []
-    },
-    {
-      "id": "blood-booster-moderate",
-      "name": "Blood Booster (Moderate)",
-      "description": "Resistance 10 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
-      "modifiers": []
-    },
-    {
-      "id": "blood-booster-greater",
-      "name": "Blood Booster (Greater)",
-      "description": "Resistance 20 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
-      "modifiers": []
-    },
-    {
-      "id": "soothing-tonic-lesser",
-      "name": "Soothing Tonic (Lesser)",
-      "description": "Fast Healing 1 for 1 minute.",
-      "modifiers": []
-    },
-    {
-      "id": "soothing-tonic-moderate",
-      "name": "Soothing Tonic (Moderate)",
-      "description": "Fast Healing 3 for 1 minute.",
-      "modifiers": []
-    },
-    {
-      "id": "soothing-tonic-greater",
-      "name": "Soothing Tonic (Greater)",
-      "description": "Fast Healing 5 for 1 minute.",
-      "modifiers": []
-    },
-    {
-      "id": "soothing-tonic-major",
-      "name": "Soothing Tonic (Major)",
-      "description": "Fast Healing 10 for 1 minute.",
-      "modifiers": []
-    },
-    {
       "id": "antiplague",
       "name": "Antiplague",
       "description": "+2 item bonus to Fortitude saves against diseases (Lesser; Moderate antiplague is +3), including the daily save against a disease's progression. The bonus is conditional ('vs disease'), so it is shown as a reminder beneath the Fortitude save rather than netted into the always-on number. Lasts 24 hours.",
@@ -11217,6 +11175,24 @@
           "amount": 1
         }
       ]
+    },
+    {
+      "id": "blood-booster-greater",
+      "name": "Blood Booster (Greater)",
+      "description": "Resistance 20 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+      "modifiers": []
+    },
+    {
+      "id": "blood-booster-lesser",
+      "name": "Blood Booster (Lesser)",
+      "description": "Resistance 5 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+      "modifiers": []
+    },
+    {
+      "id": "blood-booster-moderate",
+      "name": "Blood Booster (Moderate)",
+      "description": "Resistance 10 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+      "modifiers": []
     },
     {
       "id": "defend",
@@ -11757,6 +11733,30 @@
       ]
     },
     {
+      "id": "soothing-tonic-greater",
+      "name": "Soothing Tonic (Greater)",
+      "description": "Fast Healing 5 for 1 minute.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-lesser",
+      "name": "Soothing Tonic (Lesser)",
+      "description": "Fast Healing 1 for 1 minute.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-major",
+      "name": "Soothing Tonic (Major)",
+      "description": "Fast Healing 10 for 1 minute.",
+      "modifiers": []
+    },
+    {
+      "id": "soothing-tonic-moderate",
+      "name": "Soothing Tonic (Moderate)",
+      "description": "Fast Healing 3 for 1 minute.",
+      "modifiers": []
+    },
+    {
       "id": "treat-poison-resist",
       "name": "Treat Poison",
       "description": "+2 circumstance bonus to saving throws against the poison being treated.",
@@ -11845,6 +11845,39 @@
       ]
     },
     {
+      "id": "armor-potency-1",
+      "type": "fundamental",
+      "fundamental": "potency",
+      "target": "armor",
+      "tier": 1,
+      "name": "+1 Armor Potency",
+      "level": 5,
+      "price": 160,
+      "description": "A fundamental rune that grants a +1 item bonus to AC and unlocks 1 property-rune slot."
+    },
+    {
+      "id": "armor-potency-2",
+      "type": "fundamental",
+      "fundamental": "potency",
+      "target": "armor",
+      "tier": 2,
+      "name": "+2 Armor Potency",
+      "level": 11,
+      "price": 1060,
+      "description": "A fundamental rune that grants a +2 item bonus to AC and unlocks 2 property-rune slots."
+    },
+    {
+      "id": "armor-potency-3",
+      "type": "fundamental",
+      "fundamental": "potency",
+      "target": "armor",
+      "tier": 3,
+      "name": "+3 Armor Potency",
+      "level": 18,
+      "price": 20560,
+      "description": "A fundamental rune that grants a +3 item bonus to AC and unlocks 3 property-rune slots."
+    },
+    {
       "id": "dread",
       "type": "property",
       "armorRune": true,
@@ -11866,6 +11899,50 @@
         "sight": true,
         "effect": "the frightened value doesn't drop below 1 this turn"
       }
+    },
+    {
+      "id": "greater-resilient",
+      "type": "fundamental",
+      "fundamental": "resilient",
+      "target": "armor",
+      "tierKey": "greater",
+      "name": "Greater Resilient",
+      "level": 14,
+      "price": 3440,
+      "description": "A fundamental rune that grants an item bonus to all saving throws."
+    },
+    {
+      "id": "greater-striking",
+      "type": "fundamental",
+      "fundamental": "striking",
+      "target": "weapon",
+      "tierKey": "greater",
+      "name": "Greater Striking",
+      "level": 12,
+      "price": 1065,
+      "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+    },
+    {
+      "id": "major-resilient",
+      "type": "fundamental",
+      "fundamental": "resilient",
+      "target": "armor",
+      "tierKey": "major",
+      "name": "Major Resilient",
+      "level": 20,
+      "price": 49440,
+      "description": "A fundamental rune that grants an item bonus to all saving throws."
+    },
+    {
+      "id": "major-striking",
+      "type": "fundamental",
+      "fundamental": "striking",
+      "target": "weapon",
+      "tierKey": "major",
+      "name": "Major Striking",
+      "level": 19,
+      "price": 31065,
+      "description": "A fundamental rune that adds extra weapon damage dice on a hit."
     },
     {
       "id": "quenching",
@@ -11896,6 +11973,17 @@
           "text": "Don or remove this armor as a single action (1 action) rather than minutes."
         }
       ]
+    },
+    {
+      "id": "resilient",
+      "type": "fundamental",
+      "fundamental": "resilient",
+      "target": "armor",
+      "tierKey": "resilient",
+      "name": "Resilient",
+      "level": 8,
+      "price": 340,
+      "description": "A fundamental rune that grants an item bonus to all saving throws."
     },
     {
       "id": "shadow",
@@ -11934,6 +12022,17 @@
           "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
         }
       ]
+    },
+    {
+      "id": "striking",
+      "type": "fundamental",
+      "fundamental": "striking",
+      "target": "weapon",
+      "tierKey": "striking",
+      "name": "Striking",
+      "level": 4,
+      "price": 65,
+      "description": "A fundamental rune that adds extra weapon damage dice on a hit."
     },
     {
       "id": "swallow-spike",
@@ -12022,6 +12121,39 @@
           ]
         }
       }
+    },
+    {
+      "id": "weapon-potency-1",
+      "type": "fundamental",
+      "fundamental": "potency",
+      "target": "weapon",
+      "tier": 1,
+      "name": "+1 Weapon Potency",
+      "level": 2,
+      "price": 35,
+      "description": "A fundamental rune that grants a +1 item bonus to attack rolls and unlocks 1 property-rune slot."
+    },
+    {
+      "id": "weapon-potency-2",
+      "type": "fundamental",
+      "fundamental": "potency",
+      "target": "weapon",
+      "tier": 2,
+      "name": "+2 Weapon Potency",
+      "level": 10,
+      "price": 935,
+      "description": "A fundamental rune that grants a +2 item bonus to attack rolls and unlocks 2 property-rune slots."
+    },
+    {
+      "id": "weapon-potency-3",
+      "type": "fundamental",
+      "fundamental": "potency",
+      "target": "weapon",
+      "tier": 3,
+      "name": "+3 Weapon Potency",
+      "level": 16,
+      "price": 8935,
+      "description": "A fundamental rune that grants a +3 item bonus to attack rolls and unlocks 3 property-rune slots."
     }
   ],
   "image": [
