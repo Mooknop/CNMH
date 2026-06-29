@@ -6,7 +6,7 @@ import { useGameDate } from '../contexts/GameDateContext';
 import { useSessionLog } from './useSessionLog';
 import { docGold } from '../utils/gold';
 import { toGameSeconds } from '../utils/gameTime';
-import { createWorkOrder, isOrderReady, foldRuneIntoWeapon } from '../utils/runeWorkOrder';
+import { createWorkOrder, createHandoffOrder, isOrderReady, foldRuneIntoWeapon, applyRunesToGear } from '../utils/runeWorkOrder';
 
 // Rune work orders (#802). "Etch" pays the rune's price, takes the weapon from
 // the owner (an authored entry is masked via `cnmh_removed_`, a bought one is
@@ -76,6 +76,54 @@ export const useRuneWork = (charId) => {
     [offline, charId, gold, locationId, gameDate, time, list, acquired, setOrders, setAcquired, setRemoved, setGold, appendEvent, byId],
   );
 
+  // Hand staged gear to the smith (#857 S7a). `handoffs` = [{ gear, runes }];
+  // commits all in one transaction — N orders recorded, each gear pulled
+  // (acquired-splice or removed-mask, as etch does), and the combined rune total
+  // debited ONCE. A separate action from the ware cart so the two never write the
+  // shared gold/acquired overlays in the same handler. Returns the new orders, or
+  // null when rejected (offline, none staged, over balance).
+  const commitHandoff = useCallback(
+    (handoffs, shopTitle) => {
+      if (offline || !charId) return null;
+      const valid = (Array.isArray(handoffs) ? handoffs : []).filter(
+        (h) => h && h.gear && h.gear.uid != null && Array.isArray(h.runes) && h.runes.length
+      );
+      if (!valid.length) return null;
+      const total = valid.reduce((sum, h) => sum + h.runes.reduce((x, r) => x + (Number(r?.price) || 0), 0), 0);
+      if (total > gold) return null;
+
+      const now = { ...gameDate, ...time };
+      const newOrders = valid.map((h) =>
+        createHandoffOrder({ gear: h.gear, runes: h.runes, shopTitle, locationId, now })
+      );
+      setOrders([...list, ...newOrders]);
+
+      // Pull each gear: splice the bought (acquired) ones, mask the authored ones.
+      const uids = new Set(valid.map((h) => h.gear.uid));
+      const mine = Array.isArray(acquired) ? acquired : [];
+      const acquiredUids = new Set(mine.filter((e) => e && uids.has(e.uid)).map((e) => e.uid));
+      if (acquiredUids.size) setAcquired(mine.filter((e) => !(e && acquiredUids.has(e.uid))));
+      const authored = [...uids].filter((u) => !acquiredUids.has(u));
+      if (authored.length) {
+        setRemoved((cur) => {
+          const set = Array.isArray(cur) ? cur : [];
+          const add = authored.filter((u) => !set.includes(u));
+          return add.length ? [...set, ...add] : set;
+        });
+      }
+
+      setGold(gold - total);
+      appendEvent({
+        type: 'action',
+        text: `${byId[charId]?.name || 'Someone'} left ${valid.length} item${valid.length === 1 ? '' : 's'} with ${
+          shopTitle || 'a shop'
+        } to be runed for ${total} gp`,
+      });
+      return newOrders;
+    },
+    [offline, charId, gold, locationId, gameDate, time, list, acquired, setOrders, setAcquired, setRemoved, setGold, appendEvent, byId],
+  );
+
   // Collect a ready order: credit the runed weapon back and clear the order.
   // Returns true on success, false when the order is missing or not yet ready.
   const collect = useCallback(
@@ -84,7 +132,11 @@ export const useRuneWork = (charId) => {
       const order = list.find((o) => o && o.id === orderId);
       if (!order || !isOrderReady(order, nowSeconds, locationId)) return false;
 
-      const runed = foldRuneIntoWeapon(order.weapon, order.runeRef);
+      // Multi-rune handoff orders (#857 S7a) apply the whole staged array; legacy
+      // single-rune orders (#802) keep the property-only fold.
+      const runed = Array.isArray(order.runes) && order.runes.length
+        ? applyRunesToGear(order.weapon, order.runes)
+        : foldRuneIntoWeapon(order.weapon, order.runeRef);
       setAcquired([...(Array.isArray(acquired) ? acquired : []), runed]);
       setOrders(list.filter((o) => o && o.id !== orderId));
       appendEvent({
@@ -96,7 +148,7 @@ export const useRuneWork = (charId) => {
     [offline, charId, list, nowSeconds, locationId, acquired, setAcquired, setOrders, appendEvent, byId],
   );
 
-  return { orders: list, etch, collect, nowSeconds, locationId };
+  return { orders: list, etch, commitHandoff, collect, nowSeconds, locationId };
 };
 
 export default useRuneWork;

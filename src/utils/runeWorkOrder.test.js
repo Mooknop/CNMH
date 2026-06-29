@@ -1,5 +1,7 @@
 import {
   createWorkOrder,
+  createHandoffOrder,
+  applyRunesToGear,
   isOrderReady,
   orderStatus,
   eligibleWeapons,
@@ -83,5 +85,29 @@ describe('foldRuneIntoWeapon', () => {
     expect(out.state).toBeUndefined();
     expect(out.hand).toBeUndefined();
     expect(out.runes.property).toEqual(['flaming']);
+  });
+});
+
+describe('createHandoffOrder / applyRunesToGear (#857 S7a)', () => {
+  const potency = { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: '+1 Weapon Potency', price: 35 };
+  const flaming = { id: 'flaming', type: 'property', name: 'Flaming', price: 500 };
+
+  it('builds one order holding the rune array, a joined name, and the summed price', () => {
+    const o = createHandoffOrder({ gear: { uid: 'w1', name: 'Longsword', strikes: [{}] }, runes: [potency, flaming], shopTitle: 'Smith', locationId: 'sandpoint', now });
+    expect(o).toMatchObject({ weaponUid: 'w1', weaponName: 'Longsword', runeName: '+1 Weapon Potency, Flaming', price: 535, readyLocationId: 'sandpoint' });
+    expect(o.runes).toHaveLength(2);
+    expect(o.readyAtSeconds).toBe(toGameSeconds(now) + TURNAROUND_HOURS * 3600);
+  });
+
+  it('applies fundamentals before property so the property slot exists', () => {
+    const runed = applyRunesToGear({ uid: 'w1', name: 'Longsword', strikes: [{}] }, [flaming, potency]); // property listed first
+    expect(runed.runes).toEqual({ potency: 1, property: ['flaming'] });
+  });
+
+  it('skips an incompatible rune rather than aborting the rest', () => {
+    const slick = { id: 'slick', type: 'property', armorRune: true, name: 'Slick', price: 45 }; // armor rune
+    const runed = applyRunesToGear({ uid: 'w1', name: 'Longsword', strikes: [{}] }, [potency, slick]);
+    expect(runed.runes.potency).toBe(1);
+    expect(runed.runes.property || []).not.toContain('slick');
   });
 });

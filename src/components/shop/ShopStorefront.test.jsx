@@ -21,7 +21,17 @@ vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: vi.fn(() => ({ inventory: mockInventory })),
 }));
 
-beforeEach(() => { mockGold = 142; mockBuy.mockClear(); mockInventory = []; });
+// useRuneWork — stub commit + the pending orders the benched tickets render.
+let mockOrders = [];
+const mockCommitHandoff = vi.fn(() => [{ id: 'o1' }]);
+vi.mock('../../hooks/useRuneWork', () => ({
+  useRuneWork: vi.fn(() => ({ orders: mockOrders, commitHandoff: mockCommitHandoff, nowSeconds: 0, locationId: 'sandpoint' })),
+}));
+
+beforeEach(() => {
+  mockGold = 142; mockBuy.mockClear(); mockInventory = [];
+  mockOrders = []; mockCommitHandoff.mockClear();
+});
 
 const items = [
   { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.' },
@@ -373,6 +383,39 @@ describe('ShopStorefront', () => {
       expect(within(gear).getByLabelText('un-stage Striking')).toBeInTheDocument();
       fireEvent.click(within(gear).getByLabelText('un-stage Striking'));
       expect(within(gear).queryByTestId('staged-w1')).not.toBeInTheDocument();
+    });
+
+    it('hands staged gear over: commits the grouped handoff, clears staging, toasts', () => {
+      renderRunes();
+      const gear = screen.getByTestId('gear-w1');
+      fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
+      fireEvent.click(screen.getByTestId('hand-over'));
+      expect(mockCommitHandoff).toHaveBeenCalledTimes(1);
+      const [handoffs] = mockCommitHandoff.mock.calls[0];
+      expect(handoffs).toHaveLength(1);
+      expect(handoffs[0].gear.uid).toBe('w1');
+      expect(handoffs[0].runes.map((r) => r.id)).toEqual(['striking']);
+      expect(screen.getByTestId('shop-toast')).toBeInTheDocument();
+      expect(within(screen.getByTestId('gear-w1')).queryByTestId('staged-w1')).not.toBeInTheDocument();
+    });
+
+    it('disables hand-over when the staged total exceeds gold', () => {
+      mockGold = 10; // a 68gp striking runestone is unaffordable
+      renderRunes();
+      const gear = screen.getByTestId('gear-w1');
+      fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
+      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
+      expect(screen.getByTestId('hand-over')).toBeDisabled();
+    });
+
+    it('renders a benched ticket for a pending order', () => {
+      mockOrders = [{ id: 'ord1', weaponName: 'Longsword', runeName: 'Striking, Flaming', price: 565, readyAtSeconds: 999999 }];
+      renderRunes();
+      const ticket = screen.getByTestId('bench-ord1');
+      expect(ticket).toHaveTextContent('Longsword');
+      expect(ticket).toHaveTextContent('Striking, Flaming');
+      expect(ticket).toHaveTextContent('565 gp');
     });
 
     it('read-only mode shows "—" sockets and no picker', () => {

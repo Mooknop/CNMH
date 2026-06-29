@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { createWorkOrder } from '../utils/runeWorkOrder';
+import { createWorkOrder, createHandoffOrder } from '../utils/runeWorkOrder';
 import { toGameSeconds } from '../utils/gameTime';
 
 let session = { connected: true, foundryConnected: true };
@@ -89,6 +89,37 @@ describe('etch', () => {
   });
 });
 
+describe('commitHandoff (#857 S7a)', () => {
+  const potency = { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: '+1 Weapon Potency', price: 35 };
+  const flaming = { id: 'flaming', type: 'property', name: 'Flaming', price: 500 };
+
+  it('records one order per gear, pulls each, and debits the combined total once', () => {
+    const { result } = renderHook(() => useRuneWork('a'));
+    const out = result.current.commitHandoff([{ gear: weapon, runes: [potency, flaming] }], 'The Etcher');
+    expect(out).toHaveLength(1);
+    expect(setOrders).toHaveBeenCalledWith([
+      expect.objectContaining({ weaponUid: 'w1', runeName: '+1 Weapon Potency, Flaming', price: 535 }),
+    ]);
+    expect(removed).toContain('w1');
+    expect(setGold).toHaveBeenCalledTimes(1);
+    expect(setGold).toHaveBeenCalledWith(465); // 1000 - 535
+  });
+
+  it('rejects when the combined rune total exceeds gold (no writes)', () => {
+    gold = 100;
+    const { result } = renderHook(() => useRuneWork('a'));
+    expect(result.current.commitHandoff([{ gear: weapon, runes: [potency, flaming] }], 'The Etcher')).toBeNull();
+    expect(setOrders).not.toHaveBeenCalled();
+    expect(setGold).not.toHaveBeenCalled();
+  });
+
+  it('ignores empty payloads', () => {
+    const { result } = renderHook(() => useRuneWork('a'));
+    expect(result.current.commitHandoff([], 'The Etcher')).toBeNull();
+    expect(result.current.commitHandoff([{ gear: weapon, runes: [] }], 'The Etcher')).toBeNull();
+  });
+});
+
 describe('collect', () => {
   // An order placed 2 days ago in Sandpoint — ready now (24h elapsed, in town).
   const past = { ...NOW, day: NOW.day - 2 };
@@ -123,5 +154,19 @@ describe('collect', () => {
   it('verifies the ready order’s time math', () => {
     const o = readyOrder();
     expect(toGameSeconds(NOW)).toBeGreaterThanOrEqual(o.readyAtSeconds);
+  });
+
+  it('applies a whole multi-rune handoff order on collect (#857 S7a)', () => {
+    const runes = [
+      { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', tier: 1, name: '+1 Weapon Potency', price: 35 },
+      { id: 'flaming', type: 'property', name: 'Flaming', price: 500 },
+    ];
+    orders = [{ ...createHandoffOrder({ gear: weapon, runes, locationId: 'sandpoint', now: past }), id: 'ord-multi' }];
+    const { result } = renderHook(() => useRuneWork('a'));
+    expect(result.current.collect('ord-multi')).toBe(true);
+    // potency applied first opens the slot the property rune lands in.
+    expect(setAcquired).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'Longsword', runes: { potency: 1, property: ['flaming'] } }),
+    ]);
   });
 });
