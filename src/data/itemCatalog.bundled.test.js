@@ -124,10 +124,10 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(ids).toEqual(expect.arrayContaining(['antidote', 'antiplague', 'eagle-eye-elixir', 'elixir-of-life']));
   });
 
-  // #907 S1: a variant may carry `overrides` with variant-specific mechanical
+  // #907: a variant may carry `overrides` with variant-specific mechanical
   // fields. Only allowlisted keys are permitted; widen this list as later slices
-  // make more fields variant-aware (S2 container/frequency, S3 resistance).
-  const OVERRIDE_ALLOWLIST = ['bonus'];
+  // make more fields variant-aware (S1 bonus, S2 container; S3 resistance).
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -138,6 +138,10 @@ describe('bundled item catalog (Slice 3)', () => {
           expect(Array.isArray(v.overrides.bonus)).toBe(true);
           expect(typeof v.overrides.bonus[0]).toBe('string');
           expect(typeof v.overrides.bonus[1]).toBe('number');
+        }
+        if (v.overrides.container !== undefined) {
+          expect(typeof v.overrides.container.capacity).toBe('number');
+          expect(typeof v.overrides.container.ignored).toBe('number');
         }
       });
     });
@@ -156,6 +160,21 @@ describe('bundled item catalog (Slice 3)', () => {
       { ...owner, inventory: [{ ref: 'cloak-of-repute', level: 4 }] }, items, spells
     ).inventory[0];
     expect(std.bonus).toEqual(['diplomacy', 1]);
+  });
+
+  it('Sleeves of Storage Greater resolves to the override container capacity', () => {
+    const owner = { id: 'tester', level: 20, inventory: [{ ref: 'sleeves-of-storage', level: 9 }] };
+    const greater = resolveCharacterItems(owner, items, spells).inventory[0];
+    expect(greater.container.capacity).toBe(40);
+    expect(greater.container.ignored).toBe(40);
+    expect(greater.overrides).toBeUndefined();
+    // contents still resolve (container plumbing intact).
+    expect(Array.isArray(greater.container.contents)).toBe(true);
+    // Standard tier keeps the base 10-Bulk capacity.
+    const std = resolveCharacterItems(
+      { ...owner, inventory: [{ ref: 'sleeves-of-storage', level: 4 }] }, items, spells
+    ).inventory[0];
+    expect(std.container.capacity).toBe(10);
   });
 
   it('Blu\'s orb is tagged Artifact but mechanically inert', () => {
