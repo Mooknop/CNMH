@@ -29,7 +29,8 @@ beforeEach(() => {
 });
 
 const items = [
-  { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.' },
+  { id: 'antidote', name: 'Antidote', price: 3, weight: 0, traits: ['Alchemical', 'Consumable'], description: 'Cures poison.',
+    image: 'antidote.png', imagePosition: { x: 50, y: 25 } },
   { id: 'spellbook', name: 'Spellbook', price: 10, weight: 1, traits: ['Magical'] },
   {
     id: 'tonic',
@@ -152,6 +153,25 @@ describe('ShopStorefront', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Magical' }));
       expect(within(screen.getByLabelText('wares')).getByTestId('ware-spellbook')).toBeInTheDocument();
       expect(within(screen.getByLabelText('wares')).queryByTestId('ware-tonic')).not.toBeInTheDocument();
+    });
+
+    it('renders the item image on the tile when present, crest fallback otherwise (#881)', () => {
+      renderShop();
+      const grid = screen.getByLabelText('wares');
+      const img = grid.querySelector('[data-testid="ware-antidote"] img.ps-tile-img');
+      expect(img).toHaveAttribute('src', '/api/images/antidote.png');
+      expect(img).toHaveStyle({ objectPosition: '50% 25%' });
+      // spellbook has no image → letter crest, no img.
+      const spellbook = grid.querySelector('[data-testid="ware-spellbook"]');
+      expect(spellbook.querySelector('img')).toBeNull();
+      expect(within(spellbook).getByText('S')).toBeInTheDocument();
+    });
+
+    it('renders the item image in the takeover preview when present (#881)', () => {
+      renderShop();
+      fireEvent.keyDown(within(screen.getByLabelText('wares')).getByTestId('ware-antidote'), { key: 'Enter' });
+      const preview = screen.getByTestId('ware-preview');
+      expect(preview.querySelector('img.ps-preview-img')).toHaveAttribute('src', '/api/images/antidote.png');
     });
 
     it('opens the takeover preview with per-form rows on tap', () => {
