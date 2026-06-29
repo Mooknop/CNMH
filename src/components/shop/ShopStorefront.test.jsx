@@ -2,16 +2,19 @@ import React from 'react';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import ShopStorefront from './ShopStorefront';
 
-// useBuyItems pulls session/content/log contexts; stub it with a working buy
-// that returns a receipt for affordable carts (over-budget is pre-gated in UI).
+// useShopCheckout owns the whole transaction (#878); stub it with a checkout that
+// returns a receipt for an affordable combined cart (over-budget is UI-gated).
 let mockGold = 142;
-const mockBuy = vi.fn((purchases) => {
-  const total = purchases.reduce((s, p) => s + p.item.price * p.qty, 0);
+let mockOrders = [];
+const mockCheckout = vi.fn(({ purchases = [], handoffs = [] }) => {
+  const wareTotal = purchases.reduce((s, p) => s + p.item.price * p.qty, 0);
+  const handoffTotal = handoffs.reduce((s, h) => s + h.runes.reduce((x, r) => x + (r.price || 0), 0), 0);
+  const total = wareTotal + handoffTotal;
   if (total > mockGold) return null;
-  return { total, count: purchases.reduce((s, p) => s + p.qty, 0) };
+  return { total, wareCount: purchases.reduce((s, p) => s + p.qty, 0), handoffCount: handoffs.length };
 });
-vi.mock('../../hooks/useBuyItems', () => ({
-  useBuyItems: vi.fn(() => ({ myGold: mockGold, buy: mockBuy })),
+vi.mock('../../hooks/useShopCheckout', () => ({
+  useShopCheckout: vi.fn(() => ({ myGold: mockGold, orders: mockOrders, nowSeconds: 0, checkout: mockCheckout })),
 }));
 
 // useCharacter pulls character/content contexts; stub it with the inventory the
@@ -21,16 +24,8 @@ vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: vi.fn(() => ({ inventory: mockInventory })),
 }));
 
-// useRuneWork — stub commit + the pending orders the benched tickets render.
-let mockOrders = [];
-const mockCommitHandoff = vi.fn(() => [{ id: 'o1' }]);
-vi.mock('../../hooks/useRuneWork', () => ({
-  useRuneWork: vi.fn(() => ({ orders: mockOrders, commitHandoff: mockCommitHandoff, nowSeconds: 0, locationId: 'sandpoint' })),
-}));
-
 beforeEach(() => {
-  mockGold = 142; mockBuy.mockClear(); mockInventory = [];
-  mockOrders = []; mockCommitHandoff.mockClear();
+  mockGold = 142; mockInventory = []; mockOrders = []; mockCheckout.mockClear();
 });
 
 const items = [
@@ -231,14 +226,14 @@ describe('ShopStorefront', () => {
       expect(checkout).toHaveTextContent('Need 5 gp more');
     });
 
-    it('checks out: calls buy, clears the cart, and shows a toast', () => {
+    it('checks out: calls the unified checkout, clears the cart, and shows a toast', () => {
       renderShop();
       fireEvent.click(screen.getByLabelText('add Antidote'));
       openTray();
       fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
-      expect(mockBuy).toHaveBeenCalledTimes(1);
-      expect(mockBuy.mock.calls[0][0]).toEqual([{ item: expect.objectContaining({ wareKey: 'antidote' }), qty: 1 }]);
-      expect(screen.getByTestId('shop-toast')).toHaveTextContent('Bought 1 item for 3 gp.');
+      expect(mockCheckout).toHaveBeenCalledTimes(1);
+      expect(mockCheckout.mock.calls[0][0].purchases).toEqual([{ item: expect.objectContaining({ wareKey: 'antidote' }), qty: 1 }]);
+      expect(screen.getByTestId('shop-toast')).toHaveTextContent('Checked out 1 item for 3 gp.');
       // bar resets to empty
       expect(screen.getByTestId('cart-bar')).toHaveTextContent(/empty/i);
     });
@@ -289,7 +284,7 @@ describe('ShopStorefront', () => {
       expect(screen.getByTestId('incart-scroll-of-heal')).toBeInTheDocument();
       fireEvent.click(screen.getByTestId('cart-bar'));
       fireEvent.click(within(screen.getByTestId('cart-tray')).getByTestId('checkout'));
-      expect(mockBuy.mock.calls[0][0]).toEqual([
+      expect(mockCheckout.mock.calls[0][0].purchases).toEqual([
         { item: expect.objectContaining({ wareKey: 'scroll:heal' }), qty: 1 },
       ]);
       expect(screen.getByTestId('shop-toast')).toBeInTheDocument();
@@ -385,28 +380,44 @@ describe('ShopStorefront', () => {
       expect(within(gear).queryByTestId('staged-w1')).not.toBeInTheDocument();
     });
 
-    it('hands staged gear over: commits the grouped handoff, clears staging, toasts', () => {
-      renderRunes();
+    const stageStriking = () => {
       const gear = screen.getByTestId('gear-w1');
       fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
       fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
-      fireEvent.click(screen.getByTestId('hand-over'));
-      expect(mockCommitHandoff).toHaveBeenCalledTimes(1);
-      const [handoffs] = mockCommitHandoff.mock.calls[0];
+    };
+
+    it('a staged rune shows as a handoff line in the cart and checks out (#878)', () => {
+      renderRunes();
+      stageStriking();
+      // the handoff appears as a cart line + counts in the bar
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      const tray = screen.getByTestId('cart-tray');
+      expect(within(tray).getByTestId('handoff-line-w1')).toHaveTextContent('Longsword');
+      expect(within(tray).getByTestId('handoff-line-w1')).toHaveTextContent('68 gp'); // 3 + 65
+      fireEvent.click(within(tray).getByTestId('checkout'));
+      const { purchases, handoffs } = mockCheckout.mock.calls[0][0];
+      expect(purchases).toEqual([]);
       expect(handoffs).toHaveLength(1);
       expect(handoffs[0].gear.uid).toBe('w1');
       expect(handoffs[0].runes.map((r) => r.id)).toEqual(['striking']);
       expect(screen.getByTestId('shop-toast')).toBeInTheDocument();
+    });
+
+    it('removes a handoff line with its ✕ (un-stages the gear)', () => {
+      renderRunes();
+      stageStriking();
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      fireEvent.click(within(screen.getByTestId('cart-tray')).getByLabelText(/remove handoff Longsword/i));
+      expect(screen.queryByTestId('handoff-line-w1')).not.toBeInTheDocument();
       expect(within(screen.getByTestId('gear-w1')).queryByTestId('staged-w1')).not.toBeInTheDocument();
     });
 
-    it('disables hand-over when the staged total exceeds gold', () => {
-      mockGold = 10; // a 68gp striking runestone is unaffordable
+    it('disables checkout when the combined total exceeds gold', () => {
+      mockGold = 10; // a 68gp striking handoff is unaffordable
       renderRunes();
-      const gear = screen.getByTestId('gear-w1');
-      fireEvent.click(within(gear).getByLabelText(/fill Striking slot/i));
-      fireEvent.click(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Striking/ }));
-      expect(screen.getByTestId('hand-over')).toBeDisabled();
+      stageStriking();
+      fireEvent.click(screen.getByTestId('cart-bar'));
+      expect(within(screen.getByTestId('cart-tray')).getByTestId('checkout')).toBeDisabled();
     });
 
     it('renders a benched ticket for a pending order', () => {

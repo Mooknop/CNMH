@@ -354,14 +354,19 @@
 .ps-runepicker-cancel { background: none; border: none; cursor: pointer; text-decoration: underline; font-size: 11px; color: var(--ps-ink2); }
 .ps-staged-note { margin: var(--space-3) 0 0; font-family: var(--font-body); font-size: 11.5px; line-height: 1.4; color: var(--gold-light); }
 
-/* Hand-over action (S7a) — its own transaction, separate from the ware cart. */
-.ps-handoff-bar { padding: var(--space-3) 15px 0; }
-.ps-handoff-btn {
-  width: 100%; min-height: 44px; cursor: pointer; border: none; border-radius: var(--radius-lg);
-  font-family: var(--font-ui); font-weight: 700; font-size: 13px;
-  background: linear-gradient(135deg, var(--gold-mid), color-mix(in srgb, var(--gold-mid) 60%, #000)); color: #1a1208;
+/* Handoff cart line (#878) — staged gear in the pull-up tray. */
+.ps-tray-line--handoff { align-items: center; }
+.ps-handoff-wrench {
+  display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 6px;
+  border-radius: var(--radius-sm); background: color-mix(in srgb, var(--gold-mid) 18%, transparent); color: var(--gold-light);
 }
-.ps-handoff-btn:disabled { filter: grayscale(0.6); opacity: 0.55; cursor: default; }
+.ps-handoff-pill {
+  margin-left: 6px; font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--gold-mid) 45%, transparent); color: var(--gold-light); white-space: nowrap;
+}
+.ps-handoff-x { grid-row: 1 / span 2; grid-column: 2; background: none; border: none; cursor: pointer; color: var(--ps-ink3); font-size: 0.9rem; }
+.ps-handoff-x:hover { color: var(--peril-light); }
+.ps-tray-handoff-note { margin: 0; font-family: var(--font-body); font-size: 10.5px; color: var(--ps-ink3); }
 
 /* Benched ticket (S7a) — gear currently at the smith, rendered from a work order. */
 .ps-bench {
