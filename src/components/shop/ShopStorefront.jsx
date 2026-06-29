@@ -19,6 +19,7 @@ import { formatAvailableAt } from '../../utils/gameTime';
 import { useShopCheckout } from '../../hooks/useShopCheckout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
+import ItemActivations from '../shared/ItemActivations';
 import './ShopStorefront.css';
 
 // Player Shop redesign (#857). The single full-screen, phone-shaped shop surface
@@ -243,6 +244,9 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
           {(group.traits || []).slice(0, 4).map((t) => <span key={t} className="ps-preview-trait">{t}</span>)}
         </div>
         {group.description && <p className="ps-preview-desc">{group.description}</p>}
+        {/* Item activations — what it does (display-only), shared with the
+            inventory ItemModal so the views match (#882). */}
+        <ItemActivations item={head} />
         <ul className="ps-preview-forms" aria-label="forms">
           {group.forms.map((f) => {
             const qty = qtyByKey[f.wareKey] || 0;
