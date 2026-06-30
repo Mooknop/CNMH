@@ -425,6 +425,60 @@ describe('eligibleSpellItems', () => {
   });
 });
 
+describe('eligibleSpellItems — heightened offerings (#937)', () => {
+  const heightenedCatalog = [
+    { id: 'fireball', name: 'Fireball', level: 3, traditions: ['arcane'], heightened: { '+1': 'more damage' } },
+    { id: 'glitterdust', name: 'Glitterdust', level: 2, traditions: ['arcane'], heightened: { '4th': 'upgrade' } },
+    { id: 'mage-armor', name: 'Mage Armor', level: 1, traditions: ['arcane'] }, // no heightening
+  ];
+  const scrolls = (maxLevel) =>
+    eligibleSpellItems({ spellItem: 'scroll', maxLevel, traditions: ['arcane'] }, heightenedCatalog);
+
+  it('emits one scroll per mechanically-distinct rank, sharing an id with rank-distinct wareKeys', () => {
+    const fb = scrolls(19).filter((e) => e.id === 'scroll-of-fireball');
+    expect(fb.map((e) => e.wareKey)).toEqual([
+      'scroll:fireball', 'scroll:fireball:4', 'scroll:fireball:5', 'scroll:fireball:6',
+      'scroll:fireball:7', 'scroll:fireball:8', 'scroll:fireball:9', 'scroll:fireball:10',
+    ]);
+    // Base form is minimal (no rank override); a heightened form carries it.
+    const base = fb[0];
+    const r5 = fb.find((e) => e.wareKey === 'scroll:fireball:5');
+    expect(base).toMatchObject({ name: 'Scroll of Fireball', scroll: { spellRef: 'fireball' }, level: 5, price: 30 });
+    expect(base.scroll.rank).toBeUndefined();
+    // Rank 5 scroll → item level 9, 150 gp; name carries the "(Rank N)" suffix.
+    expect(r5).toMatchObject({ name: 'Scroll of Fireball (Rank 5)', scroll: { spellRef: 'fireball', rank: 5 }, level: 9, price: 150 });
+  });
+
+  it('offers a fixed-"Nth" spell only at base + that rank, and an un-heightenable spell once', () => {
+    const out = scrolls(19);
+    expect(out.filter((e) => e.id === 'scroll-of-glitterdust').map((e) => e.wareKey))
+      .toEqual(['scroll:glitterdust', 'scroll:glitterdust:4']);
+    expect(out.filter((e) => e.id === 'scroll-of-mage-armor').map((e) => e.wareKey))
+      .toEqual(['scroll:mage-armor']);
+  });
+
+  it("bounds heightened ranks by the shop's item-level cap", () => {
+    // maxLevel 5 ⇒ scroll cap rank 3, so fireball (base 3) offers only the base.
+    expect(scrolls(5).filter((e) => e.id === 'scroll-of-fireball').map((e) => e.wareKey))
+      .toEqual(['scroll:fireball']);
+  });
+
+  it('groups all ranks of a spell into one browse entry, cheapest-first', () => {
+    // maxLevel 9 ⇒ scroll cap rank 5 ⇒ fireball ranks 3,4,5.
+    const groups = groupWares(scrolls(9));
+    const fb = groups.find((g) => g.ref === 'scroll-of-fireball');
+    expect(fb.name).toBe('Scroll of Fireball'); // headline = base, un-suffixed
+    expect(fb.forms.map((f) => f.wareKey)).toEqual(['scroll:fireball', 'scroll:fireball:4', 'scroll:fireball:5']);
+    expect(fb.forms.map((f) => f.price)).toEqual([30, 70, 150]); // ascending
+  });
+
+  it('summary counts distinct spells, not rank-forms', () => {
+    const s = spellOfferingSummary({ spellItem: 'scroll', maxLevel: 19, traditions: ['arcane'] }, heightenedCatalog);
+    expect(s.count).toBe(3); // fireball, glitterdust, mage-armor — not the many forms
+    expect(s.text).toContain('3 eligible spells');
+  });
+});
+
 describe('spellOfferingSummary', () => {
   it('summarises the default (all traditions, common only) coverage + count', () => {
     const s = spellOfferingSummary({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog);

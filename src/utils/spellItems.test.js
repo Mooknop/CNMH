@@ -2,6 +2,7 @@ import {
   SCROLL_BY_RANK,
   WAND_BY_RANK,
   castRank,
+  mechanicalHeightenRanks,
   resolveScroll,
   resolveWand,
   spellItemDisplayName,
@@ -134,6 +135,51 @@ describe('fallbacks (no throw)', () => {
     expect(out.level).toBeNull();
     expect(out.price).toBeNull();
     expect(out.traits).toEqual(['Consumable', 'Magical', 'Scroll']);
+  });
+});
+
+describe('mechanicalHeightenRanks (#937)', () => {
+  test('no heightening → base rank only', () => {
+    expect(mechanicalHeightenRanks({ level: 3 })).toEqual([3]);
+    expect(mechanicalHeightenRanks({ level: 1, heightened: {} })).toEqual([1]);
+  });
+
+  test('interval "+1" → every rank from base to the spell max', () => {
+    expect(mechanicalHeightenRanks({ level: 2, heightened: { '+1': 'more dice' } }))
+      .toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+
+  test('interval "+2" → every second rank (base+1 grants nothing)', () => {
+    expect(mechanicalHeightenRanks({ level: 2, heightened: { '+2': 'more' } }))
+      .toEqual([2, 4, 6, 8, 10]);
+  });
+
+  test('fixed "Nth" → exactly that rank, not the intermediate ones', () => {
+    // base 1 with only a 3rd-rank upgrade: rank 2 crosses no threshold.
+    expect(mechanicalHeightenRanks({ level: 1, heightened: { '3rd': 'upgrade' } }))
+      .toEqual([1, 3]);
+    expect(mechanicalHeightenRanks({ level: 1, heightened: { '3rd': 'a', '6th': 'b' } }))
+      .toEqual([1, 3, 6]);
+  });
+
+  test('mixed fixed + interval → union, sorted, deduped', () => {
+    expect(mechanicalHeightenRanks({ level: 3, heightened: { '+1': 'scale', '5th': 'jump' } }))
+      .toEqual([3, 4, 5, 6, 7, 8, 9, 10]);
+  });
+
+  test('ignores fixed keys at or below the base rank', () => {
+    expect(mechanicalHeightenRanks({ level: 4, heightened: { '2nd': 'weird' } })).toEqual([4]);
+  });
+
+  test('caps at the spell max rank (10)', () => {
+    expect(mechanicalHeightenRanks({ level: 9, heightened: { '+1': 'x' } })).toEqual([9, 10]);
+    expect(mechanicalHeightenRanks({ level: 10, heightened: { '+1': 'x' } })).toEqual([10]);
+  });
+
+  test('non-positive / non-integer base → []', () => {
+    expect(mechanicalHeightenRanks({ level: 0, heightened: { '+1': 'x' } })).toEqual([]);
+    expect(mechanicalHeightenRanks({})).toEqual([]);
+    expect(mechanicalHeightenRanks(undefined)).toEqual([]);
   });
 });
 
