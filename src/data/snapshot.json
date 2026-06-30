@@ -11474,6 +11474,617 @@
       ],
       "weight": 2,
       "id": "xanderghuls-flawless-hammer"
+    },
+    {
+      "id": "wordreaper",
+      "name": "Wordreaper",
+      "description": "This +1 sickle's blade is engraved to look like the curving feather of an elaborate quill, with a pen nib at the base of its wooden handle. You can use the handle as an ink pen, and it never runs out of ink.",
+      "traits": [
+        "Uncommon",
+        "Divination",
+        "Magical"
+      ],
+      "usage": "held in one hand",
+      "price": 55,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Wordreaper",
+          "proficiency": "simple",
+          "type": "melee",
+          "damage": "1d4",
+          "traits": [
+            "Attack",
+            "Agile",
+            "Finesse",
+            "Trip",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1
+      },
+      "actions": [
+        {
+          "name": "Read By",
+          "actionCount": 3,
+          "traits": [
+            "Interact"
+          ],
+          "description": "Frequency once per day; Effect You inscribe the words \"read by\" and your name inside a nonmagical literary work such as a book, scroll, or play, immediately gaining cursory knowledge of the work as though you had skimmed it for 5 minutes."
+        }
+      ]
+    },
+    {
+      "id": "caterwaul-sling",
+      "name": "Caterwaul Sling",
+      "description": "Made of shiny brown leather, this +1 striking sling has a single white thread interwoven into its cord.",
+      "traits": [
+        "Magical"
+      ],
+      "price": 155,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Caterwaul Sling",
+          "proficiency": "simple",
+          "type": "ranged",
+          "damage": "1d6",
+          "range": "50ft",
+          "reload": 1,
+          "traits": [
+            "Attack",
+            "Propulsive",
+            "Ranged"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1,
+        "striking": "striking"
+      },
+      "actions": [
+        {
+          "name": "Unleash Roar",
+          "actionCount": 2,
+          "traits": [
+            "Manipulate",
+            "Sonic"
+          ],
+          "description": "Frequency once per day; Effect You pull the white thread free and whirl the sling at high speed, letting out an ear-piercing wave of sound. Each creature in a 30-foot cone takes 4d6 sonic damage (DC 21 basic Fortitude save). On a failure the creature is also deafened for 1 round; on a critical failure, deafened for 1 hour."
+        }
+      ]
+    },
+    {
+      "id": "dog-bone-knife",
+      "name": "Dog-Bone Knife",
+      "description": "The blade of this +1 striking dagger is made from the thigh bone of a canine that died protecting its master. A willing polymorphed creature or werecreature that takes damage from the knife must succeed at a DC 19 Will save or immediately revert to its natural form; on a success it is temporarily immune for 1 minute. Creatures vulnerable to canines (such as kushtakas) take a -2 circumstance penalty to the save, and the knife ignores their resistance to physical damage. Unwilling polymorph victims are unaffected.",
+      "traits": [
+        "Uncommon",
+        "Magical"
+      ],
+      "price": 150,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Dog-Bone Knife",
+          "proficiency": "simple",
+          "type": "melee",
+          "damage": "1d4",
+          "traits": [
+            "Attack",
+            "Agile",
+            "Finesse",
+            "Versatile S",
+            "Melee"
+          ],
+          "actionCount": 1
+        },
+        {
+          "name": "Dog-Bone Knife (Thrown)",
+          "proficiency": "simple",
+          "type": "ranged",
+          "damage": "1d4",
+          "range": "10ft",
+          "traits": [
+            "Attack",
+            "Agile",
+            "Thrown",
+            "Versatile S"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1,
+        "striking": "striking"
+      }
+    },
+    {
+      "id": "ladys-knife",
+      "name": "Lady's Knife",
+      "description": "This +1 striking returning dagger has an elaborate, gemmed handle and can be strapped to the inside of a wrist or tucked within a bodice.",
+      "traits": [
+        "Uncommon",
+        "Conjuration",
+        "Magical"
+      ],
+      "price": 200,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Lady's Knife",
+          "proficiency": "simple",
+          "type": "melee",
+          "damage": "1d4",
+          "traits": [
+            "Attack",
+            "Agile",
+            "Finesse",
+            "Versatile S",
+            "Melee"
+          ],
+          "actionCount": 1
+        },
+        {
+          "name": "Lady's Knife (Thrown)",
+          "proficiency": "simple",
+          "type": "ranged",
+          "damage": "1d4",
+          "range": "10ft",
+          "traits": [
+            "Attack",
+            "Agile",
+            "Thrown",
+            "Versatile S"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1,
+        "striking": "striking",
+        "property": [
+          "returning"
+        ]
+      },
+      "actions": [
+        {
+          "name": "Favor",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate",
+            "Interact"
+          ],
+          "description": "Frequency once per day; Effect You grant the blade to an ally, forming a link that lasts until your next daily preparations. While linked, you and your ally each gain the benefits of the status spell, using each other as the target."
+        },
+        {
+          "name": "Recall",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Frequency once per day; Requirements You have an active Favor link; Effect The knife teleports instantly to your hand. This fails if the knife is more than 1 mile away. Your linked ally can also use this activation once per day to recall the knife."
+        }
+      ]
+    },
+    {
+      "id": "hunters-bow",
+      "name": "Hunter's Bow",
+      "description": "This +1 shortbow is favored by stealthy hunters and rogues. If you Strike a target that can't see you and score a critical hit, the target takes an extra 1d6 damage (in addition to any sneak attack damage).",
+      "traits": [
+        "Magical"
+      ],
+      "price": 60,
+      "weight": 1,
+      "strikes": [
+        {
+          "name": "Hunter's Bow",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6",
+          "range": "60ft",
+          "traits": [
+            "Attack",
+            "Deadly d10",
+            "Ranged"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1
+      }
+    },
+    {
+      "id": "sparkblade",
+      "name": "Sparkblade",
+      "material": "Cold Iron",
+      "description": "This +1 shortsword is forged of cold iron and etched with lightning. Cold iron weapons deal additional damage to creatures with weakness to cold iron, such as demons and fey.",
+      "traits": [
+        "Evocation",
+        "Magical"
+      ],
+      "price": 70,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Sparkblade",
+          "proficiency": "martial",
+          "type": "melee",
+          "damage": "1d6",
+          "traits": [
+            "Attack",
+            "Agile",
+            "Finesse",
+            "Versatile S",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1
+      },
+      "actions": [
+        {
+          "name": "Lightning Arc",
+          "actionCount": 1,
+          "traits": [
+            "Evocation",
+            "Electricity"
+          ],
+          "description": "Frequency once per day; Effect You point the sparkblade at a foe within 30 feet and shoot an arc of lightning that can leap to a second creature within 30 feet of the first. Each target takes 2d4+4 electricity damage (DC 19 basic Reflex save)."
+        }
+      ]
+    },
+    {
+      "id": "storm-hammer",
+      "name": "Storm Hammer",
+      "description": "This +1 warhammer crackles with electricity, dealing 1 extra electricity damage on a hit.",
+      "traits": [
+        "Electricity",
+        "Magical"
+      ],
+      "price": 60,
+      "weight": 1,
+      "strikes": [
+        {
+          "name": "Storm Hammer",
+          "proficiency": "martial",
+          "type": "melee",
+          "damage": "1d8",
+          "traits": [
+            "Attack",
+            "Shove",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1
+      },
+      "actions": [
+        {
+          "name": "Thunderclap Charge",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate",
+            "Electricity"
+          ],
+          "description": "Effect Until the end of your turn, the storm hammer deals 1d6 extra electricity damage instead of 1. Once you use this activation, you can't use it again for 10 minutes."
+        }
+      ]
+    },
+    {
+      "id": "alicorn-lance",
+      "name": "Alicorn Lance",
+      "description": "This white +1 striking lance is carved from a unicorn's horn. In addition to its normal damage, it deals 1 spirit damage. You can use a single action (concentrate) to make it glow like a torch or to extinguish that light.",
+      "traits": [
+        "Uncommon",
+        "Holy",
+        "Magical"
+      ],
+      "price": 150,
+      "weight": 2,
+      "strikes": [
+        {
+          "name": "Alicorn Lance",
+          "proficiency": "martial",
+          "type": "melee",
+          "damage": "1d8",
+          "traits": [
+            "Attack",
+            "Deadly d8",
+            "Jousting d6",
+            "Reach",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ],
+      "runes": {
+        "potency": 1,
+        "striking": "striking"
+      },
+      "actions": [
+        {
+          "name": "Shining Charge",
+          "actionCount": 2,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "Frequency once per hour; Effect You evoke the spirit of the unicorn whose horn forms the lance and ride a shining charge: Stride up to twice your Speed and make a Strike with the alicorn lance, gaining the benefits of the lance's jousting trait on the Strike. If you're already mounted, the unicorn spirit takes shape around your steed instead, granting it a +10-foot status bonus to its Speed for the charge."
+        }
+      ]
+    },
+    {
+      "id": "flask-of-fellowship",
+      "name": "Flask of Fellowship",
+      "description": "This metal drinking flask is 4 inches in diameter and 10 inches tall, with a screw top covered by four nested metal cups. When you share drinks as part of a Make an Impression action, the drink that pours out is exactly what the target would most like to have a dram or two of, and you gain a +1 item bonus to that Diplomacy check. The drinks are purely social and provide no nourishment or intoxication. The GM might prevent its use when sharing a drink would be inappropriate.",
+      "traits": [
+        "Conjuration",
+        "Magical"
+      ],
+      "usage": "held in two hands",
+      "price": 25,
+      "weight": 0.1
+    },
+    {
+      "id": "pendant-of-the-occult",
+      "name": "Pendant of the Occult",
+      "description": "This amulet is hollow and shaped like an unblinking eye, its cavity typically holding a fragment of occult text. While wearing the pendant, you gain a +1 item bonus to Occultism checks and can cast guidance as an occult innate cantrip. (A greater version, item 9, grants a +2 bonus and a once-daily 4th-rank dream message.)",
+      "traits": [
+        "Invested",
+        "Occult"
+      ],
+      "usage": "worn",
+      "price": 60,
+      "weight": 0,
+      "bonus": [
+        "occultism",
+        1
+      ]
+    },
+    {
+      "id": "fan-of-the-four-winds",
+      "name": "Fan of the Four Winds",
+      "description": "This ornate fan once belonged to a sage of Gozreh. Activate it (two actions, concentrate, manipulate; once per day) to fan in a direction and cast gust of wind; if directed at a ship's sail, the vessel instead gains a +10-foot circumstance bonus to its Speed for 8 hours. As a relic, the fan can awaken further gifts: feather step and wind barrier (minor), lightning storm and propelling winds (major), and living storm (grand).",
+      "traits": [
+        "Unique",
+        "Air",
+        "Magical",
+        "Relic"
+      ],
+      "usage": "held in one hand",
+      "weight": 0.1
+    },
+    {
+      "id": "obsidian-goggles",
+      "name": "Obsidian Goggles",
+      "description": "These sleek goggles have black lenses that make everything seem more brightly lit, granting a +1 item bonus to Perception checks involving sight. Activate them (single action, manipulate; once per day) to gain darkvision for 1 hour. (Greater, item 11, gives a +2 bonus and unlimited use; major, item 18, gives +3 and greater darkvision.)",
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "usage": "worn",
+      "price": 150,
+      "weight": 0
+    },
+    {
+      "id": "staff-of-the-unblinking-eye",
+      "name": "Staff of the Unblinking Eye",
+      "description": "The stone head of this staff is carved to look like a lidless eye. While wielding it, you gain a +1 status bonus to Perception checks for initiative, and you can Activate it to Cast a Spell from its staff spell list (detect magic; sure strike; darkvision, see the unseen, translate). Greater (item 10) and major (item 14) versions add higher-rank divination spells.",
+      "traits": [
+        "Uncommon",
+        "Magical",
+        "Staff"
+      ],
+      "usage": "held in one hand",
+      "price": 230,
+      "weight": 1,
+      "staff": {
+        "name": "Staff of the Unblinking Eye",
+        "type": "Standard",
+        "itemLevel": 6,
+        "bulkValue": 1,
+        "charges": {
+          "max": 3,
+          "current": 3
+        },
+        "spells": [
+          {
+            "ref": "detect-magic"
+          },
+          {
+            "ref": "sure-strike"
+          },
+          {
+            "ref": "darkvision"
+          },
+          {
+            "ref": "see-the-unseen"
+          },
+          {
+            "ref": "translate"
+          }
+        ]
+      }
+    },
+    {
+      "id": "inventors-chair",
+      "name": "Inventor's Chair",
+      "description": "A traveler's chair crafted by a gifted inventor who lost the use of their legs, it is a marvel of clockwork engineering that maneuvers about on its own, equipped with wheel blades and built-in sterling artisan's tools. As a relic it awakens further gifts: emotion surge and a Crafting muse (minor), emotion conduit and enthralling (major), and artistic perfection in Crafting (grand).",
+      "traits": [
+        "Unique",
+        "Magical",
+        "Relic"
+      ],
+      "weight": 3
+    },
+    {
+      "id": "aeon-stone-gold-nodule",
+      "name": "Aeon Stone (Gold Nodule)",
+      "description": "This gold nodule orbits your head when invested. When the stone is created, its creator chooses a language they know to store within it; while you invest the stone, you can understand, speak, and write that language. Resonant Power You can cast comprehend language as an occult innate spell once per day.",
+      "traits": [
+        "Uncommon",
+        "Invested",
+        "Magical",
+        "Transmutation"
+      ],
+      "price": 230,
+      "weight": 0
+    },
+    {
+      "id": "masquerade-scarf",
+      "name": "Masquerade Scarf",
+      "description": "This delicately embroidered scarf seems to match every outfit. Activate it (1 minute, manipulate; once per day) to arrange it over your lower face and cast a 1st-rank illusory disguise on yourself; the disguise ends immediately if the scarf is removed. The scarf's own appearance can be altered or made invisible, though it remains detectable by touch. (A greater version, item 7, activates in 2 actions any number of times per day and casts a 2nd-rank illusory disguise.)",
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "usage": "worn",
+      "price": 30,
+      "weight": 0
+    },
+    {
+      "id": "axe-musket",
+      "name": "Axe Musket",
+      "description": "A sturdy musket with an axeblade attached near the muzzle, this combination weapon is favored by firearm-using dwarves and barbarians. As a combination weapon, you can attack with either its melee axe or its ranged firearm.",
+      "traits": [
+        "Uncommon",
+        "Combination",
+        "Concussive",
+        "Critical Fusion",
+        "Fatal d10",
+        "Forceful",
+        "Sweep"
+      ],
+      "price": 10,
+      "weight": 2,
+      "strikes": [
+        {
+          "name": "Axe Musket (Axe)",
+          "proficiency": "martial",
+          "type": "melee",
+          "damage": "1d8",
+          "traits": [
+            "Attack",
+            "Forceful",
+            "Sweep",
+            "Melee"
+          ],
+          "actionCount": 1
+        },
+        {
+          "name": "Axe Musket (Firearm)",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6",
+          "range": "50ft",
+          "reload": 1,
+          "traits": [
+            "Attack",
+            "Concussive",
+            "Fatal d10",
+            "Ranged"
+          ],
+          "actionCount": 1
+        }
+      ]
+    },
+    {
+      "id": "katana",
+      "name": "Katana",
+      "description": "A curved, single-edged sword known for its wickedly sharp blade.",
+      "traits": [
+        "Uncommon",
+        "Deadly d8",
+        "Two-Hand d10",
+        "Versatile P"
+      ],
+      "price": 2,
+      "weight": 1,
+      "strikes": [
+        {
+          "name": "Katana",
+          "proficiency": "martial",
+          "type": "melee",
+          "damage": "1d6",
+          "traits": [
+            "Attack",
+            "Deadly d8",
+            "Two-Hand d10",
+            "Versatile P",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ]
+    },
+    {
+      "id": "scorpion-whip",
+      "name": "Scorpion Whip",
+      "description": "A whip with a series of razor-sharp blades set along its tip. Unlike a normal whip it lacks the nonlethal trait, making it deadlier but less suited to taking foes alive.",
+      "traits": [
+        "Uncommon",
+        "Disarm",
+        "Finesse",
+        "Reach",
+        "Trip"
+      ],
+      "price": 0.5,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Scorpion Whip",
+          "proficiency": "martial",
+          "type": "melee",
+          "damage": "1d4",
+          "traits": [
+            "Attack",
+            "Disarm",
+            "Finesse",
+            "Reach",
+            "Trip",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ]
+    },
+    {
+      "id": "spiked-chain",
+      "name": "Spiked Chain",
+      "description": "A 4-foot length of chain covered with barbs and spikes, sometimes fitted with metal hoops as handgrips.",
+      "traits": [
+        "Uncommon",
+        "Disarm",
+        "Finesse",
+        "Trip"
+      ],
+      "price": 3,
+      "weight": 1,
+      "strikes": [
+        {
+          "name": "Spiked Chain",
+          "proficiency": "advanced",
+          "type": "melee",
+          "damage": "1d8",
+          "traits": [
+            "Attack",
+            "Disarm",
+            "Finesse",
+            "Trip",
+            "Melee"
+          ],
+          "actionCount": 1
+        }
+      ]
     }
   ],
   "spell": [
