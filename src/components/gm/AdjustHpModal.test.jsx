@@ -12,6 +12,16 @@ vi.mock('../../hooks/useEncounter', () => ({
   useEncounter: () => ({ appendLog: appendLogMock }),
 }));
 
+// useResolvedEffects drives the incoming-resistance read (#922 S2) — app +
+// Foundry + worn gear, resolved into { effects, catalog }. Controllable per test;
+// useCharacter only feeds it the selected char's inventory, so it returns null.
+const { resolvedHolder } = vi.hoisted(() => ({ resolvedHolder: { value: { effects: [], catalog: [] } } }));
+vi.mock('../../hooks/useCharacter', () => ({ __esModule: true, useCharacter: () => null }));
+vi.mock('../../hooks/useResolvedEffects', () => ({
+  __esModule: true,
+  useResolvedEffects: () => resolvedHolder.value,
+}));
+
 vi.mock('../../hooks/useSyncedState', () => {
   const ReactLib = require('react');
   const store = {};
@@ -56,6 +66,7 @@ const ASHKA = { id: 'ashka', name: 'Ashka', animalCompanion: { name: 'Zevira', h
 beforeEach(() => {
   __reset();
   appendLogMock.mockClear();
+  resolvedHolder.value = { effects: [], catalog: [] };
   useContent.mockReturnValue({ characters: CHARACTERS });
 });
 
@@ -266,9 +277,13 @@ describe('AdjustHpModal', () => {
     ];
 
     beforeEach(() => {
-      useContent.mockReturnValue({ characters: CHARACTERS, effects: RES_CATALOG });
       __store['cnmh_hp_thorn'] = { ...THORN_HP }; // current 20
-      __store['cnmh_effects_thorn'] = [{ id: 'e1', effectId: 'fire-ward' }];
+      // The resolver hands AdjustHpModal the merged effects + catalog; Thorn has
+      // an active fire-ward (resistance 5 to fire), e.g. from a worn Energy Robe.
+      resolvedHolder.value = {
+        effects: [{ id: 'e1', effectId: 'fire-ward' }],
+        catalog: RES_CATALOG,
+      };
     });
 
     const selectDamage = (type) => {

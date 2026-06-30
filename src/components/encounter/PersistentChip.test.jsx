@@ -12,23 +12,22 @@ vi.mock('../../hooks/useGmAuth', () => ({
   useGmAuth: () => ({ isGm: mockIsGm }),
 }));
 
-// useEffects backs the resistance/flat-check lookup (#900); keyed by charId.
+// useResolvedEffects backs the resistance/flat-check lookup (#900/#922) — the
+// chip threads its { effects, catalog } into the real readers, so the test
+// keys the resolved effects by charId and supplies the catalog the readers run
+// against (verifying the wiring). useCharacter only feeds inventory to the
+// resolver, which is mocked here, so it can return null.
 let mockEffectsByChar = {}; // { [charId]: effects[] }
-vi.mock('../../hooks/useEffects', () => ({
-  useEffects: (charId) => ({ effects: mockEffectsByChar[charId] || [] }),
+const RESOLVED_CATALOG = [
+  { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
+    { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+  ] },
+];
+vi.mock('../../hooks/useResolvedEffects', () => ({
+  useResolvedEffects: (charId) => ({ effects: mockEffectsByChar[charId] || [], catalog: RESOLVED_CATALOG }),
 }));
-
-// The live (DO) effect catalog the chip resolves resistance against (#900) — the
-// readers run for real against it, verifying the content catalog is threaded in.
-vi.mock('../../contexts/ContentContext', () => ({
-  useContent: () => ({
-    effects: [
-      { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
-        { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
-      ] },
-    ],
-  }),
-}));
+vi.mock('../../hooks/useCharacter', () => ({ useCharacter: () => null }));
+vi.mock('../../contexts/ContentContext', () => ({ useContent: () => ({ characters: [] }) }));
 
 // Key-aware synced-state mock backed by real state so removals re-render.
 const syncedMock = vi.hoisted(() => ({ initialMap: {}, setSpy: null }));

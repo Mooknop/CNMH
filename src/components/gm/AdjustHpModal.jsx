@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import Modal from '../shared/Modal';
 import { useContent } from '../../contexts/ContentContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
+import { useCharacter } from '../../hooks/useCharacter';
+import { useResolvedEffects } from '../../hooks/useResolvedEffects';
 import { useMinions } from '../../hooks/useMinions';
 import { useSummons } from '../../hooks/useSummons';
 import { useEncounter } from '../../hooks/useEncounter';
@@ -31,7 +33,7 @@ const parseSelection = (value) => {
 };
 
 const AdjustHpModal = ({ isOpen, onClose }) => {
-  const { characters, effects: effectCatalog } = useContent();
+  const { characters } = useContent();
   const { appendLog } = useEncounter();
   const [selectedId, setSelectedId] = useState('');
   const [amount, setAmount] = useState('');
@@ -48,6 +50,14 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
     () => ({ ...EMPTY_HP }),
   );
   const [charEffects, setCharEffects] = useSyncedState(`cnmh_effects_${charId}`, () => []);
+  // Full resistance picture for the selected PC: app + Foundry effects + worn
+  // gear (#922 S2). charEffects above is still the app-owned store the #275
+  // clear writes to; resolvedEffects/resolvedCatalog drive the resistance read
+  // so worn items (Energy Robe, …) mitigate incoming damage too.
+  const selectedChar = sel?.kind === 'char' ? (characters || []).find((c) => c.id === charId) : null;
+  const selectedCharData = useCharacter(selectedChar);
+  const { effects: resolvedEffects, catalog: resolvedCatalog } =
+    useResolvedEffects(charId, selectedCharData?.inventory);
   const minionOwner = sel?.kind === 'minion' ? sel.ownerId : 'none';
   const { getHp, damage, heal } = useMinions(minionOwner);
   const { summons, getHp: getSummonHp, setHp: setSummonHp } = useSummons();
@@ -70,9 +80,9 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   // effects here.
   const previewResistance = useMemo(
     () => (sel?.kind === 'char' && mode === 'damage' && damageType
-      ? resistanceFor(charEffects, damageType, effectCatalog)
+      ? resistanceFor(resolvedEffects, damageType, resolvedCatalog)
       : 0),
-    [sel?.kind, mode, damageType, charEffects, effectCatalog],
+    [sel?.kind, mode, damageType, resolvedEffects, resolvedCatalog],
   );
 
   const handleApply = () => {
@@ -91,10 +101,10 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
       // General typed resistance on incoming damage (#900 stretch). The highest
       // applicable `resistance` effect for this damage type reduces the hit
       // before temp HP absorbs it (resistance doesn't stack; floors at 0).
-      // Reads app-owned effects only, like the #275 clear below.
+      // Reads the resolved set (app + Foundry + worn gear, #922 S2).
       const resisted =
         mode === 'damage' && damageType
-          ? resistanceFor(charEffects, damageType, effectCatalog)
+          ? resistanceFor(resolvedEffects, damageType, resolvedCatalog)
           : 0;
       const incoming = Math.max(0, n - resisted);
 
