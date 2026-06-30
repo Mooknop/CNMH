@@ -191,6 +191,25 @@ describe('computeEffectBonuses', () => {
     });
   });
 
+  // Worn gear now rides resistance/weakness/immunity modifiers on the same
+  // synthetic def the bonus pipeline reads (#922). Those special stats have no
+  // bonus bucket, so they must never net as a bonus nor land in _conditional —
+  // the defense readers consume them separately.
+  describe('special damage modifiers are ignored as bonuses (#922)', () => {
+    const specialCat = [
+      { id: 'fire-robe', name: 'Energy Robe', modifiers: [
+        { stat: 'ac', kind: 'item', amount: 1 },
+        { stat: 'resistance', amount: 5, vs: 'fire' },
+      ] },
+    ];
+    it('nets the ac bonus but drops the resistance from totals and _conditional', () => {
+      const result = computeEffectBonuses([entry('fire-robe')], specialCat);
+      expect(result.ac.total).toBe(1);
+      expect(result.resistance).toBeUndefined();
+      expect(result._conditional.resistance).toBeUndefined();
+    });
+  });
+
   describe('skill check bonuses (#447)', () => {
     const skillCat = [
       {

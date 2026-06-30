@@ -106,6 +106,54 @@ describe('useWornGear', () => {
     expect(setup(null)).toEqual([]);
   });
 
+  // ── special damage modifiers: resistance/weakness/immunity (#922) ──
+  describe('special damage modifiers (#922)', () => {
+    it('contributes a worn invested item whose only modifier is a resistance', () => {
+      investedSet.add('robe');
+      const out = setup([{
+        uid: 'robe',
+        name: 'Energy Robe (Fire)',
+        traits: ['Invested', 'Magical'],
+        modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }],
+      }]);
+      expect(out).toHaveLength(1);
+      expect(out[0].def.modifiers).toEqual([{ stat: 'resistance', amount: 5, vs: 'fire' }]);
+    });
+
+    it('carries weakness and immunity (amount-less) modifiers through too', () => {
+      investedSet.add('w');
+      investedSet.add('i');
+      const weak = setup([{ uid: 'w', name: 'Weak', traits: ['Invested'], modifiers: [{ stat: 'weakness', amount: 5, vs: 'cold' }] }]);
+      expect(weak[0].def.modifiers).toEqual([{ stat: 'weakness', amount: 5, vs: 'cold' }]);
+      const imm = setup([{ uid: 'i', name: 'Ward', traits: ['Invested'], modifiers: [{ stat: 'immunity', vs: 'poison' }] }]);
+      expect(imm[0].def.modifiers).toEqual([{ stat: 'immunity', vs: 'poison' }]);
+    });
+
+    it('appends special modifiers alongside the bonus stats on one item', () => {
+      investedSet.add('u1');
+      const out = setup([
+        acRune({ modifiers: [
+          { stat: 'ac', kind: 'item', amount: 1 },
+          { stat: 'resistance', amount: 5, vs: 'acid' },
+        ] }),
+      ]);
+      expect(out[0].def.modifiers).toEqual([
+        { stat: 'ac', kind: 'item', amount: 1 },
+        { stat: 'resistance', amount: 5, vs: 'acid' },
+      ]);
+    });
+
+    it('drops a special modifier missing its vs (malformed)', () => {
+      investedSet.add('u1');
+      expect(setup([acRune({ modifiers: [{ stat: 'resistance', amount: 5 }] })])).toEqual([]);
+    });
+
+    it('still gates a resistance-only item on investment', () => {
+      // robe absent from investedSet
+      expect(setup([{ uid: 'robe', name: 'Energy Robe', traits: ['Invested'], modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }] }])).toEqual([]);
+    });
+  });
+
   describe('etched armor (runes block, #727)', () => {
     // A worn invested armor with potency + resilient + a skill property rune.
     const runedChain = (overrides = {}) => ({

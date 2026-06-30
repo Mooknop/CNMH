@@ -10,8 +10,10 @@ import { SKILL_KEYS } from '../utils/EffectUtils';
 // Generalizes the useShield synthetic-effect pattern: every worn item carrying
 // a `modifiers: [{ stat, kind, amount }]` block contributes an always-on active
 // effect (no manual toggle), folded into the same computeEffectBonuses pipeline
-// as conditions and the raised shield. This slice covers the stats the effect
-// engine already models — ac / fort / reflex / will (skills come in W2, #731).
+// as conditions and the raised shield. Covers the bonus stats the effect engine
+// models — ac / fort / reflex / will / skills (W2, #731) — plus the special
+// damage resistance/weakness/immunity modifiers the defense readers consume
+// (#922), which ride along on the same synthetic def but never net as a bonus.
 //
 // IMPORTANT — these app-catalog items are NOT also on the Foundry actor. AC and
 // saves are static scalars synced from Foundry; if a magic armor lived on the
@@ -32,12 +34,28 @@ import { SKILL_KEYS } from '../utils/EffectUtils';
 // past this gate. Genuinely unknown/malformed stats are still dropped.
 const SUPPORTED_STATS = new Set(['ac', 'fort', 'reflex', 'will', ...SKILL_KEYS]);
 
+// Damage resistance/weakness/immunity (#900/#918/#919) are special, non-bonus
+// modifiers — `{ stat: 'resistance'|'weakness'|'immunity', vs, amount? }`. They
+// never net through computeEffectBonuses (no bonus bucket — the `!buckets[stat]`
+// guard drops them, same as `dexCap`); instead the defense readers
+// (resistanceFor / weaknessFor / isImmuneTo) pick them off the synthetic def by
+// stat. Immunity carries no `amount`, so the only well-formedness gate is `vs`.
+const SPECIAL_STATS = new Set(['resistance', 'weakness', 'immunity']);
+
 const isWorn = (e) => e?.state == null || e.state === DEFAULT_ITEM_STATE;
 
 const usableModifiers = (mods) =>
   (Array.isArray(mods) ? mods : []).filter(
     (m) => m && SUPPORTED_STATS.has(m.stat) && typeof m.amount === 'number'
   );
+
+const specialModifiers = (mods) =>
+  (Array.isArray(mods) ? mods : []).filter((m) => m && SPECIAL_STATS.has(m.stat) && m.vs);
+
+// Everything a worn item contributes: the bonus stats (ac/saves/skills) the
+// effect engine buckets, plus the special damage modifiers the defense readers
+// consume. An item contributes when it has at least one of either.
+const contributedModifiers = (mods) => [...usableModifiers(mods), ...specialModifiers(mods)];
 
 // The modifiers an item contributes. Armor with an etched `runes` block (#727)
 // derives its magic delta (potency AC + resilient saves + property-rune
@@ -68,7 +86,7 @@ export const useWornGear = (charId, inventory = []) => {
     return (Array.isArray(inventory) ? inventory : [])
       .filter((e) => {
         if (!isWorn(e)) return false;
-        if (!usableModifiers(itemModifiers(e)).length) return false;
+        if (!contributedModifiers(itemModifiers(e)).length) return false;
         // Magic gear must be invested to grant its bonus; non-investable worn
         // gear contributes as soon as it's worn.
         if (isInvestable(e) && !isInvested(e.uid)) return false;
@@ -78,7 +96,7 @@ export const useWornGear = (charId, inventory = []) => {
         const id = `worn-${e.uid}`;
         return {
           entry: { id, effectId: id },
-          def: { id, name: e.name, modifiers: usableModifiers(itemModifiers(e)) },
+          def: { id, name: e.name, modifiers: contributedModifiers(itemModifiers(e)) },
         };
       });
   }, [inventory, isInvested]);
