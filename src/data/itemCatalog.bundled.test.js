@@ -11,6 +11,7 @@ import {
   extractWandSpells,
 } from '../utils/SpellUtils';
 import { getItemBonus } from '../utils/CharacterUtils';
+import { wornResistanceFor } from '../utils/wornGear';
 
 const catalogMap = itemCatalogMap(items);
 
@@ -127,7 +128,7 @@ describe('bundled item catalog (Slice 3)', () => {
   // #907: a variant may carry `overrides` with variant-specific mechanical
   // fields. Only allowlisted keys are permitted; widen this list as later slices
   // make more fields variant-aware (S1 bonus, S2 container; S3 resistance).
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container'];
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -142,6 +143,13 @@ describe('bundled item catalog (Slice 3)', () => {
         if (v.overrides.container !== undefined) {
           expect(typeof v.overrides.container.capacity).toBe('number');
           expect(typeof v.overrides.container.ignored).toBe('number');
+        }
+        // #911: a structured resistance — { amount: number, type: string } where
+        // `type` is the damage descriptor (the `vs` token bridged by wornGear).
+        if (v.overrides.resistance !== undefined) {
+          expect(typeof v.overrides.resistance.amount).toBe('number');
+          expect(typeof v.overrides.resistance.type).toBe('string');
+          expect(v.overrides.resistance.type.length).toBeGreaterThan(0);
         }
       });
     });
@@ -175,6 +183,28 @@ describe('bundled item catalog (Slice 3)', () => {
       { ...owner, inventory: [{ ref: 'sleeves-of-storage', level: 4 }] }, items, spells
     ).inventory[0];
     expect(std.container.capacity).toBe(10);
+  });
+
+  // #911 "Done when": a fire Energy Robe grants fire resistance 5 and a cold one
+  // grants cold resistance 5 from the same base item via per-variant overrides.
+  it('Energy Robe variants resolve to per-energy resistance and read through wornGear', () => {
+    const owner = { id: 'tester', level: 20 };
+    const resolve = (level) =>
+      resolveCharacterItems({ ...owner, inventory: [{ ref: 'energy-robe', level }] }, items, spells)
+        .inventory[0];
+
+    const fire = resolve(7);
+    expect(fire.resistance).toEqual({ amount: 5, type: 'fire' });
+    expect(fire.overrides).toBeUndefined();
+    const invested = () => true;
+    expect(wornResistanceFor([fire], invested, 'fire')).toBe(5);
+    expect(wornResistanceFor([fire], invested, 'cold')).toBe(0);
+
+    // Same base item, cold variant ⇒ cold resistance, not fire.
+    const cold = resolve(8);
+    expect(cold.resistance).toEqual({ amount: 5, type: 'cold' });
+    expect(wornResistanceFor([cold], invested, 'cold')).toBe(5);
+    expect(wornResistanceFor([cold], invested, 'fire')).toBe(0);
   });
 
   it('Blu\'s orb is tagged Artifact but mechanically inert', () => {

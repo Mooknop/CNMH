@@ -1,4 +1,4 @@
-import { wornResistanceFor, specialModifiers } from './wornGear';
+import { wornResistanceFor, specialModifiers, itemModifiers } from './wornGear';
 
 // Invested by default in these fixtures unless a test overrides the predicate.
 const yes = () => true;
@@ -60,6 +60,37 @@ describe('wornResistanceFor (#922 S3)', () => {
   it('is resilient to a non-array inventory and a falsy vsType', () => {
     expect(wornResistanceFor(undefined, yes, 'fire')).toBe(0);
     expect(wornResistanceFor([robe()], yes, '')).toBe(0);
+  });
+
+  // The structured `resistance: { amount, type }` field (#911), as merged from a
+  // variant override, is bridged into a resistance modifier.
+  describe('structured resistance field bridge (#911)', () => {
+    it('synthesizes a resistance modifier from the field', () => {
+      expect(itemModifiers({ resistance: { amount: 5, type: 'fire' } })).toEqual([
+        { stat: 'resistance', amount: 5, vs: 'fire' },
+      ]);
+    });
+
+    it('appends the resistance modifier after any authored modifiers', () => {
+      expect(itemModifiers({
+        modifiers: [{ stat: 'ac', kind: 'item', amount: 1 }],
+        resistance: { amount: 5, type: 'cold' },
+      })).toEqual([
+        { stat: 'ac', kind: 'item', amount: 1 },
+        { stat: 'resistance', amount: 5, vs: 'cold' },
+      ]);
+    });
+
+    it('ignores a malformed resistance field (no amount / no type)', () => {
+      expect(itemModifiers({ resistance: { type: 'fire' } })).toEqual([]);
+      expect(itemModifiers({ resistance: { amount: 5 } })).toEqual([]);
+    });
+
+    it('a worn invested item resists via the field end-to-end', () => {
+      const robe = { uid: 'r', traits: ['Invested'], resistance: { amount: 5, type: 'fire' } };
+      expect(wornResistanceFor([robe], () => true, 'fire')).toBe(5);
+      expect(wornResistanceFor([robe], () => true, 'cold')).toBe(0);
+    });
   });
 
   it('specialModifiers keeps only well-formed special mods', () => {

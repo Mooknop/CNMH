@@ -20,8 +20,22 @@ export const isWornDefault = (e) => e?.state == null || e.state === DEFAULT_ITEM
 // derives its magic delta (potency AC + resilient saves + property-rune
 // modifiers) through the armor-rune resolver; everything else carries a flat
 // authored `modifiers` array.
-export const itemModifiers = (e) =>
-  hasArmorRuneBlock(e) ? resolveArmorItem(e).modifiers : e.modifiers;
+//
+// A structured `resistance: { amount, type }` field (#911) — authored on the
+// item or merged from a variant override (Energy Robe's per-energy tiers) — is
+// bridged into a `{ stat: 'resistance', vs }` modifier here, so every worn-gear
+// reader (useWornGear synthetic def + the imperative wornResistanceFor) sees it
+// uniformly without authors hand-writing the modifier shape. `type` is the `vs`
+// descriptor (e.g. 'fire', 'persistent-bleed,persistent-poison').
+export const itemModifiers = (e) => {
+  const base = hasArmorRuneBlock(e) ? resolveArmorItem(e).modifiers : e?.modifiers;
+  const mods = Array.isArray(base) ? [...base] : [];
+  const r = e?.resistance;
+  if (r && typeof r.amount === 'number' && r.type) {
+    mods.push({ stat: 'resistance', amount: r.amount, vs: String(r.type) });
+  }
+  return mods;
+};
 
 // The special damage modifiers in a mod array (well-formed = a truthy `vs`).
 export const specialModifiers = (mods) =>
