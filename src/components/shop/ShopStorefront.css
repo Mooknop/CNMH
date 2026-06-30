@@ -7,7 +7,11 @@
 .ps-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  /* Ties with the character sheet's --z-navbar (also 1000) let the bottom rail
+     intercept clicks on the cart bar — among equal-stacked fixed siblings the
+     winner is DOM order, not z-index value, and the rail renders after this
+     overlay's portal-less mount point (#941). */
+  z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
