@@ -10728,6 +10728,59 @@
       }
     },
     {
+      "id": "bane",
+      "name": "Bane",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": [
+        "Aura",
+        "Concentrate",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "area": "10-foot emanation",
+      "targets": "enemies in the area",
+      "defense": "Will",
+      "duration": "1 minute",
+      "description": "You fill the minds of your enemies with doubt. Enemies in the area must succeed at a Will save or take a –1 status penalty to attack rolls as long as they are in the area. Once per round on subsequent turns, you can Sustain the spell to increase the emanation's radius by 10 feet and force enemies in the area that weren't yet affected to attempt another saving throw. Bane can counteract bless.",
+      "traditions": [
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "banishment",
+      "name": "Banishment",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Concentrate",
+        "Incapacitation",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature that isn't on its home plane",
+      "defense": "Will",
+      "description": "You send the target back to its home plane. The target must attempt a Will save. You can spend an extra action while Casting this Spell and add a cost to the spell to give the creature a –2 circumstance penalty to its save. The cost must be a specially gathered object that is anathema to the creature. This spell fails if you aren't on your home plane when you cast it.",
+      "degrees": {
+        "Critical Success": "The target resists being banished and you are stunned 1.",
+        "Success": "The target resists being banished.",
+        "Failure": "The target is banished.",
+        "Critical Failure": "The target is banished and can't return by any means to the plane it's banished from for 1 week."
+      },
+      "heightened": {
+        "9th": "You can target up to 10 creatures. The extra cost affects targets to which it is anathema."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
+    },
+    {
       "id": "blazing-bolt",
       "name": "Blazing Bolt",
       "level": 2,
@@ -10819,6 +10872,27 @@
       ]
     },
     {
+      "id": "blur",
+      "name": "Blur",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Illusion",
+        "Manipulate",
+        "Visual"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "targets": "1 creature",
+      "duration": "1 minute",
+      "description": "The target's form appears blurry. It becomes concealed. As the nature of this effect still leaves the target's location obvious, the target can't use this concealment to Hide or Sneak.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "breathe-fire",
       "name": "Breathe Fire",
       "level": 1,
@@ -10838,6 +10912,35 @@
       "traditions": [
         "arcane",
         "primal"
+      ]
+    },
+    {
+      "id": "calm",
+      "name": "Calm",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Emotion",
+        "Incapacitation",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "area": "10-foot burst",
+      "defense": "Will",
+      "duration": "Sustained up to 1 minute",
+      "description": "You forcibly calm creatures in the area, soothing them into a nonviolent state; each creature must attempt a Will save.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "Calming urges impose a –1 status penalty to the creature's attack rolls.",
+        "Failure": "Any emotion effects that would affect the creature are suppressed and the creature can't use hostile actions. If the target is subject to hostility from any other creature, it ceases to be affected by calm.",
+        "Critical Failure": "As failure, but hostility doesn't end the effect."
+      },
+      "traditions": [
+        "divine",
+        "occult"
       ]
     },
     {
@@ -10867,6 +10970,41 @@
         "arcane",
         "divine",
         "occult"
+      ]
+    },
+    {
+      "id": "charm",
+      "name": "Charm",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": [
+        "Concentrate",
+        "Emotion",
+        "Incapacitation",
+        "Manipulate",
+        "Mental",
+        "Subtle"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "1 hour",
+      "description": "To the target, your words are honey and your visage seems bathed in a dreamy haze. It must attempt a Will save, with a +4 circumstance bonus if you or your allies recently threatened it or used hostile actions against it. You can Dismiss the spell. If you use hostile actions against the target, the spell ends. When the spell ends, the target doesn't necessarily realize it was charmed unless its friendship with you or the actions you convinced it to take clash with its expectations.",
+      "degrees": {
+        "Critical Success": "The target is unaffected and aware you tried to charm it.",
+        "Success": "The target is unaffected but thinks your spell was something harmless instead of charm, unless it identifies the spell.",
+        "Failure": "The target's attitude becomes friendly toward you. If it was already friendly, it becomes helpful. It can't use hostile actions against you.",
+        "Critical Failure": "The target's attitude becomes helpful toward you, and it can't use hostile actions against you."
+      },
+      "heightened": {
+        "4th": "The duration lasts until the next time you make your daily preparations.",
+        "8th": "The duration lasts until the next time you make your daily preparations, and you can target up to 10 creatures."
+      },
+      "traditions": [
+        "arcane",
+        "occult",
+        "primal"
       ]
     },
     {
@@ -10920,6 +11058,37 @@
       "traditions": [
         "arcane",
         "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "confusion",
+      "name": "Confusion",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Emotion",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "1 minute",
+      "description": "You befuddle your target with strange impulses, causing it to act randomly. The effects are determined by the target's Will save. You can Dismiss the spell.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target babbles incoherently and is stunned 1.",
+        "Failure": "The target is confused for 1 minute. It can attempt a new save at the end of each of its turns to end the confusion.",
+        "Critical Failure": "The target is confused for 1 minute, with no save to end early."
+      },
+      "heightened": {
+        "8th": "You can target up to 10 creatures."
+      },
+      "traditions": [
+        "arcane",
         "occult"
       ]
     },
@@ -10989,6 +11158,33 @@
       ]
     },
     {
+      "id": "deafness",
+      "name": "Deafness",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Fortitude",
+      "description": "The target loses hearing; it must attempt a Fortitude save. The target is then temporarily immune for 1 minute.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target is deafened for 1 round.",
+        "Failure": "The target is deafened for 10 minutes.",
+        "Critical Failure": "The target is deafened permanently."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
+    },
+    {
       "id": "detect-magic",
       "name": "Detect Magic",
       "level": 0,
@@ -11031,6 +11227,26 @@
         "divine",
         "occult",
         "primal"
+      ]
+    },
+    {
+      "id": "dispelling-globe",
+      "name": "Dispelling Globe",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "area": "10-foot burst",
+      "duration": "10 minutes",
+      "description": "You create an immobile globe around yourself that attempts to counteract any spell from outside the globe whose area or targets enter into the globe, as if the globe were a dispel magic spell 1 rank lower than its actual spell rank. If the counteract attempt succeeds, it prevents only the portion of the spell that would have entered the globe (so if the spell also has targets outside the globe, or part of its area is beyond the globe, those targets or that area is affected normally). You must form the sphere in an unbroken open space, so its edges don't pass through any creatures or objects, or the spell is lost (though creatures can enter the globe after the spell is cast).",
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
       ]
     },
     {
@@ -11083,6 +11299,54 @@
       "traditions": [
         "arcane",
         "primal"
+      ]
+    },
+    {
+      "id": "enthrall",
+      "name": "Enthrall",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Auditory",
+        "Concentrate",
+        "Emotion",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "targets": "all creatures in range",
+      "defense": "Will",
+      "duration": "Sustained",
+      "description": "Your words fascinate your targets. You speak or sing without interruption throughout the casting and duration. Targets who notice your speech or song might give their undivided attention; each target must attempt a Will save. The GM might grant a circumstance bonus (to a maximum of +4) if the target is of an opposing religion, ancestry, or political leaning, or is otherwise unlikely to agree with what you're saying. Each creature that comes within range has to attempt a save when you Sustain the spell. If you're speaking, enthrall gains the linguistic trait.",
+      "degrees": {
+        "Critical Success": "The target is unaffected and notices that you tried to use magic.",
+        "Success": "The target needn't pay attention but doesn't notice you tried to use magic (it might notice others are enthralled).",
+        "Failure": "The target is fascinated with you. It can attempt another Will save if it witnesses actions or speech with which it disagrees. If it succeeds, it's no longer fascinated and is temporarily immune for 1 hour. If the target is subject to a hostile act, or if another creature succeeds at a Diplomacy or Intimidation check against it, the fascination ends immediately.",
+        "Critical Failure": "As failure, but the target can't attempt a save to end the fascination if it disagrees with you."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "false-vitality",
+      "name": "False Vitality",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "duration": "8 hours",
+      "description": "You augment your flesh with the energies typically used to manipulate the undead. You gain 10 temporary Hit Points.",
+      "heightened": {
+        "+1": "The temporary Hit Points increase by 3."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
       ]
     },
     {
@@ -11239,6 +11503,36 @@
       ]
     },
     {
+      "id": "glimmer-of-charm",
+      "name": "Glimmer of Charm",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Aura",
+        "Concentrate",
+        "Emotion",
+        "Incapacitation",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "area": "20-foot emanation",
+      "defense": "Will",
+      "duration": "Sustained up to 1 minute",
+      "description": "You're bathed in a smooth, almost glittering aura that improves the attitude of those near you. Any creature that ends its turn in the aura must attempt a Will saving throw with the following effects. No matter the result, it's then temporarily immune for 24 hours. The effect lasts until the spell ends, even after the creature leaves the aura.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected and is aware of the aura.",
+        "Success": "The creature's attitude toward you improves by one step. If that improves its attitude to at least friendly, it can't take hostile actions against you, though the effect ends as soon as you take a hostile action against the creature or its allies.",
+        "Failure": "The creature's attitude toward you improves by two steps. It can't take hostile actions against you, though the effect ends as soon as you take a hostile action against the creature or its allies.",
+        "Critical Failure": "The creature's attitude becomes helpful to you, though the effect ends as soon as you take a hostile action against the creature or its allies. While the creature is helpful, it can't take hostile actions against you."
+      },
+      "traditions": [
+        "arcane",
+        "occult",
+        "primal"
+      ]
+    },
+    {
       "id": "grease",
       "name": "Grease",
       "level": 1,
@@ -11286,6 +11580,62 @@
       ]
     },
     {
+      "id": "hallucination",
+      "name": "Hallucination",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Illusion",
+        "Incapacitation",
+        "Manipulate",
+        "Mental",
+        "Subtle"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "1 hour",
+      "description": "The target consistently detects one thing as another, can't detect something that's there, or detects something that's not there, though it doesn't alter their beliefs. You choose which of these effects applies, and you determine the specifics of the hallucination. The target can attempt an initial Will save, with effects below. They also receive a Will save to disbelieve the hallucination every time they Seek or directly interact with the hallucination. The target can attempt to disbelieve with a large circumstance bonus in situations determined by the GM.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "The creature perceives what you chose until it disbelieves, but it knows what the hallucination is.",
+        "Failure": "The creature perceives what you chose until it disbelieves.",
+        "Critical Failure": "The creature perceives what you chose until it disbelieves, and it trusts its false senses, taking a –4 circumstance penalty to saves to disbelieve."
+      },
+      "heightened": {
+        "6th": "Choose to either target up to 10 creatures or change the spell's duration to until your next daily preparations.",
+        "8th": "Choose to either target any number of creatures or change the spell's duration to unlimited."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "haste",
+      "name": "Haste",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "duration": "1 minute",
+      "description": "Magic empowers the target to act faster. It gains the quickened condition and can use the extra action each round only for Strike and Stride actions.",
+      "heightened": {
+        "7th": "You can target up to 6 creatures."
+      },
+      "traditions": [
+        "arcane",
+        "occult",
+        "primal"
+      ]
+    },
+    {
       "id": "haunting-hymn",
       "name": "Haunting Hymn",
       "level": 0,
@@ -11304,6 +11654,47 @@
       "heightened": {
         "+2": "The damage increases by 1d8."
       },
+      "traditions": [
+        "occult"
+      ]
+    },
+    {
+      "id": "heroism",
+      "name": "Heroism",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "targets": "1 creature",
+      "duration": "10 minutes",
+      "description": "You unlock the target's inner heroism, granting it a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks.",
+      "heightened": {
+        "6th": "The status bonus increases to +2.",
+        "9th": "The status bonus increases to +3."
+      },
+      "traditions": [
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "honeyed-words",
+      "name": "Honeyed Words",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "duration": "10 minutes",
+      "description": "Falsehoods pass your lips as smoothly as silk. You gain a +4 status bonus to Deception checks to Lie and against Perception checks to discern if you are telling the truth, and you add your level even if untrained. If the implausibility of your lies prompts a circumstance penalty or a DC increase, reduce that penalty by half or increase it by half.",
       "traditions": [
         "occult"
       ]
@@ -11332,6 +11723,33 @@
       }
     },
     {
+      "id": "hypnotize",
+      "name": "Hypnotize",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Illusion",
+        "Manipulate",
+        "Subtle",
+        "Visual"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "area": "10-foot burst",
+      "defense": "Will",
+      "duration": "Sustained up to 1 minute",
+      "description": "You create a cloud of mesmerizing patterns and colors that hovers in the air. Creatures are dazzled while inside the cloud. In addition, a creature must attempt a Will saving throw if it is inside the cloud when you cast it, when it enters the cloud, when it ends its turn within the cloud, or if it uses a Seek or Interact action on the cloud. A creature currently fascinated by hypnotize doesn't attempt new saves.",
+      "degrees": {
+        "Success": "The target is unaffected.",
+        "Failure": "The target is fascinated by the cloud.",
+        "Critical Failure": "The target is fascinated by the cloud. While it remains fascinated, it can't use reactions."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "illusory-creature",
       "name": "Illusory Creature",
       "level": 2,
@@ -11349,6 +11767,32 @@
       "description": "You create an illusory image of a Large or smaller creature. It generates the appropriate sounds, smells, and feels believable to the touch. If you and the image are ever farther than 500 feet apart, the spell ends. The image can't speak, but you can use your actions to speak through the creature, with the spell disguising your voice as appropriate. You might need to attempt a Deception or Performance check to mimic the creature, as determined by the GM. This is especially likely if you're trying to imitate a specific person and engage with someone that person knows. In combat, the illusion can use 2 actions per turn, which it uses when you Sustain the spell. It uses your spell attack modifier for attack rolls and your spell DC for its AC. Its saving throw modifiers are equal to your spell DC – 10. It is substantial enough that it can flank other creatures. If the image is hit by an attack or fails a save, the spell ends. The illusion can cause damage by making the target believe the illusion's attacks are real, but it cannot otherwise directly affect the physical world. If the illusory creature hits with a Strike, the target takes 3d4 mental damage. The illusion's Strikes are nonlethal. If the damage doesn't correspond to the image of the monster—for example, if an illusory Large dragon deals only 5 damage—the GM might allow the target to attempt an immediate Perception check to disbelieve the spell. Any relevant resistances and weaknesses apply if the target thinks they do, as judged by the GM. For example, if the illusion wields a warhammer and attacks a creature resistant to bludgeoning damage, the creature would take less mental damage. However, illusory damage does not deactivate regeneration or trigger other effects that require a certain damage type. The GM should track illusory damage dealt by the illusion. Any creature that touches the image or uses the Seek action to examine it can attempt to disbelieve your illusion. When a creature disbelieves the illusion, it recovers from half the damage it had taken from it (if any) and doesn't take any further damage from it.",
       "heightened": {
         "+1": "The damage of the image's Strikes increases by 1d4, and the maximum size of creature you can create increases by one (to a maximum of Gargantuan)."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "illusory-disguise",
+      "name": "Illusory Disguise",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": [
+        "Concentrate",
+        "Illusion",
+        "Manipulate",
+        "Visual"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 willing creature",
+      "duration": "1 hour",
+      "description": "You create an illusion that causes the target to appear as another creature of the same body shape, and with roughly similar height (within 6 inches) and weight (within 50 pounds). The disguise is typically good enough to hide their identity, but not to impersonate a specific individual. The spell changes their appearance and voice, but not mannerisms. You can change the appearance of its clothing and worn items, such as making its armor look like a dress. Held items are unaffected, and any worn item removed from the creature returns to its true appearance. Casting illusory disguise counts as setting up a disguise for the Impersonate use of Deception; it ignores any circumstance penalties the target might take for disguising itself as a dissimilar creature, gives a +4 status bonus to Deception checks to prevent others from seeing through the disguise, and lets the target add its level to such Deception checks even if untrained. You can Dismiss this spell.",
+      "heightened": {
+        "3rd": "The target can appear as any creature of the same size, even a specific individual. You must have seen an individual to replicate its appearance, and must have heard its voice to replicate its voice.",
+        "4th": "You can target up to 10 willing creatures. If you target multiple creatures, you can choose a different disguise for each target, but none can impersonate a specific individual. You can Dismiss each disguise individually or all collectively.",
+        "7th": "As 4th, but you can choose disguises that impersonate specific individuals. You must have seen an individual to replicate its appearance, and must have heard its voice to replicate its voice."
       },
       "traditions": [
         "arcane",
@@ -11380,6 +11824,33 @@
       ]
     },
     {
+      "id": "illusory-scene",
+      "name": "Illusory Scene",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Auditory",
+        "Concentrate",
+        "Illusion",
+        "Manipulate",
+        "Olfactory",
+        "Visual"
+      ],
+      "actions": "10 Minutes",
+      "range": "500 feet",
+      "area": "30-foot burst",
+      "duration": "1 hour",
+      "description": "You craft an imaginary scene that includes up to 10 discrete creatures or objects of various sizes, all of which must be within the spell's area. These elements generate appropriate sounds and smells, and they feel right to the touch. Elements of an illusory scene are incapable of speech. Unlike with illusory creature, creatures in your scene lack combat abilities and statistics. When you create the scene, you can choose to have it be static or follow a program of up to 1 minute that repeats when finished. Any creature that touches any part of the image or Seeks to examine it can attempt to disbelieve your illusion. If they interact with a portion of the illusion, they disbelieve only that portion. They disbelieve the entire scene only on a critical success.",
+      "heightened": {
+        "6th": "Creatures or objects in your scene can speak. You must speak the specific lines for each actor when creating your program. The spell disguises your voice for each actor.",
+        "8th": "As the 6th-rank version, and the duration is unlimited."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "infectious-enthusiasm",
       "name": "Infectious Enthusiasm",
       "level": 0,
@@ -11394,6 +11865,33 @@
       "description": "With enchanted gusto, you encourage yourself to get things done and share your motivation with your allies. You gain a +1 status bonus to your choice of attack rolls, Will saves, or Charisma-based skill checks. During the spell's duration, an ally who observed you Casting this Spell and was within 30 feet when you did so can take a single action, which has the concentrate trait, to gain the same bonus you chose until the start of its next turn. Using this spell to influence someone in a social situation is typically considered a faux pas, negating the benefit on Charisma-based skills if the subject of the check observed you casting the spell.",
       "traditions": [
         "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "infectious-melody",
+      "name": "Infectious Melody",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Auditory",
+        "Concentrate",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "area": "15-foot emanation",
+      "targets": "enemies in the area",
+      "defense": "Will",
+      "duration": "Varies",
+      "description": "You call forth the chords of a tune so catchy that foes hearing it can't help but sing along, making it harder for them to communicate. Each target must attempt a Will save.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "For 1 round, the creature can communicate only by singing along to the melody. It can speak only on its turn, and it must take the Perform action when it does. It still communicates the information regardless of the Performance check result. This effect might interfere with verbal components of spells or other linguistic abilities that rely on precise speech; to use such an ability successfully, the creature must succeed at a flat check. The creature also takes a –2 status penalty on linguistic Intimidation checks, and its constant humming makes it nearly impossible for the creature to remain undetected.",
+        "Failure": "As success, but the duration is 3 rounds.",
+        "Critical Failure": "As success, but the duration is 1 hour."
+      },
+      "traditions": [
         "occult"
       ]
     },
@@ -11478,6 +11976,54 @@
       ]
     },
     {
+      "id": "invisibility",
+      "name": "Invisibility",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Illusion",
+        "Manipulate",
+        "Subtle"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "targets": "1 creature",
+      "duration": "10 minutes",
+      "description": "Illusions bend light around the target, rendering it invisible. This makes it undetected to all creatures, though the creatures can attempt to find the target, making it hidden to them instead. If the target uses a hostile action, the spell ends after that hostile action is completed.",
+      "heightened": {
+        "4th": "The spell lasts 1 minute, but it doesn't end if the target uses a hostile action."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "item-facade",
+      "name": "Item Facade",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": [
+        "Concentrate",
+        "Illusion",
+        "Manipulate",
+        "Visual"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "targets": "1 object of up to 10 feet by 10 feet by 10 feet",
+      "duration": "1 hour",
+      "description": "You make the target object look and feel as though it were in much better or worse physical condition. When you Cast the Spell, decide whether you want to make the object look decrepit or perfect. An item made to look decrepit appears broken and shoddy. An intact item made to look better appears as though it's brand new and highly polished or well maintained. A broken item appears to be intact and functional. Destroyed items can't be affected by this spell. A creature that Interacts with the item can attempt to disbelieve the illusion.",
+      "heightened": {
+        "2nd": "The duration is 24 hours.",
+        "3rd": "The duration is unlimited."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "knock",
       "name": "Knock",
       "level": 2,
@@ -11491,6 +12037,34 @@
       "targets": "1 door, lock, or container",
       "duration": "1 minute",
       "description": "You make the target easier to open. Knock grants a +4 status bonus to any creature that tries to open the target door, lock, or container with an Athletics or a Thievery check. You can attempt a Thievery check to open the target as part of casting knock, and you add your level even if you're untrained. Knock counteracts Lock.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "laughing-fit",
+      "name": "Laughing Fit",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Emotion",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 living creature",
+      "defense": "Will",
+      "duration": "Sustained",
+      "description": "The target is overtaken with uncontrollable laughter. It must attempt a Will save.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target is plagued with uncontrollable laughter. It can't use reactions.",
+        "Failure": "The target is slowed 1 and can't use reactions.",
+        "Critical Failure": "The target falls prone and can't use actions or reactions for 1 round. It then takes the effects of a failure."
+      },
       "traditions": [
         "arcane",
         "occult"
@@ -11562,6 +12136,35 @@
         "Success": "The target is unaffected.",
         "Failure": "The target is stunned 1.",
         "Critical Failure": "The target is stunned 2."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "mind-reading",
+      "name": "Mind Reading",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Detection",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "1 round or Sustained up to 1 minute",
+      "description": "With a cursory mental touch, you attempt to read the target's mind. It must attempt a Will save. The target then becomes temporarily immune to your mind reading for 1 hour.",
+      "degrees": {
+        "Critical Success": "The target perceives vague surface thoughts from you when you Cast the Spell.",
+        "Success": "You find out whether the target's Intelligence modifier is higher than, equal to, or lower than yours.",
+        "Failure": "You perceive vague surface thoughts from the target when you Cast the Spell, and you find out whether its Intelligence is higher than, equal to, or lower than yours.",
+        "Critical Failure": "As failure, and for the duration of the spell, you can Sustain the spell to detect the target's surface thoughts again. The target doesn't receive any additional saves."
       },
       "traditions": [
         "arcane",
@@ -11692,6 +12295,122 @@
       ]
     },
     {
+      "id": "painful-vibrations",
+      "name": "Painful Vibrations",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Sonic"
+      ],
+      "actions": "Two Actions",
+      "range": "100 feet",
+      "targets": "1 living creature",
+      "defense": "Fortitude",
+      "description": "You send powerful sound waves through an opponent's body, vibrating its bones and internal organs painfully. The creature takes 8d6 sonic damage and must attempt a Fortitude save.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target takes half damage.",
+        "Failure": "The target takes full damage, is sickened 1, and is deafened for 1 round.",
+        "Critical Failure": "The target takes double damage, is sickened 2, and is deafened for 1 minute."
+      },
+      "heightened": {
+        "+1": "The damage increases by 2d6."
+      },
+      "traditions": [
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "paralyze",
+      "name": "Paralyze",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Concentrate",
+        "Incapacitation",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "Varies",
+      "description": "You block the target's motor impulses before they can leave its mind, threatening to freeze the target in place. The target must attempt a Will save.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target is stunned 1.",
+        "Failure": "The target is paralyzed for 1 round.",
+        "Critical Failure": "The target is paralyzed for 4 rounds. At the end of each of its turns, it can attempt a new Will save to reduce the remaining duration by 1 round, or end it entirely on a critical success."
+      },
+      "heightened": {
+        "7th": "You can target up to 10 creatures."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "phantasmal-treasure",
+      "name": "Phantasmal Treasure",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Emotion",
+        "Illusion",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "60 feet",
+      "targets": "1 living creature",
+      "defense": "Will",
+      "duration": "Varies",
+      "description": "A phantasmal image of the most precious thing imaginable to the target appears in a location of your choice within the spell's range. Only the spell's target can see the treasure, though you can see the vague shape of the treasure—be it a pile of items, a deific avatar, or a cherished loved one or hero. The target's response to the treasure is based on the outcome of the target's Will save.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target becomes fascinated with the treasure, and the duration is until the end of its turn. The target can also try to disbelieve the illusion if it touches the treasure, Seeks to examine it, or speaks to it if the illusion appears to be a person or the like. If the target disbelieves the illusion, the spell ends.",
+        "Failure": "As success, but the duration is 1 minute.",
+        "Critical Failure": "As success, but the duration is 1 minute. The target finds the treasure so appealing that until the spell ends, it must spend each action focused on it. This can include moving toward the treasure if the target isn't next to it, and Interacting with the treasure if the target is next to it."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "phantom-prison",
+      "name": "Phantom Prison",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Concentrate",
+        "Illusion",
+        "Incapacitation",
+        "Manipulate",
+        "Mental",
+        "Visual"
+      ],
+      "actions": "Three Actions",
+      "range": "50 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "1 minute",
+      "description": "You completely surround a Large or smaller creature in immobile illusory walls, trapping it inside a false prison it can't escape. No other creatures see or feel these walls, and the target can't see anything outside of the illusory walls. The target can attempt a Will save when the spell is cast, each time it attempts to interact with or escape the walls, and each time something from outside the walls affects the target. On a success, it disbelieves the illusion and the spell ends.",
+      "heightened": {
+        "8th": "You can target up to 5 creatures."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "pocket-library",
       "name": "Pocket Library",
       "level": 1,
@@ -11738,6 +12457,25 @@
       ]
     },
     {
+      "id": "quicken-time",
+      "name": "Quicken Time",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "area": "20-foot burst",
+      "duration": "1 minute",
+      "description": "You speed up the time stream in an area, stretching and pulling it until time flows swift and wild. Any creature that begins its turn in the area is quickened until the end of its turn and can use the extra action only to Stride or Strike. Unfortunately, speeding up time is much more difficult than slowing it down, and the effect is uneven and jittery, making accuracy between times painfully difficult; creatures inside the area are concealed to those outside it, and vice versa.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "ray-of-frost",
       "name": "Ray of Frost",
       "level": 0,
@@ -11771,6 +12509,34 @@
       "traditions": [
         "arcane",
         "primal"
+      ]
+    },
+    {
+      "id": "ring-of-truth",
+      "name": "Ring of Truth",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Detection",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "area": "20-foot burst",
+      "defense": "Will",
+      "duration": "10 minutes",
+      "description": "You designate an area in which lies are revealed. Creatures in the area also take a –2 status penalty to Deception checks. Each time a creature in the area speaks a true statement, the soft ring of a bell sounds in the area. Creatures are aware of the magic; therefore, they can avoid answering questions to which they would normally respond with a lie, or they can be evasive as long as they remain within the boundaries of the truth. If a creature is in the area when the spell is cast or later enters the area, that creature attempts a Will save. It uses the results of this initial save if it leaves and reenters the area.",
+      "degrees": {
+        "Critical Success": "The target is so convincing that the bell rings even if they lie.",
+        "Success": "If the target lies and succeeds at their Deception check against all targets, the bell still rings.",
+        "Failure": "The bell accurately sees through their deception and will never ring if they lie."
+      },
+      "traditions": [
+        "divine",
+        "occult"
       ]
     },
     {
@@ -11822,6 +12588,52 @@
       }
     },
     {
+      "id": "shared-invisibility",
+      "name": "Shared Invisibility",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Aura",
+        "Illusion",
+        "Manipulate",
+        "Subtle"
+      ],
+      "actions": "Two Actions",
+      "area": "30-foot emanation",
+      "targets": "you and up to 5 willing creatures",
+      "duration": "10 minutes",
+      "description": "You and all targets are invisible except to each other as long as the targets remain within the emanation. If a creature made invisible by this spell leaves the spell's area, it becomes visible and remains so even if it returns to the spell's area. If any creature made invisible by this spell uses a hostile action, the spell ends after the hostile action is completed.",
+      "heightened": {
+        "5th": "The targets increase to you and up to 10 willing creatures. The duration increases to 1 hour."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "shatter",
+      "name": "Shatter",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Sonic"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 unattended object",
+      "description": "A high-frequency sonic attack shatters a nearby object. You deal 2d10 sonic damage to the object, ignoring the object's Hardness if it is 4 or lower.",
+      "heightened": {
+        "+1": "The damage increases by 1d10, and the Hardness the spell ignores increases by 2."
+      },
+      "traditions": [
+        "occult",
+        "primal"
+      ]
+    },
+    {
       "id": "shield",
       "name": "Shield",
       "level": 0,
@@ -11861,6 +12673,31 @@
       "heightened": {
         "+2": "The extra damage increases by 1d4."
       }
+    },
+    {
+      "id": "shift-blame",
+      "name": "Shift Blame",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Concentrate",
+        "Mental"
+      ],
+      "actions": "Reaction",
+      "trigger": "You or another creature attacks a creature or fails at a Deception, Diplomacy, or Intimidation check.",
+      "range": "30 feet",
+      "targets": "the target of the triggering attack or skill check",
+      "defense": "Will",
+      "description": "You alter the target's memories of the triggering event as they form. You choose another creature (which can be you) with the capacity to make the triggering attack or skill check, and you alter the target's memories to recall the creature you chose as responsible for the triggering attack or skill check. The target must attempt a Will save and is then temporarily immune for 24 hours.",
+      "degrees": {
+        "Critical Success": "The target knows you attempted to alter its memories.",
+        "Success": "The target doesn't realize you attempted to alter its memories, though it knows you cast a spell.",
+        "Failure": "You successfully alter the target's memory. It isn't forced to react to the new memories in a particular way, and it's likely to question them if they contradict other information it knows or are implausible for the situation."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     },
     {
       "id": "shocking-grasp",
@@ -11939,6 +12776,58 @@
       ]
     },
     {
+      "id": "spiritual-armament",
+      "name": "Spiritual Armament",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Attack",
+        "Concentrate",
+        "Manipulate",
+        "Sanctified",
+        "Spirit"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "targets": "1 creature",
+      "duration": "Sustained up to 1 minute",
+      "description": "You create a ghostly, magical echo of one weapon you're wielding or wearing and fling it. Attempt a spell attack roll against the target's AC, dealing 2d8 damage on a hit (or double damage on a critical hit). The damage type is the same as the chosen weapon (or any of its types for a versatile weapon). The attack deals spirit damage instead if that would be more detrimental to the creature (as determined by the GM). This attack uses and contributes to your multiple attack penalty. After the attack, the weapon returns to your side. If you sanctify the spell, the attacks are sanctified as well. Each time you Sustain the spell, you can repeat the attack against any creature within 120 feet.",
+      "heightened": {
+        "+2": "The damage increases by 1d8."
+      },
+      "traditions": [
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "stupefy",
+      "name": "Stupefy",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "Varies",
+      "description": "You dull the target's mind, depending on its Will save.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target is stupefied 1 until the start of your next turn.",
+        "Failure": "The target is stupefied 2 for 1 minute.",
+        "Critical Failure": "The target is stupefied 3 for 1 minute."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "sudden-bolt",
       "name": "Sudden Bolt",
       "level": 2,
@@ -11958,6 +12847,39 @@
       "traditions": [
         "arcane",
         "primal"
+      ]
+    },
+    {
+      "id": "suggestion",
+      "name": "Suggestion",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Incapacitation",
+        "Linguistic",
+        "Manipulate",
+        "Mental",
+        "Subtle"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "Varies",
+      "description": "Your honeyed words are difficult for creatures to resist. You suggest a course of action to the target, which must be phrased in such a way as to seem like a logical course of action to the target and can't be self-destructive or obviously against the target's self-interest. The target must attempt a Will save.",
+      "degrees": {
+        "Critical Success": "The target is unaffected and knows you tried to control it.",
+        "Success": "The target is unaffected.",
+        "Failure": "The target immediately follows your suggestion. The spell has a duration of 1 minute, or until the target has completed a finite suggestion or the suggestion becomes self-destructive or has other obvious negative effects.",
+        "Critical Failure": "As failure, but the base duration is 1 hour."
+      },
+      "heightened": {
+        "8th": "You can target up to 10 creatures."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
       ]
     },
     {
@@ -11988,6 +12910,49 @@
       "traditions": [
         "arcane",
         "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "sure-strike",
+      "name": "Sure Strike",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": [
+        "Concentrate",
+        "Fortune"
+      ],
+      "actions": "One Action",
+      "duration": "until the end of your turn",
+      "description": "The next time you make an attack roll before the end of your turn, roll it twice and use the better result. The attack ignores circumstance penalties to the attack roll and any flat check required due to the target being concealed or hidden. You are then temporarily immune to sure strike for 10 minutes.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "synaptic-pulse",
+      "name": "Synaptic Pulse",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Concentrate",
+        "Incapacitation",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "area": "30-foot emanation",
+      "defense": "Will",
+      "duration": "1 round",
+      "description": "You emit a pulsating mental blast that penetrates the minds of all enemies in the area. Each enemy in the area must attempt a Will save.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "The creature is stunned 1.",
+        "Failure": "The creature is stunned 2.",
+        "Critical Failure": "The creature is stunned for 1 round."
+      },
+      "traditions": [
         "occult"
       ]
     },
@@ -12061,6 +13026,107 @@
         "arcane",
         "occult",
         "primal"
+      ]
+    },
+    {
+      "id": "telepathy",
+      "name": "Telepathy",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Linguistic",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "duration": "10 minutes",
+      "description": "You can communicate telepathically with creatures within 30 feet. Once you establish a connection by communicating with a creature, the communication is two-way. You can communicate only with creatures that share a language with you.",
+      "heightened": {
+        "6th": "You can communicate telepathically with creatures using shared mental imagery even if you don't share a language; telepathy loses the linguistic trait."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "tortoise-and-the-hare",
+      "name": "Tortoise and the Hare",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 foe, and either yourself or 1 ally",
+      "defense": "Fortitude",
+      "description": "You prove that slow and steady doesn't always win the race by turning a foe into a proverbial tortoise and yourself or an ally into a hare, siphoning some of the foe's speed and granting it to the other target. The effects depend on the foe's Fortitude save.",
+      "degrees": {
+        "Critical Success": "The targets are unaffected.",
+        "Success": "The foe is slowed 1 for 1 round, and the other target is unaffected.",
+        "Failure": "The foe is slowed 1 for 3 rounds and the other target is quickened for 1 round. It can use the extra action to Step, Stride, or Strike.",
+        "Critical Failure": "The foe is slowed 1 for 3 minutes and the other target is quickened for 1 minute. It can use the extra action to Step, Stride, or Strike."
+      },
+      "traditions": [
+        "occult",
+        "primal"
+      ]
+    },
+    {
+      "id": "ventriloquism",
+      "name": "Ventriloquism",
+      "level": 1,
+      "baseLevel": 1,
+      "traits": [
+        "Auditory",
+        "Concentrate",
+        "Illusion",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "duration": "10 minutes",
+      "description": "Whenever you speak or make any other sound vocally, you can make your vocalization seem to originate from somewhere else within 60 feet, and you can change that apparent location freely as you vocalize. Any creature that hears the sound can attempt to disbelieve your illusion.",
+      "heightened": {
+        "2nd": "The spell's duration increases to 1 hour, and you can also change the tone, quality, and other aspects of your voice. Before a creature can attempt to disbelieve your illusion, it must actively attempt a Perception check or otherwise use actions to interact with the sound."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
+    },
+    {
+      "id": "wave-of-despair",
+      "name": "Wave of Despair",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Concentrate",
+        "Emotion",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "Two Actions",
+      "area": "30-foot cone",
+      "defense": "Will",
+      "duration": "1 or more rounds",
+      "description": "You inflict despair on creatures in the area. The effects for each creature are determined by its Will save.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "For 1 round, the creature can't use reactions and must attempt another save at the start of its turn; on a failure, it is slowed 1 for that turn as it sobs uncontrollably.",
+        "Failure": "As success, but the duration is 1 minute.",
+        "Critical Failure": "As failure, and the creature is automatically slowed 1 for 1 minute."
+      },
+      "heightened": {
+        "7th": "The area increases to a 60-foot cone."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
       ]
     }
   ],
