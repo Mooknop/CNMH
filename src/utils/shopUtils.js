@@ -272,6 +272,9 @@ export function eligibleSpellItems(ware, spells, catalogMap) {
         price,
         weight: BULK_L_WEIGHT,
         traits,
+        // The spell's own mechanics text, so the shop preview card shows what a
+        // Scroll/Wand of X actually does (#936 follow-up).
+        ...(spell.description ? { description: spell.description } : {}),
         ...(baseArt ? { image: baseArt.image, ...(baseArt.imagePosition != null ? { imagePosition: baseArt.imagePosition } : {}) } : {}),
         [kind]: block,
         wareKey: heightened ? `${kind}:${spell.id}:${rank}` : `${kind}:${spell.id}`,

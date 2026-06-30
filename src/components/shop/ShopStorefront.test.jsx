@@ -57,7 +57,7 @@ const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: [
 // common) expands to buyable scroll items.
 const spells = [
   { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
-  { id: 'sleep', name: 'Sleep', level: 1, traditions: ['arcane', 'occult'] },
+  { id: 'sleep', name: 'Sleep', level: 1, traditions: ['arcane', 'occult'], description: 'Each creature in the area becomes drowsy.' },
 ];
 
 // One shop at a location: general wares + a runestone (⇒ Runesmithing derives on)
@@ -309,6 +309,17 @@ describe('ShopStorefront', () => {
       const svc = screen.getByLabelText('spellcasting services');
       expect(within(svc).getByText('Cast a spell for you')).toBeInTheDocument();
       expect(screen.getByText(/coming in a future update/i)).toBeInTheDocument();
+    });
+
+    it('shows the spell description in the takeover preview of a scroll', () => {
+      renderShop();
+      openSpells();
+      fireEvent.keyDown(
+        within(screen.getByLabelText('scrolls and wands')).getByTestId('ware-scroll-of-sleep'),
+        { key: 'Enter' }
+      );
+      const preview = screen.getByTestId('ware-preview');
+      expect(within(preview).getByText('Each creature in the area becomes drowsy.')).toBeInTheDocument();
     });
 
     it('searches the scroll/wand list by spell name', () => {
