@@ -11913,7 +11913,116 @@
             "ref": "translate"
           }
         ]
-      }
+      },
+      "variants": [
+        {
+          "level": 6,
+          "label": "Standard",
+          "name": "Staff of the Unblinking Eye",
+          "price": 230
+        },
+        {
+          "level": 10,
+          "label": "Greater",
+          "name": "Staff of the Unblinking Eye (Greater)",
+          "price": 900,
+          "effect": "Adds 3rd- and 4th-rank divination spells to the staff.",
+          "staff": {
+            "name": "Staff of the Unblinking Eye",
+            "type": "Greater",
+            "itemLevel": 10,
+            "bulkValue": 1,
+            "charges": {
+              "max": 5,
+              "current": 5
+            },
+            "spells": [
+              {
+                "ref": "detect-magic"
+              },
+              {
+                "ref": "sure-strike"
+              },
+              {
+                "ref": "darkvision"
+              },
+              {
+                "ref": "see-the-unseen"
+              },
+              {
+                "ref": "translate"
+              },
+              {
+                "ref": "mind-reading"
+              },
+              {
+                "ref": "clairvoyance"
+              },
+              {
+                "ref": "detect-scrying"
+              },
+              {
+                "ref": "telepathy"
+              }
+            ]
+          }
+        },
+        {
+          "level": 14,
+          "label": "Major",
+          "name": "Staff of the Unblinking Eye (Major)",
+          "price": 4000,
+          "effect": "Adds 5th- and 6th-rank divination spells to the staff.",
+          "staff": {
+            "name": "Staff of the Unblinking Eye",
+            "type": "Major",
+            "itemLevel": 14,
+            "bulkValue": 1,
+            "charges": {
+              "max": 7,
+              "current": 7
+            },
+            "spells": [
+              {
+                "ref": "detect-magic"
+              },
+              {
+                "ref": "sure-strike"
+              },
+              {
+                "ref": "darkvision"
+              },
+              {
+                "ref": "see-the-unseen"
+              },
+              {
+                "ref": "translate"
+              },
+              {
+                "ref": "mind-reading"
+              },
+              {
+                "ref": "clairvoyance"
+              },
+              {
+                "ref": "detect-scrying"
+              },
+              {
+                "ref": "telepathy"
+              },
+              {
+                "ref": "mind-probe"
+              },
+              {
+                "ref": "scouting-eye"
+              },
+              {
+                "ref": "truesight"
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "inventors-chair",
@@ -12387,6 +12496,25 @@
       ]
     },
     {
+      "id": "clairvoyance",
+      "name": "Clairvoyance",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Scrying"
+      ],
+      "actions": "1 Minute",
+      "range": "500 feet",
+      "duration": "10 minutes",
+      "description": "You create an invisible floating eye at a location within range, even if it's outside your line of sight or line of effect. While the eye can't move, you can see in all directions from that point as if using your normal visual senses.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "cleanse-affliction",
       "name": "Cleanse Affliction",
       "level": 2,
@@ -12514,6 +12642,29 @@
       ]
     },
     {
+      "id": "darkvision",
+      "name": "Darkvision",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "duration": "1 hour",
+      "description": "You grant yourself supernatural sight in areas of darkness. You gain darkvision.",
+      "heightened": {
+        "3rd": "The spell's range is touch and it targets 1 willing creature.",
+        "5th": "The spell's range is touch and it targets 1 willing creature. The duration is until your next daily preparations."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
+    },
+    {
       "id": "daze",
       "name": "Daze",
       "level": 0,
@@ -12586,6 +12737,29 @@
         "divine",
         "occult",
         "primal"
+      ]
+    },
+    {
+      "id": "detect-scrying",
+      "name": "Detect Scrying",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Detection",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "area": "30-foot emanation",
+      "duration": "1 hour",
+      "description": "By reading trace auras, you detect the presence of scrying effects in the area. If detect scrying is higher rank than a scrying effect, you gain a glimpse of the scrying creature and learn its approximate distance and direction.",
+      "heightened": {
+        "6th": "The duration is until your next daily preparations."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
       ]
     },
     {
@@ -13522,6 +13696,34 @@
       ]
     },
     {
+      "id": "mind-probe",
+      "name": "Mind Probe",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Linguistic",
+        "Manipulate",
+        "Mental"
+      ],
+      "actions": "1 Minute",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "Will",
+      "duration": "Sustained up to 1 minute",
+      "description": "You cast your thoughts through a creature's mind, sifting for information. The target must attempt a Will save.",
+      "degrees": {
+        "Success": "The target is unaffected.",
+        "Failure": "Each round of the spell's duration, you can Sustain the spell to ask a different question and attempt to uncover the answer. For each question, the target can attempt a Deception check against your spell DC; if the target succeeds, you don't learn the answer, and on a critical success, the target gives you a false answer that you believe is truthful. Once you've asked the target a given question, asking it again, even with a separate casting of mind probe, produces the same result.",
+        "Critical Failure": "As failure, and the target takes a –4 circumstance penalty to Deception checks against your questions."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
       "id": "mind-reading",
       "name": "Mind Reading",
       "level": 3,
@@ -13944,6 +14146,48 @@
         "divine",
         "occult",
         "primal"
+      ]
+    },
+    {
+      "id": "scouting-eye",
+      "name": "Scouting Eye",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Scrying"
+      ],
+      "actions": "1 Minute",
+      "range": "500 feet",
+      "duration": "Sustained",
+      "description": "You create an invisible, floating eye that is 1 inch in diameter, at a location you can see within 500 feet. The eye can see in all directions with your normal visual senses, and it continuously transmits what it sees to you. The first time you Sustain the spell each round, you can move the eye up to 30 feet if you're concentrating on seeing only things in front of the eye, or up to 10 feet if you want to see in all directions around the eye. There's no limit to how far away from you the eye can move, but the spell ends immediately if you and the eye are ever on different planes of existence. You can attempt Seek actions through the eye if you want to attempt Perception checks with it. The eye is destroyed if it takes any damage, ending the spell.",
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "see-the-unseen",
+      "name": "See the Unseen",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Revelation"
+      ],
+      "actions": "Two Actions",
+      "duration": "10 minutes",
+      "description": "Your gaze pierces through illusions and finds invisible creatures and spirits. You can see invisible creatures as though they weren't invisible, although their features are blurred, making them concealed and difficult to identify. You can also see incorporeal creatures, like ghosts, phased through an object from within 10 feet of an object's surface as blurry shapes seen through those objects. Subtler clues also grant you a +2 status bonus to checks you make to disbelieve illusions.",
+      "heightened": {
+        "5th": "The duration increases to 8 hours."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
       ]
     },
     {
@@ -14450,6 +14694,51 @@
         "Critical Failure": "The foe is slowed 1 for 3 minutes and the other target is quickened for 1 minute. It can use the extra action to Step, Stride, or Strike."
       },
       "traditions": [
+        "occult",
+        "primal"
+      ]
+    },
+    {
+      "id": "translate",
+      "name": "Translate",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "duration": "1 hour",
+      "description": "The target can understand the meaning of a single language it is hearing or reading when you Cast the Spell. This doesn't let it understand codes, language couched in metaphor, and the like (subject to GM discretion). If the target can hear multiple languages and knows that, it can choose which language to understand; otherwise, choose one of the languages randomly.",
+      "heightened": {
+        "3rd": "The target can also speak the language.",
+        "4th": "You can target up to 10 creatures, and targets can also speak the language."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "truesight",
+      "name": "Truesight",
+      "level": 6,
+      "baseLevel": 6,
+      "traits": [
+        "Concentrate",
+        "Manipulate",
+        "Revelation"
+      ],
+      "actions": "Two Actions",
+      "area": "60-foot emanation",
+      "duration": "10 minutes",
+      "description": "You see things within 60 feet as they actually are. The GM rolls a secret counteract check against any illusion, morph, or polymorph effect in the area, but only for the purpose of determining whether you see through it (for instance, if the check succeeds against a polymorph spell, you can see the creature's true form, but you don't end the polymorph spell).",
+      "traditions": [
+        "arcane",
+        "divine",
         "occult",
         "primal"
       ]
