@@ -22,6 +22,7 @@ import bootstrapArmorRunes from '../data/armorRunes';
 import { FUNDAMENTAL_RUNES } from '../data/fundamentalRunes';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { resolveScroll, resolveWand } from './spellItems';
+import { baseSpellItemArt } from './InventoryUtils';
 
 export const slugify = (str) =>
   String(str || '')
@@ -364,7 +365,7 @@ const isResolvedSpell = (block) =>
 // unique scroll or a custom-named item keeps its values. A null-priced
 // (out-of-range) derivation leaves price/level untouched rather than nulling an
 // authored value. No-ops when the block didn't resolve to a real spell.
-const hydrateSpellItem = (item, kind, resolveFn) => {
+const hydrateSpellItem = (item, kind, resolveFn, catalogMap) => {
   const block = item[kind];
   if (!isResolvedSpell(block)) return item;
   const derived = resolveFn(block, block);
@@ -376,6 +377,16 @@ const hydrateSpellItem = (item, kind, resolveFn) => {
   if (out.traits == null) out.traits = derived.traits;
   if (out.usage == null) out.usage = derived.usage;
   if (out.source == null) out.source = derived.source;
+  // Inherit the shared base scroll/wand art (#936) when the item authored none —
+  // author override wins, like every other hydrated field. No-op until the GM
+  // sets the magic-scroll / magic-wand base image.
+  if (out.image == null) {
+    const art = baseSpellItemArt(kind, catalogMap);
+    if (art) {
+      out.image = art.image;
+      if (out.imagePosition == null && art.imagePosition != null) out.imagePosition = art.imagePosition;
+    }
+  }
   return out;
 };
 
@@ -384,18 +395,18 @@ const hydrateSpellItem = (item, kind, resolveFn) => {
 // any wand/scroll/staff spell refs and hydrate scroll/wand base-template fields.
 // Identity-preserving when nothing applies, so legacy inline items pass through
 // byte-for-byte.
-const finishItem = (item, spellMap, ownerLevel, runeMap) => {
+const finishItem = (item, spellMap, ownerLevel, runeMap, catalogMap) => {
   if (!item || typeof item !== 'object') return item;
   let out = applyArtifactGating(item, ownerLevel);
   if (out.scroll) {
     const r = resolveSpellBlock(out.scroll, spellMap);
     if (r !== out.scroll) out = { ...out, scroll: r };
-    out = hydrateSpellItem(out, 'scroll', resolveScroll);
+    out = hydrateSpellItem(out, 'scroll', resolveScroll, catalogMap);
   }
   if (out.wand) {
     const r = resolveSpellBlock(out.wand, spellMap);
     if (r !== out.wand) out = { ...out, wand: r };
-    out = hydrateSpellItem(out, 'wand', resolveWand);
+    out = hydrateSpellItem(out, 'wand', resolveWand, catalogMap);
   }
   if (out.staff) {
     const r = resolveStaffSpells(out.staff, spellMap);
@@ -468,7 +479,7 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
             },
           }
         : entry;
-    return finishItem(inline, spellMap, ownerLevel, runeMap);
+    return finishItem(inline, spellMap, ownerLevel, runeMap, catalogMap);
   }
 
   // A runestone is an unattached rune (#800): resolve it from the rune catalog
@@ -512,7 +523,7 @@ export const resolveInventoryItem = (entry, catalogMap, spellMap, ownerLevel, ru
   }
   // Gate artifact abilities by owner level, then inline wand/scroll/staff
   // spell refs and property-rune refs — see finishItem.
-  return finishItem(resolved, spellMap, ownerLevel, runeMap);
+  return finishItem(resolved, spellMap, ownerLevel, runeMap, catalogMap);
 };
 
 export const resolveInventory = (list, catalogMap, spellMap, ownerLevel, runeMap) =>
