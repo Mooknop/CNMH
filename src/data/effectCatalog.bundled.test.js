@@ -22,10 +22,10 @@ describe('bundled effect catalog', () => {
       expect(Array.isArray(e.modifiers)).toBe(true);
       e.modifiers.forEach((m) => {
         expect(typeof m.stat).toBe('string');
-        // `dexCap` (absolute Dex ceiling, #507) and `resistance` (typed damage
-        // resistance, #900) are special non-bonus modifiers — they carry no
+        // `dexCap` (absolute Dex ceiling, #507), `resistance` (#900) and
+        // `weakness` (#918) are special non-bonus modifiers — they carry no
         // bonus `kind` and never net through bestOfKind.
-        if (m.stat !== 'dexCap' && m.stat !== 'resistance') {
+        if (m.stat !== 'dexCap' && m.stat !== 'resistance' && m.stat !== 'weakness') {
           expect(VALID_KINDS).toContain(m.kind);
         }
         expect(typeof m.amount).toBe('number');
