@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { useEncounter } from '../../hooks/useEncounter';
 import { useGmAuth } from '../../hooks/useGmAuth';
-import { useEffects } from '../../hooks/useEffects';
+import { useCharacter } from '../../hooks/useCharacter';
+import { useResolvedEffects } from '../../hooks/useResolvedEffects';
 import { useContent } from '../../contexts/ContentContext';
 import {
   PERSISTENT_KEY,
@@ -28,12 +29,14 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
   const { appendLog } = useEncounter();
   const { isGm } = useGmAuth();
-  // The combatant's active effects drive resistance/flat-check easing (#900).
-  // Enemies (no charId) read an empty store; resolves to no resistance. The
-  // catalog is the live (DO) effect collection — Blood Booster lives there, not
-  // in the bundled bootstrap, so the readers must resolve against it.
-  const { effects } = useEffects(entry.charId);
-  const { effects: catalog } = useContent();
+  // The combatant's resolved effects drive resistance/flat-check easing (#900) —
+  // app + Foundry effects + worn gear (#922 S2), against the catalog that
+  // carries both the live (DO) effects and the dynamic worn defs. Enemies (no
+  // charId) resolve to an empty set ⇒ no resistance.
+  const { characters } = useContent();
+  const character = entry.charId ? (characters || []).find((c) => c.id === entry.charId) : null;
+  const charData = useCharacter(character);
+  const { effects, catalog } = useResolvedEffects(entry.charId, charData?.inventory);
   const [open, setOpen] = useState(false);
 
   const instances = persistentMap?.[entry.entryId] || [];
