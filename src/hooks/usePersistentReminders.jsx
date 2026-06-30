@@ -5,9 +5,9 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '../utils/persistentDamage';
-import { resistanceFor, flatCheckEasedFor } from '../utils/EffectUtils';
+import { resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
-import { wornResistanceFor } from '../utils/wornGear';
+import { wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
 // turn transitions instead of hooking advanceTurn, so reminders fire for
@@ -38,13 +38,13 @@ export function usePersistentReminders() {
   const prevTurnRef = useRef({ token: null, entry: null });
   const prevActiveRef = useRef(false);
 
-  // Resistance/flat-check context for one instance, read from the combatant's
-  // active effects (#900) and worn gear (#922 S3). PC entries carry a charId
-  // whose cnmh_effects_<id> + cnmh_foundryeffects_<id> hold the buffs (Blood
-  // Booster lives there); worn resistance comes from the authored inventory
-  // stamped with the live loadout/investment overlays. All read synchronously
-  // off the session cache at turn-end — no reactive subscription needed for a
-  // one-shot log line. Enemies (no charId) resolve to no resistance.
+  // Weakness/resistance/flat-check context for one instance, read from the
+  // combatant's active effects (#900/#918) and worn gear (#922 S3). PC entries
+  // carry a charId whose cnmh_effects_<id> + cnmh_foundryeffects_<id> hold the
+  // buffs (Blood Booster lives there); worn modifiers come from the authored
+  // inventory stamped with the live loadout/investment overlays. All read
+  // synchronously off the session cache at turn-end — no reactive subscription
+  // needed for a one-shot log line. Enemies (no charId) resolve to nothing.
   const resolveResistance = useCallback((entry, inst) => {
     if (!entry?.charId) return null;
     const effects = [
@@ -52,9 +52,8 @@ export function usePersistentReminders() {
       ...(getState(entry.charId, 'foundryeffects') || []),
     ];
     const vsType = persistentVsType(inst);
-    const effectAmount = resistanceFor(effects, vsType, catalog);
 
-    // Worn-gear resistance: the imperative path can't call hooks, so rebuild the
+    // Worn-gear modifiers: the imperative path can't call hooks, so rebuild the
     // PC's effective inventory from content + the live placement/investment
     // overlays. (Mid-session *acquired* gear is out of scope for this reminder
     // line; the chip and HP-apply, via useResolvedEffects, cover that.)
@@ -64,10 +63,17 @@ export function usePersistentReminders() {
       getState(entry.charId, 'loadout') || {},
     );
     const invested = getState(entry.charId, 'invested') || {};
-    const wornAmount = wornResistanceFor(inventory, (uid) => !!invested[uid], vsType);
+    const isInvested = (uid) => !!invested[uid];
 
     return {
-      amount: Math.max(effectAmount, wornAmount),
+      weakness: Math.max(
+        weaknessFor(effects, vsType, catalog),
+        wornWeaknessFor(inventory, isInvested, vsType),
+      ),
+      amount: Math.max(
+        resistanceFor(effects, vsType, catalog),
+        wornResistanceFor(inventory, isInvested, vsType),
+      ),
       easeFlatCheck: flatCheckEasedFor(effects, vsType, catalog),
     };
   }, [getState, catalog, characters]);

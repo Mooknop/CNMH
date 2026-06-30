@@ -22,6 +22,9 @@ const RESOLVED_CATALOG = [
   { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
     { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
   ] },
+  { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [
+    { stat: 'weakness', amount: 5, vs: 'persistent-fire' },
+  ] },
 ];
 vi.mock('../../hooks/useResolvedEffects', () => ({
   useResolvedEffects: (charId) => ({ effects: mockEffectsByChar[charId] || [], catalog: RESOLVED_CATALOG }),
@@ -122,6 +125,21 @@ describe('PersistentChip (#272)', () => {
     expect(screen.getByText(/1d6 persistent fire/).textContent).not.toMatch(/resistance/);
     // bleed is eased, so the footer reads DC 10
     expect(screen.getByText(/Damage at end of turn, then DC 10 flat check to end/)).toBeInTheDocument();
+  });
+
+  it('annotates weakness per row for a matching effect (#918)', () => {
+    mockEffectsByChar = { 'char-a': [{ id: 'u1', effectId: 'fire-vuln' }] };
+    seed({
+      'e-pc': [
+        { id: 'pd-1', dice: '1d6', type: 'fire', sourceName: 'Torch' },
+        { id: 'pd-2', dice: '1d6', type: 'bleed', sourceName: 'Wound' },
+      ],
+    });
+    render(<PersistentChip entry={ashka} viewerCharId="char-a" />);
+    fireEvent.click(screen.getByRole('button', { name: /Ashka/ }));
+    expect(screen.getByText(/1d6 persistent fire \+ weakness 5/)).toBeInTheDocument();
+    // bleed is not covered — no weakness annotation
+    expect(screen.getByText(/1d6 persistent bleed/).textContent).not.toMatch(/weakness/);
   });
 
   it('keeps the DC-15 footer and no annotation for an enemy with no effects (#900)', () => {

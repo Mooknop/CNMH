@@ -12,7 +12,7 @@ import {
   persistentVsType,
   recoveryDc,
 } from '../../utils/persistentDamage';
-import { resistanceFor, flatCheckEasedFor } from '../../utils/EffectUtils';
+import { resistanceFor, weaknessFor, flatCheckEasedFor } from '../../utils/EffectUtils';
 import './PersistentChip.css';
 
 /**
@@ -50,11 +50,13 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
   };
 
   const resistanceOf = (inst) => resistanceFor(effects, persistentVsType(inst), catalog);
+  const weaknessOf = (inst) => weaknessFor(effects, persistentVsType(inst), catalog);
   const describe = (inst) => {
+    const weak = weaknessOf(inst);
     const res = resistanceOf(inst);
     return `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}${
-      res ? ` − resistance ${res}` : ''
-    }`;
+      weak ? ` + weakness ${weak}` : ''
+    }${res ? ` − resistance ${res}` : ''}`;
   };
   const summary = instances.map(describe).join(', ');
 
