@@ -110,6 +110,47 @@ describe('bundled item catalog (Slice 3)', () => {
     expect(lowHammer.strikes).toBeTruthy();
   });
 
+  // #904 — the five Coda instrument staves: one catalog item each, grades via
+  // level-keyed variants that carry their own (cumulative) staff spell list.
+  // Holding a given grade resolves to that grade's list with every ref inlined.
+  it('Coda instrument staves resolve to per-grade staff spell lists', () => {
+    const STAVES = [
+      'bagpipes-of-turmoil', 'entertainers-lute', 'drums-of-war',
+      'pipes-of-compulsion', 'tricksters-mandolin',
+    ];
+    const GRADES = [
+      { level: 4, type: 'Standard', charges: 2 },
+      { level: 8, type: 'Greater', charges: 4 },
+      { level: 12, type: 'Major', charges: 6 },
+    ];
+    const resolveStaff = (id, level) => {
+      const owner = { id: 'tester', level: 20, inventory: [{ ref: id, level }] };
+      return resolveCharacterItems(owner, items, spells).inventory[0].staff;
+    };
+
+    STAVES.forEach((id) => {
+      // The base catalog item is a Standard-grade staff with a multi-grade
+      // variants array.
+      const cat = items.find((i) => i.id === id);
+      expect(cat).toBeTruthy();
+      expect(cat.staff.type).toBe('Standard');
+      expect(cat.variants.map((v) => v.label)).toEqual(['Standard', 'Greater', 'Major']);
+
+      const counts = GRADES.map((g) => {
+        const st = resolveStaff(id, g.level);
+        expect(st.type).toBe(g.type);
+        expect(st.charges.max).toBe(g.charges);
+        // Every staff spell is a real, inlined catalog spell (no dangling refs).
+        expect(st.spells.length).toBeGreaterThan(0);
+        expect(st.spells.every((s) => s.name && !s.name.startsWith('(unknown') && s.ref == null)).toBe(true);
+        return st.spells.length;
+      });
+      // Grades are cumulative: Major ⊃ Greater ⊃ Standard.
+      expect(counts[0]).toBeLessThan(counts[1]);
+      expect(counts[1]).toBeLessThan(counts[2]);
+    });
+  });
+
   it('multi-level items have variants with numeric level and string label', () => {
     const multiLevel = items.filter((i) => Array.isArray(i.variants) && i.variants.length > 0);
     expect(multiLevel.length).toBeGreaterThan(0);

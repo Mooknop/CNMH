@@ -8031,6 +8031,141 @@
       "id": "backpack"
     },
     {
+      "name": "Bagpipes of Turmoil",
+      "description": "These droning war-pipes wail with a discordant, unsettling skirl that stirs dread in those who hear it. While playing the bagpipes, you gain a +1 item bonus to Performance checks and to Intimidation checks to Demoralize. You can Activate the bagpipes to Cast a Spell from its staff spell list.",
+      "traits": [
+        "Coda",
+        "Magical",
+        "Occult",
+        "Staff"
+      ],
+      "usage": "held in two hands",
+      "price": 90,
+      "weight": 1,
+      "staff": {
+        "name": "Bagpipes of Turmoil",
+        "type": "Standard",
+        "itemLevel": 4,
+        "bulkValue": 1,
+        "charges": {
+          "max": 2,
+          "current": 2
+        },
+        "spells": [
+          {
+            "ref": "daze"
+          },
+          {
+            "ref": "bane"
+          }
+        ]
+      },
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Bagpipes of Turmoil",
+          "price": 90
+        },
+        {
+          "level": 8,
+          "label": "Greater",
+          "name": "Bagpipes of Turmoil (Greater)",
+          "price": 460,
+          "effect": "Adds 2nd- and 3rd-rank spells to the staff.",
+          "staff": {
+            "name": "Bagpipes of Turmoil",
+            "type": "Greater",
+            "itemLevel": 8,
+            "bulkValue": 1,
+            "charges": {
+              "max": 4,
+              "current": 4
+            },
+            "spells": [
+              {
+                "ref": "daze"
+              },
+              {
+                "ref": "bane"
+              },
+              {
+                "ref": "deafness"
+              },
+              {
+                "ref": "knock"
+              },
+              {
+                "ref": "shatter"
+              },
+              {
+                "ref": "paralyze"
+              },
+              {
+                "ref": "shift-blame"
+              }
+            ]
+          }
+        },
+        {
+          "level": 12,
+          "label": "Major",
+          "name": "Bagpipes of Turmoil (Major)",
+          "price": 1900,
+          "effect": "The item bonus while playing increases to +2. Adds 4th- and 5th-rank spells to the staff.",
+          "staff": {
+            "name": "Bagpipes of Turmoil",
+            "type": "Major",
+            "itemLevel": 12,
+            "bulkValue": 1,
+            "charges": {
+              "max": 6,
+              "current": 6
+            },
+            "spells": [
+              {
+                "ref": "daze"
+              },
+              {
+                "ref": "bane"
+              },
+              {
+                "ref": "deafness"
+              },
+              {
+                "ref": "knock"
+              },
+              {
+                "ref": "shatter"
+              },
+              {
+                "ref": "paralyze"
+              },
+              {
+                "ref": "shift-blame"
+              },
+              {
+                "ref": "confusion"
+              },
+              {
+                "ref": "painful-vibrations"
+              },
+              {
+                "ref": "banishment"
+              },
+              {
+                "ref": "synaptic-pulse"
+              },
+              {
+                "ref": "wave-of-despair"
+              }
+            ]
+          }
+        }
+      ],
+      "id": "bagpipes-of-turmoil"
+    },
+    {
       "ammunition": {
         "types": [
           "arrow",
@@ -8613,6 +8748,156 @@
       "description": "Eerie symbols cover your armor, inspiring terror in your foes. Frightened enemies within 30 feet that can see you must attempt a DC 20 Will save at the end of their turn; on a failure, the value of their frightened condition doesn't decrease below 1 that turn."
     },
     {
+      "name": "Drums of War",
+      "description": "The martial cadence of these drums quickens the step of all who march to their beat. While playing the drums, you gain a +1 item bonus to Performance checks and a +5-foot status bonus to your Speed. You can Activate the drums to Cast a Spell from its staff spell list.",
+      "traits": [
+        "Coda",
+        "Magical",
+        "Occult",
+        "Staff"
+      ],
+      "usage": "held in two hands",
+      "price": 90,
+      "weight": 1,
+      "staff": {
+        "name": "Drums of War",
+        "type": "Standard",
+        "itemLevel": 4,
+        "bulkValue": 1,
+        "charges": {
+          "max": 2,
+          "current": 2
+        },
+        "spells": [
+          {
+            "ref": "shield"
+          },
+          {
+            "ref": "force-barrage"
+          },
+          {
+            "ref": "mystic-armor"
+          },
+          {
+            "ref": "sure-strike"
+          }
+        ]
+      },
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Drums of War",
+          "price": 90
+        },
+        {
+          "level": 8,
+          "label": "Greater",
+          "name": "Drums of War (Greater)",
+          "price": 460,
+          "effect": "Adds 2nd- and 3rd-rank spells to the staff.",
+          "staff": {
+            "name": "Drums of War",
+            "type": "Greater",
+            "itemLevel": 8,
+            "bulkValue": 1,
+            "charges": {
+              "max": 4,
+              "current": 4
+            },
+            "spells": [
+              {
+                "ref": "shield"
+              },
+              {
+                "ref": "force-barrage"
+              },
+              {
+                "ref": "mystic-armor"
+              },
+              {
+                "ref": "sure-strike"
+              },
+              {
+                "ref": "false-vitality"
+              },
+              {
+                "ref": "noise-blast"
+              },
+              {
+                "ref": "spiritual-armament"
+              },
+              {
+                "ref": "haste"
+              },
+              {
+                "ref": "heroism"
+              }
+            ]
+          }
+        },
+        {
+          "level": 12,
+          "label": "Major",
+          "name": "Drums of War (Major)",
+          "price": 1900,
+          "effect": "The Performance bonus while playing increases to +2 (the +5-foot Speed bonus is unchanged). Adds 4th- and 5th-rank spells to the staff.",
+          "staff": {
+            "name": "Drums of War",
+            "type": "Major",
+            "itemLevel": 12,
+            "bulkValue": 1,
+            "charges": {
+              "max": 6,
+              "current": 6
+            },
+            "spells": [
+              {
+                "ref": "shield"
+              },
+              {
+                "ref": "force-barrage"
+              },
+              {
+                "ref": "mystic-armor"
+              },
+              {
+                "ref": "sure-strike"
+              },
+              {
+                "ref": "false-vitality"
+              },
+              {
+                "ref": "noise-blast"
+              },
+              {
+                "ref": "spiritual-armament"
+              },
+              {
+                "ref": "haste"
+              },
+              {
+                "ref": "heroism"
+              },
+              {
+                "ref": "dispelling-globe"
+              },
+              {
+                "ref": "tortoise-and-the-hare"
+              },
+              {
+                "ref": "quicken-time"
+              },
+              {
+                "ref": "synaptic-pulse"
+              }
+            ]
+          }
+        }
+      ],
+      "id": "drums-of-war"
+    },
+    {
       "name": "Dweomerweave Robe",
       "description": "This robe is made from dweomerweave, a magical fabric created by spinning minor illusions into the threads of ether spider silk. Dweomerweave is naturally hazy and translucent. It can take on the illusory appearances of other fabrics and garments, and dweomerweave robes are coveted by adventurers who want to travel light without compromising on fashion.",
       "traits": [
@@ -8782,6 +9067,156 @@
         }
       ],
       "id": "energy-robe"
+    },
+    {
+      "name": "Entertainer's Lute",
+      "description": "This finely crafted lute rewards a skilled performer with rich, captivating tones. While playing the lute, you gain a +1 item bonus to Diplomacy and Performance checks. You can Activate the lute to Cast a Spell from its staff spell list.",
+      "traits": [
+        "Coda",
+        "Magical",
+        "Occult",
+        "Staff"
+      ],
+      "usage": "held in two hands",
+      "price": 90,
+      "weight": 0.1,
+      "freeActions": [
+        {
+          "name": "Restyle",
+          "description": "Frequency once per round; Effect You play a quick flourish and the look of your hair, clothing, and accessories shifts to a new cosmetic style of your choice. This illusory change lasts as long as you keep the lute in hand and has no mechanical effect."
+        }
+      ],
+      "staff": {
+        "name": "Entertainer's Lute",
+        "type": "Standard",
+        "itemLevel": 4,
+        "bulkValue": "L",
+        "charges": {
+          "max": 2,
+          "current": 2
+        },
+        "spells": [
+          {
+            "ref": "infectious-enthusiasm"
+          },
+          {
+            "ref": "bless"
+          },
+          {
+            "ref": "ventriloquism"
+          }
+        ]
+      },
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Entertainer's Lute",
+          "price": 90
+        },
+        {
+          "level": 8,
+          "label": "Greater",
+          "name": "Entertainer's Lute (Greater)",
+          "price": 460,
+          "effect": "Adds 2nd- and 3rd-rank spells to the staff.",
+          "staff": {
+            "name": "Entertainer's Lute",
+            "type": "Greater",
+            "itemLevel": 8,
+            "bulkValue": "L",
+            "charges": {
+              "max": 4,
+              "current": 4
+            },
+            "spells": [
+              {
+                "ref": "infectious-enthusiasm"
+              },
+              {
+                "ref": "bless"
+              },
+              {
+                "ref": "ventriloquism"
+              },
+              {
+                "ref": "calm"
+              },
+              {
+                "ref": "phantasmal-treasure"
+              },
+              {
+                "ref": "enthrall"
+              },
+              {
+                "ref": "heroism"
+              },
+              {
+                "ref": "illusory-creature"
+              }
+            ]
+          }
+        },
+        {
+          "level": 12,
+          "label": "Major",
+          "name": "Entertainer's Lute (Major)",
+          "price": 1900,
+          "effect": "The item bonus while playing increases to +2. Adds 4th- and 5th-rank spells to the staff.",
+          "staff": {
+            "name": "Entertainer's Lute",
+            "type": "Major",
+            "itemLevel": 12,
+            "bulkValue": "L",
+            "charges": {
+              "max": 6,
+              "current": 6
+            },
+            "spells": [
+              {
+                "ref": "infectious-enthusiasm"
+              },
+              {
+                "ref": "bless"
+              },
+              {
+                "ref": "ventriloquism"
+              },
+              {
+                "ref": "calm"
+              },
+              {
+                "ref": "phantasmal-treasure"
+              },
+              {
+                "ref": "enthrall"
+              },
+              {
+                "ref": "heroism"
+              },
+              {
+                "ref": "illusory-creature"
+              },
+              {
+                "ref": "honeyed-words"
+              },
+              {
+                "ref": "infectious-melody"
+              },
+              {
+                "ref": "hallucination"
+              },
+              {
+                "ref": "illusory-scene"
+              },
+              {
+                "ref": "suggestion"
+              }
+            ]
+          }
+        }
+      ],
+      "id": "entertainers-lute"
     },
     {
       "name": "Everyneed Pack",
@@ -9372,6 +9807,157 @@
         "group": "cloth"
       },
       "id": "padded-armor"
+    },
+    {
+      "name": "Pipes of Compulsion",
+      "description": "The honeyed notes of these pipes coax and bend the will of those who listen. While playing the pipes, you gain a +1 item bonus to Diplomacy and Performance checks. You can Activate the pipes to Cast a Spell from its staff spell list.",
+      "traits": [
+        "Uncommon",
+        "Coda",
+        "Magical",
+        "Occult",
+        "Staff"
+      ],
+      "usage": "held in two hands",
+      "price": 90,
+      "weight": 0.1,
+      "staff": {
+        "name": "Pipes of Compulsion",
+        "type": "Standard",
+        "itemLevel": 4,
+        "bulkValue": "L",
+        "charges": {
+          "max": 2,
+          "current": 2
+        },
+        "spells": [
+          {
+            "ref": "daze"
+          },
+          {
+            "ref": "charm"
+          },
+          {
+            "ref": "command"
+          },
+          {
+            "ref": "fear"
+          }
+        ]
+      },
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Pipes of Compulsion",
+          "price": 90
+        },
+        {
+          "level": 8,
+          "label": "Greater",
+          "name": "Pipes of Compulsion (Greater)",
+          "price": 460,
+          "effect": "Adds 2nd- and 3rd-rank spells to the staff.",
+          "staff": {
+            "name": "Pipes of Compulsion",
+            "type": "Greater",
+            "itemLevel": 8,
+            "bulkValue": "L",
+            "charges": {
+              "max": 4,
+              "current": 4
+            },
+            "spells": [
+              {
+                "ref": "daze"
+              },
+              {
+                "ref": "charm"
+              },
+              {
+                "ref": "command"
+              },
+              {
+                "ref": "fear"
+              },
+              {
+                "ref": "laughing-fit"
+              },
+              {
+                "ref": "stupefy"
+              },
+              {
+                "ref": "hypnotize"
+              },
+              {
+                "ref": "mind-reading"
+              },
+              {
+                "ref": "ring-of-truth"
+              }
+            ]
+          }
+        },
+        {
+          "level": 12,
+          "label": "Major",
+          "name": "Pipes of Compulsion (Major)",
+          "price": 1900,
+          "effect": "The item bonus while playing increases to +2. Adds 4th- and 5th-rank spells to the staff.",
+          "staff": {
+            "name": "Pipes of Compulsion",
+            "type": "Major",
+            "itemLevel": 12,
+            "bulkValue": "L",
+            "charges": {
+              "max": 6,
+              "current": 6
+            },
+            "spells": [
+              {
+                "ref": "daze"
+              },
+              {
+                "ref": "charm"
+              },
+              {
+                "ref": "command"
+              },
+              {
+                "ref": "fear"
+              },
+              {
+                "ref": "laughing-fit"
+              },
+              {
+                "ref": "stupefy"
+              },
+              {
+                "ref": "hypnotize"
+              },
+              {
+                "ref": "mind-reading"
+              },
+              {
+                "ref": "ring-of-truth"
+              },
+              {
+                "ref": "confusion"
+              },
+              {
+                "ref": "suggestion"
+              },
+              {
+                "ref": "glimmer-of-charm"
+              },
+              {
+                "ref": "telepathy"
+              }
+            ]
+          }
+        }
+      ],
+      "id": "pipes-of-compulsion"
     },
     {
       "name": "Potion of Waterbreathing",
@@ -10335,6 +10921,163 @@
       "price": 0.01,
       "weight": 0.1,
       "id": "torch"
+    },
+    {
+      "name": "Trickster's Mandolin",
+      "description": "This ever-changing mandolin is as slippery and protean as the trickster who carries it. While playing the mandolin, you gain a +1 item bonus to Deception and Performance checks. You can Activate the mandolin to Cast a Spell from its staff spell list.",
+      "traits": [
+        "Coda",
+        "Magical",
+        "Occult",
+        "Staff"
+      ],
+      "usage": "held in two hands",
+      "price": 90,
+      "weight": 0.1,
+      "actions": [
+        {
+          "name": "Change Instrument",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate"
+          ],
+          "description": "You alter the mandolin's color, shape, and apparent type — making it look like a fiddle, a hurdy-gurdy, or any other handheld instrument. The change is purely cosmetic and doesn't alter its function."
+        }
+      ],
+      "staff": {
+        "name": "Trickster's Mandolin",
+        "type": "Standard",
+        "itemLevel": 4,
+        "bulkValue": "L",
+        "charges": {
+          "max": 2,
+          "current": 2
+        },
+        "spells": [
+          {
+            "ref": "prestidigitation"
+          },
+          {
+            "ref": "illusory-disguise"
+          },
+          {
+            "ref": "item-facade"
+          },
+          {
+            "ref": "ventriloquism"
+          }
+        ]
+      },
+      "variants": [
+        {
+          "level": 4,
+          "label": "Standard",
+          "name": "Trickster's Mandolin",
+          "price": 90
+        },
+        {
+          "level": 8,
+          "label": "Greater",
+          "name": "Trickster's Mandolin (Greater)",
+          "price": 460,
+          "effect": "Adds 2nd- and 3rd-rank spells to the staff.",
+          "staff": {
+            "name": "Trickster's Mandolin",
+            "type": "Greater",
+            "itemLevel": 8,
+            "bulkValue": "L",
+            "charges": {
+              "max": 4,
+              "current": 4
+            },
+            "spells": [
+              {
+                "ref": "prestidigitation"
+              },
+              {
+                "ref": "illusory-disguise"
+              },
+              {
+                "ref": "item-facade"
+              },
+              {
+                "ref": "ventriloquism"
+              },
+              {
+                "ref": "blur"
+              },
+              {
+                "ref": "illusory-creature"
+              },
+              {
+                "ref": "invisibility"
+              },
+              {
+                "ref": "phantom-prison"
+              },
+              {
+                "ref": "shared-invisibility"
+              }
+            ]
+          }
+        },
+        {
+          "level": 12,
+          "label": "Major",
+          "name": "Trickster's Mandolin (Major)",
+          "price": 1900,
+          "effect": "The item bonus while playing increases to +2. Adds 4th- and 5th-rank spells to the staff.",
+          "staff": {
+            "name": "Trickster's Mandolin",
+            "type": "Major",
+            "itemLevel": 12,
+            "bulkValue": "L",
+            "charges": {
+              "max": 6,
+              "current": 6
+            },
+            "spells": [
+              {
+                "ref": "prestidigitation"
+              },
+              {
+                "ref": "illusory-disguise"
+              },
+              {
+                "ref": "item-facade"
+              },
+              {
+                "ref": "ventriloquism"
+              },
+              {
+                "ref": "blur"
+              },
+              {
+                "ref": "illusory-creature"
+              },
+              {
+                "ref": "invisibility"
+              },
+              {
+                "ref": "phantom-prison"
+              },
+              {
+                "ref": "shared-invisibility"
+              },
+              {
+                "ref": "confusion"
+              },
+              {
+                "ref": "hallucination"
+              },
+              {
+                "ref": "illusory-scene"
+              }
+            ]
+          }
+        }
+      ],
+      "id": "tricksters-mandolin"
     },
     {
       "actions": [
