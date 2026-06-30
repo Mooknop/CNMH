@@ -19,6 +19,7 @@ vi.mock('../../utils/CharacterUtils', () => ({
 
 vi.mock('../../utils/InventoryUtils', () => ({
   formatBulk: vi.fn((b) => (b === 0 ? '—' : String(b))),
+  baseSpellItemArt: () => null,
 }));
 
 vi.mock('../../hooks/useCharacter', () => ({

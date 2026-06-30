@@ -50,6 +50,7 @@ vi.mock('../utils/CharacterUtils', () => ({
 vi.mock('../utils/InventoryUtils', () => ({
   calculateItemsBulk: vi.fn(() => 1),
   formatBulk: vi.fn((b) => (b === 0 ? '—' : String(b))),
+  baseSpellItemArt: () => null,
 }));
 
 vi.mock('../hooks/usePartyGold', () => ({
