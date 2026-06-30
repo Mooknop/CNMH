@@ -13719,6 +13719,349 @@
         }
       ],
       "id": "water-bomb"
+    },
+    {
+      "name": "Pressure Bomb",
+      "description": "A bomb that detonates in a concussive blast of force. Deals 1d4 bludgeoning and 1 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Force",
+        "Splash"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Pressure Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 bludgeoning",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Force",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d4 bludgeoning and 1 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Pressure Bomb (Lesser)",
+          "price": 4,
+          "effect": "1d4 bludgeoning, 1 splash; crit prone"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Pressure Bomb (Moderate)",
+          "price": 12,
+          "effect": "2d4 bludgeoning, 2 splash; crit prone",
+          "strikes": [
+            {
+              "name": "Pressure Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Force",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d4 bludgeoning and 2 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet."
+            }
+          ]
+        }
+      ],
+      "id": "pressure-bomb"
+    },
+    {
+      "name": "Sticky Algae Bomb",
+      "description": "A bomb of bioluminescent algae that tags and trails its target. Deals 1d8 poison and 1 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water).",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Water"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Sticky Algae Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d8 poison",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Poison",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d8 poison and 1 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Sticky Algae Bomb (Lesser)",
+          "price": 4,
+          "effect": "1d8 poison, 1 splash; leaves a glowing trail (track DC 19, in water)"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Sticky Algae Bomb (Moderate)",
+          "price": 12,
+          "effect": "2d8 poison, 2 splash; leaves a glowing trail (track DC 19, in water)",
+          "strikes": [
+            {
+              "name": "Sticky Algae Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d8 poison",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d8 poison and 2 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water)."
+            }
+          ]
+        }
+      ],
+      "id": "sticky-algae-bomb"
+    },
+    {
+      "name": "Sulfur Bomb",
+      "description": "A reeking bomb whose acrid fumes choke and sicken. Deals 1d4 acid and 1 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1.",
+      "traits": [
+        "Uncommon",
+        "Acid",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Olfactory",
+        "Splash"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Sulfur Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 acid",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Acid",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d4 acid and 1 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Sulfur Bomb (Lesser)",
+          "price": 4,
+          "effect": "1d4 acid, 1 splash; −1 Perception & attacks; crit sickened 1"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Sulfur Bomb (Moderate)",
+          "price": 12,
+          "effect": "2d4 acid, 2 splash; −1 Perception & attacks; crit sickened 1",
+          "strikes": [
+            {
+              "name": "Sulfur Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d4 acid and 2 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1."
+            }
+          ]
+        }
+      ],
+      "id": "sulfur-bomb"
+    },
+    {
+      "name": "Vexing Vapor",
+      "description": "A bomb of disorienting vapor that fogs the mind. Deals 1d6 mental and 1 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit).",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Inhaled",
+        "Mental",
+        "Poison",
+        "Splash"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Vexing Vapor",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 mental",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Mental",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 mental and 1 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Vexing Vapor (Lesser)",
+          "price": 4,
+          "effect": "1d6 mental, 1 splash; DC 5 flat to Concentrate"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Vexing Vapor (Moderate)",
+          "price": 12,
+          "effect": "2d6 mental, 2 splash; DC 5 flat to Concentrate",
+          "strikes": [
+            {
+              "name": "Vexing Vapor",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 mental",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Mental",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 mental and 2 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit)."
+            }
+          ]
+        }
+      ],
+      "id": "vexing-vapor"
+    },
+    {
+      "name": "Aether Marbles",
+      "description": "A handful of crystalline marbles that shatter into eddies of raw force. Deals 2d6 force and 2 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones).",
+      "traits": [
+        "Uncommon",
+        "Bomb",
+        "Consumable",
+        "Force",
+        "Splash"
+      ],
+      "price": 19,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Aether Marbles",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "2d6 force",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Force",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 2d6 force and 2 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones)."
+        }
+      ],
+      "id": "aether-marbles"
+    },
+    {
+      "name": "Silver Orb",
+      "description": "An orb of liquid silver that bursts into a clinging, glittering cloud. Deals 1 slashing on a direct hit, then bursts into a 5-foot silver cloud for 1 minute: creatures inside are concealed and take 1d6 persistent slashing each round (Fortitude DC 19 basic), and weapons and unarmed attacks made within it count as silver until cleaned.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable"
+      ],
+      "price": 30,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Silver Orb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1 slashing",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1 slashing on a direct hit, then bursts into a 5-foot silver cloud for 1 minute: creatures inside are concealed and take 1d6 persistent slashing each round (Fortitude DC 19 basic), and weapons and unarmed attacks made within it count as silver until cleaned."
+        }
+      ],
+      "id": "silver-orb"
+    },
+    {
+      "name": "Blindpepper Bomb",
+      "description": "A burst of caustic pepper dust that blinds those caught in the cloud. Thrown to a range of 30 feet, it bursts in a 15-foot radius; each creature in the area must attempt a DC 18 Reflex save. On a failure the creature is blinded for 1 round, then dazzled for 1 round; on a critical failure it is blinded for 1 round, sickened 1, and dazzled until the sickened condition ends.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Consumable",
+        "Visual"
+      ],
+      "price": 40,
+      "weight": 0.1,
+      "id": "blindpepper-bomb"
     }
   ],
   "spell": [
