@@ -12,6 +12,28 @@ if (bulk < 1) return 'L'; // Light Bulk
 return parseFloat(bulk.toFixed(1)).toString(); // Regular Bulk
 };
 
+// The two scroll/wand BASE catalog items (#936). A derived scroll/wand inherits
+// its art from these when it authors none, so every "Scroll of X" / "Wand of X"
+// shows the shared base crest. They're plain catalog items (no scroll/wand block)
+// whose image the GM sets via GM Tools → Images.
+export const SPELL_ITEM_BASE_ID = { scroll: 'magic-scroll', wand: 'magic-wand' };
+
+/**
+ * The base scroll/wand item's art ({ image, imagePosition }) for a kind, looked
+ * up in the resolved item catalog (a Map keyed by id, from itemCatalogMap).
+ * Returns null when the catalog or base item is absent, or the base carries no
+ * image — callers then leave the derived item's own art untouched.
+ * @param {'scroll'|'wand'} kind
+ * @param {Map} catalogMap
+ * @returns {{ image: string, imagePosition?: Object }|null}
+ */
+export const baseSpellItemArt = (kind, catalogMap) => {
+  const id = SPELL_ITEM_BASE_ID[kind];
+  const base = id && catalogMap && typeof catalogMap.get === 'function' ? catalogMap.get(id) : null;
+  if (!base || base.image == null) return null;
+  return { image: base.image, imagePosition: base.imagePosition };
+};
+
 /**
  * Calculate total Bulk of items.
  * Item weights are stored directly in Bulk units in the JSON data.

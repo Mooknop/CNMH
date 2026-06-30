@@ -11,6 +11,7 @@ vi.mock('../../utils/CharacterUtils', () => ({
 vi.mock('../../utils/InventoryUtils', () => ({
   getLevelBasedDc: (level) => 15 + level,
   formatBulk: (b) => (b === 0 ? '—' : String(b)),
+  baseSpellItemArt: () => null,
 }));
 
 const baseCharacter = {

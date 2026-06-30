@@ -1,7 +1,7 @@
 import { buildChildrenMap, getChildren } from './loreUtils';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
-import { getItemRarity } from './InventoryUtils';
+import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
 
 // Shop selectors over the app-managed wares store `cnmh_shops_global` (#696 S1).
 //
@@ -220,7 +220,7 @@ export function spellItemOfferings(loreId, shops) {
 // S1/S2-derived name/level/price/bulk/traits, the spell's rarity stamped on)
 // with a stable distinct `wareKey`, so the cart + useBuyItems treat it like any
 // other ware (reuid clones it; finishItem re-derives on resolution).
-export function eligibleSpellItems(ware, spells) {
+export function eligibleSpellItems(ware, spells, catalogMap) {
   if (!isSpellItemWare(ware)) return [];
   const kind = ware.spellItem;
   const cap = maxRankForLevel(kind, ware.maxLevel);
@@ -229,6 +229,9 @@ export function eligibleSpellItems(ware, spells) {
   const trads = offeringTraditions(ware);
   const rars = offeringRarities(ware);
   const resolveFn = kind === 'scroll' ? resolveScroll : resolveWand;
+  // Shared base scroll/wand art (#936), stamped on every generated ware so the
+  // browse crest renders. Null (no base item / no image set yet) ⇒ no art key.
+  const baseArt = baseSpellItemArt(kind, catalogMap);
   const mod = typeof ware.priceMod === 'number' && Number.isFinite(ware.priceMod) && ware.priceMod > 0
     ? ware.priceMod
     : null;
@@ -269,6 +272,7 @@ export function eligibleSpellItems(ware, spells) {
         price,
         weight: BULK_L_WEIGHT,
         traits,
+        ...(baseArt ? { image: baseArt.image, ...(baseArt.imagePosition != null ? { imagePosition: baseArt.imagePosition } : {}) } : {}),
         [kind]: block,
         wareKey: heightened ? `${kind}:${spell.id}:${rank}` : `${kind}:${spell.id}`,
       });

@@ -594,14 +594,14 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     const seen = new Set();
     const out = [];
     spellItemOfferings(selected.id, waresStore).forEach((o) =>
-      eligibleSpellItems(o, spells).forEach((it) => {
+      eligibleSpellItems(o, spells, catalogMap).forEach((it) => {
         if (seen.has(it.wareKey)) return;
         seen.add(it.wareKey);
         out.push(it);
       })
     );
     return groupWares(out);
-  }, [selected, waresStore, spells]);
+  }, [selected, waresStore, spells, catalogMap]);
 
   // Every stocked form by wareKey (wares + scrolls/wands) — to resolve cart lines
   // back to full wares at checkout (a cart line only carries the wareKey/price/qty).

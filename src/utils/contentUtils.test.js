@@ -474,6 +474,35 @@ describe('contentUtils', () => {
         wandName: 'Wand of Cleanse Affliction',
       });
     });
+
+    // #936 — a resolved scroll/wand inherits the magic-scroll / magic-wand base
+    // item's art when it authored none; an item's own image wins.
+    it('inherits the base scroll/wand image, author image wins', () => {
+      const artCatalog = itemCatalogMap([
+        { id: 'magic-scroll', name: 'Magic Scroll', image: 'img_scroll.jpg', imagePosition: { x: 10, y: 20 } },
+        { id: 'magic-wand', name: 'Magic Wand', image: 'img_wand.jpg' },
+        { id: 'scroll-friendfetch', name: 'Scroll of Friendfetch', scroll: { spellRef: 'friendfetch' } },
+        { id: 'wand-cleanse', name: 'Wand of Cleanse Affliction', wand: { spellRef: 'cleanse-affliction' } },
+        { id: 'fancy-scroll', name: 'Fancy Scroll', image: 'img_own.jpg', scroll: { spellRef: 'friendfetch' } },
+      ]);
+
+      const scroll = resolveInventoryItem({ ref: 'scroll-friendfetch' }, artCatalog, inventorySpellMap);
+      expect(scroll.image).toBe('img_scroll.jpg');
+      expect(scroll.imagePosition).toEqual({ x: 10, y: 20 });
+
+      const wand = resolveInventoryItem({ ref: 'wand-cleanse' }, artCatalog, inventorySpellMap);
+      expect(wand.image).toBe('img_wand.jpg');
+      expect(wand.imagePosition).toBeUndefined(); // base set none
+
+      // Author override: the item's own image is kept, not the base's.
+      const fancy = resolveInventoryItem({ ref: 'fancy-scroll' }, artCatalog, inventorySpellMap);
+      expect(fancy.image).toBe('img_own.jpg');
+    });
+
+    it('leaves the image unset when no base item carries one', () => {
+      const scroll = resolveInventoryItem({ ref: 'scroll-friendfetch' }, catalog, inventorySpellMap);
+      expect(scroll.image).toBeUndefined();
+    });
   });
 
   describe('resolveInventory / resolveCharacterItems', () => {

@@ -45,6 +45,7 @@ vi.mock('../utils/InventoryUtils', () => ({
   ARMOR_CATEGORIES: ['unarmored', 'light', 'medium', 'heavy'],
   isArmor: (it) => !!it && !!it.armor,
   normalizeArmor: (a) => (a && typeof a === 'object' ? a : null),
+  baseSpellItemArt: () => null,
 }));
 
 describe('useCharacter', () => {

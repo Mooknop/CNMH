@@ -15,6 +15,7 @@ import {
   ARMOR_CATEGORIES,
   isArmor,
   normalizeArmor,
+  baseSpellItemArt,
 } from './InventoryUtils';
 
 describe('InventoryUtils', () => {
@@ -479,6 +480,27 @@ describe('InventoryUtils', () => {
 
     it('is false when HP/threshold are unknown', () => {
       expect(isShieldBroken({ bonus: 2, hardness: 5 })).toBe(false);
+    });
+  });
+
+  describe('baseSpellItemArt (#936)', () => {
+    const catalogMap = new Map([
+      ['magic-scroll', { id: 'magic-scroll', name: 'Magic Scroll', image: 'img_scroll.jpg', imagePosition: { x: 5, y: 5 } }],
+      ['magic-wand', { id: 'magic-wand', name: 'Magic Wand', image: 'img_wand.jpg' }],
+      ['magic-staff', { id: 'magic-staff', name: 'Magic Staff' }], // no image
+    ]);
+
+    it('returns the base item art for a kind', () => {
+      expect(baseSpellItemArt('scroll', catalogMap)).toEqual({ image: 'img_scroll.jpg', imagePosition: { x: 5, y: 5 } });
+      expect(baseSpellItemArt('wand', catalogMap)).toEqual({ image: 'img_wand.jpg', imagePosition: undefined });
+    });
+
+    it('returns null when the base item, its image, the kind, or the map is absent', () => {
+      expect(baseSpellItemArt('scroll', new Map())).toBeNull(); // no base item
+      expect(baseSpellItemArt('staff', new Map([['magic-staff', { id: 'magic-staff' }]]))).toBeNull(); // unknown kind
+      expect(baseSpellItemArt('wand', new Map([['magic-wand', { id: 'magic-wand' }]]))).toBeNull(); // base has no image
+      expect(baseSpellItemArt('scroll', null)).toBeNull();
+      expect(baseSpellItemArt('scroll', undefined)).toBeNull();
     });
   });
 });

@@ -479,6 +479,33 @@ describe('eligibleSpellItems — heightened offerings (#937)', () => {
   });
 });
 
+describe('eligibleSpellItems — base image (#936)', () => {
+  const artMap = new Map([
+    ['magic-scroll', { id: 'magic-scroll', image: 'img_scroll.jpg', imagePosition: { x: 1, y: 2 } }],
+    ['magic-wand', { id: 'magic-wand', image: 'img_wand.jpg' }],
+  ]);
+
+  it('stamps the base scroll image (+position) on every generated ware', () => {
+    const out = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog, artMap);
+    expect(out.length).toBeGreaterThan(0);
+    expect(out.every((e) => e.image === 'img_scroll.jpg')).toBe(true);
+    expect(out.every((e) => e.imagePosition && e.imagePosition.x === 1)).toBe(true);
+  });
+
+  it('stamps the wand image with no position when the base has none', () => {
+    const [heal] = eligibleSpellItems({ spellItem: 'wand', maxLevel: 3, traditions: ['divine'] }, spellCatalog, artMap);
+    expect(heal.image).toBe('img_wand.jpg');
+    expect(heal).not.toHaveProperty('imagePosition');
+  });
+
+  it('omits the image when no catalog (or base art) is supplied', () => {
+    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1 }, spellCatalog);
+    expect(sleep).not.toHaveProperty('image');
+    const [sleep2] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1 }, spellCatalog, new Map());
+    expect(sleep2).not.toHaveProperty('image');
+  });
+});
+
 describe('spellOfferingSummary', () => {
   it('summarises the default (all traditions, common only) coverage + count', () => {
     const s = spellOfferingSummary({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog);
