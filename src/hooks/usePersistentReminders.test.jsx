@@ -30,6 +30,9 @@ const content = vi.hoisted(() => ({
     { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
       { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
     ] },
+    { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [
+      { stat: 'weakness', amount: 5, vs: 'persistent-fire' },
+    ] },
   ],
   characters: [],
 }));
@@ -167,6 +170,35 @@ describe('usePersistentReminders (#272)', () => {
     setEncounter(hook, inProgress(1, 1));
     expect(reminderTexts()).toEqual([
       'Ashka: 1d6 persistent bleed, resistance 20 (reduce, min 0) — DC 10 flat check to end',
+    ]);
+  });
+
+  it("annotates a PC's weakness on the persistent tick from an active effect (#918)", () => {
+    mockEffects = { 'char-a': { effects: [{ id: 'u1', effectId: 'fire-vuln' }] } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0)); // Ashka's turn underway
+    seedMap(hook, { 'e-pc': [{ id: 'pd-1', dice: '1d6', type: 'fire', sourceName: 'Torch' }] });
+    setEncounter(hook, inProgress(1, 1)); // Ashka's turn ends
+    expect(reminderTexts()).toEqual([
+      'Ashka: 1d6 persistent fire, weakness 5 (add) — DC 15 flat check to end',
+    ]);
+  });
+
+  it("adds a PC's worn invested gear weakness to the tick (#918)", () => {
+    content.characters = [{
+      id: 'char-a', name: 'Ashka',
+      inventory: [{
+        uid: 'cursed', name: 'Cursed Brand', traits: ['Invested'],
+        modifiers: [{ stat: 'weakness', amount: 4, vs: 'persistent-fire' }],
+      }],
+    }];
+    mockEffects = { 'char-a': { invested: { cursed: true } } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0));
+    seedMap(hook, { 'e-pc': [{ id: 'pd-1', dice: '1d6', type: 'fire' }] });
+    setEncounter(hook, inProgress(1, 1));
+    expect(reminderTexts()).toEqual([
+      'Ashka: 1d6 persistent fire, weakness 4 (add) — DC 15 flat check to end',
     ]);
   });
 

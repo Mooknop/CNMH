@@ -98,16 +98,20 @@ export const EASED_RECOVERY_DC = 10;
 // distinguishable.
 export const persistentVsType = (inst) => `persistent-${inst?.type || ''}`;
 
-// Resistance context for one instance, as resolved by the caller from the
-// target's active effects (resistanceFor / flatCheckEasedFor in EffectUtils):
-//   { amount, easeFlatCheck }
-// `amount` reduces each tick's rolled damage (min 0 — the table rolls the dice,
-// so the reminder states the reduction); `easeFlatCheck` lowers the recovery DC.
+// Weakness/resistance context for one instance, as resolved by the caller from
+// the target's active effects (weaknessFor / resistanceFor / flatCheckEasedFor
+// in EffectUtils):
+//   { weakness, amount, easeFlatCheck }
+// `weakness` adds to each tick and `amount` (resistance) reduces it (min 0) — the
+// table rolls the dice, so the reminder just states the modifiers; `easeFlatCheck`
+// lowers the recovery DC.
 export const recoveryDc = (res) => (res?.easeFlatCheck ? EASED_RECOVERY_DC : RECOVERY_DC);
 
 export const formatReminder = (name, inst, res = null) => {
+  // PF2e order: weakness adds first, then resistance reduces.
+  const weakNote = res?.weakness ? `, weakness ${res.weakness} (add)` : '';
   const resNote = res?.amount ? `, resistance ${res.amount} (reduce, min 0)` : '';
-  return `${name}: ${describe(inst)}${resNote} — DC ${recoveryDc(res)} flat check to end`;
+  return `${name}: ${describe(inst)}${weakNote}${resNote} — DC ${recoveryDc(res)} flat check to end`;
 };
 
 export const formatClearance = (name, inst, how) =>

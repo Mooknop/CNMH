@@ -160,6 +160,15 @@ describe('formatters', () => {
     );
   });
 
+  it('annotates weakness before resistance, both in PF2e order (#918)', () => {
+    expect(
+      formatReminder('Goblin', { dice: '1d6', type: 'fire' }, { weakness: 5, amount: 0, easeFlatCheck: false })
+    ).toBe('Goblin: 1d6 persistent fire, weakness 5 (add) — DC 15 flat check to end');
+    expect(
+      formatReminder('Goblin', { dice: '1d6', type: 'fire' }, { weakness: 5, amount: 3, easeFlatCheck: false })
+    ).toBe('Goblin: 1d6 persistent fire, weakness 5 (add), resistance 3 (reduce, min 0) — DC 15 flat check to end');
+  });
+
   it('formats clearance for both paths', () => {
     expect(formatClearance('Goblin', { dice: '1d4', type: 'bleed' }, 'flat-check')).toBe(
       'Goblin: 1d4 persistent bleed ended (flat check)'
