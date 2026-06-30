@@ -302,7 +302,7 @@ describe('AdjustHpModal', () => {
 
       expect(__store['cnmh_hp_thorn'].current).toBe(17); // 20 - (8 - 5)
       expect(appendLogMock).toHaveBeenCalledWith(
-        expect.objectContaining({ charId: 'thorn', text: expect.stringMatching(/resisted fire.*8 → 3.*resistance 5/) })
+        expect.objectContaining({ charId: 'thorn', text: expect.stringMatching(/fire damage 8 → 3 \(resistance 5\)/) })
       );
     });
 
@@ -337,13 +337,70 @@ describe('AdjustHpModal', () => {
     it('previews the matching resistance beside the damage-type picker', () => {
       render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
       selectDamage('fire');
-      expect(screen.getByLabelText('resistance preview')).toHaveTextContent('resistance 5');
+      expect(screen.getByLabelText('damage modifier preview')).toHaveTextContent('resistance 5');
     });
 
     it('shows no preview for a non-matching type', () => {
       render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
       selectDamage('cold');
-      expect(screen.queryByLabelText('resistance preview')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('damage modifier preview')).not.toBeInTheDocument();
+    });
+  });
+
+  // ─── incoming typed weakness (#918) ─────────────────────────
+  describe('typed weakness on incoming damage (#918)', () => {
+    const WEAK_CATALOG = [
+      { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }] },
+      { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 5, vs: 'fire' }] },
+    ];
+
+    const selectDamage = (type) => {
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+      });
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      if (type) fireEvent.change(screen.getByLabelText('damage type'), { target: { value: type } });
+    };
+
+    beforeEach(() => {
+      __store['cnmh_hp_thorn'] = { ...THORN_HP }; // current 20
+    });
+
+    it('adds matching weakness to the incoming damage and logs it', () => {
+      resolvedHolder.value = { effects: [{ id: 'w1', effectId: 'fire-vuln' }], catalog: WEAK_CATALOG };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(7); // 20 - (8 + 5)
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ charId: 'thorn', text: expect.stringMatching(/fire damage 8 → 13 \(weakness 5\)/) })
+      );
+    });
+
+    it('sequences weakness then resistance (PF2e order) when both apply', () => {
+      resolvedHolder.value = {
+        effects: [{ id: 'w1', effectId: 'fire-vuln' }, { id: 'r1', effectId: 'fire-ward' }],
+        catalog: WEAK_CATALOG,
+      };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      // 8 + 5 weakness - 5 resistance = 8
+      expect(__store['cnmh_hp_thorn'].current).toBe(12);
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringMatching(/fire damage 8 → 8 \(weakness 5, resistance 5\)/) })
+      );
+    });
+
+    it('previews weakness beside the damage-type picker', () => {
+      resolvedHolder.value = { effects: [{ id: 'w1', effectId: 'fire-vuln' }], catalog: WEAK_CATALOG };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      expect(screen.getByLabelText('damage modifier preview')).toHaveTextContent('weakness 5');
     });
   });
 

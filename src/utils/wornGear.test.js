@@ -1,4 +1,4 @@
-import { wornResistanceFor, specialModifiers, itemModifiers } from './wornGear';
+import { wornResistanceFor, wornWeaknessFor, specialModifiers, itemModifiers } from './wornGear';
 
 // Invested by default in these fixtures unless a test overrides the predicate.
 const yes = () => true;
@@ -90,6 +90,34 @@ describe('wornResistanceFor (#922 S3)', () => {
       const robe = { uid: 'r', traits: ['Invested'], resistance: { amount: 5, type: 'fire' } };
       expect(wornResistanceFor([robe], () => true, 'fire')).toBe(5);
       expect(wornResistanceFor([robe], () => true, 'cold')).toBe(0);
+    });
+  });
+
+  // Weakness mirrors resistance — same gating, different stat (#918).
+  describe('wornWeaknessFor (#918)', () => {
+    const vuln = (overrides = {}) => robe({
+      uid: 'v', name: 'Cursed Mantle',
+      modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }],
+      ...overrides,
+    });
+
+    it('returns a worn invested weakness matching the type', () => {
+      expect(wornWeaknessFor([vuln()], yes, 'fire')).toBe(5);
+      expect(wornWeaknessFor([vuln()], yes, 'cold')).toBe(0);
+    });
+
+    it('takes the highest matching weakness and gates on investment', () => {
+      const items = [
+        vuln({ uid: 'a', modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }] }),
+        vuln({ uid: 'b', modifiers: [{ stat: 'weakness', amount: 10, vs: 'fire' }] }),
+      ];
+      expect(wornWeaknessFor(items, yes, 'fire')).toBe(10);
+      expect(wornWeaknessFor([vuln()], no, 'fire')).toBe(0); // investable, not invested
+    });
+
+    it('reads weakness only — not resistance', () => {
+      expect(wornWeaknessFor([robe()], yes, 'fire')).toBe(0); // robe is a resistance item
+      expect(wornResistanceFor([vuln()], yes, 'fire')).toBe(0);
     });
   });
 

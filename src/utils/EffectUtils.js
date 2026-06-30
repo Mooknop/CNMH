@@ -195,31 +195,25 @@ export function dexCapFor(activeEffects, catalog = PF2E_EFFECTS) {
 }
 
 /**
- * Highest damage resistance an active effect grants against a damage descriptor
- * (#900). A `resistance` modifier is a special, non-bonus modifier — like
- * `dexCap` it carries no bonus `kind` and never nets through
- * computeEffectBonuses (`stat: 'resistance'` isn't a bonus bucket). Its `vs`
- * field is a comma-separated list of descriptors it applies to (e.g.
- * `'persistent-bleed,persistent-poison'`); `vsType` is matched exactly against
- * one of those tokens. Per PF2e, resistance does NOT stack — the single highest
- * matching amount wins. Returns 0 when nothing matches.
+ * Highest amount of a special, non-bonus damage modifier (`resistance` /
+ * `weakness`) matching a damage descriptor. These stats carry no bonus `kind`,
+ * never net through computeEffectBonuses (`!buckets[stat]` drops them, like
+ * `dexCap`), and per PF2e do NOT stack — the single highest matching amount
+ * wins. A modifier's `vs` is a comma-separated descriptor list (e.g.
+ * `'persistent-bleed,persistent-poison'`) matched exactly against `vsType`.
  *
- * Generic over the descriptor so the persistent-tick path (`persistent-bleed`)
- * and a future general incoming-damage path (`fire`) share one reader.
- *
- * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
- * @param {string} vsType        - damage descriptor (e.g. 'persistent-bleed')
- * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
- * @returns {number} the highest matching resistance, or 0 if none
+ * Shared core of resistanceFor/weaknessFor (#900/#918), generic over the
+ * descriptor so the persistent-tick path (`persistent-bleed`) and the general
+ * incoming-damage path (`fire`) use one reader.
  */
-export function resistanceFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
+function highestSpecialFor(activeEffects, stat, vsType, catalog) {
   if (!activeEffects || activeEffects.length === 0 || !vsType) return 0;
   let best = 0;
   for (const entry of activeEffects) {
     const def = catalog.find((e) => e.id === entry.effectId);
     if (!def || !def.modifiers) continue;
     for (const mod of def.modifiers) {
-      if (mod.stat !== 'resistance' || !mod.vs) continue;
+      if (mod.stat !== stat || !mod.vs) continue;
       const types = String(mod.vs).split(',').map((t) => t.trim());
       if (!types.includes(vsType)) continue;
       const amount = typeof mod.amount === 'number' ? mod.amount : 0;
@@ -227,6 +221,35 @@ export function resistanceFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
     }
   }
   return best;
+}
+
+/**
+ * Highest damage resistance an active effect grants against `vsType` (#900) —
+ * reduces matching incoming/persistent damage. Returns 0 when nothing matches.
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {string} vsType        - damage descriptor (e.g. 'persistent-bleed')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {number} the highest matching resistance, or 0 if none
+ */
+export function resistanceFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
+  return highestSpecialFor(activeEffects, 'resistance', vsType, catalog);
+}
+
+/**
+ * Highest damage weakness an active effect imposes against `vsType` (#918) — the
+ * inverse of resistanceFor: a `weakness` modifier ADDS its amount to matching
+ * incoming/persistent damage. Like resistance it's a special non-bonus modifier
+ * and does NOT stack (highest matching wins). When both apply, the apply site
+ * sequences them (PF2e: weakness first, then resistance). Returns 0 if none.
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {string} vsType        - damage descriptor (e.g. 'fire')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {number} the highest matching weakness, or 0 if none
+ */
+export function weaknessFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
+  return highestSpecialFor(activeEffects, 'weakness', vsType, catalog);
 }
 
 /**

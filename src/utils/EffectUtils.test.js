@@ -5,6 +5,7 @@ import {
   conditionalTogglesFor,
   dexCapFor,
   resistanceFor,
+  weaknessFor,
   flatCheckEasedFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
@@ -479,6 +480,38 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
     expect(flatCheckEasedFor([entry('bb-lesser')], 'fire', cat)).toBe(false);
     expect(flatCheckEasedFor([], 'persistent-bleed', cat)).toBe(false);
     expect(flatCheckEasedFor(null, 'persistent-bleed', cat)).toBe(false);
+  });
+});
+
+describe('weaknessFor (#918)', () => {
+  const cat = [
+    { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }] },
+    { id: 'big-vuln', name: 'Greater Vulnerability', modifiers: [{ stat: 'weakness', amount: 10, vs: 'fire,cold' }] },
+    { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 10, vs: 'fire' }] },
+    { id: 'no-vs', name: 'Bad Weakness', modifiers: [{ stat: 'weakness', amount: 99 }] },
+  ];
+
+  it('returns the matching weakness amount for a descriptor in the vs list', () => {
+    expect(weaknessFor([entry('fire-vuln')], 'fire', cat)).toBe(5);
+    expect(weaknessFor([entry('big-vuln')], 'cold', cat)).toBe(10);
+  });
+
+  it('does not stack — highest matching amount wins', () => {
+    expect(weaknessFor([entry('fire-vuln'), entry('big-vuln')], 'fire', cat)).toBe(10);
+  });
+
+  it('reads weakness only — ignores resistance modifiers and vice versa', () => {
+    expect(weaknessFor([entry('fire-ward')], 'fire', cat)).toBe(0);
+    expect(resistanceFor([entry('fire-vuln')], 'fire', cat)).toBe(0);
+  });
+
+  it('returns 0 for non-matching, vs-less, empty, null, or unknown effects', () => {
+    expect(weaknessFor([entry('fire-vuln')], 'cold', cat)).toBe(0);
+    expect(weaknessFor([entry('no-vs')], 'fire', cat)).toBe(0);
+    expect(weaknessFor([], 'fire', cat)).toBe(0);
+    expect(weaknessFor(null, 'fire', cat)).toBe(0);
+    expect(weaknessFor([entry('nope')], 'fire', cat)).toBe(0);
+    expect(weaknessFor([entry('fire-vuln')], '', cat)).toBe(0);
   });
 });
 

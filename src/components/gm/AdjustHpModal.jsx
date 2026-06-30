@@ -9,7 +9,7 @@ import { useSummons } from '../../hooks/useSummons';
 import { useEncounter } from '../../hooks/useEncounter';
 import { minionRoster } from '../../utils/minionUtils';
 import { DAMAGE_TYPES } from '../../utils/damage';
-import { clearsOnDamageType, resistanceFor } from '../../utils/EffectUtils';
+import { clearsOnDamageType, resistanceFor, weaknessFor } from '../../utils/EffectUtils';
 import PF2E_EFFECTS from '../../data/pf2eEffects';
 import './AdjustHpModal.css';
 
@@ -75,13 +75,16 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
     : sel?.kind === 'summon' ? { ...getSummonHp(sel.entryId), temp: 0 }
     : charHp;
 
-  // Preview of the resistance that will mitigate the entered typed damage (#900),
-  // surfaced beside the damage-type picker. PCs only — minions/summons carry no
-  // effects here.
-  const previewResistance = useMemo(
+  // Preview of the weakness/resistance that will modify the entered typed damage
+  // (#900/#918), surfaced beside the damage-type picker. PCs only — minions/
+  // summons carry no effects here.
+  const preview = useMemo(
     () => (sel?.kind === 'char' && mode === 'damage' && damageType
-      ? resistanceFor(resolvedEffects, damageType, resolvedCatalog)
-      : 0),
+      ? {
+          weakness: weaknessFor(resolvedEffects, damageType, resolvedCatalog),
+          resistance: resistanceFor(resolvedEffects, damageType, resolvedCatalog),
+        }
+      : { weakness: 0, resistance: 0 }),
     [sel?.kind, mode, damageType, resolvedEffects, resolvedCatalog],
   );
 
@@ -98,15 +101,19 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
         : { current: Math.max(0, hp.current - n), max: hp.max };
       setSummonHp(sel.entryId, next);
     } else {
-      // General typed resistance on incoming damage (#900 stretch). The highest
-      // applicable `resistance` effect for this damage type reduces the hit
-      // before temp HP absorbs it (resistance doesn't stack; floors at 0).
-      // Reads the resolved set (app + Foundry + worn gear, #922 S2).
+      // Typed weakness/resistance on incoming damage (#900/#918). Reads the
+      // resolved set (app + Foundry + worn gear). Per PF2e, weakness ADDS first
+      // and resistance REDUCES after, on the running total; floors at 0. Neither
+      // stacks (highest matching applies). Applied before temp HP absorbs it.
+      const weak =
+        mode === 'damage' && damageType
+          ? weaknessFor(resolvedEffects, damageType, resolvedCatalog)
+          : 0;
       const resisted =
         mode === 'damage' && damageType
           ? resistanceFor(resolvedEffects, damageType, resolvedCatalog)
           : 0;
-      const incoming = Math.max(0, n - resisted);
+      const incoming = Math.max(0, n + weak - resisted);
 
       let newHp;
       if (mode === 'heal') {
@@ -122,12 +129,15 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
       }
       setCharHp(newHp);
 
-      if (resisted > 0) {
+      if (weak > 0 || resisted > 0) {
         const charName = (characters || []).find((c) => c.id === sel.id)?.name || 'Character';
+        const parts = [];
+        if (weak > 0) parts.push(`weakness ${weak}`);
+        if (resisted > 0) parts.push(`resistance ${resisted}`);
         appendLog({
           type: 'action',
           charId: sel.id,
-          text: `${charName} resisted ${damageType} damage — ${n} → ${incoming} (resistance ${resisted})`,
+          text: `${charName}: ${damageType} damage ${n} → ${incoming} (${parts.join(', ')})`,
         });
       }
 
@@ -245,9 +255,12 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
-                {previewResistance > 0 && (
-                  <span className="adj-hp-resist-note" aria-label="resistance preview">
-                    resistance {previewResistance}
+                {(preview.weakness > 0 || preview.resistance > 0) && (
+                  <span className="adj-hp-resist-note" aria-label="damage modifier preview">
+                    {[
+                      preview.weakness > 0 ? `weakness ${preview.weakness}` : null,
+                      preview.resistance > 0 ? `resistance ${preview.resistance}` : null,
+                    ].filter(Boolean).join(' · ')}
                   </span>
                 )}
               </div>

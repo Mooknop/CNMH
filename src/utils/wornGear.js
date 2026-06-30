@@ -46,24 +46,17 @@ export const specialModifiers = (mods) =>
 const contributes = (e, isInvested) =>
   isWornDefault(e) && !(isInvestable(e) && !isInvested(e.uid));
 
-/**
- * Highest worn-gear resistance to a damage descriptor across a character's
- * effective inventory (resistance doesn't stack — the single highest matching
- * amount wins). `vsType` is matched exactly against one of the comma-separated
- * tokens in each modifier's `vs` (e.g. 'fire', 'persistent-bleed').
- *
- * @param {Array}    inventory  - effective (state-stamped) inventory
- * @param {Function} isInvested - (uid) => boolean
- * @param {string}   vsType     - damage descriptor
- * @returns {number} highest matching resistance, or 0
- */
-export const wornResistanceFor = (inventory, isInvested, vsType) => {
+// Highest worn-gear amount of a special stat (`resistance` / `weakness`) to a
+// damage descriptor across a character's effective inventory — doesn't stack, so
+// the single highest matching amount wins. `vsType` is matched exactly against
+// one of the comma-separated tokens in each modifier's `vs`.
+const highestWornSpecial = (inventory, isInvested, stat, vsType) => {
   if (!vsType) return 0;
   let best = 0;
   for (const e of Array.isArray(inventory) ? inventory : []) {
     if (!contributes(e, isInvested)) continue;
     for (const m of specialModifiers(itemModifiers(e))) {
-      if (m.stat !== 'resistance') continue;
+      if (m.stat !== stat) continue;
       const types = String(m.vs).split(',').map((t) => t.trim());
       if (types.includes(vsType) && typeof m.amount === 'number' && m.amount > best) {
         best = m.amount;
@@ -72,3 +65,27 @@ export const wornResistanceFor = (inventory, isInvested, vsType) => {
   }
   return best;
 };
+
+/**
+ * Highest worn-gear resistance to a damage descriptor (#900/#922). Reduces
+ * matching incoming/persistent damage.
+ *
+ * @param {Array}    inventory  - effective (state-stamped) inventory
+ * @param {Function} isInvested - (uid) => boolean
+ * @param {string}   vsType     - damage descriptor (e.g. 'fire', 'persistent-bleed')
+ * @returns {number} highest matching resistance, or 0
+ */
+export const wornResistanceFor = (inventory, isInvested, vsType) =>
+  highestWornSpecial(inventory, isInvested, 'resistance', vsType);
+
+/**
+ * Highest worn-gear weakness to a damage descriptor (#918) — the inverse of
+ * wornResistanceFor; adds to matching incoming/persistent damage.
+ *
+ * @param {Array}    inventory  - effective (state-stamped) inventory
+ * @param {Function} isInvested - (uid) => boolean
+ * @param {string}   vsType     - damage descriptor
+ * @returns {number} highest matching weakness, or 0
+ */
+export const wornWeaknessFor = (inventory, isInvested, vsType) =>
+  highestWornSpecial(inventory, isInvested, 'weakness', vsType);
