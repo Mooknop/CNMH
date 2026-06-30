@@ -12233,6 +12233,32 @@
             "durationMinutes": 10,
             "note": "+2 mental/RK skills; −2 attacks, Athletics, Acrobatics (10 min)"
           }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Cognitive Mutagen (Greater)",
+          "price": 300,
+          "effect": "The item bonus is +3.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "cognitive-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 mental/RK skills; −2 attacks, Athletics, Acrobatics (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Cognitive Mutagen (Major)",
+          "price": 3000,
+          "effect": "The item bonus is +4.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "cognitive-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 mental/RK skills; −2 attacks, Athletics, Acrobatics (1 hr)"
+          }
         }
       ],
       "id": "cognitive-mutagen"
@@ -12274,6 +12300,32 @@
             "effectId": "juggernaut-mutagen-moderate",
             "durationMinutes": 10,
             "note": "+2 Fort, 10 temp HP; −2 Will, Perception, initiative (10 min)"
+          }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Juggernaut Mutagen (Greater)",
+          "price": 300,
+          "effect": "The bonus is +3 and you gain 30 temporary HP.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "juggernaut-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 Fort, 30 temp HP; −2 Will, Perception, initiative (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Juggernaut Mutagen (Major)",
+          "price": 3000,
+          "effect": "The bonus is +4 and you gain 45 temporary HP.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "juggernaut-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 Fort, 45 temp HP; −2 Will, Perception, initiative (1 hr)"
           }
         }
       ],
@@ -12317,6 +12369,32 @@
             "durationMinutes": 10,
             "note": "+2 Acro/Stealth/Thievery/Reflex/Dex-attacks, +10 ft Speed; −2 Fort (10 min)"
           }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Quicksilver Mutagen (Greater)",
+          "price": 300,
+          "effect": "The item bonus is +3 and the Speed bonus is +15 feet.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "quicksilver-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 Acro/Stealth/Thievery/Reflex/Dex-attacks, +15 ft Speed; −2 Fort (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Quicksilver Mutagen (Major)",
+          "price": 3000,
+          "effect": "The item bonus is +4 and the Speed bonus is +20 feet.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "quicksilver-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 Acro/Stealth/Thievery/Reflex/Dex-attacks, +20 ft Speed; −2 Fort (1 hr)"
+          }
         }
       ],
       "id": "quicksilver-mutagen"
@@ -12358,6 +12436,32 @@
             "effectId": "sanguine-mutagen-moderate",
             "durationMinutes": 10,
             "note": "+2 Fort & Reflex (+3 vs disease/poison/fatigue); 1d6 bleed when cut (10 min)"
+          }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Sanguine Mutagen (Greater)",
+          "price": 300,
+          "effect": "The bonus is +3 (+4 vs disease/poison/fatigue).",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "sanguine-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 Fort/Reflex (+4 vs disease/poison/fatigue); 1d6 bleed when pierced or slashed (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Sanguine Mutagen (Major)",
+          "price": 3000,
+          "effect": "The bonus is +4.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "sanguine-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 Fort/Reflex; success→crit success vs disease/poison/fatigue; 1d6 bleed when pierced or slashed (1 hr)"
           }
         }
       ],
@@ -12401,6 +12505,32 @@
             "durationMinutes": 10,
             "note": "+2 Will/Perception/Med/Nat/Rel/Survival; −1 attacks & offensive spell DCs & damage/die (10 min)"
           }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Serene Mutagen (Greater)",
+          "price": 300,
+          "effect": "The item bonus is +3.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "serene-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 Will/Perception/Medicine/Nature/Religion/Survival; −1 attacks & spell DC, −1/die damage (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Serene Mutagen (Major)",
+          "price": 3000,
+          "effect": "The item bonus is +4.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "serene-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 Will/Perception/Medicine/Nature/Religion/Survival; −1 attacks & spell DC, −1/die damage (1 hr)"
+          }
         }
       ],
       "id": "serene-mutagen"
@@ -12443,6 +12573,32 @@
             "durationMinutes": 10,
             "note": "+2 Deception/Diplomacy/Intimidation/Performance; −2 knowledge skills, lose a trained skill (10 min)"
           }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Silvertongue Mutagen (Greater)",
+          "price": 300,
+          "effect": "The item bonus is +3.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "silvertongue-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 Deception/Diplomacy/Intimidation/Performance; −2 knowledge skills, lose a trained skill (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Silvertongue Mutagen (Major)",
+          "price": 3000,
+          "effect": "The item bonus is +4.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "silvertongue-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 Deception/Diplomacy/Intimidation/Performance; −2 knowledge skills, lose a trained skill (1 hr)"
+          }
         }
       ],
       "id": "silvertongue-mutagen"
@@ -12484,6 +12640,32 @@
             "effectId": "theatrical-mutagen-moderate",
             "durationMinutes": 10,
             "note": "+2 Acro/Crafting/Performance, +5 ft Speed, untrained at level; −1 Perception & Will, off-guard if idle (10 min)"
+          }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Theatrical Mutagen (Greater)",
+          "price": 300,
+          "effect": "The item bonus is +3 and the Speed bonus is +10 feet.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "theatrical-mutagen-greater",
+            "durationMinutes": 10,
+            "note": "+3 Acro/Crafting/Performance, +10 ft Speed, untrained at level; −1 Per/Will, off-guard unless you act (10 min)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Theatrical Mutagen (Major)",
+          "price": 3000,
+          "effect": "The item bonus is +4 and the Speed bonus is +10 feet.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "theatrical-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 Acro/Crafting/Performance, +10 ft Speed, untrained at level; −1 Per/Will, off-guard unless you act (1 hr)"
           }
         }
       ],
@@ -12528,6 +12710,32 @@
             "durationMinutes": 10,
             "note": "+2 attacks (chosen melee weapon, bound to hand); +2 Will vs fear; concentrate DC 5 flat (10 min)"
           }
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "War Blood Mutagen (Greater)",
+          "price": 300,
+          "effect": "The bonus is +3.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "war-blood-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "+3 attack (bound melee weapon), +3 Will vs fear; DC 30 to remove, DC 5 flat for concentrate (1 hr)"
+          }
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "War Blood Mutagen (Major)",
+          "price": 3000,
+          "effect": "The bonus is +4.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "war-blood-mutagen-major",
+            "durationMinutes": 60,
+            "note": "+4 attack (bound melee weapon), +4 Will vs fear; DC 30 to remove, DC 5 flat for concentrate (1 hr)"
+          }
         }
       ],
       "id": "war-blood-mutagen"
@@ -12551,7 +12759,8 @@
         "durationMinutes": 1,
         "note": "+2 visual Perception, all-around vision (unflankable), low-light; −2 saves vs visual (1 min)"
       },
-      "id": "ommatophoric-mutagen"
+      "id": "ommatophoric-mutagen",
+      "level": 7
     },
     {
       "name": "Ichthyosis Mutagen",
@@ -12572,10 +12781,11 @@
         "durationMinutes": 1,
         "note": "Fast healing 2, auto-recover persistent bleed; −2 Reflex; trackable +4 for 24 hr (1 min)"
       },
-      "id": "ichthyosis-mutagen"
+      "id": "ichthyosis-mutagen",
+      "level": 5
     },
     {
-      "name": "Stone Body Mutagen (Lesser)",
+      "name": "Stone Body Mutagen",
       "description": "This mutagen calcifies your body, making it as hard as stone — turning aside blades and points at the cost of speed and agility.",
       "traits": [
         "Alchemical",
@@ -12586,13 +12796,48 @@
       ],
       "price": 22,
       "weight": 0.1,
-      "consumable": {
-        "kind": "effect",
-        "effectId": "stone-body-mutagen-lesser",
-        "durationMinutes": 10,
-        "note": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (10 min)"
-      },
-      "id": "stone-body-mutagen-lesser"
+      "id": "stone-body-mutagen",
+      "variants": [
+        {
+          "level": 5,
+          "label": "Lesser",
+          "name": "Stone Body Mutagen (Lesser)",
+          "price": 22,
+          "effect": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "stone-body-mutagen-lesser",
+            "durationMinutes": 10,
+            "note": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (10 min)"
+          }
+        },
+        {
+          "level": 12,
+          "label": "Moderate",
+          "name": "Stone Body Mutagen (Moderate)",
+          "price": 300,
+          "effect": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "stone-body-mutagen-moderate",
+            "durationMinutes": 60,
+            "note": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (1 hr)"
+          }
+        },
+        {
+          "level": 15,
+          "label": "Greater",
+          "name": "Stone Body Mutagen (Greater)",
+          "price": 920,
+          "effect": "Resistance 10 to physical (except bludgeoning); −10 ft Speed; −2 Reflex.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "stone-body-mutagen-greater",
+            "durationMinutes": 60,
+            "note": "Resistance 10 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (1 hr)"
+          }
+        }
+      ]
     },
     {
       "name": "Acid Flask",
@@ -12654,6 +12899,56 @@
               "actionCount": 1,
               "range": "20 feet",
               "description": "Deals 1 acid on a direct hit, 2d6 persistent acid, and 2 acid splash."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Acid Flask (Greater)",
+          "price": 250,
+          "effect": "1 acid, 3d6 persistent acid, 3 splash",
+          "strikes": [
+            {
+              "name": "Acid Flask",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 persistent acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 acid on a direct hit, 3d6 persistent acid, and 3 acid splash."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Acid Flask (Major)",
+          "price": 2500,
+          "effect": "1 acid, 4d6 persistent acid, 4 splash",
+          "strikes": [
+            {
+              "name": "Acid Flask",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 persistent acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 acid on a direct hit, 4d6 persistent acid, and 4 acid splash."
             }
           ]
         }
@@ -12722,6 +13017,56 @@
               "description": "Deals 2d8 fire, 2 persistent fire, and 2 fire splash."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Alchemist's Fire (Greater)",
+          "price": 250,
+          "effect": "3d8 fire, 3 persistent fire, 3 splash",
+          "strikes": [
+            {
+              "name": "Alchemist's Fire",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d8 fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d8 fire, 3 persistent fire, and 3 fire splash."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Alchemist's Fire (Major)",
+          "price": 2500,
+          "effect": "4d8 fire, 4 persistent fire, 4 splash",
+          "strikes": [
+            {
+              "name": "Alchemist's Fire",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d8 fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d8 fire, 4 persistent fire, and 4 fire splash."
+            }
+          ]
         }
       ],
       "id": "alchemists-fire"
@@ -12788,6 +13133,56 @@
               "description": "Deals 2d4 poison, 2d4 persistent poison, and 2 poison splash."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Blight Bomb (Greater)",
+          "price": 250,
+          "effect": "3d4 poison, 3d4 persistent poison, 3 splash",
+          "strikes": [
+            {
+              "name": "Blight Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 poison",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d4 poison, 3d4 persistent poison, and 3 poison splash."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Blight Bomb (Major)",
+          "price": 2500,
+          "effect": "4d4 poison, 4d4 persistent poison, 4 splash",
+          "strikes": [
+            {
+              "name": "Blight Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 poison",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d4 poison, 4d4 persistent poison, and 4 poison splash."
+            }
+          ]
         }
       ],
       "id": "blight-bomb"
@@ -12852,6 +13247,56 @@
               "actionCount": 1,
               "range": "20 feet",
               "description": "Deals 2d6 electricity and 2 electricity splash; on a hit the target is off-guard until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Bottled Lightning (Greater)",
+          "price": 250,
+          "effect": "3d6 electricity, 3 splash; off-guard on hit",
+          "strikes": [
+            {
+              "name": "Bottled Lightning",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 electricity",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Electricity",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 electricity and 3 electricity splash; on a hit the target is off-guard until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Bottled Lightning (Major)",
+          "price": 2500,
+          "effect": "4d6 electricity, 4 splash; off-guard on hit",
+          "strikes": [
+            {
+              "name": "Bottled Lightning",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 electricity",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Electricity",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 electricity and 4 electricity splash; on a hit the target is off-guard until the start of your next turn."
             }
           ]
         }
@@ -12923,6 +13368,56 @@
               "description": "Deals 2d6 mental and 2 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit)."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Dread Ampoule (Greater)",
+          "price": 300,
+          "effect": "3d6 mental, 3 splash; frightened 1 (2 on crit)",
+          "strikes": [
+            {
+              "name": "Dread Ampoule",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 mental",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Mental",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 mental and 3 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit)."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Dread Ampoule (Major)",
+          "price": 3000,
+          "effect": "4d6 mental, 4 splash; frightened 1 (2 on crit)",
+          "strikes": [
+            {
+              "name": "Dread Ampoule",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 mental",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Mental",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 mental and 4 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit)."
+            }
+          ]
         }
       ],
       "id": "dread-ampoule"
@@ -12987,6 +13482,56 @@
               "actionCount": 1,
               "range": "20 feet",
               "description": "Deals 2d6 cold and 2 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Frost Vial (Greater)",
+          "price": 250,
+          "effect": "3d6 cold, 3 splash; −5 ft Speed on hit",
+          "strikes": [
+            {
+              "name": "Frost Vial",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 cold",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Cold",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 cold and 3 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Frost Vial (Major)",
+          "price": 2500,
+          "effect": "4d6 cold, 4 splash; −5 ft Speed on hit",
+          "strikes": [
+            {
+              "name": "Frost Vial",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 cold",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Cold",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 cold and 4 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn."
             }
           ]
         }
@@ -13055,6 +13600,56 @@
               "description": "Deals 2d8 vitality and 2 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Ghost Charge (Greater)",
+          "price": 250,
+          "effect": "3d8 vitality, 3 splash; enfeebled 1 on hit",
+          "strikes": [
+            {
+              "name": "Ghost Charge",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d8 vitality",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Vitality",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d8 vitality and 3 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Ghost Charge (Major)",
+          "price": 2500,
+          "effect": "4d8 vitality, 4 splash; enfeebled 1 on hit",
+          "strikes": [
+            {
+              "name": "Ghost Charge",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d8 vitality",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Vitality",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d8 vitality and 4 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn."
+            }
+          ]
         }
       ],
       "id": "ghost-charge"
@@ -13113,6 +13708,52 @@
               "actionCount": 1,
               "range": "20 feet",
               "description": "Deals no damage. On a hit the target takes a −10-foot status penalty to its Speed for 1 minute; on a critical hit it is immobilized for 1 round (Escape DC 17)."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Glue Bomb (Greater)",
+          "price": 250,
+          "effect": "No damage; −15 ft Speed; crit immobilized (Escape DC 28)",
+          "strikes": [
+            {
+              "name": "Glue Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "—",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals no damage. On a hit the target takes a −15-foot status penalty to its Speed for 1 minute; on a critical hit it is immobilized for 1 round (Escape DC 28)."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Glue Bomb (Major)",
+          "price": 2500,
+          "effect": "No damage; −20 ft Speed; crit immobilized (Escape DC 37)",
+          "strikes": [
+            {
+              "name": "Glue Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "—",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals no damage. On a hit the target takes a −20-foot status penalty to its Speed for 1 minute; on a critical hit it is immobilized for 1 round (Escape DC 37)."
             }
           ]
         }
@@ -13182,6 +13823,56 @@
               "description": "Deals 2d4 acid, 2 persistent acid, and 2 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions)."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Goo Grenade (Greater)",
+          "price": 250,
+          "effect": "3d4 acid, 3 persistent acid, 3 splash; −5 Speed (Escape DC 15)",
+          "strikes": [
+            {
+              "name": "Goo Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d4 acid, 3 persistent acid, and 3 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions)."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Goo Grenade (Major)",
+          "price": 2500,
+          "effect": "4d4 acid, 4 persistent acid, 4 splash; −5 Speed (Escape DC 15)",
+          "strikes": [
+            {
+              "name": "Goo Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d4 acid, 4 persistent acid, and 4 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions)."
+            }
+          ]
         }
       ],
       "id": "goo-grenade"
@@ -13247,6 +13938,56 @@
               "actionCount": 1,
               "range": "20 feet",
               "description": "Deals 2d6 bludgeoning and 2 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Mud Bomb (Greater)",
+          "price": 250,
+          "effect": "3d6 bludgeoning, 3 splash; crit dazzled",
+          "strikes": [
+            {
+              "name": "Mud Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Bludgeoning",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 bludgeoning and 3 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Mud Bomb (Major)",
+          "price": 2500,
+          "effect": "4d6 bludgeoning, 4 splash; crit dazzled",
+          "strikes": [
+            {
+              "name": "Mud Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Bludgeoning",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 bludgeoning and 4 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn."
             }
           ]
         }
@@ -13315,6 +14056,56 @@
               "description": "Deals 2d6 void and 2 void splash; on a critical hit the target is sickened 1."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Necrotic Bomb (Greater)",
+          "price": 250,
+          "effect": "3d6 void, 3 splash; crit sickened 1",
+          "strikes": [
+            {
+              "name": "Necrotic Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 void",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Void",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 void and 3 void splash; on a critical hit the target is sickened 1."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Necrotic Bomb (Major)",
+          "price": 2500,
+          "effect": "4d6 void, 4 splash; crit sickened 1",
+          "strikes": [
+            {
+              "name": "Necrotic Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 void",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Void",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 void and 4 void splash; on a critical hit the target is sickened 1."
+            }
+          ]
         }
       ],
       "id": "necrotic-bomb"
@@ -13362,7 +14153,7 @@
           "label": "Moderate",
           "name": "Pernicious Spore Bomb (Moderate)",
           "price": 10,
-          "effect": "1 poison, 2d4 persistent piercing, 2 splash; difficult terrain",
+          "effect": "2 poison, 2d4 persistent piercing, 2 splash; difficult terrain",
           "strikes": [
             {
               "name": "Pernicious Spore Bomb",
@@ -13378,7 +14169,57 @@
               ],
               "actionCount": 1,
               "range": "20 feet",
-              "description": "Deals 1 poison on a direct hit, 2d4 persistent piercing, and 2 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
+              "description": "Deals 2 poison on a direct hit, 2d4 persistent piercing, and 2 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Pernicious Spore Bomb (Greater)",
+          "price": 250,
+          "effect": "3 poison, 3d4 persistent piercing, 3 splash; difficult terrain",
+          "strikes": [
+            {
+              "name": "Pernicious Spore Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 persistent piercing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3 poison on a direct hit, 3d4 persistent piercing, and 3 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Pernicious Spore Bomb (Major)",
+          "price": 2500,
+          "effect": "4 poison, 4d4 persistent piercing, 4 splash; difficult terrain",
+          "strikes": [
+            {
+              "name": "Pernicious Spore Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 persistent piercing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4 poison on a direct hit, 4d4 persistent piercing, and 4 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
             }
           ]
         }
@@ -13447,6 +14288,56 @@
               "description": "Deals 2d6 piercing and 2 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Peshpine Grenade (Greater)",
+          "price": 250,
+          "effect": "3d6 piercing, 3 splash; stupefied on hit",
+          "strikes": [
+            {
+              "name": "Peshpine Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 piercing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Piercing",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 piercing and 3 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Peshpine Grenade (Major)",
+          "price": 2500,
+          "effect": "4d6 piercing, 4 splash; stupefied on hit",
+          "strikes": [
+            {
+              "name": "Peshpine Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 piercing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Piercing",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 piercing and 4 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn."
+            }
+          ]
         }
       ],
       "id": "peshpine-grenade"
@@ -13494,7 +14385,7 @@
           "label": "Moderate",
           "name": "Redpitch Bomb (Moderate)",
           "price": 10,
-          "effect": "1 fire, 2d4 persistent fire, 2 splash; crit clumsy 1",
+          "effect": "2 fire, 2d4 persistent fire, 2 splash; crit clumsy 1",
           "strikes": [
             {
               "name": "Redpitch Bomb",
@@ -13510,7 +14401,57 @@
               ],
               "actionCount": 1,
               "range": "20 feet",
-              "description": "Deals 1 fire on a direct hit, 2d4 persistent fire, and 2 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
+              "description": "Deals 2 fire on a direct hit, 2d4 persistent fire, and 2 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Redpitch Bomb (Greater)",
+          "price": 250,
+          "effect": "3 fire, 3d4 persistent fire, 3 splash; crit clumsy 1",
+          "strikes": [
+            {
+              "name": "Redpitch Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 persistent fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3 fire on a direct hit, 3d4 persistent fire, and 3 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Redpitch Bomb (Major)",
+          "price": 2500,
+          "effect": "4 fire, 4d4 persistent fire, 4 splash; crit clumsy 1",
+          "strikes": [
+            {
+              "name": "Redpitch Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 persistent fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4 fire on a direct hit, 4d4 persistent fire, and 4 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
             }
           ]
         }
@@ -13580,6 +14521,56 @@
               "description": "Deals 2d8 fire and 2 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Star Grenade (Greater)",
+          "price": 250,
+          "effect": "3d8 fire, 3 splash; cross-shaped burst",
+          "strikes": [
+            {
+              "name": "Star Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d8 fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d8 fire and 3 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Star Grenade (Major)",
+          "price": 2500,
+          "effect": "4d8 fire, 4 splash; cross-shaped burst",
+          "strikes": [
+            {
+              "name": "Star Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d8 fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d8 fire and 4 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target."
+            }
+          ]
         }
       ],
       "id": "star-grenade"
@@ -13646,6 +14637,56 @@
               "description": "Deals no direct damage; 2d4 persistent fire and 2 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Tallow Bomb (Greater)",
+          "price": 250,
+          "effect": "3d4 persistent fire, 3 splash; crit sickened 1 (locked)",
+          "strikes": [
+            {
+              "name": "Tallow Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 persistent fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals no direct damage; 3d4 persistent fire and 3 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Tallow Bomb (Major)",
+          "price": 2500,
+          "effect": "4d4 persistent fire, 4 splash; crit sickened 1 (locked)",
+          "strikes": [
+            {
+              "name": "Tallow Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 persistent fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals no direct damage; 4d4 persistent fire and 4 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts."
+            }
+          ]
         }
       ],
       "id": "tallow-bomb"
@@ -13696,13 +14737,13 @@
           "label": "Moderate",
           "name": "Water Bomb (Moderate)",
           "price": 10,
-          "effect": "1 nonlethal bludgeoning, 2 splash; douses fire",
+          "effect": "1d4 nonlethal bludgeoning, 2 splash; douses fire",
           "strikes": [
             {
               "name": "Water Bomb",
               "proficiency": "martial",
               "type": "ranged",
-              "damage": "1 nonlethal bludgeoning",
+              "damage": "1d4 nonlethal bludgeoning",
               "traits": [
                 "Attack",
                 "Bomb",
@@ -13713,7 +14754,59 @@
               ],
               "actionCount": 1,
               "range": "20 feet",
-              "description": "Deals 1 nonlethal bludgeoning and 2 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
+              "description": "Deals 1d4 nonlethal bludgeoning and 2 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Water Bomb (Greater)",
+          "price": 250,
+          "effect": "2d4 nonlethal bludgeoning, 3 splash; douses fire",
+          "strikes": [
+            {
+              "name": "Water Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 nonlethal bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Nonlethal",
+                "Splash",
+                "Bludgeoning",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d4 nonlethal bludgeoning and 3 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Water Bomb (Major)",
+          "price": 2500,
+          "effect": "3d4 nonlethal bludgeoning, 4 splash; douses fire",
+          "strikes": [
+            {
+              "name": "Water Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 nonlethal bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Nonlethal",
+                "Splash",
+                "Bludgeoning",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d4 nonlethal bludgeoning and 4 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
             }
           ]
         }
@@ -13783,6 +14876,56 @@
               "description": "Deals 2d4 bludgeoning and 2 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Pressure Bomb (Greater)",
+          "price": 275,
+          "effect": "3d4 bludgeoning, 3 splash; crit prone",
+          "strikes": [
+            {
+              "name": "Pressure Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Force",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d4 bludgeoning and 3 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Pressure Bomb (Major)",
+          "price": 2750,
+          "effect": "4d4 bludgeoning, 4 splash; crit prone",
+          "strikes": [
+            {
+              "name": "Pressure Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Force",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d4 bludgeoning and 4 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet."
+            }
+          ]
         }
       ],
       "id": "pressure-bomb"
@@ -13847,6 +14990,56 @@
               "actionCount": 1,
               "range": "20 feet",
               "description": "Deals 2d8 poison and 2 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water)."
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Sticky Algae Bomb (Greater)",
+          "price": 280,
+          "effect": "3d8 poison, 3 splash; leaves a glowing trail (track DC 19, in water)",
+          "strikes": [
+            {
+              "name": "Sticky Algae Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d8 poison",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d8 poison and 3 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water)."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Sticky Algae Bomb (Major)",
+          "price": 2800,
+          "effect": "4d8 poison, 4 splash; leaves a glowing trail (track DC 19, in water)",
+          "strikes": [
+            {
+              "name": "Sticky Algae Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d8 poison",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d8 poison and 4 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water)."
             }
           ]
         }
@@ -13917,6 +15110,56 @@
               "description": "Deals 2d4 acid and 2 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Sulfur Bomb (Greater)",
+          "price": 275,
+          "effect": "3d4 acid, 3 splash; −1 Perception & attacks; crit sickened 1",
+          "strikes": [
+            {
+              "name": "Sulfur Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d4 acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d4 acid and 3 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Sulfur Bomb (Major)",
+          "price": 2750,
+          "effect": "4d4 acid, 4 splash; −1 Perception & attacks; crit sickened 1",
+          "strikes": [
+            {
+              "name": "Sulfur Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d4 acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d4 acid and 4 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1."
+            }
+          ]
         }
       ],
       "id": "sulfur-bomb"
@@ -13985,6 +15228,56 @@
               "description": "Deals 2d6 mental and 2 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit)."
             }
           ]
+        },
+        {
+          "level": 11,
+          "label": "Greater",
+          "name": "Vexing Vapor (Greater)",
+          "price": 300,
+          "effect": "3d6 mental, 3 splash; DC 5 flat to Concentrate",
+          "strikes": [
+            {
+              "name": "Vexing Vapor",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 mental",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Mental",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 mental and 3 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit)."
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "label": "Major",
+          "name": "Vexing Vapor (Major)",
+          "price": 3000,
+          "effect": "4d6 mental, 4 splash; DC 5 flat to Concentrate",
+          "strikes": [
+            {
+              "name": "Vexing Vapor",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 mental",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Mental",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 mental and 4 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit)."
+            }
+          ]
         }
       ],
       "id": "vexing-vapor"
@@ -14019,7 +15312,66 @@
           "description": "Deals 2d6 force and 2 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones)."
         }
       ],
-      "id": "aether-marbles"
+      "id": "aether-marbles",
+      "variants": [
+        {
+          "level": 4,
+          "label": "Lesser",
+          "name": "Aether Marbles (Lesser)",
+          "price": 19,
+          "effect": "2d6 force, 2 splash; difficult terrain (incorporeal)"
+        },
+        {
+          "level": 12,
+          "label": "Moderate",
+          "name": "Aether Marbles (Moderate)",
+          "price": 360,
+          "effect": "3d6 force, 3 splash; difficult terrain (incorporeal)",
+          "strikes": [
+            {
+              "name": "Aether Marbles",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "3d6 force",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Force",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 3d6 force and 3 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones)."
+            }
+          ]
+        },
+        {
+          "level": 18,
+          "label": "Greater",
+          "name": "Aether Marbles (Greater)",
+          "price": 3400,
+          "effect": "4d6 force, 4 splash; difficult terrain (incorporeal)",
+          "strikes": [
+            {
+              "name": "Aether Marbles",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "4d6 force",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Force",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 4d6 force and 4 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones)."
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Silver Orb",
@@ -14048,7 +15400,39 @@
           "description": "Deals 1 slashing on a direct hit, then bursts into a 5-foot silver cloud for 1 minute: creatures inside are concealed and take 1d6 persistent slashing each round (Fortitude DC 19 basic), and weapons and unarmed attacks made within it count as silver until cleaned."
         }
       ],
-      "id": "silver-orb"
+      "id": "silver-orb",
+      "variants": [
+        {
+          "level": 5,
+          "label": "Lesser",
+          "name": "Silver Orb (Lesser)",
+          "price": 30,
+          "effect": "1 slashing; cloud 1d6 slashing (Fort DC 19 basic), concealed"
+        },
+        {
+          "level": 18,
+          "label": "Greater",
+          "name": "Silver Orb (Greater)",
+          "price": 5000,
+          "effect": "1 slashing; cloud 5d6 slashing (Fort DC 39 basic), concealed",
+          "strikes": [
+            {
+              "name": "Silver Orb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "1 slashing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 slashing on a direct hit, then bursts into a 5-foot silver cloud for 1 minute: creatures inside are concealed and take 5d6 slashing each round (Fortitude DC 39 basic), and weapons and unarmed attacks made within it count as silver until cleaned."
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "Blindpepper Bomb",
@@ -14061,7 +15445,8 @@
       ],
       "price": 40,
       "weight": 0.1,
-      "id": "blindpepper-bomb"
+      "id": "blindpepper-bomb",
+      "level": 5
     }
   ],
   "spell": [
@@ -18065,6 +19450,604 @@
         {
           "stat": "resistance",
           "amount": 5,
+          "vs": "piercing,slashing"
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": -10
+        }
+      ]
+    },
+    {
+      "id": "cognitive-mutagen-greater",
+      "name": "Cognitive Mutagen (Greater)",
+      "description": "+3 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "athletics",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "cognitive-mutagen-major",
+      "name": "Cognitive Mutagen (Major)",
+      "description": "+4 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "athletics",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "juggernaut-mutagen-greater",
+      "name": "Juggernaut Mutagen (Greater)",
+      "description": "+3 item bonus to Fortitude saves and 30 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "juggernaut-mutagen-major",
+      "name": "Juggernaut Mutagen (Major)",
+      "description": "+4 item bonus to Fortitude saves and 45 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "quicksilver-mutagen-greater",
+      "name": "Quicksilver Mutagen (Greater)",
+      "description": "+3 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +15-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "stealth",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "thievery",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 15
+        },
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "quicksilver-mutagen-major",
+      "name": "Quicksilver Mutagen (Major)",
+      "description": "+4 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +20-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "stealth",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "thievery",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 20
+        },
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "sanguine-mutagen-greater",
+      "name": "Sanguine Mutagen (Greater)",
+      "description": "+3 item bonus to Fortitude and Reflex saves (+4 against disease, poison, or fatigue effects). Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "id": "sanguine-mutagen-major",
+      "name": "Sanguine Mutagen (Major)",
+      "description": "+4 item bonus to Fortitude and Reflex saves; a success against a disease, poison, or fatigue effect becomes a critical success. Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "id": "serene-mutagen-greater",
+      "name": "Serene Mutagen (Greater)",
+      "description": "+3 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+4 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "medicine",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "nature",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "religion",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "survival",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "attacks",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "spellDC",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "serene-mutagen-major",
+      "name": "Serene Mutagen (Major)",
+      "description": "+4 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+5 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "medicine",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "nature",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "religion",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "survival",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "attacks",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "spellDC",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "silvertongue-mutagen-greater",
+      "name": "Silvertongue Mutagen (Greater)",
+      "description": "+3 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "deception",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "diplomacy",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "intimidation",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "silvertongue-mutagen-major",
+      "name": "Silvertongue Mutagen (Major)",
+      "description": "+4 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "deception",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "diplomacy",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "intimidation",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "theatrical-mutagen-greater",
+      "name": "Theatrical Mutagen (Greater)",
+      "description": "+3 item bonus to Acrobatics, Crafting, and Performance and a +10-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 10
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "theatrical-mutagen-major",
+      "name": "Theatrical Mutagen (Major)",
+      "description": "+4 item bonus to Acrobatics, Crafting, and Performance and a +10-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 10
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "war-blood-mutagen-greater",
+      "name": "War Blood Mutagen (Greater)",
+      "description": "+3 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +3 item bonus to Will saves against fear. The weapon resists being removed (DC 30 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": 3
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 3,
+          "vs": "fear"
+        }
+      ]
+    },
+    {
+      "id": "war-blood-mutagen-major",
+      "name": "War Blood Mutagen (Major)",
+      "description": "+4 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +4 item bonus to Will saves against fear. The weapon resists being removed (DC 30 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": 4
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 4,
+          "vs": "fear"
+        }
+      ]
+    },
+    {
+      "id": "stone-body-mutagen-moderate",
+      "name": "Stone Body Mutagen (Moderate)",
+      "description": "Your body calcifies: resistance 5 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "resistance",
+          "amount": 5,
+          "vs": "piercing,slashing"
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": -10
+        }
+      ]
+    },
+    {
+      "id": "stone-body-mutagen-greater",
+      "name": "Stone Body Mutagen (Greater)",
+      "description": "Your body calcifies: resistance 10 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 1 hour.",
+      "modifiers": [
+        {
+          "stat": "resistance",
+          "amount": 10,
           "vs": "piercing,slashing"
         },
         {
