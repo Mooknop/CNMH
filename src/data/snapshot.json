@@ -7990,14 +7990,26 @@
           "label": "Standard",
           "name": "Backfire Mantle",
           "price": 45,
-          "effect": "The mantle grants a +1 circumstance bonus to Reflex saves against your own and allies' spells, and resistance 3 to splash damage from your own and allies' alchemical items."
+          "effect": "The mantle grants a +1 circumstance bonus to Reflex saves against your own and allies' spells, and resistance 3 to splash damage from your own and allies' alchemical items.",
+          "overrides": {
+            "resistance": {
+              "amount": 3,
+              "type": "splash"
+            }
+          }
         },
         {
           "level": 8,
           "label": "Greater",
           "name": "Backfire Mantle (Greater)",
           "price": 430,
-          "effect": "The mantle grants a +2 circumstance bonus to Reflex saves against your own and allies' spells, and resistance 10 to splash damage from your own and allies' alchemical items."
+          "effect": "The mantle grants a +2 circumstance bonus to Reflex saves against your own and allies' spells, and resistance 10 to splash damage from your own and allies' alchemical items.",
+          "overrides": {
+            "resistance": {
+              "amount": 10,
+              "type": "splash"
+            }
+          }
         }
       ],
       "id": "backfire-mantle"
@@ -8721,28 +8733,52 @@
           "label": "Fire",
           "name": "Energy Robe (Fire)",
           "price": 320,
-          "effect": "You gain resistance 5 to fire. When the robe is activated, you gain a +30-foot status bonus to Speed for 1 minute as flames shoot out behind you to speed you up."
+          "effect": "You gain resistance 5 to fire. When the robe is activated, you gain a +30-foot status bonus to Speed for 1 minute as flames shoot out behind you to speed you up.",
+          "overrides": {
+            "resistance": {
+              "amount": 5,
+              "type": "fire"
+            }
+          }
         },
         {
           "level": 8,
           "label": "Cold",
           "name": "Energy Robe (Cold)",
           "price": 450,
-          "effect": "You gain resistance 5 to cold. When the robe is activated, you gain the effects of water walk for 1 minute, as you momentarily flash freeze the surface of water as you walk across it."
+          "effect": "You gain resistance 5 to cold. When the robe is activated, you gain the effects of water walk for 1 minute, as you momentarily flash freeze the surface of water as you walk across it.",
+          "overrides": {
+            "resistance": {
+              "amount": 5,
+              "type": "cold"
+            }
+          }
         },
         {
           "level": 9,
           "label": "Acid",
           "name": "Energy Robe (Acid)",
           "price": 575,
-          "effect": "You gain resistance 5 to acid. When the robe is activated, you gain a climb Speed equal to your Speed, as the acid on your hands grants you easier handholds."
+          "effect": "You gain resistance 5 to acid. When the robe is activated, you gain a climb Speed equal to your Speed, as the acid on your hands grants you easier handholds.",
+          "overrides": {
+            "resistance": {
+              "amount": 5,
+              "type": "acid"
+            }
+          }
         },
         {
           "level": 10,
           "label": "Electricity",
           "name": "Energy Robe (Electricity)",
           "price": 900,
-          "effect": "You gain resistance 5 to electricity. When the robe is activated, you gain a fly Speed equal to your Speed for 1 minute."
+          "effect": "You gain resistance 5 to electricity. When the robe is activated, you gain a fly Speed equal to your Speed for 1 minute.",
+          "overrides": {
+            "resistance": {
+              "amount": 5,
+              "type": "electricity"
+            }
+          }
         }
       ],
       "id": "energy-robe"
