@@ -12593,6 +12593,1132 @@
         "note": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (10 min)"
       },
       "id": "stone-body-mutagen-lesser"
+    },
+    {
+      "name": "Acid Flask",
+      "description": "A flask of corrosive acid that eats through flesh and material. Deals 1 acid on a direct hit, 1d6 persistent acid, and 1 acid splash.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Acid"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Acid Flask",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 persistent acid",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Acid",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1 acid on a direct hit, 1d6 persistent acid, and 1 acid splash."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Acid Flask (Lesser)",
+          "price": 3,
+          "effect": "1 acid, 1d6 persistent acid, 1 splash"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Acid Flask (Moderate)",
+          "price": 10,
+          "effect": "1 acid, 2d6 persistent acid, 2 splash",
+          "strikes": [
+            {
+              "name": "Acid Flask",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 persistent acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 acid on a direct hit, 2d6 persistent acid, and 2 acid splash."
+            }
+          ]
+        }
+      ],
+      "id": "acid-flask"
+    },
+    {
+      "name": "Alchemist's Fire",
+      "description": "A volatile concoction that bursts into flame on impact. Deals 1d8 fire, 1 persistent fire, and 1 fire splash.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Fire"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Alchemist's Fire",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d8 fire",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Fire",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d8 fire, 1 persistent fire, and 1 fire splash."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Alchemist's Fire (Lesser)",
+          "price": 3,
+          "effect": "1d8 fire, 1 persistent fire, 1 splash"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Alchemist's Fire (Moderate)",
+          "price": 10,
+          "effect": "2d8 fire, 2 persistent fire, 2 splash",
+          "strikes": [
+            {
+              "name": "Alchemist's Fire",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d8 fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d8 fire, 2 persistent fire, and 2 fire splash."
+            }
+          ]
+        }
+      ],
+      "id": "alchemists-fire"
+    },
+    {
+      "name": "Blight Bomb",
+      "description": "A bomb of concentrated toxins that sickens on contact. Deals 1d4 poison, 1d4 persistent poison, and 1 poison splash.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Poison"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Blight Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 poison",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Poison",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d4 poison, 1d4 persistent poison, and 1 poison splash."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Blight Bomb (Lesser)",
+          "price": 3,
+          "effect": "1d4 poison, 1d4 persistent poison, 1 splash"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Blight Bomb (Moderate)",
+          "price": 10,
+          "effect": "2d4 poison, 2d4 persistent poison, 2 splash",
+          "strikes": [
+            {
+              "name": "Blight Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 poison",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d4 poison, 2d4 persistent poison, and 2 poison splash."
+            }
+          ]
+        }
+      ],
+      "id": "blight-bomb"
+    },
+    {
+      "name": "Bottled Lightning",
+      "description": "A jar of crackling captured lightning. Deals 1d6 electricity and 1 electricity splash; on a hit the target is off-guard until the start of your next turn.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Electricity"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Bottled Lightning",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 electricity",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Electricity",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 electricity and 1 electricity splash; on a hit the target is off-guard until the start of your next turn."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Bottled Lightning (Lesser)",
+          "price": 3,
+          "effect": "1d6 electricity, 1 splash; off-guard on hit"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Bottled Lightning (Moderate)",
+          "price": 10,
+          "effect": "2d6 electricity, 2 splash; off-guard on hit",
+          "strikes": [
+            {
+              "name": "Bottled Lightning",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 electricity",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Electricity",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 electricity and 2 electricity splash; on a hit the target is off-guard until the start of your next turn."
+            }
+          ]
+        }
+      ],
+      "id": "bottled-lightning"
+    },
+    {
+      "name": "Dread Ampoule",
+      "description": "A vial of fear-inducing alchemical vapor. Deals 1d6 mental and 1 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit).",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Emotion",
+        "Fear",
+        "Mental",
+        "Poison"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Dread Ampoule",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 mental",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Mental",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 mental and 1 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Dread Ampoule (Lesser)",
+          "price": 3,
+          "effect": "1d6 mental, 1 splash; frightened 1 (2 on crit)"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Dread Ampoule (Moderate)",
+          "price": 10,
+          "effect": "2d6 mental, 2 splash; frightened 1 (2 on crit)",
+          "strikes": [
+            {
+              "name": "Dread Ampoule",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 mental",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Mental",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 mental and 2 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit)."
+            }
+          ]
+        }
+      ],
+      "id": "dread-ampoule"
+    },
+    {
+      "name": "Frost Vial",
+      "description": "A vial of supercooled liquid that numbs and slows. Deals 1d6 cold and 1 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Cold"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Frost Vial",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 cold",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Cold",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 cold and 1 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Frost Vial (Lesser)",
+          "price": 3,
+          "effect": "1d6 cold, 1 splash; −5 ft Speed on hit"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Frost Vial (Moderate)",
+          "price": 10,
+          "effect": "2d6 cold, 2 splash; −5 ft Speed on hit",
+          "strikes": [
+            {
+              "name": "Frost Vial",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 cold",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Cold",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 cold and 2 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn."
+            }
+          ]
+        }
+      ],
+      "id": "frost-vial"
+    },
+    {
+      "name": "Ghost Charge",
+      "description": "A charge of positive energy especially harmful to the undead. Deals 1d8 vitality and 1 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Vitality"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Ghost Charge",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d8 vitality",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Vitality",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d8 vitality and 1 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Ghost Charge (Lesser)",
+          "price": 3,
+          "effect": "1d8 vitality, 1 splash; enfeebled 1 on hit"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Ghost Charge (Moderate)",
+          "price": 10,
+          "effect": "2d8 vitality, 2 splash; enfeebled 1 on hit",
+          "strikes": [
+            {
+              "name": "Ghost Charge",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d8 vitality",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Vitality",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d8 vitality and 2 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn."
+            }
+          ]
+        }
+      ],
+      "id": "ghost-charge"
+    },
+    {
+      "name": "Glue Bomb",
+      "description": "A bomb of fast-setting adhesive that mires its target. Deals no damage. On a hit the target takes a −10-foot status penalty to its Speed for 1 minute; on a critical hit it is immobilized for 1 round (Escape DC 17).",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Glue Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "—",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals no damage. On a hit the target takes a −10-foot status penalty to its Speed for 1 minute; on a critical hit it is immobilized for 1 round (Escape DC 17)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Glue Bomb (Lesser)",
+          "price": 3,
+          "effect": "No damage; −10 ft Speed; crit immobilized (Escape DC 17)"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Glue Bomb (Moderate)",
+          "price": 10,
+          "effect": "No damage; −10 ft Speed; crit immobilized (Escape DC 17)",
+          "strikes": [
+            {
+              "name": "Glue Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "—",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals no damage. On a hit the target takes a −10-foot status penalty to its Speed for 1 minute; on a critical hit it is immobilized for 1 round (Escape DC 17)."
+            }
+          ]
+        }
+      ],
+      "id": "glue-bomb"
+    },
+    {
+      "name": "Goo Grenade",
+      "description": "A grenade of clinging alchemical goo. Deals 1d4 acid, 1 persistent acid, and 1 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions).",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Acid"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Goo Grenade",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 acid",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Acid",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d4 acid, 1 persistent acid, and 1 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Goo Grenade (Lesser)",
+          "price": 3,
+          "effect": "1d4 acid, 1 persistent acid, 1 splash; −5 Speed (Escape DC 15)"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Goo Grenade (Moderate)",
+          "price": 10,
+          "effect": "2d4 acid, 2 persistent acid, 2 splash; −5 Speed (Escape DC 15)",
+          "strikes": [
+            {
+              "name": "Goo Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 acid",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Acid",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d4 acid, 2 persistent acid, and 2 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions)."
+            }
+          ]
+        }
+      ],
+      "id": "goo-grenade"
+    },
+    {
+      "name": "Mud Bomb",
+      "description": "A bomb of dense clinging mud. Deals 1d6 bludgeoning and 1 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Earth"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Mud Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 bludgeoning",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Bludgeoning",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 bludgeoning and 1 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Mud Bomb (Lesser)",
+          "price": 3,
+          "effect": "1d6 bludgeoning, 1 splash; crit dazzled"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Mud Bomb (Moderate)",
+          "price": 10,
+          "effect": "2d6 bludgeoning, 2 splash; crit dazzled",
+          "strikes": [
+            {
+              "name": "Mud Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Bludgeoning",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 bludgeoning and 2 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn."
+            }
+          ]
+        }
+      ],
+      "id": "mud-bomb"
+    },
+    {
+      "name": "Necrotic Bomb",
+      "description": "A bomb of life-draining negative energy. Deals 1d6 void and 1 void splash; on a critical hit the target is sickened 1.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Void"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Necrotic Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 void",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Void",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 void and 1 void splash; on a critical hit the target is sickened 1."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Necrotic Bomb (Lesser)",
+          "price": 3,
+          "effect": "1d6 void, 1 splash; crit sickened 1"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Necrotic Bomb (Moderate)",
+          "price": 10,
+          "effect": "2d6 void, 2 splash; crit sickened 1",
+          "strikes": [
+            {
+              "name": "Necrotic Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 void",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Void",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 void and 2 void splash; on a critical hit the target is sickened 1."
+            }
+          ]
+        }
+      ],
+      "id": "necrotic-bomb"
+    },
+    {
+      "name": "Pernicious Spore Bomb",
+      "description": "A bomb that bursts into a cloud of barbed, toxic spores. Deals 1 poison on a direct hit, 1d4 persistent piercing, and 1 poison splash; one square of the target’s space becomes difficult terrain for 1 round.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Poison"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Pernicious Spore Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 persistent piercing",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Poison",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1 poison on a direct hit, 1d4 persistent piercing, and 1 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Pernicious Spore Bomb (Lesser)",
+          "price": 3,
+          "effect": "1 poison, 1d4 persistent piercing, 1 splash; difficult terrain"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Pernicious Spore Bomb (Moderate)",
+          "price": 10,
+          "effect": "1 poison, 2d4 persistent piercing, 2 splash; difficult terrain",
+          "strikes": [
+            {
+              "name": "Pernicious Spore Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 persistent piercing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Poison",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 poison on a direct hit, 2d4 persistent piercing, and 2 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
+            }
+          ]
+        }
+      ],
+      "id": "pernicious-spore-bomb"
+    },
+    {
+      "name": "Peshpine Grenade",
+      "description": "A grenade packed with drug-laced pesh spines. Deals 1d6 piercing and 1 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Peshpine Grenade",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d6 piercing",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Piercing",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d6 piercing and 1 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Peshpine Grenade (Lesser)",
+          "price": 3,
+          "effect": "1d6 piercing, 1 splash; stupefied on hit"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Peshpine Grenade (Moderate)",
+          "price": 10,
+          "effect": "2d6 piercing, 2 splash; stupefied on hit",
+          "strikes": [
+            {
+              "name": "Peshpine Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d6 piercing",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Piercing",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d6 piercing and 2 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn."
+            }
+          ]
+        }
+      ],
+      "id": "peshpine-grenade"
+    },
+    {
+      "name": "Redpitch Bomb",
+      "description": "A bomb of sticky, slow-burning red pitch. Deals 1 fire on a direct hit, 1d4 persistent fire, and 1 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Fire"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Redpitch Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 persistent fire",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Fire",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1 fire on a direct hit, 1d4 persistent fire, and 1 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Redpitch Bomb (Lesser)",
+          "price": 3,
+          "effect": "1 fire, 1d4 persistent fire, 1 splash; crit clumsy 1"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Redpitch Bomb (Moderate)",
+          "price": 10,
+          "effect": "1 fire, 2d4 persistent fire, 2 splash; crit clumsy 1",
+          "strikes": [
+            {
+              "name": "Redpitch Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 persistent fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 fire on a direct hit, 2d4 persistent fire, and 2 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
+            }
+          ]
+        }
+      ],
+      "id": "redpitch-bomb"
+    },
+    {
+      "name": "Star Grenade",
+      "description": "A grenade that detonates in a cross-shaped burst of fire. Deals 1d8 fire and 1 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Fire"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Star Grenade",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d8 fire",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Fire",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1d8 fire and 1 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Star Grenade (Lesser)",
+          "price": 3,
+          "effect": "1d8 fire, 1 splash; cross-shaped burst"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Star Grenade (Moderate)",
+          "price": 10,
+          "effect": "2d8 fire, 2 splash; cross-shaped burst",
+          "strikes": [
+            {
+              "name": "Star Grenade",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d8 fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 2d8 fire and 2 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target."
+            }
+          ]
+        }
+      ],
+      "id": "star-grenade"
+    },
+    {
+      "name": "Tallow Bomb",
+      "description": "A bomb of rendered fat that clings and burns. Deals no direct damage; 1d4 persistent fire and 1 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts.",
+      "traits": [
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Splash",
+        "Fire"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Tallow Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1d4 persistent fire",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Splash",
+            "Fire",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals no direct damage; 1d4 persistent fire and 1 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Tallow Bomb (Lesser)",
+          "price": 3,
+          "effect": "1d4 persistent fire, 1 splash; crit sickened 1 (locked)"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Tallow Bomb (Moderate)",
+          "price": 10,
+          "effect": "2d4 persistent fire, 2 splash; crit sickened 1 (locked)",
+          "strikes": [
+            {
+              "name": "Tallow Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "2d4 persistent fire",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Splash",
+                "Fire",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals no direct damage; 2d4 persistent fire and 2 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts."
+            }
+          ]
+        }
+      ],
+      "id": "tallow-bomb"
+    },
+    {
+      "name": "Water Bomb",
+      "description": "A bomb of pressurized water that douses flames. Deals 1 nonlethal bludgeoning and 1 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat).",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Bomb",
+        "Consumable",
+        "Nonlethal",
+        "Splash",
+        "Water"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "strikes": [
+        {
+          "name": "Water Bomb",
+          "proficiency": "martial",
+          "type": "ranged",
+          "damage": "1 nonlethal bludgeoning",
+          "traits": [
+            "Attack",
+            "Bomb",
+            "Nonlethal",
+            "Splash",
+            "Bludgeoning",
+            "Ranged"
+          ],
+          "actionCount": 1,
+          "range": "20 feet",
+          "description": "Deals 1 nonlethal bludgeoning and 1 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
+        }
+      ],
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Water Bomb (Lesser)",
+          "price": 3,
+          "effect": "1 nonlethal bludgeoning, 1 splash; douses fire"
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Water Bomb (Moderate)",
+          "price": 10,
+          "effect": "1 nonlethal bludgeoning, 2 splash; douses fire",
+          "strikes": [
+            {
+              "name": "Water Bomb",
+              "proficiency": "martial",
+              "type": "ranged",
+              "damage": "1 nonlethal bludgeoning",
+              "traits": [
+                "Attack",
+                "Bomb",
+                "Nonlethal",
+                "Splash",
+                "Bludgeoning",
+                "Ranged"
+              ],
+              "actionCount": 1,
+              "range": "20 feet",
+              "description": "Deals 1 nonlethal bludgeoning and 2 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
+            }
+          ]
+        }
+      ],
+      "id": "water-bomb"
     }
   ],
   "spell": [
