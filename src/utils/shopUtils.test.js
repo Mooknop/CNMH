@@ -506,6 +506,19 @@ describe('eligibleSpellItems — base image (#936)', () => {
   });
 });
 
+describe('eligibleSpellItems — spell description for the preview', () => {
+  it("stamps the spell's description onto each generated ware", () => {
+    const cat = [{ id: 'doze', name: 'Doze', level: 1, traditions: ['arcane'], description: 'Targets nod off.' }];
+    const [scroll] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 3, traditions: ['arcane'] }, cat);
+    expect(scroll.description).toBe('Targets nod off.');
+  });
+
+  it('omits description when the spell has none', () => {
+    const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1 }, spellCatalog);
+    expect(sleep).not.toHaveProperty('description');
+  });
+});
+
 describe('spellOfferingSummary', () => {
   it('summarises the default (all traditions, common only) coverage + count', () => {
     const s = spellOfferingSummary({ spellItem: 'scroll', maxLevel: 3 }, spellCatalog);
