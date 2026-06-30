@@ -22,16 +22,19 @@ vi.mock('../contexts/SessionContext', () => ({
   }),
 }));
 
-// The live (DO) effect catalog the reader resolves effectIds against (#900) — the
-// real reader runs against it, verifying the content catalog is threaded in.
+// Content: the effect catalog the reader resolves effectIds against (#900) plus
+// `characters` for the worn-gear inventory read (#922 S3). Mutable via a hoisted
+// holder so a test can stock a PC's inventory.
+const content = vi.hoisted(() => ({
+  effects: [
+    { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
+      { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
+    ] },
+  ],
+  characters: [],
+}));
 vi.mock('../contexts/ContentContext', () => ({
-  useContent: () => ({
-    effects: [
-      { id: 'blood-booster-greater', name: 'Blood Booster (Greater)', modifiers: [
-        { stat: 'resistance', amount: 20, vs: 'persistent-bleed,persistent-poison', flatCheckEase: true },
-      ] },
-    ],
-  }),
+  useContent: () => ({ effects: content.effects, characters: content.characters }),
 }));
 
 // useSyncedState: plain useState, with the setter spied for write assertions.
@@ -76,6 +79,7 @@ beforeEach(() => {
   syncedMock.setSpy = null;
   mockIsGm = true;
   mockEffects = {};
+  content.characters = [];
   mockEncounter = { active: false, phase: 'idle', round: 0, currentTurnIndex: 0, order: [] };
 });
 
@@ -121,6 +125,48 @@ describe('usePersistentReminders (#272)', () => {
       'Ashka: 1d6 persistent bleed, resistance 20 (reduce, min 0) — DC 10 flat check to end',
       // fire is not covered by Blood Booster — standard line
       'Ashka: 1d6 persistent fire — DC 15 flat check to end',
+    ]);
+  });
+
+  it("adds a PC's worn invested gear resistance to the tick (#922 S3)", () => {
+    // Ashka wears an invested aeon stone granting resistance to persistent
+    // bleed/poison — no active effect, so this exercises the worn path alone.
+    content.characters = [{
+      id: 'char-a', name: 'Ashka',
+      inventory: [{
+        uid: 'stone', name: 'Preserving Aeon Stone', traits: ['Invested', 'Magical'],
+        modifiers: [{ stat: 'resistance', amount: 8, vs: 'persistent-bleed,persistent-poison' }],
+      }],
+    }];
+    mockEffects = { 'char-a': { invested: { stone: true } } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0)); // Ashka's turn underway
+    seedMap(hook, { 'e-pc': [{ id: 'pd-1', dice: '1d6', type: 'bleed', sourceName: 'Wound' }] });
+    setEncounter(hook, inProgress(1, 1)); // Ashka's turn ends
+    expect(reminderTexts()).toEqual([
+      // worn resistance, no flat-check ease ⇒ standard DC 15
+      'Ashka: 1d6 persistent bleed, resistance 8 (reduce, min 0) — DC 15 flat check to end',
+    ]);
+  });
+
+  it('takes the higher of an active-effect and worn resistance (no stacking, #922)', () => {
+    content.characters = [{
+      id: 'char-a', name: 'Ashka',
+      inventory: [{
+        uid: 'stone', name: 'Aeon Stone', traits: ['Invested'],
+        modifiers: [{ stat: 'resistance', amount: 8, vs: 'persistent-bleed,persistent-poison' }],
+      }],
+    }];
+    // Blood Booster (resistance 20, eases the DC) beats the worn 8.
+    mockEffects = {
+      'char-a': { effects: [{ id: 'u1', effectId: 'blood-booster-greater' }], invested: { stone: true } },
+    };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0));
+    seedMap(hook, { 'e-pc': [{ id: 'pd-1', dice: '1d6', type: 'bleed' }] });
+    setEncounter(hook, inProgress(1, 1));
+    expect(reminderTexts()).toEqual([
+      'Ashka: 1d6 persistent bleed, resistance 20 (reduce, min 0) — DC 10 flat check to end',
     ]);
   });
 
