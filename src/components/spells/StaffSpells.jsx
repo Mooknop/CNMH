@@ -7,9 +7,10 @@ const StaffInfoBox = ({ themeColor }) => (
   <div className="bloodline-info">
     <h3 >Staff Rules</h3>
     <p className="bloodline-description">
-      Each day during your daily preparations, you can prepare a staff to add charges to it for free.
-      This gives the staff a number of charges equal to the level of your highest-level spell slot.
-      You can use these charges to cast spells from the staff.
+      Staves hold no charges on their own. Each day during your daily preparations you can prepare a
+      single staff, giving it a number of charges equal to the highest spell rank you can cast. You can
+      add even more charges by expending some of your own spell slots, each adding charges equal to its
+      rank. You can use these charges to cast spells from the staff.
     </p>
     <div className="bloodline-magic">
       <span className="bloodline-magic-effect">
@@ -21,7 +22,7 @@ const StaffInfoBox = ({ themeColor }) => (
   </div>
 );
 
-const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character, onCast }) => {
+const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter, activeSpellRank, character, prepared = true, onCast }) => {
   const chargesMax = staff.charges?.max ?? 0;
   const [chargesSpent, setChargesSpent] = useLocalStorage(
     `cnmh_staff_${character?.id || 'unknown'}`,
@@ -57,6 +58,12 @@ const StaffSpells = ({ staff, spells, themeColor, characterLevel, defenseFilter,
       {inactive && (
         <div className="ability-inactive-hint">
           Not in hand — hold the staff to cast its spells.
+        </div>
+      )}
+
+      {!inactive && !prepared && (
+        <div className="ability-inactive-hint">
+          Not prepared today — prepare this staff during your daily preparations to charge it.
         </div>
       )}
 

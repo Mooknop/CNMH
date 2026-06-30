@@ -138,6 +138,18 @@ describe('StaffSpells', () => {
     expect(screen.getByText('This staff has no spells.')).toBeInTheDocument();
   });
 
+  it('shows the prepare-this-staff hint when held but not prepared today', () => {
+    const spells = baseSpells.map((s) => ({ ...s, active: true }));
+    render(<StaffSpells {...baseProps} spells={spells} prepared={false} />);
+    expect(screen.getByText(/Not prepared today/)).toBeInTheDocument();
+  });
+
+  it('shows no prepare hint when the staff is prepared', () => {
+    const spells = baseSpells.map((s) => ({ ...s, active: true }));
+    render(<StaffSpells {...baseProps} spells={spells} prepared />);
+    expect(screen.queryByText(/Not prepared today/)).not.toBeInTheDocument();
+  });
+
   it('shows the not-in-hand hint when staff spells are inactive', () => {
     const spells = baseSpells.map((s) => ({ ...s, active: false }));
     render(<StaffSpells {...baseProps} spells={spells} />);
