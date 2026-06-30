@@ -9611,6 +9611,31 @@
       "id": "longbow"
     },
     {
+      "id": "magic-scroll",
+      "name": "Magic Scroll",
+      "traits": [
+        "Consumable",
+        "Magical",
+        "Scroll"
+      ],
+      "usage": "held in 1 hand",
+      "weight": 0.1,
+      "source": "GM Core pg. 262",
+      "description": "A scroll is a spell stored in written form. Casting the spell from a scroll requires Activating it (Cast a Spell), after which the scroll is consumed. A specific scroll is named for the spell it holds (Scroll of Heal, Scroll of Web), and derives its rank, item level, price, and Bulk from that spell. This base entry carries the shared scroll artwork that every such scroll displays."
+    },
+    {
+      "id": "magic-wand",
+      "name": "Magic Wand",
+      "traits": [
+        "Magical",
+        "Wand"
+      ],
+      "usage": "held in 1 hand",
+      "weight": 0.1,
+      "source": "GM Core pg. 282",
+      "description": "A magic wand holds a single spell, which you can cast once per day by Activating it (Cast a Spell), with the option to overcharge it for an additional casting at some risk. A specific wand is named for the spell it holds (Wand of Heal), and derives its rank, item level, price, and Bulk from that spell. This base entry carries the shared wand artwork that every such wand displays."
+    },
+    {
       "name": "Midnight Milk",
       "description": "The strange, swirling liquid in this bottle is said to give those who injest it a feeling of drowsy euphoria as it lulls them to sleep. It is a new drug, making its way into surface markets via trade routes in the Darklands.",
       "image": "img_34fe1aba-bbd1-4dc4-bfe7-57ff9d357e19.jpg",
