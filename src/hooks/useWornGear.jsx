@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { useInvested } from './useInvested';
 import { isInvestable } from '../utils/InventoryUtils';
-import { DEFAULT_ITEM_STATE } from '../utils/itemState';
-import { hasArmorRuneBlock, resolveArmorItem } from '../utils/armorRunes';
 import { SKILL_KEYS } from '../utils/EffectUtils';
+import { isWornDefault, itemModifiers, specialModifiers } from '../utils/wornGear';
 
 // Worn-Gear Effects (W1, #730) — the app-owned passive-bonus spine.
 //
@@ -34,35 +33,16 @@ import { SKILL_KEYS } from '../utils/EffectUtils';
 // past this gate. Genuinely unknown/malformed stats are still dropped.
 const SUPPORTED_STATS = new Set(['ac', 'fort', 'reflex', 'will', ...SKILL_KEYS]);
 
-// Damage resistance/weakness/immunity (#900/#918/#919) are special, non-bonus
-// modifiers — `{ stat: 'resistance'|'weakness'|'immunity', vs, amount? }`. They
-// never net through computeEffectBonuses (no bonus bucket — the `!buckets[stat]`
-// guard drops them, same as `dexCap`); instead the defense readers
-// (resistanceFor / weaknessFor / isImmuneTo) pick them off the synthetic def by
-// stat. Immunity carries no `amount`, so the only well-formedness gate is `vs`.
-const SPECIAL_STATS = new Set(['resistance', 'weakness', 'immunity']);
-
-const isWorn = (e) => e?.state == null || e.state === DEFAULT_ITEM_STATE;
-
 const usableModifiers = (mods) =>
   (Array.isArray(mods) ? mods : []).filter(
     (m) => m && SUPPORTED_STATS.has(m.stat) && typeof m.amount === 'number'
   );
 
-const specialModifiers = (mods) =>
-  (Array.isArray(mods) ? mods : []).filter((m) => m && SPECIAL_STATS.has(m.stat) && m.vs);
-
 // Everything a worn item contributes: the bonus stats (ac/saves/skills) the
-// effect engine buckets, plus the special damage modifiers the defense readers
-// consume. An item contributes when it has at least one of either.
+// effect engine buckets, plus the special damage resistance/weakness/immunity
+// modifiers (utils/wornGear) the defense readers consume — which ride on the
+// same synthetic def but never net as a bonus. Contributes on any of either.
 const contributedModifiers = (mods) => [...usableModifiers(mods), ...specialModifiers(mods)];
-
-// The modifiers an item contributes. Armor with an etched `runes` block (#727)
-// derives its magic delta (potency AC + resilient saves + property-rune
-// modifiers) through the armor-rune resolver; everything else carries a flat
-// authored `modifiers` array.
-const itemModifiers = (e) =>
-  hasArmorRuneBlock(e) ? resolveArmorItem(e).modifiers : e.modifiers;
 
 /**
  * Synthesize always-on active-effect entries for the character's worn magic
@@ -85,7 +65,7 @@ export const useWornGear = (charId, inventory = []) => {
   const wornEffects = useMemo(() => {
     return (Array.isArray(inventory) ? inventory : [])
       .filter((e) => {
-        if (!isWorn(e)) return false;
+        if (!isWornDefault(e)) return false;
         if (!contributedModifiers(itemModifiers(e)).length) return false;
         // Magic gear must be invested to grant its bonus; non-investable worn
         // gear contributes as soon as it's worn.

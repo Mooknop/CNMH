@@ -6,6 +6,8 @@ import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '../utils/persistentDamage';
 import { resistanceFor, flatCheckEasedFor } from '../utils/EffectUtils';
+import { buildEffectiveInventory } from '../utils/effectiveInventory';
+import { wornResistanceFor } from '../utils/wornGear';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
 // turn transitions instead of hooking advanceTurn, so reminders fire for
@@ -28,7 +30,8 @@ export function usePersistentReminders() {
   const { getState } = useSession();
   // Live (DO) effect catalog — Blood Booster's resistance modifier lives here,
   // not in the bundled bootstrap, so the readers must resolve against it (#900).
-  const { effects: catalog } = useContent();
+  // `characters` supplies authored inventory for the worn-gear read (#922 S3).
+  const { effects: catalog, characters } = useContent();
   const [persistentMap, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   // { token, entry } for the combatant whose turn is underway.
@@ -36,23 +39,38 @@ export function usePersistentReminders() {
   const prevActiveRef = useRef(false);
 
   // Resistance/flat-check context for one instance, read from the combatant's
-  // active effects (#900). PC entries carry a charId whose cnmh_effects_<id> +
-  // cnmh_foundryeffects_<id> hold the buffs (Blood Booster lives there). Read
-  // synchronously off the session cache at turn-end — no reactive subscription
-  // needed for a one-shot log line. Enemies (no charId) resolve to no resistance.
+  // active effects (#900) and worn gear (#922 S3). PC entries carry a charId
+  // whose cnmh_effects_<id> + cnmh_foundryeffects_<id> hold the buffs (Blood
+  // Booster lives there); worn resistance comes from the authored inventory
+  // stamped with the live loadout/investment overlays. All read synchronously
+  // off the session cache at turn-end — no reactive subscription needed for a
+  // one-shot log line. Enemies (no charId) resolve to no resistance.
   const resolveResistance = useCallback((entry, inst) => {
     if (!entry?.charId) return null;
     const effects = [
       ...(getState(entry.charId, 'effects') || []),
       ...(getState(entry.charId, 'foundryeffects') || []),
     ];
-    if (!effects.length) return null;
     const vsType = persistentVsType(inst);
+    const effectAmount = resistanceFor(effects, vsType, catalog);
+
+    // Worn-gear resistance: the imperative path can't call hooks, so rebuild the
+    // PC's effective inventory from content + the live placement/investment
+    // overlays. (Mid-session *acquired* gear is out of scope for this reminder
+    // line; the chip and HP-apply, via useResolvedEffects, cover that.)
+    const character = (characters || []).find((c) => c.id === entry.charId);
+    const inventory = buildEffectiveInventory(
+      character?.inventory || [],
+      getState(entry.charId, 'loadout') || {},
+    );
+    const invested = getState(entry.charId, 'invested') || {};
+    const wornAmount = wornResistanceFor(inventory, (uid) => !!invested[uid], vsType);
+
     return {
-      amount: resistanceFor(effects, vsType, catalog),
+      amount: Math.max(effectAmount, wornAmount),
       easeFlatCheck: flatCheckEasedFor(effects, vsType, catalog),
     };
-  }, [getState, catalog]);
+  }, [getState, catalog, characters]);
 
   useEffect(() => {
     const active = encounter?.active ?? false;
