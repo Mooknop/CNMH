@@ -12194,6 +12194,405 @@
           "actionCount": 1
         }
       ]
+    },
+    {
+      "name": "Cognitive Mutagen",
+      "description": "An alchemical mutagen that sharpens the intellect at the cost of physical prowess.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Cognitive Mutagen (Lesser)",
+          "price": 4,
+          "effect": "The item bonus is +1.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "cognitive-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 mental/RK skills; −2 attacks, Athletics, Acrobatics (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Cognitive Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The item bonus is +2.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "cognitive-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 mental/RK skills; −2 attacks, Athletics, Acrobatics (10 min)"
+          }
+        }
+      ],
+      "id": "cognitive-mutagen"
+    },
+    {
+      "name": "Juggernaut Mutagen",
+      "description": "An alchemical mutagen that toughens the body, granting resilience and temporary vigor.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Juggernaut Mutagen (Lesser)",
+          "price": 4,
+          "effect": "The bonus is +1 and you gain 5 temporary HP.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "juggernaut-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 Fort, 5 temp HP; −2 Will, Perception, initiative (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Juggernaut Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The bonus is +2 and you gain 10 temporary HP.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "juggernaut-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 Fort, 10 temp HP; −2 Will, Perception, initiative (10 min)"
+          }
+        }
+      ],
+      "id": "juggernaut-mutagen"
+    },
+    {
+      "name": "Quicksilver Mutagen",
+      "description": "An alchemical mutagen that makes you swifter and nimbler, but more fragile.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Quicksilver Mutagen (Lesser)",
+          "price": 4,
+          "effect": "The item bonus is +1 and the Speed bonus is +5 feet.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "quicksilver-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 Acro/Stealth/Thievery/Reflex/Dex-attacks, +5 ft Speed; −2 Fort (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Quicksilver Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The item bonus is +2 and the Speed bonus is +10 feet.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "quicksilver-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 Acro/Stealth/Thievery/Reflex/Dex-attacks, +10 ft Speed; −2 Fort (10 min)"
+          }
+        }
+      ],
+      "id": "quicksilver-mutagen"
+    },
+    {
+      "name": "Sanguine Mutagen",
+      "description": "An alchemical mutagen that boosts blood production, filtering contagions and bolstering endurance.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Sanguine Mutagen (Lesser)",
+          "price": 3,
+          "effect": "The bonus is +1 (+2 vs disease/poison/fatigue).",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "sanguine-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 Fort & Reflex (+2 vs disease/poison/fatigue); 1d6 bleed when cut (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Sanguine Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The bonus is +2 (+3 vs disease/poison/fatigue).",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "sanguine-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 Fort & Reflex (+3 vs disease/poison/fatigue); 1d6 bleed when cut (10 min)"
+          }
+        }
+      ],
+      "id": "sanguine-mutagen"
+    },
+    {
+      "name": "Serene Mutagen",
+      "description": "An alchemical mutagen that calms the mind, sharpening senses and will at the cost of aggression.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Serene Mutagen (Lesser)",
+          "price": 4,
+          "effect": "The item bonus is +1 (+2 to Will vs mental).",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "serene-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 Will/Perception/Med/Nat/Rel/Survival; −1 attacks & offensive spell DCs & damage/die (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Serene Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The item bonus is +2 (+3 to Will vs mental).",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "serene-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 Will/Perception/Med/Nat/Rel/Survival; −1 attacks & offensive spell DCs & damage/die (10 min)"
+          }
+        }
+      ],
+      "id": "serene-mutagen"
+    },
+    {
+      "name": "Silvertongue Mutagen",
+      "description": "An alchemical mutagen that hones charm and guile while dulling scholarly recall.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Silvertongue Mutagen (Lesser)",
+          "price": 4,
+          "effect": "The item bonus is +1.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "silvertongue-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 Deception/Diplomacy/Intimidation/Performance; −2 knowledge skills, lose a trained skill (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Silvertongue Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The item bonus is +2.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "silvertongue-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 Deception/Diplomacy/Intimidation/Performance; −2 knowledge skills, lose a trained skill (10 min)"
+          }
+        }
+      ],
+      "id": "silvertongue-mutagen"
+    },
+    {
+      "name": "Theatrical Mutagen",
+      "description": "An alchemical mutagen that turns you into a consummate performer, demanding constant motion.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 3,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "Theatrical Mutagen (Lesser)",
+          "price": 3,
+          "effect": "The item bonus is +1.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "theatrical-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 Acro/Crafting/Performance, +5 ft Speed, untrained at level; −1 Perception & Will, off-guard if idle (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "Theatrical Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The item bonus is +2.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "theatrical-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 Acro/Crafting/Performance, +5 ft Speed, untrained at level; −1 Perception & Will, off-guard if idle (10 min)"
+          }
+        }
+      ],
+      "id": "theatrical-mutagen"
+    },
+    {
+      "name": "War Blood Mutagen",
+      "description": "An alchemical mutagen that binds a weapon to your hand and fuels relentless aggression.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 4,
+      "weight": 0.1,
+      "variants": [
+        {
+          "level": 1,
+          "label": "Lesser",
+          "name": "War Blood Mutagen (Lesser)",
+          "price": 4,
+          "effect": "The attack bonus is +1; weapon-removal DC is 25.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "war-blood-mutagen-lesser",
+            "durationMinutes": 1,
+            "note": "+1 attacks (chosen melee weapon, bound to hand); +1 Will vs fear; concentrate DC 5 flat (1 min)"
+          }
+        },
+        {
+          "level": 3,
+          "label": "Moderate",
+          "name": "War Blood Mutagen (Moderate)",
+          "price": 12,
+          "effect": "The attack bonus is +2; weapon-removal DC is 30.",
+          "consumable": {
+            "kind": "effect",
+            "effectId": "war-blood-mutagen-moderate",
+            "durationMinutes": 10,
+            "note": "+2 attacks (chosen melee weapon, bound to hand); +2 Will vs fear; concentrate DC 5 flat (10 min)"
+          }
+        }
+      ],
+      "id": "war-blood-mutagen"
+    },
+    {
+      "name": "Ommatophoric Mutagen",
+      "description": "Upon activation your eyes bulge from their sockets and extend upward on long, prehensile stalks, greatly enhancing your eyesight and field of view but leaving you unable to close them.",
+      "traits": [
+        "Uncommon",
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 65,
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "ommatophoric-mutagen",
+        "durationMinutes": 1,
+        "note": "+2 visual Perception, all-around vision (unflankable), low-light; −2 saves vs visual (1 min)"
+      },
+      "id": "ommatophoric-mutagen"
+    },
+    {
+      "name": "Ichthyosis Mutagen",
+      "description": "Your skin thickens into overlapping scales that knit wounds closed and seal bleeding, but flake constantly and slow your reflexes — leaving an easy trail to follow.",
+      "traits": [
+        "Rare",
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 24,
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "ichthyosis-mutagen",
+        "durationMinutes": 1,
+        "note": "Fast healing 2, auto-recover persistent bleed; −2 Reflex; trackable +4 for 24 hr (1 min)"
+      },
+      "id": "ichthyosis-mutagen"
+    },
+    {
+      "name": "Stone Body Mutagen (Lesser)",
+      "description": "This mutagen calcifies your body, making it as hard as stone — turning aside blades and points at the cost of speed and agility.",
+      "traits": [
+        "Alchemical",
+        "Consumable",
+        "Elixir",
+        "Mutagen",
+        "Polymorph"
+      ],
+      "price": 22,
+      "weight": 0.1,
+      "consumable": {
+        "kind": "effect",
+        "effectId": "stone-body-mutagen-lesser",
+        "durationMinutes": 10,
+        "note": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (10 min)"
+      },
+      "id": "stone-body-mutagen-lesser"
     }
   ],
   "spell": [
@@ -15610,6 +16009,606 @@
       "name": "Waterbreathing",
       "description": "You can breathe underwater. Lasts 1 hour.",
       "modifiers": []
+    },
+    {
+      "id": "cognitive-mutagen-lesser",
+      "name": "Cognitive Mutagen (Lesser)",
+      "description": "+1 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "athletics",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "cognitive-mutagen-moderate",
+      "name": "Cognitive Mutagen (Moderate)",
+      "description": "+2 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "athletics",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "juggernaut-mutagen-lesser",
+      "name": "Juggernaut Mutagen (Lesser)",
+      "description": "+1 item bonus to Fortitude saves and 5 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "juggernaut-mutagen-moderate",
+      "name": "Juggernaut Mutagen (Moderate)",
+      "description": "+2 item bonus to Fortitude saves and 10 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "quicksilver-mutagen-lesser",
+      "name": "Quicksilver Mutagen (Lesser)",
+      "description": "+1 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +5-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "stealth",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "thievery",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 5
+        },
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "quicksilver-mutagen-moderate",
+      "name": "Quicksilver Mutagen (Moderate)",
+      "description": "+2 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +10-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "stealth",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "thievery",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "rangedAttack",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 10
+        },
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "sanguine-mutagen-lesser",
+      "name": "Sanguine Mutagen (Lesser)",
+      "description": "+1 item bonus to Fortitude and Reflex saves (+2 against disease, poison, or fatigue effects). Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "sanguine-mutagen-moderate",
+      "name": "Sanguine Mutagen (Moderate)",
+      "description": "+2 item bonus to Fortitude and Reflex saves (+3 against disease, poison, or fatigue effects). Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "fort",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "serene-mutagen-lesser",
+      "name": "Serene Mutagen (Lesser)",
+      "description": "+1 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+2 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "medicine",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "nature",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "religion",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "survival",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "attacks",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "spellDC",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "serene-mutagen-moderate",
+      "name": "Serene Mutagen (Moderate)",
+      "description": "+2 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+3 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "medicine",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "nature",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "religion",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "survival",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "attacks",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "spellDC",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "silvertongue-mutagen-lesser",
+      "name": "Silvertongue Mutagen (Lesser)",
+      "description": "+1 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "deception",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "diplomacy",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "intimidation",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "silvertongue-mutagen-moderate",
+      "name": "Silvertongue Mutagen (Moderate)",
+      "description": "+2 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "deception",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "diplomacy",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "intimidation",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "arcana",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "occultism",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "society",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "theatrical-mutagen-lesser",
+      "name": "Theatrical Mutagen (Lesser)",
+      "description": "+1 item bonus to Acrobatics, Crafting, and Performance and a +5-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 5
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "theatrical-mutagen-moderate",
+      "name": "Theatrical Mutagen (Moderate)",
+      "description": "+2 item bonus to Acrobatics, Crafting, and Performance and a +5-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "acrobatics",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "crafting",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "performance",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": 5
+        },
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": -1
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": -1
+        }
+      ]
+    },
+    {
+      "id": "war-blood-mutagen-lesser",
+      "name": "War Blood Mutagen (Lesser)",
+      "description": "+1 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +1 item bonus to Will saves against fear. The weapon resists being removed (DC 25 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": 1
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 1,
+          "vs": "fear"
+        }
+      ]
+    },
+    {
+      "id": "war-blood-mutagen-moderate",
+      "name": "War Blood Mutagen (Moderate)",
+      "description": "+2 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +2 item bonus to Will saves against fear. The weapon resists being removed (DC 30 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "meleeAttack",
+          "kind": "item",
+          "amount": 2
+        },
+        {
+          "stat": "will",
+          "kind": "item",
+          "amount": 2,
+          "vs": "fear"
+        }
+      ]
+    },
+    {
+      "id": "ommatophoric-mutagen",
+      "name": "Ommatophoric Mutagen",
+      "description": "Your eyes extend on prehensile stalks: +2 item bonus to visual Perception checks, all-around vision (you can’t be flanked), and low-light vision. You take a –2 penalty to saves against effects with the visual trait. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "perception",
+          "kind": "item",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "ichthyosis-mutagen",
+      "name": "Ichthyosis Mutagen",
+      "description": "Your skin thickens into scales: you gain fast healing 2 and automatically succeed at flat checks to recover from persistent bleed. The flaking skin imposes a –2 penalty to Reflex saves and grants creatures a +4 circumstance bonus to Track you for 24 hours. Lasts 1 minute.",
+      "modifiers": [
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": -2
+        }
+      ]
+    },
+    {
+      "id": "stone-body-mutagen-lesser",
+      "name": "Stone Body Mutagen (Lesser)",
+      "description": "Your body calcifies: resistance 5 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 10 minutes.",
+      "modifiers": [
+        {
+          "stat": "resistance",
+          "amount": 5,
+          "vs": "piercing,slashing"
+        },
+        {
+          "stat": "reflex",
+          "kind": "item",
+          "amount": -2
+        },
+        {
+          "stat": "speed",
+          "kind": "status",
+          "amount": -10
+        }
+      ]
     }
   ],
   "rune": [
