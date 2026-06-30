@@ -4465,6 +4465,31 @@
       "id": "manipulate-20"
     },
     {
+      "name": "Scepter",
+      "description": "A scepter is a magic item held in one hand. While holding an invested scepter you gain access to its spellshape Activate ability, and once per day you can Activate its actuated ability by expending a spell slot of the rank the effect requires. A prepared spellcaster chooses one prepared spell of that rank to lose as if they had cast it; a spontaneous spellcaster expends one of their spell slots as if they had cast a spell from it. Most actuated effects list a minimum and/or maximum spell-slot rank. After you have used a scepter's actuated effect, you can attempt to Overload it: roll a DC 10 flat check. On a success the activation happens as normal but the scepter gains the broken condition; on a failure the effect doesn't happen, you lose the actions, and the scepter gains the broken condition anyway. While broken, a scepter can be used for neither its spellshape nor its actuated ability. Repairing it requires the Repair action or sacrificing a daily spell slot of the minimum rank required to activate it, and it cannot be repaired before your next daily preparations.",
+      "id": "scepter-100"
+    },
+    {
+      "name": "Spellshape",
+      "description": "Actions and abilities with the spellshape trait tweak the properties of a spell you are about to cast. You can use only one spellshape action during the Casting of a single spell, and a spellshape action must be used immediately before Casting the Spell it modifies. (Spellshape was formerly called metamagic.)",
+      "id": "spellshape-101"
+    },
+    {
+      "name": "Aura",
+      "description": "An aura is an emanation that continually radiates from its source out to a specified distance. An aura's effects are determined by its source and apply to creatures in the area, often as they enter it or end their turn within it.",
+      "id": "aura-102"
+    },
+    {
+      "name": "Olfactory",
+      "description": "An olfactory effect can affect only creatures that can smell it. A creature that has no sense of smell, or that is otherwise unable to smell the effect, is immune to it.",
+      "id": "olfactory-103"
+    },
+    {
+      "name": "Envision",
+      "description": "You perform an action with the envision trait primarily by concentrating on a mental image, idea, or force of will rather than through physical movement.",
+      "id": "envision-104"
+    },
+    {
       "name": "Melee",
       "description": "This weapon or attack is used in melee, meaning that it can be used only against creatures within reach of the wielder. Most melee weapons have a reach of 5 feet, but some weapons have different reach values.",
       "id": "melee-22"
@@ -10385,6 +10410,239 @@
       "price": 7,
       "weight": 0,
       "id": "sanitizing-pin"
+    },
+    {
+      "name": "Scepter of Energy Ablation",
+      "description": "Scepters of this type are often made of heavy iron and have large hand guards similar to some swords.",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 80,
+      "weight": 0.1,
+      "level": 4,
+      "actions": [
+        {
+          "name": "Energy Ablation",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "If your next action is to Cast a Spell that deals at least one type of energy damage (acid, cold, electricity, fire, force, sonic, vitality, or void), you gain resistance to one energy type the spell could deal equal to the spell's rank until the end of your next turn."
+        },
+        {
+          "name": "Energy Abjection",
+          "actionCount": 3,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 2nd rank; Effect You grant resistance to one energy damage type of your choosing to all allies within 30 feet, equal to double the rank of the spell you expended. This lasts for a number of rounds equal to the rank of the spell you expended."
+        }
+      ],
+      "id": "scepter-of-energy-ablation"
+    },
+    {
+      "name": "Scepter of Greater Distances",
+      "description": "Sometimes mistaken for small staves, these scepters are made of bamboo or other fast-growing plants.",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 70,
+      "weight": 0.1,
+      "level": 4,
+      "actions": [
+        {
+          "name": "Reach Spell",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet. If you have the Reach Spell feat, you increase the range of the spell by 45 feet instead of 30."
+        },
+        {
+          "name": "Mobilize the Distance",
+          "actionCount": 3,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 2nd rank; Effect You grant all allies within 30 feet a +10-foot status bonus to Speed and a +1 status bonus to DCs and checks against effects that would impart immobilized, grabbed, or restrained for a number of rounds equal to the rank of the spell you expended."
+        }
+      ],
+      "id": "scepter-of-greater-distances"
+    },
+    {
+      "name": "Scepter of Purifying",
+      "description": "You can tell this scepter by its effervescent-smelling handle.",
+      "traits": [
+        "Healing",
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 340,
+      "weight": 0.1,
+      "level": 7,
+      "actions": [
+        {
+          "name": "Purifying Spell",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell that would restore Hit Points to a single creature, you can attempt to counteract the target's sickened condition in addition to the normal effects, using the rank of the spell you cast for your counteract modifier."
+        },
+        {
+          "name": "Purifying Wave",
+          "actionCount": 3,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 4th rank; Effect You restore 1d8 Hit Points per rank of the spell to all creatures within a 30-foot cone. You can attempt to counteract the sickened condition of all creatures in the area, or a disease or poison affecting a single target in the area, using the rank of the spell you expended as the spell rank for your counteract modifier."
+        }
+      ],
+      "id": "scepter-of-purifying"
+    },
+    {
+      "name": "Scepter of Second Chances",
+      "description": "The birch these scepters are made from sheds its paper-like bark as if it were still a living tree. The bark disappears quickly, leading some wielders to write secret desires on it and watch them vanish, in hopes that they will come back in reality.",
+      "traits": [
+        "Fortune",
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 1000,
+      "weight": 0.1,
+      "level": 10,
+      "actions": [
+        {
+          "name": "Dangerous Odds",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell that would target a single creature and requires a Will save, you can use your reaction if the target rolls a success on their save to force the creature to reroll their save and take the new result. This is a misfortune effect."
+        },
+        {
+          "name": "Manifest Desires",
+          "actionCount": 3,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 5th rank; Effect You and allies within 30 feet can manifest a better reality for yourselves for a number of rounds equal to the rank of the spell you expended. For the duration, affected creatures can choose to reroll a single attack roll, saving throw, or skill check. They must take the new result even if it is worse. This is a fortune effect."
+        }
+      ],
+      "id": "scepter-of-second-chances"
+    },
+    {
+      "name": "Scepter of Sickening",
+      "description": "These scepters are often green and brown, have an unpleasant, greasy feeling when touched, or carry a faint yet repulsive odor. Using the scepter to enhance a spell adds a bit of disgusting magic to it, leaving targets of the magic feeling sick.",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 1400,
+      "weight": 0.1,
+      "level": 11,
+      "actions": [
+        {
+          "name": "Sicken Spell",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per hour; Effect If your next action is to Cast a Spell with a basic Fortitude save, creatures that fail their save are also sickened 1 (sickened 2 on a critical failure). The creature is affected whether or not the spell deals damage."
+        },
+        {
+          "name": "Rotting Aura",
+          "actionCount": 3,
+          "traits": [
+            "Aura",
+            "Concentrate",
+            "Disease",
+            "Manipulate",
+            "Olfactory"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 3rd rank; Effect You exude a putrid aura in a 20-foot emanation. The aura lasts a number of rounds equal to the rank of the expended spell. Creatures that end their turn within the area become sickened 1 or increase the value of their sickened condition by 1, to a maximum of sickened 4. Creatures in the area cannot reduce their sickened condition below 1."
+        }
+      ],
+      "id": "scepter-of-sickening"
+    },
+    {
+      "name": "Scepter of Heightening",
+      "description": "Often made of polished burled wood, this scepter allows the user to reach new heights of power, using the energy from one spell to temporarily make many of their spells more powerful.",
+      "traits": [
+        "Uncommon",
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 2000,
+      "weight": 0.1,
+      "level": 12,
+      "actions": [
+        {
+          "name": "Heighten",
+          "actionCount": 1,
+          "traits": [
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell of at least 3 ranks below the highest-rank spell slot you have, you treat the rank of the spell as 2 higher for the purposes of numerical effects based on its heightened rank, such as damage, healing, increased area, bonuses, or penalties. You do not gain any other effects associated with the heightened rank, such as being able to target more creatures or treating the spell as a higher rank for the purposes of counteracting or the incapacitation trait."
+        },
+        {
+          "name": "Height of Your Power",
+          "actionCount": 3,
+          "traits": [
+            "Concentrate",
+            "Envision",
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 4th rank; Effect For the duration, you can use the Heighten spellshape from this scepter as if it had a frequency of once per round instead of once per hour. This effect lasts for a number of rounds equal to the rank of the spell you expended."
+        }
+      ],
+      "id": "scepter-of-heightening"
+    },
+    {
+      "name": "Scepter of Quickening",
+      "description": "Scepters of this type are almost always made from stabilized quicksilver, polished so that it glistens in the faintest light. Despite this, they always appear slightly out of focus, as if they are moving too fast to be seen in one glance.",
+      "traits": [
+        "Invested",
+        "Magical",
+        "Scepter"
+      ],
+      "price": 25000,
+      "weight": 0.1,
+      "level": 18,
+      "actions": [
+        {
+          "name": "Quickened Casting",
+          "actionCount": 1,
+          "traits": [
+            "Concentrate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per day; Effect If the next action you use is to Cast a cantrip or a spell that is at least 2 ranks lower than the highest-rank spell slot you have, reduce the number of actions to Cast it by 1 (minimum 1 action)."
+        },
+        {
+          "name": "Hasten to Fight",
+          "actionCount": 3,
+          "traits": [
+            "Manipulate"
+          ],
+          "description": "Frequency once per day; Cost a spell slot of at least 8th rank; Effect You and all allies within 30 feet are quickened for 1 minute and can use the extra action each round only to Strike and Stride."
+        }
+      ],
+      "id": "scepter-of-quickening"
     },
     {
       "id": "scroll-of-cleanse-affliction",
