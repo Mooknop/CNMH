@@ -1,6 +1,6 @@
 import { buildChildrenMap, getChildren } from './loreUtils';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
-import { resolveScroll, resolveWand, castRank, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
+import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity } from './InventoryUtils';
 
 // Shop selectors over the app-managed wares store `cnmh_shops_global` (#696 S1).
@@ -239,27 +239,40 @@ export function eligibleSpellItems(ware, spells) {
     const spellTrads = Array.isArray(spell.traditions) ? spell.traditions : null;
     if (!spellTrads || spellTrads.length === 0) continue; // focus spell — no scroll/wand pricing
 
-    const rank = castRank(spell, {});
-    if (rank == null || rank < 1 || rank > cap) continue;
+    const baseRank = castRank(spell, {});
+    if (baseRank == null || baseRank < 1 || baseRank > cap) continue;
     if (!spellTrads.some((t) => trads.includes(String(t).toLowerCase()))) continue;
     if (!rars.includes(spellRarity(spell))) continue;
 
-    const derived = resolveFn(spell, {});
     // A scroll/wand inherits its spell's rarity — stamp the rarity trait on.
     const rarityTrait = getItemRarity(spell);
-    const traits = rarityTrait ? [rarityTrait, ...derived.traits] : [...derived.traits];
-    const price = mod != null ? Math.round(derived.price * mod) : derived.price;
 
-    out.push({
-      id: `${kind}-of-${spell.id}`,
-      name: derived.name,
-      level: derived.level,
-      price,
-      weight: BULK_L_WEIGHT,
-      traits,
-      [kind]: { spellRef: String(spell.id) },
-      wareKey: `${kind}:${spell.id}`,
-    });
+    // One ware per mechanically-distinct cast rank within the shop's level cap
+    // (#937): the base rank, plus each heightened rank that actually changes the
+    // spell. The base rank keeps the minimal `{spellRef}` block + un-suffixed
+    // wareKey (so it round-trips like before and useBuyItems lands a plain item);
+    // a heightened rank carries a `rank` override and a rank-distinct wareKey.
+    // All share one `id`, so groupWares collapses them into a single browse
+    // entry with a buy form per rank.
+    for (const rank of mechanicalHeightenRanks(spell)) {
+      if (rank > cap) continue;
+      const heightened = rank > baseRank;
+      const block = heightened ? { spellRef: String(spell.id), rank } : { spellRef: String(spell.id) };
+      const derived = resolveFn(spell, block);
+      const traits = rarityTrait ? [rarityTrait, ...derived.traits] : [...derived.traits];
+      const price = mod != null ? Math.round(derived.price * mod) : derived.price;
+
+      out.push({
+        id: `${kind}-of-${spell.id}`,
+        name: derived.name,
+        level: derived.level,
+        price,
+        weight: BULK_L_WEIGHT,
+        traits,
+        [kind]: block,
+        wareKey: heightened ? `${kind}:${spell.id}:${rank}` : `${kind}:${spell.id}`,
+      });
+    }
   }
   return out;
 }
@@ -277,7 +290,10 @@ export function spellOfferingSummary(ware, spells) {
   const cap = maxRankForLevel(kind, maxLevel);
   const traditions = offeringTraditions(ware || {});
   const rarities = offeringRarities(ware || {});
-  const count = eligibleSpellItems(ware, spells).length;
+  // Count distinct spells, not rank-forms: heightened offerings (#937) emit
+  // several wares per spell (all sharing one `id`), but the summary speaks in
+  // spells ("23 eligible spells"), so collapse by id.
+  const count = new Set(eligibleSpellItems(ware, spells).map((e) => e.id)).size;
   const tradLabel = traditions.length === ALL_TRADITIONS.length ? 'all traditions' : traditions.join('/');
   const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to item level ${maxLevel} · ${count} eligible spell${count === 1 ? '' : 's'}`;
   return { kind, maxLevel, cap, count, traditions, rarities, text };

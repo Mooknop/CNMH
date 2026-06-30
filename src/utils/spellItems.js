@@ -74,6 +74,46 @@ export const castRank = (spell, block) => {
   return Number.isInteger(n) && n > 0 ? n : null;
 };
 
+// Spells top out at rank 10, so an interval heightening never produces a higher
+// cast rank than this.
+export const MAX_SPELL_RANK = 10;
+
+// The cast ranks at which a scroll/wand of this spell is mechanically distinct
+// from a lower-rank one — i.e. the ranks worth selling separately (#937). The
+// base rank is always included; a rank above it is included only when heightening
+// the spell to that rank actually does something:
+//   • a fixed "Nth" heightening (e.g. "3rd") adds exactly rank N — intermediate
+//     ranks that cross no threshold grant nothing and are skipped;
+//   • an interval "+N" heightening (e.g. "+1", "+2") adds every step base+N,
+//     base+2N, … (each increment is a fresh effect).
+// A spell with no (or no further) mechanical heightening yields just [base].
+// Result is sorted ascending and capped at MAX_SPELL_RANK; the caller still
+// bounds by the scroll/wand table and the shop's level cap.
+export const mechanicalHeightenRanks = (spell) => {
+  const base = Number(spell && spell.level);
+  if (!Number.isInteger(base) || base < 1) return [];
+  const ranks = new Set([base]);
+  const h = spell && spell.heightened;
+  if (h && typeof h === 'object') {
+    for (const key of Object.keys(h)) {
+      const interval = /^\+(\d+)$/.exec(key);
+      if (interval) {
+        const step = Number(interval[1]);
+        if (step > 0) {
+          for (let r = base + step; r <= MAX_SPELL_RANK; r += step) ranks.add(r);
+        }
+        continue;
+      }
+      const fixed = /^(\d+)(?:st|nd|rd|th)$/.exec(key);
+      if (fixed) {
+        const r = Number(fixed[1]);
+        if (r > base && r <= MAX_SPELL_RANK) ranks.add(r);
+      }
+    }
+  }
+  return [...ranks].sort((a, b) => a - b);
+};
+
 // "Scroll of Heal", plus a "(Rank 5)" suffix when the cast rank exceeds the
 // spell's base level (a heightened casting baked into the item). A missing
 // spell name degrades to "(unknown spell)" so React keys / displays never break.
