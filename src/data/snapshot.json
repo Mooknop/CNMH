@@ -15007,6 +15007,96 @@
       }
     },
     {
+      "id": "authorized",
+      "type": "property",
+      "name": "Authorized",
+      "level": 3,
+      "price": 50,
+      "description": "Sharp needles impale anyone who attempts to wield this weapon other than its rightful owner. If any other creature wields the weapon, needles erupt from the hilt or shaft, dealing 1d8 piercing damage plus 1d4 persistent bleed damage to that wielder (increasing to 1d8 piercing and 1d4 persistent bleed per damage die if the weapon has a striking rune). When the rune is crafted, the crafter can broaden who may safely wield it (e.g. a particular bloodline, patron deity, or sanctification)."
+    },
+    {
+      "id": "crushing",
+      "type": "property",
+      "name": "Crushing",
+      "level": 3,
+      "price": 50,
+      "description": "Etched onto a bludgeoning weapon. When you score a critical hit with this weapon, the target becomes clumsy 1 and enfeebled 1 until the end of your next turn.",
+      "rider": {
+        "onCrit": {
+          "conditions": [
+            {
+              "name": "clumsy",
+              "value": 1,
+              "duration": "end-of-next-turn"
+            },
+            {
+              "name": "enfeebled",
+              "value": 1,
+              "duration": "end-of-next-turn"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "returning",
+      "type": "property",
+      "name": "Returning",
+      "level": 3,
+      "price": 55,
+      "description": "Etched onto a thrown weapon. When you make a thrown Strike with this weapon, it flies back to your hand after the Strike is complete. If your hands are full when the weapon returns, it falls to the ground in your space."
+    },
+    {
+      "id": "ghost-touch",
+      "type": "property",
+      "name": "Ghost Touch",
+      "level": 4,
+      "price": 75,
+      "description": "This rune enables a weapon to damage non-physical beings, and it's exceptionally potent against incorporeal creatures, which typically have a specific weakness to ghost touch weapons. Incorporeal creatures can also touch, hold, and wield a ghost touch weapon, unlike most physical objects."
+    },
+    {
+      "id": "earthbinding",
+      "type": "property",
+      "name": "Earthbinding",
+      "level": 5,
+      "price": 125,
+      "description": "The weapon hums when touched to the ground. Once per hour, when you critically hit a flying creature with the etched weapon, you can use a reaction (concentrate) to have the rune cast a DC 20 earthbind spell on that creature."
+    },
+    {
+      "id": "cunning",
+      "type": "property",
+      "name": "Cunning",
+      "level": 5,
+      "price": 140,
+      "description": "Etched on a slashing or piercing weapon, the rune performs divination magic on your foes' blood to grant insight into their abilities. Once per minute, if your previous action hit and dealt damage to a bleeding creature, you can activate it (free action, envision) to Recall Knowledge about that target, gaining an item bonus to the check equal to the weapon's potency rune bonus to attack rolls (and a +2 circumstance bonus if your hit was a critical hit)."
+    },
+    {
+      "id": "pacifying",
+      "type": "property",
+      "name": "Pacifying",
+      "level": 5,
+      "price": 150,
+      "description": "This rune turns a weapon into an instrument of peacemaking. When you deal damage with the etched weapon, you can use a reaction to force the damaged creature to succeed at a DC 20 Will save or become pacified: the creature takes a –2 penalty to attack rolls with attacks that aren't nonlethal for 1 minute, as a psychic warning urges it to cease dealing lethal damage."
+    },
+    {
+      "id": "fearsome",
+      "type": "property",
+      "name": "Fearsome",
+      "level": 5,
+      "price": 160,
+      "description": "Etched onto a weapon. When you critically hit with this weapon, the target becomes frightened 1.",
+      "rider": {
+        "onCrit": {
+          "conditions": [
+            {
+              "name": "frightened",
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
       "id": "weapon-potency-1",
       "type": "fundamental",
       "fundamental": "potency",
