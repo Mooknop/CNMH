@@ -37,7 +37,7 @@ import { immunityConfigFor } from '../../utils/immunity';
 import { requiredFlatChecks, flatCheckPasses, concealmentFlatCheck, CONCEALMENT_LEVELS } from '../../utils/flatChecks';
 import { expiryLabelSecs } from '../../utils/expiry';
 import { DEFENSE_LABELS } from '../../utils/defense';
-import { resolveActionRoll } from '../../utils/rollResolution';
+import { resolveActionRoll, isBasicDefense } from '../../utils/rollResolution';
 import { parseRangeIncrement, rangeIncrementResult } from '../../utils/rangeIncrement';
 import { preyMatches } from '../../utils/huntPrey';
 import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
@@ -1027,7 +1027,7 @@ const UseAbilityModal = ({
         abilityName: ability.name,
         save: rollProfile.defense,
         dc: saveDc,
-        basic: !!(ability.basic),
+        basic: !!(ability.basic) || isBasicDefense(ability.defense),
         rank: directCastRank,
         targets,
         ...(damage && { damage }),

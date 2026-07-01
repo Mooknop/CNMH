@@ -3,7 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import ChainedSpellSection from './ChainedSpellSection';
 import { resolveActionRoll } from '../../utils/rollResolution';
 
-vi.mock('../../utils/rollResolution', () => ({
+vi.mock('../../utils/rollResolution', async (importActual) => ({
+  ...(await importActual()),
   resolveActionRoll: vi.fn(),
 }));
 vi.mock('../../utils/defense', () => ({
@@ -544,6 +545,81 @@ describe('ChainedSpellSection — save damage payload (#281)', () => {
     expect(screen.getByLabelText('rolled damage total')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '7' } });
     expect(ref.current.getResults().damage).toMatchObject({ entered: 7, expression: '2d6' });
+  });
+});
+
+// Sicken Spell (#1001 S4): a spellshape injects conditional riders (sickened 1
+// on a failed basic-Fort save, sickened 2 on a crit fail) into the chained
+// save-spell. The picker scopes to basic-Fortitude spells; the riders serialize
+// into getResults' damage payload so the parent's save request carries them.
+describe('ChainedSpellSection — Sicken Spell injected riders (#1001 S4)', () => {
+  const sickenChain = {
+    into: 'spell',
+    spellFilter: 'basic-fortitude-save',
+    modifier: 'Failed basic Fortitude save → sickened.',
+    injectRiders: [
+      { id: 'sicken-spell', label: 'Sicken Spell — sickened 1', condition: 'sickened 1', on: ['failure'] },
+      { id: 'sicken-spell-crit', label: 'Sicken Spell — sickened 2 (crit fail)', condition: 'sickened 2', on: ['criticalFailure'] },
+    ],
+  };
+  const FORT_DMG = {
+    id: 'ripple', name: 'Spatial Ripple', actions: 'Two Actions', range: '60 feet',
+    level: 1, defense: 'basic Fortitude', damageData: { base: '1d6', type: 'slashing' },
+  };
+  const FORT_NODMG = {
+    id: 'nausea', name: 'Waves of Nausea', actions: 'Two Actions', range: '30 feet',
+    level: 2, defense: 'basic Fortitude', // no damageData → no base panel
+  };
+  const REFLEX_SPELL = {
+    id: 'fireball', name: 'Fireball', actions: 'Two Actions', range: '500 feet',
+    level: 3, defense: 'basic Reflex', damageData: { base: '6d6', type: 'fire' },
+  };
+  const fortEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { saves: { fortitude: 6 } } }];
+
+  const renderSicken = (spells, ref) => render(
+    <ChainedSpellSection
+      ref={ref}
+      character={{ ...character, spellcasting: { spells } }}
+      chain={sickenChain}
+      parentCost={1}
+      enemyTargets={fortEnemies}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => {
+    resolveActionRoll.mockReturnValue({ mode: 'target-save', bonus: null, dc: 20, defense: 'fortitude' });
+  });
+
+  it('filters the picker to basic-Fortitude spells only', () => {
+    renderSicken([FORT_DMG, FORT_NODMG, REFLEX_SPELL]);
+    const options = Array.from(screen.getByLabelText('spell picker').options).map((o) => o.textContent);
+    expect(options.join(' ')).toContain('Spatial Ripple');
+    expect(options.join(' ')).toContain('Waves of Nausea');
+    expect(options.join(' ')).not.toContain('Fireball'); // basic Reflex — excluded
+  });
+
+  it('serializes the degree-scoped sickened riders into the damage payload', () => {
+    const ref = createRef();
+    renderSicken([FORT_DMG], ref);
+    fireEvent.change(screen.getByLabelText('rolled damage total'), { target: { value: '6' } });
+    const res = ref.current.getResults();
+    expect(res.spellBasic).toBe(true);
+    const conds = res.damage.riders.filter((r) => r.condition);
+    expect(conds).toEqual(expect.arrayContaining([
+      expect.objectContaining({ condition: 'sickened 1', on: ['failure'] }),
+      expect.objectContaining({ condition: 'sickened 2', on: ['criticalFailure'] }),
+    ]));
+  });
+
+  it('carries the riders even when the spell deals no damage (whether or not it deals damage)', () => {
+    const ref = createRef();
+    renderSicken([FORT_NODMG], ref);
+    // No base damage input, but the injected condition riders still travel.
+    const res = ref.current.getResults();
+    const conds = res.damage.riders.filter((r) => r.condition);
+    expect(conds).toHaveLength(2);
   });
 });
 

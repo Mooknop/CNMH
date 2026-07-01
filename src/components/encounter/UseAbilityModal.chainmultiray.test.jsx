@@ -70,7 +70,8 @@ vi.mock('../../hooks/useSyncedState', () => ({
 vi.mock('../../hooks/useCharacter', () => ({
   useCharacter: (c) => (c ? { inventory: [] } : null),
 }));
-vi.mock('../../utils/rollResolution', () => ({
+vi.mock('../../utils/rollResolution', async (importActual) => ({
+  ...(await importActual()),
   resolveActionRoll: (ability) =>
     ability?.traits?.includes('Spellshape')
       ? { mode: 'none', bonus: null, dc: null, defense: null }
