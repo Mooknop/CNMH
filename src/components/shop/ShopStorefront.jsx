@@ -23,6 +23,7 @@ import { useShopCheckout } from '../../hooks/useShopCheckout';
 import { useCharacter } from '../../hooks/useCharacter';
 import { DndProvider, useDraggable, DropZone } from '../inventory/dnd';
 import ItemActivations from '../shared/ItemActivations';
+import SpellMechanics from '../spells/SpellMechanics';
 import './ShopStorefront.css';
 
 // Player Shop redesign (#857). The single full-screen, phone-shaped shop surface
@@ -246,10 +247,19 @@ const Takeover = ({ group, town, qtyByKey, onAdd, onBack }) => {
           {head.level != null && head.level > 0 && <span className="ps-preview-lvl">Level {head.level}</span>}
           {(group.traits || []).slice(0, 4).map((t) => <span key={t} className="ps-preview-trait">{t}</span>)}
         </div>
-        {group.description && <p className="ps-preview-desc">{group.description}</p>}
-        {/* Item activations — what it does (display-only), shared with the
-            inventory ItemModal so the views match (#882). */}
-        <ItemActivations item={head} />
+        {/* A Scroll/Wand shows the whole embedded spell — traits, action cost,
+            defense, range, area, targets, duration, degrees of success, and
+            heightening — via the shared SpellMechanics (its description subsumes
+            the plain ps-preview-desc). Other wares keep the description +
+            ItemActivations, shared with the inventory ItemModal (#882). */}
+        {head.spell ? (
+          <SpellMechanics spell={head.spell} />
+        ) : (
+          <>
+            {group.description && <p className="ps-preview-desc">{group.description}</p>}
+            <ItemActivations item={head} />
+          </>
+        )}
         <ul className="ps-preview-forms" aria-label="forms">
           {group.forms.map((f) => {
             const qty = qtyByKey[f.wareKey] || 0;
