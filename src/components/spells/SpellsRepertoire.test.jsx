@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import SpellsRepertoire from './SpellsRepertoire';
 
 vi.mock('../../utils/SpellUtils', () => ({
@@ -49,7 +49,7 @@ describe('SpellsRepertoire', () => {
     expect(screen.getByText('Magic Missile')).toBeInTheDocument();
   });
 
-  it('renders a slot bar for non-cantrip ranks', () => {
+  it('renders a read-only slot ledger for non-cantrip ranks', () => {
     const spells = [makeSpell('s1', 'Fireball', 1)];
     const character = { spellcasting: { bloodline: null } };
     render(
@@ -63,13 +63,14 @@ describe('SpellsRepertoire', () => {
       />
     );
     expect(
-      screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ })
+      screen.getByRole('img', { name: /Rank 1 spell slots: 3 of 3 remaining/ })
     ).toBeInTheDocument();
   });
 
-  it('tapping the slot bar spends one slot', () => {
+  it('reflects spent slots from the synced ledger (read-only, not clickable)', () => {
+    localStorage.setItem('cnmh_slots_wiz', JSON.stringify({ '1': 1 }));
     const spells = [makeSpell('s1', 'Fireball', 1)];
-    const character = { spellcasting: { bloodline: null } };
+    const character = { id: 'wiz', spellcasting: { bloodline: null } };
     render(
       <SpellsRepertoire
         spells={spells}
@@ -80,13 +81,14 @@ describe('SpellsRepertoire', () => {
         character={character}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ }));
+    // One slot spent → 2 of 3 remaining, and no interactive control exists.
     expect(
-      screen.getByRole('button', { name: /Rank 1 spell slots: 2 of 3 remaining/ })
+      screen.getByRole('img', { name: /Rank 1 spell slots: 2 of 3 remaining/ })
     ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /spell slots:/ })).toBeNull();
   });
 
-  it('does not render a slot bar for cantrips', () => {
+  it('does not render a slot ledger for cantrips', () => {
     const spells = [makeSpell('s1', 'Detect Magic', 0)];
     const character = { spellcasting: { bloodline: null } };
     render(
@@ -99,11 +101,11 @@ describe('SpellsRepertoire', () => {
         character={character}
       />
     );
-    expect(screen.queryByRole('button', { name: /spell slots:/ })).toBeNull();
+    expect(screen.queryByRole('img', { name: /spell slots:/ })).toBeNull();
     expect(screen.getByText('Detect Magic')).toBeInTheDocument();
   });
 
-  it('Rest button restores all spell slots', () => {
+  it('no longer renders a Rest button (daily prep owns the refresh)', () => {
     const spells = [makeSpell('s1', 'Fireball', 1)];
     const character = { spellcasting: { bloodline: null } };
     render(
@@ -116,10 +118,7 @@ describe('SpellsRepertoire', () => {
         character={character}
       />
     );
-    fireEvent.click(screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ }));
-    expect(screen.getByRole('button', { name: /2 of 3 remaining/ })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Rest: restore all spell slots' }));
-    expect(screen.getByRole('button', { name: /Rank 1 spell slots: 3 of 3 remaining/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Rest/i })).toBeNull();
   });
 
   it('renders ★ symbol on signature spells', () => {

@@ -4,19 +4,20 @@ import { useSyncedState as useLocalStorage } from '../../hooks/useSyncedState';
 import SpellCard from './SpellCard';
 
 /**
- * Clickable slot-pip ledger shown in a rank header. Tapping spends one slot.
+ * Read-only slot-pip ledger shown in a rank header. Reflects slots spent by
+ * casting (in or out of encounter) and refreshed at daily preparations — no
+ * hand-toggling. GMs remediate via CharacterStateModal if a correction is needed.
  */
-const RankSlotPips = ({ rank, total, remaining, onSpend }) => (
-  <button
+const RankSlotPips = ({ rank, total, remaining }) => (
+  <span
     className="rank-slot-pips"
-    disabled={remaining === 0}
-    onClick={onSpend}
-    aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining. Tap to spend one.`}
+    role="img"
+    aria-label={`Rank ${rank} spell slots: ${remaining} of ${total} remaining`}
   >
     {Array.from({ length: total }, (_, i) => (
       <span key={i} className={`rank-slot-pip${i < remaining ? ' filled' : ''}`} />
     ))}
-  </button>
+  </span>
 );
 
 const SpellsRepertoire = ({
@@ -30,22 +31,12 @@ const SpellsRepertoire = ({
   castResources,
 }) => {
   const characterKey = character?.id || 'unknown';
-  const [slotsSpent, setSlotsSpent] = useLocalStorage(
+  // Read-only view of the slot ledger. The sole player-side writer is the cast
+  // path (useCastingResources.spend); daily preparations reset it.
+  const [slotsSpent] = useLocalStorage(
     `cnmh_slots_${characterKey}`,
     () => Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0]))
   );
-
-  const handleSpend = (rank) => {
-    const total = spellSlots[rank] || 0;
-    const spent = slotsSpent[rank] || 0;
-    if (spent < total) {
-      setSlotsSpent(prev => ({ ...prev, [rank]: spent + 1 }));
-    }
-  };
-
-  const handleRest = () => {
-    setSlotsSpent(Object.fromEntries(Object.keys(spellSlots || {}).map(k => [k, 0])));
-  };
 
   const filtered = filterSpellsByDefense(spells, defenseFilter);
   const spellsByRank = organizeSpellsByRank(filtered);
@@ -53,24 +44,8 @@ const SpellsRepertoire = ({
     Object.keys(spellsByRank).filter(r => spellsByRank[r].length > 0)
   ).slice(1); // drop the leading 'all' entry
 
-  const hasNonCantripSlots = Object.keys(spellSlots || {}).some(
-    k => k !== 'cantrips' && (spellSlots[k] || 0) > 0
-  );
-
   return (
     <div className="spells-container">
-      {hasNonCantripSlots && (
-        <div className="repertoire-rest-row">
-          <button
-            className="btn-secondary btn-small"
-            aria-label="Rest: restore all spell slots"
-            onClick={handleRest}
-          >
-            Rest
-          </button>
-        </div>
-      )}
-
       {ranksToShow.map(rank => {
         const total = spellSlots?.[rank] || 0;
         const spent = slotsSpent[rank] || 0;
@@ -87,7 +62,6 @@ const SpellsRepertoire = ({
                   rank={rank}
                   total={total}
                   remaining={remaining}
-                  onSpend={() => handleSpend(rank)}
                 />
               )}
             </div>
