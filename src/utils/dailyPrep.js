@@ -11,6 +11,7 @@
 // summary stays meaningful.
 import { pruneLedgerByPer } from './frequency';
 import { staffPrepValue } from './staffPrep';
+import { clampSlotAllocation } from './slotSacrifice';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -177,23 +178,14 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
   // loop) refreshes whatever staff was prepared so it stays charged.
   // Clamp a requested slot allocation to what the caster actually has of each
   // rank (cantrips/rank 0 never count). Used for BOTH the charge total and the
-  // spent-slots write so they can't disagree.
+  // spent-slots write so they can't disagree. Shares the slot-sacrifice
+  // clamp primitive (#957 S3); slots were reset above, so maxes == remaining.
   const maxes = character?.spellcasting?.spell_slots || {};
-  const clampAlloc = (alloc) => {
-    const out = {};
-    Object.keys(maxes).forEach((k) => {
-      const rn = Number(k);
-      out[k] = Number.isFinite(rn) && rn > 0
-        ? Math.max(0, Math.min(Number((alloc || {})[k] || 0), Number(maxes[k] || 0)))
-        : 0;
-    });
-    return out;
-  };
 
   let nextStaffPrep;
   let expendedForStaff = null; // clamped rank -> slots spent, applied to cnmh_slots below
   if (staffChoice !== undefined) {
-    expendedForStaff = staffChoice ? clampAlloc(staffSlots) : null;
+    expendedForStaff = staffChoice ? clampSlotAllocation(maxes, staffSlots) : null;
     nextStaffPrep = staffPrepValue(character, staffChoice, expendedForStaff);
   } else {
     const prev = getState(id, 'staffprep');
