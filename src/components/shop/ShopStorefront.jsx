@@ -583,8 +583,16 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
     [resolved]
   );
   // The active character's runesmithable gear (weapons + armor), for the sockets.
+  // Power rings are runesmithable too (gearTarget → 'ring', #967 R4) but get
+  // their own imbue affordance in R5, so they stay out of this weapon/armor
+  // etch list for now.
   const gearList = useMemo(
-    () => (Array.isArray(charData?.inventory) ? charData.inventory.filter((it) => gearTarget(it)) : []),
+    () => (Array.isArray(charData?.inventory)
+      ? charData.inventory.filter((it) => {
+          const t = gearTarget(it);
+          return t === 'weapon' || t === 'armor';
+        })
+      : []),
     [charData]
   );
   // Buyable scrolls/wands for the Spellcasting tab (#812 generative offerings

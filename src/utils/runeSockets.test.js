@@ -1,4 +1,4 @@
-import { gearTarget, runeTarget, gearSockets, compatibleRunes, applyRune, projectStagedGear } from './runeSockets';
+import { gearTarget, runeTarget, gearSockets, compatibleRunes, applyRune, projectStagedGear, ringSocketCapacity } from './runeSockets';
 
 // Fixtures — minimal gear + rune docs.
 const weapon = (runes) => ({ uid: 'w1', name: 'Longsword', strikes: [{}], runes });
@@ -129,5 +129,46 @@ describe('applyRune', () => {
     expect(applyRune(weapon({}), resilient)).toBeNull(); // armor rune on a weapon
     expect(applyRune(armor({}), striking)).toBeNull(); // weapon rune on armor
     expect(applyRune(weapon({ potency: 1 }), slick)).toBeNull(); // armor property on a weapon
+  });
+});
+
+describe('power ring sockets (#967 R4)', () => {
+  // No fundamentals; imbue capacity is the grade's `ringSockets`, not a potency rune.
+  const ring = (grade, runes) => ({ uid: 'r1', name: 'Power Ring', powerRing: true, ringSockets: grade, runes });
+  const ringEnergy = { id: 'ring-energy', type: 'property', target: 'ring', name: 'Energy' };
+  const ringCalling = { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling' };
+
+  it('gearTarget detects a power ring by its marker; runeTarget reads a ring rune', () => {
+    expect(gearTarget(ring(1, {}))).toBe('ring');
+    expect(runeTarget(ringEnergy)).toBe('ring');
+  });
+
+  it('ringSocketCapacity is the grade, defaulting to 0', () => {
+    expect(ringSocketCapacity(ring(3, {}))).toBe(3);
+    expect(ringSocketCapacity({ powerRing: true })).toBe(0);
+  });
+
+  it('gearSockets: grade-count property sockets, NO fundamentals', () => {
+    expect(gearSockets(ring(1, {})).map((s) => s.type)).toEqual(['property']);
+    expect(gearSockets(ring(3, {})).map((s) => s.type)).toEqual(['property', 'property', 'property']);
+    const s = gearSockets(ring(2, { property: ['ring-energy'] }));
+    expect(s[0]).toMatchObject({ type: 'property', filled: true, rune: 'ring-energy', index: 0 });
+    expect(s[1]).toMatchObject({ type: 'property', filled: false, index: 1 });
+  });
+
+  it('applyRune imbues a ring rune up to grade capacity, rejecting over-capacity + duplicates', () => {
+    expect(applyRune(ring(2, {}), ringEnergy).runes.property).toEqual(['ring-energy']);
+    expect(applyRune(ring(1, { property: ['ring-energy'] }), ringCalling)).toBeNull(); // full (grade 1)
+    expect(applyRune(ring(2, { property: ['ring-energy'] }), ringEnergy)).toBeNull(); // duplicate
+  });
+
+  it('applyRune rejects a non-ring rune in a ring, and a ring rune in other gear', () => {
+    expect(applyRune(ring(2, {}), vitalizing)).toBeNull(); // weapon property into a ring
+    expect(applyRune(weapon({ potency: 1 }), ringEnergy)).toBeNull(); // ring rune into a weapon
+  });
+
+  it('compatibleRunes offers only ring property runes for a ring socket', () => {
+    const stock = [vitalizing, slick, ringEnergy, ringCalling, striking];
+    expect(compatibleRunes(ring(2, {}), 'property', stock).map((r) => r.id)).toEqual(['ring-energy', 'ring-calling']);
   });
 });
