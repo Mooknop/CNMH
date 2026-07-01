@@ -11,6 +11,12 @@ import {
   spellItemOfferings,
   eligibleSpellItems,
   spellOfferingSummary,
+  isRuneServiceWare,
+  runeRarity,
+  runeOfferings,
+  eligibleRunes,
+  runeOfferingSummary,
+  RUNE_TARGETS,
   groupWares,
   traitAccent,
 } from './shopUtils';
@@ -168,6 +174,11 @@ describe('shopOffersRunes (#857 S1)', () => {
     expect(shopOffersRunes('town-hall', shops)).toBe(false);
     expect(shopOffersRunes(null, shops)).toBe(false);
     expect(shopOffersRunes('bottled-solutions', null)).toBe(false);
+  });
+
+  it('derives from a generative rune-service offering (#982 G1)', () => {
+    const s = { smith: { wares: [{ runeService: true, targets: ['weapon'], maxLevel: 10 }] } };
+    expect(shopOffersRunes('smith', s)).toBe(true);
   });
 });
 
@@ -652,5 +663,121 @@ describe('traitAccent', () => {
     expect(traitAccent({ traits: ['Adventuring Gear'] })).toBe('gold');
     expect(traitAccent({})).toBe('gold');
     expect(traitAccent(null)).toBe('gold');
+  });
+});
+
+// ── Generative rune-service offerings (#982 G1) ─────────────────────────────
+// A property-rune catalog spanning every target axis + a fundamental (excluded).
+const runeCatalog = [
+  { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500 }, // weapon (no target, not armorRune)
+  { id: 'keen', type: 'property', name: 'Keen', level: 13, price: 3000 }, // weapon, above a cap-10 shop
+  { id: 'shadow', type: 'property', armorRune: true, name: 'Shadow', level: 5, price: 55 }, // armor via legacy flag
+  { id: 'ready', type: 'property', target: 'armor', name: 'Ready', level: 6, price: 200 }, // armor via explicit target
+  { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', level: 8, price: 400 }, // ring
+  { id: 'fearsome', type: 'property', name: 'Fearsome', level: 5, price: 160, rarity: 'uncommon' }, // weapon, uncommon
+  { id: 'striking', type: 'fundamental', target: 'weapon', name: 'Striking', level: 4, price: 65 }, // fundamental — never offered
+];
+
+describe('isRuneServiceWare (#982 G1)', () => {
+  it('detects the runeService flag only', () => {
+    expect(isRuneServiceWare({ runeService: true })).toBe(true);
+    expect(isRuneServiceWare({ ref: 'runestone', runeRef: 'flaming' })).toBe(false);
+    expect(isRuneServiceWare({ spellItem: 'scroll' })).toBe(false);
+    expect(isRuneServiceWare(null)).toBe(false);
+  });
+});
+
+describe('runeRarity (#982 G1)', () => {
+  it('reads an explicit rarity field, lowercased', () => {
+    expect(runeRarity({ rarity: 'Uncommon' })).toBe('uncommon');
+    expect(runeRarity({ rarity: 'rare' })).toBe('rare');
+  });
+  it('falls back to a rarity trait, then to common', () => {
+    expect(runeRarity({ traits: ['Rare', 'Magical'] })).toBe('rare');
+    expect(runeRarity({ name: 'Flaming' })).toBe('common');
+    expect(runeRarity(null)).toBe('common');
+  });
+});
+
+describe('runeOfferings (#982 G1)', () => {
+  it('returns only runeService wares, tagged with a stable offeringKey', () => {
+    const s = {
+      smith: {
+        wares: [
+          { ref: 'antidote' },
+          { runeService: true, targets: ['weapon'], maxLevel: 10 },
+          { ref: 'runestone', runeRef: 'flaming' },
+        ],
+      },
+    };
+    const offs = runeOfferings('smith', s);
+    expect(offs).toHaveLength(1);
+    expect(offs[0].offeringKey).toBe('runeService:weapon:10/10/10:common');
+  });
+  it('is empty for a shop with no rune-service ware or bad args', () => {
+    expect(runeOfferings('bottled-solutions', shops)).toEqual([]);
+    expect(runeOfferings(null, shops)).toEqual([]);
+  });
+});
+
+describe('eligibleRunes (#982 G1)', () => {
+  it('filters by target, level cap, and default common-only rarity; excludes fundamentals', () => {
+    const ware = { runeService: true, targets: ['weapon'], maxLevel: 10 };
+    const ids = eligibleRunes(ware, runeCatalog).map((w) => w.runeRef);
+    expect(ids).toEqual(['flaming']); // keen too high, fearsome uncommon, others off-target, striking fundamental
+  });
+
+  it('admits uncommon runes when the offering opts in', () => {
+    const ware = { runeService: true, targets: ['weapon'], maxLevel: 10, rarities: ['common', 'uncommon'] };
+    const ids = eligibleRunes(ware, runeCatalog).map((w) => w.runeRef);
+    expect(ids).toEqual(['flaming', 'fearsome']);
+  });
+
+  it('caps per target with an object maxLevel and honors the target list', () => {
+    const ware = { runeService: true, targets: ['weapon', 'ring'], maxLevel: { weapon: 10, ring: 8 } };
+    const ids = eligibleRunes(ware, runeCatalog).map((w) => w.runeRef);
+    expect(ids).toEqual(['flaming', 'ring-calling']); // armor runes excluded (not a target)
+  });
+
+  it('defaults to all three targets when targets is unset', () => {
+    const ware = { runeService: true, maxLevel: 20 };
+    const ids = eligibleRunes(ware, runeCatalog).map((w) => w.runeRef).sort();
+    expect(ids).toEqual(['flaming', 'keen', 'ready', 'ring-calling', 'shadow'].sort());
+  });
+
+  it('emits hand-stocked-shaped runestone ware specs with a stable wareKey', () => {
+    const ware = { runeService: true, targets: ['weapon'], maxLevel: 10 };
+    expect(eligibleRunes(ware, runeCatalog)[0]).toEqual({
+      ref: 'runestone',
+      runeRef: 'flaming',
+      wareKey: 'rune:flaming',
+    });
+  });
+
+  it('dedupes by rune id and is empty for a non-runeService ware', () => {
+    const dupes = [...runeCatalog, { id: 'flaming', type: 'property', name: 'Flaming', level: 8 }];
+    const ware = { runeService: true, targets: ['weapon'], maxLevel: 10 };
+    expect(eligibleRunes(ware, dupes).filter((w) => w.runeRef === 'flaming')).toHaveLength(1);
+    expect(eligibleRunes({ ref: 'runestone' }, runeCatalog)).toEqual([]);
+  });
+
+  it('offers nothing for a target with no cap in an object maxLevel', () => {
+    const ware = { runeService: true, targets: ['weapon', 'armor'], maxLevel: { weapon: 10 } };
+    const ids = eligibleRunes(ware, runeCatalog).map((w) => w.runeRef);
+    expect(ids).toEqual(['flaming']); // armor capped at 0 → excluded
+  });
+});
+
+describe('runeOfferingSummary (#982 G1)', () => {
+  it('summarizes targets, rarities, caps, and the live eligible count', () => {
+    const ware = { runeService: true, targets: ['weapon', 'ring'], maxLevel: { weapon: 10, ring: 8 } };
+    const sum = runeOfferingSummary(ware, runeCatalog);
+    expect(sum).toMatchObject({ targets: ['weapon', 'ring'], rarities: ['common'], count: 2 });
+    expect(sum.text).toBe('Runes · weapon/ring · common · weapon ≤10, ring ≤8 · 2 eligible runes');
+  });
+  it('labels all-targets and reflects RUNE_TARGETS', () => {
+    const sum = runeOfferingSummary({ runeService: true, maxLevel: 20 }, runeCatalog);
+    expect(sum.text.startsWith('Runes · all targets ·')).toBe(true);
+    expect(RUNE_TARGETS).toEqual(['weapon', 'armor', 'ring']);
   });
 });
