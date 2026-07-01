@@ -29,6 +29,7 @@ import { useBladeByrnie } from '../../hooks/useBladeByrnie';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { applyAbility, applyAbilityImmunity, applyRiderChoice, abilityNeedsPicker, resolveApplyTargets } from '../../utils/applyAbility';
+import { buildChainSelfEffect } from '../../utils/spellshapeTransform';
 import { lingeringDurationOverride } from '../../utils/lingering';
 import { isSustainedSpell, registerSustain } from '../../utils/sustain';
 import { hasSpellCounter, registerSpellCounter } from '../../utils/spellCounter';
@@ -1178,6 +1179,36 @@ const UseAbilityModal = ({
         } else if (heff) {
           appendLog({ type: 'system', text: `${character.name} — ${hc.drawnSuit}: ${heff.note}` });
         }
+      }
+
+      // Spellshape self-effect (#1001 S2): a chained spellshape can grant the
+      // caster a buff parametrized by the chained spell's rank + a chosen
+      // descriptor (Energy Ablation — resistance vs a chosen energy type = the
+      // spell's rank, until the end of your next turn). Inline modifiers, so it
+      // can't ride applyAbility's static-catalog path.
+      const chainSelfEffect = ability.chain?.selfEffect
+        ? buildChainSelfEffect({
+            selfEffect: ability.chain.selfEffect,
+            castRank: chainResults.castRank,
+            choice: chainResults.selfEffectChoice,
+            caster: character,
+            abilityName: ability.name,
+            casterEntryId,
+            encounter,
+            nowSecs,
+          })
+        : null;
+      if (chainSelfEffect) {
+        const nextEffects = [...(getState(character.id, 'effects') || []), chainSelfEffect];
+        try {
+          window.localStorage.setItem(`cnmh_effects_${character.id}`, JSON.stringify(nextEffects));
+        } catch { /* noop */ }
+        sendUpdate(character.id, 'effects', nextEffects);
+        const m = chainSelfEffect.modifiers[0];
+        appendLog({
+          type: 'action', charId: character.id,
+          text: `${character.name} gains ${chainSelfEffect.name || 'a spellshape effect'} (${m.stat} ${m.amount} vs ${m.vs})`,
+        });
       }
     }
 

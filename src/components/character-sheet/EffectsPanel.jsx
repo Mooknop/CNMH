@@ -38,7 +38,9 @@ const EffectsPanel = ({ charId, themeColor }) => {
       <ul className="effects-panel-list">
         {effects.map((entry) => {
           const def = getEffect(entry.effectId);
-          const baseName = def ? def.name : entry.effectId;
+          // Inline effects (#1001 S2) have no catalog def — fall back to the
+          // entry's own name (e.g. "Energy Ablation (fire)") before the raw id.
+          const baseName = def ? def.name : (entry.name || entry.effectId);
           // Ability immunity carries its source ability ("Immune: Guidance").
           const name = entry.effectId === ABILITY_IMMUNITY_EFFECT_ID && entry.source
             ? `${baseName}: ${entry.source}`
