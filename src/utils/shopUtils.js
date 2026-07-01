@@ -339,7 +339,8 @@ const offeringTargets = (ware) => {
 // The max rune level a target is offered up to. A scalar `maxLevel` caps every
 // selected target; an object `{ weapon?, armor?, ring? }` caps per target (a
 // target with no finite cap is not offered). Returns 0 when there is no cap.
-const maxLevelForTarget = (ware, target) => {
+// Exported so the GM authoring editor (#982 G2) can read a stored per-target cap.
+export const maxLevelForTarget = (ware, target) => {
   const ml = ware ? ware.maxLevel : null;
   const raw = ml !== null && typeof ml === 'object' ? ml[target] : ml;
   const lvl = Number(raw);

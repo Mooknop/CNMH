@@ -449,6 +449,119 @@ describe('GmShops', () => {
     });
   });
 
+  describe('runesmithing services (#982 G2)', () => {
+    // A property-rune catalog spanning every target axis + rarity.
+    const runeSet = [
+      { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500 }, // weapon
+      { id: 'keen', type: 'property', name: 'Keen', level: 13, price: 3000 }, // weapon, above a cap-10 shop
+      { id: 'ready', type: 'property', target: 'armor', name: 'Ready', level: 6, price: 200 }, // armor
+      { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', level: 8, price: 400 }, // ring
+      { id: 'fearsome', type: 'property', name: 'Fearsome', level: 5, price: 160, rarity: 'uncommon' }, // weapon, uncommon
+    ];
+    const open = (shops = { 'town-hall': { wares: [] } }) => {
+      setup(shops);
+      useContent.mockReturnValue({ allLoreEntries, items, runes: runeSet, spells });
+      render(<GmShops />);
+      select('Town Hall');
+    };
+    const lastWares = () => lastSave()[1].wares;
+    const offers = () => screen.getByTestId('rune-offerings');
+
+    it('shows the not-selling prompt until a target is enabled', () => {
+      open();
+      expect(offers()).toBeInTheDocument();
+      expect(screen.getByText(/Not selling runes/)).toBeInTheDocument();
+    });
+
+    it('authors one target and persists the minimal spec (defaults omitted)', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '10' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
+    });
+
+    it('collapses a uniform cap to a scalar and omits targets when all three are chosen', () => {
+      open();
+      ['weapon', 'armor', 'ring'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
+      ['weapon', 'armor', 'ring'].forEach((t) =>
+        fireEvent.change(screen.getByLabelText(`rune-maxlevel-${t}`), { target: { value: '12' } })
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([{ runeService: true, maxLevel: 12 }]);
+    });
+
+    it('emits a per-target object maxLevel when caps differ', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.click(screen.getByLabelText('rune-target-ring'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '10' } });
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-ring'), { target: { value: '8' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([
+        { runeService: true, targets: ['weapon', 'ring'], maxLevel: { weapon: 10, ring: 8 } },
+      ]);
+    });
+
+    it('persists a rarities subset (common+uncommon)', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '10' } });
+      fireEvent.click(screen.getByLabelText('rune-rarity-common'));
+      fireEvent.click(screen.getByLabelText('rune-rarity-uncommon'));
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      expect(lastWares()).toEqual([
+        { runeService: true, targets: ['weapon'], maxLevel: 10, rarities: ['common', 'uncommon'] },
+      ]);
+    });
+
+    it('summarises coverage with a live count that reacts to rarity', () => {
+      open();
+      fireEvent.click(screen.getByLabelText('rune-target-weapon'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-weapon'), { target: { value: '10' } });
+      // weapon property runes ≤10, common only: flaming (keen too high, fearsome uncommon).
+      expect(screen.getByTestId('rune-summary')).toHaveTextContent(
+        'Runes · weapon · common · weapon ≤10 · 1 eligible rune'
+      );
+      fireEvent.click(screen.getByLabelText('rune-rarity-common'));
+      fireEvent.click(screen.getByLabelText('rune-rarity-uncommon'));
+      // fearsome (uncommon, level 5) now included.
+      expect(screen.getByTestId('rune-summary')).toHaveTextContent(
+        'common+uncommon · weapon ≤10 · 2 eligible runes'
+      );
+    });
+
+    it('backfills: loads a stored rune-service offering into the config', () => {
+      open({
+        'town-hall': {
+          wares: [
+            { ref: 'antidote' },
+            { runeService: true, targets: ['weapon', 'ring'], maxLevel: { weapon: 10, ring: 8 }, rarities: ['common', 'uncommon'] },
+          ],
+        },
+      });
+      // Flat ware still on the shelf; the rune offering loads into the config.
+      expect(within(shelf()).getByText('Antidote')).toBeInTheDocument();
+      expect(within(offers()).getByLabelText('rune-target-weapon')).toHaveAttribute('aria-pressed', 'true');
+      expect(within(offers()).getByLabelText('rune-target-ring')).toHaveAttribute('aria-pressed', 'true');
+      expect(within(offers()).getByLabelText('rune-target-armor')).toHaveAttribute('aria-pressed', 'false');
+      expect(within(offers()).getByLabelText('rune-maxlevel-weapon')).toHaveValue(10);
+      expect(within(offers()).getByLabelText('rune-maxlevel-ring')).toHaveValue(8);
+      expect(within(offers()).getByLabelText('rune-rarity-uncommon')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('disabling all targets republishes the flat ware alone', () => {
+      open({ 'town-hall': { wares: [{ ref: 'antidote' }, { runeService: true, targets: ['weapon'], maxLevel: 10 }] } });
+      fireEvent.click(screen.getByLabelText('rune-target-weapon')); // turn the only target off
+      fireEvent.click(screen.getByRole('button', { name: 'Save & publish' }));
+      // The rune offering derived Runesmithing ON at mount (#857 S1); it persists ON.
+      expect(lastSave()).toEqual([
+        'town-hall',
+        { ...META, offersRunes: true, wares: [{ ref: 'antidote' }] },
+      ]);
+    });
+  });
+
   describe('service offerings (#857 S1)', () => {
     // The Spellcasting/Runesmithing toggles share "Offered"/"None" button text,
     // so scope each lookup to its labelled group.
