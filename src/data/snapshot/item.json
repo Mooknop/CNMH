@@ -18,7 +18,8 @@
           "Agile",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       },
       {
         "name": "Hammer Throw",
@@ -31,7 +32,8 @@
           "Agile",
           "Thrown"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "runes": {
@@ -59,7 +61,8 @@
         "Versatile P",
         "Melee"
       ],
-      "actionCount": 1
+      "actionCount": 1,
+      "damageType": "slashing"
     },
     "runes": {
       "potency": 1
@@ -88,7 +91,8 @@
       "proficiency": "martial",
       "type": "melee",
       "damage": "1d6",
-      "actionCount": 1
+      "actionCount": 1,
+      "damageType": "piercing"
     },
     "runes": {
       "potency": 1,
@@ -132,7 +136,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1 acid on a direct hit, 1d6 persistent acid, and 1 acid splash."
+        "description": "Deals 1 acid on a direct hit, 1d6 persistent acid, and 1 acid splash.",
+        "damageType": "acid"
       }
     ],
     "variants": [
@@ -389,7 +394,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 2d6 force and 2 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones)."
+        "description": "Deals 2d6 force and 2 force splash; the splash area fills with twisting eddies of force that are difficult terrain for incorporeal creatures (but not corporeal ones).",
+        "damageType": "force"
       }
     ],
     "id": "aether-marbles",
@@ -491,7 +497,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d8 fire, 1 persistent fire, and 1 fire splash."
+        "description": "Deals 1d8 fire, 1 persistent fire, and 1 fire splash.",
+        "damageType": "fire"
       }
     ],
     "variants": [
@@ -604,7 +611,8 @@
           "Reach",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ],
     "runes": {
@@ -645,7 +653,8 @@
         "Unarmed",
         "Versatile P"
       ],
-      "actionCount": 1
+      "actionCount": 1,
+      "damageType": "bludgeoning"
     },
     "actions": [
       {
@@ -884,7 +893,8 @@
           "Sweep",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "slashing"
       },
       {
         "name": "Axe Musket (Firearm)",
@@ -899,7 +909,8 @@
           "Fatal d10",
           "Ranged"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ]
   },
@@ -1194,7 +1205,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d4 poison, 1d4 persistent poison, and 1 poison splash."
+        "description": "Deals 1d4 poison, 1d4 persistent poison, and 1 poison splash.",
+        "damageType": "poison"
       }
     ],
     "variants": [
@@ -1378,7 +1390,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 electricity and 1 electricity splash; on a hit the target is off-guard until the start of your next turn."
+        "description": "Deals 1d6 electricity and 1 electricity splash; on a hit the target is off-guard until the start of your next turn.",
+        "damageType": "electricity"
       }
     ],
     "variants": [
@@ -1608,7 +1621,8 @@
           "Propulsive",
           "Ranged"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "runes": {
@@ -1852,7 +1866,8 @@
           "Parry",
           "Ranged"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       },
       {
         "name": "Crescent Cross Blade",
@@ -1865,7 +1880,8 @@
           "Melee",
           "Parry"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "slashing"
       }
     ],
     "description": "A crescent cross combines a small scizore with an arm-mounted crossbow apparatus that can hold up to three bolts at a time. It changes chambers automatically after you fire. To reload, you must load each bolt into the aparatus individually as its own action.",
@@ -1962,7 +1978,8 @@
           "Versatile S",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       },
       {
         "name": "Dog-Bone Knife (Thrown)",
@@ -1976,7 +1993,8 @@
           "Thrown",
           "Versatile S"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ],
     "runes": {
@@ -2106,7 +2124,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 mental and 1 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit)."
+        "description": "Deals 1d6 mental and 1 mental splash; on a hit the target is frightened 1 (frightened 2 on a critical hit).",
+        "damageType": "mental"
       }
     ],
     "variants": [
@@ -2779,7 +2798,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 cold and 1 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn."
+        "description": "Deals 1d6 cold and 1 cold splash; on a hit the target takes a −5-foot status penalty to its Speeds until the end of its next turn.",
+        "damageType": "cold"
       }
     ],
     "variants": [
@@ -2944,7 +2964,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d8 vitality and 1 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn."
+        "description": "Deals 1d8 vitality and 1 vitality splash; on a hit the target is enfeebled 1 until the start of your next turn.",
+        "damageType": "vitality"
       }
     ],
     "variants": [
@@ -3193,7 +3214,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d4 acid, 1 persistent acid, and 1 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions)."
+        "description": "Deals 1d4 acid, 1 persistent acid, and 1 acid splash; the clinging goo imposes a −5 circumstance penalty to Speeds (Escape DC 15 or 3 Interact actions).",
+        "damageType": "acid"
       }
     ],
     "variants": [
@@ -3436,7 +3458,8 @@
         "Splash",
         "Holy"
       ],
-      "actionCount": 1
+      "actionCount": 1,
+      "damageType": "vitality"
     },
     "description": "This vial contains water blessed by a benevolent deity. You activate a vial of holy water by throwing it as a Strike. It's a simple thrown weapon with a range increment of 20 feet. Holy water deals 1d6 spirit damage and 1 spirit splash damage. Holy water can damage only creatures with the unholy trait.",
     "image": "img_1fe88669-d3ed-4caa-becf-b8554069292b.jpg",
@@ -3504,7 +3527,8 @@
           "Deadly d10",
           "Ranged"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ],
     "runes": {
@@ -3661,7 +3685,8 @@
           "Versatile P",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "slashing"
       }
     ]
   },
@@ -3689,7 +3714,8 @@
           "Versatile S",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       },
       {
         "name": "Lady's Knife (Thrown)",
@@ -3703,7 +3729,8 @@
           "Thrown",
           "Versatile S"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ],
     "runes": {
@@ -3747,7 +3774,8 @@
           "Ranged",
           "Volley 30ft"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ],
     "description": "This 5-foot-tall bow, usually made of a single piece of elm, hickory, or yew, has a powerful draw and is excellent at propelling arrows with great force and at an extreme distance. You must use two hands to fire a longbow, and it can't be used while mounted. Because it's made for long range, you take a -2 penalty to attacks on creatures within 30ft with it.",
@@ -3963,7 +3991,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 bludgeoning and 1 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn."
+        "description": "Deals 1d6 bludgeoning and 1 bludgeoning splash; on a critical hit the target is dazzled until the start of your next turn.",
+        "damageType": "bludgeoning"
       }
     ],
     "variants": [
@@ -4097,7 +4126,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 void and 1 void splash; on a critical hit the target is sickened 1."
+        "description": "Deals 1d6 void and 1 void splash; on a critical hit the target is sickened 1.",
+        "damageType": "void"
       }
     ],
     "variants": [
@@ -4309,7 +4339,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1 poison on a direct hit, 1d4 persistent piercing, and 1 poison splash; one square of the target’s space becomes difficult terrain for 1 round."
+        "description": "Deals 1 poison on a direct hit, 1d4 persistent piercing, and 1 poison splash; one square of the target’s space becomes difficult terrain for 1 round.",
+        "damageType": "poison"
       }
     ],
     "variants": [
@@ -4425,7 +4456,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 piercing and 1 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn."
+        "description": "Deals 1d6 piercing and 1 piercing splash; on a hit the target gains the stupefied condition until the end of its next turn.",
+        "damageType": "piercing"
       }
     ],
     "variants": [
@@ -4785,7 +4817,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d4 bludgeoning and 1 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet."
+        "description": "Deals 1d4 bludgeoning and 1 bludgeoning splash; on a critical hit the target is knocked prone, and a Tiny or smaller target is pushed 5 feet.",
+        "damageType": "bludgeoning"
       }
     ],
     "variants": [
@@ -5057,7 +5090,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1 fire on a direct hit, 1d4 persistent fire, and 1 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn."
+        "description": "Deals 1 fire on a direct hit, 1d4 persistent fire, and 1 fire splash; on a critical hit the target is clumsy 1 until the start of your next turn.",
+        "damageType": "fire"
       }
     ],
     "variants": [
@@ -5536,7 +5570,16 @@
             "choose": {
               "key": "vs",
               "label": "Energy type",
-              "options": ["acid", "cold", "electricity", "fire", "force", "sonic", "vitality", "void"]
+              "options": [
+                "acid",
+                "cold",
+                "electricity",
+                "fire",
+                "force",
+                "sonic",
+                "vitality",
+                "void"
+              ]
             },
             "duration": {
               "until": "rounds",
@@ -5773,8 +5816,22 @@
           "spellFilter": "basic-fortitude-save",
           "modifier": "Creatures that fail the spell's basic Fortitude save are also sickened 1 (sickened 2 on a critical failure), whether or not the spell deals damage.",
           "injectRiders": [
-            { "id": "sicken-spell", "label": "Sicken Spell — sickened 1", "condition": "sickened 1", "on": ["failure"] },
-            { "id": "sicken-spell-crit", "label": "Sicken Spell — sickened 2 (crit fail)", "condition": "sickened 2", "on": ["criticalFailure"] }
+            {
+              "id": "sicken-spell",
+              "label": "Sicken Spell — sickened 1",
+              "condition": "sickened 1",
+              "on": [
+                "failure"
+              ]
+            },
+            {
+              "id": "sicken-spell-crit",
+              "label": "Sicken Spell — sickened 2 (crit fail)",
+              "condition": "sickened 2",
+              "on": [
+                "criticalFailure"
+              ]
+            }
           ]
         }
       }
@@ -5822,7 +5879,8 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "slashing"
       }
     ]
   },
@@ -5984,7 +6042,8 @@
         "Monk",
         "Thrown"
       ],
-      "actionCount": 1
+      "actionCount": 1,
+      "damageType": "piercing"
     },
     "description": "This “throwing star” is a small piece of flat metal with sharp edges, designed to be flung with a flick of the wrist.",
     "image": "img_42445a59-85ec-4017-96c6-68be682b8807.jpg",
@@ -6026,7 +6085,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1 slashing on a direct hit, then bursts into a 5-foot silver cloud for 1 minute: creatures inside are concealed and take 1d6 persistent slashing each round (Fortitude DC 19 basic), and weapons and unarmed attacks made within it count as silver until cleaned."
+        "description": "Deals 1 slashing on a direct hit, then bursts into a 5-foot silver cloud for 1 minute: creatures inside are concealed and take 1d6 persistent slashing each round (Fortitude DC 19 basic), and weapons and unarmed attacks made within it count as silver until cleaned.",
+        "damageType": "slashing"
       }
     ],
     "id": "silver-orb",
@@ -6393,7 +6453,8 @@
           "Versatile S",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "piercing"
       }
     ],
     "runes": {
@@ -6475,7 +6536,8 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "slashing"
       }
     ]
   },
@@ -6500,7 +6562,8 @@
       "traits": [
         "Attack",
         "melee"
-      ]
+      ],
+      "damageType": "piercing"
     }
   },
   {
@@ -6720,7 +6783,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d8 fire and 1 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target."
+        "description": "Deals 1d8 fire and 1 fire splash, bursting in a cross of two perpendicular 25-foot lines centered on the target.",
+        "damageType": "fire"
       }
     ],
     "variants": [
@@ -6843,7 +6907,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d8 poison and 1 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water)."
+        "description": "Deals 1d8 poison and 1 poison splash; the target is tagged and leaves a highly visible trail for 1 hour (DC 19 to Track, but the trail shows only in water).",
+        "damageType": "poison"
       }
     ],
     "variants": [
@@ -7028,7 +7093,8 @@
           "Shove",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "runes": {
@@ -7123,7 +7189,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d4 acid and 1 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1."
+        "description": "Deals 1d4 acid and 1 acid splash; on a hit the target takes a −1 status penalty to Perception and attack rolls until the end of its next turn, and on a critical hit it is sickened 1.",
+        "damageType": "acid"
       }
     ],
     "variants": [
@@ -7272,7 +7339,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals no direct damage; 1d4 persistent fire and 1 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts."
+        "description": "Deals no direct damage; 1d4 persistent fire and 1 fire splash. On a critical hit a living target is sickened 1 and can’t reduce its sickened value below 1 while the persistent fire lasts.",
+        "damageType": "fire"
       }
     ],
     "variants": [
@@ -7670,7 +7738,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1d6 mental and 1 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit)."
+        "description": "Deals 1d6 mental and 1 mental splash; on a hit the target must succeed at a DC 5 flat check before using concentrate actions until the end of its next turn (1 minute on a critical hit).",
+        "damageType": "mental"
       }
     ],
     "variants": [
@@ -7967,7 +8036,8 @@
         ],
         "actionCount": 1,
         "range": "20 feet",
-        "description": "Deals 1 nonlethal bludgeoning and 1 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat)."
+        "description": "Deals 1 nonlethal bludgeoning and 1 nonlethal bludgeoning splash; extinguishes non-magical fire and helps end persistent acid or fire damage (DC 10 flat).",
+        "damageType": "bludgeoning"
       }
     ],
     "variants": [
@@ -8218,7 +8288,8 @@
           "Trip",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "slashing"
       }
     ],
     "runes": {
@@ -8313,7 +8384,8 @@
         "Reach",
         "Shove"
       ],
-      "actionCount": 1
+      "actionCount": 1,
+      "damageType": "bludgeoning"
     },
     "description": "At the height of the ancient Thassilonian Empire Emperor Xin crafted seven Alara'quin, magical weapons of extraordinary power. Xanderghul's Flawless Hammer was the symbol of office for Xanderghul, the Runelord of Pride.",
     "image": "img_79b82e52-92b8-4492-b74f-8f618abb4cdd.jpg",

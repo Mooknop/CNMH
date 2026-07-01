@@ -814,7 +814,8 @@
               "Melee",
               "Unarmed"
             ],
-            "description": "You swing your leg through the air like a dragon swiping with its tail. You can only use this when you are in Dragon Stance."
+            "description": "You swing your leg through the air like a dragon swiping with its tail. You can only use this when you are in Dragon Stance.",
+            "damageType": "bludgeoning"
           }
         ],
         "name": "Dragon Stance",
@@ -877,7 +878,8 @@
               "Agile",
               "Finesse"
             ],
-            "description": "Rend their flesh with your draconic claws."
+            "description": "Rend their flesh with your draconic claws.",
+            "damageType": "slashing"
           },
           {
             "name": "Ravager Fang",
@@ -890,7 +892,8 @@
               "Agile",
               "Finesse"
             ],
-            "description": "Bite into your foe with magically sharp dragon teeth."
+            "description": "Bite into your foe with magically sharp dragon teeth.",
+            "damageType": "piercing"
           }
         ],
         "actions": [
@@ -996,7 +999,8 @@
           "Attack",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "actions": [
@@ -1710,7 +1714,8 @@
               "Attack",
               "Ranged"
             ],
-            "description": "Chuck one of your seed pods!"
+            "description": "Chuck one of your seed pods!",
+            "damageType": "bludgeoning"
           }
         ],
         "name": "Seedpod",
@@ -1806,7 +1811,8 @@
           "Attack",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "actions": [],
@@ -2299,7 +2305,8 @@
           "Attack",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "actions": [],
@@ -2619,7 +2626,8 @@
                 "defaultOn": true
               }
             ],
-            "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage."
+            "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage.",
+            "damageType": "piercing"
           },
           {
             "name": "Ranged Metal Blast",
@@ -2657,7 +2665,8 @@
               "Metal",
               "Primal"
             ],
-            "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. When you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage, and has a range of 30 feet."
+            "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. When you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage, and has a range of 30 feet.",
+            "damageType": "piercing"
           }
         ],
         "name": "Kineticist Dedication",
@@ -2867,7 +2876,8 @@
           "Attack",
           "Melee"
         ],
-        "actionCount": 1
+        "actionCount": 1,
+        "damageType": "bludgeoning"
       }
     ],
     "actions": [],
