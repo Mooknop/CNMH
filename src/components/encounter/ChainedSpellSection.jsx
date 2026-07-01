@@ -11,7 +11,7 @@ import TargetRollResolver from './TargetRollResolver';
 import MultiRayResolver from './MultiRayResolver';
 import DamagePanel from './DamagePanel';
 import HeightenedNotes from './HeightenedNotes';
-import { resolveActionRoll } from '../../utils/rollResolution';
+import { resolveActionRoll, mapSpellDefense, isBasicDefense } from '../../utils/rollResolution';
 import { useContent } from '../../contexts/ContentContext';
 import { useOmen } from '../../hooks/useOmen';
 import { DEFENSE_LABELS } from '../../utils/defense';
@@ -67,6 +67,14 @@ const ChainedSpellSection = forwardRef(({
     if (chain.spellFilter === 'has-range') {
       return spells.filter(
         (s) => s.range && s.range.trim() !== '' && s.range.toLowerCase() !== 'touch'
+      );
+    }
+    // Sicken Spell (#1001 S4): spells resolved by a *basic Fortitude* save — the
+    // scepter's rider only lands on those. isBasicDefense gates out plain-Fort
+    // spells (which aren't a valid Sicken target).
+    if (chain.spellFilter === 'basic-fortitude-save') {
+      return spells.filter(
+        (s) => isBasicDefense(s.defense) && mapSpellDefense(s.defense) === 'fortitude'
       );
     }
     // Split Shot (#227): ranged single-target attack spells without a duration.
@@ -180,7 +188,15 @@ const ChainedSpellSection = forwardRef(({
   // GM's RequestedSaves derives per-degree totals. Built at the section's own
   // cast rank, with the actor's exploit weakness scoped against the targets. The
   // chosen action-count variant (#572) overrides the dice via damageOverride.
-  const saveDamageProfile = saveTargets.length > 0
+  // Sicken Spell (#1001 S4): a spellshape may inject conditional riders into the
+  // chained save-spell (sickened 1 on a failed basic-Fort save, sickened 2 on a
+  // crit fail). Authored as `chain.injectRiders` condition riders; they ride the
+  // same degree gating and serialize into the GM save request. Applied only to a
+  // save spell — the picker's spellFilter already scopes which spells qualify.
+  const injectRiders = rollProfile.mode === 'target-save' && Array.isArray(chain.injectRiders)
+    ? chain.injectRiders
+    : [];
+  const saveBaseProfile = saveTargets.length > 0
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
         castRank: numericRank,
@@ -190,6 +206,12 @@ const ChainedSpellSection = forwardRef(({
         damageOverride: variant?.damage ?? null,
       })
     : null;
+  // A no-damage save spell (buildDamageProfile → null) still needs a shell so the
+  // injected condition riders reach the panel + save request.
+  const saveDamageProfile = injectRiders.length > 0 && saveTargets.length > 0
+    ? { ...(saveBaseProfile ?? { expression: null, typeLabel: null }),
+        riders: [...(saveBaseProfile?.riders ?? []), ...injectRiders] }
+    : saveBaseProfile;
   const [saveDmgInput, setSaveDmgInput] = useState('');
   const [saveRiderState, setSaveRiderState] = useState({});
 
@@ -260,7 +282,7 @@ const ChainedSpellSection = forwardRef(({
         multiRay: isMultiRayCast,
         saveTargets: saveTargets.length > 0 ? saveTargets : null,
         rollProfile,
-        spellBasic: selectedSpell.basic === true,
+        spellBasic: selectedSpell.basic === true || isBasicDefense(selectedSpell.defense),
         damage: damage ?? null,
         harrow: isHarrow ? {
           drawnSuit,
