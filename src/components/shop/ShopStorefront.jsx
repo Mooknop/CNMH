@@ -9,7 +9,10 @@ import {
   shopOffersRunes,
   spellItemOfferings,
   eligibleSpellItems,
+  runeOfferings,
+  eligibleRunes,
 } from '../../utils/shopUtils';
+import { resolveRunestone } from '../../utils/runestone';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
 import { gearTarget, gearSockets, compatibleRunes, projectStagedGear } from '../../utils/runeSockets';
 import { isRuneItem } from '../../utils/runeClassify';
@@ -563,7 +566,32 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   const runeIds = useMemo(() => new Set(runeMap.keys()), [runeMap]);
   const isRuneWare = useCallback((w) => !!w.runestone || isRuneItem(w, runeIds), [runeIds]);
   const wareGroups = useMemo(() => groupWares(resolved.filter((w) => !isRuneWare(w))), [resolved, isRuneWare]);
-  const runeGroups = useMemo(() => groupWares(resolved.filter(isRuneWare)), [resolved, isRuneWare]);
+  // Rune wares for the Runesmithing tab = hand-stocked runes (resolved) PLUS the
+  // generative rune-service offerings (#982 G3) expanded into runestones and
+  // resolved like any other ware. A hand-stocked rune stays an escape hatch (a
+  // custom price, or a rune outside the offering's target·level·rarity window);
+  // when both cover the same rune the hand-stocked one wins (deduped by rune id).
+  const runeWares = useMemo(() => {
+    const handStocked = resolved.filter(isRuneWare);
+    if (!selected) return handStocked;
+    const stockedIds = new Set(
+      handStocked.map((w) => (w.runestone ? String(w.runestone.runeRef) : String(w.id)))
+    );
+    const seen = new Set();
+    const generated = [];
+    runeOfferings(selected.id, waresStore).forEach((o) =>
+      eligibleRunes(o, runes).forEach((spec) => {
+        const rid = String(spec.runeRef);
+        if (stockedIds.has(rid) || seen.has(rid)) return;
+        seen.add(rid);
+        const item = resolveRunestone(spec, runeMap);
+        item.wareKey = spec.wareKey;
+        generated.push(item);
+      })
+    );
+    return [...handStocked, ...generated];
+  }, [resolved, isRuneWare, selected, waresStore, runes, runeMap]);
+  const runeGroups = useMemo(() => groupWares(runeWares), [runeWares]);
 
   // Tab set: Wares always; Spellcasting when the shop offers it (S1); Runesmithing
   // when it offers runes OR simply stocks any (so rune wares always have a home,
@@ -576,11 +604,12 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       ...(shopOffersRunes(selected.id, waresStore) || runeGroups.length > 0 ? ['runes'] : []),
     ];
   }, [selected, waresStore, runeGroups]);
-  // Rune docs the shop stocks (with the runestone's price), for the socket picker.
+  // Rune docs the shop stocks (with the runestone's price), for the socket picker
+  // — hand-stocked + generated (#982 G3), off the same combined runeWares list.
   const shopRunes = useMemo(
-    () => resolved.filter((w) => w.runestone && w.runestone.rune)
+    () => runeWares.filter((w) => w.runestone && w.runestone.rune)
       .map((w) => ({ ...w.runestone.rune, price: w.price, wareKey: w.wareKey })),
-    [resolved]
+    [runeWares]
   );
   // The active character's runesmithable gear (weapons, armor, and power rings —
   // gearTarget → 'ring', #967 R4/R5), for the sockets. Ring imbue reuses this
