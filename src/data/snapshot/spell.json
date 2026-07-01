@@ -138,6 +138,37 @@
     ]
   },
   {
+    "id": "bewilder",
+    "name": "Bewilder",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Illusion",
+      "Manipulate",
+      "Mental"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "Will",
+    "duration": "1 minute",
+    "description": "Your magic overwhelms the target's senses, swapping faces, silhouettes, voices, and scents of nearby creatures with ones from their memories. The target believes everyone might be their friend and is wary of attacking the wrong creature. Any time they attempt a hostile action, they must attempt a DC 6 flat check, failing to perform the hostile action on a failure. If the creature fails to complete a hostile action against another creature due to this spell, it treats the creature it targeted with the hostile action as its ally until its next turn.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target is affected until the end of their next turn.",
+      "Failure": "The target is affected for the duration of the spell, but it can attempt a Will save at the end of each of its turns. On a success, the spell ends.",
+      "Critical Failure": "The target is affected for the duration of the spell and the DC for the flat check is increased to 11."
+    },
+    "heightened": {
+      "8th": "You can target up to 10 creatures."
+    },
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "blazing-bolt",
     "name": "Blazing Bolt",
     "level": 2,
@@ -250,6 +281,30 @@
     ]
   },
   {
+    "id": "boom-a-rang",
+    "name": "Boom-a-rang",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Air",
+      "Concentrate",
+      "Manipulate",
+      "Sonic"
+    ],
+    "actions": "One to Three Actions",
+    "area": "30-foot line",
+    "defense": "basic Reflex",
+    "duration": "up to 1 round",
+    "description": "You conjure a boomerang of howling winds, then toss it at your foes. The boomerang sails from your hand to the end of the line.\n\nSingle Action The boomerang deals no damage on the initial throw. On your next turn, you can Sustain the spell to bring the boomerang back to your location. All creatures in that returning line take 2d8 sonic damage, with a basic Reflex save.\n\nTwo Actions As the 1-action version, except that the boomerang also harms creatures as soon as you throw it. Creatures in the line when you throw the boomerang also take 2d8 slashing damage, with a basic Reflex save.\n\nThree Actions As the 2-action version, but the boomerang automatically returns to your location at the beginning of your next turn, without you having to Sustain it, and the sonic damage of the returning boomerang is increased to 2d10.",
+    "heightened": {
+      "+1": "Increase the sonic damage of the returning boomerang by 1d8 for the 1-action and 2-action versions and by 1d10 for the 3-action version. Increase the slashing damage from the 2-action and 3-action versions by 1d8."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "boulder-crush",
     "name": "Boulder Crush",
     "level": 4,
@@ -356,6 +411,33 @@
       "Critical Failure": "As failure, but hostility doesn't end the effect."
     },
     "traditions": [
+      "divine",
+      "occult"
+    ]
+  },
+  {
+    "id": "careless-swings",
+    "name": "Careless Swings",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Illusion",
+      "Manipulate",
+      "Mental"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "Will",
+    "description": "You use a carefully-timed illusion to cause your foe to leave a small opening in their defenses for your allies to take advantage of. Choose either the manipulate or move trait.",
+    "degrees": {
+      "Success": "The target is unaffected.",
+      "Failure": "The first time the target Strikes before the end of its next turn, it gains the chosen trait.",
+      "Critical Failure": "As failure, except all of the target's Strikes gain the chosen trait until the end of its next turn."
+    },
+    "traditions": [
+      "arcane",
       "divine",
       "occult"
     ]
@@ -602,6 +684,64 @@
     ]
   },
   {
+    "id": "creeping-cold",
+    "name": "Creeping Cold",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Cold",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "description": "You cause frost creep and numb a creature's extremities. The target takes 1d6 persistent cold damage with a Fortitude save.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target takes half persistent damage and a –1 status penalty to their Reflex saves until the start of their next turn.",
+      "Failure": "The target takes the full persistent damage and a –1 status penalty to their Reflex saves as long as they are taking this persistent damage.",
+      "Critical Failure": "As failure, but the status penalty is –2."
+    },
+    "heightened": {
+      "+1": "The persistent damage increases by 1d6."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "primal"
+    ]
+  },
+  {
+    "id": "crushing-stampede",
+    "name": "Crushing Stampede",
+    "level": 5,
+    "baseLevel": 5,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "One to Three Actions",
+    "range": "120 feet",
+    "area": "varies",
+    "defense": "Reflex",
+    "description": "You briefly call forth a great stampede to batter your foes, with effects depending on the number of actions you spend. Affected creatures take bludgeoning damage and might be disoriented or knocked over based on the results of a Reflex save.\n\nSingle Action The stampede affects a single creature and deals 5d6 bludgeoning damage.\n\nTwo Actions The stampede affects all creatures in a 30-foot burst and deals 10d6 bludgeoning damage.\n\nThree Actions You conjure a stampeding creature under each of your allies, allowing them to move to safety if they can manage to ride the perilous wave. As the 2-action version except allies in the area that succeed at their save against the spell take no damage and move to the edge of the spell’s radius in a direction of their choice. Allies that fail the saving throw experience the spell’s normal effects.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature takes half damage.",
+      "Failure": "The creature takes full damage and is off-guard for 1 round.",
+      "Critical Failure": "The creature takes double damage and is knocked prone."
+    },
+    "heightened": {
+      "+1": "Increase the damage of the 1-action version by 1d6 and the two-action and three-action versions by 2d6."
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "darkvision",
     "name": "Darkvision",
     "level": 2,
@@ -827,6 +967,34 @@
     "traditions": [
       "arcane",
       "occult"
+    ]
+  },
+  {
+    "id": "drown",
+    "name": "Drown",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Incapacitation",
+      "Water"
+    ],
+    "actions": "Two Actions",
+    "range": "60 feet",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "duration": "sustained up to 1 minute",
+    "description": "You summon a bubble of deoxygenated water around the target's face, gills, or wherever they use to breathe. Creatures that do not need to breathe are unaffected by this spell. Air bubble can counteract drown, and vice versa.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target takes a –2 status penalty to all checks it makes with the auditory or linguistics traits it attempts until the end of its turn.",
+      "Failure": "The target must hold its breath or it begins suffocating. The target creature can Interact to attempt to remove the bubble, allowing it to attempt a new Fortitude save to end the effect.",
+      "Critical Failure": "As failure, except the target also halves the number of rounds it can hold its breath (minimum 0)."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "primal"
     ]
   },
   {
@@ -1069,6 +1237,34 @@
     ]
   },
   {
+    "id": "fountain-of-blood",
+    "name": "Fountain of Blood",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Emotion",
+      "Fear",
+      "Manipulate",
+      "Mental"
+    ],
+    "actions": "Reaction",
+    "trigger": "A creature takes bleed damage.",
+    "range": "30 feet",
+    "defense": "Will",
+    "description": "You cause the triggering creature's blood to geyser out in a horrific display of ultraviolence. Each other creature within 15 feet of the triggering creature must make a Will save. The target is then temporarily immune for 10 minutes.",
+    "degrees": {
+      "Critical Success": "The creature is unaffected.",
+      "Success": "The creature is frightened 1.",
+      "Failure": "The creature is frightened 2.",
+      "Critical Failure": "The creature is frightened 3 and fleeing for 1 round."
+    },
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "friendfetch",
     "name": "Friendfetch",
     "level": 1,
@@ -1132,6 +1328,38 @@
     "description": "You conjure grease.  All solid ground in the area is covered with grease. Each creature standing on the greasy surface must succeed at a Reflex save or an Acrobatics check against your spell DC or fall prone. Creatures using an action to move onto the greasy surface during the spell's duration must attempt either a Reflex save or an Acrobatics check to Balance. A creature that Steps or Crawls doesn't have to attempt a check or save. Alternatively, if you Cast the Spell on an unattended object, anyone trying to pick up the object must succeed at an Acrobatics check or Reflex save against your spell DC to do so. If you target an attended object, the creature that has the object must attempt an Acrobatics check or Reflex save. On a failure, the holder or wielder takes a –2 circumstance penalty to all checks that involve using the object; on a critical failure, the holder or wielder releases the item. The object lands in an adjacent square of the GM's choice. If you Cast this Spell on a worn object, the wearer gains a +2 circumstance bonus to Fortitude saves against attempts to grapple them.",
     "traditions": [
       "arcane",
+      "primal"
+    ]
+  },
+  {
+    "id": "gruesome-marionettist",
+    "name": "Gruesome Marionettist",
+    "level": 5,
+    "baseLevel": 5,
+    "traits": [
+      "Uncommon",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature not immune to bleed damage",
+    "defense": "Fortitude",
+    "duration": "sustained up to 1 minute",
+    "description": "You seize control of the target's blood temporarily, using specific motions to move them to your will instead of their own. Choose two actions or activities the creature can take that have either the attack, manipulate, or move traits, one is prohibited and the other is directed. If the creature takes the prohibited action or activity, it takes 5d10 persistent bleed damage. If the creature takes the directed action or activity, it is immune to the bleed damage from this spell until the beginning of its next turn.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The creature takes half the persistent bleed damage and the spell ends at the beginning of your next turn.",
+      "Failure": "The creature takes the full persistent bleed damage and the spell lasts for the duration.",
+      "Critical Failure": "As failure, except the creature takes double the persistent bleed damage."
+    },
+    "heightened": {
+      "+1": "The persistent bleed damage increases by 1d10."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
       "primal"
     ]
   },
@@ -1238,6 +1466,33 @@
       "+2": "The damage increases by 1d8."
     },
     "traditions": [
+      "occult"
+    ]
+  },
+  {
+    "id": "hemophilia",
+    "name": "Hemophilia",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate"
+    ],
+    "actions": "One Action",
+    "range": "60 feet",
+    "defense": "Fortitude",
+    "duration": "1 minute",
+    "description": "You cause the target's blood to flow freely. Regardless of the result, the target is temporarily immune for 1 minute.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target gains weakness 1 to bleed damage.",
+      "Failure": "As success, except the first time the target takes bleed damage while the spell is active, it becomes drained 1 or increases its drained value by 1.",
+      "Critical Failure": "As failure, except the weakness to bleed damage is doubled."
+    },
+    "heightened": {
+      "+1": "The weakness to bleed damage increases by 1."
+    },
+    "traditions": [
+      "arcane",
       "occult"
     ]
   },
@@ -1642,6 +1897,34 @@
     ]
   },
   {
+    "id": "kinetic-tow",
+    "name": "Kinetic Tow",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Force",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "duration": "sustained up to 1 minute",
+    "description": "You bind a creature with chains that swiftly contract. The target creature is drawn by an invisible chain towards another creature or object of your choice within 30 feet of the target, depending on its Fortitude save. This is forced movement.",
+    "degrees": {
+      "Critical Success": "The target is unaffected and the spell ends.",
+      "Success": "The target is moved 10 feet towards the creature or object and then the spell ends.",
+      "Failure": "The target is moved 15 feet towards the creature or object and cannot move more than 30 feet from the creature. The creature can attempt a new Fortitude save against the effect by spending an Interact action to break the chain. The target can choose to use its modifier in Athletics for its Fortitude save.",
+      "Critical Failure": "As failure, except the target is moved 30 feet."
+    },
+    "traditions": [
+      "arcane",
+      "occult",
+      "primal"
+    ]
+  },
+  {
     "id": "knock",
     "name": "Knock",
     "level": 2,
@@ -1803,6 +2086,58 @@
       "Success": "The composition lasts 3 rounds.",
       "Failure": "The composition lasts 1 round, but you don't expend a focus point for trying."
     }
+  },
+  {
+    "id": "localized-eclipse",
+    "name": "Localized Eclipse",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Darkness",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "area": "10-foot burst",
+    "duration": "sustained up to 1 minute",
+    "description": "You draw a curtain of darkness over the celestial firmament. In the area, bright light becomes dim light and dim light becomes darkness. The first time you Sustain the spell each turn, you can move the area to another location within 30 feet.",
+    "heightened": {
+      "+1": "You increase the area of the burst by 5 feet."
+    },
+    "traditions": [
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "lucky-decision",
+    "name": "Lucky Decision",
+    "level": 7,
+    "baseLevel": 7,
+    "traits": [
+      "Uncommon",
+      "Concentrate",
+      "Contingency",
+      "Fortune"
+    ],
+    "actions": "Two Actions",
+    "range": "120 feet",
+    "targets": "1 creature",
+    "defense": "Will",
+    "duration": "until your next daily preparations",
+    "description": "You know that destiny and fate are not something that is predetermined. As part of casting this spell roll a d20 and make note of the result. For the duration of the spell you gain the Your Good Luck and Their Bad Luck reactions. If you use either reaction the spell ends immediately.\n\nYour Good Luck (reaction, manipulate) Trigger You are about to attempt a non-secret attack roll, saving throw, or skill check. Effect You insert the fate you have made for yourself. Instead of rolling a d20, you use the result you rolled when casting this spell for your roll. This is a fortune effect.\n\nTheir Bad Luck (reaction, manipulate) Trigger An enemy creature is about to attempt an attack roll, saving throw, or skill check. Effect You steal the creature’s fate and insert your own. The target must attempt a Will save.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target rolls their check with a –2 status penalty.",
+      "Failure": "The target uses your roll from this spell for the triggering roll and takes a –2 status penalty to the check.",
+      "Critical Failure": "As failure, except the status penalty is –4."
+    },
+    "traditions": [
+      "divine",
+      "occult"
+    ]
   },
   {
     "id": "mind-games",
@@ -2174,6 +2509,38 @@
     ]
   },
   {
+    "id": "propagating-arc",
+    "name": "Propagating Arc",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Electricity",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "basic Reflex",
+    "description": "Cackling energy flies from your fingertips leaping through targets until the area around the target is filled with electricity. You create an arc of electricity that deals 2d12 electricity damage. If the target fails its save, each creature within 10 feet of the target also takes 2d6 electricity damage with a basic Reflex save, or half this amount if the creature was further than 10 feet but within 20 feet of the target. There must be at least 1 creature within 10 feet of the target for you to deal damage to creatures other than the target.",
+    "heightened": {
+      "+1": "The damage to the target increases by 1d12 and the damage to targets within 10 feet of the target increases by 1d6."
+    },
+    "damageData": {
+      "base": "2d12",
+      "type": "electricity",
+      "heightened": {
+        "+1": {
+          "base": "1d12"
+        }
+      }
+    },
+    "traditions": [
+      "arcane",
+      "primal"
+    ]
+  },
+  {
     "id": "pummeling-shockwave",
     "name": "Pummeling Shockwave",
     "level": 3,
@@ -2512,6 +2879,65 @@
     }
   },
   {
+    "id": "shade-of-night",
+    "name": "Shade of Night",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Darkness",
+      "Manipulate",
+      "Shadow"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature",
+    "defense": "Fortitude",
+    "duration": "varies",
+    "description": "Plunging creatures into darkness to conceal yourself and your allies or to confuse your enemies. The target creature attempts a Fortitude save, reducing their ability to see in darkness or low-light. Depending on their save, the target reduces their darkvision to low-light vision, and low-light vision to no special vision. If the creature has light sensitivity, it is suppressed for the duration. If the target is a willing ally, the ally can choose which result it gets without rolling.",
+    "degrees": {
+      "Critical Success": "The target is unaffected.",
+      "Success": "The target's vision is reduced for 1 round.",
+      "Failure": "The target's vision is reduced for 1 minute.",
+      "Critical Failure": "As failure, except the target is also blinded for 1 round."
+    },
+    "heightened": {
+      "2nd": "The spell reduces a creature's darkvision and low-light vision to no special vision.",
+      "4th": "The spell reduces greater darkvision to low-light vision in addition to its other effects."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "shadows-betrayal",
+    "name": "Shadow's Betrayal",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Shadow"
+    ],
+    "actions": "Two Actions",
+    "range": "30 feet",
+    "targets": "1 creature wielding a weapon or unarmed attack",
+    "defense": "AC",
+    "description": "You inject a small amount of magic into a foe's shadow, causing it to rise off the ground and attack its caster. Choose a weapon the target is wielding or an unarmed attack it could use for a Strike and make a spell attack roll against the target's AC. If the target is in dim light or darkness, they are off-guard to this spell attack roll. If you hit, you deal 2d8 damage to the creature of the same damage type as the chosen weapon or unarmed attack. If the chosen weapon or unarmed attack you chose deals multiple types of damage, you choose which damage type when you make your spell attack roll.",
+    "heightened": {
+      "+1": "The damage increases by 1d8."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
     "id": "shared-invisibility",
     "name": "Shared Invisibility",
     "level": 3,
@@ -2669,6 +3095,28 @@
     ]
   },
   {
+    "id": "siphoning-rivulet",
+    "name": "Siphoning Rivulet",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "Reaction",
+    "trigger": "A creature within range takes persistent bleed damage.",
+    "range": "60 feet",
+    "targets": "the triggering creature",
+    "description": "You seize hold of the target's blood as it leaves its body, siphoning it through the air to yourself. The target increases the triggering bleed damage by 4d4, and you gain temporary Hit Points equal to the total bleed damage they took that lasts until the end of your next turn.",
+    "heightened": {
+      "+1": "The damage increases by 1d4."
+    },
+    "traditions": [
+      "arcane",
+      "occult"
+    ]
+  },
+  {
     "id": "sleep",
     "name": "Sleep",
     "level": 1,
@@ -2723,6 +3171,29 @@
       "divine",
       "occult",
       "primal"
+    ]
+  },
+  {
+    "id": "spirit-boundary",
+    "name": "Spirit Boundary",
+    "level": 4,
+    "baseLevel": 4,
+    "traits": [
+      "Uncommon",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "One to Three Actions",
+    "range": "120 feet",
+    "area": "varies",
+    "duration": "1 minute",
+    "description": "You call forth a stationary shield of defensive spirits that blunt dangerous forces that cross its boundaries. The spirits do not impede sight, movement, or line of effect. When an effect that deals damage passes through the spirit shield, reduce the damage that the effect deals by the listed amount; the shield takes the same amount of damage that it reduced. If the crossing effect deals damage to multiple creatures, the shield only takes damage once. When the shield is reduced to 0 Hit Points, it is destroyed. The size of the shield, the amount of damage reduced, and the shield’s durability depend upon the number of actions used to cast the spell.\n\nSingle Action The shield has a 10-foot radius and 20 Hit Points. It reduces damage that crosses it by 5.\n\nTwo Actions The shield has a 20-foot radius and 50 Hit Points. It reduces damage that crosses it by 10.\n\nThree Actions You can select any radius between 5 feet and 30 feet for the shield. The shield has 50 Hit Points and reduces damage that crosses it by 10. You can Dismiss this spell as a reaction triggered by a damaging effect passing through it.",
+    "heightened": {
+      "+1": "For the one-action version, increase the damage reduced by 1 and the shield's Hit Points by 4. For the two-action and three-action versions, increase the damage reduced by 2 and the shield's Hit Points by 12."
+    },
+    "traditions": [
+      "divine",
+      "occult"
     ]
   },
   {
@@ -2934,6 +3405,36 @@
     ]
   },
   {
+    "id": "targeted-ward",
+    "name": "Targeted Ward",
+    "level": 2,
+    "baseLevel": 2,
+    "traits": [
+      "Uncommon",
+      "Concentrate",
+      "Manipulate"
+    ],
+    "actions": "One to Three Actions",
+    "range": "varies",
+    "defense": "Will",
+    "duration": "4 rounds",
+    "description": "You prepare your defenses against a specific foe, shrouding them in a cloak of divinatory magic that allows you to react to their past actions, focus sharply on their present actions, or peer slightly into their future. You gain a status bonus to your choice of AC, Fortitude saves, Reflex saves, or Will saves against that opponent based on the results of the opponent’s Will save. The number of actions you spend determines when the bonus applies.\n\nSingle Action The range is 30 feet. You focus on a specific action the opponent has taken in the past, such as a breath weapon or a Strike. The bonus only applies when the opponent uses that same action against you.\n\nTwo Actions The range is 30 feet, and the bonus applies every time that opponent targets your chosen defense.\n\nThree Actions As the two-action version, except the range is 60 feet. Additionally, when the opponent uses an offensive ability against you that targets a different defense (such as targeting your AC after you have chosen to gain a status bonus to Fortitude saves), you can change your defense to match the one appropriate for the incoming attack as a free action. Once you have changed the defense type once, you can’t change it again during the same casting of targeted ward.",
+    "degrees": {
+      "Critical Success": "You do not gain a bonus.",
+      "Success": "The status bonus is +1.",
+      "Failure": "The status bonus is +2.",
+      "Critical Failure": "The status bonus is +3."
+    },
+    "heightened": {
+      "5th": "Increase the status bonuses granted by each result by 1 (including granting a +1 status bonus on a critical success)."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
+    ]
+  },
+  {
     "id": "targeting-beacon",
     "name": "Targeting Beacon",
     "level": 4,
@@ -3050,6 +3551,27 @@
     ]
   },
   {
+    "id": "thousand-year-flood",
+    "name": "Thousand-Year Flood",
+    "level": 9,
+    "baseLevel": 9,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Water"
+    ],
+    "actions": "Three Actions",
+    "range": "500 feet",
+    "area": "100-foot radius, 50-foot-tall cylinder",
+    "defense": "basic Reflex and AC (see text)",
+    "duration": "sustained up to 1 minute",
+    "description": "You conjure forth a near-mythical deluge of water. The deluge has the following effects:\n\nThe area is filled with water, which is greater difficult terrain to all creatures without a swim Speed and difficult terrain for creatures with a swim Speed. Creatures in the area that cannot breathe in water must hold their breath or immediately begin drowning.\n\nWhen you initially Cast the Spell, creatures in the area are tossed about by the rushing water, taking 10d10 bludgeoning damage with a basic Reflex save.\n\nThe water deals 20d12 damage to structures and unattended objects in the area or half this amount if the structure or object is magical.\n\nThe first time each round you Sustain this spell, you can spend an action to attack a creature in the area with debris and rushing water, making a spell attack roll against their AC and dealing 9d4 bludgeoning damage on a success, or double damage on a critical success.\n\nSpecial If you are a follower of a deity with the water domain, you can choose to give this spell the sanctified trait.",
+    "traditions": [
+      "divine",
+      "primal"
+    ]
+  },
+  {
     "id": "time-skip",
     "name": "Time Skip",
     "level": 0,
@@ -3154,6 +3676,49 @@
     ]
   },
   {
+    "id": "umbral-escape",
+    "name": "Umbral Escape",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Shadow"
+    ],
+    "actions": "Two Actions",
+    "description": "Requirements You are in bright or dim light.\n\nYou merge with your shadow and displace yourself to another shadow within range. Stride up to your Speed towards another creature or object with a shadow. You ignore difficult terrain during this Stride and can move along solid surfaces like walls or ceilings during this movement. You gain resistance 4 to all damage during this Stride. You are then temporarily immune for 1 minute.",
+    "heightened": {
+      "+1": "Increase the resistance by 4."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult",
+      "primal"
+    ]
+  },
+  {
+    "id": "unhelpful-nudge",
+    "name": "Unhelpful Nudge",
+    "level": 1,
+    "baseLevel": 1,
+    "traits": [
+      "Concentrate",
+      "Force",
+      "Manipulate"
+    ],
+    "actions": "Reaction",
+    "trigger": "A creature off-guard to you attempts to Stride.",
+    "range": "60 feet",
+    "targets": "1 creature",
+    "defense": "Reflex",
+    "description": "With but a thought and a wave of your hand, you cause an unprepared enemy to move. The target creature attempts a Reflex save. You push the creature 10 feet at any point during its Stride. If the creature would be pushed into another creature or object, it must attempt a Reflex save, falling prone if it fails its save.",
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
+    ]
+  },
+  {
     "id": "ventriloquism",
     "name": "Ventriloquism",
     "level": 1,
@@ -3175,6 +3740,30 @@
       "divine",
       "occult",
       "primal"
+    ]
+  },
+  {
+    "id": "volley-my-ally",
+    "name": "Volley My Ally",
+    "level": 3,
+    "baseLevel": 3,
+    "traits": [
+      "Concentrate",
+      "Manipulate",
+      "Polymorph",
+      "Teleportation"
+    ],
+    "actions": "Three Actions",
+    "range": "touch",
+    "targets": "1 willing ally",
+    "description": "Requirements You are wielding a ranged weapon or thrown weapon and could make a Strike with it.\n\nYou meld your ally into a ranged weapon you are holding for a combo assault. You imbue your ally into the required weapon and make a ranged Strike at a creature within the required weapon’s first range increment. Your ally then appears in a space adjacent to the target of your Strike (or the closest available space if there are no available adjacent spaces). If your ally could make a melee Strike at the end of this movement against the enemy you targeted with your Strike, it may spend its reaction to make a Strike against the enemy.",
+    "heightened": {
+      "+2": "Increase the range of the Strike by 15 feet."
+    },
+    "traditions": [
+      "arcane",
+      "divine",
+      "occult"
     ]
   },
   {
@@ -3224,6 +3813,41 @@
     },
     "traditions": [
       "arcane",
+      "occult"
+    ]
+  },
+  {
+    "id": "winters-cold-embrace",
+    "name": "Winter's Cold Embrace",
+    "level": 6,
+    "baseLevel": 6,
+    "traits": [
+      "Concentrate",
+      "Cold",
+      "Darkness",
+      "Manipulate"
+    ],
+    "actions": "Two Actions",
+    "range": "60 feet",
+    "area": "40-foot burst",
+    "defense": "basic Fortitude",
+    "duration": "1 minute",
+    "description": "You create a darkness so cold and chilling that even those that would call the cold and darkness friend fear it. Light does not enter the area and any non-magical light sources, such as a torch or lantern, do not emanate any light while inside the area, even if their light radius would extend beyond the darkness. This also suppresses magical light of the spell's rank or lower. Light can't pass through, so creatures in the area can't see outside. From outside, it appears as a frosted globe of pure darkness. Creatures with darkvision cannot see through the darkness and creatures with greater darkness still treat the area as concealed. Creatures that end their turn in the area of darkness take 12d4 cold damage with a basic Fortitude save. Creatures with immunities or resistance to cold damage take spirit damage instead if they do not possess darkvision or greater darkvision.",
+    "heightened": {
+      "+1": "Increase the damage by 2d4."
+    },
+    "damageData": {
+      "base": "12d4",
+      "type": "cold",
+      "heightened": {
+        "+1": {
+          "base": "2d4"
+        }
+      }
+    },
+    "traditions": [
+      "arcane",
+      "divine",
       "occult"
     ]
   },
