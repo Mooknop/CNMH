@@ -1,5 +1,6 @@
 import React from 'react';
 import TraitTag from './TraitTag';
+import ActionSymbol from './ActionSymbol';
 
 // Shared, display-only render of an item's activations — Actions, Reactions and
 // Free Actions — used by both the inventory ItemModal and the shop item preview
@@ -23,9 +24,7 @@ const ItemActivations = ({ item }) => {
                 <div className="action-header">
                   <span className="action-name">{action.name}</span>
                   <div className="action-count">
-                    {action.actionCount && Array.from({ length: action.actionCount }, (_, i) => (
-                      <span key={i} className="action-icon">⚬</span>
-                    ))}
+                    {action.actionCount && <ActionSymbol cost={action.actionCount} />}
                   </div>
                 </div>
                 {action.traits && action.traits.length > 0 && (
@@ -50,7 +49,7 @@ const ItemActivations = ({ item }) => {
               <div key={index} className="item-reaction">
                 <div className="reaction-header">
                   <span className="reaction-name">{reaction.name}</span>
-                  <div className="reaction-icon">⟳</div>
+                  <div className="reaction-icon"><ActionSymbol cost="reaction" /></div>
                 </div>
                 {reaction.traits && reaction.traits.length > 0 && (
                   <div className="reaction-traits">
@@ -80,7 +79,7 @@ const ItemActivations = ({ item }) => {
               <div key={index} className="item-free-action">
                 <div className="free-action-header">
                   <span className="free-action-name">{freeAction.name}</span>
-                  <div className="free-action-icon">◆</div>
+                  <div className="free-action-icon"><ActionSymbol cost="free" /></div>
                 </div>
                 {freeAction.traits && freeAction.traits.length > 0 && (
                   <div className="free-action-traits">

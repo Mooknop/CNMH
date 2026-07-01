@@ -299,7 +299,7 @@ describe('ItemModal', () => {
     expect(screen.queryByText('Actions')).toBeNull();
   });
 
-  it('renders action icons when action.actionCount is present', () => {
+  it('renders the action-cost glyph when action.actionCount is present', () => {
     const item = {
       ...baseItem,
       actions: [{ name: 'Slash', actionCount: 2, description: 'Strike.' }],
@@ -307,11 +307,15 @@ describe('ItemModal', () => {
     render(
       <ItemModal isOpen={true} onClose={vi.fn()} item={item} />
     );
-    const icons = document.querySelectorAll('.action-icon');
-    expect(icons).toHaveLength(2);
+    // Rendered by ActionSymbol in the genuine PF2e action font: one glyph span
+    // carrying the '2' character, labelled for accessibility.
+    const glyph = document.querySelector('.action-count .pf2e-action-glyph');
+    expect(glyph).toBeInTheDocument();
+    expect(glyph).toHaveTextContent('2');
+    expect(glyph).toHaveAttribute('aria-label', '2 actions');
   });
 
-  it('does not render action icons when action.actionCount is absent', () => {
+  it('does not render an action-cost glyph when action.actionCount is absent', () => {
     const item = {
       ...baseItem,
       actions: [{ name: 'Slash', description: 'Strike.' }],
@@ -319,7 +323,7 @@ describe('ItemModal', () => {
     render(
       <ItemModal isOpen={true} onClose={vi.fn()} item={item} />
     );
-    expect(document.querySelectorAll('.action-icon')).toHaveLength(0);
+    expect(document.querySelectorAll('.action-count .pf2e-action-glyph')).toHaveLength(0);
   });
 
   it('renders action traits when action.traits is non-empty', () => {
