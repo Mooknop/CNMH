@@ -4,6 +4,7 @@ import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { dailyPrepPlanFor, performDailyPrep } from '../../utils/dailyPrep';
+import { highestCastableRank } from '../../utils/staffPrep';
 import { toGameSeconds } from '../../utils/gameTime';
 import './DailyPrepModal.css';
 
@@ -23,7 +24,18 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
 
   const [eldChoice, setEldChoice] = useState(plan.currentEldSource || '');
 
+  // Staff preparation (#957 S6a) — the held staves and the one prepared today.
+  // `character` here is the computed useCharacter model, so `staves` is present;
+  // raw-object callers (and the closed modal) simply see none.
+  const staves = (isOpen && character?.staves) || [];
+  const currentStaffId =
+    (isOpen && character ? (getState(character.id, 'staffprep') || {}).staffId : '') || '';
+  const [staffChoice, setStaffChoice] = useState(currentStaffId);
+
   if (!isOpen || !character) return null;
+
+  const staffCharges = highestCastableRank(character);
+  const canPrepStaff = staves.length > 0 && staffCharges >= 1;
 
   const handleConfirm = () => {
     const nowSecs = toGameSeconds({ ...gameDate, ...time });
@@ -33,6 +45,7 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
       sendUpdate,
       nowSecs,
       eldChoice: plan.hasEld ? eldChoice : undefined,
+      staffChoice: canPrepStaff ? staffChoice : undefined,
     });
     appendEvent({ type: 'rest', text: `${character.name} made daily preparations — ${summary}` });
     onClose();
@@ -73,6 +86,28 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+          </div>
+        )}
+
+        {canPrepStaff && (
+          <div className="dp-staff">
+            <label className="dp-staff-label" htmlFor="dp-staff-select">Prepare a staff</label>
+            <select
+              id="dp-staff-select"
+              className="dp-staff-select"
+              value={staffChoice}
+              onChange={(e) => setStaffChoice(e.target.value)}
+            >
+              <option value="">Don&apos;t prepare a staff</option>
+              {staves.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            {staffChoice && (
+              <p className="dp-staff-hint">
+                Gains {staffCharges} charge{staffCharges !== 1 ? 's' : ''} (highest rank you can cast).
+              </p>
+            )}
           </div>
         )}
 

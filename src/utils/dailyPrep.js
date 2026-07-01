@@ -10,6 +10,7 @@
 // spent / used), so martials and full-pool casters write nothing and the log
 // summary stays meaningful.
 import { pruneLedgerByPer } from './frequency';
+import { staffPrepValue } from './staffPrep';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -142,9 +143,12 @@ export function dailyPrepPlanFor(character, getState) {
  * @param {Function} sendUpdate - (charId, key, value) => void
  * @param {number}   [nowSecs]  - current game seconds (sweeps expired immunities too)
  * @param {string}   [eldChoice]- chosen Eld attunement source (synced when provided)
+ * @param {string|null} [staffChoice] - staff to prepare today (#957 S6a): an item
+ *   uid to prepare, '' / null to clear, or undefined to refresh the staff already
+ *   prepared (the GM party loop passes nothing, so existing staves stay charged).
  * @returns {{ summary: string }}
  */
-export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eldChoice }) {
+export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eldChoice, staffChoice }) {
   const id = character?.id;
   const resets = computeResets(character, getState);
 
@@ -164,6 +168,27 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
     writeLocal(`cnmh_eldattune_${id}`, eldChoice);
     sendUpdate(id, 'eldattune', eldChoice);
     labels.push(`attuned to ${eldChoice}`);
+  }
+
+  // Staff preparation (#957 S6a) — a daily choice, like Eld attunement. An
+  // explicit choice prepares (or clears) a staff; `undefined` (the GM party
+  // loop) refreshes whatever staff was prepared so it stays charged.
+  let nextStaffPrep;
+  if (staffChoice !== undefined) {
+    nextStaffPrep = staffPrepValue(character, staffChoice);
+  } else {
+    const prev = getState(id, 'staffprep');
+    nextStaffPrep = prev?.staffId ? staffPrepValue(character, prev.staffId) : undefined;
+  }
+  if (nextStaffPrep !== undefined) {
+    writeLocal(`cnmh_staffprep_${id}`, nextStaffPrep);
+    sendUpdate(id, 'staffprep', nextStaffPrep);
+    // A fresh preparation starts with full charges — clear any spent count.
+    writeLocal(`cnmh_staff_${id}`, 0);
+    sendUpdate(id, 'staff', 0);
+    if (nextStaffPrep) {
+      labels.push(`prepared a staff (${nextStaffPrep.charges} charge${nextStaffPrep.charges !== 1 ? 's' : ''})`);
+    }
   }
 
   const summary = labels.length ? labels.join(', ') : 'nothing to restore';

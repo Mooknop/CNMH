@@ -48,6 +48,7 @@ const SpellsList = ({ character, characterColor }) => {
     innateSpells,
     staffSpells,
     staff,
+    staffPrepared,
     eldPowers,
     level,
     flags,
@@ -298,6 +299,7 @@ const SpellsList = ({ character, characterColor }) => {
           defenseFilter={defenseFilter}
           activeSpellRank={activeSpellRank}
           character={character}
+          prepared={staffPrepared}
           onCast={makeOnCast('staff')}
         />
       )}

@@ -12,6 +12,8 @@ import { useContent } from '../contexts/ContentContext';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
 import { applyRemovedOverlay } from '../utils/removedOverlay';
 import { itemAbilitiesActive } from '../utils/itemState';
+import { itemUidOf } from '../utils/affix';
+import { listStaves } from '../utils/staffPrep';
 import { itemCatalogMap, spellCatalogMap, resolveInventory } from '../utils/contentUtils';
 
 import {
@@ -77,6 +79,10 @@ export const useCharacter = (character) => {
     () => ({ current: character?.maxHp || 0, max: character?.maxHp || 0, temp: 0, dying: 0, wounded: 0, doomed: 0 })
   );
   const [heroPoints, setHeroPoints] = useSyncedState(`cnmh_heropoints_${character?.id || 'none'}`, 0);
+  // Staff preparation (#957 S6a) — the single staff prepared today and its
+  // charge count for the day. null ⇒ no staff prepared (so any held staff has 0
+  // charges). Read-only here; DailyPrepModal / performDailyPrep is the writer.
+  const [staffPrep] = useSyncedState(`cnmh_staffprep_${character?.id || 'none'}`, null);
 
   // Additive runtime inventory (crafted items, loot, purchases, GM grants).
   // Authored `character.inventory` arrives already resolved; acquired entries
@@ -272,9 +278,23 @@ export const useCharacter = (character) => {
     // ref/uid link IS the link — no fragile name matching, and artifact
     // gating may withhold it until the owner is high enough level). It is
     // castable only while that entry is held (or flagged noHandRequired).
-    const staffItem   = effectiveInventory.find((e) => e && e.staff) || null;
-    const staff       = staffItem ? staffItem.staff : null;
+    // Staff preparation (#957 S6a): staves have no charges by default. The
+    // caster prepares ONE staff per day (cnmh_staffprep), which then carries the
+    // charges stored in the overlay. The prepared staff is the "active" one; if
+    // none is prepared we still surface the first held staff so its category
+    // shows (with 0 charges + a prepare hint). charges.max is derived here so
+    // StaffSpells / useCastingResources keep reading staff.charges.max unchanged.
+    const staffItems  = effectiveInventory.filter((e) => e && e.staff);
+    const preparedStaffId = staffPrep?.staffId ?? null;
+    const staffItem   = staffItems.find((it) => itemUidOf(it) === preparedStaffId)
+                        || staffItems[0] || null;
+    const staffPrepared = !!staffItem && itemUidOf(staffItem) === preparedStaffId;
+    const staffChargesMax = staffPrepared ? (staffPrep?.charges ?? 0) : 0;
+    const staff       = staffItem
+      ? { ...staffItem.staff, charges: { max: staffChargesMax, current: staffChargesMax } }
+      : null;
     const staffActive = staff ? itemAbilitiesActive(staffItem) : false;
+    const staves      = listStaves(effectiveInventory);
     // Tradition gating (epic #645, S4): cast a spell from a staff and you must
     // share its tradition — non-matching staff spells are hidden, same as
     // scrolls/wands. A staff whose spells are all off-tradition shows no
@@ -394,6 +414,8 @@ export const useCharacter = (character) => {
       innateSpells,
       staff,
       staffSpells,
+      staves,
+      staffPrepared,
       eldPowers,
       focusSpells,
 
@@ -409,7 +431,7 @@ export const useCharacter = (character) => {
       champion,
       monk,
     };
-  }, [character, loadout, chambers, blade, resolvedAcquired, removed, activeEffects, effectCatalog]);
+  }, [character, loadout, chambers, blade, staffPrep, resolvedAcquired, removed, activeEffects, effectCatalog]);
 
   // Combine the memoized computed character with the live sync state.
   // Wrapped in useMemo so downstream components don't re-render when neither

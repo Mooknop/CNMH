@@ -66,6 +66,25 @@ describe('DailyPrepModal', () => {
     expect(screen.queryByRole('combobox')).toBeNull();
   });
 
+  it('prepares a held staff and stores the day\'s charges on confirm', () => {
+    const caster = {
+      id: 'char-bard',
+      name: 'Bard',
+      spellcasting: { spell_slots: { 1: 4, 2: 4 } },
+      staves: [{ id: 'lute', name: "Entertainer's Lute" }],
+    };
+    render(<DailyPrepModal {...baseProps} character={caster} />);
+    fireEvent.change(screen.getByLabelText('Prepare a staff'), { target: { value: 'lute' } });
+    fireEvent.click(screen.getByText('Prepare'));
+    expect(store['char-bard'].staffprep).toEqual({ staffId: 'lute', charges: 2 });
+    expect(store['char-bard'].staff).toBe(0);
+  });
+
+  it('omits the staff picker for a character holding no staves', () => {
+    render(<DailyPrepModal {...baseProps} character={character} />);
+    expect(screen.queryByLabelText('Prepare a staff')).toBeNull();
+  });
+
   it('runs the prep and logs a summary on confirm', () => {
     seed('char-izzy', { focus: 2 });
     const onClose = vi.fn();

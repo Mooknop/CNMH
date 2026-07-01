@@ -37,6 +37,32 @@
   color: var(--color-text);
 }
 
+.dp-staff {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.dp-staff-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.dp-staff-select {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.dp-staff-hint {
+  margin: 0.1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
 .dp-actions {
   display: flex;
   justify-content: flex-end;

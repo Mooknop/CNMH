@@ -147,6 +147,36 @@ describe('performDailyPrep — Eld attunement', () => {
   });
 });
 
+describe('performDailyPrep — staff preparation (#957 S6a)', () => {
+  const caster = { id: 'char-1', spellcasting: { spell_slots: { 1: 4, 2: 4, 3: 2 } } };
+
+  it('prepares the chosen staff with charges = highest castable rank, full charges', () => {
+    const { updates, getState, sendUpdate } = makeStubs({ staff: 2 });
+    const { summary } = performDailyPrep({ character: caster, getState, sendUpdate, staffChoice: 'staff-x' });
+    expect(updates.find((u) => u.key === 'staffprep').value).toEqual({ staffId: 'staff-x', charges: 3 });
+    expect(updates.find((u) => u.key === 'staff').value).toBe(0);
+    expect(summary).toMatch(/prepared a staff \(3 charges\)/);
+  });
+
+  it('clears the prepared staff when the choice is empty', () => {
+    const { updates, getState, sendUpdate } = makeStubs({ staffprep: { staffId: 'old', charges: 1 } });
+    performDailyPrep({ character: caster, getState, sendUpdate, staffChoice: '' });
+    expect(updates.find((u) => u.key === 'staffprep').value).toBeNull();
+  });
+
+  it('refreshes the previously prepared staff when no choice is passed (GM loop)', () => {
+    const { updates, getState, sendUpdate } = makeStubs({ staffprep: { staffId: 'old', charges: 1 } });
+    performDailyPrep({ character: caster, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'staffprep').value).toEqual({ staffId: 'old', charges: 3 });
+  });
+
+  it('touches no staff state when none is prepared and no choice is passed', () => {
+    const { updates, getState, sendUpdate } = makeStubs({});
+    performDailyPrep({ character: caster, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'staffprep')).toBeUndefined();
+  });
+});
+
 describe('dailyPrepPlanFor', () => {
   it('previews dirty resets and Eld options', () => {
     const { getState } = makeStubs({ slots: { 1: 1 }, focus: 0, huntprey: { target: 'X' } });
