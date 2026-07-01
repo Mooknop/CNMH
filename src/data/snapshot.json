@@ -15705,6 +15705,75 @@
       "weight": 0.1,
       "id": "blindpepper-bomb",
       "level": 5
+    },
+    {
+      "name": "Power Ring",
+      "description": "This seemingly simple metal band glows with mystic heat when magic travels through your fingers. You can add special ring runes to a power ring to further heighten your mastery over magic. When activated, it imbues your attack spells with increased accuracy. During your daily preparations, choose a single cantrip you can cast that would require a spell attack roll (more at higher grades). A chosen cantrip can ignore the frequency of the ring's activation, and using Veracious Spell with such a cantrip doesn't count toward its frequency for other spells. You cannot invest in more than one power ring. (Usage: worn; Bulk L.)",
+      "traits": [
+        "Invested",
+        "Magical"
+      ],
+      "weight": 0.1,
+      "powerRing": true,
+      "actions": [
+        {
+          "name": "Veracious Spell",
+          "actionCount": 1,
+          "traits": [
+            "Flourish",
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per 10 minutes; Effect The ring's magic guides your attack. If the next action you use is to Cast a Spell that would require a spell attack roll, you gain the ring's item bonus to your spell attack roll. If the spell has multiple targets, the bonus applies to all of them. If a spell you modified with this effect could make additional spell attack rolls on a Sustain, the item bonus applies to these spell attack rolls as well."
+        }
+      ],
+      "variants": [
+        {
+          "level": 5,
+          "label": "Iron",
+          "name": "Power Ring (Iron)",
+          "price": 125,
+          "description": "The item bonus is +1. You can imbue one ring rune into the ring, and choose one cantrip during your daily preparations.",
+          "overrides": {
+            "itemBonus": 1,
+            "ringSockets": 1,
+            "cantripSlots": 1,
+            "apex": false
+          }
+        },
+        {
+          "level": 11,
+          "label": "Silver",
+          "name": "Power Ring (Silver)",
+          "price": 1400,
+          "description": "The item bonus increases to +2. You can choose up to 3 cantrips during your daily preparations. You can imbue two ring runes into the ring.",
+          "overrides": {
+            "itemBonus": 2,
+            "ringSockets": 2,
+            "cantripSlots": 3,
+            "apex": false
+          }
+        },
+        {
+          "level": 17,
+          "label": "Platinum",
+          "name": "Power Ring (Platinum)",
+          "price": 15000,
+          "description": "This power ring has the apex trait. When you invest it, you either increase your spellcasting attribute modifier by 1 or increase it to +4, whichever would give you a higher score. The item bonus is +2. You can choose up to 5 cantrips during your daily preparations. You can imbue three ring runes into the ring.",
+          "traits": [
+            "Apex",
+            "Invested",
+            "Magical"
+          ],
+          "overrides": {
+            "itemBonus": 2,
+            "ringSockets": 3,
+            "cantripSlots": 5,
+            "apex": true
+          }
+        }
+      ],
+      "id": "power-ring"
     }
   ],
   "spell": [
