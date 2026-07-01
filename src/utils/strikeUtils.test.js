@@ -51,6 +51,52 @@ describe('getStrikes targetDefense', () => {
   });
 });
 
+describe('getStrikes damage types (#1018)', () => {
+  test('a character strike passes its damageType through', () => {
+    const char = {
+      ...minimalCharacter,
+      strikes: [{ name: 'Longsword', type: 'melee', proficiency: 'martial', damage: '1d8', damageType: 'slashing' }],
+    };
+    expect(getStrikes(char).find((s) => s.name === 'Longsword').damageType).toBe('slashing');
+  });
+
+  test('a feat strike carries its damageType', () => {
+    const char = {
+      ...minimalCharacter,
+      feats: [{
+        id: 'f1',
+        name: 'Elemental Blast',
+        strikes: [{ name: 'Fire Blast', type: 'ranged', damage: '1d6', action: 1, damageType: 'fire' }],
+      }],
+    };
+    expect(getStrikes(char).find((s) => s.name === 'Fire Blast').damageType).toBe('fire');
+  });
+
+  test('an inventory weapon strike carries its damageType', () => {
+    const char = {
+      ...minimalCharacter,
+      inventory: [{
+        id: 'i1', uid: 'u1', name: 'Warhammer', state: 'held1',
+        strikes: [{ name: 'Warhammer Strike', proficiency: 'martial', type: 'melee', damage: '1d8', damageType: 'bludgeoning' }],
+      }],
+    };
+    expect(getStrikes(char).find((s) => s.name === 'Warhammer Strike').damageType).toBe('bludgeoning');
+  });
+
+  test('the generated Unarmed Strike fallback is bludgeoning', () => {
+    const unarmed = getStrikes(minimalCharacter).find((s) => s.name === 'Unarmed Strike');
+    expect(unarmed.damageType).toBe('bludgeoning');
+  });
+
+  test('strikes authored without a type stay untyped (no field)', () => {
+    const char = {
+      ...minimalCharacter,
+      strikes: [{ name: 'Mystery Lash', type: 'melee', proficiency: 'simple', damage: '1d6' }],
+    };
+    expect(getStrikes(char).find((s) => s.name === 'Mystery Lash').damageType).toBeUndefined();
+  });
+});
+
 describe('getStrikes stance tagging (#224)', () => {
   const dragonFeat = {
     id: 'feat-2',
