@@ -381,7 +381,7 @@ const GearCard = ({ gear, shopRunes, runeMap, stagedFor, keeperName, onStage, on
   return (
     <div className="ps-gear" data-testid={`gear-${gear.uid}`}>
       <div className="ps-gear-head">
-        <span className="ps-gear-icon" aria-hidden="true">{target === 'armor' ? '🛡' : '⚔'}</span>
+        <span className="ps-gear-icon" aria-hidden="true">{target === 'armor' ? '🛡' : target === 'ring' ? '💍' : '⚔'}</span>
         <div className="ps-gear-id">
           <div className="ps-gear-name">{gear.name}</div>
           <div className="ps-gear-sub">{openCount} open slot{openCount === 1 ? '' : 's'} · {target}</div>
@@ -582,17 +582,12 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
       .map((w) => ({ ...w.runestone.rune, price: w.price, wareKey: w.wareKey })),
     [resolved]
   );
-  // The active character's runesmithable gear (weapons + armor), for the sockets.
-  // Power rings are runesmithable too (gearTarget → 'ring', #967 R4) but get
-  // their own imbue affordance in R5, so they stay out of this weapon/armor
-  // etch list for now.
+  // The active character's runesmithable gear (weapons, armor, and power rings —
+  // gearTarget → 'ring', #967 R4/R5), for the sockets. Ring imbue reuses this
+  // shop flow: the socket board, staging, checkout, work order, and collect are
+  // all target-generic, so a power ring hands off and etches like any gear.
   const gearList = useMemo(
-    () => (Array.isArray(charData?.inventory)
-      ? charData.inventory.filter((it) => {
-          const t = gearTarget(it);
-          return t === 'weapon' || t === 'armor';
-        })
-      : []),
+    () => (Array.isArray(charData?.inventory) ? charData.inventory.filter((it) => gearTarget(it)) : []),
     [charData]
   );
   // Buyable scrolls/wands for the Spellcasting tab (#812 generative offerings
