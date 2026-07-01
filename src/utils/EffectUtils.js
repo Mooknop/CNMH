@@ -206,13 +206,24 @@ export function dexCapFor(activeEffects, catalog = PF2E_EFFECTS) {
  * descriptor so the persistent-tick path (`persistent-bleed`) and the general
  * incoming-damage path (`fire`) use one reader.
  */
+// A stored effect entry's modifiers: the catalog def's static modifiers, plus
+// any INLINE modifiers on the entry itself (#1001 S2). Inline modifiers let an
+// effect carry a parametrized value/descriptor that a static catalog def can't —
+// e.g. Energy Ablation's resistance = the cast spell's rank vs a chosen energy
+// type. Backward-compatible: entries without inline modifiers behave as before.
+function modifiersOf(entry, catalog) {
+  const def = catalog.find((e) => e.id === entry.effectId);
+  return [
+    ...(def && Array.isArray(def.modifiers) ? def.modifiers : []),
+    ...(Array.isArray(entry.modifiers) ? entry.modifiers : []),
+  ];
+}
+
 function highestSpecialFor(activeEffects, stat, vsType, catalog) {
   if (!activeEffects || activeEffects.length === 0 || !vsType) return 0;
   let best = 0;
   for (const entry of activeEffects) {
-    const def = catalog.find((e) => e.id === entry.effectId);
-    if (!def || !def.modifiers) continue;
-    for (const mod of def.modifiers) {
+    for (const mod of modifiersOf(entry, catalog)) {
       if (mod.stat !== stat || !mod.vs) continue;
       const types = String(mod.vs).split(',').map((t) => t.trim());
       if (!types.includes(vsType)) continue;
@@ -267,9 +278,7 @@ export function weaknessFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
 export function flatCheckEasedFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
   if (!activeEffects || activeEffects.length === 0 || !vsType) return false;
   for (const entry of activeEffects) {
-    const def = catalog.find((e) => e.id === entry.effectId);
-    if (!def || !def.modifiers) continue;
-    for (const mod of def.modifiers) {
+    for (const mod of modifiersOf(entry, catalog)) {
       if (mod.stat !== 'resistance' || !mod.flatCheckEase || !mod.vs) continue;
       const types = String(mod.vs).split(',').map((t) => t.trim());
       if (types.includes(vsType)) return true;

@@ -483,6 +483,46 @@ describe('resistanceFor / flatCheckEasedFor (#900)', () => {
   });
 });
 
+// Inline (parametrized) effect modifiers (#1001 S2) — an effect entry can carry
+// its own `modifiers` so a dynamic value/descriptor (Energy Ablation resistance
+// = cast rank vs a chosen type) works without a static catalog def.
+describe('inline effect modifiers (#1001 S2)', () => {
+  const cat = [
+    { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 10, vs: 'fire' }] },
+  ];
+  // An entry with no catalog def, carrying its own modifiers.
+  const inline = (mods) => ({ id: 'uid-inline', effectId: 'energy-ablation', modifiers: mods });
+
+  it('resistanceFor reads inline modifiers with no catalog def', () => {
+    const e = inline([{ stat: 'resistance', vs: 'fire', amount: 3 }]);
+    expect(resistanceFor([e], 'fire', cat)).toBe(3);
+    expect(resistanceFor([e], 'cold', cat)).toBe(0);
+  });
+
+  it('weaknessFor reads inline modifiers', () => {
+    const e = inline([{ stat: 'weakness', vs: 'cold', amount: 4 }]);
+    expect(weaknessFor([e], 'cold', cat)).toBe(4);
+  });
+
+  it('inline and catalog modifiers both count — highest matching wins', () => {
+    const e = inline([{ stat: 'resistance', vs: 'fire', amount: 3 }]);
+    // catalog fire-ward = 10 vs inline 3 → 10
+    expect(resistanceFor([entry('fire-ward'), e], 'fire', cat)).toBe(10);
+    // inline 12 beats catalog 10
+    const bigger = inline([{ stat: 'resistance', vs: 'fire', amount: 12 }]);
+    expect(resistanceFor([entry('fire-ward'), bigger], 'fire', cat)).toBe(12);
+  });
+
+  it('flatCheckEasedFor honours an inline flag', () => {
+    const e = inline([{ stat: 'resistance', vs: 'persistent-bleed', amount: 2, flatCheckEase: true }]);
+    expect(flatCheckEasedFor([e], 'persistent-bleed', cat)).toBe(true);
+  });
+
+  it('entries with neither a catalog def nor inline modifiers contribute nothing', () => {
+    expect(resistanceFor([{ id: 'x', effectId: 'unknown' }], 'fire', cat)).toBe(0);
+  });
+});
+
 describe('weaknessFor (#918)', () => {
   const cat = [
     { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }] },
