@@ -538,6 +538,23 @@ describe('buildDamageProfile', () => {
     expect(buildDamageProfile({ name: 'Shove' }, { id: 'c' }, {})).toBeNull();
   });
 
+  // ── strike damage types (#1018) ────────────────────────────────────────────
+
+  it('falls back to the strike-level damageType when there is no damageData', () => {
+    const strike = { name: 'Longsword Strike', attackMod: 8, damage: '1d8+4', damageType: 'slashing' };
+    const profile = buildDamageProfile(strike, { id: 'c' }, {});
+    expect(profile.typeLabel).toBe('slashing');
+  });
+
+  it('damageData.type and overrides still win over the strike damageType', () => {
+    const odd = {
+      name: 'Odd Blade', attackMod: 8, damage: '1d8', damageType: 'slashing',
+      damageData: { base: '1d8', type: 'fire' },
+    };
+    expect(buildDamageProfile(odd, { id: 'c' }, {}).typeLabel).toBe('fire');
+    expect(buildDamageProfile(odd, { id: 'c' }, { damageOverride: { type: 'cold' } }).typeLabel).toBe('cold');
+  });
+
   // ── heightened damageData (slice 2) ───────────────────────────────────────
 
   const shockingGrasp = {

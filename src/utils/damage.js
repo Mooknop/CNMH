@@ -406,7 +406,10 @@ export const buildDamageProfile = (ability, character, {
     damageOverride?.base ?? dd?.base ?? ability.damage ?? null,
     level
   );
-  const typeLabel = damageOverride?.type ?? dd?.type ?? null;
+  // Damage type: an override/damageData type wins; strikes carry a flat
+  // `damageType` instead of a damageData block (#1018), so it backstops here —
+  // feeding the panel hint and the typed Foundry relay (#1016).
+  const typeLabel = damageOverride?.type ?? dd?.type ?? ability.damageType ?? null;
   const heightenedMap = damageOverride?.heightened ?? dd?.heightened;
 
   // Heightened damage scaling — cumulative entries at this cast rank.
