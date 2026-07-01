@@ -14,9 +14,20 @@ import { computeConditionEffects } from './ConditionUtils';
 import { computeEffectBonuses, combineModifiers } from './EffectUtils';
 import { isAttackAbility, mapPenaltyFor } from './map';
 
-// Maps the capitalized spell.defense field ("Reflex") to the lowercase defense key used everywhere else.
+// Maps the capitalized spell.defense field ("Reflex") to the lowercase defense
+// key used everywhere else. A leading "basic " ("basic Reflex") denotes a basic
+// save — strip it before mapping so those spells still resolve to target-save
+// (isBasicDefense reports the basic-ness separately for the halving/doubling).
 export function mapSpellDefense(d) {
-  return { Reflex: 'reflex', Will: 'will', Fortitude: 'fortitude' }[d] ?? null;
+  const norm = String(d ?? '').replace(/^\s*basic\s+/i, '').trim();
+  return { Reflex: 'reflex', Will: 'will', Fortitude: 'fortitude' }[norm] ?? null;
+}
+
+// True when a defense string denotes a *basic* save ("basic Fortitude"): the
+// target halves on success and doubles on a critical failure. Drives the `basic`
+// flag on save requests (computeSaveDamage keys its multiplier off it).
+export function isBasicDefense(d) {
+  return /^\s*basic\s+/i.test(String(d ?? ''));
 }
 
 // Build the full net-modifier object from the actor's current conditions/effects for a given stat.

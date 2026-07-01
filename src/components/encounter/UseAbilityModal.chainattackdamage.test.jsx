@@ -72,7 +72,8 @@ vi.mock('../../hooks/useCharacter', () => ({
 }));
 // The Spellshape parent has no roll of its own; only the chained spell-attack
 // spell resolves to actor-roll.
-vi.mock('../../utils/rollResolution', () => ({
+vi.mock('../../utils/rollResolution', async (importActual) => ({
+  ...(await importActual()),
   resolveActionRoll: (ability) =>
     ability?.traits?.includes('Spellshape')
       ? { mode: 'none', bonus: null, dc: null, defense: null }

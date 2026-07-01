@@ -1,4 +1,4 @@
-import { resolveActionRoll, mapSpellDefense } from './rollResolution';
+import { resolveActionRoll, mapSpellDefense, isBasicDefense } from './rollResolution';
 import { calculateClassDC } from './CharacterUtils';
 import * as ConditionUtils from './ConditionUtils';
 import * as EffectUtils from './EffectUtils';
@@ -21,6 +21,21 @@ describe('mapSpellDefense', () => {
   it('maps Will → will',    () => expect(mapSpellDefense('Will')).toBe('will'));
   it('maps Fortitude → fortitude', () => expect(mapSpellDefense('Fortitude')).toBe('fortitude'));
   it('returns null for unrecognised', () => expect(mapSpellDefense('Unknown')).toBeNull());
+  // Basic saves (#1001 S4) carry a "basic " prefix in the data — strip it so the
+  // save still resolves; isBasicDefense reports the basic-ness separately.
+  it('strips the "basic " prefix → basic Fortitude → fortitude', () =>
+    expect(mapSpellDefense('basic Fortitude')).toBe('fortitude'));
+  it('strips the "basic " prefix → basic Reflex → reflex', () =>
+    expect(mapSpellDefense('basic Reflex')).toBe('reflex'));
+});
+
+describe('isBasicDefense', () => {
+  it('is true for a basic save', () => expect(isBasicDefense('basic Fortitude')).toBe(true));
+  it('is false for a plain save', () => expect(isBasicDefense('Fortitude')).toBe(false));
+  it('is false for empty/missing', () => {
+    expect(isBasicDefense('')).toBe(false);
+    expect(isBasicDefense(undefined)).toBe(false);
+  });
 });
 
 // ─── none cases ──────────────────────────────────────────────────────────────
@@ -224,6 +239,14 @@ describe('resolveActionRoll — spell inference', () => {
     const result = resolveActionRoll(fireball, baseCharacter, noEffects);
     expect(result.mode).toBe('target-save');
     expect(result.defense).toBe('reflex');
+    expect(typeof result.dc).toBe('number');
+  });
+
+  it('a basic-save spell (defense: "basic Fortitude") → target-save (#1001 S4)', () => {
+    const spell = { name: 'Spatial Ripple', defense: 'basic Fortitude', traits: ['Manipulate'] };
+    const result = resolveActionRoll(spell, baseCharacter, noEffects);
+    expect(result.mode).toBe('target-save');
+    expect(result.defense).toBe('fortitude');
     expect(typeof result.dc).toBe('number');
   });
 

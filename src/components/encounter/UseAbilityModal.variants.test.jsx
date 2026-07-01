@@ -69,7 +69,8 @@ vi.mock('../../hooks/useCastingResources', () => ({
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: () => [[], vi.fn()],
 }));
-vi.mock('../../utils/rollResolution', () => ({
+vi.mock('../../utils/rollResolution', async (importActual) => ({
+  ...(await importActual()),
   resolveActionRoll: () => mockRollProfile,
 }));
 vi.mock('../shared/Modal', () => ({
