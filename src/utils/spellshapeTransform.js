@@ -51,6 +51,35 @@ export function chainTransformCostNote(actionCost, transform) {
 }
 
 /**
+ * The rank a chained spell's NUMERIC effects (damage, healing, area, bonuses)
+ * are computed at — Heighten treats the spell as `rankDelta` ranks higher for
+ * numeric purposes only (`chain.transform.rankDelta`). The rank actually cast
+ * (slot spent, counteract/incapacitation) stays the real cast rank. No-op
+ * without a numeric rankDelta; never below 0.
+ *
+ * @param {number} castRank
+ * @param {{ rankDelta?: number }|null} [transform]
+ * @returns {number}
+ */
+export function effectiveNumericRank(castRank, transform) {
+  const delta = transform && typeof transform.rankDelta === 'number' ? transform.rankDelta : 0;
+  return Math.max(0, (Number(castRank) || 0) + delta);
+}
+
+/**
+ * A note describing a numeric-rank boost, or null when it doesn't change.
+ * @param {number} castRank
+ * @param {{ rankDelta?: number }|null} [transform]
+ * @returns {string|null}
+ */
+export function chainRankNote(castRank, transform) {
+  const eff = effectiveNumericRank(castRank, transform);
+  if (eff === (Number(castRank) || 0)) return null;
+  const delta = transform.rankDelta;
+  return `Spellshape: numeric effects at rank ${eff} (${delta > 0 ? '+' : '−'}${Math.abs(delta)} rank${Math.abs(delta) === 1 ? '' : 's'}, cast/counteract stays rank ${castRank})`;
+}
+
+/**
  * The descriptor a `selfEffect` applies against — the player's choice, else the
  * first offered option, else a fixed `vs`. Null when nothing resolves.
  */
