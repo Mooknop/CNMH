@@ -794,6 +794,72 @@ describe('ChainedSpellSection — action-cost transform (#1001 S1)', () => {
   });
 });
 
+// Spellshape self-effect choice (#1001 S2, Energy Ablation): a chain may offer
+// a descriptor picker (energy type); the choice flows through getResults so the
+// parent applies the parametrized caster effect on confirm.
+describe('ChainedSpellSection — self-effect choice (#1001 S2)', () => {
+  const ablationChain = {
+    into: 'spell',
+    modifier: 'Gain resistance to an energy type = the spell rank',
+    selfEffect: {
+      effectId: 'energy-ablation', name: 'Energy Ablation', stat: 'resistance', amount: 'castRank',
+      choose: { key: 'vs', label: 'Energy type', options: ['acid', 'cold', 'fire'] },
+      duration: { until: 'rounds', rounds: 1 },
+    },
+  };
+
+  it('renders the descriptor picker and defaults to the first option', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={character}
+        chain={ablationChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(screen.getByLabelText('Energy type')).toBeInTheDocument();
+    expect(ref.current.getResults().selfEffectChoice).toBe('acid');
+  });
+
+  it('carries the chosen descriptor through getResults', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={character}
+        chain={ablationChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    fireEvent.change(screen.getByLabelText('Energy type'), { target: { value: 'fire' } });
+    expect(ref.current.getResults().selfEffectChoice).toBe('fire');
+  });
+
+  it('a chain without a selfEffect reports null and renders no picker', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={character}
+        chain={reachChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(screen.queryByLabelText('Energy type')).toBeNull();
+    expect(ref.current.getResults().selfEffectChoice).toBeNull();
+  });
+});
+
 describe('ChainedSpellSection — Split Shot (#227)', () => {
   const splitChain = { into: 'spell', cost: 'added', spellFilter: 'single-target-attack', splitShot: true };
 
