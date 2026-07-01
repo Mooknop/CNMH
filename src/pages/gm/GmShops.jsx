@@ -2,7 +2,17 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useContent } from '../../contexts/ContentContext';
 import { useShops } from '../../hooks/useShops';
 import { itemCatalogMap, runeCatalogMap } from '../../utils/contentUtils';
-import { isSetUp, isSpellItemWare, spellOfferingSummary, shopOffersSpellcasting, shopOffersRunes } from '../../utils/shopUtils';
+import {
+  isSetUp,
+  isSpellItemWare,
+  spellOfferingSummary,
+  shopOffersSpellcasting,
+  shopOffersRunes,
+  isRuneServiceWare,
+  runeOfferingSummary,
+  maxLevelForTarget,
+  RUNE_TARGETS,
+} from '../../utils/shopUtils';
 import './gm.css';
 
 // GM shop authoring (#696 S2, reworked in #822). Shops are app-managed, not vault
@@ -28,9 +38,11 @@ import './gm.css';
 const str = (v) => (v != null ? String(v) : '');
 
 const toRows = (wares) => {
-  // Generative spell-item offerings (#819) are authored in their own section
-  // (toOfferings), not as catalog rows — they carry no `ref`.
-  const list = (Array.isArray(wares) ? wares : []).filter((w) => !isSpellItemWare(w));
+  // Generative spell-item (#819) and rune-service (#982 G2) offerings are authored
+  // in their own sections, not as catalog rows — they carry no `ref`.
+  const list = (Array.isArray(wares) ? wares : []).filter(
+    (w) => !isSpellItemWare(w) && !isRuneServiceWare(w)
+  );
   const rows = [];
   const variantRow = new Map(); // ref -> the collapsed variant row
   list.forEach((w) => {
@@ -150,6 +162,58 @@ const fromSpellConfig = (config) => {
   if (config.scroll) out.push(offeringWare('scroll', config));
   if (config.wand) out.push(offeringWare('wand', config));
   return out;
+};
+
+// ── Generative rune-service offerings (#982 G2) ─────────────────────────────
+// A shop can also sell runes for a TARGET (weapon | armor | ring) up to a max
+// rune LEVEL, filtered by rarity — the G1 model in shopUtils. Authored as one
+// `{ runeService, targets?, maxLevel, rarities? }` ware in its own "Runesmithing
+// services" section, mirroring the spellcasting editor.
+const RUNE_TARGET_LABELS = [['weapon', 'Weapon'], ['armor', 'Armor'], ['ring', 'Ring']];
+// Property runes cap out at item level 19 (ring runes reach 18); allow 20 headroom.
+const RUNE_MAX_LEVEL = 20;
+
+// Stored rune-service ware → the editor config. At most one runeService ware per
+// shop. Targets unset ⇒ all three (mirrors offeringTargets); each selected target
+// carries its own max-level cap (from a scalar or per-target maxLevel).
+const toRuneConfig = (wares) => {
+  const off = (Array.isArray(wares) ? wares : []).find(isRuneServiceWare);
+  const config = { weapon: false, armor: false, ring: false, levels: { weapon: '', armor: '', ring: '' }, rarities: [] };
+  if (!off) return config;
+  const targets = Array.isArray(off.targets) && off.targets.length
+    ? off.targets.map((t) => String(t).toLowerCase())
+    : [...RUNE_TARGETS];
+  RUNE_TARGETS.forEach((t) => {
+    if (!targets.includes(t)) return;
+    config[t] = true;
+    const cap = maxLevelForTarget(off, t);
+    if (cap > 0) config.levels[t] = String(cap);
+  });
+  config.rarities = (Array.isArray(off.rarities) ? off.rarities : []).filter(Boolean);
+  return config;
+};
+
+// Editor config → stored rune-service ware (an array of 0 or 1). Defaults are
+// OMITTED so specs stay clean + round-trip with the G1 selectors: targets unset =
+// all three; a uniform cap collapses to a scalar maxLevel, else per-target object;
+// rarities unset = common only.
+const fromRuneConfig = (config) => {
+  const selected = RUNE_TARGETS.filter((t) => config[t]);
+  if (selected.length === 0) return [];
+  const capOf = (t) => {
+    let n = parseInt(config.levels?.[t], 10);
+    if (Number.isNaN(n)) n = 1;
+    return Math.max(1, Math.min(RUNE_MAX_LEVEL, n));
+  };
+  const caps = {};
+  selected.forEach((t) => { caps[t] = capOf(t); });
+  const w = { runeService: true };
+  if (selected.length < RUNE_TARGETS.length) w.targets = selected;
+  const uniq = [...new Set(selected.map((t) => caps[t]))];
+  w.maxLevel = uniq.length === 1 ? uniq[0] : caps;
+  const rars = (config.rarities || []).filter(Boolean);
+  if (!(rars.length === 0 || (rars.length === 1 && rars[0] === 'common'))) w.rarities = rars;
+  return [w];
 };
 
 // Unified catalog of shelvable things: every item + every rune (as a Runestone).
@@ -613,10 +677,96 @@ const SpellcastingSection = ({ config, spells, onChange }) => {
   );
 };
 
+// The "Runesmithing services" section (#982 G2): the GM picks which rune targets
+// to sell (weapon/armor/ring), a max rune level per selected target, and allowed
+// rarities; a live summary shows coverage (off the G1 selector). Targets empty =
+// none (unlike traditions, a rune offering needs ≥1 target); rarities empty =
+// common only.
+const RunesmithingSection = ({ config, runes, onChange }) => {
+  const setField = (patch) => onChange({ ...config, ...patch });
+  const toggleTarget = (t) => setField({ [t]: !config[t] });
+  const setLevel = (t, v) => setField({ levels: { ...config.levels, [t]: v } });
+  const toggleRarity = (v) => {
+    const cur = config.rarities || [];
+    setField({ rarities: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] });
+  };
+  const enabled = RUNE_TARGET_LABELS.filter(([t]) => config[t]);
+
+  const summary = useMemo(() => {
+    if (enabled.length === 0) return null;
+    const ware = {
+      runeService: true,
+      targets: enabled.map(([t]) => t),
+      maxLevel: Object.fromEntries(enabled.map(([t]) => [t, parseInt(config.levels?.[t], 10) || 1])),
+      rarities: config.rarities,
+    };
+    return runeOfferingSummary(ware, runes);
+  }, [enabled, config, runes]);
+
+  return (
+    <div className="gm-shop-offers" data-testid="rune-offerings">
+      <div className="gm-shop-offers-head">
+        <div className="gm-shop-pane-title">Runesmithing services</div>
+      </div>
+      <p className="gm-count gm-shop-offers-intro">
+        Etch any catalog rune onto a runestone, by target and rune level.
+      </p>
+      <div className="gm-shop-offer-filters">
+        <div className="form-group gm-shop-offer-field">
+          <span className="gm-shop-offer-label">targets</span>
+          <div className="gm-shop-chips" role="group" aria-label="targets">
+            {RUNE_TARGET_LABELS.map(([t, lbl]) => (
+              <button
+                key={t}
+                type="button"
+                className={`gm-shop-chip${config[t] ? ' is-on' : ''}`}
+                aria-pressed={!!config[t]}
+                aria-label={`rune-target-${t}`}
+                onClick={() => toggleTarget(t)}
+              >
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        {enabled.map(([t, lbl]) => (
+          <div key={t} className="form-group gm-shop-offer-rank">
+            <label htmlFor={`rune-maxlevel-${t}`}>{lbl} max level</label>
+            <input
+              id={`rune-maxlevel-${t}`}
+              aria-label={`rune-maxlevel-${t}`}
+              type="number"
+              min="1"
+              max={String(RUNE_MAX_LEVEL)}
+              value={config.levels?.[t] ?? ''}
+              onChange={(e) => setLevel(t, e.target.value)}
+            />
+          </div>
+        ))}
+        <ChipMulti
+          label="rarities"
+          options={ALL_RARITIES}
+          selected={config.rarities}
+          onToggle={toggleRarity}
+          idBase="rune-rarity"
+          hint="none = common only"
+        />
+      </div>
+      {enabled.length === 0 ? (
+        <p className="gm-count gm-shop-offers-empty">
+          Not selling runes. Choose a target above to offer runesmithing services.
+        </p>
+      ) : (
+        <p className="gm-shop-offer-summary" data-testid="rune-summary">{summary.text}</p>
+      )}
+    </div>
+  );
+};
+
 // The per-location authoring surface. `onBack` is supplied only by finders that
 // hide the list (the Command finder, S5); inside PageEditorShell the list stays
 // visible, so no back button renders.
-const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMap, setShop, removeShop, onBack }) => {
+const Workspace = ({ location, shops, spells, runes, catalog, chips, catalogMap, runeMap, setShop, removeShop, onBack }) => {
   const loreId = location.id;
   const entry = shops[loreId];
   const [setUp, setSetUp] = useState(() => isSetUp(loreId, shops));
@@ -630,6 +780,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
   const [offersRunes, setOffersRunes] = useState(() => shopOffersRunes(loreId, shops));
   const [rows, setRows] = useState(() => toRows(entry?.wares));
   const [spellConfig, setSpellConfig] = useState(() => toSpellConfig(entry?.wares));
+  const [runeConfig, setRuneConfig] = useState(() => toRuneConfig(entry?.wares));
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
@@ -647,6 +798,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
   };
 
   const editSpellConfig = (next) => { setSpellConfig(next); touch(); };
+  const editRuneConfig = (next) => { setRuneConfig(next); touch(); };
 
   // Shelve a catalog card as ONE row, skipping a ref/rune already on the shelf.
   // A multi-variant item (#889) shelves with its first variant pre-selected (the
@@ -675,6 +827,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
     setOpen(true);
     setRows([]);
     setSpellConfig(toSpellConfig([]));
+    setRuneConfig(toRuneConfig([]));
     setOffersSpellcasting(false);
     setOffersRunes(false);
     setDirty(false);
@@ -688,7 +841,7 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
       revealed,
       offersSpellcasting,
       offersRunes,
-      wares: [...fromRows(rows), ...fromSpellConfig(spellConfig)],
+      wares: [...fromRows(rows), ...fromSpellConfig(spellConfig), ...fromRuneConfig(runeConfig)],
     });
     setDirty(false);
     setJustSaved(true);
@@ -806,6 +959,12 @@ const Workspace = ({ location, shops, spells, catalog, chips, catalogMap, runeMa
             config={spellConfig}
             spells={spells}
             onChange={editSpellConfig}
+          />
+
+          <RunesmithingSection
+            config={runeConfig}
+            runes={runes}
+            onChange={editRuneConfig}
           />
         </>
       )}
@@ -971,6 +1130,7 @@ const GmShops = () => {
             location={selected}
             shops={shops}
             spells={spells}
+            runes={runes}
             catalog={catalog}
             chips={chips}
             catalogMap={catalogMap}
