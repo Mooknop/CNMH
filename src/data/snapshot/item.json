@@ -5524,7 +5524,26 @@
           "Manipulate",
           "Spellshape"
         ],
-        "description": "If your next action is to Cast a Spell that deals at least one type of energy damage (acid, cold, electricity, fire, force, sonic, vitality, or void), you gain resistance to one energy type the spell could deal equal to the spell's rank until the end of your next turn."
+        "description": "If your next action is to Cast a Spell that deals at least one type of energy damage (acid, cold, electricity, fire, force, sonic, vitality, or void), you gain resistance to one energy type the spell could deal equal to the spell's rank until the end of your next turn.",
+        "chain": {
+          "into": "spell",
+          "modifier": "If the spell deals energy damage, gain resistance to one energy type it could deal equal to the spell's rank until the end of your next turn.",
+          "selfEffect": {
+            "effectId": "energy-ablation-resistance",
+            "name": "Energy Ablation",
+            "stat": "resistance",
+            "amount": "castRank",
+            "choose": {
+              "key": "vs",
+              "label": "Energy type",
+              "options": ["acid", "cold", "electricity", "fire", "force", "sonic", "vitality", "void"]
+            },
+            "duration": {
+              "until": "rounds",
+              "rounds": 1
+            }
+          }
+        }
       }
     ],
     "actuated": {
