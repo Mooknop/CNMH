@@ -7,7 +7,7 @@
 // infinite bolt (Activate 0, no on-hit) or a special-ammunition item from
 // inventory (e.g. Beacon Shot — Activate 1, on-hit effect).
 //
-// Content shape this reads (added to src/data/snapshot.json in the S1 content PR):
+// Content shape this reads (added to src/data/snapshot/item.json in the S1 content PR):
 //
 //   Ranged strike (crescent-cross "Crescent Cross Bolt"):
 //     { "capacity": 3, "reload": 1, "ammoType": "bolt", traits:[…, "Capacity 3"] }

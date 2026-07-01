@@ -1,0 +1,394 @@
+[
+  {
+    "title": "A Message in the Night",
+    "date": {
+      "year": 4724,
+      "month": 7,
+      "day": 27
+    },
+    "type": "campaign",
+    "description": "A dying Gorumite asks for help with his final breath; Iron Harbor is in danger.",
+    "id": "a-message-in-the-night"
+  },
+  {
+    "title": "Abjurant Day",
+    "date": {
+      "month": 10,
+      "day": 8
+    },
+    "type": "holiday",
+    "description": "Nethysian holiday devoted to magical protection and securing that which is dear to you.",
+    "id": "abjurant-day-29"
+  },
+  {
+    "title": "Allbrith",
+    "date": {
+      "month": 9,
+      "day": 30
+    },
+    "type": "holiday",
+    "description": "What was once a day of bloodcurdling ritualistic sacrifice has become a day of temptation and celebration, ever since the half-orcs and Goblins of Katapesh popularized the celebration of the Demon Queen Lamashtu with secretive masquerades.",
+    "id": "allbrith-26"
+  },
+  {
+    "title": "Archerfeast",
+    "date": {
+      "month": 6,
+      "day": 3
+    },
+    "type": "holiday",
+    "description": "Devotees of Erastil celebrate this holiday with archery contests and a celebration of the contribution of Hunters to their communities.",
+    "id": "archerfeast-19"
+  },
+  {
+    "title": "Ascendance Day (Iomedae)",
+    "date": {
+      "month": 9,
+      "day": 6
+    },
+    "type": "holiday",
+    "description": "Holiday marking the ascension of the goddess Iomedae after taking the Test of the Starstone.",
+    "id": "ascendance-day-iomedae-24"
+  },
+  {
+    "title": "Ascendance Night (Norgorber)",
+    "date": {
+      "month": 4,
+      "day": 2
+    },
+    "type": "holiday",
+    "description": "A holiday comemorating the apotheosis of the Reaper of Reputation.",
+    "id": "ascendance-night-norgorber-17"
+  },
+  {
+    "title": "Ascension Day (Cayden Cailean)",
+    "date": {
+      "month": 11,
+      "day": 11
+    },
+    "type": "holiday",
+    "description": "Celebration of the Accidental God's triumph over the Test of the Starstone.",
+    "id": "ascension-day-cayden-cailean-32"
+  },
+  {
+    "title": "Ashka's Birthday",
+    "date": {
+      "month": 6,
+      "day": 20
+    },
+    "type": "personal",
+    "description": "One of Ashka's fondest memories is of the brithday tiaras their mother would give them, glistening with beautiful rubies...",
+    "id": "ashkas-birthday-6"
+  },
+  {
+    "title": "Audrahni Arrives in Sandpoint",
+    "date": {
+      "year": 4725,
+      "month": 2,
+      "day": 10
+    },
+    "type": "campaign",
+    "description": "Audrahni arrives from Absalom, ready to perform the Call Spirit Ritual.",
+    "id": "audrahni-arrives-in-sandpoint-3"
+  },
+  {
+    "title": "Blu's Birthday",
+    "date": {
+      "month": 0,
+      "day": 25
+    },
+    "type": "personal",
+    "description": "A foundling raised by an order of monks, Blu's real birthdate is unknown. But on this day years ago, an Automaton delivered the child to the Order of the Platinum Band.",
+    "id": "blus-birthday-4"
+  },
+  {
+    "title": "Candlemark",
+    "date": {
+      "month": 11,
+      "day": 21
+    },
+    "type": "holiday",
+    "description": "Holiday reminding the faithful that the Dawnflower's power to heal and redeem is always with her, even during the sun's weakest day. The day is also seen as a time to look forward to longer days.",
+    "id": "candlemark-34"
+  },
+  {
+    "title": "Crystalhue",
+    "date": {
+      "month": 11,
+      "day": 21
+    },
+    "type": "holiday",
+    "description": "Shelynite holiday marked by the creation of artistic works, and the start of romantic courtships.",
+    "id": "crystalhue-35"
+  },
+  {
+    "title": "Currentseve",
+    "date": {
+      "month": 3,
+      "day": 7
+    },
+    "type": "holiday",
+    "description": "A somber festival, it was started by sailors seeking the protection of Gozreh, deity of storms, to ensure safe voyages as the spring fishing ventures began their preparations.",
+    "id": "currentseve-15"
+  },
+  {
+    "title": "Day of Bones",
+    "date": {
+      "month": 2,
+      "day": 5
+    },
+    "type": "holiday",
+    "description": "Priests and worshipers of the Lady of Graves parade the bodies of the recently dead on this holiday, holding free burials afterwards.",
+    "id": "day-of-bones-13"
+  },
+  {
+    "title": "Day of Order",
+    "date": {
+      "month": 11,
+      "day": 11
+    },
+    "type": "holiday",
+    "description": "Asmodean holiday recognizing Asmodeus slaying his brother Ihys at the dawn of this universe. ",
+    "id": "day-of-order-33"
+  },
+  {
+    "title": "Day of the Inheritor",
+    "date": {
+      "month": 8,
+      "day": 19
+    },
+    "type": "holiday",
+    "description": "A holiday commemorating the church of Iomedae's adoption of the forlorn faithful of the dead god Aroden into their midst.",
+    "id": "day-of-the-inheritor-21"
+  },
+  {
+    "title": "Elder Ordwi Found",
+    "date": {
+      "year": 4724,
+      "month": 7,
+      "day": 31
+    },
+    "type": "campaign",
+    "description": "The party finds Elder Ordwi",
+    "id": "elder-ordwi-found-1"
+  },
+  {
+    "title": "Evoking Day",
+    "date": {
+      "month": 10,
+      "day": 18
+    },
+    "type": "holiday",
+    "description": "Holiday marked by displays of fireworks and magical duels (both mock and real).",
+    "id": "evoking-day-30"
+  },
+  {
+    "title": "Feast of the Survivors",
+    "recurring": "third Moonday of Lamashan",
+    "type": "holiday",
+    "description": "A Nidalese tradition celebrating the protection offered by Zon-Kuthon to their people for generations. Hyper-goth Passover.",
+    "id": "feast-of-the-survivors-23"
+  },
+  {
+    "title": "Feast of Vigor",
+    "date": {
+      "month": 1,
+      "day": 14
+    },
+    "type": "holiday",
+    "description": "A communal, hedonistic celebration of pleasure led by the clerics of Calistria.",
+    "id": "feast-of-vigor-11"
+  },
+  {
+    "name": "Festival of Making and Breaking",
+    "recurring": "First Starday of Neth",
+    "type": "holiday",
+    "description": "Artisans teach children to build something which, come evening, is then destroyed by teachers of magic in a vibrant elemental display.",
+    "id": "festival-of-making-and-breaking-28"
+  },
+  {
+    "title": "Festival of the Witch",
+    "date": {
+      "month": 9,
+      "day": 30
+    },
+    "type": "holiday",
+    "description": "A tradition started in Irrisen, it is a celebration of all Witches and the refinement of their craft.",
+    "id": "festival-of-the-witch-27"
+  },
+  {
+    "title": "First Brewing",
+    "date": {
+      "month": 8,
+      "day": 1
+    },
+    "type": "holiday",
+    "description": "Cayden's priests use this holiday to bless the year's harvest of brewing crops and reflect on the hard work of the Accidental God's devotees.",
+    "id": "first-brewing-20"
+  },
+  {
+    "title": "Firstbloom",
+    "date": {
+      "month": 2,
+      "day": 20
+    },
+    "type": "holiday",
+    "description": "Firstbloom is a holiday celebrating the first planting of the agricultural season, and generally associated with the weather god Gozreh. It falls on the vernal equinox.",
+    "id": "firstbloom-14"
+  },
+  {
+    "title": "Izzy's Birthday",
+    "date": {
+      "month": 2,
+      "day": 17
+    },
+    "type": "personal",
+    "description": "Izzy could never quite recall the specifics of when he was created, which is strange for Leshies. It's a puzzle to this day, but he celebrates his birth on this day, the anniversary of his first sold-out show.",
+    "id": "izzys-birthday-5"
+  },
+  {
+    "title": "Jade's Birthday",
+    "date": {
+      "month": 10,
+      "day": 29
+    },
+    "type": "personal",
+    "description": "Half elf, half Varisian, 100% that witch.",
+    "id": "jades-birthday-8"
+  },
+  {
+    "title": "Jestercap",
+    "date": {
+      "month": 9,
+      "day": 27
+    },
+    "type": "holiday",
+    "description": "A gnomish holiday celebrated by playing practical jokes.",
+    "id": "jestercap-25"
+  },
+  {
+    "name": "Longnight",
+    "recurring": "full moon of Abadius",
+    "type": "holiday",
+    "description": "All-night festival in which revelers defy the darkness of winter and stay up to greet the dawn.",
+    "id": "longnight-9"
+  },
+  {
+    "title": "Merrymead",
+    "date": {
+      "month": 1,
+      "day": 2
+    },
+    "type": "holiday",
+    "description": "Merrymead was started by Druma's Caydenites, who had the brilliant idea to host a massive party to drink the remains of the previous year's alcohol in a symbolic act of drowning unfinished business.",
+    "id": "merrymead-12"
+  },
+  {
+    "title": "Night of the Pale",
+    "date": {
+      "month": 11,
+      "day": 31
+    },
+    "type": "holiday",
+    "description": "On the Night of the Pale, it is said that the ghosts of those who died during the previous year manifest upon the world and come to visit the homes they lived in during life. Although some might think that the chance of seeing even the shade of a dearly departed one might be a blessing, the Night of the Pale is not a time for tearful reunions, for these ghosts, tradition says, do not return out of love for those they left behind but out of darker compulsions.",
+    "id": "night-of-the-pale-38"
+  },
+  {
+    "title": "Pellias' Birthday",
+    "date": {
+      "month": 9,
+      "day": 18
+    },
+    "type": "personal",
+    "description": "That religious hipster, worshipping some new god nobody's ever heard of...",
+    "id": "pellias-birthday-7"
+  },
+  {
+    "name": "Rememberance Moon",
+    "recurring": "full moon of Desnus",
+    "type": "holiday",
+    "description": "A comemorative holiday celebrating those that died in the Shining Crusades against the Whispering Tyrant.",
+    "id": "rememberance-moon-16"
+  },
+  {
+    "title": "Ritual of Stardust",
+    "date": {
+      "month": 5,
+      "day": 21
+    },
+    "type": "holiday",
+    "description": "Bi-annual festival held on the solstices, where the faithful of Desna sing songs through the night around bonfires.",
+    "id": "ritual-of-stardust-18"
+  },
+  {
+    "title": "Ritual of Stardust",
+    "date": {
+      "month": 11,
+      "day": 21
+    },
+    "type": "holiday",
+    "description": "Bi-annual festival held on the solstices, where the faithful of Desna sing songs through the night around bonfires.",
+    "id": "ritual-of-stardust-36"
+  },
+  {
+    "title": "Ritual of the Whip Sting",
+    "date": {
+      "month": 1,
+      "day": 1
+    },
+    "type": "holiday",
+    "description": "Calistrian day of vengeance. Any revenge taken on this day must be put fully to rest.",
+    "id": "ritual-of-the-whip-sting-10"
+  },
+  {
+    "title": "Swallowtail Festival",
+    "date": {
+      "month": 8,
+      "day": 23
+    },
+    "type": "holiday",
+    "description": "Priests of Desna release a wagon full of swallowtail butterflies in front of a crowd of believers. Worshipers consider it a good omen if a butterfly rests on him or her for a short time. The remainder of the day is spent in celebration and can include activities such as feasting, storytelling, and singing.",
+    "id": "swallowtail-festival-22"
+  },
+  {
+    "title": "The Final Day",
+    "date": {
+      "month": 11,
+      "day": 31
+    },
+    "type": "holiday",
+    "description": "Cultists of Groetus perform an hour's silence at dusk on the last day of the year and seek guidance from their god about the End Time.",
+    "id": "the-final-day-37"
+  },
+  {
+    "title": "Transmutatum",
+    "date": {
+      "month": 10,
+      "day": 28
+    },
+    "type": "holiday",
+    "description": "Holiday celebrating transformation, both magical and metaphysical.",
+    "id": "transmutatum-31"
+  },
+  {
+    "title": "Turning Day",
+    "date": {
+      "month": 11,
+      "day": 31
+    },
+    "type": "holiday",
+    "description": "The changing of the year is celebrated by Alseta's faithful with the forgiveness of old debts and grudges, and embracing new opportunities.",
+    "id": "turning-day-39"
+  },
+  {
+    "title": "Xar-Azmak Defeated",
+    "date": {
+      "year": 4724,
+      "month": 8,
+      "day": 1
+    },
+    "type": "campaign",
+    "description": "Party arrives in Dis, Hell",
+    "id": "xar-azmak-defeated-2"
+  }
+]

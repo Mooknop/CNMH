@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /*
  * Fetches the live CampaignContent snapshot from the production Durable Object
- * and writes it to src/data/snapshot.json — the canonical seed source.
+ * and writes it to src/data/snapshot/<collection>.json — the canonical seed
+ * source, one file per collection (sharded from the old monolithic snapshot.json
+ * so content PRs no longer collide on a single 20k-line file).
  *
  * Run:  node scripts/snapshotContent.js [<base-url>]
  *   or: CNMH_SNAPSHOT_URL=https://... node scripts/snapshotContent.js
@@ -19,7 +21,7 @@ const REQUIRED_NON_EMPTY = ['character', 'quest'];
 
 const baseUrl = (process.argv[2] || process.env.CNMH_SNAPSHOT_URL || DEFAULT_BASE).replace(/\/$/, '');
 const endpoint = `${baseUrl}/api/content`;
-const outPath = path.join(__dirname, '..', 'src', 'data', 'snapshot.json');
+const outDir = path.join(__dirname, '..', 'src', 'data', 'snapshot');
 
 (async () => {
   console.log(`Fetching ${endpoint} ...`);
@@ -68,16 +70,12 @@ const outPath = path.join(__dirname, '..', 'src', 'data', 'snapshot.json');
     const y = b && b.id != null ? String(b.id) : '￿';
     return x < y ? -1 : x > y ? 1 : 0;
   };
-  const out = {};
+  fs.mkdirSync(outDir, { recursive: true });
   for (const key of COLLECTION_KEYS) {
     const arr = Array.isArray(snapshot[key]) ? snapshot[key] : [];
-    out[key] = [...arr].sort(byId);
+    const sorted = [...arr].sort(byId);
+    fs.writeFileSync(path.join(outDir, `${key}.json`), JSON.stringify(sorted, null, 2) + '\n');
+    console.log(`  ${key.padEnd(10)} ${sorted.length} docs`);
   }
-
-  fs.writeFileSync(outPath, JSON.stringify(out, null, 2) + '\n');
-
-  for (const key of COLLECTION_KEYS) {
-    console.log(`  ${key.padEnd(10)} ${out[key].length} docs`);
-  }
-  console.log(`\n✓ Written to ${path.relative(process.cwd(), outPath)}`);
+  console.log(`\n✓ Written to ${path.relative(process.cwd(), outDir)}/<collection>.json`);
 })();

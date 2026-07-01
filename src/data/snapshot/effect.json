@@ -1,0 +1,2012 @@
+[
+  {
+    "id": "ability-immunity",
+    "name": "Immune",
+    "description": "Temporarily immune to a specific ability (e.g. Guidance, Battle Medicine, Tell Fortune). Applied automatically on use and cleared when the game clock passes its expiry.",
+    "modifiers": []
+  },
+  {
+    "id": "aid",
+    "name": "Aid",
+    "description": "+2 circumstance bonus to the next attack roll or save (Aid critical success: +3).",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "circumstance",
+        "amount": 2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "circumstance",
+        "amount": 2
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "circumstance",
+        "amount": 2
+      },
+      {
+        "stat": "fort",
+        "kind": "circumstance",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "circumstance",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "circumstance",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "aid-crit",
+    "name": "Aid (Critical Success)",
+    "description": "+3 circumstance bonus to the next attack roll or save.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "circumstance",
+        "amount": 3
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "circumstance",
+        "amount": 3
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "circumstance",
+        "amount": 3
+      },
+      {
+        "stat": "fort",
+        "kind": "circumstance",
+        "amount": 3
+      },
+      {
+        "stat": "reflex",
+        "kind": "circumstance",
+        "amount": 3
+      },
+      {
+        "stat": "will",
+        "kind": "circumstance",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "id": "antidote",
+    "name": "Antidote",
+    "description": "+2 item bonus to Fortitude saves against poisons (Lesser; Moderate antidote is +3). The bonus is conditional ('vs poison'), so it is shown as a reminder beneath the Fortitude save rather than netted into the always-on number. Lasts 6 hours.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 2,
+        "vs": "poison"
+      }
+    ]
+  },
+  {
+    "id": "antiplague",
+    "name": "Antiplague",
+    "description": "+2 item bonus to Fortitude saves against diseases (Lesser; Moderate antiplague is +3), including the daily save against a disease's progression. The bonus is conditional ('vs disease'), so it is shown as a reminder beneath the Fortitude save rather than netted into the always-on number. Lasts 24 hours.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 2,
+        "vs": "disease"
+      }
+    ]
+  },
+  {
+    "id": "avoid-notice-hidden",
+    "name": "Avoiding Notice",
+    "description": "Successful Stealth check at start of exploration — Hidden from creatures that haven't noticed you.",
+    "modifiers": []
+  },
+  {
+    "id": "beacon-shot",
+    "name": "Beacon Shot",
+    "description": "Embedded with a sparking beacon shot for 1 minute. An invisible creature becomes merely hidden to creatures who couldn't otherwise see it, and a concealed creature loses the concealed condition. Remove with an Interact action and a DC 20 Athletics check.",
+    "modifiers": []
+  },
+  {
+    "id": "bless",
+    "name": "Bless",
+    "description": "+1 status bonus to attack rolls while within the emanation.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "blood-booster-greater",
+    "name": "Blood Booster (Greater)",
+    "description": "Resistance 20 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 20,
+        "vs": "persistent-bleed,persistent-poison",
+        "flatCheckEase": true
+      }
+    ]
+  },
+  {
+    "id": "blood-booster-lesser",
+    "name": "Blood Booster (Lesser)",
+    "description": "Resistance 5 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "persistent-bleed,persistent-poison",
+        "flatCheckEase": true
+      }
+    ]
+  },
+  {
+    "id": "blood-booster-moderate",
+    "name": "Blood Booster (Moderate)",
+    "description": "Resistance 10 to persistent bleed and persistent poison damage; lower the flat-check DC to end persistent bleed or poison as if aided. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "persistent-bleed,persistent-poison",
+        "flatCheckEase": true
+      }
+    ]
+  },
+  {
+    "id": "cognitive-mutagen-greater",
+    "name": "Cognitive Mutagen (Greater)",
+    "description": "+3 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "athletics",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "cognitive-mutagen-lesser",
+    "name": "Cognitive Mutagen (Lesser)",
+    "description": "+1 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "athletics",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "cognitive-mutagen-major",
+    "name": "Cognitive Mutagen (Major)",
+    "description": "+4 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "athletics",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "cognitive-mutagen-moderate",
+    "name": "Cognitive Mutagen (Moderate)",
+    "description": "+2 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "athletics",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "defend",
+    "name": "Defend",
+    "description": "Moving at half Speed with your shield raised: +2 circumstance bonus to Perception checks to detect hazards. You cannot be surprised, and can use Shield Block while traveling.",
+    "modifiers": [
+      {
+        "stat": "perception",
+        "kind": "circumstance",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "devoted-guardian",
+    "name": "Devoted Guardian",
+    "description": "+1 circumstance bonus to AC while your guardian stays adjacent with their shield raised.",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "circumstance",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "devoted-guardian-tower",
+    "name": "Devoted Guardian (Tower Shield)",
+    "description": "+2 circumstance bonus to AC while your guardian stays adjacent with their tower shield raised.",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "circumstance",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "dirge-of-doom",
+    "name": "Dirge of Doom",
+    "description": "Enemies in range are Frightened 1 (no save). Manual — apply Frightened via conditions.",
+    "modifiers": []
+  },
+  {
+    "id": "dragon-turtle-guard",
+    "name": "Roll the Plates",
+    "description": "+1 circumstance bonus to AC against the triggering melee attack (Dragon Turtle Plate reaction).",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "circumstance",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "drakeheart-mutagen",
+    "name": "Drakeheart Mutagen (Moderate)",
+    "description": "+5 item bonus to AC and +2 item bonus to Perception, with a −1 item penalty to Will and Reflex saves and a Dexterity cap of +2 (all netted into the sheet; the cap composes with your armor's, lowest wins). The −1 penalty to Recall Knowledge checks is shown as a reminder on each Recall-Knowledge skill. You can burn the remaining duration to Stride twice (1 action).",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "item",
+        "amount": 5
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "dexCap",
+        "amount": 2
+      },
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      },
+      {
+        "stat": "medicine",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      },
+      {
+        "stat": "nature",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      },
+      {
+        "stat": "religion",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": -1,
+        "vs": "Recall Knowledge"
+      }
+    ]
+  },
+  {
+    "id": "eagle-eye-elixir",
+    "name": "Eagle-eye Elixir",
+    "description": "+1 item bonus to Perception (Lesser; Moderate elixir is +2). The greater +2/+3 bonus to find secret doors and traps shows as a conditional reminder — an extra +1 on top of the netted Perception bonus. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 1,
+        "vs": "find secret doors and traps"
+      }
+    ]
+  },
+  {
+    "id": "eld-charged",
+    "name": "Charged (Eld)",
+    "description": "Off-guard against attacks that deal electricity damage (still descriptive — no AC-vs-type surface) and −2 to saves against electric effects (now shown as a reminder beneath each save). Ends when the encounter ends, on taking electricity damage, or by Discharging to empower another electric Eld power.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": -2,
+        "vs": "electricity"
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": -2,
+        "vs": "electricity"
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": -2,
+        "vs": "electricity"
+      }
+    ],
+    "encounterScoped": true,
+    "clearOnDamageType": "electricity"
+  },
+  {
+    "id": "eld-rust-cloud",
+    "name": "Rust Cloud",
+    "description": "A 20-foot emanation of billowing rust: creatures inside are concealed, and creatures outside are concealed to those inside. Lasts 10 minutes, until Dismissed (2 actions), or until you fall unconscious.",
+    "modifiers": []
+  },
+  {
+    "id": "eld-shrouded",
+    "name": "Shrouded",
+    "description": "All light within 20 feet is lowered one step in intensity (bright → dim, dim → darkness). Lasts until the end of your turn.",
+    "modifiers": []
+  },
+  {
+    "id": "fly-spell",
+    "name": "Fly (spell)",
+    "description": "Character gains a fly Speed equal to their land Speed. Track manually.",
+    "modifiers": []
+  },
+  {
+    "id": "gecko-potion",
+    "name": "Gecko Potion",
+    "description": "+1 item bonus to Climb and to Palm an Object (shown as conditional reminders on the Athletics and Thievery cards), and you can cling to surfaces. Lasts 5 minutes.",
+    "modifiers": [
+      {
+        "stat": "athletics",
+        "kind": "item",
+        "amount": 1,
+        "vs": "Climb"
+      },
+      {
+        "stat": "thievery",
+        "kind": "item",
+        "amount": 1,
+        "vs": "Palm an Object"
+      }
+    ]
+  },
+  {
+    "id": "harrow-key-ward",
+    "name": "Harrow Casting — Key",
+    "description": "+1 status bonus to AC and all saving throws until the start of your next turn (Harrow Casting, Key drawn).",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "harrow-key-ward-2",
+    "name": "Harrow Casting — Key (omen match)",
+    "description": "+2 status bonus to AC and all saving throws until the start of your next turn (Harrow Casting, Key drawn matching the Keys omen).",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "harrow-star-saves",
+    "name": "Harrow Casting — Star (omen match)",
+    "description": "+2 status bonus to all saving throws until the start of the caster's next turn (Harrow Casting, Star drawn matching the Stars omen).",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "heroism-1",
+    "name": "Heroism (Rank 1–3)",
+    "description": "+1 status bonus to attack rolls, Perception, and saving throws for 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "perception",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "heroism-2",
+    "name": "Heroism (Rank 4–6)",
+    "description": "+2 status bonus to attack rolls, Perception, and saving throws for 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "perception",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "heroism-3",
+    "name": "Heroism (Rank 7+)",
+    "description": "+3 status bonus to attack rolls, Perception, and saving throws for 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 3
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 3
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 3
+      },
+      {
+        "stat": "perception",
+        "kind": "status",
+        "amount": 3
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 3
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 3
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "id": "ichthyosis-mutagen",
+    "name": "Ichthyosis Mutagen",
+    "description": "Your skin thickens into scales: you gain fast healing 2 and automatically succeed at flat checks to recover from persistent bleed. The flaking skin imposes a –2 penalty to Reflex saves and grants creatures a +4 circumstance bonus to Track you for 24 hours. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "imperial-blood-magic-ac",
+    "name": "Blood Magic — AC (Imperial)",
+    "description": "+1 status bonus to AC until the start of your next turn (Imperial blood magic).",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "imperial-blood-magic-saves",
+    "name": "Blood Magic — Saving Throws (Imperial)",
+    "description": "+1 status bonus to all saving throws until the start of your next turn (Imperial blood magic).",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "inspire-courage",
+    "name": "Inspire Courage",
+    "description": "+1 status bonus to attack rolls and damage rolls while the composition lasts.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "inspire-courage-2",
+    "name": "Inspire Courage (+2)",
+    "description": "+2 status bonus to attack rolls (Maestro dedication or Lingering Composition).",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 2
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "juggernaut-mutagen-greater",
+    "name": "Juggernaut Mutagen (Greater)",
+    "description": "+3 item bonus to Fortitude saves and 30 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "juggernaut-mutagen-lesser",
+    "name": "Juggernaut Mutagen (Lesser)",
+    "description": "+1 item bonus to Fortitude saves and 5 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "juggernaut-mutagen-major",
+    "name": "Juggernaut Mutagen (Major)",
+    "description": "+4 item bonus to Fortitude saves and 45 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "juggernaut-mutagen-moderate",
+    "name": "Juggernaut Mutagen (Moderate)",
+    "description": "+2 item bonus to Fortitude saves and 10 temporary Hit Points; –2 item penalty to Will saves, Perception, and initiative. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "mage-armor",
+    "name": "Mage Armor",
+    "description": "+1 item bonus to AC (unarmored only in practice). Lasts until next daily prep.",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "ommatophoric-mutagen",
+    "name": "Ommatophoric Mutagen",
+    "description": "Your eyes extend on prehensile stalks: +2 item bonus to visual Perception checks, all-around vision (you can’t be flanked), and low-light vision. You take a –2 penalty to saves against effects with the visual trait. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "quicksilver-mutagen-greater",
+    "name": "Quicksilver Mutagen (Greater)",
+    "description": "+3 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +15-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "thievery",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 15
+      },
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "quicksilver-mutagen-lesser",
+    "name": "Quicksilver Mutagen (Lesser)",
+    "description": "+1 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +5-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "thievery",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 5
+      },
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "quicksilver-mutagen-major",
+    "name": "Quicksilver Mutagen (Major)",
+    "description": "+4 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +20-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "thievery",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 20
+      },
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "quicksilver-mutagen-moderate",
+    "name": "Quicksilver Mutagen (Moderate)",
+    "description": "+2 item bonus to Acrobatics, Stealth, Thievery, Reflex saves, and Dexterity-based (ranged/finesse) attack rolls, plus a +10-foot status bonus to Speed; –2 item penalty to Fortitude saves, and you take damage equal to twice your level that can’t heal while active. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "thievery",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 10
+      },
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "runic-body",
+    "name": "Runic Body",
+    "description": "+1 status bonus to attack rolls (from fundamental rune bonus on unarmed attacks).",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "sanguine-mutagen-greater",
+    "name": "Sanguine Mutagen (Greater)",
+    "description": "+3 item bonus to Fortitude and Reflex saves (+4 against disease, poison, or fatigue effects). Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 3
+      }
+    ]
+  },
+  {
+    "id": "sanguine-mutagen-lesser",
+    "name": "Sanguine Mutagen (Lesser)",
+    "description": "+1 item bonus to Fortitude and Reflex saves (+2 against disease, poison, or fatigue effects). Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "sanguine-mutagen-major",
+    "name": "Sanguine Mutagen (Major)",
+    "description": "+4 item bonus to Fortitude and Reflex saves; a success against a disease, poison, or fatigue effect becomes a critical success. Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 4
+      }
+    ]
+  },
+  {
+    "id": "sanguine-mutagen-moderate",
+    "name": "Sanguine Mutagen (Moderate)",
+    "description": "+2 item bonus to Fortitude and Reflex saves (+3 against disease, poison, or fatigue effects). Whenever you take piercing or slashing damage you take 1d6 persistent bleed. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "serene-mutagen-greater",
+    "name": "Serene Mutagen (Greater)",
+    "description": "+3 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+4 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "medicine",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "nature",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "religion",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "survival",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "attacks",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "spellDC",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "serene-mutagen-lesser",
+    "name": "Serene Mutagen (Lesser)",
+    "description": "+1 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+2 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "medicine",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "nature",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "religion",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "survival",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "attacks",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "spellDC",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "serene-mutagen-major",
+    "name": "Serene Mutagen (Major)",
+    "description": "+4 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+5 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "medicine",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "nature",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "religion",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "survival",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "attacks",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "spellDC",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "serene-mutagen-moderate",
+    "name": "Serene Mutagen (Moderate)",
+    "description": "+2 item bonus to Will saves, Perception, Medicine, Nature, Religion, and Survival (+3 to Will vs mental effects); –1 to attack rolls and offensive spell DCs, and –1 per damage die to your weapon, unarmed, and spell damage. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "medicine",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "nature",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "religion",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "survival",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "attacks",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "spellDC",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "shield-spell",
+    "name": "Shield (spell)",
+    "description": "+1 circumstance bonus to AC until the start of your next turn.",
+    "modifiers": [
+      {
+        "stat": "ac",
+        "kind": "circumstance",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "shining-guidance",
+    "name": "Shining Guidance",
+    "description": "You and your allies gain a +1 circumstance bonus to attack rolls against the limned creature while it stays limned (Izzy's Shining Guidance, #225). Conditional ('vs limned target') — it surfaces as an opt-in toggle in the attack resolver, applied to the target you choose. Applied to the party automatically when Shining Guidance's save resolves to anything but a critical success; lasts until the end of your next turn (two rounds on a critical failure — re-apply if needed).",
+    "modifiers": [
+      {
+        "stat": "attacks",
+        "kind": "circumstance",
+        "amount": 1,
+        "vs": "limned target"
+      }
+    ]
+  },
+  {
+    "id": "silvertongue-mutagen-greater",
+    "name": "Silvertongue Mutagen (Greater)",
+    "description": "+3 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "deception",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "silvertongue-mutagen-lesser",
+    "name": "Silvertongue Mutagen (Lesser)",
+    "description": "+1 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "deception",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "silvertongue-mutagen-major",
+    "name": "Silvertongue Mutagen (Major)",
+    "description": "+4 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "deception",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "silvertongue-mutagen-moderate",
+    "name": "Silvertongue Mutagen (Moderate)",
+    "description": "+2 item bonus to Deception, Diplomacy, Intimidation, and Performance; –2 item penalty to Arcana, Crafting, Lore, Occultism, and Society, and you become untrained in one trained skill of your choice. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "deception",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "arcana",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "occultism",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "society",
+        "kind": "item",
+        "amount": -2
+      }
+    ]
+  },
+  {
+    "id": "soothing-tonic-greater",
+    "name": "Soothing Tonic (Greater)",
+    "description": "Fast Healing 5 for 1 minute.",
+    "modifiers": []
+  },
+  {
+    "id": "soothing-tonic-lesser",
+    "name": "Soothing Tonic (Lesser)",
+    "description": "Fast Healing 1 for 1 minute.",
+    "modifiers": []
+  },
+  {
+    "id": "soothing-tonic-major",
+    "name": "Soothing Tonic (Major)",
+    "description": "Fast Healing 10 for 1 minute.",
+    "modifiers": []
+  },
+  {
+    "id": "soothing-tonic-moderate",
+    "name": "Soothing Tonic (Moderate)",
+    "description": "Fast Healing 3 for 1 minute.",
+    "modifiers": []
+  },
+  {
+    "id": "stone-body-mutagen-greater",
+    "name": "Stone Body Mutagen (Greater)",
+    "description": "Your body calcifies: resistance 10 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "piercing,slashing"
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": -10
+      }
+    ]
+  },
+  {
+    "id": "stone-body-mutagen-lesser",
+    "name": "Stone Body Mutagen (Lesser)",
+    "description": "Your body calcifies: resistance 5 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "piercing,slashing"
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": -10
+      }
+    ]
+  },
+  {
+    "id": "stone-body-mutagen-moderate",
+    "name": "Stone Body Mutagen (Moderate)",
+    "description": "Your body calcifies: resistance 5 to physical damage except bludgeoning. Your Speed drops by 10 feet (minimum 5) and you take a –2 penalty to Reflex saves. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "piercing,slashing"
+      },
+      {
+        "stat": "reflex",
+        "kind": "item",
+        "amount": -2
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": -10
+      }
+    ]
+  },
+  {
+    "id": "theatrical-mutagen-greater",
+    "name": "Theatrical Mutagen (Greater)",
+    "description": "+3 item bonus to Acrobatics, Crafting, and Performance and a +10-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 10
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "theatrical-mutagen-lesser",
+    "name": "Theatrical Mutagen (Lesser)",
+    "description": "+1 item bonus to Acrobatics, Crafting, and Performance and a +5-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 5
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "theatrical-mutagen-major",
+    "name": "Theatrical Mutagen (Major)",
+    "description": "+4 item bonus to Acrobatics, Crafting, and Performance and a +10-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 10
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "theatrical-mutagen-moderate",
+    "name": "Theatrical Mutagen (Moderate)",
+    "description": "+2 item bonus to Acrobatics, Crafting, and Performance and a +5-foot status bonus to Speed; your untrained skills function at your level instead of +0. –1 item penalty to Perception and Will saves, and you become off-guard unless you spend an action each round on Interact, Perform, Step, or Stride. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "crafting",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 5
+      },
+      {
+        "stat": "perception",
+        "kind": "item",
+        "amount": -1
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": -1
+      }
+    ]
+  },
+  {
+    "id": "treat-poison-resist",
+    "name": "Treat Poison",
+    "description": "+2 circumstance bonus to saving throws against the poison being treated.",
+    "modifiers": [
+      {
+        "stat": "fort",
+        "kind": "circumstance",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "treat-wounds-immunity",
+    "name": "Treat Wounds Immunity",
+    "description": "Cannot be healed by Treat Wounds or Battle Medicine from the specific healer who applied this effect. Applied automatically on a successful Treat Wounds or Battle Medicine check. Remove to allow re-treatment.",
+    "modifiers": []
+  },
+  {
+    "id": "upstage",
+    "name": "Upstage",
+    "description": "+1 status bonus to attack rolls, Perception, saving throws, and skill checks until the end of your next turn.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "rangedAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "spellAttack",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "perception",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "fort",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "reflex",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "will",
+        "kind": "status",
+        "amount": 1
+      },
+      {
+        "stat": "skills",
+        "kind": "status",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "war-blood-mutagen-greater",
+    "name": "War Blood Mutagen (Greater)",
+    "description": "+3 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +3 item bonus to Will saves against fear. The weapon resists being removed (DC 30 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": 3
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 3,
+        "vs": "fear"
+      }
+    ]
+  },
+  {
+    "id": "war-blood-mutagen-lesser",
+    "name": "War Blood Mutagen (Lesser)",
+    "description": "+1 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +1 item bonus to Will saves against fear. The weapon resists being removed (DC 25 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 1 minute.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 1,
+        "vs": "fear"
+      }
+    ]
+  },
+  {
+    "id": "war-blood-mutagen-major",
+    "name": "War Blood Mutagen (Major)",
+    "description": "+4 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +4 item bonus to Will saves against fear. The weapon resists being removed (DC 30 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 1 hour.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": 4
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 4,
+        "vs": "fear"
+      }
+    ]
+  },
+  {
+    "id": "war-blood-mutagen-moderate",
+    "name": "War Blood Mutagen (Moderate)",
+    "description": "+2 item bonus to attack rolls with a chosen melee weapon (bound to your hand) and +2 item bonus to Will saves against fear. The weapon resists being removed (DC 30 Athletics) and you must succeed at a DC 5 flat check to use concentrate actions. Lasts 10 minutes.",
+    "modifiers": [
+      {
+        "stat": "meleeAttack",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "will",
+        "kind": "item",
+        "amount": 2,
+        "vs": "fear"
+      }
+    ]
+  },
+  {
+    "id": "waterbreathing",
+    "name": "Waterbreathing",
+    "description": "You can breathe underwater. Lasts 1 hour.",
+    "modifiers": []
+  }
+]

@@ -954,7 +954,7 @@ describe('resolveFocusSpells', () => {
   });
 
   it('bundled focus spells resolve correctly after migration', () => {
-    const { spell: spells } = require('../data/snapshot.json');
+    const spells = require('../data/snapshot/spell.json');
     const bundledMap = spellCatalogMap(spells);
     const pelliasFocus = [
       { spellRef: 'serrate' },

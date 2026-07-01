@@ -1,0 +1,347 @@
+[
+  {
+    "name": "Runewatchers",
+    "reputation": 4,
+    "ranks": [
+      {
+        "id": "runewatchers-1-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "runewatchers-1-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "runewatchers-1-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14
+      },
+      {
+        "id": "runewatchers-1-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "runewatchers-1-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5
+      },
+      {
+        "id": "runewatchers-1-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "runewatchers-1-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "runewatchers-1"
+  },
+  {
+    "name": "Sandpoint Cathedral",
+    "reputation": 12,
+    "ranks": [
+      {
+        "id": "sandpoint-cathedral-2-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "sandpoint-cathedral-2-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "sandpoint-cathedral-2-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14,
+        "effect": "10% discount on Healing items and services"
+      },
+      {
+        "id": "sandpoint-cathedral-2-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "sandpoint-cathedral-2-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5
+      },
+      {
+        "id": "sandpoint-cathedral-2-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "sandpoint-cathedral-2-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "sandpoint-cathedral-2"
+  },
+  {
+    "name": "Sandpoint Merchantile League",
+    "reputation": 0,
+    "ranks": [
+      {
+        "id": "sandpoint-merchantile-league-3-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "sandpoint-merchantile-league-3-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "sandpoint-merchantile-league-3-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14
+      },
+      {
+        "id": "sandpoint-merchantile-league-3-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "sandpoint-merchantile-league-3-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5
+      },
+      {
+        "id": "sandpoint-merchantile-league-3-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "sandpoint-merchantile-league-3-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "sandpoint-merchantile-league-3"
+  },
+  {
+    "name": "Scarnetti Consortium",
+    "reputation": -12,
+    "ranks": [
+      {
+        "id": "scarnetti-consortium-4-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "scarnetti-consortium-4-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "scarnetti-consortium-4-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14
+      },
+      {
+        "id": "scarnetti-consortium-4-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "scarnetti-consortium-4-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5,
+        "effect": "The consortium is spreading petty rumors about you. You get a -1 Circumstance penalty to all attempts to Gather Information from groups you are not at least Liked by."
+      },
+      {
+        "id": "scarnetti-consortium-4-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "scarnetti-consortium-4-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "scarnetti-consortium-4"
+  },
+  {
+    "name": "The Bunyip Club",
+    "reputation": -4,
+    "ranks": [
+      {
+        "id": "the-bunyip-club-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "the-bunyip-club-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "the-bunyip-club-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14
+      },
+      {
+        "id": "the-bunyip-club-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "the-bunyip-club-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5
+      },
+      {
+        "id": "the-bunyip-club-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "the-bunyip-club-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "the-bunyip-club"
+  },
+  {
+    "name": "Town Watch",
+    "reputation": 0,
+    "ranks": [
+      {
+        "id": "town-watch-5-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "town-watch-5-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "town-watch-5-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14
+      },
+      {
+        "id": "town-watch-5-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "town-watch-5-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5
+      },
+      {
+        "id": "town-watch-5-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "town-watch-5-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "town-watch-5"
+  },
+  {
+    "name": "Townsfolk",
+    "reputation": 0,
+    "ranks": [
+      {
+        "id": "townsfolk-6-rank-0",
+        "name": "Revered",
+        "min": 30,
+        "max": 50
+      },
+      {
+        "id": "townsfolk-6-rank-1",
+        "name": "Admired",
+        "min": 15,
+        "max": 29
+      },
+      {
+        "id": "townsfolk-6-rank-2",
+        "name": "Liked",
+        "min": 5,
+        "max": 14
+      },
+      {
+        "id": "townsfolk-6-rank-3",
+        "name": "Ignored",
+        "min": -4,
+        "max": 4
+      },
+      {
+        "id": "townsfolk-6-rank-4",
+        "name": "Disliked",
+        "min": -14,
+        "max": -5
+      },
+      {
+        "id": "townsfolk-6-rank-5",
+        "name": "Hated",
+        "min": -29,
+        "max": -15
+      },
+      {
+        "id": "townsfolk-6-rank-6",
+        "name": "Hunted",
+        "min": -50,
+        "max": -30
+      }
+    ],
+    "id": "townsfolk-6"
+  }
+]
