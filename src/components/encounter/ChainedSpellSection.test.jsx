@@ -794,6 +794,66 @@ describe('ChainedSpellSection — action-cost transform (#1001 S1)', () => {
   });
 });
 
+// Heighten (#1001 S3): a rankDelta transform scales the chained spell's numeric
+// effects (damage dice) as if cast N ranks higher, while the rank actually cast
+// (getResults.castRank → slot spend / counteract) stays real.
+describe('ChainedSpellSection — Heighten numeric rank (#1001 S3)', () => {
+  // level-1 attack spell that gains +1d6 per rank above 1.
+  const HEIGHT_ATTACK = {
+    id: 'ha', name: 'Rising Bolt', actions: 'Two Actions', range: '60 feet',
+    level: 1, traits: ['Attack'], targetDefense: 'ac',
+    damageData: { base: '2d6', type: 'fire', heightened: { '+1': { base: '1d6' } } },
+  };
+  const heightenChain = { into: 'spell', modifier: 'Numeric effects +2 ranks', transform: { rankDelta: 2 } };
+  const plainChain = { into: 'spell', modifier: 'none' };
+  const attackEnemies = [{ entryId: 'e1', name: 'Goblin', defenses: { ac: { value: 15 } } }];
+
+  const renderChain = (chain) => render(
+    <ChainedSpellSection
+      character={{ ...character, spellcasting: { spells: [HEIGHT_ATTACK] } }}
+      chain={chain}
+      parentCost={1}
+      enemyTargets={attackEnemies}
+      conditions={[]}
+      effects={[]}
+    />
+  );
+
+  beforeEach(() => {
+    resolveActionRoll.mockReturnValue({ mode: 'actor-roll', bonus: 8, dc: null, defense: 'ac' });
+  });
+
+  it('scales the damage profile up by the rankDelta (cast rank 1 → numeric rank 3)', () => {
+    const { unmount } = renderChain(plainChain);
+    const plainDmg = screen.getByTestId('spell-resolver').getAttribute('data-damage');
+    expect(plainDmg).toBe('2d6'); // cast at native rank 1
+    unmount();
+
+    renderChain(heightenChain);
+    const heightenedDmg = screen.getByTestId('spell-resolver').getAttribute('data-damage');
+    // rank 3 → base 2d6 + 2×1d6; different from (and larger than) the rank-1 base.
+    expect(heightenedDmg).not.toBe(plainDmg);
+    expect(heightenedDmg).toContain('d6');
+  });
+
+  it('the rank actually cast (getResults.castRank) stays the real rank, and a note shows', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={{ ...character, spellcasting: { spells: [HEIGHT_ATTACK] } }}
+        chain={heightenChain}
+        parentCost={1}
+        enemyTargets={attackEnemies}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(ref.current.getResults().castRank).toBe(1); // slot/counteract rank unchanged
+    expect(screen.getByTestId('chain-rank-note')).toHaveTextContent('numeric effects at rank 3');
+  });
+});
+
 // Spellshape self-effect choice (#1001 S2, Energy Ablation): a chain may offer
 // a descriptor picker (energy type); the choice flows through getResults so the
 // parent applies the parametrized caster effect on confirm.

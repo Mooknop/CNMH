@@ -1,6 +1,36 @@
 import {
   applyChainTransform, chainTransformCostNote, buildChainSelfEffect, selfEffectDescriptor,
+  effectiveNumericRank, chainRankNote,
 } from './spellshapeTransform';
+
+describe('effectiveNumericRank', () => {
+  it('adds a positive rankDelta (Heighten +2)', () => {
+    expect(effectiveNumericRank(3, { rankDelta: 2 })).toBe(5);
+  });
+
+  it('is a no-op without a numeric rankDelta', () => {
+    expect(effectiveNumericRank(3, null)).toBe(3);
+    expect(effectiveNumericRank(3, {})).toBe(3);
+    expect(effectiveNumericRank(3, { actionDelta: -1 })).toBe(3); // cost transform, not rank
+  });
+
+  it('never drops below 0 and coerces a missing rank', () => {
+    expect(effectiveNumericRank(1, { rankDelta: -5 })).toBe(0);
+    expect(effectiveNumericRank(undefined, { rankDelta: 2 })).toBe(2);
+  });
+});
+
+describe('chainRankNote', () => {
+  it('describes a numeric-rank boost, noting cast/counteract stays real', () => {
+    expect(chainRankNote(3, { rankDelta: 2 }))
+      .toBe('Spellshape: numeric effects at rank 5 (+2 ranks, cast/counteract stays rank 3)');
+  });
+
+  it('returns null when the rank does not change', () => {
+    expect(chainRankNote(3, null)).toBeNull();
+    expect(chainRankNote(3, { actionDelta: -1 })).toBeNull();
+  });
+});
 
 describe('applyChainTransform', () => {
   it('reduces a numeric action cost by the delta, clamped to the minimum', () => {
