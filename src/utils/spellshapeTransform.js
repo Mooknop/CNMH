@@ -1,7 +1,8 @@
 // src/utils/spellshapeTransform.js
-// Spellshape mechanical transforms (#1001 S1). A chained spellshape may carry a
-// `chain.transform` block describing how it changes the spell it chains into.
-// These are pure helpers; ChainedSpellSection applies them at render time.
+// Spellshape mechanical transforms (#1001 S1/S2). A chained spellshape may carry
+// a `chain.transform` block (how it changes the chained spell) and/or a
+// `chain.selfEffect` block (a caster effect it applies on confirm). Pure helpers;
+// ChainedSpellSection / UseAbilityModal apply them.
 //
 // The first transform is an action-cost delta — Quickened Casting reduces the
 // chained spell's action cost by 1 (minimum 1). Crucially this changes only the
@@ -10,6 +11,12 @@
 //
 // transform shape (extensible; unknown keys are ignored here):
 //   { actionDelta?: number, minActions?: number }
+//
+// selfEffect shape (Energy Ablation — resistance to a chosen energy type = the
+// chained spell's rank, until the end of your next turn):
+//   { effectId?, name?, stat='resistance', amount: 'castRank'|number,
+//     choose?: { key, label, options: string[] }, vs?, duration? }
+import { buildEffectEntry } from './applyAbility';
 
 /**
  * Apply a spellshape's action-cost delta to the chained spell's action cost.
@@ -41,4 +48,52 @@ export function chainTransformCostNote(actionCost, transform) {
   const delta = adjusted - actionCost;
   const sign = delta > 0 ? '+' : '−';
   return `Spellshape: ${sign}${Math.abs(delta)} action${Math.abs(delta) === 1 ? '' : 's'} (now ${adjusted})`;
+}
+
+/**
+ * The descriptor a `selfEffect` applies against — the player's choice, else the
+ * first offered option, else a fixed `vs`. Null when nothing resolves.
+ */
+export function selfEffectDescriptor(selfEffect, choice) {
+  if (!selfEffect) return null;
+  return choice || selfEffect.choose?.options?.[0] || selfEffect.vs || null;
+}
+
+/**
+ * Build a caster self-effect entry for a spellshape's `chain.selfEffect`, with
+ * INLINE parametrized modifiers so a static catalog effect isn't needed — the
+ * amount comes from the chained spell's cast rank (`amount: 'castRank'`) and the
+ * descriptor from the player's choice. Written to the caster's `cnmh_effects` on
+ * confirm; EffectUtils reads the inline modifiers. Returns null when there's no
+ * effect to apply (missing config, no descriptor, or a non-positive amount).
+ *
+ * @returns {Object|null} a stored effects entry ({ id, effectId?, name?, source,
+ *   appliedBy, modifiers:[{stat, vs, amount}], expireAt?/expireAtSecs?, ts })
+ */
+export function buildChainSelfEffect({
+  selfEffect, castRank, choice, caster, abilityName, casterEntryId, encounter, nowSecs,
+}) {
+  if (!selfEffect) return null;
+  const amount = selfEffect.amount === 'castRank'
+    ? (Number(castRank) || 0)
+    : (Number(selfEffect.amount) || 0);
+  const vs = selfEffectDescriptor(selfEffect, choice);
+  if (!vs || amount <= 0) return null;
+
+  // Reuse the shared duration precedence (minutes → encounter boundary → daily).
+  const base = buildEffectEntry({
+    eff: { effectId: selfEffect.effectId || undefined, duration: selfEffect.duration || null },
+    caster: caster || {},
+    abilityName: abilityName || '',
+    encounter,
+    casterEntryId,
+    targetEntryId: casterEntryId,
+    nowSecs,
+  });
+
+  return {
+    ...base,
+    modifiers: [{ stat: selfEffect.stat || 'resistance', vs, amount }],
+    ...(selfEffect.name ? { name: `${selfEffect.name} (${vs})` } : {}),
+  };
 }
