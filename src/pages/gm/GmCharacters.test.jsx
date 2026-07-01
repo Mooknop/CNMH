@@ -954,6 +954,95 @@ describe('GmCharacters', () => {
     });
   });
 
+  describe('generated scroll/wand items (#812)', () => {
+    const spellChar = {
+      id: 'scrollguy',
+      name: 'Scroll Guy',
+      level: 1,
+      abilities: { strength: 10, dexterity: 10, constitution: 10, intelligence: 10, wisdom: 10, charisma: 10 },
+      saves: { fortitude: 0, reflex: 0, will: 0 },
+      skills: {},
+      proficiencies: {},
+      inventory: [{ uid: 'sg-0', scroll: { spellRef: 'heal' } }],
+    };
+
+    it('shows a generated scroll row with its resolved name + kind, losslessly round-tripping', async () => {
+      setContent([spellChar]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-scrollguy');
+      gotoTab(form, 'Inventory');
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent('Scroll of Heal');
+      expect(within(form).getByTestId('item-0')).toHaveTextContent(/· scroll/);
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const inv = saveDocument.mock.calls[0][2].inventory;
+      expect(inv[0].uid).toBe('sg-0'); // placement identity preserved
+      expect(stripUids(inv)).toEqual([{ scroll: { spellRef: 'heal' }, quantity: 1 }]);
+    });
+
+    it('“Add scroll / wand” opens the editor; picking a spell appends a generated entry (mints a uid)', async () => {
+      const empty = { ...spellChar, id: 'empty', name: 'Empty', inventory: [] };
+      setContent([empty]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-empty');
+      gotoTab(form, 'Inventory');
+      fireEvent.click(within(form).getByRole('button', { name: 'Add scroll / wand' }));
+      // Editor opens on the new (blank) entry; pick the spell.
+      fireEvent.change(screen.getByLabelText('item-0-spell-ref'), { target: { value: 'heal' } });
+      // The read-only preview resolves name/level/price from the cast rank.
+      expect(screen.getByTestId('item-0-spell-preview')).toHaveTextContent(
+        'Resolves to: Scroll of Heal · Item 1 · 4 gp'
+      );
+      closeEditor(form);
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent('Scroll of Heal');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      const added = saveDocument.mock.calls[0][2].inventory;
+      expect(stripUids(added)).toEqual([{ scroll: { spellRef: 'heal' }, quantity: 1 }]);
+      expect(added[0].uid).toMatch(/^e-/);
+    });
+
+    it('switches kind to wand and bakes a heightened cast rank', async () => {
+      const empty = { ...spellChar, id: 'empty', name: 'Empty', inventory: [] };
+      setContent([empty]);
+      saveDocument.mockResolvedValue({ ok: true });
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-empty');
+      gotoTab(form, 'Inventory');
+      fireEvent.click(within(form).getByRole('button', { name: 'Add scroll / wand' }));
+      fireEvent.change(screen.getByLabelText('item-0-spell-kind'), { target: { value: 'wand' } });
+      fireEvent.change(screen.getByLabelText('item-0-spell-ref'), { target: { value: 'heal' } });
+      fireEvent.change(screen.getByLabelText('item-0-spell-rank'), { target: { value: '3' } });
+      fireEvent.change(screen.getByLabelText('item-0-quantity'), { target: { value: '2' } });
+      closeEditor(form);
+      // Heightened casting surfaces the "(Rank N)" suffix in the row.
+      expect(within(form).getByTestId('item-0-summary')).toHaveTextContent('Wand of Heal (Rank 3)');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+      expect(stripUids(saveDocument.mock.calls[0][2].inventory)).toEqual([
+        { wand: { spellRef: 'heal', rank: 3 }, quantity: 2 },
+      ]);
+    });
+
+    it('blocks save when a generated spell item has no spell picked', async () => {
+      const empty = { ...spellChar, id: 'empty', name: 'Empty', inventory: [] };
+      setContent([empty]);
+      render(<GmCharacters />);
+      const form = screen.getByTestId('character-form-empty');
+      gotoTab(form, 'Inventory');
+      fireEvent.click(within(form).getByRole('button', { name: 'Add scroll / wand' }));
+      closeEditor(form);
+      expect(within(form).getByTestId('item-0')).toHaveTextContent('New scroll — pick a spell');
+      fireEvent.click(within(form).getByText('Save'));
+      await waitFor(() =>
+        expect(within(form).getByRole('alert')).toHaveTextContent(/choose a spell for the scroll/i)
+      );
+      expect(saveDocument).not.toHaveBeenCalled();
+    });
+  });
+
   describe('image round-trip', () => {
     it('saves image id when character has an image', async () => {
       const withImage = { ...pellias, image: 'img_portrait.jpg' };

@@ -1,6 +1,92 @@
 import React from 'react';
 import Modal from '../shared/Modal';
 import TraitsField from '../shared/TraitsField';
+import { resolveScroll, resolveWand, catalogItemName } from '../../utils/spellItems';
+
+// Editor body for a generated scroll/wand entry (#812): the spell is a catalog
+// ref, so there is no item to re-point — the GM picks the spell, an optional
+// heightened cast rank, and a quantity. Name / level / price are derived (shown
+// as a read-only preview), mirroring GM → Items' scroll/wand authoring.
+const SpellItemFields = ({ item, tag, spells, onPatch }) => {
+  const kind = item.kind === 'wand' ? 'wand' : 'scroll';
+  const ref = (item.spellRef || '').trim();
+  const sorted = (Array.isArray(spells) ? spells : [])
+    .slice()
+    .sort((a, b) =>
+      String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
+    );
+  const match = ref ? sorted.find((s) => String(s.id) === ref) : null;
+  const rankNum = parseInt(item.rank, 10);
+  const block = { spellRef: ref, ...(Number.isInteger(rankNum) && rankNum > 0 ? { rank: rankNum } : {}) };
+  const preview = match ? (kind === 'scroll' ? resolveScroll : resolveWand)(match, block) : null;
+
+  return (
+    <>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>kind</label>
+          <select
+            aria-label={`${tag}-spell-kind`}
+            value={kind}
+            onChange={(e) => onPatch({ kind: e.target.value })}
+          >
+            <option value="scroll">scroll</option>
+            <option value="wand">wand</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>quantity</label>
+          <input
+            aria-label={`${tag}-quantity`}
+            type="number"
+            value={item.quantity}
+            onChange={(e) => onPatch({ quantity: e.target.value })}
+          />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>spell</label>
+        <select
+          aria-label={`${tag}-spell-ref`}
+          value={ref}
+          onChange={(e) => onPatch({ spellRef: e.target.value })}
+        >
+          <option value="">— (select a spell) —</option>
+          {sorted.map((s) => (
+            <option key={s.id} value={s.id}>{s.name || s.id}</option>
+          ))}
+          {ref && !match && <option value={ref}>(unknown: {ref})</option>}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>cast rank (optional)</label>
+        <input
+          aria-label={`${tag}-spell-rank`}
+          type="number"
+          min="1"
+          max={kind === 'wand' ? 9 : 10}
+          placeholder={match ? `default ${match.level}` : 'spell rank'}
+          value={item.rank}
+          onChange={(e) => onPatch({ rank: e.target.value })}
+        />
+        <p className="gm-hint">
+          Leave blank to use the spell&rsquo;s own rank. Set higher for a heightened {kind}.
+        </p>
+      </div>
+      <p className="gm-count" data-testid={`${tag}-spell-preview`}>
+        {preview
+          ? `Resolves to: ${preview.name}${
+              preview.level != null
+                ? ` · Item ${preview.level} · ${preview.price} gp · Bulk ${preview.bulk}`
+                : ` · rank ${block.rank ?? '?'} out of range — no item level/price`
+            }`
+          : ref
+          ? 'Unknown spell — pick a catalog spell to resolve this item.'
+          : 'Pick a spell to generate the item.'}
+      </p>
+    </>
+  );
+};
 
 // Catalog summary line for a reference entry — same content the old inline
 // RefRow showed, kept so the GM can confirm what the ref resolves to.
@@ -77,6 +163,7 @@ const ItemEditModal = ({
   item,
   tag,
   catalogList,
+  spells,
   onPatch,
   onRepoint,
   onAddToContainer,
@@ -87,10 +174,15 @@ const ItemEditModal = ({
   if (!isOpen || !item) return null;
 
   const isRef = !!item.__ref;
+  const isSpell = !!item.__spell;
   const sel = isRef
     ? catalogList.find((c) => String(c.id) === String(item.ref))
     : null;
-  const title = isRef
+  const title = isSpell
+    ? item.spellRef
+      ? catalogItemName({ [item.kind]: { spellRef: item.spellRef } }, spells)
+      : `New ${item.kind === 'wand' ? 'wand' : 'scroll'}`
+    : isRef
     ? (sel && sel.name) || item.ref || 'Edit item'
     : item.name || 'Edit item';
   // Show the contents editor for anything that resolves to a container —
@@ -104,7 +196,9 @@ const ItemEditModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Edit — ${title}`} maxWidth="640px" highZ>
-      {isRef ? (
+      {isSpell ? (
+        <SpellItemFields item={item} tag={tag} spells={spells} onPatch={onPatch} />
+      ) : isRef ? (
         <>
           <RefSummary sel={sel} refId={item.ref} />
           <div className="gm-row">
