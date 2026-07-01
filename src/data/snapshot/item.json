@@ -5612,7 +5612,14 @@
           "Manipulate",
           "Spellshape"
         ],
-        "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell of at least 3 ranks below the highest-rank spell slot you have, you treat the rank of the spell as 2 higher for the purposes of numerical effects based on its heightened rank, such as damage, healing, increased area, bonuses, or penalties. You do not gain any other effects associated with the heightened rank, such as being able to target more creatures or treating the spell as a higher rank for the purposes of counteracting or the incapacitation trait."
+        "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell of at least 3 ranks below the highest-rank spell slot you have, you treat the rank of the spell as 2 higher for the purposes of numerical effects based on its heightened rank, such as damage, healing, increased area, bonuses, or penalties. You do not gain any other effects associated with the heightened rank, such as being able to target more creatures or treating the spell as a higher rank for the purposes of counteracting or the incapacitation trait.",
+        "chain": {
+          "into": "spell",
+          "modifier": "Numeric effects (damage, healing, area, bonuses) treat the spell as 2 ranks higher — not for counteract, incapacitation, or targeting. Once per hour; the spell must be at least 3 ranks below your highest slot.",
+          "transform": {
+            "rankDelta": 2
+          }
+        }
       }
     ],
     "actuated": {
