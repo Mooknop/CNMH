@@ -6931,6 +6931,26 @@
     ]
   },
   {
+    "name": "Stone Body Mutagen (Lesser)",
+    "description": "This mutagen calcifies your body, making it as hard as stone — turning aside blades and points at the cost of speed and agility.",
+    "traits": [
+      "Alchemical",
+      "Consumable",
+      "Elixir",
+      "Mutagen",
+      "Polymorph"
+    ],
+    "price": 22,
+    "weight": 0.1,
+    "consumable": {
+      "kind": "effect",
+      "effectId": "stone-body-mutagen-lesser",
+      "durationMinutes": 10,
+      "note": "Resistance 5 to physical (except bludgeoning); −10 ft Speed; −2 Reflex (10 min)"
+    },
+    "id": "stone-body-mutagen-lesser"
+  },
+  {
     "id": "storm-hammer",
     "name": "Storm Hammer",
     "description": "This +1 warhammer crackles with electricity, dealing 1 extra electricity damage on a hit.",
