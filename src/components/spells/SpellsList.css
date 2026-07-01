@@ -817,26 +817,13 @@
   color: var(--color-theme, var(--shell-text-secondary));
 }
 
-/* Slot-pip ledger in rank header — arcane pips; the whole row is a tap-to-spend button */
+/* Read-only slot-pip ledger in rank header — arcane pips reflecting remaining slots */
 .rank-slot-pips {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
   padding: 6px 4px;
   margin: -6px 0;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s;
-}
-
-.rank-slot-pips:not(:disabled):hover {
-  background: var(--surface-inset-hover);
-}
-
-.rank-slot-pips:disabled {
-  cursor: default;
 }
 
 .rank-slot-pip {
@@ -850,12 +837,6 @@
 .rank-slot-pip.filled {
   background: var(--slot-pip-filled, var(--theme-arcane));
   border-color: var(--slot-pip-filled, var(--theme-arcane));
-}
-
-.repertoire-rest-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
 }
 
 .staff-charges-section {
