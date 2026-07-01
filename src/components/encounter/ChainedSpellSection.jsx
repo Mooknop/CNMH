@@ -19,6 +19,7 @@ import { isAttackAbility } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/actionIconUtils';
 import { buildDamageProfile, serializeRidersForSave } from '../../utils/damage';
 import { HARROW_SUITS, HARROW_CAST_DC, harrowCastEffect } from '../../utils/harrow';
+import { applyChainTransform, chainTransformCostNote } from '../../utils/spellshapeTransform';
 
 // Same parser as UseAbilityModal — avoids a circular import.
 const parseSpellCost = (actionsText) => {
@@ -109,11 +110,16 @@ const ChainedSpellSection = forwardRef(({
     : null;
   const variant = variableRange ? variantFor(selectedSpell, chosenActions) : null;
 
+  // `spellCost` feeds the damage/effect tier (chosenActions) and must stay the
+  // real cast cost. `castActionCost` is what the caster actually pays after a
+  // spellshape transform (Quickened Casting −1) — cost only, damage unchanged.
   const spellCost = selectedSpell
     ? (chosenActions ?? parseSpellCost(selectedSpell.actions))
     : 0;
+  const castActionCost = applyChainTransform(spellCost, chain.transform);
+  const transformNote = chainTransformCostNote(spellCost, chain.transform);
   const parentNum = typeof parentCost === 'number' ? parentCost : 1;
-  const totalCost = typeof spellCost === 'number' ? parentNum + spellCost : parentCost;
+  const totalCost = typeof castActionCost === 'number' ? parentNum + castActionCost : parentCost;
 
   // Harrow Casting (#227): the card drawn from the physical deck, the DC 11
   // flat check, and the suit's effect (enhanced when it matches the omen).
@@ -441,10 +447,14 @@ const ChainedSpellSection = forwardRef(({
         <HeightenedNotes spell={selectedSpell} castRank={castRank} />
       )}
 
+      {transformNote && (
+        <div className="uam-variant-note" data-testid="chain-transform-note">{transformNote}</div>
+      )}
+
       <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
         Total: {costLabel(totalCost)} action{typeof totalCost === 'number' && totalCost !== 1 ? 's' : ''}
         <span style={{ fontWeight: 'normal', marginLeft: '6px', color: 'var(--color-text-muted)' }}>
-          ({costLabel(parentCost)} + {costLabel(spellCost)})
+          ({costLabel(parentCost)} + {costLabel(castActionCost)})
         </span>
       </div>
 

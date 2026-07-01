@@ -732,6 +732,68 @@ describe('ChainedSpellSection — variable-action picker (#572)', () => {
   });
 });
 
+// Spellshape mechanical transform (#1001 S1): a chain may reduce the chained
+// spell's action cost (Quickened Casting −1). Cost only — the damage/effect tier
+// (keyed off the chosen action count) is untouched.
+describe('ChainedSpellSection — action-cost transform (#1001 S1)', () => {
+  const quickenChain = {
+    into: 'spell',
+    modifier: 'Reduce the actions to Cast by 1',
+    transform: { actionDelta: -1, minActions: 1 },
+  };
+  const ONE_ACT = { id: 'shield', name: 'Shield', actions: 'One Action', range: '30 feet' };
+
+  it('reduces the total by 1 and shows the transform note', () => {
+    render(
+      <ChainedSpellSection
+        character={character}
+        chain={quickenChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    // Light is 2 actions → reduced to 1; + parent 1 = 2 total.
+    expect(screen.getByText(/Total: 2 action/)).toBeInTheDocument();
+    expect(screen.getByText(/\(1 \+ 1\)/)).toBeInTheDocument();
+    expect(screen.getByTestId('chain-transform-note')).toHaveTextContent('Spellshape: −1 action (now 1)');
+  });
+
+  it('clamps at the minimum (a 1-action spell is not reduced, no note)', () => {
+    render(
+      <ChainedSpellSection
+        character={{ ...character, spellcasting: { spells: [ONE_ACT] } }}
+        chain={quickenChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    expect(screen.getByText(/Total: 2 action/)).toBeInTheDocument(); // 1 (clamped) + 1 parent
+    expect(screen.queryByTestId('chain-transform-note')).toBeNull();
+  });
+
+  it('getResults reports the reduced totalCost while spellCost stays the real cast cost', () => {
+    const ref = createRef();
+    render(
+      <ChainedSpellSection
+        ref={ref}
+        character={character}
+        chain={quickenChain}
+        parentCost={1}
+        enemyTargets={[]}
+        conditions={[]}
+        effects={[]}
+      />
+    );
+    const res = ref.current.getResults();
+    expect(res.totalCost).toBe(2);  // 1 parent + (2 − 1) reduced
+    expect(res.spellCost).toBe(2);  // the spell's own cost — drives the damage tier
+  });
+});
+
 describe('ChainedSpellSection — Split Shot (#227)', () => {
   const splitChain = { into: 'spell', cost: 'added', spellFilter: 'single-target-attack', splitShot: true };
 
