@@ -264,6 +264,30 @@ export function weaknessFor(activeEffects, vsType, catalog = PF2E_EFFECTS) {
 }
 
 /**
+ * True when an active effect makes the character immune to `vsType` damage
+ * (#919) — the terminal case of the resistance family. An `immunity` modifier
+ * is `{ stat: 'immunity', vs }` with NO amount (it's absolute): matching
+ * incoming/persistent damage is zeroed outright, taking precedence over
+ * weakness and resistance at every apply site.
+ *
+ * @param {Array}  activeEffects - active effects (cnmh_effects_<id>)
+ * @param {string} vsType        - damage descriptor (e.g. 'fire', 'persistent-bleed')
+ * @param {Array}  [catalog]     - defaults to PF2E_EFFECTS
+ * @returns {boolean}
+ */
+export function isImmuneTo(activeEffects, vsType, catalog = PF2E_EFFECTS) {
+  if (!activeEffects || activeEffects.length === 0 || !vsType) return false;
+  for (const entry of activeEffects) {
+    for (const mod of modifiersOf(entry, catalog)) {
+      if (mod.stat !== 'immunity' || !mod.vs) continue;
+      const types = String(mod.vs).split(',').map((t) => t.trim());
+      if (types.includes(vsType)) return true;
+    }
+  }
+  return false;
+}
+
+/**
  * True when an active `resistance` effect against `vsType` carries the
  * `flatCheckEase` flag (#900) — Blood Booster lowers the recovery flat-check DC
  * for persistent bleed/poison "as if you received particularly appropriate aid"

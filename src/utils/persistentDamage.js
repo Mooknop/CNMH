@@ -98,16 +98,22 @@ export const EASED_RECOVERY_DC = 10;
 // distinguishable.
 export const persistentVsType = (inst) => `persistent-${inst?.type || ''}`;
 
-// Weakness/resistance context for one instance, as resolved by the caller from
-// the target's active effects (weaknessFor / resistanceFor / flatCheckEasedFor
-// in EffectUtils):
-//   { weakness, amount, easeFlatCheck }
-// `weakness` adds to each tick and `amount` (resistance) reduces it (min 0) — the
-// table rolls the dice, so the reminder just states the modifiers; `easeFlatCheck`
-// lowers the recovery DC.
+// Immunity/weakness/resistance context for one instance, as resolved by the
+// caller from the target's active effects (isImmuneTo / weaknessFor /
+// resistanceFor / flatCheckEasedFor in EffectUtils):
+//   { immune, weakness, amount, easeFlatCheck }
+// `immune` (#919) zeroes the tick outright and supersedes the other modifiers;
+// otherwise `weakness` adds to each tick and `amount` (resistance) reduces it
+// (min 0) — the table rolls the dice, so the reminder just states the
+// modifiers; `easeFlatCheck` lowers the recovery DC.
 export const recoveryDc = (res) => (res?.easeFlatCheck ? EASED_RECOVERY_DC : RECOVERY_DC);
 
 export const formatReminder = (name, inst, res = null) => {
+  if (res?.immune) {
+    // The condition persists (the flat check can still end it) but each tick
+    // deals nothing while the immunity holds.
+    return `${name}: ${describe(inst)} — immune (no damage) — DC ${recoveryDc(res)} flat check to end`;
+  }
   // PF2e order: weakness adds first, then resistance reduces.
   const weakNote = res?.weakness ? `, weakness ${res.weakness} (add)` : '';
   const resNote = res?.amount ? `, resistance ${res.amount} (reduce, min 0)` : '';

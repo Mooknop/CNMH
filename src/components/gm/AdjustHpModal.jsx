@@ -9,7 +9,7 @@ import { useSummons } from '../../hooks/useSummons';
 import { useEncounter } from '../../hooks/useEncounter';
 import { minionRoster } from '../../utils/minionUtils';
 import { DAMAGE_TYPES } from '../../utils/damage';
-import { clearsOnDamageType, resistanceFor, weaknessFor } from '../../utils/EffectUtils';
+import { clearsOnDamageType, isImmuneTo, resistanceFor, weaknessFor } from '../../utils/EffectUtils';
 import PF2E_EFFECTS from '../../data/pf2eEffects';
 import './AdjustHpModal.css';
 
@@ -81,10 +81,11 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
   const preview = useMemo(
     () => (sel?.kind === 'char' && mode === 'damage' && damageType
       ? {
+          immune: isImmuneTo(resolvedEffects, damageType, resolvedCatalog),
           weakness: weaknessFor(resolvedEffects, damageType, resolvedCatalog),
           resistance: resistanceFor(resolvedEffects, damageType, resolvedCatalog),
         }
-      : { weakness: 0, resistance: 0 }),
+      : { immune: false, weakness: 0, resistance: 0 }),
     [sel?.kind, mode, damageType, resolvedEffects, resolvedCatalog],
   );
 
@@ -101,19 +102,24 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
         : { current: Math.max(0, hp.current - n), max: hp.max };
       setSummonHp(sel.entryId, next);
     } else {
-      // Typed weakness/resistance on incoming damage (#900/#918). Reads the
-      // resolved set (app + Foundry + worn gear). Per PF2e, weakness ADDS first
-      // and resistance REDUCES after, on the running total; floors at 0. Neither
-      // stacks (highest matching applies). Applied before temp HP absorbs it.
-      const weak =
+      // Typed immunity/weakness/resistance on incoming damage (#900/#918/#919).
+      // Reads the resolved set (app + Foundry + worn gear). Immunity is
+      // absolute and takes precedence: matching damage zeroes outright.
+      // Otherwise, per PF2e, weakness ADDS first and resistance REDUCES after,
+      // on the running total; floors at 0. Neither stacks (highest matching
+      // applies). Applied before temp HP absorbs it.
+      const immune =
         mode === 'damage' && damageType
+          && isImmuneTo(resolvedEffects, damageType, resolvedCatalog);
+      const weak =
+        mode === 'damage' && damageType && !immune
           ? weaknessFor(resolvedEffects, damageType, resolvedCatalog)
           : 0;
       const resisted =
-        mode === 'damage' && damageType
+        mode === 'damage' && damageType && !immune
           ? resistanceFor(resolvedEffects, damageType, resolvedCatalog)
           : 0;
-      const incoming = Math.max(0, n + weak - resisted);
+      const incoming = immune ? 0 : Math.max(0, n + weak - resisted);
 
       let newHp;
       if (mode === 'heal') {
@@ -129,9 +135,10 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
       }
       setCharHp(newHp);
 
-      if (weak > 0 || resisted > 0) {
+      if (immune || weak > 0 || resisted > 0) {
         const charName = (characters || []).find((c) => c.id === sel.id)?.name || 'Character';
         const parts = [];
+        if (immune) parts.push('immune');
         if (weak > 0) parts.push(`weakness ${weak}`);
         if (resisted > 0) parts.push(`resistance ${resisted}`);
         appendLog({
@@ -143,8 +150,9 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
 
       // Typed damage clears effects that end on it — e.g. eld-charged on
       // electricity (#275). Applies even when temp HP absorbs the hit (taking
-      // the damage is what counts).
-      if (mode === 'damage' && damageType) {
+      // the damage is what counts) — but NOT when immune (#919): an immune
+      // character never takes the damage at all, so nothing triggers.
+      if (mode === 'damage' && damageType && !immune) {
         const cur = charEffects || [];
         const cleared = cur.filter((e) => clearsOnDamageType(e, damageType));
         if (cleared.length) {
@@ -255,12 +263,14 @@ const AdjustHpModal = ({ isOpen, onClose }) => {
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
-                {(preview.weakness > 0 || preview.resistance > 0) && (
+                {(preview.immune || preview.weakness > 0 || preview.resistance > 0) && (
                   <span className="adj-hp-resist-note" aria-label="damage modifier preview">
-                    {[
-                      preview.weakness > 0 ? `weakness ${preview.weakness}` : null,
-                      preview.resistance > 0 ? `resistance ${preview.resistance}` : null,
-                    ].filter(Boolean).join(' · ')}
+                    {preview.immune
+                      ? 'immune'
+                      : [
+                          preview.weakness > 0 ? `weakness ${preview.weakness}` : null,
+                          preview.resistance > 0 ? `resistance ${preview.resistance}` : null,
+                        ].filter(Boolean).join(' · ')}
                   </span>
                 )}
               </div>

@@ -6,6 +6,7 @@ import {
   dexCapFor,
   resistanceFor,
   weaknessFor,
+  isImmuneTo,
   flatCheckEasedFor,
   isEncounterScopedEffect,
   clearsOnDamageType,
@@ -552,6 +553,44 @@ describe('weaknessFor (#918)', () => {
     expect(weaknessFor(null, 'fire', cat)).toBe(0);
     expect(weaknessFor([entry('nope')], 'fire', cat)).toBe(0);
     expect(weaknessFor([entry('fire-vuln')], '', cat)).toBe(0);
+  });
+});
+
+describe('isImmuneTo (#919)', () => {
+  const cat = [
+    { id: 'fire-immune', name: 'Fire Immunity', modifiers: [{ stat: 'immunity', vs: 'fire' }] },
+    { id: 'multi-immune', name: 'Toxin Ward', modifiers: [{ stat: 'immunity', vs: 'poison,persistent-poison' }] },
+    { id: 'fire-ward', name: 'Fire Ward', modifiers: [{ stat: 'resistance', amount: 10, vs: 'fire' }] },
+    { id: 'no-vs', name: 'Bad Immunity', modifiers: [{ stat: 'immunity' }] },
+  ];
+
+  it('is true for a descriptor in the vs list', () => {
+    expect(isImmuneTo([entry('fire-immune')], 'fire', cat)).toBe(true);
+    expect(isImmuneTo([entry('multi-immune')], 'poison', cat)).toBe(true);
+    expect(isImmuneTo([entry('multi-immune')], 'persistent-poison', cat)).toBe(true);
+  });
+
+  it('distinguishes persistent from direct damage of the same type', () => {
+    expect(isImmuneTo([entry('fire-immune')], 'persistent-fire', cat)).toBe(false);
+  });
+
+  it('reads immunity only — a resistance modifier is not immunity', () => {
+    expect(isImmuneTo([entry('fire-ward')], 'fire', cat)).toBe(false);
+  });
+
+  it('reads inline modifiers with no catalog def', () => {
+    const e = { id: 'uid-x', effectId: 'unknown', modifiers: [{ stat: 'immunity', vs: 'cold' }] };
+    expect(isImmuneTo([e], 'cold', cat)).toBe(true);
+    expect(isImmuneTo([e], 'fire', cat)).toBe(false);
+  });
+
+  it('is false for non-matching, vs-less, empty, null, or unknown effects', () => {
+    expect(isImmuneTo([entry('fire-immune')], 'cold', cat)).toBe(false);
+    expect(isImmuneTo([entry('no-vs')], 'fire', cat)).toBe(false);
+    expect(isImmuneTo([], 'fire', cat)).toBe(false);
+    expect(isImmuneTo(null, 'fire', cat)).toBe(false);
+    expect(isImmuneTo([entry('nope')], 'fire', cat)).toBe(false);
+    expect(isImmuneTo([entry('fire-immune')], '', cat)).toBe(false);
   });
 });
 

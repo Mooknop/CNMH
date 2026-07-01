@@ -12,7 +12,7 @@ import {
   persistentVsType,
   recoveryDc,
 } from '../../utils/persistentDamage';
-import { resistanceFor, weaknessFor, flatCheckEasedFor } from '../../utils/EffectUtils';
+import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../../utils/EffectUtils';
 import './PersistentChip.css';
 
 /**
@@ -52,9 +52,14 @@ const PersistentChip = ({ entry, viewerCharId = null }) => {
   const resistanceOf = (inst) => resistanceFor(effects, persistentVsType(inst), catalog);
   const weaknessOf = (inst) => weaknessFor(effects, persistentVsType(inst), catalog);
   const describe = (inst) => {
+    const base = `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}`;
+    // Immunity (#919) zeroes the tick outright and supersedes weakness/resistance.
+    if (isImmuneTo(effects, persistentVsType(inst), catalog)) {
+      return `${base} — immune (no damage)`;
+    }
     const weak = weaknessOf(inst);
     const res = resistanceOf(inst);
-    return `${inst.dice} persistent ${inst.type || 'damage'}${inst.half ? ' (half)' : ''}${
+    return `${base}${
       weak ? ` + weakness ${weak}` : ''
     }${res ? ` − resistance ${res}` : ''}`;
   };

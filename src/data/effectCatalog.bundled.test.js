@@ -22,13 +22,20 @@ describe('bundled effect catalog', () => {
       expect(Array.isArray(e.modifiers)).toBe(true);
       e.modifiers.forEach((m) => {
         expect(typeof m.stat).toBe('string');
-        // `dexCap` (absolute Dex ceiling, #507), `resistance` (#900) and
-        // `weakness` (#918) are special non-bonus modifiers — they carry no
-        // bonus `kind` and never net through bestOfKind.
-        if (m.stat !== 'dexCap' && m.stat !== 'resistance' && m.stat !== 'weakness') {
+        // `dexCap` (absolute Dex ceiling, #507), `resistance` (#900),
+        // `weakness` (#918) and `immunity` (#919) are special non-bonus
+        // modifiers — they carry no bonus `kind` and never net through
+        // bestOfKind. Immunity is absolute, so it carries no `amount` either;
+        // its only well-formedness gate is a truthy `vs`.
+        const special = ['dexCap', 'resistance', 'weakness', 'immunity'];
+        if (!special.includes(m.stat)) {
           expect(VALID_KINDS).toContain(m.kind);
         }
-        expect(typeof m.amount).toBe('number');
+        if (m.stat === 'immunity') {
+          expect(typeof m.vs === 'string' && m.vs.length > 0).toBe(true);
+        } else {
+          expect(typeof m.amount).toBe('number');
+        }
       });
     });
   });
