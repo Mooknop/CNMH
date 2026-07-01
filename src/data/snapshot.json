@@ -20806,6 +20806,165 @@
       "level": 16,
       "price": 8935,
       "description": "A fundamental rune that grants a +3 item bonus to attack rolls and unlocks 3 property-rune slots."
+    },
+    {
+      "id": "ring-energy",
+      "type": "property",
+      "target": "ring",
+      "name": "Energy",
+      "level": 7,
+      "price": 300,
+      "description": "Energy spells cause this ring to send a shimmering power through your hand. Etched onto a power ring; a spell attack roll referenced here counts only when the spell was modified by Veracious Spell.",
+      "freeActions": [
+        {
+          "name": "Gather Power",
+          "traits": [],
+          "trigger": "Your last action was to Cast a Spell that dealt energy damage and was shaped by Veracious Spell.",
+          "description": "You absorb some of the energy you are about to expel into your power ring. You hold a charge of Gathered Power in the ring of that energy type. These charges last for 1 minute or until expelled by using Release Power."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Release Power",
+          "actionCount": 1,
+          "traits": [
+            "Attack"
+          ],
+          "description": "Requirements You have a charge of Gathered Power in the ring. Effect You shoot a ray of power from the stored-up energy in the ring. Make a spell attack roll against a target creature's AC within 30 feet, dealing 5d4 damage on a success or twice that amount on a critical success. You apply the ring's item bonus to this spell attack roll. The damage is of the same damage type as the energy used to Gather Power, and you expel the charge of energy from Gathered Power."
+        }
+      ]
+    },
+    {
+      "id": "ring-energy-greater",
+      "type": "property",
+      "target": "ring",
+      "name": "Energy (Greater)",
+      "level": 12,
+      "price": 2000,
+      "description": "Energy spells cause this ring to send a shimmering power through your hand. Your ring can hold two charges of Gathered Power. Etched onto a power ring; a spell attack roll referenced here counts only when the spell was modified by Veracious Spell.",
+      "freeActions": [
+        {
+          "name": "Gather Power",
+          "traits": [],
+          "trigger": "Your last action was to Cast a Spell that dealt energy damage and was shaped by Veracious Spell.",
+          "description": "You absorb some of the energy you are about to expel into your power ring. You hold a charge of Gathered Power in the ring of that energy type (up to two charges). These charges last for 1 minute or until expelled by using Release Power."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Release Power",
+          "actionCount": 1,
+          "traits": [
+            "Attack"
+          ],
+          "description": "Requirements You have a charge of Gathered Power in the ring. Effect You shoot a ray of power from the stored-up energy in the ring. Make a spell attack roll against a target creature's AC within 30 feet, dealing 5d4 damage on a success or twice that amount on a critical success. You may instead expend two charges of the same energy type to deal 10d4 damage (twice that on a critical success). You apply the ring's item bonus to this spell attack roll. The damage matches the energy used to Gather Power, and you expel the expended charge(s)."
+        }
+      ]
+    },
+    {
+      "id": "ring-energy-major",
+      "type": "property",
+      "target": "ring",
+      "name": "Energy (Major)",
+      "level": 18,
+      "price": 24000,
+      "description": "Energy spells cause this ring to send a shimmering power through your hand. Your ring can hold three charges of Gathered Power maximum. Etched onto a power ring; a spell attack roll referenced here counts only when the spell was modified by Veracious Spell.",
+      "freeActions": [
+        {
+          "name": "Gather Power",
+          "traits": [],
+          "trigger": "Your last action was to Cast a Spell that dealt energy damage and was shaped by Veracious Spell.",
+          "description": "You absorb some of the energy you are about to expel into your power ring. You hold a charge of Gathered Power in the ring of that energy type (up to three charges). These charges last for 1 minute or until expelled by using Release Power."
+        }
+      ],
+      "actions": [
+        {
+          "name": "Release Power",
+          "actionCount": 1,
+          "traits": [
+            "Attack"
+          ],
+          "description": "Requirements You have a charge of Gathered Power in the ring. Effect You shoot a ray of power from the stored-up energy in the ring. Make a spell attack roll against a target creature's AC within 30 feet, dealing 5d4 damage on a success or twice that amount on a critical success. You may instead expend three charges of the same energy type to deal 15d4 damage (twice that on a critical success). You apply the ring's item bonus to this spell attack roll. The damage matches the energy used to Gather Power, and you expel the expended charge(s)."
+        }
+      ]
+    },
+    {
+      "id": "ring-calling",
+      "type": "property",
+      "target": "ring",
+      "name": "Calling",
+      "level": 8,
+      "price": 400,
+      "description": "Your ring swirls with the energies and faces of those it would conjure. Etched onto a power ring.",
+      "actions": [
+        {
+          "name": "Veracious Summon",
+          "actionCount": 1,
+          "traits": [
+            "Flourish",
+            "Manipulate",
+            "Spellshape"
+          ],
+          "description": "Frequency once per 10 minutes. Effect The ring's magic guides your conjuration. If the next action you use is to Cast a Spell that would summon a creature capable of making Strikes, the summon gains a status bonus to its Strikes equal to your power ring's item bonus. You cannot use Veracious Spell until the summon spell ends."
+        }
+      ]
+    },
+    {
+      "id": "ring-righteous",
+      "type": "property",
+      "target": "ring",
+      "name": "Righteous",
+      "level": 8,
+      "price": 425,
+      "description": "Righteous rings somehow evoke those worn by old heroes and legendary figures of bygone eras. Etched onto a power ring.",
+      "freeActions": [
+        {
+          "name": "Justice Prevails",
+          "traits": [
+            "Holy"
+          ],
+          "trigger": "You successfully hit an unholy creature with a spell modified by Veracious Spell.",
+          "description": "You overpower the evil ways of your enemy. The creature is enfeebled 2 until the start of your next turn."
+        }
+      ]
+    },
+    {
+      "id": "ring-wicked",
+      "type": "property",
+      "target": "ring",
+      "name": "Wicked",
+      "level": 8,
+      "price": 425,
+      "description": "Your ring shimmers with dark power, mocking those that fight for good. Etched onto a power ring.",
+      "freeActions": [
+        {
+          "name": "Curse the Righteous",
+          "traits": [
+            "Unholy"
+          ],
+          "trigger": "You successfully hit a holy creature with a spell modified by Veracious Spell.",
+          "description": "Your wicked energy saps at the creature's soul. The creature is off-guard until the start of your next turn."
+        }
+      ]
+    },
+    {
+      "id": "ring-precision",
+      "type": "property",
+      "target": "ring",
+      "name": "Precision",
+      "level": 10,
+      "price": 1000,
+      "description": "Precision rings can channel a massive blast of energy into a single thin ray that packs all the punch of its regular spell. Etched onto a power ring.",
+      "actions": [
+        {
+          "name": "Hone Spell",
+          "actionCount": 1,
+          "traits": [
+            "Spellshape"
+          ],
+          "description": "You contain your magic to a single target. If your next action is to Cast a Spell that targets an area and requires a Reflex or Fortitude save, you may instead target one creature within range by making a spell attack roll against the target's AC. This makes the target the only creature affected by the spell, and the spell has no effect on a miss, applies the failure effect on a successful spell attack roll, and applies the critical failure effect on a critically successful spell attack roll. You apply the ring's item bonus to your attack roll."
+        }
+      ]
     }
   ],
   "image": [
