@@ -335,6 +335,42 @@
   border: 1px solid color-mix(in srgb, var(--arcane-light) 45%, transparent);
 }
 
+/* Actuated activation (#957 S4) — once/day + Overload + broken/repair */
+.loot-scroll .actuated-cost {
+  font-size: 0.8rem;
+  color: var(--shell-text-tertiary);
+  margin: 0.35rem 0 0.5rem;
+}
+.loot-scroll .actuated-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--shell-text-secondary);
+  margin-bottom: 0.4rem;
+}
+.loot-scroll .actuated-ranks,
+.loot-scroll .actuated-repair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.loot-scroll .actuated-hint {
+  font-size: 0.82rem;
+  color: var(--shell-text-tertiary);
+  font-style: italic;
+  margin: 0.3rem 0;
+}
+.loot-scroll .actuated-broken { display: flex; flex-direction: column; gap: 0.4rem; }
+.loot-scroll .actuated-broken-tag {
+  align-self: flex-start;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-danger, #d9534f);
+  border: 1px solid var(--color-danger, #d9534f);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.4rem;
+}
+
 @media (max-width: 480px) {
   .modal-container.modal--loot { max-width: 100%; }
 }

@@ -58,6 +58,26 @@ describe('performDailyPrep — resets', () => {
     });
   });
 
+  it('unlocks repair for broken items without clearing them (#957 S4)', () => {
+    const { updates, getState, sendUpdate } = makeStubs({
+      itembroken: { 'sceptre-1': { repairable: false }, 'sceptre-2': { repairable: true } },
+    });
+    const { summary } = performDailyPrep({ character, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'itembroken').value).toEqual({
+      'sceptre-1': { repairable: true },
+      'sceptre-2': { repairable: true },
+    });
+    expect(summary).toMatch(/broken items/);
+  });
+
+  it('does not write itembroken when nothing is locked', () => {
+    const { updates, getState, sendUpdate } = makeStubs({
+      itembroken: { 'sceptre-1': { repairable: true } },
+    });
+    performDailyPrep({ character, getState, sendUpdate });
+    expect(updates.find((u) => u.key === 'itembroken')).toBeUndefined();
+  });
+
   it('clears the Hunt Prey designation', () => {
     const { updates, getState, sendUpdate } = makeStubs({ huntprey: { target: 'Goblin' } });
     performDailyPrep({ character, getState, sendUpdate });

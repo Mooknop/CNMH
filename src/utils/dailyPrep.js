@@ -12,6 +12,7 @@
 import { pruneLedgerByPer } from './frequency';
 import { staffPrepValue } from './staffPrep';
 import { clampSlotAllocation } from './slotSacrifice';
+import { unlockRepairs, hasLockedBroken } from './itemBroken';
 
 const writeLocal = (key, value) => {
   try { window.localStorage.setItem(key, JSON.stringify(value)); } catch { /* noop */ }
@@ -59,6 +60,14 @@ function computeResets(character, getState) {
       value: Object.fromEntries(Object.keys(wands).map((k) => [k, 'available'])),
       label: 'wand uses',
     });
+  }
+
+  // Broken items (#957 S4) — daily prep UNLOCKS repair for anything broken
+  // (source: "can't be repaired before your next daily preparations"). It does
+  // not auto-repair; a Repair action or minimum-rank slot sacrifice clears it.
+  const itembroken = getState(id, 'itembroken');
+  if (hasLockedBroken(itembroken)) {
+    resets.push({ type: 'itembroken', value: unlockRepairs(itembroken), label: 'broken items (repair unlocked)' });
   }
 
   // Daily ability frequencies — prune per:'day' records from the ledger.

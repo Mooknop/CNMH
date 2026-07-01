@@ -26,7 +26,10 @@ import { useSyncedState } from '../../hooks/useSyncedState';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { useGiveItem } from '../../hooks/useGiveItem';
 import { usePlayMode } from '../../hooks/usePlayMode';
+import { useItemActivation } from '../../hooks/useItemActivation';
 import { useContent } from '../../contexts/ContentContext';
+import { useGameDate } from '../../contexts/GameDateContext';
+import { toGameSeconds } from '../../utils/gameTime';
 import './ItemModal.css';
 
 const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) => {
@@ -47,6 +50,11 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
   const { give, giveConsumable } = useGiveItem(character?.id);
   const { mode } = usePlayMode();
   const { characters } = useContent();
+  // Actuated-item activation state machine (#957 S4) — once/day + Overload +
+  // broken/repair, driven by an item's optional `actuated` block.
+  const { gameDate, time } = useGameDate();
+  const nowSecs = toGameSeconds({ ...gameDate, ...time });
+  const itemAct = useItemActivation(character, item, { nowSecs });
   // Stack-split amount for giving a consumable (#657). Clamped to the remaining
   // quantity at render so it can't exceed what's on hand.
   const [giveCount, setGiveCount] = useState(1);
@@ -95,6 +103,44 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
     appendEvent({ type: 'action', text: `${character?.name || 'Someone'} activated ${item.name}: ${activationSummary(item, charData)}` });
     deactivateTalisman({ talisman: item, setConsumed, setAffixed });
     onClose();
+  };
+
+  // Actuated activation (#957 S4) — scepter-style once/day effect paid with a
+  // spell-slot sacrifice, with Overload + broken/repair. Only items carrying an
+  // `actuated` block render this surface.
+  const actuated = item.actuated || null;
+  const who = character?.name || 'Someone';
+  const doActuate = (rank) => {
+    const r = itemAct.activation.activate(rank);
+    if (r.ok) {
+      appendEvent({ type: 'action', text: `${who} activated ${item.name} — ${actuated.name} (spent ${r.label})` });
+      onClose();
+    }
+  };
+  const doOverload = (rank) => {
+    const r = itemAct.overload.overload(rank);
+    if (!r.ok) return;
+    const outcome = r.success
+      ? `${actuated.name} resolves, but ${item.name} is now broken`
+      : `the effect fizzles and the actions are lost; ${item.name} is now broken`;
+    appendEvent({
+      type: 'action',
+      text: `${who} overloaded ${item.name} (spent ${r.label}) — DC ${r.dc} flat check rolled ${r.roll}: ${outcome}`,
+    });
+    onClose();
+  };
+  const doRepairAction = () => {
+    if (itemAct.repair.withAction().ok) {
+      appendEvent({ type: 'action', text: `${who} repaired ${item.name} with the Repair action` });
+      onClose();
+    }
+  };
+  const doRepairSlot = () => {
+    const r = itemAct.repair.withSlot();
+    if (r.ok) {
+      appendEvent({ type: 'action', text: `${who} repaired ${item.name} (spent ${r.label})` });
+      onClose();
+    }
   };
 
   const themeColor = characterColor || 'var(--color-primary)';
@@ -527,6 +573,105 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
 
       {/* Actions / Reactions / Free Actions (shared with the shop preview, #882) */}
       <ItemActivations item={item} />
+
+      {/* Actuated activation (#957 S4) — interactive once/day + Overload +
+          broken/repair for scepter-style items that declare an `actuated` block. */}
+      {actuated && (
+        <div className="item-actuated" data-testid="item-actuated">
+          <h3>Actuated</h3>
+          <div className="item-action actuated-card">
+            <div className="action-header">
+              <span className="action-name">{actuated.name}</span>
+              <div className="action-count">
+                {actuated.actionCount && <ActionSymbol cost={actuated.actionCount} />}
+              </div>
+            </div>
+            {actuated.traits && actuated.traits.length > 0 && (
+              <div className="action-traits">
+                {actuated.traits.map((t, i) => <TraitTag key={i} trait={t} />)}
+              </div>
+            )}
+            {actuated.description && <p className="action-description">{actuated.description}</p>}
+            <p className="actuated-cost">
+              Cost: sacrifice a spell slot of rank {itemAct.minRank}+ · once per day
+            </p>
+
+            {itemAct.broken ? (
+              <div className="actuated-broken" data-testid="item-actuated-broken">
+                <span className="actuated-broken-tag">⚠ Broken</span>
+                {itemAct.repairable ? (
+                  <div className="actuated-repair">
+                    <button
+                      type="button"
+                      className="btn-small btn-secondary"
+                      data-testid="actuated-repair-action"
+                      onClick={doRepairAction}
+                    >
+                      Repair (action)
+                    </button>
+                    {itemAct.repair.minRankSlotAvailable && (
+                      <button
+                        type="button"
+                        className="btn-small btn-secondary"
+                        data-testid="actuated-repair-slot"
+                        onClick={doRepairSlot}
+                      >
+                        Repair (rank {itemAct.minRank} slot)
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="actuated-hint" data-testid="actuated-repair-locked">
+                    Can’t be repaired until your next daily preparations.
+                  </p>
+                )}
+              </div>
+            ) : itemAct.activation.canActivate ? (
+              <div className="actuated-controls">
+                <span className="actuated-label">Activate — spend a slot:</span>
+                <div className="actuated-ranks">
+                  {itemAct.slotOptions.map((o) => (
+                    <button
+                      key={o.rank}
+                      type="button"
+                      className="btn-small btn-primary"
+                      data-testid={`actuated-activate-rank-${o.rank}`}
+                      onClick={() => doActuate(o.rank)}
+                    >
+                      Rank {o.rank} ({o.remaining})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : itemAct.overload.canOverload ? (
+              <div className="actuated-controls">
+                <p className="actuated-hint">
+                  Daily use spent. Overload for another use — DC 10 flat check; the item breaks either way.
+                </p>
+                <div className="actuated-ranks">
+                  {itemAct.slotOptions.map((o) => (
+                    <button
+                      key={o.rank}
+                      type="button"
+                      className="btn-small btn-danger"
+                      data-testid={`actuated-overload-rank-${o.rank}`}
+                      onClick={() => doOverload(o.rank)}
+                    >
+                      Overload (rank {o.rank})
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="actuated-hint" data-testid="actuated-unavailable">
+                {!itemAct.gate.available
+                  ? 'Daily use spent — no spell slot left to Overload.'
+                  : itemAct.activation.disabledReason || 'Unavailable.'}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Strikes */}
       {item.strikes && (
