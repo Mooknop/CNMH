@@ -81,6 +81,31 @@ vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: mockCharacters }),
 }));
 
+// Game clock (once/day gate) — a stub is enough; freq math is tested elsewhere.
+vi.mock('../../contexts/GameDateContext', () => ({
+  useGameDate: () => ({ gameDate: {}, time: {} }),
+}));
+
+// Actuated-activation state machine (#957 S4) is unit-tested in
+// useItemActivation.test.jsx; here we drive the modal's rendering + wiring off a
+// controllable stub.
+let mockItemAct;
+const makeItemAct = (over = {}) => ({
+  actuated: null,
+  minRank: 2,
+  gate: { available: true },
+  broken: false,
+  repairable: false,
+  slotOptions: [{ rank: 2, remaining: 1, label: 'Rank 2 slot (1 left)' }],
+  activation: { canActivate: false, activate: vi.fn(() => ({ ok: true, rank: 2, label: 'rank 2 slot' })), disabledReason: null },
+  overload: { canOverload: false, overload: vi.fn(() => ({ ok: true, rank: 2, label: 'rank 2 slot', roll: 11, dc: 10, success: true })) },
+  repair: { repairable: false, minRankSlotAvailable: true, withAction: vi.fn(() => ({ ok: true })), withSlot: vi.fn(() => ({ ok: true, rank: 2, label: 'rank 2 slot' })) },
+  ...over,
+});
+vi.mock('../../hooks/useItemActivation', () => ({
+  useItemActivation: () => mockItemAct,
+}));
+
 beforeEach(() => {
   mockItemEffects = [];
   mockAffixed = {};
@@ -97,6 +122,7 @@ beforeEach(() => {
   mockGiveConsumable.mockReturnValue(true);
   mockMode = 'exploration';
   mockCharacters = [];
+  mockItemAct = makeItemAct();
 });
 
 const baseItem = {
@@ -1177,5 +1203,65 @@ describe('ItemModal — attunement (#invest)', () => {
   it('shows no Invested chip when the item is not invested', () => {
     render(<ItemModal isOpen onClose={vi.fn()} item={investable} />);
     expect(screen.queryByTestId('item-invested-chip')).not.toBeInTheDocument();
+  });
+
+  // ── Actuated activation (#957 S4) ──
+  const scepter = {
+    uid: 'sc1',
+    name: 'Scepter of Energy Ablation',
+    weight: 1,
+    actuated: { name: 'Energy Abjection', minRank: 2, description: 'A ward against energy.' },
+  };
+
+  it('renders no actuated surface for a plain item', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={baseItem} />);
+    expect(screen.queryByTestId('item-actuated')).not.toBeInTheDocument();
+  });
+
+  it('renders the actuated ability and an Activate button when available', () => {
+    mockItemAct = makeItemAct({ activation: { ...makeItemAct().activation, canActivate: true } });
+    render(<ItemModal isOpen onClose={vi.fn()} item={scepter} />);
+    expect(screen.getByTestId('item-actuated')).toBeInTheDocument();
+    expect(screen.getByText('Energy Abjection')).toBeInTheDocument();
+    expect(screen.getByTestId('actuated-activate-rank-2')).toBeInTheDocument();
+  });
+
+  it('activating spends the slot, logs, and closes', () => {
+    const onClose = vi.fn();
+    mockItemAct = makeItemAct({ activation: { ...makeItemAct().activation, canActivate: true } });
+    render(<ItemModal isOpen onClose={onClose} item={scepter} character={{ id: 'wiz', name: 'Wizzo' }} />);
+    fireEvent.click(screen.getByTestId('actuated-activate-rank-2'));
+    expect(mockItemAct.activation.activate).toHaveBeenCalledWith(2);
+    expect(mockAppendEvent).toHaveBeenCalledWith(expect.objectContaining({
+      text: expect.stringContaining('Energy Abjection'),
+    }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('offers Overload once the daily use is spent', () => {
+    const onClose = vi.fn();
+    mockItemAct = makeItemAct({ gate: { available: false }, overload: { ...makeItemAct().overload, canOverload: true } });
+    render(<ItemModal isOpen onClose={onClose} item={scepter} character={{ id: 'wiz', name: 'Wizzo' }} />);
+    fireEvent.click(screen.getByTestId('actuated-overload-rank-2'));
+    expect(mockItemAct.overload.overload).toHaveBeenCalledWith(2);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('shows a Broken tag with the repair lock hint before daily prep', () => {
+    mockItemAct = makeItemAct({ broken: true, repairable: false });
+    render(<ItemModal isOpen onClose={vi.fn()} item={scepter} />);
+    expect(screen.getByTestId('item-actuated-broken')).toBeInTheDocument();
+    expect(screen.getByTestId('actuated-repair-locked')).toBeInTheDocument();
+    expect(screen.queryByTestId('actuated-repair-action')).not.toBeInTheDocument();
+  });
+
+  it('offers Repair action + slot once unlocked, and repairs on click', () => {
+    const onClose = vi.fn();
+    mockItemAct = makeItemAct({ broken: true, repairable: true });
+    render(<ItemModal isOpen onClose={onClose} item={scepter} character={{ id: 'wiz', name: 'Wizzo' }} />);
+    expect(screen.getByTestId('actuated-repair-slot')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('actuated-repair-action'));
+    expect(mockItemAct.repair.withAction).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
   });
 });
