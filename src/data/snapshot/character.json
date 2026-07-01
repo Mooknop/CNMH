@@ -1,0 +1,2903 @@
+[
+  {
+    "created": "2025-04-18T14:30:00.000Z",
+    "lastUpdated": "2025-04-25T10:15:00.000Z",
+    "thaumaturge": {
+      "passives": [
+        {
+          "name": "Implement's Empowerment",
+          "benefit": "The power of your implement can also be turned to the more common task of combat, its power adding to and amplifying the effects of runes and other magical empowerments. When you Strike, you can trace mystic patterns with an implement you're holding to empower the Strike, causing it to deal 2 additional damage per weapon damage die. Channeling the power requires full use of your hands. You don't gain the benefit of implement's empowerment if you are holding anything in either hand other than a single one-handed weapon, other implements, or esoterica, and you must be holding at least one implement to gain the benefit."
+        }
+      ],
+      "exploits": [
+        {
+          "name": "Personal Antithesis",
+          "description": "You improvise a custom weakness on a creature by forcefully presenting and empowering a piece of esoterica that repels it on an individual level; for instance, against a tyrant, you might procure a broken chain that once held a captive. This causes the target creature, and only the target creature, to gain a weakness against your unarmed and weapon Strikes equal to 2 + half your level."
+        },
+        {
+          "name": "Mortal Weakness",
+          "description": "After identifying a creature's weakness, you use a thematically resonant bit of esoterica to attune your attacks to your discovery. Your unarmed and weapon Strikes activate the highest weakness you discovered with Exploit Vulnerability, even though the damage type your weapon deals doesn't change. This damage affects the target of your Exploit Vulnerability, as well as any other creatures of the exact same type, but not other creatures with the same weakness. For example, when fighting a pack of werewolves you might use silver shavings or crushed moonstone to deal damage that applies their weakness to silver to your attacks against any of the werewolves, but you wouldn't apply this damage to any other monsters with a weakness to silver."
+        }
+      ]
+    },
+    "damageRiders": [
+      {
+        "id": "implements-empowerment",
+        "label": "Implement's Empowerment",
+        "appliesTo": "strikes",
+        "bonus": {
+          "perWeaponDie": 2
+        },
+        "defaultOn": true,
+        "note": "Hold an implement; hands free except a single one-handed weapon, other implements, or esoterica"
+      }
+    ],
+    "image": "img_7ff08743-6d95-4ecf-960d-210c7aca0192.jpg",
+    "imagePosition": {
+      "x": 43,
+      "y": 4
+    },
+    "id": "AshkaBGosh",
+    "name": "Ashka B'Gosh",
+    "ancestry": "Fetchling",
+    "background": "Ranger",
+    "class": "Thaumaturge",
+    "keyAbility": "charisma",
+    "size": "Small",
+    "senses": "Darkvision",
+    "loreEntryId": "ashka-bgosh",
+    "level": 4,
+    "maxHp": 40,
+    "ac": 20,
+    "speed": 25,
+    "abilities": {
+      "strength": 10,
+      "dexterity": 16,
+      "constitution": 10,
+      "intelligence": 12,
+      "wisdom": 12,
+      "charisma": 18
+    },
+    "saves": {
+      "fortitude": 8,
+      "reflex": 11,
+      "will": 9
+    },
+    "skills": {
+      "acrobatics": {
+        "proficiency": 1
+      },
+      "arcana": {
+        "proficiency": 1
+      },
+      "deception": {
+        "proficiency": 2
+      },
+      "diplomacy": {
+        "proficiency": 1
+      },
+      "medicine": {
+        "proficiency": 1
+      },
+      "nature": {
+        "proficiency": 1
+      },
+      "occultism": {
+        "proficiency": 1
+      },
+      "perception": {
+        "proficiency": 2
+      },
+      "religion": {
+        "proficiency": 1
+      },
+      "stealth": {
+        "proficiency": 1
+      },
+      "survival": {
+        "proficiency": 1
+      },
+      "thievery": {
+        "proficiency": 1
+      },
+      "lore": [
+        {
+          "name": "Esoteric",
+          "proficiency": 2
+        },
+        {
+          "name": "Merchantile",
+          "proficiency": 1
+        }
+      ]
+    },
+    "proficiencies": {
+      "class": 1,
+      "weapons": {
+        "simple": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "martial": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "advanced": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "unarmed": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
+      },
+      "armor": {
+        "unarmored": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "light": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "medium": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "heavy": {
+          "proficiency": 0,
+          "name": "Untrained"
+        }
+      }
+    },
+    "spellcasting": {
+      "scrollAnyTradition": true,
+      "proficiency": 0,
+      "focus": {
+        "max": 0,
+        "current": 0
+      },
+      "spell_slots": {},
+      "spells": []
+    },
+    "inventory": [
+      {
+        "uid": "e-s9h6pjjdw94t",
+        "ref": "backpack",
+        "quantity": 1,
+        "container": {
+          "contents": [
+            {
+              "uid": "e-25d5nc0aw94t",
+              "ref": "bedroll",
+              "quantity": 1
+            },
+            {
+              "uid": "e-ligobdx1w94t",
+              "ref": "flint-steel",
+              "quantity": 1
+            },
+            {
+              "uid": "e-tiaxgea6w94t",
+              "ref": "chalk",
+              "quantity": 1
+            },
+            {
+              "uid": "e-4ww8ie76dbpx",
+              "ref": "rope-50ft",
+              "quantity": 1
+            },
+            {
+              "uid": "e-h0lif1jvdbpx",
+              "ref": "rations",
+              "quantity": 7
+            },
+            {
+              "uid": "e-e0gedp1zdbpx",
+              "ref": "soap",
+              "quantity": 1
+            },
+            {
+              "uid": "e-ehu3aa8fdbpx",
+              "ref": "torch",
+              "quantity": 5
+            },
+            {
+              "uid": "e-8ejpv8rjihyq",
+              "ref": "waterskin",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "uid": "e-2brav2gmw94t",
+        "ref": "crescent-cross",
+        "quantity": 1
+      },
+      {
+        "uid": "e-7csxh9uow94t",
+        "ref": "mothers-amulet",
+        "quantity": 1
+      },
+      {
+        "uid": "e-18hfpkos0lde",
+        "ref": "longbow",
+        "quantity": 1
+      },
+      {
+        "uid": "e-7ewsndsu0lde",
+        "ref": "elixir-of-life",
+        "quantity": 2,
+        "level": 1
+      },
+      {
+        "uid": "e-3jg6hbfd0lde",
+        "ref": "healers-toolkit",
+        "quantity": 1
+      },
+      {
+        "uid": "e-4w7batma0lde",
+        "ref": "thieves-toolkit",
+        "quantity": 1
+      },
+      {
+        "uid": "e-v7zzpss30lde",
+        "ref": "skeleton-key",
+        "quantity": 1
+      },
+      {
+        "uid": "e-upzich6yihxv",
+        "ref": "antiplague",
+        "quantity": 1
+      },
+      {
+        "uid": "e-fewre97yihyp",
+        "ref": "holy-water",
+        "quantity": 2
+      },
+      {
+        "uid": "e-46mcarynihyp",
+        "ref": "padded-armor",
+        "quantity": 1
+      },
+      {
+        "uid": "e-zooar8g6ihyp",
+        "ref": "healing-potion",
+        "quantity": 1,
+        "level": 3
+      },
+      {
+        "uid": "e-we1788s5ihyp",
+        "ref": "beacon-shot",
+        "quantity": 1
+      },
+      {
+        "uid": "e-28tm05msakrn",
+        "ref": "vangloris-tattoo",
+        "quantity": 1
+      },
+      {
+        "uid": "e-vmcoysa7bqgz",
+        "ref": "midnight-milk",
+        "quantity": 1
+      }
+    ],
+    "feats": [
+      {
+        "id": "feat-1",
+        "actions": [
+          {
+            "name": "Hunt Prey",
+            "actionCount": 1,
+            "traits": [
+              "Concentrate",
+              "Ranger"
+            ],
+            "description": "You designate a single creature as your prey and focus your attacks against that creature. You gain a +2 circumstance bonus to Perception checks when you Seek your prey and a +2 circumstance bonus to Survival checks when you Track your prey.\n\nYou also ignore the penalty for making ranged attacks within your second range increment against the prey you're hunting.\n\nYou can have only one creature designated as your prey at a time. This designation lasts until your next daily preparations."
+          }
+        ],
+        "name": "Ranger Dedication",
+        "source": "Archetype",
+        "description": "You become trained in Survival; if you were already trained in Survival, you instead become trained in another skill of your choice. You become trained in ranger class DC. You can use the Hunt Prey action.",
+        "level": 2
+      },
+      {
+        "id": "feat-2",
+        "name": "Hard to Fool",
+        "source": "Fetchling",
+        "description": "You're accustomed to seeing through shifting darkness and bewildering magic. You gain a +1 circumstance bonus on Perception checks against illusions as well as to Will saves against illusions and shadow effects.",
+        "level": 1
+      },
+      {
+        "id": "feat-3",
+        "name": "Bargain Hunter",
+        "source": "General",
+        "description": "You can Earn Income (page 228) using Diplomacy, spending your days hunting for bargains and reselling at a profit. You can also spend time specifically sniffing out a great bargain on an item; this works as if you were using Earn Income with Diplomacy, except instead of gaining money, you purchase the item at a discount equal to the money you would have gained, gaining the item for free if your earned income equals or exceeds its cost.",
+        "level": 1
+      },
+      {
+        "id": "feat-4",
+        "name": "Charming Liar",
+        "source": "Skill",
+        "description": "Your charm allows you to win over those you lie to. When you get a critical success using the Lie action, the target's attitude toward you improves by one step, as though you'd succeeded at using Diplomacy to Make an Impression. This works only once per conversation, and if you critically succeed against multiple targets using the same Lie, you choose one creature's attitude to improve.",
+        "level": 2
+      },
+      {
+        "id": "feat-5",
+        "name": "Dubious Knowledge",
+        "source": "Skill",
+        "description": "You're a treasure trove of information, but not all of it comes from reputable sources. When you fail (but don't critically fail) a Recall Knowledge check using any skill, you learn a bit of true knowledge and a bit of erroneous knowledge, but you don't have any way to differentiate which is which.",
+        "level": 1
+      },
+      {
+        "id": "feat-6",
+        "name": "Quick Squeeze",
+        "source": "Skill",
+        "description": "You Squeeze 5 feet per round (10 feet on a critical success), rather than 5 feet per minute (10 feet on a critical success).",
+        "level": 1
+      },
+      {
+        "id": "feat-7",
+        "name": "Diverse Lore",
+        "source": "Thaumaturge",
+        "description": "Your wandering studies mean you've heard rumors or theories about almost every topic... though admittedly, your sources aren't always the most reliable. You can take a –2 penalty to your check to Recall Knowledge with Esoteric Lore to Recall Knowledge about any topic, not just the usual topics available for Esoteric Lore. Additionally, when you succeed at your check to Exploit a Vulnerability, compare the result of your Esoteric Lore check to the DC to Recall Knowledge for that creature; if that number would be a success or a critical success, you gain information as if you had succeeded at the Recall Knowledge check.",
+        "level": 2
+      },
+      {
+        "id": "feat-8",
+        "name": "Familiar",
+        "source": "General",
+        "description": "You make a pact with a creature that serves you and assists you; you gain a familiar.",
+        "level": 2
+      },
+      {
+        "id": "feat-9",
+        "actions": [
+          {
+            "name": "Spell-Signature Reading",
+            "actionCount": 1,
+            "traits": [
+              "Concentrate",
+              "Secret"
+            ],
+            "description": "You study the magical energy of a spellcaster you can see within 30 feet. Make a secret Arcana check against the spellcaster's Will DC. On a success, you learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources, you learn both."
+          }
+        ],
+        "name": "Spell-Signature Reading",
+        "source": "Skill",
+        "description": "Whenever any caster performs magic, no matter how meager, it creates a vibrant display of runes circling around an intricate glyph known as a spell signature. As a learned student of the arcane yourself, you know all too well what information can be gleaned from such runes, such as one's personality or skill level with magic. You learn if the creature is casting the spell as a spontaneous, prepared, or innate spellcaster, if they can cast spells from spell slots, and what attribute they use to cast spells. If a creature can cast a spell from multiple sources such as having innate spells and prepared spells both, you learn both.",
+        "level": 3
+      },
+      {
+        "id": "feat-10",
+        "name": "Scroll Thaumaturgy",
+        "source": "Thaumaturge",
+        "description": "Your multidisciplinary study of magic means you know how to activate the magic in scrolls with ease. You can activate scrolls of any magical tradition, using your Thaumaturge class DC for the resulting spell's DC. When you do, you choose which of its possible traditions to use when you activate it. You can draw and activate scrolls with the same hand holding an implement, much like you can for esoterica.",
+        "level": 4
+      },
+      {
+        "id": "feat-11",
+        "name": "Animal Companion",
+        "source": "Ranger",
+        "description": "You gain the service of a young animal companion that travels with you and obeys simple commands. When you Hunt Prey, your animal companion gains the action's benefits.",
+        "level": 4
+      },
+      {
+        "id": "feat-12",
+        "name": "Discrete Inquiry",
+        "source": "General",
+        "description": "You are subtle in your efforts to learn the things you need to know. When Gathering Information, you can hide the true subject of your inquiry among other topics of little interest to you without increasing the difficulty of the check or taking more time to Gather Information. Anyone trying to Gather Information to determine if someone else was asking about the topic in question must exceed your Deception DC or the normal DC to Gather Information about your inquiries, whichever is higher, or else they don't learn of your efforts.",
+        "level": 4
+      }
+    ],
+    "strikes": [],
+    "actions": [
+      {
+        "degrees": {
+          "Critical Success": "You remember the creature's weaknesses, and as you empower your esoterica, you have a flash of insight that grants even more knowledge about the creature. You learn all of the creature's resistances, weaknesses, and immunities, including the amounts of the resistances and weaknesses and any unusual weaknesses or vulnerabilities, such as what spells will pass through a golem's antimagic. You can exploit either the creature's mortal weakness or personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
+          "Success": "You recall an important fact about the creature, learning its highest weakness (or one of its highest weaknesses, if it has multiple with the same value) but not its other weaknesses, resistances, or immunities. You can exploit either the creature's mortal weakness or personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
+          "Failure": " Failing to recall a salient weakness about the creature, you instead attempt to exploit a more personal vulnerability. You can exploit only the creature's personal antithesis. Your unarmed and weapon Strikes against the creature also become magical if they weren't already.",
+          "Critical Failure": "You couldn't remember the right object to use and become distracted while you rummage through your esoterica. You become flat-footed until the beginning of your next turn."
+        },
+        "name": "Exploit Vulnerability",
+        "description": "You scour your experiences and learning to identify something that might repel your foe. You retrieve an object from your esoterica with the appropriate supernatural qualities, then use your implement to stoke the remnants of its power into a blaze. Select a creature you can see and attempt an Esoteric Lore check against a standard DC for its level, as you retrieve the right object from your esoterica and use your implement to empower it. You gain the following effects until you Exploit Vulnerabilities again.",
+        "traits": [
+          "Esoterica",
+          "Manipulate",
+          "Thaumaturge"
+        ],
+        "actionCount": 1
+      }
+    ],
+    "reactions": [],
+    "familiar": {
+      "name": "Lazarus",
+      "type": "Squox",
+      "size": "Tiny",
+      "speed": "25 feet",
+      "communication": "Empathic link with Ashka within 1 mile",
+      "description": "A Squox is an exotic creature resembling a cross between a squirrel and a fox. Little is known about them in Golarion, not even where they are native to; the only clue to their origin is the fact that they can most often be tracked back to Elven traders though where they procure the creatures in the first place remains a mystery.",
+      "ac": 20,
+      "hp": 20,
+      "traits": [
+        "Familiar"
+      ],
+      "skills": [
+        "Stealth",
+        "Acrobatics",
+        "Perception"
+      ],
+      "abilities": [
+        {
+          "name": "Manual Dexterity",
+          "description": "Your familiar can use up to two of its limbs as if they were hands to use manipulate actions."
+        },
+        {
+          "name": "Threat Display",
+          "description": "Your familiar helps you convey wordless threats through body language. Whenever you attempt an Intimidation check to Demoralize a creature, if your familiar is within 30 feet of your target and can act, it accompanies you with snarls, hisses, or raising its hackles. If it can do so, you don't take the normal –4 penalty on the Intimidation check if your target doesn't understand the language you're speaking."
+        },
+        {
+          "name": "Squox Tricks",
+          "description": "A squox can Disarm and Trip creatures with its tail using Acrobatics instead of Athletics, even if it doesn't have a free hand. A squox can attempt to Disarm or Trip off-guard creatures up to two sizes larger than it and gains a +2 circumstance bonus to the attempt."
+        }
+      ]
+    },
+    "animalCompanion": {
+      "strikes": [
+        {
+          "name": "Bite",
+          "proficiency": 1,
+          "type": "melee",
+          "action": 1,
+          "damage": "1d8",
+          "traits": [
+            "Attack",
+            "Finesse"
+          ]
+        }
+      ],
+      "name": "Zevira",
+      "type": "Young Shadow Hound",
+      "size": "Small",
+      "senses": "Darkvision, Scent (imprecise) 30 feet",
+      "support": "Zevira shrouds your foes in shadow when you leave an opening. Until the start of your next turn, when you damage a creature with a Strike and that creature is within reach of your Shadow Hound, both you and your hound become Concealed to the creature until the end of your next turn.",
+      "ac": 19,
+      "hp": 32,
+      "speed": 30,
+      "skills": [
+        "Acrobatics",
+        "Athletics",
+        "Intimidation",
+        "Perception"
+      ],
+      "abilities": {
+        "strength": 14,
+        "dexterity": 16,
+        "constitution": 13,
+        "intelligence": 2,
+        "wisdom": 12,
+        "charisma": 12
+      },
+      "saves": {
+        "fortitude": 7,
+        "reflex": 9,
+        "will": 7
+      }
+    }
+  },
+  {
+    "created": "2025-04-18T12:00:00.000Z",
+    "lastUpdated": "2025-04-18T12:00:00.000Z",
+    "monk": {
+      "traditions": [
+        "Dragon",
+        "Mountain"
+      ],
+      "stances": [
+        {
+          "name": "Dragon Stance",
+          "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
+          "restrictions": "You can use this action only while in Dragon Stance."
+        }
+      ],
+      "ki_spells": [
+        {
+          "spellRef": "inner-upheaval"
+        }
+      ],
+      "focus_points": 1,
+      "class_dc": 19
+    },
+    "image": "img_a0b98fca-8ea2-4032-9d00-432c95c7a9b9.jpg",
+    "id": "Blu-Kakke",
+    "name": "Blu-kakke",
+    "ancestry": "Human",
+    "background": "Draconic Ravager",
+    "class": "Monk",
+    "keyAbility": "strength",
+    "size": "Medium",
+    "senses": "Darkvision",
+    "loreEntryId": "blu-kakke",
+    "level": 4,
+    "maxHp": 48,
+    "ac": 20,
+    "speed": 35,
+    "abilities": {
+      "strength": 18,
+      "dexterity": 14,
+      "constitution": 10,
+      "intelligence": 12,
+      "wisdom": 10,
+      "charisma": 14
+    },
+    "saves": {
+      "fortitude": 8,
+      "reflex": 10,
+      "will": 8
+    },
+    "skills": {
+      "athletics": {
+        "proficiency": 1
+      },
+      "crafting": {
+        "proficiency": 1
+      },
+      "deception": {
+        "proficiency": 1
+      },
+      "medicine": {
+        "proficiency": 2
+      },
+      "perception": {
+        "proficiency": 1
+      },
+      "society": {
+        "proficiency": 1
+      },
+      "survival": {
+        "proficiency": 1
+      },
+      "lore": [
+        {
+          "name": "Dragon",
+          "proficiency": 1
+        },
+        {
+          "name": "Sailing",
+          "proficiency": 1
+        }
+      ]
+    },
+    "proficiencies": {
+      "class": 1,
+      "weapons": {
+        "simple": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "martial": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "advanced": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "unarmed": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
+      },
+      "armor": {
+        "unarmored": {
+          "proficiency": 2,
+          "name": "Expert"
+        },
+        "light": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "medium": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "heavy": {
+          "proficiency": 0,
+          "name": "Untrained"
+        }
+      }
+    },
+    "imagePosition": {
+      "x": 56,
+      "y": 6
+    },
+    "inventory": [
+      {
+        "uid": "e-oidcmxsc62dh",
+        "ref": "backpack",
+        "quantity": 1,
+        "container": {
+          "contents": [
+            {
+              "uid": "e-dhva47f3ld5g",
+              "ref": "bedroll",
+              "quantity": 1
+            },
+            {
+              "uid": "e-gm5w28v6ld5g",
+              "ref": "chalk",
+              "quantity": 1
+            },
+            {
+              "uid": "e-vrqwwo6qld5g",
+              "ref": "flint-steel",
+              "quantity": 1
+            },
+            {
+              "uid": "e-rrq8pn1sld5g",
+              "ref": "rations",
+              "quantity": 1
+            },
+            {
+              "uid": "e-7hs3a428ld5g",
+              "ref": "rope-50ft",
+              "quantity": 1
+            },
+            {
+              "uid": "e-p7o07lqtld5g",
+              "ref": "soap",
+              "quantity": 1
+            },
+            {
+              "uid": "e-cgrpwml3ld5g",
+              "ref": "torch",
+              "quantity": 5
+            },
+            {
+              "uid": "e-0wyxv9ajld5g",
+              "ref": "waterskin",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "uid": "e-ul46a2ka62dh",
+        "ref": "shuriken",
+        "quantity": 1
+      },
+      {
+        "uid": "e-7riot4pt62dh",
+        "ref": "spacious-pouch",
+        "quantity": 1,
+        "container": {
+          "contents": [
+            {
+              "uid": "e-enj36p2962dh",
+              "ref": "sterling-artisans-tools-talismans",
+              "quantity": 1
+            },
+            {
+              "uid": "e-hkszcrby62dh",
+              "ref": "anticorrosion-oil",
+              "quantity": 3
+            },
+            {
+              "uid": "e-mmclnler62dh",
+              "ref": "oil-of-weightlessness",
+              "quantity": 1
+            },
+            {
+              "uid": "e-v96cygms62dh",
+              "ref": "moderate-drakeheart-mutagen",
+              "quantity": 2
+            },
+            {
+              "uid": "e-10wrhh4e62dh",
+              "ref": "eye-garnets",
+              "quantity": 1
+            },
+            {
+              "uid": "e-9phe0jba62dh",
+              "ref": "rusty-broken-full-plate-armor",
+              "quantity": 1
+            },
+            {
+              "uid": "e-717pgpun62dh",
+              "ref": "midnight-milk",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "uid": "e-omszv8j5ld5g",
+        "ref": "healers-toolkit",
+        "quantity": 1
+      },
+      {
+        "uid": "e-g83tyv3sld5g",
+        "ref": "healing-potion",
+        "quantity": 2,
+        "level": 1
+      },
+      {
+        "uid": "e-qk7nx0dmld5g",
+        "ref": "elixir-of-life",
+        "quantity": 1,
+        "level": 1
+      },
+      {
+        "uid": "e-y5smsmcmld5g",
+        "ref": "potion-of-waterbreathing",
+        "quantity": 1
+      },
+      {
+        "uid": "e-0d2xdy0tld5g",
+        "ref": "mysterious-blue-orb",
+        "quantity": 1
+      },
+      {
+        "uid": "e-ct4ml3a8ld5g",
+        "ref": "sanitizing-pin",
+        "quantity": 1
+      },
+      {
+        "uid": "e-zwl6xtqyld5g",
+        "ref": "rust-scrub",
+        "quantity": 1
+      },
+      {
+        "uid": "e-ulnczl27ihyq",
+        "ref": "holy-water",
+        "quantity": 1
+      },
+      {
+        "uid": "e-2efbsdnfihyq",
+        "ref": "salve-of-antiparalysis",
+        "quantity": 1
+      },
+      {
+        "uid": "e-6v7kqy55ihyq",
+        "ref": "healing-potion",
+        "quantity": 1,
+        "level": 3
+      },
+      {
+        "uid": "e-g54likfdihyq",
+        "ref": "shark-tooth-charm",
+        "quantity": 1
+      },
+      {
+        "uid": "e-r5s7ua5zakrn",
+        "ref": "healers-gloves",
+        "quantity": 1
+      }
+    ],
+    "feats": [
+      {
+        "id": "feat-1",
+        "innate": [
+          {
+            "spellRef": "electric-arc"
+          }
+        ],
+        "name": "Dragon Spit",
+        "description": "Many Tian-Dan claim to have dragon blood in their veins, and in your case, this is true—you can spit.",
+        "level": 1
+      },
+      {
+        "id": "feat-2",
+        "actions": [
+          {
+            "name": "Dragon Stance",
+            "actionCount": 1,
+            "traits": [
+              "Monk",
+              "Stance"
+            ],
+            "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits. While in Dragon Stance, you can ignore the first square of difficult terrain while Striding."
+          }
+        ],
+        "strikes": [
+          {
+            "name": "Dragon Tail Strike",
+            "proficiency": "unarmed",
+            "type": "melee",
+            "action": 1,
+            "damage": "1d10",
+            "traits": [
+              "Attack",
+              "Backswing",
+              "Nonlethal",
+              "Melee",
+              "Unarmed"
+            ],
+            "description": "You swing your leg through the air like a dragon swiping with its tail. You can only use this when you are in Dragon Stance."
+          }
+        ],
+        "name": "Dragon Stance",
+        "source": "Monk",
+        "description": "You enter the stance of a dragon and make powerful leg strikes like a lashing dragon's tail. You can make dragon tail attacks that deal 1d10 bludgeoning damage. They are in the brawling group and have the backswing, nonlethal, and unarmed traits.",
+        "level": 1
+      },
+      {
+        "id": "feat-3",
+        "name": "Qi Spells",
+        "source": "Monk",
+        "description": "You can tap into your inner qi to cast special spells called qi spells. You gain a focus pool of 1 Focus Point. You learn the ki strike and wholeness of body qi spells.",
+        "level": 2
+      },
+      {
+        "id": "feat-4",
+        "actions": [
+          {
+            "name": "Battle Medicine",
+            "actionCount": 1,
+            "traits": [
+              "General",
+              "Healing",
+              "Manipulate",
+              "Skill"
+            ],
+            "description": "You can patch up wounds, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore the corresponding amount of HP; this doesn’t remove the wounded condition. As with Treat Wounds, you can attempt checks against higher DCs if you have the minimum proficiency rank. The target is then immune to your Battle Medicine for 1 day. This does not make them immune to, or otherwise count as, Treat Wounds."
+          }
+        ],
+        "name": "Battle Medicine",
+        "source": "General",
+        "description": "You can patch up yourself or an adjacent ally, even in combat. Attempt a Medicine check with the same DC as for Treat Wounds and restore a corresponding amount of Hit Points. This doesn't remove the wounded condition.",
+        "level": 1
+      },
+      {
+        "id": "feat-5",
+        "name": "Godless Healing",
+        "source": "General",
+        "description": "You recover more Hit Points from effects that only grant healing. You gain a +2 circumstance bonus to Hit Points regained by effects that only grant healing.",
+        "level": 2
+      },
+      {
+        "id": "feat-6",
+        "name": "Quick Repair",
+        "source": "General",
+        "description": "You can Repair items quickly. You can Repair items in half the normal time (minimum 1 minute). If you're a master in Crafting, you can Repair items in one-quarter the normal time (minimum 1 minute).",
+        "level": 1
+      },
+      {
+        "id": "feat-7",
+        "strikes": [
+          {
+            "name": "Ravager Claw",
+            "proficiency": "unarmed",
+            "type": "melee",
+            "action": 1,
+            "damage": "1d6",
+            "traits": [
+              "Attack",
+              "Agile",
+              "Finesse"
+            ],
+            "description": "Rend their flesh with your draconic claws."
+          },
+          {
+            "name": "Ravager Fang",
+            "proficiency": "unarmed",
+            "type": "melee",
+            "action": 1,
+            "damage": "1d8",
+            "traits": [
+              "Attack",
+              "Agile",
+              "Finesse"
+            ],
+            "description": "Bite into your foe with magically sharp dragon teeth."
+          }
+        ],
+        "actions": [
+          {
+            "name": "Take Flight",
+            "actionCount": 1,
+            "traits": [
+              "Dragon"
+            ],
+            "frequencyRule": {
+              "per": "round",
+              "uses": 1
+            },
+            "description": "You've grown a pair of scaled wings, but they're taking some getting used to. Once per round, you can fly up to 15 feet. If you aren't on solid ground at the end of this movement, you fall."
+          }
+        ],
+        "name": "Draconic Ravager",
+        "source": "Archetype",
+        "description": "You have begun to focus your draconic magic from within into your body, giving you dragon-like features like claws, sharpened teeth, and scales, making you a fearsome sight to behold. You gain claw (1d6) and jaw (1d8) unarmed attacks that have the agile and finesse traits. Your eyes have also sharpened, giving you Darkvision.",
+        "level": 2
+      },
+      {
+        "id": "feat-8",
+        "actions": [
+          {
+            "name": "Staunch Bleeding",
+            "actions": "One to Two Actions",
+            "variants": [
+              {
+                "actions": 1,
+                "note": "Treat Wounds at the normal DC"
+              },
+              {
+                "actions": 2,
+                "note": "DC reduced by 10"
+              }
+            ],
+            "traits": [
+              "Concentrate",
+              "Sorcerer",
+              "Spellshape"
+            ],
+            "description": "As a single action you can Treat Wounds to stop someone from bleeding; if you use two actions the DC is reduced by 10."
+          }
+        ],
+        "name": "Staunch Bleeding",
+        "source": "Skill",
+        "description": "You know how to pack an injury properly to stop bleeding.",
+        "level": 3
+      },
+      {
+        "id": "feat-9",
+        "reactions": [
+          {
+            "name": "Deflect Projectile",
+            "traits": [
+              "Monk"
+            ],
+            "trigger": "You are the target of a physical ranged attack, are aware of the attack, are not off-guard, and have a free hand",
+            "triggerType": "attack-ranged",
+            "description": "You gain a +4 circumstance bonus to AC against the triggering attack. If the attack misses, you have deflected it. You cannot use this to deflect unusually massive ranged projectiles (such as boulders or ballista bolts)."
+          }
+        ],
+        "name": "Deflect Projectile",
+        "source": "Monk",
+        "description": "Your reflexes are so sharp, you can swat projectiles out of the air.",
+        "level": 4
+      },
+      {
+        "id": "feat-10",
+        "reactions": [
+          {
+            "name": "Wing Deflection",
+            "traits": [
+              "Draconic Ravager"
+            ],
+            "trigger": "You are the target of a physical attack, are aware of the attack, and are not off-guard",
+            "triggerType": "attack-any",
+            "description": "You gain a +2 circumstance bonus to AC against the triggering attack."
+          }
+        ],
+        "name": "Wing Deflection",
+        "source": "Draconic Ravager",
+        "description": "You can protect yourself from attacks with your wings.",
+        "level": 4
+      },
+      {
+        "id": "feat-11",
+        "name": "Mortal Healing",
+        "source": "Skill",
+        "description": "You grant greater healing when the gods don't interfere. When you roll a success to Treat Wounds for a creature that hasn't regained Hit Points from divine magic in the past 24 hours, you get a critical success instead.",
+        "level": 4
+      }
+    ],
+    "strikes": [
+      {
+        "name": "Unarmed Strike",
+        "proficiency": "unarmed",
+        "type": "melee",
+        "damage": "1d6",
+        "description": "Give 'em a good smack",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1
+      }
+    ],
+    "actions": [
+      {
+        "name": "Flurry of Blows",
+        "description": "Make two unarmed Strikes. If both hit the same creature, combine their damage for the purpose of resistances and weaknesses. Apply your multiple attack penalty to the Strikes normally. As a flourish ability, you can use Flurry of Blows only once per turn.",
+        "traits": [
+          "Flourish",
+          "Monk"
+        ],
+        "actionCount": 1,
+        "chain": {
+          "into": "strike",
+          "cost": "included",
+          "modes": [
+            "flurry"
+          ]
+        }
+      }
+    ],
+    "reactions": []
+  },
+  {
+    "created": "2025-04-18T09:00:00.000Z",
+    "lastUpdated": "2025-04-18T09:00:00.000Z",
+    "focus_spells": [
+      {
+        "spellRef": "inspire-courage"
+      },
+      {
+        "spellRef": "counter-performance"
+      },
+      {
+        "spellRef": "hymn-of-healing"
+      },
+      {
+        "spellRef": "lingering-composition"
+      }
+    ],
+    "image": "img_3f74e21b-b3c3-4323-ad07-d9b3cbadd7d8.jpg",
+    "imagePosition": {
+      "x": 48,
+      "y": 41
+    },
+    "id": "IzzyUncut",
+    "name": "Izzy Uncut",
+    "ancestry": "Leshy",
+    "background": "Celebrity",
+    "class": "Bard",
+    "keyAbility": "charisma",
+    "size": "Small",
+    "senses": "Low-light Vision",
+    "loreEntryId": "izzy-uncut",
+    "level": 4,
+    "maxHp": 48,
+    "ac": 19,
+    "speed": 25,
+    "abilities": {
+      "strength": 10,
+      "dexterity": 12,
+      "constitution": 14,
+      "intelligence": 8,
+      "wisdom": 16,
+      "charisma": 18
+    },
+    "saves": {
+      "fortitude": 8,
+      "reflex": 9,
+      "will": 11
+    },
+    "skills": {
+      "deception": {
+        "proficiency": 2
+      },
+      "diplomacy": {
+        "proficiency": 1
+      },
+      "nature": {
+        "proficiency": 1
+      },
+      "occultism": {
+        "proficiency": 1
+      },
+      "perception": {
+        "proficiency": 2
+      },
+      "performance": {
+        "proficiency": 1
+      },
+      "survival": {
+        "proficiency": 1
+      },
+      "lore": [
+        {
+          "name": "Bardic",
+          "proficiency": 1
+        },
+        {
+          "name": "Underdark (Ostilli)",
+          "proficiency": 1
+        }
+      ]
+    },
+    "proficiencies": {
+      "class": 1,
+      "weapons": {
+        "simple": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "martial": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "advanced": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "unarmed": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
+      },
+      "armor": {
+        "unarmored": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "light": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "medium": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "heavy": {
+          "proficiency": 0,
+          "name": "Untrained"
+        }
+      }
+    },
+    "spellcasting": {
+      "eldPowers": [
+        {
+          "source": "Pellias",
+          "powers": [
+            {
+              "name": "Erode",
+              "actions": "Two Actions",
+              "range": "Touch",
+              "traits": [
+                "Attack",
+                "Concentrate",
+                "Magical",
+                "Void"
+              ],
+              "description": "You touch a creature, ushering them towards the harsh embrace of death. Make a melee spell attack roll against a foe in reach, dealing 2d10 (+1d10 per level) void damage.",
+              "damageData": {
+                "base": "2d10 (+1d10 per level)",
+                "type": "void"
+              },
+              "degrees": {
+                "Critical Success": "The target succumbs to the call of the Void and takes double damage",
+                "Success": "The target takes regular damage",
+                "Failure": "The target takes damage equal to 2 + half your level",
+                "Critical Failure": "The target resists, taking no damage"
+              }
+            },
+            {
+              "name": "Rust Cloud",
+              "actions": "Two Actions",
+              "area": "20 foot emanation",
+              "traits": [
+                "Concentrate",
+                "Metal",
+                "Magical"
+              ],
+              "description": "Rust pours out of your mouth and eyes, creating a cloud of rust that extends 20-feet in every direction. All creatures inside the cloud are Concealed, and creatures outside the cloud are concealed to them. You continue producing this cloud until you spend 2 actions to Dismiss the effect, 10 minutes pass, or you fall unconscious, whichever comes first.",
+              "effects": [
+                {
+                  "effectId": "eld-rust-cloud",
+                  "applyTo": "self",
+                  "duration": {
+                    "minutes": 10
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "source": "Horn of Rust",
+          "special": {
+            "name": "Shrouded",
+            "description": "When a creature is shrouded, all light within 20 feet of them is lowered in intensity by one step (bright to dim, dim to dark)."
+          },
+          "powers": [
+            {
+              "name": "Gloaming Backstab",
+              "actions": "Two Actions",
+              "range": "Touch",
+              "traits": [
+                "Attack",
+                "Concentrate",
+                "Darkness",
+                "Magical"
+              ],
+              "description": "You reach into the shadows and pull out a blade of pure darkness. You deal 2d6 (+1d6 per level) void damage to a foe within your reach with a Melee Spell Attack. If you're hidden, you deal an additional 2d4 (+1d4 per level) percision damage. You become Shrouded until the end of your turn.",
+              "damageData": {
+                "base": "2d6 (+1d6 per level)",
+                "type": "void",
+                "riders": [
+                  {
+                    "id": "gloaming-hidden-precision",
+                    "label": "Hidden",
+                    "dice": "2d4 (+1d4 per level)",
+                    "type": "precision",
+                    "defaultOn": false,
+                    "note": "if you're hidden"
+                  }
+                ]
+              },
+              "effects": [
+                {
+                  "effectId": "eld-shrouded",
+                  "applyTo": "self",
+                  "duration": {
+                    "until": "caster-turn-end"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Chains of Rust",
+              "actions": "Two Actions",
+              "range": "Touch",
+              "traits": [
+                "Concentrate",
+                "Metal",
+                "Magical"
+              ],
+              "description": "Rusted chains erupt from the ground, ensnaring your foes. Choose one of your space's four sides; all foes adjacent to you along that side take 2d6 (+1d6 per level) bludgeoning damage with a basic Fortitude Save.",
+              "defense": "Fortitude",
+              "basic": true,
+              "damageData": {
+                "base": "2d6 (+1d6 per level)",
+                "type": "bludgeoning"
+              },
+              "degrees": {
+                "Failure": "All movement is difficult terrain for the creature until the start of your next turn.",
+                "Critical Failure": "The creature is immobilized until the start of your next turn."
+              }
+            }
+          ]
+        },
+        {
+          "source": "Ashka's Amulet",
+          "powers": [
+            {
+              "name": "Addling Blast",
+              "actions": "Two Actions",
+              "area": "15 foot cone",
+              "traits": [
+                "Concentrate",
+                "Magical",
+                "Mental"
+              ],
+              "description": "You blast a cone of disorienting mental energy to muddle your foes' minds and throw them off guard. You deal 1d4 (+1d4 per level) mental damage to all creatures in a 15-foot cone with a basic Will save.",
+              "defense": "Will",
+              "basic": true,
+              "damageData": {
+                "base": "1d4 (+1d4 per level)",
+                "type": "mental"
+              },
+              "degrees": {
+                "Success": "The creature is Off-Guard until the start of their next turn",
+                "Failure": "The creature is Off-Guard and Stupefied 1 until the end of your next turn",
+                "Critical Failure": "The creature is Off-Guard and Stupefied 2 until the end of your next turn"
+              }
+            },
+            {
+              "name": "Psychic Thrust",
+              "actions": "Two Actions",
+              "range": "60 feet",
+              "traits": [
+                "Attack",
+                "Concentrate",
+                "Magical",
+                "Mental"
+              ],
+              "description": "You thrust psychic energy into a foe from a distance to overwhelm their mind. Make a ranged Spell Attack against a foe in range, dealing 2d6 (+1d6 per level) mental damage",
+              "damageData": {
+                "base": "2d6 (+1d6 per level)",
+                "type": "mental"
+              },
+              "degrees": {
+                "Critical Success": "You hit a mental weak spot, dealing double damage and inflicting Stupefied 3 until the end of your next turn",
+                "Success": "The enemy takes regular damage and is Stupefied 2 until the end of your next turn",
+                "Failure": "The enemy takes no damage, and is Stupefied 1 until the end of your next turn",
+                "Critical Failure": "The enemy's psyche is too strong and they are unaffected"
+              }
+            }
+          ]
+        },
+        {
+          "source": "Xanderghul's Flawless Hammer",
+          "special": {
+            "name": "Limned",
+            "description": "A limned creature is surrounded by light, causing it to glow like a torch, outlining it and making its position obvious. A limned creature cant normally become concealed, though if the creature would become invisible it will become concealed instead. Attempts at stealth while Limned take a -4 penalty."
+          },
+          "powers": [
+            {
+              "name": "Stupefying Inception",
+              "actions": "Two Actions",
+              "range": "touch",
+              "traits": [
+                "Attack",
+                "Concentrate",
+                "Magical",
+                "Mental"
+              ],
+              "description": "You touch a foe and release overflowing mental energy into their vulnerable mind, damaging them and briefly weakening their psychic defenses. Make a Spell Attack against an enemy; you deal 2d8 (+1d8 per level) mental damage to them.",
+              "damageData": {
+                "base": "2d8 (+1d8 per level)",
+                "type": "mental"
+              },
+              "degrees": {
+                "Critical Success": "You deal double damage, and they are Stupefied 3 until the end of your next turn",
+                "Success": "You deal regular damage, and they are Stupefied 2 until the end of your next turn",
+                "Failure": "They take no damage, but are Stupefied 1 until the end of your next turn",
+                "Critical Failure": "They resist your psychic assault and take no damage"
+              }
+            },
+            {
+              "name": "Shining Guidance",
+              "actions": "Two Actions",
+              "range": "40 feet",
+              "traits": [
+                "Concentrate",
+                "Light",
+                "Magical"
+              ],
+              "description": "You call forth a guiding light to surround your foe and guide your attacks toward them. Choose an enemy in range; you deal 2d4 (+1d4 per level + half your level) fire damage with a Basic Fortitude Save.",
+              "defense": "Fortitude",
+              "basic": true,
+              "saveOutcomeEffect": {
+                "effectId": "shining-guidance",
+                "applyTo": "all-allies",
+                "onDegrees": [
+                  "success",
+                  "failure",
+                  "criticalFailure"
+                ],
+                "duration": {
+                  "until": "caster-turn-end"
+                }
+              },
+              "degrees": {
+                "Critical Success": "The creature resists entirely and is unaffected",
+                "Success": "The enemy is Limned until the end of your next turn. You can choose to deal no fire damage rather than half; if you do, you and your allies get a +1 circumstance bonus to attack rolls against them until the end of your next turn, as long as it remains limned",
+                "Failure": "The foe is Limned until the end of your next turn. You and your allies get a +1 circumstance bonus on attack rolls against the creature until the end of your next turn, as long as it remains limned",
+                "Critical Failure": "The foe is limned for two rounds (ending at the end of your turn). During that time, as long as it remains limned, you and your allies gain a +1 circumstance bonus to attack rolls against them"
+              }
+            }
+          ]
+        },
+        {
+          "source": "Blu's Weird Orb",
+          "special": {
+            "name": "Charged",
+            "description": "Using electric Eld abilities gives you Charge; while charged, you are off-guard against attacks that deal electricity damage and take a -2 on saves against electric effects. The charged condition lasts until the encounter ends, you take electric damage, or you Discharge to empower another Electric Eld Power."
+          },
+          "powers": [
+            {
+              "name": "Electric Surge",
+              "actions": "Two Actions",
+              "area": "20 foot line",
+              "traits": [
+                "Concentrate",
+                "Electricity",
+                "Magical"
+              ],
+              "description": "You send a surging current of electricity in front of you, shocking creatures in a line. You deal 1d4 (+1d4 per level) electric damage to all creatures in a 20ft line with a Basic Reflex Save. Choose one rider effect: you either become Charged, or you Discharge to increase the are to a 40ft line and the damage increases from d4s to d8s.",
+              "defense": "Reflex",
+              "basic": true,
+              "riderChoice": {
+                "prompt": "Rider",
+                "options": [
+                  {
+                    "id": "charge",
+                    "label": "Become Charged",
+                    "note": "Off-guard vs electricity attacks and -2 to saves vs electric effects until it ends.",
+                    "appliesEffect": {
+                      "effectId": "eld-charged"
+                    }
+                  },
+                  {
+                    "id": "discharge",
+                    "label": "Discharge",
+                    "note": "Consumes Charged - the line extends to 40 feet and the damage dice become d8s.",
+                    "removesEffectId": "eld-charged",
+                    "requiresEffectId": "eld-charged"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Polarize",
+              "actions": "Two Actions",
+              "range": "30 feet",
+              "traits": [
+                "Attack",
+                "Electricity",
+                "Magical"
+              ],
+              "description": "You electrically polarize the target, causing it to become charged as electricity surges through them, jolting them over and over. You deal 1d4 persistent electricity damage per two levels you have to a target within 30 ftt with a Basic Fortitude Save. On a failure they become Charged for 2 rounds. The persistent electricity damage from Polarize doesn't discharge their Charged condition. Choose one rider effect: you either become Charged, or you Discharge to increase the persistent electricity damage to 1d4 per level you have.",
+              "defense": "Fortitude",
+              "basic": true,
+              "riderChoice": {
+                "prompt": "Rider",
+                "options": [
+                  {
+                    "id": "charge",
+                    "label": "Become Charged",
+                    "note": "Off-guard vs electricity attacks and -2 to saves vs electric effects until it ends.",
+                    "appliesEffect": {
+                      "effectId": "eld-charged"
+                    },
+                    "damage": {
+                      "riders": [
+                        {
+                          "id": "polarize-persistent",
+                          "label": "Persistent electricity",
+                          "persistent": {
+                            "dice": "1d4 per two levels you have",
+                            "type": "electricity"
+                          },
+                          "on": [
+                            "success",
+                            "failure",
+                            "criticalFailure"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "id": "discharge",
+                    "label": "Discharge",
+                    "note": "Consumes Charged - the persistent electricity damage increases to 1d4 per level.",
+                    "removesEffectId": "eld-charged",
+                    "requiresEffectId": "eld-charged",
+                    "damage": {
+                      "riders": [
+                        {
+                          "id": "polarize-persistent",
+                          "label": "Persistent electricity (Discharge)",
+                          "persistent": {
+                            "dice": "1d4 per level you have",
+                            "type": "electricity"
+                          },
+                          "on": [
+                            "success",
+                            "failure",
+                            "criticalFailure"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "tradition": "Occult",
+      "ability": "charisma",
+      "proficiency": 1,
+      "focus": {
+        "max": 3,
+        "current": 1
+      },
+      "spell_slots": {
+        "1": 4,
+        "2": 4
+      },
+      "spells": [
+        {
+          "spellRef": "daze"
+        },
+        {
+          "spellRef": "forbidding-ward"
+        },
+        {
+          "spellRef": "guidance"
+        },
+        {
+          "spellRef": "shield"
+        },
+        {
+          "spellRef": "haunting-hymn"
+        },
+        {
+          "spellRef": "summon-undead",
+          "signature": true
+        },
+        {
+          "spellRef": "bless"
+        },
+        {
+          "spellRef": "fear"
+        },
+        {
+          "spellRef": "charitable-urge"
+        },
+        {
+          "spellRef": "noise-blast"
+        }
+      ]
+    },
+    "inventory": [
+      {
+        "uid": "e-z69z1cdkj3e7",
+        "ref": "backpack",
+        "quantity": 1,
+        "container": {
+          "contents": [
+            {
+              "uid": "e-z0iwebf6j3e7",
+              "ref": "bedroll",
+              "quantity": 1
+            },
+            {
+              "uid": "e-02kbqwqfj3e7",
+              "ref": "chalk",
+              "quantity": 1
+            },
+            {
+              "uid": "e-lv0ivw5wj3e7",
+              "ref": "flint-steel",
+              "quantity": 1
+            },
+            {
+              "uid": "e-auk5pimzj3e7",
+              "ref": "rope-50ft",
+              "quantity": 1
+            },
+            {
+              "uid": "e-g6j2g912j3e7",
+              "ref": "soap",
+              "quantity": 1
+            },
+            {
+              "uid": "e-5p9ov3moj3e7",
+              "ref": "torch",
+              "quantity": 5
+            },
+            {
+              "uid": "e-fwwaylp8j3e7",
+              "ref": "waterskin",
+              "quantity": 1
+            },
+            {
+              "uid": "e-s9s9p0kmavu7",
+              "ref": "rations",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "uid": "e-zqvo3ro4j3e7",
+        "ref": "gourd-head",
+        "quantity": 1,
+        "container": {
+          "contents": []
+        }
+      },
+      {
+        "uid": "e-cd4s4fkej3e7",
+        "ref": "vocoder-of-invisibility",
+        "quantity": 1
+      },
+      {
+        "uid": "e-4gaz9mu5j3e7",
+        "ref": "studded-leather-armor",
+        "quantity": 1
+      },
+      {
+        "uid": "e-4phd9lsbj3e7",
+        "ref": "healing-potion",
+        "quantity": 1,
+        "level": 1
+      },
+      {
+        "uid": "e-yn2rxy6mj3e7",
+        "ref": "scroll-of-friendfetch",
+        "quantity": 1
+      },
+      {
+        "uid": "e-uvpbsyp2j3e7",
+        "ref": "rust-scrub",
+        "quantity": 1
+      },
+      {
+        "uid": "e-h9ufvscmj3e7",
+        "ref": "scroll-of-cleanse-affliction",
+        "quantity": 1
+      },
+      {
+        "uid": "e-dzkyjxn8j3e7",
+        "ref": "sanitizing-pin",
+        "quantity": 1
+      },
+      {
+        "uid": "e-aurfnxvij3e7",
+        "ref": "wand-of-create-food",
+        "quantity": 1
+      },
+      {
+        "uid": "e-g1sn2m5qj3e7",
+        "ref": "wand-of-cleanse-affliction",
+        "quantity": 1
+      },
+      {
+        "uid": "e-d3n3r7qdj3e7",
+        "ref": "horn-of-rust",
+        "quantity": 1
+      },
+      {
+        "uid": "e-aa8l5sitavu7",
+        "ref": "scroll-of-sleep",
+        "quantity": 1
+      },
+      {
+        "uid": "e-yzpz6v5yavu7",
+        "ref": "scroll-of-dispel-magic",
+        "quantity": 1
+      },
+      {
+        "uid": "e-8xq46prgavu7",
+        "ref": "antiplague",
+        "quantity": 1
+      },
+      {
+        "uid": "e-ikikuamxavu7",
+        "ref": "salve-of-antiparalysis",
+        "quantity": 1
+      },
+      {
+        "uid": "e-l1qrunn0avu7",
+        "ref": "holy-water",
+        "quantity": 1
+      }
+    ],
+    "feats": [
+      {
+        "id": "feat-1",
+        "reactions": [
+          {
+            "name": "Upstage",
+            "trigger": "An enemy attempts a skill check and doesn’t get a critical success",
+            "triggerType": "enemy-skill-check",
+            "description": "After your foe has tried their best, you show everyone how it’s really done. Attempt a check using the same skill that triggered this reaction. The DC is typically the same as the check the enemy attempted, though the GM can adjust this as usual.",
+            "degrees": {
+              "Critical Success": "You gain a +1 status bonus to attack rolls, Perception checks, saving throws, and skill checks until the end of your next turn.",
+              "Success": "As critical success, except you gain the benefits only if the triggering creature failed their skill check."
+            },
+            "roll": {
+              "type": "skill",
+              "skill": "performance",
+              "opposed": true,
+              "skillChoice": true,
+              "successNote": "Applies only if the triggering creature failed their skill check (a critical success applies regardless)."
+            },
+            "effects": [
+              {
+                "effectId": "upstage",
+                "applyTo": "self",
+                "duration": {
+                  "until": "caster-turn-end"
+                }
+              }
+            ]
+          }
+        ],
+        "name": "Celebrity Dedication",
+        "source": "Archetype",
+        "description": "The more people you have looking at you, the more content you are, and you take every opportunity to show up others when their performances are less than perfect. You gain the Upstage reaction. In addition, when you Earn Income, if the level of the task is higher than your level, you gain a +1 circumstance bonus to your check to Earn Income.",
+        "level": 2
+      },
+      {
+        "id": "feat-2",
+        "name": "Bardic Lore",
+        "source": "Bard",
+        "description": "Your studies cover a wide range of topics. You are trained in Bardic Lore, a special Lore skill that can be used for any checks to Recall Knowledge. If you have legendary proficiency in Occultism, you gain expert proficiency in Bardic Lore, but you can't increase your proficiency rank in Bardic Lore by any other means.",
+        "level": 1
+      },
+      {
+        "id": "feat-3",
+        "strikes": [
+          {
+            "name": "Seedpod",
+            "proficiency": "unarmed",
+            "type": "ranged",
+            "action": 1,
+            "damage": "1d4",
+            "traits": [
+              "Attack",
+              "Ranged"
+            ],
+            "description": "Chuck one of your seed pods!"
+          }
+        ],
+        "name": "Seedpod",
+        "source": "Leshy",
+        "description": "Your body produces a nearly endless supply of hard seedpods. You gain a seedpod ranged unarmed attack that deals 1d4 bludgeoning damage; these Strikes have the manipulate trait. On a critical hit, a seedpod bursts, issuing forth a tangle of rapid-growing vines that impose a -10-foot circumstance penalty to the target's Speed for 1 round.",
+        "level": 1
+      },
+      {
+        "id": "feat-4",
+        "name": "Eyes of the City",
+        "source": "Skill",
+        "description": "You can track down targets with the help of locals. You can use Diplomacy or Society, whichever you're trained in, to Track creatures in settlements. You chat with locals to help follow the trail of creatures you Track. At the GM's discretion, there might not be enough people to speak with to keep following the trail.",
+        "level": 2
+      },
+      {
+        "id": "feat-5",
+        "name": "Quick Identification",
+        "source": "Skill",
+        "description": "You can Identify Magic swiftly. You take only 1 minute when using Identify Magic to determine the properties of an item, ongoing effect, or location, rather than 10 minutes. If you’re a master, it takes a 3-action activity, and if you’re legendary, it takes 1 action.",
+        "level": 1
+      },
+      {
+        "id": "feat-6",
+        "reactions": [
+          {
+            "name": "Disrupting Performance",
+            "traits": [
+              "Emotion",
+              "General",
+              "Mental",
+              "Skill"
+            ],
+            "trigger": "A creature you can observe within 30 feet takes a skill action with the Auditory, Concentrate, or Visual traits.",
+            "triggerType": "enemy-skill-check",
+            "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute.",
+            "immunity": {
+              "duration": {
+                "value": 1,
+                "unit": "minute"
+              }
+            }
+          }
+        ],
+        "name": "Disrupting Performance",
+        "source": "Skill",
+        "description": "You make an awkward or bizarre sound, note, or gesture to foul the action the creature is attempting. Your reaction gains your choice of the auditory or visual trait. Make a Performance check against the triggering creature's Will DC. Creatures with less than a +0 Intelligence gain a +4 circumstance bonus to their Will DC. Regardless of the outcome, the creature then becomes immune to this reaction for 1 minute.",
+        "level": 3
+      },
+      {
+        "id": "feat-7",
+        "name": "Multifarious Muse",
+        "source": "Bard",
+        "description": "Your muse doesn't fall into a single label. Your muse is now also a Maestro, you gain that muse's unique ability, and can now choose feats that are available only to Maestro Bards.",
+        "level": 4
+      },
+      {
+        "id": "feat-8",
+        "name": "Eld Attunement",
+        "source": "Ostilli Host",
+        "description": "The Ostilli bound to you has learned from absorbing the primal magic you naturally exude. When you make your daily preparations, you can attune your Ostilli to a single source of potent magic to which you have been exposed for at least half of the past 24 hours, granting you a new kind of magic called an Eld Power. You may use each one only once per hour as you replenish the Ostilli's store of magical energy.",
+        "level": 4
+      },
+      {
+        "id": "feat-9",
+        "freeActions": [
+          {
+            "name": "Harmless Bystander",
+            "traits": [
+              "Auditory",
+              "Concentrate",
+              "Linguistic",
+              "Mental",
+              "Skill"
+            ],
+            "trigger": "You roll initiative",
+            "description": "Roll initiative using your Deception rather than Perception. Any non-ally creature must attempt to Sense Motive against you to realize you are hostile to them and they cannot make reactions against you until you take a hostile action against the creature or its allies. If you are wielding a weapon or cannot reasonably hide yourself as a bystander, the creature gets a +4 circumstance bonus to their Sense Motive. If you are observed taking a hostile action you are automatically recognized as hostile. Regardless of the result of the creature's Sense Motive, once you are observed being hostile, non-allied creatures are temporarily immune to your use of Harmless Bystander for 1 day."
+          }
+        ],
+        "name": "Harmless Bystander",
+        "source": "Skill",
+        "description": "You can pretend you have nothing to do with the conflict that is about to take place.",
+        "level": 4
+      }
+    ],
+    "strikes": [
+      {
+        "name": "Unarmed Strike",
+        "proficiency": "unarmed",
+        "type": "melee",
+        "damage": "1d4",
+        "description": "Give 'em a good smack",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1
+      }
+    ],
+    "actions": [],
+    "reactions": []
+  },
+  {
+    "image": "img_0f2cd2ea-d783-46dc-9cea-364591eb2de3.jpg",
+    "imagePosition": {
+      "x": 38,
+      "y": 11
+    },
+    "id": "JadeInferno",
+    "name": "Jade Inferno",
+    "ancestry": "Half-Elf",
+    "background": "Harrower",
+    "class": "Sorcerer",
+    "keyAbility": "charisma",
+    "size": "Medium",
+    "senses": "Low-light Vision",
+    "loreEntryId": "jade-inferno",
+    "level": 4,
+    "maxHp": 30,
+    "ac": 18,
+    "speed": 30,
+    "abilities": {
+      "strength": 10,
+      "dexterity": 14,
+      "constitution": 10,
+      "intelligence": 16,
+      "wisdom": 10,
+      "charisma": 18
+    },
+    "saves": {
+      "fortitude": 6,
+      "reflex": 8,
+      "will": 8
+    },
+    "skills": {
+      "acrobatics": {
+        "proficiency": 1
+      },
+      "arcana": {
+        "proficiency": 1
+      },
+      "crafting": {
+        "proficiency": 1
+      },
+      "deception": {
+        "proficiency": 1
+      },
+      "diplomacy": {
+        "proficiency": 2
+      },
+      "intimidation": {
+        "proficiency": 1
+      },
+      "occultism": {
+        "proficiency": 1
+      },
+      "perception": {
+        "proficiency": 1
+      },
+      "performance": {
+        "proficiency": 1
+      },
+      "society": {
+        "proficiency": 1
+      },
+      "stealth": {
+        "proficiency": 1
+      },
+      "lore": [
+        {
+          "name": "Varisian",
+          "proficiency": 1
+        },
+        {
+          "name": "Elven",
+          "proficiency": 1
+        },
+        {
+          "name": "Fortune-Telling",
+          "proficiency": 1
+        },
+        {
+          "name": "Thassilonian",
+          "proficiency": 1
+        }
+      ]
+    },
+    "proficiencies": {
+      "class": 1,
+      "weapons": {
+        "simple": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "martial": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "advanced": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "unarmed": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
+      },
+      "armor": {
+        "unarmored": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "light": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "medium": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "heavy": {
+          "proficiency": 0,
+          "name": "Untrained"
+        }
+      }
+    },
+    "spellcasting": {
+      "bloodline": {
+        "name": "Imperial",
+        "description": "One of your ancestors was a mortal who mastered magic. Such magical blood can remain latent for generations, but in you it manifested in full.",
+        "blood_magic": "Raw magic emanates from every cell in your body, protecting you. Until the start of your next turn, you gain +1 to either your AC or to Saving Throws.",
+        "focus_spells": [
+          {
+            "spellRef": "ancestral-memories",
+            "bloodline": true
+          }
+        ]
+      },
+      "tradition": "Arcane",
+      "ability": "charisma",
+      "proficiency": 1,
+      "focus": {
+        "max": 1,
+        "current": 1
+      },
+      "spell_slots": {
+        "1": 4,
+        "2": 4
+      },
+      "spells": [
+        {
+          "spellRef": "light"
+        },
+        {
+          "spellRef": "electric-arc"
+        },
+        {
+          "spellRef": "detect-magic"
+        },
+        {
+          "spellRef": "prestidigitation"
+        },
+        {
+          "spellRef": "telekinetic-hand"
+        },
+        {
+          "spellRef": "ray-of-frost"
+        },
+        {
+          "spellRef": "telekinetic-projectile",
+          "signature": true
+        },
+        {
+          "spellRef": "mystic-armor"
+        },
+        {
+          "spellRef": "command"
+        },
+        {
+          "spellRef": "force-barrage"
+        },
+        {
+          "spellRef": "shocking-grasp"
+        },
+        {
+          "spellRef": "blazing-bolt"
+        },
+        {
+          "spellRef": "knock"
+        },
+        {
+          "spellRef": "dispel-magic"
+        },
+        {
+          "spellRef": "sudden-bolt"
+        }
+      ]
+    },
+    "inventory": [
+      {
+        "uid": "e-93hszhvnoezh",
+        "ref": "backpack",
+        "quantity": 1,
+        "container": {
+          "contents": [
+            {
+              "uid": "e-0im4jb4e07ns",
+              "ref": "bedroll",
+              "quantity": 1
+            },
+            {
+              "uid": "e-b95v3pmp07ns",
+              "ref": "chalk",
+              "quantity": 1
+            },
+            {
+              "uid": "e-gv84388d07ns",
+              "ref": "flint-steel",
+              "quantity": 1
+            },
+            {
+              "uid": "e-vpkmiiyg07ns",
+              "ref": "rations",
+              "quantity": 1
+            },
+            {
+              "uid": "e-ft66kilc07ns",
+              "ref": "rope-50ft",
+              "quantity": 1
+            },
+            {
+              "uid": "e-bpr7c73h07ns",
+              "ref": "soap",
+              "quantity": 1
+            },
+            {
+              "uid": "e-mhljykom07ns",
+              "ref": "torch",
+              "quantity": 5
+            },
+            {
+              "uid": "e-4xhlitm307ns",
+              "ref": "waterskin",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "uid": "e-mbdfc9g9oezh",
+        "ref": "crafters-eyepiece",
+        "quantity": 1
+      },
+      {
+        "uid": "e-x484lqauoezh",
+        "ref": "wand-of-dizzying-colors",
+        "quantity": 1
+      },
+      {
+        "uid": "e-wjorm2ueoezh",
+        "ref": "wand-of-grease",
+        "quantity": 1
+      },
+      {
+        "uid": "e-typicfh7oezh",
+        "ref": "wand-of-breathe-fire",
+        "quantity": 1
+      },
+      {
+        "uid": "e-zwe0plnuoezh",
+        "ref": "xanderghuls-flawless-hammer",
+        "quantity": 1
+      },
+      {
+        "uid": "e-5wt9oadpoezh",
+        "ref": "elixir-of-life",
+        "quantity": 1,
+        "level": 1
+      },
+      {
+        "uid": "e-06de2xugoezh",
+        "ref": "sanitizing-pin",
+        "quantity": 1
+      },
+      {
+        "uid": "e-hcvsoheuoezh",
+        "ref": "rust-scrub",
+        "quantity": 1
+      },
+      {
+        "uid": "e-r42ub9dxoezh",
+        "ref": "scroll-of-pocket-library",
+        "quantity": 1
+      },
+      {
+        "uid": "e-gbpv1oj8oezh",
+        "ref": "scroll-of-runic-body",
+        "quantity": 1
+      },
+      {
+        "uid": "e-9db7dc0moezh",
+        "ref": "scroll-of-sleep",
+        "quantity": 1
+      },
+      {
+        "uid": "e-lcih3p1voezh",
+        "ref": "scroll-of-dispel-magic",
+        "quantity": 1
+      },
+      {
+        "uid": "e-wjzu6n3fihyq",
+        "ref": "antiplague",
+        "quantity": 1
+      },
+      {
+        "uid": "e-swx7yknxihyq",
+        "ref": "healing-potion",
+        "quantity": 2,
+        "level": 1
+      },
+      {
+        "uid": "e-89i4hd7gihyq",
+        "ref": "wand-of-fear",
+        "quantity": 1
+      },
+      {
+        "uid": "e-i96di93dihyq",
+        "ref": "healing-potion",
+        "quantity": 1,
+        "level": 3
+      },
+      {
+        "uid": "e-ztotevemakrn",
+        "ref": "scroll-of-mind-games",
+        "quantity": 1
+      }
+    ],
+    "feats": [
+      {
+        "id": "feat-1",
+        "reactions": [
+          {
+            "name": "Avoid Dire Fate",
+            "traits": [
+              "Fortune"
+            ],
+            "trigger": "You fail or critically fail a check associated with your active Harrow Omen's suit",
+            "triggerType": "self-check-failed",
+            "requiresOmen": true,
+            "clearsOmen": true,
+            "description": "Treat the failure as a success or a critical failure as a failure. You no longer have an active harrow omen."
+          }
+        ],
+        "actions": [],
+        "name": "Harrower Dedication",
+        "source": "Archetype",
+        "description": "You've dedicated yourself to the art of harrowing, a traditional Varisian fortune-telling practice using a deck of cards known as a Harrow deck. You can draw upon the power of the harrow to create supernatural effects based on the cards you draw.",
+        "level": 2
+      },
+      {
+        "id": "feat-2",
+        "actions": [],
+        "name": "Otherworldly Magic",
+        "source": "Ancestry",
+        "description": "Your elven blood runs strong enough to grant you magical abilities. You gain an extra Arcane cantrip.",
+        "level": 1
+      },
+      {
+        "id": "feat-3",
+        "actions": [],
+        "name": "Alchemical Crafting",
+        "source": "Skill",
+        "description": "You can use the Craft activity to create alchemical items. When you select this feat, you immediately add the formulas for four common 1st-level alchemical items to your formula book.",
+        "level": 2
+      },
+      {
+        "id": "feat-4",
+        "actions": [],
+        "name": "Hobnobber",
+        "source": "Skill",
+        "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2).",
+        "level": 1
+      },
+      {
+        "id": "feat-5",
+        "actions": [
+          {
+            "name": "Reach Spell",
+            "actionCount": 1,
+            "traits": [
+              "Concentrate",
+              "Sorcerer",
+              "Spellshape"
+            ],
+            "description": "You  can extend your spells’ range. If the next action you use is to Cast a Spell that has a range, increase that spell’s range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
+            "chain": {
+              "into": "spell",
+              "cost": "added",
+              "spellFilter": "has-range",
+              "modifier": "Range increased by 30 feet (touch → 30 ft)"
+            }
+          }
+        ],
+        "name": "Reach Spell",
+        "source": "Sorcerer",
+        "description": "You can extend the range of your spells. If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet.",
+        "level": 2
+      },
+      {
+        "id": "feat-6",
+        "actions": [],
+        "name": "Tell Fortune",
+        "source": "Skill",
+        "description": "Whether through harrow cards, palm-reading, star-reading or some other method of divining the future, you are able to predict the futures of other people surprisingly well. You can spend 1 hour telling someone else's fortune. Attempt a Fortune-Telling Lore check against a hard DC of a target creature’s level, producing the effects of augury on a success with regards to the creature’s future. Regardless of the result, the creature is then immune to your Tell Fortune for 1 week.",
+        "level": 3
+      },
+      {
+        "id": "feat-7",
+        "actions": [
+          {
+            "name": "Split Shot",
+            "actionCount": 1,
+            "traits": [
+              "Concentrate",
+              "Sorcerer",
+              "Spellshape"
+            ],
+            "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals half the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
+            "chain": {
+              "into": "spell",
+              "cost": "added",
+              "spellFilter": "single-target-attack",
+              "splitShot": true,
+              "modifier": "Second target within range — one attack roll compared to both ACs (one attack for MAP); the second target takes half damage and no other effects"
+            }
+          }
+        ],
+        "name": "Split Shot",
+        "source": "Sorcerer",
+        "description": "You fragment a ranged spell. If your next action is to Cast a Spell without a duration that requires an attack roll against a single target, you can choose a second target within range. You roll a single attack roll and compare the result to the AC of both targets. This counts as one attack for your multiple attack penalty. To the second target, the spell deals half the amount of damage it would normally deal and has no effects beyond the spell's initial damage.",
+        "level": 4
+      },
+      {
+        "id": "feat-8",
+        "actions": [
+          {
+            "name": "Harrow Casting",
+            "actionCount": 1,
+            "traits": [
+              "Concentrate",
+              "Harrower",
+              "Spellshape"
+            ],
+            "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn.",
+            "requiresOmen": true,
+            "chain": {
+              "into": "spell",
+              "cost": "added",
+              "spellFilter": "any",
+              "harrow": true,
+              "modifier": "Draw a Harrow card before the spell; DC 11 flat check or lose your Harrow Omen at the end of your turn"
+            }
+          }
+        ],
+        "name": "Harrow Casting",
+        "source": "Harrower",
+        "description": "You draw a card from your harrow deck just before you cast a spell to infuse your magic with its destined potential. If you next action is to Cast a Spell, the suit of the card you draw enhances the spell. If the card you draw matches the suit of your active Harrow Omen, the effect is enhanced. When you Harrow Cast, attempt a DC 11 flat check. If you fail, you lose your active Harrow Omen at the end of your turn.",
+        "level": 4
+      },
+      {
+        "id": "feat-9",
+        "actions": [],
+        "name": "Glad-Hand",
+        "source": "Skill",
+        "description": "First impressions are your strong suit. When you meet someone in a casual or social situation, you can immediately attempt a Diplomacy check to Make an Impression on that creature rather than needing to converse for 1 minute. If you fail, you can engage in 1 minute of conversation and attempt a new check at the end of the time rather than accepting the failure.",
+        "level": 4
+      }
+    ],
+    "strikes": [
+      {
+        "name": "Unarmed Strike",
+        "proficiency": "unarmed",
+        "type": "melee",
+        "damage": "1d4",
+        "description": "Give 'em a good smack",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1
+      }
+    ],
+    "actions": [],
+    "reactions": [],
+    "crafting": [
+      {
+        "ref": "antidote"
+      },
+      {
+        "ref": "antiplague"
+      },
+      {
+        "ref": "eagle-eye-elixir"
+      },
+      {
+        "ref": "elixir-of-life"
+      }
+    ]
+  },
+  {
+    "champion": {
+      "deity": "Ferrumnestra",
+      "cause": "Paladin",
+      "tenets": [
+        "You must act with honor, never cheating, lying, or taking advantage of others.",
+        "You must respect legitimate authority.",
+        "You must act with mercy, showing compassion to those who deserve it and seeking to convert those who don't to goodness.",
+        "You must be righteous, standing against the forces of evil wherever they might hide."
+      ],
+      "devotion_spells": [
+        {
+          "spellRef": "serrate"
+        },
+        {
+          "spellRef": "shields-of-the-spirit"
+        }
+      ],
+      "focus_points": 2,
+      "class_dc": 19
+    },
+    "freeActions": [],
+    "image": "img_5efb6fe3-c69e-4ec2-82c9-c04c6a24ec7f.jpg",
+    "id": "Pellias",
+    "name": "Pellias",
+    "ancestry": "Human",
+    "background": "Kineticist",
+    "class": "Champion",
+    "keyAbility": "strength",
+    "size": "Medium",
+    "loreEntryId": "pellias-scarnetti",
+    "level": 4,
+    "maxHp": 60,
+    "ac": 22,
+    "speed": 20,
+    "abilities": {
+      "strength": 18,
+      "dexterity": 10,
+      "constitution": 16,
+      "intelligence": 10,
+      "wisdom": 12,
+      "charisma": 12
+    },
+    "saves": {
+      "fortitude": 11,
+      "reflex": 6,
+      "will": 9
+    },
+    "skills": {
+      "athletics": {
+        "proficiency": 2
+      },
+      "diplomacy": {
+        "proficiency": 1
+      },
+      "intimidation": {
+        "proficiency": 1
+      },
+      "nature": {
+        "proficiency": 1
+      },
+      "perception": {
+        "proficiency": 1
+      },
+      "religion": {
+        "proficiency": 1
+      },
+      "survival": {
+        "proficiency": 1
+      },
+      "lore": [
+        {
+          "name": "Thassilonian",
+          "proficiency": 1
+        }
+      ]
+    },
+    "proficiencies": {
+      "class": 1,
+      "weapons": {
+        "simple": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "martial": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "advanced": {
+          "proficiency": 0,
+          "name": "Untrained"
+        },
+        "unarmed": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
+      },
+      "armor": {
+        "unarmored": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "light": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "medium": {
+          "proficiency": 1,
+          "name": "Trained"
+        },
+        "heavy": {
+          "proficiency": 1,
+          "name": "Trained"
+        }
+      }
+    },
+    "imagePosition": {
+      "x": 63,
+      "y": 0
+    },
+    "inventory": [
+      {
+        "uid": "e-yaso9hh4ry1f",
+        "ref": "1-cold-iron-light-hammer",
+        "quantity": 1
+      },
+      {
+        "uid": "e-1o7zg065ry1f",
+        "ref": "1-striking-pick",
+        "quantity": 1
+      },
+      {
+        "uid": "e-7asnxxolry1f",
+        "ref": "backpack",
+        "quantity": 1,
+        "container": {
+          "contents": [
+            {
+              "uid": "e-ftdvxxbery1f",
+              "ref": "bedroll",
+              "quantity": 1
+            },
+            {
+              "uid": "e-9ecle4sory1f",
+              "ref": "chalk",
+              "quantity": 1
+            },
+            {
+              "uid": "e-bcog9u4ery1f",
+              "ref": "flint-steel",
+              "quantity": 1
+            },
+            {
+              "uid": "e-zezdoxkdry1f",
+              "ref": "rations",
+              "quantity": 1
+            },
+            {
+              "uid": "e-trmk242lry1f",
+              "ref": "rope-50ft",
+              "quantity": 1
+            },
+            {
+              "uid": "e-uimf37cory1f",
+              "ref": "soap",
+              "quantity": 1
+            },
+            {
+              "uid": "e-el8d0qtnry1f",
+              "ref": "waterskin",
+              "quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "uid": "e-l2y86qk6ry1f",
+        "ref": "full-plate",
+        "quantity": 1
+      },
+      {
+        "uid": "e-t3802twgry1f",
+        "ref": "reinforced-tower-shield",
+        "quantity": 1
+      },
+      {
+        "uid": "e-eb7dbofmry1f",
+        "ref": "spiked-steel-shield",
+        "quantity": 1
+      },
+      {
+        "uid": "e-cb9gh80vry1f",
+        "ref": "sanitizing-pin",
+        "quantity": 1
+      },
+      {
+        "uid": "e-u1z0c15nry1f",
+        "ref": "rust-scrub",
+        "quantity": 1
+      },
+      {
+        "uid": "e-s3ftiaodry1f",
+        "ref": "gecko-potion",
+        "quantity": 1
+      },
+      {
+        "uid": "e-0itjhw4lry1f",
+        "ref": "wolf-fang",
+        "quantity": 1
+      },
+      {
+        "uid": "e-6yakvan8ry1f",
+        "ref": "elixir-of-life",
+        "quantity": 1,
+        "level": 1
+      },
+      {
+        "uid": "e-47653xtc1xrc",
+        "ref": "1-cold-iron-longsword",
+        "quantity": 1
+      },
+      {
+        "uid": "e-8t7654x51xrc",
+        "ref": "spoiling-buckler",
+        "quantity": 1
+      },
+      {
+        "uid": "e-dlfzhji81xrc",
+        "ref": "antiplague",
+        "quantity": 1
+      },
+      {
+        "uid": "e-p5jbu0xf1xrc",
+        "ref": "holy-water",
+        "quantity": 2
+      },
+      {
+        "uid": "e-4y51zbvm1xrc",
+        "ref": "torch",
+        "quantity": 5
+      }
+    ],
+    "feats": [
+      {
+        "id": "feat-1",
+        "actions": [
+          {
+            "name": "Channel Elements",
+            "actionCount": 1,
+            "traits": [
+              "Aura",
+              "Kineticist",
+              "Metal",
+              "Primal"
+            ],
+            "chain": {
+              "into": "strike",
+              "optional": true,
+              "heading": "Elemental Blast",
+              "strikeTrait": "Impulse"
+            },
+            "description": "You tap into your kinetic gate to make elements flow around you. Your kinetic aura activates, and as a part of this action, you can use a 1-action Elemental Blast or a 1-action stance impulse. Your kinetic aura is a 10-foot emanation where pieces of your kinetic element (or all your kinetic elements, if you can channel more than one) flow around you. The kinetic aura can't damage anything or affect the environment around you unless another ability allows it to. Channel Elements has the traits of all your kinetic elements.\nYour kinetic aura automatically deactivates if you're knocked out, you use an impulse with the overflow trait, or you Dismiss the aura. Though you can't use new impulses while your kinetic aura is deactivated, ones you already used remain, and you can still Sustain any that can be sustained. Stance impulses are linked to your kinetic aura and end when the aura deactivates."
+          }
+        ],
+        "strikes": [
+          {
+            "name": "Melee Metal Blast",
+            "actionCount": "One to Two",
+            "variants": [
+              {
+                "actions": 1,
+                "note": "Standard blast (Str to damage)"
+              },
+              {
+                "actions": 2,
+                "note": "+Con status bonus to damage"
+              }
+            ],
+            "type": "melee",
+            "traits": [
+              "Attack",
+              "Impulse",
+              "Kineticist",
+              "Metal",
+              "Primal"
+            ],
+            "damage": "1d8",
+            "riders": [
+              {
+                "id": "blast-2a-con",
+                "label": "+Con (2-action blast)",
+                "bonus": {
+                  "ability": "constitution"
+                },
+                "when": {
+                  "actions": 2
+                },
+                "defaultOn": true
+              }
+            ],
+            "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. If you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage."
+          },
+          {
+            "name": "Ranged Metal Blast",
+            "actionCount": "One to Two",
+            "variants": [
+              {
+                "actions": 1,
+                "note": "Standard blast"
+              },
+              {
+                "actions": 2,
+                "note": "+Con status bonus to damage"
+              }
+            ],
+            "type": "ranged",
+            "damage": "1d8",
+            "riders": [
+              {
+                "id": "blast-2a-con",
+                "label": "+Con (2-action blast)",
+                "bonus": {
+                  "ability": "constitution"
+                },
+                "when": {
+                  "actions": 2
+                },
+                "defaultOn": true
+              }
+            ],
+            "range": "30ft",
+            "traits": [
+              "Attack",
+              "Impulse",
+              "Kineticist",
+              "Metal",
+              "Primal"
+            ],
+            "description": "With a wave of your hand, you collect shards of metal from your aura and swing or hurl it. Make a melee or ranged impulse attack against the AC of one creature. Add your Strength modifier to the damage roll for a melee Elemental Blast. When you make a 2-action Elemental Blast, you gain a status bonus to the damage roll equal to your Constitution modifier. Your blast does piercing or slashing damage, and has a range of 30 feet."
+          }
+        ],
+        "name": "Kineticist Dedication",
+        "source": "Archetype",
+        "description": "You gain the ability to gather and shape elemental energy. Choose an element: air, earth, fire, metal, water, or wood. You gain an impulse attack with the element trait from a gate of your choice.",
+        "level": 2
+      },
+      {
+        "id": "feat-2",
+        "name": "Deity's Domain",
+        "source": "Champion",
+        "description": "You embody an aspect of your deity. You get the initial domain spell of the Metal domain as a Devotion Spell.",
+        "level": 1
+      },
+      {
+        "id": "feat-3",
+        "actions": [
+          {
+            "name": "Devoted Guardian",
+            "actionCount": 1,
+            "traits": [
+              "Champion"
+            ],
+            "targets": "1 adjacent ally",
+            "requiresShieldRaised": true,
+            "effects": [
+              {
+                "effectId": "devoted-guardian-tower",
+                "applyTo": "ally"
+              }
+            ],
+            "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward. Select one adjacent creature. As long as your shield is raised and the creature remains adjacent to you, the creature gains a +1 circumstance bonus to their AC, or a +2 circumstance bonus if the shield you raised was a tower shield. (Pellias carries a reinforced tower shield, so the +2 effect is applied; the ward ends automatically when his shield is no longer raised — the GM should clear it early if the ally moves away.)"
+          }
+        ],
+        "name": "Devoted Guardian",
+        "source": "Champion",
+        "description": "You adopt a wide stance, ready to defend both yourself and your chosen ward.",
+        "level": 2
+      },
+      {
+        "id": "feat-4",
+        "name": "Nimble Reprisal",
+        "source": "Ancestry",
+        "description": "You can use Retributive Strike at greater distance. You can use a ranged weapon to make a ranged Strike instead of a melee Strike for Retributive Strike. The enemy needs to be in range, but not in reach, and it must still be in your champion's aura. You can also make melee Strikes against enemies a bit farther away. If the enemy that triggered your reaction is outside your reach but is within 5 feet of your reach, as part of your reaction you can Step to put the enemy in your reach before making a melee Retributive Strike.",
+        "level": 2
+      },
+      {
+        "id": "feat-5",
+        "name": "Shield Block",
+        "source": "General",
+        "description": "You snap your shield in place to ward off a blow. You immediately use your shield's Hardness to reduce the damage you would take by that amount. Your shield takes the damage that was prevented in this way instead.",
+        "level": 1
+      },
+      {
+        "id": "feat-6",
+        "name": "Untrained Improvisation",
+        "source": "General",
+        "description": "You've learned how to handle situations when you're out of your depth. Your proficiency bonus to untrained skill checks is equal to half your level instead of +0. If you're 7th level or higher, the bonus increases to your full level instead.",
+        "level": 3
+      },
+      {
+        "id": "feat-7",
+        "name": "Natural Ambition",
+        "source": "Human",
+        "description": "Your ambition knows no bounds, and you strive to learn as much as you can. You gain an extra 1st-level class feat.",
+        "level": 1
+      },
+      {
+        "id": "feat-8",
+        "name": "Hefty Hauler",
+        "source": "General",
+        "description": "You can carry more than your frame implies. Increase your maximum Bulk by 2 and your encumbered Bulk by 2.",
+        "level": 2
+      },
+      {
+        "id": "feat-9",
+        "name": "Hobnobber",
+        "source": "Skill",
+        "description": "You are skilled at learning information through conversation. The Gather Information exploration activity takes you half as long as normal (typically 1 hour instead of 2).",
+        "level": 1
+      },
+      {
+        "id": "feat-10",
+        "name": "Titan Wrestler",
+        "source": "Skill",
+        "description": "You can attempt to Disarm, Grapple, Shove, or Trip creatures up to two sizes larger than you, and you don't take a circumstance penalty when targeting a creature that's one size larger than you with these actions.",
+        "level": 1
+      },
+      {
+        "id": "feat-11",
+        "freeActions": [
+          {
+            "name": "Primary Threat",
+            "traits": [
+              "Champion"
+            ],
+            "trigger": "Your turn begins and it is the first round of combat",
+            "offerAt": {
+              "round": 1
+            },
+            "reminder": "Primary Threat: Pellias Delays (GM moves him in the Foundry tracker). Enemies that act after he used Delay take a -1 circumstance penalty to attack rolls against his allies until the start of his next turn; a creature can spend a single concentrate action to remove it.",
+            "description": "You Delay while presenting an imposing afront to your enemies. Enemy creatures that go after you used Delay take a -1 circumstance penalty to attack rolls against your allies until the beginning of your next turn. Creatures can remove this penalty by spending a single action with the concentrate trait to do their own threat evaluation."
+          }
+        ],
+        "name": "Primary Threat",
+        "source": "Champion",
+        "description": "When a fight begins, you make it clear you should be the one people are concerned about.",
+        "level": 4
+      },
+      {
+        "id": "feat-12",
+        "actions": [
+          {
+            "name": "Shard Strike",
+            "actionCount": 2,
+            "traits": [
+              "Impulse",
+              "Kineticist",
+              "Metal",
+              "Primal"
+            ],
+            "description": "Jagged metal shards form in the air and lash out in front of you. Creatures in the area attempt a Basic Reflex Save against your Class DC. Choose Shards or Spines. Shards deal 1d6 slashing damage in a 15-foot cone, and a creature that critically fails takes 1d6 persistent bleed damage. Spines deal 1d6 piercing damage in a 30-foot line, and a creature that critically fails is Clumsy 1 until the start of your next turn.",
+            "targetDefense": "reflex",
+            "basic": true,
+            "roll": {
+              "type": "class-dc"
+            },
+            "damageData": {
+              "base": "1d6",
+              "type": "slashing or piercing"
+            },
+            "riderChoice": {
+              "prompt": "Form",
+              "options": [
+                {
+                  "id": "shards",
+                  "label": "Shards — 15-foot cone, slashing",
+                  "note": "Critical failure: 1d6 persistent bleed",
+                  "damage": {
+                    "type": "slashing",
+                    "riders": [
+                      {
+                        "id": "shard-bleed",
+                        "label": "Shards: persistent bleed",
+                        "persistent": {
+                          "dice": "1d6",
+                          "type": "bleed"
+                        },
+                        "on": [
+                          "criticalFailure"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "spines",
+                  "label": "Spines — 30-foot line, piercing",
+                  "note": "Critical failure: clumsy 1 until the start of your next turn",
+                  "damage": {
+                    "type": "piercing",
+                    "riders": [
+                      {
+                        "id": "spine-clumsy",
+                        "label": "Spines: clumsy 1",
+                        "condition": "clumsy 1 until the start of Pellias's next turn",
+                        "on": [
+                          "criticalFailure"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "name": "Through the Gate",
+        "source": "Kineticist",
+        "description": "You have learned to channel the energies of the Plane of Metal more precisely; you gain a new Kineticist Impulse.",
+        "level": 4
+      },
+      {
+        "id": "feat-13",
+        "innate": [
+          {
+            "spellRef": "guidance"
+          },
+          {
+            "spellRef": "murmured-prayer-plus"
+          }
+        ],
+        "name": "Murmured Prayer",
+        "source": "Skill",
+        "description": "A prayer under your breath to the appropriate god can guide you in times of trouble. You can cast Guidance as a divine innate cantrip. Once per day, you can utter a prayer to a particularly relevant deity as part of casting Guidance, and the bonus increases to a +2. You do not need to follow the deity to ask for their guidance, but if their goals do not align with you own, they may refuse to aid you. When you are Legendary in Religion, you can utter a prayer once per hour instead of daily.",
+        "level": 4
+      }
+    ],
+    "strikes": [
+      {
+        "name": "Unarmed Strike",
+        "proficiency": "unarmed",
+        "type": "melee",
+        "damage": "1d4",
+        "description": "Give 'em a good smack",
+        "traits": [
+          "Attack",
+          "Melee"
+        ],
+        "actionCount": 1
+      }
+    ],
+    "actions": [],
+    "reactions": [
+      {
+        "name": "Retributive Strike",
+        "trigger": "An enemy damages an ally within 15 feet of you.",
+        "triggerType": "damaged-ally",
+        "chain": {
+          "into": "strike",
+          "cost": "included"
+        },
+        "allyResistance": {
+          "base": 2,
+          "addLevel": true
+        },
+        "description": "You protect your ally and strike your foe. The ally gains resistance to all damage against the triggering damage equal to 2 + your level. If the foe is within reach, make a melee Strike against it. Nimble Reprisal: you can instead make a ranged Strike (foe in range and in your aura), and if the foe is within 5 feet of your reach you can Step before the melee Strike.",
+        "traits": [
+          "Champion"
+        ]
+      },
+      {
+        "name": "Shield Block",
+        "trigger": "While you have your shield raised, you take damage from a physical attack.",
+        "triggerType": "damaged-self",
+        "description": "You position your shield to ward off a blow. Your shield prevents you from taking an amount of damage up to the shield's Hardness. You and the shield each take any remaining damage, possibly breaking or destroying the shield.",
+        "traits": [
+          "General"
+        ]
+      }
+    ]
+  }
+]

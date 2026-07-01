@@ -1,0 +1,347 @@
+[
+  {
+    "name": "Agile",
+    "description": "The multiple attack penalty you take with this weapon on the second attack on your turn is -4 instead of -5, and -8 instead of -10 on the third and subsequent attacks in the turn.",
+    "id": "agile"
+  },
+  {
+    "name": "Alchemical",
+    "description": "Alchemical items contain chemically infused magical energy and tend to be consumable. Improper handling of an alchemical item might cause it to explode, catch fire, or otherwise release dangerous chemicals.",
+    "id": "alchemical-40"
+  },
+  {
+    "name": "Anchoring",
+    "description": "You can use abilities with the anchoring trait only while your quantum field is activated (unless they are your Signature Spells). If you use the ability on your turn, in addition to their stated effects, they automatically Sustain your quantum field.",
+    "id": "anchoring-62"
+  },
+  {
+    "name": "Attack",
+    "description": "An action with this trait involves an attack. Attack actions typically use the Strike action or a similar action that targets an enemy's AC.",
+    "id": "attack-2"
+  },
+  {
+    "name": "Auditory",
+    "description": "Auditory actions and effects rely on sound. An action with the auditory trait can be successfully performed only if the creature using the action can speak or otherwise produce the required sounds. A spell or effect with the auditory trait has its effect only if the target can hear it. This applies only to sound-based parts of the effect, as determined by the GM. This is different from a sonic effect, which affects creatures whether or not they can hear it.",
+    "id": "auditory-1"
+  },
+  {
+    "name": "Aura",
+    "description": "An aura is an emanation that continually radiates from its source out to a specified distance. An aura's effects are determined by its source and apply to creatures in the area, often as they enter it or end their turn within it.",
+    "id": "aura-102"
+  },
+  {
+    "name": "Backswing",
+    "description": "You can use the momentum from a missed attack with this weapon to lead into your next attack. After you miss with this weapon on your turn, you gain a +1 circumstance bonus to your next attack with this weapon before the end of your turn.",
+    "id": "backswing-3"
+  },
+  {
+    "name": "Bard",
+    "description": "This indicates abilities from the bard class.",
+    "id": "bard-4"
+  },
+  {
+    "name": "Bulwark",
+    "description": "The armor covers you so completely that it provides benefits against some damaging effects. On Reflex saves to avoid a damaging effect, such as a fireball, you add a +3 modifier instead of your Dexterity modifier",
+    "id": "bulwark-5"
+  },
+  {
+    "name": "Cantrip",
+    "description": "A spell you can cast at will that is automatically heightened to half your level rounded up. Cantrips are a type of spell that don't use spell slots.",
+    "id": "cantrip-6"
+  },
+  {
+    "name": "Champion",
+    "description": "This indicates abilities from the champion class.",
+    "id": "champion-7"
+  },
+  {
+    "name": "Cold",
+    "description": "Effects with this trait deal cold damage or create ice, snow, or other freezing effects. Creatures and objects with this trait deal cold damage or have a cold theme to their abilities.",
+    "id": "cold-48"
+  },
+  {
+    "name": "Composition",
+    "description": "To cast a composition cantrip or focus spell, you usually use the Performance skill. If the spell includes a verbal component, you must sing, recite, or play an instrument. If it includes a somatic component, you must dance or play an instrument. If it includes a material component, you must use a musical instrument as a focus. Composition spells are a type of focus spell.",
+    "id": "composition-59"
+  },
+  {
+    "name": "Concentrate",
+    "description": "An action with this trait requires a degree of mental concentration and discipline. You can't use an action with the concentrate trait if you're affected by effects that prevent you from concentrating, like being fascinated.",
+    "id": "concentrate-8"
+  },
+  {
+    "name": "Consumable",
+    "description": "An item with this trait can be used only once. Unless stated otherwise, it's destroyed after activation. Consumable items include alchemical items, ammunition, scrolls, talismans, and most magical oils and potions.",
+    "id": "consumable-38"
+  },
+  {
+    "name": "Critical Fusion",
+    "description": "Critical fusion is a trait for combination weapons that grants you an additional option for the critical specialization effect when using the combination weapon's melee version to make a melee attack while the ranged weapon is loaded. If you choose to use one of them, it replaces the melee usage's normal critical specialization effect; you can choose to discharge the ranged weapon to increase the critical hit's momentum or shoot the foe as you attack in melee, dealing 2 additional damage per weapon damage die.",
+    "id": "critical-fusion-9"
+  },
+  {
+    "name": "Deadly",
+    "description": "On a critical hit, the weapon adds a weapon damage die of the listed size. Roll this after doubling the weapon’s damage. This increases to two dice if the weapon has a greater striking rune and three dice if the weapon has a major striking rune.",
+    "id": "deadly-11"
+  },
+  {
+    "name": "Disarm",
+    "description": "You can use this weapon to knock items out of a creature's grasp. When you use an Attack action with this weapon, you can attempt to disarm the target with the Athletics skill. If you critically succeed at the Athletics check, you can knock the item away from the opponent as normal, or you can grab the item with your attack hand if it's free.",
+    "id": "disarm-10"
+  },
+  {
+    "name": "Disease",
+    "description": "An effect with this trait applies a disease to a character. A disease is an affliction other characters can catch from the infected character, making them infected as well.",
+    "id": "disease-56"
+  },
+  {
+    "name": "Drug",
+    "description": "An item with this trait is a drug, which alters a creature's mind and body. Drugs usually have effects that help the user in some way, and separate addiction effects that hinder the user when they're in withdrawal.",
+    "id": "drug-54"
+  },
+  {
+    "name": "Electricity",
+    "description": "Effects with this trait deal electricity damage or create electricity. If an attack with this trait deals damage, all of that damage is electricity damage.",
+    "id": "electricity-46"
+  },
+  {
+    "name": "Elixir",
+    "description": "Elixirs are alchemical liquids that contain volatile chemicals that grant the drinker some alchemical benefit. Each elixir is a single dose that takes 1 action to drink (or administer). An elixir's effects typically last for a specified period of time.",
+    "id": "elixir-41"
+  },
+  {
+    "name": "Emotion",
+    "description": "This effect alters emotions. Effects with this trait might affect only creatures that have emotions, and usually they alter emotions in some way. Creatures without emotions—typically constructs, mindless undead, and objects—are immune to emotion effects.",
+    "id": "emotion-12"
+  },
+  {
+    "name": "Envision",
+    "description": "You perform an action with the envision trait primarily by concentrating on a mental image, idea, or force of will rather than through physical movement.",
+    "id": "envision-104"
+  },
+  {
+    "name": "Evocation",
+    "description": "A spell that manipulates the raw elemental power of the universe—air, earth, fire, water, or pure magical energy—belongs to the evocation school. Spells that create an object, energy, or a creature out of nothing are also often (though not always) from this school.",
+    "id": "evocation-13"
+  },
+  {
+    "name": "Extradimensional",
+    "description": "Items with this trait create an extradimensional storage space. An extradimensional space overlaps with the Material Plane, but the space exists outside any of the dimensions. Using an extradimensional space isn't the same as traveling to another plane.",
+    "id": "extradimensional-50"
+  },
+  {
+    "name": "Fatal",
+    "description": "A fatal weapon is especially effective at dealing critical hits. When you critically succeed at an attack roll with this weapon, you apply the listed weapon specialization effect, and your attack deals one additional die of the listed size. This die applies the effects from all your weapon runes. For example, a pick with fatal d10 deals an additional d10 damage on a critical hit, on top of the doubled damage from the critical hit and on top of the additional damage from weapon specialization.",
+    "id": "fatal-14"
+  },
+  {
+    "name": "Finesse",
+    "description": "You can use your Dexterity modifier instead of your Strength modifier on attack rolls using this melee weapon. You still use your Strength modifier when calculating damage.",
+    "id": "finesse-15"
+  },
+  {
+    "name": "Fire",
+    "description": "Effects with the fire trait deal fire damage or either conjure or manipulate fire. Those that manipulate fire have no effect in an area without fire.",
+    "id": "fire-45"
+  },
+  {
+    "name": "Flourish",
+    "description": "Actions with this trait are special techniques that require too much exertion to perform a large number in a row. You can use only 1 action with the flourish trait per turn.",
+    "id": "flourish-60"
+  },
+  {
+    "name": "Focus",
+    "description": "A spell you can cast by spending a Focus Point, and that is automatically heightened to half your level rounded up.",
+    "id": "focus-16"
+  },
+  {
+    "name": "Force",
+    "description": "Effects with this trait deal force damage or create objects made of magical force. Force effects can damage force barriers such as a wall of force.",
+    "id": "force-49"
+  },
+  {
+    "name": "Fortune",
+    "description": "A fortune effect beneficially alters how you roll the dice. You can never have more than one fortune effect come into play when you roll a single check, and if multiple fortune effects would apply, you must pick which one to use. If a fortune effect and a misfortune effect would apply to the same roll, the effects cancel each other out and you roll normally.",
+    "id": "fortune-58"
+  },
+  {
+    "name": "Healing",
+    "description": "A healing effect restores a creature's body, typically by restoring Hit Points, but sometimes by removing diseases or other debilitating effects.",
+    "id": "healing-17"
+  },
+  {
+    "name": "Illusion",
+    "description": "The illusion school of magic is used to create images, figments, and phantasms to deceive the senses. Illusions can create sensory experiences or have mind-affecting properties. If an illusion creates something insubstantial, like an image, a creature could detect that it's an illusion by physically interacting with it, causing their hand to go through it.",
+    "id": "illusion-47"
+  },
+  {
+    "name": "Implement",
+    "description": "A special item that thaumaturges use to channel their esoteric practices. Items with the implement trait can be used as implements by a thaumaturge.",
+    "id": "implement-18"
+  },
+  {
+    "name": "Incapacitation",
+    "description": "An ability with this trait can take a character completely out of the fight or even kill them, and it’s harder to use on a more powerful character. If a spell has the incapacitation trait, any creature of more than twice the spell’s rank treats the result of their check to prevent being incapacitated by the spell as one degree of success better, or the result of any check the spellcaster made to incapacitate them as one degree of success worse. If any other effect has the incapacitation trait, a creature of higher level than the item, creature, or hazard generating the effect gains the same benefits.",
+    "id": "incapacitation-57"
+  },
+  {
+    "name": "Invested",
+    "description": "A character can wear only 10 magical items that have the invested trait. None of the magical effects of the item apply if the character hasn't invested the item, though they still gain any normal benefits from wearing or carrying the physical item (like a hat keeping rain off their head).",
+    "id": "invested-42"
+  },
+  {
+    "name": "Light",
+    "description": "Effects with this trait create light. Light effects have a specified range, and some can target objects that then emanate light, potentially with a different range. Light with a larger radius can illuminate creatures across a greater distance, making them easier to detect using sight. For instance, an effect that creates dim light in a 20-foot radius provides illumination sufficient to reduce creatures' Stealth modifier from darkness from a +2 circumstance bonus to a +1 circumstance bonus anywhere in that 20 foot area.",
+    "id": "light-19"
+  },
+  {
+    "name": "Magical",
+    "description": "Something with the magical trait is infused with magical energies not tied to a specific tradition of magic. A magical item radiates a magic aura infused with its effect.",
+    "id": "magical-39"
+  },
+  {
+    "name": "Manipulate",
+    "description": "You must physically manipulate an item or make gestures to use an action with this trait. Creatures without a suitable appendage can't perform actions with this trait. Manipulate actions often trigger reactions.",
+    "id": "manipulate-20"
+  },
+  {
+    "name": "Melee",
+    "description": "This weapon or attack is used in melee, meaning that it can be used only against creatures within reach of the wielder. Most melee weapons have a reach of 5 feet, but some weapons have different reach values.",
+    "id": "melee-22"
+  },
+  {
+    "name": "Mental",
+    "description": "A mental effect can alter the target's mind. It has no effect on an object or a mindless creature.",
+    "id": "mental-21"
+  },
+  {
+    "name": "Metal",
+    "description": "Effects with the metal trait conjure or manipulate metal. Those that manipulate metal have no effect in an area without metal. Creatures with this trait consist primarily of metal or have a connection to magical metal.",
+    "id": "metal-23"
+  },
+  {
+    "name": "Monk",
+    "description": "Monks can use abilities with this trait, and those with this trait can be found in the monk class.",
+    "id": "monk-24"
+  },
+  {
+    "name": "Nonlethal",
+    "description": "Attacks with this weapon are nonlethal, and are used to knock creatures unconscious instead of killing them. They do not apply the dying condition or the normal penalties for attacking nonlethally with a weapon that doesn't have this trait.",
+    "id": "nonlethal-25"
+  },
+  {
+    "name": "Oil",
+    "description": "This item is a container of oil that can be applied to an object or creature. Applying a vial of oil typically takes 1 action. The effects apply to the first target hit with the oil, and the substance becomes inert immediately thereafter.",
+    "id": "oil-51"
+  },
+  {
+    "name": "Olfactory",
+    "description": "An olfactory effect can affect only creatures that can smell it. A creature that has no sense of smell, or that is otherwise unable to smell the effect, is immune to it.",
+    "id": "olfactory-103"
+  },
+  {
+    "name": "Parry",
+    "description": "This weapon can be used defensively to block attacks. While wielding this weapon, if your proficiency with it is trained or better, you can spend a single action to position your weapon defensively, gaining a +1 circumstance bonus to AC until the start of your next turn.",
+    "id": "parry-26"
+  },
+  {
+    "name": "Poison",
+    "description": "An effect with this trait delivers a poison or deals poison damage. An item with this trait is poisonous and might cause an affliction.",
+    "id": "poison-55"
+  },
+  {
+    "name": "Potion",
+    "description": "A potion is a magical liquid activated when you drink it, which uses it up. Potions have the consumable trait and a variety of subtypes based on their effects. They typically can be used only once.",
+    "id": "potion-52"
+  },
+  {
+    "name": "Ranged",
+    "description": "This weapon is used for making a ranged attack and has a maximum range in feet.",
+    "id": "ranged-27"
+  },
+  {
+    "name": "Reach",
+    "description": "This weapon is long and can be used to attack creatures up to 10 feet away instead of only adjacent creatures. For creatures that already have reach with the limb or limbs that wield the weapon, the weapon increases their reach by 5 feet.",
+    "id": "reach-28"
+  },
+  {
+    "name": "Sanctified",
+    "description": "If you are holy or unholy, your sanctified actions and spells gain the same trait.",
+    "id": "sanctified-29"
+  },
+  {
+    "name": "Scepter",
+    "description": "A scepter is a magic item held in one hand. While holding an invested scepter you gain access to its spellshape Activate ability, and once per day you can Activate its actuated ability by expending a spell slot of the rank the effect requires. A prepared spellcaster chooses one prepared spell of that rank to lose as if they had cast it; a spontaneous spellcaster expends one of their spell slots as if they had cast a spell from it. Most actuated effects list a minimum and/or maximum spell-slot rank. After you have used a scepter's actuated effect, you can attempt to Overload it: roll a DC 10 flat check. On a success the activation happens as normal but the scepter gains the broken condition; on a failure the effect doesn't happen, you lose the actions, and the scepter gains the broken condition anyway. While broken, a scepter can be used for neither its spellshape nor its actuated ability. Repairing it requires the Repair action or sacrificing a daily spell slot of the minimum rank required to activate it, and it cannot be repaired before your next daily preparations.",
+    "id": "scepter-100"
+  },
+  {
+    "name": "Scroll",
+    "description": "Scrolls contain the necessary magic to cast a particular spell without using your spell slots. You must hold the scroll in one hand and cast the spell as if using the Cast a Spell activity, except you perform verbal, somatic, and material components while reading directly from the scroll.",
+    "id": "scroll-44"
+  },
+  {
+    "name": "Shove",
+    "description": "You can use this weapon to push a creature away from you. When you use an Attack action with this weapon, you can attempt to Shove the target using the Athletics skill. If you successfully Shove a target with this weapon, you can move the target an additional 5 feet back, for a total of 10 feet. This doesn't count as a move action for the target.",
+    "id": "shove-30"
+  },
+  {
+    "name": "Sonic",
+    "description": "An effect with the sonic trait functions only if it makes sound, meaning it has no effect in an area of silence or in a vacuum. This is different from an auditory effect, which relies on the target being able to hear it.",
+    "id": "sonic-32"
+  },
+  {
+    "name": "Spellshape",
+    "description": "Actions and abilities with the spellshape trait tweak the properties of a spell you are about to cast. You can use only one spellshape action during the Casting of a single spell, and a spellshape action must be used immediately before Casting the Spell it modifies. (Spellshape was formerly called metamagic.)",
+    "id": "spellshape-101"
+  },
+  {
+    "name": "Spirit",
+    "description": "Effects with this trait can affect creatures with spiritual essence and might deal spirit damage. A creature with this trait is defined by its spiritual essence. Spirit creatures often lack a material form.",
+    "id": "spirit-31"
+  },
+  {
+    "name": "Talisman",
+    "description": "A talisman is a small object affixed to armor, a shield, or a weapon. Each talisman holds a sliver of magical energy that can be activated for a specific benefit. A talisman can be activated only once, after which it burns out and becomes useless. If a talisman is removed, it keeps its magical energy for 24 hours before burning out.",
+    "id": "talisman-43"
+  },
+  {
+    "name": "Tech",
+    "description": "Items with this trait incorporate things like electronics, computer systems, integrated power sources, and/or a comm unit. They cannot use archaic runes.",
+    "id": "tech-63"
+  },
+  {
+    "name": "Thrown",
+    "description": "You can throw this weapon as a ranged attack; it is a ranged weapon when thrown. A thrown weapon adds your Strength modifier to damage just like a melee weapon does. When this trait appears on a melee weapon, it also includes the range increment.",
+    "id": "thrown-33"
+  },
+  {
+    "name": "Unarmed",
+    "description": "An unarmed attack uses your body rather than a manufactured weapon. An unarmed attack isn't a weapon, though it's categorized with weapons for weapon groups, and it might have weapon traits. Since it's part of your body, an unarmed attack can't be Disarmed. It also doesn't take up a hand, though a fist or other grasping appendage generally works like a free-hand weapon.",
+    "id": "unarmed-34"
+  },
+  {
+    "name": "Uncommon",
+    "description": "Something of uncommon rarity requires special training or comes from a particular culture or part of the world. Some character choices give access to uncommon options, and the GM can choose to allow access for anyone. Less is known about uncommon items than common items, and they're generally not available except from special merchants.",
+    "id": "uncommon-35"
+  },
+  {
+    "name": "Visual",
+    "description": "A visual effect can affect only creatures that can see it. This applies only to parts of the effect that would require seeing it, as determined by the GM.",
+    "id": "visual-36"
+  },
+  {
+    "name": "Volley",
+    "description": "This ranged weapon is less effective at close distances. Your attacks against targets that are at a distance within the listed range take a –2 penalty.",
+    "id": "volley-37"
+  },
+  {
+    "name": "Wand",
+    "description": "A wand contains a single spell which can be cast once per day. Most wands are made from wood, but some rare materials like ivory, metal, and even crystal can be used.",
+    "id": "wand-53"
+  },
+  {
+    "name": "Zone",
+    "description": "These actions apply an additional effect to your quantum field. You may apply effects of a zone only to a quantum field that doesn't have a zone effect.",
+    "id": "zone-61"
+  }
+]

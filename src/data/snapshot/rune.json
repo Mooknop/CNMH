@@ -1,0 +1,758 @@
+[
+  {
+    "id": "aim-aiding",
+    "type": "property",
+    "armorRune": true,
+    "name": "Aim-Aiding",
+    "level": 6,
+    "price": 225,
+    "description": "Armor etched with this rune aids in routing ranged attacks aimed at an enemy around you. You don't provide enemies cover against your allies' ranged attacks.",
+    "riders": [
+      {
+        "id": "aim-aiding-reminder",
+        "text": "You don't grant enemies cover against your allies' ranged attacks."
+      }
+    ]
+  },
+  {
+    "id": "armor-potency-1",
+    "type": "fundamental",
+    "fundamental": "potency",
+    "target": "armor",
+    "tier": 1,
+    "name": "+1 Armor Potency",
+    "level": 5,
+    "price": 160,
+    "description": "A fundamental rune that grants a +1 item bonus to AC and unlocks 1 property-rune slot."
+  },
+  {
+    "id": "armor-potency-2",
+    "type": "fundamental",
+    "fundamental": "potency",
+    "target": "armor",
+    "tier": 2,
+    "name": "+2 Armor Potency",
+    "level": 11,
+    "price": 1060,
+    "description": "A fundamental rune that grants a +2 item bonus to AC and unlocks 2 property-rune slots."
+  },
+  {
+    "id": "armor-potency-3",
+    "type": "fundamental",
+    "fundamental": "potency",
+    "target": "armor",
+    "tier": 3,
+    "name": "+3 Armor Potency",
+    "level": 18,
+    "price": 20560,
+    "description": "A fundamental rune that grants a +3 item bonus to AC and unlocks 3 property-rune slots."
+  },
+  {
+    "id": "authorized",
+    "type": "property",
+    "name": "Authorized",
+    "level": 3,
+    "price": 50,
+    "description": "Sharp needles impale anyone who attempts to wield this weapon other than its rightful owner. If any other creature wields the weapon, needles erupt from the hilt or shaft, dealing 1d8 piercing damage plus 1d4 persistent bleed damage to that wielder (increasing to 1d8 piercing and 1d4 persistent bleed per damage die if the weapon has a striking rune). When the rune is crafted, the crafter can broaden who may safely wield it (e.g. a particular bloodline, patron deity, or sanctification)."
+  },
+  {
+    "id": "crushing",
+    "type": "property",
+    "name": "Crushing",
+    "level": 3,
+    "price": 50,
+    "description": "Etched onto a bludgeoning weapon. When you score a critical hit with this weapon, the target becomes clumsy 1 and enfeebled 1 until the end of your next turn.",
+    "rider": {
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "clumsy",
+            "value": 1,
+            "duration": "end-of-next-turn"
+          },
+          {
+            "name": "enfeebled",
+            "value": 1,
+            "duration": "end-of-next-turn"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "cunning",
+    "type": "property",
+    "name": "Cunning",
+    "level": 5,
+    "price": 140,
+    "description": "Etched on a slashing or piercing weapon, the rune performs divination magic on your foes' blood to grant insight into their abilities. Once per minute, if your previous action hit and dealt damage to a bleeding creature, you can activate it (free action, envision) to Recall Knowledge about that target, gaining an item bonus to the check equal to the weapon's potency rune bonus to attack rolls (and a +2 circumstance bonus if your hit was a critical hit)."
+  },
+  {
+    "id": "dread",
+    "type": "property",
+    "armorRune": true,
+    "name": "Dread (Lesser)",
+    "level": 6,
+    "price": 225,
+    "description": "Eerie symbols cover your armor, inspiring terror in your foes. Frightened enemies within 30 feet that can see you must attempt a DC 20 Will save at the end of their turn; on a failure, the value of their frightened condition doesn't decrease below 1 that turn.",
+    "riders": [
+      {
+        "id": "dread-reminder",
+        "text": "Frightened foes within 30 ft that can see you save DC 20 Will or stay frightened ≥1."
+      }
+    ],
+    "aura": {
+      "save": "will",
+      "dc": 20,
+      "range": 30,
+      "requires": "frightened",
+      "sight": true,
+      "effect": "the frightened value doesn't drop below 1 this turn"
+    }
+  },
+  {
+    "id": "earthbinding",
+    "type": "property",
+    "name": "Earthbinding",
+    "level": 5,
+    "price": 125,
+    "description": "The weapon hums when touched to the ground. Once per hour, when you critically hit a flying creature with the etched weapon, you can use a reaction (concentrate) to have the rune cast a DC 20 earthbind spell on that creature."
+  },
+  {
+    "id": "fearsome",
+    "type": "property",
+    "name": "Fearsome",
+    "level": 5,
+    "price": 160,
+    "description": "Etched onto a weapon. When you critically hit with this weapon, the target becomes frightened 1.",
+    "rider": {
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "frightened",
+            "value": 1
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "ghost-touch",
+    "type": "property",
+    "name": "Ghost Touch",
+    "level": 4,
+    "price": 75,
+    "description": "This rune enables a weapon to damage non-physical beings, and it's exceptionally potent against incorporeal creatures, which typically have a specific weakness to ghost touch weapons. Incorporeal creatures can also touch, hold, and wield a ghost touch weapon, unlike most physical objects."
+  },
+  {
+    "id": "greater-resilient",
+    "type": "fundamental",
+    "fundamental": "resilient",
+    "target": "armor",
+    "tierKey": "greater",
+    "name": "Greater Resilient",
+    "level": 14,
+    "price": 3440,
+    "description": "A fundamental rune that grants an item bonus to all saving throws."
+  },
+  {
+    "id": "greater-striking",
+    "type": "fundamental",
+    "fundamental": "striking",
+    "target": "weapon",
+    "tierKey": "greater",
+    "name": "Greater Striking",
+    "level": 12,
+    "price": 1065,
+    "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "major-resilient",
+    "type": "fundamental",
+    "fundamental": "resilient",
+    "target": "armor",
+    "tierKey": "major",
+    "name": "Major Resilient",
+    "level": 20,
+    "price": 49440,
+    "description": "A fundamental rune that grants an item bonus to all saving throws."
+  },
+  {
+    "id": "major-striking",
+    "type": "fundamental",
+    "fundamental": "striking",
+    "target": "weapon",
+    "tierKey": "major",
+    "name": "Major Striking",
+    "level": 19,
+    "price": 31065,
+    "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "pacifying",
+    "type": "property",
+    "name": "Pacifying",
+    "level": 5,
+    "price": 150,
+    "description": "This rune turns a weapon into an instrument of peacemaking. When you deal damage with the etched weapon, you can use a reaction to force the damaged creature to succeed at a DC 20 Will save or become pacified: the creature takes a –2 penalty to attack rolls with attacks that aren't nonlethal for 1 minute, as a psychic warning urges it to cease dealing lethal damage."
+  },
+  {
+    "id": "quenching",
+    "type": "property",
+    "armorRune": true,
+    "name": "Quenching",
+    "level": 6,
+    "price": 250,
+    "description": "This rune counters burning and corrosive agents. Armor with this rune reduces the DC of the flat check to end persistent acid or fire damage affecting you from 15 to 12 (7 with particularly effective assistance).",
+    "riders": [
+      {
+        "id": "quenching-reminder",
+        "text": "Persistent acid/fire flat check DC 15 → 12 (7 with effective assistance)."
+      }
+    ]
+  },
+  {
+    "id": "ready",
+    "type": "property",
+    "armorRune": true,
+    "name": "Ready",
+    "level": 6,
+    "price": 200,
+    "description": "A ready rune lets you don or remove the etched armor in only a few seconds rather than minutes.",
+    "riders": [
+      {
+        "id": "ready-reminder",
+        "text": "Don or remove this armor as a single action (1 action) rather than minutes."
+      }
+    ]
+  },
+  {
+    "id": "resilient",
+    "type": "fundamental",
+    "fundamental": "resilient",
+    "target": "armor",
+    "tierKey": "resilient",
+    "name": "Resilient",
+    "level": 8,
+    "price": 340,
+    "description": "A fundamental rune that grants an item bonus to all saving throws."
+  },
+  {
+    "id": "returning",
+    "type": "property",
+    "name": "Returning",
+    "level": 3,
+    "price": 55,
+    "description": "Etched onto a thrown weapon. When you make a thrown Strike with this weapon, it flies back to your hand after the Strike is complete. If your hands are full when the weapon returns, it falls to the ground in your space."
+  },
+  {
+    "id": "ring-calling",
+    "type": "property",
+    "target": "ring",
+    "name": "Calling",
+    "level": 8,
+    "price": 400,
+    "description": "Your ring swirls with the energies and faces of those it would conjure. Etched onto a power ring.",
+    "actions": [
+      {
+        "name": "Veracious Summon",
+        "actionCount": 1,
+        "traits": [
+          "Flourish",
+          "Manipulate",
+          "Spellshape"
+        ],
+        "description": "Frequency once per 10 minutes. Effect The ring's magic guides your conjuration. If the next action you use is to Cast a Spell that would summon a creature capable of making Strikes, the summon gains a status bonus to its Strikes equal to your power ring's item bonus. You cannot use Veracious Spell until the summon spell ends."
+      }
+    ]
+  },
+  {
+    "id": "ring-embodiment",
+    "type": "property",
+    "target": "ring",
+    "name": "Embodiment",
+    "level": 6,
+    "price": 250,
+    "description": "Your ring swirls with the malleable magical essences. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-embodiment-reminder",
+        "text": "When you Cast a Spell with the polymorph trait that grants a battle form, you gain a status bonus to Strikes equal to the ring's item bonus until the spell ends."
+      }
+    ]
+  },
+  {
+    "id": "ring-energy",
+    "type": "property",
+    "target": "ring",
+    "name": "Energy",
+    "level": 7,
+    "price": 300,
+    "description": "Energy spells cause this ring to send a shimmering power through your hand. Etched onto a power ring; a spell attack roll referenced here counts only when the spell was modified by Veracious Spell.",
+    "freeActions": [
+      {
+        "name": "Gather Power",
+        "traits": [],
+        "trigger": "Your last action was to Cast a Spell that dealt energy damage and was shaped by Veracious Spell.",
+        "description": "You absorb some of the energy you are about to expel into your power ring. You hold a charge of Gathered Power in the ring of that energy type. These charges last for 1 minute or until expelled by using Release Power."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Release Power",
+        "actionCount": 1,
+        "traits": [
+          "Attack"
+        ],
+        "description": "Requirements You have a charge of Gathered Power in the ring. Effect You shoot a ray of power from the stored-up energy in the ring. Make a spell attack roll against a target creature's AC within 30 feet, dealing 5d4 damage on a success or twice that amount on a critical success. You apply the ring's item bonus to this spell attack roll. The damage is of the same damage type as the energy used to Gather Power, and you expel the charge of energy from Gathered Power."
+      }
+    ]
+  },
+  {
+    "id": "ring-energy-greater",
+    "type": "property",
+    "target": "ring",
+    "name": "Energy (Greater)",
+    "level": 12,
+    "price": 2000,
+    "description": "Energy spells cause this ring to send a shimmering power through your hand. Your ring can hold two charges of Gathered Power. Etched onto a power ring; a spell attack roll referenced here counts only when the spell was modified by Veracious Spell.",
+    "freeActions": [
+      {
+        "name": "Gather Power",
+        "traits": [],
+        "trigger": "Your last action was to Cast a Spell that dealt energy damage and was shaped by Veracious Spell.",
+        "description": "You absorb some of the energy you are about to expel into your power ring. You hold a charge of Gathered Power in the ring of that energy type (up to two charges). These charges last for 1 minute or until expelled by using Release Power."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Release Power",
+        "actionCount": 1,
+        "traits": [
+          "Attack"
+        ],
+        "description": "Requirements You have a charge of Gathered Power in the ring. Effect You shoot a ray of power from the stored-up energy in the ring. Make a spell attack roll against a target creature's AC within 30 feet, dealing 5d4 damage on a success or twice that amount on a critical success. You may instead expend two charges of the same energy type to deal 10d4 damage (twice that on a critical success). You apply the ring's item bonus to this spell attack roll. The damage matches the energy used to Gather Power, and you expel the expended charge(s)."
+      }
+    ]
+  },
+  {
+    "id": "ring-energy-major",
+    "type": "property",
+    "target": "ring",
+    "name": "Energy (Major)",
+    "level": 18,
+    "price": 24000,
+    "description": "Energy spells cause this ring to send a shimmering power through your hand. Your ring can hold three charges of Gathered Power maximum. Etched onto a power ring; a spell attack roll referenced here counts only when the spell was modified by Veracious Spell.",
+    "freeActions": [
+      {
+        "name": "Gather Power",
+        "traits": [],
+        "trigger": "Your last action was to Cast a Spell that dealt energy damage and was shaped by Veracious Spell.",
+        "description": "You absorb some of the energy you are about to expel into your power ring. You hold a charge of Gathered Power in the ring of that energy type (up to three charges). These charges last for 1 minute or until expelled by using Release Power."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Release Power",
+        "actionCount": 1,
+        "traits": [
+          "Attack"
+        ],
+        "description": "Requirements You have a charge of Gathered Power in the ring. Effect You shoot a ray of power from the stored-up energy in the ring. Make a spell attack roll against a target creature's AC within 30 feet, dealing 5d4 damage on a success or twice that amount on a critical success. You may instead expend three charges of the same energy type to deal 15d4 damage (twice that on a critical success). You apply the ring's item bonus to this spell attack roll. The damage matches the energy used to Gather Power, and you expel the expended charge(s)."
+      }
+    ]
+  },
+  {
+    "id": "ring-immobilizing",
+    "type": "property",
+    "target": "ring",
+    "name": "Immobilizing",
+    "level": 8,
+    "price": 500,
+    "description": "When you blast magic from a hand wearing this ring, it encrusts the enemy in magical ice, stone, or wood. Choose cold, earth, shadow, or wood when you etch the rune; the rune gains that trait. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-immobilizing-reminder",
+        "text": "When you critically succeed at a spell attack roll with a spell that has no duration and has the rune's chosen trait, the target is slowed 1 until the end of your next turn unless it succeeds at a DC 24 Fortitude save."
+      }
+    ]
+  },
+  {
+    "id": "ring-immobilizing-greater",
+    "type": "property",
+    "target": "ring",
+    "name": "Immobilizing (Greater)",
+    "level": 15,
+    "price": 7750,
+    "description": "When you blast magic from a hand wearing this ring, it encrusts the enemy in magical ice, stone, or wood. Choose cold, earth, shadow, or wood when you etch the rune; the rune gains that trait. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-immobilizing-greater-reminder",
+        "text": "When you critically succeed at a spell attack roll with a spell that has no duration and has the rune's chosen trait, the target is slowed 1 until the end of your next turn unless it succeeds at a DC 34 Fortitude save."
+      },
+      {
+        "id": "ring-immobilizing-greater-chain",
+        "text": "If you critically hit a creature already slowed by this rune with a second cold or earth spell attack, it attempts another Fortitude save. On a failure it is slowed 2 instead and the duration extends to the end of your next turn; on a critical failure it is instead petrified for 1 minute (this is an incapacitation effect)."
+      }
+    ]
+  },
+  {
+    "id": "ring-overwhelming",
+    "type": "property",
+    "target": "ring",
+    "name": "Overwhelming",
+    "level": 13,
+    "price": 3000,
+    "description": "Magic that comes from overwhelming rings explodes out with unnatural force on random occasions. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-overwhelming-reminder",
+        "text": "Spell attacks you modify with Veracious Spell score a critical success on a natural 19, as long as that result is a success. This has no effect on a 19 that would be a failure."
+      }
+    ]
+  },
+  {
+    "id": "ring-precision",
+    "type": "property",
+    "target": "ring",
+    "name": "Precision",
+    "level": 10,
+    "price": 1000,
+    "description": "Precision rings can channel a massive blast of energy into a single thin ray that packs all the punch of its regular spell. Etched onto a power ring.",
+    "actions": [
+      {
+        "name": "Hone Spell",
+        "actionCount": 1,
+        "traits": [
+          "Spellshape"
+        ],
+        "description": "You contain your magic to a single target. If your next action is to Cast a Spell that targets an area and requires a Reflex or Fortitude save, you may instead target one creature within range by making a spell attack roll against the target's AC. This makes the target the only creature affected by the spell, and the spell has no effect on a miss, applies the failure effect on a successful spell attack roll, and applies the critical failure effect on a critically successful spell attack roll. You apply the ring's item bonus to your attack roll."
+      }
+    ]
+  },
+  {
+    "id": "ring-ramming",
+    "type": "property",
+    "target": "ring",
+    "name": "Ramming",
+    "level": 6,
+    "price": 225,
+    "description": "Ramming rings shoot foes rocketing away. Etched onto a power ring. (Force.)",
+    "riders": [
+      {
+        "id": "ring-ramming-objects",
+        "text": "Your spell attacks deal additional damage to objects equal to the rank of the spell."
+      },
+      {
+        "id": "ring-ramming-push",
+        "text": "On a critically successful spell attack against a creature with a spell modified by Veracious Spell, the target must succeed at a DC 22 Fortitude save or be pushed back 10 feet from the origin of the spell."
+      }
+    ]
+  },
+  {
+    "id": "ring-ramming-greater",
+    "type": "property",
+    "target": "ring",
+    "name": "Ramming (Greater)",
+    "level": 13,
+    "price": 2800,
+    "description": "Ramming rings shoot foes rocketing away. Etched onto a power ring. (Force.)",
+    "riders": [
+      {
+        "id": "ring-ramming-greater-objects",
+        "text": "Your spell attacks deal additional damage to objects equal to twice the rank of the spell."
+      },
+      {
+        "id": "ring-ramming-greater-push",
+        "text": "On a critically successful spell attack against a creature with a spell modified by Veracious Spell, the target must succeed at a DC 32 Fortitude save or be pushed back 20 feet from the origin of the spell."
+      }
+    ]
+  },
+  {
+    "id": "ring-righteous",
+    "type": "property",
+    "target": "ring",
+    "name": "Righteous",
+    "level": 8,
+    "price": 425,
+    "description": "Righteous rings somehow evoke those worn by old heroes and legendary figures of bygone eras. Etched onto a power ring.",
+    "freeActions": [
+      {
+        "name": "Justice Prevails",
+        "traits": [
+          "Holy"
+        ],
+        "trigger": "You successfully hit an unholy creature with a spell modified by Veracious Spell.",
+        "description": "You overpower the evil ways of your enemy. The creature is enfeebled 2 until the start of your next turn."
+      }
+    ]
+  },
+  {
+    "id": "ring-scourging",
+    "type": "property",
+    "target": "ring",
+    "name": "Scourging",
+    "level": 8,
+    "price": 450,
+    "description": "Spells cast with a scourging ring leave lasting wounds on the target. Choose acid, electricity, fire, or physical when you etch the rune; the ring gains that damage type's trait (or force, if physical). Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-scourging-reminder",
+        "text": "When you critically succeed at a spell attack roll with a spell that has no duration and deals the rune's chosen damage type, the target also takes 1d10 persistent damage of that type (or persistent bleed if the spell dealt physical damage). If the spell already deals persistent damage, the DC to end it increases by 2."
+      }
+    ]
+  },
+  {
+    "id": "ring-scourging-greater",
+    "type": "property",
+    "target": "ring",
+    "name": "Scourging (Greater)",
+    "level": 15,
+    "price": 6500,
+    "description": "Spells cast with a scourging ring leave lasting wounds on the target. Choose acid, electricity, fire, or physical when you etch the rune; the ring gains that damage type's trait (or force, if physical). Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-scourging-greater-reminder",
+        "text": "When you critically succeed at a spell attack roll with a spell that has no duration and deals the rune's chosen damage type, the target takes 2d10 persistent damage of that type (or persistent bleed if the spell dealt physical damage). If the spell already deals persistent damage, the DC to end it increases by 2."
+      },
+      {
+        "id": "ring-scourging-greater-pierce",
+        "text": "Damage dealt from a spell attack roll modified by Veracious Spell ignores the target's resistance (including this persistent damage)."
+      }
+    ]
+  },
+  {
+    "id": "ring-warping",
+    "type": "property",
+    "target": "ring",
+    "name": "Warping",
+    "level": 6,
+    "price": 250,
+    "description": "Spells cast through a warping ring can arc and change at sharp angles, letting you avoid allies and hit enemies around corners. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-warping-reminder",
+        "text": "When you Cast a Spell that requires a spell attack roll, you can select a single square within 15 feet to be the new point of origin for the spell. Determine line of effect, line of sight, and cover from there. The target must still be within range of the chosen square."
+      }
+    ]
+  },
+  {
+    "id": "ring-warping-greater",
+    "type": "property",
+    "target": "ring",
+    "name": "Warping (Greater)",
+    "level": 11,
+    "price": 1450,
+    "description": "Spells cast through a warping ring can arc and change at sharp angles, letting you avoid allies and hit enemies around corners. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-warping-greater-reminder",
+        "text": "When you Cast a Spell that requires a spell attack roll, you can select up to 2 squares to redirect the spell's point of origin — the first within 15 feet of you, the second within 15 feet of the first. Determine line of effect, line of sight, and cover from the final square. The target must still be within range of that square."
+      }
+    ]
+  },
+  {
+    "id": "ring-warping-major",
+    "type": "property",
+    "target": "ring",
+    "name": "Warping (Major)",
+    "level": 16,
+    "price": 8000,
+    "description": "Spells cast through a warping ring can arc and change at sharp angles, letting you avoid allies and hit enemies around corners. Etched onto a power ring.",
+    "riders": [
+      {
+        "id": "ring-warping-major-reminder",
+        "text": "When you Cast a Spell that requires a spell attack roll, you can select up to 3 squares to redirect the spell's point of origin — the first within 15 feet of you, each subsequent square within 15 feet of the previous. Determine line of effect, line of sight, and cover from the final square. The target must still be within range of that square."
+      }
+    ]
+  },
+  {
+    "id": "ring-wicked",
+    "type": "property",
+    "target": "ring",
+    "name": "Wicked",
+    "level": 8,
+    "price": 425,
+    "description": "Your ring shimmers with dark power, mocking those that fight for good. Etched onto a power ring.",
+    "freeActions": [
+      {
+        "name": "Curse the Righteous",
+        "traits": [
+          "Unholy"
+        ],
+        "trigger": "You successfully hit a holy creature with a spell modified by Veracious Spell.",
+        "description": "Your wicked energy saps at the creature's soul. The creature is off-guard until the start of your next turn."
+      }
+    ]
+  },
+  {
+    "id": "shadow",
+    "type": "property",
+    "armorRune": true,
+    "name": "Shadow",
+    "level": 5,
+    "price": 55,
+    "description": "Shadow runes make armor lighter and softer. While wearing the etched armor, you gain a +1 item bonus to Stealth checks.",
+    "modifiers": [
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "slick",
+    "type": "property",
+    "armorRune": true,
+    "name": "Slick",
+    "level": 5,
+    "price": 45,
+    "description": "The defenses provided by this rune make it harder for foes to grab you. While wearing the etched armor, you gain a +1 item bonus to Acrobatics checks to Escape and to Squeeze.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 1
+      }
+    ],
+    "riders": [
+      {
+        "id": "slick-reminder",
+        "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
+      }
+    ]
+  },
+  {
+    "id": "striking",
+    "type": "fundamental",
+    "fundamental": "striking",
+    "target": "weapon",
+    "tierKey": "striking",
+    "name": "Striking",
+    "level": 4,
+    "price": 65,
+    "description": "A fundamental rune that adds extra weapon damage dice on a hit."
+  },
+  {
+    "id": "swallow-spike",
+    "type": "property",
+    "armorRune": true,
+    "name": "Swallow-Spike",
+    "level": 6,
+    "price": 200,
+    "description": "Your armor responds to your desire to break free of a creature grabbing you by growing spikes. Attacks made by armor with the swallow-spike rune apply the multiple attack penalty as if you had made them with another weapon.",
+    "riders": [
+      {
+        "id": "swallow-spike-reminder",
+        "text": "When grabbed/restrained, react to attack the grabber with armor spikes."
+      }
+    ],
+    "reactions": [
+      {
+        "name": "Grow Spikes",
+        "triggerType": "grabbed",
+        "traits": [
+          "Attack",
+          "Concentrate"
+        ],
+        "trigger": "You become grabbed, restrained, or otherwise immobilized in a creature's grasp (including being engulfed or swallowed).",
+        "description": "The armor attacks the immobilizing creature with a melee Strike: +14 (greater +22), dealing 2d6 piercing (greater 3d6), plus 1d6 extra if the creature is swallowing or engulfing you. Add an item bonus to the attack equal to the armor's AC item bonus, and an item bonus to damage equal to double that. This Strike applies (and increases) the multiple attack penalty as a separate weapon. If the damage equals or exceeds the immobilizing ability's Rupture value, you cut yourself free."
+      }
+    ],
+    "actions": [
+      {
+        "name": "Renewed Assault",
+        "actions": "One Action",
+        "traits": [
+          "Attack",
+          "Concentrate"
+        ],
+        "trigger": "You're being held immobilized as described in the Grow Spikes reaction.",
+        "description": "The armor attacks the immobilizing creature again, as the Grow Spikes reaction."
+      }
+    ]
+  },
+  {
+    "id": "vitalizing",
+    "type": "property",
+    "name": "Vitalizing",
+    "level": 5,
+    "price": 150,
+    "description": "A vitalizing rune draws on positive energy. Against undead, the weapon deals 1d6 persistent vitality damage, and a critical hit also leaves the target enfeebled 1 until the end of your next turn.",
+    "rider": {
+      "vsTrait": "undead",
+      "persistent": "1d6",
+      "damageType": "vitality",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "enfeebled",
+            "value": 1,
+            "duration": "end-of-next-turn"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "vitalizing-greater",
+    "type": "property",
+    "name": "Vitalizing (Greater)",
+    "level": 14,
+    "price": 4300,
+    "description": "A greater vitalizing rune deals 2d6 persistent vitality damage to undead, and a critical hit leaves the target enfeebled 1 and stupefied 1 while the persistent damage continues.",
+    "rider": {
+      "vsTrait": "undead",
+      "persistent": "2d6",
+      "damageType": "vitality",
+      "onCrit": {
+        "conditions": [
+          {
+            "name": "enfeebled",
+            "value": 1,
+            "duration": "while-persistent"
+          },
+          {
+            "name": "stupefied",
+            "value": 1,
+            "duration": "while-persistent"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "weapon-potency-1",
+    "type": "fundamental",
+    "fundamental": "potency",
+    "target": "weapon",
+    "tier": 1,
+    "name": "+1 Weapon Potency",
+    "level": 2,
+    "price": 35,
+    "description": "A fundamental rune that grants a +1 item bonus to attack rolls and unlocks 1 property-rune slot."
+  },
+  {
+    "id": "weapon-potency-2",
+    "type": "fundamental",
+    "fundamental": "potency",
+    "target": "weapon",
+    "tier": 2,
+    "name": "+2 Weapon Potency",
+    "level": 10,
+    "price": 935,
+    "description": "A fundamental rune that grants a +2 item bonus to attack rolls and unlocks 2 property-rune slots."
+  },
+  {
+    "id": "weapon-potency-3",
+    "type": "fundamental",
+    "fundamental": "potency",
+    "target": "weapon",
+    "tier": 3,
+    "name": "+3 Weapon Potency",
+    "level": 16,
+    "price": 8935,
+    "description": "A fundamental rune that grants a +3 item bonus to attack rolls and unlocks 3 property-rune slots."
+  }
+]
