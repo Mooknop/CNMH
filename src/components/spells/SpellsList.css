@@ -1037,3 +1037,35 @@
   color: var(--color-theme, var(--theme-accent-mid));
 }
 
+
+/* Veracious Spell (#967 R7) — arm the power ring's item bonus onto the next
+   spell attack. Display-only; boosts the shown Atk (never the DC). */
+.spellcasting-stats .stat-value.is-boosted {
+  color: var(--accent-text, var(--color-theme, currentColor));
+  font-weight: 700;
+}
+.veracious {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.veracious-toggle {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent-outline, var(--shell-border, currentColor));
+  background: transparent;
+  color: inherit;
+}
+.veracious.is-armed .veracious-toggle {
+  background: var(--accent-tint, rgba(255, 255, 255, 0.08));
+  border-color: var(--accent-text, var(--color-theme, currentColor));
+}
+.veracious-runes {
+  font-size: 0.8em;
+  opacity: 0.75;
+}

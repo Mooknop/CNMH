@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import SpellsHeader from './SpellsHeader';
 
 let mockCharacterModel;
@@ -11,6 +11,12 @@ vi.mock('../../hooks/useCharacter', () => ({
 let mockFocusSpent = 0;
 vi.mock('../../hooks/useSyncedState', () => ({
   useSyncedState: () => [mockFocusSpent, vi.fn()],
+}));
+
+// Veracious Spell (#967 R7) — controllable per test.
+let mockVeracious;
+vi.mock('../../hooks/useVeracious', () => ({
+  useVeracious: () => mockVeracious,
 }));
 
 describe('SpellsHeader', () => {
@@ -26,6 +32,7 @@ describe('SpellsHeader', () => {
       spellStats: { spellAttackMod: 6, spellDC: 16 },
       flags: { hasFocusSpells: true },
     };
+    mockVeracious = { itemBonus: 0, imbuedRunes: [], armed: false, arm: vi.fn(), disarm: vi.fn() };
   });
 
   it('renders without crashing', () => {
@@ -78,5 +85,41 @@ describe('SpellsHeader', () => {
     expect(screen.queryByText('Focus')).not.toBeInTheDocument();
     expect(screen.getByText('Atk')).toBeInTheDocument();
     expect(screen.getByText('DC')).toBeInTheDocument();
+  });
+
+  describe('Veracious Spell (#967 R7)', () => {
+    it('shows no Veracious control without an invested power ring', () => {
+      render(<SpellsHeader character={mockCharacter} />);
+      expect(screen.queryByTestId('veracious-control')).not.toBeInTheDocument();
+      expect(screen.getByText('+6')).toBeInTheDocument(); // unboosted Atk
+    });
+
+    it('offers an arm control when a power ring is invested', () => {
+      mockVeracious.itemBonus = 2;
+      render(<SpellsHeader character={mockCharacter} />);
+      expect(screen.getByRole('button', { name: 'Arm Veracious Spell' })).toBeInTheDocument();
+      expect(screen.getByText('+6')).toBeInTheDocument(); // not boosted until armed
+    });
+
+    it('boosts the shown Atk (not the DC) while armed, with an imbued reminder', () => {
+      mockVeracious = { ...mockVeracious, itemBonus: 2, armed: true, imbuedRunes: ['Energy', 'Calling'] };
+      render(<SpellsHeader character={mockCharacter} />);
+      expect(screen.getByText('+8')).toBeInTheDocument(); // 6 + 2
+      expect(screen.getByText('16')).toBeInTheDocument(); // DC unchanged
+      expect(screen.getByRole('button', { name: /Veracious Spell armed · \+2/ })).toBeInTheDocument();
+      expect(screen.getByText(/Imbued: Energy, Calling/)).toBeInTheDocument();
+    });
+
+    it('arm and disarm are wired to the toggle', () => {
+      mockVeracious.itemBonus = 1;
+      const { rerender } = render(<SpellsHeader character={mockCharacter} />);
+      fireEvent.click(screen.getByRole('button', { name: 'Arm Veracious Spell' }));
+      expect(mockVeracious.arm).toHaveBeenCalled();
+
+      mockVeracious = { ...mockVeracious, armed: true };
+      rerender(<SpellsHeader character={mockCharacter} />);
+      fireEvent.click(screen.getByRole('button', { name: /Veracious Spell armed/ }));
+      expect(mockVeracious.disarm).toHaveBeenCalled();
+    });
   });
 });
