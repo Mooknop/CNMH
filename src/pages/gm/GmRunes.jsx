@@ -7,6 +7,7 @@ import { DAMAGE_TYPES } from '../../utils/damage';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import PageEditorShell from '../../components/gm/PageEditorShell';
+import { ArmorRuneForm, armorToForm, armorBlankRune } from './GmArmorRunes';
 import './gm.css';
 
 // Property-rune catalog editor (#548 Slice 3b). Rune shape (src/data/pf2eRunes.js):
@@ -307,48 +308,187 @@ const RuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
   );
 };
 
+// ── Ring runes (#967 R9) ─────────────────────────────────────────────────────
+// Ring runes carry rich activations (actions[]/freeActions[]/reactions[]) and
+// riders authored in snapshot content (#248), not editable here yet. This safe
+// form edits the descriptive fields and PRESERVES every other field by spreading
+// the original doc on save, so an edit never drops a ring rune's mechanics.
+const ringToForm = (r) => {
+  const src = r && typeof r === 'object' ? r : {};
+  return {
+    id: src.id,
+    name: src.name || '',
+    level: src.level != null ? String(src.level) : '',
+    price: src.price != null ? String(src.price) : '',
+    description: src.description || '',
+    _original: src,
+  };
+};
+const ringBlankRune = () => ringToForm({});
+const ringFromForm = (f) => {
+  if (!f.name.trim()) throw new Error('Rune name is required.');
+  const out = { ...(f._original || {}), type: 'property', target: 'ring', name: f.name.trim() };
+  const level = parseInt(f.level, 10);
+  if (Number.isNaN(level)) delete out.level; else out.level = level;
+  const price = parseFloat(f.price);
+  if (Number.isNaN(price)) delete out.price; else out.price = price;
+  if (f.description.trim()) out.description = f.description.trim(); else delete out.description;
+  delete out.id; // the caller stamps the id (slug or existing)
+  return out;
+};
+
+const RingRuneForm = ({ initial, isNew, existingIds, onSaved, onRestored }) => {
+  const [e, setE] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const set = (patch) => setE((cur) => ({ ...cur, ...patch }));
+
+  const submit = async (id, payload) => {
+    setConfirm(null); setBusy(true); setError(null);
+    try { await saveDocument('rune', id, payload); onSaved(isNew, id); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  };
+  const save = async () => {
+    let body;
+    try { body = ringFromForm(e); } catch (err) { setError(err.message); return; }
+    const id = e.id || slugify(body.name);
+    const payload = { ...body, id };
+    if (isNew && existingIds && existingIds.has(id)) { setConfirm({ kind: 'collision', id, payload }); return; }
+    await submit(id, payload);
+  };
+  const doRemove = async () => {
+    setConfirm(null); setBusy(true); setError(null);
+    try { await deleteDocument('rune', e.id); onSaved(false); }
+    catch (err) { setError(err.message); }
+    finally { setBusy(false); }
+  };
+
+  const activationCount = ['actions', 'freeActions', 'reactions'].reduce(
+    (n, k) => n + (Array.isArray(e._original?.[k]) ? e._original[k].length : 0), 0);
+  const riderCount = Array.isArray(e._original?.riders) ? e._original.riders.length : 0;
+
+  return (
+    <div className="gm-card" data-testid={`rune-form-${e.id || 'new'}`}>
+      <div className="gm-row">
+        <div className="form-group">
+          <label>Name</label>
+          <input aria-label="name" value={e.name} onChange={(ev) => set({ name: ev.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>level</label>
+          <input aria-label="level" type="number" value={e.level} onChange={(ev) => set({ level: ev.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>price (gp)</label>
+          <input aria-label="price" type="number" value={e.price} onChange={(ev) => set({ price: ev.target.value })} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Description</label>
+        <textarea aria-label="description" rows={3} value={e.description} onChange={(ev) => set({ description: ev.target.value })} />
+      </div>
+      {(activationCount > 0 || riderCount > 0) && (
+        <p className="gm-count" data-testid="ring-preserved-note">
+          Preserved on save: {activationCount} activation{activationCount === 1 ? '' : 's'} · {riderCount} rider{riderCount === 1 ? '' : 's'} (authored in content).
+        </p>
+      )}
+      {error && <p className="gm-warn" role="alert">{error}</p>}
+      <div className="gm-actions">
+        <button className="btn-primary" disabled={busy} onClick={save}>{isNew ? 'Create rune' : 'Save'}</button>
+        {!isNew && (
+          <>
+            <button className="btn-secondary" disabled={busy} onClick={() => setShowHistory(true)}>History</button>
+            <button className="btn-danger" disabled={busy} onClick={() => setConfirm({ kind: 'delete' })}>Delete</button>
+          </>
+        )}
+      </div>
+      {!isNew && (
+        <HistoryModal isOpen={showHistory} collection="rune" id={e.id} name={e.name}
+          onClose={() => setShowHistory(false)}
+          onRestored={(doc) => { setShowHistory(false); if (doc) setE(ringToForm(doc)); setError(null); onRestored(); }} />
+      )}
+      <ConfirmDialog isOpen={confirm?.kind === 'delete'} title="Delete rune"
+        message={`Permanently delete the rune "${e.name}". This cannot be undone.`}
+        confirmLabel="Delete forever" requireType={e.name}
+        onConfirm={doRemove} onCancel={() => setConfirm(null)} />
+      <ConfirmDialog isOpen={confirm?.kind === 'collision'} title="Overwrite existing rune?"
+        message={`A rune with id "${confirm?.id}" already exists. Saving will overwrite it.`}
+        confirmLabel="Overwrite" onConfirm={() => submit(confirm.id, confirm.payload)} onCancel={() => setConfirm(null)} />
+    </div>
+  );
+};
+
+// Target facet (#967 R9): one editor over ALL property runes, filtered + grouped
+// by rune target so weapon/armor/ring are distinguishable at a glance. The facet
+// also picks the target for a NEW rune (weapon when 'All'). Fundamentals
+// (type:'fundamental') are table-derived — not authored here.
+const TARGETS = ['weapon', 'armor', 'ring'];
+const TARGET_LABEL = { weapon: 'Weapon', armor: 'Armor', ring: 'Ring' };
+const TARGET_ORDER = { weapon: 0, armor: 1, ring: 2 };
+
 const GmRunes = () => {
   const { runes } = useContent();
-  // Weapon PROPERTY runes only (#885): armor property runes have their own editor
-  // (GmArmorRunes), and the fundamentals (potency/striking, type:'fundamental')
-  // are table-derived — not authored here. Classify by target, not the raw
-  // armorRune flag, so the count is right and ring/accessory kinds slot in later.
+  const [facet, setFacet] = useState('all');
+
   const catalog = useMemo(
-    () => (Array.isArray(runes) ? runes : []).filter((r) => r && r.type === 'property' && runeTarget(r) === 'weapon'),
+    () => (Array.isArray(runes) ? runes : []).filter((r) => r && r.type === 'property'),
     [runes]
   );
   const existingIds = useMemo(() => existingIdSet(catalog), [catalog]);
 
-  const sorted = useMemo(
-    () =>
-      catalog
-        .slice()
-        .sort((a, b) =>
-          String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase())
-        ),
-    [catalog]
+  const sorted = useMemo(() => {
+    const list = facet === 'all' ? catalog : catalog.filter((r) => runeTarget(r) === facet);
+    return list.slice().sort((a, b) => {
+      const ta = TARGET_ORDER[runeTarget(a)] ?? 9;
+      const tb = TARGET_ORDER[runeTarget(b)] ?? 9;
+      if (ta !== tb) return ta - tb;
+      return String(a.name || a.id).toLowerCase().localeCompare(String(b.name || b.id).toLowerCase());
+    });
+  }, [catalog, facet]);
+
+  const newTarget = facet === 'all' ? 'weapon' : facet;
+  const detailFor = (entry, isNew, callbacks) => {
+    const t = isNew ? newTarget : runeTarget(entry);
+    if (t === 'armor') {
+      return <ArmorRuneForm initial={isNew ? armorBlankRune() : armorToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
+    }
+    if (t === 'ring') {
+      return <RingRuneForm initial={isNew ? ringBlankRune() : ringToForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
+    }
+    return <RuneForm initial={isNew ? blankRune() : toForm(entry)} isNew={isNew} existingIds={existingIds} {...callbacks} />;
+  };
+
+  const header = (
+    <div className="gm-rune-facets" role="group" aria-label="rune target filter">
+      {['all', ...TARGETS].map((t) => (
+        <button key={t} type="button"
+          className={`btn-small ${facet === t ? 'btn-primary' : 'btn-secondary'}`}
+          aria-pressed={facet === t}
+          onClick={() => setFacet(t)}>
+          {t === 'all' ? 'All' : TARGET_LABEL[t]}
+        </button>
+      ))}
+    </div>
   );
 
   return (
     <div className="gm-runes">
       <PageEditorShell
         entries={sorted}
-        nameOf={(r) => r.name}
-        noun="rune"
-        addLabel="+ New rune"
-        filterEntry={(r, q) =>
-          [r.name, r.id, r.description]
-            .filter(Boolean)
-            .some((v) => String(v).toLowerCase().includes(q))
-        }
-        renderDetail={(entry, isNew, callbacks) => (
-          <RuneForm
-            initial={isNew ? blankRune() : toForm(entry)}
-            isNew={isNew}
-            existingIds={existingIds}
-            {...callbacks}
-          />
+        nameOf={(r) => (
+          <>{r.name} <span className="gm-rune-badge" aria-hidden="true">{TARGET_LABEL[runeTarget(r)] || runeTarget(r)}</span></>
         )}
+        noun="rune"
+        addLabel={facet === 'all' ? '+ New rune' : `+ New ${facet} rune`}
+        header={header}
+        groupOf={facet === 'all' ? (r) => `${TARGET_LABEL[runeTarget(r)] || 'Other'} runes` : undefined}
+        filterEntry={(r, q) =>
+          [r.name, r.id, r.description].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
+        }
+        renderDetail={detailFor}
       />
     </div>
   );

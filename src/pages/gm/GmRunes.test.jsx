@@ -47,17 +47,74 @@ describe('GmRunes', () => {
     expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
   });
 
-  it('excludes armor property runes and fundamentals from the count (#885)', () => {
+  it('shows all property-rune targets grouped, excluding fundamentals (#885, #967 R9)', () => {
     useContent.mockReturnValue({ runes: [
       ...runes,
       { id: 'slick', type: 'property', armorRune: true, name: 'Slick' },
+      { id: 'ring-energy', type: 'property', target: 'ring', name: 'Energy' },
       { id: 'weapon-potency-1', type: 'fundamental', fundamental: 'potency', target: 'weapon', name: '+1 Weapon Potency' },
     ] });
     render(<GmRunes />);
-    // still only the two weapon property runes — armor + fundamental filtered out.
-    expect(screen.getByText('Showing 2 of 2')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Slick' })).not.toBeInTheDocument();
+    // 2 weapon + 1 armor + 1 ring property runes; the fundamental is excluded.
+    expect(screen.getByText('Showing 4 of 4')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Slick' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Energy' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Weapon Potency/ })).not.toBeInTheDocument();
+    // Grouped by target.
+    expect(screen.getByText('Weapon runes')).toBeInTheDocument();
+    expect(screen.getByText('Armor runes')).toBeInTheDocument();
+    expect(screen.getByText('Ring runes')).toBeInTheDocument();
+  });
+
+  it('facet filters the list to one target (#967 R9)', () => {
+    useContent.mockReturnValue({ runes: [
+      ...runes,
+      { id: 'slick', type: 'property', armorRune: true, name: 'Slick' },
+    ] });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Armor' }));
+    expect(screen.getByText('Showing 1 of 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Slick' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Frost' })).not.toBeInTheDocument();
+  });
+
+  it('edits a ring rune through a safe form that preserves its activations (#967 R9)', async () => {
+    saveDocument.mockResolvedValue({ ok: true });
+    useContent.mockReturnValue({ runes: [
+      { id: 'ring-energy', type: 'property', target: 'ring', name: 'Energy', level: 7, price: 300,
+        description: 'shimmering',
+        freeActions: [{ name: 'Gather Power', description: 'g' }],
+        actions: [{ name: 'Release Power', actionCount: 1, description: 'r' }] },
+    ] });
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Energy' }));
+    const form = screen.getByTestId('rune-form-ring-energy');
+    expect(within(form).getByLabelText('name')).toHaveValue('Energy');
+    expect(within(form).getByTestId('ring-preserved-note')).toHaveTextContent('2 activations · 0 riders');
+    // No weapon rider controls on the ring form.
+    expect(within(form).queryByLabelText('rider-vsTrait')).not.toBeInTheDocument();
+    fireEvent.change(within(form).getByLabelText('description'), { target: { value: 'brighter' } });
+    fireEvent.click(within(form).getByText('Save'));
+    await waitFor(() => expect(saveDocument).toHaveBeenCalled());
+    const [collection, id, data] = saveDocument.mock.calls[0];
+    expect(collection).toBe('rune');
+    expect(id).toBe('ring-energy');
+    // Descriptive edit applied; target + activations preserved (not dropped).
+    expect(data).toMatchObject({
+      type: 'property', target: 'ring', name: 'Energy', description: 'brighter',
+      freeActions: [{ name: 'Gather Power' }],
+      actions: [{ name: 'Release Power', actionCount: 1 }],
+    });
+  });
+
+  it('creates a new rune under the selected target facet (#967 R9)', () => {
+    setContent();
+    render(<GmRunes />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ring' }));
+    fireEvent.click(screen.getByRole('button', { name: '+ New ring rune' }));
+    const form = screen.getByTestId('rune-form-new');
+    expect(within(form).getByLabelText('name')).toBeInTheDocument();
+    expect(within(form).queryByLabelText('rider-vsTrait')).not.toBeInTheDocument(); // ring form, not weapon
   });
 
   it('loads an existing rune into the structured rider fields', () => {
