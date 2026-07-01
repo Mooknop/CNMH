@@ -17,6 +17,15 @@
   letter-spacing: -1px;
 }
 
+/* Glyph spans use the genuine PF2e action font. Compound selector (0,2,0)
+ * outranks the base .action-icon rule regardless of stylesheet order; the
+ * plain-text fallback span keeps the display font above. */
+.action-icon.pf2e-action-glyph {
+  font-family: var(--font-action);
+  font-weight: var(--weight-normal);
+  letter-spacing: normal;
+}
+
 /* Reaction and free action use gold to distinguish from standard pips */
 .action-icon--reaction,
 .action-icon--free {

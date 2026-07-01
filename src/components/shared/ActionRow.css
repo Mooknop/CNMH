@@ -58,6 +58,14 @@
   color: var(--gold-mid);
 }
 
+/* Genuine PF2e action font for action-cost glyphs (compound selector outranks
+ * the base .action-row__glyph font-family / letter-spacing). */
+.action-row__glyph.pf2e-action-glyph {
+  font-family: var(--font-action);
+  font-weight: var(--weight-normal);
+  letter-spacing: normal;
+}
+
 /* Name */
 .action-row__name {
   flex: 1;

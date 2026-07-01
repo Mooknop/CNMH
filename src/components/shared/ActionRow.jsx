@@ -4,8 +4,9 @@ import React from 'react';
 import './ActionRow.css';
 
 const ActionRow = ({
-  glyph,           // string — Cinzel glyph(s) like '◆' '◆◆' '↺'
+  glyph,           // string — glyph(s) like '1' '2' 'R' or an arrow '→'
   glyphColor,      // 'accent' | 'gold' | undefined (accent default)
+  actionFont = false, // render glyph in the genuine PF2e action font
   name,
   rightLabel,      // short chip text (trait, skill, etc.)
   onClick,
@@ -24,7 +25,11 @@ const ActionRow = ({
     type="button"
   >
     {glyph && (
-      <span className={`action-row__glyph${glyphColor === 'gold' ? ' action-row__glyph--gold' : ''}`}>
+      <span className={[
+        'action-row__glyph',
+        glyphColor === 'gold' ? 'action-row__glyph--gold' : '',
+        actionFont ? 'pf2e-action-glyph' : '',
+      ].filter(Boolean).join(' ')}>
         {glyph}
       </span>
     )}
