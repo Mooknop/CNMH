@@ -126,6 +126,9 @@ export const resolveItemStrikes = (item, character, chamberState = null) => {
       traits: weaponStrike.traits || [],
       attackMod: attackBonus,
       damage,
+      // Damage type (#1018) — feeds the damage panel hint and the typed relay
+      // to Foundry (#1016), where PF2e's applyDamage nets the target's IWR.
+      ...(weaponStrike.damageType ? { damageType: weaponStrike.damageType } : {}),
       description: weaponStrike.description || item.description || '',
       source: sourceName,
       range: weaponStrike.range,
@@ -231,6 +234,8 @@ export const getStrikes = (character, chambersByUid = {}) => {
             traits: strike.traits || [],
             attackMod: attackBonus,
             damage: damageString,
+            // Damage type (#1018) — carried through for the hint + typed relay.
+            ...(strike.damageType ? { damageType: strike.damageType } : {}),
             description: strike.description || '',
             source: feat.name,
             range: strike.range,
@@ -266,6 +271,7 @@ export const getStrikes = (character, chambersByUid = {}) => {
       traits: ['Attack', 'Melee', 'Unarmed'],
       attackMod: attackBonus,
       damage: `1d4${strMod !== 0 ? (strMod > 0 ? '+' + strMod : strMod) : ''}`,
+      damageType: 'bludgeoning',
       description: 'A strike with your fist or another body part.',
     });
   }

@@ -406,7 +406,10 @@ export const buildDamageProfile = (ability, character, {
     damageOverride?.base ?? dd?.base ?? ability.damage ?? null,
     level
   );
-  const typeLabel = damageOverride?.type ?? dd?.type ?? null;
+  // Damage type: an override/damageData type wins; strikes carry a flat
+  // `damageType` instead of a damageData block (#1018), so it backstops here —
+  // feeding the panel hint and the typed Foundry relay (#1016).
+  const typeLabel = damageOverride?.type ?? dd?.type ?? ability.damageType ?? null;
   const heightenedMap = damageOverride?.heightened ?? dd?.heightened;
 
   // Heightened damage scaling — cumulative entries at this cast rank.
@@ -476,6 +479,20 @@ export const buildDamageProfile = (ability, character, {
 };
 
 /**
+ * The type label a hint should append to a damage expression — null when the
+ * hand-curated expression text already names it (#1018). Bomb strikes author
+ * strings like '1d6 cold' or '1d4 persistent fire'; with a `damageType` now on
+ * the strike too, blindly appending would render '1d6 cold cold'. Display-only:
+ * the profile keeps its typeLabel for the relay/save-request payloads.
+ */
+export const hintTypeLabel = (expression, typeLabel) => {
+  if (!typeLabel) return null;
+  if (typeof expression === 'string'
+      && new RegExp(`\\b${typeLabel}\\b`, 'i').test(expression)) return null;
+  return typeLabel;
+};
+
+/**
  * The dice the player should physically roll: the base expression plus every
  * enabled immediate extra-dice rider (Gloaming Backstab's hidden precision).
  * These riders fold into the hint — the player rolls one combined total — and
@@ -487,11 +504,11 @@ export const buildDamageProfile = (ability, character, {
 export const damageHintParts = (profile, riderState) => {
   if (!profile) return [];
   const parts = profile.expression
-    ? [{ dice: profile.expression, typeLabel: profile.typeLabel ?? null }]
+    ? [{ dice: profile.expression, typeLabel: hintTypeLabel(profile.expression, profile.typeLabel) }]
     : [];
   for (const r of profile.riders || []) {
     if (r.dice && riderEnabled(r, riderState)) {
-      parts.push({ dice: r.dice, typeLabel: r.type ?? null });
+      parts.push({ dice: r.dice, typeLabel: hintTypeLabel(r.dice, r.type) });
     }
   }
   return parts;
