@@ -103,4 +103,96 @@ describe('SpellDetailModal', () => {
     expect(onCast).toHaveBeenCalledWith(expect.objectContaining({ name: 'Fireball' }), 2);
     expect(onClose).toHaveBeenCalled();
   });
+
+  // Non-encounter slot cast (#961)
+  const slotResources = (options) => ({
+    optionsFor: vi.fn(() => options),
+    spend: vi.fn(),
+  });
+
+  it('spends the native-rank slot and closes on a non-encounter cast', () => {
+    const onClose = vi.fn();
+    const option = { type: 'slot', rank: 3, label: 'Rank 3 slot (2 left)', enabled: true };
+    const resources = slotResources([option]);
+    render(
+      <SpellDetailModal
+        spell={baseSpell}
+        isOpen
+        castResources={resources}
+        onClose={onClose}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Cast — Rank 3 slot \(2 left\)/ }));
+    expect(resources.spend).toHaveBeenCalledWith(option);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('offers a rank picker for a signature spell and spends the chosen rank', () => {
+    const onClose = vi.fn();
+    const options = [
+      { type: 'slot', rank: 3, label: 'Rank 3 slot (1 left)', enabled: true },
+      { type: 'slot', rank: 4, label: 'Rank 4 slot (2 left)', enabled: true },
+    ];
+    const resources = slotResources(options);
+    render(
+      <SpellDetailModal
+        spell={{ ...baseSpell, signature: true }}
+        isOpen
+        castResources={resources}
+        onClose={onClose}
+      />
+    );
+    expect(screen.getByText('Cast at:')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Rank 4 slot (2 left)' }));
+    expect(resources.spend).toHaveBeenCalledWith(options[1]);
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('disables the cast button and does not spend when no slots remain', () => {
+    const onClose = vi.fn();
+    const option = { type: 'slot', rank: 3, label: 'Rank 3 slot (0 left)', enabled: false };
+    const resources = slotResources([option]);
+    render(
+      <SpellDetailModal
+        spell={baseSpell}
+        isOpen
+        castResources={resources}
+        onClose={onClose}
+      />
+    );
+    const btn = screen.getByRole('button', { name: /Rank 3 slot \(0 left\)/ });
+    expect(btn).toBeDisabled();
+    fireEvent.click(btn);
+    expect(resources.spend).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('shows no non-encounter cast control when only free options exist (cantrip)', () => {
+    const resources = slotResources([{ type: 'cantrip', label: 'Cantrip — no cost', enabled: true }]);
+    render(
+      <SpellDetailModal
+        spell={{ ...baseSpell, level: 0 }}
+        isOpen
+        castResources={resources}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: /Cast/ })).not.toBeInTheDocument();
+  });
+
+  it('does not show the slot cast control in encounter mode', () => {
+    const resources = slotResources([{ type: 'slot', rank: 3, label: 'Rank 3 slot (2 left)', enabled: true }]);
+    render(
+      <SpellDetailModal
+        spell={{ ...baseSpell, actions: '2' }}
+        isOpen
+        encounterMode
+        onCast={vi.fn()}
+        castResources={resources}
+        onClose={vi.fn()}
+      />
+    );
+    expect(resources.optionsFor).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Cast — /)).not.toBeInTheDocument();
+  });
 });

@@ -19,6 +19,7 @@ const SpellDetailModal = ({
   character,
   encounterMode,
   onCast,
+  castResources,
 }) => {
   if (!isOpen || !spell) return null;
 
@@ -31,6 +32,21 @@ const SpellDetailModal = ({
   const isVariable = variableRange != null;
 
   const showCast = encounterMode && !inactive && onCast && (isVariable || spellCost !== null);
+
+  // Non-encounter repertoire cast (#961): outside the encounter cast flow the
+  // repertoire host passes castResources so a slot spend is one tap. Only real
+  // spell-slot options qualify — cantrips/innate are free (no ledger to touch),
+  // so they filter out and no Cast control shows. Signature spells surface each
+  // eligible heighten rank; everything else spends its native rank.
+  const slotOptions = (!encounterMode && castResources && !inactive)
+    ? castResources.optionsFor(spell, 'slot').filter((o) => o.type === 'slot')
+    : [];
+  const showSlotCast = slotOptions.length > 0;
+  const handleSlotCast = (option) => {
+    if (!option?.enabled) return;
+    castResources.spend(option);
+    onClose();
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={spell.name} themeColor={themeColor} highZ>
@@ -163,6 +179,25 @@ const SpellDetailModal = ({
               variableRange={isVariable ? variableRange : undefined}
               onUse={(c) => { onCast(spell, c); onClose(); }}
             />
+          </div>
+        )}
+
+        {showSlotCast && (
+          <div className="spell-detail-footer spell-slot-cast">
+            {slotOptions.length > 1 && (
+              <span className="slot-cast-label">Cast at:</span>
+            )}
+            {slotOptions.map((o) => (
+              <button
+                key={o.rank}
+                type="button"
+                className="btn-primary btn-small"
+                disabled={!o.enabled}
+                onClick={() => handleSlotCast(o)}
+              >
+                {slotOptions.length > 1 ? o.label : `Cast — ${o.label}`}
+              </button>
+            ))}
           </div>
         )}
       </div>
