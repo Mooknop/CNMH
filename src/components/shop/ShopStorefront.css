@@ -329,6 +329,42 @@
   margin: 4px 0 0; font-family: var(--font-body); font-size: 12.5px; line-height: 1.5; color: var(--ps-ink2);
 }
 
+/* Full spell render in the Scroll/Wand preview (SpellMechanics) — themed for the
+   dark storefront so the detail grid, degrees, and heightening read on-surface. */
+.ps-preview .spell-mechanics { gap: var(--space-3); }
+.ps-preview .spell-mechanics .spell-details {
+  padding: var(--space-2) var(--space-3); border: 1px solid var(--ps-line);
+  border-radius: 10px; background: var(--ps-screen); font-size: 12.5px;
+}
+.ps-preview .spell-mechanics .detail-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--ps-ink3);
+}
+.ps-preview .spell-mechanics .detail-value { color: var(--ps-ink); }
+.ps-preview .spell-mechanics .spell-description {
+  font-family: var(--font-body); font-size: 13px; line-height: 1.5; color: var(--ps-ink2);
+}
+.ps-preview .spell-mechanics .spell-degrees,
+.ps-preview .spell-mechanics .spell-heightened {
+  padding-top: var(--space-3); font-size: 12.5px; border-top: 1px solid var(--ps-line-soft);
+}
+.ps-preview .spell-mechanics .degrees-label,
+.ps-preview .spell-mechanics .heightened-label {
+  display: block; margin-bottom: var(--space-2);
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.13em; font-weight: 700;
+  color: var(--ps-ware-accent, var(--arcane-mid));
+}
+.ps-preview .spell-mechanics .degree-entry,
+.ps-preview .spell-mechanics .heightened-entry { margin-bottom: var(--space-2); padding-left: var(--space-3); }
+.ps-preview .spell-mechanics .degree-level,
+.ps-preview .spell-mechanics .heightened-level { font-weight: 600; margin-right: var(--space-1); color: var(--ps-ink); }
+.ps-preview .spell-mechanics .degree-effect,
+.ps-preview .spell-mechanics .heightened-effect { color: var(--ps-ink2); }
+.ps-preview .spell-mechanics .reaction-trigger { font-size: 11.5px; color: var(--ps-ink2); }
+.ps-preview .spell-mechanics .trigger-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+  color: var(--ps-ink3); margin-right: 6px;
+}
+
 /* ── Spellcasting tab (#857 S5) ───────────────────────────────────────────── */
 .ps-spellcasting { padding-bottom: var(--space-4); }
 .ps-section {

@@ -423,6 +423,25 @@ describe('eligibleSpellItems', () => {
     expect(heal).toMatchObject({ id: 'wand-of-heal', name: 'Wand of Heal', level: 3, price: 60, wand: { spellRef: 'heal' } });
   });
 
+  it('carries the full spell display block so the preview can show the whole spell', () => {
+    const rich = [{
+      id: 'bolt', name: 'Bolt', level: 1, traditions: ['arcane'], baseLevel: 1,
+      traits: ['Concentrate', 'Manipulate'], actions: 'Two Actions', defense: 'Reflex',
+      range: '30 feet', targets: '1 creature', duration: 'instant', trigger: 'you point',
+      description: 'A bolt.', degrees: { Success: 'half' }, heightened: { '+1': 'more' },
+    }];
+    const [ware] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1 }, rich);
+    expect(ware.spell).toEqual({
+      name: 'Bolt', level: 1, traits: ['Concentrate', 'Manipulate'], actions: 'Two Actions',
+      defense: 'Reflex', range: '30 feet', targets: '1 creature', duration: 'instant',
+      trigger: 'you point', description: 'A bolt.', degrees: { Success: 'half' }, heightened: { '+1': 'more' },
+    });
+    // Curated subset — internal fields are not leaked onto the browse ware.
+    expect(ware.spell).not.toHaveProperty('id');
+    expect(ware.spell).not.toHaveProperty('traditions');
+    expect(ware.spell).not.toHaveProperty('baseLevel');
+  });
+
   it('applies priceMod as a multiplier over the standard price', () => {
     const [sleep] = eligibleSpellItems({ spellItem: 'scroll', maxLevel: 1, priceMod: 2 }, spellCatalog);
     expect(sleep.price).toBe(8); // 4 × 2

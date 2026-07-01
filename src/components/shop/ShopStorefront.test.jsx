@@ -57,7 +57,12 @@ const runes = [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, traits: [
 // common) expands to buyable scroll items.
 const spells = [
   { id: 'heal', name: 'Heal', level: 1, traditions: ['divine', 'primal'] },
-  { id: 'sleep', name: 'Sleep', level: 1, traditions: ['arcane', 'occult'], description: 'Each creature in the area becomes drowsy.' },
+  { id: 'sleep', name: 'Sleep', level: 1, traditions: ['arcane', 'occult'],
+    traits: ['Concentrate', 'Manipulate', 'Sleep'], actions: 'Two Actions', defense: 'Will',
+    range: '30 feet', area: '5-foot burst', targets: '', duration: 'varies',
+    description: 'Each creature in the area becomes drowsy.',
+    degrees: { Success: 'Unaffected.', Failure: 'Falls asleep.' },
+    heightened: { '4th': 'The initial duration increases.' } },
 ];
 
 // One shop at a location: general wares + a runestone (⇒ Runesmithing derives on)
@@ -311,7 +316,7 @@ describe('ShopStorefront', () => {
       expect(screen.getByText(/coming in a future update/i)).toBeInTheDocument();
     });
 
-    it('shows the spell description in the takeover preview of a scroll', () => {
+    it('shows the whole embedded spell in the takeover preview of a scroll', () => {
       renderShop();
       openSpells();
       fireEvent.keyDown(
@@ -319,7 +324,17 @@ describe('ShopStorefront', () => {
         { key: 'Enter' }
       );
       const preview = screen.getByTestId('ware-preview');
+      // Description…
       expect(within(preview).getByText('Each creature in the area becomes drowsy.')).toBeInTheDocument();
+      // …plus the full spell block: spell traits, detail grid, degrees, heightening.
+      expect(within(preview).getByText('Sleep')).toBeInTheDocument(); // spell trait chip
+      expect(within(preview).getByText('Will')).toBeInTheDocument(); // defense
+      expect(within(preview).getByText('30 feet')).toBeInTheDocument(); // range
+      expect(within(preview).getByText('5-foot burst')).toBeInTheDocument(); // area
+      expect(within(preview).getByText('Degrees of Success:')).toBeInTheDocument();
+      expect(within(preview).getByText('Falls asleep.')).toBeInTheDocument();
+      expect(within(preview).getByText('Heightened:')).toBeInTheDocument();
+      expect(within(preview).getByText('The initial duration increases.')).toBeInTheDocument();
     });
 
     it('searches the scroll/wand list by spell name', () => {

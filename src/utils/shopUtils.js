@@ -205,6 +205,23 @@ const spellRarity = (spell) => String(getItemRarity(spell) || 'common').toLowerC
 const isCantrip = (spell) =>
   Array.isArray(spell.traits) && spell.traits.some((t) => String(t).toLowerCase() === 'cantrip');
 
+// The display-only spell fields the shop preview shows (via <SpellMechanics>) so
+// a buyer sees the whole spell — traits, action cost, defense, range, area,
+// targets, duration, trigger, description, degrees of success, and heightening.
+// A curated subset (no id/traditions/baseLevel) keeps the browse ware lean; only
+// present fields are carried.
+const SPELL_DISPLAY_FIELDS = [
+  'name', 'level', 'traits', 'actions', 'defense', 'range', 'area',
+  'targets', 'duration', 'trigger', 'description', 'degrees', 'heightened',
+];
+const spellMechanics = (spell) => {
+  const out = {};
+  for (const f of SPELL_DISPLAY_FIELDS) {
+    if (spell[f] != null) out[f] = spell[f];
+  }
+  return out;
+};
+
 // The just spell-item offerings on a shop, in authored order, each tagged with a
 // stable `offeringKey` for React/test keys + the S8 summary rows.
 export function spellItemOfferings(loreId, shops) {
@@ -279,6 +296,11 @@ export function eligibleSpellItems(ware, spells, catalogMap) {
         // The spell's own mechanics text, so the shop preview card shows what a
         // Scroll/Wand of X actually does (#936 follow-up).
         ...(spell.description ? { description: spell.description } : {}),
+        // The full spell block (traits, action cost, defense, range, area,
+        // targets, duration, trigger, description, degrees, heightening) so the
+        // preview can render the whole spell via <SpellMechanics>. Browse-only —
+        // reuid() strips it, landing a minimal { spellRef, rank? } in inventory.
+        spell: spellMechanics(spell),
         ...(baseArt ? { image: baseArt.image, ...(baseArt.imagePosition != null ? { imagePosition: baseArt.imagePosition } : {}) } : {}),
         [kind]: block,
         wareKey: heightened ? `${kind}:${spell.id}:${rank}` : `${kind}:${spell.id}`,
