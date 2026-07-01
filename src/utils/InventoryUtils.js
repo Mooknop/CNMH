@@ -310,6 +310,23 @@ export const isInvestable = (item) =>
   ((item.traits) || []).some((t) => String(t).toLowerCase() === 'invested');
 
 /**
+ * Whether an item is a power ring (#967) — the explicit `powerRing` marker the
+ * R1 catalog item carries (same signal runeSockets.gearTarget keys off).
+ */
+export const isPowerRing = (item) => !!(item && item.powerRing);
+
+/**
+ * PF2e caps you at one invested power ring. True when investing `item` would
+ * break that — it's a power ring and a DIFFERENT power ring is already invested
+ * (#967 R6). Re-checking the same, already-invested ring never conflicts.
+ */
+export const wouldBreakPowerRingLimit = (item, investedItems = []) =>
+  isPowerRing(item) &&
+  (Array.isArray(investedItems) ? investedItems : []).some(
+    (it) => isPowerRing(it) && it?.uid !== item?.uid,
+  );
+
+/**
  * Whether an item is a tracked consumable — one whose copies are used up via
  * the player-writable `cnmh_consumed_<charId>` overlay (inventory itself is
  * GM-gated content). Scrolls qualify implicitly; other consumables (potions,
