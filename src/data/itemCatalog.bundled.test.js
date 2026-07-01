@@ -169,7 +169,9 @@ describe('bundled item catalog (Slice 3)', () => {
   // #907: a variant may carry `overrides` with variant-specific mechanical
   // fields. Only allowlisted keys are permitted; widen this list as later slices
   // make more fields variant-aware (S1 bonus, S2 container; S3 resistance).
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance'];
+  // #967 (R1): the power ring's grade ladder carries its mechanical contract —
+  // itemBonus / ringSockets / cantripSlots / apex — per grade.
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {
@@ -192,6 +194,11 @@ describe('bundled item catalog (Slice 3)', () => {
           expect(typeof v.overrides.resistance.type).toBe('string');
           expect(v.overrides.resistance.type.length).toBeGreaterThan(0);
         }
+        // #967 (R1): power-ring grade contract — all numeric except `apex`.
+        if (v.overrides.itemBonus !== undefined) expect(typeof v.overrides.itemBonus).toBe('number');
+        if (v.overrides.ringSockets !== undefined) expect(typeof v.overrides.ringSockets).toBe('number');
+        if (v.overrides.cantripSlots !== undefined) expect(typeof v.overrides.cantripSlots).toBe('number');
+        if (v.overrides.apex !== undefined) expect(typeof v.overrides.apex).toBe('boolean');
       });
     });
   });
