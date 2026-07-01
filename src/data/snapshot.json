@@ -18376,6 +18376,668 @@
         "arcane",
         "occult"
       ]
+    },
+    {
+      "id": "buzzsaw",
+      "name": "Buzzsaw",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Cantrip",
+        "Attack",
+        "Concentrate",
+        "Manipulate",
+        "Mental",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "targets": "1 creature",
+      "defense": "AC",
+      "duration": "sustained up to 1 minute",
+      "requirements": "you have a free hand",
+      "description": "You temporarily envelop your free hand in a metal casing covered with rows of whirling sawblades. Make a melee spell attack roll against your target’s AC. If you hit, you deal 2d6 slashing damage plus 2 persistent bleed damage. On a critical success, you deal double damage and double bleed damage.\nYou can Sustain the spell for up to 1 minute. Each time you do, you can attempt a melee spell attack roll against a new target. While your hand remains covered in sawblades, it can’t be used for any other purpose.",
+      "heightened": {
+        "+1": "The damage increases by 1d6 and the persistent bleed damage increases by 1."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
+    },
+    {
+      "id": "cascading-caltrops",
+      "name": "Cascading Caltrops",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Cantrip",
+        "Concentrate",
+        "Manipulate",
+        "Mental",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "defense": "Acrobatics or Reflex",
+      "duration": "up to 1 minute",
+      "description": "You conjure forth a giant mass of jagged metal then break it into numerous caltrops that scatter to fill a 10-foot radius burst. When a creature enters a square in the area, they must attempt their choice of a Reflex save or Acrobatics check.",
+      "degrees": {
+        "Success": "The creature is unaffected.",
+        "Failure": "The caltrops dig into the creature, dealing 3d4 piercing damage and 3 persistent bleed damage. While the persistent bleed damage lasts, the creature takes a –5-foot status penalty to its Speed. Spending an Interact action to pull the caltrops out reduces the DC of the flat check to stop the persistent bleed damage.",
+        "Critical Failure": "As failure, but double the piercing damage and persistent bleed damage and increase the status penalty to Speed to –10 feet. The field of caltrops lasts until a creature fails its Reflex save or Acrobatics check against the spell, you cast cascading caltrops again, or 1 minute passes, whichever comes first."
+      },
+      "heightened": {
+        "+1": "Increase the piercing damage by 1d4 and the persistent bleed damage by 1."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
+    },
+    {
+      "id": "eye-biting-shadow",
+      "name": "Eye-Biting Shadow",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Cantrip",
+        "Cold",
+        "Concentrate",
+        "Darkness",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "60 feet",
+      "targets": "1 creature",
+      "defense": "AC",
+      "description": "You conjure a globe of frigid darkness and hurl it into the eyes of one of your foes.",
+      "degrees": {
+        "Critical Success": "The target takes 6d6 cold damage, and everything is concealed to them for 1 minute if they don’t have greater darkvision.",
+        "Success": "The target takes 3d6 cold damage, and everything is concealed to them for 1 minute if they don’t have darkvision or greater darkvision. A target can end the concealment early by spending an action to wipe the spell’s residue out of their eyes; this action has the manipulate trait."
+      },
+      "heightened": {
+        "+1": "The cold damage increases by 2d6 (or by 4d6 on a critical hit)."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
+    },
+    {
+      "id": "internal-distortion",
+      "name": "Internal Distortion",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Cantrip",
+        "Concentrate",
+        "Manipulate",
+        "Teleportation",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "60 feet",
+      "targets": "1 creature",
+      "defense": "basic Fortitude",
+      "description": "You create a spatial ripple inside of a creature’s body, injuring it from within. The target takes 1d6 slashing damage, with a basic Fortitude save. On a critical failure, the target is also sickened 1.",
+      "heightened": {
+        "+1": "The damage increases by 1d6."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ],
+      "damageData": {
+        "base": "1d6",
+        "type": "slashing",
+        "heightened": {
+          "+1": {
+            "base": "1d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "reverberating-pain",
+      "name": "Reverberating Pain",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Cantrip",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature that has taken damage since the beginning of your last turn",
+      "defense": "basic Will",
+      "description": "You pull an echo of your target’s recent injuries through time, inflicting them anew. Choose a type of damage that the target has taken since the beginning of your last turn. The target takes 2d6 damage of that type.",
+      "heightened": {
+        "+1": "The damage increases by 1d6."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "rushing-gust",
+      "name": "Rushing Gust",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Air",
+        "Attack",
+        "Cantrip",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "defense": "AC",
+      "description": "You stir up the air around you to propel yourself toward a foe, then slice into them with blades of air. Move up to half your speed toward a target, then make a melee spell attack roll against the target’s AC. If you hit, the target takes 2d4 slashing damage (double damage on a critical hit).",
+      "heightened": {
+        "+1": "The damage increases by 1d4."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "primal"
+      ]
+    },
+    {
+      "id": "time-skip",
+      "name": "Time Skip",
+      "level": 0,
+      "baseLevel": 1,
+      "traits": [
+        "Uncommon",
+        "Cantrip",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "60 feet",
+      "targets": "1 creature",
+      "defense": "Fortitude",
+      "description": "You grasp on to a creature’s place in the timestream, pulling them a moment into the future. Temporal friction grinds against their body as the timestream rights itself, and they might be disoriented from the displacement. The target takes 3d6 force damage with a basic Fortitude save. On a critical failure, they are also slowed 1.",
+      "heightened": {
+        "+1": "The force damage increases by 2d6."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ],
+      "damageData": {
+        "base": "3d6",
+        "type": "force",
+        "heightened": {
+          "+1": {
+            "base": "2d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "agonizing-relocation",
+      "name": "Agonizing Relocation",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "Teleportation",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 foe",
+      "defense": "Fortitude",
+      "description": "You create a connection between a creature’s body and an unoccupied space within 10 feet of it. The target’s body is partially displaced toward that space, causing significant pain throughout their entire body. The target must attempt a Fortitude save. If the target fails or critically fails its save, it can choose not to be relocated, at the cost of taking double damage from the spell.",
+      "degrees": {
+        "Critical Success": "The target is unaffected.",
+        "Success": "The target takes 2d6 slashing damage.",
+        "Failure": "The target takes 4d6 slashing damage and is moved to the linked space.",
+        "Critical Failure": "The target takes 6d6 slashing damage and is moved to the linked space. Unlike most forced movement, a critical failure against agonizing relocation can move its target into a dangerous location."
+      },
+      "heightened": {
+        "4th": "Increase the slashing damage to 3d6 on a success, 6d6 on a failure, or 9d6 on a critical failure. The spell’s range increases to 100 feet, and the unoccupied space chosen can be within 30 feet of the target.",
+        "6th": "Increase the slashing damage to 4d6 on a success, 8d6 on a failure, or 12d6 on a critical failure. The spell’s range increases to 500 feet, and the unoccupied space chosen can be within 60 feet of the target."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "autumns-howl",
+      "name": "Autumn's Howl",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Uncommon",
+        "Air",
+        "Concentrate",
+        "Manipulate",
+        "Wood",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "area": "20-foot burst",
+      "defense": "basic Reflex",
+      "description": "You call forth a chill wind that carries with it a barrage of fallen leaves and sharp twigs. All creatures in the area when you call the fallen leaves take 3d6 slashing damage. The winds persist for 1 minute. While the winds last, the area is difficult terrain for creatures both in the air and on the ground. Creatures that end their turn inside the wind take 1d6 persistent piercing damage.",
+      "heightened": {
+        "+1": "The damage from the initial blast increases by 2d6 and the persistent piercing damage for creatures ending their turn inside the wind increases by 1."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ],
+      "damageData": {
+        "base": "3d6",
+        "type": "slashing",
+        "heightened": {
+          "+1": {
+            "base": "2d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "reforge-weapon",
+      "name": "Reforge Weapon",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "Metal",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "touch",
+      "targets": "1 metal weapon",
+      "duration": "1 minute",
+      "description": "You temporarily adjust the shape and weight of a metal weapon to adapt it to suit its wielder’s needs. Apply one of the following weapon traits to the weapon: disarm, grapple, nonlethal, shove, trip, versatile B, versatile P, versatile S.",
+      "heightened": {
+        "4th": "You can apply two of the listed weapon traits to the weapon or apply one of backstabber or sweep.",
+        "6th": "You can apply three of the listed weapon traits to the weapon or one of backstabber, backswing, forceful, deadly d8, or sweep."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
+    },
+    {
+      "id": "songshroud",
+      "name": "Songshroud",
+      "level": 2,
+      "baseLevel": 2,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "Sonic",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "duration": "1 minute",
+      "description": "You surround yourself in a beautiful melody that echoes in unusual directions, confounding attempts to hear your precise location. While using songshroud, you can’t become unnoticed by creatures that can hear. You are hidden to creatures that rely purely on echolocation or other sound-based senses, and you can’t become observed by those senses unless they use magic or another special ability and succeed at a counteract check against this spell; as such, you can use songshroud in combination with becoming invisible (or foiling vision in a different way) to avoid being observed by a creature with both vision and echolocation. The shroud also protects you from harmful sounds, granting you a +1 status bonus to saving throws against auditory effects and resistance 5 to sonic damage. When you speak, you can choose to either project your voice normally or to use the song to hide it. If you choose to hide it, creatures that are farther than 5 feet away must succeed at a Perception check against your spell DC to overhear what you are saying.",
+      "heightened": {
+        "4th": "The resistance to sonic damage increases to 10, the duration increases to 10 minutes, and the status bonus on saving throws against auditory effects increases to +2.",
+        "7th": "The resistance to sonic damage increases to 15, the duration increases to 10 minutes, and the status bonus on saving throws against auditory effects increases to +3."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult",
+        "primal"
+      ]
+    },
+    {
+      "id": "pummeling-shockwave",
+      "name": "Pummeling Shockwave",
+      "level": 3,
+      "baseLevel": 3,
+      "traits": [
+        "Uncommon",
+        "Attack",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "targets": "1 creature",
+      "defense": "AC",
+      "description": "You wreathe your body in magical energy, preparing to introduce a distant opponent to the taste of your martial arts. When your fist surges forth or your claws slash, the shockwaves they create tear into your foe’s body as surely as if you were standing right next to them. Make a melee Strike with an unarmed attack using your typical attack bonus for the unarmed attack or your spell attack bonus, whichever is better, against a foe within 30 feet. If the Strike hits, it deals its normal damage.",
+      "heightened": {
+        "5th": "The range increases to 120 feet, and your attack ignores concealment.",
+        "7th": "The range increases to 400 feet, and your attack ignores both cover and concealment."
+      },
+      "traditions": [
+        "arcane",
+        "occult",
+        "primal"
+      ]
+    },
+    {
+      "id": "boulder-crush",
+      "name": "Boulder Crush",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Earth",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "30 feet",
+      "area": "10-foot radius cylinder up to 40 feet tall",
+      "defense": "Reflex",
+      "description": "You conjure a large boulder in the air and send it crashing down to the ground. The boulder appears at the top of the cylinder before falling. Creatures underneath the boulder take 4d12 bludgeoning damage and must attempt a Reflex save.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "The creature takes half damage.",
+        "Failure": "The creature takes full damage. If it was flying, it is repositioned to the bottom of the cylinder, landing on its feet without taking additional falling damage.",
+        "Critical Failure": "The creature takes full damage. If it was flying, it is repositioned to the bottom of the cylinder, landing on its feet without taking additional falling damage. If it is on the ground after the boulder’s fall, it is knocked prone. If it’s still in the air, it’s instead off-guard for 1 round or until it spends an action to right itself, whichever comes first."
+      },
+      "heightened": {
+        "+1": "The damage increases by 1d12 and the cylinder’s maximum height increases by 10 feet"
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ]
+    },
+    {
+      "id": "launching-vortex",
+      "name": "Launching Vortex",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Uncommon",
+        "Air",
+        "Manipulate",
+        "Move",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "duration": "1 minute",
+      "description": "You call forth a vortex around your legs, shredding everyone nearby before redirecting the vortex’s energy to propel you into the air. When you cast the spell, all adjacent creatures take 4d6 slashing damage, with a basic Reflex save. You then jump 30 feet in any direction without touching the ground. You must land on a space of solid ground within 30 feet of you, or else you fall after using your next action. On your future turns until the spell’s duration expires, you can recreate the vortex once per round as a single action with the move and manipulate traits, dealing the slashing damage and jumping up to 30 feet each time you do.",
+      "heightened": {
+        "+1": "Increase the slashing damage by 1d6 and the maximum distance of the jump by 5 feet."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ],
+      "damageData": {
+        "base": "4d6",
+        "type": "slashing",
+        "heightened": {
+          "+1": {
+            "base": "1d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "steal-the-show",
+      "name": "Steal the Show",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "area": "30-foot emanation",
+      "defense": "Will",
+      "duration": "sustained up to 1 minute",
+      "description": "Your enchanting performance draws everyone’s attention to you, for good or for ill. Opponents have an easier time targeting you, gaining a +1 status bonus to attack rolls against you. However, the distraction makes it more difficult for them to defend themselves and perform more complex tasks. If you Sustain the spell, creatures attempt a new saving throw at the beginning of each of their turns.",
+      "degrees": {
+        "Critical Success": "The creature gains the status bonus to attack rolls against you for the spell’s duration and doesn’t need to attempt further saving throws.",
+        "Success": "The creature is off-guard against everyone except you for 1 round.",
+        "Failure": "The creature is stupefied 2 and off-guard against everyone except you for 1 round.",
+        "Critical Failure": "As failure, but the creature is instead stupefied 4."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
+    },
+    {
+      "id": "targeting-beacon",
+      "name": "Targeting Beacon",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "targets": "1 creature",
+      "duration": "1 minute",
+      "description": "You create a glowing beacon that hovers over a creature’s body. If the creature was invisible, it becomes concealed instead. If the creature was already concealed for any other reason, it is no longer concealed. While the beacon is active, all creatures gain a +1 circumstance bonus to their attack rolls against the creature. The next time an attack roll hits the creature, in addition to the attack’s normal effects, the beacon explodes, dealing 6d6 fire damage to the creature (basic Reflex save). When the beacon explodes, the spell ends.",
+      "heightened": {
+        "+1": "The damage from the exploding beacon increases by 2d6."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "primal"
+      ]
+    },
+    {
+      "id": "winters-grasp",
+      "name": "Winter's Grasp",
+      "level": 4,
+      "baseLevel": 4,
+      "traits": [
+        "Uncommon",
+        "Cold",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "area": "20-foot burst",
+      "duration": "sustained up to 1 minute",
+      "description": "You infuse the ground with the essence of winter, coating it in supernaturally cold ice. All creatures in the area of the spell when you first cast it take 4d6 cold damage (basic Reflex save). You can Sustain this spell. While the spell lasts, the icy ground is difficult terrain, and each creature standing on the ice must succeed at their choice of a Reflex save or an Acrobatics check against your spell DC or fall prone. Creatures using an action to move onto the ice during the spell’s duration must also attempt their choice of either a Reflex save or an Acrobatics check to Balance. A creature that ends its turn standing on the ice takes 8 cold damage with a basic Fortitude save.",
+      "heightened": {
+        "+1": "Increase the cold damage that creatures take from the initial casting by 1d6 and the cold damage they take from ending their turn in the ice by 2."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ],
+      "damageData": {
+        "base": "4d6",
+        "type": "cold",
+        "heightened": {
+          "+1": {
+            "base": "1d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "dissonance",
+      "name": "Dissonance",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "200 feet",
+      "area": "20-foot burst",
+      "defense": "Fortitude",
+      "description": "You induce deafening and nauseating vibrations throughout the bodies of all creatures in the area, dealing 5d10 sonic damage with a Fortitude save.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "The creature takes half damage and is deafened for 1d4 rounds.",
+        "Failure": "The creature takes full damage, is sickened 1, and is deafened for 1 minute.",
+        "Critical Failure": "The creature takes double damage, is sickened 3, and is deafened for 1 hour."
+      },
+      "heightened": {
+        "+1": "The damage increases by 1d10."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ],
+      "damageData": {
+        "base": "5d10",
+        "type": "sonic",
+        "heightened": {
+          "+1": {
+            "base": "1d10"
+          }
+        }
+      }
+    },
+    {
+      "id": "knock-heads",
+      "name": "Knock Heads",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "120 feet",
+      "targets": "2 creatures that are up to 40 feet apart",
+      "defense": "Reflex",
+      "description": "Choose two creatures in the area to telekinetically grab and smash into each other. Both targets are repositioned to the midpoint between them and battered against each other, taking 16d6 bludgeoning damage. If either creature critically succeeds at their saving throw, the other creature takes no damage from the spell.",
+      "degrees": {
+        "Critical Success": "The creature is unaffected.",
+        "Success": "The creature is repositioned and takes half damage.",
+        "Failure": "The creature is repositioned and takes full damage.",
+        "Critical Failure": "The creature is repositioned and takes double damage."
+      },
+      "heightened": {
+        "+1": "The damage increases by 2d6 and the maximum distance between the two targets increases by 5 feet."
+      },
+      "traditions": [
+        "arcane",
+        "occult"
+      ],
+      "damageData": {
+        "base": "16d6",
+        "type": "bludgeoning",
+        "heightened": {
+          "+1": {
+            "base": "2d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "raise-the-reapers-scythe",
+      "name": "Raise the Reaper's Scythe",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Two Actions",
+      "range": "60 feet",
+      "targets": "1 creature",
+      "defense": "Fortitude and Will (see below)",
+      "description": "You conjure a spectral scythe that gradually phases into reality above a target’s head and follows them wherever they go. At the end of the creature’s next three turns, an ominous bell tolls, and the creature must succeed at a Will save or be frightened 1 (frightened 2 on a critical failure); this effect has the emotion, fear, and mental traits. After the third toll, the scythe swings, striking the creature in the neck and dealing 10d10 slashing damage with a basic Fortitude save. If the spell reduces a target to 0 Hit Points, they die; this is a death effect.",
+      "heightened": {
+        "+1": "Increase the damage by 2d10."
+      },
+      "traditions": [
+        "arcane",
+        "divine",
+        "occult"
+      ]
+    },
+    {
+      "id": "sandstorm",
+      "name": "Sandstorm",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Uncommon",
+        "Air",
+        "Concentrate",
+        "Earth",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Three Actions",
+      "range": "120 feet",
+      "area": "20-foot burst",
+      "duration": "1 minute",
+      "description": "You call forth a localized sandstorm that cuts at the eyes and chokes the breath of creatures within it. All creatures within the sandstorm become concealed, and all creatures outside the sandstorm become concealed to creatures within it. A creature that starts its turn in the sandstorm or enters the sandstorm takes 6d6 slashing damage with a basic Reflex save. A creature that ends its turn in the sandstorm must hold its breath to avoid suffocation. You can Dismiss the sandstorm.",
+      "heightened": {
+        "+1": "The slashing damage from the sandstorm increases by 1d6."
+      },
+      "traditions": [
+        "arcane",
+        "primal"
+      ],
+      "damageData": {
+        "base": "6d6",
+        "type": "slashing",
+        "heightened": {
+          "+1": {
+            "base": "1d6"
+          }
+        }
+      }
+    },
+    {
+      "id": "wall-of-time",
+      "name": "Wall of Time",
+      "level": 5,
+      "baseLevel": 5,
+      "traits": [
+        "Uncommon",
+        "Concentrate",
+        "Manipulate",
+        "3rd Party"
+      ],
+      "actions": "Three Actions",
+      "range": "120 feet",
+      "duration": "1 minute",
+      "description": "You conjure up a wall of slowed time, which is both transparent and sepia-colored. The wall is 1 inch thick, up to 120 feet long, and up to 20 feet high. You can shape the wall’s path, placing each 5 feet of the wall on the border between squares. The wall doesn’t need to stand vertically or be supported by any surface. You must conjure the wall in an unbroken open space so its edges don’t pass through any creatures or objects, or the spell is lost.\nMindless creatures, unattended objects (including thrown weapons and ammunition), and spell effects that pass through the wall are trapped within, emerging 1 round after they enter it. Held objects that enter the wall, such as a melee weapon used to Strike a creature on the other side of the wall, become stuck for 1 round as well. The creature can choose to drop the held object; if they do, the object continues its trajectory after it is freed from the wall’s effect; this would allow a melee weapon to resolve the Strike before falling to the ground. However, attacks and targeted effects whose targets have moved from their original position since they entered the wall automatically miss.\nNon-mindless creatures that enter the wall of time lose one action from their current turn if they can; if they can’t, either because they are on their final action for the turn or it is not their turn, they are instead slowed 1.",
+      "traditions": [
+        "arcane",
+        "occult"
+      ]
     }
   ],
   "effect": [
