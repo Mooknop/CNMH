@@ -7,7 +7,7 @@
 //   Action text parsing and icon descriptors → actionIconUtils.js
 
 export { getStrikes, categorizeStrikesByType } from './strikeUtils';
-export { getActions, getReactions, getFreeActions } from './actionUtils';
+export { getActions, getReactions, getFreeActions, deriveSpellshapeChain } from './actionUtils';
 export {
   convertWordToNumber,
   parseActionCount,
