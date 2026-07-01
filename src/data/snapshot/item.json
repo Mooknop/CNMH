@@ -5664,7 +5664,15 @@
           "Concentrate",
           "Spellshape"
         ],
-        "description": "Frequency once per day; Effect If the next action you use is to Cast a cantrip or a spell that is at least 2 ranks lower than the highest-rank spell slot you have, reduce the number of actions to Cast it by 1 (minimum 1 action)."
+        "description": "Frequency once per day; Effect If the next action you use is to Cast a cantrip or a spell that is at least 2 ranks lower than the highest-rank spell slot you have, reduce the number of actions to Cast it by 1 (minimum 1 action).",
+        "chain": {
+          "into": "spell",
+          "modifier": "Reduce the actions to Cast the spell by 1 (minimum 1). Once per day; the spell must be a cantrip or at least 2 ranks below your highest slot.",
+          "transform": {
+            "actionDelta": -1,
+            "minActions": 1
+          }
+        }
       }
     ],
     "actuated": {
