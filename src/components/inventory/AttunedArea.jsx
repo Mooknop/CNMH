@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import IconTile from './IconTile';
 import { useDraggable, DropZone } from './dnd';
-import { isInvestable } from '../../utils/InventoryUtils';
+import { isInvestable, wouldBreakPowerRingLimit } from '../../utils/InventoryUtils';
 import { ATTUNE_CAP } from '../../hooks/useInvested';
 
 /**
@@ -40,12 +40,15 @@ const AttunedArea = ({ items = [], attune, onItemClick, glow = true }) => {
   const count = items.length;
   const empties = Math.max(0, ATTUNE_CAP - count);
 
-  // Accept an eligible item only while there's room and it isn't already here.
+  // Accept an eligible item only while there's room, it isn't already here, and
+  // it wouldn't break the one-power-ring-invested limit (#967 R6). A rejected
+  // drop shows the invalid state, same as an over-cap or non-investable drop.
   const accepts = useCallback(
     (item) =>
       count < ATTUNE_CAP &&
       isInvestable(item) &&
-      !items.some((it) => it.uid === item.uid),
+      !items.some((it) => it.uid === item.uid) &&
+      !wouldBreakPowerRingLimit(item, items),
     [count, items]
   );
 

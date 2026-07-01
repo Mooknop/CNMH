@@ -12,6 +12,8 @@ import {
   applyConsumedOverlay,
   flattenInventory,
   isInvestable,
+  isPowerRing,
+  wouldBreakPowerRingLimit,
   ARMOR_CATEGORIES,
   isArmor,
   normalizeArmor,
@@ -404,6 +406,32 @@ describe('InventoryUtils', () => {
       expect(isInvestable({ name: 'Rope' })).toBe(false);
       expect(isInvestable({ traits: ['Invested'], container: { contents: [] } })).toBe(false);
       expect(isInvestable(null)).toBe(false);
+    });
+  });
+
+  describe('isPowerRing / wouldBreakPowerRingLimit (#967 R6)', () => {
+    const ring = (uid) => ({ uid, name: 'Power Ring', powerRing: true, traits: ['Invested', 'Magical'] });
+    const notRing = (uid) => ({ uid, name: 'Ring of Wizardry', traits: ['Invested', 'Magical'] });
+
+    it('isPowerRing keys off the powerRing marker', () => {
+      expect(isPowerRing(ring('r1'))).toBe(true);
+      expect(isPowerRing(notRing('x'))).toBe(false);
+      expect(isPowerRing(null)).toBe(false);
+    });
+
+    it('blocks a second power ring when a different one is already invested', () => {
+      expect(wouldBreakPowerRingLimit(ring('r2'), [ring('r1')])).toBe(true);
+      expect(wouldBreakPowerRingLimit(ring('r2'), [notRing('a'), ring('r1')])).toBe(true);
+    });
+
+    it('allows a power ring when none (or only non-rings) are invested', () => {
+      expect(wouldBreakPowerRingLimit(ring('r1'), [])).toBe(false);
+      expect(wouldBreakPowerRingLimit(ring('r1'), [notRing('a'), notRing('b')])).toBe(false);
+    });
+
+    it('does not conflict with itself, and never blocks a non-power-ring', () => {
+      expect(wouldBreakPowerRingLimit(ring('r1'), [ring('r1')])).toBe(false); // same ring
+      expect(wouldBreakPowerRingLimit(notRing('x'), [ring('r1')])).toBe(false); // not a ring
     });
   });
 
