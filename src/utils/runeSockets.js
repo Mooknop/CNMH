@@ -25,18 +25,27 @@ import { runeTarget } from './runeClassify';
 export { runeTarget };
 
 /** What a piece of gear is for rune purposes: 'weapon' (has Strikes), 'armor'
- *  (has an armor block), else null (not runesmithable). */
+ *  (has an armor block), 'ring' (a power ring — #967 R4), else null (not
+ *  runesmithable). The power ring is neither weapon nor armor, so it's detected
+ *  by the explicit `powerRing` marker the R1 catalog item carries. */
 export const gearTarget = (item) => {
   if (!item || typeof item !== 'object') return null;
+  if (item.powerRing) return 'ring';
   if (item.strikes) return 'weapon';
   if (isArmor(item)) return 'armor';
   return null;
 };
 
+/** A power ring's property-socket capacity is its GRADE, not a potency rune:
+ *  the resolved grade merges `ringSockets` (R1 `overrides`) onto the item. */
+export const ringSocketCapacity = (item) => Number(item && item.ringSockets) || 0;
+
 const runesOf = (item) => (item && item.runes && typeof item.runes === 'object' ? item.runes : {});
 
 const propertyCapacity = (item, target) =>
-  target === 'armor' ? armorPropertySlotCapacity(runesOf(item)) : propertySlotCapacity(runesOf(item));
+  target === 'armor' ? armorPropertySlotCapacity(runesOf(item))
+    : target === 'ring' ? ringSocketCapacity(item)
+      : propertySlotCapacity(runesOf(item));
 
 /**
  * Derive the socket view for a piece of gear, in display order: potency, the
@@ -48,16 +57,22 @@ export const gearSockets = (item) => {
   const target = gearTarget(item);
   if (!target) return [];
   const runes = runesOf(item);
-  const sockets = [
-    { type: 'potency', target, filled: (runes.potency || 0) > 0, value: runes.potency || 0 },
-  ];
-  if (target === 'weapon') {
-    sockets.push({ type: 'striking', target, filled: !!runes.striking, value: runes.striking || null });
-  } else {
-    sockets.push({ type: 'resilient', target, filled: !!runes.resilient, value: runes.resilient || null });
-  }
   const property = Array.isArray(runes.property) ? runes.property : [];
   const cap = propertyCapacity(item, target);
+
+  // A power ring has NO fundamental sockets — its imbue capacity is fixed by
+  // grade (ringSockets), so every socket is a property (imbue) socket. Weapon
+  // and armor lead with their two fundamentals (potency + striking|resilient)
+  // before the potency-gated property sockets.
+  const sockets = [];
+  if (target !== 'ring') {
+    sockets.push({ type: 'potency', target, filled: (runes.potency || 0) > 0, value: runes.potency || 0 });
+    if (target === 'weapon') {
+      sockets.push({ type: 'striking', target, filled: !!runes.striking, value: runes.striking || null });
+    } else {
+      sockets.push({ type: 'resilient', target, filled: !!runes.resilient, value: runes.resilient || null });
+    }
+  }
   for (let i = 0; i < cap; i += 1) {
     sockets.push({ type: 'property', target, index: i, filled: property[i] != null, rune: property[i] != null ? property[i] : null });
   }
