@@ -19,7 +19,7 @@ import { isAttackAbility } from '../../utils/map';
 import { getVariableActionRange, variantFor } from '../../utils/actionIconUtils';
 import { buildDamageProfile, serializeRidersForSave } from '../../utils/damage';
 import { HARROW_SUITS, HARROW_CAST_DC, harrowCastEffect } from '../../utils/harrow';
-import { applyChainTransform, chainTransformCostNote } from '../../utils/spellshapeTransform';
+import { applyChainTransform, chainTransformCostNote, effectiveNumericRank, chainRankNote } from '../../utils/spellshapeTransform';
 
 // Same parser as UseAbilityModal — avoids a circular import.
 const parseSpellCost = (actionsText) => {
@@ -97,6 +97,11 @@ const ChainedSpellSection = forwardRef(({
   const defaultCastIdx = Math.max(0, castOptions.findIndex((o) => o.enabled));
   const selectedCastOption = castOptions[chainCastIdx ?? defaultCastIdx] || null;
   const castRank = selectedCastOption?.rank ?? (selectedSpell?.level ?? 0);
+  // Heighten (#1001 S3): numeric effects (damage/healing/area) treat the spell
+  // as `rankDelta` higher, while the rank actually cast — slot spent, counteract,
+  // incapacitation — stays `castRank`. Only the damage profiles use this.
+  const numericRank = effectiveNumericRank(castRank, chain.transform);
+  const rankNote = chainRankNote(castRank, chain.transform);
 
   // Variable-action chained spells (#572): a Spellshape can chain into a spell
   // that costs a range of actions (Blazing Bolt, Force Barrage — "One to Three
@@ -178,7 +183,7 @@ const ChainedSpellSection = forwardRef(({
   const saveDamageProfile = saveTargets.length > 0
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
-        castRank,
+        castRank: numericRank,
         exploit,
         enemyEntries: saveTargets,
         order,
@@ -197,7 +202,7 @@ const ChainedSpellSection = forwardRef(({
   const attackDamageProfile = (resolverTargets.length > 0 && rollProfile.defense === 'ac')
     ? buildDamageProfile(selectedSpell, character, {
         chosenActions: typeof spellCost === 'number' ? spellCost : null,
-        castRank,
+        castRank: numericRank,
         exploit,
         enemyEntries: resolverTargets,
         order,
@@ -474,6 +479,9 @@ const ChainedSpellSection = forwardRef(({
 
       {transformNote && (
         <div className="uam-variant-note" data-testid="chain-transform-note">{transformNote}</div>
+      )}
+      {rankNote && (
+        <div className="uam-variant-note" data-testid="chain-rank-note">{rankNote}</div>
       )}
 
       <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
