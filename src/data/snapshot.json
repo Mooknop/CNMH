@@ -20965,6 +20965,187 @@
           "description": "You contain your magic to a single target. If your next action is to Cast a Spell that targets an area and requires a Reflex or Fortitude save, you may instead target one creature within range by making a spell attack roll against the target's AC. This makes the target the only creature affected by the spell, and the spell has no effect on a miss, applies the failure effect on a successful spell attack roll, and applies the critical failure effect on a critically successful spell attack roll. You apply the ring's item bonus to your attack roll."
         }
       ]
+    },
+    {
+      "id": "ring-embodiment",
+      "type": "property",
+      "target": "ring",
+      "name": "Embodiment",
+      "level": 6,
+      "price": 250,
+      "description": "Your ring swirls with the malleable magical essences. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-embodiment-reminder",
+          "text": "When you Cast a Spell with the polymorph trait that grants a battle form, you gain a status bonus to Strikes equal to the ring's item bonus until the spell ends."
+        }
+      ]
+    },
+    {
+      "id": "ring-ramming",
+      "type": "property",
+      "target": "ring",
+      "name": "Ramming",
+      "level": 6,
+      "price": 225,
+      "description": "Ramming rings shoot foes rocketing away. Etched onto a power ring. (Force.)",
+      "riders": [
+        {
+          "id": "ring-ramming-objects",
+          "text": "Your spell attacks deal additional damage to objects equal to the rank of the spell."
+        },
+        {
+          "id": "ring-ramming-push",
+          "text": "On a critically successful spell attack against a creature with a spell modified by Veracious Spell, the target must succeed at a DC 22 Fortitude save or be pushed back 10 feet from the origin of the spell."
+        }
+      ]
+    },
+    {
+      "id": "ring-ramming-greater",
+      "type": "property",
+      "target": "ring",
+      "name": "Ramming (Greater)",
+      "level": 13,
+      "price": 2800,
+      "description": "Ramming rings shoot foes rocketing away. Etched onto a power ring. (Force.)",
+      "riders": [
+        {
+          "id": "ring-ramming-greater-objects",
+          "text": "Your spell attacks deal additional damage to objects equal to twice the rank of the spell."
+        },
+        {
+          "id": "ring-ramming-greater-push",
+          "text": "On a critically successful spell attack against a creature with a spell modified by Veracious Spell, the target must succeed at a DC 32 Fortitude save or be pushed back 20 feet from the origin of the spell."
+        }
+      ]
+    },
+    {
+      "id": "ring-warping",
+      "type": "property",
+      "target": "ring",
+      "name": "Warping",
+      "level": 6,
+      "price": 250,
+      "description": "Spells cast through a warping ring can arc and change at sharp angles, letting you avoid allies and hit enemies around corners. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-warping-reminder",
+          "text": "When you Cast a Spell that requires a spell attack roll, you can select a single square within 15 feet to be the new point of origin for the spell. Determine line of effect, line of sight, and cover from there. The target must still be within range of the chosen square."
+        }
+      ]
+    },
+    {
+      "id": "ring-warping-greater",
+      "type": "property",
+      "target": "ring",
+      "name": "Warping (Greater)",
+      "level": 11,
+      "price": 1450,
+      "description": "Spells cast through a warping ring can arc and change at sharp angles, letting you avoid allies and hit enemies around corners. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-warping-greater-reminder",
+          "text": "When you Cast a Spell that requires a spell attack roll, you can select up to 2 squares to redirect the spell's point of origin — the first within 15 feet of you, the second within 15 feet of the first. Determine line of effect, line of sight, and cover from the final square. The target must still be within range of that square."
+        }
+      ]
+    },
+    {
+      "id": "ring-warping-major",
+      "type": "property",
+      "target": "ring",
+      "name": "Warping (Major)",
+      "level": 16,
+      "price": 8000,
+      "description": "Spells cast through a warping ring can arc and change at sharp angles, letting you avoid allies and hit enemies around corners. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-warping-major-reminder",
+          "text": "When you Cast a Spell that requires a spell attack roll, you can select up to 3 squares to redirect the spell's point of origin — the first within 15 feet of you, each subsequent square within 15 feet of the previous. Determine line of effect, line of sight, and cover from the final square. The target must still be within range of that square."
+        }
+      ]
+    },
+    {
+      "id": "ring-immobilizing",
+      "type": "property",
+      "target": "ring",
+      "name": "Immobilizing",
+      "level": 8,
+      "price": 500,
+      "description": "When you blast magic from a hand wearing this ring, it encrusts the enemy in magical ice, stone, or wood. Choose cold, earth, shadow, or wood when you etch the rune; the rune gains that trait. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-immobilizing-reminder",
+          "text": "When you critically succeed at a spell attack roll with a spell that has no duration and has the rune's chosen trait, the target is slowed 1 until the end of your next turn unless it succeeds at a DC 24 Fortitude save."
+        }
+      ]
+    },
+    {
+      "id": "ring-immobilizing-greater",
+      "type": "property",
+      "target": "ring",
+      "name": "Immobilizing (Greater)",
+      "level": 15,
+      "price": 7750,
+      "description": "When you blast magic from a hand wearing this ring, it encrusts the enemy in magical ice, stone, or wood. Choose cold, earth, shadow, or wood when you etch the rune; the rune gains that trait. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-immobilizing-greater-reminder",
+          "text": "When you critically succeed at a spell attack roll with a spell that has no duration and has the rune's chosen trait, the target is slowed 1 until the end of your next turn unless it succeeds at a DC 34 Fortitude save."
+        },
+        {
+          "id": "ring-immobilizing-greater-chain",
+          "text": "If you critically hit a creature already slowed by this rune with a second cold or earth spell attack, it attempts another Fortitude save. On a failure it is slowed 2 instead and the duration extends to the end of your next turn; on a critical failure it is instead petrified for 1 minute (this is an incapacitation effect)."
+        }
+      ]
+    },
+    {
+      "id": "ring-scourging",
+      "type": "property",
+      "target": "ring",
+      "name": "Scourging",
+      "level": 8,
+      "price": 450,
+      "description": "Spells cast with a scourging ring leave lasting wounds on the target. Choose acid, electricity, fire, or physical when you etch the rune; the ring gains that damage type's trait (or force, if physical). Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-scourging-reminder",
+          "text": "When you critically succeed at a spell attack roll with a spell that has no duration and deals the rune's chosen damage type, the target also takes 1d10 persistent damage of that type (or persistent bleed if the spell dealt physical damage). If the spell already deals persistent damage, the DC to end it increases by 2."
+        }
+      ]
+    },
+    {
+      "id": "ring-scourging-greater",
+      "type": "property",
+      "target": "ring",
+      "name": "Scourging (Greater)",
+      "level": 15,
+      "price": 6500,
+      "description": "Spells cast with a scourging ring leave lasting wounds on the target. Choose acid, electricity, fire, or physical when you etch the rune; the ring gains that damage type's trait (or force, if physical). Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-scourging-greater-reminder",
+          "text": "When you critically succeed at a spell attack roll with a spell that has no duration and deals the rune's chosen damage type, the target takes 2d10 persistent damage of that type (or persistent bleed if the spell dealt physical damage). If the spell already deals persistent damage, the DC to end it increases by 2."
+        },
+        {
+          "id": "ring-scourging-greater-pierce",
+          "text": "Damage dealt from a spell attack roll modified by Veracious Spell ignores the target's resistance (including this persistent damage)."
+        }
+      ]
+    },
+    {
+      "id": "ring-overwhelming",
+      "type": "property",
+      "target": "ring",
+      "name": "Overwhelming",
+      "level": 13,
+      "price": 3000,
+      "description": "Magic that comes from overwhelming rings explodes out with unnatural force on random occasions. Etched onto a power ring.",
+      "riders": [
+        {
+          "id": "ring-overwhelming-reminder",
+          "text": "Spell attacks you modify with Veracious Spell score a critical success on a natural 19, as long as that result is a success. This has no effect on a 19 that would be a failure."
+        }
+      ]
     }
   ],
   "image": [
