@@ -97,10 +97,20 @@ describe('EffectsPanel', () => {
     expect(screen.getByText('Bless')).toBeInTheDocument();
   });
 
-  it('falls back to effectId when effect is not in catalog', () => {
+  it('falls back to effectId when a non-catalog effect has no inline name', () => {
     mockEffects.effects = [{ id: 'uid-unk', effectId: 'unknown-effect', ts: 1 }];
     render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
     expect(screen.getByText('unknown-effect')).toBeInTheDocument();
+  });
+
+  it('shows an inline (catalog-less) effect by its own name (#1001 S2)', () => {
+    mockEffects.effects = [{
+      id: 'uid-abl', effectId: 'energy-ablation', name: 'Energy Ablation (fire)',
+      modifiers: [{ stat: 'resistance', vs: 'fire', amount: 3 }], ts: 1,
+    }];
+    render(<EffectsPanel charId="char-a" themeColor="#cc0000" />);
+    expect(screen.getByText('Energy Ablation (fire)')).toBeInTheDocument();
+    expect(screen.queryByText('energy-ablation')).not.toBeInTheDocument();
   });
 
   it('calls removeEffect with the entry id when × is clicked', () => {

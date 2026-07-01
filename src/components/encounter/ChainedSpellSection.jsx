@@ -121,6 +121,14 @@ const ChainedSpellSection = forwardRef(({
   const parentNum = typeof parentCost === 'number' ? parentCost : 1;
   const totalCost = typeof castActionCost === 'number' ? parentNum + castActionCost : parentCost;
 
+  // Spellshape self-effect (#1001 S2): a chained spellshape may grant the caster
+  // a buff whose descriptor the player picks (Energy Ablation — resistance vs a
+  // chosen energy type). The chosen option flows through getResults; the parent
+  // applies the parametrized effect on confirm.
+  const selfEffect = chain.selfEffect || null;
+  const selfEffectOptions = selfEffect?.choose?.options || [];
+  const [selfEffectChoice, setSelfEffectChoice] = useState(selfEffectOptions[0] ?? null);
+
   // Harrow Casting (#227): the card drawn from the physical deck, the DC 11
   // flat check, and the suit's effect (enhanced when it matches the omen).
   const isHarrow = chain.harrow === true;
@@ -263,6 +271,7 @@ const ChainedSpellSection = forwardRef(({
           secondaryEntryId: secondaryEntry?.entryId ?? null,
           secondaryName: secondaryEntry?.name ?? null,
         } : null,
+        selfEffectChoice: selfEffect ? selfEffectChoice : null,
       };
     },
     getTotalCost: () => totalCost,
@@ -295,6 +304,22 @@ const ChainedSpellSection = forwardRef(({
         <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.4rem', fontStyle: 'italic' }}>
           {chain.modifier}
         </div>
+      )}
+
+      {selfEffect?.choose && selfEffectOptions.length > 0 && (
+        <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.4rem' }}>
+          {selfEffect.choose.label || 'Choose'}:{' '}
+          <select
+            aria-label={selfEffect.choose.label || 'Self-effect choice'}
+            value={selfEffectChoice ?? ''}
+            onChange={(e) => setSelfEffectChoice(e.target.value)}
+            style={{ fontSize: '0.85rem' }}
+          >
+            {selfEffectOptions.map((o) => (
+              <option key={o} value={o}>{o}</option>
+            ))}
+          </select>
+        </label>
       )}
 
       {isHarrow && (
