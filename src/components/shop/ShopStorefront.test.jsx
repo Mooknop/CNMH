@@ -603,6 +603,56 @@ describe('ShopStorefront', () => {
     });
   });
 
+  describe('generative rune-service offerings (#982 G3)', () => {
+    // A weapon at +1 (one open property slot), so a generated weapon rune can fill it.
+    const g3Runes = [
+      { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500 }, // weapon, in window
+      { id: 'keen', type: 'property', name: 'Keen', level: 13, price: 3000 }, // weapon, above cap 10
+      { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', level: 8, price: 400 }, // ring, off-target
+    ];
+    const renderG3 = (wares, props = {}) => {
+      mockInventory = [{ uid: 'w1', name: 'Longsword', strikes: [{}], runes: { potency: 1 } }];
+      render(
+        <ShopStorefront
+          isOpen onClose={vi.fn()} shops={[ringsShop]}
+          waresStore={{ rings: { keeper: '', wares } }}
+          items={items} runes={g3Runes} spells={spells} character={{ id: 'p', name: 'P' }} {...props}
+        />
+      );
+      fireEvent.click(screen.getByRole('tab', { name: /Runes/ }));
+    };
+
+    it('expands an offering into runes-for-sale, filtered by target + level', () => {
+      renderG3([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
+      const forSale = screen.getByLabelText('runes for sale');
+      expect(within(forSale).getByTestId('ware-runestone-flaming')).toBeInTheDocument();
+      // keen (level 13 > cap) and ring-calling (off-target) are not offered.
+      expect(within(forSale).queryByTestId('ware-runestone-keen')).not.toBeInTheDocument();
+      expect(within(forSale).queryByTestId('ware-runestone-ring-calling')).not.toBeInTheDocument();
+    });
+
+    it('offers a generated rune in the socket picker', () => {
+      renderG3([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
+      const gear = screen.getByTestId('gear-w1');
+      fireEvent.click(within(gear).getByLabelText(/fill Property slot/i));
+      expect(within(screen.getByTestId('picker-w1')).getByRole('button', { name: /Flaming/ })).toBeInTheDocument();
+    });
+
+    it('surfaces the Runes tab for an offering-only shop with no hand-stocked runes', () => {
+      renderG3([{ runeService: true, targets: ['weapon'], maxLevel: 10 }]);
+      expect(screen.getByRole('tab', { name: /Runes/ })).toBeInTheDocument();
+    });
+
+    it('dedupes a hand-stocked rune against the offering (shows once)', () => {
+      renderG3([
+        { ref: 'runestone', runeRef: 'flaming', price: 450 }, // custom-priced escape hatch
+        { runeService: true, targets: ['weapon'], maxLevel: 10 },
+      ]);
+      const forSale = screen.getByLabelText('runes for sale');
+      expect(within(forSale).getAllByTestId('ware-runestone-flaming')).toHaveLength(1);
+    });
+  });
+
   describe('multi-shop picker', () => {
     const second = { id: 'forge', title: 'The Forge', kind: 'Smithy' };
     it('lists shops and opens one, with Back returning to the picker', () => {
