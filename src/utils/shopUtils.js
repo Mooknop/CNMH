@@ -1,5 +1,6 @@
 import { buildChildrenMap, getChildren } from './loreUtils';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
+import { runeTarget } from './runeClassify';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
 
@@ -65,7 +66,7 @@ export function shopOffersRunes(loreId, shops) {
   if (!entry) return false;
   if (typeof entry.offersRunes === 'boolean') return entry.offersRunes;
   const wares = Array.isArray(entry.wares) ? entry.wares : [];
-  return wares.some(isRunestoneEntry);
+  return wares.some((w) => isRunestoneEntry(w) || isRuneServiceWare(w));
 }
 
 // Shop-flagged direct children of the current location that players may see,
@@ -107,6 +108,9 @@ export function resolveShopWares(loreId, shops, catalogMap, runeMap) {
       // spellItemOfferings/eligibleSpellItems (the Spellcasting Services tab) —
       // never expanded into the flat wares list, which would flood it.
       if (isSpellItemWare(w)) return null;
+      // Generative rune-service offerings (#982 G1) are surfaced via
+      // runeOfferings/eligibleRunes (the Runesmithing tab), not the flat list.
+      if (isRuneServiceWare(w)) return null;
       if (!w || w.ref == null) return null;
 
       if (isRunestoneEntry(w)) {
@@ -304,6 +308,104 @@ export function spellOfferingSummary(ware, spells) {
   const tradLabel = traditions.length === ALL_TRADITIONS.length ? 'all traditions' : traditions.join('/');
   const text = `${kind === 'scroll' ? 'Scrolls' : 'Wands'} · ${tradLabel} · ${rarities.join('+')} · up to item level ${maxLevel} · ${count} eligible spell${count === 1 ? '' : 's'}`;
   return { kind, maxLevel, cap, count, traditions, rarities, text };
+}
+
+// ── Generative rune-service offerings (#982 G1) ─────────────────────────────
+// A shop can sell runes for a TARGET (weapon | armor | ring) up to a max rune
+// LEVEL, filtered by rarity — expanded from the rune catalog on demand instead
+// of stocking one { ref:'runestone', runeRef } ware per rune (the pre-generative
+// model). The authored ware is the compact spec:
+//   { runeService:true, targets?:[...], maxLevel: number | { weapon?, armor?, ring? },
+//     rarities?:[...] }
+// directly mirroring the spell-item offering (spellItemOfferings/eligibleSpellItems).
+// FUNDAMENTAL runes (potency/striking/resilient) are NOT offered here — those are
+// stocked as their own item wares; the generative service covers PROPERTY runes,
+// which is also where the ring runes live (#967).
+
+export const RUNE_TARGETS = ['weapon', 'armor', 'ring'];
+
+// A ware is a generative rune-service offering (not a flat item/runestone ref).
+export function isRuneServiceWare(w) {
+  return !!(w && w.runeService === true);
+}
+
+// Target filter: an explicit non-empty list, else all three. (Empty/unset = all,
+// mirroring offeringTraditions.)
+const offeringTargets = (ware) => {
+  const t = Array.isArray(ware.targets) ? ware.targets.filter(Boolean) : [];
+  return t.length ? t.map((x) => String(x).toLowerCase()) : RUNE_TARGETS;
+};
+
+// The max rune level a target is offered up to. A scalar `maxLevel` caps every
+// selected target; an object `{ weapon?, armor?, ring? }` caps per target (a
+// target with no finite cap is not offered). Returns 0 when there is no cap.
+const maxLevelForTarget = (ware, target) => {
+  const ml = ware ? ware.maxLevel : null;
+  const raw = ml !== null && typeof ml === 'object' ? ml[target] : ml;
+  const lvl = Number(raw);
+  return Number.isFinite(lvl) && lvl > 0 ? lvl : 0;
+};
+
+// A rune's rarity (lowercased). Explicit `rune.rarity` wins; else a rarity trait
+// (getItemRarity, for forward-compat); else common. Runes carry no traits today
+// (#982 G1), so the explicit field is the signal a rarity filter reads.
+export const runeRarity = (rune) =>
+  String((rune && rune.rarity) || getItemRarity(rune) || 'common').toLowerCase();
+
+// The rune-service offerings on a shop, in authored order, each tagged with a
+// stable `offeringKey` for React/test keys.
+export function runeOfferings(loreId, shops) {
+  const wares = shops && loreId != null ? shops[loreId]?.wares : null;
+  if (!Array.isArray(wares)) return [];
+  return wares.filter(isRuneServiceWare).map((w) => ({
+    ...w,
+    offeringKey: `runeService:${offeringTargets(w).join('+')}:${RUNE_TARGETS.map((t) => maxLevelForTarget(w, t)).join('/')}:${offeringRarities(w).join('+')}`,
+  }));
+}
+
+// Expand one rune-service offering into the runestone ware specs it covers. A
+// PROPERTY rune is kept when ALL hold: its target ∈ the offering's targets, its
+// level ≤ that target's cap, and its rarity is allowed (rarity-unset ⇒ common
+// only). Each entry is a runestone ware spec { ref:'runestone', runeRef, wareKey }
+// — the same shape a hand-stocked runestone has — so resolveShopWares/resolveRunestone
+// (R1) price + display it unchanged and G3 can feed it straight into the socket
+// picker. Deduped by rune id.
+export function eligibleRunes(ware, runes) {
+  if (!isRuneServiceWare(ware)) return [];
+  const targets = offeringTargets(ware);
+  const rars = offeringRarities(ware);
+  const seen = new Set();
+  const out = [];
+  for (const rune of Array.isArray(runes) ? runes : []) {
+    if (!rune || rune.type !== 'property') continue;
+    const target = String(runeTarget(rune) || '').toLowerCase();
+    if (!targets.includes(target)) continue;
+    const cap = maxLevelForTarget(ware, target);
+    if (cap < 1 || Number(rune.level) > cap) continue;
+    if (!rars.includes(runeRarity(rune))) continue;
+    const id = String(rune.id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push({ ref: 'runestone', runeRef: rune.id, wareKey: `rune:${id}` });
+  }
+  return out;
+}
+
+// A human-readable coverage summary for one rune-service offering plus its live
+// eligible-rune count, for the G2 authoring preview. Mirrors the offering
+// defaults exactly: targets empty = all three; rarities empty = common only.
+//   → { targets[], rarities[], count, text }
+// e.g. "Runes · weapon/ring · common · weapon ≤8, ring ≤10 · 14 eligible runes".
+export function runeOfferingSummary(ware, runes) {
+  const targets = offeringTargets(ware || {});
+  const rarities = offeringRarities(ware || {});
+  const count = eligibleRunes(ware, runes).length;
+  const tgtLabel = targets.length === RUNE_TARGETS.length ? 'all targets' : targets.join('/');
+  const caps = RUNE_TARGETS.filter((t) => targets.includes(t) && maxLevelForTarget(ware, t) > 0)
+    .map((t) => `${t} ≤${maxLevelForTarget(ware, t)}`)
+    .join(', ');
+  const text = `Runes · ${tgtLabel} · ${rarities.join('+')} · ${caps || 'no level cap'} · ${count} eligible rune${count === 1 ? '' : 's'}`;
+  return { targets, rarities, count, text };
 }
 
 // ── Player browse grouping (#857 S2) ────────────────────────────────────────
