@@ -64,6 +64,8 @@ vi.mock('../../utils/SpellUtils', () => ({
   getDefenseTypes: () => ['all'],
   filterSpellsByRank: (spells) => spells,
   getSortedRankList: (ranks) => ranks.sort(),
+  // Pulled in transitively via useCastingResources (#961).
+  getFocusInfo: () => ({ max: 0, current: 0 }),
 }));
 
 describe('SpellsList', () => {

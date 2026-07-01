@@ -27,6 +27,7 @@ const SpellsRepertoire = ({
   defenseFilter,
   character,
   onCast,
+  castResources,
 }) => {
   const characterKey = character?.id || 'unknown';
   const [slotsSpent, setSlotsSpent] = useLocalStorage(
@@ -100,6 +101,7 @@ const SpellsRepertoire = ({
                   character={character}
                   encounterMode={!!onCast}
                   onCast={onCast}
+                  castResources={castResources}
                 />
               ))}
             </div>

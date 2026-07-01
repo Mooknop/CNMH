@@ -13,6 +13,7 @@ import SpellsHeader from './SpellsHeader';
 import CastSpellModal from '../encounter/CastSpellModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSpellCastFlow } from '../../hooks/useSpellCastFlow';
+import { useCastingResources } from '../../hooks/useCastingResources';
 import './MagicModal.css';
 
 const CATEGORY_LABELS = {
@@ -37,6 +38,10 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
   // Cast buttons appear on the character's turn; the source tag tells the
   // cast modal which pool (slot/focus/staff/wand/scroll) pays for the spell.
   const { makeOnCast, castRequest, clearCast } = useSpellCastFlow(character);
+
+  // Off-turn / non-encounter cast (#961): spend a slot directly via the shared
+  // casting-resources hook when no encounter cast handler is active.
+  const castResources = useCastingResources(character);
 
   const {
     spellcasting,
@@ -99,6 +104,7 @@ const MagicModal = ({ isOpen, onClose, character, themeColor }) => {
               defenseFilter="all"
               character={character}
               onCast={makeOnCast('slot')}
+              castResources={castResources}
             />
           </>
         );

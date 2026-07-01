@@ -9,7 +9,7 @@ import SpellDetailModal from './SpellDetailModal';
  * row, with an arcane left border. Tapping the card opens SpellDetailModal with
  * the full detail (mirrors the Encounter ActionRow → ActionDetailModal pattern).
  */
-const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode, onCast }) => {
+const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode, onCast, castResources }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Scroll/wand spells are gated on the item being held (see
@@ -71,6 +71,7 @@ const SpellCard = ({ spell, themeColor, characterLevel, character, encounterMode
         character={character}
         encounterMode={encounterMode}
         onCast={onCast}
+        castResources={castResources}
       />
     </>
   );

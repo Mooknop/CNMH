@@ -22,6 +22,7 @@ import Harrowing from './Harrowing';
 import CastSpellModal from '../encounter/CastSpellModal';
 import { useCharacter } from '../../hooks/useCharacter';
 import { useSpellCastFlow } from '../../hooks/useSpellCastFlow';
+import { useCastingResources } from '../../hooks/useCastingResources';
 
 /**
  * Main component for displaying spells in different categories
@@ -39,6 +40,10 @@ const SpellsList = ({ character, characterColor }) => {
   // makeOnCast(source) tags the request with its casting source (slot/focus/…)
   // so the cast modal knows which pool pays for it.
   const { makeOnCast, castRequest, clearCast } = useSpellCastFlow(character);
+
+  // Out-of-encounter cast (#961): the repertoire spends a slot directly through
+  // the shared casting-resources hook when there's no encounter cast handler.
+  const castResources = useCastingResources(character);
 
   // Data layer — all character reads go through this hook
   const {
@@ -268,6 +273,7 @@ const SpellsList = ({ character, characterColor }) => {
           defenseFilter={defenseFilter}
           character={character}
           onCast={makeOnCast('slot')}
+          castResources={castResources}
         />
       )}
 
