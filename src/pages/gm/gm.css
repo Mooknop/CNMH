@@ -2106,3 +2106,19 @@ p.gm-live-note {
   padding-top: 0.5rem;
   border-top: 1px solid var(--shell-border);
 }
+
+/* Rune-target facet (#967 R9) — filter chips above the rune list + a per-row
+   target badge distinguishing weapon / armor / ring runes. */
+.gm-rune-facets {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.gm-rune-badge {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.6;
+  margin-left: 0.35em;
+}
