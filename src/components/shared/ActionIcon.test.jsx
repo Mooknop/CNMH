@@ -25,9 +25,11 @@ describe('ActionIcon', () => {
   it('should render multiple action icons as a single glyph', () => {
     const { container } = render(<ActionIcon actionText="Three Actions" />);
     const icons = container.querySelectorAll('.action-icon');
-    // Three actions now render as one ◆◆◆ glyph span, not three separate icons
+    // Three actions render as one glyph span carrying the '3' font character,
+    // which the Pathfinder2eActions font draws as three pips.
     expect(icons).toHaveLength(1);
-    expect(icons[0].textContent).toBe('◆◆◆');
+    expect(icons[0].textContent).toBe('3');
+    expect(icons[0]).toHaveClass('pf2e-action-glyph');
   });
 
   it('should render reaction icon', () => {
@@ -88,9 +90,9 @@ describe('ActionIcon', () => {
   it('should handle two actions text as a single glyph', () => {
     const { container } = render(<ActionIcon actionText="Two Actions" />);
     const icons = container.querySelectorAll('.action-icon');
-    // Two actions render as one ◆◆ glyph span
+    // Two actions render as one glyph span carrying the '2' font character.
     expect(icons).toHaveLength(1);
-    expect(icons[0].textContent).toBe('◆◆');
+    expect(icons[0].textContent).toBe('2');
   });
 
   it('should be case-insensitive', () => {

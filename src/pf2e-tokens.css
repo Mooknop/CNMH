@@ -11,6 +11,17 @@
 /* — Google Fonts ————————————————————————————————————————— */
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=Caveat:wght@400;500;600;700&family=Special+Elite&family=Noto+Sans+Runic&display=swap');
 
+/* — Genuine PF2e action symbols ——————————————————————————————
+ * Paizo's official action-symbol font, released for non-commercial use.
+ * The glyphs are drawn for plain ASCII characters (see getActionGlyph in
+ * src/utils/actionGlyph.js): 1/2/3 → action pips, R → reaction, F → free.
+ * Bundled copy from the open-source Foundry pf2e system. */
+@font-face {
+  font-family: 'Pathfinder2eActions';
+  src: url('./assets/fonts/pathfinder-2e-actions.woff2') format('woff2');
+  font-display: swap;
+}
+
 
 :root {
 
@@ -28,6 +39,7 @@
   --font-type:      'Special Elite', Consolas, monospace;   /* typewriter specimen labels + stat keys */
   --font-hand:      'Caveat', ui-rounded, cursive;          /* handwritten party field notes          */
   --font-rune:      'Noto Sans Runic', 'Segoe UI Historic', 'Segoe UI Symbol', serif;
+  --font-action:    'Pathfinder2eActions';                  /* genuine PF2e action pips / reaction arrow */
 
   /* Font sizes */
   --text-xs:    0.625rem;   /* 10px */
@@ -448,6 +460,22 @@
   font-weight: var(--weight-bold);
   font-size: var(--action-sym-size);
   line-height: 1;
+}
+
+/* Genuine PF2e action symbols. Declared after .action-sym so the action
+ * font wins the family cascade when both classes sit on one element, while
+ * per-surface color/size overrides (single-vs-descendant selectors) still
+ * apply. Color inherits by default; --gold marks reaction/free. */
+.pf2e-action-glyph {
+  font-family: var(--font-action);
+  font-weight: var(--weight-normal);
+  line-height: 1;
+  letter-spacing: normal;
+  color: var(--accent-text);
+}
+
+.pf2e-action-glyph--gold {
+  color: var(--gold-mid);
 }
 
 .rank-label {

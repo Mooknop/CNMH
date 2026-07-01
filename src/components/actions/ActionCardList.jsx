@@ -4,17 +4,16 @@
 import React, { useState } from 'react';
 import ActionRow from '../shared/ActionRow';
 import ActionDetailModal from '../encounter/ActionDetailModal';
-
-const GLYPH = { 1: '◆', 2: '◆◆', 3: '◆◆◆' };
+import { getActionGlyph, getVariableActionGlyph } from '../../utils/actionGlyph';
 
 const getGlyph = (type, item) => {
-  if (type === 'reaction')    return '↺';
-  if (type === 'free-action') return '⬦';
+  if (type === 'reaction')    return getActionGlyph('reaction');
+  if (type === 'free-action') return getActionGlyph('free');
   if (item.variableActionCount) {
     const { min, max } = item.variableActionCount;
-    return `${GLYPH[min] || '◆'}–${GLYPH[max] || '◆◆◆'}`;
+    return getVariableActionGlyph(min, max);
   }
-  return GLYPH[item.actionCount || 1] || '◆';
+  return getActionGlyph(item.actionCount || 1);
 };
 
 const isGoldType = (type) => type === 'reaction' || type === 'free-action';
@@ -50,6 +49,7 @@ const ActionCardList = ({
             <ActionRow
               key={`${type}-${index}`}
               glyph={glyph}
+              actionFont
               glyphColor={goldGlyph ? 'gold' : undefined}
               name={item.name}
               rightLabel={rightLabel}

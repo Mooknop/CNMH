@@ -1,11 +1,14 @@
 // src/components/shared/ActionIcon.js
-// Renders action-economy glyphs (◆ ◆◆ ◆◆◆ ↺ ⬦) using the Cinzel display font.
-// Color comes from var(--color-theme) via CSS; no inline style needed.
+// Renders action-economy glyphs using the genuine Pathfinder2eActions font
+// (@font-face in pf2e-tokens.css). Parses free-form action text ("Two Actions",
+// "Reaction", "One to Three Actions") into the mapped font characters.
+// Color comes from CSS; no inline style needed.
 import React from 'react';
 import { convertWordToNumber } from '../../utils/ActionsUtils';
+import { getActionGlyph, getVariableActionGlyph } from '../../utils/actionGlyph';
 import './ActionIcon.css';
 
-const GLYPHS = { 1: '◆', 2: '◆◆', 3: '◆◆◆' };
+const GLYPH_CLASS = 'action-icon pf2e-action-glyph';
 
 const ActionIcon = ({ actionText, size = 'medium', showTooltip = true }) => {
   if (!actionText) return null;
@@ -16,7 +19,7 @@ const ActionIcon = ({ actionText, size = 'medium', showTooltip = true }) => {
   if (text.includes('reaction')) {
     return (
       <span className={`action-icon-wrapper reaction-icon ${sizeClass}`} aria-label="Reaction">
-        <span className="action-icon action-icon--reaction">↺</span>
+        <span className={`${GLYPH_CLASS} action-icon--reaction`}>{getActionGlyph('reaction')}</span>
         {showTooltip && <div className="action-tooltip">Reaction</div>}
       </span>
     );
@@ -25,7 +28,7 @@ const ActionIcon = ({ actionText, size = 'medium', showTooltip = true }) => {
   if (text.includes('free action')) {
     return (
       <span className={`action-icon-wrapper free-action-icon ${sizeClass}`} aria-label="Free Action">
-        <span className="action-icon action-icon--free">⬦</span>
+        <span className={`${GLYPH_CLASS} action-icon--free`}>{getActionGlyph('free')}</span>
         {showTooltip && <div className="action-tooltip">Free Action</div>}
       </span>
     );
@@ -41,9 +44,7 @@ const ActionIcon = ({ actionText, size = 'medium', showTooltip = true }) => {
         const label = `${startCount}–${endCount} Actions`;
         return (
           <span className={`action-icon-wrapper variable-action-count ${sizeClass}`} aria-label={label}>
-            <span className="action-icon">{GLYPHS[startCount] || '◆'}</span>
-            <span className="action-range-separator">–</span>
-            <span className="action-icon">{GLYPHS[endCount] || '◆◆◆'}</span>
+            <span className={GLYPH_CLASS}>{getVariableActionGlyph(startCount, endCount)}</span>
             {showTooltip && <div className="action-tooltip">{label}</div>}
           </span>
         );
@@ -65,7 +66,7 @@ const ActionIcon = ({ actionText, size = 'medium', showTooltip = true }) => {
     const label = `${count} Action${count !== 1 ? 's' : ''}`;
     return (
       <span className={`action-icon-wrapper action-count ${sizeClass}`} aria-label={label}>
-        <span className="action-icon">{GLYPHS[count] || '◆'}</span>
+        <span className={GLYPH_CLASS}>{getActionGlyph(count)}</span>
         {showTooltip && <div className="action-tooltip">{label}</div>}
       </span>
     );
