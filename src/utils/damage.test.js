@@ -15,6 +15,7 @@ import {
   formatDamageBreakdown,
   buildDamageProfile,
   damageHintParts,
+  hintTypeLabel,
   traitGatedEntryIds,
 } from './damage';
 
@@ -720,6 +721,24 @@ describe('damageHintParts', () => {
       riders: [{ id: 'flat', label: '+2', bonus: { flat: 2 }, defaultOn: true }],
     };
     expect(damageHintParts(p, {})).toEqual([{ dice: '2d6', typeLabel: 'fire' }]);
+  });
+
+  // ── hint type suppression (#1018) ──────────────────────────────────────────
+
+  it('hintTypeLabel suppresses a type the expression text already names', () => {
+    expect(hintTypeLabel('1d6 cold', 'cold')).toBeNull();
+    expect(hintTypeLabel('1d4 persistent fire', 'fire')).toBeNull();
+    expect(hintTypeLabel('1 nonlethal Bludgeoning', 'bludgeoning')).toBeNull();
+    expect(hintTypeLabel('1d8+4', 'slashing')).toBe('slashing');
+    expect(hintTypeLabel(null, 'fire')).toBe('fire');
+    expect(hintTypeLabel('1d6 cold', null)).toBeNull();
+  });
+
+  it('a bomb whose damage string names its type does not render it twice', () => {
+    const bomb = { name: 'Frost Vial', attackMod: 5, damage: '1d6 cold', damageType: 'cold' };
+    const profile = buildDamageProfile(bomb, { id: 'c' }, {});
+    expect(profile.typeLabel).toBe('cold'); // relay/save payloads keep the type
+    expect(damageHintParts(profile, {})).toEqual([{ dice: '1d6 cold', typeLabel: null }]);
   });
 });
 

@@ -3,7 +3,7 @@ import { useEncounter } from '../../hooks/useEncounter';
 import { useSession } from '../../contexts/SessionContext';
 import { useSyncedState } from '../../hooks/useSyncedState';
 import { computeSaveDegree } from '../../utils/saveDegree';
-import { computeSaveDamage, formatDamageBreakdown } from '../../utils/damage';
+import { computeSaveDamage, formatDamageBreakdown, hintTypeLabel } from '../../utils/damage';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
 import { buildDamageApply } from '../../utils/damageRelay';
@@ -193,7 +193,8 @@ const RequestedSaves = () => {
             {req.damage && (
               <div className="gm-save-req-dmg-hint">
                 {[
-                  [req.damage.expression, req.damage.typeLabel].filter(Boolean).join(' '),
+                  [req.damage.expression, hintTypeLabel(req.damage.expression, req.damage.typeLabel)]
+                    .filter(Boolean).join(' '),
                   req.damage.entered != null ? `rolled ${req.damage.entered}` : null,
                 ].filter(Boolean).join(' — ')}
               </div>
