@@ -121,6 +121,7 @@ export function makeActor(opts = {}) {
     getActiveTokens: () => tokens,
     update: jest.fn().mockResolvedValue(undefined),
     createEmbeddedDocuments: jest.fn().mockResolvedValue([]),
+    applyDamage: jest.fn().mockResolvedValue(undefined),
   };
 
   // Back-link condition + effect items to their parent actor.
@@ -321,11 +322,27 @@ export function makeCanvas(opts = {}) {
   };
 }
 
+// PF2e's typed damage roll, as the adapter looks it up in CONFIG.Dice.rolls by
+// class name (#1016). Evaluate is a no-op that returns the roll — tests assert
+// on the formula the adapter built ('8[fire]').
+export class DamageRoll {
+  constructor(formula) {
+    this.formula = formula;
+    this.evaluated = false;
+  }
+
+  async evaluate() {
+    this.evaluated = true;
+    return this;
+  }
+}
+
 export function makeConfig(opts = {}) {
   // testCollision returns true when a wall blocks the segment. Default: never.
   const testCollision = opts.testCollision ?? (() => false);
   return {
     Canvas: { polygonBackends: { move: { testCollision } } },
+    Dice: { rolls: opts.diceRolls ?? [DamageRoll] },
   };
 }
 

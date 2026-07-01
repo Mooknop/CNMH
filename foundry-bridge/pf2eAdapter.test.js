@@ -21,7 +21,7 @@ import {
   getGridSize, getAllTokens, getTokenDimensions, getTokenDisposition,
   getTokenGridPosition, gridToPixels, measureMoveCost, hasWallCollision, moveToken,
   getTokenById, resolveCombatantToken, setUserTargets, checkFlanking,
-  applyEffectByUuid,
+  applyEffectByUuid, applyTypedDamage,
   isEffectItem, getEffectItemActor, getEffects,
   getBestiaryInfo,
 } from './pf2eAdapter.js';
@@ -416,6 +416,59 @@ describe('applyEffectByUuid (Slice B)', () => {
     const result = await applyEffectByUuid(actor, 'slug:not-imported');
     expect(result).toBeNull();
     expect(actor.createEmbeddedDocuments).not.toHaveBeenCalled();
+  });
+});
+
+describe('applyTypedDamage (#1016)', () => {
+  test('typed amount builds an evaluated DamageRoll so PF2e nets IWR', async () => {
+    const actor = makeActor({ name: 'Troll' });
+    const token = makeToken({ actor });
+
+    const applied = await applyTypedDamage(token, 8, 'fire');
+
+    expect(applied).toBe(true);
+    expect(actor.applyDamage).toHaveBeenCalledTimes(1);
+    const arg = actor.applyDamage.mock.calls[0][0];
+    expect(arg.damage.formula).toBe('8[fire]');
+    expect(arg.damage.evaluated).toBe(true);
+    expect(arg.token).toBe(token.document); // TokenDocument, not the placeable
+  });
+
+  test('untyped amount applies as a plain number (deliberate no-IWR path)', async () => {
+    const actor = makeActor();
+    const token = makeToken({ actor });
+
+    const applied = await applyTypedDamage(token, 5, '');
+
+    expect(applied).toBe(true);
+    expect(actor.applyDamage).toHaveBeenCalledWith(
+      expect.objectContaining({ damage: 5 })
+    );
+  });
+
+  test('falls back to a plain number when no DamageRoll class is registered', async () => {
+    global.CONFIG.Dice = { rolls: [] };
+    const actor = makeActor();
+    const token = makeToken({ actor });
+
+    const applied = await applyTypedDamage(token, 8, 'fire');
+
+    expect(applied).toBe(true);
+    expect(actor.applyDamage).toHaveBeenCalledWith(
+      expect.objectContaining({ damage: 8 })
+    );
+  });
+
+  test('returns false without applying for no actor / non-positive / non-numeric amounts', async () => {
+    const actor = makeActor();
+    const token = makeToken({ actor });
+
+    expect(await applyTypedDamage(null, 8, 'fire')).toBe(false);
+    expect(await applyTypedDamage({ actor: null }, 8, 'fire')).toBe(false);
+    expect(await applyTypedDamage(token, 0, 'fire')).toBe(false);
+    expect(await applyTypedDamage(token, -3, 'fire')).toBe(false);
+    expect(await applyTypedDamage(token, 'lots', 'fire')).toBe(false);
+    expect(actor.applyDamage).not.toHaveBeenCalled();
   });
 });
 

@@ -44,6 +44,7 @@ import { SKILL_KEYS, conditionalTogglesFor } from '../../utils/EffectUtils';
 import { skillLabel } from '../../utils/victoryPoints';
 import { buildDamageProfile, formatDamageBreakdown, serializeRidersForSave } from '../../utils/damage';
 import { PERSISTENT_KEY, addPersistent, makeInstances, collectFromResults } from '../../utils/persistentDamage';
+import { collectDamageHits, buildDamageApply } from '../../utils/damageRelay';
 import { isAttackAbility, mapPenaltyFor, autoMapStep } from '../../utils/map';
 import { activatesAura, requiresAura, isOverflow } from '../../utils/kineticAura';
 import { HARROW_CAST_DC } from '../../utils/harrow';
@@ -982,6 +983,21 @@ const UseAbilityModal = ({
         (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, ability.name)),
         m || {}
       ));
+    }
+
+    // Typed damage relay (#1016): push each enemy target's RAW typed total to
+    // the bridge, which applies it through PF2e's actor.applyDamage — Foundry
+    // nets the monster's IWR and stays authoritative for enemy HP. Enemies
+    // only: PC damage flows through cnmh_hp and would double-apply.
+    const enemyEntryIds = new Set(
+      (order || []).filter((e) => e.kind === 'enemy').map((e) => e.entryId)
+    );
+    const damageHits = collectDamageHits(rayGroups, hasChainStrike ? chainResults : null, {
+      typeLabel: damageProfile?.typeLabel ?? null,
+      allowedEntryIds: enemyEntryIds,
+    });
+    if (damageHits.length) {
+      sendUpdate('global', 'dmgapply', buildDamageApply({ hits: damageHits, sourceName: ability.name }));
     }
 
     // Push a save request to the GM for target-save abilities. When a damage

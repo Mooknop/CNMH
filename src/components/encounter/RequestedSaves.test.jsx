@@ -364,6 +364,59 @@ describe('RequestedSaves', () => {
     });
   });
 
+  // ── typed damage relay to Foundry (#1016) ──────────────────────────────────
+
+  describe('typed damage relay (#1016)', () => {
+    // The relay filters to enemy order entries, so these tests stock the order.
+    const withDamageAndOrder = (damage, extra = {}) => {
+      useEncounter.mockReturnValue({
+        encounter: {
+          ...makeEncounter([{ ...baseRequest, basic: true, damage, ...extra }]),
+          order: [
+            { entryId: 'e-goblin', kind: 'enemy', name: 'Goblin' },
+            { entryId: 'e-troll',  kind: 'enemy', name: 'Troll' },
+            { entryId: 'e-pc',     kind: 'pc',    name: 'Ashka', charId: 'char-a' },
+          ],
+        },
+        appendLog: mockAppendLog,
+        removeSaveRequest: mockRemoveSaveReq,
+      });
+    };
+
+    test('resolving sends the RAW typed per-target totals to the bridge', () => {
+      withDamageAndOrder(dmgFixture, { targets: [goblinTarget, trollTarget] });
+      render(<RequestedSaves />);
+      enterGoblinD20(10); // 15 → Failure → full 12
+      fireEvent.change(screen.getByLabelText(/Troll d20/i), { target: { value: '20' } }); // crit success → none
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'dmgapply', expect.objectContaining({
+        sourceName: 'Fireball',
+        hits: [{ entryId: 'e-goblin', name: 'Goblin', amount: 12, type: 'fire' }],
+      }));
+    });
+
+    test('does not relay targets outside the enemy order', () => {
+      withDamageAndOrder(dmgFixture, {
+        targets: [{ entryId: 'e-unknown', name: 'Manual Foe', saveMod: 5 }],
+      });
+      render(<RequestedSaves />);
+      fireEvent.change(screen.getByLabelText(/Manual Foe d20/i), { target: { value: '10' } });
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
+    });
+
+    test('sends nothing when every save avoided damage', () => {
+      withDamageAndOrder(dmgFixture);
+      render(<RequestedSaves />);
+      enterGoblinD20(20); // crit success — no damage
+      fireEvent.click(screen.getByRole('button', { name: /log results/i }));
+
+      expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
+    });
+  });
+
   // ── persistent-damage recording (#272) ─────────────────────────────────────
 
   describe('persistent-damage recording (#272)', () => {

@@ -49,6 +49,8 @@ from it.
 | `shieldraise` | app (↔ Foundry mirror TBD) | charId | `{ raised, uid, ts }` — Raise a Shield state |
 | `action` | app → bridge | charId | `{ kind:'strike'\|'spell'\|'save-effect', sourceUid, targets:[entryId], ts }` — sets Foundry's user target set; bridge annotates each target with `offGuard:true` if attacker is a flanker |
 | `applyeffect` | app → bridge | charId | `{ ref, op:'apply', targets:[entryId], source, ts }` — bridge clones the compendium effect item onto each target actor (apply-only; removal is Foundry's own concern) |
+| `dmgapply` | app → bridge | `global` | `{ id, sourceName, hits:[{ entryId, name, amount, type }], ts }` — apply the app damage step's RAW typed totals to combatant actors via PF2e `applyDamage` (a typed `DamageRoll`, so Foundry nets the target's IWR itself; enemy targets only) (#1016) |
+| `dmgdone` | bridge → app | `global` | `{ id, sourceName, applied:[{ entryId, name, amount, type }], failed:[{ entryId, name }], ts }` — ack for `dmgapply` (`id` echoes); the GM client mirrors it into the encounter log |
 | `flanked` | bridge → app | `global` | `{ [enemyEntryId]: { byCharIds:[charId,...] } }` — pushed on token-move and turn-advance |
 | `positions` | bridge → app | `global` | `{ gridSize, positions: { [entryId]: { col, row } } }` — each combatant's current grid cell; pushed on token-move and combat lifecycle, empty when no combat. App measures attacker→target distance for ranged range increments (#527) |
 | `positionsreq` | app → bridge | `global` | _(no payload)_ — request a fresh `positions` push (reconnect / resolver open) |
