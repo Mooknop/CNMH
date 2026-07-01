@@ -33,6 +33,9 @@ const content = vi.hoisted(() => ({
     { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [
       { stat: 'weakness', amount: 5, vs: 'persistent-fire' },
     ] },
+    { id: 'fire-immune', name: 'Fire Immunity', modifiers: [
+      { stat: 'immunity', vs: 'persistent-fire' },
+    ] },
   ],
   characters: [],
 }));
@@ -181,6 +184,38 @@ describe('usePersistentReminders (#272)', () => {
     setEncounter(hook, inProgress(1, 1)); // Ashka's turn ends
     expect(reminderTexts()).toEqual([
       'Ashka: 1d6 persistent fire, weakness 5 (add) — DC 15 flat check to end',
+    ]);
+  });
+
+  it("marks a PC's tick immune from an active effect, superseding weakness (#919)", () => {
+    mockEffects = { 'char-a': { effects: [
+      { id: 'u1', effectId: 'fire-immune' },
+      { id: 'u2', effectId: 'fire-vuln' },
+    ] } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0)); // Ashka's turn underway
+    seedMap(hook, { 'e-pc': [{ id: 'pd-1', dice: '1d6', type: 'fire', sourceName: 'Torch' }] });
+    setEncounter(hook, inProgress(1, 1)); // Ashka's turn ends
+    expect(reminderTexts()).toEqual([
+      'Ashka: 1d6 persistent fire — immune (no damage) — DC 15 flat check to end',
+    ]);
+  });
+
+  it("marks a PC's tick immune from worn invested gear (#919)", () => {
+    content.characters = [{
+      id: 'char-a', name: 'Ashka',
+      inventory: [{
+        uid: 'ward', name: 'Salamander Charm', traits: ['Invested'],
+        modifiers: [{ stat: 'immunity', vs: 'persistent-fire' }],
+      }],
+    }];
+    mockEffects = { 'char-a': { invested: { ward: true } } };
+    const hook = setup();
+    setEncounter(hook, inProgress(1, 0));
+    seedMap(hook, { 'e-pc': [{ id: 'pd-1', dice: '1d6', type: 'fire' }] });
+    setEncounter(hook, inProgress(1, 1));
+    expect(reminderTexts()).toEqual([
+      'Ashka: 1d6 persistent fire — immune (no damage) — DC 15 flat check to end',
     ]);
   });
 

@@ -1,4 +1,4 @@
-import { wornResistanceFor, wornWeaknessFor, specialModifiers, itemModifiers } from './wornGear';
+import { wornResistanceFor, wornWeaknessFor, wornImmuneTo, specialModifiers, itemModifiers } from './wornGear';
 
 // Invested by default in these fixtures unless a test overrides the predicate.
 const yes = () => true;
@@ -118,6 +118,35 @@ describe('wornResistanceFor (#922 S3)', () => {
     it('reads weakness only — not resistance', () => {
       expect(wornWeaknessFor([robe()], yes, 'fire')).toBe(0); // robe is a resistance item
       expect(wornResistanceFor([vuln()], yes, 'fire')).toBe(0);
+    });
+  });
+
+  // Immunity is absolute — a boolean, not a highest-of (#919).
+  describe('wornImmuneTo (#919)', () => {
+    const ward = (overrides = {}) => robe({
+      uid: 'wd', name: 'Poison Ward',
+      modifiers: [{ stat: 'immunity', vs: 'poison,persistent-poison' }],
+      ...overrides,
+    });
+
+    it('is true for a worn invested immunity matching a vs token', () => {
+      expect(wornImmuneTo([ward()], yes, 'poison')).toBe(true);
+      expect(wornImmuneTo([ward()], yes, 'persistent-poison')).toBe(true);
+      expect(wornImmuneTo([ward()], yes, 'fire')).toBe(false);
+    });
+
+    it('gates on investment and worn placement', () => {
+      expect(wornImmuneTo([ward()], no, 'poison')).toBe(false);
+      expect(wornImmuneTo([ward({ state: 'held1' })], yes, 'poison')).toBe(false);
+    });
+
+    it('reads immunity only — resistance/weakness are not immunity', () => {
+      expect(wornImmuneTo([robe()], yes, 'fire')).toBe(false);
+    });
+
+    it('is resilient to a non-array inventory and a falsy vsType', () => {
+      expect(wornImmuneTo(undefined, yes, 'poison')).toBe(false);
+      expect(wornImmuneTo([ward()], yes, '')).toBe(false);
     });
   });
 

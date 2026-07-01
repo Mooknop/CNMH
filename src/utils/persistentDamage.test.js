@@ -169,6 +169,12 @@ describe('formatters', () => {
     ).toBe('Goblin: 1d6 persistent fire, weakness 5 (add), resistance 3 (reduce, min 0) — DC 15 flat check to end');
   });
 
+  it('immunity zeroes the tick and supersedes weakness/resistance (#919)', () => {
+    expect(
+      formatReminder('Ashka', { dice: '1d6', type: 'fire' }, { immune: true, weakness: 5, amount: 3 })
+    ).toBe('Ashka: 1d6 persistent fire — immune (no damage) — DC 15 flat check to end');
+  });
+
   it('formats clearance for both paths', () => {
     expect(formatClearance('Goblin', { dice: '1d4', type: 'bleed' }, 'flat-check')).toBe(
       'Goblin: 1d4 persistent bleed ended (flat check)'

@@ -404,6 +404,90 @@ describe('AdjustHpModal', () => {
     });
   });
 
+  // ─── incoming typed immunity (#919) ─────────────────────────
+  describe('typed immunity on incoming damage (#919)', () => {
+    const IMM_CATALOG = [
+      { id: 'fire-immune', name: 'Fire Immunity', modifiers: [{ stat: 'immunity', vs: 'fire' }] },
+      { id: 'fire-vuln', name: 'Fire Vulnerability', modifiers: [{ stat: 'weakness', amount: 5, vs: 'fire' }] },
+      { id: 'shock-immune', name: 'Shock Immunity', modifiers: [{ stat: 'immunity', vs: 'electricity' }] },
+    ];
+
+    const selectDamage = (type) => {
+      act(() => {
+        fireEvent.change(screen.getByLabelText('select character'), { target: { value: 'thorn' } });
+      });
+      fireEvent.click(screen.getByRole('button', { name: /damage/i }));
+      if (type) fireEvent.change(screen.getByLabelText('damage type'), { target: { value: type } });
+    };
+
+    beforeEach(() => {
+      __store['cnmh_hp_thorn'] = { ...THORN_HP }; // current 20
+    });
+
+    it('zeroes matching typed damage and logs immune', () => {
+      resolvedHolder.value = { effects: [{ id: 'i1', effectId: 'fire-immune' }], catalog: IMM_CATALOG };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(20); // untouched
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ charId: 'thorn', text: expect.stringMatching(/fire damage 8 → 0 \(immune\)/) })
+      );
+    });
+
+    it('takes precedence over weakness (no adding to zeroed damage)', () => {
+      resolvedHolder.value = {
+        effects: [{ id: 'i1', effectId: 'fire-immune' }, { id: 'w1', effectId: 'fire-vuln' }],
+        catalog: IMM_CATALOG,
+      };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(20);
+      expect(appendLogMock).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringMatching(/fire damage 8 → 0 \(immune\)/) })
+      );
+    });
+
+    it('does not zero a non-matching damage type', () => {
+      resolvedHolder.value = { effects: [{ id: 'i1', effectId: 'fire-immune' }], catalog: IMM_CATALOG };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('cold');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '8' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_hp_thorn'].current).toBe(12); // full 8
+    });
+
+    it('previews immune (alone) beside the damage-type picker', () => {
+      resolvedHolder.value = {
+        effects: [{ id: 'i1', effectId: 'fire-immune' }, { id: 'w1', effectId: 'fire-vuln' }],
+        catalog: IMM_CATALOG,
+      };
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('fire');
+      const note = screen.getByLabelText('damage modifier preview');
+      expect(note).toHaveTextContent('immune');
+      expect(note).not.toHaveTextContent('weakness');
+    });
+
+    it('does not clear on-damage effects when immune — the damage is never taken', () => {
+      resolvedHolder.value = { effects: [{ id: 'i1', effectId: 'shock-immune' }], catalog: IMM_CATALOG };
+      __store['cnmh_effects_thorn'] = [{ id: 'c1', effectId: 'eld-charged' }];
+      render(<AdjustHpModal isOpen={true} onClose={() => {}} />);
+      selectDamage('electricity');
+      fireEvent.change(screen.getByLabelText('hp amount'), { target: { value: '6' } });
+      fireEvent.click(screen.getByLabelText('Apply damage'));
+
+      expect(__store['cnmh_effects_thorn'].map((e) => e.id)).toEqual(['c1']); // eld-charged stays
+      expect(__store['cnmh_hp_thorn'].current).toBe(20);
+    });
+  });
+
   it('amount field clears after applying', () => {
     __store['cnmh_hp_thorn'] = { ...THORN_HP };
     render(<AdjustHpModal isOpen={true} onClose={() => {}} />);

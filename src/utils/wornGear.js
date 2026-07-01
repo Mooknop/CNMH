@@ -89,3 +89,27 @@ export const wornResistanceFor = (inventory, isInvested, vsType) =>
  */
 export const wornWeaknessFor = (inventory, isInvested, vsType) =>
   highestWornSpecial(inventory, isInvested, 'weakness', vsType);
+
+/**
+ * True when a contributing worn item grants immunity to a damage descriptor
+ * (#919). Immunity modifiers carry no `amount` — the mere presence of a
+ * matching `{ stat: 'immunity', vs }` on worn (and invested, where applicable)
+ * gear zeroes matching damage, so this is a boolean, not a highest-of.
+ *
+ * @param {Array}    inventory  - effective (state-stamped) inventory
+ * @param {Function} isInvested - (uid) => boolean
+ * @param {string}   vsType     - damage descriptor
+ * @returns {boolean}
+ */
+export const wornImmuneTo = (inventory, isInvested, vsType) => {
+  if (!vsType) return false;
+  for (const e of Array.isArray(inventory) ? inventory : []) {
+    if (!contributes(e, isInvested)) continue;
+    for (const m of specialModifiers(itemModifiers(e))) {
+      if (m.stat !== 'immunity') continue;
+      const types = String(m.vs).split(',').map((t) => t.trim());
+      if (types.includes(vsType)) return true;
+    }
+  }
+  return false;
+};

@@ -5,9 +5,9 @@ import { useSyncedState } from './useSyncedState';
 import { useSession } from '../contexts/SessionContext';
 import { useContent } from '../contexts/ContentContext';
 import { PERSISTENT_KEY, pruneOrphans, formatReminder, persistentVsType } from '../utils/persistentDamage';
-import { resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
+import { isImmuneTo, resistanceFor, weaknessFor, flatCheckEasedFor } from '../utils/EffectUtils';
 import { buildEffectiveInventory } from '../utils/effectiveInventory';
-import { wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
+import { wornImmuneTo, wornResistanceFor, wornWeaknessFor } from '../utils/wornGear';
 
 // Persistent-damage turn watcher (#272). Watches synced encounter state for
 // turn transitions instead of hooking advanceTurn, so reminders fire for
@@ -66,6 +66,8 @@ export function usePersistentReminders() {
     const isInvested = (uid) => !!invested[uid];
 
     return {
+      immune: isImmuneTo(effects, vsType, catalog)
+        || wornImmuneTo(inventory, isInvested, vsType),
       weakness: Math.max(
         weaknessFor(effects, vsType, catalog),
         wornWeaknessFor(inventory, isInvested, vsType),
