@@ -451,6 +451,25 @@ describe('ShopStorefront', () => {
       expect(within(gear).getByTestId('staged-w1')).toHaveTextContent('541 gp');
     });
 
+    it('lists a power ring with its imbue sockets, offering ring runes to fill them (#967 R5)', () => {
+      const ringEnergy = { id: 'ring-energy', type: 'property', target: 'ring', name: 'Energy', price: 300 };
+      const ringCalling = { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', price: 400 };
+      renderRunesWith({
+        // A silver power ring (grade 2 ⇒ 2 imbue sockets), one already filled.
+        inv: [{ uid: 'pr1', name: 'Power Ring (Silver)', powerRing: true, ringSockets: 2, runes: { property: ['ring-energy'] } }],
+        runeDocs: [ringEnergy, ringCalling], refs: ['ring-calling'],
+      });
+      const gear = screen.getByTestId('gear-pr1');
+      expect(gear).toHaveTextContent('Power Ring (Silver)');
+      expect(gear).toHaveTextContent('Energy'); // filled imbue socket shows the rune
+      // grade 2 ⇒ 2 property sockets: one filled, one open (no fundamentals).
+      const fillBtns = within(gear).getAllByRole('button', { name: /^fill Property slot/i });
+      expect(fillBtns.length).toBe(1);
+      // The open socket offers the stocked ring rune (Calling), not weapon/armor runes.
+      fireEvent.click(fillBtns[0]);
+      expect(within(screen.getByTestId('picker-pr1')).getByRole('button', { name: /Calling/ })).toBeInTheDocument();
+    });
+
     it('moves runestones out of Wares and into the Runesmithing "for sale" section', () => {
       renderRunes();
       const forSale = screen.getByLabelText('runes for sale');
