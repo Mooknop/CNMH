@@ -5525,16 +5525,18 @@
           "Spellshape"
         ],
         "description": "If your next action is to Cast a Spell that deals at least one type of energy damage (acid, cold, electricity, fire, force, sonic, vitality, or void), you gain resistance to one energy type the spell could deal equal to the spell's rank until the end of your next turn."
-      },
-      {
-        "name": "Energy Abjection",
-        "actionCount": 3,
-        "traits": [
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 2nd rank; Effect You grant resistance to one energy damage type of your choosing to all allies within 30 feet, equal to double the rank of the spell you expended. This lasts for a number of rounds equal to the rank of the spell you expended."
       }
     ],
+    "actuated": {
+      "name": "Energy Abjection",
+      "actionCount": 3,
+      "minRank": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "You grant resistance to one energy damage type of your choosing to all allies within 30 feet, equal to double the rank of the spell you expended. This lasts for a number of rounds equal to the rank of the spell you expended."
+    },
     "id": "scepter-of-energy-ablation"
   },
   {
@@ -5557,16 +5559,18 @@
           "Spellshape"
         ],
         "description": "If the next action you use is to Cast a Spell that has a range, increase that spell's range by 30 feet. As is standard for increasing spell ranges, if the spell normally has a range of touch, you extend its range to 30 feet. If you have the Reach Spell feat, you increase the range of the spell by 45 feet instead of 30."
-      },
-      {
-        "name": "Mobilize the Distance",
-        "actionCount": 3,
-        "traits": [
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 2nd rank; Effect You grant all allies within 30 feet a +10-foot status bonus to Speed and a +1 status bonus to DCs and checks against effects that would impart immobilized, grabbed, or restrained for a number of rounds equal to the rank of the spell you expended."
       }
     ],
+    "actuated": {
+      "name": "Mobilize the Distance",
+      "actionCount": 3,
+      "minRank": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "You grant all allies within 30 feet a +10-foot status bonus to Speed and a +1 status bonus to DCs and checks against effects that would impart immobilized, grabbed, or restrained for a number of rounds equal to the rank of the spell you expended."
+    },
     "id": "scepter-of-greater-distances"
   },
   {
@@ -5590,18 +5594,20 @@
           "Spellshape"
         ],
         "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell of at least 3 ranks below the highest-rank spell slot you have, you treat the rank of the spell as 2 higher for the purposes of numerical effects based on its heightened rank, such as damage, healing, increased area, bonuses, or penalties. You do not gain any other effects associated with the heightened rank, such as being able to target more creatures or treating the spell as a higher rank for the purposes of counteracting or the incapacitation trait."
-      },
-      {
-        "name": "Height of Your Power",
-        "actionCount": 3,
-        "traits": [
-          "Concentrate",
-          "Envision",
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 4th rank; Effect For the duration, you can use the Heighten spellshape from this scepter as if it had a frequency of once per round instead of once per hour. This effect lasts for a number of rounds equal to the rank of the spell you expended."
       }
     ],
+    "actuated": {
+      "name": "Height of Your Power",
+      "actionCount": 3,
+      "minRank": 4,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Envision",
+        "Manipulate"
+      ],
+      "description": "For the duration, you can use the Heighten spellshape from this scepter as if it had a frequency of once per round instead of once per hour. This effect lasts for a number of rounds equal to the rank of the spell you expended."
+    },
     "id": "scepter-of-heightening"
   },
   {
@@ -5625,16 +5631,18 @@
           "Spellshape"
         ],
         "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell that would restore Hit Points to a single creature, you can attempt to counteract the target's sickened condition in addition to the normal effects, using the rank of the spell you cast for your counteract modifier."
-      },
-      {
-        "name": "Purifying Wave",
-        "actionCount": 3,
-        "traits": [
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 4th rank; Effect You restore 1d8 Hit Points per rank of the spell to all creatures within a 30-foot cone. You can attempt to counteract the sickened condition of all creatures in the area, or a disease or poison affecting a single target in the area, using the rank of the spell you expended as the spell rank for your counteract modifier."
       }
     ],
+    "actuated": {
+      "name": "Purifying Wave",
+      "actionCount": 3,
+      "minRank": 4,
+      "frequency": "once per day",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "You restore 1d8 Hit Points per rank of the spell to all creatures within a 30-foot cone. You can attempt to counteract the sickened condition of all creatures in the area, or a disease or poison affecting a single target in the area, using the rank of the spell you expended as the spell rank for your counteract modifier."
+    },
     "id": "scepter-of-purifying"
   },
   {
@@ -5657,16 +5665,18 @@
           "Spellshape"
         ],
         "description": "Frequency once per day; Effect If the next action you use is to Cast a cantrip or a spell that is at least 2 ranks lower than the highest-rank spell slot you have, reduce the number of actions to Cast it by 1 (minimum 1 action)."
-      },
-      {
-        "name": "Hasten to Fight",
-        "actionCount": 3,
-        "traits": [
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 8th rank; Effect You and all allies within 30 feet are quickened for 1 minute and can use the extra action each round only to Strike and Stride."
       }
     ],
+    "actuated": {
+      "name": "Hasten to Fight",
+      "actionCount": 3,
+      "minRank": 8,
+      "frequency": "once per day",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "You and all allies within 30 feet are quickened for 1 minute and can use the extra action each round only to Strike and Stride."
+    },
     "id": "scepter-of-quickening"
   },
   {
@@ -5690,16 +5700,18 @@
           "Spellshape"
         ],
         "description": "Frequency once per hour; Effect If the next action you use is to Cast a Spell that would target a single creature and requires a Will save, you can use your reaction if the target rolls a success on their save to force the creature to reroll their save and take the new result. This is a misfortune effect."
-      },
-      {
-        "name": "Manifest Desires",
-        "actionCount": 3,
-        "traits": [
-          "Manipulate"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 5th rank; Effect You and allies within 30 feet can manifest a better reality for yourselves for a number of rounds equal to the rank of the spell you expended. For the duration, affected creatures can choose to reroll a single attack roll, saving throw, or skill check. They must take the new result even if it is worse. This is a fortune effect."
       }
     ],
+    "actuated": {
+      "name": "Manifest Desires",
+      "actionCount": 3,
+      "minRank": 5,
+      "frequency": "once per day",
+      "traits": [
+        "Manipulate"
+      ],
+      "description": "You and allies within 30 feet can manifest a better reality for yourselves for a number of rounds equal to the rank of the spell you expended. For the duration, affected creatures can choose to reroll a single attack roll, saving throw, or skill check. They must take the new result even if it is worse. This is a fortune effect."
+    },
     "id": "scepter-of-second-chances"
   },
   {
@@ -5722,20 +5734,22 @@
           "Spellshape"
         ],
         "description": "Frequency once per hour; Effect If your next action is to Cast a Spell with a basic Fortitude save, creatures that fail their save are also sickened 1 (sickened 2 on a critical failure). The creature is affected whether or not the spell deals damage."
-      },
-      {
-        "name": "Rotting Aura",
-        "actionCount": 3,
-        "traits": [
-          "Aura",
-          "Concentrate",
-          "Disease",
-          "Manipulate",
-          "Olfactory"
-        ],
-        "description": "Frequency once per day; Cost a spell slot of at least 3rd rank; Effect You exude a putrid aura in a 20-foot emanation. The aura lasts a number of rounds equal to the rank of the expended spell. Creatures that end their turn within the area become sickened 1 or increase the value of their sickened condition by 1, to a maximum of sickened 4. Creatures in the area cannot reduce their sickened condition below 1."
       }
     ],
+    "actuated": {
+      "name": "Rotting Aura",
+      "actionCount": 3,
+      "minRank": 3,
+      "frequency": "once per day",
+      "traits": [
+        "Aura",
+        "Concentrate",
+        "Disease",
+        "Manipulate",
+        "Olfactory"
+      ],
+      "description": "You exude a putrid aura in a 20-foot emanation. The aura lasts a number of rounds equal to the rank of the expended spell. Creatures that end their turn within the area become sickened 1 or increase the value of their sickened condition by 1, to a maximum of sickened 4. Creatures in the area cannot reduce their sickened condition below 1."
+    },
     "id": "scepter-of-sickening"
   },
   {
