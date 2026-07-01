@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Modal from '../shared/Modal';
 import TraitTag from '../shared/TraitTag';
+import ActionSymbol from '../shared/ActionSymbol';
 import ItemActivations from '../shared/ItemActivations';
 import { formatBulk, normalizeShield, isContainer, flattenInventory, isArmor } from '../../utils/InventoryUtils';
 import { armorDisplayName } from '../../utils/armorRunes';
@@ -592,6 +593,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           <div className="scroll-details">
             <div className="scroll-header">
               <span className="scroll-name">{item.scroll.name}</span>
+              {item.scroll.actions && <ActionSymbol cost={item.scroll.actions} />}
               <span className="scroll-level">Rank {castRank(item.scroll, item.scroll) ?? item.scroll.level}</span>
             </div>
             {item.scroll.traits && item.scroll.traits.length > 0 && (
@@ -615,6 +617,7 @@ const ItemModal = ({ isOpen, onClose, item, character, characterColor, onUse }) 
           <div className="wand-details">
             <div className="wand-header">
               <span className="wand-name">{item.wand.name}</span>
+              {item.wand.actions && <ActionSymbol cost={item.wand.actions} />}
               <span className="wand-level">Rank {castRank(item.wand, item.wand) ?? item.wand.level}</span>
             </div>
             {item.wand.traits && item.wand.traits.length > 0 && (
