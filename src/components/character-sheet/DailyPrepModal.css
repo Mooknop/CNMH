@@ -57,6 +57,64 @@
   color: var(--color-text);
 }
 
+.dp-staff-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.15rem;
+}
+
+.dp-staff-sublabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.dp-slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.dp-slot-label {
+  font-size: 0.88rem;
+}
+
+.dp-slot-label em {
+  color: var(--color-text-muted);
+  font-style: normal;
+}
+
+.dp-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dp-step {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.dp-step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dp-step-count {
+  min-width: 2.4rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
+}
+
 .dp-staff-hint {
   margin: 0.1rem 0 0;
   font-size: 0.85rem;

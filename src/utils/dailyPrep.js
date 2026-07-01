@@ -146,9 +146,11 @@ export function dailyPrepPlanFor(character, getState) {
  * @param {string|null} [staffChoice] - staff to prepare today (#957 S6a): an item
  *   uid to prepare, '' / null to clear, or undefined to refresh the staff already
  *   prepared (the GM party loop passes nothing, so existing staves stay charged).
+ * @param {Object} [staffSlots] - rank -> spell slots expended for extra staff
+ *   charges (#957 S6b); each adds charges equal to its rank and is spent as if cast.
  * @returns {{ summary: string }}
  */
-export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eldChoice, staffChoice }) {
+export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eldChoice, staffChoice, staffSlots }) {
   const id = character?.id;
   const resets = computeResets(character, getState);
 
@@ -173,11 +175,30 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
   // Staff preparation (#957 S6a) — a daily choice, like Eld attunement. An
   // explicit choice prepares (or clears) a staff; `undefined` (the GM party
   // loop) refreshes whatever staff was prepared so it stays charged.
+  // Clamp a requested slot allocation to what the caster actually has of each
+  // rank (cantrips/rank 0 never count). Used for BOTH the charge total and the
+  // spent-slots write so they can't disagree.
+  const maxes = character?.spellcasting?.spell_slots || {};
+  const clampAlloc = (alloc) => {
+    const out = {};
+    Object.keys(maxes).forEach((k) => {
+      const rn = Number(k);
+      out[k] = Number.isFinite(rn) && rn > 0
+        ? Math.max(0, Math.min(Number((alloc || {})[k] || 0), Number(maxes[k] || 0)))
+        : 0;
+    });
+    return out;
+  };
+
   let nextStaffPrep;
+  let expendedForStaff = null; // clamped rank -> slots spent, applied to cnmh_slots below
   if (staffChoice !== undefined) {
-    nextStaffPrep = staffPrepValue(character, staffChoice);
+    expendedForStaff = staffChoice ? clampAlloc(staffSlots) : null;
+    nextStaffPrep = staffPrepValue(character, staffChoice, expendedForStaff);
   } else {
     const prev = getState(id, 'staffprep');
+    // GM party-loop refresh recomputes base charges only (it can't know the
+    // day's slot allocation), so any prior slot bonus is dropped on refresh.
     nextStaffPrep = prev?.staffId ? staffPrepValue(character, prev.staffId) : undefined;
   }
   if (nextStaffPrep !== undefined) {
@@ -186,6 +207,14 @@ export function performDailyPrep({ character, getState, sendUpdate, nowSecs, eld
     // A fresh preparation starts with full charges — clear any spent count.
     writeLocal(`cnmh_staff_${id}`, 0);
     sendUpdate(id, 'staff', 0);
+
+    // Expend the slots allocated to the staff — spent as if cast. The slot reset
+    // above zeroed cnmh_slots, so re-write it with the clamped allocation.
+    if (expendedForStaff && Object.values(expendedForStaff).some((n) => n > 0)) {
+      writeLocal(`cnmh_slots_${id}`, expendedForStaff);
+      sendUpdate(id, 'slots', expendedForStaff);
+    }
+
     if (nextStaffPrep) {
       labels.push(`prepared a staff (${nextStaffPrep.charges} charge${nextStaffPrep.charges !== 1 ? 's' : ''})`);
     }
