@@ -5,6 +5,7 @@ import { slugify, existingIdSet } from '../../utils/contentUtils';
 import { newEntryUid } from '../../utils/uid';
 import { SKILL_ABILITY_MAP, getProficiencyLabel } from '../../utils/CharacterUtils';
 import { formatBulk } from '../../utils/InventoryUtils';
+import { catalogItemName } from '../../utils/spellItems';
 import ConfirmDialog from '../../components/shared/ConfirmDialog';
 import HistoryModal from '../../components/gm/HistoryModal';
 import CatalogPickerModal from '../../components/gm/CatalogPickerModal';
@@ -103,6 +104,23 @@ const itemToForm = (it) => {
           ? it.container.contents.map(itemToForm)
           : [],
       forkName: '',
+    };
+  }
+  // A generated scroll/wand (#812): the spell is a catalog ref, so the entry
+  // carries no item `ref` — just a `{ scroll|wand: { spellRef, rank? } }` block
+  // that finishItem re-resolves into a named, priced item. Edited as a spell
+  // pick + optional cast-rank override, mirroring GM → Items' scroll/wand form.
+  if (it && (it.scroll || it.wand)) {
+    const kind = it.scroll ? 'scroll' : 'wand';
+    const block = it[kind] && typeof it[kind] === 'object' ? it[kind] : {};
+    return {
+      __spell: true,
+      uid: it.uid,
+      kind,
+      spellRef: block.spellRef != null ? String(block.spellRef) : '',
+      rank: block.rank != null ? String(block.rank) : '',
+      quantity: it.quantity != null ? String(it.quantity) : '1',
+      extra: omit(it, ['uid', 'scroll', 'wand', 'quantity']),
     };
   }
   const rest = { ...it };
@@ -250,6 +268,23 @@ const itemFromForm = (f, index) => {
         contents: (f.contents || []).map((c, i) => itemFromForm(c, i)),
       };
     }
+    return out;
+  }
+  // Generated scroll/wand entry (#812): emit the minimal `{ scroll|wand: {
+  // spellRef, rank? } }` block finishItem re-resolves. A cast-rank override is
+  // kept only when a positive integer (blank ⇒ the spell's own rank). Non-block
+  // per-character keys round-trip via `extra`; a fresh uid is minted on add.
+  if (f && f.__spell) {
+    const spellRef = String(f.spellRef || '').trim();
+    const kind = f.kind === 'wand' ? 'wand' : 'scroll';
+    if (!spellRef) {
+      throw new Error(`Inventory item ${index + 1}: choose a spell for the ${kind}.`);
+    }
+    const block = { spellRef };
+    const rankNum = parseInt(f.rank, 10);
+    if (Number.isInteger(rankNum) && rankNum > 0) block.rank = rankNum;
+    const out = { uid: f.uid || newEntryUid(), ...(f.extra || {}), [kind]: block };
+    out.quantity = String(f.quantity).trim() === '' ? 1 : toInt(f.quantity);
     return out;
   }
   if (!f.name.trim()) throw new Error(`Inventory item ${index + 1} needs a name.`);
@@ -459,22 +494,41 @@ const SpellRow = ({ index, spell, spells, onChange, onRemove }) => {
 // that opens the edit modal, and a red ✕ at the far right that removes the
 // entry. Controlled by the parent form; containers are a single row here —
 // their contents are edited inside the modal.
-const ItemRow = ({ item, tag, catalogList, onEdit, onRemove }) => {
+const ItemRow = ({ item, tag, catalogList, spells, onEdit, onRemove }) => {
   const isRef = !!item.__ref;
+  const isSpell = !!item.__spell;
   const sel = isRef ? catalogList.find((c) => String(c.id) === String(item.ref)) : null;
-  const known = isRef && !!sel;
-  const label = isRef
-    ? sel
-      ? sel.name
-      : `${item.ref || '(none)'} (not in catalog)`
-    : item.name || '(unnamed item)';
+  // A generated scroll/wand row resolves its name from the spell catalog (no
+  // catalog item ref). An unpicked spell reads as a prompt rather than a stub.
+  const spellFound =
+    isSpell && item.spellRef
+      ? (Array.isArray(spells) ? spells : []).some((s) => String(s.id) === String(item.spellRef))
+      : false;
+  const known = isRef ? !!sel : isSpell ? spellFound : false;
+  let label;
+  if (isSpell) {
+    const rankNum = parseInt(item.rank, 10);
+    const block = { spellRef: item.spellRef, ...(rankNum > 0 ? { rank: rankNum } : {}) };
+    label = item.spellRef
+      ? catalogItemName({ [item.kind]: block }, spells)
+      : `New ${item.kind} — pick a spell`;
+  } else if (isRef) {
+    label = sel ? sel.name : `${item.ref || '(none)'} (not in catalog)`;
+  } else {
+    label = item.name || '(unnamed item)';
+  }
   const qty =
     item.quantity === '' || item.quantity == null ? 1 : item.quantity;
-  const bulk = isRef
+  const bulk = isSpell
+    ? 'L' // scrolls and wands are always Light (spellItems base template)
+    : isRef
     ? sel
       ? formatBulk(sel.weight || 0)
       : '—'
     : formatBulk(Number(item.weight) || 0);
+  // Warn styling + testid: a resolved row is a summary; a set-but-unresolved
+  // ref/spell is flagged unknown; an unpicked spell has no testid yet.
+  const flagUnknown = (isRef && !sel) || (isSpell && item.spellRef && !spellFound);
 
   return (
     <div className="gm-inv-row" data-testid={tag}>
@@ -482,7 +536,7 @@ const ItemRow = ({ item, tag, catalogList, onEdit, onRemove }) => {
         <span
           className={`gm-inv-label${known ? '' : ' gm-warn'}`}
           data-testid={
-            known ? `${tag}-summary` : isRef ? `${tag}-unknown` : undefined
+            known ? `${tag}-summary` : flagUnknown ? `${tag}-unknown` : undefined
           }
         >
           {label}
@@ -491,7 +545,8 @@ const ItemRow = ({ item, tag, catalogList, onEdit, onRemove }) => {
           ×{qty} · Bulk {bulk}
           {isRef && item.invested ? ' · invested' : ''}
           {isRef && (item.isContainer || (sel && sel.container)) ? ' · container' : ''}
-          {!isRef ? ' · legacy' : ''}
+          {isSpell ? ` · ${item.kind}` : ''}
+          {!isRef && !isSpell ? ' · legacy' : ''}
         </span>
       </button>
       <button
@@ -619,6 +674,18 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
     if (!picker || !catalogItems.length) return;
     if (picker.kind === 'change') repointAt(picker.path, catalogItems[0].id);
     else catalogItems.forEach((it) => addRef(picker, it.id));
+  };
+
+  // Append a blank generated scroll/wand entry and open its editor so the GM
+  // picks the spell (#812). Defaults to a scroll; the kind is switchable in the
+  // editor. Sits alongside "Add item" (which only reaches catalog entries).
+  const addSpellItem = () => {
+    const idx = f.inventory.length;
+    setF((c) => ({
+      ...c,
+      inventory: [...c.inventory, itemToForm({ scroll: {}, quantity: 1 })],
+    }));
+    setEditing({ path: [idx] });
   };
 
   // Before save, re-derive each ref's container-ness from the catalog (a
@@ -1095,16 +1162,25 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
                 item={it}
                 tag={`item-${i}`}
                 catalogList={catalogList}
+                spells={spells}
                 onEdit={() => setEditing({ path: [i] })}
                 onRemove={() => removeAt([i])}
               />
             ))}
-            <button
-              className="btn-small btn-secondary"
-              onClick={() => setPicker({ kind: 'top' })}
-            >
-              Add item
-            </button>
+            <div className="gm-row">
+              <button
+                className="btn-small btn-secondary"
+                onClick={() => setPicker({ kind: 'top' })}
+              >
+                Add item
+              </button>
+              <button
+                className="btn-small btn-secondary"
+                onClick={addSpellItem}
+              >
+                Add scroll / wand
+              </button>
+            </div>
           </div>
         )}
 
@@ -1199,6 +1275,7 @@ const CharacterForm = ({ initial, isNew, existingIds, catalog, spells, onSaved, 
         item={editItem}
         tag={editTag}
         catalogList={catalogList}
+        spells={spells}
         onPatch={(p) => editing && patchAt(editing.path, p)}
         onRepoint={() => editing && setPicker({ kind: 'change', path: editing.path })}
         onAddToContainer={() => editing && setPicker({ kind: 'container', path: editing.path })}
