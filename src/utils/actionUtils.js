@@ -23,6 +23,23 @@ const runeAbilities = (item, key) => {
     );
 };
 
+const hasTrait = (action, name) =>
+  (action?.traits || []).some((t) => String(t).toLowerCase() === name);
+
+/**
+ * Spellshape item actions (scepters, #1001 S0) tweak the next spell you Cast.
+ * Give any Spellshape-trait action a `chain: { into: 'spell' }` so it flows
+ * through the existing chained-cast UI (UseAbilityModal → ChainedSpellSection):
+ * the player picks a spell, resolves it inline, and the slot is spent once.
+ * An authored `chain` always wins, so a specific spell filter or transform can
+ * be added per item later (Slices 1+). The effect renders as the modifier note
+ * (no mechanical transform yet).
+ */
+export const deriveSpellshapeChain = (action) => {
+  if (!action || action.chain || !hasTrait(action, 'spellshape')) return action;
+  return { ...action, chain: { into: 'spell', modifier: action.description || null } };
+};
+
 /**
  * Normalise a single action object, resolving variable action counts and
  * mapping action text (e.g. "One to Three Actions") to a numeric actionCount.
@@ -69,7 +86,7 @@ export const getActions = (character) => {
       .filter(item => item.actions && item.actions.length > 0)
       .flatMap(item =>
         item.actions.map(action => ({
-          ...processActionText(action),
+          ...deriveSpellshapeChain(processActionText(action)),
           source: item.name,
           active: itemAbilitiesActive(item),
         }))

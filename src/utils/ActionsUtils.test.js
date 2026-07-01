@@ -11,6 +11,7 @@ import {
   getVariableActionRange,
   variantFor,
   renderActionIcons,
+  deriveSpellshapeChain,
 } from './ActionsUtils';
 
 // Mock CharacterUtils to avoid dependencies
@@ -256,8 +257,80 @@ describe('ActionsUtils', () => {
       };
 
       const result = getActions(character);
-      
+
       expect(result.some(a => a.source === 'Power Attack')).toBe(true);
+    });
+
+    it('derives a spell-chain on an invested-item Spellshape action (#1001 S0)', () => {
+      const character = {
+        inventory: [
+          {
+            name: 'Scepter of Greater Distances',
+            state: 'held1',
+            actions: [
+              {
+                name: 'Reach Spell',
+                actionCount: 1,
+                traits: ['Manipulate', 'Spellshape'],
+                description: 'Increase the range of the next spell by 30 feet.',
+              },
+            ],
+          },
+        ],
+      };
+
+      const reach = getActions(character).find((a) => a.name === 'Reach Spell');
+      expect(reach.source).toBe('Scepter of Greater Distances');
+      expect(reach.active).toBe(true); // held → item abilities active
+      expect(reach.chain).toEqual({
+        into: 'spell',
+        modifier: 'Increase the range of the next spell by 30 feet.',
+      });
+    });
+
+    it('does not add a chain to a non-Spellshape item action', () => {
+      const character = {
+        inventory: [
+          {
+            name: 'Some Wand',
+            state: 'held1',
+            actions: [{ name: 'Zap', actionCount: 1, traits: ['Manipulate'] }],
+          },
+        ],
+      };
+      const zap = getActions(character).find((a) => a.name === 'Zap');
+      expect(zap.chain).toBeUndefined();
+    });
+  });
+
+  describe('deriveSpellshapeChain', () => {
+    it('attaches a spell chain to a Spellshape-trait action', () => {
+      const action = { name: 'Sicken Spell', traits: ['Manipulate', 'Spellshape'], description: 'Next basic-Fort spell sickens on a failed save.' };
+      expect(deriveSpellshapeChain(action)).toEqual({
+        ...action,
+        chain: { into: 'spell', modifier: 'Next basic-Fort spell sickens on a failed save.' },
+      });
+    });
+
+    it('matches the Spellshape trait case-insensitively', () => {
+      const action = { name: 'x', traits: ['spellshape'] };
+      expect(deriveSpellshapeChain(action).chain).toEqual({ into: 'spell', modifier: null });
+    });
+
+    it('leaves an authored chain untouched (so filters/transforms can be authored)', () => {
+      const action = {
+        name: 'Reach Spell',
+        traits: ['Spellshape'],
+        chain: { into: 'spell', spellFilter: 'has-range', modifier: 'custom' },
+      };
+      expect(deriveSpellshapeChain(action)).toBe(action);
+    });
+
+    it('ignores non-Spellshape actions and nullish input', () => {
+      const plain = { name: 'Strike', traits: ['Attack'] };
+      expect(deriveSpellshapeChain(plain)).toBe(plain);
+      expect(deriveSpellshapeChain(null)).toBeNull();
+      expect(deriveSpellshapeChain(undefined)).toBeUndefined();
     });
   });
 
