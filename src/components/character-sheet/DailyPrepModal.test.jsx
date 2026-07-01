@@ -85,6 +85,22 @@ describe('DailyPrepModal', () => {
     expect(screen.queryByLabelText('Prepare a staff')).toBeNull();
   });
 
+  it('folds expended slots into the prepared staff\'s charges (#957 S6b)', () => {
+    const caster = {
+      id: 'char-bard',
+      name: 'Bard',
+      spellcasting: { spell_slots: { 1: 4, 2: 4 } },
+      staves: [{ id: 'lute', name: "Entertainer's Lute" }],
+    };
+    render(<DailyPrepModal {...baseProps} character={caster} />);
+    fireEvent.change(screen.getByLabelText('Prepare a staff'), { target: { value: 'lute' } });
+    fireEvent.click(screen.getByLabelText('Expend one more rank 2 slot'));
+    fireEvent.click(screen.getByText('Prepare'));
+    // base 2 (highest rank) + one rank-2 slot = 4 charges; that slot is spent.
+    expect(store['char-bard'].staffprep).toEqual({ staffId: 'lute', charges: 4 });
+    expect(store['char-bard'].slots).toEqual({ 1: 0, 2: 1 });
+  });
+
   it('runs the prep and logs a summary on confirm', () => {
     seed('char-izzy', { focus: 2 });
     const onClose = vi.fn();

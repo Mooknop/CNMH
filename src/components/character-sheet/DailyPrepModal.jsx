@@ -4,7 +4,7 @@ import { useSession } from '../../contexts/SessionContext';
 import { useGameDate } from '../../contexts/GameDateContext';
 import { useSessionLog } from '../../hooks/useSessionLog';
 import { dailyPrepPlanFor, performDailyPrep } from '../../utils/dailyPrep';
-import { highestCastableRank } from '../../utils/staffPrep';
+import { highestCastableRank, chargesFromSlots } from '../../utils/staffPrep';
 import { toGameSeconds } from '../../utils/gameTime';
 import './DailyPrepModal.css';
 
@@ -31,11 +31,33 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
   const currentStaffId =
     (isOpen && character ? (getState(character.id, 'staffprep') || {}).staffId : '') || '';
   const [staffChoice, setStaffChoice] = useState(currentStaffId);
+  // Slots expended for extra staff charges (#957 S6b) — rank -> count.
+  const [staffSlots, setStaffSlots] = useState({});
 
   if (!isOpen || !character) return null;
 
   const staffCharges = highestCastableRank(character);
   const canPrepStaff = staves.length > 0 && staffCharges >= 1;
+
+  // Ranks the caster can expend for extra charges: every rank with slots.
+  const slotMax = character.spellcasting?.spell_slots || {};
+  const slotRanks = Object.keys(slotMax)
+    .filter((k) => Number(k) > 0 && Number(slotMax[k]) > 0)
+    .map(Number)
+    .sort((a, b) => a - b);
+  const bonusCharges = chargesFromSlots(staffSlots);
+  const totalCharges = staffCharges + bonusCharges;
+
+  const bumpSlot = (rank, delta) => setStaffSlots((prev) => {
+    const cur = Number(prev[rank] || 0);
+    const next = Math.max(0, Math.min(cur + delta, Number(slotMax[rank] || 0)));
+    return { ...prev, [rank]: next };
+  });
+
+  const pickStaff = (value) => {
+    setStaffChoice(value);
+    if (!value) setStaffSlots({}); // clearing the staff drops any allocation
+  };
 
   const handleConfirm = () => {
     const nowSecs = toGameSeconds({ ...gameDate, ...time });
@@ -46,6 +68,7 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
       nowSecs,
       eldChoice: plan.hasEld ? eldChoice : undefined,
       staffChoice: canPrepStaff ? staffChoice : undefined,
+      staffSlots: canPrepStaff && staffChoice ? staffSlots : undefined,
     });
     appendEvent({ type: 'rest', text: `${character.name} made daily preparations — ${summary}` });
     onClose();
@@ -96,16 +119,47 @@ const DailyPrepModal = ({ isOpen, onClose, character, themeColor }) => {
               id="dp-staff-select"
               className="dp-staff-select"
               value={staffChoice}
-              onChange={(e) => setStaffChoice(e.target.value)}
+              onChange={(e) => pickStaff(e.target.value)}
             >
               <option value="">Don&apos;t prepare a staff</option>
               {staves.map((s) => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
+
+            {staffChoice && slotRanks.length > 0 && (
+              <div className="dp-staff-slots">
+                <span className="dp-staff-sublabel">Expend spell slots for extra charges</span>
+                {slotRanks.map((r) => (
+                  <div className="dp-slot-row" key={r}>
+                    <span className="dp-slot-label">Rank {r} <em>(+{r} each)</em></span>
+                    <div className="dp-stepper">
+                      <button
+                        type="button"
+                        className="dp-step"
+                        aria-label={`Expend one fewer rank ${r} slot`}
+                        disabled={Number(staffSlots[r] || 0) <= 0}
+                        onClick={() => bumpSlot(r, -1)}
+                      >−</button>
+                      <span className="dp-step-count">{Number(staffSlots[r] || 0)} / {slotMax[r]}</span>
+                      <button
+                        type="button"
+                        className="dp-step"
+                        aria-label={`Expend one more rank ${r} slot`}
+                        disabled={Number(staffSlots[r] || 0) >= Number(slotMax[r])}
+                        onClick={() => bumpSlot(r, 1)}
+                      >+</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {staffChoice && (
               <p className="dp-staff-hint">
-                Gains {staffCharges} charge{staffCharges !== 1 ? 's' : ''} (highest rank you can cast).
+                {bonusCharges > 0
+                  ? `Gains ${totalCharges} charges (${staffCharges} base + ${bonusCharges} from slots).`
+                  : `Gains ${staffCharges} charge${staffCharges !== 1 ? 's' : ''} (highest rank you can cast).`}
               </p>
             )}
           </div>

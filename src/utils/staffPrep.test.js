@@ -1,4 +1,4 @@
-import { highestCastableRank, staffPrepValue, listStaves } from './staffPrep';
+import { highestCastableRank, staffPrepValue, listStaves, chargesFromSlots } from './staffPrep';
 
 describe('highestCastableRank', () => {
   const caster = (slots) => ({ spellcasting: { spell_slots: slots } });
@@ -21,6 +21,19 @@ describe('highestCastableRank', () => {
   });
 });
 
+describe('chargesFromSlots', () => {
+  it('adds charges equal to each expended slot\'s rank', () => {
+    expect(chargesFromSlots({ 1: 2, 3: 1 })).toBe(5); // 2·1 + 1·3
+    expect(chargesFromSlots({ 4: 2 })).toBe(8);
+  });
+
+  it('ignores cantrips, non-numeric ranks, and empty input', () => {
+    expect(chargesFromSlots({ cantrips: 3, 2: 1 })).toBe(2);
+    expect(chargesFromSlots({})).toBe(0);
+    expect(chargesFromSlots(null)).toBe(0);
+  });
+});
+
 describe('staffPrepValue', () => {
   const caster = { spellcasting: { spell_slots: { 1: 4, 2: 4 } } };
 
@@ -28,9 +41,13 @@ describe('staffPrepValue', () => {
     expect(staffPrepValue(caster, 'staff-x')).toEqual({ staffId: 'staff-x', charges: 2 });
   });
 
+  it('adds charges bought by expending spell slots', () => {
+    expect(staffPrepValue(caster, 'staff-x', { 1: 1, 2: 1 })).toEqual({ staffId: 'staff-x', charges: 5 });
+  });
+
   it('returns null when no staff is chosen', () => {
     expect(staffPrepValue(caster, '')).toBeNull();
-    expect(staffPrepValue(caster, null)).toBeNull();
+    expect(staffPrepValue(caster, null, { 1: 2 })).toBeNull();
   });
 });
 

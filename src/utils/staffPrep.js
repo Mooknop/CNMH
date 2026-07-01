@@ -22,15 +22,34 @@ export const highestCastableRank = (character) => {
 };
 
 /**
+ * Extra charges gained from expending spell slots at preparation: each expended
+ * slot adds charges equal to its rank. `slotAlloc` maps rank -> number of slots
+ * expended (e.g. { '1': 2, '3': 1 } => 2·1 + 1·3 = 5). Non-numeric ranks and
+ * rank 0 (cantrips) contribute nothing.
+ *
+ * @param {Object|null} slotAlloc
+ * @returns {number}
+ */
+export const chargesFromSlots = (slotAlloc) =>
+  Object.entries(slotAlloc || {}).reduce((sum, [rank, count]) => {
+    const r = Number(rank);
+    return Number.isFinite(r) && r > 0 ? sum + r * Number(count || 0) : sum;
+  }, 0);
+
+/**
  * The `cnmh_staffprep` overlay value for preparing `staffId`, or null to clear.
- * Charges come from the highest rank the caster can cast.
+ * Charges = the highest rank the caster can cast plus any charges bought by
+ * expending spell slots (`slotAlloc`).
  *
  * @param {Object|null} character
  * @param {string|null} staffId - itemUid of the staff to prepare, or falsy to clear
+ * @param {Object} [slotAlloc] - rank -> slots expended for extra charges
  * @returns {{ staffId: string, charges: number } | null}
  */
-export const staffPrepValue = (character, staffId) =>
-  staffId ? { staffId, charges: highestCastableRank(character) } : null;
+export const staffPrepValue = (character, staffId, slotAlloc) =>
+  staffId
+    ? { staffId, charges: highestCastableRank(character) + chargesFromSlots(slotAlloc) }
+    : null;
 
 /**
  * Every staff in a resolved inventory, as `{ id, name }` options for the

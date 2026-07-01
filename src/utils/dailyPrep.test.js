@@ -175,6 +175,30 @@ describe('performDailyPrep — staff preparation (#957 S6a)', () => {
     performDailyPrep({ character: caster, getState, sendUpdate });
     expect(updates.find((u) => u.key === 'staffprep')).toBeUndefined();
   });
+
+  it('folds expended slots into the charge count and spends them (#957 S6b)', () => {
+    const { updates, getState, sendUpdate } = makeStubs({ slots: { 1: 0, 2: 0, 3: 0 } });
+    performDailyPrep({
+      character: caster, getState, sendUpdate,
+      staffChoice: 'staff-x', staffSlots: { 1: 2, 3: 1 },
+    });
+    // 3 (highest rank) + 2·1 + 1·3 = 8 charges.
+    expect(updates.find((u) => u.key === 'staffprep').value).toEqual({ staffId: 'staff-x', charges: 8 });
+    // The last slots write reflects the expended allocation.
+    const slotWrites = updates.filter((u) => u.key === 'slots');
+    expect(slotWrites[slotWrites.length - 1].value).toEqual({ 1: 2, 2: 0, 3: 1 });
+  });
+
+  it('clamps a slot allocation to what the caster actually has', () => {
+    const { updates, getState, sendUpdate } = makeStubs({});
+    performDailyPrep({
+      character: caster, getState, sendUpdate,
+      staffChoice: 'staff-x', staffSlots: { 3: 9 }, // caster only has 2 rank-3 slots
+    });
+    expect(updates.find((u) => u.key === 'staffprep').value.charges).toBe(3 + 3 * 2);
+    const slotWrites = updates.filter((u) => u.key === 'slots');
+    expect(slotWrites[slotWrites.length - 1].value).toEqual({ 1: 0, 2: 0, 3: 2 });
+  });
 });
 
 describe('dailyPrepPlanFor', () => {
