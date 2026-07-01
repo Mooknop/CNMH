@@ -6,6 +6,7 @@ import { computeSaveDegree } from '../../utils/saveDegree';
 import { computeSaveDamage, formatDamageBreakdown } from '../../utils/damage';
 import { DEFENSE_LABELS } from '../../utils/defense';
 import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persistentDamage';
+import { buildDamageApply } from '../../utils/damageRelay';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
 
@@ -109,6 +110,24 @@ const RequestedSaves = () => {
         (acc, h) => addPersistent(acc, h.entryId, makeInstances(h.persistent, req.abilityName)),
         m || {}
       ));
+    }
+
+    // Typed damage relay (#1016): push each enemy target's RAW typed total to
+    // the bridge — Foundry's applyDamage nets the monster's IWR (the logged
+    // number above stays raw/informational). Enemies only, same as UseAbilityModal.
+    const enemyEntryIds = new Set(
+      (encounter?.order || []).filter((e) => e.kind === 'enemy').map((e) => e.entryId)
+    );
+    const relayHits = results
+      .map((r) => {
+        const d = damageFor(req, r.degree, r.entryId);
+        return d?.dmg?.final > 0 && enemyEntryIds.has(r.entryId)
+          ? { entryId: r.entryId, name: r.name, amount: d.dmg.final, type: req.damage?.typeLabel || '' }
+          : null;
+      })
+      .filter(Boolean);
+    if (relayHits.length) {
+      sendUpdate('global', 'dmgapply', buildDamageApply({ hits: relayHits, sourceName: req.abilityName }));
     }
 
     // Save-outcome-gated caster-side buff (#274 — Shining Guidance's Limned bonus):

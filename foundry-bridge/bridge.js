@@ -16,6 +16,7 @@ import { initMovement, handleMoveRequest, handleMoveConfirm } from './movement.j
 import { handleAction } from './targeting.js';
 import { initDoors, handleDoorRequest, handleDoorInteract } from './doors.js';
 import { handleApplyEffect } from './effects.js';
+import { initDamageApply, handleDamageApply } from './damageApply.js';
 import { initFlankingPush, pushFlankedState } from './flankingPush.js';
 import { initAdjacencyPush, pushAdjacencyState } from './adjacencyPush.js';
 import { initPositions, pushPositions } from './positions.js';
@@ -81,6 +82,7 @@ Hooks.once('ready', () => {
   initMinionActors(sendUpdate);
   initMinionSync(sendUpdate);
   initDoors(sendUpdate);
+  initDamageApply(sendUpdate);
   connect();
 });
 
@@ -281,6 +283,12 @@ function dispatch(msg) {
   // Foundry effect application from app → clone effect item onto target actors.
   if (key === 'applyeffect') {
     handleApplyEffect(characterId, value);
+    return;
+  }
+
+  // Typed damage from the app's damage step → PF2e applyDamage (IWR nets there).
+  if (characterId === 'global' && key === 'dmgapply') {
+    handleDamageApply(value);
     return;
   }
 }

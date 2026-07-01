@@ -20,8 +20,11 @@ const enemyOrder = [
   { entryId: 'e-gob', kind: 'enemy', name: 'Goblin', creatureKey: 'goblin-warrior', defenses: { ac: 15, saves: { fortitude: 8 } } },
 ];
 
+// sendUpdate is hoisted so the damage-relay tests (#1016) can assert on the
+// cnmh_dmgapply_global payload the confirm pushes to the bridge.
+const sessionMock = vi.hoisted(() => ({ sendUpdate: vi.fn() }));
 vi.mock('../../contexts/SessionContext', () => ({
-  useSession: () => ({ getState: vi.fn(() => []), sendUpdate: vi.fn(), subscribe: () => () => {} }),
+  useSession: () => ({ getState: vi.fn(() => []), sendUpdate: sessionMock.sendUpdate, subscribe: () => () => {} }),
 }));
 vi.mock('../../contexts/ContentContext', () => ({
   useContent: () => ({ characters: [{ id: 'char-a', name: 'Ashka' }] }),
@@ -392,5 +395,32 @@ describe('UseAbilityModal — damage step (#222)', () => {
     render(<UseAbilityModal {...props} ability={fear} />);
     enterD20(10);
     expect(screen.getByText('The target is frightened 1.')).toBeInTheDocument();
+  });
+
+  // ── typed damage relay to Foundry (#1016) ─────────────────────────────────
+
+  it('confirm relays the per-target total (typed by the profile) to the bridge', () => {
+    const fireStrike = {
+      ...maceStrike,
+      name: 'Flame Strike',
+      damageData: { base: '2d6+4', type: 'fire' },
+    };
+    render(<UseAbilityModal {...props} ability={fireStrike} />);
+    enterD20(10);    // 15 vs AC 15 → hit
+    enterDamage(9);  // + 4 Implement's Empowerment (2 dice × 2) = 13
+    confirm();
+
+    expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'dmgapply', expect.objectContaining({
+      sourceName: 'Flame Strike',
+      hits: [{ entryId: 'e-gob', name: 'Goblin', amount: 13, type: 'fire' }],
+    }));
+  });
+
+  it('confirm relays nothing on a miss / when no total was entered', () => {
+    render(<UseAbilityModal {...props} ability={maceStrike} />);
+    enterD20(2); // 7 vs AC 15 → miss
+    confirm();
+
+    expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
   });
 });

@@ -368,6 +368,31 @@ export function setUserTargets(tokens) {
   game.user?.updateTokenTargets?.(ids);
 }
 
+// --- Damage application (#1016) ---
+
+// Apply a flat, typed damage total to a combatant's actor, letting the PF2e
+// system net the target's IWR (immunities/weaknesses/resistances). The app
+// always relays the RAW typed total: a typed DamageRoll instance is what makes
+// actor.applyDamage run its IWR pipeline — a plain number is applied as-is
+// (untyped, no IWR), which is the deliberate path for untyped damage.
+// Returns false when there is nothing to apply (no actor / non-positive amount).
+// v14 MIGRATION: DamageRoll is looked up in CONFIG.Dice.rolls (PF2e registers
+// its roll classes there); actor.applyDamage({ damage, token }) is a PF2e
+// ActorPF2e method. Re-verify both against the v14-era system release.
+export async function applyTypedDamage(token, amount, type = '') {
+  const actor = token?.actor;
+  if (!actor?.applyDamage || typeof amount !== 'number' || amount <= 0) return false;
+  const tokenDoc = token.document ?? token;
+  const DamageRoll = CONFIG.Dice?.rolls?.find?.((R) => R.name === 'DamageRoll');
+  if (type && DamageRoll) {
+    const roll = await new DamageRoll(`${amount}[${type}]`).evaluate();
+    await actor.applyDamage({ damage: roll, token: tokenDoc });
+  } else {
+    await actor.applyDamage({ damage: amount, token: tokenDoc });
+  }
+  return true;
+}
+
 // Flanking (Slice 3): enumerate token-id → placed-token for all tokens in the
 // current scene. Returns an array of { id, token } only for tokens that are
 // actually placed (getActiveTokens returns a live list).
