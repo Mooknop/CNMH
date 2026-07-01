@@ -5767,7 +5767,16 @@
           "Manipulate",
           "Spellshape"
         ],
-        "description": "Frequency once per hour; Effect If your next action is to Cast a Spell with a basic Fortitude save, creatures that fail their save are also sickened 1 (sickened 2 on a critical failure). The creature is affected whether or not the spell deals damage."
+        "description": "Frequency once per hour; Effect If your next action is to Cast a Spell with a basic Fortitude save, creatures that fail their save are also sickened 1 (sickened 2 on a critical failure). The creature is affected whether or not the spell deals damage.",
+        "chain": {
+          "into": "spell",
+          "spellFilter": "basic-fortitude-save",
+          "modifier": "Creatures that fail the spell's basic Fortitude save are also sickened 1 (sickened 2 on a critical failure), whether or not the spell deals damage.",
+          "injectRiders": [
+            { "id": "sicken-spell", "label": "Sicken Spell — sickened 1", "condition": "sickened 1", "on": ["failure"] },
+            { "id": "sicken-spell-crit", "label": "Sicken Spell — sickened 2 (crit fail)", "condition": "sickened 2", "on": ["criticalFailure"] }
+          ]
+        }
       }
     ],
     "actuated": {
