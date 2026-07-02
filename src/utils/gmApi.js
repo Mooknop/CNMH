@@ -70,6 +70,17 @@ const deepEqual = (a, b) => {
   return ka.every((k) => Object.prototype.hasOwnProperty.call(b, k) && deepEqual(a[k], b[k]));
 };
 
+// Live (GM-assigned) image-reference fields on catalog docs. The GM editors
+// assign artwork to a live doc via ImageField (image = R2 image id,
+// imagePosition = focal point) — a live GM action, not seed-authored content,
+// exactly like a player's inventory/gold on a character doc. The committed
+// seed only ever carries a stale copy from the last snapshot pull, so a
+// content apply overwriting these would silently revert any assignment made
+// since that pull (the 2026-07-02 incident: item art wiped by an apply).
+// Mirror of LIVE_CHARACTER_FIELDS: the live doc wins for these fields,
+// including their absence (a GM removing an image must stay removed).
+export const LIVE_IMAGE_FIELDS = ['image', 'imagePosition'];
+
 // Apply a content drop the SAFE way: diff the bundled defaults against the
 // CURRENT live store and write ONLY the docs that are new or actually changed,
 // one PUT each. The PUT route archives the prior version before overwriting, so
@@ -110,11 +121,22 @@ export const applyContentDiff = async () => {
       if (!liveDoc) {
         await saveDocument(collection, id, doc);
         added.push(id);
-      } else if (!deepEqual({ ...doc, id }, { ...liveDoc, id })) {
-        await saveDocument(collection, id, doc);
-        changed.push(id);
-      } else {
+        continue;
+      }
+      // Overwrites are merged: authored fields from the bundle, image
+      // references from the live doc (see LIVE_IMAGE_FIELDS). The merge
+      // happens BEFORE the equality check so a doc whose only drift is a
+      // live image assignment counts as unchanged — no write, no archive.
+      const merged = { ...doc, id };
+      for (const f of LIVE_IMAGE_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(liveDoc, f)) merged[f] = liveDoc[f];
+        else delete merged[f];
+      }
+      if (deepEqual(merged, { ...liveDoc, id })) {
         unchanged += 1;
+      } else {
+        await saveDocument(collection, id, merged);
+        changed.push(id);
       }
     }
     const liveOnly = liveDocs
