@@ -88,6 +88,18 @@ const BestiaryEntry = ({
     ? (defenses?.weaknesses || []).filter((w) => rec.weaknessesRevealed?.[w.type])
     : [];
   const anyWeaknessRevealed = weaknessesFullyRevealed || partialWeaknesses.length > 0;
+  // Per-type partial reveals for resistances/immunities (#1014 — a hidden IWR
+  // that fires on applied damage), mirroring the weakness pattern above.
+  const partialResistances = !resistancesRevealed
+    ? (defenses?.resistances || []).filter((r) => rec.resistancesRevealed?.[r.type])
+    : [];
+  const anyResistanceRevealed = resistancesRevealed || partialResistances.length > 0;
+  const shownResistances = resistancesRevealed ? (defenses?.resistances || []) : partialResistances;
+  const partialImmunities = !immunitiesRevealed
+    ? (defenses?.immunities || []).filter((t) => rec.immunitiesRevealed?.[t])
+    : [];
+  const anyImmunityRevealed = immunitiesRevealed || partialImmunities.length > 0;
+  const shownImmunities = immunitiesRevealed ? (defenses?.immunities || []) : partialImmunities;
 
   const accent = traitToAccent(bestiary?.traits);
   const dexNum = dexNumber(monsters, enemy.creatureKey);
@@ -315,9 +327,9 @@ const BestiaryEntry = ({
           <div className="dex-cell">
             <div className="k">Resist</div>
             <div className="v dex-cell-sm">
-              {resistancesRevealed
-                ? (defenses?.resistances?.length
-                    ? defenses.resistances.map((r) => `${r.type} ${r.value}`).join(', ')
+              {anyResistanceRevealed
+                ? (shownResistances.length
+                    ? shownResistances.map((r) => `${r.type} ${r.value}`).join(', ')
                     : '—')
                 : <Redacted width="3ch" />}
             </div>
@@ -330,8 +342,8 @@ const BestiaryEntry = ({
             {defenses?.immunities?.length > 0 && (
               <span className="d">
                 <span className="l">Immunities</span>
-                {immunitiesRevealed
-                  ? <span className="val">{defenses.immunities.join(', ')}</span>
+                {anyImmunityRevealed
+                  ? <span className="val">{shownImmunities.join(', ')}</span>
                   : <Redacted width="8ch" />}
               </span>
             )}

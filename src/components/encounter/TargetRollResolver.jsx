@@ -153,6 +153,10 @@ const TargetRollResolver = forwardRef(({
             riderState,
             entryId: entry.entryId,
             critDouble,
+            // Monster IWR (#1014): the target's own defenses net into the
+            // displayed final (relay stays raw via rawFinal/rawInstances).
+            typeLabel: damage.typeLabel,
+            defenses: entry.defenses,
           })
         : null;
       return {

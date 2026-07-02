@@ -423,4 +423,35 @@ describe('UseAbilityModal — damage step (#222)', () => {
 
     expect(sessionMock.sendUpdate).not.toHaveBeenCalledWith('global', 'dmgapply', expect.anything());
   });
+
+  // ── monster IWR in the outgoing damage step (#1014) ────────────────────────
+
+  it('a fired monster weakness nets into the log, keeps the relay raw, and announces the reveal', () => {
+    const gob = enemyOrder[1];
+    const savedDefenses = gob.defenses;
+    gob.defenses = { ...savedDefenses, weaknesses: [{ type: 'fire', value: 5 }] };
+    try {
+      const fireStrike = {
+        ...maceStrike,
+        name: 'Flame Strike',
+        damageData: { base: '2d6+4', type: 'fire' },
+      };
+      render(<UseAbilityModal {...props} ability={fireStrike} />);
+      enterD20(10);   // 15 vs AC 15 → hit
+      enterDamage(9); // + 4 rider = 13 raw; + weakness 5 = 18 netted
+      confirm();
+
+      expect(loggedLines()).toContainEqual(
+        expect.stringContaining("damage 18 (9 +4 Implement's Empowerment +5 weakness (fire))")
+      );
+      // The relay stays pre-IWR — Foundry nets the weakness itself.
+      expect(sessionMock.sendUpdate).toHaveBeenCalledWith('global', 'dmgapply', expect.objectContaining({
+        hits: [{ entryId: 'e-gob', name: 'Goblin', amount: 13, type: 'fire' }],
+      }));
+      // First reveal announced (reveal-on-trigger).
+      expect(loggedLines()).toContain("Goblin's weakness to fire is revealed!");
+    } finally {
+      gob.defenses = savedDefenses;
+    }
+  });
 });

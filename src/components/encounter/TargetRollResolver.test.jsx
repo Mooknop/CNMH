@@ -505,4 +505,51 @@ describe('TargetRollResolver', () => {
     expect(r.total).toBe(14);
     expect(r.adjust).toBeUndefined();
   });
+
+  // ── monster IWR (#1014) ────────────────────────────────────────────────────
+
+  test('the target\'s own defenses net into the damage; raw values kept for the relay', () => {
+    const fireTroll = {
+      ...goblinEntry,
+      entryId: 'cbt-troll',
+      name: 'Troll',
+      defenses: {
+        ...goblinEntry.defenses,
+        weaknesses: [{ type: 'fire', value: 5 }],
+      },
+    };
+    const fireProfile = { expression: '2d6', typeLabel: 'fire', riders: [] };
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[fireTroll]} targetDefense="ac" rollBonus={5}
+        damage={fireProfile}
+      />
+    );
+    enterD20(10); // hit
+    enterDamage(9);
+    // 9 + monster weakness (fire 5) = 14; relay keeps the raw 9
+    expect(ref.current.getResults()[0].damage).toMatchObject({
+      final: 14,
+      rawFinal: 9,
+      iwr: [{ kind: 'weakness', type: 'fire', amount: 5 }],
+    });
+  });
+
+  test('a target with no matching IWR is untouched (shape unchanged)', () => {
+    const fireProfile = { expression: '2d6', typeLabel: 'fire', riders: [] };
+    const ref = createRef();
+    render(
+      <TargetRollResolver
+        ref={ref} enemyTargets={[goblinEntry]} targetDefense="ac" rollBonus={null}
+        damage={fireProfile}
+      />
+    );
+    enterD20(20);
+    enterDamage(9);
+    const dmg = ref.current.getResults()[0].damage;
+    expect(dmg.final).toBe(18); // crit ×2, nothing else
+    expect(dmg.iwr).toBeUndefined();
+    expect(dmg.rawFinal).toBeUndefined();
+  });
 });

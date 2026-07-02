@@ -17,13 +17,18 @@ export const newDamageApplyId = () =>
   `dmg-${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`;
 
 // Positive typed instances off a computeTargetDamage result (#1019), or null
-// when the result was single-total entry (no instances field).
+// when the result was single-total entry (no instances field). Prefers the
+// pre-IWR rawInstances (#1014): the app nets monster IWR into `instances` for
+// display, but the relay must stay raw — Foundry's applyDamage nets IWR itself
+// (and knows exceptions like 'except silver' the app's model drops).
 const positiveInstances = (damage) => {
-  const list = Array.isArray(damage?.instances)
-    ? damage.instances.filter((i) => i?.amount > 0)
-    : null;
+  const source = damage?.rawInstances ?? damage?.instances;
+  const list = Array.isArray(source) ? source.filter((i) => i?.amount > 0) : null;
   return list?.length ? list.map((i) => ({ amount: i.amount, type: i.type || '' })) : null;
 };
+
+// Pre-IWR total off a compute result (#1014) — `final` when no IWR fired.
+const rawAmount = (damage) => damage?.rawFinal ?? damage?.final;
 
 /**
  * Per-target damage hits out of the confirm-time results, mirroring
@@ -52,14 +57,14 @@ export const collectDamageHits = (rayGroups, chainResults, {
   const pushHit = (r, type) => {
     const instances = positiveInstances(r.damage);
     hits.push({
-      entryId: r.entryId, name: r.name || '', amount: r.damage.final, type,
+      entryId: r.entryId, name: r.name || '', amount: rawAmount(r.damage), type,
       ...(instances ? { instances } : {}),
     });
   };
 
   (rayGroups || []).forEach((g) => {
     (g?.results || []).forEach((r) => {
-      if (r?.entryId && r.damage?.final > 0 && allowed(r.entryId)) {
+      if (r?.entryId && rawAmount(r.damage) > 0 && allowed(r.entryId)) {
         pushHit(r, typeLabel || '');
       }
     });
@@ -70,13 +75,13 @@ export const collectDamageHits = (rayGroups, chainResults, {
     const sums = new Map();
     rolls.forEach((rollSet) => {
       (rollSet || []).forEach((r) => {
-        if (!r?.entryId || !(r.damage?.final > 0) || !allowed(r.entryId)) return;
+        if (!r?.entryId || !(rawAmount(r.damage) > 0) || !allowed(r.entryId)) return;
         const cur = sums.get(r.entryId)
           || { entryId: r.entryId, name: r.name || '', amount: 0, type: '', typeSums: new Map() };
-        cur.amount += r.damage.final;
+        cur.amount += rawAmount(r.damage);
         // Merge typed instances per type; an instance-less roll folds into ''.
         const instances = positiveInstances(r.damage)
-          ?? [{ amount: r.damage.final, type: '' }];
+          ?? [{ amount: rawAmount(r.damage), type: '' }];
         instances.forEach((i) => {
           cur.typeSums.set(i.type, (cur.typeSums.get(i.type) || 0) + i.amount);
         });
@@ -92,7 +97,7 @@ export const collectDamageHits = (rayGroups, chainResults, {
   } else {
     rolls.forEach((rollSet) => {
       (rollSet || []).forEach((r) => {
-        if (r?.entryId && r.damage?.final > 0 && allowed(r.entryId)) {
+        if (r?.entryId && rawAmount(r.damage) > 0 && allowed(r.entryId)) {
           pushHit(r, '');
         }
       });

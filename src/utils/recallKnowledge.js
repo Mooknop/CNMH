@@ -116,7 +116,9 @@ export function defaultRecord() {
     speed: false,           // pickable option
     saves: { fortitude: false, reflex: false, will: false },
     iwr: { immunities: false, resistances: false, weaknesses: false },
-    weaknessesRevealed: {}, // { [type]: true } — partial single-weakness reveal (EV success)
+    weaknessesRevealed: {},  // { [type]: true } — partial single-weakness reveal (EV success, #1014 trigger)
+    resistancesRevealed: {}, // { [type]: true } — partial per-type reveal (#1014 damage trigger)
+    immunitiesRevealed: {},  // { [type]: true } — partial per-type reveal (#1014 damage trigger)
     lockedOut: {},          // { [charId]: true } — in-combat crit-fail lock, cleared at encounter end
     dayLocked: {},          // { [charId]: dayIndex } — out-of-combat crit-fail lock, clears next in-game day (#396)
     history: [],
@@ -174,6 +176,8 @@ export function fullyRevealedRecord(record = defaultRecord()) {
     saves: { fortitude: true, reflex: true, will: true },
     iwr: { immunities: true, resistances: true, weaknesses: true },
     weaknessesRevealed: {},
+    resistancesRevealed: {},
+    immunitiesRevealed: {},
     history: base.history || [],
   };
 }
@@ -296,6 +300,55 @@ export function highestWeakness(defenses) {
   const ws = defenses?.weaknesses;
   if (!ws || ws.length === 0) return null;
   return ws.reduce((best, w) => (w.value > best.value ? w : best));
+}
+
+// ── Damage-triggered IWR reveals (#1014) ────────────────────────────────────
+
+// Category → per-type partial-reveal map on the record.
+const FIRED_KIND_FIELD = {
+  immunity:   'immunitiesRevealed',
+  resistance: 'resistancesRevealed',
+  weakness:   'weaknessesRevealed',
+};
+const FIRED_KIND_IWR = {
+  immunity:   'immunities',
+  resistance: 'resistances',
+  weakness:   'weaknesses',
+};
+
+// A hidden IWR that actually modified applied damage becomes revealed: the
+// players learned a troll's weakness by burning it. `fired` is the compute
+// result's `iwr` list ([{ kind, type }] — amount ignored here). Additive and
+// idempotent, same pattern as revealFromExploit.
+export function revealFromDamage(record, fired) {
+  let next = record || defaultRecord();
+  for (const f of fired || []) {
+    const field = FIRED_KIND_FIELD[f?.kind];
+    if (!field || !f.type) continue;
+    if (next[field]?.[f.type]) continue;
+    next = { ...next, [field]: { ...(next[field] || {}), [f.type]: true } };
+  }
+  return next;
+}
+
+// The subset of `fired` not already revealed (per-type map or the full
+// iwr.<category> flag) — drives the first-reveal announcement in the log
+// without spamming on repeat triggers. Dedupes within the list itself.
+export function newlyRevealedFromDamage(record, fired) {
+  const rec = record || defaultRecord();
+  const seen = new Set();
+  const out = [];
+  for (const f of fired || []) {
+    const field = FIRED_KIND_FIELD[f?.kind];
+    if (!field || !f.type) continue;
+    const key = `${f.kind}:${f.type}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (rec.iwr?.[FIRED_KIND_IWR[f.kind]]) continue;
+    if (rec[field]?.[f.type]) continue;
+    out.push({ kind: f.kind, type: f.type });
+  }
+  return out;
 }
 
 // Applies the knowledge reveals from Exploit Vulnerability.

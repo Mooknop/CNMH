@@ -157,6 +157,51 @@ describe('FocusBanner', () => {
     expect(screen.getByText(/No stat block/)).toBeInTheDocument();
   });
 
+  // ── Per-type revealed resistances/immunities (#1014) ──────────────────────
+  it('shows Resist/Immune lines for per-type damage-triggered reveals', () => {
+    let drv, setEnc, setFocus, setKnowledge;
+    render(
+      <>
+        <EncounterDriver onReady={(e) => (drv = e)} />
+        <SyncDriver skey="cnmh_encounter_global" onReady={(s) => (setEnc = s)} />
+        <SyncDriver skey="cnmh_focus_Pellias" onReady={(s) => (setFocus = s)} />
+        <SyncDriver skey="cnmh_knowledge_global" onReady={(s) => (setKnowledge = s)} />
+        <FocusBanner charId="Pellias" />
+      </>
+    );
+    const goblin = setupFocus(() => drv, { setEnc, setFocus });
+    // Give the foe IWR beyond the base fixture's weakness.
+    act(() => setEnc((cur) => ({
+      ...cur,
+      order: cur.order.map((e) =>
+        e.entryId === goblin.entryId
+          ? {
+              ...e,
+              defenses: {
+                ...ENEMY_DEFENSES,
+                resistances: [{ type: 'fire', value: 10 }, { type: 'acid', value: 5 }],
+                immunities: ['poison', 'bleed'],
+              },
+            }
+          : e
+      ),
+    })));
+    // Only fire resistance + poison immunity have been triggered/revealed.
+    act(() => setKnowledge({
+      [goblin.entryId]: {
+        resistancesRevealed: { fire: true },
+        immunitiesRevealed: { poison: true },
+      },
+    }));
+
+    expect(screen.getByTestId('cmd-focus-resist')).toHaveTextContent('fire 10');
+    expect(screen.getByTestId('cmd-focus-resist')).not.toHaveTextContent('acid');
+    expect(screen.getByTestId('cmd-focus-immune')).toHaveTextContent('poison');
+    expect(screen.getByTestId('cmd-focus-immune')).not.toHaveTextContent('bleed');
+    // The unrevealed weakness stays hidden.
+    expect(screen.queryByText('cold 5')).toBeNull();
+  });
+
   // ── Active Exploit Vulnerability indicator (#454) ────────────────────────────
   it('shows the Exploited line when this foe is the active exploit target', () => {
     let drv, setEnc, setFocus, setExploit;

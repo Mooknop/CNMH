@@ -9,6 +9,7 @@ import { PERSISTENT_KEY, addPersistent, makeInstances } from '../../utils/persis
 import { buildDamageApply } from '../../utils/damageRelay';
 import { buildEffectEntry } from '../../utils/applyAbility';
 import { useSessionLog } from '../../hooks/useSessionLog';
+import { useIwrReveal } from '../../hooks/useIwrReveal';
 
 const DEGREE_LABELS = {
   criticalSuccess: 'Critical Success',
@@ -36,7 +37,7 @@ const DEGREE_CLASSES = {
  * rider snapshot) derive per-target damage from each degree as the d20s are
  * typed (none/half/full/double) and append it to the log lines.
  */
-const damageFor = (req, degree, entryId) => {
+const damageFor = (req, degree, entryId, defenses = null) => {
   if (!req.damage || !degree) return null;
   if (degree === 'criticalSuccess') return { none: true };
   const dmg = computeSaveDamage({
@@ -44,6 +45,10 @@ const damageFor = (req, degree, entryId) => {
     degree,
     riders: req.damage.riders,
     entryId,
+    // Monster IWR (#1014): the target's own defenses net into the displayed
+    // final (the relay below stays raw via rawFinal).
+    typeLabel: req.damage.typeLabel,
+    defenses,
   });
   return dmg ? { dmg } : null;
 };
@@ -52,11 +57,17 @@ const RequestedSaves = () => {
   const { encounter, appendLog, removeSaveRequest } = useEncounter();
   const { getState, sendUpdate } = useSession();
   const { appendEvent } = useSessionLog();
+  const { revealFiredIwr } = useIwrReveal();
   const [d20Inputs, setD20Inputs] = useState({});
   // Persistent-damage tracking (#272) — failed saves record their entries here.
   const [, setPersistentMap] = useSyncedState(PERSISTENT_KEY, {});
 
   const requests = (encounter?.saveRequests || []).filter((r) => r.status === 'pending');
+
+  // Monster IWR (#1014): save-request targets carry only {entryId,name,saveMod};
+  // the defenses live on the encounter order entries.
+  const defensesFor = (entryId) =>
+    (encounter?.order || []).find((e) => e.entryId === entryId)?.defenses ?? null;
 
   if (requests.length === 0) return null;
 
@@ -84,7 +95,7 @@ const RequestedSaves = () => {
     const saveLabel = DEFENSE_LABELS[req.save] || req.save;
     results.forEach((r) => {
       const degreeLabel = DEGREE_LABELS[r.degree] || r.degree;
-      const d = damageFor(req, r.degree, r.entryId);
+      const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
       const dmgSuffix = d
         ? (d.none ? ' · no damage' : ` · damage ${formatDamageBreakdown(d.dmg)}`)
         : '';
@@ -99,7 +110,7 @@ const RequestedSaves = () => {
     // entries by degree (and doubled/halved their dice) — record what's left.
     const persistentHits = results
       .map((r) => {
-        const d = damageFor(req, r.degree, r.entryId);
+        const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
         return d?.dmg?.persistent?.length
           ? { entryId: r.entryId, persistent: d.dmg.persistent }
           : null;
@@ -120,15 +131,25 @@ const RequestedSaves = () => {
     );
     const relayHits = results
       .map((r) => {
-        const d = damageFor(req, r.degree, r.entryId);
-        return d?.dmg?.final > 0 && enemyEntryIds.has(r.entryId)
-          ? { entryId: r.entryId, name: r.name, amount: d.dmg.final, type: req.damage?.typeLabel || '' }
+        const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
+        // Raw pre-IWR amount (#1014): Foundry's applyDamage nets IWR itself —
+        // an app-netted 0 (immune) still relays raw and Foundry decides.
+        const raw = d?.dmg?.rawFinal ?? d?.dmg?.final;
+        return raw > 0 && enemyEntryIds.has(r.entryId)
+          ? { entryId: r.entryId, name: r.name, amount: raw, type: req.damage?.typeLabel || '' }
           : null;
       })
       .filter(Boolean);
     if (relayHits.length) {
       sendUpdate('global', 'dmgapply', buildDamageApply({ hits: relayHits, sourceName: req.abilityName }));
     }
+
+    // Reveal-on-trigger (#1014): monster IWR that just modified a target's
+    // save damage becomes table knowledge.
+    revealFiredIwr(results.map((r) => {
+      const d = damageFor(req, r.degree, r.entryId, defensesFor(r.entryId));
+      return { entryId: r.entryId, damage: d?.dmg || null };
+    }));
 
     // Save-outcome-gated caster-side buff (#274 — Shining Guidance's Limned bonus):
     // when the resolved degree is one this effect triggers on, write it to the
@@ -231,7 +252,7 @@ const RequestedSaves = () => {
                     </span>
                   )}
                   {(() => {
-                    const d = damageFor(req, degree, t.entryId);
+                    const d = damageFor(req, degree, t.entryId, defensesFor(t.entryId));
                     if (!d) return null;
                     return (
                       <span className="gm-save-req-dmg">

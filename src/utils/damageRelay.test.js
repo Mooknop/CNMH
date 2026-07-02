@@ -194,3 +194,51 @@ describe('relay keys', () => {
     expect(DMGDONE_KEY).toBe('cnmh_dmgdone_global');
   });
 });
+
+// ── Relay stays raw when the app nets monster IWR (#1014) ───────────────────
+
+describe('collectDamageHits — pre-IWR raw values', () => {
+  it('prefers rawFinal/rawInstances over the netted display values', () => {
+    const rayGroups = [{
+      rayIndex: null,
+      results: [{
+        entryId: 'e-1', name: 'Golem',
+        damage: {
+          final: 13, rawFinal: 17,
+          instances: [{ amount: 13, type: 'piercing' }, { amount: 0, type: 'fire' }],
+          rawInstances: [{ amount: 13, type: 'piercing' }, { amount: 4, type: 'fire' }],
+          iwr: [{ kind: 'immunity', type: 'fire', amount: -4 }],
+        },
+      }],
+    }];
+    const hits = collectDamageHits(rayGroups, null, { typeLabel: 'piercing' });
+    expect(hits).toEqual([{
+      entryId: 'e-1', name: 'Golem', amount: 17, type: 'piercing',
+      instances: [{ amount: 13, type: 'piercing' }, { amount: 4, type: 'fire' }],
+    }]);
+  });
+
+  it('an app-netted-0 hit (immune) still relays its raw amount', () => {
+    const rayGroups = [{
+      rayIndex: null,
+      results: [{
+        entryId: 'e-1', name: 'Golem',
+        damage: { final: 0, rawFinal: 13, iwr: [{ kind: 'immunity', type: 'fire', amount: -13 }] },
+      }],
+    }];
+    const hits = collectDamageHits(rayGroups, null, { typeLabel: 'fire' });
+    expect(hits).toEqual([{ entryId: 'e-1', name: 'Golem', amount: 13, type: 'fire' }]);
+  });
+
+  it('flurry sums raw amounts per target', () => {
+    const chain = {
+      mode: 'flurry',
+      rolls: [
+        [{ entryId: 'e-1', name: 'Golem', damage: { final: 2, rawFinal: 9 } }],
+        [{ entryId: 'e-1', name: 'Golem', damage: { final: 8 } }],
+      ],
+    };
+    const hits = collectDamageHits([], chain, {});
+    expect(hits).toEqual([{ entryId: 'e-1', name: 'Golem', amount: 17, type: '' }]);
+  });
+});
