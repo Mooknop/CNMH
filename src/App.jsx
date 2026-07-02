@@ -25,6 +25,7 @@ import TurnEffectsSync from './components/encounter/TurnEffectsSync';
 import BestiaryCaptureSync from './components/encounter/BestiaryCaptureSync';
 import AuraKoSync from './components/encounter/AuraKoSync';
 import WardSync from './components/encounter/WardSync';
+import VocoderConcealSync from './components/encounter/VocoderConcealSync';
 import GmLayout from './pages/gm/GmLayout';
 import GmDashboard from './pages/gm/GmDashboard';
 import GmQuests from './pages/gm/GmQuests';
@@ -86,6 +87,7 @@ function App() {
           <BestiaryCaptureSync />
           <AuraKoSync />
           <WardSync />
+          <VocoderConcealSync />
           <CharacterProvider>
             <TraitProvider>
               <LoreProvider>
