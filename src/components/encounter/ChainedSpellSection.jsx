@@ -263,6 +263,7 @@ const ChainedSpellSection = forwardRef(({
             expression: saveDamageProfile.expression ?? null,
             typeLabel: saveDamageProfile.typeLabel ?? null,
             riders: savedRiders,
+            ...(saveDamageProfile.degrees && { degrees: saveDamageProfile.degrees }),
           };
         }
       }

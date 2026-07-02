@@ -348,6 +348,43 @@ describe('computeSaveDamage', () => {
     expect(out.parts.multiplier).toBe('double');
   });
 
+  // Per-degree overrides (#987) — Agonizing Relocation (crit fail ×1.5) and
+  // Boulder Crush (crit fail takes full, not double).
+  it('a numeric degrees override multiplies and floors (Agonizing Relocation)', () => {
+    const out = computeSaveDamage({
+      entered: 13, degree: 'criticalFailure', entryId: 'e-gob',
+      degrees: { criticalFailure: 1.5 },
+    });
+    expect(out.final).toBe(19); // floor(13 × 1.5)
+    expect(out.parts.multiplier).toBe(1.5);
+  });
+
+  it("a 'full' degrees override suppresses the crit-fail doubling (Boulder Crush)", () => {
+    const out = computeSaveDamage({
+      entered: 12, degree: 'criticalFailure', entryId: 'e-gob',
+      degrees: { criticalFailure: 'full' },
+    });
+    expect(out.final).toBe(12);
+    expect(out.parts.multiplier).toBeNull();
+  });
+
+  it('degrees overrides leave unlisted degrees on the basic table', () => {
+    const degrees = { criticalFailure: 1.5 };
+    const success = computeSaveDamage({ entered: 12, degree: 'success', entryId: 'e-gob', degrees });
+    expect(success.final).toBe(6);
+    expect(success.parts.multiplier).toBe('half');
+    const failure = computeSaveDamage({ entered: 12, degree: 'failure', entryId: 'e-gob', degrees });
+    expect(failure.final).toBe(12);
+  });
+
+  it('degrees overrides apply after bonus riders, before weakness', () => {
+    const out = computeSaveDamage({
+      entered: 12, degree: 'criticalFailure', riders: [rune, weakness], entryId: 'e-gob',
+      degrees: { criticalFailure: 1.5 },
+    });
+    expect(out.final).toBe(24); // floor((12 + 1) × 1.5) + 5
+  });
+
   it('weakness applies after the multiplier, never halved or doubled, scoped by entryId', () => {
     const half = computeSaveDamage({ entered: 12, degree: 'success', riders: [weakness], entryId: 'e-gob' });
     expect(half.final).toBe(11); // 6 + 5
@@ -481,6 +518,12 @@ describe('formatDamageBreakdown', () => {
     })).toBe('26 (12 +1 Rune ×2)');
   });
 
+  it('renders a numeric degrees-override multiplier (#987)', () => {
+    expect(formatDamageBreakdown({
+      final: 19, parts: { base: 13, riders: [], multiplier: 1.5, weaknesses: [] }, persistent: [],
+    })).toBe('19 (13 ×1.5)');
+  });
+
   it('marks halved persistent entries', () => {
     expect(formatDamageBreakdown({
       final: 6, parts: { base: 12, riders: [], multiplier: 'half', weaknesses: [] },
@@ -570,6 +613,21 @@ describe('buildDamageProfile', () => {
     const spell = { name: 'Zappy Ray', damage: '2d6', traits: ['Attack'] };
     const profile = buildDamageProfile(spell, character, {});
     expect(profile.riders).toHaveLength(0);
+  });
+
+  it('carries damageData.degrees into the profile, damageOverride winning (#987)', () => {
+    const spell = {
+      name: 'Boulder Crush', level: 4,
+      damageData: { base: '4d12', type: 'bludgeoning', degrees: { criticalFailure: 'full' } },
+    };
+    const profile = buildDamageProfile(spell, character, {});
+    expect(profile.degrees).toEqual({ criticalFailure: 'full' });
+    const overridden = buildDamageProfile(spell, character, {
+      damageOverride: { degrees: { criticalFailure: 1.5 } },
+    });
+    expect(overridden.degrees).toEqual({ criticalFailure: 1.5 });
+    const plain = buildDamageProfile({ name: 'Zap', damage: '2d6' }, character, {});
+    expect(plain.degrees).toBeUndefined();
   });
 
   it('gates ability riders on the chosen action count', () => {

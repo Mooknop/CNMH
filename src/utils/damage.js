@@ -360,6 +360,13 @@ export const serializeRidersForSave = (riders, riderState) =>
  * `final` after the multiplier and weakness riders — same result additions as
  * computeTargetDamage (`iwr`, `rawFinal`; saves are single-total, no instances).
  *
+ * Per-degree overrides (#987 — Agonizing Relocation, Boulder Crush): `degrees`
+ * maps a save degree to a multiplier replacing the basic-save default for that
+ * degree only — 'half' | 'full' | 'double' | a number (×n, floored, so 1.5
+ * expresses "success dice + half again"). The base expression stays the
+ * *failure* dice; unlisted degrees keep the basic table. Persistent riders are
+ * untouched — their degree algebra is authored per-rider via `on`.
+ *
  * @returns {null|{ entered, final, parts, persistent, riderIds, iwr?, rawFinal? }}
  */
 export const computeSaveDamage = ({
@@ -369,6 +376,7 @@ export const computeSaveDamage = ({
   entryId,
   typeLabel = null,
   defenses = null,
+  degrees = null,
 }) => {
   if (!SAVE_DAMAGE_DEGREES.includes(degree)) return null;
   const enabled = riders.filter((r) => r.enabled !== false);
@@ -413,11 +421,15 @@ export const computeSaveDamage = ({
     .map((r) => ({ label: r.label, amount: r.amount }));
 
   let total = entered + bonusParts.reduce((sum, p) => sum + p.amount, 0);
-  const multiplier = degree === 'success' ? 'half'
+  const authored = degrees?.[degree];
+  const multiplier = authored != null
+    ? (authored === 'full' ? null : authored)
+    : degree === 'success' ? 'half'
     : degree === 'criticalFailure' ? 'double'
     : null;
   if (multiplier === 'half') total = Math.floor(total / 2);
-  if (multiplier === 'double') total *= 2;
+  else if (multiplier === 'double') total *= 2;
+  else if (typeof multiplier === 'number') total = Math.floor(total * multiplier);
 
   const weaknessRiders = total > 0
     ? enabled
@@ -474,6 +486,7 @@ export const formatDamageBreakdown = ({ final, parts, persistent = [], condition
   }
   if (parts.crit || parts.multiplier === 'double') bits.push('×2');
   else if (parts.multiplier === 'half') bits.push('half');
+  else if (typeof parts.multiplier === 'number') bits.push(`×${parts.multiplier}`);
   for (const w of parts.weaknesses) {
     bits.push(`+${w.amount} ${w.label}`);
   }
@@ -547,7 +560,7 @@ const exploitRider = (exploit, enemyEntries, order) => {
  * @param {Object|null} exploit        - the actor's active exploit (useExploitVulnerability)
  * @param {Array}       enemyEntries   - enemy targets shown on the resolver
  * @param {Array}       order          - full encounter order (creatureKey lookups)
- * @param {Object|null} damageOverride - { base?, type?, heightened?, riders? }
+ * @param {Object|null} damageOverride - { base?, type?, heightened?, riders?, degrees? }
  */
 export const buildDamageProfile = (ability, character, {
   chosenActions = null,
@@ -633,7 +646,10 @@ export const buildDamageProfile = (ability, character, {
   );
 
   if (!expression && !gatedRiders.length) return null;
-  return { expression, typeLabel, riders: gatedRiders };
+  // Per-degree save multiplier overrides (#987) — profile-level, carried into
+  // the save request next to entered/typeLabel for GM-side computeSaveDamage.
+  const degrees = damageOverride?.degrees ?? dd?.degrees ?? null;
+  return { expression, typeLabel, riders: gatedRiders, ...(degrees && { degrees }) };
 };
 
 /**
