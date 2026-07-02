@@ -11,6 +11,7 @@ import {
   eligibleSpellItems,
   runeOfferings,
   eligibleRunes,
+  eligibleHostItems,
 } from '../../utils/shopUtils';
 import { resolveRunestone } from '../../utils/runestone';
 import { addToCart, setQty, removeLine, cartTotal, cartCount } from '../../utils/shopCart';
@@ -596,7 +597,29 @@ const ShopStorefront = ({ isOpen, onClose, shops, waresStore, items, runes, spel
   );
   const runeIds = useMemo(() => new Set(runeMap.keys()), [runeMap]);
   const isRuneWare = useCallback((w) => !!w.runestone || isRuneItem(w, runeIds), [runeIds]);
-  const wareGroups = useMemo(() => groupWares(resolved.filter((w) => !isRuneWare(w))), [resolved, isRuneWare]);
+  // Base gear implied by SPECIFIC-target rune services (#1044), expanded into
+  // virtual Wares like the generative runestones/scrolls — nothing is written
+  // into the stored wares. Hand-stocked wares win (deduped by item id), and a
+  // general runesmith (no explicit target list) expands to nothing.
+  const hostWares = useMemo(() => {
+    if (!selected) return [];
+    const stocked = new Set(resolved.map((w) => String(w.id)));
+    const seen = new Set();
+    const out = [];
+    runeOfferings(selected.id, waresStore).forEach((o) =>
+      eligibleHostItems(o, items, runes).forEach((item) => {
+        const id = String(item.id);
+        if (stocked.has(id) || seen.has(id)) return;
+        seen.add(id);
+        out.push({ ...(catalogMap.get(id) || item), wareKey: `host:${id}` });
+      })
+    );
+    return out;
+  }, [selected, waresStore, resolved, items, runes, catalogMap]);
+  const wareGroups = useMemo(
+    () => groupWares([...resolved.filter((w) => !isRuneWare(w)), ...hostWares]),
+    [resolved, isRuneWare, hostWares]
+  );
   // Rune wares for the Runesmithing tab = hand-stocked runes (resolved) PLUS the
   // generative rune-service offerings (#982 G3) expanded into runestones and
   // resolved like any other ware. A hand-stocked rune stays an escape hatch (a

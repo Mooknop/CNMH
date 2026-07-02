@@ -1,6 +1,7 @@
 import { buildChildrenMap, getChildren } from './loreUtils';
 import { isRunestoneEntry, resolveRunestone } from './runestone';
 import { runeTarget } from './runeClassify';
+import { accessoryEligible } from './accessoryRunes';
 import { resolveScroll, resolveWand, castRank, mechanicalHeightenRanks, SCROLL_BY_RANK, WAND_BY_RANK } from './spellItems';
 import { getItemRarity, baseSpellItemArt } from './InventoryUtils';
 
@@ -429,6 +430,86 @@ export function runeOfferingSummary(ware, runes) {
     .join(', ');
   const text = `Runes · ${tgtLabel} · ${rarities.join('+')} · ${caps || 'no level cap'} · ${count} eligible rune${count === 1 ? '' : 's'}`;
   return { targets, rarities, count, text };
+}
+
+// ── Rune-service base gear (#1044) ──────────────────────────────────────────
+// A shop that sells runes for SPECIFIC targets also stocks the mundane base
+// gear those runes etch onto — a weapon-rune smith carries base weapons, an
+// accessory-rune tailor carries cloaks and boots. A GENERAL runesmith (no
+// explicit target list, i.e. every target) is exempt: it's an etching service,
+// not a gear shop. Matching is live against the same window eligibleRunes
+// reads: a target's base gear appears only when the offering actually admits
+// ≥1 rune for it, and an accessory host only when an admitted accessory rune
+// fits its usage tags — a footwear-runes-only shop stocks boots, not umbrellas.
+
+// Traits that disqualify an item as mundane BASE gear (bombs are Alchemical
+// Consumable weapons; magic/invested gear isn't a blank to etch).
+const MUNDANE_BLOCKERS = /^(magical|invested|alchemical|consumable)$/i;
+const isMundaneBase = (item) => {
+  if (!item || item.id == null) return false;
+  if ((Array.isArray(item.traits) ? item.traits : []).some((t) => MUNDANE_BLOCKERS.test(String(t)))) return false;
+  // Pre-runed catalog entries (a +1 cold iron longsword) aren't base gear; the
+  // empty `runes: {}` block the base catalog carries is fine.
+  const r = item.runes;
+  return !(r && (r.potency || r.striking || r.resilient ||
+    (Array.isArray(r.property) && r.property.length) || r.accessory));
+};
+
+// The accessory candidates are the DELIBERATE hosts — authored tags, shields,
+// containers. The bare derived 'light' tag would sweep every negligible-bulk
+// item (potions, ammunition) into the shop window.
+const isDeliberateHost = (item) =>
+  (Array.isArray(item.accessoryTags) && item.accessoryTags.length > 0) ||
+  !!item.shield || !!item.container;
+
+/**
+ * The catalog items a rune-service offering implies as buyable base gear, in
+ * catalog order, deduped by id (Explorer's Clothing is both base armor and an
+ * accessory host). Returns [] for a non-service ware and for the exempt
+ * general runesmith. `items` is the item catalog; `runes` the rune catalog.
+ */
+export function eligibleHostItems(ware, items, runes) {
+  if (!isRuneServiceWare(ware)) return [];
+  const explicit = Array.isArray(ware.targets)
+    ? ware.targets.filter(Boolean).map((t) => String(t).toLowerCase())
+    : [];
+  // No explicit list = every target = the general runesmith; an explicit list
+  // covering every target is the same shop spelled out.
+  if (explicit.length === 0 || explicit.length >= RUNE_TARGETS.length) return [];
+
+  // Which targets the level/rarity window actually admits runes for, plus the
+  // admitted accessory docs (needed for per-host usage matching).
+  const byId = new Map((Array.isArray(runes) ? runes : []).map((r) => [String(r.id), r]));
+  const admitted = new Set();
+  const accessoryDocs = [];
+  eligibleRunes(ware, runes).forEach((spec) => {
+    const doc = byId.get(String(spec.runeRef));
+    const target = String(runeTarget(doc) || '');
+    admitted.add(target);
+    if (target === 'accessory') accessoryDocs.push(doc);
+  });
+
+  const out = [];
+  const seen = new Set();
+  const push = (item) => {
+    const id = String(item.id);
+    if (!seen.has(id)) { seen.add(id); out.push(item); }
+  };
+  for (const item of Array.isArray(items) ? items : []) {
+    if (!item || item.id == null) continue;
+    // The Power Ring is magic (so not "mundane base"), but it IS the ring
+    // target's base gear — the blank a ring rune imbues into.
+    if (item.powerRing) {
+      if (explicit.includes('ring') && admitted.has('ring')) push(item);
+      continue;
+    }
+    if (!isMundaneBase(item)) continue;
+    if (explicit.includes('weapon') && admitted.has('weapon') && item.strikes) push(item);
+    if (explicit.includes('armor') && admitted.has('armor') && item.armor) push(item);
+    if (explicit.includes('accessory') && isDeliberateHost(item) &&
+        accessoryDocs.some((r) => accessoryEligible(item, r))) push(item);
+  }
+  return out;
 }
 
 // ── Player browse grouping (#857 S2) ────────────────────────────────────────

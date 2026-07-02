@@ -552,6 +552,29 @@ describe('GmShops', () => {
       );
     });
 
+    it('summarises the auto-stocked base gear for a specific-target service (#1044)', () => {
+      // A clothing host in the catalog + a clothing-usage accessory rune in the
+      // window → one auto-stocked base item.
+      setup({ 'town-hall': { wares: [] } });
+      useContent.mockReturnValue({
+        allLoreEntries,
+        items: [...items, { id: 'cloak', name: 'Cloak', price: 0.5, weight: 0.1, accessoryTags: ['cloak', 'clothing'] }],
+        runes: [...runeSet, { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50, usage: ['clothing'] }],
+        spells,
+      });
+      render(<GmShops />);
+      select('Town Hall');
+      fireEvent.click(screen.getByLabelText('rune-target-accessory'));
+      fireEvent.change(screen.getByLabelText('rune-maxlevel-accessory'), { target: { value: '5' } });
+      expect(screen.getByTestId('rune-host-summary')).toHaveTextContent('Also auto-stocks 1 base gear item');
+    });
+
+    it('notes the general runesmith exemption when every target is enabled (#1044)', () => {
+      open();
+      ['weapon', 'armor', 'ring', 'accessory'].forEach((t) => fireEvent.click(screen.getByLabelText(`rune-target-${t}`)));
+      expect(screen.getByTestId('rune-host-summary')).toHaveTextContent('General runesmith');
+    });
+
     it('backfills: loads a stored rune-service offering into the config', () => {
       open({
         'town-hall': {

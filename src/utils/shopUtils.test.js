@@ -16,6 +16,7 @@ import {
   runeOfferings,
   eligibleRunes,
   runeOfferingSummary,
+  eligibleHostItems,
   RUNE_TARGETS,
   groupWares,
   traitAccent,
@@ -810,5 +811,68 @@ describe('runeOfferingSummary (#982 G1)', () => {
     const sum = runeOfferingSummary({ runeService: true, maxLevel: 20 }, runeCatalog);
     expect(sum.text.startsWith('Runes · all targets ·')).toBe(true);
     expect(RUNE_TARGETS).toEqual(['weapon', 'armor', 'ring', 'accessory']);
+  });
+});
+
+describe('eligibleHostItems (#1044)', () => {
+  // Rune docs spanning the four targets, with the accessory usages host
+  // matching needs.
+  const hostRunes = [
+    { id: 'flaming', type: 'property', name: 'Flaming', level: 8, price: 500 }, // weapon
+    { id: 'ready', type: 'property', target: 'armor', name: 'Ready', level: 6, price: 200 },
+    { id: 'ring-calling', type: 'property', target: 'ring', name: 'Calling', level: 8, price: 400 },
+    { id: 'menacing', type: 'property', target: 'accessory', name: 'Menacing', level: 3, price: 50, usage: ['clothing'] },
+    { id: 'pontoon', type: 'property', target: 'accessory', name: 'Pontoon', level: 9, price: 650, usage: ['footwear'] },
+    { id: 'catching', type: 'property', target: 'accessory', name: 'Catching', level: 8, price: 425, usage: ['shield'] },
+  ];
+  // A catalog slice: base gear, pre-runed/magic/bomb impostors, hosts, and a
+  // light-bulk trinket that must never be swept in by the derived light tag.
+  const hostItems = [
+    { id: 'longsword', name: 'Longsword', price: 1, strikes: [{}], runes: {} },
+    { id: 'cold-iron-longsword', name: '+1 Cold Iron Longsword', price: 41, strikes: [{}], runes: { potency: 1 } },
+    { id: 'acid-flask', name: 'Acid Flask', price: 3, strikes: [{}], traits: ['Alchemical', 'Bomb', 'Consumable'] },
+    { id: 'sparkblade', name: 'Sparkblade', price: 60, strikes: [{}], traits: ['Magical'] },
+    { id: 'breastplate', name: 'Breastplate', price: 8, armor: { acBonus: 4 } },
+    { id: 'explorers-clothing', name: "Explorer's Clothing", price: 0.1, armor: { acBonus: 0 }, accessoryTags: ['clothing'] },
+    { id: 'cloak', name: 'Cloak', price: 0.5, weight: 0.1, accessoryTags: ['cloak', 'clothing'] },
+    { id: 'boots', name: 'Boots', price: 0.5, weight: 0.1, accessoryTags: ['footwear'] },
+    { id: 'buckler', name: 'Buckler', price: 1, weight: 0.1, shield: { hardness: 3 } },
+    { id: 'chalk', name: 'Chalk', price: 0.01, weight: 0 }, // light, but no deliberate host tag
+    { id: 'power-ring', name: 'Power Ring', powerRing: true, traits: ['Invested', 'Magical'] },
+  ];
+  const ids = (ware) => eligibleHostItems(ware, hostItems, hostRunes).map((i) => i.id);
+
+  it('a weapon-target service stocks base weapons only — no bombs, magic, or pre-runed gear', () => {
+    expect(ids({ runeService: true, targets: ['weapon'], maxLevel: 10 })).toEqual(['longsword']);
+  });
+
+  it('the general runesmith is exempt: unset targets and an explicit all-target list stock nothing', () => {
+    expect(ids({ runeService: true, maxLevel: 20 })).toEqual([]);
+    expect(ids({ runeService: true, targets: [...RUNE_TARGETS], maxLevel: 20 })).toEqual([]);
+  });
+
+  it('accessory hosts match the ADMITTED runes by usage; the derived light tag never sweeps trinkets in', () => {
+    // Cap 5 admits Menacing only → clothing hosts, not boots/buckler.
+    expect(ids({ runeService: true, targets: ['accessory'], maxLevel: 5 })).toEqual(['explorers-clothing', 'cloak']);
+    // Cap 10 admits Pontoon + Catching too → footwear + shield join; chalk never does.
+    expect(ids({ runeService: true, targets: ['accessory'], maxLevel: 10 }))
+      .toEqual(['explorers-clothing', 'cloak', 'boots', 'buckler']);
+  });
+
+  it('a target with no admitted rune in the window stocks no gear for it', () => {
+    // Ready (armor, L6) is above a cap-5 window — no armor, even though the target is on.
+    expect(ids({ runeService: true, targets: ['armor'], maxLevel: 5 })).toEqual([]);
+    expect(ids({ runeService: true, targets: ['armor'], maxLevel: 10 })).toEqual(['breastplate', 'explorers-clothing']);
+  });
+
+  it('the ring target stocks the Power Ring (magic, but the blank a ring rune imbues)', () => {
+    expect(ids({ runeService: true, targets: ['ring'], maxLevel: 10 })).toEqual(['power-ring']);
+  });
+
+  it('dedupes a dual-role item across targets and ignores non-service wares', () => {
+    // Explorer's Clothing is base armor AND a clothing host — once only.
+    expect(ids({ runeService: true, targets: ['armor', 'accessory'], maxLevel: 10 }))
+      .toEqual(['breastplate', 'explorers-clothing', 'cloak', 'boots', 'buckler']);
+    expect(eligibleHostItems({ ref: 'runestone' }, hostItems, hostRunes)).toEqual([]);
   });
 });
