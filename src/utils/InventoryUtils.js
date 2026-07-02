@@ -296,18 +296,31 @@ export const getItemRarity = (item) => {
 export const isItemMagical = (item) => {
   if (!item) return false;
   if (item.scroll || item.wand) return true;
+  if (hasAccessoryRuneSlotFilled(item)) return true; // inscription makes the host magical (#1033)
   return ((item.traits) || []).some((t) => String(t).toLowerCase() === 'magical');
 };
+
+// An inscribed accessory rune (#1033) grants Magical + Invested without ever
+// being written into the item's authored traits. Checked structurally (inline,
+// not via accessoryRunes.js, to avoid an import cycle).
+const hasAccessoryRuneSlotFilled = (item) =>
+  !!(item && item.runes && typeof item.runes === 'object' && !Array.isArray(item.runes) && item.runes.accessory);
 
 /**
  * Whether an item can be invested (attuned). PF2e gates this on the `Invested`
  * trait — you may invest up to 10 such items to gain their magic. Containers are
- * never investable. Case-insensitive.
+ * never investable — EXCEPT via an inscribed accessory rune (#1033), which is
+ * checked ahead of the container exclusion: a Preserving-runed satchel is
+ * invested magic. Case-insensitive.
  */
-export const isInvestable = (item) =>
-  !!item &&
-  !isContainer(item) &&
-  ((item.traits) || []).some((t) => String(t).toLowerCase() === 'invested');
+export const isInvestable = (item) => {
+  if (!item) return false;
+  if (hasAccessoryRuneSlotFilled(item)) return true;
+  return (
+    !isContainer(item) &&
+    ((item.traits) || []).some((t) => String(t).toLowerCase() === 'invested')
+  );
+};
 
 /**
  * Whether an item is a power ring (#967) — the explicit `powerRing` marker the

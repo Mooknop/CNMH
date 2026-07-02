@@ -1028,6 +1028,65 @@ describe('ItemModal weapon runes (#548 Slice 3c)', () => {
   });
 });
 
+describe('ItemModal accessory rune (#1033 S1)', () => {
+  const menacingCloak = {
+    name: 'Cloak',
+    weight: 0.1,
+    price: 2,
+    traits: ['Homemade'],
+    accessoryTags: ['clothing'],
+    runes: {
+      accessory: {
+        id: 'menacing', name: 'Menacing', type: 'property', target: 'accessory',
+        level: 3, price: 50, usage: ['clothing'],
+        description: 'Sinister sigils shift across the garment.',
+        riders: [{ id: 'menacing-reminder', text: 'Foes find you unsettling.' }],
+      },
+    },
+  };
+
+  it('titles the modal with the rune-prefixed name and sums the price', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={menacingCloak} />);
+    expect(screen.getByText('Menacing Cloak')).toBeInTheDocument();
+    expect(screen.getByText('52 gp')).toBeInTheDocument();
+  });
+
+  it('grants derived Magical + Invested trait chips on top of authored traits', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={menacingCloak} />);
+    const chips = screen.getAllByTestId('trait-tag').map((el) => el.textContent);
+    expect(chips).toEqual(expect.arrayContaining(['Homemade', 'Magical', 'Invested']));
+  });
+
+  it('shows an Accessory Rune section with name, level, flavor, and riders', () => {
+    render(<ItemModal isOpen onClose={vi.fn()} item={menacingCloak} />);
+    const section = screen.getByTestId('item-modal-accessory-rune');
+    expect(section).toHaveTextContent('Menacing');
+    expect(section).toHaveTextContent('Level 3');
+    expect(section).toHaveTextContent('Sinister sigils shift across the garment.');
+    expect(section).toHaveTextContent('Foes find you unsettling.');
+  });
+
+  it('renders dual-host names: accessory prefix wraps the armor-derived name', () => {
+    const explorers = {
+      name: "Explorer's Clothing",
+      weight: 0.1,
+      armor: { category: 'unarmored', acBonus: 0 },
+      accessoryTags: ['clothing'],
+      runes: { potency: 1, accessory: menacingCloak.runes.accessory },
+    };
+    render(<ItemModal isOpen onClose={vi.fn()} item={explorers} />);
+    expect(screen.getByText("Menacing +1 Explorer's Clothing")).toBeInTheDocument();
+  });
+
+  it('omits the section when the slot holds an unresolved string ref', () => {
+    render(
+      <ItemModal isOpen onClose={vi.fn()} item={{ name: 'Cloak', weight: 0.1, runes: { accessory: 'menacing' } }} />
+    );
+    expect(screen.queryByTestId('item-modal-accessory-rune')).not.toBeInTheDocument();
+    expect(screen.getByText('Cloak')).toBeInTheDocument();
+  });
+});
+
 // #656 — give a plain worn/stowed item to another PC, out of combat only.
 describe('ItemModal — give to another PC (#656)', () => {
   const giver = { id: 'a', name: 'Ashka' };

@@ -158,3 +158,49 @@ describe('wornResistanceFor (#922 S3)', () => {
     ])).toEqual([{ stat: 'resistance', amount: 5, vs: 'fire' }]);
   });
 });
+
+// ── Accessory-rune modifiers (#1033 S1) ──────────────────────────────────────
+describe('itemModifiers — accessory runes (#1033)', () => {
+  const menacing = {
+    id: 'menacing', name: 'Menacing', type: 'property', target: 'accessory',
+    modifiers: [{ stat: 'intimidation', kind: 'item', amount: 1 }],
+  };
+
+  it('merges an inscribed rune doc\'s modifiers with the item\'s authored ones', () => {
+    const mods = itemModifiers({
+      name: 'Cloak of the Bat',
+      modifiers: [{ stat: 'stealth', kind: 'item', amount: 1 }],
+      runes: { accessory: menacing },
+    });
+    expect(mods).toEqual([
+      { stat: 'stealth', kind: 'item', amount: 1 },
+      { stat: 'intimidation', kind: 'item', amount: 1 },
+    ]);
+  });
+
+  it('an accessory-only runes block does NOT swallow authored modifiers via the armor resolver', () => {
+    const mods = itemModifiers({
+      name: 'Cloak',
+      modifiers: [{ stat: 'stealth', kind: 'item', amount: 2 }],
+      runes: { accessory: 'menacing' }, // unresolved string ref: slot taken, no doc
+    });
+    expect(mods).toEqual([{ stat: 'stealth', kind: 'item', amount: 2 }]);
+  });
+
+  it('dual-host: armor-rune delta and accessory modifiers are additive', () => {
+    const mods = itemModifiers({
+      name: "Explorer's Clothing",
+      armor: { category: 'unarmored', acBonus: 0 },
+      runes: {
+        potency: 1,
+        property: [{ id: 'slick', name: 'Slick', modifiers: [{ stat: 'acrobatics', kind: 'item', amount: 1 }] }],
+        accessory: menacing,
+      },
+    });
+    expect(mods).toEqual([
+      { stat: 'ac', kind: 'item', amount: 1 },
+      { stat: 'acrobatics', kind: 'item', amount: 1 },
+      { stat: 'intimidation', kind: 'item', amount: 1 },
+    ]);
+  });
+});

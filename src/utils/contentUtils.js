@@ -422,6 +422,15 @@ const finishItem = (item, spellMap, ownerLevel, runeMap, catalogMap) => {
       .filter(Boolean);
     out = { ...out, runes: { ...out.runes, property: resolved } };
   }
+  // Inline an accessory-rune reference (#1033 S1): runes.accessory is stored
+  // as a rune id; resolve it to the full doc so the worn-gear spine and the
+  // item modal read modifiers/riders without a catalog lookup. An id that
+  // doesn't resolve stays a string, which accessoryRuneOf treats as "no doc"
+  // (the slot still reads as occupied).
+  if (runeMap && out.runes && typeof out.runes.accessory === 'string') {
+    const doc = runeMap.get(out.runes.accessory);
+    if (doc) out = { ...out, runes: { ...out.runes, accessory: doc } };
+  }
   return out;
 };
 

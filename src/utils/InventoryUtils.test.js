@@ -12,6 +12,7 @@ import {
   applyConsumedOverlay,
   flattenInventory,
   isInvestable,
+  isItemMagical,
   isPowerRing,
   wouldBreakPowerRingLimit,
   ARMOR_CATEGORIES,
@@ -406,6 +407,19 @@ describe('InventoryUtils', () => {
       expect(isInvestable({ name: 'Rope' })).toBe(false);
       expect(isInvestable({ traits: ['Invested'], container: { contents: [] } })).toBe(false);
       expect(isInvestable(null)).toBe(false);
+    });
+
+    it('an inscribed accessory rune makes the host investable — even a container (#1033)', () => {
+      expect(isInvestable({ name: 'Cloak', runes: { accessory: 'menacing' } })).toBe(true);
+      expect(isInvestable({ name: 'Satchel', container: { contents: [] }, runes: { accessory: 'preserving' } })).toBe(true);
+      // weapon/armor runes alone grant nothing — the slot must be filled
+      expect(isInvestable({ name: 'Longsword', runes: { potency: 1 } })).toBe(false);
+      expect(isInvestable({ name: 'Cloak', runes: [] })).toBe(false);
+    });
+
+    it('an inscribed accessory rune also reads as magical (#1033)', () => {
+      expect(isItemMagical({ name: 'Cloak', runes: { accessory: 'menacing' } })).toBe(true);
+      expect(isItemMagical({ name: 'Cloak', runes: { potency: 1 } })).toBe(false);
     });
   });
 

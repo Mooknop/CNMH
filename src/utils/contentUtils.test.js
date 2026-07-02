@@ -392,6 +392,28 @@ describe('contentUtils', () => {
       expect(out.runes.property).toEqual([]);
     });
 
+    it('inlines a runes.accessory id against the rune catalog (#1033)', () => {
+      const menacing = {
+        id: 'menacing', name: 'Menacing', type: 'property', target: 'accessory',
+        price: 50, usage: ['clothing'],
+        modifiers: [{ stat: 'intimidation', kind: 'item', amount: 1 }],
+      };
+      const runeMap = runeCatalogMap([menacing]);
+      const cloakCatalog = itemCatalogMap([
+        { id: 'cloak', name: 'Cloak', price: 2, accessoryTags: ['clothing'], runes: { accessory: 'menacing' } },
+      ]);
+      const out = resolveInventoryItem({ ref: 'cloak', quantity: 1 }, cloakCatalog, undefined, undefined, runeMap);
+      expect(out.runes.accessory).toEqual(menacing);
+    });
+
+    it('leaves a dangling accessory ref as the string (slot occupied, no doc) (#1033)', () => {
+      const cloakCatalog = itemCatalogMap([
+        { id: 'cloak', name: 'Cloak', runes: { accessory: 'nope' } },
+      ]);
+      const out = resolveInventoryItem({ ref: 'cloak' }, cloakCatalog, undefined, undefined, runeCatalogMap([]));
+      expect(out.runes.accessory).toBe('nope');
+    });
+
     it('routes a runestone ref through the rune catalog, inert (#800)', () => {
       const runeMap = runeCatalogMap([{ id: 'flaming', name: 'Flaming', price: 500 }]);
       const out = resolveInventoryItem(
