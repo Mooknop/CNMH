@@ -56,6 +56,336 @@
     "description": "Sharp needles impale anyone who attempts to wield this weapon other than its rightful owner. If any other creature wields the weapon, needles erupt from the hilt or shaft, dealing 1d8 piercing damage plus 1d4 persistent bleed damage to that wielder (increasing to 1d8 piercing and 1d4 persistent bleed per damage die if the weapon has a striking rune). When the rune is crafted, the crafter can broaden who may safely wield it (e.g. a particular bloodline, patron deity, or sanctification)."
   },
   {
+    "id": "called",
+    "type": "property",
+    "target": "accessory",
+    "name": "Called",
+    "level": 3,
+    "price": 60,
+    "rarity": "uncommon",
+    "usage": [
+      "light"
+    ],
+    "description": "With this rune, you can instantly retrieve an item in your possession without digging around looking for it.",
+    "actuated": {
+      "cost": "none",
+      "name": "Call Item",
+      "actionCount": 1,
+      "frequency": "once per hour",
+      "traits": [
+        "Command"
+      ],
+      "description": "Requirements You have a free hand and the called item is in a bag, pack, pouch, or other container on your person, or unattended within 30 feet. Effect The item teleports to a free hand."
+    }
+  },
+  {
+    "id": "catching",
+    "type": "property",
+    "target": "accessory",
+    "name": "Catching",
+    "level": 8,
+    "price": 425,
+    "usage": [
+      "shield"
+    ],
+    "description": "A catching rune creates a small, magical vacuum that attempts to pull weapons away from opponents. If you can attempt to Disarm as part of a Shield Block, such as with the Disarming Block feat or this rune's activated ability, a catching shield grants you a +1 circumstance bonus to such Disarm attempts.",
+    "actuated": {
+      "cost": "none",
+      "name": "Catching Rune",
+      "frequency": "once per hour",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Free action. Trigger You Shield Block a melee Strike made with a held weapon. Effect You attempt to Disarm the creature whose attack you blocked of the weapon they attacked you with, with a +1 circumstance bonus. You can do so even if you don't have a hand free."
+    },
+    "onBlock": "Free action (once per hour): attempt to Disarm the weapon you blocked — +1 circumstance bonus, no free hand needed."
+  },
+  {
+    "id": "clothing-acid-resistant",
+    "type": "property",
+    "target": "accessory",
+    "name": "Acid-Resistant",
+    "level": 8,
+    "price": 420,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 5 to acid.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "acid"
+      }
+    ]
+  },
+  {
+    "id": "clothing-acid-resistant-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Acid-Resistant (Greater)",
+    "level": 12,
+    "price": 1650,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 10 to acid.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "acid"
+      }
+    ]
+  },
+  {
+    "id": "clothing-cold-resistant",
+    "type": "property",
+    "target": "accessory",
+    "name": "Cold-Resistant",
+    "level": 8,
+    "price": 420,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 5 to cold.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "cold"
+      }
+    ]
+  },
+  {
+    "id": "clothing-cold-resistant-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Cold-Resistant (Greater)",
+    "level": 12,
+    "price": 1650,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 10 to cold.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "cold"
+      }
+    ]
+  },
+  {
+    "id": "clothing-electricity-resistant",
+    "type": "property",
+    "target": "accessory",
+    "name": "Electricity-Resistant",
+    "level": 8,
+    "price": 420,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 5 to electricity.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "electricity"
+      }
+    ]
+  },
+  {
+    "id": "clothing-electricity-resistant-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Electricity-Resistant (Greater)",
+    "level": 12,
+    "price": 1650,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 10 to electricity.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "electricity"
+      }
+    ]
+  },
+  {
+    "id": "clothing-fire-resistant",
+    "type": "property",
+    "target": "accessory",
+    "name": "Fire-Resistant",
+    "level": 8,
+    "price": 420,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 5 to fire.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 5,
+        "vs": "fire"
+      }
+    ]
+  },
+  {
+    "id": "clothing-fire-resistant-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Fire-Resistant (Greater)",
+    "level": 12,
+    "price": 1650,
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols convey protective forces from the Elemental Planes. While wearing the garment, you gain resistance 10 to fire.",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "amount": 10,
+        "vs": "fire"
+      }
+    ]
+  },
+  {
+    "id": "clothing-shadow",
+    "type": "property",
+    "target": "accessory",
+    "name": "Shadow",
+    "level": 5,
+    "price": 55,
+    "usage": [
+      "clothing"
+    ],
+    "description": "A garment inscribed with this rune takes on a hazy black appearance. You gain a +1 item bonus to Stealth checks while wearing it.",
+    "modifiers": [
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "clothing-shadow-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Shadow (Greater)",
+    "level": 9,
+    "price": 650,
+    "usage": [
+      "clothing"
+    ],
+    "description": "A garment inscribed with this rune takes on a hazy black appearance. You gain a +2 item bonus to Stealth checks while wearing it.",
+    "modifiers": [
+      {
+        "stat": "stealth",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "clothing-slick",
+    "type": "property",
+    "target": "accessory",
+    "name": "Slick",
+    "level": 5,
+    "price": 45,
+    "usage": [
+      "clothing"
+    ],
+    "description": "This rune makes the garment slippery, as though it were coated with a thin film of oil. You gain a +1 item bonus to Acrobatics checks to Escape and to Squeeze.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 1
+      }
+    ],
+    "riders": [
+      {
+        "id": "clothing-slick-reminder",
+        "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
+      }
+    ]
+  },
+  {
+    "id": "clothing-slick-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Slick (Greater)",
+    "level": 8,
+    "price": 450,
+    "usage": [
+      "clothing"
+    ],
+    "description": "This rune makes the garment slippery, as though it were coated with a thin film of oil. You gain a +2 item bonus to Acrobatics checks to Escape and to Squeeze.",
+    "modifiers": [
+      {
+        "stat": "acrobatics",
+        "kind": "item",
+        "amount": 2
+      }
+    ],
+    "riders": [
+      {
+        "id": "clothing-slick-greater-reminder",
+        "text": "Bonus applies only to Acrobatics checks to Escape or Squeeze."
+      }
+    ]
+  },
+  {
+    "id": "clothing-stanching",
+    "type": "property",
+    "target": "accessory",
+    "name": "Stanching",
+    "level": 5,
+    "price": 130,
+    "rarity": "uncommon",
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols close bloody wounds. A garment with this rune reduces the DC of the flat check to end persistent bleed damage from 15 to 12 (7 with particularly effective assistance).",
+    "riders": [
+      {
+        "id": "clothing-stanching-reminder",
+        "text": "Flat check to end persistent bleed is DC 12 (7 with particularly effective assistance)."
+      }
+    ]
+  },
+  {
+    "id": "clothing-stanching-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Stanching (Greater)",
+    "level": 9,
+    "price": 600,
+    "rarity": "uncommon",
+    "usage": [
+      "clothing"
+    ],
+    "description": "These symbols close bloody wounds. A garment with this rune reduces the DC of the flat check to end persistent bleed damage from 15 to 10 (5 with particularly effective assistance).",
+    "modifiers": [
+      {
+        "stat": "resistance",
+        "vs": "persistent-bleed",
+        "flatCheckEase": true
+      }
+    ],
+    "riders": [
+      {
+        "id": "clothing-stanching-greater-reminder",
+        "text": "Flat check to end persistent bleed is DC 10 (5 with particularly effective assistance)."
+      }
+    ]
+  },
+  {
     "id": "corrosive",
     "type": "property",
     "name": "Corrosive",
@@ -124,6 +454,126 @@
     "level": 5,
     "price": 140,
     "description": "Etched on a slashing or piercing weapon, the rune performs divination magic on your foes' blood to grant insight into their abilities. Once per minute, if your previous action hit and dealt damage to a bleeding creature, you can activate it (free action, envision) to Recall Knowledge about that target, gaining an item bonus to the check equal to the weapon's potency rune bonus to attack rolls (and a +2 circumstance bonus if your hit was a critical hit)."
+  },
+  {
+    "id": "dragons-breath-1",
+    "type": "property",
+    "target": "accessory",
+    "name": "Dragon's Breath (1st-Rank Spell)",
+    "level": 4,
+    "price": 100,
+    "rarity": "uncommon",
+    "usage": [
+      "dueling-cape",
+      "shield"
+    ],
+    "description": "This rune depicts a specific type of dragon, resizing after application to fit the surface of the item.",
+    "freeActions": [
+      {
+        "name": "Dragon's Breath",
+        "traits": [
+          "Envision",
+          "Spellshape"
+        ],
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 1st rank or lower."
+      }
+    ]
+  },
+  {
+    "id": "dragons-breath-2",
+    "type": "property",
+    "target": "accessory",
+    "name": "Dragon's Breath (2nd-Rank Spell)",
+    "level": 6,
+    "price": 250,
+    "rarity": "uncommon",
+    "usage": [
+      "dueling-cape",
+      "shield"
+    ],
+    "description": "This rune depicts a specific type of dragon, resizing after application to fit the surface of the item.",
+    "freeActions": [
+      {
+        "name": "Dragon's Breath",
+        "traits": [
+          "Envision",
+          "Spellshape"
+        ],
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 2nd rank or lower."
+      }
+    ]
+  },
+  {
+    "id": "dragons-breath-3",
+    "type": "property",
+    "target": "accessory",
+    "name": "Dragon's Breath (3rd-Rank Spell)",
+    "level": 8,
+    "price": 500,
+    "rarity": "uncommon",
+    "usage": [
+      "dueling-cape",
+      "shield"
+    ],
+    "description": "This rune depicts a specific type of dragon, resizing after application to fit the surface of the item.",
+    "freeActions": [
+      {
+        "name": "Dragon's Breath",
+        "traits": [
+          "Envision",
+          "Spellshape"
+        ],
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 3rd rank or lower."
+      }
+    ]
+  },
+  {
+    "id": "dragons-breath-4",
+    "type": "property",
+    "target": "accessory",
+    "name": "Dragon's Breath (4th-Rank Spell)",
+    "level": 10,
+    "price": 1000,
+    "rarity": "uncommon",
+    "usage": [
+      "dueling-cape",
+      "shield"
+    ],
+    "description": "This rune depicts a specific type of dragon, resizing after application to fit the surface of the item.",
+    "freeActions": [
+      {
+        "name": "Dragon's Breath",
+        "traits": [
+          "Envision",
+          "Spellshape"
+        ],
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 4th rank or lower."
+      }
+    ]
+  },
+  {
+    "id": "dragons-breath-5",
+    "type": "property",
+    "target": "accessory",
+    "name": "Dragon's Breath (5th-Rank Spell)",
+    "level": 12,
+    "price": 2000,
+    "rarity": "uncommon",
+    "usage": [
+      "dueling-cape",
+      "shield"
+    ],
+    "description": "This rune depicts a specific type of dragon, resizing after application to fit the surface of the item.",
+    "freeActions": [
+      {
+        "name": "Dragon's Breath",
+        "traits": [
+          "Envision",
+          "Spellshape"
+        ],
+        "description": "Requirements You're receiving a bonus to AC from your dragon's breath cape or shield. Effect If your next action is to Cast a Spell with an area of effect that deals the same type of damage as the depicted dragon's breath weapon, the spell gains the effects of the Widen Spell feat. The rune can only affect spells of 5th rank or lower."
+      }
+    ]
   },
   {
     "id": "dread",
@@ -308,12 +758,247 @@
     "description": "A fundamental rune that adds extra weapon damage dice on a hit."
   },
   {
+    "id": "menacing",
+    "type": "property",
+    "target": "accessory",
+    "name": "Menacing",
+    "level": 3,
+    "price": 50,
+    "usage": [
+      "clothing"
+    ],
+    "description": "Common among brutes who use the magic to scare others into compliance, menacing runes lend you a formidable appearance, granting you a +1 item bonus to Intimidation checks to Coerce others.",
+    "modifiers": [
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 1
+      }
+    ],
+    "riders": [
+      {
+        "id": "menacing-reminder",
+        "text": "Bonus applies only to Intimidation checks to Coerce."
+      }
+    ]
+  },
+  {
+    "id": "menacing-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Menacing (Greater)",
+    "level": 10,
+    "price": 900,
+    "usage": [
+      "clothing"
+    ],
+    "description": "Common among brutes who use the magic to scare others into compliance, menacing runes lend you a formidable appearance, granting you a +2 item bonus to Intimidation checks to Coerce others.",
+    "modifiers": [
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 2
+      }
+    ],
+    "riders": [
+      {
+        "id": "menacing-greater-reminder",
+        "text": "Bonus applies only to Intimidation checks to Coerce."
+      }
+    ],
+    "actuated": {
+      "cost": "none",
+      "name": "Fear",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "The rune casts a 3rd-rank fear spell (DC 25)."
+    }
+  },
+  {
     "id": "pacifying",
     "type": "property",
     "name": "Pacifying",
     "level": 5,
     "price": 150,
     "description": "This rune turns a weapon into an instrument of peacemaking. When you deal damage with the etched weapon, you can use a reaction to force the damaged creature to succeed at a DC 20 Will save or become pacified: the creature takes a –2 penalty to attack rolls with attacks that aren't nonlethal for 1 minute, as a psychic warning urges it to cease dealing lethal damage."
+  },
+  {
+    "id": "paired",
+    "type": "property",
+    "target": "accessory",
+    "name": "Paired",
+    "level": 5,
+    "price": 150,
+    "rarity": "uncommon",
+    "usage": [
+      "pocketed"
+    ],
+    "description": "These runes always come in pairs, each applied to a separate item that has pockets.",
+    "actuated": {
+      "cost": "none",
+      "name": "Paired Exchange",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Requirements The paired items are both invested, typically by two different characters, and are within 100 feet of each other. Effect Items in the pockets (up to 10 negligible-Bulk items or 1 light-Bulk item per pocket) trade places via teleportation."
+    }
+  },
+  {
+    "id": "paired-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Paired (Greater)",
+    "level": 9,
+    "price": 650,
+    "rarity": "uncommon",
+    "usage": [
+      "pocketed"
+    ],
+    "description": "These runes always come in pairs, each applied to a separate item that has pockets. You can activate greater paired runes at a distance of up to 1 mile.",
+    "actuated": {
+      "cost": "none",
+      "name": "Paired Exchange",
+      "actionCount": 1,
+      "frequency": "once per day",
+      "traits": [
+        "Command"
+      ],
+      "description": "Requirements The paired items are both invested, typically by two different characters, and are within 1 mile of each other. Effect Items in the pockets (up to 10 negligible-Bulk items or 1 light-Bulk item per pocket) trade places via teleportation."
+    }
+  },
+  {
+    "id": "pontoon",
+    "type": "property",
+    "target": "accessory",
+    "name": "Pontoon",
+    "level": 9,
+    "price": 650,
+    "usage": [
+      "footwear"
+    ],
+    "description": "Footwear with pontoon runes allows you to traverse waterways with ease. While wearing footwear with the rune, you can walk on the surface of water and other liquids without falling through. This offers no protection against damage the liquid deals. You can go under the liquid's surface, but you must Swim if you do.",
+    "riders": [
+      {
+        "id": "pontoon-reminder",
+        "text": "You can walk on the surface of water and other liquids."
+      }
+    ]
+  },
+  {
+    "id": "presentable",
+    "type": "property",
+    "target": "accessory",
+    "name": "Presentable",
+    "level": 3,
+    "price": 50,
+    "rarity": "uncommon",
+    "usage": [
+      "clothing"
+    ],
+    "description": "A garment with this rune is always clean, as though it had just been affected by prestidigitation. You gain a +1 item bonus to Make an Impression on those who would be impressed by a particular presentable outfit while wearing this garment.",
+    "modifiers": [
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 1
+      }
+    ],
+    "riders": [
+      {
+        "id": "presentable-reminder",
+        "text": "Bonus applies only to Diplomacy checks to Make an Impression on those impressed by the outfit."
+      }
+    ]
+  },
+  {
+    "id": "presentable-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Presentable (Greater)",
+    "level": 10,
+    "price": 900,
+    "rarity": "uncommon",
+    "usage": [
+      "clothing"
+    ],
+    "description": "A garment with this rune is always clean, as though it had just been affected by prestidigitation. You gain a +2 item bonus to Make an Impression on those who would be impressed by a particular presentable outfit while wearing this garment.",
+    "modifiers": [
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 2
+      }
+    ],
+    "riders": [
+      {
+        "id": "presentable-greater-reminder",
+        "text": "Bonus applies only to Diplomacy checks to Make an Impression on those impressed by the outfit."
+      }
+    ],
+    "actuated": {
+      "cost": "none",
+      "name": "Suggestion",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Envision",
+        "Interact"
+      ],
+      "description": "You cast suggestion."
+    }
+  },
+  {
+    "id": "preserving",
+    "type": "property",
+    "target": "accessory",
+    "name": "Preserving",
+    "level": 3,
+    "price": 45,
+    "usage": [
+      "container"
+    ],
+    "description": "Preserving runes are common among merchants and other travelers who are on the road for weeks or months at a time. Any non-magical food and drink inside a container with a preserving rune remains fresher for longer, taking ten times as long to spoil. This feature doesn't prolong the duration of alchemical items.",
+    "riders": [
+      {
+        "id": "preserving-reminder",
+        "text": "Food and drink inside take ten times as long to spoil (alchemical items unaffected)."
+      }
+    ]
+  },
+  {
+    "id": "preserving-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Preserving (Greater)",
+    "level": 8,
+    "price": 450,
+    "usage": [
+      "container"
+    ],
+    "description": "Preserving runes are common among merchants and other travelers who are on the road for weeks or months at a time. Non-magical food and drink inside the container never spoil. This feature doesn't prolong the duration of alchemical items.",
+    "riders": [
+      {
+        "id": "preserving-greater-reminder",
+        "text": "Food and drink inside never spoil (alchemical items unaffected)."
+      }
+    ],
+    "actuated": {
+      "cost": "none",
+      "name": "Cleanse Cuisine",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate",
+        "Manipulate"
+      ],
+      "description": "The container casts cleanse cuisine on all the food and drink within."
+    }
   },
   {
     "id": "quenching",
@@ -355,6 +1040,50 @@
     "level": 8,
     "price": 340,
     "description": "A fundamental rune that grants an item bonus to all saving throws."
+  },
+  {
+    "id": "retaliation-lesser",
+    "type": "property",
+    "target": "accessory",
+    "name": "Retaliation (Lesser)",
+    "level": 6,
+    "price": 250,
+    "usage": [
+      "shield"
+    ],
+    "description": "Shields with a retaliation rune use the impact of weapons to generate blasts of explosive force that counterattack foes.",
+    "actuated": {
+      "cost": "none",
+      "name": "Retaliation",
+      "frequency": "once per hour",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Free action. Trigger You Shield Block a melee Strike. Effect You unleash force damage against the creature that made the triggering attack: 4d4 force damage, DC 20 basic Reflex save."
+    },
+    "onBlock": "Free action (once per hour): 4d4 force damage to the attacker (DC 20 basic Reflex)."
+  },
+  {
+    "id": "retaliation-moderate",
+    "type": "property",
+    "target": "accessory",
+    "name": "Retaliation (Moderate)",
+    "level": 10,
+    "price": 1000,
+    "usage": [
+      "shield"
+    ],
+    "description": "Shields with a retaliation rune use the impact of weapons to generate blasts of explosive force that counterattack foes.",
+    "actuated": {
+      "cost": "none",
+      "name": "Retaliation",
+      "frequency": "once per hour",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Free action. Trigger You Shield Block a melee Strike. Effect You unleash force damage against the creature that made the triggering attack: 8d4 force damage, DC 27 basic Reflex save."
+    },
+    "onBlock": "Free action (once per hour): 8d4 force damage to the attacker (DC 27 basic Reflex)."
   },
   {
     "id": "returning",
@@ -781,6 +1510,60 @@
     ]
   },
   {
+    "id": "snagging",
+    "type": "property",
+    "target": "accessory",
+    "name": "Snagging",
+    "level": 3,
+    "price": 60,
+    "rarity": "uncommon",
+    "usage": [
+      "belt",
+      "cape",
+      "cloak",
+      "scarf"
+    ],
+    "description": "This animated item attempts to catch you when you fall. You can attempt to Grab an Edge, even if your hands are tied behind your back or otherwise restrained, so long as there's a solid edge within 10 feet. If you roll a success, you can Grab the Edge even if you don't have a hand free.",
+    "riders": [
+      {
+        "id": "snagging-reminder",
+        "text": "You can Grab an Edge without a free hand (solid edge within 10 feet)."
+      }
+    ]
+  },
+  {
+    "id": "soft-landing",
+    "type": "property",
+    "target": "accessory",
+    "name": "Soft-Landing",
+    "level": 3,
+    "price": 60,
+    "rarity": "uncommon",
+    "usage": [
+      "footwear",
+      "cape",
+      "cloak",
+      "umbrella"
+    ],
+    "description": "This item creates a small cushion of air that catches you when you fall. You treat falls as 10 feet shorter.",
+    "riders": [
+      {
+        "id": "soft-landing-reminder",
+        "text": "Treat falls as 10 feet shorter."
+      }
+    ],
+    "reactions": [
+      {
+        "name": "Soft Landing",
+        "traits": [
+          "Envision"
+        ],
+        "trigger": "You begin to fall.",
+        "description": "Frequency once per day. Effect You gain the effects of feather fall for 1 minute or until you stop falling, whichever comes first."
+      }
+    ]
+  },
+  {
     "id": "striking",
     "type": "fundamental",
     "fundamental": "striking",
@@ -867,6 +1650,71 @@
         ]
       }
     }
+  },
+  {
+    "id": "trackless",
+    "type": "property",
+    "target": "accessory",
+    "name": "Trackless",
+    "level": 6,
+    "price": 225,
+    "usage": [
+      "footwear"
+    ],
+    "description": "Trackless runes are common among hunters and trappers, as well as thieves and anyone fleeing pursuit. While wearing trackless footwear, you are continuously affected by the vanishing tracks spell.",
+    "riders": [
+      {
+        "id": "trackless-reminder",
+        "text": "You are continuously affected by vanishing tracks."
+      }
+    ]
+  },
+  {
+    "id": "trackless-greater",
+    "type": "property",
+    "target": "accessory",
+    "name": "Trackless (Greater)",
+    "level": 10,
+    "price": 900,
+    "usage": [
+      "footwear"
+    ],
+    "description": "Trackless runes are common among hunters and trappers, as well as thieves and anyone fleeing pursuit. While wearing trackless footwear, you are continuously affected by the vanishing tracks spell.",
+    "riders": [
+      {
+        "id": "trackless-greater-reminder",
+        "text": "You are continuously affected by vanishing tracks."
+      }
+    ],
+    "actuated": {
+      "cost": "none",
+      "name": "Trackless Emanation",
+      "actionCount": 2,
+      "frequency": "once per day",
+      "traits": [
+        "Concentrate"
+      ],
+      "description": "Effect You extend the effect of your rune out to a 20-foot emanation. The emanation remains for 8 hours, affecting up to 10 creatures of your choice within the area. You can Dismiss this effect."
+    }
+  },
+  {
+    "id": "unexceptional",
+    "type": "property",
+    "target": "accessory",
+    "name": "Unexceptional",
+    "level": 3,
+    "price": 60,
+    "rarity": "uncommon",
+    "usage": [
+      "light"
+    ],
+    "description": "Merchants traveling into Stonebreach sometimes apply this accessory rune to specific wares to avoid the notice of thieves. Conversely, many thieves in Highhelm apply these runes to stolen goods to help them smuggle items out of the city. The item gains the effects of magic aura to appear as non-magical. The rune's effects also cause anyone who closely observes or holds the item to believe it is a mundane version of that type of item, unless the creature succeeds at a DC 18 Will save.",
+    "riders": [
+      {
+        "id": "unexceptional-reminder",
+        "text": "The item appears mundane; close observers believe it ordinary unless they succeed at a DC 18 Will save."
+      }
+    ]
   },
   {
     "id": "vitalizing",

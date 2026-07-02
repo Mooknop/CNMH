@@ -1176,6 +1176,16 @@
     "id": "bedroll"
   },
   {
+    "id": "belt",
+    "name": "Belt",
+    "price": 0.1,
+    "weight": 0,
+    "accessoryTags": [
+      "belt"
+    ],
+    "description": "A sturdy leather belt."
+  },
+  {
     "actions": [
       {
         "name": "Draw a Blade",
@@ -1394,6 +1404,16 @@
     "id": "blood-booster"
   },
   {
+    "id": "boots",
+    "name": "Boots",
+    "price": 0.5,
+    "weight": 0.1,
+    "accessoryTags": [
+      "footwear"
+    ],
+    "description": "Sturdy leather footwear, made for long roads."
+  },
+  {
     "name": "Bottled Lightning",
     "description": "A jar of crackling captured lightning. Deals 1d6 electricity and 1 electricity splash; on a hit the target is off-guard until the start of your next turn.",
     "traits": [
@@ -1574,6 +1594,16 @@
       "hardness": 3,
       "bonus": 1
     }
+  },
+  {
+    "id": "cape",
+    "name": "Cape",
+    "price": 0.5,
+    "weight": 0.1,
+    "accessoryTags": [
+      "cape"
+    ],
+    "description": "A shoulder-fastened cape."
   },
   {
     "name": "Cape of Illumination",
@@ -1757,6 +1787,16 @@
     "weight": 0,
     "price": 56,
     "id": "channel-protection-amulet"
+  },
+  {
+    "id": "cloak",
+    "name": "Cloak",
+    "price": 0.5,
+    "weight": 0.1,
+    "accessoryTags": [
+      "cloak"
+    ],
+    "description": "A warm hooded traveler's cloak."
   },
   {
     "name": "Cloak of Feline Rest",
@@ -2571,6 +2611,16 @@
     "playingEffect": "coda-drums-playing"
   },
   {
+    "id": "dueling-cape",
+    "name": "Dueling Cape",
+    "price": 0.5,
+    "weight": 0.1,
+    "accessoryTags": [
+      "dueling-cape"
+    ],
+    "description": "A stylish, reinforced cape favored by duelists. With an Interact action you can wrap it around your arm; certain feats and runes rely on the readied cape's defensive bonus."
+  },
+  {
     "name": "Dweomerweave Robe",
     "description": "This robe is made from dweomerweave, a magical fabric created by spinning minor illusions into the threads of ether spider silk. Dweomerweave is naturally hazy and translucent. It can take on the illusory appearances of other fabrics and garments, and dweomerweave robes are coveted by adventurers who want to travel light without compromising on fashion.",
     "traits": [
@@ -2947,7 +2997,10 @@
       "dexCap": 5,
       "strength": 10,
       "group": "cloth"
-    }
+    },
+    "accessoryTags": [
+      "clothing"
+    ]
   },
   {
     "name": "Eye Garnets",
@@ -2973,6 +3026,16 @@
     ],
     "usage": "held in one hand",
     "weight": 0.1
+  },
+  {
+    "id": "fine-clothing",
+    "name": "Clothing (Fine)",
+    "price": 2,
+    "weight": 0.1,
+    "accessoryTags": [
+      "clothing"
+    ],
+    "description": "Fine clothing appropriate for a noble court or formal occasion."
   },
   {
     "id": "flail",
@@ -4732,6 +4795,16 @@
     "level": 7
   },
   {
+    "id": "ordinary-clothing",
+    "name": "Clothing (Ordinary)",
+    "price": 0.1,
+    "weight": 0,
+    "accessoryTags": [
+      "clothing"
+    ],
+    "description": "Ordinary, everyday clothing."
+  },
+  {
     "name": "Padded Armor",
     "description": "This armor is simply a layer of heavy, quilted cloth, but it is sometimes used because it's so inexpensive. Padded armor is easier to damage and destroy than other types of armor. Heavy armor comes with a padded armor undercoat included in its Price, though it loses the comfort trait when worn under heavy armor. You can wear just that padded armor undercoat to sleep in, if your heavy armor is destroyed, or when otherwise not wearing the full heavy armor.",
     "image": "img_08af988c-26b0-4047-942b-0505497f1e66.jpg",
@@ -5157,6 +5230,17 @@
     ],
     "id": "pipes-of-compulsion",
     "playingEffect": "coda-pipes-playing"
+  },
+  {
+    "id": "pocketed-vest",
+    "name": "Pocketed Vest",
+    "price": 0.5,
+    "weight": 0.1,
+    "accessoryTags": [
+      "clothing",
+      "pocketed"
+    ],
+    "description": "A sturdy vest lined with pockets. Paired runes need one pocketed garment for each rune of the pair."
   },
   {
     "name": "Potion of Waterbreathing",
@@ -6043,6 +6127,16 @@
       "strength": 14,
       "group": "composite"
     }
+  },
+  {
+    "id": "scarf",
+    "name": "Scarf",
+    "price": 0.1,
+    "weight": 0,
+    "accessoryTags": [
+      "scarf"
+    ],
+    "description": "A long woven scarf."
   },
   {
     "name": "Scepter of Energy Ablation",
@@ -8375,6 +8469,16 @@
     ],
     "id": "tricksters-mandolin",
     "playingEffect": "coda-mandolin-playing"
+  },
+  {
+    "id": "umbrella",
+    "name": "Umbrella",
+    "price": 1,
+    "weight": 0.1,
+    "accessoryTags": [
+      "umbrella"
+    ],
+    "description": "A collapsible canvas umbrella on a wooden frame."
   },
   {
     "actions": [
