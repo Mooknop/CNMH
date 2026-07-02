@@ -109,6 +109,19 @@ describe('useCharacter — acquired inventory overlay', () => {
     expect(result.current.inventory.find((i) => i.name === 'Longsword')).toBeUndefined();
   });
 
+  it('resolves a purchased runestone against the rune catalog (#800)', () => {
+    useContent.mockReturnValue({
+      items: catalog,
+      spells: [],
+      runes: [{ id: 'flaming', name: 'Flaming', level: 8, price: 500, description: 'Deals extra fire damage on a hit.' }],
+    });
+    setAcquired([{ ref: 'runestone', runeRef: 'flaming', uid: 'u3' }]);
+    const { result } = renderHook(() => useCharacter(character));
+    const stone = result.current.inventory.find((i) => i.uid === 'u3');
+    expect(stone.name).toBe('Flaming Runestone');
+    expect(stone.runestone.rune.description).toBe('Deals extra fire damage on a hit.');
+  });
+
   it('selects the matching variant when an acquired entry carries a level', () => {
     useContent.mockReturnValue({
       items: [{ id: 'potion', name: 'Potion', weight: 0.1, variants: [

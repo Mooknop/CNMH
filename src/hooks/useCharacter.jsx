@@ -14,7 +14,7 @@ import { applyRemovedOverlay } from '../utils/removedOverlay';
 import { itemAbilitiesActive } from '../utils/itemState';
 import { itemUidOf } from '../utils/affix';
 import { listStaves } from '../utils/staffPrep';
-import { itemCatalogMap, spellCatalogMap, resolveInventory } from '../utils/contentUtils';
+import { itemCatalogMap, spellCatalogMap, runeCatalogMap, resolveInventory } from '../utils/contentUtils';
 
 import {
   getAbilityModifier,
@@ -97,15 +97,16 @@ export const useCharacter = (character) => {
   // adjustment that feeds the AC derivation (caps can't ride the additive effect
   // rail, so the value must be applied at the derivation site).
   const { effects: activeEffects } = useEffects(character?.id || 'none');
-  const { items: catalogItems, spells: catalogSpells, effects: effectCatalog } = useContent();
+  const { items: catalogItems, spells: catalogSpells, effects: effectCatalog, runes: catalogRunes } = useContent();
   const resolvedAcquired = useMemo(
     () => resolveInventory(
       Array.isArray(acquired) ? acquired : [],
       itemCatalogMap(catalogItems || []),
       spellCatalogMap(catalogSpells || []),
       character?.level || 1,
+      runeCatalogMap(catalogRunes || []),
     ),
-    [acquired, catalogItems, catalogSpells, character?.level],
+    [acquired, catalogItems, catalogSpells, character?.level, catalogRunes],
   );
 
   const charMemo = useMemo(() => {
