@@ -165,20 +165,21 @@ const fromSpellConfig = (config) => {
 };
 
 // ── Generative rune-service offerings (#982 G2) ─────────────────────────────
-// A shop can also sell runes for a TARGET (weapon | armor | ring) up to a max
-// rune LEVEL, filtered by rarity — the G1 model in shopUtils. Authored as one
-// `{ runeService, targets?, maxLevel, rarities? }` ware in its own "Runesmithing
-// services" section, mirroring the spellcasting editor.
-const RUNE_TARGET_LABELS = [['weapon', 'Weapon'], ['armor', 'Armor'], ['ring', 'Ring']];
+// A shop can also sell runes for a TARGET (weapon | armor | ring | accessory)
+// up to a max rune LEVEL, filtered by rarity — the G1 model in shopUtils.
+// Authored as one `{ runeService, targets?, maxLevel, rarities? }` ware in its
+// own "Runesmithing services" section, mirroring the spellcasting editor.
+const RUNE_TARGET_LABELS = [['weapon', 'Weapon'], ['armor', 'Armor'], ['ring', 'Ring'], ['accessory', 'Accessory']];
 // Property runes cap out at item level 19 (ring runes reach 18); allow 20 headroom.
 const RUNE_MAX_LEVEL = 20;
 
 // Stored rune-service ware → the editor config. At most one runeService ware per
-// shop. Targets unset ⇒ all three (mirrors offeringTargets); each selected target
+// shop. Targets unset ⇒ all (mirrors offeringTargets); each selected target
 // carries its own max-level cap (from a scalar or per-target maxLevel).
 const toRuneConfig = (wares) => {
   const off = (Array.isArray(wares) ? wares : []).find(isRuneServiceWare);
-  const config = { weapon: false, armor: false, ring: false, levels: { weapon: '', armor: '', ring: '' }, rarities: [] };
+  const config = { levels: {}, rarities: [] };
+  RUNE_TARGETS.forEach((t) => { config[t] = false; config.levels[t] = ''; });
   if (!off) return config;
   const targets = Array.isArray(off.targets) && off.targets.length
     ? off.targets.map((t) => String(t).toLowerCase())
@@ -195,7 +196,7 @@ const toRuneConfig = (wares) => {
 
 // Editor config → stored rune-service ware (an array of 0 or 1). Defaults are
 // OMITTED so specs stay clean + round-trip with the G1 selectors: targets unset =
-// all three; a uniform cap collapses to a scalar maxLevel, else per-target object;
+// all; a uniform cap collapses to a scalar maxLevel, else per-target object;
 // rarities unset = common only.
 const fromRuneConfig = (config) => {
   const selected = RUNE_TARGETS.filter((t) => config[t]);
@@ -678,10 +679,10 @@ const SpellcastingSection = ({ config, spells, onChange }) => {
 };
 
 // The "Runesmithing services" section (#982 G2): the GM picks which rune targets
-// to sell (weapon/armor/ring), a max rune level per selected target, and allowed
-// rarities; a live summary shows coverage (off the G1 selector). Targets empty =
-// none (unlike traditions, a rune offering needs ≥1 target); rarities empty =
-// common only.
+// to sell (weapon/armor/ring/accessory), a max rune level per selected target,
+// and allowed rarities; a live summary shows coverage (off the G1 selector).
+// Targets empty = none (unlike traditions, a rune offering needs ≥1 target);
+// rarities empty = common only.
 const RunesmithingSection = ({ config, runes, onChange }) => {
   const setField = (patch) => onChange({ ...config, ...patch });
   const toggleTarget = (t) => setField({ [t]: !config[t] });
@@ -709,7 +710,8 @@ const RunesmithingSection = ({ config, runes, onChange }) => {
         <div className="gm-shop-pane-title">Runesmithing services</div>
       </div>
       <p className="gm-count gm-shop-offers-intro">
-        Etch any catalog rune onto a runestone, by target and rune level.
+        Etch any catalog rune onto a runestone, by target and rune level. Most
+        accessory runes are Uncommon — opt into the Uncommon rarity to stock them.
       </p>
       <div className="gm-shop-offer-filters">
         <div className="form-group gm-shop-offer-field">

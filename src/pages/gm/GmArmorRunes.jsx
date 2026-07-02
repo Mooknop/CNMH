@@ -332,7 +332,8 @@ const GmArmorRunes = () => {
 };
 
 // Reused by the unified target-faceted rune editor (GmRunes, #967 R9) so an
-// armor rune edits with its own modifiers/riders form there too.
-export { RuneForm as ArmorRuneForm, toForm as armorToForm, blankRune as armorBlankRune };
+// armor rune edits with its own modifiers/riders form there too; the modifier
+// vocabularies also seed the accessory rune form (#1033 S4).
+export { RuneForm as ArmorRuneForm, toForm as armorToForm, blankRune as armorBlankRune, MODIFIER_STATS, MODIFIER_KINDS };
 
 export default GmArmorRunes;
