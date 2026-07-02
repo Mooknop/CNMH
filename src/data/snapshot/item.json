@@ -7829,20 +7829,8 @@
     "id": "vexing-vapor"
   },
   {
-    "actions": [
-      {
-        "name": "Unseen Din",
-        "actionCount": 1,
-        "traits": [
-          "Illusion",
-          "Manipulate",
-          "Sonic"
-        ],
-        "description": "You engage a piece of the alien technology, producing a deafening sound as you become completely invisible. Because of the noise, you are only Concealed to other creatures unless they are deaf. This effect lasts until the end of your next turn."
-      }
-    ],
     "name": "Vocoder of Invisibility",
-    "description": "A curious device found in a crashed spaceship in the deserts of Numeria.",
+    "description": "A curious device found in a crashed spaceship in the deserts of Numeria. While you are playing — you cast a Composition cantrip on your previous turn — the vocoder weaves your performance into a deafening sonic veil: you become completely invisible, but the noise means you are merely Concealed to creatures that can hear you. The veil falls silent the moment you stop playing.",
     "image": "img_27e90a4f-7446-4ff9-a02c-a10d2c5798de.jpg",
     "imagePosition": {
       "x": 50,
