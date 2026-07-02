@@ -209,6 +209,16 @@ describe('useEncounter', () => {
     expect(JSON.parse(localStorage.getItem('cnmh_bystander_Pellias'))).toMatchObject({ active: false, mod: null });
   });
 
+  it('endEncounter clears each PC playing state (#935)', () => {
+    localStorage.setItem('cnmh_playing_Pellias', JSON.stringify({
+      active: true, expireAt: { round: 2, entryId: 'e1', boundary: 'turn-end' }, ts: 1,
+    }));
+    const { result } = setup();
+    act(() => result.current.startEncounter([pellias]));
+    act(() => result.current.endEncounter());
+    expect(JSON.parse(localStorage.getItem('cnmh_playing_Pellias'))).toMatchObject({ active: false });
+  });
+
   it('endEncounter drops encounter-scoped effects (eld-charged) but keeps manual ones (#275)', () => {
     localStorage.setItem('cnmh_effects_IzzyUncut', JSON.stringify([
       { id: 'c1', effectId: 'eld-charged' }, // catalog-flagged encounterScoped

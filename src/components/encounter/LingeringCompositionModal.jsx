@@ -11,6 +11,7 @@ import { resolveActionRoll } from '../../utils/rollResolution';
 import { computeSaveDegree } from '../../utils/saveDegree';
 import { recallKnowledgeDC } from '../../utils/recallKnowledge';
 import { lingeringResult } from '../../utils/lingering';
+import { markPlayingOnCast } from '../../utils/playing';
 import './LingeringCompositionModal.css';
 
 const DEGREE_LABELS = {
@@ -41,8 +42,10 @@ const LingeringCompositionModal = ({ isOpen, onClose, spell, character, themeCol
   const { effects } = useEffects(character?.id || '');
   const { effects: effectCatalog } = useContent();
   const [activeConditions] = useSyncedState(`cnmh_conditions_${character?.id || 'none'}`, []);
-  const { appendLog } = useEncounter();
+  const { appendLog, encounter } = useEncounter();
   const { sendUpdate } = useSession();
+  const casterEntryId = (encounter?.order || [])
+    .find((e) => e.kind === 'pc' && e.charId === character?.id)?.entryId;
   const resources = useCastingResources(character);
 
   const [d20, setD20] = useState('');
@@ -106,6 +109,10 @@ const LingeringCompositionModal = ({ isOpen, onClose, spell, character, themeCol
       charId: id,
       text: `${character?.name} used Lingering Composition (Performance ${total} vs DC ${dcVal}) → ${DEGREE_LABELS[degree]} — ${resultStr}`,
     });
+
+    // 'While playing' (#935) — Lingering Composition is itself a Composition
+    // cast, so even a failed check keeps the performance going.
+    markPlayingOnCast({ ability: spell, caster: character, casterEntryId, encounter, sendUpdate, appendLog });
 
     setResolved({ degree, resultStr });
   };

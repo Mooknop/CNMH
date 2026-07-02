@@ -3,8 +3,9 @@
 //   • app-driven combats → useEncounter.advanceTurn / beginNextRound
 //   • Foundry-driven combats → useEncounterTurnEffects (watches the bridge's
 //     synced round/currentTurnIndex write-back)
-// Keeping the logic here means both paths expire effects + granted actions and
-// apply Hymn fast healing identically, with a single source of truth.
+// Keeping the logic here means both paths expire effects, granted actions and
+// the playing state (#935) and apply Hymn fast healing identically, with a
+// single source of truth.
 
 import { isExpired } from './expiry';
 import { hymnFastHealingFor, applyHymnFastHealing } from './hymnHealing';
@@ -15,6 +16,10 @@ const writeLocal = (key, value) => {
 
 const readLocal = (key) => {
   try { return JSON.parse(window.localStorage.getItem(key)) || []; } catch { return []; }
+};
+
+const readLocalObj = (key) => {
+  try { return JSON.parse(window.localStorage.getItem(key)); } catch { return null; }
 };
 
 /**
@@ -44,6 +49,17 @@ export function sweepExpiredOnBoundaries({ order, boundaries, sendUpdate, append
           const def = (effectCatalog || []).find((d) => d.id === e.effectId);
           appendLog({ type: 'system', text: `${def?.name || e.effectId} expired on ${entry.name}` });
         });
+    }
+
+    // --- playing sweep (#935) ---
+    // A Composition cast marks the caster playing through the end of their
+    // next turn; without a re-up the state lapses on that boundary.
+    const playing = readLocalObj(`cnmh_playing_${entry.charId}`);
+    if (playing?.active && isExpired(playing.expireAt, boundaries)) {
+      const idle = { active: false, ts: Date.now() };
+      writeLocal(`cnmh_playing_${entry.charId}`, idle);
+      sendUpdate(entry.charId, 'playing', idle);
+      appendLog({ type: 'system', text: `${entry.name} stops playing` });
     }
 
     // --- granted actions sweep ---
