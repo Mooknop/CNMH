@@ -484,7 +484,8 @@
         "reflex": 9,
         "will": 7
       }
-    }
+    },
+    "gold": 24
   },
   {
     "created": "2025-04-18T12:00:00.000Z",
@@ -1021,7 +1022,8 @@
         }
       }
     ],
-    "reactions": []
+    "reactions": [],
+    "gold": 26
   },
   {
     "created": "2025-04-18T09:00:00.000Z",
@@ -1593,13 +1595,8 @@
       },
       {
         "uid": "e-4phd9lsbj3e7",
+        "level": 1,
         "ref": "healing-potion",
-        "quantity": 1,
-        "level": 1
-      },
-      {
-        "uid": "e-yn2rxy6mj3e7",
-        "ref": "scroll-of-friendfetch",
         "quantity": 1
       },
       {
@@ -1608,38 +1605,13 @@
         "quantity": 1
       },
       {
-        "uid": "e-h9ufvscmj3e7",
-        "ref": "scroll-of-cleanse-affliction",
-        "quantity": 1
-      },
-      {
         "uid": "e-dzkyjxn8j3e7",
         "ref": "sanitizing-pin",
         "quantity": 1
       },
       {
-        "uid": "e-aurfnxvij3e7",
-        "ref": "wand-of-create-food",
-        "quantity": 1
-      },
-      {
-        "uid": "e-g1sn2m5qj3e7",
-        "ref": "wand-of-cleanse-affliction",
-        "quantity": 1
-      },
-      {
         "uid": "e-d3n3r7qdj3e7",
         "ref": "horn-of-rust",
-        "quantity": 1
-      },
-      {
-        "uid": "e-aa8l5sitavu7",
-        "ref": "scroll-of-sleep",
-        "quantity": 1
-      },
-      {
-        "uid": "e-yzpz6v5yavu7",
-        "ref": "scroll-of-dispel-magic",
         "quantity": 1
       },
       {
@@ -1655,6 +1627,48 @@
       {
         "uid": "e-l1qrunn0avu7",
         "ref": "holy-water",
+        "quantity": 1
+      },
+      {
+        "uid": "e-ymz12l806uq9",
+        "scroll": {
+          "spellRef": "friendfetch"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-8kbku5bn6uqa",
+        "scroll": {
+          "spellRef": "sleep"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-ll6wolco6uqa",
+        "scroll": {
+          "spellRef": "dispel-magic"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-9twk3es96uqa",
+        "scroll": {
+          "spellRef": "cleanse-affliction"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-djxbd8en6uqa",
+        "wand": {
+          "spellRef": "create-food"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-ivcb6f2q6uqb",
+        "wand": {
+          "spellRef": "cleanse-affliction"
+        },
         "quantity": 1
       }
     ],
@@ -1816,7 +1830,8 @@
       }
     ],
     "actions": [],
-    "reactions": []
+    "reactions": [],
+    "gold": 24
   },
   {
     "image": "img_0f2cd2ea-d783-46dc-9cea-364591eb2de3.jpg",
@@ -2070,30 +2085,15 @@
         "quantity": 1
       },
       {
-        "uid": "e-x484lqauoezh",
-        "ref": "wand-of-dizzying-colors",
-        "quantity": 1
-      },
-      {
-        "uid": "e-wjorm2ueoezh",
-        "ref": "wand-of-grease",
-        "quantity": 1
-      },
-      {
-        "uid": "e-typicfh7oezh",
-        "ref": "wand-of-breathe-fire",
-        "quantity": 1
-      },
-      {
         "uid": "e-zwe0plnuoezh",
         "ref": "xanderghuls-flawless-hammer",
         "quantity": 1
       },
       {
         "uid": "e-5wt9oadpoezh",
+        "level": 1,
         "ref": "elixir-of-life",
-        "quantity": 1,
-        "level": 1
+        "quantity": 1
       },
       {
         "uid": "e-06de2xugoezh",
@@ -2106,50 +2106,83 @@
         "quantity": 1
       },
       {
-        "uid": "e-r42ub9dxoezh",
-        "ref": "scroll-of-pocket-library",
-        "quantity": 1
-      },
-      {
-        "uid": "e-gbpv1oj8oezh",
-        "ref": "scroll-of-runic-body",
-        "quantity": 1
-      },
-      {
-        "uid": "e-9db7dc0moezh",
-        "ref": "scroll-of-sleep",
-        "quantity": 1
-      },
-      {
-        "uid": "e-lcih3p1voezh",
-        "ref": "scroll-of-dispel-magic",
-        "quantity": 1
-      },
-      {
         "uid": "e-wjzu6n3fihyq",
         "ref": "antiplague",
         "quantity": 1
       },
       {
         "uid": "e-swx7yknxihyq",
+        "level": 1,
         "ref": "healing-potion",
-        "quantity": 2,
-        "level": 1
-      },
-      {
-        "uid": "e-89i4hd7gihyq",
-        "ref": "wand-of-fear",
-        "quantity": 1
+        "quantity": 2
       },
       {
         "uid": "e-i96di93dihyq",
+        "level": 3,
         "ref": "healing-potion",
-        "quantity": 1,
-        "level": 3
+        "quantity": 1
       },
       {
-        "uid": "e-ztotevemakrn",
-        "ref": "scroll-of-mind-games",
+        "uid": "e-2g5czq7nduq2",
+        "wand": {
+          "spellRef": "fear"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-8mq1qxf9duq2",
+        "scroll": {
+          "spellRef": "mind-games"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-094ooal6duq2",
+        "scroll": {
+          "spellRef": "dispel-magic"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-low732f1duq3",
+        "scroll": {
+          "spellRef": "sleep"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-9ajmuj0qduq3",
+        "scroll": {
+          "spellRef": "runic-body"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-isdnlujcduq3",
+        "scroll": {
+          "spellRef": "pocket-library"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-m67m2z0bduq3",
+        "wand": {
+          "spellRef": "breathe-fire"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-9x0ory67duq3",
+        "wand": {
+          "spellRef": "dizzying-colors"
+        },
+        "quantity": 1
+      },
+      {
+        "uid": "e-2z3w6fbmduq3",
+        "wand": {
+          "spellRef": "grease"
+        },
         "quantity": 1
       }
     ],
@@ -2324,7 +2357,8 @@
       {
         "ref": "elixir-of-life"
       }
-    ]
+    ],
+    "gold": 24
   },
   {
     "champion": {
@@ -2908,6 +2942,7 @@
           "General"
         ]
       }
-    ]
+    ],
+    "gold": 24
   }
 ]
