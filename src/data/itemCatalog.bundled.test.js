@@ -2,7 +2,7 @@
 // and character inventories satisfy the structural invariants required by the
 // resolution layer (ContentContext, SpellUtils, InventoryUtils). Runs the REAL
 // src/utils functions so any regression in resolution logic is caught here.
-import { sampleCharacters, items, spells } from './index';
+import { sampleCharacters, items, spells, effects } from './index';
 import { itemCatalogMap, spellCatalogMap, resolveCharacterItems } from '../utils/contentUtils';
 import {
   findScrollItems,
@@ -172,6 +172,46 @@ describe('bundled item catalog (Slice 3)', () => {
     });
   });
 
+  // #935 (S4) — while-playing bonuses: every playingEffect ref (base and Major
+  // override) resolves to a real effect def with modifiers, and holding a given
+  // grade resolves the item to that grade's ref.
+  it('Coda staves carry playing-effect refs that resolve per grade', () => {
+    const CODA_STAVES = [
+      'bagpipes-of-turmoil', 'entertainers-lute', 'drums-of-war',
+      'pipes-of-compulsion', 'tricksters-mandolin',
+    ];
+    const effectIds = new Set(effects.map((e) => e.id));
+    CODA_STAVES.forEach((id) => {
+      const cat = items.find((i) => i.id === id);
+      expect(typeof cat.playingEffect).toBe('string');
+      expect(effectIds.has(cat.playingEffect)).toBe(true);
+
+      const major = cat.variants.find((v) => v.label === 'Major');
+      expect(major.overrides.playingEffect).toBe(`${cat.playingEffect}-major`);
+      expect(effectIds.has(major.overrides.playingEffect)).toBe(true);
+
+      // Both defs carry effect-engine modifiers; the Major def is the +2 tier.
+      const base = effects.find((e) => e.id === cat.playingEffect);
+      const majorDef = effects.find((e) => e.id === major.overrides.playingEffect);
+      [base, majorDef].forEach((def) => expect(def.modifiers.length).toBeGreaterThan(0));
+      expect(base.modifiers.some((m) => m.kind === 'item' && m.amount === 1)).toBe(true);
+      expect(majorDef.modifiers.some((m) => m.kind === 'item' && m.amount === 2)).toBe(true);
+
+      // Resolution: Standard keeps the base ref, Major swaps to the +2 ref.
+      const resolve = (level) => resolveCharacterItems(
+        { id: 'tester', level: 20, inventory: [{ ref: id, level }] }, items, spells
+      ).inventory[0];
+      expect(resolve(4).playingEffect).toBe(cat.playingEffect);
+      const rMajor = resolve(12);
+      expect(rMajor.playingEffect).toBe(`${cat.playingEffect}-major`);
+      expect(rMajor.overrides).toBeUndefined();
+    });
+
+    // The Drums of War also grant a status Speed bonus while playing.
+    const drums = effects.find((e) => e.id === 'coda-drums-playing');
+    expect(drums.modifiers).toContainEqual({ stat: 'speed', kind: 'status', amount: 5 });
+  });
+
   it('multi-level items have variants with numeric level and string label', () => {
     const multiLevel = items.filter((i) => Array.isArray(i.variants) && i.variants.length > 0);
     expect(multiLevel.length).toBeGreaterThan(0);
@@ -192,7 +232,9 @@ describe('bundled item catalog (Slice 3)', () => {
   // make more fields variant-aware (S1 bonus, S2 container; S3 resistance).
   // #967 (R1): the power ring's grade ladder carries its mechanical contract —
   // itemBonus / ringSockets / cantripSlots / apex — per grade.
-  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex'];
+  // #935 (S4): a Coda staff's Major grade overrides `playingEffect` — the ref
+  // into the effect catalog its while-playing bonuses come from — to the +2 def.
+  const OVERRIDE_ALLOWLIST = ['bonus', 'container', 'resistance', 'itemBonus', 'ringSockets', 'cantripSlots', 'apex', 'playingEffect'];
   it('variant overrides use only allowlisted, well-formed keys', () => {
     items.forEach((item) => {
       (Array.isArray(item.variants) ? item.variants : []).forEach((v) => {

@@ -179,6 +179,176 @@
     ]
   },
   {
+    "id": "coda-bagpipes-playing",
+    "name": "Bagpipes of Turmoil (playing)",
+    "description": "+1 item bonus to Performance checks and to Intimidation checks to Demoralize while playing the bagpipes.",
+    "modifiers": [
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "coda-bagpipes-playing-major",
+    "name": "Bagpipes of Turmoil (playing)",
+    "description": "+2 item bonus to Performance checks and to Intimidation checks to Demoralize while playing the bagpipes.",
+    "modifiers": [
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "intimidation",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "coda-drums-playing",
+    "name": "Drums of War (playing)",
+    "description": "+1 item bonus to Performance checks and a +5-foot status bonus to Speed while playing the drums.",
+    "modifiers": [
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "id": "coda-drums-playing-major",
+    "name": "Drums of War (playing)",
+    "description": "+2 item bonus to Performance checks and a +5-foot status bonus to Speed while playing the drums.",
+    "modifiers": [
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "speed",
+        "kind": "status",
+        "amount": 5
+      }
+    ]
+  },
+  {
+    "id": "coda-lute-playing",
+    "name": "Entertainer's Lute (playing)",
+    "description": "+1 item bonus to Diplomacy and Performance checks while playing the lute.",
+    "modifiers": [
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "coda-lute-playing-major",
+    "name": "Entertainer's Lute (playing)",
+    "description": "+2 item bonus to Diplomacy and Performance checks while playing the lute.",
+    "modifiers": [
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "coda-mandolin-playing",
+    "name": "Trickster's Mandolin (playing)",
+    "description": "+1 item bonus to Deception and Performance checks while playing the mandolin.",
+    "modifiers": [
+      {
+        "stat": "deception",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "coda-mandolin-playing-major",
+    "name": "Trickster's Mandolin (playing)",
+    "description": "+2 item bonus to Deception and Performance checks while playing the mandolin.",
+    "modifiers": [
+      {
+        "stat": "deception",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
+    "id": "coda-pipes-playing",
+    "name": "Pipes of Compulsion (playing)",
+    "description": "+1 item bonus to Diplomacy and Performance checks while playing the pipes.",
+    "modifiers": [
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 1
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 1
+      }
+    ]
+  },
+  {
+    "id": "coda-pipes-playing-major",
+    "name": "Pipes of Compulsion (playing)",
+    "description": "+2 item bonus to Diplomacy and Performance checks while playing the pipes.",
+    "modifiers": [
+      {
+        "stat": "diplomacy",
+        "kind": "item",
+        "amount": 2
+      },
+      {
+        "stat": "performance",
+        "kind": "item",
+        "amount": 2
+      }
+    ]
+  },
+  {
     "id": "cognitive-mutagen-greater",
     "name": "Cognitive Mutagen (Greater)",
     "description": "+3 item bonus to Arcana, Crafting, Lore, Occultism, Society, and Recall Knowledge checks; –2 item penalty to weapon/unarmed attack rolls, Athletics, and Acrobatics. Carrying capacity drops by 2 Bulk. Lasts 1 hour.",
